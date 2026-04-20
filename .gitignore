@@ -1,0 +1,45 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Node / Bun
+node_modules/
+dist/
+build/
+.vite/
+*.log
+coverage/
+
+# Generated
+apps/web/src/routeTree.gen.ts
+apps/web/vite.config.d.ts
+apps/web/*.tsbuildinfo
+
+# Go
+apps/api/bin/
+apps/api/tmp/
+*.test
+*.out
+coverage.*
+
+# sqlc caches
+apps/api/.sqlc-cache/
+
+# Docker / Dokploy local
+infra/dokploy/.env
+docker-data/
+
+# Docs build
+docs/_build/

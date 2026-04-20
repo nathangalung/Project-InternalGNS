@@ -1,3 +1,5 @@
+-- +goose Up
+-- +goose StatementBegin
 -- ============================================================
 -- QUOTATION SYSTEM — PRODUCTION SCHEMA (PostgreSQL 14+)
 -- Target DB: gns_quotation
@@ -382,3 +384,12 @@ LEFT JOIN quotation_items qi ON qi.quotation_id = q.id
 GROUP BY q.id, q.quotation_no, q.total, q.total_discount;
 
 COMMENT ON VIEW quotation_reconciliation IS 'Reconciliation check: header total vs SUM items. Non-zero diff = inconsistency.';
+
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+-- +goose StatementEnd

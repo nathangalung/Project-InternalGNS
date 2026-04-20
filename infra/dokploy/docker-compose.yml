@@ -1,0 +1,88 @@
+name: internalgns
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Jakarta
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.track=all
+      - -c
+      - max_connections=200
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    networks: [internal]
+
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks: [internal]
+
+  api:
+    image: ghcr.io/${GH_OWNER}/internalgns-api:${TAG:-latest}
+    environment:
+      ENV: production
+      HTTP_ADDR: :8080
+      TZ: Asia/Jakarta
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRY: 24h
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_USER}
+      MINIO_SECRET_KEY: ${MINIO_PASSWORD}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+    depends_on:
+      postgres: { condition: service_healthy }
+      minio:    { condition: service_healthy }
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.internalgns-api.rule=Host(`${API_HOST}`)"
+      - "traefik.http.routers.internalgns-api.entrypoints=websecure"
+      - "traefik.http.routers.internalgns-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.internalgns-api.loadbalancer.server.port=8080"
+    restart: unless-stopped
+    networks: [internal, dokploy-network]
+
+  web:
+    image: ghcr.io/${GH_OWNER}/internalgns-web:${TAG:-latest}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.internalgns-web.rule=Host(`${WEB_HOST}`)"
+      - "traefik.http.routers.internalgns-web.entrypoints=websecure"
+      - "traefik.http.routers.internalgns-web.tls.certresolver=letsencrypt"
+      - "traefik.http.services.internalgns-web.loadbalancer.server.port=80"
+    restart: unless-stopped
+    networks: [dokploy-network]
+
+volumes:
+  postgres_data:
+  minio_data:
+
+networks:
+  internal:
+  dokploy-network:
+    external: true

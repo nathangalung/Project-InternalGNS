@@ -5,17 +5,34 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "generate:routes": "tsr generate",
+    "build": "bun run generate:routes && tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "biome check src",
+    "format": "biome format --write src",
+    "typecheck": "bun run generate:routes && tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.99.0",
+    "@tanstack/react-router": "^1.168.0",
+    "clsx": "^2.1.1",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "tailwind-merge": "^3.5.0",
+    "zod": "^4.3.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.12",
+    "@tailwindcss/vite": "^4.2.0",
+    "@tanstack/react-query-devtools": "^5.99.0",
+    "@tanstack/router-cli": "^1.166.0",
+    "@tanstack/router-devtools": "^1.166.0",
+    "@tanstack/router-plugin": "^1.167.0",
+    "@types/node": "^22.10.5",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react-swc": "^4.2.3",
+    "tailwindcss": "^4.2.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
   }
