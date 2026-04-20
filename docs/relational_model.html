@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quotation System — ERD & Data Dictionary</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* ─── RESET & BASE ─────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;
+  --text:#1e293b;--text-dim:#64748b;--text-bright:#0f172a;
+  --blue:#2563eb;--amber:#d97706;--green:#059669;--purple:#7c3aed;
+  --red:#dc2626;--cyan:#0891b2;--gold:#b45309;--teal:#0d9488;
+  --blue-bg:rgba(37,99,235,.06);--amber-bg:rgba(217,119,6,.06);
+  --green-bg:rgba(5,150,105,.06);--purple-bg:rgba(124,58,237,.06);
+  --radius:10px;--radius-sm:6px;
+}
+html{font-size:14px}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--surface2)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#cbd5e1}
+
+/* ─── TOP BAR ──────────────────────────────────────── */
+.topbar{display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.topbar h1{font-size:1.1rem;font-weight:700;color:var(--text-bright);white-space:nowrap}
+.topbar h1 span{color:var(--blue);margin-right:6px}
+.tabs{display:flex;gap:4px;margin-left:24px}
+.tab-btn{padding:7px 18px;border:1px solid transparent;border-radius:var(--radius-sm);background:transparent;color:var(--text-dim);font-size:.9rem;font-family:'Inter',system-ui,-apple-system,sans-serif;cursor:pointer;transition:.2s}
+.tab-btn:hover{background:var(--surface2);color:var(--text)}
+.tab-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+.tab-btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--text-dim)}
+
+/* ─── TAB CONTENT ──────────────────────────────────── */
+.tab-content{flex:1;overflow:hidden;display:none}
+.tab-content.active{display:flex;flex-direction:column}
+
+/* ═══════════════════════════════════════════════════════
+   ERD TAB
+   ═══════════════════════════════════════════════════════ */
+#erd-tab{position:relative}
+#erd-viewport{flex:1;overflow:auto;cursor:grab;position:relative}
+#erd-viewport:active{cursor:grabbing}
+/* KANVAS SUPER LEBAR (4200px) */
+#erd-canvas{position:relative;width:4200px;height:2600px;transform-origin:0 0}
+
+/* Zoom Controls */
+.zoom-controls{position:absolute;bottom:20px;right:20px;display:flex;flex-direction:column;gap:4px;z-index:50}
+.zoom-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:1.1rem;font-family:'Inter',system-ui,-apple-system,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.zoom-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.zoom-btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.zoom-label{text-align:center;font-size:.7rem;color:var(--text-dim);padding:2px 0}
+
+/* ERD SVG overlay */
+#erd-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+
+/* HALO EFFECT TEBAL UNTUK MEMUTUS GARIS */
+#erd-svg text {
+  paint-order: stroke fill;
+  stroke: var(--bg);
+  stroke-width: 6px; 
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  font-weight: 500;
+}
+
+/* Group backgrounds */
+.group-bg{position:absolute;border-radius:16px;z-index:0}
+.group-label{position:absolute;font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;z-index:0;opacity:.8}
+
+/* Entity cards */
+.entity-card{position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);z-index:10;box-shadow:0 1px 8px rgba(0,0,0,.08);transition:box-shadow .2s}
+.entity-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.entity-header{padding:10px 14px;border-radius:calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;display:flex;align-items:center;gap:8px;font-weight:700;font-size:.9rem;color:#fff}
+.entity-header .badge{font-size:.6rem;padding:2px 6px;border-radius:3px;background:rgba(255,255,255,.2);font-weight:600;margin-left:auto}
+.entity-cols{padding:0;font-size:.78rem;line-height:1.6}
+.entity-cols .col-row{display:flex;padding:3px 14px;border-top:1px solid var(--border);background:var(--surface)}
+.entity-cols .col-row:hover{background:var(--bg)}
+.col-name{flex:1;font-family:'Cascadia Code','Fira Code',monospace;font-size:.75rem}
+.col-name.pk{color:var(--gold)}
+.col-name.fk{color:var(--red)}
+.col-name.gen{color:var(--cyan);font-style:italic}
+.col-type{color:var(--text-dim);font-size:.7rem;text-align:right}
+.col-section{padding:4px 14px;font-size:.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;border-top:1px solid var(--border);background:var(--surface2);font-weight:600}
+.entity-footer{padding:6px 14px;font-size:.68rem;color:var(--text-dim);border-top:1px solid var(--border);background:var(--surface);border-radius:0 0 calc(var(--radius) - 1px) calc(var(--radius) - 1px);}
+
+/* ERD Legend */
+.erd-legend{position:absolute;top:12px;right:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;z-index:50;font-size:.72rem;box-shadow:0 1px 8px rgba(0,0,0,.08)}
+.erd-legend h4{margin-bottom:6px;color:var(--text-dim);font-size:.7rem;text-transform:uppercase;letter-spacing:1px}
+.legend-item{display:flex;align-items:center;gap:8px;margin:3px 0}
+.legend-swatch{width:28px;height:3px;border-radius:2px}
+
+/* ═══════════════════════════════════════════════════════
+   DATA DICTIONARY TAB
+   ═══════════════════════════════════════════════════════ */
+#dict-tab{flex-direction:row!important}
+.dict-sidebar{width:240px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:16px 0}
+.dict-sidebar .group-title{padding:10px 18px 4px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim)}
+.dict-sidebar a{display:block;padding:6px 18px 6px 28px;font-size:.82rem;color:var(--text-dim);transition:.15s;border-left:3px solid transparent}
+.dict-sidebar a:hover{background:var(--surface2);color:var(--text);text-decoration:none}
+.dict-sidebar a.active{border-left-color:var(--blue);color:var(--text-bright);background:var(--blue-bg)}
+.dict-main{flex:1;overflow-y:auto;padding:28px 40px 60px}
+
+/* Flow diagram */
+.flow-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin-bottom:36px;box-shadow:0 1px 8px rgba(0,0,0,.06)}
+.flow-box h2{font-size:1rem;margin-bottom:14px;color:var(--text-bright)}
+.flow-steps{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.85rem}
+.flow-step{background:var(--surface2);padding:7px 14px;border-radius:var(--radius-sm);display:flex;align-items:center;gap:6px;color:var(--text)}
+.flow-arrow{color:var(--text-dim);font-size:1rem}
+.flow-branch{display:flex;flex-direction:column;gap:4px;padding-left:12px;border-left:2px solid var(--amber);margin:4px 0}
+.flow-branch .flow-step{font-size:.82rem}
+
+/* Table section */
+.table-section{margin-bottom:48px;scroll-margin-top:20px}
+.table-section-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.table-section-header h3{font-size:1.15rem;color:var(--text-bright)}
+.table-section-header .layer-badge{font-size:.7rem;padding:3px 10px;border-radius:4px;font-weight:600;color:#fff}
+.table-desc{color:var(--text-dim);font-size:.88rem;line-height:1.6;margin-bottom:14px;max-width:860px}
+.example-box{background:rgba(37,99,235,.04);border:1px solid rgba(37,99,235,.15);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;font-size:.82rem;font-family:'Cascadia Code','Fira Code',monospace;color:var(--blue);line-height:1.7}
+
+/* Attribute table */
+.attr-table{width:100%;max-width:960px;border-collapse:collapse;font-size:.82rem;margin-bottom:12px}
+.attr-table thead th{background:var(--surface2);padding:8px 12px;text-align:left;font-weight:600;color:var(--text-dim);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border)}
+.attr-table tbody td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text)}
+.attr-table tbody tr:hover{background:var(--surface2)}
+.attr-table .col-nm{font-family:'Cascadia Code','Fira Code',monospace;font-size:.8rem;white-space:nowrap}
+.attr-table .col-nm.pk{color:var(--gold)}
+.attr-table .col-nm.fk{color:var(--red)}
+.attr-table .col-nm.gen{color:var(--cyan);font-style:italic}
+.attr-table .col-tp{color:var(--text-dim);font-family:'Cascadia Code','Fira Code',monospace;font-size:.75rem;white-space:nowrap}
+.attr-table .section-divider td{background:var(--surface2);padding:5px 12px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);border-bottom:1px solid var(--border)}
+
+/* Constraint badges */
+.cbadge{display:inline-block;font-size:.6rem;padding:1px 5px;border-radius:3px;font-weight:700;margin-left:4px;vertical-align:middle}
+.cbadge-pk{background:rgba(180,83,9,.12);color:var(--gold)}
+.cbadge-fk{background:rgba(220,38,38,.1);color:var(--red)}
+.cbadge-nn{background:rgba(100,116,139,.12);color:var(--text-dim)}
+.cbadge-uq{background:rgba(37,99,235,.1);color:var(--blue)}
+.cbadge-gen{background:rgba(8,145,178,.1);color:var(--cyan)}
+.cbadge-chk{background:rgba(124,58,237,.1);color:var(--purple)}
+.cbadge-auto{background:rgba(8,145,178,.08);color:var(--cyan);font-style:italic}
+.col-auto-tag{font-size:.6rem;color:var(--cyan);margin-left:3px;opacity:.7;font-weight:500}
+
+/* Inline example table */
+.inline-table{width:100%;max-width:900px;border-collapse:collapse;font-size:.8rem;margin:14px 0}
+.inline-table th{background:var(--surface2);padding:6px 10px;text-align:left;font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim)}
+.inline-table td{padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text)}
+.inline-table tr:hover{background:var(--surface2)}
+.inline-table .num{text-align:right;font-family:'Cascadia Code','Fira Code',monospace;font-size:.78rem}
+
+/* Role matrix */
+.role-matrix{border-collapse:collapse;font-size:.82rem;margin:12px 0}
+.role-matrix th,.role-matrix td{padding:6px 14px;border:1px solid var(--border);text-align:center;color:var(--text)}
+.role-matrix th{background:var(--surface2);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim)}
+.role-matrix .yes{color:var(--green)}
+.role-matrix .no{color:var(--red);opacity:.5}
+.role-matrix td:first-child{text-align:left;font-weight:600}
+
+@media(max-width:900px){
+  .dict-sidebar{width:200px}
+  .dict-main{padding:20px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1><span>&#9672;</span> Quotation System</h1>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('erd')">ERD Diagram</button>
+    <button class="tab-btn" onclick="switchTab('dict')">Data Dictionary</button>
+  </div>
+  <div class="topbar-right">14 tabel &middot; PostgreSQL &middot; v3.0</div>
+</div>
+
+<div id="erd-tab" class="tab-content active">
+  <div id="erd-viewport">
+    <div id="erd-canvas">
+
+      <svg id="erd-svg" viewBox="0 0 4200 2600" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr-b" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#2563eb" stroke-width="1.2"/></marker>
+          <marker id="arr-a" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#d97706" stroke-width="1.2"/></marker>
+          <marker id="arr-g" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#059669" stroke-width="1.2"/></marker>
+          <marker id="arr-p" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#7c3aed" stroke-width="1.2"/></marker>
+          <marker id="arr-c" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" stroke="#0891b2" stroke-width="1.2"/></marker>
+        </defs>
+
+        <path d="M 1100, 208 H 820 V 108 H 370" fill="none" stroke="#2563eb" stroke-width="1.8" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="1090" y="198" fill="#2563eb" font-size="10" text-anchor="end">company_client_id</text>
+
+        <path d="M 1900, 183 H 1750 V 30 H 800 V 108 H 370" fill="none" stroke="#2563eb" stroke-width="1.3" stroke-dasharray="6,4" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="1890" y="173" fill="#2563eb" font-size="10" text-anchor="end">company_client_id</text>
+
+        <path d="M 2700, 208 H 2550 V 15 H 780 V 108 H 370" fill="none" stroke="#2563eb" stroke-width="1.3" stroke-dasharray="6,4" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="2690" y="198" fill="#2563eb" font-size="10" text-anchor="end">company_client_id</text>
+
+        <path d="M 50, 593 H 30 V 108 H 50" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="40" y="583" fill="#2563eb" font-size="10" text-anchor="end">company_id</text>
+
+        <path d="M 1100, 233 H 860 V 568 H 370" fill="none" stroke="#2563eb" stroke-width="1.3" stroke-dasharray="6,4" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="1090" y="223" fill="#2563eb" font-size="10" text-anchor="end">contact_id</text>
+
+        <path d="M 1900, 208 H 1720 V 568 H 370" fill="none" stroke="#2563eb" stroke-width="1.3" stroke-dasharray="6,4" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="1890" y="198" fill="#2563eb" font-size="10" text-anchor="end">contact_id</text>
+
+        <path d="M 1900, 158 H 1460" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arr-a)"/>
+        <text x="1890" y="148" fill="#d97706" font-size="10" text-anchor="end">quotation_id</text>
+
+        <path d="M 2700, 158 H 2400 V 108 H 1460" fill="none" stroke="#d97706" stroke-width="1.8" marker-end="url(#arr-a)" stroke-linejoin="round"/>
+        <text x="2690" y="148" fill="#d97706" font-size="10" text-anchor="end">quotation_id</text>
+
+        <path d="M 1460, 183 H 1510 V 108 H 1460" fill="none" stroke="#d97706" stroke-width="1.4" stroke-dasharray="5,3" marker-end="url(#arr-a)" stroke-linejoin="round"/>
+        <text x="1515" y="173" fill="#d97706" font-size="10" text-anchor="start">parent_id</text>
+
+        <path d="M 1100, 923 H 1070 V 108 H 1100" fill="none" stroke="#d97706" stroke-width="2" marker-end="url(#arr-a)" stroke-linejoin="round"/>
+        <text x="1090" y="913" fill="#d97706" font-size="10" text-anchor="end">quotation_id</text>
+
+        <path d="M 450, 373 H 420 V 108 H 450" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="440" y="363" fill="#2563eb" font-size="10" text-anchor="end">default_unit_id</text>
+
+        <path d="M 1100, 1120 H 870 V 108 H 770" fill="none" stroke="#2563eb" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="1090" y="1110" fill="#2563eb" font-size="10" text-anchor="end">unit_id</text>
+
+        <path d="M 1900, 1095 H 1680 V 108 H 770" fill="none" stroke="#2563eb" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="1890" y="1085" fill="#2563eb" font-size="10" text-anchor="end">unit_id</text>
+
+        <path d="M 50, 1293 H 30 V 928 H 50" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="40" y="1283" fill="#2563eb" font-size="10" text-anchor="end">vendor_id</text>
+
+        <path d="M 370, 1318 H 400 V 298 H 450" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="380" y="1308" fill="#2563eb" font-size="10" text-anchor="start">item_id</text>
+
+        <path d="M 1100, 1045 H 980 V 298 H 770" fill="none" stroke="#2563eb" stroke-width="1.3" stroke-dasharray="6,4" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="1090" y="1035" fill="#2563eb" font-size="10" text-anchor="end">offered_item_id</text>
+
+        <path d="M 1900, 1045 H 1780 V 298 H 770" fill="none" stroke="#2563eb" stroke-width="1.3" stroke-dasharray="6,4" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="1890" y="1035" fill="#2563eb" font-size="10" text-anchor="end">offered_item_id</text>
+
+        <path d="M 1100, 1070 H 940 V 1268 H 370" fill="none" stroke="#2563eb" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="1090" y="1060" fill="#2563eb" font-size="10" text-anchor="end">vendor_product_id</text>
+
+        <path d="M 1100, 1192 H 900 V 1368 H 370" fill="none" stroke="#0891b2" stroke-width="1.3" stroke-dasharray="4,4" marker-end="url(#arr-c)" stroke-linejoin="round"/>
+        <text x="1090" y="1182" fill="#0891b2" font-size="10" text-anchor="end">cost_price</text>
+
+        <path d="M 450, 718 H 410 V 298 H 450" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-b)" stroke-linejoin="round"/>
+        <text x="440" y="708" fill="#2563eb" font-size="10" text-anchor="end">matched_item_id</text>
+
+        <path d="M 1900, 948 H 1480" fill="none" stroke="#d97706" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arr-a)"/>
+        <text x="1890" y="938" fill="#d97706" font-size="10" text-anchor="end">quotation_item_id</text>
+
+        <path d="M 2700, 948 H 2420 V 898 H 1480" fill="none" stroke="#d97706" stroke-width="1.3" stroke-dasharray="6,4" marker-end="url(#arr-a)" stroke-linejoin="round"/>
+        <text x="2690" y="938" fill="#d97706" font-size="10" text-anchor="end">quotation_item_id</text>
+
+        <path d="M 1900, 923 H 1870 V 108 H 1900" fill="none" stroke="#d97706" stroke-width="2" marker-end="url(#arr-a)" stroke-linejoin="round"/>
+        <text x="1890" y="913" fill="#d97706" font-size="10" text-anchor="end">po_id</text>
+
+        <path d="M 2700, 183 H 2260" fill="none" stroke="#d97706" stroke-width="1.3" stroke-dasharray="6,4" marker-end="url(#arr-a)"/>
+        <text x="2690" y="173" fill="#d97706" font-size="10" text-anchor="end">po_id</text>
+
+        <path d="M 2700, 923 H 2670 V 108 H 2700" fill="none" stroke="#059669" stroke-width="2" marker-end="url(#arr-g)" stroke-linejoin="round"/>
+        <text x="2690" y="913" fill="#059669" font-size="10" text-anchor="end">invoice_id</text>
+
+
+        <path d="M 1460, 333 H 1520 V 1648 H 2700" fill="none" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arr-p)" stroke-linejoin="round"/>
+        <text x="1470" y="323" fill="#7c3aed" font-size="10" text-anchor="start">created_by</text>
+
+        <path d="M 1480, 1508 H 1540 V 1648 H 2700" fill="none" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arr-p)" stroke-linejoin="round"/>
+        <text x="1490" y="1498" fill="#7c3aed" font-size="10" text-anchor="start">created_by</text>
+
+        <path d="M 2260, 380 H 2320 V 1648 H 2700" fill="none" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arr-p)" stroke-linejoin="round"/>
+        <text x="2270" y="370" fill="#7c3aed" font-size="10" text-anchor="start">created_by</text>
+
+        <path d="M 2280, 1408 H 2340 V 1648 H 2700" fill="none" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arr-p)" stroke-linejoin="round"/>
+        <text x="2290" y="1398" fill="#7c3aed" font-size="10" text-anchor="start">created_by</text>
+
+        <path d="M 3060, 574 H 3120 V 1648 H 3020" fill="none" stroke="#7c3aed" stroke-width="1.1" stroke-dasharray="4,3" marker-end="url(#arr-p)" stroke-linejoin="round"/>
+        <text x="3070" y="564" fill="#7c3aed" font-size="10" text-anchor="start">created_by</text>
+
+        <path d="M 3080, 1314 H 3140 V 1648 H 3020" fill="none" stroke="#7c3aed" stroke-width="1.1" stroke-dasharray="4,3" marker-end="url(#arr-p)" stroke-linejoin="round"/>
+        <text x="3090" y="1304" fill="#7c3aed" font-size="10" text-anchor="start">created_by</text>
+
+      </svg>
+
+      <div class="group-bg" style="left:20px;top:20px;width:780px;height:1400px;background:var(--blue-bg);border:1px solid rgba(37,99,235,.12)"></div>
+      <div class="group-label" style="left:30px;top:28px;color:var(--blue)">&#9632; Master Data</div>
+
+      <div class="group-bg" style="left:1050px;top:20px;width:1270px;height:1560px;background:var(--amber-bg);border:1px solid rgba(217,119,6,.12)"></div>
+      <div class="group-label" style="left:1060px;top:28px;color:var(--amber)">&#9632; Transaction</div>
+
+      <div class="group-bg" style="left:2650px;top:20px;width:480px;height:1440px;background:var(--green-bg);border:1px solid rgba(5,150,105,.12)"></div>
+      <div class="group-label" style="left:2660px;top:28px;color:var(--green)">&#9632; Finance</div>
+
+      <div class="group-bg" style="left:2650px;top:1550px;width:420px;height:350px;background:var(--purple-bg);border:1px solid rgba(124,58,237,.12)"></div>
+      <div class="group-label" style="left:2660px;top:1558px;color:var(--purple)">&#9632; System</div>
+
+
+      <div class="entity-card" style="left:50px;top:60px;width:320px;">
+        <div class="entity-header" style="background:linear-gradient(135deg,#1d4ed8,#2563eb)">
+          &#127970; company_client <span class="badge">MASTER</span>
+        </div>
+        <div class="entity-cols">
+          <div class="col-row"><span class="col-name pk">id</span><span class="col-type">BIGINT PK</span></div>
+          <div class="col-row"><span class="col-name">number</span><span class="col-type">VARCHAR(10)</span></div>
+          <div class="col-row"><span class="col-name">name</span><span class="col-type">VARCHAR(255) NN</span></div>
+          <div class="col-row"><span class="col-name">npwp</span><span class="col-type">VARCHAR(20)</span></div>
+          <div class="col-row"><span class="col-name">address</span><span class="col-type">TEXT</span></div>
+          <div class="col-row"><span class="col-name">email</span><span class="col-type">VARCHAR(255)</span></div>
+          <div class="col-row"><span class="col-name">country_code</span><span class="col-type">CHAR(3)</span></div>
+          <div class="col-row"><span class="col-name">tku_id</span><span class="col-type">VARCHAR(30)</span></div>
+          <div class="col-row"><span class="col-name">is_active</span><span class="col-type">BOOLEAN</span></div>
+          <div class="col-section">Audit</div>
+          <div class="col-row"><span class="col-name fk">created_by</span><span class="col-type">FK → users</span></div>
+          <div class="col-row"><span class="col-name fk">updated_by</span><span class="col-type">FK → users</span></div>
+          <div class="col-section">Timestamps</div>
+          <div class="col-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+          <div class="col-row"><span class="col-name">updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+      </div>
+
+      <div class="entity-card" style="left:50px;top:520px;width:320px;">
+        <div class="entity-header" style="background:linear-gradient(135deg,#1d4ed8,#2563eb)">
+          &#128101; company_contacts <span class="badge">MASTER</span>
+        </div>
+        <div class="entity-cols">
+          <div class="col-row"><span class="col-name pk">id</span><span class="col-type">BIGINT PK</span></div>
+          <div class="col-row"><span class="col-name fk">company_id</span><span class="col-type">FK &#8594; company_client NN</span></div>
+          <div class="col-row"><span class="col-name">name</span><span class="col-type">VARCHAR(255) NN</span></div>
+          <div class="col-row"><span class="col-name">email</span><span class="col-type">VARCHAR(255)</span></div>
+          <div class="col-row"><span class="col-name">phone</span><span class="col-type">VARCHAR(50)</span></div>
+          <div class="col-row"><span class="col-name">title</span><span class="col-type">VARCHAR(100)</span></div>
+          <div class="col-row"><span class="col-name">is_active</span><span class="col-type">BOOLEAN NN</span></div>
+          <div class="col-section">Audit</div>
+          <div class="col-row"><span class="col-name fk">created_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-row"><span class="col-name fk">updated_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-section">Timestamps</div>
+          <div class="col-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+          <div class="col-row"><span class="col-name">updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+      </div>
+
+      <div class="entity-card" style="left:50px;top:880px;width:320px;">
+        <div class="entity-header" style="background:linear-gradient(135deg,#1d4ed8,#2563eb)">
+          &#127978; vendors <span class="badge">MASTER</span>
+        </div>
+        <div class="entity-cols">
+          <div class="col-row"><span class="col-name pk">id</span><span class="col-type">BIGINT PK</span></div>
+          <div class="col-row"><span class="col-name">name</span><span class="col-type">VARCHAR(255) NN</span></div>
+          <div class="col-row"><span class="col-name">location</span><span class="col-type">VARCHAR(255)</span></div>
+          <div class="col-row"><span class="col-name">contact_info</span><span class="col-type">JSONB</span></div>
+          <div class="col-row"><span class="col-name">is_active</span><span class="col-type">BOOLEAN NN</span></div>
+          <div class="col-section">Audit</div>
+          <div class="col-row"><span class="col-name fk">created_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-row"><span class="col-name fk">updated_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-section">Timestamps</div>
+          <div class="col-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+          <div class="col-row"><span class="col-name">updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+      </div>
+
+      <div class="entity-card" style="left:50px;top:1220px;width:320px;">
+        <div class="entity-header" style="background:linear-gradient(135deg,#1d4ed8,#2563eb)">
+          &#128722; vendor_products <span class="badge">MASTER</span>
+        </div>
+        <div class="entity-cols">
+          <div class="col-row"><span class="col-name pk">id</span><span class="col-type">BIGINT PK</span></div>
+          <div class="col-row"><span class="col-name fk">vendor_id</span><span class="col-type">FK &#8594; vendors UQ&#9413; NN</span></div>
+          <div class="col-row"><span class="col-name fk">item_id</span><span class="col-type">FK &#8594; items UQ&#9413; NN</span></div>
+          <div class="col-row"><span class="col-name">vendor_sku</span><span class="col-type">VARCHAR(100)</span></div>
+          <div class="col-row"><span class="col-name">cost_price</span><span class="col-type">NUMERIC(15,2) NN</span></div>
+          <div class="col-row"><span class="col-name">last_quoted_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+          <div class="col-row"><span class="col-name">is_active</span><span class="col-type">BOOLEAN NN</span></div>
+          <div class="col-section">Audit</div>
+          <div class="col-row"><span class="col-name fk">created_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-row"><span class="col-name fk">updated_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-section">Timestamps</div>
+          <div class="col-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+          <div class="col-row"><span class="col-name">updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+        <div class="entity-footer">UNIQUE(vendor_id, item_id)</div>
+      </div>
+
+      <div class="entity-card" style="left:450px;top:60px;width:320px;">
+        <div class="entity-header" style="background:linear-gradient(135deg,#1d4ed8,#2563eb)">
+          &#128207; units <span class="badge">MASTER</span>
+        </div>
+        <div class="entity-cols">
+          <div class="col-row"><span class="col-name pk">id</span><span class="col-type">SMALLINT PK</span></div>
+          <div class="col-row"><span class="col-name">code</span><span class="col-type">VARCHAR(20) UQ NN</span></div>
+          <div class="col-row"><span class="col-name">name</span><span class="col-type">VARCHAR(50)</span></div>
+          <div class="col-row"><span class="col-name">coretax_code</span><span class="col-type">VARCHAR(10)</span></div>
+        </div>
+      </div>
+
+      <div class="entity-card" style="left:450px;top:250px;width:320px;">
+        <div class="entity-header" style="background:linear-gradient(135deg,#1d4ed8,#2563eb)">
+          &#128230; items <span class="badge">MASTER</span>
+        </div>
+        <div class="entity-cols">
+          <div class="col-row"><span class="col-name pk">id</span><span class="col-type">BIGINT PK</span></div>
+          <div class="col-row"><span class="col-name">name</span><span class="col-type">VARCHAR(500) NN</span></div>
+          <div class="col-row"><span class="col-name">impa_code</span><span class="col-type">VARCHAR(20)</span></div>
+          <div class="col-row"><span class="col-name fk">default_unit_id</span><span class="col-type">FK &#8594; units</span></div>
+          <div class="col-row"><span class="col-name">is_active</span><span class="col-type">BOOLEAN NN</span></div>
+          <div class="col-section">Audit</div>
+          <div class="col-row"><span class="col-name fk">created_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-row"><span class="col-name fk">updated_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-section">Timestamps</div>
+          <div class="col-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+          <div class="col-row"><span class="col-name">updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+      </div>
+
+      <div class="entity-card" style="left:450px;top:620px;width:320px;">
+        <div class="entity-header" style="background:linear-gradient(135deg,#1d4ed8,#2563eb)">
+          &#128270; item_request_matches <span class="badge">MASTER</span>
+        </div>
+        <div class="entity-cols">
+          <div class="col-row"><span class="col-name pk">id</span><span class="col-type">BIGINT PK</span></div>
+          <div class="col-row"><span class="col-name">request_text</span><span class="col-type">TEXT NN</span></div>
+          <div class="col-row"><span class="col-name fk">matched_item_id</span><span class="col-type">FK &#8594; items</span></div>
+          <div class="col-row"><span class="col-name">match_count</span><span class="col-type">INT</span></div>
+          <div class="col-row"><span class="col-name">last_used_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+      </div>
+
+      <div class="entity-card" style="left:1100px;top:60px;width:360px;">
+        <div class="entity-header" style="background:linear-gradient(135deg,#b45309,#d97706)">
+          &#128196; quotations <span class="badge">TRX</span>
+        </div>
+        <div class="entity-cols">
+          <div class="col-row"><span class="col-name pk">id</span><span class="col-type">BIGINT PK</span></div>
+          <div class="col-row"><span class="col-name">quotation_no</span><span class="col-type">VARCHAR(50) UQ NN</span></div>
+          <div class="col-row"><span class="col-name">version</span><span class="col-type">INT NN</span></div>
+          <div class="col-row"><span class="col-name fk">parent_id</span><span class="col-type">FK &#8594; self</span></div>
+          <div class="col-row"><span class="col-name fk">company_client_id</span><span class="col-type">FK &#8594; company_client NN</span></div>
+          <div class="col-row"><span class="col-name">company_client_name</span><span class="col-type">VARCHAR(255) NN</span></div>
+          <div class="col-row"><span class="col-name fk">contact_id</span><span class="col-type">FK &#8594; company_contacts</span></div>
+          <div class="col-row"><span class="col-name">contact_name</span><span class="col-type">VARCHAR(255)</span></div>
+          <div class="col-row"><span class="col-name">client_ref_no</span><span class="col-type">VARCHAR(100)</span></div>
+          <div class="col-row"><span class="col-name">vessel_name</span><span class="col-type">VARCHAR(255)</span></div>
+          <div class="col-row"><span class="col-name">status</span><span class="col-type">VARCHAR(20) NN CHK</span></div>
+          <div class="col-row"><span class="col-name fk">created_by</span><span class="col-type">FK &#8594; users NN</span></div>
+          <div class="col-row"><span class="col-name fk">updated_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-row"><span class="col-name">notes</span><span class="col-type">TEXT</span></div>
+          <div class="col-row"><span class="col-name">payment_terms</span><span class="col-type">VARCHAR(100)</span></div>
+          <div class="col-row"><span class="col-name">validity_days</span><span class="col-type">SMALLINT</span></div>
+          <div class="col-section">Financial Summary</div>
+          <div class="col-row"><span class="col-name">total_produk</span><span class="col-type">NUMERIC(15,2)</span></div>
+          <div class="col-row"><span class="col-name">total</span><span class="col-type">NUMERIC(15,2)</span></div>
+          <div class="col-row"><span class="col-name">total_discount</span><span class="col-type">NUMERIC(15,2)</span></div>
+          <div class="col-row"><span class="col-name gen">subtotal</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name gen">dpp_nilai_lain</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name gen">ppn_amount</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name gen">grand_total</span><span class="col-type">GENERATED</span></div>
+          <div class="col-section">Concurrency</div>
+          <div class="col-row"><span class="col-name">row_version</span><span class="col-type">INT NN</span></div>
+          <div class="col-section">Timestamps</div>
+          <div class="col-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+          <div class="col-row"><span class="col-name">updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+        <div class="entity-footer">Status: draft|sent|accepted|rejected|revised</div>
+      </div>
+
+      <div class="entity-card" style="left:1100px;top:850px;width:380px;">
+        <div class="entity-header" style="background:linear-gradient(135deg,#b45309,#d97706)">
+          &#128221; quotation_items <span class="badge">TRX</span>
+        </div>
+        <div class="entity-cols">
+          <div class="col-row"><span class="col-name pk">id</span><span class="col-type">BIGINT PK</span></div>
+          <div class="col-row"><span class="col-name fk">quotation_id</span><span class="col-type">FK &#8594; quotations NN</span></div>
+          <div class="col-row"><span class="col-name">line_number</span><span class="col-type">SMALLINT NN</span></div>
+          <div class="col-row"><span class="col-name">item_type</span><span class="col-type">VARCHAR(20) NN CHK</span></div>
+          <div class="col-section">REQUEST (dari client)</div>
+          <div class="col-row"><span class="col-name fk">requested_item_id</span><span class="col-type">FK &#8594; items</span></div>
+          <div class="col-row"><span class="col-name">requested_impa</span><span class="col-type">VARCHAR(20)</span></div>
+          <div class="col-row"><span class="col-name">requested_name</span><span class="col-type">TEXT NN</span></div>
+          <div class="col-section">OFFER (yang kita tawarkan)</div>
+          <div class="col-row"><span class="col-name fk">offered_item_id</span><span class="col-type">FK &#8594; items</span></div>
+          <div class="col-row"><span class="col-name fk">vendor_product_id</span><span class="col-type">FK &#8594; vendor_products</span></div>
+          <div class="col-row"><span class="col-name">qty</span><span class="col-type">NUMERIC(12,2) NN</span></div>
+          <div class="col-row"><span class="col-name fk">unit_id</span><span class="col-type">FK &#8594; units</span></div>
+          <div class="col-section">Pricing</div>
+          <div class="col-row"><span class="col-name">selling_price</span><span class="col-type">NUMERIC(15,2) NN</span></div>
+          <div class="col-row"><span class="col-name">cost_price</span><span class="col-type">NUMERIC(15,2) &#8592; vp</span></div>
+          <div class="col-section">Computed (Generated)</div>
+          <div class="col-row"><span class="col-name gen">total_selling</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name gen">discount_amount</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name gen">subtotal</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name gen">total_cost</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name gen">profit_amount</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name gen">profit_pct</span><span class="col-type">GENERATED</span></div>
+          <div class="col-section">Availability &amp; Shipping</div>
+          <div class="col-row"><span class="col-name">is_available</span><span class="col-type">BOOLEAN</span></div>
+          <div class="col-row"><span class="col-name">ship_destination</span><span class="col-type">VARCHAR(255)</span></div>
+          <div class="col-row"><span class="col-name">due_date</span><span class="col-type">DATE</span></div>
+          <div class="col-section">Audit</div>
+          <div class="col-row"><span class="col-name fk">created_by</span><span class="col-type">FK &#8594; users NN</span></div>
+          <div class="col-row"><span class="col-name fk">updated_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-section">Concurrency</div>
+          <div class="col-row"><span class="col-name">row_version</span><span class="col-type">INT NN</span></div>
+          <div class="col-section">Timestamps</div>
+          <div class="col-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+          <div class="col-row"><span class="col-name">updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+        <div class="entity-footer">UNIQUE(quotation_id, line_number)</div>
+      </div>
+
+      <div class="entity-card" style="left:1900px;top:60px;width:360px;">
+        <div class="entity-header" style="background:linear-gradient(135deg,#b45309,#d97706)">
+          &#128230; purchase_orders <span class="badge">TRX</span>
+        </div>
+        <div class="entity-cols">
+          <div class="col-row"><span class="col-name pk">id</span><span class="col-type">BIGINT PK</span></div>
+          <div class="col-row"><span class="col-name">po_number</span><span class="col-type">VARCHAR(50) UQ NN</span></div>
+          <div class="col-row"><span class="col-name fk">quotation_id</span><span class="col-type">FK &#8594; quotations NN</span></div>
+          <div class="col-row"><span class="col-name fk">company_client_id</span><span class="col-type">FK &#8594; company_client NN</span></div>
+          <div class="col-row"><span class="col-name fk">contact_id</span><span class="col-type">FK &#8594; company_contacts</span></div>
+          <div class="col-row"><span class="col-name">po_date</span><span class="col-type">DATE NN</span></div>
+          <div class="col-row"><span class="col-name">status</span><span class="col-type">VARCHAR(20) NN CHK</span></div>
+          <div class="col-row"><span class="col-name">delivery_note_number</span><span class="col-type">VARCHAR(50)</span></div>
+          <div class="col-row"><span class="col-name">notes</span><span class="col-type">TEXT</span></div>
+          <div class="col-row"><span class="col-name">file_url</span><span class="col-type">VARCHAR(500)</span></div>
+          <div class="col-section">Audit</div>
+          <div class="col-row"><span class="col-name fk">created_by</span><span class="col-type">FK &#8594; users NN</span></div>
+          <div class="col-row"><span class="col-name fk">updated_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-section">Concurrency</div>
+          <div class="col-row"><span class="col-name">row_version</span><span class="col-type">INT NN</span></div>
+          <div class="col-section">Timestamps</div>
+          <div class="col-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+          <div class="col-row"><span class="col-name">updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+        <div class="entity-footer">Status: PENDING|UPLOADED|DELIVERED</div>
+      </div>
+
+      <div class="entity-card" style="left:1900px;top:850px;width:380px;">
+        <div class="entity-header" style="background:linear-gradient(135deg,#b45309,#d97706)">
+          &#128203; purchase_order_items <span class="badge">TRX</span>
+        </div>
+        <div class="entity-cols">
+          <div class="col-row"><span class="col-name pk">id</span><span class="col-type">BIGINT PK</span></div>
+          <div class="col-row"><span class="col-name fk">po_id</span><span class="col-type">FK &#8594; purchase_orders NN</span></div>
+          <div class="col-row"><span class="col-name fk">quotation_item_id</span><span class="col-type">FK &#8594; quotation_items</span></div>
+          <div class="col-row"><span class="col-name">line_number</span><span class="col-type">SMALLINT NN</span></div>
+          <div class="col-row"><span class="col-name">item_type</span><span class="col-type">VARCHAR(20) NN CHK</span></div>
+          <div class="col-section">Item Detail</div>
+          <div class="col-row"><span class="col-name fk">offered_item_id</span><span class="col-type">FK &#8594; items</span></div>
+          <div class="col-row"><span class="col-name">qty</span><span class="col-type">NUMERIC(12,2) NN</span></div>
+          <div class="col-row"><span class="col-name fk">unit_id</span><span class="col-type">FK &#8594; units</span></div>
+          <div class="col-section">Pricing</div>
+          <div class="col-row"><span class="col-name">selling_price</span><span class="col-type">NUMERIC(15,2) NN</span></div>
+          <div class="col-row"><span class="col-name">cost_price</span><span class="col-type">NUMERIC(15,2) &#8592; vp</span></div>
+          <div class="col-section">Computed (Generated)</div>
+          <div class="col-row"><span class="col-name gen">total_selling</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name gen">discount_amount</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name gen">subtotal</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name gen">total_cost</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name gen">profit_amount</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name gen">profit_pct</span><span class="col-type">GENERATED</span></div>
+          <div class="col-section">Other</div>
+          <div class="col-row"><span class="col-name">is_available</span><span class="col-type">BOOLEAN</span></div>
+          <div class="col-section">Audit</div>
+          <div class="col-row"><span class="col-name fk">created_by</span><span class="col-type">FK &#8594; users NN</span></div>
+          <div class="col-row"><span class="col-name fk">updated_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-section">Timestamps</div>
+          <div class="col-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+          <div class="col-row"><span class="col-name">updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+        <div class="entity-footer">UNIQUE(po_id, line_number)</div>
+      </div>
+
+      <div class="entity-card" style="left:2700px;top:60px;width:360px;">
+        <div class="entity-header" style="background:linear-gradient(135deg,#047857,#059669)">
+          &#128179; invoices <span class="badge">FIN</span>
+        </div>
+        <div class="entity-cols">
+          <div class="col-row"><span class="col-name pk">id</span><span class="col-type">BIGINT PK</span></div>
+          <div class="col-row"><span class="col-name">invoice_no</span><span class="col-type">VARCHAR(50) UQ NN</span></div>
+          <div class="col-row"><span class="col-name fk">quotation_id</span><span class="col-type">FK &#8594; quotations NN</span></div>
+          <div class="col-row"><span class="col-name fk">po_id</span><span class="col-type">FK &#8594; purchase_orders</span></div>
+          <div class="col-row"><span class="col-name fk">company_client_id</span><span class="col-type">FK &#8594; company_client NN</span></div>
+          <div class="col-section">Tanggal</div>
+          <div class="col-row"><span class="col-name">invoice_date</span><span class="col-type">DATE NN</span></div>
+          <div class="col-row"><span class="col-name">due_date</span><span class="col-type">DATE</span></div>
+          <div class="col-section">Finansial</div>
+          <div class="col-row"><span class="col-name">subtotal</span><span class="col-type">NUMERIC(15,2)</span></div>
+          <div class="col-row"><span class="col-name">dpp</span><span class="col-type">NUMERIC(15,2)</span></div>
+          <div class="col-row"><span class="col-name gen">dpp_nilai_lain</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name">ppn_rate</span><span class="col-type">NUMERIC(4,2) CHK=12</span></div>
+          <div class="col-row"><span class="col-name gen">ppn_amount</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name gen">total</span><span class="col-type">GENERATED</span></div>
+          <div class="col-section">Pajak / Coretax</div>
+          <div class="col-row"><span class="col-name">tax_transaction_code</span><span class="col-type">VARCHAR(2)</span></div>
+          <div class="col-row"><span class="col-name">faktur_type</span><span class="col-type">VARCHAR(10)</span></div>
+          <div class="col-row"><span class="col-name">status</span><span class="col-type">VARCHAR(20) NN CHK</span></div>
+          <div class="col-row"><span class="col-name fk">created_by</span><span class="col-type">FK &#8594; users NN</span></div>
+          <div class="col-row"><span class="col-name fk">updated_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-section">Concurrency</div>
+          <div class="col-row"><span class="col-name">row_version</span><span class="col-type">INT NN</span></div>
+          <div class="col-section">Timestamps</div>
+          <div class="col-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+          <div class="col-row"><span class="col-name">updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+        <div class="entity-footer">Status: draft|sent|paid|overdue|cancelled</div>
+      </div>
+
+      <div class="entity-card" style="left:2700px;top:850px;width:380px;">
+        <div class="entity-header" style="background:linear-gradient(135deg,#047857,#059669)">
+          &#128203; invoice_items <span class="badge">FIN</span>
+        </div>
+        <div class="entity-cols">
+          <div class="col-row"><span class="col-name pk">id</span><span class="col-type">BIGINT PK</span></div>
+          <div class="col-row"><span class="col-name fk">invoice_id</span><span class="col-type">FK &#8594; invoices NN</span></div>
+          <div class="col-row"><span class="col-name fk">quotation_item_id</span><span class="col-type">FK &#8594; q_items</span></div>
+          <div class="col-section">Snapshot</div>
+          <div class="col-row"><span class="col-name">line_type</span><span class="col-type">VARCHAR(20) NN</span></div>
+          <div class="col-row"><span class="col-name">item_name</span><span class="col-type">VARCHAR(500) NN</span></div>
+          <div class="col-row"><span class="col-name">item_code</span><span class="col-type">VARCHAR(20)</span></div>
+          <div class="col-row"><span class="col-name">goods_or_service</span><span class="col-type">CHAR(1)</span></div>
+          <div class="col-row"><span class="col-name">unit_code</span><span class="col-type">VARCHAR(10)</span></div>
+          <div class="col-section">Finansial</div>
+          <div class="col-row"><span class="col-name">qty</span><span class="col-type">NUMERIC(12,2) NN</span></div>
+          <div class="col-row"><span class="col-name">unit_price</span><span class="col-type">NUMERIC(15,2) NN</span></div>
+          <div class="col-row"><span class="col-name">dpp</span><span class="col-type">NUMERIC(15,2)</span></div>
+          <div class="col-row"><span class="col-name">dpp_nilai_lain</span><span class="col-type">NUMERIC(15,2)</span></div>
+          <div class="col-row"><span class="col-name">ppn_rate</span><span class="col-type">NUMERIC(4,2)</span></div>
+          <div class="col-row"><span class="col-name">ppn_amount</span><span class="col-type">NUMERIC(15,2)</span></div>
+          <div class="col-section">Audit</div>
+          <div class="col-row"><span class="col-name fk">created_by</span><span class="col-type">FK &#8594; users NN</span></div>
+          <div class="col-row"><span class="col-name fk">updated_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-section">Timestamps</div>
+          <div class="col-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+      </div>
+
+      <div class="entity-card" style="left:2700px;top:1600px;width:320px;">
+        <div class="entity-header" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)">
+          &#128100; users <span class="badge">SYS</span>
+        </div>
+        <div class="entity-cols">
+          <div class="col-row"><span class="col-name pk">id</span><span class="col-type">BIGINT PK</span></div>
+          <div class="col-row"><span class="col-name">email</span><span class="col-type">VARCHAR(255) UQ NN</span></div>
+          <div class="col-row"><span class="col-name">name</span><span class="col-type">VARCHAR(255) NN</span></div>
+          <div class="col-row"><span class="col-name">password_hash</span><span class="col-type">VARCHAR(255) NN</span></div>
+          <div class="col-row"><span class="col-name">role</span><span class="col-type">VARCHAR(20) NN CHK</span></div>
+          <div class="col-row"><span class="col-name">is_active</span><span class="col-type">BOOLEAN NN</span></div>
+          <div class="col-section">Audit</div>
+          <div class="col-row"><span class="col-name fk">created_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-row"><span class="col-name fk">updated_by</span><span class="col-type">FK &#8594; users</span></div>
+          <div class="col-section">Timestamps</div>
+          <div class="col-row"><span class="col-name">created_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+          <div class="col-row"><span class="col-name">updated_at</span><span class="col-type">TIMESTAMPTZ</span></div>
+        </div>
+        <div class="entity-footer">Roles: operational | finance | superadmin</div>
+      </div>
+
+    </div></div><div class="erd-legend">
+    <h4>Legenda Garis</h4>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--blue)"></div> FK &#8594; PK (Master)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--amber)"></div> FK &#8594; PK (Transaction)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--green)"></div> FK &#8594; PK (Finance)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--purple)"></div> FK &#8594; PK (System)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:transparent;border-top:2px dashed var(--text-dim);height:0"></div> Dashed = opsional/cross</div>
+    <h4 style="margin-top:10px">Kolom</h4>
+    <div class="legend-item"><span style="color:var(--gold);font-family:monospace;font-size:.8rem;font-weight:700">pk_col</span> Primary Key</div>
+    <div class="legend-item"><span style="color:var(--red);font-family:monospace;font-size:.8rem">fk_col</span> Foreign Key</div>
+    <div class="legend-item"><span style="color:var(--cyan);font-family:monospace;font-size:.8rem;font-style:italic">gen_col</span> Generated</div>
+  </div>
+
+  <div class="zoom-controls">
+    <button class="zoom-btn" onclick="zoomIn()" title="Zoom In (+)">+</button>
+    <div class="zoom-label" id="zoom-label">100%</div>
+    <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out (-)">&#8722;</button>
+    <button class="zoom-btn" onclick="zoomReset()" title="Reset (0)" style="font-size:.75rem">&#8634;</button>
+  </div>
+</div>
+
+<div id="dict-tab" class="tab-content">
+  <nav class="dict-sidebar">
+    <div class="group-title" style="color:var(--text-bright)">&#128218; Navigasi</div>
+    <a href="#flow-overview" onclick="scrollDict(this)">Alur Bisnis</a>
+
+    <div class="group-title" style="color:var(--blue)">&#9632; Master Data</div>
+    <a href="#tbl-company_client" onclick="scrollDict(this)">&#127970; company_client</a>
+    <a href="#tbl-company_contacts" onclick="scrollDict(this)">&#128101; company_contacts</a>
+    <a href="#tbl-vendors" onclick="scrollDict(this)">&#127978; vendors</a>
+    <a href="#tbl-units" onclick="scrollDict(this)">&#128207; units</a>
+    <a href="#tbl-items" onclick="scrollDict(this)">&#128230; items</a>
+    <a href="#tbl-vendor_products" onclick="scrollDict(this)">&#128722; vendor_products</a>
+    <a href="#tbl-item_request_matches" onclick="scrollDict(this)">&#128270; item_request_matches</a>
+
+    <div class="group-title" style="color:var(--amber)">&#9632; Transaction</div>
+    <a href="#tbl-quotations" onclick="scrollDict(this)">&#128196; quotations</a>
+    <a href="#tbl-quotation_items" onclick="scrollDict(this)">&#128221; quotation_items</a>
+    <a href="#tbl-purchase_orders" onclick="scrollDict(this)">&#128230; purchase_orders</a>
+    <a href="#tbl-purchase_order_items" onclick="scrollDict(this)">&#128203; purchase_order_items</a>
+
+    <div class="group-title" style="color:var(--green)">&#9632; Finance</div>
+    <a href="#tbl-invoices" onclick="scrollDict(this)">&#128179; invoices</a>
+    <a href="#tbl-invoice_items" onclick="scrollDict(this)">&#128203; invoice_items</a>
+
+    <div class="group-title" style="color:var(--purple)">&#9632; System</div>
+    <a href="#tbl-users" onclick="scrollDict(this)">&#128100; users</a>
+  </nav>
+
+  <div class="dict-main" id="dict-main">
+
+    <div class="flow-box" id="flow-overview">
+      <h2>&#128640; Alur Bisnis Sistem Quotation</h2>
+      <div class="flow-steps" style="margin-top:14px">
+        <div class="flow-step">&#128230; Client (company + contact person) minta barang</div>
+        <span class="flow-arrow">&#10132;</span>
+        <div class="flow-step">&#128221; Operasional buat Quotation + item dari histori &mdash; harga otomatis kena diskon 5%</div>
+        <span class="flow-arrow">&#10132;</span>
+        <div class="flow-step">&#128228; Quotation dikirim ke client</div>
+        <span class="flow-arrow">&#10132;</span>
+        <div class="flow-step">&#128172; Client setuju?</div>
+      </div>
+      <div class="flow-branch" style="margin-top:10px;margin-left:24px">
+        <div class="flow-step" style="border-left:3px solid var(--red)">&#10060; Reject &#10132; Buat revision (versi baru, data lama tetap tersimpan)</div>
+        <div class="flow-step" style="border-left:3px solid var(--green)">&#9989; Setuju &#10132; Client kirim PO &#10132; Upload PO ke sistem &#10132; Verifikasi PO vs Quotation &#10132; Buat Invoice &#10132; Export Coretax</div>
+      </div>
+      <p style="margin-top:12px;font-size:.82rem;color:var(--text-dim)">
+        <strong>Penomoran:</strong> &nbsp;
+        Quotation: <code>Q-{YY}{kode_client}{seq}/GNS/{Bulan Roman}/{YYYY}</code> &nbsp;|&nbsp;
+        PO: <code>PO-...</code> &nbsp;|&nbsp;
+        Invoice: <code>INV-...</code>
+        &nbsp;&mdash; contoh: <strong>Q-264128/GNS/IV/2026</strong>
+      </p>
+      <p style="margin-top:8px;font-size:.8rem;color:var(--text-dim)">
+        <strong>Pricing flow:</strong> Total &#8594; Diskon 5% (product saja, hardcoded) &#8594; Sub Total &#8594; DPP Nilai Lain (×11/12) &#8594; PPN 12% (fixed) &#8594; <strong>Grand Total = DPP Nilai Lain + PPN</strong>
+      </p>
+      <p style="margin-top:8px;font-size:.8rem;color:var(--text-dim)">
+        <strong>14 tabel:</strong> 7 Master Data (biru) + 4 Transaction (amber) + 2 Finance (hijau) + 1 System (ungu)
+      </p>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:28px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.8rem;color:var(--text-dim)">
+      <span style="font-weight:600;color:var(--text);margin-right:4px">Keterangan kolom:</span>
+      <span><span class="cbadge cbadge-auto">AUTO</span> &nbsp;Diisi otomatis oleh sistem (id, timestamps)</span>
+      <span style="color:var(--border)">|</span>
+      <span><span class="cbadge cbadge-gen">GENERATED</span> &nbsp;Dihitung otomatis dari kolom lain (DB computed)</span>
+      <span style="color:var(--border)">|</span>
+      <span><span class="cbadge cbadge-fk">FK</span> &nbsp;Referensi ke tabel lain</span>
+      <span style="color:var(--border)">|</span>
+      <span style="color:var(--text)">Tanpa badge = diisi <strong>manual</strong> oleh user</span>
+    </div>
+
+    <div class="table-section" id="tbl-company_client">
+      <div class="table-section-header">
+        <h3>&#127970; company_client</h3>
+        <span class="layer-badge" style="background:var(--blue)">Master Data</span>
+      </div>
+      <p class="table-desc">
+        Data perusahaan pelanggan (level korporat). Menyimpan info pajak (NPWP, TKU) untuk Coretax.
+        Satu perusahaan bisa memiliki banyak contact person (<code style="color:var(--cyan)">company_contacts</code>) dan banyak quotation.
+        <code style="color:var(--cyan)">number</code> adalah kode singkat perusahaan (2 digit) yang digunakan dalam penomoran quotation.
+        Contoh: kode "41" → quotation no. <strong>Q-264128/GNS/IV/2026</strong> (26=tahun, 41=kode, 28=seq).
+      </p>
+      <div class="example-box">
+        number = "41" &nbsp;|&nbsp; name = "PT. IMC Ship Management" &nbsp;|&nbsp; npwp = "0438600371022000" &nbsp;|&nbsp; country_code = "IDN"
+      </div>
+      <table class="attr-table">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Kegunaan</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td class="col-nm pk">id <span class="cbadge cbadge-pk">PK</span></td><td class="col-tp">BIGINT</td><td>Primary key, auto-increment</td><td>1</td></tr>
+          <tr><td class="col-nm">number <span class="cbadge cbadge-uq">UNIQUE</span></td><td class="col-tp">VARCHAR(10)</td><td>Kode singkat perusahaan — dipakai di format penomoran quotation/PO/invoice. Wajib diisi sebelum quotation dibuat.</td><td>41</td></tr>
+          <tr><td class="col-nm">name <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">VARCHAR(255)</td><td>Nama resmi perusahaan pelanggan</td><td>PT. IMC Ship Management</td></tr>
+          <tr><td class="col-nm">npwp</td><td class="col-tp">VARCHAR(20)</td><td>NPWP perusahaan untuk faktur pajak Coretax</td><td>0438600371022000</td></tr>
+          <tr><td class="col-nm">address</td><td class="col-tp">TEXT</td><td>Alamat lengkap kantor</td><td>Gedung Wirausaha Lt 1, Jl. HR. Rasuna Said Kav. C5</td></tr>
+          <tr><td class="col-nm">email</td><td class="col-tp">VARCHAR(255)</td><td>Email resmi perusahaan (bukan personal)</td><td>procurement@imc-shipmanagement.com</td></tr>
+          <tr><td class="col-nm">country_code</td><td class="col-tp">CHAR(3)</td><td>Kode negara ISO 3166-1 alpha-3. Dropdown: IDN | SGP | MYS | PHL | AUS | ...</td><td>IDN</td></tr>
+          <tr><td class="col-nm">tku_id</td><td class="col-tp">VARCHAR(30)</td><td>Tempat Kegiatan Usaha — ID lokasi di sistem Coretax DJP</td><td>000000000000000</td></tr>
+          <tr><td class="col-nm">is_active <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BOOLEAN</td><td>Soft delete flag (default TRUE). FALSE = tidak bisa dipakai di quotation baru.</td><td>true</td></tr>
+          <tr class="section-divider"><td colspan="4">Audit Trail</td></tr>
+          <tr><td class="col-nm fk">created_by <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>User yang membuat record → users.id</td><td>2</td></tr>
+          <tr><td class="col-nm fk">updated_by <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>User yang terakhir mengubah record → users.id</td><td>2</td></tr>
+          <tr class="section-divider"><td colspan="4">Timestamps</td></tr>
+          <tr><td class="col-nm">created_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu record dibuat</td><td>2025-08-01 09:00:00+07</td></tr>
+          <tr><td class="col-nm">updated_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu terakhir diubah</td><td>2025-08-15 14:30:00+07</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-section" id="tbl-company_contacts">
+      <div class="table-section-header">
+        <h3>&#128101; company_contacts</h3>
+        <span class="layer-badge" style="background:var(--blue)">Master Data</span>
+      </div>
+      <p class="table-desc">
+        Data contact person milik perusahaan pelanggan. Satu <code style="color:var(--cyan)">company_client</code> dapat memiliki banyak contact.
+        Quotation dibuat untuk perusahaan (<code style="color:var(--cyan)">company_client_id</code>) namun ditujukan ke contact tertentu (<code style="color:var(--cyan)">contact_id</code>), seperti field <em>Attn</em> di dokumen quotation PDF.
+      </p>
+      <div class="example-box">
+        company_id = 1 (PT. IMC Ship Management) &nbsp;|&nbsp; name = "Bp. Restu Umar Singgih" &nbsp;|&nbsp; email = "restu.singgih@imc-shipmanagement.com"
+      </div>
+      <table class="attr-table">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Kegunaan</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td class="col-nm pk">id <span class="cbadge cbadge-pk">PK</span></td><td class="col-tp">BIGINT</td><td>Primary key, auto-increment</td><td>1</td></tr>
+          <tr><td class="col-nm fk">company_id <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>Perusahaan tempat person ini bekerja → company_client.id</td><td>1</td></tr>
+          <tr><td class="col-nm">name <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">VARCHAR(255)</td><td>Nama lengkap contact person</td><td>Bp. Restu Umar Singgih</td></tr>
+          <tr><td class="col-nm">email</td><td class="col-tp">VARCHAR(255)</td><td>Email pribadi/kerja contact person</td><td>restu.singgih@imc-shipmanagement.com</td></tr>
+          <tr><td class="col-nm">phone</td><td class="col-tp">VARCHAR(50)</td><td>Nomor telepon/WA contact person</td><td>+628112345678</td></tr>
+          <tr><td class="col-nm">title</td><td class="col-tp">VARCHAR(100)</td><td>Jabatan / posisi di perusahaan</td><td>Procurement Manager</td></tr>
+          <tr><td class="col-nm">is_active <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BOOLEAN</td><td>Soft delete flag (default TRUE)</td><td>true</td></tr>
+          <tr class="section-divider"><td colspan="4">Audit Trail</td></tr>
+          <tr><td class="col-nm fk">created_by <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>User yang membuat record → users.id</td><td>2</td></tr>
+          <tr><td class="col-nm fk">updated_by <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>User yang terakhir mengubah record → users.id</td><td>2</td></tr>
+          <tr class="section-divider"><td colspan="4">Timestamps</td></tr>
+          <tr><td class="col-nm">created_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu record dibuat</td><td>2025-08-01 09:00:00+07</td></tr>
+          <tr><td class="col-nm">updated_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu terakhir diubah</td><td>2025-08-15 14:30:00+07</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-section" id="tbl-vendors">
+      <div class="table-section-header">
+        <h3>&#127978; vendors</h3>
+        <span class="layer-badge" style="background:var(--blue)">Master Data</span>
+      </div>
+      <p class="table-desc">
+        Data supplier/toko tempat membeli barang (Tokopedia, Shopee, fisik). Satu vendor bisa menjual banyak item melalui tabel vendor_products.
+      </p>
+      <div class="example-box">
+        name = "Usaha Bersama Plastic" &nbsp;|&nbsp; location = "Toped"
+      </div>
+      <table class="attr-table">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Kegunaan</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td class="col-nm pk">id <span class="cbadge cbadge-pk">PK</span></td><td class="col-tp">BIGINT</td><td>Primary key, auto-increment</td><td>1</td></tr>
+          <tr><td class="col-nm">name <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">VARCHAR(255)</td><td>Nama vendor/supplier</td><td>Usaha Bersama Plastic</td></tr>
+          <tr><td class="col-nm">location</td><td class="col-tp">VARCHAR(255)</td><td>Platform/lokasi (marketplace atau kota)</td><td>Toped</td></tr>
+          <tr><td class="col-nm">contact_info</td><td class="col-tp">JSONB</td><td>Info kontak fleksibel (telp, WA, email, dll)</td><td>{"wa": "081234567890"}</td></tr>
+          <tr><td class="col-nm">is_active <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BOOLEAN</td><td>Soft delete flag (default TRUE)</td><td>true</td></tr>
+          <tr class="section-divider"><td colspan="4">Audit Trail</td></tr>
+          <tr><td class="col-nm fk">created_by <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>User yang membuat record → users.id</td><td>2</td></tr>
+          <tr><td class="col-nm fk">updated_by <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>User yang terakhir mengubah record → users.id</td><td>2</td></tr>
+          <tr class="section-divider"><td colspan="4">Timestamps</td></tr>
+          <tr><td class="col-nm">created_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu record dibuat</td><td>2025-06-10 10:00:00+07</td></tr>
+          <tr><td class="col-nm">updated_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu terakhir diubah</td><td>2025-06-10 10:00:00+07</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-section" id="tbl-units">
+      <div class="table-section-header">
+        <h3>&#128207; units</h3>
+        <span class="layer-badge" style="background:var(--blue)">Master Data</span>
+      </div>
+      <p class="table-desc">
+        Master satuan ukur yang sudah dinormalisasi. Data historis punya 87 varian (BOX/Box/box) &mdash; tabel ini menyatukannya jadi ~15 standar. Juga menyimpan kode Coretax (UM.0021).
+      </p>
+      <div class="example-box">
+        code = "PCS" &nbsp;|&nbsp; coretax_code = "UM.0021"
+      </div>
+      <table class="attr-table">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Kegunaan</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td class="col-nm pk">id <span class="cbadge cbadge-pk">PK</span></td><td class="col-tp">SMALLINT</td><td>Primary key, auto-increment</td><td>1</td></tr>
+          <tr><td class="col-nm">code <span class="cbadge cbadge-uq">UNIQUE</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">VARCHAR(20)</td><td>Kode satuan standar (uppercase)</td><td>PCS</td></tr>
+          <tr><td class="col-nm">name</td><td class="col-tp">VARCHAR(50)</td><td>Nama lengkap satuan</td><td>Pieces</td></tr>
+          <tr><td class="col-nm">coretax_code</td><td class="col-tp">VARCHAR(10)</td><td>Kode satuan di sistem Coretax DJP</td><td>UM.0021</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-section" id="tbl-items">
+      <div class="table-section-header">
+        <h3>&#128230; items</h3>
+        <span class="layer-badge" style="background:var(--blue)">Master Data</span>
+      </div>
+      <p class="table-desc">
+        Katalog master semua barang yang pernah ditawarkan. Basis fitur pencarian/rekomendasi.
+        <code style="color:var(--cyan)">impa_code</code> langsung disimpan sebagai kolom VARCHAR (bukan FK ke tabel lain).
+      </p>
+      <div class="example-box">
+        name = "Pasta gigi 190gr Pepsodent" &nbsp;|&nbsp; impa_code = "110920"<br>
+        name = "RINSO DETERGENT 770gr" &nbsp;|&nbsp; impa_code = NULL
+      </div>
+      <table class="attr-table">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Kegunaan</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td class="col-nm pk">id <span class="cbadge cbadge-pk">PK</span></td><td class="col-tp">BIGINT</td><td>Primary key, auto-increment</td><td>1</td></tr>
+          <tr><td class="col-nm">name <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">VARCHAR(500)</td><td>Nama lengkap barang (bahasa campur OK)</td><td>Pasta gigi 190gr Pepsodent</td></tr>
+          <tr><td class="col-nm">impa_code</td><td class="col-tp">VARCHAR(20)</td><td>Kode IMPA (International Maritime Purchasing Association), langsung di kolom</td><td>110920</td></tr>
+          <tr><td class="col-nm fk">default_unit_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">SMALLINT</td><td>Satuan default barang ini &#8594; units.id</td><td>1 (PCS)</td></tr>
+          <tr><td class="col-nm">is_active <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BOOLEAN</td><td>Soft delete flag (default TRUE)</td><td>true</td></tr>
+          <tr class="section-divider"><td colspan="4">Audit Trail</td></tr>
+          <tr><td class="col-nm fk">created_by <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>User yang membuat record → users.id</td><td>2</td></tr>
+          <tr><td class="col-nm fk">updated_by <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>User yang terakhir mengubah record → users.id</td><td>2</td></tr>
+          <tr class="section-divider"><td colspan="4">Timestamps</td></tr>
+          <tr><td class="col-nm">created_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu record dibuat</td><td>2025-07-01 08:00:00+07</td></tr>
+          <tr><td class="col-nm">updated_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu terakhir diubah</td><td>2025-07-01 08:00:00+07</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-section" id="tbl-vendor_products">
+      <div class="table-section-header">
+        <h3>&#128722; vendor_products</h3>
+        <span class="layer-badge" style="background:var(--blue)">Master Data</span>
+      </div>
+      <p class="table-desc">
+        Penghubung item dan vendor. "Vendor X menjual item Y dengan harga modal Z". Untuk rekomendasi vendor ke operasional. Constraint UNIQUE pada kombinasi (vendor_id, item_id).
+      </p>
+      <div class="example-box">
+        vendor = "Usaha Bersama Plastic" &nbsp;|&nbsp; item = "Laundry Pinches Plastic" &nbsp;|&nbsp; cost_price = 15,000
+      </div>
+      <table class="attr-table">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Kegunaan</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td class="col-nm pk">id <span class="cbadge cbadge-pk">PK</span></td><td class="col-tp">BIGINT</td><td>Primary key, auto-increment</td><td>1</td></tr>
+          <tr><td class="col-nm fk">vendor_id <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-uq">UNIQUE*</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>Referensi ke vendor &#8594; vendors.id</td><td>3</td></tr>
+          <tr><td class="col-nm fk">item_id <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-uq">UNIQUE*</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>Referensi ke item &#8594; items.id</td><td>42</td></tr>
+          <tr><td class="col-nm">vendor_sku</td><td class="col-tp">VARCHAR(100)</td><td>Kode SKU di marketplace/vendor</td><td>UBP-LP-001</td></tr>
+          <tr><td class="col-nm">cost_price <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">NUMERIC(15,2)</td><td>Harga modal terakhir dari vendor</td><td>15000.00</td></tr>
+          <tr><td class="col-nm">last_quoted_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Terakhir dipakai di quotation</td><td>2025-09-01 10:00:00+07</td></tr>
+          <tr><td class="col-nm">is_active <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BOOLEAN</td><td>Soft delete flag (default TRUE)</td><td>true</td></tr>
+          <tr class="section-divider"><td colspan="4">Audit Trail</td></tr>
+          <tr><td class="col-nm fk">created_by <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>User yang membuat record → users.id</td><td>2</td></tr>
+          <tr><td class="col-nm fk">updated_by <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>User yang terakhir mengubah record → users.id</td><td>2</td></tr>
+          <tr class="section-divider"><td colspan="4">Timestamps</td></tr>
+          <tr><td class="col-nm">created_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu record dibuat</td><td>2025-06-15 09:00:00+07</td></tr>
+          <tr><td class="col-nm">updated_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu terakhir diubah</td><td>2025-09-01 10:00:00+07</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.78rem;color:var(--text-dim);margin-top:4px">* UNIQUE constraint pada kombinasi (vendor_id, item_id) &mdash; satu vendor hanya bisa punya satu entry per item.</p>
+    </div>
+
+    <div class="table-section" id="tbl-item_request_matches">
+      <div class="table-section-header">
+        <h3>&#128270; item_request_matches</h3>
+        <span class="layer-badge" style="background:var(--blue)">Master Data</span>
+      </div>
+      <p class="table-desc">
+        Rekomendasi otomatis. Menyimpan "kalau client minta X, biasanya kita tawarkan Y".
+        Semakin tinggi match_count = semakin sering direkomendasikan. Belajar dari perilaku user tanpa ML.
+      </p>
+      <div class="example-box">
+        request_text = "TOOTH PASTE COLGATE 140GRM"<br>
+        matched_item = "Pasta gigi 190gr Pepsodent" &nbsp;|&nbsp; match_count = 12
+      </div>
+      <table class="attr-table">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Kegunaan</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td class="col-nm pk">id <span class="cbadge cbadge-pk">PK</span></td><td class="col-tp">BIGINT</td><td>Primary key, auto-increment</td><td>1</td></tr>
+          <tr><td class="col-nm">request_text <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">TEXT</td><td>Teks permintaan asli dari client (tanpa normalisasi)</td><td>TOOTH PASTE COLGATE 140GRM</td></tr>
+          <tr><td class="col-nm fk">matched_item_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Item yang biasa ditawarkan &#8594; items.id</td><td>15</td></tr>
+          <tr><td class="col-nm">match_count</td><td class="col-tp">INT</td><td>Counter berapa kali match ini dipilih (default 1)</td><td>12</td></tr>
+          <tr><td class="col-nm">last_used_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Terakhir dipakai</td><td>2025-10-01 14:00:00+07</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-section" id="tbl-quotations">
+      <div class="table-section-header">
+        <h3>&#128196; quotations</h3>
+        <span class="layer-badge" style="background:var(--amber)">Transaction</span>
+      </div>
+      <p class="table-desc">
+        Header quotation (penawaran harga). Mendukung revision system — jika client reject, buat versi baru (bukan edit lama).
+        Quotation dibuat untuk perusahaan (<code style="color:var(--cyan)">company_client_id</code>) dan ditujukan ke contact (<code style="color:var(--cyan)">contact_id</code>).<br>
+        <strong>Format nomor:</strong> <code>Q-{YY}{kode_client}{seq}/GNS/{Bulan Roman}/{YYYY}</code> — contoh: <strong>Q-264128/GNS/IV/2026</strong><br>
+        <strong>Status flow:</strong> draft &#10132; sent &#10132; accepted | rejected &#10132; revised
+      </p>
+      <div class="example-box">
+        quotation_no = "Q-264128/GNS/IV/2026" &nbsp;|&nbsp; version = 1 &nbsp;|&nbsp; status = "sent"<br>
+        client_ref_no = "8404/V-0006/REQ26" &nbsp;|&nbsp; vessel_name = "MV YUXIN SATU" &nbsp;|&nbsp; validity_days = 3
+      </div>
+      <table class="attr-table">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Kegunaan</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td class="col-nm pk">id <span class="cbadge cbadge-pk">PK</span></td><td class="col-tp">BIGINT</td><td>Primary key, auto-increment</td><td>1</td></tr>
+          <tr><td class="col-nm">quotation_no <span class="cbadge cbadge-uq">UNIQUE</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">VARCHAR(50)</td><td>Nomor unik. Format: Q-{YY}{kode_client}{seq}/GNS/{Roman}/{YYYY}. Seq reset per company per tahun.</td><td>Q-264128/GNS/IV/2026</td></tr>
+          <tr><td class="col-nm">version <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">INT</td><td>Versi revisi (1 = original, 2+ = revisi). Tidak pernah diubah setelah dibuat.</td><td>1</td></tr>
+          <tr><td class="col-nm fk">parent_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Self-reference ke quotation original → quotations.id (NULL jika original)</td><td>NULL</td></tr>
+          <tr><td class="col-nm fk">company_client_id <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>Perusahaan penerima quotation → company_client.id. Dipakai sebagai FK utama.</td><td>1</td></tr>
+          <tr><td class="col-nm">company_client_name <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">VARCHAR(255)</td><td><strong>SNAPSHOT</strong> nama perusahaan saat quotation dibuat. Diisi dari company_client.name di INSERT dan tidak berubah meskipun master direname — menjaga integritas dokumen historis.</td><td>PT. IMC Ship Management</td></tr>
+          <tr><td class="col-nm fk">contact_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Contact yang dituju (field Attn) → company_contacts.id. Nullable jika tidak diketahui.</td><td>3</td></tr>
+          <tr><td class="col-nm">contact_name</td><td class="col-tp">VARCHAR(255)</td><td><strong>SNAPSHOT</strong> nama contact saat quotation dibuat. Diisi dari company_contacts.name. Nullable jika contact_id NULL.</td><td>Bapak Andi</td></tr>
+          <tr><td class="col-nm">client_ref_no</td><td class="col-tp">VARCHAR(100)</td><td>Nomor referensi dokumen dari client (field "Your Ref No." di PDF). Nullable jika client tidak pakai nomor dokumen.</td><td>8404/V-0006/REQ26</td></tr>
+          <tr><td class="col-nm">vessel_name</td><td class="col-tp">VARCHAR(255)</td><td>Nama kapal tujuan pengiriman (contoh: MV YUXIN SATU). Nullable untuk pengiriman ke darat.</td><td>MV YUXIN SATU</td></tr>
+          <tr><td class="col-nm">status <span class="cbadge cbadge-nn">NOT NULL</span> <span class="cbadge cbadge-chk">CHECK</span></td><td class="col-tp">VARCHAR(20)</td><td>Status flow quotation. Dropdown: draft | sent | accepted | rejected | revised</td><td>sent</td></tr>
+          <tr><td class="col-nm fk">created_by <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>User pembuat quotation → users.id</td><td>2</td></tr>
+          <tr><td class="col-nm fk">updated_by <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>User yang terakhir mengubah → users.id</td><td>2</td></tr>
+          <tr><td class="col-nm">notes</td><td class="col-tp">TEXT</td><td>Catatan internal (tidak muncul di dokumen quotation)</td><td>Client minta dikirim sebelum akhir bulan</td></tr>
+          <tr><td class="col-nm">payment_terms</td><td class="col-tp">VARCHAR(100)</td><td>Syarat pembayaran — ditampilkan di dokumen quotation</td><td>30 days</td></tr>
+          <tr><td class="col-nm">validity_days</td><td class="col-tp">SMALLINT</td><td>Masa berlaku penawaran dalam hari</td><td>3</td></tr>
+          <tr class="section-divider"><td colspan="4">Financial Summary (diisi otomatis dari quotation_items)</td></tr>
+          <tr><td class="col-nm">total_produk</td><td class="col-tp">NUMERIC(15,2)</td><td>Total nilai item_type=<code>product</code> saja sebelum diskon (SUM total_selling untuk baris produk). Digunakan untuk breakdown product vs shipping di report. Diisi app layer.</td><td>125,823,000.00</td></tr>
+          <tr><td class="col-nm">total</td><td class="col-tp">NUMERIC(15,2)</td><td>Total semua baris sebelum diskon (SUM dari total_selling tiap item, product + shipping). Diisi app layer.</td><td>126,323,000.00</td></tr>
+          <tr><td class="col-nm">total_discount</td><td class="col-tp">NUMERIC(15,2)</td><td>Total diskon (SUM dari discount_amount tiap item). Diisi app layer.</td><td>6,316,150.00</td></tr>
+          <tr><td class="col-nm gen">subtotal <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>total − total_discount</code> — Sub Total setelah diskon (level-1)</td><td>120,006,850.00</td></tr>
+          <tr><td class="col-nm gen">dpp_nilai_lain <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>(total − total_discount) × 11/12</code> — langsung ke base stored (level-1)</td><td>110,006,279.00</td></tr>
+          <tr><td class="col-nm gen">ppn_amount <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>(total − total_discount) × 11/12 × 0.12</code> — langsung ke base (level-1)</td><td>13,200,754.00</td></tr>
+          <tr><td class="col-nm gen">grand_total <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>(total − total_discount) × 11/12 × 1.12</code> — = DPP + PPN (level-1)</td><td>123,207,033.00</td></tr>
+          <tr class="section-divider"><td colspan="4">Concurrency (Optimistic Locking)</td></tr>
+          <tr><td class="col-nm">row_version <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">INT</td><td>Counter yang di-increment tiap UPDATE. App layer pakai <code>WHERE id=? AND row_version=?</code> untuk detect concurrent edit — kalau affected_rows=0, throw conflict error.</td><td>3</td></tr>
+          <tr class="section-divider"><td colspan="4">Timestamps</td></tr>
+          <tr><td class="col-nm">created_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu quotation dibuat (DEFAULT NOW())</td><td>2026-04-01 09:00:00+07</td></tr>
+          <tr><td class="col-nm">updated_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu terakhir diubah (DEFAULT NOW(), auto-update via trigger)</td><td>2026-04-01 11:20:00+07</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-section" id="tbl-quotation_items">
+      <div class="table-section-header">
+        <h3>&#128221; quotation_items</h3>
+        <span class="layer-badge" style="background:var(--amber)">Transaction</span>
+      </div>
+      <p class="table-desc">
+        <strong>TABEL TERPENTING.</strong> Setiap baris item dalam quotation memiliki dua sisi:<br>
+        <strong>1. REQUEST</strong> (dari dokumen client) — disimpan verbatim di <code style="color:var(--cyan)">requested_impa</code> + <code style="color:var(--cyan)">requested_name</code>. Jika request matches ke item master, <code style="color:var(--cyan)">requested_item_id</code> diisi; jika tidak (item baru/tidak dikenal), tetap NULL tapi requested_name wajib diisi.<br>
+        <strong>2. OFFER</strong> (yang kita tawarkan) — mengacu ke <code style="color:var(--cyan)">offered_item_id</code> (master items kita) + <code style="color:var(--cyan)">vendor_product_id</code> (sumber pembelian).<br>
+        <strong>Diskon otomatis 5%</strong> untuk item_type = 'product'. Shipping tidak kena diskon. Generated columns menghitung profit dan subtotal per baris. UNIQUE pada (quotation_id, line_number).<br>
+        Jika client tidak bisa dipenuhi, set <code style="color:var(--cyan)">is_available = false</code> dan <code style="color:var(--cyan)">selling_price = 0</code> ("No Offer").
+      </p>
+
+      <table class="inline-table">
+        <thead>
+          <tr><th>Line</th><th>Req IMPA</th><th>Req Name</th><th>Type</th><th>Qty</th><th>Sell</th><th>Disc 5%</th><th>Subtotal</th><th>Profit</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td><td>550101</td><td>Safety Helmet</td><td>product</td>
+            <td class="num">1</td><td class="num">2,000,000</td><td class="num">100,000</td><td class="num">1,900,000</td><td class="num" style="color:var(--green)">66.7%</td>
+          </tr>
+          <tr>
+            <td>2</td><td>331205</td><td>Grease EP-2</td><td>product</td>
+            <td class="num">10</td><td class="num">145,000</td><td class="num">72,500</td><td class="num">1,377,500</td><td class="num" style="color:var(--green)">61.1%</td>
+          </tr>
+          <tr style="background:rgba(217,119,6,.05)">
+            <td>3</td><td>-</td><td>Freight to MV YUXIN SATU</td><td>shipping</td>
+            <td class="num">1</td><td class="num">500,000</td><td class="num">0</td><td class="num">500,000</td><td class="num" style="color:var(--green)">42.9%</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table class="attr-table">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Kegunaan</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td class="col-nm pk">id <span class="cbadge cbadge-pk">PK</span></td><td class="col-tp">BIGINT</td><td>Primary key, auto-increment</td><td>1</td></tr>
+          <tr><td class="col-nm fk">quotation_id <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>Header quotation → quotations.id</td><td>1</td></tr>
+          <tr><td class="col-nm">line_number <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">SMALLINT</td><td>Nomor urut baris (UNIQUE bersama quotation_id). Sesuai kolom "No." di dokumen PDF.</td><td>1</td></tr>
+          <tr><td class="col-nm">item_type <span class="cbadge cbadge-nn">NOT NULL</span> <span class="cbadge cbadge-chk">CHECK</span></td><td class="col-tp">VARCHAR(20)</td><td>Jenis baris. Dropdown: product | shipping. Menentukan apakah diskon 5% berlaku.</td><td>product</td></tr>
+
+          <tr class="section-divider"><td colspan="4">REQUEST — data mentah dari dokumen client (kolom REQUEST di PDF)</td></tr>
+          <tr><td class="col-nm fk">requested_item_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Link ke master items jika request cocok dengan catalog kita → items.id. <strong>Nullable</strong> jika client minta item baru/tidak dikenal — dalam hal ini tetap bisa dibuat quotation dengan requested_name saja.</td><td>42</td></tr>
+          <tr><td class="col-nm">requested_impa</td><td class="col-tp">VARCHAR(20)</td><td>Kode IMPA yang ditulis client di dokumen request — disimpan verbatim (snapshot). Bisa beda dari items.code kita kalau client pakai referensi berbeda. Nullable karena tidak semua request punya IMPA.</td><td>550101</td></tr>
+          <tr><td class="col-nm">requested_name <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">TEXT</td><td>Nama/deskripsi item persis seperti ditulis client di dokumen request. Snapshot wajib diisi untuk jejak audit — tidak ikut berubah meski master items diubah.</td><td>SAFETY HELMET, INDUSTRIAL WHITE</td></tr>
+
+          <tr class="section-divider"><td colspan="4">OFFER — item yang kita tawarkan (kolom OFFER DESCRIPTION di PDF)</td></tr>
+          <tr><td class="col-nm fk">offered_item_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Item yang kita tawarkan → items.id. Nullable jika item baru belum ada di master (biasanya segera dibuat setelah quotation accepted).</td><td>42</td></tr>
+          <tr><td class="col-nm fk">vendor_product_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Sumber pembelian item → vendor_products.id. Nullable jika belum ditentukan vendor.</td><td>15</td></tr>
+          <tr><td class="col-nm">qty <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">NUMERIC(12,2)</td><td>Jumlah/kuantitas yang ditawarkan</td><td>10.00</td></tr>
+          <tr><td class="col-nm fk">unit_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">SMALLINT</td><td>Satuan (PCS, TIN, SET, dll.) → units.id</td><td>1 (PCS)</td></tr>
+
+          <tr class="section-divider"><td colspan="4">Pricing</td></tr>
+          <tr><td class="col-nm">selling_price <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">NUMERIC(15,2)</td><td>Harga jual per unit (Unit Price di PDF). Set 0 untuk "No Offer".</td><td>145000.00</td></tr>
+          <tr><td class="col-nm">cost_price</td><td class="col-tp">NUMERIC(15,2)</td><td>Harga modal per unit — diambil otomatis dari vendor_products.cost_price saat vendor_product_id dipilih. Tidak diisi manual.</td><td>90000.00</td></tr>
+
+          <tr class="section-divider"><td colspan="4">Computed — Generated (semua level-1, referensi langsung ke base stored columns)</td></tr>
+          <tr><td class="col-nm gen">total_selling <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>qty × selling_price</code></td><td>1,450,000</td></tr>
+          <tr><td class="col-nm gen">discount_amount <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>CASE WHEN item_type='product' THEN qty × selling_price × 0.05 ELSE 0 END</code> — diskon 5% hardcoded, hanya product</td><td>72,500</td></tr>
+          <tr><td class="col-nm gen">subtotal <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>qty × selling_price × CASE WHEN item_type='product' THEN 0.95 ELSE 1 END</code></td><td>1,377,500</td></tr>
+          <tr><td class="col-nm gen">total_cost <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>qty × cost_price</code></td><td>900,000</td></tr>
+          <tr><td class="col-nm gen">profit_amount <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>qty × (selling_price − cost_price)</code></td><td>550,000</td></tr>
+          <tr><td class="col-nm gen">profit_pct <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(7,4)</td><td><code>(selling_price − cost_price) / NULLIF(cost_price, 0)</code></td><td>0.6111</td></tr>
+
+          <tr class="section-divider"><td colspan="4">Availability &amp; Shipping</td></tr>
+          <tr><td class="col-nm">is_available</td><td class="col-tp">BOOLEAN</td><td>FALSE = "No Offer". Default TRUE. Set FALSE jika item tidak bisa dipenuhi.</td><td>true</td></tr>
+          <tr><td class="col-nm">ship_destination</td><td class="col-tp">VARCHAR(255)</td><td>Tujuan pengiriman (hanya relevan untuk item_type = 'shipping')</td><td>MV YUXIN SATU — Pelabuhan Sangatta</td></tr>
+          <tr><td class="col-nm">due_date</td><td class="col-tp">DATE</td><td>Tanggal estimasi pengiriman yang disepakati dengan client. Opsional.</td><td>2026-04-06</td></tr>
+
+          <tr class="section-divider"><td colspan="4">Audit Trail</td></tr>
+          <tr><td class="col-nm fk">created_by <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>User yang membuat record → users.id</td><td>2</td></tr>
+          <tr><td class="col-nm fk">updated_by <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>User yang terakhir mengubah record → users.id</td><td>2</td></tr>
+          <tr class="section-divider"><td colspan="4">Concurrency</td></tr>
+          <tr><td class="col-nm">row_version <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">INT</td><td>Optimistic locking counter. Increment tiap UPDATE.</td><td>1</td></tr>
+          <tr class="section-divider"><td colspan="4">Timestamps</td></tr>
+          <tr><td class="col-nm">created_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu record dibuat (DEFAULT NOW())</td><td>2026-04-01 09:15:00+07</td></tr>
+          <tr><td class="col-nm">updated_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu terakhir diubah (DEFAULT NOW())</td><td>2026-04-01 10:30:00+07</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.78rem;color:var(--text-dim);margin-top:4px">item_type: <code>product</code> | <code>shipping</code> &mdash; Diskon 5% hanya berlaku untuk <code>product</code>. Shipping selalu 0%.</p>
+    </div>
+
+    <div class="table-section" id="tbl-purchase_orders">
+      <div class="table-section-header">
+        <h3>&#128230; purchase_orders</h3>
+        <span class="layer-badge" style="background:var(--amber)">Transaction</span>
+      </div>
+      <p class="table-desc">
+        Purchase Order dari client setelah quotation disetujui. Client mengirimkan PO (biasanya PDF/dokumen), lalu operasional meng-upload dan memverifikasi kesesuaiannya dengan quotation.
+        PO menjadi dasar pembuatan invoice. <code style="color:var(--cyan)">file_url</code> menyimpan link ke file PO yang di-upload.<br>
+        <strong>Format nomor:</strong> <code>PO-{YY}{kode_client}{seq}/GNS/{Roman}/{YYYY}</code>
+      </p>
+      <div class="example-box">
+        po_number = "PO-264129/GNS/IV/2026" &nbsp;|&nbsp; quotation_id = 1 &nbsp;|&nbsp; po_date = "2026-04-05" &nbsp;|&nbsp; status = "verified"
+      </div>
+      <table class="attr-table">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Kegunaan</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td class="col-nm pk">id <span class="cbadge cbadge-pk">PK</span></td><td class="col-tp">BIGINT</td><td>Primary key, auto-increment</td><td>1</td></tr>
+          <tr><td class="col-nm">po_number <span class="cbadge cbadge-uq">UNIQUE</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">VARCHAR(50)</td><td>Nomor PO internal. Format: PO-{YY}{kode}{seq}/GNS/{Roman}/{YYYY}</td><td>PO-264129/GNS/IV/2026</td></tr>
+          <tr><td class="col-nm fk">quotation_id <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>Quotation yang menjadi dasar PO → quotations.id</td><td>1</td></tr>
+          <tr><td class="col-nm fk">company_client_id <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>Perusahaan yang mengirim PO → company_client.id</td><td>1</td></tr>
+          <tr><td class="col-nm fk">contact_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Contact yang menandatangani PO → company_contacts.id. Nullable.</td><td>3</td></tr>
+          <tr><td class="col-nm">po_date <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">DATE</td><td>Tanggal PO diterima dari client</td><td>2026-04-05</td></tr>
+          <tr><td class="col-nm">status <span class="cbadge cbadge-nn">NOT NULL</span> <span class="cbadge cbadge-chk">CHECK</span></td><td class="col-tp">VARCHAR(20)</td><td>Status PO. Dropdown: PENDING | UPLOADED | ON PROGRESS | DELIVERED</td><td>UPLOADED</td></tr>
+          <tr><td class="col-nm">delivery_note_number</td><td class="col-tp">VARCHAR(50)</td><td>Nomor surat jalan / delivery note. Diisi saat status berubah ke DELIVERED.</td><td>DN-264131/GNS/IV/2026</td></tr>
+          <tr><td class="col-nm">notes</td><td class="col-tp">TEXT</td><td>Catatan internal (misalnya perbedaan antara PO dan quotation)</td><td>Client minta tambah qty item #3</td></tr>
+          <tr><td class="col-nm">file_url</td><td class="col-tp">VARCHAR(500)</td><td>URL file PO yang di-upload ke storage (PDF/image). Nullable jika belum di-upload.</td><td>https://storage/po/PO-264129.pdf</td></tr>
+          <tr class="section-divider"><td colspan="4">Audit Trail</td></tr>
+          <tr><td class="col-nm fk">created_by <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>User yang menginput PO → users.id</td><td>2</td></tr>
+          <tr><td class="col-nm fk">updated_by <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>User yang terakhir mengubah → users.id</td><td>2</td></tr>
+          <tr class="section-divider"><td colspan="4">Concurrency</td></tr>
+          <tr><td class="col-nm">row_version <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">INT</td><td>Optimistic locking counter.</td><td>0</td></tr>
+          <tr class="section-divider"><td colspan="4">Timestamps</td></tr>
+          <tr><td class="col-nm">created_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu PO diinput ke sistem (DEFAULT NOW())</td><td>2026-04-05 10:00:00+07</td></tr>
+          <tr><td class="col-nm">updated_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu terakhir diubah</td><td>2026-04-05 14:00:00+07</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.78rem;color:var(--text-dim);margin-top:4px">Status flow: <code>PENDING</code> → <code>UPLOADED</code> → <code>ON PROGRESS</code> → <code>DELIVERED</code></p>
+    </div>
+
+    <div class="table-section" id="tbl-purchase_order_items">
+      <div class="table-section-header">
+        <h3>&#128203; purchase_order_items</h3>
+        <span class="layer-badge" style="background:var(--amber)">Transaction</span>
+      </div>
+      <p class="table-desc">
+        Detail baris PO — <strong>mirror dari quotation_items</strong>. Merepresentasikan versi final item yang disetujui client.
+        <code style="color:var(--cyan)">quotation_item_id</code> = traceability ke baris quotation asal. Qty bisa berbeda jika client order parsial.
+        GENERATED columns identik dengan quotation_items (semua level-1).
+      </p>
+      <div class="example-box">
+        po_id = 1 &nbsp;|&nbsp; quotation_item_id = 1 &nbsp;|&nbsp; qty = 1 &nbsp;|&nbsp; selling_price = 2,000,000
+      </div>
+      <table class="attr-table">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Kegunaan</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td class="col-nm pk">id <span class="cbadge cbadge-pk">PK</span></td><td class="col-tp">BIGINT</td><td>Primary key, auto-increment</td><td>1</td></tr>
+          <tr><td class="col-nm fk">po_id <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>Header PO → purchase_orders.id</td><td>1</td></tr>
+          <tr><td class="col-nm fk">quotation_item_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Traceability → quotation_items.id (nullable jika item tambahan)</td><td>1</td></tr>
+          <tr><td class="col-nm">line_number <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">SMALLINT</td><td>Nomor urut (UNIQUE bersama po_id)</td><td>1</td></tr>
+          <tr><td class="col-nm">item_type <span class="cbadge cbadge-nn">NOT NULL</span> <span class="cbadge cbadge-chk">CHECK</span></td><td class="col-tp">VARCHAR(20)</td><td>Dropdown: product | shipping</td><td>product</td></tr>
+          <tr class="section-divider"><td colspan="4">Item Detail</td></tr>
+          <tr><td class="col-nm fk">offered_item_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Item yang di-order → items.id</td><td>42</td></tr>
+          <tr><td class="col-nm">qty <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">NUMERIC(12,2)</td><td>Kuantitas (bisa beda dari quotation)</td><td>1.00</td></tr>
+          <tr><td class="col-nm fk">unit_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">SMALLINT</td><td>Satuan → units.id</td><td>1</td></tr>
+          <tr class="section-divider"><td colspan="4">Pricing</td></tr>
+          <tr><td class="col-nm">selling_price <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">NUMERIC(15,2)</td><td>Harga jual per unit</td><td>2,000,000.00</td></tr>
+          <tr><td class="col-nm">cost_price</td><td class="col-tp">NUMERIC(15,2)</td><td>Harga modal dari vendor_products</td><td>1,200,000.00</td></tr>
+          <tr class="section-divider"><td colspan="4">Computed — Generated (identik quotation_items)</td></tr>
+          <tr><td class="col-nm gen">total_selling <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>qty × selling_price</code></td><td>2,000,000</td></tr>
+          <tr><td class="col-nm gen">discount_amount <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>CASE WHEN item_type='product' THEN qty × selling_price × 0.05 ELSE 0 END</code></td><td>100,000</td></tr>
+          <tr><td class="col-nm gen">subtotal <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>qty × selling_price × CASE WHEN ... THEN 0.95 ELSE 1 END</code></td><td>1,900,000</td></tr>
+          <tr><td class="col-nm gen">total_cost <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>qty × cost_price</code></td><td>1,200,000</td></tr>
+          <tr><td class="col-nm gen">profit_amount <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>qty × (selling_price − cost_price)</code></td><td>800,000</td></tr>
+          <tr><td class="col-nm gen">profit_pct <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(7,4)</td><td><code>(selling_price − cost_price) / NULLIF(cost_price, 0)</code></td><td>0.6667</td></tr>
+          <tr class="section-divider"><td colspan="4">Other</td></tr>
+          <tr><td class="col-nm">is_available</td><td class="col-tp">BOOLEAN</td><td>Default TRUE</td><td>true</td></tr>
+          <tr class="section-divider"><td colspan="4">Audit Trail</td></tr>
+          <tr><td class="col-nm fk">created_by <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>→ users.id</td><td>2</td></tr>
+          <tr><td class="col-nm fk">updated_by <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>→ users.id</td><td>2</td></tr>
+          <tr class="section-divider"><td colspan="4">Timestamps</td></tr>
+          <tr><td class="col-nm">created_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu dibuat</td><td>2026-04-05 10:15:00+07</td></tr>
+          <tr><td class="col-nm">updated_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu diubah</td><td>2026-04-05 14:00:00+07</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.78rem;color:var(--text-dim);margin-top:4px">UNIQUE(po_id, line_number)</p>
+    </div>
+
+    <div class="table-section" id="tbl-invoices">
+      <div class="table-section-header">
+        <h3>&#128179; invoices</h3>
+        <span class="layer-badge" style="background:var(--green)">Finance</span>
+      </div>
+      <p class="table-desc">
+        Faktur/tagihan setelah PO diverifikasi. Menyimpan total harga, pajak (PPN), dan field Coretax.
+        Link ke quotation via <code style="color:var(--cyan)">quotation_id</code> dan ke PO via <code style="color:var(--cyan)">po_id</code>.
+        Perusahaan yang ditagih via <code style="color:var(--cyan)">company_client_id</code>.<br>
+        <strong>Format nomor:</strong> <code>INV-{YY}{kode_client}{seq}/GNS/{Roman}/{YYYY}</code>
+      </p>
+      <div class="example-box">
+        invoice_no = "INV-264130/GNS/IV/2026" &nbsp;|&nbsp; quotation_id = 1 &nbsp;|&nbsp; po_id = 1<br>
+        ppn_rate = 12.00 &nbsp;|&nbsp; tax_transaction_code = "04"
+      </div>
+      <table class="attr-table">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Kegunaan</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td class="col-nm pk">id <span class="cbadge cbadge-pk">PK</span></td><td class="col-tp">BIGINT</td><td>Primary key, auto-increment</td><td>1</td></tr>
+          <tr><td class="col-nm">invoice_no <span class="cbadge cbadge-uq">UNIQUE</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">VARCHAR(50)</td><td>Nomor invoice unik. Format: INV-{YY}{kode}{seq}/GNS/{Roman}/{YYYY}</td><td>INV-264130/GNS/IV/2026</td></tr>
+          <tr><td class="col-nm fk">quotation_id <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>Quotation yang menjadi dasar invoice &#8594; quotations.id</td><td>1</td></tr>
+          <tr><td class="col-nm fk">po_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Purchase Order terkait &#8594; purchase_orders.id. Nullable jika invoice dibuat tanpa PO.</td><td>1</td></tr>
+          <tr><td class="col-nm fk">company_client_id <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>Perusahaan yang ditagih &#8594; company_client.id</td><td>1</td></tr>
+
+          <tr class="section-divider"><td colspan="4">Tanggal</td></tr>
+          <tr><td class="col-nm">invoice_date <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">DATE</td><td>Tanggal faktur diterbitkan</td><td>2026-04-15</td></tr>
+          <tr><td class="col-nm">due_date</td><td class="col-tp">DATE</td><td>Tanggal jatuh tempo pembayaran</td><td>2026-05-15</td></tr>
+
+          <tr class="section-divider"><td colspan="4">Finansial</td></tr>
+          <tr><td class="col-nm">subtotal</td><td class="col-tp">NUMERIC(15,2)</td><td>Total sebelum pajak (setelah diskon, diambil dari quotation subtotal). Diisi app layer.</td><td>120,006,850.00</td></tr>
+          <tr><td class="col-nm">dpp</td><td class="col-tp">NUMERIC(15,2)</td><td>Dasar Pengenaan Pajak. Biasanya sama dengan subtotal.</td><td>120,006,850.00</td></tr>
+          <tr><td class="col-nm gen">dpp_nilai_lain <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td>DPP Nilai Lain = dpp × 11/12</td><td>110,006,279.00</td></tr>
+          <tr><td class="col-nm">ppn_rate <span class="cbadge cbadge-nn">NOT NULL</span> <span class="cbadge cbadge-chk">CHECK</span></td><td class="col-tp">NUMERIC(4,2)</td><td>Tarif PPN — fixed 12.00. CHECK(ppn_rate = 12.00). Tidak ada dropdown, hardcoded.</td><td>12.00</td></tr>
+          <tr><td class="col-nm gen">ppn_amount <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td>PPN = dpp_nilai_lain × ppn_rate / 100</td><td>13,200,754.00</td></tr>
+          <tr><td class="col-nm gen">total <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td>Grand Total = dpp_nilai_lain + ppn_amount</td><td>123,207,033.00</td></tr>
+
+          <tr class="section-divider"><td colspan="4">Pajak / Coretax</td></tr>
+          <tr><td class="col-nm">tax_transaction_code</td><td class="col-tp">VARCHAR(2)</td><td>Kode transaksi Coretax (default '04'). Dropdown: 01 | 04 | 07 | 08 | 09</td><td>04</td></tr>
+          <tr><td class="col-nm">faktur_type</td><td class="col-tp">VARCHAR(10)</td><td>Tipe faktur Coretax (default 'Normal'). Dropdown: Normal | Pengganti | Pembatalan</td><td>Normal</td></tr>
+          <tr><td class="col-nm">status <span class="cbadge cbadge-nn">NOT NULL</span> <span class="cbadge cbadge-chk">CHECK</span></td><td class="col-tp">VARCHAR(20)</td><td>Dropdown: draft | sent | paid | overdue | cancelled</td><td>sent</td></tr>
+          <tr><td class="col-nm fk">created_by <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>User pembuat invoice &#8594; users.id</td><td>3</td></tr>
+          <tr><td class="col-nm fk">updated_by <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>User yang terakhir mengubah &#8594; users.id</td><td>2</td></tr>
+
+          <tr class="section-divider"><td colspan="4">Concurrency</td></tr>
+          <tr><td class="col-nm">row_version <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">INT</td><td>Optimistic locking counter.</td><td>0</td></tr>
+          <tr class="section-divider"><td colspan="4">Timestamps</td></tr>
+          <tr><td class="col-nm">created_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu record dibuat (DEFAULT NOW())</td><td>2026-04-15 09:00:00+07</td></tr>
+          <tr><td class="col-nm">updated_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu terakhir diubah (DEFAULT NOW())</td><td>2026-04-15 11:00:00+07</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-section" id="tbl-invoice_items">
+      <div class="table-section-header">
+        <h3>&#128203; invoice_items</h3>
+        <span class="layer-badge" style="background:var(--green)">Finance</span>
+      </div>
+      <p class="table-desc">
+        Detail baris invoice. Data adalah <strong>SNAPSHOT</strong> (salinan beku) dari quotation_items saat invoice dibuat.
+        Nama item tidak berubah meskipun master diubah &mdash; syarat legal/pajak.
+        <strong>Tidak ada kolom discount.</strong>
+      </p>
+      <div class="example-box">
+        item_name = "GAS DETECTOR SENSOR - CITICEL 40XV" &nbsp;|&nbsp; qty = 1<br>
+        unit_price = 1,725,000 &nbsp;|&nbsp; ppn_amount = 180,262
+      </div>
+      <table class="attr-table">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Kegunaan</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td class="col-nm pk">id <span class="cbadge cbadge-pk">PK</span></td><td class="col-tp">BIGINT</td><td>Primary key, auto-increment</td><td>1</td></tr>
+          <tr><td class="col-nm fk">invoice_id <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>Header invoice &#8594; invoices.id</td><td>1</td></tr>
+          <tr><td class="col-nm fk">quotation_item_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Trace back ke quotation_items.id (nullable)</td><td>15</td></tr>
+
+          <tr class="section-divider"><td colspan="4">Snapshot (beku saat invoice dibuat)</td></tr>
+          <tr><td class="col-nm">line_type <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">VARCHAR(20)</td><td>Jenis baris: product, shipping. Dropdown: product | shipping</td><td>product</td></tr>
+          <tr><td class="col-nm">item_name <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">VARCHAR(500)</td><td>Nama item (snapshot, tidak berubah)</td><td>GAS DETECTOR SENSOR - CITICEL 40XV</td></tr>
+          <tr><td class="col-nm">item_code</td><td class="col-tp">VARCHAR(20)</td><td>Kode barang untuk Coretax (default '000000')</td><td>000000</td></tr>
+          <tr><td class="col-nm">goods_or_service</td><td class="col-tp">CHAR(1)</td><td>Kode Coretax: A=Barang, B=Jasa (default 'A'). Dropdown: A (Barang) | B (Jasa)</td><td>A</td></tr>
+          <tr><td class="col-nm">unit_code</td><td class="col-tp">VARCHAR(10)</td><td>Kode satuan Coretax (snapshot)</td><td>UM.0021</td></tr>
+
+          <tr class="section-divider"><td colspan="4">Finansial</td></tr>
+          <tr><td class="col-nm">qty <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">NUMERIC(12,2)</td><td>Jumlah/kuantitas</td><td>1.00</td></tr>
+          <tr><td class="col-nm">unit_price <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">NUMERIC(15,2)</td><td>Harga per unit</td><td>1,725,000.00</td></tr>
+          <tr><td class="col-nm">dpp</td><td class="col-tp">NUMERIC(15,2)</td><td>DPP baris ini</td><td>1,725,000.00</td></tr>
+          <tr><td class="col-nm">dpp_nilai_lain</td><td class="col-tp">NUMERIC(15,2)</td><td>DPP Nilai Lain baris ini</td><td>1,581,250.00</td></tr>
+          <tr><td class="col-nm">ppn_rate</td><td class="col-tp">NUMERIC(4,2)</td><td>Tarif PPN (default 12.00)</td><td>12.00</td></tr>
+          <tr><td class="col-nm">ppn_amount</td><td class="col-tp">NUMERIC(15,2)</td><td>Jumlah PPN baris ini</td><td>180,262.00</td></tr>
+
+          <tr class="section-divider"><td colspan="4">Audit Trail</td></tr>
+          <tr><td class="col-nm fk">created_by <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>User yang membuat record → users.id</td><td>2</td></tr>
+          <tr><td class="col-nm fk">updated_by <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>User yang terakhir mengubah record → users.id. Bernilai NULL karena tabel ini adalah snapshot beku (insert-only).</td><td>NULL</td></tr>
+          <tr class="section-divider"><td colspan="4">Timestamps</td></tr>
+          <tr><td class="col-nm">created_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu record dibuat</td><td>2025-09-10 09:05:00+07</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-section" id="tbl-users">
+      <div class="table-section-header">
+        <h3>&#128100; users</h3>
+        <span class="layer-badge" style="background:var(--purple)">System</span>
+      </div>
+      <p class="table-desc">
+        Data pengguna sistem. Role menentukan akses: operational (buat quotation), finance (buat invoice, export Coretax), superadmin (semua).
+      </p>
+      <div class="example-box">
+        email = "adi@company.co.id" &nbsp;|&nbsp; name = "Adi Pratama" &nbsp;|&nbsp; role = "operational"
+      </div>
+
+      <h4 style="margin:14px 0 8px;color:var(--text-dim);font-size:.85rem">Matriks Hak Akses per Role</h4>
+      <table class="role-matrix">
+        <thead>
+          <tr><th>Fitur</th><th>operational</th><th>finance</th><th>superadmin</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Buat & edit quotation</td><td class="yes">&#9745;</td><td class="no">&#9744;</td><td class="yes">&#9745;</td></tr>
+          <tr><td>Kirim quotation ke client</td><td class="yes">&#9745;</td><td class="no">&#9744;</td><td class="yes">&#9745;</td></tr>
+          <tr><td>Kelola master items/vendors</td><td class="yes">&#9745;</td><td class="no">&#9744;</td><td class="yes">&#9745;</td></tr>
+          <tr><td>Upload & verifikasi PO</td><td class="yes">&#9745;</td><td class="no">&#9744;</td><td class="yes">&#9745;</td></tr>
+          <tr><td>Kelola delivery notes</td><td class="yes">&#9745;</td><td class="no">&#9744;</td><td class="yes">&#9745;</td></tr>
+          <tr><td>Buat & edit invoice</td><td class="no">&#9744;</td><td class="yes">&#9745;</td><td class="yes">&#9745;</td></tr>
+          <tr><td>Export Coretax</td><td class="no">&#9744;</td><td class="yes">&#9745;</td><td class="yes">&#9745;</td></tr>
+          <tr><td>Lihat laporan profit</td><td class="no">&#9744;</td><td class="yes">&#9745;</td><td class="yes">&#9745;</td></tr>
+          <tr><td>Kelola users</td><td class="no">&#9744;</td><td class="no">&#9744;</td><td class="yes">&#9745;</td></tr>
+        </tbody>
+      </table>
+
+      <table class="attr-table" style="margin-top:16px">
+        <thead><tr><th>Kolom</th><th>Tipe</th><th>Kegunaan</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td class="col-nm pk">id <span class="cbadge cbadge-pk">PK</span></td><td class="col-tp">BIGINT</td><td>Primary key, auto-increment</td><td>1</td></tr>
+          <tr><td class="col-nm">email <span class="cbadge cbadge-uq">UNIQUE</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">VARCHAR(255)</td><td>Email login (unik)</td><td>adi@company.co.id</td></tr>
+          <tr><td class="col-nm">name <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">VARCHAR(255)</td><td>Nama lengkap</td><td>Adi Pratama</td></tr>
+          <tr><td class="col-nm">password_hash <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">VARCHAR(255)</td><td>Hash password (bcrypt/argon2)</td><td>$2b$12$...</td></tr>
+          <tr><td class="col-nm">role <span class="cbadge cbadge-nn">NOT NULL</span> <span class="cbadge cbadge-chk">CHECK</span></td><td class="col-tp">VARCHAR(20)</td><td>Role: operational, finance, superadmin. Dropdown: operational | finance | superadmin</td><td>operational</td></tr>
+          <tr><td class="col-nm">is_active <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BOOLEAN</td><td>Soft delete flag (default TRUE)</td><td>true</td></tr>
+          <tr class="section-divider"><td colspan="4">Audit Trail</td></tr>
+          <tr><td class="col-nm fk">created_by <span class="cbadge cbadge-fk">FK</span> <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">BIGINT</td><td>User yang membuat record → users.id</td><td>2</td></tr>
+          <tr><td class="col-nm fk">updated_by <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>User yang terakhir mengubah record → users.id</td><td>2</td></tr>
+          <tr class="section-divider"><td colspan="4">Timestamps</td></tr>
+          <tr><td class="col-nm">created_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu record dibuat</td><td>2025-06-01 08:00:00+07</td></tr>
+          <tr><td class="col-nm">updated_at</td><td class="col-tp">TIMESTAMPTZ</td><td>Waktu terakhir diubah</td><td>2025-06-01 08:00:00+07</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div></div><script>
+/* ─── TAB SWITCHING ──────────────────────────────── */
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  if (tab === 'erd') {
+    document.querySelectorAll('.tab-btn')[0].classList.add('active');
+    document.getElementById('erd-tab').classList.add('active');
+  } else {
+    document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    document.getElementById('dict-tab').classList.add('active');
+  }
+}
+
+/* ─── SIDEBAR SCROLL + ACTIVE STATE ──────────────── */
+function scrollDict(el) {
+  event.preventDefault();
+  document.querySelectorAll('.dict-sidebar a').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+  const target = document.querySelector(el.getAttribute('href'));
+  if (target) {
+    const main = document.getElementById('dict-main');
+    main.scrollTo({ top: target.offsetTop - main.offsetTop - 20, behavior: 'smooth' });
+  }
+}
+
+// Track scroll position for active sidebar link
+document.addEventListener('DOMContentLoaded', () => {
+  const main = document.getElementById('dict-main');
+  if (!main) return;
+  const observer = () => {
+    const sections = main.querySelectorAll('.table-section, .flow-box');
+    const links = document.querySelectorAll('.dict-sidebar a');
+    let current = '';
+    sections.forEach(s => {
+      const top = s.offsetTop - main.offsetTop - main.scrollTop;
+      if (top <= 40) current = s.id;
+    });
+    links.forEach(a => {
+      a.classList.remove('active');
+      if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+    });
+  };
+  main.addEventListener('scroll', observer);
+});
+
+/* ─── ZOOM CONTROLS ──────────────────────────────── */
+let scale = 1;
+const canvas = document.getElementById('erd-canvas');
+const zoomLabel = document.getElementById('zoom-label');
+
+function applyZoom() {
+  canvas.style.transform = `scale(${scale})`;
+  canvas.style.width = (4200 * scale) + 'px';
+  canvas.style.height = (2600 * scale) + 'px';
+  canvas.style.transformOrigin = '0 0';
+  canvas.style.width = 4200 + 'px';
+  canvas.style.height = 2600 + 'px';
+  zoomLabel.textContent = Math.round(scale * 100) + '%';
+}
+function zoomIn() { scale = Math.min(2, +(scale + 0.1).toFixed(1)); applyZoom(); }
+function zoomOut() { scale = Math.max(0.3, +(scale - 0.1).toFixed(1)); applyZoom(); }
+function zoomReset() { scale = 1; applyZoom(); }
+
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('erd-tab').classList.contains('active')) return;
+  if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomIn(); }
+  if (e.key === '-') { e.preventDefault(); zoomOut(); }
+  if (e.key === '0') { e.preventDefault(); zoomReset(); }
+});
+
+document.getElementById('erd-viewport')?.addEventListener('wheel', e => {
+  if (e.ctrlKey) {
+    e.preventDefault();
+    if (e.deltaY < 0) zoomIn(); else zoomOut();
+  }
+}, { passive: false });
+
+/* ─── AUTO BADGE INJECTION ─────────────────────────── */
+const AUTO_COLS = new Set([
+  'id','created_at','updated_at',
+  'last_quoted_at','last_used_at','match_count'
+]);
+const GEN_COLS = new Set([
+  'total_selling','total_cost','profit_amount','profit_pct',
+  'dpp_nilai_lain','ppn_amount','total',
+  'subtotal','grand_total','discount_amount'
+]);
+const ALL_AUTO_COLS = new Set([...AUTO_COLS, ...GEN_COLS]);
+
+document.querySelectorAll('.attr-table tbody tr').forEach(row => {
+  const nm = row.querySelector('.col-nm');
+  if (!nm) return;
+  const colName = nm.firstChild?.textContent?.trim();
+  if (AUTO_COLS.has(colName)) {
+    nm.insertAdjacentHTML('beforeend', ' <span class="cbadge cbadge-auto">AUTO</span>');
+  }
+});
+
+document.querySelectorAll('.entity-card .col-row').forEach(row => {
+  const nm = row.querySelector('.col-name');
+  const tp = row.querySelector('.col-type');
+  if (!nm || !tp) return;
+  const isFk = nm.classList.contains('fk');
+  const name = nm.textContent.trim();
+  if (ALL_AUTO_COLS.has(name) || isFk) {
+    tp.insertAdjacentHTML('beforeend', '<span class="col-auto-tag"> ⚙</span>');
+  }
+});
+
+document.querySelectorAll('.attr-table tbody tr').forEach(row => {
+  const nm = row.querySelector('.col-nm.fk');
+  if (!nm) return;
+  if (!nm.querySelector('.cbadge-auto')) {
+    nm.insertAdjacentHTML('beforeend', ' <span class="cbadge cbadge-auto">AUTO</span>');
+  }
+});
+</script>
+</body>
+</html>
