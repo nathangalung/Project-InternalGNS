@@ -1,4 +1,48 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
+
+const dropdownPanelStyle: CSSProperties = {
+  position: "absolute",
+  top: "calc(100% + 4px)",
+  left: 0,
+  right: 0,
+  background: "#FFFFFF",
+  border: "1px solid rgba(204, 195, 216, 0.2)",
+  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+  borderRadius: "8px",
+  display: "flex",
+  flexDirection: "column",
+  padding: "8px 0",
+  zIndex: 50,
+};
+
+const dropdownItemStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 12,
+  padding: "10px 20px",
+  width: "100%",
+  background: "transparent",
+  border: "none",
+  cursor: "pointer",
+  textAlign: "left",
+};
+
+function dropdownLabelStyle(active: boolean): CSSProperties {
+  return {
+    fontFamily: "'Inter', sans-serif",
+    fontWeight: active ? 700 : 500,
+    fontSize: "14px",
+    lineHeight: "20px",
+    color: active ? "#630ED4" : "#4A4455",
+  };
+}
+
+const CheckmarkIcon = () => (
+  <svg width="14" height="11" viewBox="0 0 14 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M1 5.5L4.5 9L13 1" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
 
 export interface ClientAddFormData {
   namaPerusahaan: string;
@@ -42,6 +86,21 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
   const [negaraOpen, setNegaraOpen] = useState(false);
 
   if (!open) return null;
+
+  // Logika validasi pengisian berjenjang
+  const isNamaPerusahaanFilled = form.namaPerusahaan.trim().length > 0;
+  const isAlamatFilled = isNamaPerusahaanFilled && form.alamat.trim().length > 0;
+  
+  // Karena kolom opsional setelahnya tidak wajib, 
+  // form opsional akan terbuka jika "namaKontak" (wajib) sudah diisi.
+  const isNamaKontakFilled = isAlamatFilled && form.namaKontak.trim().length > 0;
+
+  // Gaya untuk field yang terkunci
+  const disabledStyle: React.CSSProperties = {
+    opacity: 0.6,
+    cursor: "not-allowed",
+    backgroundColor: "#F7F7F8"
+  };
 
   function handleChange(field: keyof ClientAddFormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -98,25 +157,31 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
                   <button
                     type="button"
                     className="ca-select-btn"
-                    onClick={() => setNegaraOpen((o) => !o)}
+                    onClick={() => { if (isNamaPerusahaanFilled) setNegaraOpen((o) => !o); }}
+                    disabled={!isNamaPerusahaanFilled}
+                    style={!isNamaPerusahaanFilled ? disabledStyle : undefined}
                   >
                     <span>{selectedNegara?.label ?? "Pilih Negara"}</span>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                       <polyline points="6 9 12 15 18 9"/>
                     </svg>
                   </button>
-                  {negaraOpen && (
-                    <div className="ca-dropdown">
-                      {NEGARA_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          className="ca-dropdown-item"
-                          onClick={() => { handleChange("kodeNegara", opt.value); setNegaraOpen(false); }}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
+                  {negaraOpen && isNamaPerusahaanFilled && (
+                    <div style={dropdownPanelStyle}>
+                      {NEGARA_OPTIONS.map((opt) => {
+                        const isActive = form.kodeNegara === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            style={dropdownItemStyle}
+                            onClick={() => { handleChange("kodeNegara", opt.value); setNegaraOpen(false); }}
+                          >
+                            <span style={dropdownLabelStyle(isActive)}>{opt.label}</span>
+                            {isActive && <CheckmarkIcon />}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -130,12 +195,14 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
                 value={form.alamat}
                 onChange={(e) => handleChange("alamat", e.target.value)}
                 rows={3}
+                disabled={!isNamaPerusahaanFilled}
+                style={!isNamaPerusahaanFilled ? disabledStyle : undefined}
               />
             </div>
           </div>
 
           {/* Kontak & Teknis */}
-          <div className="ca-section">
+          <div className="ca-section" style={{ opacity: !isAlamatFilled ? 0.6 : 1, transition: "opacity 0.2s ease" }}>
             <div className="ca-section-heading">Kontak &amp; Teknis</div>
             <div className="ca-field">
               <label className="ca-label">Nama Narahubung <span className="ca-required">*</span></label>
@@ -145,6 +212,8 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
                 placeholder="Nama lengkap kontak"
                 value={form.namaKontak}
                 onChange={(e) => handleChange("namaKontak", e.target.value)}
+                disabled={!isAlamatFilled}
+                style={!isAlamatFilled ? disabledStyle : undefined}
               />
             </div>
             <div className="ca-row-2">
@@ -158,6 +227,8 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
                     placeholder="812xxxx"
                     value={form.nomorTelepon}
                     onChange={(e) => handleChange("nomorTelepon", e.target.value)}
+                    disabled={!isNamaKontakFilled}
+                    style={!isNamaKontakFilled ? disabledStyle : undefined}
                   />
                 </div>
               </div>
@@ -169,13 +240,15 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
                   placeholder="klien@perusahaan.com"
                   value={form.email}
                   onChange={(e) => handleChange("email", e.target.value)}
+                  disabled={!isNamaKontakFilled}
+                  style={!isNamaKontakFilled ? disabledStyle : undefined}
                 />
               </div>
             </div>
           </div>
 
           {/* Legalitas */}
-          <div className="ca-section">
+          <div className="ca-section" style={{ opacity: !isNamaKontakFilled ? 0.6 : 1, transition: "opacity 0.2s ease" }}>
             <div className="ca-section-heading">Legalitas</div>
             <div className="ca-row-2">
               <div className="ca-field">
@@ -186,6 +259,8 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
                   placeholder="Masukkan NPWP"
                   value={form.npwp}
                   onChange={(e) => handleChange("npwp", e.target.value)}
+                  disabled={!isNamaKontakFilled}
+                  style={!isNamaKontakFilled ? disabledStyle : undefined}
                 />
               </div>
               <div className="ca-field">
@@ -196,6 +271,8 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
                   placeholder="Masukkan ID Teknis atau TKU"
                   value={form.tku}
                   onChange={(e) => handleChange("tku", e.target.value)}
+                  disabled={!isNamaKontakFilled}
+                  style={!isNamaKontakFilled ? disabledStyle : undefined}
                 />
               </div>
             </div>
@@ -207,6 +284,8 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
                 placeholder="Masukkan reference number"
                 value={form.referenceNumber}
                 onChange={(e) => handleChange("referenceNumber", e.target.value)}
+                disabled={!isNamaKontakFilled}
+                style={!isNamaKontakFilled ? disabledStyle : undefined}
               />
             </div>
           </div>
@@ -216,7 +295,7 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
         {/* Footer */}
         <div className="ca-footer">
           <button type="button" className="ca-btn-cancel" onClick={handleCancel}>Batal</button>
-          <button type="button" className="ca-btn-submit" onClick={handleSubmit}>Simpan Klien Baru</button>
+          <button type="button" className="ca-btn-submit" onClick={handleSubmit}>Simpan Data</button>
         </div>
 
       </div>

@@ -5,14 +5,14 @@ import ClientAdd from "../shared/ClientAdd";
 import ProductAdd from "../shared/ProductAdd";
 import DiscountAdd from "../shared/DiscountAdd";
 
-// Import komponen Steps yang sudah dipisah
+// Menggunakan Step komponen yang sama dengan QuotationEdit
 import Step1Client from "./Step1Client";
 import Step2Product from "./Step2Product";
 import Step3Shipping from "./Step3Shipping";
 import Step4Summary from "./Step4Summary";
+import type { ProductItem } from "./QuotationEdit";
 
-interface QuotationEditProps {
-  quotationId: string;
+interface QuotationAddProps {
   onNavigate: (page: Page) => void;
   onLogout: () => void;
 }
@@ -36,51 +36,36 @@ const clients = [
   { id: "C009", name: "Delta Logistik",     narahubung: "Bambang Sutrisno", country: "Indonesia", initials: "DL" },
 ];
 
-export interface ProductItem {
-  id: number;
-  nama: string;
-  kodeImpa: string;
-  vendor: string;
-  jumlah: number;
-  satuan: string;
-  hargaBeli: number;
-  hargaJual: number;
-}
-
-const initialProducts: ProductItem[] = [
-  { id: 1, nama: "Marine Engine Filter Element",       kodeImpa: "330212", vendor: "PT Bahari Teknik",    jumlah: 24, satuan: "PCS", hargaBeli: 5006500,  hargaJual: 6587500  },
-  { id: 2, nama: "Oli Hidrolik Kelas Industri (200L)", kodeImpa: "590741", vendor: "CV Pelumas Nusantara", jumlah: 10, satuan: "DRM", hargaBeli: 16688900, hargaJual: 18523300 },
-  { id: 3, nama: "Shackle Tugas Berat (M42)",          kodeImpa: "626718", vendor: "PT Besi Kuat",         jumlah: 2,  satuan: "UNT", hargaBeli: 2970500,  hargaJual: 3587500  },
-];
-
 function formatRp(n: number): string {
   return n.toLocaleString("id-ID");
 }
 
-export default function QuotationEdit({ quotationId, onNavigate, onLogout }: QuotationEditProps) {
+export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps) {
   const [step, setStep] = useState(1);
   
-  // State Step 1 (Klien)
-  const [selectedClient, setSelectedClient] = useState("C001");
+  // Karena ini Tambah, klien diisi KOSONG
+  const [selectedClient, setSelectedClient] = useState("");
   const [search, setSearch] = useState("");
   const [showClientAdd, setShowClientAdd] = useState(false);
   
-  // State Step 2 (Produk & Diskon)
+  // State untuk form ProductAdd
   const [showProductAdd, setShowProductAdd] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [discountPct, setDiscountPct] = useState<number>(0);
-  const [products, setProducts] = useState<ProductItem[]>(initialProducts);
+  
+  // Produk diisi KOSONG
+  const [products, setProducts] = useState<ProductItem[]>([]);
   const [prodPageSize, setProdPageSize] = useState(5);
   const [prodPage, setProdPage] = useState(1);
   const [isRowDropdownOpen, setIsRowDropdownOpen] = useState(false);
 
-  // State Step 3 (Pengiriman)
-  const [shippingAddress, setShippingAddress] = useState("Jalan Rasuna Said, Kecamatan Jakarta Selatan, JKT 14230");
-  const [shippingTime, setShippingTime] = useState("3");
-  const [shippingCost, setShippingCost] = useState("3570000");
+  // Data pengiriman diisi KOSONG
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [shippingTime, setShippingTime] = useState("");
+  const [shippingCost, setShippingCost] = useState("");
 
-  // State Step 4 (Ringkasan/Tenggat Waktu)
+  // State Tenggat Waktu
   const [jatuhTempo, setJatuhTempo] = useState("");
   const [berlakuSampai, setBerlakuSampai] = useState("");
 
@@ -134,13 +119,13 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
               <nav className="qd-breadcrumb">
                 <button className="qd-breadcrumb-link" onClick={() => onNavigate("quotation")}>Daftar Quotation</button>
                 <span className="qd-breadcrumb-sep">&rsaquo;</span>
-                <span className="qd-breadcrumb-current">Edit Quotation</span>
+                <span className="qd-breadcrumb-current">Tambah Quotation</span>
               </nav>
               <div className="qe-title-row">
-                <button className="qd-back-btn" onClick={() => onNavigate("quotation-detail")} title="Kembali">
+                <button className="qd-back-btn" onClick={() => onNavigate("quotation")} title="Kembali">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
                 </button>
-                <h1 className="qe-title">Edit Quotation</h1>
+                <h1 className="qe-title">Tambah Quotation Baru</h1>
               </div>
             </div>
 
@@ -156,8 +141,8 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
                 </button>
               )}
               {step === steps.length && (
-                <button className="btn-admin-primary qe-next-btn" onClick={() => onNavigate("quotation-detail")} disabled={!isTenggatWaktuFilled} style={{ background: "#630ED4", opacity: !isTenggatWaktuFilled ? 0.5 : 1, cursor: !isTenggatWaktuFilled ? "not-allowed" : "pointer", transition: "opacity 0.2s" }}>
-                  Simpan
+                <button className="btn-admin-primary qe-next-btn" onClick={() => onNavigate("quotation")} disabled={!isTenggatWaktuFilled} style={{ background: "#630ED4", opacity: !isTenggatWaktuFilled ? 0.5 : 1, cursor: !isTenggatWaktuFilled ? "not-allowed" : "pointer", transition: "opacity 0.2s" }}>
+                  Buat Penawaran
                 </button>
               )}
             </div>

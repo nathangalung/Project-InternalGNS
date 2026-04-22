@@ -35,6 +35,7 @@ export default function QuotationDetail({ quotationId, onNavigate, onLogout }: Q
   const [history, setHistory]         = useState(q?.history ?? []);
   const [prodPage, setProdPage]       = useState(1);
   const [prodPageSize, setProdPageSize] = useState(5);
+  const [isRowDropdownOpen, setIsRowDropdownOpen] = useState(false);
   const [shipPage, setShipPage]       = useState(1);
 
   if (!q) {
@@ -58,21 +59,24 @@ export default function QuotationDetail({ quotationId, onNavigate, onLogout }: Q
   const totalProduk  = q.products.reduce((s, p) => s + p.qty * p.hargaSatuan, 0);
   const totalProfit  = q.products.reduce((s, p) => s + p.qty * p.profitSatuan, 0);
   const totalShip    = q.shipping.hargaSatuan;
+  const subTotal     = totalProduk + totalShip;
+  const dppNilaiLain = Math.round((subTotal * 11) / 12);
+  const ppn12        = subTotal - dppNilaiLain;
 
   function handleStatusChange(s: Status) {
     setStatus(s);
     setIsStatusOpen(false);
-    setHistory((prev) => [
-      ...prev.map((h, i) => ({ ...h })),
-      { date: nowLabel(), action: `Status diubah menjadi ${s}` },
-    ]);
   }
 
   function handleSave() {
-    setHistory((prev) => [
-      ...prev,
-      { date: nowLabel(), action: "Data diperbarui oleh Admin" },
-    ]);
+    if (!q) return; //
+
+    if (status !== q.status) {
+      setHistory((prev) => [
+        ...prev,
+        { date: nowLabel(), action: `Status diubah dari ${q.status} menjadi ${status}` },
+      ]);
+    }
     onNavigate("quotation");
   }
 
@@ -201,21 +205,100 @@ export default function QuotationDetail({ quotationId, onNavigate, onLogout }: Q
                 ))}
               </tbody>
             </table>
-            <div className="pagination">
-              <div className="pagination-left">
+            <div className="pagination" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ position: "relative", display: "inline-block" }}>
+                  <button
+                    onClick={() => setIsRowDropdownOpen(!isRowDropdownOpen)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "8px",
+                      padding: "6px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #E2E8F0",
+                      background: "#fff",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      color: "#4A4455",
+                      fontFamily: "'Inter', sans-serif"
+                    }}
+                  >
+                    {prodPageSize} Baris
+                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M1 1L5 5L9 1" stroke="#4A4455" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+
+                  {isRowDropdownOpen && (
+                    <div style={{
+                      position: "absolute",
+                      bottom: "calc(100% + 8px)",
+                      left: 0,
+                      background: "#FFFFFF",
+                      border: "1px solid rgba(204, 195, 216, 0.2)",
+                      boxShadow: "0px 0px 0px 1px rgba(0, 0, 0, 0.05)",
+                      borderRadius: "8px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      padding: "8px 0px",
+                      width: "162px",
+                      zIndex: 50,
+                      boxSizing: "border-box"
+                    }}>
+                      {PAGE_SIZE_OPTIONS.map((val) => {
+                        const isActive = prodPageSize === val;
+                        return (
+                          <button
+                            key={val}
+                            onClick={() => {
+                              setProdPageSize(val);
+                              setProdPage(1);
+                              setIsRowDropdownOpen(false);
+                            }}
+                            style={{
+                              display: "flex",
+                              flexDirection: "row",
+                              justifyContent: isActive ? "space-between" : "flex-start",
+                              alignItems: "center",
+                              padding: "4px 20px",
+                              width: "100%",
+                              height: "32px",
+                              background: "transparent",
+                              border: "none",
+                              cursor: "pointer",
+                              boxSizing: "border-box"
+                            }}
+                          >
+                            <span style={{
+                              fontFamily: "'Inter', sans-serif",
+                              fontWeight: isActive ? 600 : 400,
+                              fontSize: "12px",
+                              lineHeight: "24px",
+                              color: isActive ? "#630ED4" : "#4A4455",
+                              display: "flex",
+                              alignItems: "center"
+                            }}>
+                              {val} Baris
+                            </span>
+
+                            {isActive && (
+                              <svg width="14" height="11" viewBox="0 0 14 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1 5.5L4.5 9L13 1" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
                 <span className="pagination-info">
                   Menampilkan {totalProds === 0 ? 0 : prodStart + 1}–{Math.min(prodStart + prodPageSize, totalProds)} dari {totalProds} Produk
                 </span>
-                <div className="page-size-select">
-                  <span className="page-size-label">Tampilkan</span>
-                  {PAGE_SIZE_OPTIONS.map((n) => (
-                    <button
-                      key={n}
-                      className={`page-size-btn${prodPageSize === n ? " page-size-btn--active" : ""}`}
-                      onClick={() => { setProdPageSize(n); setProdPage(1); }}
-                    >{n}</button>
-                  ))}
-                </div>
               </div>
               <div className="page-buttons">
                 <button className="page-btn-nav" disabled={prodPage === 1} onClick={() => setProdPage(p => Math.max(1, p - 1))}>
@@ -306,6 +389,18 @@ export default function QuotationDetail({ quotationId, onNavigate, onLogout }: Q
                 <div className="qd-summary-row">
                   <span className="qd-summary-label">Total Biaya Pengiriman</span>
                   <span className="qd-summary-value">{formatRp(totalShip)}</span>
+                </div>
+                <div className="qd-summary-row">
+                  <span className="qd-summary-label">Sub Total</span>
+                  <span className="qd-summary-value">{formatRp(subTotal)}</span>
+                </div>
+                <div className="qd-summary-row">
+                  <span className="qd-summary-label">DPP Nilai Lain</span>
+                  <span className="qd-summary-value">{formatRp(dppNilaiLain)}</span>
+                </div>
+                <div className="qd-summary-row">
+                  <span className="qd-summary-label">PPN 12%</span>
+                  <span className="qd-summary-value">{formatRp(ppn12)}</span>
                 </div>
               </div>
               <div className="qd-summary-profit-row">

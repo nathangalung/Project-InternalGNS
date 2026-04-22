@@ -3,12 +3,6 @@ import type { Page } from "@/main"
 
 type Navigate = ReturnType<typeof useNavigate>
 
-/**
- * Translates friend's `onNavigate(page: Page)` prop contract into
- * TanStack Router navigate() calls. Pass `currentId` when the caller
- * lives on a detail/edit route, so breadcrumb links like
- * `onNavigate("quotation-detail")` can resolve the dynamic segment.
- */
 export function makePageNavigate(navigate: Navigate, currentId?: string): (page: Page) => void {
   return (page) => {
     switch (page) {
@@ -23,6 +17,8 @@ export function makePageNavigate(navigate: Navigate, currentId?: string): (page:
         return
       case "quotation-edit":
         if (currentId) void navigate({ to: "/quotations/$id/edit", params: { id: currentId } })
+      case "quotation-add":
+        void navigate({ to: "/quotations/add" }) // Sesuaikan string "/quotations/add" dengan path di routes Anda
         return
     }
   }

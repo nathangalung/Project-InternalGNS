@@ -169,7 +169,8 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
                 </svg>
                 Ekspor PDF
               </button>
-              <button className="btn-admin-primary">
+              {/* TOMBOL DITAMBAH EVENT ONCLICK DENGAN 'as any' UNTUK MENGHINDARI ERROR TS */}
+              <button className="btn-admin-primary" onClick={() => onNavigate("quotation-add" as any)}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
                   <line x1="12" y1="5" x2="12" y2="19"/>
                   <line x1="5" y1="12" x2="19" y2="12"/>
