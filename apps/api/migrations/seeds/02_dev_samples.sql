@@ -39,58 +39,59 @@ INSERT INTO quotation_items (
   qty, unit_id, selling_price, cost_price,
   created_by, updated_by
 ) VALUES
+  -- unit_id mapping: 19=SET, 21=PCS, 34=TIN, 35=TUB, 36=PKT
   -- Line 1: Punching tool set
   (1, 1, 'product', 1, NULL,
    'PUNCHING TOOL SET DIES & TABLE, 6-38MM 16S',
-   1, 1, 1, 5, 2000000, 1200000, 2, 2),
+   1, 1, 1, 19, 2000000, 1200000, 2, 2),
   -- Line 2: Prusian Blue (10 tubes)
   (1, 2, 'product', 2, NULL,
    'BLUE PASTE 120GRM For lapping of bearings, high',
-   2, 2, 10, 4, 145000, 90000, 2, 2),
+   2, 2, 10, 35, 145000, 90000, 2, 2),
   -- Line 3: Carborundum #2000
   (1, 3, 'product', 3, NULL,
    'CARBORUNDUM PASTE GRIT#2000, MICRO FINE 450GRM',
-   3, 3, 1, 3, 68000, 40000, 2, 2),
+   3, 3, 1, 34, 68000, 40000, 2, 2),
   -- Line 4: Carborundum #1500
   (1, 4, 'product', 4, NULL,
    'CARBORUNDUM PASTE GRIT#1500, MICRO FINE 450GRM',
-   4, 4, 1, 3, 68000, 40000, 2, 2),
+   4, 4, 1, 34, 68000, 40000, 2, 2),
   -- Line 5: Carborundum #800
   (1, 5, 'product', 5, NULL,
    'CARBORUNDUM PASTE GRIT#800, MICRO FINE 450GRM',
-   5, 5, 1, 3, 68000, 40000, 2, 2),
+   5, 5, 1, 34, 68000, 40000, 2, 2),
   -- Line 6: Puller 8"
   (1, 6, 'product', 6, NULL,
    'PULLER GEAR & WHEEL 3-ARM, 0-200MM Drop forged',
-   6, 6, 1, 5, 750000, 450000, 2, 2),
+   6, 6, 1, 19, 750000, 450000, 2, 2),
   -- Line 7: Puller 6"
   (1, 7, 'product', 7, NULL,
    'PULLER GEAR & WHEEL 3-ARM, 0-125MM Drop forged',
-   7, 7, 1, 5, 445000, 270000, 2, 2),
+   7, 7, 1, 19, 445000, 270000, 2, 2),
   -- Line 8: Rivet 3.2x8.0
   (1, 8, 'product', 8, NULL,
    'RIVET BLIND OPENTYPE ALUM-BODY, STEEL-MANDREL 3.2X8.0MM',
-   8, 8, 1, 6, 185000, 110000, 2, 2),
+   8, 8, 1, 36, 185000, 110000, 2, 2),
   -- Line 9: Rivet 3.2x6.3
   (1, 9, 'product', 9, NULL,
    'RIVET BLIND OPENTYPE ALUM-BODY, STEEL-MANDREL 3.2X6.3MM',
-   9, 9, 1, 6, 215000, 130000, 2, 2),
+   9, 9, 1, 36, 215000, 130000, 2, 2),
   -- Line 10: Wrench hook
   (1, 10, 'product', 10, NULL,
    'WRENCH HOOK SPANNER 68-75MM, STAINLESS STEEL',
-   10, 10, 3, 1, 535000, 320000, 2, 2),
+   10, 10, 3, 21, 535000, 320000, 2, 2),
   -- Line 11: LED 12W
   (1, 11, 'product', 11, '790268',
    'LAMP LED 12W (100W) 220V E-27, COOL WHITE',
-   11, 11, 50, 1, 48000, 28000, 2, 2),
+   11, 11, 50, 21, 48000, 28000, 2, 2),
   -- Line 12: LED 8W
   (1, 12, 'product', 12, '790265',
    'LAMP LED 8W (60W) 220V E-27, COOL WHITE',
-   12, 12, 50, 1, 50000, 30000, 2, 2),
+   12, 12, 50, 21, 50000, 30000, 2, 2),
   -- Line 13: Floodlight
   (1, 13, 'product', 13, '791836',
    'FLOODLIGHT FIXTURE LED SLD-150',
-   13, 13, 10, 5, 450000, 270000, 2, 2);
+   13, 13, 10, 19, 450000, 270000, 2, 2);
 
 -- ═══════════════════════════════════════════════════════════
 -- PURCHASE ORDER 8404/O-0079/P025
@@ -115,10 +116,10 @@ INSERT INTO purchase_order_items (
   po_id, quotation_item_id, line_number, item_type, offered_item_id,
   qty, unit_id, selling_price, cost_price, created_by, updated_by
 ) VALUES
-  (1, 11, 1, 'product', 11, 50, 1, 48000, 28000, 2, 2),
-  (1, 12, 2, 'product', 12, 50, 1, 50000, 30000, 2, 2),
-  (1, 13, 3, 'product', 13, 10, 5, 450000, 270000, 2, 2),
-  (1, 1,  4, 'product', 1,  1,  5, 2000000, 1200000, 2, 2);
+  (1, 11, 1, 'product', 11, 50, 21, 48000, 28000, 2, 2),
+  (1, 12, 2, 'product', 12, 50, 21, 50000, 30000, 2, 2),
+  (1, 13, 3, 'product', 13, 10, 19, 450000, 270000, 2, 2),
+  (1, 1,  4, 'product', 1,  1,  19, 2000000, 1200000, 2, 2);
 
 -- ═══════════════════════════════════════════════════════════
 -- INVOICE 077/INV-GNS-8/2025
