@@ -18,12 +18,13 @@ BEGIN;
 INSERT INTO quotations (
   id, quotation_no, version, company_client_id, company_client_name,
   contact_id, contact_name, client_ref_no, vessel_name, status,
-  payment_terms, validity_days, total_produk, total, total_discount,
+  payment_terms, validity_days, discount_pct,
+  total_produk, total, total_discount,
   notes, created_by, updated_by
 ) VALUES (
   1, 'Q-264128/GNS/IV/2026', 1, 1, 'PT. IMC Ship Management',
   1, 'Bp. Restu Umar Singgih', '8404/V-0006/REQ26', 'MV YUXIN SATU', 'sent',
-  '30 days', 3,
+  '30 days', 3, 0.05,
   -- Subset 13 items; total_produk = total (karena no shipping line di subset ini)
   8141000, 8141000, 407050,
   'Subset 13 baris untuk demo. Original quotation punya 117 baris.',
