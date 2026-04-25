@@ -1296,7 +1296,7 @@
 .qd-status-bar-desc {
   font-size: var(--text-caption);
   color: #4A4455;
-  margin-top: var(--space-1);
+  margin-top: 2px;
 }
 
 .qd-status-bar-actions {

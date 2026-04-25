@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import type { Page } from "../../main";
 import Sidebar from "../shared/Sidebar";
 import FilterQuotation, { type DatePreset, type StatusFilter } from "./FilterQuotation";
-import { quotations, formatRp, getTotalHargaBeli } from "../../data/quotations";
+import { quotations, formatRp, getTotalHargaBeli, computeGrandTotal } from "../../data/quotations";
 
 interface QuotationListProps {
   onNavigate: (page: Page) => void;
@@ -20,15 +20,6 @@ interface QuotationRow {
   status: "Disetujui" | "Dikirim" | "Draf" | "Revisi" | "Ditolak";
 }
 
-const tableData: QuotationRow[] = quotations.map((q) => ({
-  id: q.id,
-  version: q.version,
-  client: q.client,
-  date: q.createdAt.split(",")[0],
-  hargaBeli: formatRp(getTotalHargaBeli(q)),
-  total: formatRp(q.totalBayar),
-  status: q.status,
-}));
 
 const statusConfig: Record<QuotationRow["status"], { bg: string; color: string }> = {
   Disetujui: { bg: "var(--status-disetujui-bg)", color: "var(--status-disetujui-color)" },
@@ -37,6 +28,22 @@ const statusConfig: Record<QuotationRow["status"], { bg: string; color: string }
   Revisi:    { bg: "var(--status-revisi-bg)",     color: "var(--status-revisi-color)"    },
   Ditolak:   { bg: "var(--status-ditolak-bg)",   color: "var(--status-ditolak-color)"   },
 };
+
+function getPageNumbers(current: number, total: number): (number | null)[] {
+  if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
+  const set = new Set(
+    [1, 2, current - 1, current, current + 1, total - 1, total].filter(n => n >= 1 && n <= total)
+  );
+  const sorted = [...set].sort((a, b) => a - b);
+  const pages: (number | null)[] = [];
+  let prev = 0;
+  for (const n of sorted) {
+    if (n - prev > 1) pages.push(null);
+    pages.push(n);
+    prev = n;
+  }
+  return pages;
+}
 
 function SortIcon({ direction }: { direction?: "asc" | "desc" | null }) {
   return (
@@ -48,6 +55,16 @@ function SortIcon({ direction }: { direction?: "asc" | "desc" | null }) {
 }
 
 export default function QuotationList({ onNavigate, onLogout, onViewDetail }: QuotationListProps) {
+  const tableData: QuotationRow[] = quotations.map((q) => ({
+    id: q.id,
+    version: q.version,
+    client: q.client,
+    date: q.createdAt.split(",")[0],
+    hargaBeli: formatRp(getTotalHargaBeli(q)),
+    total: formatRp(computeGrandTotal(q)),
+    status: q.status,
+  }));
+
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [activeFilters, setActiveFilters] = useState<{
@@ -445,15 +462,11 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
                   <svg width="5" height="8" viewBox="0 0 5 8" fill="none"><path d="M4 1L1 4L4 7" stroke="#191C1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
                 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                  <button 
-                    key={n} 
-                    onClick={() => setCurrentPage(n)}
-                    className={`page-btn${n === currentPage ? " page-btn--active" : ""}`}
-                  >
-                    {n}
-                  </button>
-                ))}
+                {getPageNumbers(currentPage, totalPages).map((n, i) =>
+                  n === null
+                    ? <span key={`e${i}`} style={{ padding: "0 2px", color: "#9CA3AF", fontSize: "13px", alignSelf: "center", userSelect: "none" }}>…</span>
+                    : <button key={n} onClick={() => setCurrentPage(n)} className={`page-btn${n === currentPage ? " page-btn--active" : ""}`}>{n}</button>
+                )}
                 
                 <button 
                   className="page-btn-nav"

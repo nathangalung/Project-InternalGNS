@@ -6,6 +6,12 @@ export interface Client {
   narahubung: string;
   country: string;
   initials: string;
+  phone?: string;
+  email?: string;
+  nomorTKU?: string;
+  referenceNumber?: string;
+  npwp?: string;
+  lokasi?: string;
 }
 
 interface Step1ClientProps {
@@ -27,13 +33,8 @@ export default function Step1Client({
           <h2 className="qe-section-title">Pilih Klien Strategis</h2>
           <p className="qe-section-desc">Tentukan mitra bisnis untuk penawaran harga ini.</p>
         </div>
-        <button className="qe-add-client-btn" onClick={() => setShowClientAdd(true)}>
-          <svg width="16" height="14" viewBox="0 0 20 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 15v-1a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v1"/>
-            <circle cx="8.5" cy="5" r="3"/>
-            <line x1="17" y1="5" x2="17" y2="11"/>
-            <line x1="14" y1="8" x2="20" y2="8"/>
-          </svg>
+        <button className="qe-add-client-btn" style={{ width: "210px", justifyContent: "center" }} onClick={() => setShowClientAdd(true)}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
           Tambah Klien Baru
         </button>
       </div>

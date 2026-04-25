@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Page } from "../../main";
 import Sidebar from "../shared/Sidebar";
 import ClientAdd from "../shared/ClientAdd";
@@ -25,15 +25,15 @@ const steps = [
 ];
 
 const clients = [
-  { id: "C001", name: "PT Astra Modern",    narahubung: "Budi Santoso",    country: "Indonesia", initials: "AM" },
-  { id: "C002", name: "PT Telkom Prakarsa", narahubung: "Siti Rahayu",     country: "Indonesia", initials: "TP" },
-  { id: "C003", name: "Bank Loka Mandiri",  narahubung: "Ahmad Hidayat",   country: "Indonesia", initials: "BL" },
-  { id: "C004", name: "Global Network",     narahubung: "Dewi Lestari",    country: "Indonesia", initials: "GN" },
-  { id: "C005", name: "Indo Food Group",    narahubung: "Rudi Hartono",    country: "Indonesia", initials: "IF" },
-  { id: "C006", name: "Tech Solutions",     narahubung: "Linda Wijaya",    country: "Indonesia", initials: "TS" },
-  { id: "C007", name: "Mandiri Finance",    narahubung: "Andi Pratama",    country: "Indonesia", initials: "MF" },
-  { id: "C008", name: "Surya Kencana",      narahubung: "Maya Kusuma",     country: "Indonesia", initials: "SK" },
-  { id: "C009", name: "Delta Logistik",     narahubung: "Bambang Sutrisno", country: "Indonesia", initials: "DL" },
+  { id: "C001", name: "PT Astra Modern",    narahubung: "Budi Santoso",     country: "Indonesia", initials: "AM", phone: "+62 812-3456-7890", email: "budi@astramodern.co.id",      nomorTKU: "100210293840001", referenceNumber: "15823991992", npwp: "01.234.567.8-091.000", lokasi: "Jl. Gaya Motor Raya No.8, Jakarta Utara 14330" },
+  { id: "C002", name: "PT Telkom Prakarsa", narahubung: "Siti Rahayu",      country: "Indonesia", initials: "TP", phone: "+62 821-9876-5432", email: "siti@telkomprakarsa.co.id",   nomorTKU: "200319482930002", referenceNumber: "28491029384", npwp: undefined,              lokasi: "Jl. Gatot Subroto Kav. 52, Jakarta Selatan 12710" },
+  { id: "C003", name: "Bank Loka Mandiri",  narahubung: "Ahmad Hidayat",    country: "Indonesia", initials: "BL", phone: "+62 857-1234-5678", email: "ahmad@lokmandiri.co.id",      nomorTKU: undefined,         referenceNumber: undefined,     npwp: undefined,              lokasi: "Jl. Sudirman No. 24, Jakarta Pusat 10220" },
+  { id: "C004", name: "Global Network",     narahubung: "Dewi Lestari",     country: "Indonesia", initials: "GN", phone: "+62 813-5678-9012", email: "dewi@globalnetwork.co.id",    nomorTKU: undefined,         referenceNumber: "39201029384", npwp: "04.567.890.1-234.000", lokasi: "Jl. M.H. Thamrin No. 9, Jakarta Pusat 10340" },
+  { id: "C005", name: "Indo Food Group",    narahubung: "Rudi Hartono",     country: "Indonesia", initials: "IF", phone: "+62 878-2345-6789", email: "rudi@indofoodgroup.co.id",    nomorTKU: "500512938471005", referenceNumber: "48291038475", npwp: "05.678.901.2-345.000", lokasi: "Jl. Jend. Sudirman Kav. 76, Jakarta Selatan 12910" },
+  { id: "C006", name: "Tech Solutions",     narahubung: "Linda Wijaya",     country: "Indonesia", initials: "TS", phone: "+62 856-3456-7890", email: "linda@techsolutions.co.id",   nomorTKU: "600619273640006", referenceNumber: "57382910293", npwp: undefined,              lokasi: "Jl. TB Simatupang No. 57, Jakarta Selatan 12430" },
+  { id: "C007", name: "Mandiri Finance",    narahubung: "Andi Pratama",     country: "Indonesia", initials: "MF", phone: "+62 819-4567-8901", email: "andi@mandirifinance.co.id",   nomorTKU: "700728364750007", referenceNumber: "66473829102", npwp: "07.890.123.4-567.000", lokasi: "Jl. Imam Bonjol No. 61, Jakarta Pusat 10310" },
+  { id: "C008", name: "Surya Kencana",      narahubung: "Maya Kusuma",      country: "Indonesia", initials: "SK", phone: "+62 895-5678-9012", email: "maya@suryakencana.co.id",     nomorTKU: "800837455860008", referenceNumber: "75564738291", npwp: "08.901.234.5-678.000", lokasi: "Jl. Raya Kebayoran Lama No. 234, Jakarta Selatan 12220" },
+  { id: "C009", name: "Delta Logistik",     narahubung: "Bambang Sutrisno", country: "Indonesia", initials: "DL", phone: "+62 852-6789-0123", email: "bambang@deltalogistik.co.id", nomorTKU: undefined,         referenceNumber: undefined,     npwp: undefined,              lokasi: "Jl. Raya Cakung No. 88, Jakarta Timur 13910" },
 ];
 
 function formatRp(n: number): string {
@@ -74,6 +74,15 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
   const isWaktuFilled = isAlamatFilled && shippingTime.trim().length > 0;
   const isBiayaFilled = isWaktuFilled && shippingCost.trim().length > 0;
   const isTenggatWaktuFilled = jatuhTempo.trim().length > 0 && berlakuSampai.trim().length > 0;
+  const hasContent = products.length > 0 || isAlamatFilled;
+
+  useEffect(() => {
+    if (!isAlamatFilled) { setShippingTime(""); setShippingCost(""); }
+  }, [isAlamatFilled]);
+
+  useEffect(() => {
+    if (!isWaktuFilled) setShippingCost("");
+  }, [isWaktuFilled]);
 
   let isNextDisabled = false;
   if (step === 1) isNextDisabled = selectedClient === "";
@@ -100,12 +109,17 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
   const summaryTotalHargaJual = products.reduce((sum, p) => sum + (p.hargaJual * p.jumlah), 0);
   const nominalDiskon = summaryTotalHargaJual * (discountPct / 100);
   const summarySubTotal = summaryTotalHargaJual - nominalDiskon;
-  const summaryDpp = Math.round(summarySubTotal * 11 / 12);
-  const summaryPpn = summarySubTotal - summaryDpp;
   const summaryShippingCost = Number(shippingCost) || 0;
-  
-  const summaryGrandTotal = summarySubTotal + summaryPpn + summaryShippingCost;
-  const summaryProfit = summarySubTotal - summaryTotalHargaBeli;
+  const hasProducts = products.length > 0;
+  // Kalau hanya pengiriman (tanpa produk): DPP/PPN dikenakan pada biaya pengiriman
+  // Kalau ada produk: DPP/PPN hanya dari subtotal produk, pengiriman tidak dikenakan pajak
+  const dppBase = hasProducts ? summarySubTotal : summaryShippingCost;
+  const summaryDpp = Math.round(dppBase * 11 / 12);
+  const summaryPpn = dppBase - summaryDpp;
+  const summaryGrandTotal = hasProducts
+    ? summarySubTotal + summaryPpn + summaryShippingCost
+    : summaryShippingCost + summaryPpn;
+  const summaryProfit = hasProducts ? summarySubTotal - summaryTotalHargaBeli : 0;
 
   return (
     <div className="admin-shell">
@@ -139,7 +153,7 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
                 </button>
               )}
               {step === steps.length && (
-                <button className="btn-admin-primary" onClick={() => onNavigate("quotation")} disabled={!isTenggatWaktuFilled} style={{ width: "148px", justifyContent: "center", background: "#630ED4", opacity: !isTenggatWaktuFilled ? 0.5 : 1, cursor: !isTenggatWaktuFilled ? "not-allowed" : "pointer", transition: "opacity 0.2s" }}>
+                <button className="btn-admin-primary" onClick={() => onNavigate("quotation")} disabled={!isTenggatWaktuFilled || !hasContent} style={{ width: "180px", justifyContent: "center", background: "#630ED4", opacity: !isTenggatWaktuFilled || !hasContent ? 0.5 : 1, cursor: !isTenggatWaktuFilled || !hasContent ? "not-allowed" : "pointer", transition: "opacity 0.2s" }}>
                   Buat Penawaran
                 </button>
               )}

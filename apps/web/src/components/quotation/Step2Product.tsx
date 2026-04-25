@@ -24,6 +24,22 @@ interface Step2ProductProps {
   onImportProducts: (products: ProductItem[]) => void;
 }
 
+function getPageNumbers(current: number, total: number): (number | null)[] {
+  if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
+  const set = new Set(
+    [1, 2, current - 1, current, current + 1, total - 1, total].filter(n => n >= 1 && n <= total)
+  );
+  const sorted = [...set].sort((a, b) => a - b);
+  const pages: (number | null)[] = [];
+  let prev = 0;
+  for (const n of sorted) {
+    if (n - prev > 1) pages.push(null);
+    pages.push(n);
+    prev = n;
+  }
+  return pages;
+}
+
 function parseCSVProducts(text: string, maxId: number): ProductItem[] {
   const lines = text.trim().split('\n').filter(l => l.trim());
   if (lines.length < 2) return [];
@@ -34,12 +50,12 @@ function parseCSVProducts(text: string, maxId: number): ProductItem[] {
   const nameIdx = idx(['nama', 'name', 'produk']);
   if (nameIdx === -1) return [];
 
-  const kodeIdx  = idx(['kode', 'impa', 'code']);
+  const kodeIdx   = idx(['kode', 'impa', 'code']);
   const vendorIdx = idx(['vendor']);
   const jumlahIdx = idx(['jumlah', 'qty', 'quantity']);
   const satuanIdx = idx(['satuan', 'unit']);
-  const beliIdx  = idx(['beli', 'buy', 'purchase', 'cost']);
-  const jualIdx  = idx(['jual', 'sell', 'sale', 'price']);
+  const beliIdx   = idx(['beli', 'buy', 'purchase', 'cost']);
+  const jualIdx   = idx(['jual', 'sell', 'sale', 'price']);
 
   const results: ProductItem[] = [];
   let nextId = maxId + 1;
@@ -51,12 +67,12 @@ function parseCSVProducts(text: string, maxId: number): ProductItem[] {
     results.push({
       id: nextId++,
       nama,
-      kodeImpa: kodeIdx  >= 0 ? (cols[kodeIdx]  || "") : "",
-      vendor:   vendorIdx >= 0 ? (cols[vendorIdx] || "") : "",
-      jumlah:   jumlahIdx >= 0 ? (Number(cols[jumlahIdx]) || 1) : 1,
-      satuan:   satuanIdx >= 0 ? (cols[satuanIdx] || "PCS") : "PCS",
-      hargaBeli: beliIdx >= 0 ? (Number(cols[beliIdx]) || 0) : 0,
-      hargaJual: jualIdx >= 0 ? (Number(cols[jualIdx]) || 0) : 0,
+      kodeImpa:  kodeIdx   >= 0 ? (cols[kodeIdx]   || "") : "",
+      vendor:    vendorIdx >= 0 ? (cols[vendorIdx]  || "") : "",
+      jumlah:    jumlahIdx >= 0 ? (Number(cols[jumlahIdx]) || 1) : 1,
+      satuan:    satuanIdx >= 0 ? (cols[satuanIdx]  || "PCS") : "PCS",
+      hargaBeli: beliIdx   >= 0 ? (Number(cols[beliIdx])   || 0) : 0,
+      hargaJual: jualIdx   >= 0 ? (Number(cols[jualIdx])   || 0) : 0,
     });
   }
   return results;
@@ -72,6 +88,7 @@ export default function Step2Product({
 }: Step2ProductProps) {
   const importFileRef = useRef<HTMLInputElement>(null);
   const [importMsg, setImportMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [prodExpanded, setProdExpanded] = useState(true);
 
   function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -109,139 +126,183 @@ export default function Step2Product({
   const totalProds = products.length;
   const totalPages = Math.ceil(totalProds / prodPageSize) || 1;
   const start = (prodPage - 1) * prodPageSize;
+  const summaryProfit = summarySubTotal - summaryTotalHargaBeli;
 
   return (
     <div className="qe-step-content">
+
+      {/* Header */}
       <div className="qe-section-header">
         <div>
-          <h2 className="qe-section-title">Pilih Produk & Harga</h2>
+          <h2 className="qe-section-title">Pilih Produk &amp; Harga</h2>
           <p className="qe-section-desc">Tentukan produk dan harga penawaran.</p>
         </div>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <input ref={importFileRef} type="file" accept=".csv,.xlsx,.xls" style={{ display: "none" }} onChange={handleImportFile} />
-          <button
-            className="qe-add-client-btn"
-            onClick={() => importFileRef.current?.click()}
-            style={{ background: "transparent", border: "1px solid rgba(99,14,212,0.3)", color: "#630ED4" }}
-          >
+          <button className="qe-add-client-btn" style={{ width: "210px", justifyContent: "center" }} onClick={() => importFileRef.current?.click()}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="17 8 12 3 7 8"/>
               <line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
-            Import Excel/CSV
+            Unggah Excel/CSV
           </button>
-          <button className="qe-add-client-btn" onClick={() => { setEditingProduct(null); setShowProductAdd(true); }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg> Tambah Produk
+          <button className="qe-add-client-btn" style={{ width: "210px", justifyContent: "center" }} onClick={() => setShowDiscountModal(true)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            {discountPct > 0 ? `Diskon (${discountPct}%)` : "Tambah Diskon"}
+          </button>
+          <button className="qe-add-client-btn" style={{ width: "210px", justifyContent: "center" }} onClick={() => { setEditingProduct(null); setShowProductAdd(true); }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Tambah Produk
           </button>
         </div>
       </div>
 
       {importMsg && (
-        <div style={{ padding: "10px 16px", borderRadius: "8px", fontSize: "13px", fontWeight: 500, fontFamily: "'Inter', sans-serif", marginBottom: "8px", background: importMsg.ok ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", color: importMsg.ok ? "#059669" : "#DC2626", border: `1px solid ${importMsg.ok ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>
+        <div style={{ padding: "10px 16px", borderRadius: "8px", fontSize: "13px", fontWeight: 500, fontFamily: "'Inter', sans-serif", background: importMsg.ok ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", color: importMsg.ok ? "#059669" : "#DC2626", border: `1px solid ${importMsg.ok ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>
           {importMsg.text}
         </div>
       )}
 
-      <div className="qep-layout">
-        <div className="qep-cards">
-          {/* Pagination controls */}
-          <div className="pagination" style={{ paddingLeft: 0, paddingRight: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ position: "relative", display: "inline-block" }}>
-                <button
-                  onClick={() => setIsRowDropdownOpen(!isRowDropdownOpen)}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", padding: "6px 12px", borderRadius: "6px", border: "1px solid #E2E8F0", background: "#fff", cursor: "pointer", fontSize: "14px", color: "#4A4455", fontFamily: "'Inter', sans-serif" }}
-                >
-                  {prodPageSize} Baris
-                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="#4A4455" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </button>
-                {isRowDropdownOpen && (
-                  <div style={{ position: "absolute", bottom: "calc(100% + 8px)", left: 0, background: "#fff", border: "1px solid rgba(204,195,216,0.2)", boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.05)", borderRadius: "8px", display: "flex", flexDirection: "column", padding: "8px 0", width: "162px", zIndex: 50 }}>
-                    {[5, 10, 15].map((val) => {
-                      const isActive = prodPageSize === val;
-                      return (
-                        <button key={val} onClick={() => { setProdPageSize(val); setProdPage(1); setIsRowDropdownOpen(false); }} style={{ display: "flex", flexDirection: "row", justifyContent: isActive ? "space-between" : "flex-start", alignItems: "center", padding: "4px 20px", width: "100%", height: "32px", background: "transparent", border: "none", cursor: "pointer" }}>
-                          <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: isActive ? 600 : 400, fontSize: "12px", color: isActive ? "#630ED4" : "#4A4455" }}>{val} Baris</span>
-                          {isActive && <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5L4.5 9L13 1" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-              <span className="pagination-info">Menampilkan {totalProds === 0 ? 0 : start + 1}–{Math.min(start + prodPageSize, totalProds)} dari {totalProds} Produk</span>
+      {/* Product section */}
+      <div>
+        {/* Bar: rows selector + count | pagination + toggle */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 20px", background: "#FFFFFF", border: "1px solid rgba(204,195,216,0.2)", borderRadius: prodExpanded ? "12px 12px 0 0" : "12px", borderBottom: prodExpanded ? "1px solid rgba(204,195,216,0.15)" : "1px solid rgba(204,195,216,0.2)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ position: "relative", display: "inline-block" }}>
+              <button
+                onClick={() => setIsRowDropdownOpen(!isRowDropdownOpen)}
+                style={{ display: "flex", alignItems: "center", gap: "8px", padding: "5px 10px", borderRadius: "6px", border: "1px solid #E2E8F0", background: "#fff", cursor: "pointer", fontSize: "13px", color: "#4A4455", fontFamily: "'Inter', sans-serif" }}
+              >
+                {prodPageSize} Baris
+                <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="#4A4455" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              {isRowDropdownOpen && (
+                <div style={{ position: "absolute", bottom: "calc(100% + 8px)", left: 0, background: "#fff", border: "1px solid rgba(204,195,216,0.2)", boxShadow: "0px 4px 16px rgba(0,0,0,0.08)", borderRadius: "8px", display: "flex", flexDirection: "column", padding: "8px 0", width: "140px", zIndex: 50 }}>
+                  {[5, 10, 15].map((val) => {
+                    const isActive = prodPageSize === val;
+                    return (
+                      <button key={val} onClick={() => { setProdPageSize(val); setProdPage(1); setIsRowDropdownOpen(false); }} style={{ display: "flex", justifyContent: isActive ? "space-between" : "flex-start", alignItems: "center", padding: "4px 16px", width: "100%", height: "32px", background: "transparent", border: "none", cursor: "pointer" }}>
+                        <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: isActive ? 600 : 400, fontSize: "12px", color: isActive ? "#630ED4" : "#4A4455" }}>{val} Baris</span>
+                        {isActive && <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5L4.5 9L13 1" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
+            <span style={{ fontSize: "12px", color: "#6B7280", fontWeight: 500 }}>
+              Menampilkan {totalProds === 0 ? 0 : start + 1}–{Math.min(start + prodPageSize, totalProds)} dari {totalProds} produk
+            </span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div className="page-buttons">
               <button className="page-btn-nav" disabled={prodPage === 1} onClick={() => setProdPage((p) => Math.max(1, p - 1))}>
                 <svg width="5" height="8" viewBox="0 0 5 8" fill="none"><path d="M4 1L1 4L4 7" stroke="#191C1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                <button key={n} onClick={() => setProdPage(n)} className={`page-btn${n === prodPage ? " page-btn--active" : ""}`}>{n}</button>
-              ))}
+              {getPageNumbers(prodPage, totalPages).map((n, i) =>
+                n === null
+                  ? <span key={`e${i}`} style={{ padding: "0 2px", color: "#9CA3AF", fontSize: "13px", alignSelf: "center", userSelect: "none" }}>…</span>
+                  : <button key={n} onClick={() => setProdPage(n)} className={`page-btn${n === prodPage ? " page-btn--active" : ""}`}>{n}</button>
+              )}
               <button className="page-btn-nav" disabled={prodPage === totalPages} onClick={() => setProdPage((p) => Math.min(totalPages, p + 1))}>
                 <svg width="5" height="8" viewBox="0 0 5 8" fill="none"><path d="M1 1L4 4L1 7" stroke="#191C1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
             </div>
+            <button
+              onClick={() => setProdExpanded(e => !e)}
+              style={{ display: "flex", alignItems: "center", gap: "5px", background: "none", border: "1px solid rgba(204,195,216,0.5)", borderRadius: "6px", padding: "5px 10px", cursor: "pointer", fontSize: "12px", color: "#6B7280", fontFamily: "'Inter', sans-serif", fontWeight: 500 }}
+            >
+              {prodExpanded ? "Sembunyikan" : "Tampilkan"}
+              <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ transform: prodExpanded ? "rotate(0deg)" : "rotate(180deg)", transition: "transform 0.2s ease" }}>
+                <path d="M1 5L5 1L9 5" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
           </div>
-
-          {/* Mapping Products */}
-          {products.slice((prodPage - 1) * prodPageSize, prodPage * prodPageSize).map((p, i) => {
-            const globalIndex = (prodPage - 1) * prodPageSize + i + 1;
-            const profit = p.hargaJual - p.hargaBeli;
-            const profitPct = p.hargaBeli > 0 ? ((profit / p.hargaBeli) * 100).toFixed(2) : "0.00";
-            return (
-              <div key={p.id} className="qep-card">
-                <div className="qep-card-header">
-                  <div className="qep-card-meta">
-                    <span className="qep-card-label">PRODUK {globalIndex}</span>
-                    <span className="qep-card-name">{p.nama}</span>
-                    <span className="qep-card-code">KODE IMPA: {p.kodeImpa}</span>
-                  </div>
-                  <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                    <button onClick={() => { setEditingProduct(p); setShowProductAdd(true); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#630ED4" }} title="Edit Produk">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                    </button>
-                    <button className="qep-card-delete" onClick={() => deleteProduct(p.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#EF4444" }} title="Hapus Produk">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
-                    </button>
-                  </div>
-                </div>
-                <div className="qep-card-body">
-                  <div className="qep-col-left">
-                    <div className="qep-field"><span className="qep-field-label">VENDOR</span><div className="qep-field-input">{p.vendor}</div></div>
-                    <div className="qep-field"><span className="qep-field-label">JUMLAH</span><div className="qep-field-input">{p.jumlah}</div></div>
-                    <div className="qep-field"><span className="qep-field-label">SATUAN</span><div className="qep-field-input">{p.satuan}</div></div>
-                  </div>
-                  <div className="qep-col-right">
-                    <div className="qep-field"><span className="qep-field-label">HARGA BELI SATUAN</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(p.hargaBeli)}</div></div>
-                    <div className="qep-field"><span className="qep-field-label">HARGA JUAL SATUAN</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(p.hargaJual)}</div></div>
-                    <div className="qep-field"><span className="qep-field-label">PROFIT</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(profit)} <span className="qep-profit-pct">({profitPct}%)</span></div></div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
         </div>
 
-        <div className="qep-sidebar">
-          <button className="qep-discount-btn" onClick={() => setShowDiscountModal(true)}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 8v8M8 12h8"/></svg>
-            {discountPct > 0 ? `Diskon (${discountPct}%)` : "Tambah Diskon Pembayaran"}
-          </button>
-          <div className="qep-summary-card">
-            <h3 className="qep-summary-title">Ringkasan Penawaran</h3>
-            <div className="qep-summary-row"><span className="qep-summary-label">TOTAL HARGA BELI</span><span className="qep-summary-value">Rp {formatRp(summaryTotalHargaBeli)}</span></div>
-            <div className="qep-summary-row"><span className="qep-summary-label">TOTAL HARGA JUAL</span><span className="qep-summary-value">Rp {formatRp(summaryTotalHargaJual)}</span></div>
-            {discountPct > 0 && (
-              <div className="qep-summary-row"><span className="qep-summary-label">DISKON ({discountPct}%)</span><span className="qep-summary-value" style={{ color: "#EF4444" }}>-Rp {formatRp(nominalDiskon)}</span></div>
-            )}
-            <div className="qep-summary-row"><span className="qep-summary-label">SUB TOTAL</span><span className="qep-summary-value">Rp {formatRp(summarySubTotal)}</span></div>
-            <div className="qep-summary-row"><span className="qep-summary-label">DPP NILAI LAIN</span><span className="qep-summary-value">Rp {formatRp(summaryDpp)}</span></div>
-            <div className="qep-summary-row"><span className="qep-summary-label">PPN 12%</span><span className="qep-summary-value">Rp {formatRp(summaryPpn)}</span></div>
+        {/* Cards */}
+        {prodExpanded && <div style={{ background: "#FFFFFF", border: "1px solid rgba(204,195,216,0.2)", borderTop: "none", borderRadius: "0 0 12px 12px", padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
+          {products.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "48px 0", color: "#9CA3AF", fontSize: "14px" }}>
+              Belum ada produk. Klik "Tambah Produk" untuk mulai.
+            </div>
+          ) : (
+            products.slice(start, start + prodPageSize).map((p, i) => {
+              const globalIndex = start + i + 1;
+              const profit = p.hargaJual - p.hargaBeli;
+              const profitPct = p.hargaBeli > 0 ? ((profit / p.hargaBeli) * 100).toFixed(2) : "0.00";
+              return (
+                <div key={p.id} className="qep-card" style={{ marginBottom: 0 }}>
+                  <div className="qep-card-header">
+                    <div className="qep-card-meta">
+                      <span className="qep-card-label">PRODUK {globalIndex}</span>
+                      <span className="qep-card-name">{p.nama}</span>
+                      <span className="qep-card-code">KODE IMPA: {p.kodeImpa}</span>
+                    </div>
+                    <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                      <button onClick={() => { setEditingProduct(p); setShowProductAdd(true); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#630ED4" }} title="Edit Produk">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                      </button>
+                      <button onClick={() => deleteProduct(p.id)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#EF4444" }} title="Hapus Produk">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="qep-card-body">
+                    <div className="qep-col-left">
+                      <div className="qep-field"><span className="qep-field-label">VENDOR</span><div className="qep-field-input">{p.vendor}</div></div>
+                      <div className="qep-field"><span className="qep-field-label">JUMLAH</span><div className="qep-field-input">{p.jumlah}</div></div>
+                      <div className="qep-field"><span className="qep-field-label">SATUAN</span><div className="qep-field-input">{p.satuan}</div></div>
+                    </div>
+                    <div className="qep-col-right">
+                      <div className="qep-field"><span className="qep-field-label">HARGA BELI SATUAN</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(p.hargaBeli)}</div></div>
+                      <div className="qep-field"><span className="qep-field-label">HARGA JUAL SATUAN</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(p.hargaJual)}</div></div>
+                      <div className="qep-field"><span className="qep-field-label">PROFIT</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(profit)} <span className="qep-profit-pct">({profitPct}%)</span></div></div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>}
+      </div>
+
+      {/* Rincian Biaya */}
+      <div style={{ background: "#F8FAFC", borderRadius: "12px", padding: "24px", border: "1px solid rgba(204,195,216,0.1)" }}>
+        <div style={{ fontSize: "13px", fontWeight: 700, color: "#6B7280", letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: "20px" }}>Rincian Biaya</div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#4B5563" }}><span>Total Produk</span><span style={{ fontWeight: 600, color: "#111827" }}>{totalProds} Produk</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#4B5563" }}><span>Total Harga Beli</span><span style={{ fontWeight: 600, color: "#111827" }}>Rp {formatRp(summaryTotalHargaBeli)}</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#4B5563" }}><span>Total Harga Jual</span><span style={{ fontWeight: 600, color: "#111827" }}>Rp {formatRp(summaryTotalHargaJual)}</span></div>
+          {discountPct > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#4B5563" }}><span>Diskon ({discountPct}%)</span><span style={{ fontWeight: 600, color: "#10B981" }}>- Rp {formatRp(nominalDiskon)}</span></div>
+          )}
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#4B5563" }}>
+            <span>Sub Total</span>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              {discountPct > 0 && <span style={{ textDecoration: "line-through", color: "#9CA3AF" }}>Rp {formatRp(summaryTotalHargaJual)}</span>}
+              <span style={{ fontWeight: 600, color: "#111827" }}>Rp {formatRp(summarySubTotal)}</span>
+            </div>
           </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#4B5563" }}><span>DPP Nilai Lain</span><span style={{ fontWeight: 600, color: "#111827" }}>Rp {formatRp(summaryDpp)}</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#4B5563" }}><span>PPN 12%</span><span style={{ fontWeight: 600, color: "#111827" }}>Rp {formatRp(summaryPpn)}</span></div>
+        </div>
+
+        <div style={{ height: "1px", background: "#E5E7EB", marginBottom: "16px" }} />
+
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: 700, color: "#6B7280", textTransform: "uppercase", marginBottom: "20px" }}>
+          <span>Total Estimasi Profit</span>
+          <span style={{ color: "#630ED4", fontSize: "12px" }}>Rp {formatRp(summaryProfit)}</span>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <span style={{ fontSize: "11px", fontWeight: 700, color: "#6B7280", letterSpacing: "1px", textTransform: "uppercase" }}>Grand Total</span>
+          <span style={{ fontSize: "28px", fontWeight: 800, color: "#630ED4", letterSpacing: "-0.5px" }}>Rp {formatRp(summarySubTotal + summaryPpn)}</span>
         </div>
       </div>
+
     </div>
   );
 }
