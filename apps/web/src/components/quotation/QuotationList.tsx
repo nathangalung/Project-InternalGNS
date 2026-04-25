@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import type { Page } from "../../main";
 import Sidebar from "../shared/Sidebar";
 import FilterQuotation, { type DatePreset, type StatusFilter } from "./FilterQuotation";
-import { quotations, formatRp } from "../../data/quotations";
+import { quotations, formatRp, getTotalHargaBeli } from "../../data/quotations";
 
 interface QuotationListProps {
   onNavigate: (page: Page) => void;
@@ -15,6 +15,7 @@ interface QuotationRow {
   version: number;
   client: string;
   date: string;
+  hargaBeli: string;
   total: string;
   status: "Disetujui" | "Dikirim" | "Draf" | "Revisi" | "Ditolak";
 }
@@ -24,6 +25,7 @@ const tableData: QuotationRow[] = quotations.map((q) => ({
   version: q.version,
   client: q.client,
   date: q.createdAt.split(",")[0],
+  hargaBeli: formatRp(getTotalHargaBeli(q)),
   total: formatRp(q.totalBayar),
   status: q.status,
 }));
@@ -153,7 +155,7 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
           <div className="page-header">
             <h1 className="page-title">Daftar Quotation</h1>
             <div className="page-actions">
-              <button className="btn-admin-outline">
+              <button className="btn-admin-outline" style={{ width: "160px", justifyContent: "center" }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="7 10 12 15 17 10"/>
@@ -161,7 +163,7 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
                 </svg>
                 Ekspor Excel
               </button>
-              <button className="btn-admin-outline">
+              <button className="btn-admin-outline" style={{ width: "160px", justifyContent: "center" }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="7 10 12 15 17 10"/>
@@ -169,8 +171,7 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
                 </svg>
                 Ekspor PDF
               </button>
-              {/* TOMBOL DITAMBAH EVENT ONCLICK DENGAN 'as any' UNTUK MENGHINDARI ERROR TS */}
-              <button className="btn-admin-primary" onClick={() => onNavigate("quotation-add" as any)}>
+              <button className="btn-admin-primary" onClick={() => onNavigate("quotation-add" as any)} style={{ width: "180px", justifyContent: "center" }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
                   <line x1="12" y1="5" x2="12" y2="19"/>
                   <line x1="5" y1="12" x2="19" y2="12"/>
@@ -234,8 +235,10 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
             </div>
             
             <button className="btn-admin-filter" onClick={() => setShowFilter(true)}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="none">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="4" y1="6" x2="20" y2="6"/>
+                <line x1="7" y1="12" x2="17" y2="12"/>
+                <line x1="10" y1="18" x2="14" y2="18"/>
               </svg>
               Filter
             </button>
@@ -277,8 +280,9 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
                       <SortIcon direction={sortConfig?.key === "date" ? sortConfig.direction : null} />
                     </div>
                   </th>
-                  <th 
-                    className="tbl-th tbl-th--center" 
+                  <th className="tbl-th tbl-th--center" style={{ width: 160 }}>Total Harga Beli</th>
+                  <th
+                    className="tbl-th tbl-th--center"
                     style={{ width: 160, cursor: "pointer" }}
                     onClick={() => requestSort("total")}
                   >
@@ -300,6 +304,7 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
                       <td className="tbl-td tbl-td--center">{row.version}</td>
                       <td className="tbl-td tbl-td--client tbl-td--center">{row.client}</td>
                       <td className="tbl-td tbl-td--center">{row.date}</td>
+                      <td className="tbl-td tbl-td--center">{row.hargaBeli}</td>
                       <td className="tbl-td tbl-td--total tbl-td--center">{row.total}</td>
                       <td className="tbl-td tbl-td--center">
                         <span

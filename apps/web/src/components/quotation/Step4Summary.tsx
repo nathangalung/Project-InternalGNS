@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import type { Client } from "./Step1Client";
 import type { ProductItem } from "./QuotationEdit";
 
@@ -34,6 +34,19 @@ export default function Step4Summary({
   nominalDiskon, summarySubTotal, summaryDpp, summaryPpn,
   summaryShippingCost, summaryProfit, summaryGrandTotal
 }: Step4SummaryProps) {
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    setAttachments((prev) => [...prev, ...files]);
+    e.target.value = "";
+  }
+
+  function removeAttachment(index: number) {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  }
+
   return (
     <div className="qe-step-content" style={{ maxWidth: "100%", margin: "0 auto", padding: "16px 0", fontFamily: "'Inter', sans-serif" }}>
       
@@ -66,6 +79,50 @@ export default function Step4Summary({
         </div>
       </div>
 
+      {/* Lampiran Dokumen */}
+      <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#111827", marginBottom: "16px" }}>Lampiran Dokumen</h2>
+      <div style={{ background: "#FFFFFF", border: "1px solid rgba(204, 195, 216, 0.2)", borderRadius: "12px", padding: "24px", marginBottom: "32px" }}>
+        <input ref={fileInputRef} type="file" multiple style={{ display: "none" }} onChange={handleFileChange} />
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          style={{ border: "2px dashed rgba(99, 14, 212, 0.3)", borderRadius: "8px", padding: "32px", textAlign: "center", cursor: "pointer", background: "#FAFAFA", transition: "border-color 0.2s" }}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#630ED4")}
+          onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(99, 14, 212, 0.3)")}
+        >
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#630ED4" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: "0 auto 12px" }}>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <p style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: "#630ED4" }}>Klik untuk unggah file</p>
+          <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#6B7280" }}>PDF, Word, Excel, JPG, PNG — maks. 10 MB per file</p>
+        </div>
+        {attachments.length > 0 && (
+          <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+            {attachments.map((file, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#F8FAFC", borderRadius: "6px", padding: "10px 16px", border: "1px solid rgba(204,195,216,0.2)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                    <polyline points="13 2 13 9 20 9"/>
+                  </svg>
+                  <span style={{ fontSize: "13px", color: "#111827", fontWeight: 500 }}>{file.name}</span>
+                  <span style={{ fontSize: "11px", color: "#6B7280" }}>({(file.size / 1024).toFixed(0)} KB)</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeAttachment(i)}
+                  style={{ background: "transparent", border: "none", cursor: "pointer", color: "#EF4444", display: "flex", alignItems: "center" }}
+                  title="Hapus"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#111827", marginBottom: "16px" }}>Ringkasan Produk dan Pengiriman</h2>
       <div className="qep-layout" style={{ alignItems: "flex-start" }}>
         
@@ -86,8 +143,8 @@ export default function Step4Summary({
                     <div className="qep-field"><span className="qep-field-label">SATUAN</span><div className="qep-field-input">{p.satuan}</div></div>
                   </div>
                   <div className="qep-col-right">
-                    <div className="qep-field"><span className="qep-field-label">HARGA BELI</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(p.hargaBeli)}</div></div>
-                    <div className="qep-field"><span className="qep-field-label">HARGA JUAL</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(p.hargaJual)}</div></div>
+                    <div className="qep-field"><span className="qep-field-label">HARGA BELI SATUAN</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(p.hargaBeli)}</div></div>
+                    <div className="qep-field"><span className="qep-field-label">HARGA JUAL SATUAN</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(p.hargaJual)}</div></div>
                     <div className="qep-field"><span className="qep-field-label">PROFIT</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(profit)} <span className="qep-profit-pct">({profitPct}%)</span></div></div>
                   </div>
                 </div>

@@ -81,6 +81,20 @@ const INITIAL_FORM: ClientAddFormData = {
   referenceNumber: "",
 };
 
+function isValidAddress(s: string): boolean {
+  const t = s.trim();
+  return t.length >= 20 && /[a-zA-Z]/.test(t);
+}
+
+function isValidEmail(s: string): boolean {
+  return s.includes("@") && s.split("@").length === 2 && s.split("@")[1].includes(".");
+}
+
+function isValidPhone(s: string): boolean {
+  const digits = s.replace(/[^0-9]/g, "");
+  return digits.length >= 9 && digits.length <= 13;
+}
+
 export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddProps) {
   const [form, setForm] = useState<ClientAddFormData>(INITIAL_FORM);
   const [negaraOpen, setNegaraOpen] = useState(false);
@@ -89,11 +103,24 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
 
   // Logika validasi pengisian berjenjang
   const isNamaPerusahaanFilled = form.namaPerusahaan.trim().length > 0;
-  const isAlamatFilled = isNamaPerusahaanFilled && form.alamat.trim().length > 0;
-  
-  // Karena kolom opsional setelahnya tidak wajib, 
-  // form opsional akan terbuka jika "namaKontak" (wajib) sudah diisi.
+  const isAlamatFilled = isNamaPerusahaanFilled && isValidAddress(form.alamat);
+  const alamatError = isNamaPerusahaanFilled && form.alamat.trim().length > 0 && !isValidAddress(form.alamat)
+    ? "Alamat harus minimal 20 karakter dan mengandung huruf."
+    : null;
+
+  // namaKontak wajib, lalu salah satu dari nomorTelepon atau email harus diisi (dan valid)
   const isNamaKontakFilled = isAlamatFilled && form.namaKontak.trim().length > 0;
+
+  const phoneFilledAndValid = form.nomorTelepon.trim().length > 0 && isValidPhone(form.nomorTelepon);
+  const emailFilledAndValid = form.email.trim().length > 0 && isValidEmail(form.email);
+  const phoneError = isNamaKontakFilled && form.nomorTelepon.trim().length > 0 && !isValidPhone(form.nomorTelepon)
+    ? "Nomor telepon harus 9–13 digit angka."
+    : null;
+  const emailError = isNamaKontakFilled && form.email.trim().length > 0 && !isValidEmail(form.email)
+    ? "Format email tidak valid."
+    : null;
+
+  const isContactValid = isNamaKontakFilled && (phoneFilledAndValid || emailFilledAndValid);
 
   // Gaya untuk field yang terkunci
   const disabledStyle: React.CSSProperties = {
@@ -191,13 +218,14 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
               <label className="ca-label">Alamat <span className="ca-required">*</span></label>
               <textarea
                 className="ca-textarea"
-                placeholder="Alamat lengkap operasional"
+                placeholder="Alamat lengkap operasional (min. 20 karakter)"
                 value={form.alamat}
                 onChange={(e) => handleChange("alamat", e.target.value)}
                 rows={3}
                 disabled={!isNamaPerusahaanFilled}
                 style={!isNamaPerusahaanFilled ? disabledStyle : undefined}
               />
+              {alamatError && <span style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}>{alamatError}</span>}
             </div>
           </div>
 
@@ -231,18 +259,20 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
                     style={!isNamaKontakFilled ? disabledStyle : undefined}
                   />
                 </div>
+                {phoneError && <span style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}>{phoneError}</span>}
               </div>
               <div className="ca-field">
                 <label className="ca-label">Email <span className="ca-optional">(Opsional)</span></label>
                 <input
                   className="ca-input"
-                  type="email"
+                  type="text"
                   placeholder="klien@perusahaan.com"
                   value={form.email}
                   onChange={(e) => handleChange("email", e.target.value)}
                   disabled={!isNamaKontakFilled}
                   style={!isNamaKontakFilled ? disabledStyle : undefined}
                 />
+                {emailError && <span style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}>{emailError}</span>}
               </div>
             </div>
           </div>
@@ -294,8 +324,19 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
 
         {/* Footer */}
         <div className="ca-footer">
+          {isNamaKontakFilled && !isContactValid && (
+            <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>Isi minimal nomor telepon atau email.</span>
+          )}
           <button type="button" className="ca-btn-cancel" onClick={handleCancel}>Batal</button>
-          <button type="button" className="ca-btn-submit" onClick={handleSubmit}>Simpan Data</button>
+          <button
+            type="button"
+            className="ca-btn-submit"
+            onClick={handleSubmit}
+            disabled={!isContactValid}
+            style={{ opacity: !isContactValid ? 0.5 : 1, cursor: !isContactValid ? "not-allowed" : "pointer" }}
+          >
+            Simpan Data
+          </button>
         </div>
 
       </div>

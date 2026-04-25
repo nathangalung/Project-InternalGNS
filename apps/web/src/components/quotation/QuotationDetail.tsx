@@ -60,8 +60,8 @@ export default function QuotationDetail({ quotationId, onNavigate, onLogout }: Q
   const totalProfit  = q.products.reduce((s, p) => s + p.qty * p.profitSatuan, 0);
   const totalShip    = q.shipping.hargaSatuan;
   const subTotal     = totalProduk + totalShip;
-  const dppNilaiLain = Math.round((subTotal * 11) / 12);
-  const ppn12        = subTotal - dppNilaiLain;
+  const dppNilaiLain = Math.round(totalProduk * 11 / 12);
+  const ppn12        = totalProduk - dppNilaiLain;
 
   function handleStatusChange(s: Status) {
     setStatus(s);
@@ -99,11 +99,6 @@ export default function QuotationDetail({ quotationId, onNavigate, onLogout }: Q
           {/* Header */}
           <div className="qd-header">
             <div className="qd-header-left">
-              <button className="qd-back-btn" onClick={() => onNavigate("quotation")} title="Kembali">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 12H5M12 5l-7 7 7 7"/>
-                </svg>
-              </button>
               <div>
                 <h1 className="qd-title">Quotation {quotationId}</h1>
                 <div className="qd-meta-row">
@@ -116,14 +111,14 @@ export default function QuotationDetail({ quotationId, onNavigate, onLogout }: Q
               </div>
             </div>
             <div className="qd-header-actions">
-              <button className="btn-admin-outline" onClick={() => onNavigate("quotation-edit")}>
+              <button className="btn-admin-outline" onClick={() => onNavigate("quotation-edit")} style={{ minWidth: "130px", justifyContent: "center" }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
                 Ubah
               </button>
-              <button className="btn-admin-primary">
+              <button className="btn-admin-primary" style={{ minWidth: "130px", justifyContent: "center" }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="7 10 12 15 17 10"/>

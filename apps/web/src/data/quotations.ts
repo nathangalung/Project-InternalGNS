@@ -183,6 +183,10 @@ export function getQuotation(id: string): QuotationData | undefined {
   return quotations.find((q) => q.id === id);
 }
 
+export function getTotalHargaBeli(q: QuotationData): number {
+  return q.products.reduce((sum, p) => sum + p.qty * (p.hargaSatuan - p.profitSatuan), 0);
+}
+
 export function formatRp(n: number): string {
   return "Rp" + n.toLocaleString("id-ID");
 }
