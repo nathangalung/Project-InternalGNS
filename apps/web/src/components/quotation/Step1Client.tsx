@@ -45,7 +45,7 @@ export default function Step1Client({
         <input
           className="qe-search-input"
           type="text"
-          placeholder="Cari nama perusahaan atau ID klien..."
+          placeholder="Cari nama perusahaan atau nama narahubung..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />

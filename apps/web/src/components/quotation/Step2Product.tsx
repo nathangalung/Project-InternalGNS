@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import type { ProductItem } from "./QuotationEdit";
 
 interface Step2ProductProps {
@@ -15,11 +15,51 @@ interface Step2ProductProps {
   setShowDiscountModal: (show: boolean) => void;
   discountPct: number;
   formatRp: (n: number) => string;
+  summaryTotalHargaBeli: number;
   summaryTotalHargaJual: number;
   nominalDiskon: number;
   summarySubTotal: number;
   summaryDpp: number;
   summaryPpn: number;
+  onImportProducts: (products: ProductItem[]) => void;
+}
+
+function parseCSVProducts(text: string, maxId: number): ProductItem[] {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+  const idx = (keys: string[]) => headers.findIndex(h => keys.some(k => h.includes(k)));
+
+  const nameIdx = idx(['nama', 'name', 'produk']);
+  if (nameIdx === -1) return [];
+
+  const kodeIdx  = idx(['kode', 'impa', 'code']);
+  const vendorIdx = idx(['vendor']);
+  const jumlahIdx = idx(['jumlah', 'qty', 'quantity']);
+  const satuanIdx = idx(['satuan', 'unit']);
+  const beliIdx  = idx(['beli', 'buy', 'purchase', 'cost']);
+  const jualIdx  = idx(['jual', 'sell', 'sale', 'price']);
+
+  const results: ProductItem[] = [];
+  let nextId = maxId + 1;
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+    const nama = cols[nameIdx] || "";
+    if (!nama) continue;
+    results.push({
+      id: nextId++,
+      nama,
+      kodeImpa: kodeIdx  >= 0 ? (cols[kodeIdx]  || "") : "",
+      vendor:   vendorIdx >= 0 ? (cols[vendorIdx] || "") : "",
+      jumlah:   jumlahIdx >= 0 ? (Number(cols[jumlahIdx]) || 1) : 1,
+      satuan:   satuanIdx >= 0 ? (cols[satuanIdx] || "PCS") : "PCS",
+      hargaBeli: beliIdx >= 0 ? (Number(cols[beliIdx]) || 0) : 0,
+      hargaJual: jualIdx >= 0 ? (Number(cols[jualIdx]) || 0) : 0,
+    });
+  }
+  return results;
 }
 
 export default function Step2Product({
@@ -27,8 +67,45 @@ export default function Step2Product({
   prodPageSize, setProdPageSize, prodPage, setProdPage,
   isRowDropdownOpen, setIsRowDropdownOpen,
   setShowDiscountModal, discountPct, formatRp,
-  summaryTotalHargaJual, nominalDiskon, summarySubTotal, summaryDpp, summaryPpn
+  summaryTotalHargaBeli, summaryTotalHargaJual, nominalDiskon, summarySubTotal, summaryDpp, summaryPpn,
+  onImportProducts
 }: Step2ProductProps) {
+  const importFileRef = useRef<HTMLInputElement>(null);
+  const [importMsg, setImportMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+  function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    const currentMaxId = products.reduce((m, p) => Math.max(m, p.id), 0);
+
+    if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
+      setImportMsg({ text: "Format Excel (.xlsx/.xls) belum didukung di browser. Gunakan format CSV.", ok: false });
+      setTimeout(() => setImportMsg(null), 4000);
+      return;
+    }
+    if (!file.name.endsWith(".csv")) {
+      setImportMsg({ text: "Format file tidak didukung. Gunakan .csv, .xlsx, atau .xls.", ok: false });
+      setTimeout(() => setImportMsg(null), 4000);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      const parsed = parseCSVProducts(text, currentMaxId);
+      if (parsed.length === 0) {
+        setImportMsg({ text: "Tidak ada produk valid dalam file. Pastikan kolom 'nama' tersedia.", ok: false });
+      } else {
+        onImportProducts(parsed);
+        setImportMsg({ text: `${parsed.length} produk berhasil diimport.`, ok: true });
+      }
+      setTimeout(() => setImportMsg(null), 4000);
+    };
+    reader.readAsText(file);
+  }
+
   const totalProds = products.length;
   const totalPages = Math.ceil(totalProds / prodPageSize) || 1;
   const start = (prodPage - 1) * prodPageSize;
@@ -40,10 +117,31 @@ export default function Step2Product({
           <h2 className="qe-section-title">Pilih Produk & Harga</h2>
           <p className="qe-section-desc">Tentukan produk dan harga penawaran.</p>
         </div>
-        <button className="qe-add-client-btn" onClick={() => { setEditingProduct(null); setShowProductAdd(true); }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg> Tambah Produk
-        </button>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <input ref={importFileRef} type="file" accept=".csv,.xlsx,.xls" style={{ display: "none" }} onChange={handleImportFile} />
+          <button
+            className="qe-add-client-btn"
+            onClick={() => importFileRef.current?.click()}
+            style={{ background: "transparent", border: "1px solid rgba(99,14,212,0.3)", color: "#630ED4" }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Import Excel/CSV
+          </button>
+          <button className="qe-add-client-btn" onClick={() => { setEditingProduct(null); setShowProductAdd(true); }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg> Tambah Produk
+          </button>
+        </div>
       </div>
+
+      {importMsg && (
+        <div style={{ padding: "10px 16px", borderRadius: "8px", fontSize: "13px", fontWeight: 500, fontFamily: "'Inter', sans-serif", marginBottom: "8px", background: importMsg.ok ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", color: importMsg.ok ? "#059669" : "#DC2626", border: `1px solid ${importMsg.ok ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}` }}>
+          {importMsg.text}
+        </div>
+      )}
 
       <div className="qep-layout">
         <div className="qep-cards">
@@ -86,7 +184,7 @@ export default function Step2Product({
               </button>
             </div>
           </div>
-          
+
           {/* Mapping Products */}
           {products.slice((prodPage - 1) * prodPageSize, prodPage * prodPageSize).map((p, i) => {
             const globalIndex = (prodPage - 1) * prodPageSize + i + 1;
@@ -116,8 +214,8 @@ export default function Step2Product({
                     <div className="qep-field"><span className="qep-field-label">SATUAN</span><div className="qep-field-input">{p.satuan}</div></div>
                   </div>
                   <div className="qep-col-right">
-                    <div className="qep-field"><span className="qep-field-label">HARGA BELI</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(p.hargaBeli)}</div></div>
-                    <div className="qep-field"><span className="qep-field-label">HARGA JUAL</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(p.hargaJual)}</div></div>
+                    <div className="qep-field"><span className="qep-field-label">HARGA BELI SATUAN</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(p.hargaBeli)}</div></div>
+                    <div className="qep-field"><span className="qep-field-label">HARGA JUAL SATUAN</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(p.hargaJual)}</div></div>
                     <div className="qep-field"><span className="qep-field-label">PROFIT</span><div className="qep-field-input"><span className="qep-rp">Rp</span> {formatRp(profit)} <span className="qep-profit-pct">({profitPct}%)</span></div></div>
                   </div>
                 </div>
@@ -133,6 +231,7 @@ export default function Step2Product({
           </button>
           <div className="qep-summary-card">
             <h3 className="qep-summary-title">Ringkasan Penawaran</h3>
+            <div className="qep-summary-row"><span className="qep-summary-label">TOTAL HARGA BELI</span><span className="qep-summary-value">Rp {formatRp(summaryTotalHargaBeli)}</span></div>
             <div className="qep-summary-row"><span className="qep-summary-label">TOTAL HARGA JUAL</span><span className="qep-summary-value">Rp {formatRp(summaryTotalHargaJual)}</span></div>
             {discountPct > 0 && (
               <div className="qep-summary-row"><span className="qep-summary-label">DISKON ({discountPct}%)</span><span className="qep-summary-value" style={{ color: "#EF4444" }}>-Rp {formatRp(nominalDiskon)}</span></div>

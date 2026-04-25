@@ -70,14 +70,13 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
   const [berlakuSampai, setBerlakuSampai] = useState("");
 
   // Logika Penguncian
-  const isAlamatFilled = shippingAddress.trim().length > 0;
+  const isAlamatFilled = shippingAddress.trim().length >= 20 && /[a-zA-Z]/.test(shippingAddress);
   const isWaktuFilled = isAlamatFilled && shippingTime.trim().length > 0;
   const isBiayaFilled = isWaktuFilled && shippingCost.trim().length > 0;
   const isTenggatWaktuFilled = jatuhTempo.trim().length > 0 && berlakuSampai.trim().length > 0;
 
   let isNextDisabled = false;
   if (step === 1) isNextDisabled = selectedClient === "";
-  if (step === 3) isNextDisabled = !isBiayaFilled;
 
   const disabledStyle: React.CSSProperties = { opacity: 0.6, cursor: "not-allowed", backgroundColor: "#F7F7F8" };
 
@@ -85,11 +84,13 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
     setProducts((prev) => prev.filter((p) => p.id !== id));
   }
 
-  const filteredClients = clients.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.id.toLowerCase().includes(search.toLowerCase()) ||
-    c.narahubung.toLowerCase().includes(search.toLowerCase())
-  );
+  const sortedClients = [...clients].sort((a, b) => a.name.localeCompare(b.name, "id"));
+  const filteredClients = search.trim()
+    ? sortedClients.filter((c) =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.narahubung.toLowerCase().includes(search.toLowerCase())
+      )
+    : sortedClients.slice(0, 10);
 
   const currentClient = clients.find(c => c.id === selectedClient);
 
@@ -99,8 +100,8 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
   const summaryTotalHargaJual = products.reduce((sum, p) => sum + (p.hargaJual * p.jumlah), 0);
   const nominalDiskon = summaryTotalHargaJual * (discountPct / 100);
   const summarySubTotal = summaryTotalHargaJual - nominalDiskon;
-  const summaryDpp = summarySubTotal; 
-  const summaryPpn = summaryDpp * 0.12; 
+  const summaryDpp = Math.round(summarySubTotal * 11 / 12);
+  const summaryPpn = summarySubTotal - summaryDpp;
   const summaryShippingCost = Number(shippingCost) || 0;
   
   const summaryGrandTotal = summarySubTotal + summaryPpn + summaryShippingCost;
@@ -122,26 +123,23 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
                 <span className="qd-breadcrumb-current">Tambah Quotation</span>
               </nav>
               <div className="qe-title-row">
-                <button className="qd-back-btn" onClick={() => onNavigate("quotation")} title="Kembali">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-                </button>
                 <h1 className="qe-title">Tambah Quotation Baru</h1>
               </div>
             </div>
 
             <div className="qe-header-actions" style={{ display: "flex", gap: "16px", alignItems: "center" }}>
               {step > 1 && (
-                <button className="qe-back-step-btn" onClick={() => setStep(step - 1)} style={{ background: "transparent", border: "none", color: "#630ED4", fontWeight: 600, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontFamily: "'Inter', sans-serif" }}>
+                <button className="btn-admin-outline" onClick={() => setStep(step - 1)} style={{ width: "148px", justifyContent: "center" }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> Kembali
                 </button>
               )}
               {step < steps.length && (
-                <button className="btn-admin-primary qe-next-btn" onClick={() => setStep(step + 1)} disabled={isNextDisabled} style={{ opacity: isNextDisabled ? 0.5 : 1, cursor: isNextDisabled ? "not-allowed" : "pointer", transition: "opacity 0.2s" }}>
-                  {step === 3 ? "Lanjut" : "Lanjut"} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <button className="btn-admin-primary" onClick={() => setStep(step + 1)} disabled={isNextDisabled} style={{ width: "148px", justifyContent: "center", opacity: isNextDisabled ? 0.5 : 1, cursor: isNextDisabled ? "not-allowed" : "pointer", transition: "opacity 0.2s" }}>
+                  Lanjut <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: "scaleX(-1)" }}><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
                 </button>
               )}
               {step === steps.length && (
-                <button className="btn-admin-primary qe-next-btn" onClick={() => onNavigate("quotation")} disabled={!isTenggatWaktuFilled} style={{ background: "#630ED4", opacity: !isTenggatWaktuFilled ? 0.5 : 1, cursor: !isTenggatWaktuFilled ? "not-allowed" : "pointer", transition: "opacity 0.2s" }}>
+                <button className="btn-admin-primary" onClick={() => onNavigate("quotation")} disabled={!isTenggatWaktuFilled} style={{ width: "148px", justifyContent: "center", background: "#630ED4", opacity: !isTenggatWaktuFilled ? 0.5 : 1, cursor: !isTenggatWaktuFilled ? "not-allowed" : "pointer", transition: "opacity 0.2s" }}>
                   Buat Penawaran
                 </button>
               )}
@@ -168,12 +166,14 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
             />
           )}
           {step === 2 && (
-            <Step2Product 
+            <Step2Product
               products={products} deleteProduct={deleteProduct} setEditingProduct={setEditingProduct} setShowProductAdd={setShowProductAdd}
               prodPageSize={prodPageSize} setProdPageSize={setProdPageSize} prodPage={prodPage} setProdPage={setProdPage}
               isRowDropdownOpen={isRowDropdownOpen} setIsRowDropdownOpen={setIsRowDropdownOpen}
               setShowDiscountModal={setShowDiscountModal} discountPct={discountPct} formatRp={formatRp}
+              summaryTotalHargaBeli={summaryTotalHargaBeli}
               summaryTotalHargaJual={summaryTotalHargaJual} nominalDiskon={nominalDiskon} summarySubTotal={summarySubTotal} summaryDpp={summaryDpp} summaryPpn={summaryPpn}
+              onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
             />
           )}
           {step === 3 && (
@@ -200,7 +200,7 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
 
       {/* Modals */}
       <DiscountAdd open={showDiscountModal} onOpenChange={setShowDiscountModal} initialDiscount={discountPct} onSuccess={(val) => { setDiscountPct(val); setShowDiscountModal(false); }} />
-      <ClientAdd open={showClientAdd} onOpenChange={setShowClientAdd} />
+      <ClientAdd open={showClientAdd} onOpenChange={setShowClientAdd} onSuccess={() => { setShowClientAdd(false); setStep(2); }} />
       <ProductAdd 
         open={showProductAdd} initialData={editingProduct} 
         onOpenChange={(open) => { setShowProductAdd(open); if (!open) setEditingProduct(null); }} 

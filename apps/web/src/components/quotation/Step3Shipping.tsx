@@ -18,6 +18,10 @@ export default function Step3Shipping({
   shippingCost, setShippingCost, isAlamatFilled, isWaktuFilled,
   disabledStyle, formatRp
 }: Step3ShippingProps) {
+  const addressError = shippingAddress.trim().length > 0 && (shippingAddress.trim().length < 20 || !/[a-zA-Z]/.test(shippingAddress))
+    ? "Alamat harus minimal 20 karakter dan mengandung huruf."
+    : null;
+
   return (
     <div className="qe-step-content" style={{ maxWidth: "100%", margin: "0 auto", padding: "16px 0", fontFamily: "'Inter', sans-serif" }}>
       <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#111827", marginBottom: "32px" }}>Detail Pengiriman</h2>
@@ -26,11 +30,12 @@ export default function Step3Shipping({
         <div>
           <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "#4B5563", letterSpacing: "0.5px", marginBottom: "8px", textTransform: "uppercase" }}>Alamat Lengkap <span style={{ color: "#EF4444" }}>*</span></label>
           <textarea
-            placeholder="Masukkan alamat pengiriman secara detail..."
+            placeholder="Masukkan alamat pengiriman secara detail (min. 20 karakter)..."
             value={shippingAddress}
             onChange={(e) => setShippingAddress(e.target.value)}
             style={{ width: "100%", padding: "16px", background: "#E2E8F0", border: "none", borderRadius: "8px", fontSize: "14px", color: "#111827", fontFamily: "'Inter', sans-serif", outline: "none", resize: "vertical", minHeight: "100px", boxSizing: "border-box" }}
           />
+          {addressError && <span style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}>{addressError}</span>}
         </div>
 
         <div style={{ opacity: !isAlamatFilled ? 0.6 : 1, transition: "opacity 0.2s ease" }}>

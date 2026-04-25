@@ -1,4 +1,5 @@
 import { useState, useEffect, type CSSProperties } from "react";
+import ProductAddNew from "./ProductAddNew";
 
 export interface ProductAddFormData {
   kodeImpaNama: string;
@@ -20,7 +21,7 @@ const SATUAN_OPTIONS = ["PCS", "LUSIN", "DRM", "UNT", "KG", "BOX"];
 
 interface VendorOption {
   nama: string;
-  harga: number;
+  harga: number; // 0 = belum ada riwayat harga beli
 }
 
 const VENDOR_OPTIONS: VendorOption[] = [
@@ -29,6 +30,7 @@ const VENDOR_OPTIONS: VendorOption[] = [
   { nama: "Marine Global Company 3", harga: 43300000 },
   { nama: "PT Bahari Teknik",        harga: 44100000 },
   { nama: "CV Pelumas Nusantara",    harga: 45200000 },
+  { nama: "PT Mitra Samudera",       harga: 0 },
 ];
 
 interface HistorisOption {
@@ -179,16 +181,26 @@ function AddNewButton({ label, onClick }: { label: string; onClick: () => void }
 
 type DropdownKey = "product" | "satuan" | "vendor" | "historis";
 
+interface NewVendorForm { nama: string; harga: string; }
+
 export default function ProductAdd({ open, onOpenChange, onSuccess, initialData }: ProductAddProps) {
   const [form, setForm] = useState<ProductAddFormData>(INITIAL_FORM);
   const [openDropdown, setOpenDropdown] = useState<DropdownKey | null>(null);
-  
+
   const [initialPrices, setInitialPrices] = useState<{ beli: number | null, jual: number | null }>({ beli: null, jual: null });
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const [productCatalog, setProductCatalog] = useState<CatalogItem[]>(PRODUCT_CATALOG);
+  const [vendorOptions, setVendorOptions] = useState<VendorOption[]>(VENDOR_OPTIONS);
+  const [showProductNew, setShowProductNew] = useState(false);
+  const [showVendorNew, setShowVendorNew] = useState(false);
+  const [newVendorForm, setNewVendorForm] = useState<NewVendorForm>({ nama: "", harga: "" });
 
   // Mengisi form secara otomatis jika prop initialData ada (Mode Edit)
   useEffect(() => {
     if (open) {
+      setProductCatalog([...PRODUCT_CATALOG]);
+      setVendorOptions([...VENDOR_OPTIONS]);
       if (initialData) {
         setForm({
           kodeImpaNama: initialData.kodeImpa ? `${initialData.kodeImpa} - ${initialData.nama}` : initialData.nama,
@@ -213,12 +225,15 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
   const vendorOpen = openDropdown === "vendor";
   const historisOpen = openDropdown === "historis";
 
-  const profit = parseRp(form.hargaJual) - parseRp(form.hargaBeli);
+  const hargaBeliVal = parseRp(form.hargaBeli);
+  const profit = parseRp(form.hargaJual) - hargaBeliVal;
+  const profitPct = hargaBeliVal > 0 ? ((profit / hargaBeliVal) * 100).toFixed(2) : "0.00";
   
   const isProductFilled = form.kodeImpaNama.trim().length > 0;
   const isSatuanFilled = isProductFilled && form.satuan.trim().length > 0;
   const isJumlahFilled = isSatuanFilled && form.jumlahProduk.trim().length > 0;
-  const isVendorFilled = isJumlahFilled && form.namaVendor.trim().length > 0;
+  const exactVendor = vendorOptions.find((v) => v.nama === form.namaVendor);
+  const isVendorFilled = isJumlahFilled && exactVendor !== undefined;
   
   const disabledStyle: React.CSSProperties = {
     opacity: 0.6,
@@ -267,14 +282,25 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
 
   const productQuery = form.kodeImpaNama.trim().toLowerCase();
   const productMatches = productQuery
-    ? PRODUCT_CATALOG.filter((p) =>
+    ? productCatalog.filter((p) =>
         p.kode.toLowerCase().includes(productQuery) ||
         p.nama.toLowerCase().includes(productQuery),
       ).slice(0, 3)
-    : PRODUCT_CATALOG.slice(0, 3);
+    : productCatalog.slice(0, 3);
 
-  const exactProduct = PRODUCT_CATALOG.find((p) => `${p.kode} - ${p.nama}` === form.kodeImpaNama);
+  const exactProduct = productCatalog.find((p) => `${p.kode} - ${p.nama}` === form.kodeImpaNama);
   const activeProductKode = exactProduct?.kode ?? productMatches[0]?.kode;
+
+  const vendorQuery = form.namaVendor.trim().toLowerCase();
+  const sortedVendors = [...vendorOptions].sort((a, b) => {
+    if (a.harga > 0 && b.harga > 0) return a.harga - b.harga;
+    if (a.harga > 0) return -1;
+    if (b.harga > 0) return 1;
+    return 0;
+  });
+  const vendorMatches = vendorQuery
+    ? sortedVendors.filter((v) => v.nama.toLowerCase().includes(vendorQuery))
+    : sortedVendors;
 
   const currentBeli = parseRp(form.hargaBeli);
   const currentJual = parseRp(form.hargaJual);
@@ -283,7 +309,7 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
 
   return (
     <>
-      <div className="ca-overlay" onClick={handleCancel}>
+      <div className="ca-overlay" onClick={handleCancel} style={{ display: showProductNew || showVendorNew ? "none" : undefined }}>
         <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
 
           {/* Header */}
@@ -315,6 +341,7 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
                     value={form.kodeImpaNama}
                     onChange={(e) => { handleChange("kodeImpaNama", e.target.value); setOpenDropdown("product"); }}
                     onFocus={() => setOpenDropdown("product")}
+                    onBlur={() => setTimeout(() => setOpenDropdown((d) => d === "product" ? null : d), 150)}
                   />
                   {productOpen && (
                     <div style={dropdownPanelStyle}>
@@ -340,7 +367,7 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
                           );
                         })
                       )}
-                      <AddNewButton label="Tambah Produk Baru" onClick={() => setOpenDropdown(null)} />
+                      <AddNewButton label="Tambah Produk Baru" onClick={() => { setOpenDropdown(null); setShowProductNew(true); }} />
                     </div>
                   )}
                 </div>
@@ -354,6 +381,7 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
                       type="button"
                       className="ca-select-btn"
                       onClick={() => { if (isProductFilled) toggleDropdown("satuan"); }}
+                      onBlur={() => setTimeout(() => setOpenDropdown((d) => d === "satuan" ? null : d), 150)}
                       disabled={!isProductFilled}
                       style={{
                         ...(!isProductFilled ? disabledStyle : {}),
@@ -407,51 +435,56 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
 
               <div className="ca-field">
                 <label className="ca-label">Nama Vendor <span className="ca-required">*</span></label>
-                <div className="ca-select-wrapper">
-                  <button
-                    type="button"
-                    className="ca-select-btn"
-                    onClick={() => { if (isJumlahFilled) toggleDropdown("vendor"); }}
+                <div style={{ position: "relative" }}>
+                  <input
+                    className="ca-input"
+                    type="text"
+                    placeholder="Ketik atau pilih vendor"
+                    value={form.namaVendor}
                     disabled={!isJumlahFilled}
-                    style={{
-                      ...(!isJumlahFilled ? disabledStyle : {}),
-                      color: !form.namaVendor && isJumlahFilled ? "var(--color-text-muted)" : undefined
-                    }}
-                  >
-                    <span>{form.namaVendor || "Pilih vendor"}</span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                      <polyline points="6 9 12 15 18 9"/>
-                    </svg>
-                  </button>
+                    style={!isJumlahFilled ? disabledStyle : undefined}
+                    onChange={(e) => { handleChange("namaVendor", e.target.value); setOpenDropdown("vendor"); }}
+                    onFocus={() => { if (isJumlahFilled) setOpenDropdown("vendor"); }}
+                    onBlur={() => setTimeout(() => setOpenDropdown((d) => d === "vendor" ? null : d), 150)}
+                  />
                   {vendorOpen && isJumlahFilled && (
                     <div style={dropdownPanelStyle}>
-                      {VENDOR_OPTIONS.map((v) => {
-                        const isActive = form.namaVendor === v.nama;
-                        return (
-                          <button
-                            key={v.nama}
-                            type="button"
-                            style={dropdownItemStyle}
-                            onClick={() => {
-                              setForm((prev) => ({ ...prev, namaVendor: v.nama, hargaBeli: String(v.harga) }));
-                              setInitialPrices((prev) => ({ ...prev, beli: v.harga }));
-                              setOpenDropdown(null);
-                            }}
-                          >
-                            <span style={dropdownLabelStyle(isActive)}>{v.nama}</span>
-                            <span style={{
-                              fontFamily: "'Inter', sans-serif",
-                              fontWeight: isActive ? 700 : 400,
-                              fontSize: "12px",
-                              lineHeight: "24px",
-                              color: isActive ? "#630ED4" : "#4A4455",
-                            }}>
-                              Rp {formatRp(v.harga)}
-                            </span>
-                          </button>
-                        );
-                      })}
-                      <AddNewButton label="Tambah Vendor Baru" onClick={() => setOpenDropdown(null)} />
+                      {vendorMatches.length === 0 ? (
+                        <div style={{ padding: "10px 20px", ...dropdownLabelStyle(false) }}>
+                          Tidak ada hasil. Silahkan tambahkan vendor baru.
+                        </div>
+                      ) : (
+                        vendorMatches.map((v) => {
+                          const isActive = exactVendor?.nama === v.nama;
+                          return (
+                            <button
+                              key={v.nama}
+                              type="button"
+                              style={dropdownItemStyle}
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => {
+                                setForm((prev) => ({ ...prev, namaVendor: v.nama, hargaBeli: v.harga > 0 ? String(v.harga) : prev.hargaBeli }));
+                                if (v.harga > 0) setInitialPrices((prev) => ({ ...prev, beli: v.harga }));
+                                setOpenDropdown(null);
+                              }}
+                            >
+                              <span style={dropdownLabelStyle(isActive)}>{v.nama}</span>
+                              {v.harga > 0 ? (
+                                <span style={{
+                                  fontFamily: "'Inter', sans-serif",
+                                  fontWeight: isActive ? 700 : 400,
+                                  fontSize: "12px",
+                                  lineHeight: "24px",
+                                  color: isActive ? "#630ED4" : "#4A4455",
+                                }}>
+                                  Rp {formatRp(v.harga)}
+                                </span>
+                              ) : isActive ? <CheckmarkIcon /> : null}
+                            </button>
+                          );
+                        })
+                      )}
+                      <AddNewButton label="Tambah Vendor Baru" onClick={() => { setOpenDropdown(null); setNewVendorForm({ nama: "", harga: "" }); setShowVendorNew(true); }} />
                     </div>
                   )}
                 </div>
@@ -459,7 +492,7 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
 
               <div className="ca-row-2">
                 <div className="ca-field">
-                  <label className="ca-label">Harga Beli <span className="ca-required">*</span></label>
+                  <label className="ca-label">Harga Beli Satuan <span className="ca-required">*</span></label>
                   <input
                     className="ca-input"
                     type="number"
@@ -472,7 +505,7 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
                   />
                 </div>
                 <div className="ca-field">
-                  <label className="ca-label">Harga Jual <span className="ca-required">*</span></label>
+                  <label className="ca-label">Harga Jual Satuan <span className="ca-required">*</span></label>
                   <input
                     className="ca-input"
                     type="number"
@@ -494,6 +527,7 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
                     e.preventDefault();
                     if (isVendorFilled) toggleDropdown("historis");
                   }}
+                  onBlur={() => setTimeout(() => setOpenDropdown((d) => d === "historis" ? null : d), 150)}
                   style={{
                     width: "100%",
                     padding: "11px 24px",
@@ -562,7 +596,7 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
                     backgroundColor: !isVendorFilled ? "#F7F7F8" : undefined
                   }}
                 >
-                  {profit === 0 ? "Otomatis terisi" : `Rp ${formatRp(profit)}`}
+                  {profit === 0 ? "Otomatis terisi" : `Rp ${formatRp(profit)} (${profitPct}%)`}
                 </div>
               </div>
             </div>
@@ -579,6 +613,77 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
 
         </div>
       </div>
+
+      {/* Modal Tambah Produk Baru */}
+      <ProductAddNew
+        open={showProductNew}
+        onOpenChange={setShowProductNew}
+        onSuccess={(data) => {
+          const newItem: CatalogItem = { kode: data.kode || "", nama: data.nama };
+          setProductCatalog((prev) => [...prev, newItem]);
+          const label = newItem.kode ? `${newItem.kode} - ${newItem.nama}` : newItem.nama;
+          handleChange("kodeImpaNama", label);
+          if (data.satuan) handleChange("satuan", data.satuan);
+          setShowProductNew(false);
+        }}
+      />
+
+      {/* Modal Tambah Vendor Baru */}
+      {showVendorNew && (
+        <div style={confirmOverlayStyle} onClick={() => setShowVendorNew(false)}>
+          <div style={{ ...confirmModalStyle, maxWidth: "480px" }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#111827" }}>Tambah Vendor Baru</h3>
+              <button onClick={() => setShowVendorNew(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#6B7280" }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/></svg>
+              </button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "#6B7280", textTransform: "uppercase", marginBottom: "6px" }}>Nama Vendor <span style={{ color: "#EF4444" }}>*</span></label>
+                <input
+                  className="ca-input"
+                  type="text"
+                  placeholder="Masukkan nama vendor"
+                  value={newVendorForm.nama}
+                  onChange={(e) => setNewVendorForm((p) => ({ ...p, nama: e.target.value }))}
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "#6B7280", textTransform: "uppercase", marginBottom: "6px" }}>Harga Beli (Rp)</label>
+                <input
+                  className="ca-input"
+                  type="number"
+                  min={0}
+                  placeholder="Masukkan harga beli"
+                  value={newVendorForm.harga}
+                  onChange={(e) => setNewVendorForm((p) => ({ ...p, harga: e.target.value }))}
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                />
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+              <button onClick={() => setShowVendorNew(false)} style={{ padding: "8px 16px", borderRadius: "6px", border: "1px solid #D1D5DB", background: "#fff", color: "#374151", fontWeight: 600, fontSize: "14px", cursor: "pointer" }}>Batal</button>
+              <button
+                onClick={() => {
+                  if (!newVendorForm.nama.trim()) return;
+                  const harga = Number(newVendorForm.harga) || 0;
+                  const newVendor: VendorOption = { nama: newVendorForm.nama.trim(), harga };
+                  setVendorOptions((prev) => [...prev, newVendor]);
+                  setForm((prev) => ({ ...prev, namaVendor: newVendor.nama, hargaBeli: harga > 0 ? String(harga) : prev.hargaBeli }));
+                  if (harga > 0) setInitialPrices((prev) => ({ ...prev, beli: harga }));
+                  setShowVendorNew(false);
+                }}
+                disabled={!newVendorForm.nama.trim()}
+                style={{ padding: "8px 16px", borderRadius: "6px", border: "none", background: "#630ED4", color: "#fff", fontWeight: 600, fontSize: "14px", cursor: "pointer", opacity: !newVendorForm.nama.trim() ? 0.5 : 1 }}
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Konfirmasi Perubahan Harga */}
       {showConfirm && (
