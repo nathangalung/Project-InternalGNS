@@ -10,6 +10,21 @@
 
 BEGIN;
 
+-- ─── IDEMPOTENT RESET: clear sample tables + reset sequences ──
+-- Memungkinkan seed di-run berkali-kali tanpa FK violation atau
+-- BIGSERIAL drift. CASCADE handle child tables otomatis.
+TRUNCATE TABLE
+  invoice_items,
+  invoices,
+  purchase_order_items,
+  purchase_orders,
+  quotation_status_history,
+  quotation_items,
+  quotations,
+  item_request_matches
+RESTART IDENTITY CASCADE;
+
+
 -- ═══════════════════════════════════════════════════════════
 -- QUOTATION Q-264128/GNS/IV/2026
 -- Client: PT. IMC Ship Management, Vessel: MV YUXIN SATU
@@ -24,9 +39,9 @@ INSERT INTO quotations (
 ) VALUES (
   1, 'Q-264128/GNS/IV/2026', 1, 1, 'PT. IMC Ship Management',
   1, 'Bp. Restu Umar Singgih', '8404/V-0006/REQ26', 'MV YUXIN SATU', 'sent',
-  '30 days', 3, 0.05,
+  '30 days', 3, 5,                              -- 5 = 5% (post-00010, range 0..100)
   -- Subset 13 items; total_produk = total (karena no shipping line di subset ini)
-  8141000, 8141000, 407050,
+  8141000, 8141000, 407050,                     -- total_discount = 8141000 × 5/100
   'Subset 13 baris untuk demo. Original quotation punya 117 baris.',
   2, 2
 );
@@ -167,11 +182,15 @@ INSERT INTO invoice_items (
 -- ═══════════════════════════════════════════════════════════
 -- ITEM REQUEST MATCHES (learning entries untuk auto-suggest)
 -- ═══════════════════════════════════════════════════════════
+-- Trigger trg_learn_match (00003) sudah auto-populate via INSERT quotation_items.
+-- Disini kita override match_count untuk simulasi history yang lebih kaya.
 INSERT INTO item_request_matches (request_text, matched_item_id, match_count) VALUES
   ('PUNCHING TOOL SET DIES & TABLE, 6-38MM 16S', 1, 3),
   ('LAMP LED 12W (100W) 220V E-27', 11, 5),
   ('LAMP LED 8W (60W) 220V E-27', 12, 5),
-  ('CARBORUNDUM PASTE MICRO FINE 450GRM', 3, 2);
+  ('CARBORUNDUM PASTE MICRO FINE 450GRM', 3, 2)
+ON CONFLICT (LOWER(TRIM(request_text))) DO UPDATE
+  SET match_count = EXCLUDED.match_count;
 
 COMMIT;
 
