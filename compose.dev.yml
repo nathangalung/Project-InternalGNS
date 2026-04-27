@@ -1,0 +1,43 @@
+name: internalgns-dev
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: gns_quotation
+      POSTGRES_USER: gns_app
+      POSTGRES_PASSWORD: gns_app
+      TZ: Asia/Jakarta
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gns_app -d gns_quotation"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    environment:
+      ENV: development
+      HTTP_ADDR: ":8080"
+      TZ: Asia/Jakarta
+      DATABASE_URL: postgres://gns_app:gns_app@postgres:5432/gns_quotation?sslmode=disable
+      JWT_SECRET: dev_jwt_secret_change_me_with_openssl_rand_hex_32
+      JWT_EXPIRY: 24h
+      CORS_ALLOWED_ORIGINS: "*"
+      SUPERADMIN_EMAIL: admin@globalsakti.com
+      SUPERADMIN_NAME: Administrator
+      SUPERADMIN_PASSWORD: AdminGNS123!
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata_dev:

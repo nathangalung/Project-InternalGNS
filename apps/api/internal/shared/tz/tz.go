@@ -10,7 +10,7 @@ var (
 	jakarta     *time.Location
 )
 
-// Jakarta returns Asia/Jakarta (UTC+7), lazily loaded once.
+// Asia/Jakarta location, lazy.
 func Jakarta() *time.Location {
 	jakartaOnce.Do(func() {
 		loc, err := time.LoadLocation("Asia/Jakarta")
@@ -22,5 +22,5 @@ func Jakarta() *time.Location {
 	return jakarta
 }
 
-// Now returns the current time in Jakarta.
+// Current time in Jakarta.
 func Now() time.Time { return time.Now().In(Jakarta()) }

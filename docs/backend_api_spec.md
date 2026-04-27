@@ -1,15 +1,15 @@
 # Backend API Spec — Quotation Creation Flow
 
-Dokumen ini menjelaskan endpoint Go API yang diperlukan untuk mendukung alur pembuatan quotation di frontend (`apps/web/src/components/quotation/`). Untuk setiap endpoint, dokumen menjelaskan:
+This document spells out the Go API endpoints that back the quotation flow in `apps/web/src/components/quotation/`. For each endpoint it lists:
 
-- HTTP method + path
-- Handler & repo function name
-- DB call (plain SQL via sqlc atau callable function)
-- Request/response shape (untuk endpoint kompleks)
+- HTTP method and path
+- Handler and repo function names
+- DB call (plain SQL through sqlc, or a callable function)
+- Request/response shape for the non-trivial endpoints
 
 ---
 
-## Daftar isi
+## Contents
 
 1. [Arsitektur & konvensi](#1-arsitektur--konvensi)
 2. [Mapping flow FE → backend](#2-mapping-flow-fe--backend)
@@ -48,12 +48,12 @@ sqlc Queries   — type-safe wrapper di-generate dari .sql files
 DB             — plain SQL atau call function/view
 ```
 
-### Aturan
-1. **Tidak ada raw SQL di handler atau service** — semua via sqlc-generated method.
-2. **Plain CRUD** → query SQL biasa di `.sql` file.
-3. **Complex logic** (search, atomic multi-step) → call DB function, sqlc tetap wrap.
-4. **Triggers DB-side** (snapshot, cascade, validation) handle invariants — backend cukup trust.
-5. **Response format**: JSON dengan camelCase. Error sebagai `{"error":{"code","message"}}`.
+### Rules
+1. **No raw SQL in handlers or services** — every call goes through a sqlc-generated method.
+2. **Plain CRUD** lives in a `.sql` query file.
+3. **Complex logic** (search, atomic multi-step writes) calls a DB function, still wrapped by sqlc.
+4. **DB-side triggers** (snapshot, cascade, validation) own the invariants. The backend trusts them.
+5. **Response format** is JSON with camelCase keys. Errors look like `{"error":{"code","message"}}`.
 
 ### File structure per domain
 
@@ -78,20 +78,20 @@ apps/api/internal/<domain>/db/                    # generated Go code
 
 | FE step | FE component | User action | HTTP call | DB call type |
 |---|---|---|---|---|
-| 1 | Step1Client | Initial render daftar klien | `GET /clients` | sqlc plain SELECT |
-| 1 | Step1Client | Ketik di search bar | `GET /clients/search?q=...` | **DB function `fn_search_clients`** |
-| 1 | ClientAdd modal | Buka modal add klien | `GET /countries` (cache) | sqlc plain SELECT |
-| 1 | ClientAdd modal | Pilih country → phone prefix | (no API — FE state from cached data) | — |
-| 1 | ClientAdd modal | Submit klien baru | `POST /clients` | sqlc INSERT |
-| 2 | ProductAdd modal | Search item by name/IMPA | `GET /items/search?q=...` | **DB function `fn_search_items`** |
-| 2 | ProductAdd modal | Paste raw text dari PDF | `POST /items/match-request` | **DB function `fn_match_request`** |
-| 2 | ProductAdd modal | List vendor untuk item | `GET /items/{id}/vendors` | sqlc plain JOIN |
-| 2 | ProductAdd modal | Search satuan | `GET /units` (cache) | sqlc plain SELECT |
-| 2 | ProductAdd modal | Search vendor by name | `GET /vendors/search?q=...` | **DB function `fn_search_vendors`** |
-| 2 | ProductAdd modal | "Lihat history harga jual" | `GET /items/{id}/price-history` | **DB function `fn_suggest_selling_prices`** |
-| 2 | ProductAdd modal | User edit cost + check "Update vendor" | (flag dikirim saat submit, tidak ada call) | trigger `trg_sync_vendor_cost` |
-| 3 | Step3Shipping | Isi alamat/waktu/biaya | (no API — FE state only) | — |
-| 4 | Step4Summary | Klik **"Buat Penawaran"** | **`POST /quotations`** | **DB function `fn_create_quotation`** ⭐ |
+| 1 | Step1Client | First render of the client list | `GET /clients` | sqlc plain SELECT |
+| 1 | Step1Client | Typing in the search bar | `GET /clients/search?q=...` | **DB function `fn_search_clients`** |
+| 1 | ClientAdd modal | Open the add-client modal | `GET /countries` (cache) | sqlc plain SELECT |
+| 1 | ClientAdd modal | Pick country, prefill phone prefix | no API call, FE reads cached data | — |
+| 1 | ClientAdd modal | Submit a new client | `POST /clients` | sqlc INSERT |
+| 2 | ProductAdd modal | Search items by name or IMPA | `GET /items/search?q=...` | **DB function `fn_search_items`** |
+| 2 | ProductAdd modal | Paste raw PDF text | `POST /items/match-request` | **DB function `fn_match_request`** |
+| 2 | ProductAdd modal | List vendors for an item | `GET /items/{id}/vendors` | sqlc plain JOIN |
+| 2 | ProductAdd modal | Search units | `GET /units` (cache) | sqlc plain SELECT |
+| 2 | ProductAdd modal | Search vendors by name | `GET /vendors/search?q=...` | **DB function `fn_search_vendors`** |
+| 2 | ProductAdd modal | Open the selling-price history | `GET /items/{id}/price-history` | **DB function `fn_suggest_selling_prices`** |
+| 2 | ProductAdd modal | Edit cost and tick "Update vendor" | flag sent on submit, no extra call | trigger `trg_sync_vendor_cost` |
+| 3 | Step3Shipping | Fill address, lead time, cost | no API call, FE state only | — |
+| 4 | Step4Summary | Click **"Buat Penawaran"** | **`POST /quotations`** | **DB function `fn_create_quotation`** |
 
 ---
 
@@ -99,7 +99,7 @@ apps/api/internal/<domain>/db/                    # generated Go code
 
 ### units
 
-Master satuan unit (40 rows). FE fetch sekali, cache di-memory untuk autocomplete.
+Unit master (40 rows). FE fetches once and caches in memory for autocomplete.
 
 | Method | Path | Handler | Repo | DB |
 |---|---|---|---|---|
@@ -118,7 +118,7 @@ Response sample:
 
 ### countries
 
-Master country code + ITU-T E.164 dial code (251 rows). Untuk Step1 ClientAdd modal.
+Country master with ITU-T E.164 dial codes (251 rows). Used by the Step1 ClientAdd modal.
 
 | Method | Path | Handler | Repo | DB |
 |---|---|---|---|---|
@@ -132,13 +132,13 @@ Response sample:
 ]
 ```
 
-**FE pattern:** fetch sekali di app load, cache. Saat user pilih country → ambil `dialCode`, prefill phone input.
+**FE pattern:** fetch once at app load and cache. When the user picks a country, take its `dialCode` and prefill the phone input.
 
 ---
 
 ### clients
 
-Company + contact person (1 company → many contacts). Untuk Step1.
+Companies and their contacts (one company has many contacts). Used in Step1.
 
 | Method | Path | Handler | Repo | DB |
 |---|---|---|---|---|
@@ -233,7 +233,7 @@ Response:
 ]
 ```
 
-#### `POST /items/match-request` — smart match dengan learning cache
+#### `POST /items/match-request` — smart match with learning cache
 
 Request:
 ```json
@@ -255,7 +255,7 @@ Response:
 
 `source`: `"LEARNED_EXACT"` | `"LEARNED_FUZZY"` | `"CATALOG_MATCH"`.
 
-#### `GET /items/{id}/vendors` — list vendors yang supply item ini
+#### `GET /items/{id}/vendors` — vendors that supply this item
 
 Plain JOIN, not function:
 ```sql
@@ -296,7 +296,7 @@ Response sample:
 
 ### vendors
 
-Master vendor. Untuk Step2 product modal.
+Vendor master. Used by the Step2 product modal.
 
 | Method | Path | Handler | Repo | DB |
 |---|---|---|---|---|
@@ -327,9 +327,9 @@ Quotation header + items. Step4 submit + list/detail/edit pages.
 Wraps `fn_create_quotation(...)`. Single round-trip — DB function:
 1. Generate `quotation_no` via `fn_next_doc_no` (race-safe)
 2. Snapshot company/contact name
-3. Calculate totals dari items
-4. INSERT header + items + optional shipping line
-5. Trigger handle: discount inherit, vendor cost sync (kalau flag), learning cache populate
+3. Calculate totals from the items
+4. INSERT header, items, and an optional shipping line
+5. Triggers run: discount inherit, vendor cost sync (when flagged), learning cache populate
 
 Request:
 ```json
@@ -418,7 +418,7 @@ Response:
 
 ## 4. Reference: DB functions
 
-Semua callable function (8) yang sudah ada di DB. Backend wrap via sqlc query.
+All eight callable DB functions already exist. The backend wraps each one through a sqlc query.
 
 | Function | Signature | Used by |
 |---|---|---|
@@ -428,34 +428,34 @@ Semua callable function (8) yang sudah ada di DB. Backend wrap via sqlc query.
 | `fn_search_clients(q, min_score, limit)` | `→ TABLE(company_*, contact_*, score, match_tier)` | `GET /clients/search` |
 | `fn_search_vendors(q, min_score, limit)` | `→ TABLE(vendor_id, vendor_name, location, contact_info, score, match_tier)` | `GET /vendors/search` |
 | `fn_suggest_selling_prices(item_id, limit)` | `→ TABLE(quotation_no, quotation_date, client_name, qty, cost_price, selling_price, profit_pct)` | `GET /items/{id}/price-history` |
-| `fn_next_doc_no(doc_type, company_id)` | `→ TEXT` | Internal (panggil dari `fn_create_quotation`) |
+| `fn_next_doc_no(doc_type, company_id)` | `→ TEXT` | Called internally by `fn_create_quotation` |
 | `fn_create_quotation(...)` | `→ BIGINT (quotation_id)` | `POST /quotations` |
 
-### Trigger functions (9, auto-fire — backend tidak perlu panggil manual)
+### Trigger functions (9 total, auto-fire so the backend never calls them directly)
 
 | Function | Trigger | Behavior |
 |---|---|---|
-| `set_updated_at` / `set_updated_at_no_version` | BEFORE UPDATE banyak tabel | Auto-set `updated_at = NOW()` (+ row_version pada transaksi) |
-| `trg_fn_sync_vendor_cost` | AFTER INSERT quotation_items | Sync `vendor_products.cost_price` kalau `update_vendor_price=TRUE` |
-| `trg_fn_learn_match` | AFTER INSERT quotation_items | UPSERT ke `item_request_matches` |
-| `trg_fn_inherit_quotation_discount` | BEFORE INSERT quotation_items | Inherit `discount_pct` dari quotation header |
-| `trg_fn_inherit_po_discount` | BEFORE INSERT purchase_order_items | Inherit dari PO header |
-| `trg_fn_po_inherit_quotation_discount` | BEFORE INSERT purchase_orders | PO inherit dari quotation |
-| `trg_fn_protect_quotation_discount` | BEFORE UPDATE OF discount_pct | Block kalau status≠draft |
-| `trg_fn_cascade_quotation_discount` | AFTER UPDATE OF discount_pct | Cascade ke items |
+| `set_updated_at` / `set_updated_at_no_version` | BEFORE UPDATE on many tables | Auto-sets `updated_at = NOW()` and bumps `row_version` on transactional tables |
+| `trg_fn_sync_vendor_cost` | AFTER INSERT on quotation_items | Syncs `vendor_products.cost_price` when `update_vendor_price = TRUE` |
+| `trg_fn_learn_match` | AFTER INSERT on quotation_items | Upserts into `item_request_matches` |
+| `trg_fn_inherit_quotation_discount` | BEFORE INSERT on quotation_items | Inherits `discount_pct` from the quotation header |
+| `trg_fn_inherit_po_discount` | BEFORE INSERT on purchase_order_items | Inherits from the PO header |
+| `trg_fn_po_inherit_quotation_discount` | BEFORE INSERT on purchase_orders | PO inherits from the source quotation |
+| `trg_fn_protect_quotation_discount` | BEFORE UPDATE OF discount_pct | Blocks edits unless status is draft |
+| `trg_fn_cascade_quotation_discount` | AFTER UPDATE OF discount_pct | Cascades the new discount to all items |
 
 ---
 
-## 5. Walkthrough: alur "Buat Penawaran"
+## 5. Walkthrough: the "Buat Penawaran" flow
 
-Tracing call dari klik tombol Step4 sampai data tersimpan:
+Tracing the call from the Step4 button click until the data lands in the DB:
 
 ```
 [FE: Step4Summary.tsx]
-    User klik "Buat Penawaran"
+    User clicks "Buat Penawaran"
     │
     ▼
-[FE: collect state from Step1-3 + items array + flag update_vendor_price per item]
+[FE: collect state from Step1-3, items array, and the per-item update_vendor_price flag]
     │
     ▼
 POST /api/v1/quotations
@@ -464,7 +464,7 @@ Body: { companyClientId, contactId, ..., items: [...] }
     ▼
 [Go handler] quotations.CreateQuotation
     Validate body, parse items
-    Marshal items → JSONB
+    Marshal items into JSONB
     Call repo.Create(ctx, dto, itemsJSON, userID)
     │
     ▼
@@ -473,29 +473,27 @@ Body: { companyClientId, contactId, ..., items: [...] }
     │
     ▼
 [DB function] fn_create_quotation (single transaction)
-    1. Validate: items not empty, discount_pct in [0,1]
-    2. Snapshot: SELECT company.name + contact.name
+    1. Validate items are non-empty and discount_pct is between 0 and 1
+    2. Snapshot company.name and contact.name
     3. Pre-calc totals (total_produk, total, total_discount)
     4. fn_next_doc_no('Q', company_id)
-       → UPSERT doc_sequences atomic
-       → return "Q-2626413/GNS/IV/2026"
-    5. INSERT quotations (header) RETURNING id
-    6. FOR EACH item in JSONB:
-         INSERT quotation_items (...)
-         ├─ trg_inherit_quotation_discount fires → discount_pct = header
-         ├─ GENERATED columns compute (discount_amount, subtotal, profit_*)
-         ├─ trg_sync_vendor_cost fires → kalau update_vendor_price=TRUE,
-         │                                UPDATE vendor_products.cost_price
-         └─ trg_learn_match fires → UPSERT item_request_matches
-    7. IF shipping_cost > 0:
-         INSERT quotation_items (item_type='shipping')
+       Atomic UPSERT into doc_sequences
+       Returns something like "Q-2626413/GNS/IV/2026"
+    5. INSERT into quotations (header) RETURNING id
+    6. For each item in the JSONB array:
+         INSERT into quotation_items (...)
+         - trg_inherit_quotation_discount sets discount_pct from the header
+         - GENERATED columns compute discount_amount, subtotal, profit_*
+         - trg_sync_vendor_cost updates vendor_products.cost_price when update_vendor_price=TRUE
+         - trg_learn_match upserts into item_request_matches
+    7. If shipping_cost > 0, INSERT a quotation_items row with item_type='shipping'
     8. RETURN quotation_id
     │
     ▼
-[Go handler] return { id, quotationNo } ← 201 Created
+[Go handler] return { id, quotationNo } as 201 Created
     │
     ▼
-[FE] redirect ke /quotations/{id} atau back to list
+[FE] redirect to /quotations/{id} or back to the list
 ```
 
 Total: **1 HTTP call, 1 DB transaction, multiple side-effects via triggers**.
@@ -504,9 +502,9 @@ Total: **1 HTTP call, 1 DB transaction, multiple side-effects via triggers**.
 
 ## 6. Migration index
 
-Urutan migration (semua di `apps/api/migrations/`):
+Migration order (all live in `apps/api/db/migrations/`):
 
-| # | File | Isi |
+| # | File | Contents |
 |---|---|---|
 | 00001 | `00001_baseline_schema.sql` | 14 tabel + GENERATED + 11 updated_at triggers + view |
 | 00002 | `00002_pricing_support.sql` | `update_vendor_price` flag + `trg_sync_vendor_cost` + `fn_suggest_selling_prices` |
@@ -518,21 +516,21 @@ Urutan migration (semua di `apps/api/migrations/`):
 | 00008 | `00008_search_vendors.sql` | `fn_search_vendors` |
 | 00009 | `00009_create_quotation.sql` | `fn_create_quotation` (atomic create — Step4 submit) |
 
-Apply via `make -C apps/api migrate-up` atau langsung pakai `goose`.
+Apply with `make -C apps/api migrate-up`, or call `goose` directly.
 
 ---
 
-## 7. TODO untuk backend dev
+## 7. Backend TODO
 
-- [ ] Implement 6 domain folder: `units`, `countries`, `clients`, `items`, `vendors`, `quotations`
-- [ ] Tulis sqlc query files (`queries/*.sql`) per domain
-- [ ] Generate sqlc code: `make -C apps/api sqlc`
-- [ ] Wire routes di `internal/app/router.go`
-- [ ] Auth middleware (JWT) di-pasang di domain handlers (kecuali public endpoints)
-- [ ] Error mapping: PostgreSQL error code → HTTP status (lihat `internal/shared/db/pg_errors.go`)
-- [ ] Audit logging — `created_by` / `updated_by` injected dari JWT context
-- [ ] Total: ~30 endpoints, ~6 sqlc query files, ~6 domain packages
+- [ ] Build out the six domain folders: `units`, `countries`, `clients`, `items`, `vendors`, `quotations`
+- [ ] Write sqlc query files (`db/queries/*.sql`) per domain
+- [ ] Generate sqlc code with `make -C apps/api sqlc`
+- [ ] Wire routes in `internal/app/router.go`
+- [ ] Apply the JWT middleware to domain handlers, leaving public endpoints exposed
+- [ ] Map PostgreSQL error codes to HTTP statuses in `internal/shared/db/pg_errors.go`
+- [ ] Audit logging: pull `created_by` and `updated_by` from the JWT context
+- [ ] Total: roughly 30 endpoints, 6 sqlc query files, 6 domain packages
 
 ---
 
-**Last updated:** 2026-04-25 — sync dengan migration 00009
+**Last updated:** 2026-04-27, in sync with migration 00013

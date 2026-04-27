@@ -5,28 +5,24 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/nathangalung/internalgns/apps/api/db/queries"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 )
 
 type Repo struct {
-	pool *pgxpool.Pool
+	db    db.Executor
+	store queries.Store
 }
 
-func NewRepo(pool *pgxpool.Pool) *Repo {
-	return &Repo{pool: pool}
+func NewRepo(exec db.Executor, store queries.Store) *Repo {
+	return &Repo{db: exec, store: store}
 }
 
 var ErrNotFound = errors.New("not found")
 
 func (r *Repo) List(ctx context.Context, limit, offset int) ([]Vendor, error) {
-	const q = `
-		SELECT id, name, location, contact_info, is_active, created_at, updated_at
-		FROM vendors
-		WHERE is_active = TRUE
-		ORDER BY name
-		LIMIT $1 OFFSET $2`
-
-	rows, err := r.pool.Query(ctx, q, limit, offset)
+	rows, err := r.db.Query(ctx, r.store.Get("vendors.list"), limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -34,12 +30,7 @@ func (r *Repo) List(ctx context.Context, limit, offset int) ([]Vendor, error) {
 }
 
 func (r *Repo) GetByID(ctx context.Context, id int64) (Vendor, error) {
-	const q = `
-		SELECT id, name, location, contact_info, is_active, created_at, updated_at
-		FROM vendors
-		WHERE id = $1`
-
-	rows, err := r.pool.Query(ctx, q, id)
+	rows, err := r.db.Query(ctx, r.store.Get("vendors.get_by_id"), id)
 	if err != nil {
 		return Vendor{}, err
 	}
@@ -51,12 +42,9 @@ func (r *Repo) GetByID(ctx context.Context, id int64) (Vendor, error) {
 }
 
 func (r *Repo) Create(ctx context.Context, req CreateVendorRequest, userID int64) (Vendor, error) {
-	const q = `
-		INSERT INTO vendors (name, location, contact_info, created_by, updated_by)
-		VALUES ($1, $2, $3, $4, $4)
-		RETURNING id, name, location, contact_info, is_active, created_at, updated_at`
-
-	rows, err := r.pool.Query(ctx, q, req.Name, req.Location, req.ContactInfo, userID)
+	rows, err := r.db.Query(ctx, r.store.Get("vendors.create"),
+		req.Name, req.Location, req.ContactInfo, userID,
+	)
 	if err != nil {
 		return Vendor{}, err
 	}
@@ -65,9 +53,7 @@ func (r *Repo) Create(ctx context.Context, req CreateVendorRequest, userID int64
 
 // Search calls fn_search_vendors.
 func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int) ([]SearchResult, error) {
-	const sql = `SELECT * FROM fn_search_vendors($1, $2, $3)`
-
-	rows, err := r.pool.Query(ctx, sql, q, minScore, limit)
+	rows, err := r.db.Query(ctx, r.store.Get("vendors.search"), q, minScore, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -76,14 +62,7 @@ func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int
 
 // ListItems calls fn_search_items_by_vendor.
 func (r *Repo) ListItems(ctx context.Context, vendorID int64, limit int) ([]ItemByVendor, error) {
-	const sql = `
-		SELECT
-			item_id, item_name, impa_code, vendor_sku,
-			cost_price::text,
-			last_quoted_at::text
-		FROM fn_search_items_by_vendor($1, $2)`
-
-	rows, err := r.pool.Query(ctx, sql, vendorID, limit)
+	rows, err := r.db.Query(ctx, r.store.Get("vendors.list_items"), vendorID, limit)
 	if err != nil {
 		return nil, err
 	}

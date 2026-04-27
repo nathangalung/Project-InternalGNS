@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"log/slog"
 	"net/http"
 	"os"
@@ -14,6 +15,9 @@ import (
 )
 
 func main() {
+	bootstrap := flag.Bool("bootstrap", false, "Run migrations + superadmin seed then exit")
+	flag.Parse()
+
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
@@ -30,6 +34,11 @@ func main() {
 	if err != nil {
 		logger.Error("build server", "err", err)
 		os.Exit(1)
+	}
+
+	if *bootstrap {
+		logger.Info("bootstrap done")
+		return
 	}
 
 	go func() {

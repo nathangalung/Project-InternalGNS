@@ -9,9 +9,13 @@ import "./styles/tailwind.css"
 import "./styles/design-tokens.css"
 import "./styles/admin.css"
 
-// Friend's 4-state page machine — 5 components depend on this type
-// via `import type { Page } from "../../main"`. Keep the export stable.
-export type Page = "dashboard" | "quotation" | "quotation-detail" | "quotation-edit" | "quotation-add"
+// Page state for nav.
+export type Page =
+  | "dashboard"
+  | "quotation"
+  | "quotation-detail"
+  | "quotation-edit"
+  | "quotation-add"
 
 const router = createRouter({
   routeTree,

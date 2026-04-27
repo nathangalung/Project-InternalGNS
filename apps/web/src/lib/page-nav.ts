@@ -19,7 +19,7 @@ export function makePageNavigate(navigate: Navigate, currentId?: string): (page:
         if (currentId) void navigate({ to: "/quotations/$id/edit", params: { id: currentId } })
         return
       case "quotation-add":
-        void navigate({ to: "/quotations/add" }) // Sesuaikan string "/quotations/add" dengan path di routes Anda
+        void navigate({ to: "/quotations/add" })
         return
     }
   }

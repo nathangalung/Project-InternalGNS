@@ -8,7 +8,7 @@ import (
 
 func Routes(d deps.Deps) chi.Router {
 	r := chi.NewRouter()
-	h := NewHandler(NewRepo(d.Pool))
+	h := NewHandler(NewRepo(d.Pool, d.Queries))
 
 	r.Get("/", h.List)
 

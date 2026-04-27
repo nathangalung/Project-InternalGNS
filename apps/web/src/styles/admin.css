@@ -1,9 +1,6 @@
-/* ============================================
-   PT Global Niaga Sakti — Admin Panel Styles
-   Semua nilai mengacu ke design-tokens.css
-   ============================================ */
+/* PT Global Niaga Sakti admin panel styles. Tokens in design-tokens.css. */
 
-/* ── Filter Modal ── */
+/* Filter modal. */
 .modal-overlay {
   position: fixed;
   inset: 0;

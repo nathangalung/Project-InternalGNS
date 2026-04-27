@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import MainDashboard from "@/components/dashboard/MainDashboard"
-import { useAuth } from "@/hooks/use-auth"
+import Dashboard from "@/features/dashboard/Dashboard"
+import { useAuth } from "@/features/auth/hooks"
 import { makePageNavigate } from "@/lib/page-nav"
 
 export const Route = createFileRoute("/_authed/")({
@@ -12,7 +12,7 @@ function DashboardRoute() {
   const { logout } = useAuth()
 
   return (
-    <MainDashboard
+    <Dashboard
       onNavigate={makePageNavigate(navigate)}
       onLogout={() => {
         logout()

@@ -1,0 +1,15 @@
+node_modules
+dist
+.vite
+.cache
+.turbo
+.git
+.gitignore
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+coverage
+playwright-report
+test-results

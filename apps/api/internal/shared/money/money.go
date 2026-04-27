@@ -6,12 +6,12 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// Rupiah formats a decimal as Indonesian rupiah: "Rp 1.234.567,89".
+// Format decimal as Rupiah.
 func Rupiah(d decimal.Decimal) string {
 	return "Rp " + thousandsID(d.StringFixed(2))
 }
 
-// thousandsID formats "1234567.89" → "1.234.567,89" (Indonesian locale).
+// Indonesian thousands separator.
 func thousandsID(s string) string {
 	sign := ""
 	if len(s) > 0 && s[0] == '-' {
@@ -26,7 +26,7 @@ func thousandsID(s string) string {
 			break
 		}
 	}
-	// insert dots every 3 digits from the right
+	// Dot every three digits.
 	n := len(intPart)
 	if n <= 3 {
 		if fracPart == "" {
@@ -55,7 +55,7 @@ func thousandsID(s string) string {
 	return sign + string(out)
 }
 
-// MustParse panics on invalid decimal input — use only with hard-coded constants.
+// Parse decimal or panic.
 func MustParse(s string) decimal.Decimal {
 	d, err := decimal.NewFromString(s)
 	if err != nil {

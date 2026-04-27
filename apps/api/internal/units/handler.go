@@ -7,7 +7,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 )
 
-// Handler wires HTTP requests to repo methods.
+// HTTP handler.
 type Handler struct {
 	repo *Repo
 }
@@ -17,7 +17,7 @@ func NewHandler(repo *Repo) *Handler {
 }
 
 // List handles GET /units.
-// Master data — small response, no pagination.
+// Master data, no pagination needed.
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	units, err := h.repo.ListAll(r.Context())
 	if err != nil {

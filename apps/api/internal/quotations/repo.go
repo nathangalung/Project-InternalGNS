@@ -3,39 +3,46 @@ package quotations
 import (
 	"context"
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/nathangalung/internalgns/apps/api/db/queries"
+	dbpkg "github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 )
 
+// Executor aliased for backwards compat.
+type Executor = dbpkg.Executor
+
 type Repo struct {
-	pool *pgxpool.Pool
+	db    Executor
+	store queries.Store
 }
 
-func NewRepo(pool *pgxpool.Pool) *Repo {
-	return &Repo{pool: pool}
+func NewRepo(db Executor, store queries.Store) *Repo {
+	return &Repo{db: db, store: store}
 }
 
 var ErrNotFound = errors.New("not found")
 
-// ListFilter holds filter & sort params untuk GET /quotations.
+// Filter and sort params.
 type ListFilter struct {
-	Q          string   // search by quotation_no or company name
-	Statuses   []string // filter by status (multi)
-	DateFrom   *string  // YYYY-MM-DD
-	DateTo     *string
-	MinTotal   *string  // numeric as string
-	MaxTotal   *string
-	SortBy     string   // 'created_at' | 'total' | 'quotation_no' | 'version'
-	SortDir    string   // 'asc' | 'desc'
-	Limit      int
-	Offset     int
+	Q        string
+	Statuses []string
+	DateFrom *string
+	DateTo   *string
+	MinTotal *string
+	MaxTotal *string
+	SortBy   string
+	SortDir  string
+	Limit    int
+	Offset   int
 }
 
-// List returns rows + total_harga_beli computed via subquery.
+// List rows with cost total.
 func (r *Repo) List(ctx context.Context, f ListFilter) ([]ListRow, error) {
-	// Whitelist sort fields untuk hindari SQL injection
+	// Whitelist sort fields against injection.
 	sortBy := "q.created_at"
 	switch f.SortBy {
 	case "total":
@@ -50,30 +57,13 @@ func (r *Repo) List(ctx context.Context, f ListFilter) ([]ListRow, error) {
 		sortDir = "ASC"
 	}
 
-	const baseQ = `
-		SELECT
-			q.id,
-			q.quotation_no,
-			q.version,
-			q.company_client_name AS company_name,
-			q.status,
-			q.total::text,
-			COALESCE((
-				SELECT SUM(qi.qty * qi.cost_price)::text
-				FROM quotation_items qi
-				WHERE qi.quotation_id = q.id AND qi.item_type = 'product'
-			), '0') AS total_harga_beli,
-			q.created_at
-		FROM quotations q
-		WHERE 1=1`
-
 	args := []any{}
 	conds := strings.Builder{}
-	conds.WriteString(baseQ)
+	conds.WriteString(r.store.Get("quotations.list_base"))
 
 	addArg := func(v any) string {
 		args = append(args, v)
-		return "$" + itoa(len(args))
+		return "$" + strconv.Itoa(len(args))
 	}
 
 	if f.Q != "" {
@@ -110,42 +100,27 @@ func (r *Repo) List(ctx context.Context, f ListFilter) ([]ListRow, error) {
 	conds.WriteString(" LIMIT " + addArg(limit))
 	conds.WriteString(" OFFSET " + addArg(f.Offset))
 
-	rows, err := r.pool.Query(ctx, conds.String(), args...)
+	rows, err := r.db.Query(ctx, conds.String(), args...)
 	if err != nil {
 		return nil, err
 	}
 	return pgx.CollectRows(rows, pgx.RowToStructByName[ListRow])
 }
 
-// Stats returns count GROUP BY status untuk summary cards.
+// Counts grouped by status.
 func (r *Repo) Stats(ctx context.Context) ([]StatusCount, error) {
-	const q = `
-		SELECT status, COUNT(*) AS count
-		FROM quotations
-		GROUP BY status
-		ORDER BY status`
-
-	rows, err := r.pool.Query(ctx, q)
+	rows, err := r.db.Query(ctx, r.store.Get("quotations.stats"))
 	if err != nil {
 		return nil, err
 	}
 	return pgx.CollectRows(rows, pgx.RowToStructByName[StatusCount])
 }
 
-// GetDetail returns header + items + history.
+// GetDetail returns header, items, history.
 func (r *Repo) GetDetail(ctx context.Context, id int64) (QuotationDetail, error) {
 	var d QuotationDetail
 
-	const headerQ = `
-		SELECT id, quotation_no, version, company_client_id, company_client_name,
-		       contact_id, contact_name, client_ref_no, vessel_name, status,
-		       payment_terms, validity_days,
-		       discount_pct::text, total_produk::text, total::text, total_discount::text,
-		       notes, created_at, updated_at
-		FROM quotations
-		WHERE id = $1`
-
-	rows, err := r.pool.Query(ctx, headerQ, id)
+	rows, err := r.db.Query(ctx, r.store.Get("quotations.get_header"), id)
 	if err != nil {
 		return d, err
 	}
@@ -158,20 +133,7 @@ func (r *Repo) GetDetail(ctx context.Context, id int64) (QuotationDetail, error)
 	}
 	d.Quotation = q
 
-	const itemsQ = `
-		SELECT id, quotation_id, line_number, item_type,
-		       requested_item_id, requested_impa, requested_name,
-		       offered_item_id, vendor_product_id,
-		       qty::text, unit_id,
-		       selling_price::text, cost_price::text,
-		       discount_pct::text, total_selling::text,
-		       discount_amount::text, subtotal::text,
-		       is_available, ship_destination
-		FROM quotation_items
-		WHERE quotation_id = $1
-		ORDER BY line_number`
-
-	itemRows, err := r.pool.Query(ctx, itemsQ, id)
+	itemRows, err := r.db.Query(ctx, r.store.Get("quotations.get_items"), id)
 	if err != nil {
 		return d, err
 	}
@@ -181,13 +143,7 @@ func (r *Repo) GetDetail(ctx context.Context, id int64) (QuotationDetail, error)
 	}
 	d.Items = items
 
-	const histQ = `
-		SELECT id, from_status, to_status, note, changed_by, changed_at
-		FROM quotation_status_history
-		WHERE quotation_id = $1
-		ORDER BY changed_at`
-
-	histRows, err := r.pool.Query(ctx, histQ, id)
+	histRows, err := r.db.Query(ctx, r.store.Get("quotations.get_history"), id)
 	if err != nil {
 		return d, err
 	}
@@ -212,15 +168,8 @@ func (r *Repo) Create(ctx context.Context, req CreateRequest, userID int64) (int
 		status = *req.Status
 	}
 
-	const sql = `
-		SELECT fn_create_quotation(
-			$1, $2, $3, $4, $5, $6, $7::numeric(5,2),
-			$8, $9, $10::numeric(15,2),
-			$11::jsonb, $12, $13, $14
-		)`
-
 	var id int64
-	err = r.pool.QueryRow(ctx, sql,
+	err = r.db.QueryRow(ctx, r.store.Get("quotations.fn_create"),
 		req.CompanyClientID, req.ContactID, req.ClientRefNo, req.VesselName,
 		req.PaymentTerms, req.ValidityDays, req.DiscountPct,
 		req.ShippingAddress, req.ShippingDays, req.ShippingCost,
@@ -229,22 +178,15 @@ func (r *Repo) Create(ctx context.Context, req CreateRequest, userID int64) (int
 	return id, err
 }
 
-// Update calls fn_update_quotation atomically (DRAFT only).
+// Update calls fn_update_quotation. Draft only.
 func (r *Repo) Update(ctx context.Context, id int64, req UpdateRequest, userID int64) (int64, error) {
 	itemsJSON, err := itemsToJSONB(req.Items)
 	if err != nil {
 		return 0, err
 	}
 
-	const sql = `
-		SELECT fn_update_quotation(
-			$1, $2, $3, $4, $5, $6::numeric(5,2),
-			$7, $8, $9::numeric(15,2),
-			$10::jsonb, $11, $12
-		)`
-
 	var newID int64
-	err = r.pool.QueryRow(ctx, sql,
+	err = r.db.QueryRow(ctx, r.store.Get("quotations.fn_update"),
 		id, req.ClientRefNo, req.VesselName, req.PaymentTerms, req.ValidityDays,
 		req.DiscountPct, req.ShippingAddress, req.ShippingDays, req.ShippingCost,
 		itemsJSON, userID, req.Notes,
@@ -254,22 +196,9 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateRequest, userID i
 
 // ChangeStatus calls fn_change_quotation_status atomically.
 func (r *Repo) ChangeStatus(ctx context.Context, id int64, status string, note *string, userID int64) error {
-	const sql = `SELECT fn_change_quotation_status($1, $2, $3, $4)`
-	_, err := r.pool.Exec(ctx, sql, id, status, userID, note)
+	_, err := r.db.Exec(ctx, r.store.Get("quotations.fn_change_status"),
+		id, status, userID, note,
+	)
 	return err
 }
 
-// ─── Helpers ──────────────────────────────────────────────────
-
-// itoa is local to avoid stdlib import for a simple use.
-func itoa(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	digits := []byte{}
-	for n > 0 {
-		digits = append([]byte{byte('0' + n%10)}, digits...)
-		n /= 10
-	}
-	return string(digits)
-}

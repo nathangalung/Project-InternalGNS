@@ -5,48 +5,35 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/nathangalung/internalgns/apps/api/db/queries"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 )
 
 type Repo struct {
-	pool *pgxpool.Pool
+	db    db.Executor
+	store queries.Store
 }
 
-func NewRepo(pool *pgxpool.Pool) *Repo {
-	return &Repo{pool: pool}
+func NewRepo(exec db.Executor, store queries.Store) *Repo {
+	return &Repo{db: exec, store: store}
 }
 
-// ErrNotFound is returned when a client/contact is not found.
+// Missing client or contact.
 var ErrNotFound = errors.New("not found")
-
-// ─── Companies ────────────────────────────────────────────────
 
 // List returns active clients, paginated.
 func (r *Repo) List(ctx context.Context, limit, offset int) ([]Client, error) {
-	const q = `
-		SELECT id, number, name, npwp, address, email, country_code,
-		       tku_id, is_active, created_at, updated_at
-		FROM company_client
-		WHERE is_active = TRUE
-		ORDER BY name
-		LIMIT $1 OFFSET $2`
-
-	rows, err := r.pool.Query(ctx, q, limit, offset)
+	rows, err := r.db.Query(ctx, r.store.Get("clients.list"), limit, offset)
 	if err != nil {
 		return nil, err
 	}
 	return pgx.CollectRows(rows, pgx.RowToStructByName[Client])
 }
 
-// GetByID returns a single client. Returns ErrNotFound if not found.
+// GetByID returns one client.
 func (r *Repo) GetByID(ctx context.Context, id int64) (Client, error) {
-	const q = `
-		SELECT id, number, name, npwp, address, email, country_code,
-		       tku_id, is_active, created_at, updated_at
-		FROM company_client
-		WHERE id = $1`
-
-	rows, err := r.pool.Query(ctx, q, id)
+	rows, err := r.db.Query(ctx, r.store.Get("clients.get_by_id"), id)
 	if err != nil {
 		return Client{}, err
 	}
@@ -57,17 +44,9 @@ func (r *Repo) GetByID(ctx context.Context, id int64) (Client, error) {
 	return c, err
 }
 
-// Create inserts a new client. Returns the created row with id populated.
+// Create inserts a new client.
 func (r *Repo) Create(ctx context.Context, req CreateClientRequest, userID int64) (Client, error) {
-	const q = `
-		INSERT INTO company_client
-			(number, name, npwp, address, email, country_code, tku_id, created_by, updated_by)
-		VALUES
-			($1, $2, $3, $4, $5, COALESCE(NULLIF($6, ''), 'IDN'), $7, $8, $8)
-		RETURNING id, number, name, npwp, address, email, country_code,
-		          tku_id, is_active, created_at, updated_at`
-
-	rows, err := r.pool.Query(ctx, q,
+	rows, err := r.db.Query(ctx, r.store.Get("clients.create"),
 		req.Number, req.Name, req.NPWP, req.Address, req.Email,
 		req.CountryCode, req.TkuID, userID,
 	)
@@ -77,46 +56,27 @@ func (r *Repo) Create(ctx context.Context, req CreateClientRequest, userID int64
 	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Client])
 }
 
-// Search calls fn_search_clients (fuzzy by company + contact + email).
+// Search calls fn_search_clients fuzzy match.
 func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int) ([]SearchResult, error) {
-	const sql = `SELECT * FROM fn_search_clients($1, $2, $3)`
-
-	rows, err := r.pool.Query(ctx, sql, q, minScore, limit)
+	rows, err := r.db.Query(ctx, r.store.Get("clients.search"), q, minScore, limit)
 	if err != nil {
 		return nil, err
 	}
 	return pgx.CollectRows(rows, pgx.RowToStructByName[SearchResult])
 }
 
-// ─── Contacts ─────────────────────────────────────────────────
-
-// ListContacts returns active contacts of a company.
+// ListContacts returns company contacts.
 func (r *Repo) ListContacts(ctx context.Context, companyID int64) ([]Contact, error) {
-	const q = `
-		SELECT id, company_id, name, email, phone, title, country_code,
-		       is_active, created_at, updated_at
-		FROM company_contacts
-		WHERE company_id = $1 AND is_active = TRUE
-		ORDER BY name`
-
-	rows, err := r.pool.Query(ctx, q, companyID)
+	rows, err := r.db.Query(ctx, r.store.Get("clients.list_contacts"), companyID)
 	if err != nil {
 		return nil, err
 	}
 	return pgx.CollectRows(rows, pgx.RowToStructByName[Contact])
 }
 
-// CreateContact inserts a new contact under a company.
+// CreateContact inserts new contact.
 func (r *Repo) CreateContact(ctx context.Context, companyID int64, req CreateContactRequest, userID int64) (Contact, error) {
-	const q = `
-		INSERT INTO company_contacts
-			(company_id, name, email, phone, title, country_code, created_by, updated_by)
-		VALUES
-			($1, $2, $3, $4, $5, COALESCE(NULLIF($6, ''), 'IDN'), $7, $7)
-		RETURNING id, company_id, name, email, phone, title, country_code,
-		          is_active, created_at, updated_at`
-
-	rows, err := r.pool.Query(ctx, q,
+	rows, err := r.db.Query(ctx, r.store.Get("clients.create_contact"),
 		companyID, req.Name, req.Email, req.Phone, req.Title,
 		req.CountryCode, userID,
 	)

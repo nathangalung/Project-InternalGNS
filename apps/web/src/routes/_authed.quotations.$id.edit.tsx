@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import QuotationEdit from "@/components/quotation/QuotationEdit"
-import { useAuth } from "@/hooks/use-auth"
+import QuotationEdit from "@/features/quotations/QuotationEdit"
+import { useAuth } from "@/features/auth/hooks"
 import { makePageNavigate } from "@/lib/page-nav"
 
 export const Route = createFileRoute("/_authed/quotations/$id/edit")({

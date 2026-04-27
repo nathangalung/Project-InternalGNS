@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "packageManager": "bun@1.3.9",
+  "engines": {
+    "node": ">=22.0.0",
+    "bun": ">=1.3.0"
+  },
   "scripts": {
     "dev": "vite",
     "generate:routes": "tsr generate",
@@ -25,8 +30,8 @@
     "@biomejs/biome": "^2.4.12",
     "@tailwindcss/vite": "^4.2.0",
     "@tanstack/react-query-devtools": "^5.99.0",
+    "@tanstack/react-router-devtools": "^1.166.13",
     "@tanstack/router-cli": "^1.166.0",
-    "@tanstack/router-devtools": "^1.166.0",
     "@tanstack/router-plugin": "^1.167.0",
     "@types/node": "^22.10.5",
     "@types/react": "^19.2.14",

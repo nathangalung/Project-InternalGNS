@@ -10,6 +10,8 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 )
 
 type Handler struct {
@@ -21,13 +23,13 @@ func NewHandler(repo *Repo) *Handler {
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
-	limit, offset := parsePagination(r)
+	limit, offset := paginate.Parse(r)
 	v, err := h.repo.List(r.Context(), limit, offset)
 	if err != nil {
 		httperr.Render(w, httperr.Internal(err.Error()))
 		return
 	}
-	writeJSON(w, http.StatusOK, v)
+	httpx.WriteJSON(w, http.StatusOK, v)
 }
 
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +47,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Internal(err.Error()))
 		return
 	}
-	writeJSON(w, http.StatusOK, v)
+	httpx.WriteJSON(w, http.StatusOK, v)
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +67,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Internal(err.Error()))
 		return
 	}
-	writeJSON(w, http.StatusCreated, v)
+	httpx.WriteJSON(w, http.StatusCreated, v)
 }
 
 func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
@@ -93,7 +95,7 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Internal(err.Error()))
 		return
 	}
-	writeJSON(w, http.StatusOK, results)
+	httpx.WriteJSON(w, http.StatusOK, results)
 }
 
 func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
@@ -114,26 +116,5 @@ func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Internal(err.Error()))
 		return
 	}
-	writeJSON(w, http.StatusOK, items)
-}
-
-func parsePagination(r *http.Request) (limit, offset int) {
-	limit, offset = 50, 0
-	if s := r.URL.Query().Get("limit"); s != "" {
-		if v, err := strconv.Atoi(s); err == nil && v > 0 && v <= 200 {
-			limit = v
-		}
-	}
-	if s := r.URL.Query().Get("offset"); s != "" {
-		if v, err := strconv.Atoi(s); err == nil && v >= 0 {
-			offset = v
-		}
-	}
-	return
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
+	httpx.WriteJSON(w, http.StatusOK, items)
 }

@@ -1,52 +1,52 @@
 # Backend Dev Guide — Quotation System
 
-Untuk teman backend yang akan handle implementasi, bug fix, dan deployment. Document ini menjelaskan **arsitektur, pattern, dan keputusan design** yang sudah ada di skeleton.
+For the backend engineer who owns implementation, bug fixes, and deployment. This document covers the **architecture, patterns, and design decisions** baked into the skeleton.
 
 ---
 
-## 1. Arsitektur singkat
+## 1. Architecture in one diagram
 
 ```
 HTTP request
     ↓
-chi router (internal/app/router.go) — mount /api/v1/{domain}
+chi router (internal/app/router.go) mounts /api/v1/{domain}
     ↓
-Handler (internal/<domain>/handler.go) — parse, validate, call repo, render JSON
+Handler (internal/<domain>/handler.go) parses, validates, calls the repo, renders JSON
     ↓
-Repo (internal/<domain>/repo.go) — encapsulate SQL, return Go structs
+Repo (internal/<domain>/repo.go) wraps SQL, returns Go structs
     ↓
-pgx/v5 (pgxpool.Pool) — execute SQL, scan rows
+pgx/v5 (pgxpool.Pool) executes SQL and scans rows
     ↓
-PostgreSQL — table + DB function + trigger
+PostgreSQL — tables, DB functions, triggers
 ```
 
-**Aturan layering:**
-1. **Tidak ada SQL di handler atau service.** Semua SQL hidup di repo.
-2. **Tidak ada DB types di handler signature.** Pakai DTO struct.
-3. **Repo signature stabil** — body bisa di-swap ke sqlc-generated kalau butuh, signature tidak berubah.
-4. **Triggers DB-side handle invariants** — backend tidak perlu replicate logic (snapshot, cascade, validation).
+**Layering rules:**
+1. **No SQL in handlers or services.** All SQL lives in the repo.
+2. **No DB types in handler signatures.** Use DTO structs instead.
+3. **Repo signatures stay stable.** The body can swap to sqlc-generated code without touching the signature.
+4. **DB-side triggers own the invariants.** The backend never replicates that logic (snapshot, cascade, validation).
 
 ---
 
-## 2. Stack & dependencies
+## 2. Stack and dependencies
 
-| Komponen | Pilihan | Alasan |
+| Component | Choice | Reason |
 |---|---|---|
-| HTTP router | `go-chi/chi/v5` | Idiomatic Go, middleware pattern |
-| DB driver | `jackc/pgx/v5` (pgxpool) | Native PG features (JSONB, arrays, COPY) |
-| Migration | `pressly/goose` | Embedded FS, plain SQL files |
-| Decimal | `shopspring/decimal` (di go.mod) | Untuk monetary di service layer (skeleton pakai string) |
+| HTTP router | `go-chi/chi/v5` | Idiomatic Go, clean middleware story |
+| DB driver | `jackc/pgx/v5` (pgxpool) | Native Postgres features (JSONB, arrays, COPY) |
+| Migrations | `pressly/goose` | Embedded FS, plain SQL files |
+| Decimal | `shopspring/decimal` (already in go.mod) | For monetary math when we move past strings |
 | Config | `caarlos0/env/v11` | Env-based, type-safe |
 
-Belum dipakai (TODO):
-- **JWT auth middleware** — placeholder di `internal/shared/deps.CurrentUserID()` return 0
-- **Logger** — minimal, bisa di-add (zap/slog)
-- **sqlc** — config sudah ada di `sqlc.yaml`, generate kalau preferred
-- **MinIO** — untuk file upload (PDF dokumen)
+Not yet wired (TODO):
+- **JWT auth middleware** — `internal/shared/deps.CurrentUserID()` still returns 0 in some paths.
+- **Logger** — minimal; we can add zap or slog when noise becomes a problem.
+- **sqlc** — `sqlc.yaml` is in place; opt in by writing query files.
+- **MinIO** — for file uploads (PDF documents).
 
 ---
 
-## 3. Layout direktori
+## 3. Directory layout
 
 ```
 internal/
@@ -61,17 +61,17 @@ internal/
 │   └── ...
 ├── units/                     # GET /units
 ├── countries/                 # GET /countries
-├── clients/                   # CRUD + search + contacts (7 endpoints)
-├── items/                     # CRUD + search + match + price-history (7 endpoints)
-├── vendors/                   # CRUD + search + items-by-vendor (5 endpoints)
-└── quotations/                # list + stats + detail + create + update + status (8 endpoints)
+├── clients/                   # CRUD, search, contacts (7 endpoints)
+├── items/                     # CRUD, search, match, price-history (7 endpoints)
+├── vendors/                   # CRUD, search, items-by-vendor (5 endpoints)
+└── quotations/                # list, stats, detail, create, update, status (8 endpoints)
 ```
 
-Setiap domain punya 4 file: `routes.go`, `handler.go`, `repo.go`, `dto.go`.
+Each domain has four files: `routes.go`, `handler.go`, `repo.go`, `dto.go`.
 
 ---
 
-## 4. Pattern per domain
+## 4. Per-domain pattern
 
 ### 4.1 routes.go
 
@@ -122,25 +122,25 @@ func (r *Repo) Create(ctx context.Context, req CreateRequest, userID int64) (Cli
 }
 ```
 
-`pgx.RowToStructByName` reads `db:"..."` tag untuk map kolom ke field.
+`pgx.RowToStructByName` reads the `db:"..."` tag to map columns onto struct fields.
 
 ### 4.4 dto.go
 
 ```go
 type Client struct {
-    ID    int64  `db:"id"   json:"id"`
-    Name  string `db:"name" json:"name"`
+    ID    int64   `db:"id"   json:"id"`
+    Name  string  `db:"name" json:"name"`
     Email *string `db:"email" json:"email,omitempty"`
 }
 ```
 
-- `db` tag → pgx scanning
-- `json` tag → wire format (camelCase)
-- Nullable: `*string`, `*int64`, etc
+- `db` tag drives pgx scanning.
+- `json` tag drives the wire format (camelCase).
+- Nullable columns become `*string`, `*int64`, etc.
 
 ---
 
-## 5. Endpoint lengkap (yang sudah ada)
+## 5. Existing endpoints
 
 | Method | Path | Handler | DB call |
 |---|---|---|---|
@@ -151,7 +151,7 @@ type Client struct {
 | GET | `/api/v1/clients/search?q=` | `clients.Search` | **`fn_search_clients`** |
 | GET | `/api/v1/clients/{id}` | `clients.Get` | sqlc |
 | GET | `/api/v1/clients/{id}/contacts` | `clients.ListContacts` | sqlc |
-| POST | `/api/v1/clients/{id}/contacts` | `clients.CreateContact` | sqlc INSERT (CHECK phone 9-12 fire) |
+| POST | `/api/v1/clients/{id}/contacts` | `clients.CreateContact` | sqlc INSERT (CHECK on phone digits) |
 | GET | `/api/v1/items` | `items.List` | sqlc |
 | POST | `/api/v1/items` | `items.Create` | sqlc INSERT |
 | GET | `/api/v1/items/search?q=` | `items.Search` | **`fn_search_items`** |
@@ -166,11 +166,11 @@ type Client struct {
 | GET | `/api/v1/vendors/{id}/items` | `vendors.ListItems` | **`fn_search_items_by_vendor`** |
 | GET | `/api/v1/quotations` | `quotations.List` | sqlc + dynamic filter |
 | GET | `/api/v1/quotations/stats` | `quotations.Stats` | GROUP BY |
-| POST | `/api/v1/quotations` | `quotations.Create` | **`fn_create_quotation`** ⭐ atomic |
+| POST | `/api/v1/quotations` | `quotations.Create` | **`fn_create_quotation`** (atomic) |
 | GET | `/api/v1/quotations/{id}` | `quotations.Get` | header + items + history |
-| PUT | `/api/v1/quotations/{id}` | `quotations.Update` | **`fn_update_quotation`** (DRAFT only) |
+| PUT | `/api/v1/quotations/{id}` | `quotations.Update` | **`fn_update_quotation`** (draft only) |
 | PATCH | `/api/v1/quotations/{id}/status` | `quotations.ChangeStatus` | **`fn_change_quotation_status`** |
-| POST | `/api/v1/quotations/{id}/send` | `quotations.Send` | wrapper → `fn_change_status('sent', ...)` |
+| POST | `/api/v1/quotations/{id}/send` | `quotations.Send` | wraps `fn_change_status('sent', ...)` |
 
 Total: **27 endpoints**.
 
@@ -178,163 +178,161 @@ Total: **27 endpoints**.
 
 ## 6. SQL functions (callable)
 
-10 callable functions yang dipanggil dari Go, urutan bisa dilihat di migration files:
+Ten callable functions that Go invokes. Their order is reflected in the migration files.
 
-| Function | File | Untuk |
+| Function | File | Used by |
 |---|---|---|
 | `fn_search_items(q, min_score, limit)` | 00003 | `items.Search` |
 | `fn_search_items_by_vendor(vendor_id, limit)` | 00003 | `vendors.ListItems` |
 | `fn_match_request(req_text, limit)` | 00003 | `items.MatchRequest` |
 | `fn_suggest_selling_prices(item_id, limit)` | 00002 | `items.PriceHistory` |
 | `fn_search_clients(q, min_score, limit)` | 00005 | `clients.Search` |
-| `fn_next_doc_no(doc_type, company_id)` | 00007 | dipanggil internal `fn_create_quotation` |
+| `fn_next_doc_no(doc_type, company_id)` | 00007 | called inside `fn_create_quotation` |
 | `fn_search_vendors(q, min_score, limit)` | 00008 | `vendors.Search` |
-| `fn_create_quotation(...)` | 00009 (re-created di 00010) | `quotations.Create` ⭐ atomic |
-| `fn_change_quotation_status(id, new, user, note)` | 00012 (validated di 00013) | `quotations.ChangeStatus` |
-| `fn_update_quotation(...)` | 00012 | `quotations.Update` (DRAFT only) |
+| `fn_create_quotation(...)` | 00009 (recreated in 00010) | `quotations.Create` (atomic) |
+| `fn_change_quotation_status(id, new, user, note)` | 00012 (validated in 00013) | `quotations.ChangeStatus` |
+| `fn_update_quotation(...)` | 00012 | `quotations.Update` (draft only) |
 
-**Trigger functions** (tidak dipanggil manual, fire otomatis):
-- `set_updated_at` / `set_updated_at_no_version` — touch updated_at
-- `trg_fn_sync_vendor_cost` — auto-sync cost ke vendor_products
-- `trg_fn_learn_match` — auto-populate match cache
-- `trg_fn_inherit_quotation_discount`, `trg_fn_inherit_po_discount` — discount inheritance
-- `trg_fn_po_inherit_quotation_discount` — PO inherit dari quotation
-- `trg_fn_protect_quotation_discount` — block UPDATE non-draft
-- `trg_fn_cascade_quotation_discount` — cascade ke items
-- `trg_fn_log_quotation_creation` — auto-log ke status_history saat INSERT
+**Trigger functions** (auto-fire, never called by hand):
+- `set_updated_at` and `set_updated_at_no_version` keep `updated_at` current.
+- `trg_fn_sync_vendor_cost` syncs cost back into `vendor_products`.
+- `trg_fn_learn_match` populates the match cache.
+- `trg_fn_inherit_quotation_discount` and `trg_fn_inherit_po_discount` propagate discount on insert.
+- `trg_fn_po_inherit_quotation_discount` carries the discount from quotation to PO.
+- `trg_fn_protect_quotation_discount` blocks discount updates when status is not draft.
+- `trg_fn_cascade_quotation_discount` cascades discount changes to items.
+- `trg_fn_log_quotation_creation` writes the initial `status_history` row on insert.
 
 ---
 
-## 7. Konvensi penting
+## 7. Conventions worth knowing
 
 ### 7.1 Phone format
-- Disimpan **tanpa** dial code, e.g. `"812-3456-7890"` (11 digit)
-- Field `country_code` (FK ke `countries.code`) menyimpan ISO alpha-3
-- FE display logic combine `+{countries.dial_code} {phone}` saat render
-- CHECK constraint: digit count BETWEEN 9 AND 12 (formatting diabaikan via REGEXP_REPLACE)
+- Stored **without** the dial code, e.g. `"812-3456-7890"`.
+- The `country_code` column (FK to `countries.code`) holds the ISO alpha-3.
+- The FE renders `+{countries.dial_code} {phone}`.
+- CHECK constraint: digit count is between 9 and 12 after stripping non-digits via `REGEXP_REPLACE`.
 
 ### 7.2 Discount percentage
-- DB store **0-100** (e.g., `5` = 5%, bukan `0.05`)
-- GENERATED column `subtotal` pakai `(1 - discount_pct / 100)`
-- `fn_create_quotation` validate `0 ≤ discount_pct ≤ 100`
+- Stored as `0..100` (so `5` means 5%, not `0.05`).
+- The GENERATED `subtotal` column uses `(1 - discount_pct / 100)`.
+- `fn_create_quotation` enforces `0 <= discount_pct <= 100`.
 
 ### 7.3 Status (canonical English)
-- DB: `draft | sent | accepted | rejected | revision | expired`
-- FE Bahasa labels: `Draf | Dikirim | Disetujui | Ditolak | Revisi | (Kadaluwarsa)`
-- FE wajib map bolak-balik di translation layer
-- State machine enforced di `fn_change_quotation_status`:
+- DB values: `draft | sent | accepted | rejected | revision | expired`.
+- Indonesian FE labels: `Draf | Dikirim | Disetujui | Ditolak | Revisi | Kadaluwarsa`.
+- The FE maps both directions through its translation layer.
+- `fn_change_quotation_status` enforces the state machine:
   - draft → sent | expired
   - sent → accepted | rejected | revision | expired
   - revision → sent | rejected
-  - **accepted, rejected, expired = TERMINAL** (tidak bisa keluar)
+  - **accepted, rejected, expired are terminal** (no exit).
 
-### 7.4 Decimal/numeric handling
-- Skeleton sekarang pakai **string** untuk monetary (cast `::text` di SQL)
-- FE tinggal parse string → number
-- Untuk arithmetic di backend (rare), gunakan `decimal.Decimal` (sudah di go.mod)
-- Bisa upgrade ke pgx-shopspring-decimal codec kalau butuh native scan
+### 7.4 Decimal and numeric handling
+- Today the skeleton ships monetary values as **strings** (cast `::text` in SQL).
+- The FE just parses the string into a number.
+- For backend arithmetic (rare), use `decimal.Decimal` (already in go.mod).
+- Switching to the pgx-shopspring-decimal codec is a small change when needed.
 
 ### 7.5 Quotation creation flow
-1. FE Step 4 submit `POST /quotations` dengan body lengkap (header + items array)
-2. Handler decode → repo `Create()`
-3. Repo build JSONB array dari items, call `fn_create_quotation`
-4. DB function:
-   - Validate
-   - Snapshot `company_client_name` + `contact_name`
-   - Generate `quotation_no` via `fn_next_doc_no` (atomic UPSERT)
-   - INSERT header + items + optional shipping line
-   - Trigger `trg_log_quotation_creation` fire → INSERT initial status_history entry
-   - Trigger `trg_inherit_quotation_discount` fire per item → set discount_pct
-   - Trigger `trg_sync_vendor_cost` fire untuk items dengan `update_vendor_price=true`
-5. Return `quotation_id` ke FE
+1. The Step 4 FE submits `POST /quotations` with the full body (header plus items array).
+2. The handler decodes and calls `repo.Create()`.
+3. The repo marshals items into a JSONB array and calls `fn_create_quotation`.
+4. The DB function:
+   - Validates the input.
+   - Snapshots `company_client_name` and `contact_name`.
+   - Generates `quotation_no` with `fn_next_doc_no` (atomic UPSERT).
+   - Inserts the header, items, and an optional shipping line.
+   - Triggers fire: `trg_log_quotation_creation` writes the initial status_history row, `trg_inherit_quotation_discount` sets `discount_pct` per item, `trg_sync_vendor_cost` updates vendor cost when `update_vendor_price = true`.
+5. Returns `quotation_id` to the FE.
 
-Backend layer tidak perlu replicate logic — DB fn + triggers handle semua.
+The backend never replicates this logic. The DB function and triggers handle every side effect.
 
-### 7.6 Quotation edit flow (DRAFT only)
-1. FE QuotationEdit submit `PUT /quotations/{id}` dengan body lengkap
+### 7.6 Quotation edit flow (draft only)
+1. The FE QuotationEdit page submits `PUT /quotations/{id}` with the full body.
 2. `fn_update_quotation`:
-   - Lock row + verify status='draft' (raise kalau bukan)
-   - DELETE existing items
-   - UPDATE header
-   - INSERT new items (re-fire triggers)
-3. Return `quotation_id`
+   - Locks the row and verifies `status = 'draft'` (raises otherwise).
+   - Deletes existing items.
+   - Updates the header.
+   - Inserts the new items, refiring the inheritance triggers.
+3. Returns `quotation_id`.
 
-Status non-draft → reject. FE harus handle error 4xx + tampilkan pesan.
+Anything other than draft is rejected. The FE must handle the 4xx and surface a message.
 
 ### 7.7 Status change flow
-1. FE submit `PATCH /quotations/{id}/status` dengan `{status, note}`
+1. The FE submits `PATCH /quotations/{id}/status` with `{status, note}`.
 2. `fn_change_quotation_status`:
-   - Lock row + get old_status
-   - Validate transition (state machine)
-   - Idempotent (no-op kalau same status)
-   - UPDATE quotation + INSERT status_history
-3. FE re-fetch detail untuk timeline
+   - Locks the row and reads the previous status.
+   - Validates the transition against the state machine.
+   - Is idempotent (no-op when the status is unchanged).
+   - Updates the quotation and inserts a `status_history` entry.
+3. The FE refetches the detail to refresh the timeline.
 
 ---
 
-## 8. Yang masih TODO
+## 8. Open backlog
 
 | Item | Severity | Note |
 |---|---|---|
-| JWT auth middleware | HIGH | `deps.CurrentUserID()` return 0. Wire JWT verify + set `userIDKey` di context |
-| Decimal codec registration | MED | Skeleton pakai string. Untuk arithmetic native, register `pgx-shopspring-decimal` |
-| sqlc generation (optional) | MED | `sqlc.yaml` ready. Tulis `.sql` query files lalu `make sqlc` kalau preferred |
-| Logger (slog/zap) | MED | Sekarang minimal, log error pakai stdlib |
-| Test coverage | MED | Per-domain unit tests + integration tests |
-| Pagination metadata | LOW | List endpoint return array saja, tidak ada `{data, totalCount, hasMore}`. FE asumsikan |
-| Rate limiting | LOW | Untuk public endpoints |
-| OpenAPI/Swagger | LOW | Auto-generate dari handler atau manual write |
-| Audit log umum | LOW | Selain status_history, header field changes belum di-log |
-| PDF export | MED | `GET /quotations/{id}/pdf` belum ada — perlu chromedp/wkhtmltopdf |
-| Excel export | LOW | `GET /quotations/export.xlsx` |
+| JWT auth middleware | HIGH | Wire JWT verification and set `userIDKey` on the context. |
+| Decimal codec registration | MED | Skeleton uses strings; register `pgx-shopspring-decimal` if we move to native arithmetic. |
+| sqlc generation (optional) | MED | `sqlc.yaml` is ready. Add `.sql` queries and run `make sqlc` when convenient. |
+| Logger (slog/zap) | MED | Currently minimal; errors go to stdlib. |
+| Test coverage | MED | Per-domain unit tests plus integration tests. |
+| Pagination metadata | LOW | List endpoints return arrays only; no `{data, totalCount, hasMore}`. |
+| Rate limiting | LOW | For public endpoints. |
+| OpenAPI / Swagger | LOW | Auto-generated from handlers, or hand-written. |
+| Generic audit log | LOW | Header field changes are not logged outside `status_history`. |
+| PDF export | MED | `GET /quotations/{id}/pdf` is missing; pick chromedp or wkhtmltopdf. |
+| Excel export | LOW | `GET /quotations/export.xlsx`. |
 
 ---
 
-## 9. Cara kerja dengan migration
+## 9. Working with migrations
 
-**Aturan emas: forward-only.** Setelah file di-push/applied, JANGAN edit. Bikin migration baru.
+**Golden rule: forward only.** Once a file ships or is applied, do not edit it. Add a new migration instead.
 
 ```bash
-# Bikin migration baru
+# Create a new migration
 make migrate-new NAME=add_payments
-# generates: migrations/00014_add_payments.sql
+# generates: db/migrations/00014_add_payments.sql
 
-# Apply (di local atau staging/prod)
+# Apply (locally, in staging, or prod)
 make migrate-up
 
-# Status
+# Show status
 make migrate-status
 
-# Rollback satu migration (DESTRUCTIVE — data bisa hilang)
+# Roll back the last migration (DESTRUCTIVE; data may be lost)
 make migrate-down
 ```
 
-Migrations 00001-00013 adalah baseline + iterations. Detail per file ada di header comment masing-masing.
+Migrations 00001-00013 are the baseline plus iterations. Each file has a header comment that explains what it does.
 
 ---
 
-## 10. Run locally
+## 10. Run it locally
 
 ```bash
 # Install deps
 cd apps/api && go mod download
 
-# Setup DB (one-time)
+# One-time DB setup
 psql -U postgres -c "CREATE ROLE gns_app WITH LOGIN PASSWORD 'gns_app';"
 psql -U postgres -c "CREATE DATABASE gns_quotation OWNER gns_app;"
 psql -U postgres -d gns_quotation -c "GRANT ALL ON SCHEMA public TO gns_app;"
 
-# Migrate + seed
+# Migrate and seed
 make migrate-up
-psql -v ON_ERROR_STOP=1 -f migrations/seeds/01_master.sql "postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable"
-psql -v ON_ERROR_STOP=1 -f migrations/seeds/02_dev_samples.sql "postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable"
+psql -v ON_ERROR_STOP=1 -f db/seeds/01_master.sql "postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable"
+psql -v ON_ERROR_STOP=1 -f db/seeds/02_dev_samples.sql "postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable"
 
 # Run
 DATABASE_URL='postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable' \
 JWT_SECRET=devsecret \
 make run
 
-# Test
+# Smoke test
 curl http://localhost:8080/healthz
 curl http://localhost:8080/api/v1/units
 curl "http://localhost:8080/api/v1/clients/search?q=IMC"
@@ -344,29 +342,29 @@ curl "http://localhost:8080/api/v1/quotations?status=sent&sortBy=created_at&sort
 
 ---
 
-## 11. Pertanyaan umum
+## 11. FAQ
 
-**Q: Kenapa pakai pgxpool langsung, bukan sqlc-generated?**  
-A: Tidak ada salah satu yang lebih benar. Skeleton pakai pgxpool karena: (a) tidak butuh codegen step, (b) repo signature stabil tetap, (c) backend dev bisa swap ke sqlc later tanpa change handler/dto.
+**Q: Why pgxpool directly instead of sqlc-generated code?**
+A: Neither is strictly better. The skeleton uses pgxpool because (a) we skip a codegen step, (b) repo signatures stay stable, and (c) we can swap to sqlc later without touching handlers or DTOs.
 
-**Q: Kenapa SQL ada di repo bukan di file `.sql`?**  
-A: Untuk skeleton, inline SQL di Go file lebih cepat dibaca + edit. Kalau pakai sqlc nanti, query pindah ke `.sql` file dan repo method body tinggal call `q.MethodName(ctx, ...)`.
+**Q: Why is the SQL inline in repo.go instead of in `.sql` files?**
+A: For the skeleton, inline SQL is faster to read and edit. When we adopt sqlc, the queries move into `.sql` files and the repo body shrinks to a single `q.MethodName(ctx, ...)` call.
 
-**Q: Kenapa monetary pakai string?**  
-A: Trade-off: string bypass decimal precision concern di codec layer, FE tinggal parse. Kalau ada arithmetic di service (calc total dll), tetap pakai `decimal.Decimal`.
+**Q: Why use strings for monetary values?**
+A: Trade-off. Strings sidestep decimal codec concerns and the FE just parses them. Anywhere we add arithmetic in the service layer, we use `decimal.Decimal`.
 
-**Q: Kenapa banyak logic di DB (function + trigger) bukan di Go?**  
-A: User preference: "no plain SQL in app layer". Plus: atomic operations + triggers yang mengikat invariant data lebih aman di-handle DB (single source of truth). Backend Go = thin orchestration layer.
+**Q: Why does so much logic live in DB functions and triggers instead of Go?**
+A: Two reasons. The user explicitly wants no plain SQL in the app layer. And atomic operations plus invariant-binding triggers belong next to the data — single source of truth. Backend Go is a thin orchestration layer.
 
-**Q: Kenapa repo expose error langsung ke handler tanpa translation?**  
-A: Skeleton pakai `httperr.Internal(err.Error())` untuk DB function errors. **TODO:** map specific PG errors (unique violation, FK violation, RAISE EXCEPTION) ke proper HTTP status. Ada helper di `internal/shared/db/pg_errors.go` (`IsUniqueViolation`, dll).
+**Q: Why does the repo surface raw errors to the handler with no translation?**
+A: For the skeleton, `httperr.Internal(err.Error())` is enough. The TODO is to map specific PG errors (unique violation, FK violation, RAISE EXCEPTION) onto proper HTTP statuses. Helpers live in `internal/shared/db/pg_errors.go` (`IsUniqueViolation`, etc.).
 
 ---
 
-## 12. Checklist sebelum push ke main
+## 12. Pre-merge checklist
 
-- [ ] `go build ./...` sukses
-- [ ] `go vet ./...` clean
-- [ ] Migration baru sudah ada Up + Down
-- [ ] Sanity test migration di local DB
-- [ ] Update doc kalau ada endpoint baru atau pattern berubah
+- [ ] `go build ./...` succeeds.
+- [ ] `go vet ./...` is clean.
+- [ ] New migrations include both Up and Down.
+- [ ] Migration was sanity-tested against a local DB.
+- [ ] Docs updated when endpoints or patterns change.

@@ -8,12 +8,10 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 
-	"github.com/nathangalung/internalgns/apps/api/migrations"
+	"github.com/nathangalung/internalgns/apps/api/db/migrations"
 )
 
-// RunMigrations applies all pending goose migrations using the given pool.
-// Seeds and checks are NOT applied here — they live under migrations/seeds
-// and migrations/checks and are invoked via Makefile targets in dev/staging.
+// Apply pending goose migrations.
 func RunMigrations(ctx context.Context, pool *pgxpool.Pool) error {
 	conn, err := pool.Acquire(ctx)
 	if err != nil {
@@ -31,8 +29,7 @@ func RunMigrations(ctx context.Context, pool *pgxpool.Pool) error {
 	return goose.UpContext(ctx, sqldb, ".")
 }
 
-// PlainDB exposes a *sql.DB backed by pgx for callers that need database/sql
-// interop (e.g. one-shot migration tooling). Not for request paths.
+// database/sql backed by pgx.
 func PlainDB(pool *pgxpool.Pool) *sql.DB {
 	return stdlib.OpenDBFromPool(pool)
 }

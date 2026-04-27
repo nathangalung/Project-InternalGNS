@@ -1,0 +1,1093 @@
+% Compile with: xelatex Quotation_remake.tex
+% Requires Plus Jakarta Sans installed system-wide
+% Download from: https://fonts.google.com/specimen/Plus+Jakarta+Sans
+
+\documentclass[9pt,a4paper,landscape]{article}
+
+\usepackage{fontspec}
+\setmainfont{Plus Jakarta Sans}[
+  BoldFont       = Plus Jakarta Sans Bold,
+  ItalicFont     = Plus Jakarta Sans Italic,
+  BoldItalicFont = Plus Jakarta Sans Bold Italic,
+]
+
+\usepackage[a4paper, landscape, top=1.5cm, bottom=1.8cm, left=1.5cm, right=1.5cm]{geometry}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{colortbl}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{ragged2e}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{hyperref}
+\usepackage{microtype}
+
+\hypersetup{
+  colorlinks=true,
+  urlcolor=blue,
+  linkcolor=black,
+}
+
+% Suppress paragraph indentation
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2pt}
+
+% Custom column types
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\footnotesize}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash\footnotesize}p{#1}}
+\newcolumntype{R}[1]{>{\RaggedLeft\arraybackslash\footnotesize}p{#1}}
+
+% Row height
+\renewcommand{\arraystretch}{1.2}
+
+% ------ Page style: first page ------
+\fancypagestyle{firstpage}{%
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0pt}
+  \fancyfoot[C]{\footnotesize \thepage\ of \pageref{LastPage}}
+}
+
+% ------ Page style: continuation pages ------
+\fancypagestyle{mainpages}{%
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \fancyhead[L]{\footnotesize\textbf{PT. GLOBAL NIAGA SAKTI} -- QUOTATION}
+  \fancyhead[R]{\footnotesize Q-264128/GNS/IV/2026 \quad|\quad 8404/V-0006/REQ26}
+  \fancyfoot[C]{\footnotesize \thepage\ of \pageref{LastPage}}
+}
+
+\pagestyle{mainpages}
+
+% ------ Letter-spaced bold column headers ------
+\newcommand{\lshdr}[1]{\textbf{\MakeUppercase{#1}}}
+
+% ------ Dynamic date: "Jakarta, D Month YYYY" ------
+\newcommand{\MonthName}{%
+  \ifcase\month\or January\or February\or March\or April\or May\or June\or
+  July\or August\or September\or October\or November\or December\fi}
+\newcommand{\TodayJakarta}{Jakarta, \the\day\ \MonthName\ \the\year}
+
+\begin{document}
+
+\thispagestyle{firstpage}
+
+%% ============================================================
+%% COMPANY HEADER
+%% ============================================================
+\noindent
+\begin{minipage}[t]{0.28\textwidth}
+  {\fontsize{7.5}{9.5}\selectfont
+  Gedung Wirausaha Lt 1, Unit 104\\
+  Jl. HR. Rasuna Said Kav. C5\\
+  Kuningan, Setiabudi\\
+  Jakarta Selatan 12920
+  }
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.40\textwidth}
+  \centering
+  {\fontsize{22}{26}\selectfont\bfseries PT. GLOBAL NIAGA SAKTI}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.28\textwidth}
+  \raggedleft
+  {\fontsize{7.5}{9.5}\selectfont
+  Telp. 021-5099 6969 (ext. 1249)\\
+  WA. 0811-980-982/0811-999-0991\\
+  Email: sales@globalsakti.com\\
+  Website: www.globalsakti.com
+  }
+\end{minipage}
+
+\vspace{0.4cm}
+\noindent\rule{\textwidth}{0.8pt}
+\vspace{0.3cm}
+
+%% ============================================================
+%% DOCUMENT INFO
+%% ============================================================
+\noindent
+\begin{minipage}[t]{0.52\textwidth}
+  {\small
+  \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
+    To           & : & PT. IMC Ship Management \\[1pt]
+    Attn         & : & Bp. Restu Umar Singgih \\[1pt]
+    Email        & : & \href{mailto:restu.singgih@imc-shipmanagement.com}{restu.singgih@imc-shipmanagement.com} \\[1pt]
+    Contact No.  & : & 0 \\
+  \end{tabular}
+  }
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.44\textwidth}
+  \raggedleft
+  {\small
+  \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
+    No           & : & Q-264128/GNS/IV/2026 \\[1pt]
+    Your Ref No. & : & 8404/V-0006/REQ26 \\[1pt]
+    Date         & : & \TodayJakarta \\[1pt]
+    Page         & : & \pageref{LastPage}~Pages \\
+  \end{tabular}
+  }
+\end{minipage}
+
+\vspace{0.5cm}
+\begin{center}
+  {\large\bfseries\underline{QUOTATION}}
+\end{center}
+\vspace{0.1cm}
+
+\noindent\textbf{We are pleased to quote as follow\,:}
+
+\vspace{0.3cm}
+
+%% ============================================================
+%% MAIN TABLE
+%% ============================================================
+% textwidth (landscape A4, 1.5cm margins) ≈ 267mm = 26.7cm
+% Content cols: 0.6+0.6+0.8+8.0+9.5+2.5+2.5 = 24.5cm
+% Padding (tabcolsep=3pt, 7 cols): 7×2×3pt = 42pt ≈ 1.48cm
+% Borders (8 pipes × 0.4pt): ≈ 0.11cm
+% Total ≈ 26.09cm  ✓
+
+\setlength{\tabcolsep}{3pt}
+
+\begin{longtable}{|C{0.6cm}|C{0.6cm}|C{0.8cm}|L{8.0cm}|L{9.5cm}|R{2.5cm}|R{2.5cm}|}
+
+%% First-page head
+\hline
+\multicolumn{1}{|c|}{\footnotesize\bfseries No.} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Qty} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Unit} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Request} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Offer Description} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Unit Price} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Amount} \\
+\hline
+\endfirsthead
+
+%% Continuation head
+\hline
+\multicolumn{1}{|c|}{\footnotesize\bfseries No.} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Qty} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Unit} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Request} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Offer Description} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Unit Price} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Amount} \\
+\hline
+\endhead
+
+%% Foot on non-last pages
+\hline
+\endfoot
+
+%% Final foot
+\hline
+\endlastfoot
+
+%% ---- ITEMS 1–14 ----
+1 & 1 & SET &
+  PUNCHING TOOL SET DIES \& TABLE, 6-38MM 16'S\newline
+  Used for punching holes in soft brass, copper, and &
+  PUNCHING TOOL SET DIES \& TABLE, 6-38MM 16'S &
+  Rp~2.000.000 & Rp~2.000.000 \\
+\hline
+
+2 & 10 & TUB &
+  BLUE PASTE 120GRM\newline
+  For lapping of bearings, high pressure valves, etc.\newline
+  Improved type on red lead &
+  PRUSIAN BLUE Permatex 22ml (Tube) &
+  Rp~145.000 & Rp~1.450.000 \\
+\hline
+
+3 & 1 & TIN &
+  CARBORUNDUM PASTE GRIT\#2000, MICRO FINE\newline
+  450GRM For precision lapping, fitting, surfacing,\newline
+  polishing and other general use in machine shops. &
+  CARBORUNDUM PASTE GRIT\#2000, MICRO FINE 450GRM\newline
+  For precision lapping, fitting, surfacing, polishing and other general use &
+  Rp~68.000 & Rp~68.000 \\
+\hline
+
+4 & 1 & TIN &
+  CARBORUNDUM PASTE GRIT\#1500, MICRO FINE\newline
+  450GRM For precision lapping, fitting, surfacing,\newline
+  polishing and other general use in machine shops. &
+  CARBORUNDUM PASTE GRIT\#1500, MICRO FINE 450GRM\newline
+  For precision lapping, fitting, surfacing, polishing and other general use &
+  Rp~68.000 & Rp~68.000 \\
+\hline
+
+5 & 1 & TIN &
+  CARBORUNDUM PASTE GRIT\#800, MICRO FINE\newline
+  450GRM For precision lapping, fitting, surfacing,\newline
+  polishing and other general use in machine shops. &
+  CARBORUNDUM PASTE GRIT\#800, MICRO FINE 450GRM\newline
+  For precision lapping, fitting, surfacing, polishing and other general use &
+  Rp~68.000 & Rp~68.000 \\
+\hline
+
+6 & 1 & TIN &
+  CARBORUNDUM PASTE GRIT\#500, VERY FINE 450GRM\newline
+  For precision lapping, fitting, surfacing, polishing\newline
+  and other general use in machine shops. Universally used &
+  CARBORUNDUM PASTE GRIT\#500, VERY FINE 450GRM\newline
+  For precision lapping, fitting, surfacing, polishing and other general use in machine &
+  Rp~68.000 & Rp~68.000 \\
+\hline
+
+7 & 1 & SET &
+  PULLER GEAR \& WHEEL 3-ARM, 0-200MM\newline
+  Drop forged from vanadium steel. This rigid 3 arm puller\newline
+  has been designed for situations where the use of a 2 arm puller &
+  PULLER GEAR \& WHEEL 3-ARM, 0-200MM, Brand TEKIRO 8'' &
+  Rp~750.000 & Rp~750.000 \\
+\hline
+
+8 & 1 & SET &
+  PULLER GEAR \& WHEEL 3-ARM, 0-125MM\newline
+  Drop forged from vanadium steel. This rigid 3 arm puller\newline
+  has been designed for situations where the use of a 2 arm puller &
+  PULLER GEAR \& WHEEL 3-ARM, 0-150MM, Brand TEKIRO 6'' &
+  Rp~445.000 & Rp~445.000 \\
+\hline
+
+9 & 1 & PKT &
+  RIVET BLIND OPENTYPE ALUM-BODY, STEEL-MANDREL\newline
+  3.2X8.0MM 60'S High strength, precision-made hollow &
+  RIVET BLIND OPENTYPE ALUM-BODY, 3.2X8.0MM\newline
+  Per pack 1000pcs &
+  Rp~185.000 & Rp~185.000 \\
+\hline
+
+10 & 1 & PKT &
+  RIVET BLIND OPENTYPE ALUM-BODY, STEEL-MANDREL\newline
+  3.2X6.3MM 60'S High strength, precision-made hollow &
+  RIVET BLIND OPENTYPE ALUM-BODY, 3.2X6MM\newline
+  Per pack 1000pcs &
+  Rp~215.000 & Rp~215.000 \\
+\hline
+
+11 & 1 & PKT &
+  RIVET BLIND OPENTYPE ALUM-BODY, STEEL-MANDREL\newline
+  3.2X4.4MM 60'S High strength, precision-made hollow &
+  \textcolor[gray]{0.5}{No Offer} &
+  \textcolor[gray]{0.5}{Rp~--} & \textcolor[gray]{0.5}{Rp~--} \\
+\hline
+
+12 & 3 & PCS &
+  WRENCH HOOK SPANNER 68-75MM, STAINLESS STEEL &
+  WRENCH HOOK SPANNER 65-75MM, CARBON STEEL &
+  Rp~535.000 & Rp~1.605.000 \\
+\hline
+
+13 & 3 & PCS &
+  PLIER SIDE CUTTING STAINLESS, STEEL 175MM &
+  PLIER SIDE CUTTING STAINLESS, STEEL 175MM.\newline
+  Brand TEKIRO Tang Kombinasi 7'' &
+  Rp~100.000 & Rp~300.000 \\
+\hline
+
+14 & 2 & PCS &
+  PLIER LONG-NOSE SIDE CUTTING, STAINLESS STEEL\newline
+  200MM An ideal tool for quick repair and electronic &
+  PLIER LONG-NOSE SIDE CUTTING, STAINLESS STEEL 200MM.\newline
+  Brand TEKIRO Tang lancip 8' &
+  Rp~115.000 & Rp~230.000 \\
+\hline
+
+%% ---- ITEMS 15–44 ----
+15 & 2 & PCS &
+  WRENCH ADJUSTABLE STAINLESS, STEEL 250MM &
+  WRENCH ADJUSTABLE STAINLESS STEEL - TEKIRO 250MM/10'' &
+  Rp~210.000 & Rp~420.000 \\
+\hline
+
+16 & 2 & PCS &
+  WRENCH ADJUSTABLE STAINLESS, STEEL 150MM &
+  WRENCH ADJUSTABLE STAINLESS STEEL - TEKIRO 150MM/6'' &
+  Rp~110.000 & Rp~220.000 \\
+\hline
+
+17 & 3 & PCS &
+  BRUSH PAINT ROUND 19MM DIAM\newline
+  A natural, black bristle brush sealed in rubber\newline
+  and bound with a metal &
+  BRUSH PAINT ROUND 19MM DIAM &
+  Rp~38.000 & Rp~114.000 \\
+\hline
+
+18 & 3 & PCS &
+  BRUSH SASH TOOL OVAL 21MM\newline
+  A small paint brush used on window frames or in\newline
+  places where a large &
+  Small Paint Brush 22mm &
+  Rp~40.000 & Rp~120.000 \\
+\hline
+
+19 & 3 & PCS &
+  BRUSH SASH TOOL OVAL 15MM\newline
+  A small paint brush used on window frames or in\newline
+  places where a large &
+  Small Paint Brush 16mm &
+  Rp~35.000 & Rp~105.000 \\
+\hline
+
+20 & 5 & PCS &
+  BRUSH WIRE STRAIGHT HANDLE, 270MM\newline
+  Strong wire brush for cleaning paint brushes,\newline
+  polishing ferrous &
+  BRUSH WIRE STRAIGHT HANDLE, 270MM Strong wire brush &
+  Rp~35.000 & Rp~175.000 \\
+\hline
+
+21 & 10 & PCS &
+  BRUSH WIRE WHEEL STANDARD, 75MMX3/8''\newline
+  Designed for high speed operation on pneumatic or &
+  BRUSH WIRE WHEEL STANDARD, 75MMX3/8'' &
+  Rp~60.000 & Rp~600.000 \\
+\hline
+
+22 & 10 & PCS &
+  WIRE CUP BRUSH KNOT TYPE, 75MMX5/8''\newline
+  Designed for high speed operation on pneumatic or electric &
+  WIRE CUP BRUSH KNOT TYPE, 75MMX5/8'' &
+  Rp~30.000 & Rp~300.000 \\
+\hline
+
+23 & 10 & PCS &
+  WIRE CUP BRUSH STANDARD, 75MMX5/8''\newline
+  Designed for high speed operation on pneumatic or electric &
+  WIRE CUP BRUSH STANDARD, 75MMX5/8'' &
+  Rp~28.000 & Rp~280.000 \\
+\hline
+
+24 & 10 & PCS &
+  BRUSH WIRE WHEEL THREADED NUT, TYPE\newline
+  75MMXM10THREAD Designed for high speed &
+  BRUSH WIRE WHEEL THREADED NUT, TYPE 75MMXM10THREAD &
+  Rp~34.000 & Rp~340.000 \\
+\hline
+
+25 & 10 & PCS &
+  BRUSH WIRE CUP OD50MM, WITH 6MM ARBOR\newline
+  Designed for high speed operation on pneumatic or &
+  BRUSH WIRE CUP OD50MM, WITH 6MM ARBOR &
+  Rp~47.500 & Rp~475.000 \\
+\hline
+
+26 & 10 & PCS &
+  BROOM COIR SHORT HANDLED\newline
+  Corn Broom 730 mm / Coir Broom 750 mm &
+  Coir Broom (Sapu Ijuk) 90cm &
+  Rp~45.000 & Rp~450.000 \\
+\hline
+
+27 & 2 & PCS &
+  TOILET PLUNGER DIAM 165MM, FOR WESTERN STYLE\newline
+  A rubber cup with plastic handle for general use. &
+  \textcolor[gray]{0.5}{No Offer} &
+  \textcolor[gray]{0.5}{Rp~--} & \textcolor[gray]{0.5}{Rp~--} \\
+\hline
+
+28 & 2 & PCS &
+  TOILET PLUNGER DIAM 130MM, FOR JAPANESE STYLE &
+  TOILET PLUNGER FOR JAPANESE STYLE\newline
+  DIAMETER: 140MM\newline
+  LENGTH: 48 CM &
+  Rp~52.000 & Rp~104.000 \\
+\hline
+
+29 & 10 & PCS &
+  REPLACEABLE HEAD FOR YACHT MOP, WHITE\newline
+  Made of soft white yarn and fastened to the handle end. &
+  Replaceble Head Mop (Refill) &
+  Rp~50.000 & Rp~500.000 \\
+\hline
+
+30 & 3 & PCS &
+  HOLDER ELECTRODE CLOSED HEAD, 400AMP\newline
+  Closed Head A high quality closed head electrode\newline
+  holder with &
+  Holder Electrode Closed Head 400A &
+  Rp~667.500 & Rp~2.002.500 \\
+\hline
+
+31 & 24 & TIN &
+  LUBRICANT SPRAY WD-40 MULTIUSE, 350ML\newline
+  Protects metal from rust and corrosion,\newline
+  penetrates stuck parts, &
+  LUBRICANT SPRAY WD-40 MULTIUSE, 333ML &
+  Rp~120.000 & Rp~2.880.000 \\
+\hline
+
+32 & 250 & KGS &
+  RAG COTTON OVER 100\% STERILIZED, WHITE\newline
+  Available in white, light-colour or coloured type rags. All &
+  Kain majun putih jahit tumpuk &
+  Rp~25.000 & Rp~6.250.000 \\
+\hline
+
+33 & 20 & PCS &
+  SPARE MINI ROLLER 100MM WIDTH\newline
+  Small sized rollers designed for painting radiators,\newline
+  trim or other narrow &
+  SPARE MINI ROLLER 100MM WIDTH\newline
+  MERK: FIA &
+  Rp~10.000 & Rp~200.000 \\
+\hline
+
+34 & 60 & DOZ &
+  GLOVES WORKING COTTON ORDINARY\newline
+  Woven from cotton thread and machine knitted,\newline
+  fitting smooth to &
+  GLOVES WORKING COTTON ORDINARY (12 pairs) &
+  Rp~42.000 & Rp~2.520.000 \\
+\hline
+
+35 & 2 & KGS &
+  WIRE GALVANIZED IRON 0.50MM\newline
+  Galvanized or ungalvanized wire is available. &
+  WIRE GALVANIZED IRON 0.50MM &
+  Rp~70.000 & Rp~140.000 \\
+\hline
+
+36 & 2 & SET &
+  RADIO HAND MARINE ENTEL DX544,\newline
+  INTRINSICALLY SAFE VHF (USTC)\newline
+  Intrinsically safe radio conforms to &
+  RADIO HAND MARINE ENTEL DX544 IS &
+  Rp~11.450.000 & Rp~22.900.000 \\
+\hline
+
+37 & 3 & PCS &
+  KNIFE PUTTY 65MM\newline
+  High carbon, cutlery steel, oil hardened blade,\newline
+  tempered and glaze finished. &
+  KNIFE PUTTY 2.5 INCH &
+  Rp~45.000 & Rp~135.000 \\
+\hline
+
+38 & 3 & PCS &
+  KNIFE PUTTY 100MM\newline
+  High carbon, cutlery steel, oil hardened blade,\newline
+  tempered and glaze finished. &
+  KNIFE PUTTY 4 INCH &
+  Rp~50.000 & Rp~150.000 \\
+\hline
+
+39 & 50 & PCS &
+  WASHER PLAIN ROUND STEEL, M24.0 &
+  WASHER PLAIN ROUND BLACK STEEL 8.8, M24.0 &
+  Rp~5.000 & Rp~250.000 \\
+\hline
+
+40 & 1 & SET &
+  HEX HEAD BOLT/NUT STEEL UNGALV, M14 X 50MM &
+  HEX HEAD BOLT/NUT BLACK STEEL GRADE 10.9, M14 X 50MM &
+  Rp~10.000 & Rp~10.000 \\
+\hline
+
+41 & 1 & SET &
+  HEX HEAD BOLT/NUT STEEL UNGALV, M8 X 50MM &
+  HEX HEAD BOLT/NUT BLACK STEEL GRADE 10.9, M8 X 50MM &
+  Rp~65.000 & Rp~65.000 \\
+\hline
+
+42 & 50 & PKT &
+  SOAP LAUNDRY POWDER W/ENZYME, 1.2KGS/PKT\newline
+  Higher performance laundry soap powder with stain &
+  Rinso Laundry Soap Powder &
+  Rp~68.000 & Rp~3.400.000 \\
+\hline
+
+43 & 4 & BTL &
+  CLEANER HAND GENERAL PURPOSE, LOCTITE SF7850\newline
+  3LTR Thicker consistency to scoop straight from &
+  CLEANER HAND GENERAL PURPOSE, Fast Orange Permatex 3,78L &
+  Rp~765.000 & Rp~3.060.000 \\
+\hline
+
+44 & 10 & PCS &
+  RUBBER PAD FOR PNEUMATIC, GRINDER WHEEL DIA\newline
+  100MM It is necessary to furnish the original type of &
+  RUBBER PAD FOR PNEUMATIC, GRINDER WHEEL DIA 100MM, Merk Bosch &
+  Rp~210.000 & Rp~2.100.000 \\
+\hline
+
+%% ---- ITEMS 45–70 ----
+45 & 5 & PCS &
+  BRUSH WIRE 6MM SHANK 20X0.15MM, F/DERUSTING\newline
+  BRUSH \#BP-30302 The compact design makes rust\newline
+  removal easy, even in places that are difficult to reach. &
+  BRUSH WIRE 6MM SHANK 20X0.15MM, F/DERUSTING BRUSH \#BP30305\newline
+  only 5 available &
+  Rp~78.000 & Rp~390.000 \\
+\hline
+
+46 & 2 & SET &
+  VACUUM CLEANER PNEUMATIC, ``BLOVAC CLEANER''\newline
+  MODEL V-500 A compact and lightweight industrial\newline
+  vacuum cleaner which works on compressed air. &
+  VACUUM CLEANER PNEUMATIC, ``BLOVAC CLEANER'' MODEL V-500\newline
+  A compact and lightweight industrial vacuum cleaner which works on compressed air. &
+  Rp~2.765.000 & Rp~5.530.000 \\
+\hline
+
+47 & 10 & PCS &
+  CUTTING WHEEL OD305MM, 4800MTR/MIN F/ELEC\newline
+  ROD CUTTER When ordering, please specify the outer &
+  CUTTING WHEEL 305x3x25,4mm Nippon Resibon &
+  Rp~80.000 & Rp~800.000 \\
+\hline
+
+48 & 1 & SET &
+  PUMP TRANSFER PNEUMATIC PISTON, STAINLESS\newline
+  60MTR ICO \#17000-00 Suitable for rapid transfer of &
+  \textcolor[gray]{0.5}{No Offer} &
+  \textcolor[gray]{0.5}{Rp~--} & \textcolor[gray]{0.5}{Rp~--} \\
+\hline
+
+49 & 1 & PCS &
+  WRENCH CHAIN PIPE SINGLE JAW, 25-170MM\newline
+  CAPACITY Drop forged from vanadium alloy steel with &
+  Wrench Chain Pipe 24'' &
+  Rp~1.200.000 & Rp~1.200.000 \\
+\hline
+
+50 & 3 & PRS &
+  PLIER BENT-NOSE, PLASTIC COVERED HANDLE 150MM\newline
+  Curved needle spring tempered nose plier for use in &
+  PLIER BENT-NOSE, PLASTIC COVERED HANDLE 150MM (6'') &
+  Rp~120.000 & Rp~360.000 \\
+\hline
+
+51 & 1 & PRS &
+  SNIP HAND STRAIGHT EDGE 210MM\newline
+  Forged of special steel for cutting tin plate.\newline
+  The blades have a smooth, &
+  Gunting Holo lurus (Straight) 8'' &
+  Rp~260.000 & Rp~260.000 \\
+\hline
+
+52 & 2 & PRS &
+  SNIP HAND CURVED EDGE 210MM\newline
+  Forged of special steel for cutting tin plate.\newline
+  The blades have a smooth, &
+  Gunting Holo lengkung (curved) 8'' &
+  Rp~260.000 & Rp~520.000 \\
+\hline
+
+53 & 1 & SET &
+  PACKING HOOK SET COMPLETE\newline
+  The shank consists of one inner spiral shaft\newline
+  wrapped with an outer spiral of &
+  PACKING HOOK SET COMPLETE 6pcs &
+  Rp~465.000 & Rp~465.000 \\
+\hline
+
+54 & 3 & PCS &
+  SCREWDRIVER INSULATED HANDLE, HEAVY-DUTY\newline
+  SLOTTED 8X150MM Tungsten alloy steel blades are &
+  SCREWDRIVER INSULATED HANDLE, HEAVY-DUTY SLOTTED\newline
+  8X150MM Insulated Power Grip Handle Vessel &
+  Rp~300.000 & Rp~900.000 \\
+\hline
+
+55 & 3 & PCS &
+  SCREWDRIVER INSULATED HANDLE, HEAVY-DUTY\newline
+  SLOTTED 9X200MM Tungsten alloy steel blades are &
+  SCREWDRIVER INSULATED HANDLE, HEAVY-DUTY SLOTTED\newline
+  9x200MM Insulated Power Grip Handle Vessel &
+  Rp~325.000 & Rp~975.000 \\
+\hline
+
+56 & 3 & PCS &
+  SCREWDRIVER INSULATED HANDLE, HEAVY-DUTY\newline
+  SLOTTED 10X250MM Tungsten alloy steel blades are &
+  SCREWDRIVER INSULATED HANDLE, HEAVY-DUTY SLOTTED\newline
+  10X250MM Insulated Crystal Handle Vessel &
+  Rp~225.000 & Rp~675.000 \\
+\hline
+
+57 & 3 & PCS &
+  SCREWDRIVER INSULATED HANDLE, HEAVY-DUTY\newline
+  PHILLIPS NO.3 150MM Tungsten alloy steel blades are &
+  SCREWDRIVER INSULATED HANDLE, HEAVY-DUTY PHILLIPS NO.3\newline
+  150MM Insulated Power Grip Handle Vessel &
+  Rp~300.000 & Rp~900.000 \\
+\hline
+
+58 & 3 & PCS &
+  SCREWDRIVER INSULATED HANDLE, HEAVY-DUTY\newline
+  PHILLIPS NO.4 200MM Tungsten alloy steel blades are &
+  SCREWDRIVER INSULATED HANDLE, HEAVY-DUTY PHILLIPS NO.4\newline
+  200MM Insulated Power Grip Handle Vessel &
+  Rp~325.000 & Rp~975.000 \\
+\hline
+
+59 & 3 & PCS &
+  SCREWDRIVER ELECTRICIAN'S, WOOD HANDLE\newline
+  SLOTTED 5.5X100MM Designed with a large wood &
+  SCREWDRIVER ELECTRICIAN'S, Shaft Cover Handle Slotted\newline
+  5.5X100MM Vessel &
+  Rp~225.000 & Rp~675.000 \\
+\hline
+
+60 & 2 & PCS &
+  SCREWDRIVER ELECTRICIAN'S, PHILLIPS NO.1 150MM\newline
+  Designed with a large wood handle for electricians &
+  SCREWDRIVER ELECTRICIAN'S, PHILLIPS NO.1 150MM ACESA &
+  Rp~200.000 & Rp~400.000 \\
+\hline
+
+61 & 2 & PCS &
+  SCREWDRIVER ELECTRICIAN'S, PHILLIPS NO.2 200MM\newline
+  Designed with a large wood handle for electricians &
+  SCREWDRIVER ELECTRICIAN'S, PHILLIPS N0.2 150mm Vessel &
+  Rp~210.000 & Rp~420.000 \\
+\hline
+
+62 & 1 & SET &
+  NUT DRIVER SET 5-12MM 7'S\newline
+  Deep socket type nut drivers provided as a set\newline
+  with a steel holding rack. &
+  NUT DRIVER SET 5-12MM 7'S &
+  Rp~255.000 & Rp~255.000 \\
+\hline
+
+63 & 1 & SET &
+  SCREWDRIVER SET HAMMERING, IMPACT-TYPE 4 BITS\newline
+  Designed to work with screws that are set tight due to &
+  SCREWDRIVER SET HAMMERING, IMPACT-TYPE 4 BITS &
+  Rp~250.000 & Rp~250.000 \\
+\hline
+
+64 & 1 & SET &
+  SCREWDRIVER SET HAMMERING, IMPACT-TYPE 6 BITS\newline
+  Designed to work with screws that are set tight due to &
+  SCREWDRIVER SET HAMMERING, IMPACT-TYPE 6 BITS ARCA &
+  Rp~575.000 & Rp~575.000 \\
+\hline
+
+65 & 2 & PCS &
+  HAMMER RUBBER HANDLED, 48MM DIAM NO.3/4\newline
+  (0.46KGS) Soft but tough, non-flaking neoprene head &
+  HAMMER RUBBER HANDLED 450 GRAM &
+  Rp~105.000 & Rp~210.000 \\
+\hline
+
+66 & 2 & PCS &
+  HAMMER RUBBER HANDLED, 67MM DIAM NO.1-1/2\newline
+  (0.82KGS) Soft but tough, non-flaking neoprene head &
+  HAMMER RUBBER HANDLED, 67MM DIAM NO.1-1/2 (0.82KGS) &
+  Rp~100.000 & Rp~200.000 \\
+\hline
+
+67 & 1 & SET &
+  CHISEL SET COMBINATION 150MM, 7'S\newline
+  Forged, tempered alloy steel.\newline
+  Contains 7 different types of &
+  CHISEL SET COMBINATION 150MM, 7'S &
+  Rp~365.000 & Rp~365.000 \\
+\hline
+
+68 & 1 & SET &
+  CHISEL \& PUNCH SET COMBINATION, 150MM 12'S\newline
+  Forged, tempered alloy steel.\newline
+  Consisting of different &
+  CHISEL \& PUNCH SET COMBINATION, 150MM 12'S &
+  Rp~465.000 & Rp~465.000 \\
+\hline
+
+69 & 1 & SET &
+  FILE SET NEEDLE ELECTROPLATED, DIAMOND 10'S\newline
+  The electroplated diamond needle file set is used\newline
+  by metal &
+  Diamond Needle File Set 4x160MM Sata Tools 10 pcs &
+  Rp~485.000 & Rp~485.000 \\
+\hline
+
+70 & 1 & RLS &
+  EMERY TAPE ABRASIVE, 50MMX36.5MTR GRIT \#120\newline
+  Easy to use by simply tearing off the required length of &
+  Amplas Roll 50mm x 45m Grid \#120 &
+  Rp~235.000 & Rp~235.000 \\
+\hline
+
+%% ---- ITEMS 71–103 ----
+71 & 1 & RLS &
+  EMERY TAPE ABRASIVE, 50MMX36.5MTR GRIT \#180\newline
+  Easy to use by simply tearing off the required length of &
+  Amplas Roll 50mm x 45m Grid \#180 &
+  Rp~235.000 & Rp~235.000 \\
+\hline
+
+72 & 1 & RLS &
+  EMERY TAPE ABRASIVE, 50MMX36.5MTR GRIT \#240\newline
+  Easy to use by simply tearing off the required length of &
+  Amplas Roll 50mm x 45m Grid \#240 &
+  Rp~250.000 & Rp~250.000 \\
+\hline
+
+73 & 10 & PCS &
+  WHEEL GRINDING OFFSET RESINOID, 100X6X15MM\newline
+  GRAIN36 4300MTR/MIN Grain size No. 36 is widely &
+  WHEEL GRINDING OFFSET RESINOID, 100X6X16MM Nippon Resibon &
+  Rp~35.000 & Rp~350.000 \\
+\hline
+
+74 & 10 & PCS &
+  WHEEL GRINDING OFFSET RESINOID, 125X6X22MM\newline
+  GRAIN36 4300MTR/MIN Grain size No. 36 is widely &
+  WHEEL GRINDING OFFSET RESINOID, 125X6X22MM Nippon Resibon &
+  Rp~40.000 & Rp~400.000 \\
+\hline
+
+75 & 10 & PCS &
+  WHEEL CUT-OFF RESINOID GRAIN36,\newline
+  100X1.5X12.7MM 4300MTR/MIN These resin bond &
+  WHEEL CUT-OFF RESINOID 105mmx1,6mmx5/8'' Nippon Resibon Super cut &
+  Rp~40.000 & Rp~400.000 \\
+\hline
+
+76 & 10 & PCS &
+  WHEEL CUT-OFF RESINOID GRAIN36,\newline
+  100X2.0X15.88MM 4300MTR/MIN These resin bond &
+  WHEEL CUT-OFF RESINOID 105x2x16mm Nippon Resibon &
+  Rp~32.500 & Rp~325.000 \\
+\hline
+
+77 & 5 & PCS &
+  SPARE CARTRIDGE FOR GAS TORCH, WIDE CARTRIDGE\newline
+  Lightweight, compact torch for soldering or fusing wax, &
+  Hi-Cook Gas Cartridge 230 gr &
+  Rp~37.500 & Rp~187.500 \\
+\hline
+
+78 & 1 & SET &
+  DRILL SET HSS STRAIGHT SHANK, 1-13MM 25'S IN\newline
+  STEEL CASE The drills in these sets are high speed &
+  DRILL SET HSS STRAIGHT SHANK, 1-13MM 25'S &
+  Rp~275.000 & Rp~275.000 \\
+\hline
+
+79 & 1 & PCS &
+  STEP DRILL \#ST-1 4-12MM\newline
+  Made of heat treated steel and can create various\newline
+  hole sizes by single drill in steel, &
+  STEP DRILL \#ST-1 4-12MM Titanium Coating &
+  Rp~110.000 & Rp~110.000 \\
+\hline
+
+80 & 1 & SET &
+  EXTRACTOR SCREW SET 6'S,\newline
+  FOR DRILL SIZE 2.0-10.3MM &
+  EXTRACTOR SCREW SET 6'S, FOR DRILL SIZE 2.0-10.3MM &
+  Rp~67.500 & Rp~67.500 \\
+\hline
+
+81 & 2 & SET &
+  HEX HEAD BOLT/NUT STEEL UNGALV, M24 X 95MM &
+  HEX HEAD BOLT/NUT BLACK STEEL GRADE 10.9, M24 X 95MM &
+  Rp~42.000 & Rp~84.000 \\
+\hline
+
+82 & 2 & SET &
+  HEX HEAD BOLT/NUT STEEL UNGALV, M12 X 80MM &
+  HEX HEAD BOLT/NUT BLACK STEEL GRADE 10.9, M12 X 80MM &
+  Rp~20.000 & Rp~40.000 \\
+\hline
+
+83 & 10 & BTL &
+  GLUE CYANOACRYLATE LOCTITE 401, INSENSITIVE\newline
+  INSTANT 20GRM Loctite\textregistered\ instant adhesives cure very &
+  GLUE CYANOACRYLATE LOCTITE 401, INSENSITIVE INSTANT 20GRM &
+  Rp~60.000 & Rp~600.000 \\
+\hline
+
+84 & 1 & SET &
+  HEX HEAD BOLT/NUT STEEL UNGALV, M16 X 60MM &
+  HEX HEAD BOLT/NUT BLACK STEEL GRADE 10.9, M16 X 60MM &
+  Rp~22.000 & Rp~22.000 \\
+\hline
+
+85 & 2 & PKT &
+  CABLE TIE SELF-LOCKING PLASTIC, 100MM 100'S\newline
+  A plastic band designed for bundling wires, hoses, &
+  CABLE TIE SELF-LOCKING PLASTIC, 100MM 100'S\newline
+  A plastic band designed for bundling wires, hoses, tubing, etc. A stainless steel barb &
+  Rp~18.000 & Rp~36.000 \\
+\hline
+
+86 & 5 & PKT &
+  CABLE TIE SELF-LOCKING PLASTIC, 200MM 100'S\newline
+  A plastic band designed for bundling wires, hoses, &
+  CABLE TIE SELF-LOCKING PLASTIC, 200MM 100'S\newline
+  A plastic band designed for bundling wires, hoses, tubing, etc. A stainless steel barb &
+  Rp~22.000 & Rp~110.000 \\
+\hline
+
+87 & 2 & PKT &
+  CABLE TIE SELF-LOCKING PLASTIC, 350MM 100'S\newline
+  A plastic band designed for bundling wires, hoses, &
+  CABLE TIE SELF-LOCKING PLASTIC, 350MM 100'S\newline
+  A plastic band designed for bundling wires, hoses, tubing, etc. A stainless steel barb &
+  Rp~43.000 & Rp~86.000 \\
+\hline
+
+88 & 1 & SET &
+  MULTI TESTER DIGITAL COMPACT, FLUKE 27II\newline
+  These compact system digital multi-testers cover\newline
+  all basic &
+  MULTI TESTER DIGITAL COMPACT, FLUKE 27II &
+  Rp~12.500.000 & Rp~12.500.000 \\
+\hline
+
+89 & 2 & SET &
+  HEX HEAD BOLT/NUT STEEL UNGALV, M10 X 50MM &
+  HEX HEAD BOLT/NUT BLACK STEEL GRADE 10.9, M10 X 50MM &
+  Rp~10.000 & Rp~20.000 \\
+\hline
+
+90 & 1 & BOX &
+  PACKING WATER BELDAM PILOTPACK, NO.76\newline
+  3MMX15MTR Beldam Pilotpack 76.\newline
+  Plaited from high &
+  PACKING WATER BELDAM PILOTPACK, NO.67 3MMX15MTR &
+  Rp~1.400.000 & Rp~1.400.000 \\
+\hline
+
+91 & 1 & BOX &
+  PACKING WATER BELDAM PILOTPACK, NO.76\newline
+  11MMX10MTR Beldam Pilotpack 76.\newline
+  Plaited from &
+  PACKING WATER BELDAM PILOTPACK, NO.67 11MMX10MTR &
+  Rp~1.200.000 & Rp~1.200.000 \\
+\hline
+
+92 & 1 & BOX &
+  PACKING EXFOILATED GRAPHITE, PILOTGRAPH \#4001\newline
+  5MMX15MTR Exfoliated graphite packing &
+  \textcolor[gray]{0.5}{No Offer} &
+  \textcolor[gray]{0.5}{Rp~--} & \textcolor[gray]{0.5}{Rp~--} \\
+\hline
+
+93 & 1 & MTR &
+  SHEET RUBBER VITON BLACK, TH:1MMXW:1000MM\newline
+  \#RP630010 Viton sheeting, known as fluoroelastomer &
+  SHEET RUBBER VITON BLACK, TH:1MMXW:1000MM \#RP630010\newline
+  Viton sheeting, known as fluoroelastomer or FKM, is highly resistant to heat, chemicals, and oils. &
+  Rp~3.200.000 & Rp~3.200.000 \\
+\hline
+
+94 & 2 & MTR &
+  SHEET RUBBER VITON BLACK, TH:2MMXW:1000MM\newline
+  \#RP630020 Viton sheeting, known as fluoroelastomer &
+  SHEET RUBBER VITON BLACK, TH:2MMXW:1000MM \#RP630020 &
+  Rp~3.350.000 & Rp~6.700.000 \\
+\hline
+
+95 & 1 & SHT &
+  JOINT SHEET EXPANDED GRAPHITE, NOVAPHIT SSTC\newline
+  1.5X1000X1000MM The highest quality gasket &
+  \textcolor[gray]{0.5}{No Offer} &
+  \textcolor[gray]{0.5}{Rp~--} & \textcolor[gray]{0.5}{Rp~--} \\
+\hline
+
+96 & 2 & SET &
+  LIQUID FLEXANE 80 DEVCON 1LB\newline
+  Putty: Trowelable 100\% solid urethane compound.\newline
+  Easy to mix and &
+  DEVCON Flexane 880 Putty 15820 1LB (454gr) &
+  Rp~2.100.000 & Rp~4.200.000 \\
+\hline
+
+97 & 80 & MTR &
+  AIR FILTER 15X1600MM\newline
+  So called vileoon filter made by combining tetoron\newline
+  and nylon into filter form. &
+  AIR FILTER 15mm x 2 meter &
+  Rp~50.000 & Rp~4.000.000 \\
+\hline
+
+98 & 2 & PRS &
+  GOGGLE WELDER PLASTIC, CONTOUR-MOULD 50MM\newline
+  LENS DIAM For use in gas welding. One size fits all. &
+  GOGGLE WELDER PLASTIC &
+  Rp~45.000 & Rp~90.000 \\
+\hline
+
+99 & 5 & PRS &
+  SPECTACLE SAFETY ANTI-SCRATCH, ANTI-FOG CLEAR\newline
+  Available in white and IR (Infrared) colour 5. Lens &
+  SPECTACLE SAFETY ANTI-SCRATCH, ANTI-FOG CLEAR &
+  Rp~65.000 & Rp~325.000 \\
+\hline
+
+100 & 2 & PCS &
+  HELMET WELDING WITH HEADGEAR\newline
+  Helmet with headgear for general welding use.\newline
+  Made of fibre glass, &
+  HELMET WELDING WITH HEADGEAR\newline
+  Helmet with headgear for general welding use. Made of fibre glass, lightweight, and heat-resistant. &
+  Rp~200.000 & Rp~400.000 \\
+\hline
+
+101 & 2 & PCS &
+  HANDSHIELD HANDLE INSIDE TYPE\newline
+  For general welding use; also for inspectors\newline
+  and occasional use. &
+  HANDSHIELD HANDLE OUTSIDE TYPE &
+  Rp~245.000 & Rp~490.000 \\
+\hline
+
+102 & 10 & PRS &
+  EYEWEAR PROTECTIVE CLEAR MSA, F/PRESCRIPTION\newline
+  GLASS 10008175 For users who wear prescription &
+  EYEWEAR PROTECTIVE CLEAR &
+  Rp~32.000 & Rp~320.000 \\
+\hline
+
+103 & 100 & PCS &
+  WASHER SPRING-LOCK STEEL, M16.0 &
+  WASHER SPRING-LOCK BLACK STEEL 8.8, M16.0 &
+  Rp~5.200 & Rp~520.000 \\
+\hline
+
+%% ---- ITEMS 104–117 ----
+104 & 50 & PCS &
+  WASHER SPRING-LOCK STEEL, M8.0 &
+  WASHER SPRING-LOCK BLACK STEEL 8.8, M8.0 &
+  Rp~5.000 & Rp~250.000 \\
+\hline
+
+105 & 100 & PCS &
+  WASHER PLAIN ROUND STEEL, M10.0 &
+  WASHER PLAIN ROUND BLACK STEEL 8.8, M10.0 &
+  Rp~5.100 & Rp~510.000 \\
+\hline
+
+106 & 100 & PCS &
+  WASHER SPRING-LOCK STEEL, M14.0 &
+  WASHER SPRING-LOCK BLACK STEEL 8.8, M14.0 &
+  Rp~5.150 & Rp~515.000 \\
+\hline
+
+107 & 50 & PCS &
+  WASHER SPRING-LOCK STEEL, M24.0 &
+  WASHER SPRING-LOCK BLACK STEEL 8.8, M24.0 &
+  Rp~6.100 & Rp~305.000 \\
+\hline
+
+108 & 50 & PCS &
+  WASHER SPRING-LOCK STEEL, M10.0 &
+  WASHER SPRING-LOCK BLACK STEEL 8.8, M10.0 &
+  Rp~5.100 & Rp~255.000 \\
+\hline
+
+109 & 50 & PCS &
+  WASHER SPRING-LOCK STEEL, M12.0 &
+  WASHER SPRING-LOCK BLACK STEEL 8.8, M12.0 &
+  Rp~5.200 & Rp~260.000 \\
+\hline
+
+110 & 100 & PCS &
+  WASHER PLAIN ROUND STEEL, M8.0 &
+  WASHER PLAIN ROUND BLACK STEEL 8.8, M8.0 &
+  Rp~5.000 & Rp~500.000 \\
+\hline
+
+111 & 100 & PCS &
+  WASHER PLAIN ROUND STEEL, M12.0 &
+  WASHER PLAIN ROUND BLACK STEEL 8.8, M12.0 &
+  Rp~5.100 & Rp~510.000 \\
+\hline
+
+112 & 100 & PCS &
+  WASHER PLAIN ROUND STEEL, M14.0 &
+  WASHER PLAIN ROUND BLACK STEEL 8.8, M14.0 &
+  Rp~5.125 & Rp~512.500 \\
+\hline
+
+113 & 100 & PCS &
+  WASHER PLAIN ROUND STEEL, M16.0 &
+  WASHER PLAIN ROUND BLACK STEEL 8.8, M16.0 &
+  Rp~52.000 & Rp~5.200.000 \\
+\hline
+
+114 & 2 & SET &
+  GAS CUTTING TORCH NO.CT-02, 90 DEG ANGLE WITH\newline
+  NOZZLE SET Standard combination torches which &
+  GAS CUTTING TORCH KOIKE MK-100, incl. Cutting tip no. 1, 2, 3\newline
+  untuk gas LPG &
+  Rp~700.000 & Rp~1.400.000 \\
+\hline
+
+115 & 3 & PCS &
+  SPARE NOZZLE NO.2, FOR NO.2 GAS CUTTING TORCH\newline
+  3 numbers of interchangeable spare nozzles for each &
+  SPARE NOZZLE NO.2 untuk gas LPG &
+  Rp~50.000 & Rp~150.000 \\
+\hline
+
+116 & 3 & PCS &
+  SPARE NOZZLE NO.3, FOR NO.2 GAS CUTTING TORCH\newline
+  3 numbers of interchangeable spare nozzles for each &
+  SPARE NOZZLE NO.3 untuk gas LPG &
+  Rp~50.000 & Rp~150.000 \\
+\hline
+
+117 & 4 & PKT &
+  PLASTIC BAG BLACK, 500X400X1300MM 50'S\newline
+  Polythene bag for garbage disposal.\newline
+  Available in a &
+  PLASTIC BAG BLACK, 90X120 Cm 50'S &
+  Rp~165.000 & Rp~660.000 \\
+\hline
+
+%% ---- TOTALS BLOCK ----
+\multicolumn{5}{|r|}{\footnotesize Total} &
+  \multicolumn{2}{r|}{\footnotesize Rp~126.323.000} \\
+\multicolumn{5}{|r|}{\footnotesize Diskon 5\%} &
+  \multicolumn{2}{r|}{\footnotesize -Rp~6.316.150} \\
+\multicolumn{5}{|r|}{\footnotesize Sub Total} &
+  \multicolumn{2}{r|}{\footnotesize Rp~120.006.850} \\
+\multicolumn{5}{|r|}{\footnotesize DPP Nilai Lain} &
+  \multicolumn{2}{r|}{\footnotesize Rp~110.006.279} \\
+\multicolumn{5}{|r|}{\footnotesize PPN 12\%} &
+  \multicolumn{2}{r|}{\footnotesize Rp~13.200.754} \\
+\hline
+\multicolumn{5}{|r|}{\footnotesize\bfseries Grand Total} &
+  \multicolumn{2}{r|}{\footnotesize\bfseries Rp~123.207.033} \\
+\hline
+
+\end{longtable}
+
+%% ============================================================
+%% DELIVERY TERMS + SIGNATURE
+%% ============================================================
+\vspace{0.5cm}
+\noindent
+\begin{minipage}[t]{0.55\textwidth}
+  \small
+  \begin{tabular}{@{}l@{\;}l@{\;}l@{}}
+    DELIVERY PLACE & : & MV YUXIN SATU - IMC SHIP MANAGEMENT \\[3pt]
+    DELIVERY TIME  & : & 5 working days after PO received \\[3pt]
+    PAYMENT        & : & 30 days \\[3pt]
+    VALIDITY       & : & 3 days \\
+  \end{tabular}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.40\textwidth}
+  \raggedleft
+  \small
+  \TodayJakarta\\[2cm]
+  \textbf{SENO DWI SASONGKO}
+\end{minipage}
+
+\end{document}

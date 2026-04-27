@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-// Postgres SQLSTATE codes we care about.
+// Postgres SQLSTATE codes used.
 // https://www.postgresql.org/docs/current/errcodes-appendix.html
 const (
 	codeUniqueViolation     = "23505"

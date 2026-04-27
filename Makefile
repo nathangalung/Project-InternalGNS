@@ -1,35 +1,170 @@
-.PHONY: help dev api-dev web-dev db-up db-down migrate seed test lint
+.PHONY: help setup \
+        db-up db-down db-logs db-shell \
+        stack-up stack-down stack-logs ps reset \
+        migrate migrate-up migrate-status migrate-down migrate-new \
+        seed seed-dev check-reconcile schema-dump \
+        api web dev \
+        tidy sqlc \
+        build build-api build-web \
+        test test-api test-web \
+        lint fmt \
+        docker-build docker-build-api docker-build-web \
+        clean
 
-SHELL := /bin/bash
+SHELL        := /bin/bash
+DATABASE_URL ?= postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable
+COMPOSE_DEV  := docker compose -f compose.dev.yml
+COMPOSE_PROD := docker compose -f infra/dokploy/docker-compose.yml --env-file infra/dokploy/.env
 
-help: ## Show targets
-	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-18s\033[0m %s\n",$$1,$$2}'
+API_DIR      := apps/api
+WEB_DIR      := apps/web
+MIG_DIR      := $(API_DIR)/db/migrations
+SEED_DIR     := $(API_DIR)/db/seeds
+CHECK_DIR    := $(API_DIR)/db/checks
 
-dev: db-up ## Start DB + MinIO, then run api and web dev servers in parallel
-	@( $(MAKE) api-dev & $(MAKE) web-dev & wait )
+help: ## Show available targets
+	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
+	  | sort \
+	  | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-20s\033[0m %s\n",$$1,$$2}'
 
-api-dev: ## Run Go API with live reload (requires `air`, falls back to `go run`)
-	@command -v air >/dev/null 2>&1 && cd apps/api && air || (cd apps/api && go run ./cmd/api)
+# Local toolchain prep.
+setup: ## Prep env, deps, tools
+	@command -v go     >/dev/null || { echo "missing: go (need 1.25+)"; exit 1; }
+	@command -v bun    >/dev/null || { echo "missing: bun (need 1.3+)"; exit 1; }
+	@command -v docker >/dev/null || { echo "missing: docker"; exit 1; }
+	@test -f $(API_DIR)/.env || cp $(API_DIR)/.env.example $(API_DIR)/.env
+	@test -f $(WEB_DIR)/.env || cp $(WEB_DIR)/.env.example $(WEB_DIR)/.env
+	@command -v goose >/dev/null 2>&1 || { \
+	  echo "installing goose..."; \
+	  go install github.com/pressly/goose/v3/cmd/goose@latest; \
+	}
+	cd $(API_DIR) && go mod tidy
+	cd $(WEB_DIR) && bun install
+	@echo "setup done. Next: make seed-dev && make dev"
 
-web-dev: ## Run Vite dev server
-	cd apps/web && bun run dev
+# Database container lifecycle.
+db-up: ## Start postgres only
+	$(COMPOSE_DEV) up -d --wait postgres
 
-db-up: ## Start Postgres + MinIO locally
-	cd infra/dokploy && docker compose up -d postgres minio
+db-down: ## Stop postgres
+	$(COMPOSE_DEV) stop postgres
 
-db-down: ## Stop local Postgres + MinIO
-	cd infra/dokploy && docker compose down
+db-logs: ## Tail postgres logs
+	$(COMPOSE_DEV) logs -f --tail=100 postgres
 
-migrate: ## Apply goose migrations
-	$(MAKE) -C apps/api migrate-up
+db-shell: ## Open psql shell
+	$(COMPOSE_DEV) exec postgres psql -U gns_app -d gns_quotation
 
-seed: ## Load dev seeds (master + samples)
-	$(MAKE) -C apps/api seed-dev
+# Full dev stack lifecycle.
+stack-up: ## Build and start postgres + api
+	$(COMPOSE_DEV) up -d --build --wait
 
-test: ## Run tests (api + web typecheck)
-	$(MAKE) -C apps/api test
-	cd apps/web && bun run typecheck
+stack-down: ## Stop full dev stack
+	$(COMPOSE_DEV) down
 
-lint: ## Lint all code
-	$(MAKE) -C apps/api lint
-	cd apps/web && bun run lint
+stack-logs: ## Tail dev stack logs
+	$(COMPOSE_DEV) logs -f --tail=100
+
+ps: ## List dev containers
+	$(COMPOSE_DEV) ps
+
+reset: ## Wipe dev stack and volumes
+	$(COMPOSE_DEV) down -v
+
+# Migrations.
+migrate: db-up ## Apply migrations + create superadmin
+	cd $(API_DIR) && go run ./cmd/api -bootstrap
+
+migrate-up: db-up ## Apply all pending migrations (raw goose)
+	goose -dir $(MIG_DIR) postgres "$(DATABASE_URL)" up
+
+migrate-status: ## Show migration state
+	goose -dir $(MIG_DIR) postgres "$(DATABASE_URL)" status
+
+migrate-down: ## Roll back the last migration
+	goose -dir $(MIG_DIR) postgres "$(DATABASE_URL)" down
+
+migrate-new: ## Create a new migration NAME=
+	@test -n "$(NAME)" || (echo "NAME is required"; exit 1)
+	goose -dir $(MIG_DIR) -s create $(NAME) sql
+
+# Seeds.
+seed: ## Load master data only (units + countries, idempotent)
+	@echo ">> $(SEED_DIR)/01_master.sql"
+	@psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 -f $(SEED_DIR)/01_master.sql
+
+seed-dev: migrate ## Migrate + load master + dev sample data (DEV ONLY)
+	@set -e; for f in $(SEED_DIR)/*.sql; do \
+	  echo ">> $$f"; \
+	  psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 -f $$f; \
+	done
+
+check-reconcile: ## Run reconciliation / verification queries
+	psql "$(DATABASE_URL)" -f $(CHECK_DIR)/01_verify_advanced.sql
+
+schema-dump: ## Dump current schema to docs/schema_current.sql
+	pg_dump --schema-only --no-owner "$(DATABASE_URL)" > docs/schema_current.sql
+
+# Local dev servers.
+api: db-up ## Run API on host
+	cd $(API_DIR) && go run ./cmd/api
+
+web: ## Run Vite dev server
+	cd $(WEB_DIR) && bun run dev
+
+dev: db-up ## Run api and web together
+	@trap 'kill 0' INT TERM EXIT; \
+	$(MAKE) api & \
+	$(MAKE) web & \
+	wait
+
+# Code generation / dependency tidy.
+tidy: ## go mod tidy
+	cd $(API_DIR) && go mod tidy
+
+sqlc: ## Generate sqlc code
+	cd $(API_DIR) && sqlc generate
+
+# Build artifacts.
+build: build-api build-web ## Build api binary and web bundle
+
+build-api: ## Build API binary to apps/api/bin/api
+	cd $(API_DIR) && go build -o bin/api ./cmd/api
+
+build-web: ## Build FE bundle
+	cd $(WEB_DIR) && bun run build
+
+# Tests and checks.
+test: test-api test-web ## Run all tests
+
+test-api: ## Run Go unit tests (serialized to avoid godog/integration interference)
+	cd $(API_DIR) && go test ./... -race -count=1 -p=1
+
+test-web: ## Typecheck FE
+	cd $(WEB_DIR) && bun run typecheck
+
+lint: ## Lint api and web
+	cd $(API_DIR) && go vet ./...
+	@command -v golangci-lint >/dev/null 2>&1 && (cd $(API_DIR) && golangci-lint run) || echo "golangci-lint not installed, skipping"
+	cd $(WEB_DIR) && bun run lint
+
+fmt: ## Format api and web
+	cd $(API_DIR) && gofmt -w -s .
+	cd $(WEB_DIR) && bun run format
+
+# Container images.
+docker-build: docker-build-api docker-build-web ## Build api and web images
+
+docker-build-api: ## Build API image
+	docker build -t internalgns-api:local $(API_DIR)
+
+docker-build-web: ## Build FE image
+	docker build \
+	  --build-arg VITE_API_URL=$${VITE_API_URL:-/api/v1} \
+	  -t internalgns-web:local $(WEB_DIR)
+
+# Cleanup.
+clean: ## Remove build artifacts
+	rm -rf $(API_DIR)/bin
+	rm -rf $(WEB_DIR)/dist
+	rm -rf $(WEB_DIR)/node_modules/.vite

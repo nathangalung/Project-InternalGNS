@@ -11,6 +11,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 )
 
 type Handler struct {
@@ -20,8 +21,6 @@ type Handler struct {
 func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
-
-// ─── List & stats ─────────────────────────────────────────────
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
@@ -62,7 +61,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Internal(err.Error()))
 		return
 	}
-	writeJSON(w, http.StatusOK, rows)
+	httpx.WriteJSON(w, http.StatusOK, rows)
 }
 
 func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
@@ -71,10 +70,8 @@ func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Internal(err.Error()))
 		return
 	}
-	writeJSON(w, http.StatusOK, stats)
+	httpx.WriteJSON(w, http.StatusOK, stats)
 }
-
-// ─── Detail ───────────────────────────────────────────────────
 
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
@@ -92,10 +89,8 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Internal(err.Error()))
 		return
 	}
-	writeJSON(w, http.StatusOK, d)
+	httpx.WriteJSON(w, http.StatusOK, d)
 }
-
-// ─── Create / Update / ChangeStatus (DB function calls) ──────
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
@@ -103,7 +98,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
-	// Minimal validation; DB function akan handle sisanya
+	// DB function does rest.
 	if req.CompanyClientID == 0 {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"companyClientId": "required"}))
 		return
@@ -116,11 +111,11 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	userID := deps.CurrentUserID(r.Context())
 	id, err := h.repo.Create(r.Context(), req, userID)
 	if err != nil {
-		// fn_create_quotation raise exception untuk validation gagal — surface ke client
+		// Validation comes from DB.
 		httperr.Render(w, httperr.BadRequest(err.Error()))
 		return
 	}
-	writeJSON(w, http.StatusCreated, map[string]int64{"id": id})
+	httpx.WriteJSON(w, http.StatusCreated, map[string]int64{"id": id})
 }
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
@@ -143,11 +138,11 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	userID := deps.CurrentUserID(r.Context())
 	_, err = h.repo.Update(r.Context(), id, req, userID)
 	if err != nil {
-		// fn_update_quotation raise "Cannot edit ... not draft" untuk transition violation
+		// Update needs draft status.
 		httperr.Render(w, httperr.BadRequest(err.Error()))
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]int64{"id": id})
+	httpx.WriteJSON(w, http.StatusOK, map[string]int64{"id": id})
 }
 
 func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
@@ -169,14 +164,14 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 
 	userID := deps.CurrentUserID(r.Context())
 	if err := h.repo.ChangeStatus(r.Context(), id, req.Status, req.Note, userID); err != nil {
-		// fn_change_quotation_status raise untuk invalid transition
+		// DB rejects bad transition.
 		httperr.Render(w, httperr.BadRequest(err.Error()))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Send = thin wrapper untuk POST /quotations/{id}/send → status='sent'.
+// Force status to sent.
 func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
@@ -185,19 +180,11 @@ func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := deps.CurrentUserID(r.Context())
-	if err := h.repo.ChangeStatus(r.Context(), id, "sent", strPtr("Quotation dikirim ke klien"), userID); err != nil {
+	if err := h.repo.ChangeStatus(r.Context(), id, "sent", strPtr("Quotation sent to client"), userID); err != nil {
 		httperr.Render(w, httperr.BadRequest(err.Error()))
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
-}
-
-// ─── Helpers ──────────────────────────────────────────────────
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
 }
 
 func strPtr(s string) *string { return &s }

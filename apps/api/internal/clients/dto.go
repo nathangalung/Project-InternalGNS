@@ -2,8 +2,6 @@ package clients
 
 import "time"
 
-// ─── DB row shapes (db tag for pgx scanning) ──────────────────
-
 // Client mirrors company_client table.
 type Client struct {
 	ID          int64     `db:"id"            json:"id"`
@@ -25,16 +23,15 @@ type Contact struct {
 	CompanyID   int64     `db:"company_id"    json:"companyId"`
 	Name        string    `db:"name"          json:"name"`
 	Email       *string   `db:"email"         json:"email,omitempty"`
-	Phone       *string   `db:"phone"         json:"phone,omitempty"`        // digit only, no dial code
+	Phone       *string   `db:"phone"         json:"phone,omitempty"` // digits only
 	Title       *string   `db:"title"         json:"title,omitempty"`
-	CountryCode string    `db:"country_code"  json:"countryCode"`             // for dial code prefix
+	CountryCode string    `db:"country_code"  json:"countryCode"` // dial code prefix
 	IsActive    bool      `db:"is_active"     json:"isActive"`
 	CreatedAt   time.Time `db:"created_at"    json:"createdAt"`
 	UpdatedAt   time.Time `db:"updated_at"    json:"updatedAt"`
 }
 
-// SearchResult mirrors fn_search_clients return shape.
-// Flat row per (company × contact). LEFT JOIN — contact_* bisa NULL.
+// Search hit, nullable contact.
 type SearchResult struct {
 	CompanyID      int64   `db:"company_id"      json:"companyId"`
 	CompanyName    string  `db:"company_name"    json:"companyName"`
@@ -53,24 +50,22 @@ type SearchResult struct {
 	MatchTier      string  `db:"match_tier"      json:"matchTier"` // AUTO_MATCH | SUGGESTED | FUZZY
 }
 
-// ─── Request shapes ───────────────────────────────────────────
-
-// CreateClientRequest is body untuk POST /clients.
+// Create client body.
 type CreateClientRequest struct {
 	Number      *string `json:"number"`
-	Name        string  `json:"name"`        // required
+	Name        string  `json:"name"`
 	NPWP        *string `json:"npwp"`
 	Address     *string `json:"address"`
 	Email       *string `json:"email"`
-	CountryCode string  `json:"countryCode"` // default 'IDN' kalau kosong
+	CountryCode string  `json:"countryCode"` // defaults to IDN
 	TkuID       *string `json:"tkuId"`
 }
 
-// CreateContactRequest is body untuk POST /clients/{id}/contacts.
+// Create contact body.
 type CreateContactRequest struct {
-	Name        string  `json:"name"` // required
+	Name        string  `json:"name"`
 	Email       *string `json:"email"`
-	Phone       *string `json:"phone"`       // digit only (9-12)
+	Phone       *string `json:"phone"` // 9 to 12 digits
 	Title       *string `json:"title"`
-	CountryCode string  `json:"countryCode"` // default 'IDN' kalau kosong
+	CountryCode string  `json:"countryCode"` // defaults to IDN
 }

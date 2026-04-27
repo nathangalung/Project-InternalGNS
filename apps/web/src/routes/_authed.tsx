@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
-import { isAuthenticatedSync } from "@/hooks/use-auth"
+import { isAuthenticatedSync } from "@/features/auth/hooks"
 
 export const Route = createFileRoute("/_authed")({
   beforeLoad: () => {

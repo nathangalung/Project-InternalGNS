@@ -4,26 +4,24 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/nathangalung/internalgns/apps/api/db/queries"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 )
 
-// Repo encapsulates DB access untuk units domain.
-// Pakai pgxpool langsung dengan raw SQL. Bila nanti swap ke
-// sqlc-generated, signature method tidak berubah.
+// Units DB access.
 type Repo struct {
-	pool *pgxpool.Pool
+	db    db.Executor
+	store queries.Store
 }
 
-func NewRepo(pool *pgxpool.Pool) *Repo {
-	return &Repo{pool: pool}
+func NewRepo(exec db.Executor, store queries.Store) *Repo {
+	return &Repo{db: exec, store: store}
 }
 
-// ListAll returns all units ordered by id.
-// Master data — small (puluhan rows), aman SELECT *.
+// ListAll returns every unit row.
 func (r *Repo) ListAll(ctx context.Context) ([]Unit, error) {
-	const q = `SELECT id, code, name, coretax_code FROM units ORDER BY id`
-
-	rows, err := r.pool.Query(ctx, q)
+	rows, err := r.db.Query(ctx, r.store.Get("units.list_all"))
 	if err != nil {
 		return nil, err
 	}

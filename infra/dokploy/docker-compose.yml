@@ -2,14 +2,14 @@ name: internalgns
 
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       TZ: Asia/Jakarta
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - internalgns_pgdata:/var/lib/postgresql
     command:
       - postgres
       - -c
@@ -33,7 +33,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
     command: server /data --console-address ":9001"
     volumes:
-      - minio_data:/data
+      - internalgns_minio:/data
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 15s
@@ -51,6 +51,10 @@ services:
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRY: 24h
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      SUPERADMIN_EMAIL: ${SUPERADMIN_EMAIL}
+      SUPERADMIN_NAME: ${SUPERADMIN_NAME}
+      SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD}
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: ${MINIO_USER}
       MINIO_SECRET_KEY: ${MINIO_PASSWORD}
@@ -79,10 +83,11 @@ services:
     networks: [dokploy-network]
 
 volumes:
-  postgres_data:
-  minio_data:
+  internalgns_pgdata:
+  internalgns_minio:
 
 networks:
   internal:
+    internal: true
   dokploy-network:
     external: true

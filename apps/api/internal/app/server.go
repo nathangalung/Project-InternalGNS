@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
+	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
 func NewServer(ctx context.Context, cfg Config) (*http.Server, error) {
@@ -16,8 +18,20 @@ func NewServer(ctx context.Context, cfg Config) (*http.Server, error) {
 	if err := db.RunMigrations(ctx, pool); err != nil {
 		return nil, err
 	}
+	if err := users.SeedSuperadmin(ctx, pool, users.SeedConfig{
+		Email:    cfg.SuperadminEmail,
+		Name:     cfg.SuperadminName,
+		Password: cfg.SuperadminPassword,
+	}); err != nil {
+		return nil, err
+	}
 
-	r := NewRouter(cfg, pool)
+	store, err := queries.Load()
+	if err != nil {
+		return nil, err
+	}
+
+	r := NewRouter(cfg, pool, store)
 
 	return &http.Server{
 		Addr:              cfg.HTTPAddr,
