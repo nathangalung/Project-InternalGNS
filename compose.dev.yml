@@ -18,6 +18,17 @@ services:
       timeout: 3s
       retries: 10
 
+  pgweb:
+    image: sosedoff/pgweb:latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://gns_app:gns_app@postgres:5432/gns_quotation?sslmode=disable
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   api:
     build:
       context: ./apps/api

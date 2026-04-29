@@ -8,6 +8,7 @@ import {
   dropdownItemStyle,
   dropdownLabelStyle,
   dropdownPanelStyle,
+  formatKodeNama,
 } from "./helpers";
 
 interface IdentityCardProps {
@@ -15,7 +16,7 @@ interface IdentityCardProps {
   onChange: (field: keyof ProductAddFormData, value: string) => void;
   productCatalog: CatalogItem[];
   productMatches: CatalogItem[];
-  activeProductKode?: string;
+  activeProductLabel?: string;
   productOpen: boolean;
   satuanOpen: boolean;
   satuanOptions: string[];
@@ -33,7 +34,7 @@ export default function IdentityCard({
   form,
   onChange,
   productMatches,
-  activeProductKode,
+  activeProductLabel,
   productOpen,
   satuanOpen,
   satuanOptions,
@@ -67,11 +68,11 @@ export default function IdentityCard({
                 <div style={{ padding: "10px 20px", ...dropdownLabelStyle(false) }}>Tidak ada hasil</div>
               ) : (
                 productMatches.map(p => {
-                  const label = `${p.kode} - ${p.nama}`;
-                  const isActive = p.kode === activeProductKode;
+                  const label = formatKodeNama(p.kode, p.nama);
+                  const isActive = label === activeProductLabel;
                   return (
                     <button
-                      key={p.kode}
+                      key={p.id ?? label}
                       type="button"
                       style={dropdownItemStyle}
                       onMouseDown={e => e.preventDefault()}

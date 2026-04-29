@@ -55,6 +55,13 @@ db-logs: ## Tail postgres logs
 db-shell: ## Open psql shell
 	$(COMPOSE_DEV) exec postgres psql -U gns_app -d gns_quotation
 
+db-ui: ## Start pgweb DB browser (http://localhost:8081)
+	$(COMPOSE_DEV) up -d --wait pgweb
+	@echo ">> pgweb running at http://localhost:8081"
+
+db-ui-down: ## Stop pgweb
+	$(COMPOSE_DEV) stop pgweb
+
 # Full dev stack lifecycle.
 stack-up: ## Build and start postgres + api
 	$(COMPOSE_DEV) up -d --build --wait

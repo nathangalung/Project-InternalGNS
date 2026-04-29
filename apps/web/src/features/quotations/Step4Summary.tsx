@@ -238,7 +238,7 @@ export default function Step4Summary({
                         <div className="qep-card-meta">
                           <span className="qep-card-label">PRODUK {globalIndex}</span>
                           <span className="qep-card-name">{p.nama}</span>
-                          <span className="qep-card-code">KODE IMPA: {p.kodeImpa}</span>
+                          {p.kodeImpa && <span className="qep-card-code">KODE IMPA: {p.kodeImpa}</span>}
                         </div>
                       </div>
                       <div className="qep-card-body">

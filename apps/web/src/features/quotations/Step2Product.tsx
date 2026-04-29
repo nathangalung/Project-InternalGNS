@@ -238,7 +238,7 @@ export default function Step2Product({
                     <div className="qep-card-meta">
                       <span className="qep-card-label">PRODUK {globalIndex}</span>
                       <span className="qep-card-name">{p.nama}</span>
-                      <span className="qep-card-code">KODE IMPA: {p.kodeImpa}</span>
+                      {p.kodeImpa && <span className="qep-card-code">KODE IMPA: {p.kodeImpa}</span>}
                     </div>
                     <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                       <button onClick={() => { setEditingProduct(p); setShowProductAdd(true); }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#630ED4" }} title="Edit Produk">

@@ -2,19 +2,23 @@ package clients
 
 import "time"
 
-// Client mirrors company_client table.
+// Client mirrors company_client table plus first active contact (LATERAL).
 type Client struct {
-	ID          int64     `db:"id"            json:"id"`
-	Number      *string   `db:"number"        json:"number,omitempty"`
-	Name        string    `db:"name"          json:"name"`
-	NPWP        *string   `db:"npwp"          json:"npwp,omitempty"`
-	Address     *string   `db:"address"       json:"address,omitempty"`
-	Email       *string   `db:"email"         json:"email,omitempty"`
-	CountryCode string    `db:"country_code"  json:"countryCode"`
-	TkuID       *string   `db:"tku_id"        json:"tkuId,omitempty"`
-	IsActive    bool      `db:"is_active"     json:"isActive"`
-	CreatedAt   time.Time `db:"created_at"    json:"createdAt"`
-	UpdatedAt   time.Time `db:"updated_at"    json:"updatedAt"`
+	ID           int64     `db:"id"            json:"id"`
+	Number       *string   `db:"number"        json:"number,omitempty"`
+	Name         string    `db:"name"          json:"name"`
+	NPWP         *string   `db:"npwp"          json:"npwp,omitempty"`
+	Address      *string   `db:"address"       json:"address,omitempty"`
+	Email        *string   `db:"email"         json:"email,omitempty"`
+	CountryCode  string    `db:"country_code"  json:"countryCode"`
+	TkuID        *string   `db:"tku_id"        json:"tkuId,omitempty"`
+	IsActive     bool      `db:"is_active"     json:"isActive"`
+	CreatedAt    time.Time `db:"created_at"    json:"createdAt"`
+	UpdatedAt    time.Time `db:"updated_at"    json:"updatedAt"`
+	ContactID    *int64    `db:"contact_id"    json:"contactId,omitempty"`
+	ContactName  *string   `db:"contact_name"  json:"contactName,omitempty"`
+	ContactEmail *string   `db:"contact_email" json:"contactEmail,omitempty"`
+	ContactPhone *string   `db:"contact_phone" json:"contactPhone,omitempty"`
 }
 
 // Contact mirrors company_contacts table.

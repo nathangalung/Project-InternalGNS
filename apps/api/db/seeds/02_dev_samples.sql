@@ -192,10 +192,14 @@ INSERT INTO company_contacts (id, company_id, name, email, phone, title, country
   (27, 20,'Ibu Vivi Anggreani',      'vivi.anggreani@tirta-anugerah.example', '081298335577', 'Crewing', 'IDN', 1, 1),
   -- Bahtera Anugerah
   (28, 21,'Bp. Krisna Putra',        'krisna.putra@bahtera-anugerah.example', '081234668899', 'Procurement', 'IDN', 1, 1),
+  -- Anugerah Mitra Bahari
+  (29, 22,'Bp. Yusuf Ramadhan',      'yusuf.ramadhan@anugerahmitra.example', '081298447733', 'Procurement', 'IDN', 1, 1),
+  -- Karya Bahtera Sukses
+  (30, 23,'Ibu Diana Pratiwi',       'diana.pratiwi@karyabahtera.example',  '081345558822', 'Operations Manager', 'IDN', 1, 1),
   -- Sapphire Seas (Singapore)
-  (29, 24,'Mr. Lim Wei Sheng',       'wei.lim@sapphireseas.example.sg',    '6591234567', 'Vessel Superintendent', 'SGP', 1, 1),
+  (31, 24,'Mr. Lim Wei Sheng',       'wei.lim@sapphireseas.example.sg',    '6591234567', 'Vessel Superintendent', 'SGP', 1, 1),
   -- Pelita Trans (Malaysia)
-  (30, 25,'Mr. Ahmad Rizal',         'ahmad.rizal@pelitatrans.example.my', '60123456789', 'Procurement Officer', 'MYS', 1, 1);
+  (32, 25,'Mr. Ahmad Rizal',         'ahmad.rizal@pelitatrans.example.my', '60123456789', 'Procurement Officer', 'MYS', 1, 1);
 
 SELECT setval('company_contacts_id_seq', GREATEST((SELECT MAX(id) FROM company_contacts), 1));
 

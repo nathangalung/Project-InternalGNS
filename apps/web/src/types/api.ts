@@ -27,6 +27,10 @@ export type ClientRow = {
   isActive: boolean
   createdAt: string
   updatedAt: string
+  contactId?: number
+  contactName?: string
+  contactEmail?: string
+  contactPhone?: string
 }
 
 export type ContactRow = {

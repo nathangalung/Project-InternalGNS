@@ -34,6 +34,11 @@ export interface NewVendorForm {
 
 export type DropdownKey = "product" | "satuan" | "vendor" | "historis";
 
+// Label for IMPA + name combo. Drops " - " when kode missing.
+export function formatKodeNama(kode: string | undefined | null, nama: string): string {
+  return kode && kode.trim().length > 0 ? `${kode} - ${nama}` : nama;
+}
+
 export const INITIAL_FORM: ProductAddFormData = {
   kodeImpaNama: "",
   jumlahProduk: "",

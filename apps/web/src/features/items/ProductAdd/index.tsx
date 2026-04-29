@@ -12,9 +12,10 @@ import {
   type NewVendorForm,
   type ProductAddFormData,
   type VendorOption,
+  formatKodeNama,
   parseRp,
 } from "./helpers";
-import { useItemPriceHistory, useItemSearch, useItemVendors } from "@/features/items/hooks";
+import { useItemPriceHistory, useItemSearch, useItemVendors, useItems } from "@/features/items/hooks";
 import { useUnits } from "@/features/units/hooks";
 import { useCreateVendor } from "@/features/vendors/hooks";
 
@@ -46,16 +47,23 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
 
   const productQueryRaw = form.kodeImpaNama.trim();
   const { data: searchHits } = useItemSearch(productQueryRaw, { limit: 10 });
-  const productCatalog: CatalogItem[] = useMemo(
-    () =>
-      (searchHits ?? []).map(h => ({
+  const { data: itemsAll } = useItems({ limit: 50 });
+  const productCatalog: CatalogItem[] = useMemo(() => {
+    if (productQueryRaw.length > 0) {
+      return (searchHits ?? []).map(h => ({
         id: h.id,
         kode: h.impaCode ?? "",
         nama: h.name,
         defaultUnitId: h.defaultUnitId,
-      })),
-    [searchHits],
-  );
+      }));
+    }
+    return (itemsAll ?? []).map(r => ({
+      id: r.id,
+      kode: r.impaCode ?? "",
+      nama: r.name,
+      defaultUnitId: r.defaultUnitId,
+    }));
+  }, [productQueryRaw, searchHits, itemsAll]);
 
   const { data: vendorRows } = useItemVendors(pickedItemId ?? undefined);
   const vendorOptions: VendorOption[] = useMemo(() => {
@@ -84,7 +92,7 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
       setExtraVendors([]);
       if (initialData) {
         setForm({
-          kodeImpaNama: initialData.kodeImpa ? `${initialData.kodeImpa} - ${initialData.nama}` : initialData.nama,
+          kodeImpaNama: formatKodeNama(initialData.kodeImpa, initialData.nama),
           jumlahProduk: String(initialData.jumlah),
           satuan: initialData.satuan,
           namaVendor: initialData.vendor,
@@ -167,8 +175,11 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
         .slice(0, 3)
     : productCatalog.slice(0, 3);
 
-  const exactProduct = productCatalog.find(p => `${p.kode} - ${p.nama}` === form.kodeImpaNama);
-  const activeProductKode = exactProduct?.kode ?? productMatches[0]?.kode;
+  const activeProductLabel = form.kodeImpaNama.trim().length > 0
+    ? productCatalog
+        .map(p => formatKodeNama(p.kode, p.nama))
+        .find(label => label === form.kodeImpaNama)
+    : undefined;
 
   const vendorQuery = form.namaVendor.trim().toLowerCase();
   const sortedVendors = [...vendorOptions].sort((a, b) => {
@@ -241,7 +252,7 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
               onChange={handleChange}
               productCatalog={productCatalog}
               productMatches={productMatches}
-              activeProductKode={activeProductKode}
+              activeProductLabel={activeProductLabel}
               productOpen={productOpen}
               satuanOpen={satuanOpen}
               satuanOptions={satuanOptions}
@@ -288,8 +299,7 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
         open={showProductNew}
         onOpenChange={setShowProductNew}
         onSuccess={data => {
-          const label = data.kode ? `${data.kode} - ${data.nama}` : data.nama;
-          handleChange("kodeImpaNama", label);
+          handleChange("kodeImpaNama", formatKodeNama(data.kode, data.nama));
           if (data.satuan) handleChange("satuan", data.satuan);
           setShowProductNew(false);
         }}

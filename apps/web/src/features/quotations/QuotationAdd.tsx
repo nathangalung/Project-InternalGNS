@@ -25,18 +25,20 @@ function initialsOf(name: string): string {
     .toUpperCase();
 }
 
-function fromClientRow(c: ClientRow): Client {
+function fromClientRow(c: ClientRow): Client & { contactId?: number } {
   return {
     id: String(c.id),
     name: c.name,
-    narahubung: "",
+    narahubung: c.contactName ?? "",
     country: c.countryCode,
     initials: initialsOf(c.name),
-    email: c.email,
+    phone: c.contactPhone,
+    email: c.contactEmail ?? c.email,
     npwp: c.npwp,
     nomorTKU: c.tkuId,
     referenceNumber: c.number,
     lokasi: c.address,
+    contactId: c.contactId,
   };
 }
 
