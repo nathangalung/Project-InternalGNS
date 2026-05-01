@@ -21,6 +21,30 @@ export function makePageNavigate(navigate: Navigate, currentId?: string): (page:
       case "quotation-add":
         void navigate({ to: "/quotations/add" })
         return
+      case "purchase-orders":
+        void navigate({ to: "/purchase-orders" })
+        return
+      case "purchase-order-detail":
+        if (currentId) void navigate({ to: "/purchase-orders/$id", params: { id: currentId } })
+        return
+      case "invoices":
+        void navigate({ to: "/invoices" })
+        return
+      case "invoice-detail":
+        if (currentId) void navigate({ to: "/invoices/$id", params: { id: currentId } })
+        return
+      case "users":
+        void navigate({ to: "/users" })
+        return
+      case "clients":
+        void navigate({ to: "/clients" })
+        return
+      case "vendors":
+        void navigate({ to: "/vendors" })
+        return
+      case "products":
+        void navigate({ to: "/products" })
+        return
     }
   }
 }

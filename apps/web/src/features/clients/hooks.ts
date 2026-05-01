@@ -41,6 +41,15 @@ export function useCreateClient() {
   });
 }
 
+export function useUpdateClient() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: number; input: clientsApi.UpdateClientInput }) =>
+      clientsApi.update(id, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clients.all }),
+  });
+}
+
 export function useCreateContact() {
   const qc = useQueryClient();
   return useMutation({

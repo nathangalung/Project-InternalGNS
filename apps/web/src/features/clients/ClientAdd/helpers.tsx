@@ -54,6 +54,7 @@ export interface ClientAddFormData {
   namaPerusahaan: string;
   kodeNegara: string;
   alamat: string;
+  logo: string;          // data URL for preview only (not yet persisted)
   namaKontak: string;
   nomorTelepon: string;
   email: string;
@@ -66,6 +67,7 @@ export const INITIAL_FORM: ClientAddFormData = {
   namaPerusahaan: "",
   kodeNegara: "IDN",
   alamat: "",
+  logo: "",
   namaKontak: "",
   nomorTelepon: "",
   email: "",

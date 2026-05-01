@@ -7,12 +7,12 @@ export const navItems: { label: string; icon: string; page?: Page }[] = [
   { label: "Dashboard Financial",   icon: "bar-chart" },
   { label: "Dashboard Operasional", icon: "activity" },
   { label: "Quotation",             icon: "file-text",     page: "quotation" },
-  { label: "Purchase Order",        icon: "shopping-cart" },
-  { label: "Invoices",              icon: "file" },
-  { label: "Katalog Produk",        icon: "package" },
-  { label: "Daftar Vendor",         icon: "truck" },
-  { label: "Daftar Klien",          icon: "users" },
-  { label: "Manajemen Pengguna",    icon: "settings" },
+  { label: "Purchase Order",        icon: "shopping-cart", page: "purchase-orders" },
+  { label: "Invoices",              icon: "file",          page: "invoices" },
+  { label: "Katalog Produk",        icon: "package",       page: "products" },
+  { label: "Daftar Vendor",         icon: "truck",         page: "vendors" },
+  { label: "Daftar Klien",          icon: "users",         page: "clients" },
+  { label: "Manajemen Pengguna",    icon: "settings",      page: "users" },
 ];
 
 interface SidebarProps {

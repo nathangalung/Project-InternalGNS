@@ -2455,3 +2455,17 @@
   transition: background var(--transition-fast);
 }
 .qep-upload-btn:hover { background: var(--color-primary-600); }
+
+/* Hide the native calendar picker icon — we render a custom one on the left. */
+.shared-date-input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+.shared-date-input::-webkit-inner-spin-button,
+.shared-date-input::-webkit-clear-button {
+  display: none;
+}

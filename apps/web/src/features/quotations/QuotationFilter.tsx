@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DateInput, presetToIsoRange } from "@/components/shared/DateRangeField";
 
 export type DatePreset   = "hari-ini" | "7-hari" | "30-hari" | "kustom";
 export type StatusFilter = "Draf" | "Dikirim" | "Ditolak" | "Revisi" | "Disetujui";
@@ -7,12 +8,16 @@ interface QuotationFilterProps {
   onClose: () => void;
   onApply?: (filters: {
     preset: DatePreset;
+    startDate: string;
+    endDate: string;
     statuses: StatusFilter[];
     minHarga: string;
     maxHarga: string;
   }) => void;
   initialValues?: {
     preset: DatePreset;
+    startDate?: string;
+    endDate?: string;
     statuses: StatusFilter[];
     minHarga: string;
     maxHarga: string;
@@ -25,19 +30,6 @@ const DATE_PRESETS: { key: DatePreset; label: string }[] = [
   { key: "30-hari",  label: "30 Hari Terakhir" },
   { key: "kustom",   label: "Kustom" },
 ];
-
-const MONTHS = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Ags","Sep","Okt","Nov","Des"];
-const fmtDate = (d: Date) =>
-  `${String(d.getDate()).padStart(2,"0")} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-
-function getDateLabels(preset: DatePreset): { start: string; end: string } {
-  const today = new Date();
-  const end   = fmtDate(today);
-  if (preset === "hari-ini") return { start: end, end };
-  const start = new Date(today);
-  start.setDate(today.getDate() - (preset === "7-hari" ? 7 : 30));
-  return { start: fmtDate(start), end };
-}
 
 const STATUSES: StatusFilter[] = ["Draf", "Dikirim", "Ditolak", "Revisi", "Disetujui"];
 
@@ -53,40 +45,48 @@ function IconCalendar() {
   );
 }
 
-function IconReset() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="1 4 1 10 7 10"/>
-      <path d="M3.51 15a9 9 0 1 0 .49-3.6"/>
-    </svg>
-  );
-}
-
 export default function QuotationFilter({ onClose, onApply, initialValues }: QuotationFilterProps) {
+  const seed = presetToIsoRange("30-hari");
   const [preset,         setPreset]         = useState<DatePreset>(initialValues?.preset ?? "30-hari");
-  const [activeStatuses, setActiveStatuses] = useState<StatusFilter[]>(initialValues?.statuses ?? ["Draf"]);
+  const [startDate,      setStartDate]      = useState<string>(initialValues?.startDate ?? seed.start);
+  const [endDate,        setEndDate]        = useState<string>(initialValues?.endDate   ?? seed.end);
+  const [activeStatuses, setActiveStatuses] = useState<StatusFilter[]>(initialValues?.statuses ?? []);
   const [minHarga,       setMinHarga]       = useState(initialValues?.minHarga ?? "0");
   const [maxHarga,       setMaxHarga]       = useState(initialValues?.maxHarga ?? "500.000.000");
+
+  function pickPreset(p: DatePreset) {
+    setPreset(p);
+    if (p !== "kustom") {
+      const r = presetToIsoRange(p);
+      setStartDate(r.start);
+      setEndDate(r.end);
+    }
+  }
 
   const toggleStatus = (s: StatusFilter) =>
     setActiveStatuses((prev) =>
       prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
     );
 
+  const dirty =
+    preset !== "30-hari" ||
+    startDate !== seed.start ||
+    endDate !== seed.end ||
+    activeStatuses.length > 0 ||
+    minHarga !== "0" ||
+    maxHarga !== "500.000.000";
+
   const handleReset = () => {
-    setPreset("30-hari");
+    pickPreset("30-hari");
     setActiveStatuses([]);
     setMinHarga("0");
     setMaxHarga("500.000.000");
   };
 
   const handleApply = () => {
-    onApply?.({ preset, statuses: activeStatuses, minHarga, maxHarga });
+    onApply?.({ preset, startDate, endDate, statuses: activeStatuses, minHarga, maxHarga });
     onClose();
   };
-
-  const dateLabels = getDateLabels(preset);
 
   return (
     <div className="ca-overlay" onClick={onClose}>
@@ -118,7 +118,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                     <button
                       key={key}
                       type="button"
-                      onClick={() => setPreset(key)}
+                      onClick={() => pickPreset(key)}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -149,15 +149,16 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
             </div>
 
             <div className="ca-row-2">
-              {(["start", "end"] as const).map((side) => (
-                <div className="ca-field" key={side}>
-                  <label className="ca-label">{side === "start" ? "Tanggal Mulai" : "Tanggal Selesai"}</label>
-                  <div className="ca-input" style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "default", color: "#4A4455" }}>
-                    <span style={{ color: "#9CA3AF", flexShrink: 0 }}><IconCalendar /></span>
-                    <span style={{ fontSize: "13px", fontWeight: 500 }}>{dateLabels[side]}</span>
-                  </div>
-                </div>
-              ))}
+              <DateInput
+                label="Tanggal Mulai"
+                value={startDate}
+                onChange={v => { setStartDate(v); setPreset("kustom"); }}
+              />
+              <DateInput
+                label="Tanggal Selesai"
+                value={endDate}
+                onChange={v => { setEndDate(v); setPreset("kustom"); }}
+              />
             </div>
           </div>
 
@@ -166,6 +167,29 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
             <div className="ca-section-heading">Status Penawaran</div>
             <div className="ca-field">
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {(() => {
+                  const allActive = activeStatuses.length === 0;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => setActiveStatuses([])}
+                      style={{
+                        padding: "6px 16px",
+                        borderRadius: "20px",
+                        border: allActive ? "1.5px solid #630ED4" : "1px solid rgba(204, 195, 216, 0.4)",
+                        background: allActive ? "rgba(99, 14, 212, 0.07)" : "#F7F7F8",
+                        cursor: "pointer",
+                        fontFamily: "'Inter', sans-serif",
+                        fontWeight: allActive ? 700 : 500,
+                        fontSize: "13px",
+                        color: allActive ? "#630ED4" : "#4A4455",
+                        transition: "all 0.15s",
+                      }}
+                    >
+                      Semua
+                    </button>
+                  );
+                })()}
                 {STATUSES.map((s) => {
                   const isActive = activeStatuses.includes(s);
                   return (
@@ -221,30 +245,43 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
         </div>
 
         {/* Footer */}
-        <div className="ca-footer" style={{ justifyContent: "space-between" }}>
+        <div className="ca-footer" style={{ justifyContent: "space-between", padding: "16px 24px" }}>
           <button
             type="button"
             onClick={handleReset}
+            disabled={!dirty}
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
               background: "transparent",
               border: "none",
-              cursor: "pointer",
+              cursor: dirty ? "pointer" : "default",
               fontFamily: "'Inter', sans-serif",
-              fontWeight: 600,
-              fontSize: "14px",
-              color: "#4A4455",
-              padding: "0",
+              fontWeight: 500,
+              fontSize: "13px",
+              color: dirty ? "#630ED4" : "#CBD5E1",
+              padding: 0,
+              textDecoration: dirty ? "underline" : "none",
+              textUnderlineOffset: "3px",
             }}
           >
-            <IconReset />
             Hapus Filter
           </button>
-          <div style={{ display: "flex", gap: "12px" }}>
-            <button type="button" className="ca-btn-cancel" onClick={onClose}>Batal</button>
-            <button type="button" className="ca-btn-submit" onClick={handleApply}>Terapkan</button>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              type="button"
+              className="ca-btn-cancel"
+              onClick={onClose}
+              style={{ padding: "8px 18px", fontSize: "13px" }}
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              className="ca-btn-submit"
+              onClick={handleApply}
+              style={{ padding: "8px 22px", fontSize: "13px" }}
+            >
+              Terapkan
+            </button>
           </div>
         </div>
 

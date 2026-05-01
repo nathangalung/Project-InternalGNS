@@ -17,9 +17,10 @@ export default function LegalCard({ form, onChange, isNamaKontakFilled }: LegalC
           <input
             className="ca-input"
             type="text"
+            inputMode="numeric"
             placeholder="Masukkan NPWP"
             value={form.npwp}
-            onChange={e => onChange("npwp", e.target.value)}
+            onChange={e => onChange("npwp", e.target.value.replace(/\D/g, ""))}
             disabled={!isNamaKontakFilled}
             style={!isNamaKontakFilled ? disabledStyle : undefined}
           />
@@ -29,9 +30,10 @@ export default function LegalCard({ form, onChange, isNamaKontakFilled }: LegalC
           <input
             className="ca-input"
             type="text"
+            inputMode="numeric"
             placeholder="Masukkan ID Teknis atau TKU"
             value={form.tku}
-            onChange={e => onChange("tku", e.target.value)}
+            onChange={e => onChange("tku", e.target.value.replace(/\D/g, ""))}
             disabled={!isNamaKontakFilled}
             style={!isNamaKontakFilled ? disabledStyle : undefined}
           />

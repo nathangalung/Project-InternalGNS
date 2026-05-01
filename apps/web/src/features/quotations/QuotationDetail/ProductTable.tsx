@@ -112,7 +112,7 @@ export default function ProductTable({ products }: ProductTableProps) {
             <tbody>
               {slice.map((p, i) => (
                 <tr key={i} className="tbl-row">
-                  <td className="tbl-td tbl-td--center tbl-td--id">{p.kode}</td>
+                  <td className="tbl-td tbl-td--center tbl-td--id">{p.kode || "-"}</td>
                   <td className="tbl-td tbl-td--center tbl-td--client">{p.nama}</td>
                   <td className="tbl-td tbl-td--center">{p.qty}</td>
                   <td className="tbl-td tbl-td--center">{p.satuan}</td>

@@ -126,6 +126,17 @@ export type ItemPriceHistoryRow = {
   profitPct?: string
 }
 
+// Users / staff admin.
+export type UserRow = {
+  id: number
+  email: string
+  name: string
+  role: Role
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 // Vendors master and search.
 export type VendorRow = {
   id: number
@@ -135,6 +146,7 @@ export type VendorRow = {
   isActive: boolean
   createdAt: string
   updatedAt: string
+  productCount: number
 }
 
 export type VendorSearchHit = {

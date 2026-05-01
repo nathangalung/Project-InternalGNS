@@ -40,3 +40,12 @@ export function useCreateVendor() {
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.vendors.all }),
   });
 }
+
+export function useUpdateVendor() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: number; input: vendorsApi.UpdateVendorInput }) =>
+      vendorsApi.update(id, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.vendors.all }),
+  });
+}

@@ -54,3 +54,22 @@ export function useCreateItem() {
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.items.all }),
   });
 }
+
+export function useUpdateItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: number; input: itemsApi.UpdateItemInput }) =>
+      itemsApi.update(id, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.items.all }),
+  });
+}
+
+export function useAddVendorToItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, input }: { itemId: number; input: itemsApi.AddVendorToItemInput }) =>
+      itemsApi.addVendor(itemId, input),
+    onSuccess: (_data, { itemId }) =>
+      qc.invalidateQueries({ queryKey: queryKeys.items.vendors(itemId) }),
+  });
+}

@@ -63,12 +63,22 @@ export default function ProductCreateModal({ open, onOpenChange, onSuccess }: Pr
   const [nama, setNama] = useState("");
   const [kode, setKode] = useState("");
   const [satuan, setSatuan] = useState("");
+  const [satuanQuery, setSatuanQuery] = useState("");
+  const [showSatuanSuggestions, setShowSatuanSuggestions] = useState(false);
   const [aktif, setAktif] = useState(true);
-  const [satuanOpen, setSatuanOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { data: units } = useUnits();
-  const satuanOptions = useMemo(() => (units ?? []).map(u => u.code), [units]);
+  const filteredUnits = useMemo(() => {
+    const q = satuanQuery.trim().toLowerCase();
+    if (!q) return [];
+    return (units ?? [])
+      .filter(u =>
+        u.code.toLowerCase().includes(q) ||
+        (u.name ?? "").toLowerCase().includes(q),
+      )
+      .slice(0, 5);
+  }, [units, satuanQuery]);
   const createItem = useCreateItem();
 
   if (!open) return null;
@@ -102,8 +112,9 @@ export default function ProductCreateModal({ open, onOpenChange, onSuccess }: Pr
     setNama("");
     setKode("");
     setSatuan("");
+    setSatuanQuery("");
+    setShowSatuanSuggestions(false);
     setAktif(true);
-    setSatuanOpen(false);
     setSubmitError(null);
   }
 
@@ -146,42 +157,88 @@ export default function ProductCreateModal({ open, onOpenChange, onSuccess }: Pr
               <input
                 className="ca-input"
                 type="text"
+                inputMode="numeric"
                 placeholder="Contoh: 330212"
                 value={kode}
-                onChange={(e) => setKode(e.target.value)}
+                onChange={(e) => setKode(e.target.value.replace(/\D/g, ""))}
               />
             </div>
 
-            {/* Satuan Default */}
+            {/* Satuan Default — typeahead */}
             <div className="ca-field">
               <label className="ca-label">Satuan Default</label>
-              <div className="ca-select-wrapper">
-                <button
-                  type="button"
-                  className="ca-select-btn"
-                  onClick={() => setSatuanOpen((o) => !o)}
-                >
-                  <span>{satuan || "Pilih satuan"}</span>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <polyline points="6 9 12 15 18 9"/>
-                  </svg>
-                </button>
-                {satuanOpen && (
+              <div style={{ position: "relative" }}>
+                <input
+                  className="ca-input"
+                  type="text"
+                  placeholder="Ketik nama satuan..."
+                  value={satuanQuery}
+                  onChange={(e) => {
+                    setSatuanQuery(e.target.value);
+                    setShowSatuanSuggestions(true);
+                    if (satuan) setSatuan("");
+                  }}
+                  onFocus={() => {
+                    if (satuanQuery.length > 0 && !satuan) setShowSatuanSuggestions(true);
+                  }}
+                  style={{ paddingRight: satuanQuery ? "36px" : undefined }}
+                />
+                {satuanQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSatuanQuery("");
+                      setSatuan("");
+                      setShowSatuanSuggestions(false);
+                    }}
+                    title="Bersihkan"
+                    style={{
+                      position: "absolute",
+                      right: "10px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      color: "#94A3B8",
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <line x1="1" y1="1" x2="13" y2="13" />
+                      <line x1="13" y1="1" x2="1" y2="13" />
+                    </svg>
+                  </button>
+                )}
+                {showSatuanSuggestions && satuanQuery.length > 0 && (
                   <div style={dropdownPanelStyle}>
-                    {satuanOptions.map((opt) => {
-                      const isActive = satuan === opt;
-                      return (
-                        <button
-                          key={opt}
-                          type="button"
-                          style={dropdownItemStyle}
-                          onClick={() => { setSatuan(opt); setSatuanOpen(false); }}
-                        >
-                          <span style={dropdownLabelStyle(isActive)}>{opt}</span>
-                          {isActive && <CheckmarkIcon />}
-                        </button>
-                      );
-                    })}
+                    {filteredUnits.length === 0 ? (
+                      <div style={{ padding: "12px 20px", fontSize: "13px", color: "#94A3B8", fontFamily: "'Inter', sans-serif", textAlign: "center" }}>
+                        Tidak ada hasil
+                      </div>
+                    ) : (
+                      filteredUnits.map((u) => {
+                        const active = satuan === u.code;
+                        const label = u.name ? `${u.code} — ${u.name}` : u.code;
+                        return (
+                          <button
+                            key={u.id}
+                            type="button"
+                            style={dropdownItemStyle}
+                            onClick={() => {
+                              setSatuan(u.code);
+                              setSatuanQuery(u.code);
+                              setShowSatuanSuggestions(false);
+                            }}
+                          >
+                            <span style={dropdownLabelStyle(active)}>{label}</span>
+                            {active && <CheckmarkIcon />}
+                          </button>
+                        );
+                      })
+                    )}
                   </div>
                 )}
               </div>
@@ -236,17 +293,30 @@ export default function ProductCreateModal({ open, onOpenChange, onSuccess }: Pr
         </div>
 
         {/* Footer */}
-        <div className="ca-footer">
+        <div className="ca-footer" style={{ padding: "16px 24px" }}>
           {submitError && (
             <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>{submitError}</span>
           )}
-          <button type="button" className="ca-btn-cancel" onClick={handleCancel} disabled={createItem.isPending}>Batal</button>
+          <button
+            type="button"
+            className="ca-btn-cancel"
+            onClick={handleCancel}
+            disabled={createItem.isPending}
+            style={{ padding: "8px 18px", fontSize: "13px" }}
+          >
+            Batal
+          </button>
           <button
             type="button"
             className="ca-btn-submit"
             onClick={handleSubmit}
             disabled={!isValid || createItem.isPending}
-            style={{ opacity: !isValid || createItem.isPending ? 0.5 : 1, cursor: !isValid || createItem.isPending ? "not-allowed" : "pointer" }}
+            style={{
+              padding: "8px 22px",
+              fontSize: "13px",
+              opacity: !isValid || createItem.isPending ? 0.5 : 1,
+              cursor: !isValid || createItem.isPending ? "not-allowed" : "pointer",
+            }}
           >
             {createItem.isPending ? "Menyimpan..." : "Tambahkan"}
           </button>

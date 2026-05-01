@@ -38,6 +38,12 @@ export const queryKeys = {
     detail: (id: number) => ["quotations", "detail", id] as const,
     stats: () => ["quotations", "stats"] as const,
   },
+  users: {
+    all: ["users"] as const,
+    list: (params: { limit?: number; offset?: number } = {}) =>
+      ["users", "list", params] as const,
+    detail: (id: number) => ["users", "detail", id] as const,
+  },
   dashboard: {
     all: ["dashboard"] as const,
     summary: () => ["dashboard", "summary"] as const,

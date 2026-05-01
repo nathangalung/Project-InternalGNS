@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   CheckmarkIcon,
   type ClientAddFormData,
@@ -30,11 +30,29 @@ export default function CompanyCard({
   closeNegara,
 }: CompanyCardProps) {
   const { data: countries } = useCountries();
+  const [negaraQuery, setNegaraQuery] = useState("");
   const negaraOptions = useMemo(
     () => (countries ?? []).map(c => ({ value: c.code, label: `${c.code} - ${c.name}` })),
     [countries],
   );
+  const filteredNegaraOptions = useMemo(() => {
+    const q = negaraQuery.trim().toLowerCase();
+    if (!q) return negaraOptions.slice(0, 5);
+    return negaraOptions.filter(o => o.label.toLowerCase().includes(q)).slice(0, 5);
+  }, [negaraOptions, negaraQuery]);
   const selectedNegara = negaraOptions.find(n => n.value === form.kodeNegara);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleLogoSelect(file: File | undefined) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") onChange("logo", reader.result);
+    };
+    reader.readAsDataURL(file);
+  }
   return (
     <div className="ca-section">
       <div className="ca-section-heading">Identitas Perusahaan</div>
@@ -66,14 +84,39 @@ export default function CompanyCard({
             </button>
             {negaraOpen && isNamaPerusahaanFilled && (
               <div style={dropdownPanelStyle}>
-                {negaraOptions.map(opt => {
+                <div style={{ padding: "0 12px 8px" }}>
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Cari negara..."
+                    value={negaraQuery}
+                    onChange={e => setNegaraQuery(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      fontSize: "13px",
+                      fontFamily: "'Inter', sans-serif",
+                      color: "#191C1E",
+                      background: "#F7F7F8",
+                      border: "1px solid rgba(204, 195, 216, 0.4)",
+                      borderRadius: "6px",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+                {filteredNegaraOptions.length === 0 && (
+                  <div style={{ padding: "12px 20px", fontSize: "13px", color: "#94A3B8", fontFamily: "'Inter', sans-serif", textAlign: "center" }}>
+                    Tidak ada hasil
+                  </div>
+                )}
+                {filteredNegaraOptions.map(opt => {
                   const isActive = form.kodeNegara === opt.value;
                   return (
                     <button
                       key={opt.value}
                       type="button"
                       style={dropdownItemStyle}
-                      onClick={() => { onChange("kodeNegara", opt.value); closeNegara(); }}
+                      onClick={() => { onChange("kodeNegara", opt.value); setNegaraQuery(""); closeNegara(); }}
                     >
                       <span style={dropdownLabelStyle(isActive)}>{opt.label}</span>
                       {isActive && <CheckmarkIcon />}
@@ -97,6 +140,117 @@ export default function CompanyCard({
           style={!isNamaPerusahaanFilled ? disabledStyle : undefined}
         />
         {alamatError && <span style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}>{alamatError}</span>}
+      </div>
+      <div className="ca-field">
+        <label className="ca-label">Logo <span className="ca-optional">(Opsional)</span></label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={e => {
+            handleLogoSelect(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+        {form.logo ? (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+            padding: "12px",
+            background: "#F2F4F6",
+            borderRadius: "8px",
+          }}>
+            <img
+              src={form.logo}
+              alt="Logo klien"
+              style={{
+                width: "64px",
+                height: "64px",
+                objectFit: "cover",
+                borderRadius: "8px",
+                background: "#FFFFFF",
+                flexShrink: 0,
+              }}
+            />
+            <div style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: "13px", color: "#4A4455" }}>
+              Logo terpilih
+            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={!isNamaPerusahaanFilled}
+              style={{
+                padding: "8px 14px",
+                borderRadius: "8px",
+                border: "1px solid rgba(204, 195, 216, 0.4)",
+                background: "#FFFFFF",
+                color: "#4A4455",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "12px",
+                fontWeight: 600,
+                cursor: isNamaPerusahaanFilled ? "pointer" : "not-allowed",
+                opacity: isNamaPerusahaanFilled ? 1 : 0.6,
+              }}
+            >
+              Ganti
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange("logo", "")}
+              disabled={!isNamaPerusahaanFilled}
+              style={{
+                padding: "8px 14px",
+                borderRadius: "8px",
+                border: "none",
+                background: "transparent",
+                color: "#DC2626",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "12px",
+                fontWeight: 600,
+                cursor: isNamaPerusahaanFilled ? "pointer" : "not-allowed",
+                opacity: isNamaPerusahaanFilled ? 1 : 0.6,
+              }}
+            >
+              Hapus
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={!isNamaPerusahaanFilled}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+              width: "100%",
+              padding: "20px",
+              background: "#F7F7F8",
+              border: "1.5px dashed rgba(204, 195, 216, 0.6)",
+              borderRadius: "8px",
+              cursor: isNamaPerusahaanFilled ? "pointer" : "not-allowed",
+              opacity: isNamaPerusahaanFilled ? 1 : 0.6,
+              fontFamily: "'Inter', sans-serif",
+              transition: "all 0.15s",
+            }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="9" cy="9" r="2" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "#4A4455" }}>
+              Unggah logo perusahaan
+            </span>
+            <span style={{ fontSize: "11px", color: "#94A3B8" }}>
+              PNG, JPG, atau SVG · maks 2MB
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );

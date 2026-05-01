@@ -125,20 +125,33 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
           <LegalCard form={form} onChange={handleChange} isNamaKontakFilled={isNamaKontakFilled} />
         </div>
 
-        <div className="ca-footer">
+        <div className="ca-footer" style={{ padding: "16px 24px" }}>
           {submitError && (
             <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>{submitError}</span>
           )}
           {!submitError && isNamaKontakFilled && !isContactValid && (
             <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>Isi minimal nomor telepon atau email.</span>
           )}
-          <button type="button" className="ca-btn-cancel" onClick={handleCancel} disabled={isSaving}>Batal</button>
+          <button
+            type="button"
+            className="ca-btn-cancel"
+            onClick={handleCancel}
+            disabled={isSaving}
+            style={{ padding: "8px 18px", fontSize: "13px" }}
+          >
+            Batal
+          </button>
           <button
             type="button"
             className="ca-btn-submit"
             onClick={handleSubmit}
             disabled={!isContactValid || isSaving}
-            style={{ opacity: !isContactValid || isSaving ? 0.5 : 1, cursor: !isContactValid || isSaving ? "not-allowed" : "pointer" }}
+            style={{
+              padding: "8px 22px",
+              fontSize: "13px",
+              opacity: !isContactValid || isSaving ? 0.5 : 1,
+              cursor: !isContactValid || isSaving ? "not-allowed" : "pointer",
+            }}
           >
             {isSaving ? "Menyimpan..." : "Simpan Data"}
           </button>

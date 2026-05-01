@@ -16,6 +16,14 @@ export type Page =
   | "quotation-detail"
   | "quotation-edit"
   | "quotation-add"
+  | "purchase-orders"
+  | "purchase-order-detail"
+  | "invoices"
+  | "invoice-detail"
+  | "users"
+  | "clients"
+  | "vendors"
+  | "products"
 
 const router = createRouter({
   routeTree,

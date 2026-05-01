@@ -19,6 +19,8 @@ interface QuotationListProps {
 
 interface ActiveFilters {
   preset: DatePreset;
+  startDate: string;
+  endDate: string;
   statuses: StatusFilter[];
   minHarga: string;
   maxHarga: string;
@@ -65,16 +67,23 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail, rows
       });
     }
 
-    if (activeFilters && activeFilters.preset !== "kustom") {
-      const today = new Date();
-      today.setHours(23, 59, 59, 999);
-      const start = new Date();
-      start.setHours(0, 0, 0, 0);
-      if (activeFilters.preset === "7-hari") start.setDate(start.getDate() - 7);
-      if (activeFilters.preset === "30-hari") start.setDate(start.getDate() - 30);
+    if (activeFilters) {
+      let start: Date | null = null;
+      let end: Date | null = null;
+      if (activeFilters.preset === "kustom") {
+        if (activeFilters.startDate) { start = new Date(activeFilters.startDate); start.setHours(0, 0, 0, 0); }
+        if (activeFilters.endDate)   { end   = new Date(activeFilters.endDate);   end.setHours(23, 59, 59, 999); }
+      } else {
+        end = new Date(); end.setHours(23, 59, 59, 999);
+        start = new Date(); start.setHours(0, 0, 0, 0);
+        if (activeFilters.preset === "7-hari")  start.setDate(start.getDate() - 7);
+        if (activeFilters.preset === "30-hari") start.setDate(start.getDate() - 30);
+      }
       items = items.filter(it => {
         const d = new Date(it.date);
-        return d >= start && d <= today;
+        if (start && d < start) return false;
+        if (end   && d > end)   return false;
+        return true;
       });
     }
 
