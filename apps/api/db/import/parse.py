@@ -278,8 +278,32 @@ def detect_has_impa(data_ws) -> bool:
     return (h4 and "IMPA" in str(h4).upper()) or (h5 and "OFFER" in str(h5).upper())
 
 
+_VENDOR_NOISE_RE = re.compile(r"^\s*(?:Rp\.?|[\W_]+)\s*$")
+
+
+def is_vendor_noise(name) -> bool:
+    """True when a vendor cell value is template residue, not a real vendor.
+
+    Filters: blank, currency prefix 'Rp.' / 'Rp', pure punctuation/dashes,
+    and tokens shorter than 3 chars (after strip) — these have always been
+    Excel template artifacts, never real vendor names in observed data.
+    """
+    if name is None:
+        return True
+    s = str(name).strip()
+    if len(s) < 3:
+        return True
+    return bool(_VENDOR_NOISE_RE.match(s))
+
+
 def parse_items(data_ws, has_impa: bool) -> list[dict]:
-    """Read data rows from DATA ENTRI starting after row 12."""
+    """Read data rows from DATA ENTRI starting after row 12.
+
+    Multi-page DATA ENTRI sheets duplicate the customer/qno/date/PIC header
+    every print page (rows like ``no='Customer :', desc='PT. ...'``). The
+    item-row gate requires `no` to be an integer (or `qty` to be a positive
+    number) so these label rows never reach the items list.
+    """
     items: list[dict] = []
     max_row = data_ws.max_row or 200
     for r in range(13, max_row + 1):
@@ -291,11 +315,13 @@ def parse_items(data_ws, has_impa: bool) -> list[dict]:
         qty = cell(data_ws, r, 1)
         unit = cell(data_ws, r, 2)
         desc = cell(data_ws, r, 3)
-        # Item row: must have a description AND (No or qty)
+        # Item row: must have a description AND a numeric line number
+        # OR a positive qty. String `no` ('Customer :', 'No :', 'Tgl :') →
+        # page-header residue, drop.
         if not desc:
             continue
-        if not (no or qty):
-            # Possible continuation row of previous item — skip
+        qty_pos = isinstance(qty, (int, float)) and qty > 0
+        if not (is_int_str(no) or qty_pos):
             continue
         # Parse pieces
         sell_unit = parse_num(cell(data_ws, r, 6))
@@ -305,7 +331,8 @@ def parse_items(data_ws, has_impa: bool) -> list[dict]:
         impa = cell(data_ws, r, 4) if has_impa else None
         offer_desc = cell(data_ws, r, 5) if has_impa else None
         nama_asli = cell(data_ws, r, 12)
-        vendor = cell(data_ws, r, 13)
+        vendor_raw = cell(data_ws, r, 13)
+        vendor = None if is_vendor_noise(vendor_raw) else str(vendor_raw)
         vendor_telp = cell(data_ws, r, 14)
         items.append({
             "row": r,
@@ -317,7 +344,7 @@ def parse_items(data_ws, has_impa: bool) -> list[dict]:
             "offer_desc": str(offer_desc) if offer_desc else None,
             "selling_price": sell_unit,
             "cost_price": cost_unit,
-            "vendor_name": str(vendor) if vendor else None,
+            "vendor_name": vendor,
             "vendor_telp": str(vendor_telp) if vendor_telp else None,
             "nama_asli": str(nama_asli) if nama_asli else None,
         })
