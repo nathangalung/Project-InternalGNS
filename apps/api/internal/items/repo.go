@@ -51,6 +51,35 @@ func (r *Repo) Create(ctx context.Context, req CreateItemRequest, userID int64) 
 	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Item])
 }
 
+func (r *Repo) Update(ctx context.Context, id int64, req UpdateItemRequest, userID int64) (Item, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.update"),
+		id, req.Name, req.IMPACode, req.DefaultUnitID, req.Description, req.IsActive, userID,
+	)
+	if err != nil {
+		return Item{}, err
+	}
+	item, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Item])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Item{}, ErrNotFound
+	}
+	return item, err
+}
+
+// Upsert vendor_products row.
+func (r *Repo) AddVendor(ctx context.Context, itemID int64, req AddVendorToItemRequest, userID int64) (VendorForItem, error) {
+	cost := "0"
+	if req.CostPrice != nil && *req.CostPrice != "" {
+		cost = *req.CostPrice
+	}
+	rows, err := r.db.Query(ctx, r.store.Get("items.add_vendor"),
+		req.VendorID, itemID, req.VendorSKU, cost, userID,
+	)
+	if err != nil {
+		return VendorForItem{}, err
+	}
+	return pgx.CollectOneRow(rows, pgx.RowToStructByName[VendorForItem])
+}
+
 func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int) ([]SearchResult, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("items.search"), q, minScore, limit)
 	if err != nil {

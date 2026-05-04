@@ -9,8 +9,8 @@ export const DATE_PRESETS: { key: DatePreset; label: string }[] = [
   { key: "kustom",   label: "Kustom" },
 ]
 
-// Convert Date -> "YYYY-MM-DD" (local timezone, what <input type="date"> expects).
-export function toIsoDate(d: Date): string {
+// Date to local YYYY-MM-DD.
+function toIsoDate(d: Date): string {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, "0")
   const dd = String(d.getDate()).padStart(2, "0")
@@ -24,7 +24,7 @@ export function presetToIsoRange(preset: DatePreset): { start: string; end: stri
   const start = new Date(today)
   if (preset === "7-hari")  start.setDate(today.getDate() - 7)
   if (preset === "30-hari") start.setDate(today.getDate() - 30)
-  // For "kustom" we still seed with the 30-day window as a sensible default.
+  // Kustom defaults to 30-day window.
   if (preset === "kustom")  start.setDate(today.getDate() - 30)
   return { start: toIsoDate(start), end }
 }
@@ -76,7 +76,7 @@ const iconStyle: CSSProperties = {
   pointerEvents: "none",
 }
 
-// Single date <input type="date"> with calendar icon on the left.
+// Date input with calendar icon.
 export function DateInput({ value, onChange, label }: DateInputProps) {
   return (
     <div className="ca-field">

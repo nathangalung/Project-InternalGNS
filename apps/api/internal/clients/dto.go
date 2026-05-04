@@ -2,23 +2,25 @@ package clients
 
 import "time"
 
-// Client mirrors company_client table plus first active contact (LATERAL).
+// Client row plus active contact.
 type Client struct {
-	ID           int64     `db:"id"            json:"id"`
-	Number       *string   `db:"number"        json:"number,omitempty"`
-	Name         string    `db:"name"          json:"name"`
-	NPWP         *string   `db:"npwp"          json:"npwp,omitempty"`
-	Address      *string   `db:"address"       json:"address,omitempty"`
-	Email        *string   `db:"email"         json:"email,omitempty"`
-	CountryCode  string    `db:"country_code"  json:"countryCode"`
-	TkuID        *string   `db:"tku_id"        json:"tkuId,omitempty"`
-	IsActive     bool      `db:"is_active"     json:"isActive"`
-	CreatedAt    time.Time `db:"created_at"    json:"createdAt"`
-	UpdatedAt    time.Time `db:"updated_at"    json:"updatedAt"`
-	ContactID    *int64    `db:"contact_id"    json:"contactId,omitempty"`
-	ContactName  *string   `db:"contact_name"  json:"contactName,omitempty"`
-	ContactEmail *string   `db:"contact_email" json:"contactEmail,omitempty"`
-	ContactPhone *string   `db:"contact_phone" json:"contactPhone,omitempty"`
+	ID             int64     `db:"id"              json:"id"`
+	Number         *string   `db:"number"          json:"number,omitempty"`
+	Name           string    `db:"name"            json:"name"`
+	NPWP           *string   `db:"npwp"            json:"npwp,omitempty"`
+	Address        *string   `db:"address"         json:"address,omitempty"`
+	Email          *string   `db:"email"           json:"email,omitempty"`
+	CountryCode    string    `db:"country_code"    json:"countryCode"`
+	TkuID          *string   `db:"tku_id"          json:"tkuId,omitempty"`
+	IsActive       bool      `db:"is_active"       json:"isActive"`
+	CreatedAt      time.Time `db:"created_at"      json:"createdAt"`
+	UpdatedAt      time.Time `db:"updated_at"      json:"updatedAt"`
+	ContactID      *int64    `db:"contact_id"      json:"contactId,omitempty"`
+	ContactName    *string   `db:"contact_name"    json:"contactName,omitempty"`
+	ContactEmail   *string   `db:"contact_email"   json:"contactEmail,omitempty"`
+	ContactPhone   *string   `db:"contact_phone"   json:"contactPhone,omitempty"`
+	TotalPurchase  string    `db:"total_purchase"  json:"totalPurchase"`
+	QuotationCount int64     `db:"quotation_count" json:"quotationCount"`
 }
 
 // Contact mirrors company_contacts table.
@@ -63,6 +65,26 @@ type CreateClientRequest struct {
 	Email       *string `json:"email"`
 	CountryCode string  `json:"countryCode"` // defaults to IDN
 	TkuID       *string `json:"tkuId"`
+}
+
+// Update client body.
+type UpdateClientRequest struct {
+	Name        string  `json:"name"`
+	NPWP        *string `json:"npwp"`
+	Address     *string `json:"address"`
+	Email       *string `json:"email"`
+	CountryCode string  `json:"countryCode"`
+	TkuID       *string `json:"tkuId"`
+	IsActive    bool    `json:"isActive"`
+}
+
+// Client list KPI aggregates.
+type Summary struct {
+	Total         int64 `db:"total"           json:"total"`
+	ActiveCount   int64 `db:"active_count"    json:"activeCount"`
+	NewThisMonth  int64 `db:"new_this_month"  json:"newThisMonth"`
+	NewThisYear   int64 `db:"new_this_year"   json:"newThisYear"`
+	PrevYearTotal int64 `db:"prev_year_total" json:"prevYearTotal"`
 }
 
 // Create contact body.

@@ -60,6 +60,20 @@ type CreateItemRequest struct {
 	Description   *string `json:"description"`
 }
 
+type UpdateItemRequest struct {
+	Name          string  `json:"name"`
+	IMPACode      *string `json:"impaCode"`
+	DefaultUnitID *int16  `json:"defaultUnitId"`
+	Description   *string `json:"description"`
+	IsActive      bool    `json:"isActive"`
+}
+
+type AddVendorToItemRequest struct {
+	VendorID  int64   `json:"vendorId"`
+	VendorSKU *string `json:"vendorSku"`
+	CostPrice *string `json:"costPrice"`
+}
+
 // POST /items/match-request body.
 type MatchRequest struct {
 	ReqText string `json:"reqText"` // raw text from PDF

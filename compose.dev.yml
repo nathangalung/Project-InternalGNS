@@ -2,7 +2,7 @@ name: internalgns-dev
 
 services:
   postgres:
-    image: postgres:18-alpine
+    image: postgres:18.3-alpine
     environment:
       POSTGRES_DB: gns_quotation
       POSTGRES_USER: gns_app
@@ -19,7 +19,7 @@ services:
       retries: 10
 
   pgweb:
-    image: sosedoff/pgweb:latest
+    image: sosedoff/pgweb:0.17.0
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://gns_app:gns_app@postgres:5432/gns_quotation?sslmode=disable

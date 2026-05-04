@@ -9,6 +9,13 @@ export function useClients(params: { limit?: number; offset?: number } = {}) {
   });
 }
 
+export function useClientSummary() {
+  return useQuery({
+    queryKey: queryKeys.clients.summary(),
+    queryFn: () => clientsApi.summary(),
+  });
+}
+
 export function useClient(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.clients.detail(id) : queryKeys.clients.all,

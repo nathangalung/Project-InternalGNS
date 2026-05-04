@@ -67,7 +67,7 @@ function toShipping(items: ApiQuotationItem[]): ShippingRow {
   };
 }
 
-// Map API detail to view model.
+// API detail to view model.
 export function toQuotationData(
   api: ApiQuotationDetail,
   unitOf: (id?: number) => string,
@@ -98,7 +98,7 @@ export function toQuotationData(
   };
 }
 
-// Map API row to table row.
+// API row to table row.
 export function toTableRow(api: ApiQuotationRow): QuotationRow {
   const total = Number(api.total);
   const hargaBeli = Number(api.totalHargaBeli);

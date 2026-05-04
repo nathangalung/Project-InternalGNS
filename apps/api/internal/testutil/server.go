@@ -12,7 +12,9 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/countries"
 	"github.com/nathangalung/internalgns/apps/api/internal/dashboard"
+	"github.com/nathangalung/internalgns/apps/api/internal/invoices"
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
+	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
@@ -29,7 +31,7 @@ func Store(t testing.TB) queries.Store {
 	return s
 }
 
-// withUserID injects user id into ctx.
+// Inject user id into ctx.
 func withUserID(userID int64) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -135,6 +137,36 @@ func DashboardServer(t testing.TB) *httptest.Server {
 
 	r := chi.NewRouter()
 	r.Mount("/dashboard", dashboard.Routes(deps.Deps{Pool: pool, Queries: store}))
+
+	srv := httptest.NewServer(r)
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+// PurchaseOrdersServer wires PO routes.
+func PurchaseOrdersServer(t testing.TB, userID int64) *httptest.Server {
+	t.Helper()
+	pool := Pool(t)
+	store := Store(t)
+
+	r := chi.NewRouter()
+	r.Use(withUserID(userID))
+	r.Mount("/purchase-orders", purchaseorders.Routes(deps.Deps{Pool: pool, Queries: store}))
+
+	srv := httptest.NewServer(r)
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+// InvoicesServer wires invoice routes.
+func InvoicesServer(t testing.TB, userID int64) *httptest.Server {
+	t.Helper()
+	pool := Pool(t)
+	store := Store(t)
+
+	r := chi.NewRouter()
+	r.Use(withUserID(userID))
+	r.Mount("/invoices", invoices.Routes(deps.Deps{Pool: pool, Queries: store}))
 
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)

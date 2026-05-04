@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react"
 import type { Page } from "@/main"
 import Sidebar from "@/components/shared/Sidebar"
 import Pagination from "@/components/shared/Pagination"
-import { useQuotations } from "@/features/quotations/hooks"
 import UploadPoModal from "./UploadPoModal"
 import PurchaseOrderFilter, { type PoFilterValues } from "./PurchaseOrderFilter"
-import { getAllRecords, poNumberFor, upsertRecord } from "./storage"
-import { PO_LABEL } from "./PurchaseOrderDetail/helpers"
+import { usePurchaseOrders, useUpdatePoFile } from "./hooks"
+import { PO_LABEL, shortDocNo } from "./PurchaseOrderDetail/helpers"
 import type { PoRow, PoStatus } from "./types"
+import type { PurchaseOrderRow } from "@/types/api"
 
 interface PurchaseOrderListProps {
   onNavigate: (page: Page) => void
@@ -28,17 +28,25 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
 }
 
-function formatRp(s: string): string {
+function formatRp(s: string | undefined): string {
+  if (!s) return "Rp0"
   const n = Number(s)
   if (!Number.isFinite(n)) return s
   return "Rp" + n.toLocaleString("id-ID")
 }
 
-// Show only the short prefix of the doc number (before "/GNS/..."), with "..." for the rest.
-function shortDocNo(no: string): string {
-  const slash = no.indexOf("/")
-  if (slash === -1) return no
-  return no.slice(0, slash) + "…"
+function rowFromBackend(po: PurchaseOrderRow): PoRow {
+  return {
+    quotationId: po.quotationId,
+    quotationNo: po.quotationNo,
+    poNumber: po.poNumber,
+    client: po.companyName,
+    date: po.poDate,
+    total: formatRp(po.quotationTotal),
+    status: po.status,
+    fileName: po.fileName,
+    fileDataUrl: po.fileUrl,
+  }
 }
 
 const exportBtnStyle: CSSProperties = {
@@ -71,43 +79,18 @@ const iconBtnStyle: CSSProperties = {
 }
 
 export default function PurchaseOrderList({ onNavigate, onLogout, onViewDetail }: PurchaseOrderListProps) {
-  // Pull all quotations and filter accepted client-side — they auto-flow into PO.
-  const { data: allQuotations, isLoading } = useQuotations({ limit: 200 })
-  const quotations = useMemo(
-    () => (allQuotations ?? []).filter(q => q.status === "accepted"),
-    [allQuotations],
-  )
+  const { data: rawList, isLoading } = usePurchaseOrders({ limit: 200 })
+  const updateFile = useUpdatePoFile()
 
   const [search, setSearch] = useState("")
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
-  const [uploadTarget, setUploadTarget] = useState<PoRow | null>(null)
+  const [uploadTarget, setUploadTarget] = useState<{ row: PoRow; poId: number } | null>(null)
   const [showFilter, setShowFilter] = useState(false)
   const [activeFilters, setActiveFilters] = useState<PoFilterValues | null>(null)
-  // Bump on every record change so we re-read localStorage.
-  const [storeVersion, setStoreVersion] = useState(0)
 
-  const records = useMemo(() => {
-    void storeVersion
-    return getAllRecords()
-  }, [storeVersion])
-
-  const allRows: PoRow[] = useMemo(() => {
-    return (quotations ?? []).map(q => {
-      const rec = records[String(q.id)]
-      return {
-        quotationId: q.id,
-        quotationNo: q.quotationNo,
-        poNumber: poNumberFor(q.quotationNo),
-        client: q.companyName,
-        date: formatDate(q.createdAt),
-        total: formatRp(q.total),
-        status: rec?.status ?? "PENDING",
-        fileName: rec?.fileName,
-        fileDataUrl: rec?.fileDataUrl,
-      }
-    })
-  }, [quotations, records])
+  const backend = useMemo(() => rawList ?? [], [rawList])
+  const allRows: PoRow[] = useMemo(() => backend.map(rowFromBackend), [backend])
 
   const filtered = useMemo(() => {
     let rows = allRows
@@ -166,16 +149,22 @@ export default function PurchaseOrderList({ onNavigate, onLogout, onViewDetail }
     if (currentPage > totalPages) setCurrentPage(1)
   }, [totalPages, currentPage])
 
-  function handleUploadSubmit(row: PoRow, file: { name: string; size: number; dataUrl: string }) {
-    upsertRecord(row.quotationId, {
-      status: "UPLOADED",
-      fileName: file.name,
-      fileSize: file.size,
-      fileDataUrl: file.dataUrl,
-      uploadedAt: new Date().toISOString(),
-    })
-    setStoreVersion(v => v + 1)
-    setUploadTarget(null)
+  function poIdFor(quotationId: number): number | undefined {
+    return backend.find(p => p.quotationId === quotationId)?.id
+  }
+
+  function openUpload(row: PoRow) {
+    const poId = poIdFor(row.quotationId)
+    if (!poId) return
+    setUploadTarget({ row, poId })
+  }
+
+  function handleUploadSubmit(file: { name: string; size: number; dataUrl: string }) {
+    if (!uploadTarget) return
+    updateFile.mutate(
+      { id: uploadTarget.poId, payload: { fileName: file.name, fileSize: file.size, fileUrl: file.dataUrl } },
+      { onSuccess: () => setUploadTarget(null) },
+    )
   }
 
   function handleDownload(row: PoRow) {
@@ -277,7 +266,7 @@ export default function PurchaseOrderList({ onNavigate, onLogout, onViewDetail }
                         {row.client}
                       </td>
                       <td className="tbl-td tbl-td--center" style={{ color: "#4A4455" }}>
-                        {row.date}
+                        {formatDate(row.date)}
                       </td>
                       <td className="tbl-td tbl-td--center" style={{ fontWeight: 700, color: "#191C1E" }}>
                         {row.total}
@@ -304,7 +293,7 @@ export default function PurchaseOrderList({ onNavigate, onLogout, onViewDetail }
                             type="button"
                             title="Upload berkas PO"
                             style={iconBtnStyle}
-                            onClick={() => setUploadTarget(row)}
+                            onClick={() => openUpload(row)}
                           >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -363,9 +352,9 @@ export default function PurchaseOrderList({ onNavigate, onLogout, onViewDetail }
 
       {uploadTarget && (
         <UploadPoModal
-          row={uploadTarget}
+          row={uploadTarget.row}
           onClose={() => setUploadTarget(null)}
-          onSubmit={file => handleUploadSubmit(uploadTarget, file)}
+          onSubmit={handleUploadSubmit}
         />
       )}
 

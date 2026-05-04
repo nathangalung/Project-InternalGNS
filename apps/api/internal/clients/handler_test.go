@@ -196,3 +196,13 @@ func TestHandler_CreateContact_PhoneCheckViolation(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 }
+
+func TestHandler_Summary(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/clients/summary", nil)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var s clients.Summary
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&s))
+	assert.GreaterOrEqual(t, s.Total, int64(1))
+}

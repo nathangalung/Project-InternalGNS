@@ -4,6 +4,7 @@ export const queryKeys = {
     all: ["clients"] as const,
     list: (params: { limit?: number; offset?: number } = {}) =>
       ["clients", "list", params] as const,
+    summary: () => ["clients", "summary"] as const,
     detail: (id: number) => ["clients", "detail", id] as const,
     search: (q: string) => ["clients", "search", q] as const,
     contacts: (companyId: number) => ["clients", companyId, "contacts"] as const,
@@ -43,6 +44,21 @@ export const queryKeys = {
     list: (params: { limit?: number; offset?: number } = {}) =>
       ["users", "list", params] as const,
     detail: (id: number) => ["users", "detail", id] as const,
+  },
+  purchaseOrders: {
+    all: ["purchase-orders"] as const,
+    list: (params: Record<string, unknown> = {}) =>
+      ["purchase-orders", "list", params] as const,
+    detail: (id: number) => ["purchase-orders", "detail", id] as const,
+    byQuotation: (quotationId: number) =>
+      ["purchase-orders", "by-quotation", quotationId] as const,
+  },
+  invoices: {
+    all: ["invoices"] as const,
+    list: (params: Record<string, unknown> = {}) => ["invoices", "list", params] as const,
+    detail: (id: number) => ["invoices", "detail", id] as const,
+    byQuotation: (quotationId: number) => ["invoices", "by-quotation", quotationId] as const,
+    summary: () => ["invoices", "summary"] as const,
   },
   dashboard: {
     all: ["dashboard"] as const,

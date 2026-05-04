@@ -45,7 +45,7 @@ func TestRepo_ErrorPaths(t *testing.T) {
 	assert.ErrorIs(t, err, testutil.ErrFake)
 }
 
-// GetDetail runs 3 queries; fail 2nd and 3rd.
+// GetDetail fails on 2nd, 3rd.
 func TestRepo_GetDetail_MidQueryFails(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	store := testutil.Store(t)

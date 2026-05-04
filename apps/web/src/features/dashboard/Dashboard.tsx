@@ -36,14 +36,14 @@ const lineColors: Record<string, string> = {
   PPN: "#EF4444",
 }
 
-// Map YYYY-MM to chart slot index.
+// YYYY-MM to chart index.
 function mapToMonthIndex(month: string, baseYear: number): number {
   const [y, m] = month.split("-").map(Number)
   if (y !== baseYear) return -1
   return m - 1
 }
 
-// Build 8-slot series from API points.
+// Build 8-slot chart series.
 function buildSeries(
   points: { month: string; value: string }[] | undefined,
   baseYear: number,
@@ -57,7 +57,7 @@ function buildSeries(
   return series
 }
 
-// Compute axis max with safe floor.
+// Axis max with safe floor.
 function computeMax(values: number[]): number {
   const m = Math.max(...values, 0)
   if (m <= 160) return 160
@@ -140,7 +140,7 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
   const [activeTab, setActiveTab] = useState("Quotation")
   const { data: summary } = useDashboardSummary()
 
-  // Chart range covers Jan to Sep current year.
+  // Range Jan to Sep.
   const baseYear = new Date().getFullYear()
   const fromDate = `${baseYear}-01-01`
   const toDate = `${baseYear}-09-01`

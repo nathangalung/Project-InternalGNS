@@ -13,7 +13,7 @@ interface PaginationProps {
   onPage: (n: number) => void
 }
 
-// Shared pagination footer with rows-per-page selector + numbered pages.
+// Pagination footer with page picker.
 export default function Pagination({
   totalItems,
   startIndex,

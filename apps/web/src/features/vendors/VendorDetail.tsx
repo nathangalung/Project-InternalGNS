@@ -4,6 +4,7 @@ import Sidebar from "@/components/shared/Sidebar"
 import { ApiError } from "@/lib/api-client"
 import { useUpdateVendor, useVendorItems } from "@/features/vendors/hooks"
 import type { VendorRow } from "@/types/api"
+import { formatRupiah } from "@/lib/format"
 
 interface VendorDetailProps {
   vendor: VendorRow
@@ -25,13 +26,6 @@ function vendorInitials(name: string): string {
   if (parts.length === 0) return "?"
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return (parts[0][0] + parts[1][0]).toUpperCase()
-}
-
-function formatRupiah(s?: string): string {
-  if (!s) return "-"
-  const n = Number(s)
-  if (!Number.isFinite(n)) return "-"
-  return "Rp" + n.toLocaleString("id-ID")
 }
 
 function getContactField(contactInfo: unknown, key: "email" | "phone"): string {
@@ -596,7 +590,7 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
                       <td className="tbl-td tbl-td--center">{item.impaCode ?? "-"}</td>
                       <td className="tbl-td tbl-td--center">{item.vendorSku ?? "-"}</td>
                       <td className="tbl-td tbl-td--center" style={{ fontWeight: 800, color: "#630ED4" }}>
-                        {formatRupiah(item.costPrice)}
+                        {formatRupiah(item.costPrice, "-")}
                       </td>
                     </tr>
                   ))}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { Page } from "@/main"
 import Sidebar from "@/components/shared/Sidebar"
 import { computeGrandTotal } from "@/features/quotations/types"
@@ -14,7 +14,11 @@ import Header from "./Header"
 import StatusBar from "./StatusBar"
 import FileCard from "./FileCard"
 import { PO_LABEL, poNumberFromQuotationNo } from "./helpers"
-import { getRecord, upsertRecord } from "../storage"
+import {
+  usePurchaseOrderByQuotation,
+  useChangePoStatus,
+  useUpdatePoFile,
+} from "../hooks"
 import UploadPoModal from "../UploadPoModal"
 import type { PoRow, PoStatus } from "../types"
 
@@ -38,41 +42,43 @@ export default function PurchaseOrderDetail({
   onNavigate,
   onLogout,
 }: PurchaseOrderDetailProps) {
-  const initialRecord = getRecord(quotationId)
-  const [status, setStatus] = useState<PoStatus>(initialRecord?.status ?? "PENDING")
-  const [isStatusOpen, setIsStatusOpen] = useState(false)
-  const [fileName, setFileName] = useState<string | undefined>(initialRecord?.fileName)
-  const [fileSize, setFileSize] = useState<number | undefined>(initialRecord?.fileSize)
-  const [fileDataUrl, setFileDataUrl] = useState<string | undefined>(initialRecord?.fileDataUrl)
-  const [uploadedAt, setUploadedAt] = useState<string | undefined>(initialRecord?.uploadedAt)
-  const [showUpload, setShowUpload] = useState(false)
-  const [history, setHistory] = useState<HistoryEntry[]>([])
+  const { data: po, isLoading } = usePurchaseOrderByQuotation(quotationId)
+  const changeStatus = useChangePoStatus()
+  const updateFile = useUpdatePoFile()
 
-  // Build initial history from quotation timeline + PO local events.
+  const initialStatus: PoStatus = po?.status ?? "PENDING"
+  const [status, setStatus] = useState<PoStatus>(initialStatus)
+  const [isStatusOpen, setIsStatusOpen] = useState(false)
+  const [showUpload, setShowUpload] = useState(false)
+  const [extraHistory, setExtraHistory] = useState<HistoryEntry[]>([])
+
+  // Sync local status from backend.
   useEffect(() => {
-    if (!quotation) return
+    if (po) setStatus(po.status)
+  }, [po])
+
+  const history: HistoryEntry[] = useMemo(() => {
+    if (!quotation || !po) return []
     const items: HistoryEntry[] = [
       { date: quotation.createdAt, action: `Purchase Order dibuat dari Quotation ${quotationNo}` },
     ]
-    if (uploadedAt && fileName) {
-      const d = new Date(uploadedAt)
+    if (po.uploadedAt && po.fileName) {
+      const d = new Date(po.uploadedAt)
       const label = Number.isNaN(d.getTime())
-        ? uploadedAt
+        ? po.uploadedAt
         : d.toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
-      items.push({ date: label, action: `Berkas PO diunggah: ${fileName}` })
+      items.push({ date: label, action: `Berkas PO diunggah: ${po.fileName}` })
     }
-    setHistory(items)
-    // Only rebuild when source data changes; status changes append below.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quotation?.createdAt, quotationNo, uploadedAt, fileName])
+    return [...items, ...extraHistory]
+  }, [quotation, po, quotationNo, extraHistory])
 
-  if (!quotation) {
+  if (!quotation || (isLoading && !po) || !po) {
     return (
       <div className="admin-shell">
         <Sidebar activePage={"purchase-orders" as Page} onNavigate={onNavigate} onLogout={onLogout} />
         <div className="admin-main">
           <div className="page-content">
-            <p>Purchase Order tidak ditemukan.</p>
+            <p>{isLoading ? "Memuat data Purchase Order…" : "Purchase Order tidak ditemukan."}</p>
           </div>
         </div>
       </div>
@@ -88,10 +94,10 @@ export default function PurchaseOrderDetail({
   const subTotal = totalProduk - nominalDiskon
   const dppBase = hasProducts ? subTotal : totalShip
   const dppNilaiLain = Math.round((dppBase * 11) / 12)
-  const ppn12 = dppBase - dppNilaiLain
+  const ppn12 = Math.round(dppNilaiLain * 0.12)
   const grandTotal = computeGrandTotal(quotation)
   const clientInitials = quotation.client.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()
-  const poNumber = poNumberFromQuotationNo(quotationNo)
+  const poNumber = po.poNumber || poNumberFromQuotationNo(quotationNo)
 
   function handleStatusChange(s: PoStatus) {
     setStatus(s)
@@ -99,36 +105,35 @@ export default function PurchaseOrderDetail({
   }
 
   function handleSave() {
-    const prevStatus = initialRecord?.status ?? "PENDING"
-    upsertRecord(quotationId, { status })
-    if (status !== prevStatus) {
-      setHistory(prev => [...prev, { date: nowLabel(), action: `Status diubah menjadi ${PO_LABEL[status]}` }])
+    if (!po) return
+    if (status === po.status) {
+      onNavigate("purchase-orders")
+      return
     }
-    onNavigate("purchase-orders")
+    changeStatus.mutate(
+      { id: po.id, status },
+      {
+        onSuccess: () => {
+          setExtraHistory(prev => [...prev, { date: nowLabel(), action: `Status diubah menjadi ${PO_LABEL[status]}` }])
+          onNavigate("purchase-orders")
+        },
+      },
+    )
   }
 
   function handleUploadSubmit(file: { name: string; size: number; dataUrl: string }) {
-    const ts = new Date().toISOString()
-    upsertRecord(quotationId, {
-      fileName: file.name,
-      fileSize: file.size,
-      fileDataUrl: file.dataUrl,
-      uploadedAt: ts,
-      status: status === "PENDING" ? "UPLOADED" : status,
-    })
-    setFileName(file.name)
-    setFileSize(file.size)
-    setFileDataUrl(file.dataUrl)
-    setUploadedAt(ts)
-    if (status === "PENDING") setStatus("UPLOADED")
-    setShowUpload(false)
+    if (!po) return
+    updateFile.mutate(
+      { id: po.id, payload: { fileName: file.name, fileSize: file.size, fileUrl: file.dataUrl } },
+      { onSuccess: () => setShowUpload(false) },
+    )
   }
 
   function handleDownload() {
-    if (!fileDataUrl || !fileName) return
+    if (!po?.fileUrl || !po?.fileName) return
     const a = document.createElement("a")
-    a.href = fileDataUrl
-    a.download = fileName
+    a.href = po.fileUrl
+    a.download = po.fileName
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -142,8 +147,8 @@ export default function PurchaseOrderDetail({
     date: quotation.createdAt,
     total: String(grandTotal),
     status,
-    fileName,
-    fileDataUrl,
+    fileName: po.fileName,
+    fileDataUrl: po.fileUrl,
   }
 
   return (
@@ -166,9 +171,9 @@ export default function PurchaseOrderDetail({
             onSave={handleSave}
           />
           <FileCard
-            fileName={fileName}
-            fileSize={fileSize}
-            uploadedAt={uploadedAt}
+            fileName={po.fileName}
+            fileSize={po.fileSize}
+            uploadedAt={po.uploadedAt}
             onUpload={() => setShowUpload(true)}
             onDownload={handleDownload}
           />

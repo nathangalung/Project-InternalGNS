@@ -4,7 +4,14 @@ SELECT cc.id, cc.number, cc.name, cc.npwp, cc.address, cc.email, cc.country_code
        co.id    AS contact_id,
        co.name  AS contact_name,
        co.email AS contact_email,
-       co.phone AS contact_phone
+       co.phone AS contact_phone,
+       COALESCE((SELECT SUM(q.grand_total)::TEXT
+                 FROM quotations q
+                 WHERE q.company_client_id = cc.id
+                   AND q.status = 'accepted'), '0') AS total_purchase,
+       COALESCE((SELECT COUNT(*)
+                 FROM quotations q
+                 WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count
 FROM company_client cc
 LEFT JOIN LATERAL (
     SELECT id, name, email, phone
@@ -23,7 +30,14 @@ SELECT cc.id, cc.number, cc.name, cc.npwp, cc.address, cc.email, cc.country_code
        co.id    AS contact_id,
        co.name  AS contact_name,
        co.email AS contact_email,
-       co.phone AS contact_phone
+       co.phone AS contact_phone,
+       COALESCE((SELECT SUM(q.grand_total)::TEXT
+                 FROM quotations q
+                 WHERE q.company_client_id = cc.id
+                   AND q.status = 'accepted'), '0') AS total_purchase,
+       COALESCE((SELECT COUNT(*)
+                 FROM quotations q
+                 WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count
 FROM company_client cc
 LEFT JOIN LATERAL (
     SELECT id, name, email, phone
@@ -48,8 +62,36 @@ SELECT ins.id, ins.number, ins.name, ins.npwp, ins.address, ins.email, ins.count
        NULL::BIGINT AS contact_id,
        NULL::TEXT   AS contact_name,
        NULL::TEXT   AS contact_email,
-       NULL::TEXT   AS contact_phone
+       NULL::TEXT   AS contact_phone,
+       '0'::TEXT    AS total_purchase,
+       0::BIGINT    AS quotation_count
 FROM ins;
+
+-- name: clients.update
+UPDATE company_client
+   SET name         = $2,
+       npwp         = $3,
+       address      = $4,
+       email        = $5,
+       country_code = COALESCE(NULLIF($6, ''), country_code),
+       tku_id       = $7,
+       is_active    = $8,
+       updated_by   = $9,
+       updated_at   = NOW()
+ WHERE id = $1
+RETURNING id, number, name, npwp, address, email, country_code,
+          tku_id, is_active, created_at, updated_at,
+          NULL::BIGINT AS contact_id,
+          NULL::TEXT   AS contact_name,
+          NULL::TEXT   AS contact_email,
+          NULL::TEXT   AS contact_phone,
+          COALESCE((SELECT SUM(q.grand_total)::TEXT
+                    FROM quotations q
+                    WHERE q.company_client_id = company_client.id
+                      AND q.status = 'accepted'), '0') AS total_purchase,
+          COALESCE((SELECT COUNT(*)
+                    FROM quotations q
+                    WHERE q.company_client_id = company_client.id), 0)::BIGINT AS quotation_count;
 
 -- name: clients.search
 SELECT * FROM fn_search_clients($1, $2, $3);
@@ -68,3 +110,13 @@ VALUES
     ($1, $2, $3, $4, $5, COALESCE(NULLIF($6, ''), 'IDN'), $7, $7)
 RETURNING id, company_id, name, email, phone, title, country_code,
           is_active, created_at, updated_at;
+
+
+-- name: clients.summary
+SELECT
+  COUNT(*)::BIGINT AS total,
+  COUNT(*) FILTER (WHERE is_active = TRUE)::BIGINT AS active_count,
+  COUNT(*) FILTER (WHERE created_at >= date_trunc('month', NOW() AT TIME ZONE 'Asia/Jakarta'))::BIGINT AS new_this_month,
+  COUNT(*) FILTER (WHERE created_at >= date_trunc('year',  NOW() AT TIME ZONE 'Asia/Jakarta'))::BIGINT AS new_this_year,
+  COUNT(*) FILTER (WHERE created_at <  date_trunc('year',  NOW() AT TIME ZONE 'Asia/Jakarta'))::BIGINT AS prev_year_total
+FROM company_client;

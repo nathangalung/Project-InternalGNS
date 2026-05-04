@@ -70,6 +70,62 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusCreated, item)
 }
 
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+
+	var req UpdateItemRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	if req.Name == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
+		return
+	}
+
+	userID := deps.CurrentUserID(r.Context())
+	item, err := h.repo.Update(r.Context(), id, req, userID)
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("item not found"))
+		return
+	}
+	if err != nil {
+		httperr.Render(w, httperr.Internal(err.Error()))
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, item)
+}
+
+func (h *Handler) AddVendor(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+
+	var req AddVendorToItemRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	if req.VendorID <= 0 {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"vendorId": "required"}))
+		return
+	}
+
+	userID := deps.CurrentUserID(r.Context())
+	row, err := h.repo.AddVendor(r.Context(), id, req, userID)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest(err.Error()))
+		return
+	}
+	httpx.WriteJSON(w, http.StatusCreated, row)
+}
+
 func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
 	if q == "" {

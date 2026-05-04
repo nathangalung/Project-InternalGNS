@@ -1,5 +1,5 @@
 # Build stage uses bun.
-FROM oven/bun:1.3-alpine AS build
+FROM oven/bun:1.3.9-alpine AS build
 WORKDIR /src
 
 COPY package.json bun.lockb* bun.lock* ./

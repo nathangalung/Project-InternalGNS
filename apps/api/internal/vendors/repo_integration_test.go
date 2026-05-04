@@ -89,3 +89,26 @@ func TestRepo_ListItems(t *testing.T) {
 	require.NoError(t, err)
 	_ = rows
 }
+
+func TestRepo_List_IncludesProductCountAndTotalPurchase(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := vendors.NewRepo(tx, testutil.Store(t))
+
+	rows, err := repo.List(ctx, 200, 0)
+	require.NoError(t, err)
+	require.NotEmpty(t, rows)
+	for _, v := range rows {
+		assert.GreaterOrEqual(t, v.ProductCount, int64(0))
+		assert.NotEmpty(t, v.TotalPurchase)
+	}
+}
+
+func TestRepo_GetByID_IncludesProductCountAndTotalPurchase(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := vendors.NewRepo(tx, testutil.Store(t))
+
+	v, err := repo.GetByID(ctx, seedVendorID)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, v.ProductCount, int64(0))
+	assert.NotEmpty(t, v.TotalPurchase)
+}

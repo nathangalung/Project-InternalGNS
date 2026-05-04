@@ -31,6 +31,8 @@ export type ClientRow = {
   contactName?: string
   contactEmail?: string
   contactPhone?: string
+  totalPurchase: string
+  quotationCount: number
 }
 
 export type ContactRow = {
@@ -44,6 +46,14 @@ export type ContactRow = {
   isActive: boolean
   createdAt: string
   updatedAt: string
+}
+
+export type ClientSummary = {
+  total: number
+  activeCount: number
+  newThisMonth: number
+  newThisYear: number
+  prevYearTotal: number
 }
 
 export type ClientSearchHit = {
@@ -147,6 +157,7 @@ export type VendorRow = {
   createdAt: string
   updatedAt: string
   productCount: number
+  totalPurchase: string
 }
 
 export type VendorSearchHit = {
@@ -278,10 +289,70 @@ export type QuotationUpdateInput = Omit<
 export type QuotationListParams = {
   q?: string
   statuses?: CanonicalStatus[]
+  dateFrom?: string
+  dateTo?: string
+  minTotal?: string
+  maxTotal?: string
   sortBy?: string
   sortDir?: "asc" | "desc"
   limit?: number
   offset?: number
+}
+
+// Purchase orders.
+export type PoBackendStatus = "PENDING" | "UPLOADED" | "ON_PROGRESS" | "DELIVERED"
+
+export type PurchaseOrderRow = {
+  id: number
+  poNumber: string
+  quotationId: number
+  quotationNo: string
+  companyClientId: number
+  companyName: string
+  poDate: string
+  status: PoBackendStatus
+  fileName?: string
+  fileSize?: number
+  uploadedAt?: string
+  notes?: string
+  fileUrl?: string
+  quotationTotal?: string
+  quotationSubtotal?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// Invoices.
+export type InvoiceBackendStatus = "draft" | "sent" | "paid" | "overdue" | "cancelled"
+
+export type InvoiceBackendRow = {
+  id: number
+  invoiceNo: string
+  quotationId: number
+  quotationNo: string
+  poId?: number
+  companyClientId: number
+  companyName: string
+  invoiceDate: string
+  dueDate?: string
+  subtotal?: string
+  dpp?: string
+  dppNilaiLain?: string
+  ppnAmount?: string
+  total?: string
+  status: InvoiceBackendStatus
+  taxTransactionCode?: string
+  fakturType?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type InvoiceSummary = {
+  total: number
+  draft: number
+  sent: number
+  paid: number
+  overdue: number
 }
 
 // Dashboard aggregates and chart data.

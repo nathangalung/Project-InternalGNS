@@ -152,3 +152,16 @@ func TestRepo_CreateContact_PhoneCheckRejectsLong(t *testing.T) {
 	_, err := repo.CreateContact(ctx, seedCompanyID, req, seedUserID)
 	require.Error(t, err)
 }
+
+func TestRepo_Summary(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := clients.NewRepo(tx, testutil.Store(t))
+
+	s, err := repo.Summary(ctx)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, s.Total, int64(1))
+	assert.LessOrEqual(t, s.ActiveCount, s.Total)
+	assert.GreaterOrEqual(t, s.NewThisMonth, int64(0))
+	assert.GreaterOrEqual(t, s.NewThisYear, int64(0))
+	assert.GreaterOrEqual(t, s.PrevYearTotal, int64(0))
+}

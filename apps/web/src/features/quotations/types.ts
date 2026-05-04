@@ -28,7 +28,7 @@ export interface ShippingRow {
   hari?: number;
 }
 
-export interface HistoryEntry {
+interface HistoryEntry {
   date: string;
   action: string;
 }
@@ -52,11 +52,6 @@ export function formatRp(n: number): string {
   return "Rp" + n.toLocaleString("id-ID");
 }
 
-// Sum of cost lines.
-export function getTotalHargaBeli(q: QuotationData): number {
-  return q.products.reduce((sum, p) => sum + p.qty * (p.hargaSatuan - p.profitSatuan), 0);
-}
-
 // Grand total with tax.
 export function computeGrandTotal(q: QuotationData): number {
   const hasProducts = q.products.length > 0;
@@ -66,6 +61,6 @@ export function computeGrandTotal(q: QuotationData): number {
   const totalShip = q.shipping.hargaSatuan;
   const dppBase = hasProducts ? subTotal : totalShip;
   const dpp = Math.round((dppBase * 11) / 12);
-  const ppn = dppBase - dpp;
+  const ppn = Math.round(dpp * 0.12);
   return hasProducts ? subTotal + ppn + totalShip : totalShip + ppn;
 }

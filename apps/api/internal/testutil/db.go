@@ -69,7 +69,7 @@ func Pool(t testing.TB) *pgxpool.Pool {
 	return sharedPool
 }
 
-// BeginTx returns tx with rollback cleanup.
+// Begin tx with rollback cleanup.
 func BeginTx(t testing.TB) (context.Context, pgx.Tx) {
 	t.Helper()
 	pool := Pool(t)

@@ -39,7 +39,7 @@ SELECT
     q.version,
     q.company_client_name AS company_name,
     q.status,
-    q.total::text,
+    q.grand_total::text AS total,
     COALESCE((
         SELECT SUM(qi.qty * qi.cost_price)::text
         FROM quotation_items qi

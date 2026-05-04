@@ -51,6 +51,21 @@ func (r *Repo) Create(ctx context.Context, req CreateVendorRequest, userID int64
 	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Vendor])
 }
 
+// Update edits a vendor row.
+func (r *Repo) Update(ctx context.Context, id int64, req UpdateVendorRequest, userID int64) (Vendor, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("vendors.update"),
+		id, req.Name, req.Location, req.ContactInfo, req.IsActive, userID,
+	)
+	if err != nil {
+		return Vendor{}, err
+	}
+	v, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Vendor])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Vendor{}, ErrNotFound
+	}
+	return v, err
+}
+
 // Search calls fn_search_vendors.
 func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int) ([]SearchResult, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("vendors.search"), q, minScore, limit)

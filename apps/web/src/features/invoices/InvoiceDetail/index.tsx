@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { Page } from "@/main"
 import Sidebar from "@/components/shared/Sidebar"
 import { computeGrandTotal } from "@/features/quotations/types"
@@ -13,9 +13,10 @@ import { nowLabel } from "@/features/quotations/QuotationDetail/helpers"
 import Header from "./Header"
 import StatusBar from "./StatusBar"
 import { type EditableInvoiceStatus } from "./helpers"
-import { getRecord, invoiceNumberFor, upsertRecord } from "../storage"
+import { useInvoiceByQuotation, useChangeInvoiceStatus } from "../hooks"
 import { INVOICE_LABEL } from "../types"
 import type { InvoiceStatus } from "../types"
+import type { InvoiceBackendStatus, InvoiceBackendRow } from "@/types/api"
 
 interface HistoryEntry {
   date: string
@@ -30,6 +31,25 @@ interface InvoiceDetailProps {
   onLogout: () => void
 }
 
+// Backend status to editable.
+function toEditable(inv: InvoiceBackendRow | null | undefined): EditableInvoiceStatus {
+  if (!inv) return "DRAF"
+  if (inv.status === "paid") return "DIKIRIM"
+  if (inv.status === "sent") return "DIKIRIM"
+  if (inv.status === "overdue") return "TERLAMBAT"
+  if (inv.dueDate) {
+    const due = new Date(inv.dueDate)
+    if (!Number.isNaN(due.getTime()) && new Date() > due) return "TERLAMBAT"
+  }
+  return "DRAF"
+}
+
+const TO_BACKEND: Record<EditableInvoiceStatus, InvoiceBackendStatus> = {
+  DRAF: "draft",
+  DIKIRIM: "sent",
+  TERLAMBAT: "overdue",
+}
+
 export default function InvoiceDetail({
   quotationId,
   quotationNo,
@@ -37,46 +57,33 @@ export default function InvoiceDetail({
   onNavigate,
   onLogout,
 }: InvoiceDetailProps) {
-  const initialRecord = getRecord(quotationId)
-  const initialBaseStatus: EditableInvoiceStatus =
-    initialRecord?.status === "DIKIRIM" || initialRecord?.status === "TERLAMBAT"
-      ? initialRecord.status
-      : "DRAF"
+  const { data: inv, isLoading } = useInvoiceByQuotation(quotationId)
+  const changeStatus = useChangeInvoiceStatus()
 
-  const [status, setStatus] = useState<EditableInvoiceStatus>(initialBaseStatus)
+  const initialStatus = toEditable(inv)
+  const [status, setStatus] = useState<EditableInvoiceStatus>(initialStatus)
   const [isStatusOpen, setIsStatusOpen] = useState(false)
-  const [history, setHistory] = useState<HistoryEntry[]>([])
+  const [extraHistory, setExtraHistory] = useState<HistoryEntry[]>([])
 
   useEffect(() => {
-    if (!quotation) return
+    if (inv) setStatus(toEditable(inv))
+  }, [inv])
+
+  const history: HistoryEntry[] = useMemo(() => {
+    if (!quotation || !inv) return []
     const items: HistoryEntry[] = [
       { date: quotation.createdAt, action: `Invoice dibuat dari Quotation ${quotationNo}` },
     ]
-    if (initialRecord?.sentAt) {
-      const d = new Date(initialRecord.sentAt)
-      const label = Number.isNaN(d.getTime())
-        ? initialRecord.sentAt
-        : d.toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
-      items.push({ date: label, action: "Invoice dikirim ke klien" })
-    }
-    if (initialRecord?.paidAt) {
-      const d = new Date(initialRecord.paidAt)
-      const label = Number.isNaN(d.getTime())
-        ? initialRecord.paidAt
-        : d.toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
-      items.push({ date: label, action: "Invoice dibayar oleh klien" })
-    }
-    setHistory(items)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quotation?.createdAt, quotationNo, initialRecord?.sentAt, initialRecord?.paidAt])
+    return [...items, ...extraHistory]
+  }, [quotation, inv, quotationNo, extraHistory])
 
-  if (!quotation) {
+  if (!quotation || (isLoading && !inv) || !inv) {
     return (
       <div className="admin-shell">
         <Sidebar activePage={"invoices" as Page} onNavigate={onNavigate} onLogout={onLogout} />
         <div className="admin-main">
           <div className="page-content">
-            <p>Invoice tidak ditemukan.</p>
+            <p>{isLoading ? "Memuat data Invoice…" : "Invoice tidak ditemukan."}</p>
           </div>
         </div>
       </div>
@@ -92,12 +99,10 @@ export default function InvoiceDetail({
   const subTotal = totalProduk - nominalDiskon
   const dppBase = hasProducts ? subTotal : totalShip
   const dppNilaiLain = Math.round((dppBase * 11) / 12)
-  const ppn12 = dppBase - dppNilaiLain
+  const ppn12 = Math.round(dppNilaiLain * 0.12)
   const grandTotal = computeGrandTotal(quotation)
   const clientInitials = quotation.client.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()
-  const invoiceNo = invoiceNumberFor(quotationId, quotation.createdAt)
-
-  // Pass-through status to header (always derived; Dibayar & Terlambat may be auto-set by list logic).
+  const invoiceNo = inv.invoiceNo
   const displayStatus: InvoiceStatus = status
 
   function handleStatusChange(s: EditableInvoiceStatus) {
@@ -106,16 +111,21 @@ export default function InvoiceDetail({
   }
 
   function handleSave() {
-    const prevStatus = initialBaseStatus
-    const patch: Record<string, string> = { status }
-    if (status === "DIKIRIM" && !initialRecord?.sentAt) {
-      patch.sentAt = new Date().toISOString()
+    if (!inv) return
+    const target = TO_BACKEND[status]
+    if (target === inv.status) {
+      onNavigate("invoices")
+      return
     }
-    upsertRecord(quotationId, patch as Parameters<typeof upsertRecord>[1])
-    if (status !== prevStatus) {
-      setHistory(prev => [...prev, { date: nowLabel(), action: `Status diubah menjadi ${INVOICE_LABEL[status]}` }])
-    }
-    onNavigate("invoices")
+    changeStatus.mutate(
+      { id: inv.id, status: target },
+      {
+        onSuccess: () => {
+          setExtraHistory(prev => [...prev, { date: nowLabel(), action: `Status diubah menjadi ${INVOICE_LABEL[status]}` }])
+          onNavigate("invoices")
+        },
+      },
+    )
   }
 
   return (

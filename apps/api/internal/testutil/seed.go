@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// SeedMasterIfMissing inserts minimum master data idempotently.
+// Insert master data idempotently.
 func SeedMasterIfMissing(ctx context.Context, pool *pgxpool.Pool) error {
 	stmts := []string{
 		`INSERT INTO users (id, email, name, password_hash, role, is_active, created_by, updated_by)

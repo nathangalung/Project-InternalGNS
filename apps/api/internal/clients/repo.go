@@ -56,6 +56,22 @@ func (r *Repo) Create(ctx context.Context, req CreateClientRequest, userID int64
 	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Client])
 }
 
+// Update edits a client row.
+func (r *Repo) Update(ctx context.Context, id int64, req UpdateClientRequest, userID int64) (Client, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("clients.update"),
+		id, req.Name, req.NPWP, req.Address, req.Email,
+		req.CountryCode, req.TkuID, req.IsActive, userID,
+	)
+	if err != nil {
+		return Client{}, err
+	}
+	c, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Client])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Client{}, ErrNotFound
+	}
+	return c, err
+}
+
 // Search calls fn_search_clients fuzzy match.
 func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int) ([]SearchResult, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("clients.search"), q, minScore, limit)
@@ -72,6 +88,15 @@ func (r *Repo) ListContacts(ctx context.Context, companyID int64) ([]Contact, er
 		return nil, err
 	}
 	return pgx.CollectRows(rows, pgx.RowToStructByName[Contact])
+}
+
+// Summary aggregates KPIs.
+func (r *Repo) Summary(ctx context.Context) (Summary, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("clients.summary"))
+	if err != nil {
+		return Summary{}, err
+	}
+	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Summary])
 }
 
 // CreateContact inserts new contact.

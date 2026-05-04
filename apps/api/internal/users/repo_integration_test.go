@@ -19,7 +19,7 @@ func TestRepo_GetByEmail_Found(t *testing.T) {
 
 	u, err := repo.GetByEmail(ctx, "test-superadmin@globalsakti.local")
 	if err == users.ErrNotFound {
-		// Test DB may use different superadmin email; create one and retry.
+		// Fallback when superadmin missing.
 		req := users.CreateUserRequest{
 			Email:    "lookup-test@local",
 			Name:     "Lookup",

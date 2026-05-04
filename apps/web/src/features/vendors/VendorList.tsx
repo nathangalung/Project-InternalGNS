@@ -6,6 +6,7 @@ import Pagination from "@/components/shared/Pagination"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
 import VendorFilter, { type VendorFilterValues } from "@/features/vendors/VendorFilter"
 import type { VendorRow } from "@/types/api"
+import { formatRupiah } from "@/lib/format"
 
 interface VendorListProps {
   onNavigate: (page: Page) => void
@@ -100,6 +101,18 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
         const diff = a.productCount - b.productCount
         return sortDir === "asc" ? diff : -diff
       })
+    }
+    if (sortKey === "totalPembelian") {
+      items = [...items].sort((a, b) => {
+        const diff = (Number(a.totalPurchase) || 0) - (Number(b.totalPurchase) || 0)
+        return sortDir === "asc" ? diff : -diff
+      })
+    }
+    if (filters.minTotal) {
+      const minNum = Number(filters.minTotal)
+      if (Number.isFinite(minNum) && minNum > 0) {
+        items = items.filter(v => (Number(v.totalPurchase) || 0) >= minNum)
+      }
     }
     return items
   }, [vendors, search, filters, sortKey, sortDir])
@@ -219,7 +232,7 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
                         </span>
                       </td>
                       <td className="tbl-td tbl-td--center" style={{ fontWeight: 700, color: "#191C1E" }}>
-                        -
+                        {formatRupiah(v.totalPurchase, "-")}
                       </td>
                       <td className="tbl-td tbl-td--center" style={{ fontWeight: 700, color: "#191C1E" }}>
                         {v.productCount}

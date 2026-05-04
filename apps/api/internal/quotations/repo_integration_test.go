@@ -15,7 +15,7 @@ import (
 
 const (
 	seedCompanyID  int64 = 1
-	seedContactID  int64 = 1
+	seedContactID  int64 = 5
 	seedItemID     int64 = 1
 	seedVendorProd int64 = 1
 	seedUnitID     int16 = 19

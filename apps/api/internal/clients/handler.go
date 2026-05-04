@@ -75,6 +75,47 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusCreated, c)
 }
 
+// Update handles PUT /clients/{id}
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+
+	var req UpdateClientRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	if req.Name == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
+		return
+	}
+
+	userID := deps.CurrentUserID(r.Context())
+	c, err := h.repo.Update(r.Context(), id, req, userID)
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("client not found"))
+		return
+	}
+	if err != nil {
+		httperr.Render(w, httperr.Internal(err.Error()))
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, c)
+}
+
+// Summary handles GET /clients/summary
+func (h *Handler) Summary(w http.ResponseWriter, r *http.Request) {
+	s, err := h.repo.Summary(r.Context())
+	if err != nil {
+		httperr.Render(w, httperr.Internal(err.Error()))
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, s)
+}
+
 // Search handles GET /clients/search?q=&minScore=&limit=
 func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")

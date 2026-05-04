@@ -178,6 +178,8 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
     const items: QuotationItemInput[] = products.map((p) => ({
       requestedImpa: p.kodeImpa || undefined,
       requestedName: p.nama,
+      offeredItemId: p.itemId,
+      vendorProductId: p.vendorProductId,
       qty: String(p.jumlah),
       unitId: unitIdByCode.get(p.satuan.toUpperCase()) ?? 0,
       sellingPrice: String(p.hargaJual),
@@ -224,7 +226,7 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
   // Tax base depends on products.
   const dppBase = hasProducts ? summarySubTotal : summaryShippingCost;
   const summaryDpp = Math.round(dppBase * 11 / 12);
-  const summaryPpn = dppBase - summaryDpp;
+  const summaryPpn = Math.round(summaryDpp * 0.12);
   const summaryGrandTotal = hasProducts
     ? summarySubTotal + summaryPpn + summaryShippingCost
     : summaryShippingCost + summaryPpn;
@@ -333,10 +335,10 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
           const kodeImpa = namaParts.length > 0 ? kodePart : "";
 
           if (editingProduct) {
-            setProducts((prev) => prev.map(p => p.id === editingProduct.id ? { ...p, nama, kodeImpa, vendor: data.namaVendor, jumlah: Number(data.jumlahProduk) || 1, satuan: data.satuan, hargaBeli: Number(data.hargaBeli) || 0, hargaJual: Number(data.hargaJual) || 0 } : p));
+            setProducts((prev) => prev.map(p => p.id === editingProduct.id ? { ...p, itemId: data.itemId, vendorId: data.vendorId, vendorProductId: data.vendorProductId, nama, kodeImpa, vendor: data.namaVendor, jumlah: Number(data.jumlahProduk) || 1, satuan: data.satuan, hargaBeli: Number(data.hargaBeli) || 0, hargaJual: Number(data.hargaJual) || 0 } : p));
           } else {
             const nextId = products.reduce((m, p) => Math.max(m, p.id), 0) + 1;
-            setProducts((prev) => [ ...prev, { id: nextId, nama, kodeImpa, vendor: data.namaVendor, jumlah: Number(data.jumlahProduk) || 1, satuan: data.satuan, hargaBeli: Number(data.hargaBeli) || 0, hargaJual: Number(data.hargaJual) || 0 } ]);
+            setProducts((prev) => [ ...prev, { id: nextId, itemId: data.itemId, vendorId: data.vendorId, vendorProductId: data.vendorProductId, nama, kodeImpa, vendor: data.namaVendor, jumlah: Number(data.jumlahProduk) || 1, satuan: data.satuan, hargaBeli: Number(data.hargaBeli) || 0, hargaJual: Number(data.hargaJual) || 0 } ]);
           }
           setEditingProduct(null);
         }} 

@@ -1,0 +1,162 @@
+package invoices_test
+
+import (
+	"context"
+	"strconv"
+	"testing"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/invoices"
+	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
+	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
+	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
+)
+
+const (
+	seedUserID    int64 = 1
+	seedCompanyID int64 = 1
+	seedUnitID    int16 = 19
+)
+
+// Drive quotation to delivered PO.
+func deliveredPOWithInvoice(t *testing.T, tx pgx.Tx) (int64, int64, int64) {
+	t.Helper()
+	ctx := context.Background()
+	store := testutil.Store(t)
+
+	qrepo := quotations.NewRepo(tx, store)
+	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		CompanyClientID: seedCompanyID,
+		DiscountPct:     "0",
+		Items: []quotations.CreateItem{{
+			RequestedName: "Test Product",
+			Qty:           "2",
+			UnitID:        seedUnitID,
+			SellingPrice:  "100000",
+		}},
+	}, seedUserID)
+	require.NoError(t, err)
+	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "sent", nil, seedUserID))
+	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "accepted", nil, seedUserID))
+
+	porepo := purchaseorders.NewRepo(tx, store)
+	po, err := porepo.GetByQuotation(ctx, qid)
+	require.NoError(t, err)
+	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusOnProgress, seedUserID))
+	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusDelivered, seedUserID))
+
+	repo := invoices.NewRepo(tx, store)
+	inv, err := repo.GetByQuotation(ctx, qid)
+	require.NoError(t, err)
+	return qid, po.ID, inv.ID
+}
+
+func TestRepo_GetByQuotation(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	qid, _, invID := deliveredPOWithInvoice(t, tx)
+
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+	inv, err := repo.GetByQuotation(ctx, qid)
+	require.NoError(t, err)
+	assert.Equal(t, invID, inv.ID)
+	assert.Equal(t, invoices.StatusDraft, inv.Status)
+	assert.NotEmpty(t, inv.InvoiceNo)
+}
+
+func TestRepo_GetByID(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, _, invID := deliveredPOWithInvoice(t, tx)
+
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+	inv, err := repo.GetByID(ctx, invID)
+	require.NoError(t, err)
+	assert.Equal(t, invID, inv.ID)
+}
+
+func TestRepo_GetByID_NotFound(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+
+	_, err := repo.GetByID(ctx, 99999999)
+	assert.ErrorIs(t, err, invoices.ErrNotFound)
+}
+
+func TestRepo_List(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	deliveredPOWithInvoice(t, tx)
+
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+	rows, err := repo.List(ctx, nil, nil, 50, 0)
+	require.NoError(t, err)
+	assert.NotEmpty(t, rows)
+}
+
+// DPP equals subtotal, total math.
+func TestRepo_InvoiceMoneyMath(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, _, invID := deliveredPOWithInvoice(t, tx)
+
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+	inv, err := repo.GetByID(ctx, invID)
+	require.NoError(t, err)
+
+	require.NotNil(t, inv.Subtotal)
+	require.NotNil(t, inv.Dpp)
+	require.NotNil(t, inv.Total)
+	require.NotNil(t, inv.PpnAmount)
+
+	// Subtotal equals dpp by design.
+	assert.Equal(t, *inv.Subtotal, *inv.Dpp)
+
+	dpp, err := strconv.ParseFloat(*inv.Dpp, 64)
+	require.NoError(t, err)
+	total, err := strconv.ParseFloat(*inv.Total, 64)
+	require.NoError(t, err)
+	ppn, err := strconv.ParseFloat(*inv.PpnAmount, 64)
+	require.NoError(t, err)
+
+	// total equals dpp times 1.11.
+	assert.InDelta(t, dpp*1.11, total, 0.01)
+
+	// ppn equals 11% of dpp.
+	assert.InDelta(t, dpp*0.11, ppn, 0.01)
+}
+
+func TestRepo_ChangeStatus_Lifecycle(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, _, invID := deliveredPOWithInvoice(t, tx)
+
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+	require.NoError(t, repo.ChangeStatus(ctx, invID, invoices.StatusSent, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, invID, invoices.StatusPaid, seedUserID))
+
+	inv, err := repo.GetByID(ctx, invID)
+	require.NoError(t, err)
+	assert.Equal(t, invoices.StatusPaid, inv.Status)
+}
+
+func TestRepo_ChangeStatus_NotFound(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+	err := repo.ChangeStatus(ctx, 99999999, invoices.StatusSent, seedUserID)
+	assert.ErrorIs(t, err, invoices.ErrNotFound)
+}
+
+func TestRepo_Summary(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	deliveredPOWithInvoice(t, tx)
+
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+	s, err := repo.Summary(ctx)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, s.Total, int64(1))
+	assert.GreaterOrEqual(t, s.Draft, int64(0))
+	assert.GreaterOrEqual(t, s.Sent, int64(0))
+	assert.GreaterOrEqual(t, s.Paid, int64(0))
+	assert.GreaterOrEqual(t, s.Overdue, int64(0))
+	assert.Equal(t, s.Total, s.Draft+s.Sent+s.Paid+s.Overdue)
+}

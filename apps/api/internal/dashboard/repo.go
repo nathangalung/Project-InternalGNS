@@ -11,7 +11,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 )
 
-// Allowed metrics map to query keys.
+// Metric to query key.
 var metricQuery = map[string]string{
 	"quotation": "dashboard.ts_quotation",
 	"invoice":   "dashboard.ts_invoice",

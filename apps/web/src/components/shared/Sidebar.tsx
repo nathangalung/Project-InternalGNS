@@ -2,7 +2,7 @@ import type { Page } from "../../main";
 
 const logoImg = "/logo.png";
 
-export const navItems: { label: string; icon: string; page?: Page }[] = [
+const navItems: { label: string; icon: string; page?: Page }[] = [
   { label: "Dashboard",             icon: "grid",          page: "dashboard" },
   { label: "Dashboard Financial",   icon: "bar-chart" },
   { label: "Dashboard Operasional", icon: "activity" },

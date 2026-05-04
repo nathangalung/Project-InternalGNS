@@ -1,21 +1,20 @@
 import { apiRequest } from "@/lib/api-client"
-import { applyOverride, applyOverrides, setOverride } from "@/lib/local-overrides"
-import type { ClientRow, ClientSearchHit, ContactRow } from "@/types/api"
+import type { ClientRow, ClientSearchHit, ClientSummary, ContactRow } from "@/types/api"
 
-const OVERRIDE_KEY = "gns_clients_overrides_v1"
+export async function summary(): Promise<ClientSummary> {
+  return apiRequest<ClientSummary>({ path: "/clients/summary" })
+}
 
 export async function list(params: { limit?: number; offset?: number } = {}): Promise<ClientRow[]> {
   const search = new URLSearchParams()
   if (params.limit !== undefined) search.set("limit", String(params.limit))
   if (params.offset !== undefined) search.set("offset", String(params.offset))
   const qs = search.toString()
-  const rows = await apiRequest<ClientRow[]>({ path: `/clients${qs ? `?${qs}` : ""}` })
-  return applyOverrides(rows, OVERRIDE_KEY)
+  return apiRequest<ClientRow[]>({ path: `/clients${qs ? `?${qs}` : ""}` })
 }
 
 export async function get(id: number): Promise<ClientRow> {
-  const row = await apiRequest<ClientRow>({ path: `/clients/${id}` })
-  return applyOverride(row, OVERRIDE_KEY)
+  return apiRequest<ClientRow>({ path: `/clients/${id}` })
 }
 
 export async function search(
@@ -60,16 +59,12 @@ export type UpdateClientInput = {
   isActive: boolean
 }
 
-// No PATCH endpoint exists; persist as a localStorage override and return a
-// merged row so the UI reflects the change.
 export async function update(id: number, input: UpdateClientInput): Promise<ClientRow> {
-  const current = await apiRequest<ClientRow>({ path: `/clients/${id}` })
-  const merged: ClientRow = { ...current, ...input, updatedAt: new Date().toISOString() }
-  setOverride<ClientRow>(OVERRIDE_KEY, id, {
-    ...input,
-    updatedAt: merged.updatedAt,
+  return apiRequest<ClientRow>({
+    path: `/clients/${id}`,
+    method: "PUT",
+    body: input,
   })
-  return merged
 }
 
 type CreateContactInput = {

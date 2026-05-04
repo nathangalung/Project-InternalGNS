@@ -7,12 +7,16 @@ export interface ProductAddFormData {
   namaVendor: string;
   hargaBeli: string;
   hargaJual: string;
+  itemId?: number;
+  vendorProductId?: number;
+  vendorId?: number;
 }
 
 export interface VendorOption {
   nama: string;
   harga: number;
   vendorId?: number;
+  vendorProductId?: number;
 }
 
 export interface HistorisOption {
@@ -34,7 +38,7 @@ export interface NewVendorForm {
 
 export type DropdownKey = "product" | "satuan" | "vendor" | "historis";
 
-// Label for IMPA + name combo. Drops " - " when kode missing.
+// IMPA-name label, drops missing kode.
 export function formatKodeNama(kode: string | undefined | null, nama: string): string {
   return kode && kode.trim().length > 0 ? `${kode} - ${nama}` : nama;
 }

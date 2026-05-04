@@ -71,6 +71,7 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
       nama: r.vendorName,
       harga: r.costPrice ? Number(r.costPrice) : 0,
       vendorId: r.vendorId,
+      vendorProductId: r.vendorProductId,
     }));
     return [...remote, ...extraVendors];
   }, [vendorRows, extraVendors]);
@@ -98,8 +99,12 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
           namaVendor: initialData.vendor,
           hargaBeli: String(initialData.hargaBeli),
           hargaJual: String(initialData.hargaJual),
+          itemId: initialData.itemId,
+          vendorProductId: initialData.vendorProductId,
+          vendorId: initialData.vendorId,
         });
         setInitialPrices({ beli: initialData.hargaBeli, jual: initialData.hargaJual });
+        setPickedItemId(initialData.itemId ?? null);
       } else {
         setForm(INITIAL_FORM);
         setInitialPrices({ beli: null, jual: null });
@@ -198,7 +203,13 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
   const isJualChanged = initialPrices.jual !== null && currentJual !== initialPrices.jual;
 
   function pickVendor(v: VendorOption) {
-    setForm(prev => ({ ...prev, namaVendor: v.nama, hargaBeli: v.harga > 0 ? String(v.harga) : prev.hargaBeli }));
+    setForm(prev => ({
+      ...prev,
+      namaVendor: v.nama,
+      hargaBeli: v.harga > 0 ? String(v.harga) : prev.hargaBeli,
+      vendorId: v.vendorId,
+      vendorProductId: v.vendorProductId,
+    }));
     if (v.harga > 0) setInitialPrices(prev => ({ ...prev, beli: v.harga }));
     setOpenDropdown(null);
   }
@@ -216,7 +227,13 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
       const created = await createVendor.mutateAsync({ name: newVendorForm.nama.trim() });
       const newVendor: VendorOption = { nama: created.name, harga, vendorId: created.id };
       setExtraVendors(prev => [...prev, newVendor]);
-      setForm(prev => ({ ...prev, namaVendor: newVendor.nama, hargaBeli: harga > 0 ? String(harga) : prev.hargaBeli }));
+      setForm(prev => ({
+        ...prev,
+        namaVendor: newVendor.nama,
+        hargaBeli: harga > 0 ? String(harga) : prev.hargaBeli,
+        vendorId: newVendor.vendorId,
+        vendorProductId: undefined,
+      }));
       if (harga > 0) setInitialPrices(prev => ({ ...prev, beli: harga }));
       setShowVendorNew(false);
     } catch {
@@ -226,10 +243,15 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
 
   function pickProduct(item: CatalogItem) {
     setPickedItemId(item.id ?? null);
-    if (item.defaultUnitId && units) {
-      const unit = units.find(u => u.id === item.defaultUnitId);
-      if (unit) setForm(prev => ({ ...prev, satuan: unit.code }));
-    }
+    const unit = item.defaultUnitId && units ? units.find(u => u.id === item.defaultUnitId) : undefined;
+    setForm(prev => ({
+      ...prev,
+      itemId: item.id,
+      namaVendor: "",
+      vendorId: undefined,
+      vendorProductId: undefined,
+      ...(unit ? { satuan: unit.code } : {}),
+    }));
   }
 
   return (

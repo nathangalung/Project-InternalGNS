@@ -26,4 +26,16 @@ type CreateUserRequest struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
 	Role     Role   `json:"role"`
+	IsActive *bool  `json:"isActive,omitempty"`
+}
+
+type UpdateUserRequest struct {
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Role     Role   `json:"role"`
+	IsActive bool   `json:"isActive"`
+}
+
+type ChangePasswordRequest struct {
+	Password string `json:"password"`
 }

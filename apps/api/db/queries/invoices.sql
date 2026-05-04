@@ -1,0 +1,116 @@
+-- name: invoices.list
+SELECT inv.id,
+       inv.invoice_no,
+       inv.quotation_id,
+       q.quotation_no,
+       inv.po_id,
+       inv.company_client_id,
+       cc.name AS company_name,
+       inv.invoice_date,
+       inv.due_date,
+       inv.subtotal,
+       inv.dpp,
+       inv.dpp_nilai_lain,
+       inv.ppn_amount,
+       inv.total,
+       inv.status,
+       inv.tax_transaction_code,
+       inv.faktur_type,
+       inv.created_at,
+       inv.updated_at
+FROM invoices inv
+JOIN quotations q ON q.id = inv.quotation_id
+JOIN company_client cc ON cc.id = inv.company_client_id
+WHERE ($1::text IS NULL OR (
+       LOWER(inv.invoice_no) LIKE LOWER('%' || $1 || '%')
+    OR LOWER(q.quotation_no) LIKE LOWER('%' || $1 || '%')
+    OR LOWER(cc.name) LIKE LOWER('%' || $1 || '%')))
+  AND ($2::text IS NULL OR inv.status = $2::text)
+ORDER BY inv.invoice_date DESC, inv.id DESC
+LIMIT $3 OFFSET $4;
+
+-- name: invoices.get_by_id
+SELECT inv.id,
+       inv.invoice_no,
+       inv.quotation_id,
+       q.quotation_no,
+       inv.po_id,
+       inv.company_client_id,
+       cc.name AS company_name,
+       inv.invoice_date,
+       inv.due_date,
+       inv.subtotal,
+       inv.dpp,
+       inv.dpp_nilai_lain,
+       inv.ppn_amount,
+       inv.total,
+       inv.status,
+       inv.tax_transaction_code,
+       inv.faktur_type,
+       inv.created_at,
+       inv.updated_at
+FROM invoices inv
+JOIN quotations q ON q.id = inv.quotation_id
+JOIN company_client cc ON cc.id = inv.company_client_id
+WHERE inv.id = $1;
+
+-- name: invoices.get_by_quotation
+SELECT inv.id,
+       inv.invoice_no,
+       inv.quotation_id,
+       q.quotation_no,
+       inv.po_id,
+       inv.company_client_id,
+       cc.name AS company_name,
+       inv.invoice_date,
+       inv.due_date,
+       inv.subtotal,
+       inv.dpp,
+       inv.dpp_nilai_lain,
+       inv.ppn_amount,
+       inv.total,
+       inv.status,
+       inv.tax_transaction_code,
+       inv.faktur_type,
+       inv.created_at,
+       inv.updated_at
+FROM invoices inv
+JOIN quotations q ON q.id = inv.quotation_id
+JOIN company_client cc ON cc.id = inv.company_client_id
+WHERE inv.quotation_id = $1
+ORDER BY inv.id DESC
+LIMIT 1;
+
+-- name: invoices.change_status
+UPDATE invoices
+SET status     = $2,
+    updated_by = $3
+WHERE id = $1
+RETURNING id;
+
+-- name: invoices.update_dates
+UPDATE invoices
+SET invoice_date = COALESCE($2, invoice_date),
+    due_date     = COALESCE($3, due_date),
+    updated_by   = $4
+WHERE id = $1
+RETURNING id;
+
+-- name: invoices.summary
+SELECT
+  COUNT(*)::BIGINT AS total,
+  COUNT(*) FILTER (
+    WHERE status = 'draft'
+      AND (due_date IS NULL OR due_date >= NOW())
+  )::BIGINT AS draft,
+  COUNT(*) FILTER (
+    WHERE status = 'sent'
+      AND (due_date IS NULL OR due_date >= NOW())
+  )::BIGINT AS sent,
+  COUNT(*) FILTER (WHERE status = 'paid')::BIGINT AS paid,
+  COUNT(*) FILTER (
+    WHERE status = 'overdue'
+       OR (status IN ('draft', 'sent') AND due_date IS NOT NULL AND due_date < NOW())
+  )::BIGINT AS overdue
+FROM invoices
+WHERE status <> 'cancelled';

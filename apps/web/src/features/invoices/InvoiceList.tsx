@@ -2,12 +2,11 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react"
 import type { Page } from "@/main"
 import Sidebar from "@/components/shared/Sidebar"
 import Pagination from "@/components/shared/Pagination"
-import { useQuotations } from "@/features/quotations/hooks"
-import { getRecord as getPoRecord } from "@/features/purchaseOrders/storage"
 import InvoiceFilter, { type InvoiceFilterValues } from "./InvoiceFilter"
-import { getAllRecords, invoiceNumberFor, upsertRecord } from "./storage"
+import { useInvoices, useInvoiceSummary } from "./hooks"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "./types"
 import type { InvoiceRow, InvoiceStatus } from "./types"
+import type { InvoiceBackendRow } from "@/types/api"
 
 interface InvoiceListProps {
   onNavigate: (page: Page) => void
@@ -15,7 +14,8 @@ interface InvoiceListProps {
   onViewDetail?: (quotationId: number) => void
 }
 
-function parseRupiahNumber(s: string): number {
+function parseRupiahNumber(s: string | undefined): number {
+  if (!s) return 0
   const n = Number(s)
   return Number.isFinite(n) ? n : 0
 }
@@ -30,12 +30,33 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
 }
 
-// Default 30 days due window from PO delivered date.
-function defaultDueDate(fromIso: string): string {
-  const d = new Date(fromIso)
-  if (Number.isNaN(d.getTime())) return fromIso
-  d.setDate(d.getDate() + 30)
-  return d.toISOString()
+// Backend status, overdue from due.
+function deriveStatus(inv: InvoiceBackendRow): InvoiceStatus | null {
+  if (inv.status === "cancelled") return null
+  if (inv.status === "paid") return "DIBAYAR"
+  if (inv.status === "overdue") return "TERLAMBAT"
+  const base: InvoiceStatus = inv.status === "sent" ? "DIKIRIM" : "DRAF"
+  if (inv.dueDate) {
+    const due = new Date(inv.dueDate)
+    if (!Number.isNaN(due.getTime()) && new Date() > due) return "TERLAMBAT"
+  }
+  return base
+}
+
+function rowFromBackend(inv: InvoiceBackendRow): InvoiceRow | null {
+  const status = deriveStatus(inv)
+  if (!status) return null
+  const totalNumber = parseRupiahNumber(inv.total ?? inv.subtotal)
+  return {
+    quotationId: inv.quotationId,
+    invoiceNo: inv.invoiceNo,
+    client: inv.companyName,
+    createdAt: inv.invoiceDate,
+    dueDate: inv.dueDate ?? inv.invoiceDate,
+    total: formatRp(totalNumber),
+    totalNumber,
+    status,
+  }
 }
 
 const exportBtnStyle: CSSProperties = {
@@ -68,48 +89,14 @@ const iconBtnStyle: CSSProperties = {
 }
 
 export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: InvoiceListProps) {
-  const { data: allQuotations, isLoading } = useQuotations({ limit: 200 })
+  const { data: rawList, isLoading } = useInvoices({ limit: 200 })
+  const { data: summaryData } = useInvoiceSummary()
 
-  // Bump on every record change so we re-read localStorage.
-  const [storeVersion, setStoreVersion] = useState(0)
-  void storeVersion
-
-  // Source: only quotations whose PO is DELIVERED ("Dikirim" in PO terms) become invoices.
   const allRows: InvoiceRow[] = useMemo(() => {
-    void storeVersion
-    const accepted = (allQuotations ?? []).filter(q => q.status === "accepted")
-    const invoiceRecs = getAllRecords()
-
-    const rows: InvoiceRow[] = []
-    for (const q of accepted) {
-      const po = getPoRecord(q.id)
-      if (po?.status !== "DELIVERED") continue
-
-      const inv = invoiceRecs[String(q.id)]
-      // Default invoice status DRAF; auto-flag TERLAMBAT if past due and not paid.
-      const dueIso = inv?.dueDate ?? defaultDueDate(q.createdAt)
-      const today = new Date()
-      const due = new Date(dueIso)
-      const baseStatus = inv?.status ?? "DRAF"
-      const status: InvoiceStatus =
-        baseStatus !== "DIBAYAR" && !Number.isNaN(due.getTime()) && today > due
-          ? "TERLAMBAT"
-          : baseStatus
-
-      const totalNumber = parseRupiahNumber(q.total)
-      rows.push({
-        quotationId: q.id,
-        invoiceNo: invoiceNumberFor(q.id, q.createdAt),
-        client: q.companyName,
-        createdAt: q.createdAt,
-        dueDate: dueIso,
-        total: formatRp(totalNumber),
-        totalNumber,
-        status,
-      })
-    }
-    return rows
-  }, [allQuotations, storeVersion])
+    return (rawList ?? [])
+      .map(rowFromBackend)
+      .filter((r): r is InvoiceRow => r !== null)
+  }, [rawList])
 
   const [search, setSearch] = useState("")
   const [showFilter, setShowFilter] = useState(false)
@@ -177,15 +164,13 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
     if (currentPage > totalPages) setCurrentPage(1)
   }, [totalPages, currentPage])
 
-  // KPI counts
-  const counts = useMemo(() => {
-    const byStatus: Record<InvoiceStatus, number> = { DRAF: 0, DIKIRIM: 0, DIBAYAR: 0, TERLAMBAT: 0 }
-    for (const r of allRows) byStatus[r.status]++
-    return { total: allRows.length, ...byStatus }
-  }, [allRows])
-
-  void upsertRecord  // keep export ref alive for future write paths
-  void setStoreVersion
+  const counts = {
+    total:     summaryData?.total   ?? 0,
+    DRAF:      summaryData?.draft   ?? 0,
+    DIKIRIM:   summaryData?.sent    ?? 0,
+    DIBAYAR:   summaryData?.paid    ?? 0,
+    TERLAMBAT: summaryData?.overdue ?? 0,
+  }
 
   return (
     <div className="admin-shell">

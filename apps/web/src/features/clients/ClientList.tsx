@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react"
 import type { Page } from "@/main"
 import Sidebar from "@/components/shared/Sidebar"
-import { useClients } from "@/features/clients/hooks"
+import { useClients, useClientSummary } from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
-import { useQuotations } from "@/features/quotations/hooks"
 import ClientAdd from "@/features/clients/ClientAdd"
 import ClientFilter, { type ClientFilterValues } from "@/features/clients/ClientFilter"
 import Pagination from "@/components/shared/Pagination"
 import type { ClientRow } from "@/types/api"
+import { formatRupiah } from "@/lib/format"
 
 interface ClientListProps {
   onNavigate: (page: Page) => void
@@ -33,10 +33,6 @@ function clientInitials(name: string): string {
   return (parts[0][0] + parts[1][0]).toUpperCase()
 }
 
-function formatRupiah(n: number): string {
-  if (!Number.isFinite(n) || n === 0) return "-"
-  return "Rp" + n.toLocaleString("id-ID")
-}
 
 function ClientLogo({ name }: { name: string }) {
   const bg = LOGO_BG_PALETTE[hashCode(name) % LOGO_BG_PALETTE.length]
@@ -64,7 +60,7 @@ function ClientLogo({ name }: { name: string }) {
 export default function ClientList({ onNavigate, onLogout, onViewDetail }: ClientListProps) {
   const { data: clientsData, isLoading } = useClients({ limit: 200 })
   const { data: countriesData } = useCountries()
-  const { data: quotationsData } = useQuotations({ limit: 500 })
+  const { data: summaryData } = useClientSummary()
 
   const [search, setSearch] = useState("")
   const [showAdd, setShowAdd] = useState(false)
@@ -81,35 +77,25 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
     return (code: string) => map.get(code) ?? code
   }, [countriesData])
 
-  const purchaseStats = useMemo(() => {
-    const map = new Map<string, { total: number; count: number }>()
-    for (const q of quotationsData ?? []) {
-      const key = q.companyName
-      const cur = map.get(key) ?? { total: 0, count: 0 }
-      cur.total += Number(q.total) || 0
-      cur.count += 1
-      map.set(key, cur)
-    }
-    return (name: string) => map.get(name) ?? { total: 0, count: 0 }
-  }, [quotationsData])
-
   const kpis = useMemo(() => {
-    const total = clients.length
-    const now = new Date()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-    const newThisMonth = clients.filter(c => new Date(c.createdAt) >= monthStart).length
-    const activeCount = clients.filter(c => c.isActive).length
-    const yearStart = new Date(now.getFullYear(), 0, 1)
-    const thisYear = clients.filter(c => new Date(c.createdAt) >= yearStart).length
-    const yoyPct = total > 0 ? Math.round((thisYear / total) * 100) : 0
-    const retentionPct = total > 0 ? Math.round((activeCount / total) * 100) : 0
+    const total = summaryData?.total ?? 0
+    const newThisMonth = summaryData?.newThisMonth ?? 0
+    const newThisYear = summaryData?.newThisYear ?? 0
+    const prevYearTotal = summaryData?.prevYearTotal ?? 0
+    const activeCount = summaryData?.activeCount ?? 0
+    const yoyPct = prevYearTotal > 0
+      ? Math.round(((newThisYear - prevYearTotal) / prevYearTotal) * 100)
+      : null
+    const retentionPct = total > 0 ? Math.round((activeCount / total) * 100) : null
+    const yoyText = yoyPct === null ? "-" : `${yoyPct >= 0 ? "+" : ""}${yoyPct}%`
+    const retentionText = retentionPct === null ? "-" : `${retentionPct}%`
     return {
       total,
-      yoy: total === 0 ? "-" : `+${yoyPct}%`,
+      yoy: yoyText,
       newThisMonth,
-      retention: total === 0 ? "-" : `${retentionPct}%`,
+      retention: retentionText,
     }
-  }, [clients])
+  }, [summaryData])
 
   const filtered = useMemo(() => {
     let items = clients
@@ -128,10 +114,10 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
     }
     const minTotalNum = Number(filters.minTotal)
     if (Number.isFinite(minTotalNum) && minTotalNum > 0) {
-      items = items.filter(c => purchaseStats(c.name).total >= minTotalNum)
+      items = items.filter(c => (Number(c.totalPurchase) || 0) >= minTotalNum)
     }
     return items
-  }, [clients, search, countryOf, filters, purchaseStats])
+  }, [clients, search, countryOf, filters])
 
   const totalItems = filtered.length
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
@@ -235,7 +221,6 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
                 )}
                 {!isLoading && currentRows.map((c: ClientRow) => {
                   const status = c.isActive ? STATUS_AKTIF : STATUS_NONAKTIF
-                  const stats = purchaseStats(c.name)
                   return (
                     <tr key={c.id} className="tbl-row">
                       <td className="tbl-td">
@@ -265,10 +250,10 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
                         </span>
                       </td>
                       <td className="tbl-td tbl-td--center" style={{ fontWeight: 700, color: "#191C1E" }}>
-                        {formatRupiah(stats.total)}
+                        {formatRupiah(c.totalPurchase, "-")}
                       </td>
                       <td className="tbl-td tbl-td--center" style={{ fontWeight: 700, color: "#191C1E" }}>
-                        {stats.count}
+                        {c.quotationCount}
                       </td>
                       <td className="tbl-td tbl-td--center">
                         <button

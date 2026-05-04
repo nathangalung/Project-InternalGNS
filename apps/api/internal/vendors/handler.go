@@ -70,6 +70,36 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusCreated, v)
 }
 
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+
+	var req UpdateVendorRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	if req.Name == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
+		return
+	}
+
+	userID := deps.CurrentUserID(r.Context())
+	v, err := h.repo.Update(r.Context(), id, req, userID)
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("vendor not found"))
+		return
+	}
+	if err != nil {
+		httperr.Render(w, httperr.Internal(err.Error()))
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, v)
+}
+
 func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
 	if q == "" {

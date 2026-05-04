@@ -14,7 +14,9 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/countries"
 	"github.com/nathangalung/internalgns/apps/api/internal/dashboard"
+	"github.com/nathangalung/internalgns/apps/api/internal/invoices"
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
+	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
@@ -61,6 +63,9 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store) *chi.Mux {
 			r.Mount("/items", items.Routes(d))
 			r.Mount("/vendors", vendors.Routes(d))
 			r.Mount("/quotations", quotations.Routes(d))
+			r.Mount("/purchase-orders", purchaseorders.Routes(d))
+			r.Mount("/invoices", invoices.Routes(d))
+			r.Mount("/users", users.Routes(d))
 			r.Mount("/dashboard", dashboard.Routes(d))
 		})
 	})

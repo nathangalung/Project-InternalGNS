@@ -51,7 +51,7 @@ export default function QuotationDetail({ quotationId, quotation, onSaveStatus, 
   const subTotal = totalProduk - nominalDiskon;
   const dppBase = hasProducts ? subTotal : totalShip;
   const dppNilaiLain = Math.round((dppBase * 11) / 12);
-  const ppn12 = dppBase - dppNilaiLain;
+  const ppn12 = Math.round(dppNilaiLain * 0.12);
   const grandTotal = computeGrandTotal(q);
   const clientInitials = q.client.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 

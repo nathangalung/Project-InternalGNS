@@ -26,6 +26,7 @@ coverage/
 apps/web/src/routeTree.gen.ts
 apps/web/vite.config.d.ts
 apps/web/*.tsbuildinfo
+apps/web/.tanstack/
 
 # Go
 apps/api/bin/
@@ -43,3 +44,8 @@ docker-data/
 
 # Docs build
 docs/_build/
+
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
