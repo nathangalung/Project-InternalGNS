@@ -1,8 +1,25 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, type CSSProperties } from "react"
 import Sidebar from "@/components/shared/Sidebar"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import type { DashboardMetric } from "@/types/api"
+import TrendChart, { CHART_MONTHS } from "./TrendChart"
 import type { Page } from "../../main"
+
+const exportBtnStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "8px",
+  padding: "8px 20px",
+  border: "1px solid rgba(99, 14, 212, 0.2)",
+  borderRadius: "8px",
+  background: "#FFFFFF",
+  cursor: "pointer",
+  fontFamily: "'Inter', sans-serif",
+  fontWeight: 600,
+  fontSize: "14px",
+  lineHeight: 1.25,
+  color: "#630ED4",
+}
 
 function formatId(n: number): string {
   return n.toLocaleString("id-ID")
@@ -26,16 +43,6 @@ const chartTabs: { label: string; metric: DashboardMetric }[] = [
   { label: "PPN", metric: "ppn" },
 ]
 
-const months = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGS"]
-
-const lineColors: Record<string, string> = {
-  Quotation: "#7C3AED",
-  Invoice: "#0F172A",
-  Pendapatan: "#F59E0B",
-  "Laba Bersih": "#22C55E",
-  PPN: "#EF4444",
-}
-
 // YYYY-MM to chart index.
 function mapToMonthIndex(month: string, baseYear: number): number {
   const [y, m] = month.split("-").map(Number)
@@ -43,12 +50,11 @@ function mapToMonthIndex(month: string, baseYear: number): number {
   return m - 1
 }
 
-// Build 8-slot chart series.
 function buildSeries(
   points: { month: string; value: string }[] | undefined,
   baseYear: number,
 ): number[] {
-  const series = new Array(months.length).fill(0)
+  const series = new Array(CHART_MONTHS.length).fill(0)
   if (!points) return series
   for (const p of points) {
     const idx = mapToMonthIndex(p.month, baseYear)
@@ -57,78 +63,13 @@ function buildSeries(
   return series
 }
 
-// Axis max with safe floor.
-function computeMax(values: number[]): number {
-  const m = Math.max(...values, 0)
-  if (m <= 160) return 160
-  const step = 10 ** Math.floor(Math.log10(m))
-  return Math.ceil(m / step) * step
-}
+const RP_METRICS: ReadonlyArray<string> = ["Pendapatan", "Laba Bersih", "PPN"]
 
-interface TrendChartProps {
-  activeTab: string
-  series: Record<string, number[]>
-}
-
-function TrendChart({ activeTab, series }: TrendChartProps) {
-  const W = 760,
-    H = 190
-  const PAD = { top: 16, right: 16, bottom: 32, left: 52 }
-  const cW = W - PAD.left - PAD.right
-  const cH = H - PAD.top - PAD.bottom
-  const activeData = series[activeTab] ?? []
-  const maxVal = useMemo(() => computeMax(activeData), [activeData])
-
-  const gx = (i: number) => PAD.left + (i / (months.length - 1)) * cW
-  const gy = (v: number) => PAD.top + cH - (maxVal === 0 ? 0 : (v / maxVal) * cH)
-  const makePath = (data: number[]) =>
-    data.map((v, i) => `${i === 0 ? "M" : "L"} ${gx(i).toFixed(1)} ${gy(v).toFixed(1)}`).join(" ")
-  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(maxVal * f))
-
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="chart-svg">
-      {yTicks.map((tick) => (
-        <g key={tick}>
-          <line
-            x1={PAD.left}
-            y1={gy(tick)}
-            x2={W - PAD.right}
-            y2={gy(tick)}
-            stroke="#E2E8F0"
-            strokeWidth="1"
-          />
-          {tick > 0 && (
-            <text x={PAD.left - 6} y={gy(tick) + 4} textAnchor="end" fontSize="10" fill="#94A3B8">
-              Rp {tick}K
-            </text>
-          )}
-        </g>
-      ))}
-      {months.map((m, i) => (
-        <text key={m} x={gx(i)} y={H - 6} textAnchor="middle" fontSize="10" fill="#94A3B8">
-          {m}
-        </text>
-      ))}
-      {Object.entries(series).map(([key, data]) => {
-        const isActive = key === activeTab
-        return (
-          <path
-            key={key}
-            d={makePath(data)}
-            fill="none"
-            stroke={lineColors[key]}
-            strokeWidth={isActive ? 2.5 : 1.5}
-            strokeOpacity={isActive ? 1 : 0.25}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        )
-      })}
-      {activeData.map((v, i) => (
-        <circle key={i} cx={gx(i)} cy={gy(v)} r={3.5} fill={lineColors[activeTab]} />
-      ))}
-    </svg>
-  )
+function formatRpAxis(v: number): string {
+  if (v >= 1_000_000_000) return `Rp ${(v / 1_000_000_000).toFixed(0)}M`
+  if (v >= 1_000_000)     return `Rp ${(v / 1_000_000).toFixed(0)}M`
+  if (v >= 1_000)         return `Rp ${(v / 1_000).toFixed(0)}K`
+  return `Rp ${v}`
 }
 
 interface DashboardProps {
@@ -140,10 +81,9 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
   const [activeTab, setActiveTab] = useState("Quotation")
   const { data: summary } = useDashboardSummary()
 
-  // Range Jan to Sep.
   const baseYear = new Date().getFullYear()
   const fromDate = `${baseYear}-01-01`
-  const toDate = `${baseYear}-09-01`
+  const toDate = `${baseYear}-12-31`
 
   const tsQuotation = useDashboardTimeseries("quotation", fromDate, toDate)
   const tsInvoice = useDashboardTimeseries("invoice", fromDate, toDate)
@@ -179,32 +119,28 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
       <Sidebar activePage="dashboard" onNavigate={onNavigate} onLogout={onLogout} />
 
       <div className="admin-main">
-        {/* Header */}
-        <header className="dash-header">
-          <h1>Dashboard Utama</h1>
-          <div className="page-actions">
-            <button className="btn-admin-filter">
-              <svg
-                viewBox="0 0 24 24"
-                width="16"
-                height="16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="4" y1="6" x2="20" y2="6" />
-                <line x1="7" y1="12" x2="17" y2="12" />
-                <line x1="10" y1="18" x2="14" y2="18" />
-              </svg>
-              Filter
-            </button>
+        <div className="page-content" style={{ gap: "29px" }}>
+          <div className="page-header">
+            <h1 className="page-title">Dashboard Utama</h1>
+            <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
+              <button type="button" style={exportBtnStyle}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Ekspor Excel
+              </button>
+              <button className="btn-admin-filter">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="4" y1="6" x2="20" y2="6" />
+                  <line x1="7" y1="12" x2="17" y2="12" />
+                  <line x1="10" y1="18" x2="14" y2="18" />
+                </svg>
+                Filter
+              </button>
+            </div>
           </div>
-        </header>
-
-        {/* Content */}
-        <div className="page-content">
           {/* Row 1 */}
           <div className="stats-grid-3">
             <div className="stat-card">
@@ -280,7 +216,16 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
                 ))}
               </div>
             </div>
-            <TrendChart activeTab={activeTab} series={series} />
+            <TrendChart
+              series={series}
+              activeKey={activeTab}
+              formatValue={v =>
+                RP_METRICS.includes(activeTab) ? `Rp${v.toLocaleString("id-ID")}` : v.toLocaleString("id-ID")
+              }
+              formatAxisTick={v =>
+                RP_METRICS.includes(activeTab) ? formatRpAxis(v) : v.toLocaleString("id-ID")
+              }
+            />
           </div>
 
           {/* Alerts */}

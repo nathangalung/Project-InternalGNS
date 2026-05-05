@@ -9,6 +9,12 @@ export function makePageNavigate(navigate: Navigate, currentId?: string): (page:
       case "dashboard":
         void navigate({ to: "/" })
         return
+      case "dashboard-financial":
+        void navigate({ to: "/dashboard-financial" })
+        return
+      case "dashboard-operational":
+        void navigate({ to: "/dashboard-operational" })
+        return
       case "quotation":
         void navigate({ to: "/quotations" })
         return
@@ -26,6 +32,9 @@ export function makePageNavigate(navigate: Navigate, currentId?: string): (page:
         return
       case "purchase-order-detail":
         if (currentId) void navigate({ to: "/purchase-orders/$id", params: { id: currentId } })
+        return
+      case "purchase-order-edit":
+        if (currentId) void navigate({ to: "/purchase-orders/$id/edit", params: { id: currentId } })
         return
       case "invoices":
         void navigate({ to: "/invoices" })

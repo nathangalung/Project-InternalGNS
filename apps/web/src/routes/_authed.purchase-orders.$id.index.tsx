@@ -35,6 +35,13 @@ function PurchaseOrderDetailRoute() {
       quotationNo={detail?.quotationNo ?? id}
       quotation={quotation}
       onNavigate={makePageNavigate(navigate, id)}
+      onNavigateEntity={(scope, entityId) => {
+        if (scope === "Klien") {
+          void navigate({ to: "/clients/$id", params: { id: String(entityId) } })
+        } else {
+          void navigate({ to: "/vendors/$id", params: { id: String(entityId) } })
+        }
+      }}
       onLogout={() => {
         logout()
         void navigate({ to: "/login" })

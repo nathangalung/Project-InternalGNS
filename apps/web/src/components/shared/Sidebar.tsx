@@ -4,8 +4,8 @@ const logoImg = "/logo.png";
 
 const navItems: { label: string; icon: string; page?: Page }[] = [
   { label: "Dashboard",             icon: "grid",          page: "dashboard" },
-  { label: "Dashboard Financial",   icon: "bar-chart" },
-  { label: "Dashboard Operasional", icon: "activity" },
+  { label: "Dashboard Financial",   icon: "bar-chart",     page: "dashboard-financial" },
+  { label: "Dashboard Operasional", icon: "activity",      page: "dashboard-operational" },
   { label: "Quotation",             icon: "file-text",     page: "quotation" },
   { label: "Purchase Order",        icon: "shopping-cart", page: "purchase-orders" },
   { label: "Invoices",              icon: "file",          page: "invoices" },
@@ -87,7 +87,7 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
           <div className="sidebar-user-role">Admin</div>
         </div>
         <button className="logout-btn" onClick={onLogout} title="Keluar">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
             <line x1="21" y1="12" x2="9" y2="12"/>

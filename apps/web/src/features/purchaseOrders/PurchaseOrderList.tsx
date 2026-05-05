@@ -49,22 +49,6 @@ function rowFromBackend(po: PurchaseOrderRow): PoRow {
   }
 }
 
-const exportBtnStyle: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "8px",
-  padding: "10px 24px",
-  height: "42px",
-  border: "1px solid rgba(99, 14, 212, 0.2)",
-  borderRadius: "8px",
-  background: "#FFFFFF",
-  cursor: "pointer",
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: 700,
-  fontSize: "14px",
-  color: "#630ED4",
-}
-
 const iconBtnStyle: CSSProperties = {
   background: "transparent",
   border: "none",
@@ -187,16 +171,8 @@ export default function PurchaseOrderList({ onNavigate, onLogout, onViewDetail }
           <div className="page-header">
             <h1 className="page-title">Daftar Purchase Order</h1>
             <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
-              <button type="button" style={exportBtnStyle}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Ekspor Excel
-              </button>
-              <button type="button" style={exportBtnStyle}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <button type="button" className="btn-admin-outline" style={{ width: "160px", justifyContent: "center" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
