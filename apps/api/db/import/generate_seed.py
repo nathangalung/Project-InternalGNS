@@ -1,18 +1,22 @@
 """Generate a deterministic SQL seed file from staged.json.
 
 Mirrors load.py's logic but writes a single .sql file instead of executing
-against a live DB. Output: apps/api/db/seeds/03_historical_2026.sql.
+against a live DB. Output: apps/api/db/seeds/03_historical.sql.
 
-Use this when you want to import via `make seed-dev` (psql) instead of
-Python; or when Docker is down so you can't connect to the dev DB.
+Covers all 3 historical years (2024 + 2025 + 2026) in one TRUNCATE+rebuild
+seed. Lets a teammate without the local Excel folders bootstrap a dev DB
+from psql alone.
 
 Decisions are identical to load.py:
-- Customers 4001..4010, explicit IDs 1..10
+- Customers 4001..4018, explicit IDs 1..18
 - Q-numbers regenerated via the schema's `fn_next_doc_no` formula computed
-  ahead of time (same monotonic per-company-per-year seq behaviour)
+  ahead of time (same monotonic per-company-per-year seq behaviour). Each
+  file keeps its own historical year token (a 2024 file gets `/.../2024`,
+  a 2025 file gets `/.../2025`, etc.)
 - Original Q-no recorded in quotations.notes
 - Duplicates by original Q-no become a date-ordered version chain
-- Status = 'sent' for all imported quotations
+- Status = 'draft' when every line has selling_price <= 0 (Excel pricing
+  not yet entered), else 'sent'
 """
 from __future__ import annotations
 
@@ -29,10 +33,12 @@ from unit_map import canonical_unit
 HERE = Path(__file__).parent
 STAGED_FILE = HERE / "staged.json"
 # This script lives at apps/api/db/import/; output goes to sibling seeds/.
-OUTPUT_FILE = HERE.parent / "seeds" / "03_historical_2026.sql"
+OUTPUT_FILE = HERE.parent / "seeds" / "03_historical.sql"
 
 SUPERADMIN_ID = 1
 
+# Mirrors load.py CUSTOMERS — 4001..4010 from 2026, 4011..4015 from 2025,
+# 4016..4018 from 2024. parse.py CANONICAL_CUSTOMERS uses the same set.
 CUSTOMERS = [
     (1, "4001", "PT. IMC Ship Management"),
     (2, "4002", "PT. Sentra Makmur Lines"),
@@ -44,6 +50,14 @@ CUSTOMERS = [
     (8, "4008", "PT. Aman Maritim Nusantara"),
     (9, "4009", "PT. Kasen Maritim Logistik"),
     (10, "4010", "PT. Adamaris Shipping Indonesia"),
+    (11, "4011", "PT. Solusi Pelayaran Nusantara"),
+    (12, "4012", "PT. Transcoal Pasific"),
+    (13, "4013", "PT. Indobaruna Bulk Transport"),
+    (14, "4014", "PT. Tara Jaya Cemerlang"),
+    (15, "4015", "PT. Karunia Aman Sejahtera"),
+    (16, "4016", "PT. Isna Agung Permata"),
+    (17, "4017", "PT. Lumoso Pratama Line"),
+    (18, "4018", "PT. Indoglas Jaya"),
 ]
 CUSTOMER_NAME_TO_ID: dict[str, int] = {c[2]: c[0] for c in CUSTOMERS}
 
@@ -146,6 +160,7 @@ def main():
     contacts: dict[tuple[int, str], dict] = {}
     contact_id_counter = 0
     contact_id_map: dict[tuple[int, str], int] = {}
+    seen_emails: set[str] = set()
     for r in parsed:
         cust_id = CUSTOMER_NAME_TO_ID[r["customer_name"]]
         name = r["contact_name"]
@@ -153,12 +168,22 @@ def main():
             continue
         key = (cust_id, norm_name(name))
         if key not in contacts:
+            email = truncate_to(r.get("contact_email"), 255)
+            # idx_company_contacts_email is UNIQUE on lower(email). Drop the
+            # email on later contacts that share an address with an earlier
+            # one (keep the contact row).
+            if email:
+                ek = email.lower()
+                if ek in seen_emails:
+                    email = None
+                else:
+                    seen_emails.add(ek)
             contact_id_counter += 1
             contacts[key] = {
                 "id": contact_id_counter,
                 "company_id": cust_id,
                 "name": truncate_to(name, 255),
-                "email": truncate_to(r.get("contact_email"), 255),
+                "email": email,
                 "phone": normalize_phone(r.get("contact_phone_raw")),
             }
             contact_id_map[key] = contact_id_counter
@@ -266,6 +291,11 @@ def main():
                 if sell is None:
                     sell = 0.0
                 cost = it.get("cost_price")
+                # Profit_pct overflow guard (NUMERIC(7,4), max ~999.99). If
+                # sell/cost > 999×, the cost is almost certainly an Excel typo
+                # — drop it so profit_pct ends up NULL via NULLIF.
+                if cost is not None and cost > 0 and sell > 0 and sell / cost > 999:
+                    cost = None
                 unit_code = canonical_unit(it.get("unit"))
                 unit_id = UNIT_CODE_TO_ID.get(unit_code) if unit_code else None
                 name = it.get("offer_desc") or it.get("nama_asli") or it.get("request_desc")
@@ -294,7 +324,9 @@ def main():
             if not lines:
                 continue
 
-            # Generate Q-number
+            # Generate Q-number from the file's historical year/month so the
+            # token matches the original Excel date (a 2024 file gets `/2024`,
+            # a 2025 file gets `/2025`, etc.).
             date_iso = file_data["date_iso"]
             try:
                 d = datetime.strptime(date_iso, "%Y-%m-%d")
@@ -302,16 +334,17 @@ def main():
                 month = d.month
                 day = d.day
             except (ValueError, TypeError):
+                # Undated file — bucket under 2026 jan 1 as a last resort.
                 year, month, day = 2026, 1, 1
                 date_iso = "2026-01-01"
-            # Defensive: every file in 2026_data is, by definition, 2026.
-            # The Excel cell sometimes carries a stale "2025" typo (e.g. Q-265034).
-            if year < 2026:
-                year = 2026
-                date_iso = f"2026-{month:02d}-{day:02d}"
             seq_key = (cust_id, year)
             seq_counter[seq_key] += 1
             new_qno = fn_next_doc_no("Q", cust_no, seq_counter[seq_key], year, month)
+
+            # Status: 'draft' if no line has positive selling_price (matches
+            # load.py — Excel pricing not yet entered). Else 'sent'.
+            is_draft = not any((li["selling_price"] or 0) > 0 for li in lines)
+            status = "draft" if is_draft else "sent"
 
             # Totals
             discount = file_data.get("discount_pct") or 0
@@ -343,6 +376,7 @@ def main():
                 "contact_name": contact_name,
                 "client_ref_no": truncate_to(ref, 100),
                 "vessel_name": truncate_to(file_data.get("vessel_name"), 255),
+                "status": status,
                 "payment_terms": truncate_to(file_data.get("payment_terms"), 100),
                 "discount_pct": discount,
                 "total_produk": total_produk,
@@ -368,9 +402,9 @@ def main():
 
     # ----- Render SQL -----
     out: list[str] = []
-    out.append("-- HISTORICAL 2026 IMPORT — auto-generated by scripts/import_2026/generate_seed.py")
+    out.append("-- HISTORICAL IMPORT (2024 + 2025 + 2026) — auto-generated by apps/api/db/import/generate_seed.py")
     out.append("-- DO NOT EDIT BY HAND. Re-run the generator after parse.py if Excel changes.")
-    out.append("-- Replaces 02_dev_samples.sql when run; uses the same TRUNCATE-and-rebuild pattern.\n")
+    out.append("-- TRUNCATE-and-rebuild seed: replaces any prior 03_historical_*.sql.\n")
     out.append("BEGIN;\n")
 
     out.append("-- 0. Reset transactional + master-customer tables; preserve users (superadmin and dev users) and units/countries")
@@ -387,14 +421,14 @@ RESTART IDENTITY CASCADE;
 """)
 
     # -- Customers --
-    out.append("-- 1. Customers (10 entities, IDs 1..10)")
+    out.append(f"-- 1. Customers ({len(CUSTOMERS)} entities, IDs 1..{len(CUSTOMERS)})")
     out.append("INSERT INTO company_client (id, number, name, country_code, created_by, updated_by) VALUES")
     rows = []
     for cid, num, name in CUSTOMERS:
         rows.append(f"  ({cid}, {sql_str(num)}, {sql_str(name)}, 'IDN', "
                     f"{SUPERADMIN_ID}, {SUPERADMIN_ID})")
     out.append(",\n".join(rows) + ";")
-    out.append("SELECT setval('company_client_id_seq', 10);\n")
+    out.append(f"SELECT setval('company_client_id_seq', {len(CUSTOMERS)});\n")
 
     # -- Contacts --
     out.append(f"-- 2. Contacts ({len(contacts)})")
@@ -484,7 +518,7 @@ RESTART IDENTITY CASCADE;
             f"  ({q['id']}, {sql_str(q['quotation_no'])}, {q['version']}, "
             f"{sql_num(q['parent_id'])}, {q['company_client_id']}, {sql_str(q['company_client_name'])}, "
             f"{sql_num(q['contact_id'])}, {sql_str(q['contact_name'])}, "
-            f"{sql_str(q['client_ref_no'])}, {sql_str(q['vessel_name'])}, 'sent', "
+            f"{sql_str(q['client_ref_no'])}, {sql_str(q['vessel_name'])}, {sql_str(q['status'])}, "
             f"{sql_str(q['payment_terms'])}, {q['discount_pct']}, "
             f"{q['total_produk']:.2f}, {q['total']:.2f}, {q['total_discount']:.2f}, "
             f"{sql_str(q['notes'])}, {created_at}, {SUPERADMIN_ID}, {SUPERADMIN_ID})"
@@ -538,7 +572,7 @@ RESTART IDENTITY CASCADE;
     out.append(f"SELECT setval('quotation_items_id_seq', {quotation_item_id_counter});\n")
 
     out.append("COMMIT;\n")
-    out.append("-- End of historical 2026 import")
+    out.append("-- End of historical import (2024 + 2025 + 2026)")
 
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_FILE.write_text("\n".join(out), encoding="utf-8")

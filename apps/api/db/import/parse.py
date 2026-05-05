@@ -1,8 +1,9 @@
-"""Parse all 2026_data Excel files into a normalized JSON staging file.
+"""Parse historical Excel quotations into a normalized JSON staging file.
 
-Reads every .xlsx, extracts header (customer, date, contact, etc) and items
-from the DATA ENTRI sheet, plus discount info from the PRINT sheet, and
-writes everything to staged.json for the loader to consume.
+Reads every .xlsx in SOURCE_DIRS (2024/2025/2026), extracts header
+(customer, date, contact, etc) and items from the DATA ENTRI sheet, plus
+discount info from the PRINT sheet, and writes everything to staged.json
+for downstream consumers (load*.py, generate_seed.py).
 """
 from __future__ import annotations
 import json
@@ -17,6 +18,8 @@ import openpyxl
 
 SOURCE_DIRS = [
     Path(r"D:\quotation\2024_data"),
+    Path(r"D:\quotation\2025_data"),
+    Path(r"D:\quotation\2026_data"),
 ]
 OUTPUT_FILE = Path(__file__).parent / "staged.json"
 

@@ -96,14 +96,19 @@ migrate-new: ## Create a new migration NAME=
 	goose -dir $(MIG_DIR) -s create $(NAME) sql
 
 # Seeds.
+# stdin redirect (`< $$f`) instead of `-f` is intentional: on Windows,
+# `psql -f file.sql` reads the file in the system codepage (cp1252) even
+# when PGCLIENTENCODING=UTF8 — multi-byte chars like ×, ®, ″ get expanded
+# and trip VARCHAR length checks. Stdin is pure bytes, decoded by the
+# client_encoding setting → cross-platform safe.
 seed: ## Load master data only (units + countries, idempotent)
 	@echo ">> $(SEED_DIR)/01_master.sql"
-	@psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 -f $(SEED_DIR)/01_master.sql
+	@PGCLIENTENCODING=UTF8 psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 < $(SEED_DIR)/01_master.sql
 
 seed-dev: migrate ## Migrate + load master + dev sample data (DEV ONLY)
 	@set -e; for f in $(SEED_DIR)/*.sql; do \
 	  echo ">> $$f"; \
-	  psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 -f $$f; \
+	  PGCLIENTENCODING=UTF8 psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 < $$f; \
 	done
 
 check-reconcile: ## Run reconciliation / verification queries

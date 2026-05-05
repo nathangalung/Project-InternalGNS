@@ -61,19 +61,39 @@ All loaders:
 cd apps/api/db/import
 pip install psycopg[binary] openpyxl
 
-# 1. Edit parse.py SOURCE_DIRS to point at the year folder you want
+# 1. parse.py SOURCE_DIRS already points at all 3 year folders.
+#    Edit if you only want a single year (load_*.py filter by date_iso anyway).
 # 2. Parse Excel → staged.json
 python parse.py
 
-# 3. Dry run against the dev DB (rolls back, prints reconciliation)
+# 3a. Dry run a year-specific loader against the dev DB
 python load_2024.py --dry-run     # or load_2025.py / load.py
 
-# 4. Real run (commits)
+# 3b. Real run (commits)
 python load_2024.py
+
+# OR — regenerate the SQL seed instead (covers all 3 years, no live DB needed)
+python generate_seed.py
+# → writes apps/api/db/seeds/03_historical.sql
+# → applied automatically by `make seed-dev` alongside 01_master.sql
 ```
 
 Connect via `DATABASE_URL` env var (default
 `postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable`).
+
+### Windows note: applying the seed
+
+`make seed-dev` already handles the Windows quirk (it pipes via stdin with
+`PGCLIENTENCODING=UTF8`, see Makefile). Use that whenever possible.
+
+If you must apply a single seed manually, `psql -f file.sql` on Windows
+reads UTF-8 files as cp1252, which corrupts multi-byte chars (×, ®, ″) and
+triggers `value too long for type character varying(500)`. Pipe via stdin
+instead:
+
+```bash
+PGCLIENTENCODING=UTF8 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 < apps/api/db/seeds/03_historical.sql
+```
 
 ## Files
 
@@ -82,6 +102,6 @@ Connect via `DATABASE_URL` env var (default
 - `load.py` — full-rebuild loader (TRUNCATE + reload)
 - `load_2025.py` — additive 2025 loader (uses helpers from `load.py`)
 - `load_2024.py` — additive 2024 loader (uses helpers from both)
-- `generate_seed.py` — alternative path: emits `apps/api/db/seeds/03_historical_2026.sql`
+- `generate_seed.py` — alternative path: emits `apps/api/db/seeds/03_historical.sql` (covers all 3 years 2024+2025+2026 in one TRUNCATE+rebuild seed)
 - `apply_migrations.py` — fallback migrator when `goose` CLI is unavailable
 - `staged.json` — output of `parse.py` (gitignored; regenerated each run)
