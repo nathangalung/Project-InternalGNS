@@ -79,3 +79,42 @@ type MatchRequest struct {
 	ReqText string `json:"reqText"` // raw text from PDF
 	Limit   int    `json:"limit"`   // defaults to 5
 }
+
+// Result row from items.match_with_vendor_by_id.
+type MatchedItemWithVendor struct {
+	ItemID          int64   `db:"item_id"            json:"itemId"`
+	ItemName        string  `db:"item_name"          json:"itemName"`
+	IMPACode        *string `db:"impa_code"          json:"impaCode,omitempty"`
+	DefaultUnitID   *int16  `db:"default_unit_id"    json:"defaultUnitId,omitempty"`
+	DefaultUnitCode *string `db:"default_unit_code"  json:"defaultUnitCode,omitempty"`
+	VendorProductID *int64  `db:"vendor_product_id"  json:"vendorProductId,omitempty"`
+	VendorID        *int64  `db:"vendor_id"          json:"vendorId,omitempty"`
+	VendorName      *string `db:"vendor_name"        json:"vendorName,omitempty"`
+	CostPrice       *string `db:"cost_price"         json:"costPrice,omitempty"`
+}
+
+// POST /items/match-rows: input row from xlsx upload.
+type MatchRowInput struct {
+	IMPACode string  `json:"impaCode"`
+	Name     string  `json:"name"`
+	Qty      float64 `json:"qty"`
+	Unit     string  `json:"unit"`
+}
+
+// Per-row response for batch match.
+type MatchRowResult struct {
+	Index      int                    `json:"index"`
+	Requested  MatchRowInput          `json:"requested"`
+	Matched    *MatchedItemWithVendor `json:"matched,omitempty"`
+	Confidence float32                `json:"confidence"`
+	Source     string                 `json:"source"` // IMPA_EXACT | LEARNED_EXACT | LEARNED_FUZZY | CATALOG_MATCH | NONE
+}
+
+type MatchRowsRequest struct {
+	Rows     []MatchRowInput `json:"rows"`
+	MinScore float32         `json:"minScore"` // default 0.5
+}
+
+type MatchRowsResponse struct {
+	Rows []MatchRowResult `json:"rows"`
+}

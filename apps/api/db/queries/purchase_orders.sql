@@ -12,8 +12,11 @@ SELECT po.id,
        po.uploaded_at,
        po.notes,
        po.file_url,
-       q.grand_total AS quotation_total,
-       q.subtotal AS quotation_subtotal,
+       q.grand_total::text AS quotation_total,
+       q.subtotal::text     AS quotation_subtotal,
+       COALESCE((SELECT SUM(poi.subtotal) FROM purchase_order_items poi WHERE poi.po_id = po.id), 0)::text AS po_subtotal,
+       COALESCE((SELECT SUM(poi.total_selling) FROM purchase_order_items poi WHERE poi.po_id = po.id AND poi.item_type = 'product'), 0)::text AS po_total_produk,
+       COALESCE((SELECT SUM(poi.profit_amount) FROM purchase_order_items poi WHERE poi.po_id = po.id AND poi.item_type = 'product'), 0)::text AS po_total_profit,
        po.created_at,
        po.updated_at
 FROM purchase_orders po
@@ -41,8 +44,11 @@ SELECT po.id,
        po.uploaded_at,
        po.notes,
        po.file_url,
-       q.grand_total AS quotation_total,
-       q.subtotal AS quotation_subtotal,
+       q.grand_total::text AS quotation_total,
+       q.subtotal::text     AS quotation_subtotal,
+       COALESCE((SELECT SUM(poi.subtotal) FROM purchase_order_items poi WHERE poi.po_id = po.id), 0)::text AS po_subtotal,
+       COALESCE((SELECT SUM(poi.total_selling) FROM purchase_order_items poi WHERE poi.po_id = po.id AND poi.item_type = 'product'), 0)::text AS po_total_produk,
+       COALESCE((SELECT SUM(poi.profit_amount) FROM purchase_order_items poi WHERE poi.po_id = po.id AND poi.item_type = 'product'), 0)::text AS po_total_profit,
        po.created_at,
        po.updated_at
 FROM purchase_orders po
@@ -64,14 +70,41 @@ SELECT po.id,
        po.uploaded_at,
        po.notes,
        po.file_url,
-       q.grand_total AS quotation_total,
-       q.subtotal AS quotation_subtotal,
+       q.grand_total::text AS quotation_total,
+       q.subtotal::text     AS quotation_subtotal,
+       COALESCE((SELECT SUM(poi.subtotal) FROM purchase_order_items poi WHERE poi.po_id = po.id), 0)::text AS po_subtotal,
+       COALESCE((SELECT SUM(poi.total_selling) FROM purchase_order_items poi WHERE poi.po_id = po.id AND poi.item_type = 'product'), 0)::text AS po_total_produk,
+       COALESCE((SELECT SUM(poi.profit_amount) FROM purchase_order_items poi WHERE poi.po_id = po.id AND poi.item_type = 'product'), 0)::text AS po_total_profit,
        po.created_at,
        po.updated_at
 FROM purchase_orders po
 JOIN quotations q ON q.id = po.quotation_id
 JOIN company_client cc ON cc.id = po.company_client_id
 WHERE po.quotation_id = $1;
+
+-- name: purchase_orders.list_items
+SELECT poi.id,
+       poi.po_id,
+       poi.line_number,
+       poi.item_type,
+       poi.offered_item_id,
+       COALESCE(poi.item_code, i.impa_code) AS item_code,
+       COALESCE(NULLIF(poi.item_name, ''), i.name, '') AS item_name,
+       poi.qty::text          AS qty,
+       poi.unit_id,
+       u.code AS unit_code,
+       poi.selling_price::text AS selling_price,
+       poi.cost_price::text    AS cost_price,
+       poi.subtotal::text      AS subtotal,
+       poi.total_selling::text AS total_selling,
+       poi.profit_amount::text AS profit_amount,
+       poi.ship_destination,
+       poi.is_available
+FROM purchase_order_items poi
+LEFT JOIN items i ON i.id = poi.offered_item_id
+LEFT JOIN units u ON u.id = poi.unit_id
+WHERE poi.po_id = $1
+ORDER BY poi.line_number;
 
 -- name: purchase_orders.update_file
 UPDATE purchase_orders

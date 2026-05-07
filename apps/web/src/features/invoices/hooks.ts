@@ -24,6 +24,14 @@ export function useInvoice(id: number | undefined) {
   })
 }
 
+export function useInvoiceItems(id: number | undefined) {
+  return useQuery({
+    queryKey: id ? queryKeys.invoices.items(id) : queryKeys.invoices.all,
+    queryFn: () => invApi.listItems(id as number),
+    enabled: id !== undefined && id > 0,
+  })
+}
+
 export function useInvoiceByQuotation(quotationId: number | undefined) {
   return useQuery({
     queryKey: quotationId

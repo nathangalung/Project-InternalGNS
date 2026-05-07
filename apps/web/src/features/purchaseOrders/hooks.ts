@@ -17,6 +17,14 @@ export function usePurchaseOrder(id: number | undefined) {
   })
 }
 
+export function usePoItems(id: number | undefined) {
+  return useQuery({
+    queryKey: id ? queryKeys.purchaseOrders.items(id) : queryKeys.purchaseOrders.all,
+    queryFn: () => poApi.listItems(id as number),
+    enabled: id !== undefined && id > 0,
+  })
+}
+
 export function usePurchaseOrderByQuotation(quotationId: number | undefined) {
   return useQuery({
     queryKey: quotationId

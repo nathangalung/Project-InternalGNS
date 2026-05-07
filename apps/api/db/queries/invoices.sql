@@ -96,6 +96,25 @@ SET invoice_date = COALESCE($2, invoice_date),
 WHERE id = $1
 RETURNING id;
 
+-- name: invoices.list_items
+SELECT ii.id,
+       ii.invoice_id,
+       ii.line_number,
+       ii.line_type,
+       ii.item_code,
+       ii.item_name,
+       ii.offered_item_id,
+       ii.unit_id,
+       COALESCE(ii.unit_code, u.code) AS unit_code,
+       ii.qty::text          AS qty,
+       ii.unit_price::text   AS unit_price,
+       ii.cost_price::text   AS cost_price,
+       ii.ship_destination
+FROM invoice_items ii
+LEFT JOIN units u ON u.id = ii.unit_id
+WHERE ii.invoice_id = $1
+ORDER BY COALESCE(ii.line_number, 0), ii.id;
+
 -- name: invoices.summary
 SELECT
   COUNT(*)::BIGINT AS total,

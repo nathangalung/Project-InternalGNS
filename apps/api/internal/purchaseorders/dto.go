@@ -27,8 +27,32 @@ type PurchaseOrder struct {
 	FileURL           *string    `db:"file_url"            json:"fileUrl,omitempty"`
 	QuotationTotal    *string    `db:"quotation_total"     json:"quotationTotal,omitempty"`
 	QuotationSubtotal *string    `db:"quotation_subtotal"  json:"quotationSubtotal,omitempty"`
+	PoSubtotal        string     `db:"po_subtotal"         json:"poSubtotal"`
+	PoTotalProduk     string     `db:"po_total_produk"     json:"poTotalProduk"`
+	PoTotalProfit     string     `db:"po_total_profit"     json:"poTotalProfit"`
 	CreatedAt         time.Time  `db:"created_at"          json:"createdAt"`
 	UpdatedAt         time.Time  `db:"updated_at"          json:"updatedAt"`
+}
+
+// PO line snapshot row.
+type PurchaseOrderItem struct {
+	ID            int64   `db:"id"               json:"id"`
+	PoID          int64   `db:"po_id"            json:"poId"`
+	LineNumber    int16   `db:"line_number"      json:"lineNumber"`
+	ItemType      string  `db:"item_type"        json:"itemType"`
+	OfferedItemID *int64  `db:"offered_item_id"  json:"offeredItemId,omitempty"`
+	ItemCode      *string `db:"item_code"        json:"itemCode,omitempty"`
+	ItemName      string  `db:"item_name"        json:"itemName"`
+	Qty           string  `db:"qty"              json:"qty"`
+	UnitID        *int16  `db:"unit_id"          json:"unitId,omitempty"`
+	UnitCode      *string `db:"unit_code"        json:"unitCode,omitempty"`
+	SellingPrice  string  `db:"selling_price"    json:"sellingPrice"`
+	CostPrice     *string `db:"cost_price"       json:"costPrice,omitempty"`
+	Subtotal      string  `db:"subtotal"         json:"subtotal"`
+	TotalSelling  string  `db:"total_selling"    json:"totalSelling"`
+	ProfitAmount    *string `db:"profit_amount"    json:"profitAmount,omitempty"`
+	ShipDestination *string `db:"ship_destination" json:"shipDestination,omitempty"`
+	IsAvailable     bool    `db:"is_available"     json:"isAvailable"`
 }
 
 type ChangeStatusRequest struct {

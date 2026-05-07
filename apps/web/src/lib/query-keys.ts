@@ -50,6 +50,7 @@ export const queryKeys = {
     list: (params: Record<string, unknown> = {}) =>
       ["purchase-orders", "list", params] as const,
     detail: (id: number) => ["purchase-orders", "detail", id] as const,
+    items: (id: number) => ["purchase-orders", id, "items"] as const,
     byQuotation: (quotationId: number) =>
       ["purchase-orders", "by-quotation", quotationId] as const,
   },
@@ -57,6 +58,7 @@ export const queryKeys = {
     all: ["invoices"] as const,
     list: (params: Record<string, unknown> = {}) => ["invoices", "list", params] as const,
     detail: (id: number) => ["invoices", "detail", id] as const,
+    items: (id: number) => ["invoices", id, "items"] as const,
     byQuotation: (quotationId: number) => ["invoices", "by-quotation", quotationId] as const,
     summary: () => ["invoices", "summary"] as const,
   },

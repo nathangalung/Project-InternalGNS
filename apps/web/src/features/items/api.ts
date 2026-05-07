@@ -5,6 +5,8 @@ import type {
   ItemRow,
   ItemSearchHit,
   ItemVendorRow,
+  MatchRowInput,
+  MatchRowsResponse,
 } from "@/types/api"
 
 export async function list(params: { limit?: number; offset?: number } = {}): Promise<ItemRow[]> {
@@ -50,6 +52,17 @@ export async function matchRequest(reqText: string, limit?: number): Promise<Ite
     path: "/items/match-request",
     method: "POST",
     body: { reqText, limit: limit ?? 5 },
+  })
+}
+
+export async function matchRows(
+  rows: MatchRowInput[],
+  options: { minScore?: number } = {},
+): Promise<MatchRowsResponse> {
+  return apiRequest<MatchRowsResponse>({
+    path: "/items/match-rows",
+    method: "POST",
+    body: { rows, minScore: options.minScore },
   })
 }
 

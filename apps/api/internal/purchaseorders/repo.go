@@ -82,6 +82,14 @@ func (r *Repo) UpdateNotes(ctx context.Context, id int64, notes string, actorID 
 	return nil
 }
 
+func (r *Repo) ListItems(ctx context.Context, poID int64) ([]PurchaseOrderItem, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("purchase_orders.list_items"), poID)
+	if err != nil {
+		return nil, err
+	}
+	return pgx.CollectRows(rows, pgx.RowToStructByName[PurchaseOrderItem])
+}
+
 func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, actorID int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("purchase_orders.change_status"), id, string(status), actorID)
 	return classifyChangeStatusErr(err)

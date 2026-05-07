@@ -16,6 +16,8 @@ var expectedNames = []string{
 	"items.search",
 	"items.match_request",
 	"items.list_vendors_for_item",
+	"items.find_by_impa",
+	"items.match_with_vendor_by_id",
 	"items.suggest_selling_prices",
 	"vendors.list",
 	"vendors.get_by_id",

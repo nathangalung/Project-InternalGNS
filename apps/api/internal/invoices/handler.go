@@ -88,6 +88,20 @@ func (h *Handler) GetByQuotation(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, inv)
 }
 
+func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	items, err := h.repo.ListItems(r.Context(), id)
+	if err != nil {
+		httperr.Render(w, httperr.Internal(err.Error()))
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, items)
+}
+
 func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {

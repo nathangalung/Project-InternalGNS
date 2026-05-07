@@ -45,7 +45,18 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store) *chi.Mux {
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	d := deps.Deps{Pool: pool, Queries: store}
+	d := deps.Deps{
+		Pool:          pool,
+		Queries:       store,
+		TemplatesRoot: cfg.TemplatesRoot,
+		Pdf: deps.PdfSettings{
+			SignerName:    cfg.PdfSignerName,
+			BankName:      cfg.PdfBankName,
+			BankAccountNo: cfg.PdfBankAccountNo,
+			BankAccountNm: cfg.PdfBankAccountNm,
+			PaymentTerms:  cfg.PdfPaymentTerms,
+		},
+	}
 
 	authSvc := auth.NewService(users.NewRepo(pool, store), cfg.JWTSecret, cfg.JWTExpiry)
 	authHandler := auth.NewHandler(authSvc)

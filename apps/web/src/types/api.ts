@@ -117,6 +117,38 @@ export type ItemMatchHit = {
   source: string
 }
 
+// Batch row match for xlsx upload.
+export type MatchRowInput = {
+  impaCode: string
+  name: string
+  qty: number
+  unit: string
+}
+
+export type MatchedItemWithVendor = {
+  itemId: number
+  itemName: string
+  impaCode?: string
+  defaultUnitId?: number
+  defaultUnitCode?: string
+  vendorProductId?: number
+  vendorId?: number
+  vendorName?: string
+  costPrice?: string
+}
+
+export type MatchRowResult = {
+  index: number
+  requested: MatchRowInput
+  matched?: MatchedItemWithVendor
+  confidence: number
+  source: string
+}
+
+export type MatchRowsResponse = {
+  rows: MatchRowResult[]
+}
+
 export type ItemVendorRow = {
   vendorProductId: number
   vendorId: number
@@ -318,8 +350,31 @@ export type PurchaseOrderRow = {
   fileUrl?: string
   quotationTotal?: string
   quotationSubtotal?: string
+  poSubtotal: string
+  poTotalProduk: string
+  poTotalProfit: string
   createdAt: string
   updatedAt: string
+}
+
+export type PurchaseOrderItemRow = {
+  id: number
+  poId: number
+  lineNumber: number
+  itemType: "product" | "shipping"
+  offeredItemId?: number
+  itemCode?: string
+  itemName: string
+  qty: string
+  unitId?: number
+  unitCode?: string
+  sellingPrice: string
+  costPrice?: string
+  subtotal: string
+  totalSelling: string
+  profitAmount?: string
+  shipDestination?: string
+  isAvailable: boolean
 }
 
 // Invoices.
@@ -345,6 +400,22 @@ export type InvoiceBackendRow = {
   fakturType?: string
   createdAt: string
   updatedAt: string
+}
+
+export type InvoiceItemRow = {
+  id: number
+  invoiceId: number
+  lineNumber?: number
+  lineType: "product" | "shipping"
+  itemCode?: string
+  itemName: string
+  offeredItemId?: number
+  unitId?: number
+  unitCode?: string
+  qty: string
+  unitPrice: string
+  costPrice?: string
+  shipDestination?: string
 }
 
 export type InvoiceSummary = {

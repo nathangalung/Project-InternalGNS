@@ -53,6 +53,14 @@ func (r *Repo) GetByQuotation(ctx context.Context, quotationID int64) (Invoice, 
 	return inv, err
 }
 
+func (r *Repo) ListItems(ctx context.Context, invoiceID int64) ([]InvoiceItem, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("invoices.list_items"), invoiceID)
+	if err != nil {
+		return nil, err
+	}
+	return pgx.CollectRows(rows, pgx.RowToStructByName[InvoiceItem])
+}
+
 func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, actorID int64) error {
 	tag, err := r.db.Exec(ctx, r.store.Get("invoices.change_status"), id, string(status), actorID)
 	if err != nil {

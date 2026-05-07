@@ -8,9 +8,10 @@ interface HeaderProps {
   createdAt: string
   status: PoStatus
   onNavigate: (page: Page) => void
+  onDownloadDeliveryNote?: () => void
 }
 
-export default function Header({ poNumber, quotationNo, createdAt, status, onNavigate }: HeaderProps) {
+export default function Header({ poNumber, quotationNo, createdAt, status, onNavigate, onDownloadDeliveryNote }: HeaderProps) {
   const badge = PO_STATUS_CONFIG[status]
   return (
     <>
@@ -55,7 +56,7 @@ export default function Header({ poNumber, quotationNo, createdAt, status, onNav
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            Unduh PDF
+            Unduh Surat Jalan
           </button>
         </div>
       </div>

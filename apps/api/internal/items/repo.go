@@ -105,6 +105,36 @@ func (r *Repo) ListVendorsForItem(ctx context.Context, itemID int64) ([]VendorFo
 	return pgx.CollectRows(rows, pgx.RowToStructByName[VendorForItem])
 }
 
+// FindByIMPA returns first active item matching IMPA code exactly.
+func (r *Repo) FindByIMPA(ctx context.Context, impa string) (int64, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.find_by_impa"), impa)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return 0, ErrNotFound
+	}
+	var id int64
+	if err := rows.Scan(&id); err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+// MatchWithVendorByID returns item enriched with cheapest active vendor.
+func (r *Repo) MatchWithVendorByID(ctx context.Context, itemID int64) (MatchedItemWithVendor, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.match_with_vendor_by_id"), itemID)
+	if err != nil {
+		return MatchedItemWithVendor{}, err
+	}
+	out, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[MatchedItemWithVendor])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return MatchedItemWithVendor{}, ErrNotFound
+	}
+	return out, err
+}
+
 // SuggestSellingPrices powers price-history view.
 func (r *Repo) SuggestSellingPrices(ctx context.Context, itemID int64, limit int) ([]PriceHistory, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("items.suggest_selling_prices"), itemID, limit)

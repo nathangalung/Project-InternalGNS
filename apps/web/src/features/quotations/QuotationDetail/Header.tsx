@@ -8,10 +8,11 @@ interface HeaderProps {
   version: number | string;
   status: Status;
   onNavigate: (page: Page) => void;
+  onDownload?: () => void;
 }
 
 // Breadcrumb plus title actions.
-export default function Header({ quotationId, createdAt, version, status, onNavigate }: HeaderProps) {
+export default function Header({ quotationId, createdAt, version, status, onNavigate, onDownload }: HeaderProps) {
   const badge = statusConfig[status];
   return (
     <>
@@ -50,7 +51,12 @@ export default function Header({ quotationId, createdAt, version, status, onNavi
             </svg>
             Ubah
           </button>
-          <button className="btn-admin-primary" style={{ minWidth: "130px", justifyContent: "center" }}>
+          <button
+            className="btn-admin-primary"
+            style={{ minWidth: "130px", justifyContent: "center" }}
+            onClick={onDownload}
+            disabled={!onDownload}
+          >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />

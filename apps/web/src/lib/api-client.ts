@@ -53,3 +53,25 @@ export async function apiRequest<T>({
 
   return parsed as T
 }
+
+// Fetch PDF as blob and trigger browser download.
+export async function downloadPdf(path: string, filename: string): Promise<void> {
+  const token = sessionStorage.getItem("gns_token")
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "GET",
+    headers: token ? { authorization: `Bearer ${token}` } : undefined,
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => "")
+    throw new ApiError(res.status, text, `PDF download failed: ${res.statusText}`)
+  }
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}

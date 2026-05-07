@@ -1,0 +1,194 @@
+% Quotation template, rendered via text/template.
+% Compile: xelatex Quotation.tex
+% Requires Plus Jakarta Sans installed system-wide.
+
+\documentclass[9pt,a4paper,landscape]{article}
+
+\usepackage{fontspec}
+\setmainfont{Plus Jakarta Sans}[
+  BoldFont       = Plus Jakarta Sans Bold,
+  ItalicFont     = Plus Jakarta Sans Italic,
+  BoldItalicFont = Plus Jakarta Sans Bold Italic,
+]
+
+\usepackage[a4paper, landscape, top=1.5cm, bottom=1.8cm, left=1.5cm, right=1.5cm]{geometry}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{colortbl}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{ragged2e}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{hyperref}
+\usepackage{microtype}
+
+\hypersetup{colorlinks=true, urlcolor=blue, linkcolor=black}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2pt}
+
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\footnotesize}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash\footnotesize}p{#1}}
+\newcolumntype{R}[1]{>{\RaggedLeft\arraybackslash\footnotesize}p{#1}}
+\renewcommand{\arraystretch}{1.2}
+
+\fancypagestyle{firstpage}{%
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0pt}
+  \fancyfoot[C]{\footnotesize \thepage\ of \pageref{LastPage}}
+}
+
+\fancypagestyle{mainpages}{%
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \fancyhead[L]{\footnotesize\textbf{PT. GLOBAL NIAGA SAKTI} -- QUOTATION}
+  \fancyhead[R]{\footnotesize [[.QuotationNo]] \quad|\quad [[.ClientRefNo]]}
+  \fancyfoot[C]{\footnotesize \thepage\ of \pageref{LastPage}}
+}
+\pagestyle{mainpages}
+
+\begin{document}
+\thispagestyle{firstpage}
+
+\noindent
+\begin{minipage}[t]{0.28\textwidth}
+  {\fontsize{7.5}{9.5}\selectfont
+  Gedung Wirausaha Lt 1, Unit 104\\
+  Jl. HR. Rasuna Said Kav. C5\\
+  Kuningan, Setiabudi\\
+  Jakarta Selatan 12920
+  }
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.40\textwidth}
+  \centering
+  {\fontsize{22}{26}\selectfont\bfseries PT. GLOBAL NIAGA SAKTI}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.28\textwidth}
+  \raggedleft
+  {\fontsize{7.5}{9.5}\selectfont
+  Telp. 021-5099 6969 (ext. 1249)\\
+  WA. 0811-980-982/0811-999-0991\\
+  Email: sales@globalsakti.com\\
+  Website: www.globalsakti.com
+  }
+\end{minipage}
+
+\vspace{0.4cm}
+\noindent\rule{\textwidth}{0.8pt}
+\vspace{0.3cm}
+
+\noindent
+\begin{minipage}[t]{0.52\textwidth}
+  {\small
+  \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
+    To           & : & [[.CompanyName]] \\[1pt]
+    Attn         & : & [[.AttnName]] \\[1pt]
+    Email        & : & [[if .AttnEmail]]\href{mailto:[[.AttnEmail]]}{[[.AttnEmail]]}[[else]]-[[end]] \\[1pt]
+    Contact No.  & : & [[.AttnPhone]] \\
+  \end{tabular}
+  }
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.44\textwidth}
+  \raggedleft
+  {\small
+  \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
+    No           & : & [[.QuotationNo]] \\[1pt]
+    Your Ref No. & : & [[.ClientRefNo]] \\[1pt]
+    Date         & : & [[.DateLine]] \\[1pt]
+    Page         & : & \pageref{LastPage}~Pages \\
+  \end{tabular}
+  }
+\end{minipage}
+
+\vspace{0.5cm}
+\begin{center}
+  {\large\bfseries\underline{QUOTATION}}
+\end{center}
+\vspace{0.1cm}
+
+\noindent\textbf{We are pleased to quote as follow\,:}
+\vspace{0.3cm}
+
+\setlength{\tabcolsep}{3pt}
+
+\begin{longtable}{|C{0.6cm}|C{0.6cm}|C{0.8cm}|L{8.0cm}|L{9.5cm}|R{2.5cm}|R{2.5cm}|}
+\hline
+\multicolumn{1}{|c|}{\footnotesize\bfseries No.} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Qty} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Unit} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Request} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Offer Description} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Unit Price} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Amount} \\
+\hline
+\endfirsthead
+
+\hline
+\multicolumn{1}{|c|}{\footnotesize\bfseries No.} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Qty} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Unit} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Request} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Offer Description} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Unit Price} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Amount} \\
+\hline
+\endhead
+
+\hline
+\endfoot
+
+\hline
+\endlastfoot
+
+[[range .Items]]
+[[.No]] & [[.Qty]] & [[.Unit]] &
+  [[.Request]] &
+  [[if .HasOffer]][[.Offer]][[else]]\textcolor[gray]{0.5}{No Offer}[[end]] &
+  [[if .HasOffer]][[.UnitPrice]][[else]]\textcolor[gray]{0.5}{Rp~--}[[end]] &
+  [[if .HasOffer]][[.Amount]][[else]]\textcolor[gray]{0.5}{Rp~--}[[end]] \\
+\hline
+[[end]]
+
+\multicolumn{5}{|r|}{\footnotesize Total} &
+  \multicolumn{2}{r|}{\footnotesize [[.TotalProduk]]} \\
+\multicolumn{5}{|r|}{\footnotesize Diskon [[.DiscountPct]]\%} &
+  \multicolumn{2}{r|}{\footnotesize -[[.TotalDiscount]]} \\
+\multicolumn{5}{|r|}{\footnotesize Sub Total} &
+  \multicolumn{2}{r|}{\footnotesize [[.Subtotal]]} \\
+\multicolumn{5}{|r|}{\footnotesize DPP Nilai Lain} &
+  \multicolumn{2}{r|}{\footnotesize [[.DPP]]} \\
+\multicolumn{5}{|r|}{\footnotesize PPN 12\%} &
+  \multicolumn{2}{r|}{\footnotesize [[.PPN]]} \\
+\hline
+\multicolumn{5}{|r|}{\footnotesize\bfseries Grand Total} &
+  \multicolumn{2}{r|}{\footnotesize\bfseries [[.GrandTotal]]} \\
+\hline
+
+\end{longtable}
+
+\vspace{0.5cm}
+\noindent
+\begin{minipage}[t]{0.55\textwidth}
+  \small
+  \begin{tabular}{@{}l@{\;}l@{\;}l@{}}
+    DELIVERY PLACE & : & [[.DeliveryPlace]] \\[3pt]
+    DELIVERY TIME  & : & [[.DeliveryTime]] \\[3pt]
+    PAYMENT        & : & [[.Payment]] \\[3pt]
+    VALIDITY       & : & [[.Validity]] \\
+  \end{tabular}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.40\textwidth}
+  \raggedleft
+  \small
+  [[.DateLine]]\\[2cm]
+  \textbf{[[.SignerName]]}
+\end{minipage}
+
+\end{document}

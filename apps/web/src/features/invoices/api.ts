@@ -1,5 +1,10 @@
 import { apiRequest } from "@/lib/api-client"
-import type { InvoiceBackendRow, InvoiceBackendStatus, InvoiceSummary } from "@/types/api"
+import type {
+  InvoiceBackendRow,
+  InvoiceBackendStatus,
+  InvoiceItemRow,
+  InvoiceSummary,
+} from "@/types/api"
 
 export type ListParams = {
   q?: string
@@ -28,6 +33,10 @@ export async function summary(): Promise<InvoiceSummary> {
 
 export async function get(id: number): Promise<InvoiceBackendRow> {
   return apiRequest<InvoiceBackendRow>({ path: `/invoices/${id}` })
+}
+
+export async function listItems(id: number): Promise<InvoiceItemRow[]> {
+  return apiRequest<InvoiceItemRow[]>({ path: `/invoices/${id}/items` })
 }
 
 export async function getByQuotation(quotationId: number): Promise<InvoiceBackendRow | null> {

@@ -18,6 +18,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
+	"github.com/nathangalung/internalgns/apps/api/internal/users"
 	"github.com/nathangalung/internalgns/apps/api/internal/vendors"
 )
 
@@ -173,6 +174,39 @@ func InvoicesServer(t testing.TB, userID int64) *httptest.Server {
 	return srv
 }
 
+// UsersServer wires user routes.
+func UsersServer(t testing.TB, userID int64) *httptest.Server {
+	t.Helper()
+	pool := Pool(t)
+	store := Store(t)
+
+	r := chi.NewRouter()
+	r.Use(withUserID(userID))
+	r.Mount("/users", users.Routes(deps.Deps{Pool: pool, Queries: store}))
+
+	srv := httptest.NewServer(r)
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+// FullServer wires quotation, PO, and invoice routes.
+func FullServer(t testing.TB, userID int64) *httptest.Server {
+	t.Helper()
+	pool := Pool(t)
+	store := Store(t)
+	d := deps.Deps{Pool: pool, Queries: store}
+
+	r := chi.NewRouter()
+	r.Use(withUserID(userID))
+	r.Mount("/quotations", quotations.Routes(d))
+	r.Mount("/purchase-orders", purchaseorders.Routes(d))
+	r.Mount("/invoices", invoices.Routes(d))
+
+	srv := httptest.NewServer(r)
+	t.Cleanup(srv.Close)
+	return srv
+}
+
 // FaultyServer mounts routes against FakeExec.
 func FaultyServer(t testing.TB, userID int64, mount func(chi.Router, deps.Deps)) *httptest.Server {
 	t.Helper()
@@ -191,6 +225,25 @@ func FaultyServer(t testing.TB, userID int64, mount func(chi.Router, deps.Deps))
 // ResetQuotationDomain truncates quotation* rows.
 func ResetQuotationDomain(ctx context.Context, exec quotations.Executor) error {
 	stmts := []string{
+		`TRUNCATE TABLE quotation_status_history RESTART IDENTITY CASCADE`,
+		`TRUNCATE TABLE quotation_items RESTART IDENTITY CASCADE`,
+		`TRUNCATE TABLE quotations RESTART IDENTITY CASCADE`,
+	}
+	for _, s := range stmts {
+		if _, err := exec.Exec(ctx, s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ResetCommercialDomain truncates quotation/PO/invoice rows.
+func ResetCommercialDomain(ctx context.Context, exec quotations.Executor) error {
+	stmts := []string{
+		`TRUNCATE TABLE invoice_items RESTART IDENTITY CASCADE`,
+		`TRUNCATE TABLE invoices RESTART IDENTITY CASCADE`,
+		`TRUNCATE TABLE purchase_order_items RESTART IDENTITY CASCADE`,
+		`TRUNCATE TABLE purchase_orders RESTART IDENTITY CASCADE`,
 		`TRUNCATE TABLE quotation_status_history RESTART IDENTITY CASCADE`,
 		`TRUNCATE TABLE quotation_items RESTART IDENTITY CASCADE`,
 		`TRUNCATE TABLE quotations RESTART IDENTITY CASCADE`,

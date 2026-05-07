@@ -74,6 +74,34 @@ JOIN vendors v ON v.id = vp.vendor_id
 WHERE vp.item_id = $1 AND v.is_active = TRUE
 ORDER BY vp.cost_price ASC NULLS LAST;
 
+-- name: items.find_by_impa
+SELECT id FROM items
+WHERE impa_code = $1 AND is_active = TRUE
+LIMIT 1;
+
+-- name: items.match_with_vendor_by_id
+SELECT
+    i.id              AS item_id,
+    i.name            AS item_name,
+    i.impa_code,
+    i.default_unit_id,
+    u.code            AS default_unit_code,
+    vp.id             AS vendor_product_id,
+    v.id              AS vendor_id,
+    v.name            AS vendor_name,
+    vp.cost_price::text AS cost_price
+FROM items i
+LEFT JOIN units u ON u.id = i.default_unit_id
+LEFT JOIN LATERAL (
+    SELECT vp_inner.id, vp_inner.vendor_id, vp_inner.cost_price
+    FROM vendor_products vp_inner
+    WHERE vp_inner.item_id = i.id AND vp_inner.is_active = TRUE
+    ORDER BY vp_inner.cost_price ASC NULLS LAST
+    LIMIT 1
+) vp ON TRUE
+LEFT JOIN vendors v ON v.id = vp.vendor_id AND v.is_active = TRUE
+WHERE i.id = $1 AND i.is_active = TRUE;
+
 -- name: items.suggest_selling_prices
 SELECT
     quotation_no,

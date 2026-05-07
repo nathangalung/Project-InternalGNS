@@ -1,5 +1,7 @@
 import React, { useRef, useState } from "react";
 import type { ProductItem } from "./QuotationEdit";
+import { parseProductFile } from "./uploadParser";
+import { matchRows } from "@/features/items/api";
 
 interface Step2ProductProps {
   products: ProductItem[];
@@ -40,43 +42,7 @@ function getPageNumbers(current: number, total: number): (number | null)[] {
   return pages;
 }
 
-function parseCSVProducts(text: string, maxId: number): ProductItem[] {
-  const lines = text.trim().split('\n').filter(l => l.trim());
-  if (lines.length < 2) return [];
-
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
-  const idx = (keys: string[]) => headers.findIndex(h => keys.some(k => h.includes(k)));
-
-  const nameIdx = idx(['nama', 'name', 'produk']);
-  if (nameIdx === -1) return [];
-
-  const kodeIdx   = idx(['kode', 'impa', 'code']);
-  const vendorIdx = idx(['vendor']);
-  const jumlahIdx = idx(['jumlah', 'qty', 'quantity']);
-  const satuanIdx = idx(['satuan', 'unit']);
-  const beliIdx   = idx(['beli', 'buy', 'purchase', 'cost']);
-  const jualIdx   = idx(['jual', 'sell', 'sale', 'price']);
-
-  const results: ProductItem[] = [];
-  let nextId = maxId + 1;
-
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-    const nama = cols[nameIdx] || "";
-    if (!nama) continue;
-    results.push({
-      id: nextId++,
-      nama,
-      kodeImpa:  kodeIdx   >= 0 ? (cols[kodeIdx]   || "") : "",
-      vendor:    vendorIdx >= 0 ? (cols[vendorIdx]  || "") : "",
-      jumlah:    jumlahIdx >= 0 ? (Number(cols[jumlahIdx]) || 1) : 1,
-      satuan:    satuanIdx >= 0 ? (cols[satuanIdx]  || "PCS") : "PCS",
-      hargaBeli: beliIdx   >= 0 ? (Number(cols[beliIdx])   || 0) : 0,
-      hargaJual: jualIdx   >= 0 ? (Number(cols[jualIdx])   || 0) : 0,
-    });
-  }
-  return results;
-}
+// CSV → AOA → MatchRowInput[] handled by parseProductFile (xlsx + csv).
 
 export default function Step2Product({
   products, deleteProduct, setEditingProduct, setShowProductAdd,
@@ -90,37 +56,62 @@ export default function Step2Product({
   const [importMsg, setImportMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [prodExpanded, setProdExpanded] = useState(true);
 
-  function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+  const [importing, setImporting] = useState(false);
+
+  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
 
-    const currentMaxId = products.reduce((m, p) => Math.max(m, p.id), 0);
-
-    if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
-      setImportMsg({ text: "Format Excel (.xlsx/.xls) belum didukung di browser. Gunakan format CSV.", ok: false });
-      setTimeout(() => setImportMsg(null), 4000);
-      return;
-    }
-    if (!file.name.endsWith(".csv")) {
+    const lower = file.name.toLowerCase();
+    const supported = lower.endsWith(".xlsx") || lower.endsWith(".xls") || lower.endsWith(".csv");
+    if (!supported) {
       setImportMsg({ text: "Format file tidak didukung. Gunakan .csv, .xlsx, atau .xls.", ok: false });
       setTimeout(() => setImportMsg(null), 4000);
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = ev.target?.result as string;
-      const parsed = parseCSVProducts(text, currentMaxId);
-      if (parsed.length === 0) {
-        setImportMsg({ text: "Tidak ada produk valid dalam file. Pastikan kolom 'nama' tersedia.", ok: false });
-      } else {
-        onImportProducts(parsed);
-        setImportMsg({ text: `${parsed.length} produk berhasil diimport.`, ok: true });
+    setImporting(true);
+    try {
+      const rows = await parseProductFile(file);
+      if (rows.length === 0) {
+        setImportMsg({ text: "Tidak ada produk valid dalam file. Pastikan kolom 'Nama Produk' tersedia.", ok: false });
+        setTimeout(() => setImportMsg(null), 4000);
+        return;
       }
-      setTimeout(() => setImportMsg(null), 4000);
-    };
-    reader.readAsText(file);
+
+      const resp = await matchRows(rows);
+      const baseId = products.reduce((m, p) => Math.max(m, p.id), 0);
+      const built: ProductItem[] = resp.rows.map((r, i) => {
+        const m = r.matched;
+        const fallbackUnit = (r.requested.unit || "").toUpperCase();
+        const fallbackImpa = (r.requested.impaCode || "").toUpperCase();
+        return {
+          id: baseId + i + 1,
+          itemId: m?.itemId,
+          vendorId: m?.vendorId ?? undefined,
+          vendorProductId: m?.vendorProductId ?? undefined,
+          nama: m?.itemName ?? r.requested.name,
+          kodeImpa: (m?.impaCode ?? fallbackImpa) || "",
+          vendor: m?.vendorName ?? "",
+          jumlah: r.requested.qty || 0,
+          satuan: m?.defaultUnitCode ?? fallbackUnit,
+          hargaBeli: m?.costPrice ? Number(m.costPrice) || 0 : 0,
+          hargaJual: 0,
+        };
+      });
+      onImportProducts(built);
+      const matchedCount = resp.rows.filter(r => r.matched).length;
+      setImportMsg({
+        text: `${built.length} produk diimport (${matchedCount} cocok dengan katalog, ${built.length - matchedCount} kosong).`,
+        ok: true,
+      });
+    } catch (err) {
+      setImportMsg({ text: `Gagal memproses file: ${(err as Error).message}`, ok: false });
+    } finally {
+      setImporting(false);
+      setTimeout(() => setImportMsg(null), 5000);
+    }
   }
 
   const totalProds = products.length;
@@ -139,13 +130,18 @@ export default function Step2Product({
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <input ref={importFileRef} type="file" accept=".csv,.xlsx,.xls" style={{ display: "none" }} onChange={handleImportFile} />
-          <button className="qe-add-client-btn" style={{ width: "210px", justifyContent: "center" }} onClick={() => importFileRef.current?.click()}>
+          <button
+            className="qe-add-client-btn"
+            style={{ width: "210px", justifyContent: "center", opacity: importing ? 0.6 : 1, cursor: importing ? "wait" : "pointer" }}
+            onClick={() => importFileRef.current?.click()}
+            disabled={importing}
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="17 8 12 3 7 8"/>
               <line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
-            Unggah Excel/CSV
+            {importing ? "Memproses…" : "Unggah Excel/CSV"}
           </button>
           <button className="qe-add-client-btn" style={{ width: "210px", justifyContent: "center" }} onClick={() => setShowDiscountModal(true)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>

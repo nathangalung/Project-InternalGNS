@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react"
 import { useQueries } from "@tanstack/react-query"
 import type { Page } from "@/main"
 import Sidebar from "@/components/shared/Sidebar"
-import { computeGrandTotal } from "@/features/quotations/types"
 import type { QuotationData } from "@/features/quotations/types"
 import ClientSummaryCard from "@/features/quotations/QuotationDetail/ClientSummaryCard"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
@@ -14,6 +13,7 @@ import { useClient } from "@/features/clients/hooks"
 import { useQuotation } from "@/features/quotations/hooks"
 import * as itemsApi from "@/features/items/api"
 import * as vendorsApi from "@/features/vendors/api"
+import { downloadPdf } from "@/lib/api-client"
 
 import Header from "./Header"
 import StatusBar from "./StatusBar"
@@ -30,7 +30,9 @@ import {
   usePurchaseOrderByQuotation,
   useChangePoStatus,
   useUpdatePoFile,
+  usePoItems,
 } from "../hooks"
+import { poItemsToProducts, poItemsToShipping } from "../adapters"
 import UploadPoModal from "../UploadPoModal"
 import type { PoRow, PoStatus } from "../types"
 
@@ -48,6 +50,12 @@ interface PurchaseOrderDetailProps {
   onNavigateEntity?: (scope: "Klien" | "Vendor", id: number) => void
 }
 
+function toNum(v: string | undefined | null): number {
+  if (v == null) return 0
+  const n = Number(v)
+  return Number.isFinite(n) ? n : 0
+}
+
 export default function PurchaseOrderDetail({
   quotationId,
   quotationNo,
@@ -57,6 +65,7 @@ export default function PurchaseOrderDetail({
   onNavigateEntity,
 }: PurchaseOrderDetailProps) {
   const { data: po, isLoading } = usePurchaseOrderByQuotation(quotationId)
+  const { data: poItems } = usePoItems(po?.id)
   const changeStatus = useChangePoStatus()
   const updateFile = useUpdatePoFile()
 
@@ -122,6 +131,9 @@ export default function PurchaseOrderDetail({
     if (po) setStatus(po.status)
   }, [po])
 
+  const products = useMemo(() => poItemsToProducts(poItems), [poItems])
+  const shipping = useMemo(() => poItemsToShipping(poItems), [poItems])
+
   const history: HistoryEntry[] = useMemo(() => {
     if (!quotation || !po) return []
     const items: HistoryEntry[] = [
@@ -150,17 +162,18 @@ export default function PurchaseOrderDetail({
     )
   }
 
-  const totalProduk = quotation.products.reduce((s, p) => s + p.qty * p.hargaSatuan, 0)
-  const totalProfit = quotation.products.reduce((s, p) => s + p.qty * p.profitSatuan, 0)
-  const totalShip = quotation.shipping.hargaSatuan
-  const hasProducts = quotation.products.length > 0
+  // BE-persisted totals from PO snapshot.
+  const totalProduk = toNum(po.poTotalProduk)
+  const totalProfit = toNum(po.poTotalProfit)
+  const totalShip = shipping.hargaSatuan
+  const hasProducts = products.length > 0
   const discountPct = quotation.discountPct ?? 0
   const nominalDiskon = (totalProduk * discountPct) / 100
   const subTotal = totalProduk - nominalDiskon
   const dppBase = hasProducts ? subTotal : totalShip
   const dppNilaiLain = Math.round((dppBase * 11) / 12)
   const ppn12 = Math.round(dppNilaiLain * 0.12)
-  const grandTotal = computeGrandTotal(quotation)
+  const grandTotal = hasProducts ? subTotal + ppn12 + totalShip : totalShip + ppn12
   const clientInitials = quotation.client.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()
   const poNumber = po.poNumber || poNumberFromQuotationNo(quotationNo)
 
@@ -227,6 +240,12 @@ export default function PurchaseOrderDetail({
     document.body.removeChild(a)
   }
 
+  async function handleDownloadDeliveryNote() {
+    if (!po) return
+    const safe = poNumber.replace(/[^A-Za-z0-9._-]/g, "_")
+    await downloadPdf(`/purchase-orders/${po.id}/delivery-note.pdf`, `DN-${safe}.pdf`)
+  }
+
   const uploadRow: PoRow = {
     quotationId,
     quotationNo,
@@ -250,6 +269,7 @@ export default function PurchaseOrderDetail({
             createdAt={quotation.createdAt}
             status={status}
             onNavigate={onNavigate}
+            onDownloadDeliveryNote={handleDownloadDeliveryNote}
           />
           <StatusBar
             status={status}
@@ -269,10 +289,10 @@ export default function PurchaseOrderDetail({
             clientName={quotation.client}
             clientInitials={clientInitials}
             clientInfo={quotation.clientInfo}
-            shippingAlamat={quotation.shipping.alamat}
+            shippingAlamat={shipping.alamat}
           />
-          {totalShip > 0 && <ShippingTable shipping={quotation.shipping} />}
-          <ProductTable products={quotation.products} />
+          {totalShip > 0 && <ShippingTable shipping={shipping} />}
+          <ProductTable products={products} />
           <CostBreakdown
             hasProducts={hasProducts}
             totalProduk={totalProduk}

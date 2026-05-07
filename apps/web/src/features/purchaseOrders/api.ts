@@ -1,5 +1,5 @@
 import { apiRequest } from "@/lib/api-client"
-import type { PoBackendStatus, PurchaseOrderRow } from "@/types/api"
+import type { PoBackendStatus, PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
 
 export type ListParams = {
   q?: string
@@ -24,6 +24,10 @@ export async function list(params: ListParams = {}): Promise<PurchaseOrderRow[]>
 
 export async function get(id: number): Promise<PurchaseOrderRow> {
   return apiRequest<PurchaseOrderRow>({ path: `/purchase-orders/${id}` })
+}
+
+export async function listItems(id: number): Promise<PurchaseOrderItemRow[]> {
+  return apiRequest<PurchaseOrderItemRow[]>({ path: `/purchase-orders/${id}/items` })
 }
 
 export async function getByQuotation(quotationId: number): Promise<PurchaseOrderRow | null> {

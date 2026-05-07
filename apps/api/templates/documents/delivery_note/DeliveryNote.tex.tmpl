@@ -1,0 +1,160 @@
+% Delivery note template, rendered via text/template.
+% Compile: xelatex DeliveryNote.tex
+% Mirrors PO content. No prices. Lists product, qty, ship destination.
+
+\documentclass[10pt,a4paper]{article}
+
+\usepackage{fontspec}
+\setmainfont{Plus Jakarta Sans}[
+  BoldFont       = Plus Jakarta Sans Bold,
+  ItalicFont     = Plus Jakarta Sans Italic,
+  BoldItalicFont = Plus Jakarta Sans Bold Italic,
+]
+
+\usepackage[a4paper, top=1.8cm, bottom=2.0cm, left=1.8cm, right=1.8cm]{geometry}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{colortbl}
+\usepackage{xcolor}
+\usepackage{ragged2e}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{hyperref}
+\usepackage{microtype}
+
+\hypersetup{colorlinks=true, urlcolor=blue, linkcolor=black}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2pt}
+
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\footnotesize}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash\footnotesize}p{#1}}
+\renewcommand{\arraystretch}{1.25}
+
+\fancypagestyle{firstpage}{%
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0pt}
+  \fancyfoot[C]{\footnotesize \thepage\ of \pageref{LastPage}}
+}
+
+\fancypagestyle{mainpages}{%
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \fancyhead[L]{\footnotesize\textbf{PT. GLOBAL NIAGA SAKTI} -- DELIVERY NOTE}
+  \fancyhead[R]{\footnotesize [[.DeliveryNoteNo]] \quad|\quad [[.PONo]]}
+  \fancyfoot[C]{\footnotesize \thepage\ of \pageref{LastPage}}
+}
+\pagestyle{mainpages}
+
+\begin{document}
+\thispagestyle{firstpage}
+
+\noindent
+\begin{minipage}[t]{0.42\textwidth}
+  {\fontsize{8}{10}\selectfont
+  \textbf{PT. GLOBAL NIAGA SAKTI}\\
+  Gedung Wirausaha Lt 1, Unit 104\\
+  Jl. HR. Rasuna Said Kav. C5\\
+  Kuningan, Setiabudi, Jakarta Selatan 12920\\
+  Telp. 021-5099 6969 (ext. 1249)
+  }
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.55\textwidth}
+  \raggedleft
+  {\fontsize{18}{22}\selectfont\bfseries SURAT JALAN}\\[2pt]
+  {\footnotesize DELIVERY NOTE}
+\end{minipage}
+
+\vspace{0.3cm}
+\noindent\rule{\textwidth}{0.6pt}
+\vspace{0.2cm}
+
+\noindent
+\begin{minipage}[t]{0.55\textwidth}
+  {\small
+  \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
+    Kepada     & : & [[.CompanyName]] \\[1pt]
+    Alamat     & : & [[if .CompanyAddress]][[.CompanyAddress]][[else]]-[[end]] \\[1pt]
+    Attn       & : & [[if .AttnName]][[.AttnName]][[else]]-[[end]] \\[1pt]
+    Vessel     & : & [[if .VesselName]][[.VesselName]][[else]]-[[end]] \\
+  \end{tabular}
+  }
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.40\textwidth}
+  \raggedleft
+  {\small
+  \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
+    No. SJ     & : & [[.DeliveryNoteNo]] \\[1pt]
+    PO No.     & : & [[.PONo]] \\[1pt]
+    Tanggal    & : & [[.DateLine]] \\
+  \end{tabular}
+  }
+\end{minipage}
+
+\vspace{0.5cm}
+\noindent\textbf{Mohon diterima barang-barang berikut\,:}
+\vspace{0.2cm}
+
+\setlength{\tabcolsep}{4pt}
+
+\begin{longtable}{|C{0.8cm}|C{1.4cm}|C{1.2cm}|L{9.5cm}|L{4.5cm}|}
+\hline
+\multicolumn{1}{|c|}{\footnotesize\bfseries No.} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Qty} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Unit} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Item} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Tujuan / Notes} \\
+\hline
+\endfirsthead
+
+\hline
+\multicolumn{1}{|c|}{\footnotesize\bfseries No.} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Qty} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Unit} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Item} &
+\multicolumn{1}{c|}{\footnotesize\bfseries Tujuan / Notes} \\
+\hline
+\endhead
+
+\hline
+\endfoot
+
+\hline
+\endlastfoot
+
+[[range .Items]]
+[[.No]] & [[.Qty]] & [[.Unit]] & [[.Name]] & [[.ShipDestination]] \\
+\hline
+[[end]]
+
+\end{longtable}
+
+\vspace{1.0cm}
+\noindent
+\begin{minipage}[t]{0.32\textwidth}
+  \centering
+  \small
+  Disiapkan oleh,\\[2cm]
+  \rule{4cm}{0.4pt}\\
+  \textbf{[[.PreparedBy]]}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.32\textwidth}
+  \centering
+  \small
+  Pengirim,\\[2cm]
+  \rule{4cm}{0.4pt}\\
+  \textbf{[[.SenderName]]}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.32\textwidth}
+  \centering
+  \small
+  Penerima,\\[2cm]
+  \rule{4cm}{0.4pt}\\
+  (\,Nama \& Tanda Tangan\,)
+\end{minipage}
+
+\end{document}

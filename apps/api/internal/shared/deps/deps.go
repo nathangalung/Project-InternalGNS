@@ -8,10 +8,21 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 )
 
+// PdfSettings carries hardcoded PDF defaults.
+type PdfSettings struct {
+	SignerName    string
+	BankName      string
+	BankAccountNo string
+	BankAccountNm string
+	PaymentTerms  string
+}
+
 // Deps holds shared application dependencies.
 type Deps struct {
-	Pool    db.Executor
-	Queries queries.Store
+	Pool          db.Executor
+	Queries       queries.Store
+	TemplatesRoot string
+	Pdf           PdfSettings
 }
 
 // User id context key.

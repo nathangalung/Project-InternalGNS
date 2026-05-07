@@ -3,6 +3,7 @@ import type { Page } from "@/main";
 import Sidebar from "@/components/shared/Sidebar";
 import { computeGrandTotal } from "@/features/quotations/types";
 import type { QuotationData, Status } from "@/features/quotations/types";
+import { downloadPdf } from "@/lib/api-client";
 
 import Header from "./Header";
 import StatusBar from "./StatusBar";
@@ -60,6 +61,14 @@ export default function QuotationDetail({ quotationId, quotation, onSaveStatus, 
     setIsStatusOpen(false);
   }
 
+  async function handleDownload() {
+    if (!q) return;
+    const numericId = Number(q.id);
+    if (!Number.isFinite(numericId) || numericId <= 0) return;
+    const safe = quotationId.replace(/[^A-Za-z0-9._-]/g, "_");
+    await downloadPdf(`/quotations/${numericId}/pdf`, `${safe}.pdf`);
+  }
+
   function handleSave() {
     if (!q) return;
     const newHistory =
@@ -82,6 +91,7 @@ export default function QuotationDetail({ quotationId, quotation, onSaveStatus, 
             version={q.version}
             status={status}
             onNavigate={onNavigate}
+            onDownload={handleDownload}
           />
           <StatusBar
             status={status}

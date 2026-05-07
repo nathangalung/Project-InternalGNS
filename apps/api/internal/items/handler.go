@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 
@@ -174,6 +175,69 @@ func (h *Handler) MatchRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, matches)
+}
+
+// MatchRows: batch match xlsx-imported rows. IMPA exact wins; else fuzzy.
+// No-match rows return Matched=nil so FE keeps row empty.
+func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
+	var req MatchRowsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	if len(req.Rows) == 0 {
+		httpx.WriteJSON(w, http.StatusOK, MatchRowsResponse{Rows: []MatchRowResult{}})
+		return
+	}
+	minScore := req.MinScore
+	if minScore <= 0 {
+		minScore = 0.5
+	}
+
+	ctx := r.Context()
+	out := make([]MatchRowResult, 0, len(req.Rows))
+	for i, row := range req.Rows {
+		res := MatchRowResult{Index: i, Requested: row, Source: "NONE"}
+		var itemID int64
+		var confidence float32
+		var source string
+
+		impa := strings.ToUpper(strings.TrimSpace(row.IMPACode))
+		if impa != "" {
+			id, err := h.repo.FindByIMPA(ctx, impa)
+			if err == nil {
+				itemID, confidence, source = id, 1.0, "IMPA_EXACT"
+			} else if !errors.Is(err, ErrNotFound) {
+				httperr.Render(w, httperr.Internal(err.Error()))
+				return
+			}
+		}
+
+		if itemID == 0 && strings.TrimSpace(row.Name) != "" {
+			matches, err := h.repo.MatchRequest(ctx, row.Name, 1)
+			if err != nil {
+				httperr.Render(w, httperr.Internal(err.Error()))
+				return
+			}
+			if len(matches) > 0 && matches[0].Confidence >= minScore {
+				itemID, confidence, source = matches[0].ItemID, matches[0].Confidence, matches[0].Source
+			}
+		}
+
+		if itemID > 0 {
+			m, err := h.repo.MatchWithVendorByID(ctx, itemID)
+			if err == nil {
+				res.Matched = &m
+				res.Confidence = confidence
+				res.Source = source
+			} else if !errors.Is(err, ErrNotFound) {
+				httperr.Render(w, httperr.Internal(err.Error()))
+				return
+			}
+		}
+		out = append(out, res)
+	}
+	httpx.WriteJSON(w, http.StatusOK, MatchRowsResponse{Rows: out})
 }
 
 func (h *Handler) ListVendorsForItem(w http.ResponseWriter, r *http.Request) {
