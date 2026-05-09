@@ -1,0 +1,32 @@
+# Enforce LF line endings for all source files so cross-platform clones
+# (Windows + Linux/Mac + Docker) produce byte-identical files. This matters
+# in particular for SQL seeds: items.name VARCHAR(500) values exactly at the
+# 500-char boundary fail to load when the host's git delivers CRLF, because
+# psql counts each \r as a character.
+
+* text=auto eol=lf
+
+*.sql  text eol=lf
+*.sh   text eol=lf
+*.go   text eol=lf
+*.py   text eol=lf
+*.js   text eol=lf
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.json text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.md   text eol=lf
+
+# Binary files: never touch
+*.xlsx  binary
+*.xls   binary
+*.pdf   binary
+*.pptx  binary
+*.docx  binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
