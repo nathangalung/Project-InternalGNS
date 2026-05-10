@@ -605,7 +605,7 @@ export default function ProductDetail({ product, onNavigate, onBack, onLogout }:
             marginTop: "8px",
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <h3 style={{
                   margin: 0,
                   fontFamily: "'Inter', sans-serif",
@@ -618,34 +618,27 @@ export default function ProductDetail({ product, onNavigate, onBack, onLogout }:
                   Daftar Vendor Terkait
                 </h3>
                 <span style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "3px 10px",
+                  borderRadius: 999,
+                  background: "rgba(99, 14, 212, 0.08)",
+                  color: "#630ED4",
                   fontFamily: "'Inter', sans-serif",
-                  fontWeight: 500,
-                  fontSize: "12px",
-                  color: "rgba(74, 68, 85, 0.6)",
+                  fontWeight: 700,
+                  fontSize: "11px",
+                  letterSpacing: "0.2px",
                 }}>
-                  {(itemVendors ?? []).length} baris ditemukan
+                  {(itemVendors ?? []).length}
                 </span>
               </div>
               <button
                 type="button"
+                className="btn-admin-primary"
                 onClick={() => setShowAddVendor(true)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 700,
-                  fontSize: "12px",
-                  letterSpacing: "1.2px",
-                  textTransform: "uppercase",
-                  color: "#630ED4",
-                }}
+                style={{ width: "200px", justifyContent: "center" }}
               >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>

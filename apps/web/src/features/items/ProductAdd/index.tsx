@@ -46,7 +46,9 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
   const satuanOptions = useMemo(() => (units ?? []).map(u => u.code), [units]);
 
   const productQueryRaw = form.kodeImpaNama.trim();
+  const requestQueryRaw = form.requestedKodeImpaNama.trim();
   const { data: searchHits } = useItemSearch(productQueryRaw, { limit: 10 });
+  const { data: requestSearchHits } = useItemSearch(requestQueryRaw, { limit: 10 });
   const { data: itemsAll } = useItems({ limit: 50 });
   const productCatalog: CatalogItem[] = useMemo(() => {
     if (productQueryRaw.length > 0) {
@@ -64,6 +66,23 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
       defaultUnitId: r.defaultUnitId,
     }));
   }, [productQueryRaw, searchHits, itemsAll]);
+
+  const requestCatalog: CatalogItem[] = useMemo(() => {
+    if (requestQueryRaw.length > 0) {
+      return (requestSearchHits ?? []).map(h => ({
+        id: h.id,
+        kode: h.impaCode ?? "",
+        nama: h.name,
+        defaultUnitId: h.defaultUnitId,
+      }));
+    }
+    return (itemsAll ?? []).map(r => ({
+      id: r.id,
+      kode: r.impaCode ?? "",
+      nama: r.name,
+      defaultUnitId: r.defaultUnitId,
+    }));
+  }, [requestQueryRaw, requestSearchHits, itemsAll]);
 
   const { data: vendorRows } = useItemVendors(pickedItemId ?? undefined);
   const vendorOptions: VendorOption[] = useMemo(() => {
@@ -92,7 +111,10 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
     if (open) {
       setExtraVendors([]);
       if (initialData) {
+        const reqKode = initialData.requestedKodeImpa ?? initialData.kodeImpa ?? "";
+        const reqNama = initialData.requestedNama ?? initialData.nama ?? "";
         setForm({
+          requestedKodeImpaNama: formatKodeNama(reqKode, reqNama),
           kodeImpaNama: formatKodeNama(initialData.kodeImpa, initialData.nama),
           jumlahProduk: String(initialData.jumlah),
           satuan: initialData.satuan,
@@ -116,6 +138,7 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
   if (!open) return null;
 
   const productOpen = openDropdown === "product";
+  const productRequestOpen = openDropdown === "productRequest";
   const satuanOpen = openDropdown === "satuan";
   const vendorOpen = openDropdown === "vendor";
   const historisOpen = openDropdown === "historis";
@@ -124,11 +147,13 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
   const profit = parseRp(form.hargaJual) - hargaBeliVal;
   const profitPct = hargaBeliVal > 0 ? ((profit / hargaBeliVal) * 100).toFixed(2) : "0.00";
 
+  const isRequestFilled = form.requestedKodeImpaNama.trim().length > 0;
   const isProductFilled = form.kodeImpaNama.trim().length > 0;
   const isSatuanFilled = isProductFilled && form.satuan.trim().length > 0;
   const isJumlahFilled = isSatuanFilled && form.jumlahProduk.trim().length > 0;
   const exactVendor = vendorOptions.find(v => v.nama === form.namaVendor);
   const isVendorFilled = isJumlahFilled && exactVendor !== undefined;
+  const canSubmit = isRequestFilled && isVendorFilled;
 
   function handleChange(field: keyof ProductAddFormData, value: string) {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -143,6 +168,8 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
   }
 
   function handlePreSubmit() {
+    if (!canSubmit) return;
+
     const currentBeli = parseRp(form.hargaBeli);
     const currentJual = parseRp(form.hargaJual);
 
@@ -179,6 +206,13 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
         .filter(p => p.kode.toLowerCase().includes(productQuery) || p.nama.toLowerCase().includes(productQuery))
         .slice(0, 3)
     : productCatalog.slice(0, 3);
+
+  const requestQuery = form.requestedKodeImpaNama.trim().toLowerCase();
+  const requestMatches = requestQuery
+    ? requestCatalog
+        .filter(p => p.kode.toLowerCase().includes(requestQuery) || p.nama.toLowerCase().includes(requestQuery))
+        .slice(0, 5)
+    : requestCatalog.slice(0, 5);
 
   const activeProductLabel = form.kodeImpaNama.trim().length > 0
     ? productCatalog
@@ -274,8 +308,10 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
               onChange={handleChange}
               productCatalog={productCatalog}
               productMatches={productMatches}
+              requestMatches={requestMatches}
               activeProductLabel={activeProductLabel}
               productOpen={productOpen}
+              productRequestOpen={productRequestOpen}
               satuanOpen={satuanOpen}
               satuanOptions={satuanOptions}
               setOpenDropdown={setOpenDropdown}
@@ -285,6 +321,20 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
               isSatuanFilled={isSatuanFilled}
               onAddProductNew={() => { setOpenDropdown(null); setShowProductNew(true); }}
               onPickProduct={pickProduct}
+              onPickRequestSuggestion={item => {
+                const label = formatKodeNama(item.kode, item.nama);
+                setForm(prev => ({ ...prev, requestedKodeImpaNama: label }));
+              }}
+              onCopyRequestToOffer={() => {
+                setForm(prev => ({
+                  ...prev,
+                  kodeImpaNama: prev.requestedKodeImpaNama,
+                  itemId: undefined,
+                  vendorId: undefined,
+                  vendorProductId: undefined,
+                }));
+                setPickedItemId(null);
+              }}
             />
 
             <VendorPriceCard
@@ -310,7 +360,13 @@ export default function ProductAdd({ open, onOpenChange, onSuccess, initialData 
 
           <div className="ca-footer">
             <button type="button" className="ca-btn-cancel" onClick={handleCancel}>Batal</button>
-            <button type="button" className="ca-btn-submit" onClick={handlePreSubmit}>
+            <button
+              type="button"
+              className="ca-btn-submit"
+              onClick={handlePreSubmit}
+              disabled={!canSubmit}
+              style={!canSubmit ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
+            >
               {initialData ? "Simpan Perubahan" : "Simpan Data"}
             </button>
           </div>

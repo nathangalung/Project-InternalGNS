@@ -59,6 +59,7 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
   const [vendorQuery, setVendorQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [costPrice, setCostPrice] = useState("")
+  const [productUrl, setProductUrl] = useState("")
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [showCreateVendor, setShowCreateVendor] = useState(false)
 
@@ -82,6 +83,7 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
     setVendorQuery("")
     setShowSuggestions(false)
     setCostPrice("")
+    setProductUrl("")
     setSubmitError(null)
   }
 
@@ -94,12 +96,14 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
   const handleSubmit = async () => {
     setSubmitError(null)
     if (!isValid || vendorId === null) return
+    const trimmedUrl = productUrl.trim()
     try {
       await addVendor.mutateAsync({
         itemId,
         input: {
           vendorId,
           costPrice,
+          productUrl: trimmedUrl ? trimmedUrl : undefined,
         },
       })
       reset()
@@ -257,6 +261,21 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
                   onChange={e => setCostPrice(e.target.value.replace(/\D/g, ""))}
                 />
               </div>
+            </div>
+          </div>
+
+          <div className="ca-section">
+            <div className="ca-field">
+              <label className="ca-label">
+                Link Produk <span style={{ fontWeight: 400, color: "#9CA3AF", textTransform: "none", letterSpacing: 0 }}>(opsional)</span>
+              </label>
+              <input
+                className="ca-input"
+                type="url"
+                placeholder="https://vendor.com/produk/..."
+                value={productUrl}
+                onChange={e => setProductUrl(e.target.value)}
+              />
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 export interface ProductAddFormData {
+  requestedKodeImpaNama: string;
   kodeImpaNama: string;
   jumlahProduk: string;
   satuan: string;
@@ -36,7 +37,7 @@ export interface NewVendorForm {
   harga: string;
 }
 
-export type DropdownKey = "product" | "satuan" | "vendor" | "historis";
+export type DropdownKey = "product" | "productRequest" | "satuan" | "vendor" | "historis";
 
 // IMPA-name label, drops missing kode.
 export function formatKodeNama(kode: string | undefined | null, nama: string): string {
@@ -44,6 +45,7 @@ export function formatKodeNama(kode: string | undefined | null, nama: string): s
 }
 
 export const INITIAL_FORM: ProductAddFormData = {
+  requestedKodeImpaNama: "",
   kodeImpaNama: "",
   jumlahProduk: "",
   satuan: "",
@@ -51,6 +53,17 @@ export const INITIAL_FORM: ProductAddFormData = {
   hargaBeli: "",
   hargaJual: "",
 };
+
+// "550101 - Air Filter" → { kode: "550101", nama: "Air Filter" }; "Air Filter" → { kode: "", nama: "Air Filter" }.
+export function splitKodeNama(combined: string): { kode: string; nama: string } {
+  const trimmed = combined.trim();
+  if (!trimmed) return { kode: "", nama: "" };
+  const [first, ...rest] = trimmed.split(/\s*-\s*/);
+  if (rest.length > 0 && /^\d+$/.test(first)) {
+    return { kode: first, nama: rest.join(" - ") };
+  }
+  return { kode: "", nama: trimmed };
+}
 
 export function parseRp(v: string): number {
   const n = Number(v.replace(/[^0-9]/g, ""));

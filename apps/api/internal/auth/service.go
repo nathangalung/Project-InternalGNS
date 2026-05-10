@@ -14,6 +14,7 @@ import (
 
 var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
+	ErrEmailNotRegistered = errors.New("email not registered")
 	ErrInvalidToken       = errors.New("invalid token")
 )
 
@@ -59,7 +60,7 @@ func parseInt64(s string) (int64, error) {
 func (s *Service) Login(ctx context.Context, email, password string) (LoginResponse, error) {
 	u, err := s.users.GetByEmail(ctx, email)
 	if errors.Is(err, users.ErrNotFound) {
-		return LoginResponse{}, ErrInvalidCredentials
+		return LoginResponse{}, ErrEmailNotRegistered
 	}
 	if err != nil {
 		return LoginResponse{}, err

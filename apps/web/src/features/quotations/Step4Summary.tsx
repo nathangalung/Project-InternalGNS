@@ -232,6 +232,9 @@ export default function Step4Summary({
                   const globalIndex = (prodPage - 1) * PAGE_SIZE + i + 1;
                   const profit = p.hargaJual - p.hargaBeli;
                   const profitPct = p.hargaBeli > 0 ? ((profit / p.hargaBeli) * 100).toFixed(2) : "0.00";
+                  const requestNama = p.requestedNama || p.nama;
+                  const requestKode = p.requestedKodeImpa || p.kodeImpa;
+                  const isDifferent = requestNama !== p.nama || requestKode !== p.kodeImpa;
                   return (
                     <div key={p.id} className="qep-card" style={{ marginBottom: 0 }}>
                       <div className="qep-card-header">
@@ -239,6 +242,20 @@ export default function Step4Summary({
                           <span className="qep-card-label">PRODUK {globalIndex}</span>
                           <span className="qep-card-name">{p.nama}</span>
                           {p.kodeImpa && <span className="qep-card-code">KODE IMPA: {p.kodeImpa}</span>}
+                        </div>
+                      </div>
+                      <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(204,195,216,0.2)", borderBottom: "1px solid rgba(204,195,216,0.2)", background: isDifferent ? "rgba(245, 158, 11, 0.04)" : "rgba(99, 14, 212, 0.02)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.6px", textTransform: "uppercase", color: isDifferent ? "#B45309" : "#6B7280" }}>Permintaan Klien</span>
+                          {isDifferent && (
+                            <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 6px", borderRadius: 4, background: "rgba(245, 158, 11, 0.15)", color: "#B45309" }}>
+                              Berbeda dari Offer
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", gap: 24, fontSize: 13, color: "#374151" }}>
+                          <div><span style={{ color: "#9CA3AF", marginRight: 6 }}>Kode IMPA:</span><span style={{ fontWeight: 600 }}>{requestKode || "-"}</span></div>
+                          <div><span style={{ color: "#9CA3AF", marginRight: 6 }}>Nama:</span><span style={{ fontWeight: 600 }}>{requestNama || "-"}</span></div>
                         </div>
                       </div>
                       <div className="qep-card-body">

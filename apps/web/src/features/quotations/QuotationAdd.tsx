@@ -176,8 +176,8 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
 
   function buildItems(): QuotationItemInput[] {
     const items: QuotationItemInput[] = products.map((p) => ({
-      requestedImpa: p.kodeImpa || undefined,
-      requestedName: p.nama,
+      requestedImpa: p.requestedKodeImpa || p.kodeImpa || undefined,
+      requestedName: p.requestedNama || p.nama,
       offeredItemId: p.itemId,
       vendorProductId: p.vendorProductId,
       qty: String(p.jumlah),
@@ -326,22 +326,34 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
       {/* Modals */}
       <DiscountModal open={showDiscountModal} onOpenChange={setShowDiscountModal} initialDiscount={discountPct} onSuccess={(val) => { setDiscountPct(val); setShowDiscountModal(false); }} />
       <ClientAdd open={showClientAdd} onOpenChange={setShowClientAdd} onSuccess={() => { setShowClientAdd(false); setStep(2); }} />
-      <ProductAdd 
-        open={showProductAdd} initialData={editingProduct} 
-        onOpenChange={(open) => { setShowProductAdd(open); if (!open) setEditingProduct(null); }} 
+      <ProductAdd
+        open={showProductAdd} initialData={editingProduct}
+        onOpenChange={(open) => { setShowProductAdd(open); if (!open) setEditingProduct(null); }}
         onSuccess={(data) => {
-          const [kodePart, ...namaParts] = data.kodeImpaNama.split(/\s*-\s*/);
-          const nama = namaParts.length > 0 ? namaParts.join(" - ") : kodePart;
-          const kodeImpa = namaParts.length > 0 ? kodePart : "";
+          const splitOffer = (s: string): { kode: string; nama: string } => {
+            const trimmed = s.trim();
+            if (!trimmed) return { kode: "", nama: "" };
+            const [first, ...rest] = trimmed.split(/\s*-\s*/);
+            if (rest.length > 0 && /^\d+$/.test(first)) {
+              return { kode: first, nama: rest.join(" - ") };
+            }
+            return { kode: "", nama: trimmed };
+          };
+          const offer = splitOffer(data.kodeImpaNama);
+          const nama = offer.nama;
+          const kodeImpa = offer.kode;
+          const reqSplit = splitOffer(data.requestedKodeImpaNama);
+          const requestedNama = reqSplit.nama || nama;
+          const requestedKodeImpa = reqSplit.kode;
 
           if (editingProduct) {
-            setProducts((prev) => prev.map(p => p.id === editingProduct.id ? { ...p, itemId: data.itemId, vendorId: data.vendorId, vendorProductId: data.vendorProductId, nama, kodeImpa, vendor: data.namaVendor, jumlah: Number(data.jumlahProduk) || 1, satuan: data.satuan, hargaBeli: Number(data.hargaBeli) || 0, hargaJual: Number(data.hargaJual) || 0 } : p));
+            setProducts((prev) => prev.map(p => p.id === editingProduct.id ? { ...p, itemId: data.itemId, vendorId: data.vendorId, vendorProductId: data.vendorProductId, nama, kodeImpa, requestedNama, requestedKodeImpa, vendor: data.namaVendor, jumlah: Number(data.jumlahProduk) || 1, satuan: data.satuan, hargaBeli: Number(data.hargaBeli) || 0, hargaJual: Number(data.hargaJual) || 0 } : p));
           } else {
             const nextId = products.reduce((m, p) => Math.max(m, p.id), 0) + 1;
-            setProducts((prev) => [ ...prev, { id: nextId, itemId: data.itemId, vendorId: data.vendorId, vendorProductId: data.vendorProductId, nama, kodeImpa, vendor: data.namaVendor, jumlah: Number(data.jumlahProduk) || 1, satuan: data.satuan, hargaBeli: Number(data.hargaBeli) || 0, hargaJual: Number(data.hargaJual) || 0 } ]);
+            setProducts((prev) => [ ...prev, { id: nextId, itemId: data.itemId, vendorId: data.vendorId, vendorProductId: data.vendorProductId, nama, kodeImpa, requestedNama, requestedKodeImpa, vendor: data.namaVendor, jumlah: Number(data.jumlahProduk) || 1, satuan: data.satuan, hargaBeli: Number(data.hargaBeli) || 0, hargaJual: Number(data.hargaJual) || 0 } ]);
           }
           setEditingProduct(null);
-        }} 
+        }}
       />
     </div>
   );

@@ -60,7 +60,7 @@ func TestService_Login_UserNotFound(t *testing.T) {
 	svc := mkSvc(t)
 
 	_, err := svc.Login(context.Background(), "missing@nowhere.local", "any")
-	assert.ErrorIs(t, err, auth.ErrInvalidCredentials)
+	assert.ErrorIs(t, err, auth.ErrEmailNotRegistered)
 }
 
 func TestService_Login_DBError(t *testing.T) {

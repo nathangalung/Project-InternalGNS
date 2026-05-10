@@ -15,6 +15,7 @@ function PurchaseOrderListRoute() {
     <PurchaseOrderList
       onNavigate={makePageNavigate(navigate)}
       onViewDetail={qid => void navigate({ to: "/purchase-orders/$id", params: { id: String(qid) } })}
+      onViewQuotation={qid => void navigate({ to: "/quotations/$id", params: { id: String(qid) } })}
       onLogout={() => {
         logout()
         void navigate({ to: "/login" })

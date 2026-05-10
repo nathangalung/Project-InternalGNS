@@ -10,6 +10,8 @@ export default function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const validateEmail = (value: string) => {
     if (!value) {
@@ -27,7 +29,16 @@ export default function Login({ onLogin }: LoginProps) {
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
+    setPasswordError("");
     validateEmail(value);
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    setPasswordError("");
+    if (emailError && emailError !== "Format surel tidak valid") {
+      setEmailError("");
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -37,8 +48,16 @@ export default function Login({ onLogin }: LoginProps) {
     try {
       await onLogin(email, password);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Gagal masuk";
-      setEmailError(message);
+      const message = (err instanceof Error ? err.message : "").toLowerCase();
+      if (message.includes("email not registered")) {
+        setEmailError("Surel belum terdaftar");
+        setPasswordError("");
+      } else if (message.includes("invalid password") || message.includes("invalid email or password")) {
+        setEmailError("");
+        setPasswordError("Kata sandi salah");
+      } else {
+        setPasswordError(err instanceof Error ? err.message : "Gagal masuk");
+      }
     }
   };
 
@@ -103,17 +122,52 @@ export default function Login({ onLogin }: LoginProps) {
                 </span>
                 <input
                   className="form-input"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   id="password"
                   placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
                   autoComplete="current-password"
                   value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setEmailError("");
-                  }}
+                  onChange={(e) => handlePasswordChange(e.target.value)}
+                  style={{ paddingRight: 44 }}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                  title={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                  style={{
+                    position: "absolute",
+                    right: 12,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 4,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--color-dark-400)",
+                  }}
+                >
+                  {showPassword ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-5.94" />
+                      <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-3.17 4.19" />
+                      <path d="M14.12 14.12A3 3 0 0 1 9.88 9.88" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
               </div>
+              {passwordError && (
+                <span className="error-text">{passwordError}</span>
+              )}
             </div>
 
             {/* Submit */}

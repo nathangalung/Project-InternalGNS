@@ -47,6 +47,8 @@ function toProductRow(it: ApiQuotationItem, unitName: string): ProductRow {
   return {
     kode: it.requestedImpa ?? "",
     nama: it.requestedName,
+    requestedKode: it.requestedImpa ?? "",
+    requestedNama: it.requestedName,
     qty: Number(it.qty),
     satuan: unitName,
     hargaSatuan: Number.isFinite(sell) ? sell : 0,

@@ -74,6 +74,7 @@ export type AddVendorToItemInput = {
   vendorId: number
   vendorSku?: string
   costPrice?: string
+  productUrl?: string
 }
 
 export async function addVendor(itemId: number, input: AddVendorToItemInput): Promise<ItemVendorRow> {

@@ -155,6 +155,7 @@ export type ItemVendorRow = {
   vendorName: string
   vendorSku?: string
   costPrice?: string
+  productUrl?: string
   lastQuotedAt?: string
 }
 

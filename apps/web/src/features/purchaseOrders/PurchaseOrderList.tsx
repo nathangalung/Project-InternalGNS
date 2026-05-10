@@ -13,6 +13,7 @@ interface PurchaseOrderListProps {
   onNavigate: (page: Page) => void
   onLogout: () => void
   onViewDetail?: (quotationId: number) => void
+  onViewQuotation?: (quotationId: number) => void
 }
 
 const STATUS_STYLE: Record<PoStatus, { bg: string; color: string }> = {
@@ -62,7 +63,7 @@ const iconBtnStyle: CSSProperties = {
   transition: "background 0.15s",
 }
 
-export default function PurchaseOrderList({ onNavigate, onLogout, onViewDetail }: PurchaseOrderListProps) {
+export default function PurchaseOrderList({ onNavigate, onLogout, onViewDetail, onViewQuotation }: PurchaseOrderListProps) {
   const { data: rawList, isLoading } = usePurchaseOrders({ limit: 200 })
   const updateFile = useUpdatePoFile()
 
@@ -233,7 +234,29 @@ export default function PurchaseOrderList({ onNavigate, onLogout, onViewDetail }
                   return (
                     <tr key={row.quotationId} className="tbl-row">
                       <td className="tbl-td tbl-td--center" style={{ fontWeight: 700, color: "#630ED4" }} title={row.quotationNo}>
-                        {shortDocNo(row.quotationNo)}
+                        {onViewQuotation ? (
+                          <button
+                            type="button"
+                            onClick={() => onViewQuotation(row.quotationId)}
+                            style={{
+                              background: "transparent",
+                              border: "none",
+                              padding: 0,
+                              cursor: "pointer",
+                              color: "inherit",
+                              fontWeight: "inherit",
+                              fontFamily: "inherit",
+                              fontSize: "inherit",
+                              textDecoration: "underline",
+                              textUnderlineOffset: 3,
+                              textDecorationColor: "rgba(99, 14, 212, 0.35)",
+                            }}
+                          >
+                            {shortDocNo(row.quotationNo)}
+                          </button>
+                        ) : (
+                          shortDocNo(row.quotationNo)
+                        )}
                       </td>
                       <td className="tbl-td tbl-td--center" style={{ fontWeight: 700, color: "#630ED4" }} title={row.poNumber}>
                         {shortDocNo(row.poNumber)}

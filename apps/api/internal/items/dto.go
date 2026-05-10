@@ -39,6 +39,7 @@ type VendorForItem struct {
 	VendorName      string  `db:"vendor_name"        json:"vendorName"`
 	VendorSKU       *string `db:"vendor_sku"         json:"vendorSku,omitempty"`
 	CostPrice       *string `db:"cost_price"         json:"costPrice,omitempty"`
+	ProductURL      *string `db:"product_url"        json:"productUrl,omitempty"`
 	LastQuotedAt    *string `db:"last_quoted_at"     json:"lastQuotedAt,omitempty"`
 }
 
@@ -69,9 +70,10 @@ type UpdateItemRequest struct {
 }
 
 type AddVendorToItemRequest struct {
-	VendorID  int64   `json:"vendorId"`
-	VendorSKU *string `json:"vendorSku"`
-	CostPrice *string `json:"costPrice"`
+	VendorID   int64   `json:"vendorId"`
+	VendorSKU  *string `json:"vendorSku"`
+	CostPrice  *string `json:"costPrice"`
+	ProductURL *string `json:"productUrl"`
 }
 
 // POST /items/match-request body.

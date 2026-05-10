@@ -13,6 +13,8 @@ export interface ClientInfo {
 export interface ProductRow {
   kode: string;
   nama: string;
+  requestedKode?: string;
+  requestedNama?: string;
   qty: number;
   satuan: string;
   hargaSatuan: number;

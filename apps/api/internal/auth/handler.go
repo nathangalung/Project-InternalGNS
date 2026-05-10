@@ -39,8 +39,12 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := h.svc.Login(r.Context(), req.Email, req.Password)
+	if errors.Is(err, ErrEmailNotRegistered) {
+		httperr.Render(w, httperr.Unauthorized("email not registered"))
+		return
+	}
 	if errors.Is(err, ErrInvalidCredentials) {
-		httperr.Render(w, httperr.Unauthorized("invalid email or password"))
+		httperr.Render(w, httperr.Unauthorized("invalid password"))
 		return
 	}
 	if err != nil {

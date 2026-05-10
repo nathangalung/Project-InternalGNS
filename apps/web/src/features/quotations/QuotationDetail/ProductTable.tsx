@@ -110,17 +110,37 @@ export default function ProductTable({ products }: ProductTableProps) {
               </tr>
             </thead>
             <tbody>
-              {slice.map((p, i) => (
-                <tr key={i} className="tbl-row">
-                  <td className="tbl-td tbl-td--center tbl-td--id">{p.kode || "-"}</td>
-                  <td className="tbl-td tbl-td--center tbl-td--client">{p.nama}</td>
-                  <td className="tbl-td tbl-td--center">{p.qty}</td>
-                  <td className="tbl-td tbl-td--center">{p.satuan}</td>
-                  <td className="tbl-td tbl-td--center">{formatRp(p.hargaSatuan)}</td>
-                  <td className="tbl-td tbl-td--center qd-td--profit">{formatRp(p.qty * p.profitSatuan)}</td>
-                  <td className="tbl-td tbl-td--center tbl-td--total">{formatRp(p.qty * p.hargaSatuan)}</td>
-                </tr>
-              ))}
+              {slice.map((p, i) => {
+                const reqKode = p.requestedKode ?? "";
+                const reqNama = p.requestedNama ?? "";
+                const kodeDiffers = reqKode.length > 0 && reqKode !== p.kode;
+                const namaDiffers = reqNama.length > 0 && reqNama !== p.nama;
+                return (
+                  <tr key={i} className="tbl-row">
+                    <td className="tbl-td tbl-td--center tbl-td--id">
+                      <div>{p.kode || "-"}</div>
+                      {kodeDiffers && (
+                        <div style={{ fontSize: 11, color: "#B45309", marginTop: 2 }} title="Kode IMPA yang diminta klien">
+                          Diminta: {reqKode}
+                        </div>
+                      )}
+                    </td>
+                    <td className="tbl-td tbl-td--center tbl-td--client">
+                      <div>{p.nama}</div>
+                      {namaDiffers && (
+                        <div style={{ fontSize: 11, color: "#B45309", marginTop: 2 }} title="Nama produk yang diminta klien">
+                          Diminta: {reqNama}
+                        </div>
+                      )}
+                    </td>
+                    <td className="tbl-td tbl-td--center">{p.qty}</td>
+                    <td className="tbl-td tbl-td--center">{p.satuan}</td>
+                    <td className="tbl-td tbl-td--center">{formatRp(p.hargaSatuan)}</td>
+                    <td className="tbl-td tbl-td--center qd-td--profit">{formatRp(p.qty * p.profitSatuan)}</td>
+                    <td className="tbl-td tbl-td--center tbl-td--total">{formatRp(p.qty * p.hargaSatuan)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           <div className="pagination" style={{ justifyContent: "space-between" }}>
