@@ -78,19 +78,29 @@ SELECT setval('quotation_items_id_seq', (SELECT MAX(id) FROM quotation_items));
 -- re-enable. DDL stays inside the txn, so rollback would revert the disable too.
 ALTER TABLE quotation_item_requests DISABLE TRIGGER trg_qir_lock_parent;
 
+-- match_status='unavailable' across the board: 03b is reverse-engineered from
+-- invoice; we created quotation_items rows with offered_item_id=NULL because
+-- these 23 distinct products were never added to the items master at quote
+-- time. 'unavailable' is the schema's closest enum match for "fulfilled but
+-- item identity not preserved in master". Owner can re-link by inserting
+-- items rows and UPDATE'ing matched_item_id + offered_item_id later.
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
   reviewed_by, reviewed_at, created_by, updated_by
 )
 SELECT qi.id, qi.quotation_id, qi.line_number, qi.requested_name, qi.requested_impa,
-       qi.qty, NULL, qi.offered_item_id, 'matched', 'import',
-       'Backfilled from 03b reverse-engineered quotation',
+       qi.qty, NULL, qi.offered_item_id,
+       CASE WHEN qi.offered_item_id IS NULL THEN 'unavailable' ELSE 'matched' END,
+       'import',
+       CASE WHEN qi.offered_item_id IS NULL
+            THEN 'Backfilled from 03b reverse-engineered quotation; offered item not in master catalog'
+            ELSE 'Backfilled from 03b reverse-engineered quotation' END,
        1, NOW(), 1, 1
   FROM quotation_items qi
  WHERE qi.quotation_id IN (668, 669);
 
-SELECT setval('quotation_item_requests_id_seq', (SELECT MAX(id) FROM quotation_item_requests));
+SELECT setval('quotation_item_requests_id_seq', (SELECT COALESCE(MAX(id), 1) FROM quotation_item_requests));
 
 UPDATE quotation_items SET request_id = id WHERE quotation_id IN (668, 669);
 

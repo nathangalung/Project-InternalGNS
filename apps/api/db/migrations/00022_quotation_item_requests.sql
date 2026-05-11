@@ -57,7 +57,7 @@ COMMENT ON TABLE quotation_item_requests IS
   'Pre-quotation request log. Each row = one RFQ line from klien (manual input or OCR). Goes through pending→matched/substituted/unavailable review, then 0..N quotation_items rows are built from it. Owner-facing audit via v_quotation_request_audit.';
 
 COMMENT ON COLUMN quotation_item_requests.match_status IS
-  'pending=awaiting review, matched=item identified 1:1, substituted=offered item differs from matched, unavailable=cannot fulfill (no quotation_items created). "confirmed" is derived from EXISTS quotation_items.request_id.';
+  'pending=awaiting review; matched=catalog item identified, offer text matches client request text; substituted=catalog item identified, but offer text differs from client request text (e.g. "Cement High Temperature" offered for "Semen cor tahan api" request); unavailable=cannot fulfill from current catalog (either RFQ rejected, or historical/reverse-engineered quote where matched_item_id is NULL because the item was never added to master). "confirmed" is derived from EXISTS quotation_items.request_id.';
 
 COMMENT ON COLUMN quotation_item_requests.source_type IS
   'manual=staff typed it in, ocr=extracted from klien document via OCR, import=batch loaded from external file.';

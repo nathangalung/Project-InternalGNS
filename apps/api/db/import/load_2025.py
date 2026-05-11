@@ -255,7 +255,9 @@ def build_lines(file_data, items_id_map, vendor_id_map, vp_lookup, unit_id_by_co
             cost = None
         unit_code = canonical_unit(it.get("unit"))
         unit_id = unit_id_by_code.get(unit_code) if unit_code else None
-        name = it.get("offer_desc") or it.get("nama_asli") or it.get("request_desc")
+        # Canonical OFFER name precedence: explicit OFFER column (IMPA layout)
+        # > Col D description > Col M nama_asli fallback. Mirrors generate_seed.py.
+        name = it.get("offer_desc") or it.get("request_desc") or it.get("nama_asli")
         item_id = items_id_map.get(item_dedup_key(it.get("impa"), name)) if name else None
         vp_id = None
         if it.get("vendor_name"):
@@ -263,12 +265,18 @@ def build_lines(file_data, items_id_map, vendor_id_map, vp_lookup, unit_id_by_co
             v_id = vendor_id_map.get(norm_name(v_clean))
             if v_id and item_id:
                 vp_id = vp_lookup.get((v_id, item_id))
+        # Textual substitution flag drives qir.match_status downstream.
+        nama_asli = (it.get("nama_asli") or "").strip()
+        offer_canon = (name or "").strip()
+        is_substituted = bool(nama_asli) and bool(offer_canon) and nama_asli != offer_canon
         out.append({
             "line_number": line,
             "item_type": "product",
             "requested_item_id": item_id,
             "requested_impa": truncate_to(it.get("impa"), 20),
-            "requested_name": truncate_to(it.get("request_desc") or name, 5000),
+            # requested_name = client's ORIGINAL request (Col M "Nama Asli barang"),
+            # falling back to Col D / canonical name only when nama_asli is blank.
+            "requested_name": truncate_to(it.get("nama_asli") or it.get("request_desc") or name or "", 5000),
             "offered_item_id": item_id,
             "vendor_product_id": vp_id,
             "qty": qty,
@@ -276,6 +284,7 @@ def build_lines(file_data, items_id_map, vendor_id_map, vp_lookup, unit_id_by_co
             "selling_price": sell,
             "cost_price": cost,
             "discount_pct": file_data.get("discount_pct") or 0,
+            "_is_substituted": is_substituted,
         })
     return out
 
@@ -341,6 +350,9 @@ def insert_quotation(cur, file_data, company_id, contact_id, items,
     cur.execute(sql, params)
     qid = cur.fetchone()[0]
 
+    # Insert items + paired qir row. Mirrors generate_seed.py historical 1:1.
+    # main() in load_2025/load_2024 disables trg_qir_lock_parent for the bulk
+    # window so 'sent'-status quotations can still get their qir backfill.
     for i in items:
         cur.execute(
             """INSERT INTO quotation_items (
@@ -355,7 +367,7 @@ def insert_quotation(cur, file_data, company_id, contact_id, items,
                 %s, %s,
                 %s, %s, %s, %s, %s,
                 FALSE, %s, %s
-            )""",
+            ) RETURNING id""",
             (
                 qid, i["line_number"], i["item_type"],
                 i["requested_item_id"], i["requested_impa"], i["requested_name"],
@@ -364,6 +376,37 @@ def insert_quotation(cur, file_data, company_id, contact_id, items,
                 i["discount_pct"],
                 SUPERADMIN_ID, SUPERADMIN_ID,
             ),
+        )
+        qi_id = cur.fetchone()[0]
+
+        if i["offered_item_id"] is None:
+            qir_status, qir_note = "unavailable", "Loaded from Excel; offered item not in master catalog at load time"
+        elif i.get("_is_substituted"):
+            qir_status, qir_note = "substituted", "Loaded from Excel; offer text differs from client request text"
+        else:
+            qir_status, qir_note = "matched", "Loaded from Excel"
+
+        cur.execute(
+            """INSERT INTO quotation_item_requests (
+                quotation_id, line_no, request_text, request_impa, requested_qty,
+                matched_item_id, match_status, source_type, notes,
+                reviewed_by, reviewed_at, created_by, updated_by
+            ) VALUES (
+                %s, %s, %s, %s, %s,
+                %s, %s, 'import', %s,
+                %s, NOW(), %s, %s
+            ) RETURNING id""",
+            (
+                qid, i["line_number"], i["requested_name"], i["requested_impa"],
+                i["qty"], i["offered_item_id"], qir_status, qir_note,
+                SUPERADMIN_ID, SUPERADMIN_ID, SUPERADMIN_ID,
+            ),
+        )
+        qir_id = cur.fetchone()[0]
+
+        cur.execute(
+            "UPDATE quotation_items SET request_id = %s WHERE id = %s",
+            (qir_id, qi_id),
         )
     return qid
 
@@ -412,6 +455,12 @@ def main():
             nc = insert_new_contacts(cur, parsed, contacts_id_map, used_emails)
             print(f">> inserted new: {ni} items, {nv} vendors, "
                   f"{nvp} vendor_products, {nc} contacts")
+
+            # insert_quotation writes 1 qir row per qi row, but trg_qir_lock_parent
+            # blocks qir writes for non-draft quotation status. Most files load as
+            # 'sent' — disable trigger for the bulk window. DDL is transactional;
+            # rollback restores the trigger.
+            cur.execute("ALTER TABLE quotation_item_requests DISABLE TRIGGER trg_qir_lock_parent")
 
             seq_counter: dict[tuple[int, int], int] = defaultdict(int)
             n_inserted = 0
@@ -473,6 +522,8 @@ def main():
                               updated_at = NOW()""",
                     rows,
                 )
+
+            cur.execute("ALTER TABLE quotation_item_requests ENABLE TRIGGER trg_qir_lock_parent")
 
             print(f"\n>> inserted {n_inserted} 2025 quotations "
                   f"({n_versions} version-chained, {n_drafts} as draft)")

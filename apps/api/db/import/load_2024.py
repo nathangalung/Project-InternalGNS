@@ -132,6 +132,11 @@ def main():
             print(f">> inserted new: {ni} items, {nv} vendors, "
                   f"{nvp} vendor_products, {nc} contacts")
 
+            # insert_quotation writes 1 qir row per qi row, but trg_qir_lock_parent
+            # blocks qir writes for non-draft quotation status. Disable for bulk
+            # window; DDL is transactional so rollback restores.
+            cur.execute("ALTER TABLE quotation_item_requests DISABLE TRIGGER trg_qir_lock_parent")
+
             seq_counter: dict[tuple[int, int], int] = defaultdict(int)
             n_inserted = 0
             n_versions = 0
@@ -192,6 +197,8 @@ def main():
                               updated_at = NOW()""",
                     rows,
                 )
+
+            cur.execute("ALTER TABLE quotation_item_requests ENABLE TRIGGER trg_qir_lock_parent")
 
             print(f"\n>> inserted {n_inserted} 2024 quotations "
                   f"({n_versions} version-chained, {n_drafts} as draft)")

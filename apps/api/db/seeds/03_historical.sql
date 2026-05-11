@@ -16959,26 +16959,26 @@ INSERT INTO quotation_item_requests (
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
   (1, 1, 1, 'Floatless Level Switch', NULL, 2.0, NULL, 1, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2, 2, 1, 'sesuai penawaran', NULL, 20.0, NULL, 2, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3, 2, 2, 'sesuai penawaran', NULL, 20.0, NULL, 3, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4, 2, 3, 'sesuai penawaran', NULL, 20.0, NULL, 4, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (5, 2, 4, 'sesuai penawaran', NULL, 200.0, NULL, 5, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (6, 2, 5, 'sesuai penawaran', NULL, 20.0, NULL, 6, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (7, 3, 1, 'sesuai penawaran', NULL, 1.0, NULL, 7, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2, 2, 1, 'sesuai penawaran', NULL, 20.0, NULL, 2, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3, 2, 2, 'sesuai penawaran', NULL, 20.0, NULL, 3, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (4, 2, 3, 'sesuai penawaran', NULL, 20.0, NULL, 4, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (5, 2, 4, 'sesuai penawaran', NULL, 200.0, NULL, 5, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (6, 2, 5, 'sesuai penawaran', NULL, 20.0, NULL, 6, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (7, 3, 1, 'sesuai penawaran', NULL, 1.0, NULL, 7, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (8, 4, 1, 'Seal Complate Hydraulic Cylinder', NULL, 5.0, NULL, 8, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (9, 4, 2, 'Mechanical Seal', NULL, 5.0, NULL, 9, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (10, 4, 3, 'Mechanical Seal', NULL, 5.0, NULL, 9, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (11, 5, 1, 'sesuai penawaran', NULL, 1.0, NULL, 10, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (12, 6, 1, 'sesuai penawaran', NULL, 6.0, NULL, 11, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (13, 6, 2, 'sesuai penawaran', NULL, 6.0, NULL, 12, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (14, 7, 1, 'sesuai penawaran', NULL, 4.0, NULL, 13, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (15, 8, 1, 'Semen cor tahan api', NULL, 5.0, NULL, 14, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (16, 9, 1, 'UPS APC BR1600VA', NULL, 2.0, NULL, 15, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (17, 10, 1, 'UPS APC BR1600VA', NULL, 1.0, NULL, 16, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (18, 11, 1, 'UPS APC BR1600VA', NULL, 1.0, NULL, 17, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (11, 5, 1, 'sesuai penawaran', NULL, 1.0, NULL, 10, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (12, 6, 1, 'sesuai penawaran', NULL, 6.0, NULL, 11, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (13, 6, 2, 'sesuai penawaran', NULL, 6.0, NULL, 12, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (14, 7, 1, 'sesuai penawaran', NULL, 4.0, NULL, 13, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (15, 8, 1, 'Semen cor tahan api', NULL, 5.0, NULL, 14, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (16, 9, 1, 'UPS APC BR1600VA', NULL, 2.0, NULL, 15, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (17, 10, 1, 'UPS APC BR1600VA', NULL, 1.0, NULL, 16, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (18, 11, 1, 'UPS APC BR1600VA', NULL, 1.0, NULL, 17, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (19, 12, 1, 'ARC Inverter Welder', NULL, 1.0, NULL, 18, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (20, 13, 1, 'Starter For FL Lamp FG-1P', NULL, 100.0, NULL, 19, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (21, 14, 1, 'UPS APC BR1600VA', NULL, 2.0, NULL, 15, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (21, 14, 1, 'UPS APC BR1600VA', NULL, 2.0, NULL, 15, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (22, 15, 1, 'AC. AUTOMATIC VOLTAGE REGULATOR', NULL, 1.0, NULL, 20, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (23, 16, 1, 'AC. AUTOMATIC VOLTAGE REGULATOR', NULL, 1.0, NULL, 20, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (24, 17, 1, 'QIDMP-1020071 II Oring JIS B2401 P-40', NULL, 30.0, NULL, 21, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -16999,8 +16999,8 @@ INSERT INTO quotation_item_requests (
   (39, 18, 7, 'Oring JIS B2401 P-24', NULL, 30.0, NULL, 27, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (40, 18, 8, 'QIDMP-1020043 II Oring JIS B2401 P-35', NULL, 30.0, NULL, 28, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (41, 18, 9, 'QIDMP-1020018 II Oring JIS B2401 G-45', NULL, 30.0, NULL, 29, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (42, 19, 1, 'sesuai penawaran', NULL, 10.0, NULL, 30, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (43, 20, 1, 'sesuai penawaran', NULL, 10.0, NULL, 31, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (42, 19, 1, 'sesuai penawaran', NULL, 10.0, NULL, 30, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (43, 20, 1, 'sesuai penawaran', NULL, 10.0, NULL, 31, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (44, 21, 1, 'Oring JIS B2401 P-80', NULL, 20.0, NULL, 32, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (45, 22, 1, 'Trafo Step up down', NULL, 1.0, NULL, 33, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (46, 23, 1, 'Trafo Step up down 1000w', NULL, 2.0, NULL, 34, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17008,24 +17008,24 @@ INSERT INTO quotation_item_requests (
   (48, 24, 2, 'Oring JIS W1517 #5 (90 degree)', NULL, 10.0, NULL, 36, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (49, 24, 3, 'Oring JIS B2401 G-35', NULL, 20.0, NULL, 37, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (50, 25, 1, 'Baterry Requisition For Grab Bucket', NULL, 32.0, NULL, 38, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (51, 25, 2, 'Baterry Requisition For Grab Bucket', NULL, 32.0, NULL, 39, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (51, 25, 2, 'Baterry Requisition For Grab Bucket', NULL, 32.0, NULL, 39, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (52, 26, 1, 'Charger 8 Slot AA', NULL, 1.0, NULL, 40, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (53, 27, 1, 'Battery Requisition For Grab Bucket', NULL, 32.0, NULL, 41, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (54, 27, 2, 'Battery Requisition For Grab Bucket', NULL, 32.0, NULL, 42, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (54, 27, 2, 'Battery Requisition For Grab Bucket', NULL, 32.0, NULL, 42, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (55, 27, 3, 'Charger 8 Slot AA', NULL, 2.0, NULL, 40, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (56, 28, 1, 'Handy Talkie', NULL, 6.0, NULL, 43, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (57, 29, 1, 'Oil Seal NOK AE 2847A', NULL, 3.0, NULL, 44, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (58, 29, 2, '1338 FO', NULL, 3.0, NULL, 45, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (58, 29, 2, '1338 FO', NULL, 3.0, NULL, 45, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (59, 29, 3, 'Oil Seal NOK UPI 355010', NULL, 20.0, NULL, 46, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (60, 29, 4, 'Oil Seal NOK CORTECO DSI 20284 5.6', NULL, 10.0, NULL, 47, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (61, 29, 5, 'Oil Seal NOK CORTECO DSI 30385 6.5', NULL, 10.0, NULL, 48, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (62, 29, 6, 'Oil Seal NOK CORTECO ISI 30406', NULL, 10.0, NULL, 49, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (63, 29, 7, 'O Ring JIS B2401 P-20', NULL, 30.0, NULL, 50, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (64, 29, 8, 'Oring 53x4', NULL, 10.0, NULL, 51, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (64, 29, 8, 'Oring 53x4', NULL, 10.0, NULL, 51, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (65, 29, 9, 'O Ring JIS B2401 G-35', NULL, 20.0, NULL, 52, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (66, 29, 10, 'O Ring JIS B2401 P-35', NULL, 20.0, NULL, 53, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (67, 29, 11, 'O Ring JIS B2401 P-80', NULL, 20.0, NULL, 54, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (68, 29, 12, 'Oring P71', NULL, 10.0, NULL, 55, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (68, 29, 12, 'Oring P71', NULL, 10.0, NULL, 55, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (69, 29, 13, 'O Ring JIS B2401 G-80', NULL, 10.0, NULL, 56, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (70, 29, 14, 'O Ring JIS B2401 P-105', NULL, 20.0, NULL, 57, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (71, 30, 1, 'Computer Processor i5 Gen12, RAM 8GB, SSD 512GB', NULL, 1.0, NULL, 58, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17143,7 +17143,7 @@ INSERT INTO quotation_item_requests (
   (178, 39, 33, 'Hours meter Type: SH-711, 180-245V DC/A', NULL, 1.0, NULL, 139, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (179, 39, 34, 'Switch 3 way for Start-Off-Remote', NULL, 2.0, NULL, 140, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (180, 39, 35, 'Push button red light LA38-10/206A, GB14048, Ui400V, Ith 10A, AC 15, 230V/5A', NULL, 2.0, NULL, 141, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (181, 40, 1, 'sesuai penawaran', NULL, 4.0, NULL, 142, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (181, 40, 1, 'sesuai penawaran', NULL, 4.0, NULL, 142, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (182, 41, 1, 'Kobe Steel RB-26 High Titania Type ELECTRODE RB-26 2.6MM 5KG FOR STEEL SHEET & LIGHT STRUCTURE', NULL, 20.0, NULL, 143, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (183, 41, 2, 'Kobe Steel RB-26 High Titania Type ELECTRODE RB-26 3.2MM 5KG FOR STEEL SHEET & LIGHT STRUCTURE', NULL, 20.0, NULL, 144, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (184, 41, 3, 'Kobe Steel RB-26 High Titania Type ELECTRODE RB-26 4.0MM 5KG FOR, STEEL SHEET & LIGHT STRUCTURE', NULL, 20.0, NULL, 145, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17241,82 +17241,82 @@ Hammer, SPARE HAMMER HEAD, FOR SCALING HAMMER SINGLE. IMPA 590387', NULL, 10.0, 
   (268, 46, 1, 'LATINA 600N Coffee Grinder', NULL, 1.0, NULL, 213, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (269, 46, 2, 'MEROL Coffee Machine ME709', NULL, 2.0, NULL, 214, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (270, 47, 1, 'Solenoid Pneumatic', NULL, 2.0, NULL, 220, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (271, 48, 1, 'PIPA KARBON SCH 40, 3inch x 6M', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (272, 48, 2, 'PIPA KARBON SCH 40, 4inch x 6M', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (273, 48, 3, 'Kaca las hitam No.10, 108mmx50mmx3mm', '#REF!', 10.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (274, 48, 4, 'Kaca las bening, 108mmx50mmx2mm', '#REF!', 10.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (275, 48, 5, 'Meteran 10M, Brand: Tekiro', '650878', 2.0, NULL, 160, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (276, 48, 6, 'Kapur lilin besi,F-Premium Stone Pencil, 1box=1200pcs', '#REF!', 1.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (277, 48, 7, 'PLAT Strip, 50mm x 3mm x 6M', '#REF!', 5.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (278, 48, 8, 'Nipon Resibon ultra cut 4" (100x1.6x16), Japan', '#REF!', 24.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (279, 48, 9, 'Nipon Resibon poles gerinda 4" (100x6x16), Japan', '#REF!', 24.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (280, 48, 10, 'Welding Helm warna hitam', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (281, 48, 11, 'PLAT Hitam baja 6mm x 4ft x 8ft', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (282, 48, 12, 'KACA MATA HITAM Safety 99.9% UV block out', '#REF!', 4.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (283, 48, 13, 'Chipping Hammer Handled 225 Gram', '612611', 5.0, NULL, 163, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (284, 48, 14, 'Sarung tangan kulit las panjang 18 inch, 1 pack=12 psg', '#REF!', 1.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (285, 48, 15, 'Nozzle cutting tip gas acetylene No.2', NULL, 3.0, NULL, 222, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (286, 48, 16, 'Elbow/fitting elbow Carbon steel 90 deg, sch 40, 2"', '#REF!', 25.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (287, 48, 17, 'Kunci Inggris Size 10" 250mm brand:Tekiro, carbon steel', NULL, 3.0, NULL, 223, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (288, 48, 18, 'Kabel Roll, Brand: Makita 100 meter, 4 port saklar, 220V, 700-1500W', NULL, 2.0, NULL, 224, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (289, 49, 1, 'PIPA KARBON SCH 40, 3inch x 6M', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (290, 49, 2, 'PIPA KARBON SCH 40, 4inch x 6M', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (291, 49, 3, 'Kaca las hitam No.10, 108mmx50mmx3mm', '#REF!', 10.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (292, 49, 4, 'Kaca las bening, 108mmx50mmx2mm', '#REF!', 10.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (293, 49, 5, 'Meteran 10M, Brand: Tekiro', '650878', 2.0, NULL, 160, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (294, 49, 6, 'Kapur lilin besi,F-Premium Stone Pencil, 1box=1200pcs', '#REF!', 1.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (295, 49, 7, 'PLAT Strip, 50mm x 3mm x 6M', '#REF!', 5.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (296, 49, 8, 'Nipon Resibon ultra cut 4" (100x1.6x16), Japan', '#REF!', 24.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (297, 49, 9, 'Nipon Resibon poles gerinda 4" (100x6x16), Japan', '#REF!', 24.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (298, 49, 10, 'Welding Helm warna hitam', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (299, 49, 11, 'PLAT Hitam baja 6mm x 4ft x 8ft', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (300, 49, 12, 'KACA MATA HITAM Safety 99.9% UV block out', '#REF!', 4.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+  (271, 48, 1, 'PIPA KARBON SCH 40, 3inch x 6M', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (272, 48, 2, 'PIPA KARBON SCH 40, 4inch x 6M', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (273, 48, 3, 'Kaca las hitam No.10, 108mmx50mmx3mm', '#REF!', 10.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (274, 48, 4, 'Kaca las bening, 108mmx50mmx2mm', '#REF!', 10.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (275, 48, 5, 'Meteran 10M, Brand: Tekiro', '650878', 2.0, NULL, 160, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (276, 48, 6, 'Kapur lilin besi,F-Premium Stone Pencil, 1box=1200pcs', '#REF!', 1.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (277, 48, 7, 'PLAT Strip, 50mm x 3mm x 6M', '#REF!', 5.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (278, 48, 8, 'Nipon Resibon ultra cut 4" (100x1.6x16), Japan', '#REF!', 24.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (279, 48, 9, 'Nipon Resibon poles gerinda 4" (100x6x16), Japan', '#REF!', 24.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (280, 48, 10, 'Welding Helm warna hitam', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (281, 48, 11, 'PLAT Hitam baja 6mm x 4ft x 8ft', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (282, 48, 12, 'KACA MATA HITAM Safety 99.9% UV block out', '#REF!', 4.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (283, 48, 13, 'Chipping Hammer Handled 225 Gram', '612611', 5.0, NULL, 163, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (284, 48, 14, 'Sarung tangan kulit las panjang 18 inch, 1 pack=12 psg', '#REF!', 1.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (285, 48, 15, 'Nozzle cutting tip gas acetylene No.2', NULL, 3.0, NULL, 222, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (286, 48, 16, 'Elbow/fitting elbow Carbon steel 90 deg, sch 40, 2"', '#REF!', 25.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (287, 48, 17, 'Kunci Inggris Size 10" 250mm brand:Tekiro, carbon steel', NULL, 3.0, NULL, 223, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (288, 48, 18, 'Kabel Roll, Brand: Makita 100 meter, 4 port saklar, 220V, 700-1500W', NULL, 2.0, NULL, 224, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (289, 49, 1, 'PIPA KARBON SCH 40, 3inch x 6M', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (290, 49, 2, 'PIPA KARBON SCH 40, 4inch x 6M', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (291, 49, 3, 'Kaca las hitam No.10, 108mmx50mmx3mm', '#REF!', 10.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (292, 49, 4, 'Kaca las bening, 108mmx50mmx2mm', '#REF!', 10.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (293, 49, 5, 'Meteran 10M, Brand: Tekiro', '650878', 2.0, NULL, 160, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (294, 49, 6, 'Kapur lilin besi,F-Premium Stone Pencil, 1box=1200pcs', '#REF!', 1.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (295, 49, 7, 'PLAT Strip, 50mm x 3mm x 6M', '#REF!', 5.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (296, 49, 8, 'Nipon Resibon ultra cut 4" (100x1.6x16), Japan', '#REF!', 24.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (297, 49, 9, 'Nipon Resibon poles gerinda 4" (100x6x16), Japan', '#REF!', 24.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (298, 49, 10, 'Welding Helm warna hitam', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (299, 49, 11, 'PLAT Hitam baja 6mm x 4ft x 8ft', '#REF!', 2.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (300, 49, 12, 'KACA MATA HITAM Safety 99.9% UV block out', '#REF!', 4.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
-  (301, 49, 13, 'Chipping Hammer Handled 225 Gram', '612611', 5.0, NULL, 163, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (302, 49, 14, 'Sarung tangan kulit las panjang 18 inch, 1 pack=12 psg', '#REF!', 1.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (303, 49, 15, 'Nozzle cutting tip gas acetylene No.2', NULL, 3.0, NULL, 222, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (304, 49, 16, 'Elbow/fitting elbow Carbon steel 90 deg, sch 40, 2"', '#REF!', 25.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (305, 49, 17, 'Kunci Inggris Size 10" 250mm brand:Tekiro, carbon steel', NULL, 3.0, NULL, 223, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (306, 49, 18, 'Kabel Roll, Brand: Makita 100 meter, 4 port saklar, 220V, 700-1500W', NULL, 2.0, NULL, 224, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (307, 50, 1, 'Bordes Checker steel 6mm, 4ftx8ft', '670818', 20.0, NULL, 225, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (301, 49, 13, 'Chipping Hammer Handled 225 Gram', '612611', 5.0, NULL, 163, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (302, 49, 14, 'Sarung tangan kulit las panjang 18 inch, 1 pack=12 psg', '#REF!', 1.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (303, 49, 15, 'Nozzle cutting tip gas acetylene No.2', NULL, 3.0, NULL, 222, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (304, 49, 16, 'Elbow/fitting elbow Carbon steel 90 deg, sch 40, 2"', '#REF!', 25.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (305, 49, 17, 'Kunci Inggris Size 10" 250mm brand:Tekiro, carbon steel', NULL, 3.0, NULL, 223, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (306, 49, 18, 'Kabel Roll, Brand: Makita 100 meter, 4 port saklar, 220V, 700-1500W', NULL, 2.0, NULL, 224, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (307, 50, 1, 'Bordes Checker steel 6mm, 4ftx8ft', '670818', 20.0, NULL, 225, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (308, 50, 2, 'GRATING GALV IRON 3''X20'', PITCH 1-3/16"X4"', '673803', 10.0, NULL, 226, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (309, 50, 3, 'ELBOW MALLEABLE CAST IRON GALV, 90DEG 2"', '730169', 30.0, NULL, 227, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (310, 50, 4, 'ELBOW MALLEABLE CAST IRON GALV, 90DEG 3"', '730171', 10.0, NULL, 228, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (311, 50, 5, 'ELBOW MALLEABLE CAST IRON GALV, 45DEG 2"', '730109', 30.0, NULL, 229, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (312, 50, 6, 'ELBOW MALLEABLE CAST IRON GALV, 45DEG 3"', '730111', 10.0, NULL, 230, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (313, 50, 7, 'TEE MALLEABLE CAST IRON GALV, 1"', '730306', 10.0, NULL, 231, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (314, 50, 8, 'TEE MALLEABLE CAST IRON GALV, 4"', '730307', 10.0, NULL, 232, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (309, 50, 3, 'ELBOW MALLEABLE CAST IRON GALV, 90DEG 2"', '730169', 30.0, NULL, 227, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (310, 50, 4, 'ELBOW MALLEABLE CAST IRON GALV, 90DEG 3"', '730171', 10.0, NULL, 228, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (311, 50, 5, 'ELBOW MALLEABLE CAST IRON GALV, 45DEG 2"', '730109', 30.0, NULL, 229, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (312, 50, 6, 'ELBOW MALLEABLE CAST IRON GALV, 45DEG 3"', '730111', 10.0, NULL, 230, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (313, 50, 7, 'TEE MALLEABLE CAST IRON GALV, 1"', '730306', 10.0, NULL, 231, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (314, 50, 8, 'TEE MALLEABLE CAST IRON GALV, 4"', '730307', 10.0, NULL, 232, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (315, 50, 9, 'TEE MALLEABLE CAST IRON GALV, 3', '730311', 5.0, NULL, 233, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (316, 50, 10, 'Pipa Carbon Seamless Sch 80, 1"x6m', '710431', 50.0, NULL, 234, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (317, 50, 11, 'Pipa Carbon Seamless Sch 80, 1 1/4"x6m', '710432', 50.0, NULL, 235, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (318, 50, 12, 'Pipa Carbon Seamless Sch 80, 1 1/2"x6m', '710433', 30.0, NULL, 236, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (319, 50, 13, 'No Offer', '734805', 100.0, NULL, 237, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (320, 50, 14, 'Pipa Carbon Seamless Sch 40, 3"x6m', '710411', 20.0, NULL, 238, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (321, 50, 15, 'Pipa Carbon Medium, 2"x6m', '710159', 40.0, NULL, 239, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (322, 50, 16, 'Pipa Carbon Medium, 1"x6m', '710156', 100.0, NULL, 240, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (323, 50, 17, 'Pipa Carbon Medium, 1 1/4"x6m', '710157', 30.0, NULL, 241, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (316, 50, 10, 'Pipa Carbon Seamless Sch 80, 1"x6m', '710431', 50.0, NULL, 234, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (317, 50, 11, 'Pipa Carbon Seamless Sch 80, 1 1/4"x6m', '710432', 50.0, NULL, 235, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (318, 50, 12, 'Pipa Carbon Seamless Sch 80, 1 1/2"x6m', '710433', 30.0, NULL, 236, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (319, 50, 13, 'No Offer', '734805', 100.0, NULL, 237, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (320, 50, 14, 'Pipa Carbon Seamless Sch 40, 3"x6m', '710411', 20.0, NULL, 238, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (321, 50, 15, 'Pipa Carbon Medium, 2"x6m', '710159', 40.0, NULL, 239, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (322, 50, 16, 'Pipa Carbon Medium, 1"x6m', '710156', 100.0, NULL, 240, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (323, 50, 17, 'Pipa Carbon Medium, 1 1/4"x6m', '710157', 30.0, NULL, 241, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (324, 50, 18, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M8 X 30MM                               Material : Bronze (Kuningan)', '691141', 1200.0, NULL, 242, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (325, 50, 19, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M8 X 50MM                                Material : Bronze (Kuningan)', '691145', 400.0, NULL, 243, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (326, 50, 20, 'Stainless Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STAINLESS, STEEL M24 X 70MM', '693140', 100.0, NULL, 244, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (327, 50, 21, '-', '691275', 500.0, NULL, 245, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (328, 50, 22, '-', '691215', 500.0, NULL, 246, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (329, 51, 1, 'Seal TCN 25x45x11', NULL, 3.0, NULL, 45, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (330, 51, 2, 'Oring 53x4', NULL, 10.0, NULL, 51, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (331, 51, 3, 'Oring P71', NULL, 10.0, NULL, 55, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (332, 52, 1, 'SIKA Thermometer 100C x 1/2 x 40mm', '#REF!', 3.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (333, 52, 2, 'no offer', '#REF!', 3.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (334, 52, 3, 'SIKA Thermometer 100C x 1/2 x 40mm', '#REF!', 3.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (335, 52, 4, 'no offer', '#REF!', 3.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (336, 52, 5, 'Resistance bulb termocouple, RTD PT-100 sensor 3 wire, class A. SS304, probe 10mm, d=8mm,thread 1/2" NPT Male. Range  -200~500C', '650878', 5.0, NULL, 160, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (327, 50, 21, '-', '691275', 500.0, NULL, 245, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (328, 50, 22, '-', '691215', 500.0, NULL, 246, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (329, 51, 1, 'Seal TCN 25x45x11', NULL, 3.0, NULL, 45, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (330, 51, 2, 'Oring 53x4', NULL, 10.0, NULL, 51, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (331, 51, 3, 'Oring P71', NULL, 10.0, NULL, 55, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (332, 52, 1, 'SIKA Thermometer 100C x 1/2 x 40mm', '#REF!', 3.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (333, 52, 2, 'no offer', '#REF!', 3.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (334, 52, 3, 'SIKA Thermometer 100C x 1/2 x 40mm', '#REF!', 3.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (335, 52, 4, 'no offer', '#REF!', 3.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (336, 52, 5, 'Resistance bulb termocouple, RTD PT-100 sensor 3 wire, class A. SS304, probe 10mm, d=8mm,thread 1/2" NPT Male. Range  -200~500C', '650878', 5.0, NULL, 160, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (337, 52, 6, 'ENGINE SPEED SENSOR SP-124 (1 unit avail)
-TYPE: SP-124', '#REF!', 3.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+TYPE: SP-124', '#REF!', 3.0, NULL, 221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (338, 53, 1, 'Hydraulic Pump', NULL, 1.0, NULL, 247, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (339, 54, 1, 'O RING JIS B2401 G-110', NULL, 10.0, NULL, 248, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (340, 54, 2, 'O RING JIS B2401 G-130', NULL, 10.0, NULL, 249, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17325,90 +17325,90 @@ TYPE: SP-124', '#REF!', 3.0, NULL, 221, 'substituted', 'import', 'Backfilled fro
   (343, 54, 5, 'O RING JIS B2401 P-10', NULL, 50.0, NULL, 252, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (344, 54, 6, 'O RING JIS B2401 P-20', NULL, 50.0, NULL, 50, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (345, 54, 7, 'OIL SEAL NOK SKY-56                                                                                                                      Offer: NOK USH56', NULL, 20.0, NULL, 253, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (346, 54, 8, '50x68x9 TC', NULL, 4.0, NULL, 44, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (346, 54, 8, '50x68x9 TC', NULL, 4.0, NULL, 44, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (347, 54, 9, 'O RING JIS B2401 G-35', NULL, 20.0, NULL, 52, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (348, 54, 10, '26,7x1,78 ASO23', NULL, 20.0, NULL, 254, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (348, 54, 10, '26,7x1,78 ASO23', NULL, 20.0, NULL, 254, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (349, 54, 11, 'OIL SEAL NOK CORTECO DSI 20284 5.6', NULL, 10.0, NULL, 47, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (350, 55, 1, 'OMRON RELAY MY4-24 VDC', NULL, 20.0, NULL, 255, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (350, 55, 1, 'OMRON RELAY MY4-24 VDC', NULL, 20.0, NULL, 255, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (351, 55, 2, 'OMRON-FLOATLESS SWICTH-61F-GP-N', NULL, 3.0, NULL, 256, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (352, 55, 3, 'Omron CQM1H-CPU11', NULL, 1.0, NULL, 257, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (353, 56, 1, 'Caltech Ignition lamp 400W Z400M', '791222', 2.0, NULL, 258, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (354, 56, 2, 'No Offer', '791221', 6.0, NULL, 259, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (355, 56, 3, 'Philip Flood Light 150W, 220V                                                Natural White (4000K), 14250 Lumens,                                                                                                              IP 65, IK 06, CRI 80 Size; 385 x 298x41mm', '791826', 6.0, NULL, 260, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (356, 56, 4, 'Philip Flood Light 100W, 220V                                                Natural White (4000K), 9000 Lumens,                                                                                                              IP 65, IK 06, CRI 80 Size; 324 x 204x38mm', '791820', 6.0, NULL, 261, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (357, 56, 5, 'Philip Flourecent Lamp TL-D18W/54 white                  Panjang 60cm', '791412', 100.0, NULL, 262, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (358, 56, 6, 'Isolasi Listrik Nitto Hitam 3/4 x 25m', NULL, 12.0, NULL, 263, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (352, 55, 3, 'Omron CQM1H-CPU11', NULL, 1.0, NULL, 257, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (353, 56, 1, 'Caltech Ignition lamp 400W Z400M', '791222', 2.0, NULL, 258, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (354, 56, 2, 'No Offer', '791221', 6.0, NULL, 259, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (355, 56, 3, 'Philip Flood Light 150W, 220V                                                Natural White (4000K), 14250 Lumens,                                                                                                              IP 65, IK 06, CRI 80 Size; 385 x 298x41mm', '791826', 6.0, NULL, 260, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (356, 56, 4, 'Philip Flood Light 100W, 220V                                                Natural White (4000K), 9000 Lumens,                                                                                                              IP 65, IK 06, CRI 80 Size; 324 x 204x38mm', '791820', 6.0, NULL, 261, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (357, 56, 5, 'Philip Flourecent Lamp TL-D18W/54 white                  Panjang 60cm', '791412', 100.0, NULL, 262, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (358, 56, 6, 'Isolasi Listrik Nitto Hitam 3/4 x 25m', NULL, 12.0, NULL, 263, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (359, 57, 1, 'Cutting Torch Yamato Type M', NULL, 2.0, NULL, 264, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (360, 57, 2, 'Cutting Torch Yamato Type ST25', NULL, 1.0, NULL, 265, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (361, 58, 1, 'Solenoid Valve                                                                                         Parker Lucifer                                                                                                             Type : 122K9321, 1/8 Inch, 220V, 60 Hz', NULL, 1.0, NULL, 266, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (361, 58, 1, 'Solenoid Valve                                                                                         Parker Lucifer                                                                                                             Type : 122K9321, 1/8 Inch, 220V, 60 Hz', NULL, 1.0, NULL, 266, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (362, 58, 2, 'Solenoid Valve
-Parker Lucifer                                                                                                              Type : 321 H2322, 3/8 inch, 220V, 60Hz', NULL, 2.0, NULL, 267, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (363, 59, 1, 'Kain majun mix color, potongan mix ±20x20cm', NULL, 500.0, NULL, 268, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (364, 59, 2, 'Plastic Bag for garbage disposal 600mm x 1000mm Transparant', NULL, 250.0, NULL, 269, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (365, 59, 3, 'Detergen merk: DAIA 800gr', NULL, 100.0, NULL, 270, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (366, 59, 4, 'No Offer', NULL, 5.0, NULL, 271, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (367, 59, 5, 'No Offer', NULL, 15.0, NULL, 272, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (368, 59, 6, 'No Offer', NULL, 5.0, NULL, 273, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (369, 59, 7, 'Cotton Working Gloves non slip dots (per pasang)', NULL, 250.0, NULL, 274, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (370, 59, 8, 'Silicon Clear sealant WN Weatherseal 300 ML', NULL, 10.0, NULL, 275, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Parker Lucifer                                                                                                              Type : 321 H2322, 3/8 inch, 220V, 60Hz', NULL, 2.0, NULL, 267, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (363, 59, 1, 'Kain majun mix color, potongan mix ±20x20cm', NULL, 500.0, NULL, 268, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (364, 59, 2, 'Plastic Bag for garbage disposal 600mm x 1000mm Transparant', NULL, 250.0, NULL, 269, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (365, 59, 3, 'Detergen merk: DAIA 800gr', NULL, 100.0, NULL, 270, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (366, 59, 4, 'No Offer', NULL, 5.0, NULL, 271, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (367, 59, 5, 'No Offer', NULL, 15.0, NULL, 272, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (368, 59, 6, 'No Offer', NULL, 5.0, NULL, 273, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (369, 59, 7, 'Cotton Working Gloves non slip dots (per pasang)', NULL, 250.0, NULL, 274, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (370, 59, 8, 'Silicon Clear sealant WN Weatherseal 300 ML', NULL, 10.0, NULL, 275, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (371, 59, 9, 'Gerinda tangan listrik merk Bosch GWS 700 , size 4"', NULL, 2.0, NULL, 276, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (372, 59, 10, 'No Offer', NULL, 3.0, NULL, 277, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (373, 59, 11, 'set Resinoid offset grinding wheel, OD: 100mm, Thickness: 6 mm, merk: Nippon Resibon', NULL, 100.0, NULL, 115, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (374, 59, 12, 'No Offer', NULL, 200.0, NULL, 114, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (375, 59, 13, 'Teflon/PTFE Seal tape 20mm x 10 mtr', NULL, 30.0, NULL, 278, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (372, 59, 10, 'No Offer', NULL, 3.0, NULL, 277, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (373, 59, 11, 'set Resinoid offset grinding wheel, OD: 100mm, Thickness: 6 mm, merk: Nippon Resibon', NULL, 100.0, NULL, 115, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (374, 59, 12, 'No Offer', NULL, 200.0, NULL, 114, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (375, 59, 13, 'Teflon/PTFE Seal tape 20mm x 10 mtr', NULL, 30.0, NULL, 278, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (376, 59, 14, 'Studs whole threaded M8 x 1000mm', NULL, 6.0, NULL, 279, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (377, 59, 15, 'Studs whole threaded M10 x 1000mm', NULL, 5.0, NULL, 280, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (378, 59, 16, 'Studs whole threaded M12 x 1000mm', NULL, 6.0, NULL, 281, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (379, 59, 17, 'Studs whole threaded M16 x 1000mm', NULL, 4.0, NULL, 282, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (380, 59, 18, 'Studs whole threaded M20 x 1000mm', NULL, 2.0, NULL, 283, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (381, 59, 19, 'Non-spark hand scraper material Bronze 2inch', NULL, 6.0, NULL, 284, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (382, 59, 20, 'Plastic bucket 20 ltrs, brand: Great', NULL, 10.0, NULL, 285, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (383, 59, 21, 'Hand Scraper Stainless 4" MERK: Strauss', NULL, 5.0, NULL, 286, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (381, 59, 19, 'Non-spark hand scraper material Bronze 2inch', NULL, 6.0, NULL, 284, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (382, 59, 20, 'Plastic bucket 20 ltrs, brand: Great', NULL, 10.0, NULL, 285, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (383, 59, 21, 'Hand Scraper Stainless 4" MERK: Strauss', NULL, 5.0, NULL, 286, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (384, 59, 22, 'Hexagon Head Bolts Ungalv, Bolt with Nut M10 x 55mm, full thread, coarse', NULL, 150.0, NULL, 287, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (385, 59, 23, 'Hexagon Head Bolts Ungalv, Bolt with Nut M12 x 55mm, full thread, coarse', NULL, 200.0, NULL, 288, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (386, 59, 24, 'Hexagon Head Bolts Ungalv, Bolt with Nut M14 x 55mm, full thread, coarse', NULL, 100.0, NULL, 289, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (387, 59, 25, 'Hexagon Head Bolts Ungalv, Bolt with Nut M20 x 70mm, full thread, coarse', NULL, 100.0, NULL, 290, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (388, 59, 26, 'Hexagon Head Bolts Ungalv, Bolt with Nut M16 x 60mm, full thread, coarse', NULL, 100.0, NULL, 291, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (389, 59, 27, 'Hexagon Head Bolts Ungalv, Bolt with Nut M8 x 55mm, full thread, coarse', NULL, 150.0, NULL, 292, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (390, 59, 28, 'Masking tapes 48mm x 19m, Brand: 3M', NULL, 10.0, NULL, 293, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (391, 59, 29, 'Masking tapes 24mm x 19m, Brand: 3M', NULL, 10.0, NULL, 294, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (392, 59, 30, 'Can oiler 300cc', NULL, 3.0, NULL, 295, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (393, 59, 31, 'Sapu Nylon Brand: Nagata, panjang 125cm', NULL, 10.0, NULL, 296, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (394, 59, 32, 'Red silicon Dextone 70gr', NULL, 15.0, NULL, 297, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (395, 59, 33, 'No Offer', NULL, 10.0, NULL, 298, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (396, 59, 34, 'No Offer', NULL, 5.0, NULL, 299, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (397, 59, 35, 'No Offer', NULL, 5.0, NULL, 300, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (398, 59, 36, 'No Offer', NULL, 5.0, NULL, 301, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (399, 59, 37, 'Ridgid cutter wheels F-514 for pipe cutter 2A', NULL, 3.0, NULL, 302, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (400, 59, 38, 'Hose clamps 1/2" (8 mm - 12 mm ) stainless', NULL, 25.0, NULL, 303, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+  (390, 59, 28, 'Masking tapes 48mm x 19m, Brand: 3M', NULL, 10.0, NULL, 293, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (391, 59, 29, 'Masking tapes 24mm x 19m, Brand: 3M', NULL, 10.0, NULL, 294, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (392, 59, 30, 'Can oiler 300cc', NULL, 3.0, NULL, 295, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (393, 59, 31, 'Sapu Nylon Brand: Nagata, panjang 125cm', NULL, 10.0, NULL, 296, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (394, 59, 32, 'Red silicon Dextone 70gr', NULL, 15.0, NULL, 297, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (395, 59, 33, 'No Offer', NULL, 10.0, NULL, 298, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (396, 59, 34, 'No Offer', NULL, 5.0, NULL, 299, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (397, 59, 35, 'No Offer', NULL, 5.0, NULL, 300, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (398, 59, 36, 'No Offer', NULL, 5.0, NULL, 301, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (399, 59, 37, 'Ridgid cutter wheels F-514 for pipe cutter 2A', NULL, 3.0, NULL, 302, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (400, 59, 38, 'Hose clamps 1/2" (8 mm - 12 mm ) stainless', NULL, 25.0, NULL, 303, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
-  (401, 59, 39, 'Hose clamps 5/8" (10 mm - 16 mm ) stainless', NULL, 25.0, NULL, 304, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (402, 59, 40, 'Skun tusuk Sleeve Ferrules, size 25mm (untuk kabel 25mm)', NULL, 150.0, NULL, 305, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (403, 59, 41, 'Tespen Brand: Victory, rubber handle', NULL, 5.0, NULL, 306, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (404, 59, 42, 'TELE Control Remote Wireless for crane hoist, double speed F24-8D, 220V', NULL, 2.0, NULL, 307, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (405, 60, 1, 'Lem Loctite (abu-abu)', NULL, 2.0, NULL, 308, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (406, 60, 2, 'tool kunci rachet 3/4"                                                                           Brand: Wipro', NULL, 1.0, NULL, 309, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (407, 60, 3, 'alat ukur bore gauge 100mm sampai 160mm                    Brand: Mitutoyo', NULL, 1.0, NULL, 310, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (408, 60, 4, 'Micro outside 100mm sampai 200mm                                            Brand: Mitutoyo', NULL, 1.0, NULL, 311, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (409, 61, 1, '-', NULL, 10.0, NULL, 312, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (410, 61, 2, '-', NULL, 10.0, NULL, 313, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (411, 61, 3, '50x68x9 TC', NULL, 4.0, NULL, 44, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (401, 59, 39, 'Hose clamps 5/8" (10 mm - 16 mm ) stainless', NULL, 25.0, NULL, 304, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (402, 59, 40, 'Skun tusuk Sleeve Ferrules, size 25mm (untuk kabel 25mm)', NULL, 150.0, NULL, 305, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (403, 59, 41, 'Tespen Brand: Victory, rubber handle', NULL, 5.0, NULL, 306, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (404, 59, 42, 'TELE Control Remote Wireless for crane hoist, double speed F24-8D, 220V', NULL, 2.0, NULL, 307, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (405, 60, 1, 'Lem Loctite (abu-abu)', NULL, 2.0, NULL, 308, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (406, 60, 2, 'tool kunci rachet 3/4"                                                                           Brand: Wipro', NULL, 1.0, NULL, 309, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (407, 60, 3, 'alat ukur bore gauge 100mm sampai 160mm                    Brand: Mitutoyo', NULL, 1.0, NULL, 310, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (408, 60, 4, 'Micro outside 100mm sampai 200mm                                            Brand: Mitutoyo', NULL, 1.0, NULL, 311, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (409, 61, 1, '-', NULL, 10.0, NULL, 312, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (410, 61, 2, '-', NULL, 10.0, NULL, 313, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (411, 61, 3, '50x68x9 TC', NULL, 4.0, NULL, 44, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (412, 61, 4, 'O RING JIS B2401 G-35', NULL, 20.0, NULL, 52, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (413, 61, 5, '26,7x1,78 ASO23 Hardness 90', NULL, 20.0, NULL, 254, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (414, 61, 6, '-', NULL, 10.0, NULL, 314, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (413, 61, 5, '26,7x1,78 ASO23 Hardness 90', NULL, 20.0, NULL, 254, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (414, 61, 6, '-', NULL, 10.0, NULL, 314, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (415, 61, 7, 'OIL SEAL NOK CORTECO DSI 20284 5.6', NULL, 10.0, NULL, 47, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (416, 62, 1, 'No Offer', NULL, 2.0, NULL, 315, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (417, 62, 2, 'No Offer', NULL, 2.0, NULL, 316, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (418, 62, 3, '#REF!', NULL, 2.0, NULL, 317, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (419, 62, 4, 'No Offer', NULL, 2.0, NULL, 318, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (420, 62, 5, 'No Offer', NULL, 6.0, NULL, 319, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (416, 62, 1, 'No Offer', NULL, 2.0, NULL, 315, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (417, 62, 2, 'No Offer', NULL, 2.0, NULL, 316, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (418, 62, 3, '#REF!', NULL, 2.0, NULL, 317, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (419, 62, 4, 'No Offer', NULL, 2.0, NULL, 318, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (420, 62, 5, 'No Offer', NULL, 6.0, NULL, 319, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (421, 62, 6, 'Exhaust fan SUNON, DP200A, P/N: 2123HSL 220-240V-50/60Hz 0,14A ( 120mm X 120mm X 40mm )', NULL, 4.0, NULL, 320, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (422, 62, 7, '#REF!', NULL, 6.0, NULL, 321, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (423, 62, 8, 'No Offer', NULL, 4.0, NULL, 322, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (422, 62, 7, '#REF!', NULL, 6.0, NULL, 321, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (423, 62, 8, 'No Offer', NULL, 4.0, NULL, 322, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (424, 63, 1, 'BPI PETA NO.98', NULL, 1.0, NULL, 323, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (425, 63, 2, 'BPI PETA NO.78', NULL, 1.0, NULL, 324, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (426, 63, 3, 'BPI PETA NO.414KK', NULL, 1.0, NULL, 325, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17425,15 +17425,15 @@ INSERT INTO quotation_item_requests (
   (437, 65, 1, 'EPIRB Hydrostatic Release Unit
 HRU (Hydrostatic Release Unit)', NULL, 1.0, NULL, 336, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (438, 66, 1, 'Filter 2040PM or 30 Micron Filter 2040                                                                           Brand: Parker', NULL, 1.0, NULL, 337, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (439, 67, 1, 'NIPPLE GREASE TYPE STRAIGHT DIA THREAD 10MM (M10x1 )', NULL, 500.0, NULL, 338, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (440, 67, 2, 'No Offer', NULL, 2.0, NULL, 339, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (441, 67, 3, '3-STRAND HEAVING LINE 8MM, 1 coil/roll = 200meter', '211291', 2.0, NULL, 340, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (442, 67, 4, 'LEVER TYPE HAND GREASE GUNS - IMPA 617703', '617701', 2.0, NULL, 341, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (443, 67, 5, 'Plastic Transparent Hose 2 inch x 50m x 2 roll                                                                            1 roll = 50 meter', '350241', 1.0, NULL, 196, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (444, 67, 6, 'Hose coupling Type Storz 21/2 inch (material: brass/kuningan)', NULL, 6.0, NULL, 342, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (445, 67, 7, 'Tensioner Banding Tools IMPA 614101', '614101', 1.0, NULL, 343, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (446, 67, 8, 'Strapping Band SS STEEL 16mm X 30 M', '614106', 2.0, NULL, 344, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (447, 67, 9, 'Banding Buckle SS Steel 16mmX100 PCS IMPA 614112', '614101', 1.0, NULL, 343, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (439, 67, 1, 'NIPPLE GREASE TYPE STRAIGHT DIA THREAD 10MM (M10x1 )', NULL, 500.0, NULL, 338, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (440, 67, 2, 'No Offer', NULL, 2.0, NULL, 339, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (441, 67, 3, '3-STRAND HEAVING LINE 8MM, 1 coil/roll = 200meter', '211291', 2.0, NULL, 340, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (442, 67, 4, 'LEVER TYPE HAND GREASE GUNS - IMPA 617703', '617701', 2.0, NULL, 341, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (443, 67, 5, 'Plastic Transparent Hose 2 inch x 50m x 2 roll                                                                            1 roll = 50 meter', '350241', 1.0, NULL, 196, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (444, 67, 6, 'Hose coupling Type Storz 21/2 inch (material: brass/kuningan)', NULL, 6.0, NULL, 342, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (445, 67, 7, 'Tensioner Banding Tools IMPA 614101', '614101', 1.0, NULL, 343, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (446, 67, 8, 'Strapping Band SS STEEL 16mm X 30 M', '614106', 2.0, NULL, 344, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (447, 67, 9, 'Banding Buckle SS Steel 16mmX100 PCS IMPA 614112', '614101', 1.0, NULL, 343, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (448, 67, 11, '- DANGER HIGH VOLTAGE(337610) - 30 PCS', '337610', 30.0, NULL, 346, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (449, 67, 12, '- DO NOT OPERATE(338553) - 5 PCS', '338553', 5.0, NULL, 347, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (450, 67, 13, '- AUTHORISED PERSONEL ONLY(338545) - 5 PCS', '338545', 5.0, NULL, 348, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17442,229 +17442,229 @@ HRU (Hydrostatic Release Unit)', NULL, 1.0, NULL, 336, 'matched', 'import', 'Bac
   (453, 67, 16, '- DO NOT OPERATE(332530) - 5 PCS', '332530', 5.0, NULL, 351, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (454, 67, 17, '- DO NOT TOUCH(332531) - 5 PCS', '332531', 5.0, NULL, 352, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (455, 67, 18, 'LOCKOUT TAGOUT KIT ELECTRICAL-LOTO', NULL, 1.0, NULL, 353, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (456, 67, 19, 'Aloy Steel Striking 12 POINT RING WRENCH 36MM - DIN 7444   Brand: SANDS-Germany', '616090', 4.0, NULL, 354, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (457, 67, 20, 'KUNCI RING PAS RATCHET 17MM                                                                   Brand: Tomeco Japan Standard', NULL, 4.0, NULL, 355, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (458, 67, 21, 'EXTENSION BARS FOR SOCKET WRENCHES 3/4" LENGTH 400MM. Merk Kanzawa', NULL, 1.0, NULL, 356, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (459, 67, 22, 'OFFSET HANDLES FOR SOCKET WRENCH 3/4" x 15" (380mm)', NULL, 1.0, NULL, 357, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (460, 67, 23, 'No Offer', NULL, 1.0, NULL, 358, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (461, 67, 24, 'No Offer', '371511', 2.0, NULL, 359, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (462, 67, 25, 'FLAG SYMBOL (B) size 3'' x 4'' (only 1 available)', '371512', 2.0, NULL, 360, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (463, 67, 26, 'FLAG SYMBOL (H) size 3'' x 4'' (only 1 available)', '371518', 2.0, NULL, 361, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (464, 67, 27, 'FLAG SYMBOL (Q) size 3'' x 4'' (only 1 available)', '371527', 2.0, NULL, 362, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (465, 67, 28, 'INDONESIAN FLAG size 3'' X 4''', '371230', 3.0, NULL, 363, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (466, 67, 29, 'No Offer', NULL, 1.0, NULL, 364, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (467, 67, 30, 'No Offer', NULL, 12.0, NULL, 365, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (468, 67, 31, 'Baut sekrup roofing untuk spandek -  7cm', NULL, 100.0, NULL, 366, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (469, 67, 32, 'No Offer', '672362', 150.0, NULL, 367, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (456, 67, 19, 'Aloy Steel Striking 12 POINT RING WRENCH 36MM - DIN 7444   Brand: SANDS-Germany', '616090', 4.0, NULL, 354, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (457, 67, 20, 'KUNCI RING PAS RATCHET 17MM                                                                   Brand: Tomeco Japan Standard', NULL, 4.0, NULL, 355, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (458, 67, 21, 'EXTENSION BARS FOR SOCKET WRENCHES 3/4" LENGTH 400MM. Merk Kanzawa', NULL, 1.0, NULL, 356, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (459, 67, 22, 'OFFSET HANDLES FOR SOCKET WRENCH 3/4" x 15" (380mm)', NULL, 1.0, NULL, 357, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (460, 67, 23, 'No Offer', NULL, 1.0, NULL, 358, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (461, 67, 24, 'No Offer', '371511', 2.0, NULL, 359, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (462, 67, 25, 'FLAG SYMBOL (B) size 3'' x 4'' (only 1 available)', '371512', 2.0, NULL, 360, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (463, 67, 26, 'FLAG SYMBOL (H) size 3'' x 4'' (only 1 available)', '371518', 2.0, NULL, 361, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (464, 67, 27, 'FLAG SYMBOL (Q) size 3'' x 4'' (only 1 available)', '371527', 2.0, NULL, 362, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (465, 67, 28, 'INDONESIAN FLAG size 3'' X 4''', '371230', 3.0, NULL, 363, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (466, 67, 29, 'No Offer', NULL, 1.0, NULL, 364, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (467, 67, 30, 'No Offer', NULL, 12.0, NULL, 365, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (468, 67, 31, 'Baut sekrup roofing untuk spandek -  7cm', NULL, 100.0, NULL, 366, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (469, 67, 32, 'No Offer', '672362', 150.0, NULL, 367, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (470, 68, 1, 'Trafo Step Up 220 V → 380 V                                                                                            (Input 220 V - 3 phase RST) -  (Output 380 V - 3 phase RST and Normal)                                                                               Kapasitas 3 Kva - Type : Dry                                                                           Frequency : 50/60 Hz', NULL, 2.0, NULL, 368, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (471, 69, 1, 'Dongkrak Botol (hydraulic jack) 2 Ton                                                                              Brand Tekiro', NULL, 1.0, NULL, 369, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (472, 69, 2, 'Dongkrak Botol (hydraulic jack) 4 Ton                                                                              Brand Tekiro', NULL, 1.0, NULL, 370, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (471, 69, 1, 'Dongkrak Botol (hydraulic jack) 2 Ton                                                                              Brand Tekiro', NULL, 1.0, NULL, 369, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (472, 69, 2, 'Dongkrak Botol (hydraulic jack) 4 Ton                                                                              Brand Tekiro', NULL, 1.0, NULL, 370, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (473, 70, 1, 'Printer', '#REF!', 1.0, NULL, 221, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (474, 71, 1, 'Cutting Torch Yamato Type M', NULL, 2.0, NULL, 264, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (475, 71, 2, 'Cutting Torch Yamato Type ST25', NULL, 1.0, NULL, 265, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (476, 72, 1, 'Ignition lamp 400W Z400M, Merk: Caltech', '791222', 2.0, NULL, 258, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (477, 72, 2, 'No Offer', '791221', 6.0, NULL, 259, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (478, 72, 3, 'Philip Flood Light 150W, 220V                                                Natural White (4000K), 14250 Lumens,                                                                                                              IP 65, IK 06, CRI 80 Size; 385 x 298x41mm', '791826', 6.0, NULL, 260, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (479, 72, 4, 'Philip Flood Light 100W, 220V                                                Natural White (4000K), 9000 Lumens,                                                                                                              IP 65, IK 06, CRI 80 Size; 324 x 204x38mm', '791820', 6.0, NULL, 261, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (480, 72, 5, 'IMPA 791432                                                                                                                  FL-20 20SSCW/18-24 18W (Size:27X588,7mm)', '791412', 100.0, NULL, 262, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (481, 72, 6, 'Isolasi Listrik Nitto Hitam 3/4 x 25m', NULL, 12.0, NULL, 263, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (482, 73, 1, 'Ignition lamp 400W Z400M, Merk: Caltech', '791222', 2.0, NULL, 258, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (483, 73, 2, 'No Offer', '791221', 6.0, NULL, 259, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (484, 73, 3, 'Philip Flood Light 150W, 220V                                                Natural White (4000K), 14250 Lumens,                                                                                                              IP 65, IK 06, CRI 80 Size; 385 x 298x41mm', '791826', 6.0, NULL, 260, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (485, 73, 4, 'Philip Flood Light 100W, 220V                                                Natural White (4000K), 9000 Lumens,                                                                                                              IP 65, IK 06, CRI 80 Size; 324 x 204x38mm', '791820', 6.0, NULL, 261, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (486, 73, 5, 'IMPA 791432                                                                                                                  FL-20 20SSCW/18-24 18W (Size:27X588,7mm)', '791412', 100.0, NULL, 262, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (487, 73, 6, 'Isolasi Listrik Nitto Hitam 3/4 x 25m', NULL, 12.0, NULL, 263, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (488, 74, 1, 'No Offer', NULL, 1.0, NULL, 371, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (489, 75, 1, 'No Offer', NULL, 12.0, NULL, 372, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (490, 76, 1, 'Sling Belt 75mm x 6 meter, 3 Ton, safety factor 6:1, Double Ply Polyester', '232176', 8.0, NULL, 373, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (491, 77, 1, '#REF!', NULL, 40.0, NULL, 377, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (492, 77, 2, '#REF!', NULL, 80.0, NULL, 378, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (493, 77, 3, 'Slogging Wrench 50mm DIN7444', '611107', 1.0, NULL, 379, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (494, 77, 4, 'Combination wrenche (Opening 50mm, bolt M33) Merk: OPT Japan', NULL, 1.0, NULL, 380, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (495, 78, 1, 'Dry Battery/Dry Accu Brand GS 12V/230Ah', NULL, 6.0, NULL, 374, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (476, 72, 1, 'Ignition lamp 400W Z400M, Merk: Caltech', '791222', 2.0, NULL, 258, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (477, 72, 2, 'No Offer', '791221', 6.0, NULL, 259, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (478, 72, 3, 'Philip Flood Light 150W, 220V                                                Natural White (4000K), 14250 Lumens,                                                                                                              IP 65, IK 06, CRI 80 Size; 385 x 298x41mm', '791826', 6.0, NULL, 260, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (479, 72, 4, 'Philip Flood Light 100W, 220V                                                Natural White (4000K), 9000 Lumens,                                                                                                              IP 65, IK 06, CRI 80 Size; 324 x 204x38mm', '791820', 6.0, NULL, 261, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (480, 72, 5, 'IMPA 791432                                                                                                                  FL-20 20SSCW/18-24 18W (Size:27X588,7mm)', '791412', 100.0, NULL, 262, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (481, 72, 6, 'Isolasi Listrik Nitto Hitam 3/4 x 25m', NULL, 12.0, NULL, 263, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (482, 73, 1, 'Ignition lamp 400W Z400M, Merk: Caltech', '791222', 2.0, NULL, 258, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (483, 73, 2, 'No Offer', '791221', 6.0, NULL, 259, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (484, 73, 3, 'Philip Flood Light 150W, 220V                                                Natural White (4000K), 14250 Lumens,                                                                                                              IP 65, IK 06, CRI 80 Size; 385 x 298x41mm', '791826', 6.0, NULL, 260, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (485, 73, 4, 'Philip Flood Light 100W, 220V                                                Natural White (4000K), 9000 Lumens,                                                                                                              IP 65, IK 06, CRI 80 Size; 324 x 204x38mm', '791820', 6.0, NULL, 261, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (486, 73, 5, 'IMPA 791432                                                                                                                  FL-20 20SSCW/18-24 18W (Size:27X588,7mm)', '791412', 100.0, NULL, 262, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (487, 73, 6, 'Isolasi Listrik Nitto Hitam 3/4 x 25m', NULL, 12.0, NULL, 263, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (488, 74, 1, 'No Offer', NULL, 1.0, NULL, 371, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (489, 75, 1, 'No Offer', NULL, 12.0, NULL, 372, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (490, 76, 1, 'Sling Belt 75mm x 6 meter, 3 Ton, safety factor 6:1, Double Ply Polyester', '232176', 8.0, NULL, 373, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (491, 77, 1, '#REF!', NULL, 40.0, NULL, 377, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (492, 77, 2, '#REF!', NULL, 80.0, NULL, 378, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (493, 77, 3, 'Slogging Wrench 50mm DIN7444', '611107', 1.0, NULL, 379, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (494, 77, 4, 'Combination wrenche (Opening 50mm, bolt M33) Merk: OPT Japan', NULL, 1.0, NULL, 380, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (495, 78, 1, 'Dry Battery/Dry Accu Brand GS 12V/230Ah', NULL, 6.0, NULL, 374, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (496, 78, 2, 'Water Battery/Water Accu (Air Aki) For refill', NULL, 40.0, NULL, 375, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (497, 79, 1, 'UPS/APC Computer (Model: BVX700LUI-MS)', NULL, 2.0, NULL, 376, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (498, 80, 1, 'Wire Rope Construction: 6x24 +7FC Dia:8mm Length:200M', NULL, 4.0, NULL, 381, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (499, 80, 2, 'No Offer', NULL, 10.0, NULL, 382, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (500, 80, 3, 'No Offer', NULL, 2.0, NULL, 383, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+  (498, 80, 1, 'Wire Rope Construction: 6x24 +7FC Dia:8mm Length:200M', NULL, 4.0, NULL, 381, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (499, 80, 2, 'No Offer', NULL, 10.0, NULL, 382, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (500, 80, 3, 'No Offer', NULL, 2.0, NULL, 383, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
-  (501, 80, 4, 'No Offer', NULL, 3.0, NULL, 384, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (502, 80, 5, '8-Strand Polypropylene Rope, CIR 9, 72mm, 220m', '211038', 4.0, NULL, 385, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (503, 81, 1, 'Set Hydraulic Jack & Pump 50 Ton                                                                            Details:', NULL, 1.0, NULL, 386, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (504, 82, 1, 'No offer', NULL, 1.0, NULL, 387, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (501, 80, 4, 'No Offer', NULL, 3.0, NULL, 384, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (502, 80, 5, '8-Strand Polypropylene Rope, CIR 9, 72mm, 220m', '211038', 4.0, NULL, 385, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (503, 81, 1, 'Set Hydraulic Jack & Pump 50 Ton                                                                            Details:', NULL, 1.0, NULL, 386, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (504, 82, 1, 'No offer', NULL, 1.0, NULL, 387, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (505, 82, 2, 'Mesin Bor Magnet merk: JETBROACH 35mm', NULL, 1.0, NULL, 388, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (506, 82, 3, 'No offer', NULL, 1.0, NULL, 389, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (507, 82, 4, 'Ballast TLD 18W-220V, 50/60Hz (EBC) Brand Phillip', NULL, 20.0, NULL, 390, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (508, 82, 5, 'Bullocks Offset Ring Wrench Set 1/4-1 1/4 inch.                                                                                           1 set isi 9', NULL, 1.0, NULL, 391, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (506, 82, 3, 'No offer', NULL, 1.0, NULL, 389, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (507, 82, 4, 'Ballast TLD 18W-220V, 50/60Hz (EBC) Brand Phillip', NULL, 20.0, NULL, 390, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (508, 82, 5, 'Bullocks Offset Ring Wrench Set 1/4-1 1/4 inch.                                                                                           1 set isi 9', NULL, 1.0, NULL, 391, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (509, 82, 6, 'Headlamp LED merk: Nitecore NU43', NULL, 5.0, NULL, 106, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (510, 83, 1, 'U Bolt 1/4 x 1 1/4 inch', '696734', 100.0, NULL, 392, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (511, 83, 2, 'U Bolt 5/16 x 1 1/2 inch', '696735', 100.0, NULL, 393, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (512, 83, 3, 'No Offer', '710407', 50.0, NULL, 394, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (513, 83, 4, 'No Offer', '710408', 50.0, NULL, 395, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (514, 83, 5, 'No Offer', '735504', 50.0, NULL, 396, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (515, 83, 6, 'No Offer', '735505', 50.0, NULL, 397, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (516, 83, 7, 'No Offer', '710411', 20.0, NULL, 238, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (517, 83, 8, 'No Offer', '670818', 5.0, NULL, 225, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (518, 83, 9, 'No Offer', '670780', 30.0, NULL, 398, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (519, 83, 10, 'No Offer', '670525', 10.0, NULL, 399, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (520, 83, 11, 'U Bolt 5/16 x 3 inc', '690708', 50.0, NULL, 400, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (521, 83, 12, 'Kobe Steel RB 26 3,2mm', '851325', 50.0, NULL, 401, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (522, 83, 13, 'No Offer', '731121', 20.0, NULL, 402, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (523, 83, 14, 'Bolt & Nut M24x45 Carbon Steel', '693134', 200.0, NULL, 403, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (524, 83, 15, 'No Offer', '670525', 10.0, NULL, 399, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (525, 84, 1, 'No Offer', NULL, 12.0, NULL, 372, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (526, 85, 1, 'Peta Laut Hidros No. 128 (Hidro Oseanografi)', NULL, 1.0, NULL, 404, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (527, 86, 1, 'No Offer', NULL, 1.0, NULL, 371, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (528, 86, 2, 'Kobe Steel RB 26 3,2mm', NULL, 50.0, NULL, 405, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (510, 83, 1, 'U Bolt 1/4 x 1 1/4 inch', '696734', 100.0, NULL, 392, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (511, 83, 2, 'U Bolt 5/16 x 1 1/2 inch', '696735', 100.0, NULL, 393, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (512, 83, 3, 'No Offer', '710407', 50.0, NULL, 394, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (513, 83, 4, 'No Offer', '710408', 50.0, NULL, 395, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (514, 83, 5, 'No Offer', '735504', 50.0, NULL, 396, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (515, 83, 6, 'No Offer', '735505', 50.0, NULL, 397, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (516, 83, 7, 'No Offer', '710411', 20.0, NULL, 238, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (517, 83, 8, 'No Offer', '670818', 5.0, NULL, 225, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (518, 83, 9, 'No Offer', '670780', 30.0, NULL, 398, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (519, 83, 10, 'No Offer', '670525', 10.0, NULL, 399, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (520, 83, 11, 'U Bolt 5/16 x 3 inc', '690708', 50.0, NULL, 400, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (521, 83, 12, 'Kobe Steel RB 26 3,2mm', '851325', 50.0, NULL, 401, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (522, 83, 13, 'No Offer', '731121', 20.0, NULL, 402, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (523, 83, 14, 'Bolt & Nut M24x45 Carbon Steel', '693134', 200.0, NULL, 403, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (524, 83, 15, 'No Offer', '670525', 10.0, NULL, 399, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (525, 84, 1, 'No Offer', NULL, 12.0, NULL, 372, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (526, 85, 1, 'Peta Laut Hidros No. 128 (Hidro Oseanografi)', NULL, 1.0, NULL, 404, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (527, 86, 1, 'No Offer', NULL, 1.0, NULL, 371, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (528, 86, 2, 'Kobe Steel RB 26 3,2mm', NULL, 50.0, NULL, 405, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (529, 86, 3, 'Elbow 3"', NULL, 20.0, NULL, 406, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (530, 86, 4, 'Bolt & Nut M24x45 Carbon Steel', NULL, 200.0, NULL, 407, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (531, 87, 1, 'Malarone 250/100, 250mg', NULL, 24.0, NULL, 408, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (532, 87, 2, 'No offer', NULL, 20.0, NULL, 409, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (533, 87, 3, 'No offer', NULL, 60.0, NULL, 410, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (534, 87, 4, 'No offer', NULL, 10.0, NULL, 411, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (535, 87, 5, 'Hydrogen Proxide kemasan 100ml (botol)', NULL, 5.0, NULL, 412, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (536, 87, 6, 'No offer', NULL, 50.0, NULL, 413, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (530, 86, 4, 'Bolt & Nut M24x45 Carbon Steel', NULL, 200.0, NULL, 407, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (531, 87, 1, 'Malarone 250/100, 250mg', NULL, 24.0, NULL, 408, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (532, 87, 2, 'No offer', NULL, 20.0, NULL, 409, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (533, 87, 3, 'No offer', NULL, 60.0, NULL, 410, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (534, 87, 4, 'No offer', NULL, 10.0, NULL, 411, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (535, 87, 5, 'Hydrogen Proxide kemasan 100ml (botol)', NULL, 5.0, NULL, 412, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (536, 87, 6, 'No offer', NULL, 50.0, NULL, 413, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (537, 87, 7, 'Imodium 2mg', NULL, 10.0, NULL, 414, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (538, 87, 8, 'No offer', NULL, 30.0, NULL, 415, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (539, 87, 9, 'No offer', NULL, 2.0, NULL, 416, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (538, 87, 8, 'No offer', NULL, 30.0, NULL, 415, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (539, 87, 9, 'No offer', NULL, 2.0, NULL, 416, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (540, 87, 10, 'Preparation H 25G', NULL, 5.0, NULL, 417, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (541, 87, 11, 'No offer', NULL, 20.0, NULL, 418, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (542, 87, 12, 'NaCL (Sodium Clhoride 0.9%) - 500ml', NULL, 5.0, NULL, 419, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (543, 87, 13, 'Minyak Kayu Putih CapLang 210ml', NULL, 10.0, NULL, 420, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (544, 87, 14, 'Counterpain 120gr', NULL, 5.0, NULL, 421, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (545, 87, 15, 'Balsem CapLang 20gr', NULL, 5.0, NULL, 422, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (546, 87, 16, 'Hot Cream 60gr', NULL, 5.0, NULL, 423, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (547, 87, 17, 'Enervon-C Multivitamin - Botol 30 tablet', NULL, 25.0, NULL, 424, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (548, 87, 18, 'Thermo Gun Infrared', NULL, 1.0, NULL, 425, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (549, 87, 19, 'Mylanta Tablet - strip isi 10 tablet', NULL, 10.0, NULL, 426, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (550, 87, 20, 'Panadol Flu (hijau)', NULL, 3.0, NULL, 427, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (551, 87, 21, 'Masker KN 95 - 1 box isi 50 pcs', NULL, 1.0, NULL, 428, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (552, 87, 22, 'Masker KN95 Respirator Filter - 1 box isi 10 pcs', NULL, 4.0, NULL, 429, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (553, 87, 23, 'Komix Sirup sachet', NULL, 30.0, NULL, 430, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (554, 87, 24, 'Bodrex - 1 strip isi 10 tablet', NULL, 10.0, NULL, 431, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (555, 87, 25, 'Ultra Flu - 1 strip isi 4 kaplet', NULL, 10.0, NULL, 432, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (556, 87, 26, 'Ponstan 500mg - 1 strip isi 10', NULL, 20.0, NULL, 433, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (557, 87, 27, 'Salonpas Koyo Super Biru', NULL, 10.0, NULL, 434, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (558, 87, 28, 'Salbutamol Inhealer 100mcg', NULL, 3.0, NULL, 435, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (559, 87, 29, 'No offer', NULL, 4.0, NULL, 436, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (560, 87, 30, 'No offer', NULL, 50.0, NULL, 437, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (561, 87, 31, 'No offer', NULL, 100.0, NULL, 438, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (562, 87, 32, 'No offer', NULL, 30.0, NULL, 439, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (563, 87, 33, 'No offer', NULL, 3.0, NULL, 440, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (564, 87, 34, 'No offer', NULL, 3.0, NULL, 441, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (565, 87, 35, 'No offer', NULL, 3.0, NULL, 442, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (566, 87, 36, 'Boorwater Y-Rins 12ml per box isi 10 botol', NULL, 10.0, NULL, 443, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (541, 87, 11, 'No offer', NULL, 20.0, NULL, 418, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (542, 87, 12, 'NaCL (Sodium Clhoride 0.9%) - 500ml', NULL, 5.0, NULL, 419, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (543, 87, 13, 'Minyak Kayu Putih CapLang 210ml', NULL, 10.0, NULL, 420, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (544, 87, 14, 'Counterpain 120gr', NULL, 5.0, NULL, 421, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (545, 87, 15, 'Balsem CapLang 20gr', NULL, 5.0, NULL, 422, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (546, 87, 16, 'Hot Cream 60gr', NULL, 5.0, NULL, 423, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (547, 87, 17, 'Enervon-C Multivitamin - Botol 30 tablet', NULL, 25.0, NULL, 424, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (548, 87, 18, 'Thermo Gun Infrared', NULL, 1.0, NULL, 425, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (549, 87, 19, 'Mylanta Tablet - strip isi 10 tablet', NULL, 10.0, NULL, 426, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (550, 87, 20, 'Panadol Flu (hijau)', NULL, 3.0, NULL, 427, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (551, 87, 21, 'Masker KN 95 - 1 box isi 50 pcs', NULL, 1.0, NULL, 428, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (552, 87, 22, 'Masker KN95 Respirator Filter - 1 box isi 10 pcs', NULL, 4.0, NULL, 429, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (553, 87, 23, 'Komix Sirup sachet', NULL, 30.0, NULL, 430, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (554, 87, 24, 'Bodrex - 1 strip isi 10 tablet', NULL, 10.0, NULL, 431, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (555, 87, 25, 'Ultra Flu - 1 strip isi 4 kaplet', NULL, 10.0, NULL, 432, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (556, 87, 26, 'Ponstan 500mg - 1 strip isi 10', NULL, 20.0, NULL, 433, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (557, 87, 27, 'Salonpas Koyo Super Biru', NULL, 10.0, NULL, 434, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (558, 87, 28, 'Salbutamol Inhealer 100mcg', NULL, 3.0, NULL, 435, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (559, 87, 29, 'No offer', NULL, 4.0, NULL, 436, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (560, 87, 30, 'No offer', NULL, 50.0, NULL, 437, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (561, 87, 31, 'No offer', NULL, 100.0, NULL, 438, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (562, 87, 32, 'No offer', NULL, 30.0, NULL, 439, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (563, 87, 33, 'No offer', NULL, 3.0, NULL, 440, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (564, 87, 34, 'No offer', NULL, 3.0, NULL, 441, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (565, 87, 35, 'No offer', NULL, 3.0, NULL, 442, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (566, 87, 36, 'Boorwater Y-Rins 12ml per box isi 10 botol', NULL, 10.0, NULL, 443, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (567, 87, 37, 'Alcohol 70% 100ml', NULL, 10.0, NULL, 444, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (568, 87, 38, 'OBH Combi 100Ml', NULL, 4.0, NULL, 445, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (569, 87, 39, 'Betadine Liquid Soap 100ml', NULL, 2.0, NULL, 446, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (570, 87, 40, 'No offer', NULL, 1.0, NULL, 447, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (571, 87, 41, 'No offer', NULL, 5.0, NULL, 448, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (572, 87, 42, 'CTM 4mg', NULL, 20.0, NULL, 449, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (573, 87, 43, 'Desloratadine 5mg - strip isi 10 tablet', NULL, 20.0, NULL, 450, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (574, 87, 44, 'Levocetirizine - Avocel 5mg - strip isi 10 tablet', NULL, 20.0, NULL, 451, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (575, 87, 45, 'Ketoconazole 2% cream tube 10g', NULL, 5.0, NULL, 452, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (576, 87, 46, 'Daktarin Cream 10g', NULL, 5.0, NULL, 453, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (577, 88, 1, 'DRAEGER AEROTEST SIMULTANT HP', '330446', 1.0, NULL, 454, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (578, 88, 2, 'IMPA 330197                                                                                Immersion Suits Inspection Kit', '330199', 1.0, NULL, 455, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (579, 88, 3, 'No offer', '330465', 1.0, NULL, 456, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (580, 88, 4, 'No offer', '331844', 50.0, NULL, 457, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (581, 89, 1, 'No offer', NULL, 1.0, NULL, 458, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (582, 90, 1, 'No offer', NULL, 1.0, NULL, 459, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (583, 91, 1, 'Ball bearing 6311 CM DDU – NSK', NULL, 2.0, NULL, 460, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (584, 91, 2, 'Bearing SKF 7311 BECBM SKF Austria                                            OD:120mm, ID: 55mm, tebal: 29mm', NULL, 4.0, NULL, 461, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (568, 87, 38, 'OBH Combi 100Ml', NULL, 4.0, NULL, 445, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (569, 87, 39, 'Betadine Liquid Soap 100ml', NULL, 2.0, NULL, 446, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (570, 87, 40, 'No offer', NULL, 1.0, NULL, 447, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (571, 87, 41, 'No offer', NULL, 5.0, NULL, 448, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (572, 87, 42, 'CTM 4mg', NULL, 20.0, NULL, 449, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (573, 87, 43, 'Desloratadine 5mg - strip isi 10 tablet', NULL, 20.0, NULL, 450, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (574, 87, 44, 'Levocetirizine - Avocel 5mg - strip isi 10 tablet', NULL, 20.0, NULL, 451, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (575, 87, 45, 'Ketoconazole 2% cream tube 10g', NULL, 5.0, NULL, 452, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (576, 87, 46, 'Daktarin Cream 10g', NULL, 5.0, NULL, 453, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (577, 88, 1, 'DRAEGER AEROTEST SIMULTANT HP', '330446', 1.0, NULL, 454, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (578, 88, 2, 'IMPA 330197                                                                                Immersion Suits Inspection Kit', '330199', 1.0, NULL, 455, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (579, 88, 3, 'No offer', '330465', 1.0, NULL, 456, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (580, 88, 4, 'No offer', '331844', 50.0, NULL, 457, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (581, 89, 1, 'No offer', NULL, 1.0, NULL, 458, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (582, 90, 1, 'No offer', NULL, 1.0, NULL, 459, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (583, 91, 1, 'Ball bearing 6311 CM DDU – NSK', NULL, 2.0, NULL, 460, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (584, 91, 2, 'Bearing SKF 7311 BECBM SKF Austria                                            OD:120mm, ID: 55mm, tebal: 29mm', NULL, 4.0, NULL, 461, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (585, 92, 1, 'Dust Seal 20x26x3,6mm', NULL, 5.0, NULL, 462, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (586, 93, 1, 'Bearing Cover C.SW P/P', NULL, 4.0, NULL, 463, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (587, 94, 1, 'No Offer', NULL, 1.0, NULL, 464, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (587, 94, 1, 'No Offer', NULL, 1.0, NULL, 464, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (588, 94, 2, 'NOZZLE HEAD AS SHUT OFF DEVIICE', NULL, 1.0, NULL, 465, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (589, 94, 3, 'No Offer', NULL, 1.0, NULL, 466, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (590, 94, 4, 'No Offer', NULL, 1.0, NULL, 467, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (589, 94, 3, 'No Offer', NULL, 1.0, NULL, 466, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (590, 94, 4, 'No Offer', NULL, 1.0, NULL, 467, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (591, 95, 1, 'Fuel Filter FF202', NULL, 10.0, NULL, 468, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (592, 95, 2, 'Switch Starter New Era 24 vdc, Tipe SS 83', NULL, 2.0, NULL, 469, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (593, 96, 1, 'Rain Suit (Baju dan celana)', NULL, 10.0, NULL, 470, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (594, 96, 2, 'Headlamp Flashlight LED 3 Mode (inc.USB charger cable)', NULL, 3.0, NULL, 471, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (595, 97, 1, 'Teflon/PTFE Seal tape 20mm x 10 mtr', NULL, 5.0, NULL, 472, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (596, 97, 2, 'Red silicon Dextone 70gr', NULL, 5.0, NULL, 99, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (597, 97, 3, 'Filter P.O FF 202, merk: Fleetguard', NULL, 12.0, NULL, 473, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (598, 97, 4, 'Lub Filter LF 670, merk: Fleetguard', NULL, 8.0, NULL, 474, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (599, 97, 5, 'Kuas Roll 9" merk Admiral', NULL, 6.0, NULL, 475, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (600, 98, 1, 'Handle "Teleflex Marine" Tipe MT-3 Double Handle', NULL, 1.0, NULL, 476, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+  (595, 97, 1, 'Teflon/PTFE Seal tape 20mm x 10 mtr', NULL, 5.0, NULL, 472, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (596, 97, 2, 'Red silicon Dextone 70gr', NULL, 5.0, NULL, 99, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (597, 97, 3, 'Filter P.O FF 202, merk: Fleetguard', NULL, 12.0, NULL, 473, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (598, 97, 4, 'Lub Filter LF 670, merk: Fleetguard', NULL, 8.0, NULL, 474, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (599, 97, 5, 'Kuas Roll 9" merk Admiral', NULL, 6.0, NULL, 475, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (600, 98, 1, 'Handle "Teleflex Marine" Tipe MT-3 Double Handle', NULL, 1.0, NULL, 476, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
-  (601, 98, 2, 'Wire Gearbox TSK Made in Japan 25m', NULL, 1.0, NULL, 477, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (602, 98, 3, 'Wire Gas 8,5mm/33C, 25m. Merk Coolman', NULL, 1.0, NULL, 478, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (603, 99, 1, 'No Offer', NULL, 3.0, NULL, 479, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (604, 99, 2, 'solenoid valve 3/8" EVR 6 NC Danfos 032L1212', NULL, 4.0, NULL, 480, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (605, 99, 3, 'Evaporating pressure danfos KVP 12                                                                                                         034L0021, Inlet size 12mm, outlet size 12mm, inlet/outlet, connectiion type: Flare                                                                                       0-5,5 bar/0-73 psi', NULL, 2.0, NULL, 481, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (606, 99, 4, 'Danfoss Hand valve 3/8" SAE BML 10 PN 009G0127', NULL, 4.0, NULL, 482, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (601, 98, 2, 'Wire Gearbox TSK Made in Japan 25m', NULL, 1.0, NULL, 477, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (602, 98, 3, 'Wire Gas 8,5mm/33C, 25m. Merk Coolman', NULL, 1.0, NULL, 478, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (603, 99, 1, 'No Offer', NULL, 3.0, NULL, 479, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (604, 99, 2, 'solenoid valve 3/8" EVR 6 NC Danfos 032L1212', NULL, 4.0, NULL, 480, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (605, 99, 3, 'Evaporating pressure danfos KVP 12                                                                                                         034L0021, Inlet size 12mm, outlet size 12mm, inlet/outlet, connectiion type: Flare                                                                                       0-5,5 bar/0-73 psi', NULL, 2.0, NULL, 481, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (606, 99, 4, 'Danfoss Hand valve 3/8" SAE BML 10 PN 009G0127', NULL, 4.0, NULL, 482, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (607, 100, 1, 'Cylinder Head Yanmar 6N18 - HV', NULL, 1.0, NULL, 483, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (608, 101, 1, 'Parker Racor 2040 PM - OR 30 Micron', NULL, 24.0, NULL, 484, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (608, 101, 1, 'Parker Racor 2040 PM - OR 30 Micron', NULL, 24.0, NULL, 484, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (609, 102, 1, 'Circuit Breaker Snapak Airpax P11 51                                                           Made in Mexico', NULL, 1.0, NULL, 485, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (610, 103, 1, 'Hylomar (M) Blue Universal Non-setting Gasket & Jointing Compound, 100gr', NULL, 1.0, NULL, 486, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (610, 103, 1, 'Hylomar (M) Blue Universal Non-setting Gasket & Jointing Compound, 100gr', NULL, 1.0, NULL, 486, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (611, 104, 1, 'OIL SEAL NOK SKY-56                                                                                                                      Offer: NOK USH56', NULL, 20.0, NULL, 253, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (612, 104, 2, 'OIL SEAL NOK USI 20 30 6', NULL, 20.0, NULL, 487, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (613, 104, 3, 'OIL SEAL LBH 20284.56', NULL, 20.0, NULL, 488, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (614, 104, 4, 'O RING JIS B2401 P-10', NULL, 50.0, NULL, 252, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (615, 104, 5, 'O RING JIS B2401 P-20', NULL, 50.0, NULL, 50, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (616, 104, 6, 'O RING JIS B2401 G-130', NULL, 30.0, NULL, 249, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (617, 105, 1, 'No Offer', NULL, 1.0, NULL, 489, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (618, 105, 2, 'Spring 7mm', NULL, 2.0, NULL, 490, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (619, 105, 3, 'No Offer', NULL, 2.0, NULL, 491, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (620, 106, 1, 'O-RING VITON 26 X 3', NULL, 50.0, NULL, 492, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (621, 106, 2, 'O-RING VITON AS131', NULL, 50.0, NULL, 493, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (622, 106, 3, 'O-RING VITON 37 X 3', NULL, 50.0, NULL, 494, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (623, 106, 4, 'O-RING VITON 49 X 3', NULL, 50.0, NULL, 495, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (624, 107, 1, '#REF!', NULL, 2.0, NULL, 496, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (625, 107, 2, 'Hylomar (M) Blue Universal Non-setting Gasket & Jointing Compound, 100gr', NULL, 1.0, NULL, 497, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (617, 105, 1, 'No Offer', NULL, 1.0, NULL, 489, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (618, 105, 2, 'Spring 7mm', NULL, 2.0, NULL, 490, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (619, 105, 3, 'No Offer', NULL, 2.0, NULL, 491, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (620, 106, 1, 'O-RING VITON 26 X 3', NULL, 50.0, NULL, 492, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (621, 106, 2, 'O-RING VITON AS131', NULL, 50.0, NULL, 493, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (622, 106, 3, 'O-RING VITON 37 X 3', NULL, 50.0, NULL, 494, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (623, 106, 4, 'O-RING VITON 49 X 3', NULL, 50.0, NULL, 495, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (624, 107, 1, '#REF!', NULL, 2.0, NULL, 496, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (625, 107, 2, 'Hylomar (M) Blue Universal Non-setting Gasket & Jointing Compound, 100gr', NULL, 1.0, NULL, 497, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (626, 108, 1, 'Danfoss Tez 55', NULL, 1.0, NULL, 498, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (627, 109, 1, 'LED Flood Light 100W, merk: PHILLIPS BVP 150, AC220V, 100W, IP 65, CRI 80, IK 06 (putih/kuning)', NULL, 2.0, NULL, 499, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (628, 109, 2, 'Kunci Rachet Socket, merk TEKIRO 1/2" x 10"', NULL, 2.0, NULL, 500, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (629, 109, 3, 'Shackle Omega 35 Ton, bolt & nut 2 inch, merk TOPRIG', NULL, 2.0, NULL, 501, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (630, 109, 4, 'No Offer', NULL, 2.0, NULL, 502, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (631, 109, 5, 'No Offer', NULL, 2.0, NULL, 503, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (632, 109, 6, 'No Offer', NULL, 2.0, NULL, 504, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (633, 109, 7, 'Webbing Sling belt 1 ton x 2 meter (25mm)', NULL, 4.0, NULL, 505, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (634, 109, 8, 'Webbing Sling belt 2 ton x 4 meter (55mm)', NULL, 4.0, NULL, 506, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (635, 109, 9, 'Webbing Sling belt 5 ton x 6 meter (125mm)', NULL, 4.0, NULL, 507, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (636, 109, 10, 'Spirit Level / Water pass merk Tekiro 24" (60cm)', NULL, 2.0, NULL, 508, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (637, 109, 11, 'Tekiro Hand Tap M36x4', NULL, 2.0, NULL, 509, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (627, 109, 1, 'LED Flood Light 100W, merk: PHILLIPS BVP 150, AC220V, 100W, IP 65, CRI 80, IK 06 (putih/kuning)', NULL, 2.0, NULL, 499, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (628, 109, 2, 'Kunci Rachet Socket, merk TEKIRO 1/2" x 10"', NULL, 2.0, NULL, 500, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (629, 109, 3, 'Shackle Omega 35 Ton, bolt & nut 2 inch, merk TOPRIG', NULL, 2.0, NULL, 501, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (630, 109, 4, 'No Offer', NULL, 2.0, NULL, 502, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (631, 109, 5, 'No Offer', NULL, 2.0, NULL, 503, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (632, 109, 6, 'No Offer', NULL, 2.0, NULL, 504, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (633, 109, 7, 'Webbing Sling belt 1 ton x 2 meter (25mm)', NULL, 4.0, NULL, 505, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (634, 109, 8, 'Webbing Sling belt 2 ton x 4 meter (55mm)', NULL, 4.0, NULL, 506, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (635, 109, 9, 'Webbing Sling belt 5 ton x 6 meter (125mm)', NULL, 4.0, NULL, 507, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (636, 109, 10, 'Spirit Level / Water pass merk Tekiro 24" (60cm)', NULL, 2.0, NULL, 508, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (637, 109, 11, 'Tekiro Hand Tap M36x4', NULL, 2.0, NULL, 509, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (638, 109, 12, 'Hot Gun merk BOSCH GHG 20-63', NULL, 1.0, NULL, 510, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (639, 109, 13, 'Polypropylene Rotary hand pump, outlet 1 inch, merk Devco', NULL, 2.0, NULL, 511, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (640, 109, 14, 'Pneumatic Piston Pumps IMPA 591661', '591661', 1.0, NULL, 512, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (641, 109, 15, 'Hand grease Guns, 500cc, merk: TEKIRO', '617702', 2.0, NULL, 513, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (639, 109, 13, 'Polypropylene Rotary hand pump, outlet 1 inch, merk Devco', NULL, 2.0, NULL, 511, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (640, 109, 14, 'Pneumatic Piston Pumps IMPA 591661', '591661', 1.0, NULL, 512, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (641, 109, 15, 'Hand grease Guns, 500cc, merk: TEKIRO', '617702', 2.0, NULL, 513, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (642, 109, 16, 'Rachet cable Cutter HS-520A for electrical cable', NULL, 1.0, NULL, 514, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (643, 109, 17, 'Kunci L set,Type panjang, merk TEKIRO, Hex Key 8pcs 2-10mm', NULL, 2.0, NULL, 515, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (644, 109, 18, 'Cable power NYYHY 2 x 2,5mm, merk Supreme Cable', NULL, 20.0, NULL, 516, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (643, 109, 17, 'Kunci L set,Type panjang, merk TEKIRO, Hex Key 8pcs 2-10mm', NULL, 2.0, NULL, 515, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (644, 109, 18, 'Cable power NYYHY 2 x 2,5mm, merk Supreme Cable', NULL, 20.0, NULL, 516, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (645, 109, 19, 'Oil jugs 5 Ltrs', '617748', 2.0, NULL, 517, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (646, 109, 20, 'No Offer', '350103', 200.0, NULL, 518, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (647, 109, 21, 'Cast Bronze Air hose Couplings M42x2, nominal hose end: 12mm. IMPA 351054', '351054', 3.0, NULL, 519, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (648, 109, 22, 'Hose band stainless steel size 7/8" (13-23mm)', '614054', 10.0, NULL, 520, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (649, 109, 23, 'Hose band stainless steel size 2" (27-51mm)', '614056', 10.0, NULL, 521, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (650, 109, 24, 'No Offer', '350171', 100.0, NULL, 522, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (651, 109, 25, 'Cordless Drill merk BOSCH GSR-120-Li Gen 3', NULL, 1.0, NULL, 523, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (652, 109, 26, 'No Offer', NULL, 4.0, NULL, 524, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (653, 109, 27, 'Torque wrench Merk Tekiro 3/4", Kunci torsi 100-600Nm (TR5000)', NULL, 1.0, NULL, 525, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (646, 109, 20, 'No Offer', '350103', 200.0, NULL, 518, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (647, 109, 21, 'Cast Bronze Air hose Couplings M42x2, nominal hose end: 12mm. IMPA 351054', '351054', 3.0, NULL, 519, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (648, 109, 22, 'Hose band stainless steel size 7/8" (13-23mm)', '614054', 10.0, NULL, 520, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (649, 109, 23, 'Hose band stainless steel size 2" (27-51mm)', '614056', 10.0, NULL, 521, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (650, 109, 24, 'No Offer', '350171', 100.0, NULL, 522, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (651, 109, 25, 'Cordless Drill merk BOSCH GSR-120-Li Gen 3', NULL, 1.0, NULL, 523, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (652, 109, 26, 'No Offer', NULL, 4.0, NULL, 524, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (653, 109, 27, 'Torque wrench Merk Tekiro 3/4", Kunci torsi 100-600Nm (TR5000)', NULL, 1.0, NULL, 525, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (654, 109, 28, 'Cable Roll 50 Mtrs, merk Krisbow', NULL, 2.0, NULL, 526, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (655, 109, 29, 'Kunci L 17mm type panjang merk: TEKIRO', NULL, 1.0, NULL, 527, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (656, 109, 30, 'Kunci L 19mm type panjang merk: TEKIRO', NULL, 1.0, NULL, 528, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (657, 109, 31, 'Kunci L 12mm type panjang merk: TEKIRO', NULL, 1.0, NULL, 529, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (658, 109, 32, 'Polypropylene Monofilamen, Cir 1" (8mm), 3 strand', '211271', 200.0, NULL, 530, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (659, 109, 33, 'Safety Harness Full Body type, all size, single hook', NULL, 5.0, NULL, 531, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (660, 109, 34, 'No Offer', NULL, 1.0, NULL, 532, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (658, 109, 32, 'Polypropylene Monofilamen, Cir 1" (8mm), 3 strand', '211271', 200.0, NULL, 530, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (659, 109, 33, 'Safety Harness Full Body type, all size, single hook', NULL, 5.0, NULL, 531, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (660, 109, 34, 'No Offer', NULL, 1.0, NULL, 532, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (661, 109, 35, 'Socket Wrench set, 12,7mm, size 8-32mm', NULL, 2.0, NULL, 533, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (662, 109, 36, 'No Offer', NULL, 2.0, NULL, 534, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (662, 109, 36, 'No Offer', NULL, 2.0, NULL, 534, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (663, 109, 37, 'Jerigen putih tebal, 20 Liter', NULL, 6.0, NULL, 535, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (664, 109, 38, 'Feeler gauge size mm type panjang, merk TEKIRO', NULL, 1.0, NULL, 536, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (665, 110, 1, 'Danfoss Thermo Expansion Valve TX2 068Z3206                                                                                                                                   R22/R407C', NULL, 3.0, NULL, 537, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (665, 110, 1, 'Danfoss Thermo Expansion Valve TX2 068Z3206                                                                                                                                   R22/R407C', NULL, 3.0, NULL, 537, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (666, 111, 1, 'EMERSON Filter Drier H-48 R404A High Moisture Capacity AC Central Accomodation', NULL, 3.0, NULL, 538, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (667, 112, 1, 'Dry Battery YUASA
-12V Lead Acid 38AH', NULL, 2.0, NULL, 539, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+12V Lead Acid 38AH', NULL, 2.0, NULL, 539, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (668, 112, 2, 'FIRE ALARM CARGO HOLD "SAFETEC" Air Pressure Contact
 Switch (C , NO , NC )
 SDS-48 FIRE ALARM CARGO HOLD', NULL, 5.0, NULL, 540, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17677,23 +17677,23 @@ ORIFICE EXPANSION VALVE NO 03', NULL, 4.0, NULL, 543, 'matched', 'import', 'Back
   (672, 113, 4, 'ORIFICE EXPANSION VALVE
 ORIFICE EXPANSION VALVE NO 01', NULL, 2.0, NULL, 544, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (673, 114, 1, 'EXPANSION VALVE 
-Saginomiya ATX-71140 DHS', NULL, 3.0, NULL, 545, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Saginomiya ATX-71140 DHS', NULL, 3.0, NULL, 545, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (674, 115, 1, 'UNIT PLC
-Power Supply CQM1-PA203', NULL, 1.0, NULL, 546, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Power Supply CQM1-PA203', NULL, 1.0, NULL, 546, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (675, 115, 2, 'UNIT PLC
-Omron Omron CQM1-ID212 PLC Input', NULL, 1.0, NULL, 547, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Omron Omron CQM1-ID212 PLC Input', NULL, 1.0, NULL, 547, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (676, 115, 3, 'UNIT PLC
-Omron CQM1-OD213 PLC Output', NULL, 1.0, NULL, 548, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Omron CQM1-OD213 PLC Output', NULL, 1.0, NULL, 548, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (677, 116, 1, 'NON RETURN ANGLE VALVE 16K/25
 DIAMETER FLANGE 125MM
 HOLE OF FLANGE BOLT 4
 L = 85MM, Size 1"
-F7304, IMPA 750153', NULL, 5.0, NULL, 549, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+F7304, IMPA 750153', NULL, 5.0, NULL, 549, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (678, 116, 2, 'NON RETURN GLOBE VALVE 16K/25
 DIAMETER FLANGE 125MM
 HOLE OF FLANGE BOLT 4
 L = 130MM, Size 1"
-F7303, IMPA 750143', NULL, 4.0, NULL, 550, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+F7303, IMPA 750143', NULL, 4.0, NULL, 550, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (679, 117, 1, 'OIL SEAL NOK SB 40-55-9', NULL, 10.0, NULL, 312, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (680, 117, 2, 'OIL SEAL NOK SB 73x95x14', NULL, 10.0, NULL, 313, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (681, 117, 3, 'OIL SEAL NOK AE 2847A', NULL, 4.0, NULL, 44, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17711,68 +17711,68 @@ F7303, IMPA 750143', NULL, 4.0, NULL, 550, 'substituted', 'import', 'Backfilled 
   (693, 119, 2, 'OIL SEAL NOK IDI 20 30 6                                                                                     Offer: USI 20 30 6', NULL, 10.0, NULL, 556, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (694, 119, 3, 'OIL SEAL NOK CORTECO DSI 20284 5.6', NULL, 10.0, NULL, 47, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (695, 119, 4, 'O RING JIS B2401 G-35', NULL, 20.0, NULL, 52, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (696, 119, 5, 'Oring 26,7 x 1,78 (Hs 90) AS 023', NULL, 20.0, NULL, 254, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (696, 119, 5, 'Oring 26,7 x 1,78 (Hs 90) AS 023', NULL, 20.0, NULL, 254, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (697, 119, 6, 'O RING JIS B2401 G-130', NULL, 10.0, NULL, 249, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (698, 119, 7, 'O RING JIS B2401 G-110', NULL, 10.0, NULL, 248, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (699, 120, 1, 'PLUG hydraulic 1/4"BSP', NULL, 20.0, NULL, 555, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (699, 120, 1, 'PLUG hydraulic 1/4"BSP', NULL, 20.0, NULL, 555, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (700, 121, 1, 'Converter Electric Valve BEKOMAT BM31U', NULL, 1.0, NULL, 557, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
-  (701, 122, 1, 'Kain majun lembaran tanpa jahitan', NULL, 25.0, NULL, 558, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (702, 122, 2, 'Lampu philips neon 18 watt, Neon 60cm', NULL, 8.0, NULL, 559, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (703, 122, 3, 'Air radiator Coolant@5liter , merk Megacools', NULL, 4.0, NULL, 560, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (704, 122, 4, 'Sunflex hose 2" x 90cm', NULL, 1.0, NULL, 561, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (705, 122, 5, 'Clamp selang 1”', NULL, 8.0, NULL, 562, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (706, 122, 6, 'Clamp selang 1/2”', NULL, 8.0, NULL, 563, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (707, 122, 7, 'Clamp selang 2”', NULL, 8.0, NULL, 564, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (708, 122, 8, 'Clamp selang 4”', NULL, 8.0, NULL, 565, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (709, 122, 9, 'Sikat kawat baja, gagang fiber', NULL, 2.0, NULL, 566, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (710, 122, 10, 'No offer', NULL, 6.0, NULL, 567, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (711, 122, 11, 'Kuas roll 9"', NULL, 2.0, NULL, 475, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (701, 122, 1, 'Kain majun lembaran tanpa jahitan', NULL, 25.0, NULL, 558, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (702, 122, 2, 'Lampu philips neon 18 watt, Neon 60cm', NULL, 8.0, NULL, 559, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (703, 122, 3, 'Air radiator Coolant@5liter , merk Megacools', NULL, 4.0, NULL, 560, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (704, 122, 4, 'Sunflex hose 2" x 90cm', NULL, 1.0, NULL, 561, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (705, 122, 5, 'Clamp selang 1”', NULL, 8.0, NULL, 562, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (706, 122, 6, 'Clamp selang 1/2”', NULL, 8.0, NULL, 563, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (707, 122, 7, 'Clamp selang 2”', NULL, 8.0, NULL, 564, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (708, 122, 8, 'Clamp selang 4”', NULL, 8.0, NULL, 565, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (709, 122, 9, 'Sikat kawat baja, gagang fiber', NULL, 2.0, NULL, 566, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (710, 122, 10, 'No offer', NULL, 6.0, NULL, 567, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (711, 122, 11, 'Kuas roll 9"', NULL, 2.0, NULL, 475, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (712, 122, 12, 'Kuas tangan 1 inch', NULL, 4.0, NULL, 568, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (713, 122, 13, 'Isolasi Nitto hitam 3/4 inch', NULL, 4.0, NULL, 569, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (713, 122, 13, 'Isolasi Nitto hitam 3/4 inch', NULL, 4.0, NULL, 569, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (714, 122, 14, 'Tespen', NULL, 1.0, NULL, 306, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (715, 122, 15, 'Relay 14 kaki IDEC RY4S-U (sesuai contoh photo)', NULL, 10.0, NULL, 570, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (716, 122, 16, 'Rubber packing 6mm x 1m x 1m (potong 5m)', NULL, 5.0, NULL, 571, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (715, 122, 15, 'Relay 14 kaki IDEC RY4S-U (sesuai contoh photo)', NULL, 10.0, NULL, 570, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (716, 122, 16, 'Rubber packing 6mm x 1m x 1m (potong 5m)', NULL, 5.0, NULL, 571, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (717, 122, 17, 'Tang snap ring luar dalam', NULL, 1.0, NULL, 572, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (718, 122, 18, 'Sarung tangan katun', NULL, 2.0, NULL, 573, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (719, 122, 19, 'Water Finding Paste', NULL, 1.0, NULL, 574, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (720, 122, 20, 'Gasoline Gauging Paste', NULL, 1.0, NULL, 575, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (721, 123, 1, 'Tali cir 8 (64mm), 1 roll ± 220m', NULL, 100.0, NULL, 576, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (722, 123, 2, 'Baygon aerosol 600ml, citrus fresh', NULL, 3.0, NULL, 577, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (723, 123, 3, 'Cling Pembersih Kaca, kemasan jerigen 4 liter x 1', NULL, 3.0, NULL, 578, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (724, 123, 4, 'Kertas HVS A4 , 75 gms', NULL, 1.0, NULL, 579, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (725, 123, 5, 'Rinso Anti noda + Molto, kemasan 2kg x 10 pouch', NULL, 20.0, NULL, 580, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (726, 123, 6, 'Saklar lampu Schneider 2 gang, 1 arah', NULL, 6.0, NULL, 581, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (727, 123, 7, 'Palu ketok / chipping hammer 225gr, IMPA 612611', NULL, 4.0, NULL, 582, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (728, 123, 8, 'Sikat kawat baja, gagang fiber', NULL, 5.0, NULL, 583, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (729, 123, 9, 'Stick roll 3M untuk cat extention stick 1,1m-3m', NULL, 5.0, NULL, 584, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (719, 122, 19, 'Water Finding Paste', NULL, 1.0, NULL, 574, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (720, 122, 20, 'Gasoline Gauging Paste', NULL, 1.0, NULL, 575, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (721, 123, 1, 'Tali cir 8 (64mm), 1 roll ± 220m', NULL, 100.0, NULL, 576, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (722, 123, 2, 'Baygon aerosol 600ml, citrus fresh', NULL, 3.0, NULL, 577, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (723, 123, 3, 'Cling Pembersih Kaca, kemasan jerigen 4 liter x 1', NULL, 3.0, NULL, 578, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (724, 123, 4, 'Kertas HVS A4 , 75 gms', NULL, 1.0, NULL, 579, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (725, 123, 5, 'Rinso Anti noda + Molto, kemasan 2kg x 10 pouch', NULL, 20.0, NULL, 580, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (726, 123, 6, 'Saklar lampu Schneider 2 gang, 1 arah', NULL, 6.0, NULL, 581, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (727, 123, 7, 'Palu ketok / chipping hammer 225gr, IMPA 612611', NULL, 4.0, NULL, 582, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (728, 123, 8, 'Sikat kawat baja, gagang fiber', NULL, 5.0, NULL, 583, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (729, 123, 9, 'Stick roll 3M untuk cat extention stick 1,1m-3m', NULL, 5.0, NULL, 584, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (730, 123, 10, 'Kacamata bening safety', NULL, 4.0, NULL, 585, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (731, 123, 11, 'Jam dinding Ace Arthome d:40cm', NULL, 2.0, NULL, 586, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (732, 123, 12, 'Jas hujan XL, Baju & Celana (kuning, tebal)', NULL, 10.0, NULL, 587, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (733, 124, 1, 'Parker Racor 2040 PM - OR 30 Micron', NULL, 20.0, NULL, 484, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (731, 123, 11, 'Jam dinding Ace Arthome d:40cm', NULL, 2.0, NULL, 586, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (732, 123, 12, 'Jas hujan XL, Baju & Celana (kuning, tebal)', NULL, 10.0, NULL, 587, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (733, 124, 1, 'Parker Racor 2040 PM - OR 30 Micron', NULL, 20.0, NULL, 484, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (734, 125, 1, 'Hallite Seal 30x45', NULL, 4.0, NULL, 588, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (735, 126, 1, 'Seal SB 73*95*14', NULL, 4.0, NULL, 589, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (736, 127, 1, 'Filter FL 670', NULL, 1.0, NULL, 590, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (737, 127, 2, 'Filter FF 202', NULL, 1.0, NULL, 591, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (738, 128, 1, 'Hallite (601) 35*50*10', NULL, 2.0, NULL, 592, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (739, 128, 2, 'Hallite (605) 25*35*8', NULL, 1.0, NULL, 593, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (740, 128, 3, 'Hallite (605) 20*30*6.3', NULL, 1.0, NULL, 594, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (741, 128, 4, 'Hallite (839) 20*28*4.5*6', NULL, 1.0, NULL, 595, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (742, 128, 5, 'Hallite (839) 30*38*5*6.5', NULL, 1.0, NULL, 596, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (743, 128, 6, 'Hallite (601) 30*40*6', NULL, 1.0, NULL, 597, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (738, 128, 1, 'Hallite (601) 35*50*10', NULL, 2.0, NULL, 592, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (739, 128, 2, 'Hallite (605) 25*35*8', NULL, 1.0, NULL, 593, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (740, 128, 3, 'Hallite (605) 20*30*6.3', NULL, 1.0, NULL, 594, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (741, 128, 4, 'Hallite (839) 20*28*4.5*6', NULL, 1.0, NULL, 595, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (742, 128, 5, 'Hallite (839) 30*38*5*6.5', NULL, 1.0, NULL, 596, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (743, 128, 6, 'Hallite (601) 30*40*6', NULL, 1.0, NULL, 597, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (744, 129, 1, 'Fuji Electric FA TR-On/3, TR13D', NULL, 1.0, NULL, 598, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (745, 130, 1, 'Safety Shoes', NULL, 50.0, NULL, 599, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (746, 131, 1, 'Kabel power ukuran 120mm, R', NULL, 25.0, NULL, 600, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (747, 131, 2, 'Skun Cu 120mm M12', NULL, 10.0, NULL, 601, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (748, 131, 3, 'Baut M10 x 20', NULL, 10.0, NULL, 602, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (746, 131, 1, 'Kabel power ukuran 120mm, R', NULL, 25.0, NULL, 600, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (747, 131, 2, 'Skun Cu 120mm M12', NULL, 10.0, NULL, 601, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (748, 131, 3, 'Baut M10 x 20', NULL, 10.0, NULL, 602, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (749, 132, 1, 'Kabel RST untuk genset 1x120mm, 25 meter', NULL, 3.0, NULL, 603, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (750, 133, 1, 'Handy Talky Maker STANDARD HORIZON SUBMERSIBLE HX400 COMPLETE WITH THE CHARGER', NULL, 10.0, NULL, 604, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (751, 134, 1, 'Kabel NYAF 1x150mm, per roll 25 meter', NULL, 3.0, NULL, 605, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (752, 135, 1, '#REF!', NULL, 5.0, NULL, 589, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (751, 134, 1, 'Kabel NYAF 1x150mm, per roll 25 meter', NULL, 3.0, NULL, 605, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (752, 135, 1, '#REF!', NULL, 5.0, NULL, 589, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (753, 136, 1, 'Seal SB 73*95*14', NULL, 10.0, NULL, 589, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (754, 137, 1, 'OIL SEAL TC 50 65 9 (NOK AE2838-EC)', NULL, 6.0, NULL, 606, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (755, 138, 1, 'Shell Tellus S2 VX32, 20 liter', NULL, 1.0, NULL, 607, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17785,29 +17785,29 @@ INSERT INTO quotation_item_requests (
   (762, 140, 6, 'O RING JIS B2401 P-25', NULL, 20.0, NULL, 611, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (763, 140, 7, 'O RING JIS B2401 P-16', NULL, 20.0, NULL, 612, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (764, 141, 1, 'Battery lampu Tongkang 4r25/6 volt', NULL, 4.0, NULL, 613, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (765, 141, 2, 'Bohlam lampu Navigasi 24V/40 W', NULL, 10.0, NULL, 614, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (766, 141, 3, 'Rantai Dapra 5/8 (16mm), galvanis ±10 meter, ±50kg', NULL, 1.0, NULL, 615, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (767, 141, 4, 'Segel D 5/8, Galvanis', NULL, 25.0, NULL, 616, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (768, 141, 5, 'Jam Dinding D40 cm, merk Arthome Momento 40cm', NULL, 2.0, NULL, 586, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (769, 141, 6, 'Selang spiral 2 inch, clear, PVC Hose', NULL, 30.0, NULL, 617, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (770, 142, 1, 'Rocket Parachute Flare merk Comet', NULL, 12.0, NULL, 618, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (771, 142, 2, 'Red Flare Hand merk Comet', NULL, 4.0, NULL, 619, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (772, 142, 3, 'Smoke Signal merk Comet', NULL, 2.0, NULL, 620, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (773, 142, 4, 'Line Throwing Apparatus merk Comet', NULL, 2.0, NULL, 621, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (765, 141, 2, 'Bohlam lampu Navigasi 24V/40 W', NULL, 10.0, NULL, 614, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (766, 141, 3, 'Rantai Dapra 5/8 (16mm), galvanis ±10 meter, ±50kg', NULL, 1.0, NULL, 615, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (767, 141, 4, 'Segel D 5/8, Galvanis', NULL, 25.0, NULL, 616, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (768, 141, 5, 'Jam Dinding D40 cm, merk Arthome Momento 40cm', NULL, 2.0, NULL, 586, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (769, 141, 6, 'Selang spiral 2 inch, clear, PVC Hose', NULL, 30.0, NULL, 617, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (770, 142, 1, 'Rocket Parachute Flare merk Comet', NULL, 12.0, NULL, 618, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (771, 142, 2, 'Red Flare Hand merk Comet', NULL, 4.0, NULL, 619, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (772, 142, 3, 'Smoke Signal merk Comet', NULL, 2.0, NULL, 620, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (773, 142, 4, 'Line Throwing Apparatus merk Comet', NULL, 2.0, NULL, 621, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (774, 143, 1, 'Voltmeter Gauge KUS K-Y23100', NULL, 1.0, NULL, 622, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (775, 144, 1, 'ACCU GS Premium N200, 12V, 200ah.                                                                                         Accu basah', NULL, 2.0, NULL, 623, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (776, 144, 2, 'Clemp terminal kepala accu, ukuran besar,                                                                                pool accu timah', NULL, 8.0, NULL, 624, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (777, 145, 1, 'Rocket Parachute Flare merk Comet', NULL, 12.0, NULL, 618, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (778, 145, 2, 'Red Flare Hand merk Comet', NULL, 4.0, NULL, 619, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (779, 145, 3, 'Smoke Signal merk Comet', NULL, 2.0, NULL, 620, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (780, 145, 4, 'Line Throwing Apparatus merk Comet', NULL, 2.0, NULL, 621, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (777, 145, 1, 'Rocket Parachute Flare merk Comet', NULL, 12.0, NULL, 618, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (778, 145, 2, 'Red Flare Hand merk Comet', NULL, 4.0, NULL, 619, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (779, 145, 3, 'Smoke Signal merk Comet', NULL, 2.0, NULL, 620, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (780, 145, 4, 'Line Throwing Apparatus merk Comet', NULL, 2.0, NULL, 621, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (781, 146, 1, 'Hydraulic R4 (Harflex) 1"x1100mm                                           connection female-female', NULL, 12.0, NULL, 625, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (782, 147, 1, 'Oring G230', NULL, 24.0, NULL, 626, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (783, 147, 2, 'Oring G255', NULL, 12.0, NULL, 627, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (784, 148, 1, 'Oring G230', NULL, 1.0, NULL, 628, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (785, 148, 2, 'Oring G255', NULL, 1.0, NULL, 629, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (786, 148, 3, 'Oring G255', NULL, 1.0, NULL, 630, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (787, 148, 4, 'Oring G255', NULL, 1.0, NULL, 631, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (782, 147, 1, 'Oring G230', NULL, 24.0, NULL, 626, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (783, 147, 2, 'Oring G255', NULL, 12.0, NULL, 627, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (784, 148, 1, 'Oring G230', NULL, 1.0, NULL, 628, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (785, 148, 2, 'Oring G255', NULL, 1.0, NULL, 629, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (786, 148, 3, 'Oring G255', NULL, 1.0, NULL, 630, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (787, 148, 4, 'Oring G255', NULL, 1.0, NULL, 631, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (788, 149, 1, 'TL-WA855RE 300mbps Wifi Range Extender', NULL, 1.0, NULL, 632, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (789, 149, 2, 'Mirascreen G9 Plus HDMI Dongle 5G Dual Band', NULL, 1.0, NULL, 633, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (790, 149, 3, 'Kepala Charger biasa usb', NULL, 2.0, NULL, 634, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17855,10 +17855,10 @@ INSERT INTO quotation_item_requests (
   (827, 151, 21, 'Extension Cord Roll 3x2,5mm x 30 meter', '794396', 2.0, NULL, 668, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (828, 151, 22, 'Welding Rod LB-52U KOBE, Diam.3,2mm', '614054', 30.0, NULL, 520, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (829, 151, 23, 'Welder Gloves, TUFHIDE leather 14" (per pasang)', '851163', 5.0, NULL, 669, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (830, 151, 24, 'Nozzle Cleaners', '850280', 2.0, NULL, 670, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (831, 151, 25, 'Gas Cutting Torches Merk: VICTOR CA 2460 8"', NULL, 2.0, NULL, 671, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (830, 151, 24, 'Nozzle Cleaners', '850280', 2.0, NULL, 670, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (831, 151, 25, 'Gas Cutting Torches Merk: VICTOR CA 2460 8"', NULL, 2.0, NULL, 671, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (832, 151, 26, 'Nozzle Cutting+B37:W46 Torches LPG Merk: VICTOR', NULL, 4.0, NULL, 658, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (833, 151, 27, 'Regulator LPG merk: VICTOR', NULL, 2.0, NULL, 672, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (833, 151, 27, 'Regulator LPG merk: VICTOR', NULL, 2.0, NULL, 672, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (834, 151, 28, 'Electrode Holders 500A IMPA 851034', '851031', 5.0, NULL, 673, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (835, 151, 29, 'Kawat Las tembaga Harris O, stay Silv 5, 1,3mm x 3,2mm', NULL, 1.0, NULL, 674, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (836, 151, 30, 'Regulator Oxygen merk: VICTOR G350', '850191', 2.0, NULL, 675, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17866,7 +17866,7 @@ INSERT INTO quotation_item_requests (
   (838, 151, 32, 'Kain majun warna putih/campur warna', '232907', 250.0, NULL, 677, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (839, 151, 33, 'Welding helmet with head gear', '851116', 2.0, NULL, 678, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (840, 151, 34, 'Rubber Twin Welding Hose 8x8mm red-blue', '350127', 100.0, NULL, 679, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (841, 151, 35, 'Engine Cleaner Guns with tubeTip ID 5mm', '270603', 2.0, NULL, 680, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (841, 151, 35, 'Engine Cleaner Guns with tubeTip ID 5mm', '270603', 2.0, NULL, 680, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (842, 151, 36, 'Wire Cup brush Plaited Threaded nut type M10, Dia. 3" Steel', '592073', 10.0, NULL, 681, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (843, 151, 37, 'Wire Cup brush Crimped Threaded nut Type M10, Dia. 3" Steel', '592072', 10.0, NULL, 682, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (844, 151, 38, 'Wire brush Straight handle standart length 270mm', '510662', 4.0, NULL, 197, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17876,12 +17876,12 @@ INSERT INTO quotation_item_requests (
   (848, 151, 42, 'Outside Calipers 450mm (18") IMPA 650109', '650107', 1.0, NULL, 686, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (849, 151, 43, 'Hand grease Guns, merk: TEKIRO 500cc', '617702', 3.0, NULL, 513, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (850, 151, 44, 'Hydraulic pipe Bender portable, 10Ton', '613711', 1.0, NULL, 687, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (851, 151, 45, 'Drum Hooks for 2 Drum', '614026', 1.0, NULL, 688, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (851, 151, 45, 'Drum Hooks for 2 Drum', '614026', 1.0, NULL, 688, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (852, 151, 46, 'File set merk TEKIRO, 8" isi 4pcs/set', '614532', 2.0, NULL, 689, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (853, 151, 47, 'Hand Saws 500mm/20" Merk TEKIRO', '613402', 1.0, NULL, 690, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (854, 151, 48, 'Hammering Screw Drivers, impact type. Merk TEKIRO Tool 6 mata obeng', '612432', 2.0, NULL, 691, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (855, 151, 49, 'Hydraulic Cable Shoe Pliers/ Hydraulic crimping tools 16-300mm merk: YQK-300', '611734', 1.0, NULL, 692, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (856, 151, 50, 'Cable Shoe Clamping Tool Kits with skun Merk Tubtap', '611732', 1.0, NULL, 693, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (856, 151, 50, 'Cable Shoe Clamping Tool Kits with skun Merk Tubtap', '611732', 1.0, NULL, 693, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (857, 151, 51, 'Rachet cable Cutter HS-325A for electrical cable', NULL, 1.0, NULL, 694, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (858, 151, 52, 'Electrical screw driver with isulation 1000V set, merk TEKIRO isi 8pcs, insulated to VDE standarts 1000V certified', NULL, 2.0, NULL, 695, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (859, 151, 53, 'Resinoid Cut off Wheel 305x3x25,4mm Merk Nippon Resibon', '614876', 10.0, NULL, 696, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17919,10 +17919,10 @@ INSERT INTO quotation_item_requests (
   (891, 151, 85, 'Aluminium Alloy Folding ladders, Extended 6 mtrs, Folded 3 mtrs', '617140', 1.0, NULL, 727, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (892, 151, 86, 'Straight pipe Wrenches, overall length 450mm, merk TEKIRO', '616535', 1.0, NULL, 728, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (893, 151, 87, 'Straight pipe Wrenches, overall length 300mm merk TEKIRO', '616533', 1.0, NULL, 729, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (894, 151, 88, 'Hydraulic bearing puller 3 arm complete set, merk: HHL-10, capacity: 10Ton', '615090', 1.0, NULL, 730, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (894, 151, 88, 'Hydraulic bearing puller 3 arm complete set, merk: HHL-10, capacity: 10Ton', '615090', 1.0, NULL, 730, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (895, 151, 89, 'Triangle Files-double cut, smooth, length: 300mm', '614432', 2.0, NULL, 731, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (896, 151, 90, 'Triangle Files-double cut, second cut, length: 300mm', '614425', 2.0, NULL, 732, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (897, 151, 91, 'Cutting and flaring tools sets wIth cutter, merk: RIDGID 3/16-5/8"', '612031', 1.0, NULL, 733, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (897, 151, 91, 'Cutting and flaring tools sets wIth cutter, merk: RIDGID 3/16-5/8"', '612031', 1.0, NULL, 733, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (898, 151, 92, 'Pneumatic Impact Wrenches pistol type, 1/2"', '590101', 1.0, NULL, 734, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (899, 151, 93, 'Hose End type Stainless steel 1/4" 20 SH series socket', '351221', 5.0, NULL, 735, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (900, 151, 94, 'Hose End type Stainless steel 1/2" 40 SH series socket', '351223', 5.0, NULL, 736, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
@@ -17943,7 +17943,7 @@ INSERT INTO quotation_item_requests (
   (910, 151, 104, 'tungsten carbide tipped for stainless steel, type deep cut, hole diameter: 40mm Merk Kugel', '633726', 1.0, NULL, 745, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (911, 151, 105, 'tungsten carbide tipped for stainless steel, type deep cut, hole diameter: 50mm Merk Kugel', '633736', 1.0, NULL, 746, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (912, 151, 106, 'tungsten carbide tipped for stainless steel, type deep cut, hole diameter: 60mm Merk Kugel', '633746', 1.0, NULL, 747, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (913, 151, 107, 'Electric Circular Saws AC 220V, merk Bosch 6,5", blade diameter 165mm GKS66X', '591142', 1.0, NULL, 748, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (913, 151, 107, 'Electric Circular Saws AC 220V, merk Bosch 6,5", blade diameter 165mm GKS66X', '591142', 1.0, NULL, 748, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (914, 151, 108, 'Casio Label printer KL-G2', NULL, 1.0, NULL, 749, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (915, 151, 109, 'Tape label for casio KL-G2, size 9mm x 8m, yellow, merk Casio', NULL, 1.0, NULL, 750, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (916, 151, 110, 'Tape label for casio KL-G2, size 12mm x 8m, green, merk Casio', NULL, 1.0, NULL, 751, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17971,7 +17971,7 @@ INSERT INTO quotation_item_requests (
   (938, 151, 132, 'Stainless strap Zie tension tools - IMPA 614101', NULL, 1.0, NULL, 771, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (939, 151, 133, 'Cable tie gun for stainless steel cable ties', NULL, 2.0, NULL, 772, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (940, 151, 134, 'Timah Solder Diameter 0,8mm x length 10 mtr, merk Paragon', NULL, 5.0, NULL, 773, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (941, 151, 135, 'Solder Iron automatic tin gun GT10, 60Watt mata Kristal', NULL, 2.0, NULL, 774, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (941, 151, 135, 'Solder Iron automatic tin gun GT10, 60Watt mata Kristal', NULL, 2.0, NULL, 774, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (942, 151, 136, 'Pasta Solder timah 100 gram', NULL, 1.0, NULL, 775, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (943, 151, 137, 'Penyedot timah Solder', NULL, 1.0, NULL, 776, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (944, 151, 138, 'High pressure cleaner merk: Karcher K2 420 for cleaning AC, 230V/50Hz, 100bar', NULL, 1.0, NULL, 777, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -17985,7 +17985,7 @@ INSERT INTO quotation_item_requests (
   (952, 151, 146, 'Hose band stainless steel size 15-24mm', '614054', 50.0, NULL, 520, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (953, 151, 147, 'Hose band stainless steel size 32-44mm', '614056', 50.0, NULL, 521, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (954, 151, 148, 'Gunting multifungsi merk: TEKIRO size 7"', NULL, 2.0, NULL, 783, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (955, 151, 149, 'Cable Shoe Clamping Tool Kits with skun Merk Tubtap', '611732', 1.0, NULL, 693, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (955, 151, 149, 'Cable Shoe Clamping Tool Kits with skun Merk Tubtap', '611732', 1.0, NULL, 693, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (956, 151, 150, 'Feeler Gauge 150 mm 0.05 - 0.50 mm', '650564', 2.0, NULL, 784, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (957, 151, 151, 'Gap gauges, length 400mm', '650582', 1.0, NULL, 785, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (958, 151, 152, 'Screw Extractor set merk TEKIRO, set 6pcs', '632487', 2.0, NULL, 786, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18101,86 +18101,86 @@ TeSys SCHNEIDER GV2ME08, 2,5 - 4A, Ue: 690V, Ulmp: 6kV, 50/60Hz, 440VAC, 3P', NU
   (1046, 152, 35, 'No offer', NULL, 4.0, NULL, 658, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1047, 152, 36, 'No offer', NULL, 2.0, NULL, 658, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1048, 152, 37, 'No offer', NULL, 1.0, NULL, 658, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1049, 153, 1, 'Comap InteliNano Module', NULL, 2.0, NULL, 842, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1050, 153, 2, 'Box Panel 40x30x18 cm', NULL, 2.0, NULL, 843, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1049, 153, 1, 'Comap InteliNano Module', NULL, 2.0, NULL, 842, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1050, 153, 2, 'Box Panel 40x30x18 cm', NULL, 2.0, NULL, 843, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1051, 153, 3, 'GAE Fuse 10x38 2A 500V + Holder Fuse With Indicator', NULL, 2.0, NULL, 844, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1052, 153, 4, 'GAE Fuse 10x38 32A 500V + Holder Fuse With Indicator', NULL, 6.0, NULL, 845, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1053, 153, 5, 'MCB Domae 3P 6A Schneider DOMF01306', NULL, 2.0, NULL, 846, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1053, 153, 5, 'MCB Domae 3P 6A Schneider DOMF01306', NULL, 2.0, NULL, 846, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1054, 153, 6, 'Relay Flosser 24V 20/30a Kaki 5 Relay Pemutus 87a+Socket Relay Keramik', NULL, 6.0, NULL, 847, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1055, 153, 7, 'Fort Box Push Button & Emergency Stop 22mm 1inch + Contact Block 1NO', NULL, 2.0, NULL, 848, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1056, 153, 8, 'Pilot Lamp XB5-AV63 220VAC 24 VDC Shemsco Schneider - Hijau, 220 VAC', NULL, 2.0, NULL, 849, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1056, 153, 8, 'Pilot Lamp XB5-AV63 220VAC 24 VDC Shemsco Schneider - Hijau, 220 VAC', NULL, 2.0, NULL, 849, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1057, 153, 9, 'EWIG PILOT LAMP BUZZER LED 22 mm, DC 24V, Merah', NULL, 2.0, NULL, 850, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1058, 153, 10, 'Schneider Selector Switch 3 Posisi XB2 Metal 2 No 22mm-XB2BD53C', NULL, 2.0, NULL, 851, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1059, 153, 11, 'DIN Rail MCB Alumunium 1 Meter', NULL, 4.0, NULL, 852, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1060, 153, 12, 'PM Kabel Duck Lubang Abu-Abu 32X45, panjang 1,7 Meter', NULL, 4.0, NULL, 853, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1060, 153, 12, 'PM Kabel Duck Lubang Abu-Abu 32X45, panjang 1,7 Meter', NULL, 4.0, NULL, 853, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1061, 153, 13, 'Kabel SUPREME NYAF 0.75 mm² 
-100meter - Hitam', NULL, 2.0, NULL, 854, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+100meter - Hitam', NULL, 2.0, NULL, 854, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1062, 153, 14, 'Kabel SUPREME NYAF 4 mm² 
-100meter - Hitam', NULL, 2.0, NULL, 855, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+100meter - Hitam', NULL, 2.0, NULL, 855, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1063, 153, 15, 'Kabel SUPREME NYAF 2.5mm² 
-100meter - Hitam', NULL, 4.0, NULL, 856, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+100meter - Hitam', NULL, 4.0, NULL, 856, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1064, 153, 16, 'Skun Kabel Tusuk Ferulles Ferrules 0.75mm E7508', NULL, 4.0, NULL, 857, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1065, 153, 17, 'Skun Kabel Tusuk Ferulles Ferrules 2.5mm E2508', NULL, 2.0, NULL, 858, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1066, 153, 18, 'Phoenix Contact UK5N Terminal Block
 Nominal voltage: 800 V
 Nominal current: 32 A
 Cross Section: 0,2-6mm²
-AWG: 24 - 10', NULL, 60.0, NULL, 859, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+AWG: 24 - 10', NULL, 60.0, NULL, 859, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1067, 153, 19, 'Kabel Ties 2.5x100mm HItam (100 pcs)', NULL, 4.0, NULL, 860, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1068, 153, 20, 'CT MSQ 30 (Hole 10x30mm)
-100/5A', NULL, 6.0, NULL, 861, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+100/5A', NULL, 6.0, NULL, 861, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1069, 153, 21, 'Baut L Stainles M5X12', NULL, 40.0, NULL, 862, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1070, 153, 22, 'KABEL GLAND / CABLE GLAND PG36, PG42 CIC - Hitam/Putih', NULL, 4.0, NULL, 863, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1070, 153, 22, 'KABEL GLAND / CABLE GLAND PG36, PG42 CIC - Hitam/Putih', NULL, 4.0, NULL, 863, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1071, 154, 1, 'Butterfly Key Nikel', NULL, 50.0, NULL, 864, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1072, 155, 1, 'Racor 2040 PM 30 Micron', NULL, 20.0, NULL, 484, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1073, 155, 2, 'Air Filter P181099 Merk Donaldson', NULL, 4.0, NULL, 865, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1074, 155, 3, 'Racor 2010 PM 30 Micron', NULL, 20.0, NULL, 866, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1075, 155, 4, 'Filter FS 1280 Fuel Filter', NULL, 15.0, NULL, 867, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1076, 155, 5, 'User Friendly Filter FF42000', NULL, 10.0, NULL, 868, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1077, 156, 1, 'Kain majun warna putih/campur warna', NULL, 10.0, NULL, 869, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1072, 155, 1, 'Racor 2040 PM 30 Micron', NULL, 20.0, NULL, 484, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1073, 155, 2, 'Air Filter P181099 Merk Donaldson', NULL, 4.0, NULL, 865, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1074, 155, 3, 'Racor 2010 PM 30 Micron', NULL, 20.0, NULL, 866, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1075, 155, 4, 'Filter FS 1280 Fuel Filter', NULL, 15.0, NULL, 867, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1076, 155, 5, 'User Friendly Filter FF42000', NULL, 10.0, NULL, 868, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1077, 156, 1, 'Kain majun warna putih/campur warna', NULL, 10.0, NULL, 869, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1078, 157, 1, 'PISTON ROD SEAL HALLITE 30*45*10 PU', NULL, 4.0, NULL, 870, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1079, 158, 1, 'Capasitor 8uF±5% 500V 50/60Hz', NULL, 1.0, NULL, 871, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1080, 159, 1, 'New Hydraulic Hatch Cover Pump
 Rexroth A10VSO 28 DFR1/31R-PPA12N00', NULL, 1.0, NULL, 872, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1081, 160, 1, 'plug and receptacles (MALE) 32A 4 Pin 6H 380-415V, 50/60Hz, IP44. Merk PCE. Made in Austria', NULL, 10.0, NULL, 873, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1082, 160, 2, 'plug and receptacles (FEMALE) 32A 4 Pin 6H 380-415V, 50/60Hz, IP44. Merk PCE. Made in Austria', NULL, 10.0, NULL, 874, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1081, 160, 1, 'plug and receptacles (MALE) 32A 4 Pin 6H 380-415V, 50/60Hz, IP44. Merk PCE. Made in Austria', NULL, 10.0, NULL, 873, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1082, 160, 2, 'plug and receptacles (FEMALE) 32A 4 Pin 6H 380-415V, 50/60Hz, IP44. Merk PCE. Made in Austria', NULL, 10.0, NULL, 874, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1083, 161, 1, 'O RING JIS B2401 P-16', NULL, 20.0, NULL, 612, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1084, 161, 2, 'O RING JIS B2401 P-25', NULL, 20.0, NULL, 611, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1085, 162, 1, 'Explosion/flame proof flourescent light AC 220 50/60Hz 2x20W, Emergency DC24V/1,5w.                                                       Type: CFYD20-2E (IMPA 791922)', 'CFY22-2E', 5.0, NULL, 875, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1086, 162, 2, 'TL PHILIPS TIS 1955-2551 T8 8W 800LM 600MM 220-240V 50/60HZ LED', 'TIS 1955-2551', 12.0, NULL, 876, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1087, 162, 3, 'EMERGENCY BULP PENDANT LIGHT 3-5W 24VDC LED', '3-5W 24VDC', 12.0, NULL, 877, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1088, 162, 4, 'PENDANT LIGHT AC220-240V 50/60 HZ 2X20W EMERGY DC24V LED.                                                                                                   Merk HIPROTECT type:JCY23-2EF (IMPA 791861)', 'JCY23-2EFD', 5.0, NULL, 878, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1089, 162, 5, 'TL PHILIPS TIS 1955-2551 T8 8W 800LM 600MM 220-240V 50/60HZ LED', 'TIS 1955-2551', 30.0, NULL, 876, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1090, 162, 6, 'EMERGENCY BULP PENDANT LIGHT 3-5W 24VDC LED', '3-5W 24VDC', 15.0, NULL, 877, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1091, 162, 7, 'CEILING LIGHT AC220-240V 50/60HZ 2X20W, Emergency DC24V/15W.                                                                                                     Merk HIPROTECT Type: JPY22-2E (IMPA791855)', 'JPY21-2ED', 10.0, NULL, 879, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1092, 162, 8, 'TL PHILIPS TIS 1955-2551 T8 8W 800LM 600MM 220-240V 50/60HZ LED', 'TIS 1955-2551', 30.0, NULL, 876, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1093, 162, 9, 'EMERGENCY BULP PENDANT LIGHT 3-5W 24VDC LED', '3-5W 24VDC', 30.0, NULL, 877, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1085, 162, 1, 'Explosion/flame proof flourescent light AC 220 50/60Hz 2x20W, Emergency DC24V/1,5w.                                                       Type: CFYD20-2E (IMPA 791922)', 'CFY22-2E', 5.0, NULL, 875, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1086, 162, 2, 'TL PHILIPS TIS 1955-2551 T8 8W 800LM 600MM 220-240V 50/60HZ LED', 'TIS 1955-2551', 12.0, NULL, 876, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1087, 162, 3, 'EMERGENCY BULP PENDANT LIGHT 3-5W 24VDC LED', '3-5W 24VDC', 12.0, NULL, 877, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1088, 162, 4, 'PENDANT LIGHT AC220-240V 50/60 HZ 2X20W EMERGY DC24V LED.                                                                                                   Merk HIPROTECT type:JCY23-2EF (IMPA 791861)', 'JCY23-2EFD', 5.0, NULL, 878, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1089, 162, 5, 'TL PHILIPS TIS 1955-2551 T8 8W 800LM 600MM 220-240V 50/60HZ LED', 'TIS 1955-2551', 30.0, NULL, 876, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1090, 162, 6, 'EMERGENCY BULP PENDANT LIGHT 3-5W 24VDC LED', '3-5W 24VDC', 15.0, NULL, 877, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1091, 162, 7, 'CEILING LIGHT AC220-240V 50/60HZ 2X20W, Emergency DC24V/15W.                                                                                                     Merk HIPROTECT Type: JPY22-2E (IMPA791855)', 'JPY21-2ED', 10.0, NULL, 879, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1092, 162, 8, 'TL PHILIPS TIS 1955-2551 T8 8W 800LM 600MM 220-240V 50/60HZ LED', 'TIS 1955-2551', 30.0, NULL, 876, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1093, 162, 9, 'EMERGENCY BULP PENDANT LIGHT 3-5W 24VDC LED', '3-5W 24VDC', 30.0, NULL, 877, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1094, 162, 10, 'HAIXING SEARCH LIGHT AC220-240V 50/60HZ 1000W STAINLESS STEELL 191CM POLE TG27 IP56', 'TG27', 1.0, NULL, 880, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1095, 162, 11, 'BULP SEARCH LIGHT TG27 230VAC 1000W', '230VAC 1000W', 5.0, NULL, 881, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1096, 162, 12, 'CEILING LIGHT AC220-240V 50/60HZ 2X20W, Emergency DC24V/15W.                                                                                               Merk HIPROTECT Type: JPY22-2E (IMPA791855)', 'JPY21-2ED', 10.0, NULL, 879, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1097, 162, 13, 'TL PHILIPS TIS 1955-2551 T8 8W 800LM 600MM 220-240V 50/60HZ LED', 'TIS 1955-2551', 30.0, NULL, 876, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1098, 162, 14, 'EMERGENCY BULP PENDANT LIGHT 3-5W 24VDC LED', '3-5W 24VDC LED', 15.0, NULL, 882, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1099, 162, 15, 'Flood light with ballast TG15 AC220-240V 60HZ 400W                                                                                    IP 57 IMPA 791822', 'TG6', 5.0, NULL, 883, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1100, 162, 16, 'Bulb Sodium 400W E40 Merk Philips', 'AC220 400W', 15.0, NULL, 884, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+  (1096, 162, 12, 'CEILING LIGHT AC220-240V 50/60HZ 2X20W, Emergency DC24V/15W.                                                                                               Merk HIPROTECT Type: JPY22-2E (IMPA791855)', 'JPY21-2ED', 10.0, NULL, 879, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1097, 162, 13, 'TL PHILIPS TIS 1955-2551 T8 8W 800LM 600MM 220-240V 50/60HZ LED', 'TIS 1955-2551', 30.0, NULL, 876, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1098, 162, 14, 'EMERGENCY BULP PENDANT LIGHT 3-5W 24VDC LED', '3-5W 24VDC LED', 15.0, NULL, 882, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1099, 162, 15, 'Flood light with ballast TG15 AC220-240V 60HZ 400W                                                                                    IP 57 IMPA 791822', 'TG6', 5.0, NULL, 883, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1100, 162, 16, 'Bulb Sodium 400W E40 Merk Philips', 'AC220 400W', 15.0, NULL, 884, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
-  (1101, 162, 17, 'No Offer', 'TG15-N', 5.0, NULL, 885, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1102, 162, 18, 'Philips Flood Light 220V 100Watt IP65, Sinar Putih/Kuning', 'TG21-L', 5.0, NULL, 886, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1103, 162, 19, 'NAVIGATION & SIGNAL LIGHT AFT,ANCHOR LIGHT WHITE DC24V 2X60W 360⁰/3N.M 2-TIER IP56.                                         Merk HIPROTEC Type: CXH6-101P', 'CXH6-10S', 1.0, NULL, 887, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1104, 162, 20, 'BULB LIGHT, 24VDC 60W,                                                                                  Merk HIPOTECH Type for CHX6-101P', 'V-S BISTAS 24VDC 60W', 2.0, NULL, 888, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1105, 162, 21, 'NAVIGATION & SIGNAL LIGHT PORT LIGHT RED DC24V 2X60W 112.5⁰/3N.M 2-TIER IP56.                                                    Merk HIPROTEC Type: CXH2-101P', 'CXH2-10S', 1.0, NULL, 889, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1106, 162, 22, 'BULB LIGHT, 24VDC 60W,                                                                        Merk HIPOTECH Type for CHX2-101P', 'V-S BISTAS 24VDC 60W', 2.0, NULL, 888, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1107, 162, 23, 'NAVIGATION & SIGNAL LIGHT FWD MASTER HEAD LIGHT WHITE DC24V 2X60W 255⁰/6N.M 2-TIER IP56.                           Merk HIPROTEC Type: CXH3-101P', 'CXH3-10S', 1.0, NULL, 890, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1108, 162, 24, 'BULB LIGHT, 24VDC 60W,                                                                        Merk HIPOTECH Type for CHX3-101P', 'V-S BISTAS 24VDC 60W', 2.0, NULL, 888, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1109, 162, 25, 'NAVIGATION & SIGNAL LIGHT FWD MASTER HEAD LIGHT WHITE DC24V 2X60W 255⁰/6N.M 2-TIER IP56.                          Merk HIPROTEC Type: CXH4-101P', 'CXH4-10S', 1.0, NULL, 891, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1110, 162, 26, 'BULB LIGHT, 24VDC 60W,                                                                       Merk HIPOTECH Type for CHX4-101P', 'V-S BISTAS 24VDC 60W', 2.0, NULL, 888, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1111, 162, 27, 'NAVIGATION & SIGNAL LIGHT STB LIGHT GREEN DC24V 2X60W 112.5⁰/3N.M 2-TIER IP56                                                       Merk HIPROTEC Type: CXH1-101P', 'CXH1-10S', 1.0, NULL, 892, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1112, 162, 28, 'BULB LIGHT, 24VDC 60W,                                                                        Merk HIPOTECH Type for CHX1-101P', 'V-S BISTAS 24VDC 60W', 2.0, NULL, 888, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1113, 162, 29, 'NAVIGATION & SIGNAL LIGHT IMMIG LIGHT GREEN DC24V 2X60W 360⁰/3N.M 2-TIER IP56.                                                         Merk HIPROTEC Type: CXH6-101P', 'CXH6-10S', 1.0, NULL, 887, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1114, 162, 30, 'BULB LIGHT, 24VDC 60W,                                                                  Merk HIPOTECH Type for CHX6-101P', 'V-S BISTAS 24VDC 60W', 2.0, NULL, 888, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1101, 162, 17, 'No Offer', 'TG15-N', 5.0, NULL, 885, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1102, 162, 18, 'Philips Flood Light 220V 100Watt IP65, Sinar Putih/Kuning', 'TG21-L', 5.0, NULL, 886, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1103, 162, 19, 'NAVIGATION & SIGNAL LIGHT AFT,ANCHOR LIGHT WHITE DC24V 2X60W 360⁰/3N.M 2-TIER IP56.                                         Merk HIPROTEC Type: CXH6-101P', 'CXH6-10S', 1.0, NULL, 887, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1104, 162, 20, 'BULB LIGHT, 24VDC 60W,                                                                                  Merk HIPOTECH Type for CHX6-101P', 'V-S BISTAS 24VDC 60W', 2.0, NULL, 888, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1105, 162, 21, 'NAVIGATION & SIGNAL LIGHT PORT LIGHT RED DC24V 2X60W 112.5⁰/3N.M 2-TIER IP56.                                                    Merk HIPROTEC Type: CXH2-101P', 'CXH2-10S', 1.0, NULL, 889, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1106, 162, 22, 'BULB LIGHT, 24VDC 60W,                                                                        Merk HIPOTECH Type for CHX2-101P', 'V-S BISTAS 24VDC 60W', 2.0, NULL, 888, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1107, 162, 23, 'NAVIGATION & SIGNAL LIGHT FWD MASTER HEAD LIGHT WHITE DC24V 2X60W 255⁰/6N.M 2-TIER IP56.                           Merk HIPROTEC Type: CXH3-101P', 'CXH3-10S', 1.0, NULL, 890, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1108, 162, 24, 'BULB LIGHT, 24VDC 60W,                                                                        Merk HIPOTECH Type for CHX3-101P', 'V-S BISTAS 24VDC 60W', 2.0, NULL, 888, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1109, 162, 25, 'NAVIGATION & SIGNAL LIGHT FWD MASTER HEAD LIGHT WHITE DC24V 2X60W 255⁰/6N.M 2-TIER IP56.                          Merk HIPROTEC Type: CXH4-101P', 'CXH4-10S', 1.0, NULL, 891, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1110, 162, 26, 'BULB LIGHT, 24VDC 60W,                                                                       Merk HIPOTECH Type for CHX4-101P', 'V-S BISTAS 24VDC 60W', 2.0, NULL, 888, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1111, 162, 27, 'NAVIGATION & SIGNAL LIGHT STB LIGHT GREEN DC24V 2X60W 112.5⁰/3N.M 2-TIER IP56                                                       Merk HIPROTEC Type: CXH1-101P', 'CXH1-10S', 1.0, NULL, 892, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1112, 162, 28, 'BULB LIGHT, 24VDC 60W,                                                                        Merk HIPOTECH Type for CHX1-101P', 'V-S BISTAS 24VDC 60W', 2.0, NULL, 888, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1113, 162, 29, 'NAVIGATION & SIGNAL LIGHT IMMIG LIGHT GREEN DC24V 2X60W 360⁰/3N.M 2-TIER IP56.                                                         Merk HIPROTEC Type: CXH6-101P', 'CXH6-10S', 1.0, NULL, 887, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1114, 162, 30, 'BULB LIGHT, 24VDC 60W,                                                                  Merk HIPOTECH Type for CHX6-101P', 'V-S BISTAS 24VDC 60W', 2.0, NULL, 888, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1115, 163, 1, 'Air Filter P181099 Merk Donaldson', NULL, 4.0, NULL, 893, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1116, 163, 2, 'Filter FS 1280 Fuel Filter', NULL, 15.0, NULL, 894, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1117, 163, 3, 'User Friendly Filter FF42000', NULL, 10.0, NULL, 895, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18191,84 +18191,84 @@ swivels 64mm u3 (E+SW+EL+C)', NULL, 1.0, NULL, 897, 'matched', 'import', 'Backfi
   (1120, 166, 1, 'BEARING HK 1612 
 Brand: NTN', NULL, 100.0, NULL, 898, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1121, 167, 1, 'Dry Walnut Shell for Turbo Charger cleaner', '232974', 50.0, NULL, 899, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1122, 168, 1, 'Cotton Working Gloves non slip dots (per pasang)', '190101', 30.0, NULL, 900, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1123, 168, 2, 'POLYSTER SLING 1T, length 1 mtr (30mm) safety factor 7:1', '232172', 4.0, NULL, 901, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1124, 168, 3, 'POLYSTER SLING 3T, length 4 mtr (90mm) safety factor 7:1', '232172', 4.0, NULL, 901, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1125, 168, 4, 'POLYSTER SLING 10T, length 6 mtr (250mm) safety factor 6:1', '232173', 4.0, NULL, 902, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1122, 168, 1, 'Cotton Working Gloves non slip dots (per pasang)', '190101', 30.0, NULL, 900, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1123, 168, 2, 'POLYSTER SLING 1T, length 1 mtr (30mm) safety factor 7:1', '232172', 4.0, NULL, 901, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1124, 168, 3, 'POLYSTER SLING 3T, length 4 mtr (90mm) safety factor 7:1', '232172', 4.0, NULL, 901, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1125, 168, 4, 'POLYSTER SLING 10T, length 6 mtr (250mm) safety factor 6:1', '232173', 4.0, NULL, 902, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1126, 168, 5, 'GREASE LUBRICATORS AIR OPERATED 20LTR SET INCLUDE ACCESSORIES', '617501', 2.0, NULL, 903, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1127, 168, 6, 'FLEXIBLE EXTENSION HOSE (Hydraulic or Straight type Grease Nipple ) 300mm', '617682', 5.0, NULL, 904, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1128, 168, 7, 'FLEXIBLE EXTENSION HOSE (PIN TYPE BUTTON HEAD ) 300mm', '617681', 5.0, NULL, 905, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1129, 168, 8, '?', '617556', 20.0, NULL, 906, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1130, 168, 9, 'FORGED SHACKLES G-209 GALV 1 1/4" 12T weight 9.5 pounds Merk Crosby USA', '234172', 8.0, NULL, 907, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1127, 168, 6, 'FLEXIBLE EXTENSION HOSE (Hydraulic or Straight type Grease Nipple ) 300mm', '617682', 5.0, NULL, 904, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1128, 168, 7, 'FLEXIBLE EXTENSION HOSE (PIN TYPE BUTTON HEAD ) 300mm', '617681', 5.0, NULL, 905, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1129, 168, 8, '?', '617556', 20.0, NULL, 906, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1130, 168, 9, 'FORGED SHACKLES G-209 GALV 1 1/4" 12T weight 9.5 pounds Merk Crosby USA', '234172', 8.0, NULL, 907, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1131, 168, 10, 'SYNTHETIC FIBRE TARPAULIN CANVAS', '232222', 50.0, NULL, 908, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1132, 168, 11, 'FORGED SHACKLES G-209 GALV 3/4" 3-1/4T 3.25', '234167', 15.0, NULL, 909, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1133, 168, 12, 'FORGED SHACKLES G-209 GALV 7/8" 6-1/2T 6.5 merk Crosby USA', '234169', 15.0, NULL, 910, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1133, 168, 12, 'FORGED SHACKLES G-209 GALV 7/8" 6-1/2T 6.5 merk Crosby USA', '234169', 15.0, NULL, 910, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1134, 168, 13, 'FORGED STEEL REGULAR SWIVELS SIZE SWL 3 TON', '231277', 16.0, NULL, 911, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1135, 168, 14, 'ROLLER SHACKLES SWL 2.5 TON', '230402', 5.0, NULL, 912, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1136, 168, 15, 'LEATHER PALM WORKING GLOVES (per pasang)', '190109', 5.0, NULL, 913, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1137, 168, 16, 'Electric angle grinder merk; BOSCH 4", 220V, 700w', '591031', 2.0, NULL, 162, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1138, 168, 17, 'Portable Electric Drill merk: BOSCH 13mm, 220V, 600w', '591013', 2.0, NULL, 663, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1139, 168, 18, 'Convex Rules 5 mtrs Merk Tekiro', '650828', 4.0, NULL, 662, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1136, 168, 15, 'LEATHER PALM WORKING GLOVES (per pasang)', '190109', 5.0, NULL, 913, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1137, 168, 16, 'Electric angle grinder merk; BOSCH 4", 220V, 700w', '591031', 2.0, NULL, 162, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1138, 168, 17, 'Portable Electric Drill merk: BOSCH 13mm, 220V, 600w', '591013', 2.0, NULL, 663, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1139, 168, 18, 'Convex Rules 5 mtrs Merk Tekiro', '650828', 4.0, NULL, 662, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1140, 168, 19, 'ADJUSTABLE WRENCHES 6'''' ( Merk TEKIRO )', '611332', 1.0, NULL, 654, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1141, 168, 20, 'ADJUSTABLE WRENCHES 8'''' ( Merk TEKIRO )', '611333', 1.0, NULL, 173, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1142, 168, 21, 'Side Cutting Pliers with insulated handle, Merk TEKIRO 8"', '611660', 1.0, NULL, 653, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1143, 168, 22, 'Open & 12 point box Wrench Set, Size: 8mm-32mm, Merk TEKIRO 14pcs', NULL, 1.0, NULL, 914, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1144, 168, 23, 'SOCKET WRENCH SETS isi 24Pcs, 6 point (8mm- 32mm) Merk TEKIRO', NULL, 1.0, NULL, 915, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1145, 168, 24, 'Resinoid Cut off Wheels OD: 100mm, Thickness: 1,0mm, Hole diam: 16mm, merk: MORRIS', '614857', 50.0, NULL, 664, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1142, 168, 21, 'Side Cutting Pliers with insulated handle, Merk TEKIRO 8"', '611660', 1.0, NULL, 653, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1143, 168, 22, 'Open & 12 point box Wrench Set, Size: 8mm-32mm, Merk TEKIRO 14pcs', NULL, 1.0, NULL, 914, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1144, 168, 23, 'SOCKET WRENCH SETS isi 24Pcs, 6 point (8mm- 32mm) Merk TEKIRO', NULL, 1.0, NULL, 915, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1145, 168, 24, 'Resinoid Cut off Wheels OD: 100mm, Thickness: 1,0mm, Hole diam: 16mm, merk: MORRIS', '614857', 50.0, NULL, 664, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1146, 168, 25, 'Resinoid offset grinding wheel, OD: 100mm, Thickness: 6 mm, merk: Nippon Resibon', '614803', 50.0, NULL, 665, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1147, 168, 26, 'WD-40, 333ml', '450702', 10.0, NULL, 666, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1148, 168, 27, 'Wire Cup brush Plaited Threaded nut type M10, Dia. 3" Steel', '592073', 10.0, NULL, 681, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1149, 168, 28, 'Wire Cup brush Crimped Threaded nut Type M10, Dia. 3" Steel', '592072', 10.0, NULL, 682, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1147, 168, 26, 'WD-40, 333ml', '450702', 10.0, NULL, 666, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1148, 168, 27, 'Wire Cup brush Plaited Threaded nut type M10, Dia. 3" Steel', '592073', 10.0, NULL, 681, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1149, 168, 28, 'Wire Cup brush Crimped Threaded nut Type M10, Dia. 3" Steel', '592072', 10.0, NULL, 682, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1150, 168, 29, 'Pneumatic Impact Wrenches pistol type, 3/4"', '590105', 1.0, NULL, 916, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1151, 168, 30, 'Hose End type Stainless steel 1/4" 20 SH series socket', '351221', 5.0, NULL, 735, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1152, 168, 31, 'Hose End type Stainless steel 1/2" 40 SH series socket', '351223', 5.0, NULL, 736, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1153, 168, 32, 'Hose End type Stainless steel 1/4" 20 PH series socket', '351251', 5.0, NULL, 737, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1154, 168, 33, 'Hose End type Stainless steel 1/2" 40 PH series socket', '351253', 5.0, NULL, 738, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1155, 168, 34, 'Vise Grip combination Pliers Length 10", TEKIRO', NULL, 1.0, NULL, 917, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1155, 168, 34, 'Vise Grip combination Pliers Length 10", TEKIRO', NULL, 1.0, NULL, 917, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1156, 168, 35, 'Cast Bronze Air hose Couplings M42x2, nominal hose end: 12mm', '351054', 10.0, NULL, 519, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1157, 168, 36, 'Hose band stainless steel size 15-24mm', '614054', 20.0, NULL, 520, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1158, 168, 37, 'Hose band stainless steel size 32-44mm', '614056', 20.0, NULL, 521, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1159, 168, 38, 'Wrench Double head Rachet 12 point, 17 x 19 Impa 611057', '611057', 2.0, NULL, 792, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1160, 168, 39, 'Wrench Double head Rachet 12 point, 19 x 24 Impa 611060', '611060', 2.0, NULL, 793, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1159, 168, 38, 'Wrench Double head Rachet 12 point, 17 x 19 Impa 611057', '611057', 2.0, NULL, 792, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1160, 168, 39, 'Wrench Double head Rachet 12 point, 19 x 24 Impa 611060', '611060', 2.0, NULL, 793, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1161, 168, 40, 'Cordless Drill merk BOSCH GSR-120-Li, 12V', NULL, 1.0, NULL, 523, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1162, 168, 41, 'Kunci L type T handle merk TEKIRO isi 7 pcs, size: 2,5-10mm', NULL, 1.0, NULL, 918, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1162, 168, 41, 'Kunci L type T handle merk TEKIRO isi 7 pcs, size: 2,5-10mm', NULL, 1.0, NULL, 918, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1163, 168, 42, 'Mata Bor Stainless steel set, merk NACHI', NULL, 1.0, NULL, 811, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1164, 168, 43, 'Rubber air hose 1/2 inch, ID 12mm OD 21mm working pressure 20 bar', '350103', 100.0, NULL, 518, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1165, 168, 44, 'Hand Saws blade length 450mm/18" Merk Tekiro', '613401', 2.0, NULL, 919, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1166, 168, 45, 'Hacksaw frame merk tekiro 12"', '613426', 2.0, NULL, 656, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1167, 168, 46, 'Hacksaw blade 18TPI 12"', '613431', 10.0, NULL, 920, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1164, 168, 43, 'Rubber air hose 1/2 inch, ID 12mm OD 21mm working pressure 20 bar', '350103', 100.0, NULL, 518, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1165, 168, 44, 'Hand Saws blade length 450mm/18" Merk Tekiro', '613401', 2.0, NULL, 919, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1166, 168, 45, 'Hacksaw frame merk tekiro 12"', '613426', 2.0, NULL, 656, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1167, 168, 46, 'Hacksaw blade 18TPI 12"', '613431', 10.0, NULL, 920, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1168, 168, 47, 'Mooring rope cir 10 length 220 mtr', NULL, 2.0, NULL, 921, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1169, 168, 48, 'IMPA Catalog 8th Edition', NULL, 1.0, NULL, 922, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1169, 168, 48, 'IMPA Catalog 8th Edition', NULL, 1.0, NULL, 922, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1170, 168, 49, 'Angle Radiator Brushes width 40mm', '510166', 10.0, NULL, 923, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1171, 168, 50, 'Fuel Nozzle Gun Automatic 1 Inch - Fuel Nozzle Otomatis', NULL, 1.0, NULL, 924, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1172, 168, 51, 'Rubber air hose 1 inch, ID 25mm OD 36mm working pressure 20 bar', '350105', 50.0, NULL, 925, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1173, 168, 52, 'Inflatable lifejacket standard (with gas)', '330166', 3.0, NULL, 926, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1174, 168, 53, 'LED Flashlight Rechargeable, 10.000 lumens', '792201', 5.0, NULL, 927, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1175, 168, 54, 'Dust Mask Dispossable (50''S / PKT) KN95, 3D, 5 Ply', '331130', 10.0, NULL, 928, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1172, 168, 51, 'Rubber air hose 1 inch, ID 25mm OD 36mm working pressure 20 bar', '350105', 50.0, NULL, 925, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1173, 168, 52, 'Inflatable lifejacket standard (with gas)', '330166', 3.0, NULL, 926, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1174, 168, 53, 'LED Flashlight Rechargeable, 10.000 lumens', '792201', 5.0, NULL, 927, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1175, 168, 54, 'Dust Mask Dispossable (50''S / PKT) KN95, 3D, 5 Ply', '331130', 10.0, NULL, 928, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1176, 168, 55, 'Mini paint roller complete with handle 100mm', '510461', 10.0, NULL, 929, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1177, 168, 56, 'Spare paint roller replacement 100 mm', '510334', 5.0, NULL, 930, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1178, 168, 57, 'Towel (400mm x 800mm)', '150609', 12.0, NULL, 931, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1179, 168, 58, 'Brushes / Sikat toilet 24x9x134cm, Merk Nagata', '510882', 20.0, NULL, 932, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1180, 168, 59, 'Square Shovel (250 x 300 mm)', '613687', 10.0, NULL, 933, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1181, 168, 60, 'Paper Masking Tapes 250 mm x 50 mtrs', '471377', 5.0, NULL, 934, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1182, 168, 61, 'Toilet soap / sabun mandi 100gr (Lifebouy/Nuvo/Lux/Dettol)', '550253', 50.0, NULL, 935, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1183, 168, 62, 'Toilet Cleanser 500 ML/BTL, Yuri Porstex', '550235', 20.0, NULL, 936, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1179, 168, 58, 'Brushes / Sikat toilet 24x9x134cm, Merk Nagata', '510882', 20.0, NULL, 932, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1180, 168, 59, 'Square Shovel (250 x 300 mm)', '613687', 10.0, NULL, 933, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1181, 168, 60, 'Paper Masking Tapes 250 mm x 50 mtrs', '471377', 5.0, NULL, 934, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1182, 168, 61, 'Toilet soap / sabun mandi 100gr (Lifebouy/Nuvo/Lux/Dettol)', '550253', 50.0, NULL, 935, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1183, 168, 62, 'Toilet Cleanser 500 ML/BTL, Yuri Porstex', '550235', 20.0, NULL, 936, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1184, 168, 63, 'Laundry Soap Powder (RINSO 1.8KG)', '550108', 100.0, NULL, 937, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1185, 168, 64, 'Coath Hanger Plastic 40cm', '150527', 100.0, NULL, 938, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1185, 168, 64, 'Coath Hanger Plastic 40cm', '150527', 100.0, NULL, 938, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1186, 168, 65, 'Sabun cuci piring sunlight 650ml', NULL, 20.0, NULL, 939, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1187, 168, 66, 'Handy Cutters merk KENKO', '471013', 20.0, NULL, 940, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1188, 168, 67, 'Handy Cutters Blade only merk KENKO (tube)', '471015', 5.0, NULL, 941, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1189, 168, 68, 'Plastic Tag with Small Ring, Merk KENKO (isi 50pcs)', '471307', 5.0, NULL, 942, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1190, 168, 69, 'Laundry Pinches Plastic (isi 20pcs), Merk Lion Star', '150512', 5.0, NULL, 943, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1191, 168, 70, 'Stainless Steel Cuttlery Dessert Fork, panjang 18,5cm', '170108', 52.0, NULL, 944, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1192, 168, 71, 'Stainless Steel Cuttlery Dessert Spoon, panjang 18,5cm', '170109', 52.0, NULL, 945, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1193, 168, 72, 'No Offer', '172424', 2.0, NULL, 946, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1194, 168, 73, 'Mug Standard Quality Chinaware 80mm 320cc/11oz', '170337', 36.0, NULL, 947, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1195, 168, 74, 'Dinner Plate Standard Quality Chinaware 262mm, putih', '170311', 36.0, NULL, 948, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1196, 168, 75, 'Glass Noodle bowl ( mangkuk mie ) 200mm x 70 mm, putih', '173605', 36.0, NULL, 949, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1197, 168, 76, 'Cleavers 210MM, wood handle', '172317', 2.0, NULL, 950, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1198, 168, 77, 'Pedal Flip Waste Basket 200x290mm, 5L, Stainless', '174152', 10.0, NULL, 951, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1199, 168, 78, 'Boiler Presto 10L, Stainless', NULL, 1.0, NULL, 952, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1187, 168, 66, 'Handy Cutters merk KENKO', '471013', 20.0, NULL, 940, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1188, 168, 67, 'Handy Cutters Blade only merk KENKO (tube)', '471015', 5.0, NULL, 941, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1189, 168, 68, 'Plastic Tag with Small Ring, Merk KENKO (isi 50pcs)', '471307', 5.0, NULL, 942, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1190, 168, 69, 'Laundry Pinches Plastic (isi 20pcs), Merk Lion Star', '150512', 5.0, NULL, 943, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1191, 168, 70, 'Stainless Steel Cuttlery Dessert Fork, panjang 18,5cm', '170108', 52.0, NULL, 944, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1192, 168, 71, 'Stainless Steel Cuttlery Dessert Spoon, panjang 18,5cm', '170109', 52.0, NULL, 945, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1193, 168, 72, 'No Offer', '172424', 2.0, NULL, 946, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1194, 168, 73, 'Mug Standard Quality Chinaware 80mm 320cc/11oz', '170337', 36.0, NULL, 947, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1195, 168, 74, 'Dinner Plate Standard Quality Chinaware 262mm, putih', '170311', 36.0, NULL, 948, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1196, 168, 75, 'Glass Noodle bowl ( mangkuk mie ) 200mm x 70 mm, putih', '173605', 36.0, NULL, 949, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1197, 168, 76, 'Cleavers 210MM, wood handle', '172317', 2.0, NULL, 950, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1198, 168, 77, 'Pedal Flip Waste Basket 200x290mm, 5L, Stainless', '174152', 10.0, NULL, 951, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1199, 168, 78, 'Boiler Presto 10L, Stainless', NULL, 1.0, NULL, 952, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1200, 168, 79, '3M SCOTCH-BRITE Sponge Cleaners', '174074', 30.0, NULL, 953, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
@@ -18276,25 +18276,25 @@ INSERT INTO quotation_item_requests (
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
   (1201, 168, 80, 'Stainless Steel Food Service
-Gastronom food pan stainless 1/3 10cm with cover. Size: 32,5cmx17,6cmx10cm', '170854', 5.0, NULL, 954, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1202, 168, 81, 'French Knife stainless steel length 8"', '172288', 2.0, NULL, 955, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1203, 168, 82, 'French Knife stainless steel length 6"', '172291', 2.0, NULL, 956, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1204, 168, 83, 'Hand scourer stainless steel, 85mm', '174055', 20.0, NULL, 957, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1205, 168, 84, 'Sapu lantai plastik long handle, Merk Nagata', NULL, 15.0, NULL, 958, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1206, 168, 85, 'Pengki / dust pan with long handle, Merk Nagata', NULL, 10.0, NULL, 959, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Gastronom food pan stainless 1/3 10cm with cover. Size: 32,5cmx17,6cmx10cm', '170854', 5.0, NULL, 954, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1202, 168, 81, 'French Knife stainless steel length 8"', '172288', 2.0, NULL, 955, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1203, 168, 82, 'French Knife stainless steel length 6"', '172291', 2.0, NULL, 956, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1204, 168, 83, 'Hand scourer stainless steel, 85mm', '174055', 20.0, NULL, 957, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1205, 168, 84, 'Sapu lantai plastik long handle, Merk Nagata', NULL, 15.0, NULL, 958, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1206, 168, 85, 'Pengki / dust pan with long handle, Merk Nagata', NULL, 10.0, NULL, 959, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1207, 168, 86, 'Yacht mop complete', '174271', 15.0, NULL, 960, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1208, 168, 87, 'No Offer', NULL, 10.0, NULL, 961, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1208, 168, 87, 'No Offer', NULL, 10.0, NULL, 961, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1209, 168, 88, 'Toilet brush  nylon with holder', '174253', 15.0, NULL, 962, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1210, 168, 89, 'Rubber squeegees, lebar 380mm, panjang 120cm alumunium, Merk Nagata', '174291', 5.0, NULL, 963, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1211, 168, 90, 'Coir Door Mats 40x60 cm, keset sabut kelapa', '511021', 10.0, NULL, 964, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1212, 168, 91, 'Keset ruangan ukuran 40x60 cm', NULL, 20.0, NULL, 965, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1213, 168, 92, 'Panci aluminium ukuran D40cm, T28cm', NULL, 2.0, NULL, 966, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1214, 168, 93, 'Telfon coated frying pan diameter 320 mm, Akebono', NULL, 1.0, NULL, 967, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1210, 168, 89, 'Rubber squeegees, lebar 380mm, panjang 120cm alumunium, Merk Nagata', '174291', 5.0, NULL, 963, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1211, 168, 90, 'Coir Door Mats 40x60 cm, keset sabut kelapa', '511021', 10.0, NULL, 964, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1212, 168, 91, 'Keset ruangan ukuran 40x60 cm', NULL, 20.0, NULL, 965, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1213, 168, 92, 'Panci aluminium ukuran D40cm, T28cm', NULL, 2.0, NULL, 966, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1214, 168, 93, 'Telfon coated frying pan diameter 320 mm, Akebono', NULL, 1.0, NULL, 967, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1215, 168, 94, 'Stell frying pan diameter 340 mm', '171710', 1.0, NULL, 968, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1216, 168, 95, 'Panci masak mie dia x depth 180 x 100 mm', NULL, 2.0, NULL, 969, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1217, 168, 96, 'Kitchen shears', '172370', 1.0, NULL, 970, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1218, 168, 97, 'Ember plastik dengan pegangan kawat 15 liter tanpa tutup', NULL, 30.0, NULL, 971, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1219, 168, 98, 'Ember plastik besar 80 liter dengan tutup, pegangan samping', NULL, 2.0, NULL, 972, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1217, 168, 96, 'Kitchen shears', '172370', 1.0, NULL, 970, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1218, 168, 97, 'Ember plastik dengan pegangan kawat 15 liter tanpa tutup', NULL, 30.0, NULL, 971, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1219, 168, 98, 'Ember plastik besar 80 liter dengan tutup, pegangan samping', NULL, 2.0, NULL, 972, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1220, 169, 1, 'Cylinder Head Yanmar 6N18 (L) - HV', NULL, 2.0, NULL, 973, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1221, 170, 1, 'Selang Nozzle, kanvas 1.5" x 30m (inc. connector machino 1,5")', NULL, 2.0, NULL, 974, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1222, 170, 2, 'Sprinkle Nozzle 1.5 inch', NULL, 2.0, NULL, 975, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18306,7 +18306,7 @@ Gastronom food pan stainless 1/3 10cm with cover. Size: 32,5cmx17,6cmx10cm', '17
   (1228, 170, 8, 'Mesin Las 900 watt, 120A, Merk Izumi Jepang', NULL, 1.0, NULL, 981, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1229, 170, 9, 'Palu godam 5kg', NULL, 1.0, NULL, 982, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1230, 170, 10, 'Palu kecil 8 Oz merk Tekiro', NULL, 1.0, NULL, 983, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1231, 170, 11, 'Electric angle grinder merk; BOSCH 4", 220V, 700w', NULL, 1.0, NULL, 984, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1231, 170, 11, 'Electric angle grinder merk; BOSCH 4", 220V, 700w', NULL, 1.0, NULL, 984, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1232, 170, 12, 'Palu chipping 500gr', NULL, 6.0, NULL, 985, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1233, 170, 13, 'Mata Potong Gerinda 105x1,2x16mm, Merk WD', NULL, 6.0, NULL, 986, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1234, 170, 14, 'Mata brush gerinda, sikat kepang M10 D3"', NULL, 6.0, NULL, 987, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18322,7 +18322,7 @@ Gastronom food pan stainless 1/3 10cm with cover. Size: 32,5cmx17,6cmx10cm', '17
   (1244, 170, 24, 'Lap Chamois ukuran 64x43cm + tabung plastik', NULL, 2.0, NULL, 996, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1245, 170, 25, 'Kain Majun mix warna', NULL, 25.0, NULL, 997, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1246, 170, 26, 'Keset ruangan ukuran 40x60 cm', NULL, 3.0, NULL, 998, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1247, 170, 27, 'Wire brush Straight handle standart length 270mm', NULL, 3.0, NULL, 999, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1247, 170, 27, 'Wire brush Straight handle standart length 270mm', NULL, 3.0, NULL, 999, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1248, 170, 28, 'Yacht mop complete', NULL, 3.0, NULL, 1000, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1249, 170, 29, 'Sapu lantai plastik long handle, Merk Nagata', NULL, 3.0, NULL, 1001, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1250, 170, 30, 'Sikat lantai 24x9x134cm, Merk Nagata', NULL, 3.0, NULL, 1002, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18336,8 +18336,8 @@ Gastronom food pan stainless 1/3 10cm with cover. Size: 32,5cmx17,6cmx10cm', '17
   (1258, 170, 38, 'wipol botol 750ml', NULL, 1.0, NULL, 1010, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1259, 170, 39, 'Solasi listrik Nitto', NULL, 5.0, NULL, 1011, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1260, 170, 40, 'Lakban kertas 24mm', NULL, 5.0, NULL, 1012, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1261, 171, 1, 'Baut L M20x100, half drat (non drat 45mm), material baja hitam plus ring plat', NULL, 100.0, NULL, 1013, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1262, 171, 2, 'Baut M8x30, material baja hitam plus mur', NULL, 100.0, NULL, 1014, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1261, 171, 1, 'Baut L M20x100, half drat (non drat 45mm), material baja hitam plus ring plat', NULL, 100.0, NULL, 1013, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1262, 171, 2, 'Baut M8x30, material baja hitam plus mur', NULL, 100.0, NULL, 1014, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1263, 172, 1, 'Phoenix contact 2866239 QUINT-DC-UPS/24DC/20Pn', NULL, 1.0, NULL, 1015, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1264, 172, 2, 'Power Supply Phoenix contact 2866763 QUINT-PS/1AC/24DC/10 24VDC 10A', NULL, 1.0, NULL, 1016, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1265, 173, 1, 'Transport to Manado - Cylinder Head Yanmar 6N18 (L) - HV', NULL, 1.0, NULL, 1017, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18382,7 +18382,7 @@ Ports :
   (1285, 176, 3, 'Kunci shock isi 24 pcs tekiro, 8-32mm in box. Opsi 12PT atau 6PT', NULL, 1.0, NULL, 1037, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1286, 176, 4, 'Kunci pas ring tekiro 14 pcs, 8-32mm', NULL, 1.0, NULL, 1038, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1287, 176, 5, 'Tang Jepit PC 10 (PL-LG0768), Merk Tekiro 10"', NULL, 1.0, NULL, 1039, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1288, 176, 6, 'Digital Calipers MITUTOYO mm & inch range 0 - 300mm / 12"', NULL, 1.0, NULL, 1040, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1288, 176, 6, 'Digital Calipers MITUTOYO mm & inch range 0 - 300mm / 12"', NULL, 1.0, NULL, 1040, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1289, 176, 7, 'Chain block 3 ton x 10 meter, Merk WEKA Germany', NULL, 1.0, NULL, 1041, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1290, 176, 8, 'Devcon Plastic Steel Putty (A) 10110', NULL, 1.0, NULL, 1042, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1291, 176, 9, 'Packing karet 3mm', NULL, 3.0, NULL, 1043, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18420,7 +18420,7 @@ INSERT INTO quotation_item_requests (
   (1318, 177, 3, 'Kunci shock isi 24 pcs tekiro, 8-32mm in box. Opsi 12PT atau 6PT', NULL, 1.0, NULL, 1037, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1319, 177, 4, 'Kunci pas ring tekiro 14 pcs, 8-32mm', NULL, 1.0, NULL, 1038, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1320, 177, 5, 'Tang Jepit PC 10 (PL-LG0768), Merk Tekiro 10"', NULL, 1.0, NULL, 1039, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1321, 177, 6, 'Digital Calipers MITUTOYO mm & inch range 0 - 300mm / 12"', NULL, 1.0, NULL, 1040, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1321, 177, 6, 'Digital Calipers MITUTOYO mm & inch range 0 - 300mm / 12"', NULL, 1.0, NULL, 1040, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1322, 177, 7, 'Chain block 3 ton x 10 meter, Merk WEKA Germany', NULL, 1.0, NULL, 1041, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1323, 177, 8, 'Devcon Plastic Steel Putty (A) 10110', NULL, 1.0, NULL, 1042, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1324, 177, 9, 'Packing karet 3mm', NULL, 3.0, NULL, 1043, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18459,15 +18459,15 @@ INSERT INTO quotation_item_requests (
   (1357, 179, 7, 'Size M6 x 50mm (Baut & Mur 10mm)', NULL, 50.0, NULL, 1073, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1358, 180, 1, 'O RING JIS B2401 G-25', NULL, 20.0, NULL, 610, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1359, 180, 2, 'O RING JIS B2401 P-18', NULL, 20.0, NULL, 1074, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1360, 180, 3, 'Hallite (601) 30*40*6', NULL, 10.0, NULL, 1075, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1360, 180, 3, 'Hallite (601) 30*40*6', NULL, 10.0, NULL, 1075, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1361, 181, 1, 'Transport to Ternate 24Kg', NULL, 1.0, NULL, 1076, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1362, 182, 1, 'BINOCULARS 7X50IF WATER-PROOF', NULL, 2.0, NULL, 1077, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1362, 182, 1, 'BINOCULARS 7X50IF WATER-PROOF', NULL, 2.0, NULL, 1077, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1363, 182, 2, 'No Offer', NULL, 1.0, NULL, 658, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1364, 182, 3, 'SPARE BATTERY WALKY TALKY RADIO STANDARD HORIZON HX400IS SBR29', NULL, 4.0, NULL, 1078, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1365, 182, 4, 'PRINTER EPSON L3210', NULL, 1.0, NULL, 1079, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1365, 182, 4, 'PRINTER EPSON L3210', NULL, 1.0, NULL, 1079, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1366, 182, 5, 'National Flags
 FLAG NATIONAL 3''X 4'' BUNTING, INDONESIA', NULL, 2.0, NULL, 1080, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1367, 183, 1, 'Oring AS028 34,65 x 1,78 NBR70', NULL, 20.0, NULL, 1081, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1367, 183, 1, 'Oring AS028 34,65 x 1,78 NBR70', NULL, 20.0, NULL, 1081, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1368, 184, 1, 'AC 1/2 PK Merk AQUA AQA 0,5PK', NULL, 2.0, NULL, 980, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1369, 185, 1, 'VRLA Battery OP24-12', NULL, 2.0, NULL, 1082, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1370, 186, 1, 'Handy Talky Standard Horizon - Submersible HX400 IS', NULL, 5.0, NULL, 1083, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18488,29 +18488,29 @@ FLAG NATIONAL 3''X 4'' BUNTING, INDONESIA', NULL, 2.0, NULL, 1080, 'matched', 'i
   (1385, 193, 1, 'Baterry Charger 12-24V/220, 50/60Hz, 50A', NULL, 2.0, NULL, 1098, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1386, 193, 2, 'Lampu Bohlam Hannoch LED Bulb 3W, putih', NULL, 12.0, NULL, 1099, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1387, 194, 1, 'MASTERLOCK 3058DAT Ratchet Tie Down', NULL, 1.0, NULL, 1100, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1388, 195, 1, 'Racor 2020 PM 30 Micron, 1000FG', NULL, 12.0, NULL, 1101, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1389, 195, 2, 'AVR SE 350 , brand Marathon (OEM)', NULL, 2.0, NULL, 1102, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1390, 195, 3, 'Avometer Analog, merk Sanwa KS-278', NULL, 1.0, NULL, 1103, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1391, 196, 1, 'O RING AS 028', NULL, 20.0, NULL, 1104, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1388, 195, 1, 'Racor 2020 PM 30 Micron, 1000FG', NULL, 12.0, NULL, 1101, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1389, 195, 2, 'AVR SE 350 , brand Marathon (OEM)', NULL, 2.0, NULL, 1102, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1390, 195, 3, 'Avometer Analog, merk Sanwa KS-278', NULL, 1.0, NULL, 1103, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1391, 196, 1, 'O RING AS 028', NULL, 20.0, NULL, 1104, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1392, 197, 1, 'Transport Jakarta - Cilacap', NULL, 1.0, NULL, 1105, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1393, 198, 1, 'CHARGER BATTREY '''' SMARTGEN'''' TYPE (BACM2420) 
 INPUT 220VAC OUTPUT 24VDC 20A', NULL, 1.0, NULL, 1106, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1394, 199, 1, 'Hydraulic Hose 1" (material rubber)', NULL, 2.0, NULL, 1107, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1395, 199, 2, 'Hydraulic Hose 2 ½" (material rubber)', NULL, 2.0, NULL, 1108, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1396, 199, 3, 'Air Filter A-6111 Merk Sakura', NULL, 4.0, NULL, 1109, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1396, 199, 3, 'Air Filter A-6111 Merk Sakura', NULL, 4.0, NULL, 1109, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1397, 200, 1, 'Plat Valve Set
 compressor copeland 4RJ2-3000-TSK-200, VOLTAGE 440 V/60HZ', NULL, 4.0, NULL, 1110, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1398, 201, 1, 'PRESSURE GAUGE, BOTTOM CONNECTION + FLANGE
-4", RANGE -1~5 BAR, DRAT ½ NPT', NULL, 15.0, NULL, 1111, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+4", RANGE -1~5 BAR, DRAT ½ NPT', NULL, 15.0, NULL, 1111, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1399, 201, 2, 'PRESSURE GAUGE, BOTTOM CONNECTION + FLANGE
-4", RANGE 0~10 BAR, DRAT ½ NPT', NULL, 25.0, NULL, 1111, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1400, 202, 1, 'overload relay schneider, 16-24A,690V-6kv LRD 22', NULL, 5.0, NULL, 1112, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+4", RANGE 0~10 BAR, DRAT ½ NPT', NULL, 25.0, NULL, 1111, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1400, 202, 1, 'overload relay schneider, 16-24A,690V-6kv LRD 22', NULL, 5.0, NULL, 1112, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
-  (1401, 202, 2, 'CONTACTOR SCHNEIDER LC1D09 M7 (220V)', NULL, 5.0, NULL, 1113, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1401, 202, 2, 'CONTACTOR SCHNEIDER LC1D09 M7 (220V)', NULL, 5.0, NULL, 1113, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1402, 202, 3, 'power supply allen-bradley, CAT1606-XLP72E
 INPUT AC 100-120/220-240V 1,6/0,8A 50-60HZ, OUTPUT DC24-28V/3A, P OUT MAX 72W FACTORY SET 24,5V', NULL, 2.0, NULL, 1114, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1403, 203, 1, 'Wire rope 6x36mm + IWRC Ungalvanized (per pair = 2x10.6m)', NULL, 4.0, NULL, 1115, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18528,7 +18528,7 @@ INPUT AC 100-120/220-240V 1,6/0,8A 50-60HZ, OUTPUT DC24-28V/3A, P OUT MAX 72W FA
   (1415, 203, 13, 'Nozzle 1,5 Inch', NULL, 2.0, NULL, 1127, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1416, 203, 14, 'Selang diameter 1,5 inch (per roll = max 50 meter)', NULL, 100.0, NULL, 1128, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1417, 203, 15, 'Tang kombinasi 8" Merk TEKIRO', NULL, 2.0, NULL, 1129, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1418, 203, 16, 'Dustpan kecil Lion star + brush item no.7', NULL, 12.0, NULL, 1130, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1418, 203, 16, 'Dustpan kecil Lion star + brush item no.7', NULL, 12.0, NULL, 1130, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1419, 203, 17, 'Mini roll spare 100mm IMPA 510462', NULL, 100.0, NULL, 1131, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1420, 203, 18, 'Mesin Bor Bosch cordless GSR 18V (inc. 1 baterai & charger)', NULL, 1.0, NULL, 1132, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1421, 203, 19, 'Gloves / Sarung tangan untuk kerja', NULL, 50.0, NULL, 1133, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18566,39 +18566,39 @@ INPUT AC 100-120/220-240V 1,6/0,8A 50-60HZ, OUTPUT DC24-28V/3A, P OUT MAX 72W FA
   (1453, 207, 1, 'Inflatable life jacket ISO 12402-3, Automatic, merk Hiprotect', NULL, 4.0, NULL, 1164, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1454, 207, 2, 'Inflatable life jacket ISO 12402-3, Automatic, merk Sigma Lelizas', NULL, 4.0, NULL, 1165, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1455, 207, 3, 'Inflatable life jacket ISO 12402-3, Automatic, merk Alpha Lelizas 71098', NULL, 4.0, NULL, 1166, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1456, 208, 1, 'Porstex 1000ml', NULL, 5.0, NULL, 1167, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1457, 208, 2, 'Avometer digital merk Sanwa CD800A', NULL, 1.0, NULL, 1168, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1458, 208, 3, 'Fire Retardant Sealant VT-228, tube 450gr color white', NULL, 2.0, NULL, 1169, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1459, 208, 4, 'Electric contact cleaner Rexco18, 500ml', NULL, 2.0, NULL, 1170, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1456, 208, 1, 'Porstex 1000ml', NULL, 5.0, NULL, 1167, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1457, 208, 2, 'Avometer digital merk Sanwa CD800A', NULL, 1.0, NULL, 1168, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1458, 208, 3, 'Fire Retardant Sealant VT-228, tube 450gr color white', NULL, 2.0, NULL, 1169, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1459, 208, 4, 'Electric contact cleaner Rexco18, 500ml', NULL, 2.0, NULL, 1170, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1460, 208, 5, 'Oil can 500mm', NULL, 1.0, NULL, 1171, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1461, 208, 6, 'Selang benang 1 inch, tebal', NULL, 10.0, NULL, 1172, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1462, 208, 7, 'Packing TMB (Tombo Blue) 3mm x 127cm x 127cm (ready per lembar)', NULL, 2.0, NULL, 1173, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1463, 208, 8, 'Thermo gun Merk Cheerman', NULL, 1.0, NULL, 1174, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1464, 208, 9, 'Rinso packing 1,8kg (3 pack = 5,4kg)', NULL, 5.0, NULL, 580, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1465, 208, 10, 'Radiator Coolant, pack per 5 liter, merk Megacools', NULL, 60.0, NULL, 1175, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1461, 208, 6, 'Selang benang 1 inch, tebal', NULL, 10.0, NULL, 1172, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1462, 208, 7, 'Packing TMB (Tombo Blue) 3mm x 127cm x 127cm (ready per lembar)', NULL, 2.0, NULL, 1173, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1463, 208, 8, 'Thermo gun Merk Cheerman', NULL, 1.0, NULL, 1174, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1464, 208, 9, 'Rinso packing 1,8kg (3 pack = 5,4kg)', NULL, 5.0, NULL, 580, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1465, 208, 10, 'Radiator Coolant, pack per 5 liter, merk Megacools', NULL, 60.0, NULL, 1175, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1466, 209, 1, 'Lampu Navigasi BAY 15D 24V 40W', NULL, 15.0, NULL, 1176, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1467, 209, 2, 'Gerinda Bosch GWS 700, 4"', NULL, 1.0, NULL, 1177, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1468, 209, 3, 'Refill Kuas Roll kecil 100mm (spare roll)', NULL, 1.0, NULL, 475, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1469, 209, 4, 'Rinso packing 1,8kg (12 pack = 21,6kg)', NULL, 20.0, NULL, 580, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1470, 209, 5, 'Pel Lantai, bahan pel katun, handle panjang', NULL, 4.0, NULL, 1178, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1471, 209, 6, 'Slaber Wiper lantai, handle panjang', NULL, 3.0, NULL, 1179, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1472, 209, 7, 'Sapu Lantai Nylon/Plastik', NULL, 5.0, NULL, 1180, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1473, 209, 8, 'Porstex 1000ml', NULL, 5.0, NULL, 1167, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1474, 209, 9, 'Cling pembersih kaca, botol pump 425ml', NULL, 3.0, NULL, 1181, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1475, 209, 10, 'Baygon cair refill 800ml', NULL, 5.0, NULL, 577, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1467, 209, 2, 'Gerinda Bosch GWS 700, 4"', NULL, 1.0, NULL, 1177, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1468, 209, 3, 'Refill Kuas Roll kecil 100mm (spare roll)', NULL, 1.0, NULL, 475, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1469, 209, 4, 'Rinso packing 1,8kg (12 pack = 21,6kg)', NULL, 20.0, NULL, 580, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1470, 209, 5, 'Pel Lantai, bahan pel katun, handle panjang', NULL, 4.0, NULL, 1178, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1471, 209, 6, 'Slaber Wiper lantai, handle panjang', NULL, 3.0, NULL, 1179, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1472, 209, 7, 'Sapu Lantai Nylon/Plastik', NULL, 5.0, NULL, 1180, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1473, 209, 8, 'Porstex 1000ml', NULL, 5.0, NULL, 1167, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1474, 209, 9, 'Cling pembersih kaca, botol pump 425ml', NULL, 3.0, NULL, 1181, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1475, 209, 10, 'Baygon cair refill 800ml', NULL, 5.0, NULL, 577, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1476, 210, 1, 'Mechanical Seal Shaft 38mm', NULL, 2.0, NULL, 1182, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1477, 210, 2, 'V Seal', NULL, 3.0, NULL, 1183, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1478, 211, 1, 'Kapasitor 33μf 100v', NULL, 20.0, NULL, 1184, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1479, 212, 1, 'SHACKLE ANCHOR FORGED CROSBY, BOLT TYPE G-2130
 GALV 1-1/4"', NULL, 10.0, NULL, 1185, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1480, 212, 2, 'BLOCK STEEL SNATCH WITH EYE, 10" (250mm), 5T,                          Merk Kawasaki', NULL, 2.0, NULL, 1186, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1481, 213, 1, 'Handle Marine TeleflexMT-3 Double Engine double throttle', NULL, 1.0, NULL, 1187, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1482, 213, 2, 'Kabel gas kapal, 20m', NULL, 2.0, NULL, 1188, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1483, 213, 3, 'Kabel gas kapal, 25m', NULL, 2.0, NULL, 1189, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1480, 212, 2, 'BLOCK STEEL SNATCH WITH EYE, 10" (250mm), 5T,                          Merk Kawasaki', NULL, 2.0, NULL, 1186, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1481, 213, 1, 'Handle Marine TeleflexMT-3 Double Engine double throttle', NULL, 1.0, NULL, 1187, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1482, 213, 2, 'Kabel gas kapal, 20m', NULL, 2.0, NULL, 1188, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1483, 213, 3, 'Kabel gas kapal, 25m', NULL, 2.0, NULL, 1189, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1484, 214, 1, 'Potensio Meter WXD4-23-3W (4,7kΩ)', NULL, 1.0, NULL, 1190, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1485, 214, 2, 'OCR', NULL, 1.0, NULL, 1191, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1486, 215, 1, 'Kabel NYVIN 2,5mm, panjang 50m', NULL, 1.0, NULL, 1192, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1487, 216, 1, 'Racor 2040 PM 30 Micron', NULL, 12.0, NULL, 484, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1487, 216, 1, 'Racor 2040 PM 30 Micron', NULL, 12.0, NULL, 484, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1488, 217, 1, 'Kabel NYVIN 2,5mm', NULL, 20.0, NULL, 1193, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1489, 218, 1, 'Box Panel Plastik ABS Ukuran 190x290x140mm, IP66', NULL, 10.0, NULL, 1194, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1490, 218, 2, 'Push Button Emergency Stop + Box Push Button + Cover Size 22mm, contact NC (Normal Closed) and NO (Normal Open)', NULL, 10.0, NULL, 1195, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18612,13 +18612,13 @@ GALV 1-1/4"', NULL, 10.0, NULL, 1185, 'matched', 'import', 'Backfilled from hist
   (1498, 221, 3, 'Trafo Step down 440-220, 10000 watt (tanpa box)', NULL, 1.0, NULL, 1199, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1499, 221, 4, 'Trafo Step down 440-220, 10000 watt (dengan box)', NULL, 1.0, NULL, 1200, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1500, 222, 1, 'TRAFO LAS BX1 - 400 A
-TRAFO LAS , 220-380V, 50/60Hz, 3 PHASE', NULL, 2.0, NULL, 1201, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+TRAFO LAS , 220-380V, 50/60Hz, 3 PHASE', NULL, 2.0, NULL, 1201, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
-  (1501, 222, 2, 'GERINDA TANGAN Merk BOSCH GWS700 220V, 50/60Hz (unit only)', NULL, 2.0, NULL, 1202, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1501, 222, 2, 'GERINDA TANGAN Merk BOSCH GWS700 220V, 50/60Hz (unit only)', NULL, 2.0, NULL, 1202, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1502, 223, 1, 'Quick Couplers for hose end plugs Oxygen, Nitto Kohki 22PH size 1/4" hose (male plug), material kuningan (brass)', NULL, 5.0, NULL, 1203, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1503, 223, 2, 'Quick Couplers for hose end plugs Acetylene Gas, Nitto Kohki 33PH size 3/8" hose (male plug), material kuningan (brass)', NULL, 5.0, NULL, 1204, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1504, 223, 3, 'Quick Couplers for hose end plugs Oxygen, Nitto Kohki 22SH size 1/4" hose (female plug), material kuningan (brass)', NULL, 5.0, NULL, 1205, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18632,74 +18632,74 @@ INSERT INTO quotation_item_requests (
   (1512, 223, 11, 'Female Connector Brass OD 10mm BSPT 3/8"', NULL, 2.0, NULL, 1212, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1513, 223, 12, 'Coupling tube connector 8mm, material SS316, brand Shelok', NULL, 2.0, NULL, 1213, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1514, 223, 13, 'Ermeto high pressure steel coupling tube OD:10mm,                               type G10, Merk Parker Ermeto', NULL, 2.0, NULL, 1214, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1515, 224, 1, 'PS 32 CFW ct N9114', NULL, 300.0, NULL, 1215, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1516, 225, 1, 'Oring AS 455 Viton 6,99*329.57', NULL, 16.0, NULL, 1216, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1517, 225, 2, 'Oring P320 Viton 8,4*319,5', NULL, 16.0, NULL, 1217, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1518, 226, 1, 'Potensio Meter WXD4-23-3W (4,7kΩ)', NULL, 2.0, NULL, 1218, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1515, 224, 1, 'PS 32 CFW ct N9114', NULL, 300.0, NULL, 1215, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1516, 225, 1, 'Oring AS 455 Viton 6,99*329.57', NULL, 16.0, NULL, 1216, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1517, 225, 2, 'Oring P320 Viton 8,4*319,5', NULL, 16.0, NULL, 1217, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1518, 226, 1, 'Potensio Meter WXD4-23-3W (4,7kΩ)', NULL, 2.0, NULL, 1218, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1519, 227, 1, 'Guide Ring 60*63*3,9mm', NULL, 10.0, NULL, 1219, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1520, 227, 2, 'Piston Seal 53*63*4mm', NULL, 5.0, NULL, 1220, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1521, 227, 3, 'Piston Seal 53*63*12mm, CFW C1', NULL, 5.0, NULL, 1221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1521, 227, 3, 'Piston Seal 53*63*12mm, CFW C1', NULL, 5.0, NULL, 1221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1522, 227, 4, 'Rod Seal 10*16*6,3mm', NULL, 10.0, NULL, 1222, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1523, 227, 5, 'Oring 58*3,1mm', NULL, 5.0, NULL, 1223, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1524, 227, 6, 'Rod Seal 10*16*5mm', NULL, 5.0, NULL, 1224, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1525, 228, 1, 'Oring AS 455 Viton 6,99*329.57', NULL, 1.0, NULL, 1225, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1526, 229, 1, 'No Offer', NULL, 1.0, NULL, 1226, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1527, 229, 2, 'Baterry Yuasa N200, 12V-200AH', NULL, 2.0, NULL, 1227, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1528, 230, 1, 'No Offer', NULL, 2.0, NULL, 1228, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1525, 228, 1, 'Oring AS 455 Viton 6,99*329.57', NULL, 1.0, NULL, 1225, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1526, 229, 1, 'No Offer', NULL, 1.0, NULL, 1226, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1527, 229, 2, 'Baterry Yuasa N200, 12V-200AH', NULL, 2.0, NULL, 1227, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1528, 230, 1, 'No Offer', NULL, 2.0, NULL, 1228, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1529, 231, 1, 'Hydraulic Hose', NULL, 1.0, NULL, 1229, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1530, 232, 1, 'Oil Seal 90*106"7', NULL, 1.0, NULL, 1230, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1530, 232, 1, 'Oil Seal 90*106"7', NULL, 1.0, NULL, 1230, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1531, 233, 1, 'Bonded seal Kits Viton, size M6 sampai M30 Isi: 245 pcs, merk: HYSEAL', NULL, 1.0, NULL, 1231, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1532, 233, 2, 'No Offer', NULL, 1.0, NULL, 1232, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1533, 233, 3, 'O-ring Viton, size: 3/4" (18,64*3,53) - AS210', NULL, 20.0, NULL, 1233, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1534, 233, 4, 'O-ring Viton, size: 1" (24,99*3,53) - AS214', NULL, 20.0, NULL, 1234, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1535, 233, 5, 'O-ring Viton, size: 1-1/4" (31,34*3,53) - AS218', NULL, 20.0, NULL, 1235, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1536, 233, 6, 'O-ring Viton, size: 1-1/2" (37,69*3,53) - AS222', NULL, 20.0, NULL, 1236, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1532, 233, 2, 'No Offer', NULL, 1.0, NULL, 1232, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1533, 233, 3, 'O-ring Viton, size: 3/4" (18,64*3,53) - AS210', NULL, 20.0, NULL, 1233, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1534, 233, 4, 'O-ring Viton, size: 1" (24,99*3,53) - AS214', NULL, 20.0, NULL, 1234, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1535, 233, 5, 'O-ring Viton, size: 1-1/4" (31,34*3,53) - AS218', NULL, 20.0, NULL, 1235, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1536, 233, 6, 'O-ring Viton, size: 1-1/2" (37,69*3,53) - AS222', NULL, 20.0, NULL, 1236, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1537, 234, 1, 'CHARGER BATTREY '''' SMARTGEN'''' TYPE BACM2420A
-Rated Input 110~277VAC, OUTPUT 24VDC 20A', NULL, 1.0, NULL, 1237, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1538, 235, 1, 'No Offer', NULL, 1.0, NULL, 1238, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Rated Input 110~277VAC, OUTPUT 24VDC 20A', NULL, 1.0, NULL, 1237, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1538, 235, 1, 'No Offer', NULL, 1.0, NULL, 1238, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1539, 235, 2, 'Step Up / Down Transformers for Home Appliances
-TRANSFORMER STEP UP/DOWN, 1500W, 220-110V', NULL, 1.0, NULL, 1239, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1540, 236, 1, 'Blower Electric 16inch (d:400mm), 220-240V, 50/60Hz', NULL, 2.0, NULL, 1240, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1541, 236, 2, 'Brass Countersunk Bolt & Nut M8 x 25mm (+ tip)', NULL, 200.0, NULL, 1241, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+TRANSFORMER STEP UP/DOWN, 1500W, 220-110V', NULL, 1.0, NULL, 1239, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1540, 236, 1, 'Blower Electric 16inch (d:400mm), 220-240V, 50/60Hz', NULL, 2.0, NULL, 1240, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1541, 236, 2, 'Brass Countersunk Bolt & Nut M8 x 25mm (+ tip)', NULL, 200.0, NULL, 1241, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1542, 237, 1, 'Proximity Sensor Mdel PFI25-8AO for Windows Wiper Bridge
 CHUNGSOL MARINE', NULL, 3.0, NULL, 1242, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1543, 237, 2, 'V-BELT Type A, Diameter 46.178 cm for Wiper', NULL, 5.0, NULL, 1243, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1544, 238, 1, 'Satellite Emergency Position-indicating Radio Beacons SATELLITE EPIRB, 406MHZ/121.5MHZ 
-With Built in GNSS receiver and AIS transmitter', NULL, 1.0, NULL, 1244, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1545, 239, 1, 'Tachometer Merk Datcon 0-3000 RPM with hourmeter 12/24V, 85mm, Source MPU', NULL, 1.0, NULL, 1245, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+With Built in GNSS receiver and AIS transmitter', NULL, 1.0, NULL, 1244, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1545, 239, 1, 'Tachometer Merk Datcon 0-3000 RPM with hourmeter 12/24V, 85mm, Source MPU', NULL, 1.0, NULL, 1245, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1546, 240, 1, 'Valve gelas duga atas bawah model tuas
 Delivery time: est 1-2 days', NULL, 1.0, NULL, 1246, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1547, 240, 2, 'Kaca Signglass', NULL, 1.0, NULL, 1247, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1548, 241, 1, 'Delivery SmartGen BACM 2420A to Banjarmasin', NULL, 1.0, NULL, 1248, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1549, 242, 1, 'Computer Desktop Set', NULL, 1.0, NULL, 1249, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1550, 242, 2, 'Monitor 21,45" Merk LG  22MR410-B', NULL, 1.0, NULL, 1250, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1549, 242, 1, 'Computer Desktop Set', NULL, 1.0, NULL, 1249, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1550, 242, 2, 'Monitor 21,45" Merk LG  22MR410-B', NULL, 1.0, NULL, 1250, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1551, 243, 1, 'PC Lenovo ThinkCentre NEO 50T G50C00 i7-14700 16GB, 1T SSD, Intel UHD Graphics. Display monitor S22i-30 21,5" 75Hz', NULL, 1.0, NULL, 1251, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1552, 244, 1, 'O RING JIS B2401 G-25', NULL, 20.0, NULL, 1252, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1552, 244, 1, 'O RING JIS B2401 G-25', NULL, 20.0, NULL, 1252, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1553, 245, 1, 'Rolls-Royce MPC-300 Terminal Controller PCB Module A 7029099 (Used)', NULL, 1.0, NULL, 1253, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1554, 246, 1, 'Rolls-Royce MPC-300 Terminal Controller PCB Module A 7029099 (Used)', NULL, 1.0, NULL, 1254, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1554, 246, 1, 'Rolls-Royce MPC-300 Terminal Controller PCB Module A 7029099 (Used)', NULL, 1.0, NULL, 1254, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1555, 247, 2, 'Size 39', NULL, 1.0, NULL, 1256, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1556, 247, 3, 'Size 42', NULL, 3.0, NULL, 1257, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1557, 247, 4, 'Size 43', NULL, 2.0, NULL, 1258, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1558, 247, 5, 'Safety Helmet Delta Plus Venitex - Putih', NULL, 2.0, NULL, 1259, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1559, 247, 6, 'Safety Helmet Collapsible, Izano Putih', NULL, 2.0, NULL, 1260, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1559, 247, 6, 'Safety Helmet Collapsible, Izano Putih', NULL, 2.0, NULL, 1260, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1560, 247, 7, 'Inflatable life jacket ISO 12402-3, Automatic, merk Alpha Lelizas 71098. Modified with crotchstrap (5 working days)', NULL, 3.0, NULL, 1261, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1561, 248, 1, 'Mobile Socket 32A - 50/60Hz, 220-250V, 3 pin, 2 phase, merk FORT', NULL, 2.0, NULL, 1262, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1562, 248, 2, 'Kabel trafo las                                                                                             Kabel las 25mm, panjang 2m, konektor 35-50 (-)                      Kabel las 25mm, panjang 3m, konektor 35-50 (+)', NULL, 1.0, NULL, 1263, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1563, 248, 3, 'Stang Las 600A                                                                                                       Tang Massa 500A', NULL, 1.0, NULL, 1264, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1561, 248, 1, 'Mobile Socket 32A - 50/60Hz, 220-250V, 3 pin, 2 phase, merk FORT', NULL, 2.0, NULL, 1262, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1562, 248, 2, 'Kabel trafo las                                                                                             Kabel las 25mm, panjang 2m, konektor 35-50 (-)                      Kabel las 25mm, panjang 3m, konektor 35-50 (+)', NULL, 1.0, NULL, 1263, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1563, 248, 3, 'Stang Las 600A                                                                                                       Tang Massa 500A', NULL, 1.0, NULL, 1264, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1564, 249, 1, 'ANGLE VALVE BRONZE FLANGED-END, F7302 5K 40
-Size 1½ Inch,                                                                                                    Body: Bronze,                                                                          Flange as per JIS B2220-5K.                                                                             L=80, Weight= 6kg', NULL, 1.0, NULL, 1265, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Size 1½ Inch,                                                                                                    Body: Bronze,                                                                          Flange as per JIS B2220-5K.                                                                             L=80, Weight= 6kg', NULL, 1.0, NULL, 1265, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1565, 249, 2, 'Air vent head 53-0N-65
-AIR VENT HEAD 2" 5K ci DN50', NULL, 1.0, NULL, 1266, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1566, 250, 1, 'No Offer', NULL, 5.0, NULL, 1267, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+AIR VENT HEAD 2" 5K ci DN50', NULL, 1.0, NULL, 1266, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1566, 250, 1, 'No Offer', NULL, 5.0, NULL, 1267, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1567, 250, 2, 'Brass Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT BRASS, M24 X 65MM', NULL, 200.0, NULL, 1268, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1568, 251, 1, 'No Offer', NULL, 5.0, NULL, 1267, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1568, 251, 1, 'No Offer', NULL, 5.0, NULL, 1267, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1569, 251, 2, 'Brass Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT BRASS, M24 X 65MM', NULL, 200.0, NULL, 1268, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1570, 252, 1, 'No Offer', NULL, 5.0, NULL, 1267, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1570, 252, 1, 'No Offer', NULL, 5.0, NULL, 1267, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1571, 252, 2, 'Brass Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT BRASS, M24 X 65MM', NULL, 200.0, NULL, 1268, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1572, 253, 1, 'Circuit Breaker Snapak Airpax                                       V125 32, HZ 50/60 DC                                                                                                   T/A 13,5 SNAPAK', NULL, 1.0, NULL, 1269, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1572, 253, 1, 'Circuit Breaker Snapak Airpax                                       V125 32, HZ 50/60 DC                                                                                                   T/A 13,5 SNAPAK', NULL, 1.0, NULL, 1269, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1573, 254, 1, 'FL Ceiling Lights Marine Watertight Fitting with Diffuser & Guard
 FL CEILING LIGHT W.T. W/GLOBE&, GUARD AC100/115V KAW202 20WX2 IMPA 791872', NULL, 15.0, NULL, 1270, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1574, 254, 2, 'FL Ceiling Lights Marine Watertight Fitting with Diffuser & Guard
@@ -18708,13 +18708,13 @@ FL CEILING LIGHT W.T. W/GLOBE&, GUARD AC100/115V KAW402 40WX2 IMPA 791874', NULL
 HAND LAMP NON-WATERTIGHT, B-22 60W IMPA 792167', NULL, 5.0, NULL, 1272, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1576, 254, 4, 'Battery Chargers Merk VOLOMAX VM20A
 BATTERY CHARGER INPUT 220V, 50/60Hz
-OUTPUT 6/12/24V, 20A, 20-200Ah', NULL, 1.0, NULL, 1273, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+OUTPUT 6/12/24V, 20A, 20-200Ah', NULL, 1.0, NULL, 1273, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1577, 254, 5, 'Battery 12 Volt / 100 Ah
-Merk Shoto FMX-12v100ah, made in china', NULL, 4.0, NULL, 1274, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1578, 255, 1, 'MCCB 3 Phase 250A 3P,merk Schneider NSX250F TM250D 36kA', NULL, 2.0, NULL, 1275, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1579, 255, 2, 'Cable Profinet type B, 6XV1870-2B', NULL, 30.0, NULL, 1276, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1580, 256, 1, 'Kunci Ring Slogging 42mm, merk toptool', NULL, 2.0, NULL, 1277, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1581, 256, 2, 'Kunci Ring Slogging 43mm, merk toptool', NULL, 1.0, NULL, 1278, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk Shoto FMX-12v100ah, made in china', NULL, 4.0, NULL, 1274, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1578, 255, 1, 'MCCB 3 Phase 250A 3P,merk Schneider NSX250F TM250D 36kA', NULL, 2.0, NULL, 1275, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1579, 255, 2, 'Cable Profinet type B, 6XV1870-2B', NULL, 30.0, NULL, 1276, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1580, 256, 1, 'Kunci Ring Slogging 42mm, merk toptool', NULL, 2.0, NULL, 1277, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1581, 256, 2, 'Kunci Ring Slogging 43mm, merk toptool', NULL, 1.0, NULL, 1278, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1582, 256, 3, 'Stud bolt M20 x 1m, material black steel', NULL, 2.0, NULL, 1279, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1583, 256, 4, 'Stud bolt M20 x 1m, material stainless SS304', NULL, 2.0, NULL, 1280, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1584, 256, 5, 'Stud bolt M22 x 1m, material black steel', NULL, 2.0, NULL, 1281, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18724,59 +18724,59 @@ Merk Shoto FMX-12v100ah, made in china', NULL, 4.0, NULL, 1274, 'substituted', '
   (1588, 256, 9, 'Nut M22, material black steel', NULL, 8.0, NULL, 1285, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1589, 256, 10, 'Nut M22, material stainless SS306', NULL, 8.0, NULL, 1286, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1590, 257, 1, 'Wire Cup Brushes
-WIRE CUP BRUSH KNOT TYPE, 100MMX5/8"                                               IMPA 510767', '510767', 50.0, NULL, 1287, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1591, 257, 2, 'Hammers Sledge Double Face, with handle,                                             4Lb (2 Kg)', '612524', 2.0, NULL, 1288, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+WIRE CUP BRUSH KNOT TYPE, 100MMX5/8"                                               IMPA 510767', '510767', 50.0, NULL, 1287, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1591, 257, 2, 'Hammers Sledge Double Face, with handle,                                             4Lb (2 Kg)', '612524', 2.0, NULL, 1288, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1592, 257, 3, 'Socket Wrench Set 24pcs
-SOCKET WRENCH SET 1/2",  8-32MM, PT12, Merk Matsu', '610124', 1.0, NULL, 1289, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SOCKET WRENCH SET 1/2",  8-32MM, PT12, Merk Matsu', '610124', 1.0, NULL, 1289, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1593, 257, 4, 'Padlocks & Keys Master Key System
-PADLOCK BRASS 50MM, MASTER KEY SYSTEM                   IMPA 490512', '490512', 10.0, NULL, 1290, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+PADLOCK BRASS 50MM, MASTER KEY SYSTEM                   IMPA 490512', '490512', 10.0, NULL, 1290, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1594, 257, 5, 'Chain Hoists Spur-gear 
-2TON, 3MTR Merk Kawasaki', '615009', 2.0, NULL, 1291, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+2TON, 3MTR Merk Kawasaki', '615009', 2.0, NULL, 1291, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1595, 257, 6, 'Scaling Hammers Pneumatic
-SCALING HAMMER PNEUMATIC, SINGLE IMPA 590382', '590382', 2.0, NULL, 1292, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SCALING HAMMER PNEUMATIC, SINGLE IMPA 590382', '590382', 2.0, NULL, 1292, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1596, 257, 7, 'Two Way Transformers
-TRANSFORMER TWO-WAY 110V/220V, 200watt                  Merk Daiichi', '793302', 4.0, NULL, 1293, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+TRANSFORMER TWO-WAY 110V/220V, 200watt                  Merk Daiichi', '793302', 4.0, NULL, 1293, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1597, 257, 8, 'Hammers Chipping
-HAMMER CHIPPING WITH HANDLE, 225GRM                       IMPA 612611', '612611', 10.0, NULL, 163, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HAMMER CHIPPING WITH HANDLE, 225GRM                       IMPA 612611', '612611', 10.0, NULL, 163, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1598, 257, 9, 'Belt Slings Polyester
-Widht 50mm, 2 Ton X  6 meter, Merk Powertec', '232142', 5.0, NULL, 1294, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Widht 50mm, 2 Ton X  6 meter, Merk Powertec', '232142', 5.0, NULL, 1294, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1599, 257, 10, 'Bags Cargo Sling
-CARGO SLING BAG POLYESTER, 87x87x110cm, kapasitas 1500kg (1,5Ton)', '232181', 5.0, NULL, 1295, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+CARGO SLING BAG POLYESTER, 87x87x110cm, kapasitas 1500kg (1,5Ton)', '232181', 5.0, NULL, 1295, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1600, 257, 11, 'Grease Lubricators Air Operated
-GREASE LUBRICATOR PORTABLE, AIR-OPERATED SKR-66                  IMPA 617502', '617502', 1.0, NULL, 1296, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+GREASE LUBRICATOR PORTABLE, AIR-OPERATED SKR-66                  IMPA 617502', '617502', 1.0, NULL, 1296, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
   (1601, 257, 12, 'Gloves Working Cotton
-GLOVES WORKING COTTON, RUBBER (PU) COATED PALM. 10 pairs per bag, merk Gekko Grip', '190102', 30.0, NULL, 1297, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1602, 257, 13, 'Sarung Tangan Kulit Tebal, size 14"', NULL, 10.0, NULL, 1298, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+GLOVES WORKING COTTON, RUBBER (PU) COATED PALM. 10 pairs per bag, merk Gekko Grip', '190102', 30.0, NULL, 1297, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1602, 257, 13, 'Sarung Tangan Kulit Tebal, size 14"', NULL, 10.0, NULL, 1298, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1603, 257, 14, 'Ear Muffs Merk HONEYWELL
-EAR MUFF LEFT/RIGHT HIGH APPL, SNR 33-H/M/L 36/31/24, YELLOW', '331258', 24.0, NULL, 1299, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1604, 257, 15, 'Sapu Lantai nylon/plastik', NULL, 10.0, NULL, 1180, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+EAR MUFF LEFT/RIGHT HIGH APPL, SNR 33-H/M/L 36/31/24, YELLOW', '331258', 24.0, NULL, 1299, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1604, 257, 15, 'Sapu Lantai nylon/plastik', NULL, 10.0, NULL, 1180, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1605, 257, 16, 'Yacht Mops
-YACHT MOP COMPLETE (Pel handle panjang)', '174271', 10.0, NULL, 960, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+YACHT MOP COMPLETE (Pel handle panjang)', '174271', 10.0, NULL, 960, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1606, 257, 17, 'Bags Plasctic (50pcs/pack)
-PLASTIC BAG BLACK, 900x1200mm', '174176', 10.0, NULL, 1300, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+PLASTIC BAG BLACK, 900x1200mm', '174176', 10.0, NULL, 1300, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1607, 257, 18, 'Mini Paint Rollers, 5pcs/pack
-SPARE MINI ROLLER 100MM WIDTH                                       IMPA 510462', '510462', 10.0, NULL, 1301, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SPARE MINI ROLLER 100MM WIDTH                                       IMPA 510462', '510462', 10.0, NULL, 1301, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1608, 257, 19, 'Soap Powder Laundry
-RINSO POWDER', '550103', 5.0, NULL, 1302, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+RINSO POWDER', '550103', 5.0, NULL, 1302, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1609, 257, 20, 'SEROKAN SAMPAH PLASTIK', NULL, 10.0, NULL, 1303, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1610, 258, 1, 'BINOCULLAR
 MILITARY BINOCULLAR 10X50 MERK BOSTRON', NULL, 2.0, NULL, 1304, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1611, 259, 1, 'Reflector Lamps RS-H
 LAMP REFLECTOR SPOT RS-H, OUTDOOR-USE E-39
-220-230V 500W                                                                                                 IMPA 790955', '790955', 12.0, NULL, 1305, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+220-230V 500W                                                                                                 IMPA 790955', '790955', 12.0, NULL, 1305, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1612, 259, 2, 'Fluorescent Lamps
 LAMP FLUORESCENT COOL WHITE, FL-20S/18 18W
-32.5X580MM                                                                                                                                              IMPA 791408', '791408', 12.0, NULL, 1306, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+32.5X580MM                                                                                                                                              IMPA 791408', '791408', 12.0, NULL, 1306, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1613, 259, 3, 'Cargo Lights Projector Type
-CARGO LIGHT WATER-PROOF, IP 55, E-39, 500W, DC 110V/AC 220V, Dimension: 615mmx395mm                                                                                                                                              IMPA  792014', '792014', 6.0, NULL, 1307, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1614, 259, 4, 'Freon R404 A', NULL, 1.0, NULL, 1308, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1615, 259, 5, 'FREON R134 A', NULL, 10.0, NULL, 1309, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1616, 259, 6, 'FREON R32', NULL, 12.0, NULL, 1310, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+CARGO LIGHT WATER-PROOF, IP 55, E-39, 500W, DC 110V/AC 220V, Dimension: 615mmx395mm                                                                                                                                              IMPA  792014', '792014', 6.0, NULL, 1307, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1614, 259, 4, 'Freon R404 A', NULL, 1.0, NULL, 1308, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1615, 259, 5, 'FREON R134 A', NULL, 10.0, NULL, 1309, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1616, 259, 6, 'FREON R32', NULL, 12.0, NULL, 1310, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1617, 260, 1, 'Transport Pacitan', NULL, 1.0, NULL, 1311, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1618, 261, 1, 'RAIN COAT (YELLOW)
 UKURAN XL --> 10 PCS                                                                                                        UKURAN XXL --> 2 PCS', NULL, 12.0, NULL, 1312, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18784,73 +18784,73 @@ UKURAN XL --> 10 PCS                                                            
 SAFETY RUBBER BOOT DENGAN Steel Toe (Ujung besi)                                                                                                    UKURAN 44 --> 10 PCS ,                                                                             UKURAN 46 --> 2 PCS', NULL, 12.0, NULL, 1313, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1620, 262, 1, 'U-BOLT 1 INC, material besi', NULL, 50.0, NULL, 1314, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1621, 262, 2, 'U-BOLT 1 1/4 INC, material besi', NULL, 50.0, NULL, 1315, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1622, 263, 1, 'No Offer', '734602', 6.0, NULL, 1316, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1623, 263, 2, 'No Offer', '734603', 6.0, NULL, 1317, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1624, 263, 3, 'No Offer', '734604', 6.0, NULL, 1318, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1625, 263, 4, 'No Offer', '734605', 6.0, NULL, 1319, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1626, 263, 5, 'No Offer', '734606', 6.0, NULL, 1320, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1627, 263, 6, 'No Offer', '734607', 6.0, NULL, 1321, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1628, 263, 7, 'No Offer', '734608', 6.0, NULL, 1322, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1622, 263, 1, 'No Offer', '734602', 6.0, NULL, 1316, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1623, 263, 2, 'No Offer', '734603', 6.0, NULL, 1317, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1624, 263, 3, 'No Offer', '734604', 6.0, NULL, 1318, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1625, 263, 4, 'No Offer', '734605', 6.0, NULL, 1319, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1626, 263, 5, 'No Offer', '734606', 6.0, NULL, 1320, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1627, 263, 6, 'No Offer', '734607', 6.0, NULL, 1321, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1628, 263, 7, 'No Offer', '734608', 6.0, NULL, 1322, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1629, 263, 8, 'Elbows 90 deg. Steel Butt-welding
-ELBOW STEEL BUTT-WELDING SGP, 90DEG, 6", material carbon steel', '731121', 10.0, NULL, 402, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+ELBOW STEEL BUTT-WELDING SGP, 90DEG, 6", material carbon steel', '731121', 10.0, NULL, 402, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1630, 263, 9, 'Elbows 90 deg. Steel Butt-welding
-ELBOW STEEL BUTT-WELDING SGP, 90DEG, 8", material carbon steel', '731122', 10.0, NULL, 1323, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+ELBOW STEEL BUTT-WELDING SGP, 90DEG, 8", material carbon steel', '731122', 10.0, NULL, 1323, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1631, 263, 10, 'Elbows 90 deg. Steel Butt-welding
-ELBOW STEEL BUTT-WELDING SGP, 90DEG, 10", material carbon steel', '731123', 10.0, NULL, 1324, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1632, 263, 11, 'No Offer', '731124', 10.0, NULL, 1325, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+ELBOW STEEL BUTT-WELDING SGP, 90DEG, 10", material carbon steel', '731123', 10.0, NULL, 1324, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1632, 263, 11, 'No Offer', '731124', 10.0, NULL, 1325, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1633, 263, 12, 'Elbows 90 deg. Steel Butt-welding
-ELBOW STEEL BUTT-WELDING SGP, 90DEG, 16", material carbon steel', '731125', 10.0, NULL, 1326, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1634, 263, 13, 'No Offer', '670780', 10.0, NULL, 398, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1635, 263, 14, 'No Offer', '670558', 10.0, NULL, 1327, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+ELBOW STEEL BUTT-WELDING SGP, 90DEG, 16", material carbon steel', '731125', 10.0, NULL, 1326, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1634, 263, 13, 'No Offer', '670780', 10.0, NULL, 398, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1635, 263, 14, 'No Offer', '670558', 10.0, NULL, 1327, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1636, 263, 15, 'Black Steel Hexagon Head Bolts and Nuts
-HEX HEAD BOLT/NUT BLACKSTEEL, M6 X 30MM', '691111', 100.0, NULL, 1328, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HEX HEAD BOLT/NUT BLACKSTEEL, M6 X 30MM', '691111', 100.0, NULL, 1328, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1637, 263, 16, 'Black Steel Hexagon Head Bolts and Nuts
-HEX HEAD BOLT/NUT BLACKSTEEL, M8 X 30MM', '691141', 100.0, NULL, 242, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HEX HEAD BOLT/NUT BLACKSTEEL, M8 X 30MM', '691141', 100.0, NULL, 242, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1638, 263, 17, 'Black Steel Hexagon Head Bolts and Nuts
-HEX HEAD BOLT/NUT BLACKSTEEL, M10 X 40MM', '691181', 100.0, NULL, 1329, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HEX HEAD BOLT/NUT BLACKSTEEL, M10 X 40MM', '691181', 100.0, NULL, 1329, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1639, 263, 18, 'Black Steel Hexagon Head Bolts and Nuts
-HEX HEAD BOLT/NUT BLACKSTEEL, M12 X 45MM', '691221', 150.0, NULL, 1330, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HEX HEAD BOLT/NUT BLACKSTEEL, M12 X 45MM', '691221', 150.0, NULL, 1330, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1640, 263, 19, 'Black Steel Hexagon Head Bolts and Nuts
-HEX HEAD BOLT/NUT BLACKSTEEL, M16 X 50MM', '691281', 200.0, NULL, 1331, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1641, 263, 20, 'No Offer', '671909', 1.0, NULL, 1332, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1642, 263, 21, 'No Offer', '671912', 1.0, NULL, 1333, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1643, 263, 22, 'No Offer', '671118', 5.0, NULL, 1334, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1644, 263, 23, 'No Offer', '673402', 3.0, NULL, 1335, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1645, 263, 24, 'ZINC CASTING ROUND SOLID, 40X400MM', '673405', 3.0, NULL, 1336, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1646, 263, 25, 'No Offer', '672263', 1.0, NULL, 1337, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1647, 263, 26, 'No Offer', '811038', 3.0, NULL, 1338, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1648, 263, 27, 'No Offer', '811023', 3.0, NULL, 1339, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1649, 263, 28, 'No Offer', '811113', 3.0, NULL, 1340, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1650, 263, 29, 'No Offer', '811114', 4.0, NULL, 815, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1651, 263, 30, 'Liquid Gasket THREEBOND 1102, 200GRM', '812623', 5.0, NULL, 1341, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HEX HEAD BOLT/NUT BLACKSTEEL, M16 X 50MM', '691281', 200.0, NULL, 1331, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1641, 263, 20, 'No Offer', '671909', 1.0, NULL, 1332, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1642, 263, 21, 'No Offer', '671912', 1.0, NULL, 1333, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1643, 263, 22, 'No Offer', '671118', 5.0, NULL, 1334, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1644, 263, 23, 'No Offer', '673402', 3.0, NULL, 1335, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1645, 263, 24, 'ZINC CASTING ROUND SOLID, 40X400MM', '673405', 3.0, NULL, 1336, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1646, 263, 25, 'No Offer', '672263', 1.0, NULL, 1337, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1647, 263, 26, 'No Offer', '811038', 3.0, NULL, 1338, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1648, 263, 27, 'No Offer', '811023', 3.0, NULL, 1339, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1649, 263, 28, 'No Offer', '811113', 3.0, NULL, 1340, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1650, 263, 29, 'No Offer', '811114', 4.0, NULL, 815, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1651, 263, 30, 'Liquid Gasket THREEBOND 1102, 200GRM', '812623', 5.0, NULL, 1341, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1652, 263, 31, 'Plastic Steel Putty (A)
 PLASTIC STEEL PUTTY DEVCON-A, 1LB', '812251', 4.0, NULL, 1342, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1653, 263, 32, 'No Offer', '850235', 5.0, NULL, 1343, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1653, 263, 32, 'No Offer', '850235', 5.0, NULL, 1343, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1654, 264, 1, 'Reflector Lamps RFH
 LAMP REFLECTOR RFH, OUTDOOR-USE E-39
-220-230V 500W                                                                                                 IMPA 790935', '790955', 100.0, NULL, 1305, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+220-230V 500W                                                                                                 IMPA 790935', '790955', 100.0, NULL, 1305, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1655, 264, 2, 'Fluorescent Lamps
 LAMP FLUORESCENT COOL WHITE, FL-20S/18 18W
-32.5X580MM                                                                                                                                              IMPA 791408', '791408', 150.0, NULL, 1306, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+32.5X580MM                                                                                                                                              IMPA 791408', '791408', 150.0, NULL, 1306, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1656, 264, 3, 'Cargo Lights Projector Type
-CARGO LIGHT WATER-PROOF, IP 55, E-39, 500W, DC 110V/AC 220V, Dimension: 615mmx395mm                                                                                                                                              (Only 5 available)', '792014', 5.0, NULL, 1307, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1657, 264, 4, 'Freon R404 A', NULL, 8.0, NULL, 1308, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1658, 264, 5, 'FREON R134 A', NULL, 1.0, NULL, 1309, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1659, 264, 6, 'FREON R32', NULL, 1.0, NULL, 1310, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+CARGO LIGHT WATER-PROOF, IP 55, E-39, 500W, DC 110V/AC 220V, Dimension: 615mmx395mm                                                                                                                                              (Only 5 available)', '792014', 5.0, NULL, 1307, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1657, 264, 4, 'Freon R404 A', NULL, 8.0, NULL, 1308, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1658, 264, 5, 'FREON R134 A', NULL, 1.0, NULL, 1309, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1659, 264, 6, 'FREON R32', NULL, 1.0, NULL, 1310, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1660, 265, 1, 'Reflector Lamps RFH
 LAMP REFLECTOR RFH, OUTDOOR-USE E-39
-220-230V 500W                                                                                                 IMPA 790935', '790955', 70.0, NULL, 1305, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+220-230V 500W                                                                                                 IMPA 790935', '790955', 70.0, NULL, 1305, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1661, 265, 2, 'Fluorescent Lamps
 LAMP FLUORESCENT COOL WHITE, FL-20S/18 18W
-32.5X580MM                                                                                                                                              IMPA 791408', '791408', 124.0, NULL, 1306, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1662, 265, 3, 'Freon R404 A', NULL, 8.0, NULL, 1308, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1663, 265, 4, 'FREON R134 A', NULL, 1.0, NULL, 1309, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1664, 265, 5, 'FREON R32', NULL, 1.0, NULL, 1310, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1665, 266, 1, 'No Offer', '670558', 10.0, NULL, 1327, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1666, 266, 2, 'No Offer', '670780', 10.0, NULL, 398, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1667, 266, 3, 'No Offer', '671909', 10.0, NULL, 1332, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1668, 266, 4, 'No Offer', '671912', 1.0, NULL, 1333, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1669, 266, 5, 'No Offer', '672263', 1.0, NULL, 1337, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+32.5X580MM                                                                                                                                              IMPA 791408', '791408', 124.0, NULL, 1306, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1662, 265, 3, 'Freon R404 A', NULL, 8.0, NULL, 1308, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1663, 265, 4, 'FREON R134 A', NULL, 1.0, NULL, 1309, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1664, 265, 5, 'FREON R32', NULL, 1.0, NULL, 1310, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1665, 266, 1, 'No Offer', '670558', 10.0, NULL, 1327, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1666, 266, 2, 'No Offer', '670780', 10.0, NULL, 398, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1667, 266, 3, 'No Offer', '671909', 10.0, NULL, 1332, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1668, 266, 4, 'No Offer', '671912', 1.0, NULL, 1333, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1669, 266, 5, 'No Offer', '672263', 1.0, NULL, 1337, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1670, 266, 6, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M6 X 30MM', '691111', 100.0, NULL, 1328, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1671, 266, 7, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
@@ -18867,24 +18867,24 @@ EYE BOLT STEEL M10', '692202', 6.0, NULL, 1344, 'matched', 'import', 'Backfilled
 EYE BOLT STEEL M12', '692203', 6.0, NULL, 1345, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1677, 266, 13, 'Eye Bolts Steel
 EYE BOLT STEEL M16', '692204', 6.0, NULL, 1346, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1678, 267, 1, 'Safes Fireproof with Alarm digital Lock System                                                                                              Merk HONEYWELL                                                                         Outside size: H670xW498xD505  mm                                          Inside size: H450xW348xD280 mm                                                 Weight 135kg', '471689', 1.0, NULL, 1347, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1679, 268, 1, 'KANVAS REM / BRAKE LINING LEBAR : 2cm x 10 cm x 15 meter', NULL, 1.0, NULL, 1348, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1680, 268, 2, 'KANVAS REM / BRAKE LINING LEBAR : 2cm x 14 cm x 15 meter', NULL, 1.0, NULL, 1349, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1681, 268, 3, 'Hex Bolt & Nut M12x50mm, kuningan', NULL, 500.0, NULL, 1350, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1678, 267, 1, 'Safes Fireproof with Alarm digital Lock System                                                                                              Merk HONEYWELL                                                                         Outside size: H670xW498xD505  mm                                          Inside size: H450xW348xD280 mm                                                 Weight 135kg', '471689', 1.0, NULL, 1347, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1679, 268, 1, 'KANVAS REM / BRAKE LINING LEBAR : 2cm x 10 cm x 15 meter', NULL, 1.0, NULL, 1348, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1680, 268, 2, 'KANVAS REM / BRAKE LINING LEBAR : 2cm x 14 cm x 15 meter', NULL, 1.0, NULL, 1349, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1681, 268, 3, 'Hex Bolt & Nut M12x50mm, kuningan', NULL, 500.0, NULL, 1350, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1682, 269, 1, 'Service Manuver Panel System', NULL, 1.0, NULL, 1351, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1683, 270, 1, 'Nipple grease tipe lurus 10mm', NULL, 20.0, NULL, 1352, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1684, 271, 1, 'Rope PP 8 Strand, CIR 10                                                                      1 roll = 220M', '211042', 2.0, NULL, 1353, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1685, 272, 1, 'Rope PP 8 Strand, CIR 8                                                                      1 roll = 200M', '211010', 1.0, NULL, 1354, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1683, 270, 1, 'Nipple grease tipe lurus 10mm', NULL, 20.0, NULL, 1352, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1684, 271, 1, 'Rope PP 8 Strand, CIR 10                                                                      1 roll = 220M', '211042', 2.0, NULL, 1353, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1685, 272, 1, 'Rope PP 8 Strand, CIR 8                                                                      1 roll = 200M', '211010', 1.0, NULL, 1354, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1686, 273, 1, 'Rope PP, Mono-filament, 8 Strand, CIR 10      
-1 roll = 200M', '210318', 2.0, NULL, 1355, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 roll = 200M', '210318', 2.0, NULL, 1355, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1687, 273, 2, 'Rope PP, Mono-filament, 8 Strand, CIR 12   
-1 roll = ± 220M', '210314', 2.0, NULL, 1356, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1688, 274, 1, 'HOSE COUPLING STORZ TYPE, Size 2", Material Kuningan (Brass)', '330875', 4.0, NULL, 1357, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1689, 274, 2, 'HOSE COUPLING STORZ TYPE, Size 3", Material Aluminium', '330876', 6.0, NULL, 1358, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 roll = ± 220M', '210314', 2.0, NULL, 1356, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1688, 274, 1, 'HOSE COUPLING STORZ TYPE, Size 2", Material Kuningan (Brass)', '330875', 4.0, NULL, 1357, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1689, 274, 2, 'HOSE COUPLING STORZ TYPE, Size 3", Material Aluminium', '330876', 6.0, NULL, 1358, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1690, 274, 3, 'Fire Nozzles Storz Type
-NOZZLE FIRE JET/SPRAY 2.5", Material Kuningan (Brass)', '333603', 1.0, NULL, 1359, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1691, 274, 4, 'No Offer', '333604', 4.0, NULL, 1360, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1692, 274, 5, 'No Offer', '671118', 2.0, NULL, 1334, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+NOZZLE FIRE JET/SPRAY 2.5", Material Kuningan (Brass)', '333603', 1.0, NULL, 1359, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1691, 274, 4, 'No Offer', '333604', 4.0, NULL, 1360, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1692, 274, 5, 'No Offer', '671118', 2.0, NULL, 1334, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1693, 275, 1, 'Bags Plasctic (50pcs/pack)
 PLASTIC BAG BLACK, 900x1200mm', '174176', 5.0, NULL, 1300, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1694, 275, 2, 'Cotton Working Gloves non slip dots (per pasang)', '190101', 50.0, NULL, 900, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -18956,7 +18956,7 @@ ELBOW STEEL BUTT-WELDING SGP, 90DEG, 16", material carbon steel', '731125', 10.0
   (1744, 275, 52, 'Unions Brass Flareless
 UNION FLARELESS BRASS, 4MMXPF1/8', '734021', 20.0, NULL, 1391, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1745, 275, 53, 'Unions Brass Flareless
-UNION FLARELESS BRASS, 6MMXPF1/4                                                     IMPA 734022', '734022', 20.0, NULL, 1392, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+UNION FLARELESS BRASS, 6MMXPF1/4                                                     IMPA 734022', '734022', 20.0, NULL, 1392, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1746, 275, 54, 'Unions Brass Flareless
 UNION FLARELESS BRASS, 8MMXPF1/4                                                     IMPA 734023', '734023', 20.0, NULL, 1393, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1747, 275, 55, 'Flanges JIS Sip-on Welding
@@ -19009,7 +19009,7 @@ FLUX WELDING 1KG, FOR BRASS WELDING', '850483', 1.0, NULL, 1397, 'matched', 'imp
 ELECTRODE C-1N 3.2MM 2KG, FOR CAST IRON', '850731', 6.0, NULL, 1398, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1767, 275, 75, 'ELECTRODE RB-26 DIAMETER 3,2MM
 KOBE STEEL RB-26 DIAMETER 3,2 MM', '851328', 100.0, NULL, 1399, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1768, 276, 1, 'Flexible Rubber Joint 4" / DN100                                               Merk: TOZEN                                                          Type: One flex (1 gelombang)                                                         Type Flange: JIS 10K                                                  ANSI 150                                                                 Tekanan 20bar                                                        Material  Flange: Ductile Iron', NULL, 2.0, NULL, 1400, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1768, 276, 1, 'Flexible Rubber Joint 4" / DN100                                               Merk: TOZEN                                                          Type: One flex (1 gelombang)                                                         Type Flange: JIS 10K                                                  ANSI 150                                                                 Tekanan 20bar                                                        Material  Flange: Ductile Iron', NULL, 2.0, NULL, 1400, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1769, 277, 1, 'Scoops Ice Cream
 ICE-CREAM SCOOP STAINLESS, STEEL ROUND 59MM
 DIAM 60CC', '170712', 2.0, NULL, 1401, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -19058,18 +19058,18 @@ RICE COOKER/WARMER 1.8LTR 220V', '174625', 1.0, NULL, 1420, 'matched', 'import',
 LEL-02-1 (MO-10A) 
 250 VAC 3 A 
 Merk HANYOUNG', NULL, 1.0, NULL, 1423, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1792, 281, 1, 'OMRON MY3N  220/240V AC', NULL, 6.0, NULL, 1424, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1792, 281, 1, 'OMRON MY3N  220/240V AC', NULL, 6.0, NULL, 1424, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1793, 281, 2, 'Push Button, Model: LA16Y-22D,  220V AC
 diameter: 16mm
 Kontak 20 NO dan 2 NC
-Red/Green', NULL, 5.0, NULL, 1425, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Red/Green', NULL, 5.0, NULL, 1425, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1794, 282, 1, 'Rope PP, Mono-filament, strip biru, 8 Strand, CIR 10      
-1 roll = 200M (NEW)', '210314', 2.0, NULL, 1356, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 roll = 200M (NEW)', '210314', 2.0, NULL, 1356, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1795, 282, 2, 'Rope PP, Mono-filament, strip biru, 8 Strand, CIR 12   
-1 roll = ± 220M (NEW)', '210318', 2.0, NULL, 1355, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 roll = ± 220M (NEW)', '210318', 2.0, NULL, 1355, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1796, 283, 1, 'UPS APC BX220 MI-MS
 input 220VAC 50/60Hz
-2200VA 1200 Watt', NULL, 4.0, NULL, 1426, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+2200VA 1200 Watt', NULL, 4.0, NULL, 1426, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1797, 284, 1, 'Gate Valve Cast-Iron Flanged
 F7364 10Kg 150mm - IMPA 750826
 
@@ -19081,7 +19081,7 @@ Stem: SUS403
 Flange as per JIS B2220-10K
 FTF (L): 290mm
 
-Size: 6"', '750826', 1.0, NULL, 1427, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Size: 6"', '750826', 1.0, NULL, 1427, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1798, 285, 1, 'Anti-Piracy Dummies
 DUMMY ANTI-PIRACY BARE', '314116', 1.0, NULL, 1428, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1799, 285, 2, 'ISPS Code Signs & Security Signs
@@ -19106,31 +19106,31 @@ SIGN ISPS CODE RECEPTION, #WV2907GM 100X300MM', '332907', 1.0, NULL, 1434, 'matc
   (1805, 285, 8, 'ISPS Code Signs & Security Signs
 SIGN ISPS CODE RESTRICTED AREA, #WV8696LQ
 200X300MM', '338696', 12.0, NULL, 1432, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1806, 285, 9, 'Security scanner/Metal detector', '330595', 2.0, NULL, 1435, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1806, 285, 9, 'Security scanner/Metal detector', '330595', 2.0, NULL, 1435, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1807, 285, 10, 'Work Vests
 HAZARD WARNING VEST', '331172', 4.0, NULL, 1436, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1808, 285, 11, 'Safety Approved LED Flashlights
 FLASHLIGHT LED INTRINSICALSAFE, ATEX BRIGHTSTAR
-2217LED 2CELLS, IMPA 792235', '792237', 4.0, NULL, 1437, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+2217LED 2CELLS, IMPA 792235', '792237', 4.0, NULL, 1437, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1809, 285, 12, 'Barrier Tapes
 TAPE BARRIER POLYETHYLENE B&Y, NON-ADHESIVE
 W75MM X L500MTR', '331199', 2.0, NULL, 1438, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1810, 285, 13, 'Reflective Tapes Hazard Warning
 HAZARD WARNING REFLECTIVE TAPE, BLACK/YELLOW
-W 48mm X L 20m, merk Naichi', '331191', 2.0, NULL, 1439, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+W 48mm X L 20m, merk Naichi', '331191', 2.0, NULL, 1439, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1811, 285, 14, 'Name Card Holders
-HOLDER NAME CARD CASE, Merk KENKO upto 600 cards', '471527', 24.0, NULL, 1440, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HOLDER NAME CARD CASE, Merk KENKO upto 600 cards', '471527', 24.0, NULL, 1440, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1812, 285, 15, 'Body protector Police T baton
 Polycarbonate Length 600MM +/- 10MM', NULL, 2.0, NULL, 1441, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1813, 285, 16, 'Cable Bands Plastic
 CABLE TIE SELF-LOCKING PLASTIC, 100MM', '794851', 2.0, NULL, 1442, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1814, 285, 17, 'Seals Security Pulltight
 SECURITY SEAL PP PULLTIGHT, L 380MM, YELLOW
-10''S', '471783', 1.0, NULL, 1443, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+10''S', '471783', 1.0, NULL, 1443, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1815, 285, 18, 'Whistles IMPA 330252
-WHISTLE', '330252', 6.0, NULL, 1444, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+WHISTLE', '330252', 6.0, NULL, 1444, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1816, 285, 19, 'Brass Padlock 50mm with 3 Keys
-Merk YALE', '490504', 6.0, NULL, 1445, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk YALE', '490504', 6.0, NULL, 1445, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1817, 286, 1, 'HAND LAMP WATERTIGHT E-26 60W,
 WATERTIGHT HAND PORTABLE LAMP WITH
 S90A SCREW GLOBE AND CAST IRON BODY
@@ -19138,17 +19138,17 @@ AND GUARD. HANDLE GRIP IS MADE OF HARD
 WOOD OR HARD RUBBER AND A HANGING
 HOOK IS FIXED.
 
-IMPA 792151', '792152', 6.0, NULL, 1446, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IMPA 792151', '792152', 6.0, NULL, 1446, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1818, 286, 2, 'Tape Anti-Corrosion 50mm x 10m
-Denso Tape', '812471', 30.0, NULL, 780, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Denso Tape', '812471', 30.0, NULL, 780, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1819, 286, 3, 'CABLE TIE SELF-LOCKING PLASTIC, 150MM A PLASTIC BAND DESIGNED FOR BUNDLING WIRES, HOSES, TUBING, ETC. 
 Available per pack
-1 pack = 100pcs', '794852', 6.0, NULL, 826, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 100pcs', '794852', 6.0, NULL, 826, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1820, 286, 4, 'Silicon Sealant Clear 300ml
-Merk DEXTONE - MULTI PURPOSE', '812602', 6.0, NULL, 1447, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk DEXTONE - MULTI PURPOSE', '812602', 6.0, NULL, 1447, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1821, 286, 5, 'Silicon Sealant White/Black 300ml
-Merk DEXTONE - MULTI PURPOSE', '812605', 6.0, NULL, 1448, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1822, 286, 6, 'Gun for Silicon Sealant', '812603', 6.0, NULL, 1449, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk DEXTONE - MULTI PURPOSE', '812605', 6.0, NULL, 1448, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1822, 286, 6, 'Gun for Silicon Sealant', '812603', 6.0, NULL, 1449, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1823, 286, 7, 'Water Pressure High Pressure
 Voltage:440V
 Power: 22kW
@@ -19156,32 +19156,32 @@ Phase: 3P
 Working Pressure: 50Mpa/7251PSI/500Bar
 Flow rate:21L/min
 Motor Speed:1440r/min
-Weight: 270kg', '590859', 1.0, NULL, 1450, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Weight: 270kg', '590859', 1.0, NULL, 1450, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1824, 286, 8, 'Battery AAA Panasonic
 Available per pack
-1 pack = 4 pcs', '792410', 36.0, NULL, 1451, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 4 pcs', '792410', 36.0, NULL, 1451, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1825, 286, 9, 'PLUG WATERTIGHT 3PIN HNA, CAST BRASS
 WATERTIGHT MARINE USE PLUG &
 RECEPTACLE WITH SWITCH. RATED CAPACITY
-IS 250V, 10 AMP. AVAILABLE IN CAST BRASS', '792886', 24.0, NULL, 1452, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IS 250V, 10 AMP. AVAILABLE IN CAST BRASS', '792886', 24.0, NULL, 1452, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1826, 286, 10, 'Cable reel extention AC220V, 50 Meter.
-IP 54', '794397', 2.0, NULL, 1453, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IP 54', '794397', 2.0, NULL, 1453, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1827, 286, 11, 'CONNECTOR CABLE WATERTIGHT, 3-POLE 20A FOR CONNECTING CABLES ON DECK OR ANY OTHER PLACES WHERE RAIN, SEAWATER OR HUMIDITY EXISTS. INTERIOR FIXTURES ARE BRASS SEALED INSIDE OF A RUBBER COVER.', '794754', 6.0, NULL, 1454, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1828, 286, 12, 'Tape Anti-Corrosion 75mm x 10m
-Denso Tape', '812477', 60.0, NULL, 1455, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Denso Tape', '812477', 60.0, NULL, 1455, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1829, 286, 13, 'Tape Anti-Corrosion 100mm x 10m
-Denso Tape', '812472', 60.0, NULL, 1456, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Denso Tape', '812472', 60.0, NULL, 1456, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1830, 287, 1, 'AC SPLIT STANDARD 2PK (UNIT ONLY)
 Merk DAIKIN
-1580 W, 220VAC, 50/60HZ', '174782', 2.0, NULL, 1457, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1580 W, 220VAC, 50/60HZ', '174782', 2.0, NULL, 1457, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1831, 287, 2, 'CABLE NYYHY 3 X 1.5 MM
-1 roll = 100 meter, Merk Supreme', '794283', 1.0, NULL, 1458, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1832, 287, 3, 'Gas Freon 410A, 25 Lb (11,35Kg)', '850134', 1.0, NULL, 1459, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1833, 287, 4, 'Adapter refrigant tank R134A ke selang R-22 ¼ FLARE', '850317', 1.0, NULL, 1460, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 roll = 100 meter, Merk Supreme', '794283', 1.0, NULL, 1458, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1832, 287, 3, 'Gas Freon 410A, 25 Lb (11,35Kg)', '850134', 1.0, NULL, 1459, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1833, 287, 4, 'Adapter refrigant tank R134A ke selang R-22 ¼ FLARE', '850317', 1.0, NULL, 1460, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1834, 287, 5, 'MANIFOLD GAUGE GAS REF 1/4
-Manifold Gauge Hose Kit for R134A, R22, R12, R502, R410A', '850346', 1.0, NULL, 1461, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1835, 287, 6, 'Pipa AC DAIKIN DSP 1/4 x 5/8, AC 2PK', NULL, 30.0, NULL, 1462, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1836, 287, 7, 'Duck Tape AC (dengan lem) panjang 12 meter', NULL, 20.0, NULL, 1463, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Manifold Gauge Hose Kit for R134A, R22, R12, R502, R410A', '850346', 1.0, NULL, 1461, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1835, 287, 6, 'Pipa AC DAIKIN DSP 1/4 x 5/8, AC 2PK', NULL, 30.0, NULL, 1462, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1836, 287, 7, 'Duck Tape AC (dengan lem) panjang 12 meter', NULL, 20.0, NULL, 1463, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1837, 288, 1, 'Combination Plier-Non spark, Berylium copper alloy, 6" Explotion Proof', '615870', 2.0, NULL, 1464, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1838, 288, 2, 'Long Nose Plier - Non spark, Berylium coppper alloy, 8" Explotion Proof', '615876', 2.0, NULL, 1465, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1839, 288, 3, 'Diagonal Cutting Plier-Non spark, Berylium copper alloy, 6" Explotion Proof', '615881', 2.0, NULL, 1466, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -19201,7 +19201,7 @@ AND GUARD. HANDLE GRIP IS MADE OF HARD
 WOOD OR HARD RUBBER AND A HANGING
 HOOK IS FIXED.', '792151', 20.0, NULL, 1471, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1845, 288, 9, 'Steker & stop kontak double, 2 round pin dengan arde
-Merk BROCO 16A, 250V', '792925', 100.0, NULL, 1472, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk BROCO 16A, 250V', '792925', 100.0, NULL, 1472, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1846, 288, 10, 'Hydrometer Battery 250mm', '792661', 2.0, NULL, 1473, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1847, 288, 11, 'CABLE HALOGEN-FREE UNARMOURED, HF-CXO 0.6/1KV 1.5MM2X2C 20AMP  THE REMARKABLY IMPROVED FIRE SAFETY AND ENVIRONMENTAL FRIENDLY CABLES FOR THE SHIP, NOT EMITTING TOXIC BURNING FUMES OR THICK SMOKE OWING TO HALOGEN-FREE INSULATION COVER.  HALOGEN-FREE REFERS TO THE ABSENCE OF HALOGENS, SUCH AS CHLORINE AND FLUORINE, AND THEY DOESN’T EMIT ANY HARMFUL HYDRAULIC CHLORIDE GAS WHILE EXISTING PVC (POLYVINYL CHLORINE) DOSE.   IN ADDITION TO ABOVE ATTRACTIVE FEATURES, THE HALOGEN-FREE COVERED CABLE REDUCES CABLE WEIGHT AND SIZE TO A MINIMUM AND STILL MAINTAIN QUALITY, ENABLING EASY INSTALLATION.   THE HALOGEN-FREE RANGE OF CABLES ARE FRAME-RETARDANT (IEC 60332-3).  THE FOLLOWING DESIGNATIONS ARE USED FOR INSULATION MATERIALS AND SHEATHING MATERIALS, AND ALL MATERIALS ARE HALOGEN-FREE; INSULATION : XLPE STANDS FOR CROSS-LINKED POLYETHYLENE COMPOUND, AND IT HAS EXCELLENT MECHANICAL AND ELECTRICAL CHARACTERISTICS. SHEATHING: THE DESIGNATION SHF1 STANDS FOR THERMOPLASTIC COMPOUND, AND THIS MATERIAL IS HALOGEN-FREE, HIGHLY FLAME-RETARDANT AND HAS LOW SMOKE EMISSION.  THE LISTED CABLES ARE FOR FIXED INSTALLATION ON ALL AREAS AND ON OPEN DECK IN SHIPS.  HOWEVER, IF THE CABLE IS EXPOSED TO DIRECT SUN LIGHT PROTECTIVE COVERING OR CABLE WITH BLACK OUTER SHEATH IS RECOMMENDED.', '794278', 100.0, NULL, 1474, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1848, 288, 12, 'CABLE HALOGEN-FREE UNARMOURED, HF-CXO 0.6/1KV 1.5MM2X3C 16AMP  THE REMARKABLY IMPROVED FIRE SAFETY AND ENVIRONMENTAL FRIENDLY CABLES FOR THE SHIP, NOT EMITTING TOXIC BURNING FUMES OR THICK SMOKE OWING TO HALOGEN-FREE INSULATION COVER.  HALOGEN-FREE REFERS TO THE ABSENCE OF HALOGENS, SUCH AS CHLORINE AND FLUORINE, AND THEY DOESN’T EMIT ANY HARMFUL HYDRAULIC CHLORIDE GAS WHILE EXISTING PVC (POLYVINYL CHLORINE) DOSE.   IN ADDITION TO ABOVE ATTRACTIVE FEATURES, THE HALOGEN-FREE COVERED CABLE REDUCES CABLE WEIGHT AND SIZE TO A MINIMUM AND STILL MAINTAIN QUALITY, ENABLING EASY INSTALLATION.   THE HALOGEN-FREE RANGE OF CABLES ARE FRAME-RETARDANT (IEC 60332-3).  THE FOLLOWING DESIGNATIONS ARE USED FOR INSULATION MATERIALS AND SHEATHING MATERIALS, AND ALL MATERIALS ARE HALOGEN-FREE; INSULATION : XLPE STANDS FOR CROSS-LINKED POLYETHYLENE COMPOUND, AND IT HAS EXCELLENT MECHANICAL AND ELECTRICAL CHARACTERISTICS. SHEATHING: THE DESIGNATION SHF1 STANDS FOR THERMOPLASTIC COMPOUND, AND THIS MATERIAL IS HALOGEN-FREE, HIGHLY FLAME-RETARDANT AND HAS LOW SMOKE EMISSION.  THE LISTED CABLES ARE FOR FIXED INSTALLATION ON ALL AREAS AND ON OPEN DECK IN SHIPS.  HOWEVER, IF THE CABLE IS EXPOSED TO DIRECT SUN LIGHT PROTECTIVE COVERING OR CABLE WITH BLACK OUTER SHEATH IS RECOMMENDED.', '794283', 100.0, NULL, 1458, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -19235,9 +19235,9 @@ Crimping Tool Hydraulic 10-300mm²
 YQX300A', '611734', 1.0, NULL, 692, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1869, 288, 33, 'CUTTING & FLARING TOOL SET, 5 TO 12MM WITH CUTTER  DESIGNED FOR CUTTING OR FLARING COPPER, BRASS OR ALUMINIUM TUBES.  THE SET CONSISTS OF ONE CUTTER, FLARING BAR AND YOKE.', '612030', 2.0, NULL, 1493, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1870, 288, 34, 'RECEPTACLE CEE AC380V RED 4P, 32AMP 6H IP67', '792742', 10.0, NULL, 1494, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1871, 288, 35, 'Lampu Navigasi Light Bulb E27 220V/60W', '790424', 50.0, NULL, 1495, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1872, 288, 36, 'Lampu Navigasi Light Bulb P28S 220V/40W', '790433', 50.0, NULL, 1496, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1873, 288, 37, 'LAMP FLUORESCENT COOL WHITE, FL-20S/EL 20W 32.5X588.7MM', '791411', 45.0, NULL, 1497, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1871, 288, 35, 'Lampu Navigasi Light Bulb E27 220V/60W', '790424', 50.0, NULL, 1495, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1872, 288, 36, 'Lampu Navigasi Light Bulb P28S 220V/40W', '790433', 50.0, NULL, 1496, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1873, 288, 37, 'LAMP FLUORESCENT COOL WHITE, FL-20S/EL 20W 32.5X588.7MM', '791411', 45.0, NULL, 1497, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1874, 288, 38, 'LAMP FLUORESCENT COOL WHITE, FL-40S/38 38W 32.5X1198MM  FLUORESCENT TUBE LAMPS REQUIRING GLOW STARTERS.  AVAILABLE IN TWO COLOURS OF COOL WHITE AND DAYLIGHT.  SPECIFY WHICH COLOUR WHEN ORDERING.  COOL WHITE COLOUR', '791417', 100.0, NULL, 1498, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1875, 288, 39, 'Fitting lampu TL T8 tanpa starter', '791538', 100.0, NULL, 1499, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1876, 288, 40, 'Floodlight Coolwhite, LED 200W, 100-240V
@@ -19249,16 +19249,16 @@ Merk In-Lite', '791828', 10.0, NULL, 1500, 'matched', 'import', 'Backfilled from
   (1879, 288, 43, 'Plug (2MB), watertight 4 Pin x 250V x 20A - IMPA792804
 Receptacle (2M), watertight 4 Pin x 250V x 15 A - IMPA 792807', '792816', 10.0, NULL, 1503, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1880, 288, 44, 'IMPA 792883 Synthetic Resin Watertight Plug & Socket 3Pin, 250V
-Plug & Socket beda klik barang', '792883', 20.0, NULL, 1504, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Plug & Socket beda klik barang', '792883', 20.0, NULL, 1504, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1881, 288, 45, 'Terminal strip separatable, PVC Flexible 12-Pole 380 V, 10 A
-IMPA 794640', '794631', 50.0, NULL, 1505, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IMPA 794640', '794631', 50.0, NULL, 1505, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1882, 288, 46, 'Kabel extention 4 lubang, panjang 5 meter
 Merk Uticon', '792968', 10.0, NULL, 1506, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1883, 288, 47, 'Terminal strip separatable, PVC Flexible 12-Pole 380 V, 50 A
 IMPA 794640', '794633', 50.0, NULL, 1507, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1884, 288, 48, 'CABLE REEL EXTENSION AC220V, 50MTR  PORTABLE REELS
 Water proof tutupan
-Kabel NYMHY 3 x 2,5', '794397', 4.0, NULL, 1453, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Kabel NYMHY 3 x 2,5', '794397', 4.0, NULL, 1453, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1885, 288, 49, 'CABLE TIE SELF-LOCKING PLASTIC, 350MM 100''S  A PLASTIC BAND DESIGNED FOR BUNDLING WIRES, HOSES, TUBING, ETC
 Available per pack
 1 pack = 100pcs', '794860', 2.0, NULL, 1508, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -19280,7 +19280,7 @@ Merk Phillips', '790268', 50.0, NULL, 1467, 'matched', 'import', 'Backfilled fro
 IP66', '791836', 10.0, NULL, 1468, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1896, 289, 6, 'Timah Solder Grade A 60/40
 available 250gr/roll
-Merk Paragon', '795170', 2.0, NULL, 1469, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk Paragon', '795170', 2.0, NULL, 1469, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1897, 289, 7, 'LED Lamp E27, 8 W (setara terang 68 W), Cool white (4000K)
 Merk Philips', '790265', 50.0, NULL, 1470, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1898, 289, 8, 'HAND LAMP WATERTIGHT E-26 60W,
@@ -19290,7 +19290,7 @@ AND GUARD. HANDLE GRIP IS MADE OF HARD
 WOOD OR HARD RUBBER AND A HANGING
 HOOK IS FIXED.', '792151', 20.0, NULL, 1471, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1899, 289, 9, 'Steker & stop kontak double, 2 round pin dengan arde
-Merk BROCO 16A, 250V', '792925', 100.0, NULL, 1472, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk BROCO 16A, 250V', '792925', 100.0, NULL, 1472, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1900, 289, 10, 'Hydrometer Battery 250mm', '792661', 2.0, NULL, 1473, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
@@ -19298,19 +19298,19 @@ INSERT INTO quotation_item_requests (
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
   (1901, 289, 11, 'Cable NYYHY 3x1,5mm
-Supreme', '794278', 100.0, NULL, 1474, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Supreme', '794278', 100.0, NULL, 1474, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1902, 289, 12, 'Cable NYYHY 3x1,5mm
-Supreme', '794283', 100.0, NULL, 1458, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Supreme', '794283', 100.0, NULL, 1458, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1903, 289, 13, 'Solder 3 fungsi Tekiro, 220 V, 30 Watt', '795076', 2.0, NULL, 1475, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1904, 289, 14, 'SOLDERING PASTE 50GRM  PASTE FLUX 
 Merk Lotfet 50gr', '795174', 2.0, NULL, 1476, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1905, 289, 15, 'NUT DRIVER SET 5-12MM 7''S  DEEP SOCKET TYPE NUT DRIVERS PROVIDED AS A SET WITH A STEEL HOLDING RACK', '612366', 2.0, NULL, 1477, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1906, 289, 16, 'Digital Testpen 30-1000V
 Voltage Detactor, Non-contact Test Slotted Screwdriver', '612417', 2.0, NULL, 1478, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1907, 289, 17, 'Tool Set Handy Tools eith case', '613802', 2.0, NULL, 1479, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1907, 289, 17, 'Tool Set Handy Tools eith case', '613802', 2.0, NULL, 1479, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1908, 289, 18, 'Bearing Puller Kit for Inner & Outer', '615082', 1.0, NULL, 1480, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1909, 289, 19, 'LAMP HALOGEN TUBULAR SHAPE, E-39 230V 500W', '791272', 50.0, NULL, 1481, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1910, 289, 20, 'Lampu Bohlam Philiips Essential LED 15Watt, E27', '791517', 200.0, NULL, 1482, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1910, 289, 20, 'Lampu Bohlam Philiips Essential LED 15Watt, E27', '791517', 200.0, NULL, 1482, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1911, 289, 21, 'STARTER FOR FL LAMP FG-1P', '791504', 200.0, NULL, 1483, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1912, 289, 22, 'STARTER FOR FL LAMP FG-4P', '791505', 200.0, NULL, 1484, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1913, 289, 23, 'FL CEILING LIGHT WATERTIGHT, W/GLOBE AC220V KEW202 20WX2', '791913', 10.0, NULL, 1485, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -19332,8 +19332,8 @@ Crimping Tool Hydraulic 10-300mm²
 YQX300A', '611734', 1.0, NULL, 692, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1923, 289, 33, 'CUTTING & FLARING TOOL SET, 5 TO 12MM WITH CUTTER  DESIGNED FOR CUTTING OR FLARING COPPER, BRASS OR ALUMINIUM TUBES.  THE SET CONSISTS OF ONE CUTTER, FLARING BAR AND YOKE.', '612030', 2.0, NULL, 1493, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1924, 289, 34, 'RECEPTACLE CEE AC380V RED 4P, 32AMP 6H IP67', '792742', 10.0, NULL, 1494, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1925, 289, 35, 'Lampu Navigasi Light Bulb E27 220V/60W', '790424', 50.0, NULL, 1495, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1926, 289, 36, 'Lampu Navigasi Light Bulb P28S 220V/40W', '790433', 50.0, NULL, 1496, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1925, 289, 35, 'Lampu Navigasi Light Bulb E27 220V/60W', '790424', 50.0, NULL, 1495, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1926, 289, 36, 'Lampu Navigasi Light Bulb P28S 220V/40W', '790433', 50.0, NULL, 1496, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1927, 289, 37, 'Lampu TL Phillips TL-D 18W/54 60cm
 Cahaya: putih/ Cool Day Light/6500K', '791411', 100.0, NULL, 1497, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1928, 289, 38, 'Lampu TL Phillips TL-D 36W/54-765-120cm
@@ -19351,16 +19351,16 @@ Merk In-Lite', '791828', 10.0, NULL, 1500, 'matched', 'import', 'Backfilled from
   (1933, 289, 43, 'Plug (2MB), watertight 4 Pin x 250V x 20A - IMPA792804
 Receptacle (2M), watertight 4 Pin x 250V x 15 A - IMPA 792807', '792816', 10.0, NULL, 1503, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1934, 289, 44, 'IMPA 792883 Synthetic Resin Watertight Plug & Socket 3Pin, 250V
-Plug & Socket beda klik barang', '792883', 20.0, NULL, 1504, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Plug & Socket beda klik barang', '792883', 20.0, NULL, 1504, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1935, 289, 45, 'Terminal strip separatable, PVC Flexible 12-Pole 380 V, 10 A
-IMPA 794640', '794631', 50.0, NULL, 1505, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IMPA 794640', '794631', 50.0, NULL, 1505, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1936, 289, 46, 'Kabel extention 4 lubang, panjang 5 meter
 Merk Uticon', '792968', 10.0, NULL, 1506, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1937, 289, 47, 'Terminal strip separatable, PVC Flexible 12-Pole 380 V, 50 A
 IMPA 794640', '794633', 50.0, NULL, 1507, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1938, 289, 48, 'CABLE REEL EXTENSION AC220V, 50MTR  PORTABLE REELS
 Water proof tutupan
-Kabel NYMHY 3 x 2,5', '794397', 4.0, NULL, 1453, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Kabel NYMHY 3 x 2,5', '794397', 4.0, NULL, 1453, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1939, 289, 49, 'CABLE TIE SELF-LOCKING PLASTIC, 350MM 100''S  A PLASTIC BAND DESIGNED FOR BUNDLING WIRES, HOSES, TUBING, ETC
 Available per pack
 1 pack = 100pcs', '794860', 200.0, NULL, 1508, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -19392,73 +19392,73 @@ SIGN ISPS CODE RECEPTION, #WV2907GM 100X300MM', '332907', 1.0, NULL, 1434, 'matc
   (1952, 290, 8, 'ISPS Code Signs & Security Signs
 SIGN ISPS CODE RESTRICTED AREA, #WV8696LQ
 200X300MM', '338696', 12.0, NULL, 1432, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1953, 290, 9, 'Security scanner/Metal detector', '330595', 2.0, NULL, 1435, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1953, 290, 9, 'Security scanner/Metal detector', '330595', 2.0, NULL, 1435, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1954, 290, 10, 'Work Vests
 HAZARD WARNING VEST', '331172', 4.0, NULL, 1436, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1955, 290, 11, 'Safety Approved LED Flashlights
 FLASHLIGHT LED INTRINSICALSAFE, ATEX BRIGHTSTAR
-2217LED 2CELLS, IMPA 792235', '792237', 4.0, NULL, 1437, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+2217LED 2CELLS, IMPA 792235', '792237', 4.0, NULL, 1437, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1956, 290, 12, 'Barrier Tapes
 TAPE BARRIER POLYETHYLENE B&Y, NON-ADHESIVE
 W75MM X L500MTR', '331199', 2.0, NULL, 1438, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1957, 290, 13, 'Reflective Tapes Hazard Warning
 HAZARD WARNING REFLECTIVE TAPE, BLACK/YELLOW
-W 48mm X L 20m, merk Naichi', '331191', 2.0, NULL, 1439, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+W 48mm X L 20m, merk Naichi', '331191', 2.0, NULL, 1439, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1958, 290, 14, 'Name Card Holders
-HOLDER NAME CARD CASE, Merk KENKO upto 600 cards', '471527', 24.0, NULL, 1440, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HOLDER NAME CARD CASE, Merk KENKO upto 600 cards', '471527', 24.0, NULL, 1440, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1959, 290, 15, 'Body protector Police T baton
 Polycarbonate Length 600MM +/- 10MM', NULL, 2.0, NULL, 1441, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1960, 290, 16, 'Cable Bands Plastic
 CABLE TIE SELF-LOCKING PLASTIC, 100MM', '794851', 2.0, NULL, 1442, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1961, 290, 17, 'Seals Security Pulltight
 SECURITY SEAL PP PULLTIGHT, L 380MM, YELLOW
-10''S --> min 50pcs', '471783', 1.0, NULL, 1443, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+10''S --> min 50pcs', '471783', 1.0, NULL, 1443, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1962, 290, 18, 'Whistles IMPA 330252
-WHISTLE', '330252', 6.0, NULL, 1444, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+WHISTLE', '330252', 6.0, NULL, 1444, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1963, 290, 19, 'Brass Padlock 50mm with 3 Keys
-Merk YALE', '490504', 6.0, NULL, 1445, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk YALE', '490504', 6.0, NULL, 1445, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1964, 291, 1, 'LIFEBOUY LIGHT WITH BRACKET
 LIFEBOUY LIGHT DANIAMANT L90', NULL, 6.0, NULL, 1514, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1965, 292, 1, 'No Offer', NULL, 19.0, NULL, 1515, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (1965, 292, 1, 'No Offer', NULL, 19.0, NULL, 1515, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1966, 292, 2, 'Kawat Las
-Kawat Las LB-52,  4.0 x 400mm', NULL, 20.0, NULL, 1516, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Kawat Las LB-52,  4.0 x 400mm', NULL, 20.0, NULL, 1516, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1967, 292, 3, 'Cutting Wheel 100x1x16 (4")
-Merk Morris', NULL, 2.0, NULL, 1517, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk Morris', NULL, 2.0, NULL, 1517, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1968, 292, 4, 'Grinding Wheel 100x6x16 (4")
-Merk Morris', NULL, 2.0, NULL, 1518, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk Morris', NULL, 2.0, NULL, 1518, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1969, 293, 1, 'METERAN 5 METER
-TEKIRO', NULL, 2.0, NULL, 1519, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+TEKIRO', NULL, 2.0, NULL, 1519, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1970, 293, 2, 'SIKU BESI UNTUK GARISAN
 SIKU BESI 12"', NULL, 2.0, NULL, 1520, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1971, 293, 3, 'SILICON RED HARDEX
-SILICON RED, Silicon Gasket 300gr', NULL, 2.0, NULL, 1521, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SILICON RED, Silicon Gasket 300gr', NULL, 2.0, NULL, 1521, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1972, 293, 4, 'KARET BAN BEKAS
 available per bundle:
-lebar 3cm, tebal 5mm, panjang 20m (terdiri dari bbrp potongan)', NULL, 50.0, NULL, 1522, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+lebar 3cm, tebal 5mm, panjang 20m (terdiri dari bbrp potongan)', NULL, 50.0, NULL, 1522, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1973, 293, 5, 'KUAS ROLL MINI 100mm
-1 pack = 10 spare kuas roll 100mm', NULL, 4.0, NULL, 1523, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 spare kuas roll 100mm', NULL, 4.0, NULL, 1523, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1974, 293, 6, 'KUAS ROLL MINI + TANGKAI
-KUAS ROLL 100mm', NULL, 10.0, NULL, 1524, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+KUAS ROLL 100mm', NULL, 10.0, NULL, 1524, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1975, 293, 7, 'SENTER KEPALA Rechargeable + motion sensor
-10.000 lumens, waterproof IPX4', NULL, 6.0, NULL, 1525, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+10.000 lumens, waterproof IPX4', NULL, 6.0, NULL, 1525, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1976, 293, 8, 'NOZZLE CUTTING TIP NO 3
 WIPRO CUTTING TIP LPG STRONG NO 3', NULL, 6.0, NULL, 1526, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1977, 293, 9, 'THERMOMETER INFRARED GUN 50-1050C 
-Merk SANFIX TYPE WT1050', NULL, 1.0, NULL, 1527, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk SANFIX TYPE WT1050', NULL, 1.0, NULL, 1527, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1978, 293, 10, 'KAWAT LAS RB 4.0MM
-KAWAT LAS RB 26, 4.0mm', NULL, 1.0, NULL, 1528, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+KAWAT LAS RB 26, 4.0mm', NULL, 1.0, NULL, 1528, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1979, 293, 11, 'MATA GERINDA AMPLAS (MODEL TUMPUK)
 PRIMERO FLAP DISC 4" #100
-1 box = 20 Pcs', NULL, 1.0, NULL, 1529, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 box = 20 Pcs', NULL, 1.0, NULL, 1529, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1980, 293, 12, 'MATA GERINDA POTONG TIPIS
 MATA GERINDA POTONG 105 X 2 X 16MM
 Nippon Resibon
-1 box = 10 pcs', NULL, 1.0, NULL, 1530, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 box = 10 pcs', NULL, 1.0, NULL, 1530, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1981, 293, 13, 'BATERAI / AKI NP7-12 12 VOLT 7 AH
-Merk YUASA', NULL, 8.0, NULL, 1531, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk YUASA', NULL, 8.0, NULL, 1531, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1982, 294, 1, 'Pasta gigi 190gr
-Pepsodent/Ciptadent', '110920', 150.0, NULL, 1532, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (1983, 294, 2, 'Pisau pemotong buah 21cm, stainless steel', '170107', 10.0, NULL, 1533, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Pepsodent/Ciptadent', '110920', 150.0, NULL, 1532, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (1983, 294, 2, 'Pisau pemotong buah 21cm, stainless steel', '170107', 10.0, NULL, 1533, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1984, 294, 3, 'Bowls Glass
 GLASS BOWL 120MM DIAM', '170741', 25.0, NULL, 1534, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1985, 294, 4, 'Cleaners 3M Scotch Brite
@@ -19466,37 +19466,37 @@ SCOTCH BRITE 3M SCRUBBING, SPONGE LARGE
 SPONGE ACE', '174073', 25.0, NULL, 1535, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1986, 294, 5, 'Wastebaskets
 WASTE BASKET PEDAL FLIP, STAINLESS STEEL 12LTR
-Merk Maspion', '174153', 10.0, NULL, 1536, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk Maspion', '174153', 10.0, NULL, 1536, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1987, 294, 6, 'Bags Plastic
-PLASTIC BAG TRANSPARENT, 500X600mm', '174173', 150.0, NULL, 1537, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+PLASTIC BAG TRANSPARENT, 500X600mm', '174173', 150.0, NULL, 1537, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1988, 294, 7, 'Bags Plastic 
-PLASTIC BAG BLACK, 900X1200MM', '174176', 300.0, NULL, 1300, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+PLASTIC BAG BLACK, 900X1200MM', '174176', 300.0, NULL, 1300, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1989, 294, 8, 'Cooking Paper
 COOKING PAPER 300MMX20MTR', '174212', 5.0, NULL, 1538, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1990, 294, 9, 'Brushes Toilet
 BRUSH TOILET NYLON W/HOLDER', '174253', 12.0, NULL, 962, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1991, 294, 10, 'Wipers Floor / Lobby mop
-FLOOR WIPER (FUITORU MOP), W/LONG HANDLE', '174286', 12.0, NULL, 1539, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+FLOOR WIPER (FUITORU MOP), W/LONG HANDLE', '174286', 12.0, NULL, 1539, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1992, 294, 11, 'TISSUE FACIAL
-250s', '391491', 100.0, NULL, 1540, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+250s', '391491', 100.0, NULL, 1540, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1993, 294, 12, 'Brooms Short Handled
 BROOM COIR SHORT HANDLED
 Plastic Broom , Sapu Plastik', '510807', 10.0, NULL, 1541, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1994, 294, 13, 'Detergent Rinso 
-Packing 1,5Kg', '550103', 150.0, NULL, 1302, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Packing 1,5Kg', '550103', 150.0, NULL, 1302, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1995, 294, 14, 'Laundry Softener
 Softener Molto Pewangi
-1,7L', '550124', 80.0, NULL, 1542, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1,7L', '550124', 80.0, NULL, 1542, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1996, 294, 15, 'Toilet Soap
 SOAP TOILET LIFEBUOY 100GRM', '550254', 150.0, NULL, 1543, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1997, 294, 16, 'Air Freshener
 AIR FRESHENER Aerosol 
-GLADE 350 ml', '550331', 50.0, NULL, 1544, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+GLADE 350 ml', '550331', 50.0, NULL, 1544, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (1998, 294, 17, 'Toilet Odor Balls
 TOILET ODOR BALL', '550336', 50.0, NULL, 1545, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (1999, 294, 18, 'SUPERPELL 4 Liter
-Superpell Professional Pembersih Lantai Apel, Jerigen 4Liter', '550512', 48.0, NULL, 1546, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2000, 294, 19, 'SHAMPOO ZINC 170 ml', NULL, 75.0, NULL, 1547, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+Superpell Professional Pembersih Lantai Apel, Jerigen 4Liter', '550512', 48.0, NULL, 1546, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2000, 294, 19, 'SHAMPOO ZINC 170 ml', NULL, 75.0, NULL, 1547, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
@@ -19504,14 +19504,14 @@ INSERT INTO quotation_item_requests (
 ) VALUES
   (2001, 294, 20, 'Kompor Listrik 
 Size: 210x210x65mm
-220-240 V, 50/60Hz, 600watt', NULL, 2.0, NULL, 1548, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+220-240 V, 50/60Hz, 600watt', NULL, 2.0, NULL, 1548, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2002, 294, 21, 'Setrika Traveling
-100-240V, 100-220w', NULL, 1.0, NULL, 1549, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+100-240V, 100-220w', NULL, 1.0, NULL, 1549, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2003, 294, 22, 'RAPIKA
 RAPIKA PELEMBUT DAN PELICIN PAKAIAN
-Refill 400ml', NULL, 24.0, NULL, 1550, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Refill 400ml', NULL, 24.0, NULL, 1550, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2004, 294, 23, 'Towels
-BATH TOWEL COTTON BLUE, 700 X 1400MM', '150602', 20.0, NULL, 1551, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+BATH TOWEL COTTON BLUE, 700 X 1400MM', '150602', 20.0, NULL, 1551, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2005, 294, 24, 'KESET
 KESET KAIN SERAP AIR', NULL, 25.0, NULL, 1552, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2006, 294, 25, 'LAP KANEBO
@@ -19524,22 +19524,22 @@ TOOTH PICK ROUND 150''S', '171090', 50.0, NULL, 1555, 'matched', 'import', 'Back
 RAT POSH PEMBASMI KECOA 20 ML', NULL, 25.0, NULL, 1556, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2010, 295, 1, 'Kertas HVS
 Kertas HVS Ukuran A4, 80gr
-1 box = 5 rim', NULL, 3.0, NULL, 1557, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 box = 5 rim', NULL, 3.0, NULL, 1557, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2011, 295, 2, 'PULPEN
 PULPEN CAIR WARNA HITAM
-1 pack = 12 pcs', NULL, 5.0, NULL, 1558, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 12 pcs', NULL, 5.0, NULL, 1558, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2012, 295, 3, 'BATTERY ALKALIN
 BATTERY ALKALIN UK. AA
 Available per pack
-1 pack = 6 pcs', NULL, 60.0, NULL, 1559, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 6 pcs', NULL, 60.0, NULL, 1559, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2013, 295, 4, 'BATTERY ALKALIN
 BATTERY ALKALIN UK. AAA
 Available per pack
-1 pack = 6 pcs', NULL, 60.0, NULL, 1560, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 6 pcs', NULL, 60.0, NULL, 1560, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2014, 295, 5, 'PENGHARUM RUANGAN GANTUNG
 PENGHARUM RUANGAN GANTUNG MERK GLADE', NULL, 20.0, NULL, 1561, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2015, 295, 6, 'BUKU FOLIO
-BUKU FOLIO 100 lembar', NULL, 15.0, NULL, 1562, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+BUKU FOLIO 100 lembar', NULL, 15.0, NULL, 1562, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2016, 295, 7, 'ISOLASI HITAM
 ISOLASI HITAM UK. 5 CM', NULL, 20.0, NULL, 1563, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2017, 295, 8, 'ISOLASI KERTAS
@@ -19580,16 +19580,16 @@ TINTA PRINTER EPSON L3210 WARNA YELLOW 003
 UNTUK PRINTER DI OFFICE', NULL, 5.0, NULL, 1575, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2029, 295, 20, 'AMPLOP COKLAT
 AMPLOP COKLAT UKURAN A4 (21.5 x 30cm)
-1 pack = 100pcs', NULL, 5.0, NULL, 1576, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 100pcs', NULL, 5.0, NULL, 1576, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2030, 296, 1, 'Wire Clips Standard
 WIRE CLIP CAST-IRON STANDARD, GALV 28MM', '230825', 20.0, NULL, 1581, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2031, 296, 2, 'Turnbuckles Jaw and Jaw
 TURNBUCKLE FRAME GALV JAW&JAW, 1"X 18"
-IMPA 230637', '230634', 30.0, NULL, 1582, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IMPA 230637', '230634', 30.0, NULL, 1582, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2032, 296, 3, 'Shackles Roller
-SHACKLE ROLLER 32MM (1 ¼ Inch), 5 Ton', '230403', 4.0, NULL, 1583, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SHACKLE ROLLER 32MM (1 ¼ Inch), 5 Ton', '230403', 4.0, NULL, 1583, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2033, 296, 4, 'Chain Hoists Spur-gear
-HOIST CHAIN SPUR-GEAR 1,5 TON, 3 Meter', '615008', 1.0, NULL, 1584, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HOIST CHAIN SPUR-GEAR 1,5 TON, 3 Meter', '615008', 1.0, NULL, 1584, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2034, 296, 5, 'Chain Hoists Spur-gear
 HOIST CHAIN SPUR-GEAR 5TON, 3MTR', '615011', 2.0, NULL, 1585, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2035, 297, 1, 'Rectifier 6RI50E-080 50 A 800V', NULL, 2.0, NULL, 1577, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -19622,27 +19622,27 @@ Lakban anti bocor
   (2052, 304, 2, 'Pompa
 SOMY 50 WQ15-30-3
 15.000L/H, 3KW, 380V', NULL, 1.0, NULL, 1595, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2053, 305, 1, 'Relay MY3N-J  220/240V AC', NULL, 6.0, NULL, 1424, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2053, 305, 1, 'Relay MY3N-J  220/240V AC', NULL, 6.0, NULL, 1424, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2054, 305, 2, 'Push Button, Model: LA16Y-22D,  220V AC
 diameter: 16mm
 Kontak 20 NO dan 2 NC
-Red/Green', NULL, 5.0, NULL, 1425, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2055, 306, 1, 'Relay MY3N-J  220/240V AC', NULL, 6.0, NULL, 1424, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Red/Green', NULL, 5.0, NULL, 1425, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2055, 306, 1, 'Relay MY3N-J  220/240V AC', NULL, 6.0, NULL, 1424, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2056, 306, 2, 'Push Button, Model: LA16Y-22D,  220V AC
 diameter: 16mm
 Kontak 20 NO dan 2 NC
-Red/Green', NULL, 5.0, NULL, 1425, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Red/Green', NULL, 5.0, NULL, 1425, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2057, 307, 1, 'CYLINDER GAUGE 160-250MM, 0.01MM GRADUATION  This range of gauges is designed mainly for the measurement of cylinder bores but the ovality, taper, wear and other bore conditions may be measured with equal ease. Furnished without a dial gauge.  When ordering, please indicate if the dial gauge is required.
 IMPA 651415', NULL, 1.0, NULL, 1596, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2058, 308, 1, 'Shipping handling 
 Jakarta - Samarinda Cargo', NULL, 1.0, NULL, 1597, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2059, 309, 1, 'Racor 2040 PM 30 Micron', NULL, 12.0, NULL, 484, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2059, 309, 1, 'Racor 2040 PM 30 Micron', NULL, 12.0, NULL, 484, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2060, 310, 1, 'DIODA 3 PHASE TYPE MDS 60-16 W', NULL, 1.0, NULL, 1598, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2061, 310, 2, 'No Offer', NULL, 1.0, NULL, 1599, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2061, 310, 2, 'No Offer', NULL, 1.0, NULL, 1599, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2062, 311, 1, 'Soldering Wire Resin Core
 1mm, 250gr spooled
 Merk HARDEN
-1 kg = 4 roll', '795170', 2.0, NULL, 1469, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 kg = 4 roll', '795170', 2.0, NULL, 1469, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2063, 311, 2, 'HAND LAMP WATERTIGHT E-26 60W,
 WATERTIGHT HAND PORTABLE LAMP WITH
 S90A SCREW GLOBE AND CAST IRON BODY
@@ -19651,11 +19651,11 @@ WOOD OR HARD RUBBER AND A HANGING
 HOOK IS FIXED.', '792151', 6.0, NULL, 1471, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2064, 311, 3, 'Hydrometer Battery 250mm', '792661', 2.0, NULL, 1473, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2065, 311, 4, 'Steker & stop kontak double, 2 round pin dengan arde
-Merk BROCO 16A, 250V', '792925', 30.0, NULL, 1472, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk BROCO 16A, 250V', '792925', 30.0, NULL, 1472, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2066, 311, 5, 'Cable NYYHY 3x1,5mm
-Supreme', '794278', 100.0, NULL, 1474, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Supreme', '794278', 100.0, NULL, 1474, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2067, 311, 6, 'Cable NYYHY 3x1,5mm
-Supreme', '794283', 100.0, NULL, 1458, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Supreme', '794283', 100.0, NULL, 1458, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2068, 311, 7, 'Solder 3 fungsi Tekiro, 220 V, 30 Watt', '795076', 2.0, NULL, 1475, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2069, 311, 8, 'SOLDERING PASTE 50GRM  PASTE FLUX 
 Merk Lotfet 50gr', '795174', 1.0, NULL, 1476, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -19676,7 +19676,7 @@ Manifold Gauge Hose Kit for R134A, R22, R12, R502, R410A', '850346', 1.0, NULL, 
   (2080, 311, 19, 'Bearing Puller Kit for Inner & Outer', '615082', 1.0, NULL, 1480, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2081, 311, 20, 'Digital Testpen 30-1000V
 Voltage Detactor, Non-contact Test Slotted Screwdriver', '612417', 1.0, NULL, 1478, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2082, 311, 21, 'Tool Set Handy Tools eith case', '613802', 1.0, NULL, 1479, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2082, 311, 21, 'Tool Set Handy Tools eith case', '613802', 1.0, NULL, 1479, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2083, 311, 22, 'NUT DRIVER SET 5-12MM 7''S  DEEP SOCKET TYPE NUT DRIVERS PROVIDED AS A SET WITH A STEEL HOLDING RACK', '612366', 1.0, NULL, 1477, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2084, 311, 23, 'Lampu Bohlam Philip LED 6W  - E14
 2700/4000 lumen', '791517', 200.0, NULL, 1482, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -19709,10 +19709,10 @@ Cahaya: putih/ Cool Day Light/6500K', '791438', 100.0, NULL, 1608, 'matched', 'i
   (2098, 311, 37, 'FL CEILING LIGHT WATERTIGHT, W/GLOBE AC220V KEW402 40WX2
 (Only 5 available)', '791887', 10.0, NULL, 1486, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2099, 311, 38, 'IMPA 792883 Synthetic Resin Watertight Plug & Socket 3Pin, 250V
-Plug & Socket beda klik barang', '792883', 10.0, NULL, 1504, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Plug & Socket beda klik barang', '792883', 10.0, NULL, 1504, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2100, 311, 39, 'CABLE REEL EXTENSION AC220V, 50MTR  PORTABLE REELS
 Water proof tutupan
-Kabel NYMHY 3 x 2,5', '794397', 2.0, NULL, 1453, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+Kabel NYMHY 3 x 2,5', '794397', 2.0, NULL, 1453, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
@@ -19744,38 +19744,38 @@ Kunci bantu pemasangan Pilot Lamp F48 22mm, Black/Yellow', NULL, 2.0, NULL, 1513
 lampu 3 mode
 emergency light 15 watt
 baterry 5800mAh
-MITSUYAMA MS-1221', '330655', 3.0, NULL, 1614, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+MITSUYAMA MS-1221', '330655', 3.0, NULL, 1614, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2113, 312, 5, 'WHITEBOARD MARKER GREEN  FOR USE ON ALL WHITEBOARD SURFACES, EASILY ERASED WITH DRY CLOTH.', '471647', 12.0, NULL, 1615, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2114, 312, 6, 'CALIPER VERNIER STAINLESS, STEEL METRIC 450MM  MADE OF HIGH GRADE STAINLESS STEEL WITH A SATIN CHROME FINISH.  AVAILABLE IN METRIC GRADUATION, OR IN BOTH, METRIC AND INCH GRADUATION.', '650505', 1.0, NULL, 1616, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2115, 312, 7, 'Rule convex steel metric 5 meter
-Merk KenMaster/Hasston', '650823', 1.0, NULL, 1388, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk KenMaster/Hasston', '650823', 1.0, NULL, 1388, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2116, 312, 8, 'Safety Helmet V-Gard
-Helm Proyek NSA Vgard SNI ANZI', '310142', 10.0, NULL, 1617, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Helm Proyek NSA Vgard SNI ANZI', '310142', 10.0, NULL, 1617, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2117, 312, 9, 'Safety ear plug, silicon rubber', '331156', 24.0, NULL, 1618, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2118, 312, 10, 'Memory SD Card 64GB', '471859', 1.0, NULL, 1619, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2119, 312, 11, 'PADLOCK BRASS 60MM WITH 2KEYS, material brass
-Gembok Kuningan', '490506', 10.0, NULL, 1620, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Gembok Kuningan', '490506', 10.0, NULL, 1620, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2120, 312, 12, 'Brush paint roller 100mm, with handle', '510461', 24.0, NULL, 929, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2121, 312, 13, 'Spare mini roller sized, 100mm width small', '510462', 100.0, NULL, 1301, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2121, 312, 13, 'Spare mini roller sized, 100mm width small', '510462', 100.0, NULL, 1301, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2122, 312, 14, 'Water finding paste red, yellow to red a paste for use with oil gauge tape', '650890', 5.0, NULL, 1621, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2123, 312, 15, 'Tissue paper economy tissue, economy size', '174220', 50.0, NULL, 1622, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2124, 312, 16, 'Brush toilet nylon bowl, holder sanitary', '174253', 12.0, NULL, 962, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2125, 312, 18, 'Gloves working cotton woven, non slip dots', '190103', 16.0, NULL, 1624, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2125, 312, 18, 'Gloves working cotton woven, non slip dots', '190103', 16.0, NULL, 1624, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2126, 312, 19, 'Rain suits with hood, size LL,  3 pcs comprised of
 the jacket, trouser and hood outfit.
 Yellow', '190403', 12.0, NULL, 1625, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2127, 313, 1, 'No Offer', '232003', 1.0, NULL, 1626, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2127, 313, 1, 'No Offer', '232003', 1.0, NULL, 1626, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2128, 313, 2, 'IMPA 591234
-Sparepart chain drum for model rustibus 400 scaling machine', '591234', 9.0, NULL, 1627, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Sparepart chain drum for model rustibus 400 scaling machine', '591234', 9.0, NULL, 1627, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2129, 313, 3, 'Poly Propylene 8 strand.
-CIR 5 (40mm) x 200 meter', '211014', 1.0, NULL, 1628, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2130, 313, 4, 'Tali tambang catton 10mm x 200 meter', '211283', 2.0, NULL, 1629, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2131, 314, 1, 'No Offer', '232003', 1.0, NULL, 1626, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+CIR 5 (40mm) x 200 meter', '211014', 1.0, NULL, 1628, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2130, 313, 4, 'Tali tambang catton 10mm x 200 meter', '211283', 2.0, NULL, 1629, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2131, 314, 1, 'No Offer', '232003', 1.0, NULL, 1626, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2132, 314, 2, 'IMPA 591234
-Sparepart chain drum for model rustibus 400 scaling machine', '591234', 9.0, NULL, 1627, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Sparepart chain drum for model rustibus 400 scaling machine', '591234', 9.0, NULL, 1627, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2133, 314, 3, 'Poly Propylene 8 strand.
-CIR 5 (40mm) x 200 meter', '211014', 1.0, NULL, 1628, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2134, 314, 4, 'Tali tambang catton 10mm x 200 meter', '211283', 2.0, NULL, 1629, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+CIR 5 (40mm) x 200 meter', '211014', 1.0, NULL, 1628, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2134, 314, 4, 'Tali tambang catton 10mm x 200 meter', '211283', 2.0, NULL, 1629, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2135, 315, 1, 'PRESSURE TRANSMITER                                          
 TYPE:  MBS 5100
 060N1036, Range 0-10bar  ( 0-0.1Mpa)
@@ -19785,58 +19785,58 @@ Supply Out put : 10-32 Vdc, 4-20mA', NULL, 6.0, NULL, 1630, 'matched', 'import',
 12V/2900 mAH
 Merk Jotron', NULL, 1.0, NULL, 1632, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2138, 318, 1, 'Waterproof Torch
-IMPA 330261', '330262', 2.0, NULL, 1633, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IMPA 330261', '330262', 2.0, NULL, 1633, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2139, 318, 2, 'First Aid Kit - Portable Hardcase Box
-26 x 19 x 10cm', '392060', 2.0, NULL, 1634, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+26 x 19 x 10cm', '392060', 2.0, NULL, 1634, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2140, 318, 3, 'Life Jacket Light
-IMPA 330143', '330143', 30.0, NULL, 1635, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IMPA 330143', '330143', 30.0, NULL, 1635, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2141, 318, 4, 'FIRE HOSE BOX POLYCARBONATE, FOR 20MTR  VERSATILE BOX TO STORE FIRE HOSES OF UP TO 20 MTRS IN LENGTH WITH NOZZLES AND SPANNER.  THE BOX AND COVER ARE MADE OF POLYCARBONATE FOR WEATHER AND SEA WATER RESISTANCE.  
-Roller & Holder', '330751', 4.0, NULL, 1636, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Roller & Holder', '330751', 4.0, NULL, 1636, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2142, 319, 1, 'Marine Solar Powered Navigation Light
 Type: DZL-1
 Visibilty:2NM
 Flash Light: Red and White Color
 Maker: Pro Marine', NULL, 2.0, NULL, 1637, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2143, 319, 2, 'Galvanized cotter pin 10mm x 200mm', NULL, 200.0, NULL, 1638, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2144, 319, 3, 'Galvanized cotter pin 5mm x 120mm', NULL, 100.0, NULL, 1639, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2143, 319, 2, 'Galvanized cotter pin 10mm x 200mm', NULL, 200.0, NULL, 1638, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2144, 319, 3, 'Galvanized cotter pin 5mm x 120mm', NULL, 100.0, NULL, 1639, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2145, 320, 1, 'Plat Lubang SS 304
 tebal 2mm
 ukuran 1,2 x 2,4 meter
 ukuran lubang  4mm', NULL, 1.0, NULL, 1640, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2146, 321, 1, 'INDICATOR PAPER M-2, METALLIC WHITE 50''S 65X145MM  Recording paper for use with an engine pressure indicator.  Can be furnished in white or red for the sizes listed below.  Provided in pads of 50 sheets.', NULL, 8.0, NULL, 1641, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2147, 322, 1, 'INDICATOR PAPER M-2, METALLIC WHITE 50''S 65X145MM  Recording paper for use with an engine pressure indicator.  Can be furnished in white or red for the sizes listed below.  Provided in pads of 50 sheets.', NULL, 8.0, NULL, 1641, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2148, 323, 1, 'Comap InteliNano Module', NULL, 1.0, NULL, 842, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2149, 323, 2, 'Box Panel 40x30x18 cm', NULL, 1.0, NULL, 843, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2148, 323, 1, 'Comap InteliNano Module', NULL, 1.0, NULL, 842, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2149, 323, 2, 'Box Panel 40x30x18 cm', NULL, 1.0, NULL, 843, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2150, 323, 3, 'GAE Fuse 10x38 2A-32A 500V + Holder Fuse With Indicator', NULL, 5.0, NULL, 1642, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2151, 323, 4, 'Relay Flosser 24V 20/30a Kaki 5 Relay Pemutus 87a+Socket Relay Keramik', NULL, 3.0, NULL, 847, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2152, 323, 5, 'Schneider MCB AC 1 Pole 2 A-A9F74102', NULL, 3.0, NULL, 1643, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2153, 323, 6, 'Schneider Push Bottom Lamp XB5AW33M5 dia. 22mm Plastik Hijau', NULL, 1.0, NULL, 1644, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2154, 323, 7, 'Schneider Relay RXM4AB2BD/24 VDC + Soket RXZE2M114M', NULL, 2.0, NULL, 1645, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2155, 323, 8, 'Push Button & Emergency Stop 22mm 1inch + Box 1NC 1NO', NULL, 1.0, NULL, 848, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2156, 323, 9, 'Pilot Lamp XB5-AV/XB5AV 24 VDC Shemsco Schneider - Hijau', NULL, 1.0, NULL, 849, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2155, 323, 8, 'Push Button & Emergency Stop 22mm 1inch + Box 1NC 1NO', NULL, 1.0, NULL, 848, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2156, 323, 9, 'Pilot Lamp XB5-AV/XB5AV 24 VDC Shemsco Schneider - Hijau', NULL, 1.0, NULL, 849, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2157, 323, 10, 'Schneider Selector Switch 3 Posisi XB2 Metal 2 No 22mm-XB2BD53C', NULL, 1.0, NULL, 851, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2158, 323, 11, 'DIN Rail MCB Alumunium 1 Meter', NULL, 2.0, NULL, 852, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2159, 323, 12, 'PM Kabel Duck Lubang Abu-Abu 32X45, panjang 1,7 Meter', NULL, 2.0, NULL, 853, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2159, 323, 12, 'PM Kabel Duck Lubang Abu-Abu 32X45, panjang 1,7 Meter', NULL, 2.0, NULL, 853, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2160, 323, 13, 'Kabel SUPREME NYAF 0.75 mm² 
-100meter - Hitam', NULL, 1.0, NULL, 854, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+100meter - Hitam', NULL, 1.0, NULL, 854, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2161, 323, 14, 'Kabel SUPREME NYAF 2.5mm² 
-100meter - Hitam', NULL, 1.0, NULL, 856, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+100meter - Hitam', NULL, 1.0, NULL, 856, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2162, 323, 15, 'Skun Kabel Tusuk Ferulles Ferrules 0.75mm E7508', NULL, 2.0, NULL, 857, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2163, 323, 16, 'Skun Kabel Tusuk Ferulles Ferrules 2.5mm E2508', NULL, 1.0, NULL, 858, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2164, 323, 17, 'Baut Rivet Clip universal (6 size)
-Plastik 1 Bungkus (100pcs)', NULL, 1.0, NULL, 1646, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Plastik 1 Bungkus (100pcs)', NULL, 1.0, NULL, 1646, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2165, 323, 18, 'Phoenix Contact UK5N Terminal Block
 Nominal voltage: 800 V
 Nominal current: 32 A
 Cross Section: 0,2-6mm²
-AWG: 24 - 10', NULL, 30.0, NULL, 859, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+AWG: 24 - 10', NULL, 30.0, NULL, 859, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2166, 323, 19, 'Kabel Ties 2.5x100mm HItam (100 pcs)', NULL, 2.0, NULL, 860, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2167, 323, 20, 'CT MSQ 30 (Hole 10x30mm)
-100/5A', NULL, 3.0, NULL, 861, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+100/5A', NULL, 3.0, NULL, 861, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2168, 323, 21, 'Baut L Stainles M5X12', NULL, 10.0, NULL, 862, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2169, 323, 22, 'Switch Oil Pressure 0-10 Bar 
-Drat 10mm, Merk VDO Germany', NULL, 2.0, NULL, 1647, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2170, 323, 23, 'No Offer', NULL, 2.0, NULL, 1648, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Drat 10mm, Merk VDO Germany', NULL, 2.0, NULL, 1647, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2170, 323, 23, 'No Offer', NULL, 2.0, NULL, 1648, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2171, 323, 24, 'Cummins Shut Off Valve 3932530 24 VDC', NULL, 1.0, NULL, 1649, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2172, 324, 1, 'Mata Kunci shock drive 3/4"
 12 PT, 18mm', NULL, 1.0, NULL, 1650, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -19845,11 +19845,11 @@ Drat 10mm, Merk VDO Germany', NULL, 2.0, NULL, 1647, 'substituted', 'import', 'B
 3KW, 380V', NULL, 1.0, NULL, 1652, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2175, 327, 1, 'Shipping handling 
 Jakarta - Samarinda Cargo', NULL, 1.0, NULL, 1597, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2176, 328, 1, 'Contactor FUJI SC-N5 (93), 110/230/380V', NULL, 2.0, NULL, 1653, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2176, 328, 1, 'Contactor FUJI SC-N5 (93), 110/230/380V', NULL, 2.0, NULL, 1653, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2177, 328, 2, 'Overload Fuji TR-N5/3, TR93BDW
-53-80A', NULL, 2.0, NULL, 1654, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+53-80A', NULL, 2.0, NULL, 1654, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2178, 329, 1, 'Trafo 440VAC to 220VAC 100VA 60HZ
-Tanpa box', NULL, 10.0, NULL, 1655, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Tanpa box', NULL, 10.0, NULL, 1655, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2179, 330, 1, 'Cover Lampu Acrylic - U shape
 66 x 17,5 x 3 cm
 Bening, tebal 2mm', NULL, 10.0, NULL, 1656, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -19867,46 +19867,46 @@ Sesuai contoh', NULL, 10.0, NULL, 1660, 'matched', 'import', 'Backfilled from hi
   (2185, 332, 1, 'Portable Gas Detector
 Gaslux NP/Multi Gas detector
 CITICEL 40XV CITICEL OXYGEN (O2)', NULL, 1.0, NULL, 1661, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2186, 333, 1, 'Kertas A4', NULL, 5.0, NULL, 1662, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2187, 333, 2, 'Ordner', NULL, 10.0, NULL, 1663, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2188, 333, 3, 'Ballpoint Joyko Hitam', NULL, 1.0, NULL, 1664, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2189, 333, 4, 'Ballpoint Joyko Biru', NULL, 1.0, NULL, 1665, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2190, 333, 5, 'Paper klip', NULL, 1.0, NULL, 1666, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2186, 333, 1, 'Kertas A4', NULL, 5.0, NULL, 1662, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2187, 333, 2, 'Ordner', NULL, 10.0, NULL, 1663, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2188, 333, 3, 'Ballpoint Joyko Hitam', NULL, 1.0, NULL, 1664, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2189, 333, 4, 'Ballpoint Joyko Biru', NULL, 1.0, NULL, 1665, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2190, 333, 5, 'Paper klip', NULL, 1.0, NULL, 1666, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2191, 333, 6, 'Binder klip No 107', NULL, 10.0, NULL, 1667, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2192, 333, 7, 'Binder klip No 105', NULL, 10.0, NULL, 1668, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2193, 333, 8, 'isi straples', NULL, 1.0, NULL, 1669, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2194, 333, 9, 'lem stick', NULL, 10.0, NULL, 1670, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2195, 333, 10, 'Highlighter hijau - Joyko', NULL, 5.0, NULL, 1671, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2196, 333, 11, 'Pencil holder JOYKO DS-20', NULL, 3.0, NULL, 1672, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2193, 333, 8, 'isi straples', NULL, 1.0, NULL, 1669, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2194, 333, 9, 'lem stick', NULL, 10.0, NULL, 1670, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2195, 333, 10, 'Highlighter hijau - Joyko', NULL, 5.0, NULL, 1671, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2196, 333, 11, 'Pencil holder JOYKO DS-20', NULL, 3.0, NULL, 1672, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2197, 334, 1, 'Parker 2020TM-OR
-Filter Racor (ME)', NULL, 12.0, NULL, 1673, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Filter Racor (ME)', NULL, 12.0, NULL, 1673, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2198, 334, 2, 'JFC-1600-1
 FO Cartridge Filter (AE)', NULL, 4.0, NULL, 1674, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2199, 334, 3, 'JFC-1600-2
 FO Element Filter (AE)', NULL, 8.0, NULL, 1675, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2200, 334, 4, 'C-1002 Filter Sakura
-LO Cartridge Filter (AE)', NULL, 8.0, NULL, 1676, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+LO Cartridge Filter (AE)', NULL, 8.0, NULL, 1676, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
   (2201, 334, 5, 'Parker 2010TM-OR
-Filter Racor (ME)', NULL, 8.0, NULL, 1677, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Filter Racor (ME)', NULL, 8.0, NULL, 1677, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2202, 335, 1, 'Delivery for YUXIN SATU', NULL, 1.0, NULL, 1678, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2203, 336, 1, 'Binoculars
 BINOCULARS 7X50IF WATER-PROOF, WITH SCALE
-Merk BOSTRON', '370345', 1.0, NULL, 1679, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk BOSTRON', '370345', 1.0, NULL, 1679, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2204, 336, 2, 'NIKON OCEANPRO 7x50 CF WP
-Non Night vision', '370357', 1.0, NULL, 1680, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Non Night vision', '370357', 1.0, NULL, 1680, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2205, 337, 1, 'Hammers Ball Pein
-HAMMER BALL PEIN - FIBER HANDLED, 5050GRM', '612505', 2.0, NULL, 1681, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HAMMER BALL PEIN - FIBER HANDLED, 5050GRM', '612505', 2.0, NULL, 1681, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2206, 337, 2, 'Hammers Ball Pein
 HAMMER BALL PEIN FIBER HANDLED, 1100GRM, 
-Merk TEKIRO', '612508', 2.0, NULL, 1682, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk TEKIRO', '612508', 2.0, NULL, 1682, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2207, 337, 3, 'Screwdrivers Plastic Handle Heavy Duty
 SCREWDRIVER INSULATED HANDLE, HEAVY-DUTY
-SLOTTED 8X150MM - Merk Stanley', '612265', 3.0, NULL, 1683, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SLOTTED 8X150MM - Merk Stanley', '612265', 3.0, NULL, 1683, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2208, 337, 4, 'Screwdrivers Plastic Handle Heavy Duty
 SCREWDRIVER INSULATED HANDLE, HEAVY-DUTY
 PHILLIPS NO.3 150MM', '612275', 2.0, NULL, 1684, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -19917,31 +19917,31 @@ SHACKLE D-TYPE SCREW PIN GALV, 22MM SWL 1.5TON', '230347', 10.0, NULL, 1686, 'ma
   (2211, 337, 7, 'Shackles Screw Pin D
 SHACKLE D-TYPE SCREW PIN GALV, 28MM SWL 2.5TON', '230349', 6.0, NULL, 1687, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2212, 337, 8, 'Angle Grinders Electric
-GRINDER ANGLE ELECTRIC 4" Merk BOSCH, AC220V 1-PHASE, 700W', '591031', 3.0, NULL, 162, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+GRINDER ANGLE ELECTRIC 4" Merk BOSCH, AC220V 1-PHASE, 700W', '591031', 3.0, NULL, 162, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2213, 337, 9, 'Socket Wrench Set
 SOCKET WRENCH SET Merk TEKIRO 94pcs, 
-10-32mm, 1/4-1/2 DR', '610101', 2.0, NULL, 1688, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+10-32mm, 1/4-1/2 DR', '610101', 2.0, NULL, 1688, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2214, 337, 10, 'Wrench Sets Allen Hexagon
 WRENCH SET ALLEN HEXAGON, 2.5-12MM 8''S', '611281', 2.0, NULL, 204, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2215, 337, 11, 'Wrench Sets Allen Hexagon
 WRENCH SET ALLEN HEXAGON, 1/8-1/2" 8''S', '611282', 2.0, NULL, 1689, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2216, 337, 12, 'No Offer
-Available: Regular chain hoist 1 ton x 3m', '615022', 2.0, NULL, 191, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Available: Regular chain hoist 1 ton x 3m', '615022', 2.0, NULL, 191, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2217, 337, 13, 'Combination Plier Non-spark
 Berilium Bronze, 6"
-SATATOOLS', '615867', 2.0, NULL, 1690, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SATATOOLS', '615867', 2.0, NULL, 1690, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2218, 337, 14, 'Calipers Outside
-CALIPER OUTSIDE 100MM (4")', '650101', 1.0, NULL, 1691, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+CALIPER OUTSIDE 100MM (4")', '650101', 1.0, NULL, 1691, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2219, 337, 15, 'Calipers Outside
-CALIPER OUTSIDE 150MM (6")', '650103', 1.0, NULL, 1692, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+CALIPER OUTSIDE 150MM (6")', '650103', 1.0, NULL, 1692, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2220, 337, 16, 'Calipers Outside
-CALIPER OUTSIDE 200MM (8")', '650104', 1.0, NULL, 1693, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2221, 337, 17, 'Feeler Gauge, 0.003-1.0mm, 100mm length', '650563', 2.0, NULL, 1694, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+CALIPER OUTSIDE 200MM (8")', '650104', 1.0, NULL, 1693, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2221, 337, 17, 'Feeler Gauge, 0.003-1.0mm, 100mm length', '650563', 2.0, NULL, 1694, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2222, 337, 18, 'DIAL GAUGE STANDARD 0-10MM, 0.01MM GRAD. 
-WATERPROOF', '651404', 2.0, NULL, 1695, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+WATERPROOF', '651404', 2.0, NULL, 1695, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2223, 337, 19, 'Pressure Gauges Glycerine Filled
 GAUGE PRESSURE GLYCERINE BOTTM, 0-600BAR
-100MM (4"), Drat 1/2 NPT', '653198', 2.0, NULL, 1696, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+100MM (4"), Drat 1/2 NPT', '653198', 2.0, NULL, 1696, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2224, 337, 20, 'Wrenches Double or Single Head Ratchet
 WRENCH SINGLE HEAD RATCHET, & SPUD 12-POINT 13MM', '611028', 3.0, NULL, 1697, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2225, 337, 21, 'Wrenches Double or Single Head Ratchet
@@ -19991,10 +19991,10 @@ WRENCH 12-POINT SINGLE END, 55MM', '610674', 2.0, NULL, 1715, 'matched', 'import
   (2247, 337, 43, 'Wrenches 12-point Single End
 WRENCH 12-POINT SINGLE END, 60MM', '610676', 2.0, NULL, 1716, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2248, 338, 1, 'Sockets Stainless Steel Threaded
-SOCKET STAINLESS STEEL  SS304, 1/2 THREADED', '732569', 12.0, NULL, 1717, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SOCKET STAINLESS STEEL  SS304, 1/2 THREADED', '732569', 12.0, NULL, 1717, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2249, 338, 2, 'Plugs Square Head Stainless Steel Threaded
-PLUG SQUARE HEAD, STAINLESS STEEL  SS304,  1/2 THREADED', '732604', 12.0, NULL, 1718, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2250, 338, 3, 'Rope Monofilament 3 Strand, CIR 5 x 220M', '210205', 1.0, NULL, 1719, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+PLUG SQUARE HEAD, STAINLESS STEEL  SS304,  1/2 THREADED', '732604', 12.0, NULL, 1718, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2250, 338, 3, 'Rope Monofilament 3 Strand, CIR 5 x 220M', '210205', 1.0, NULL, 1719, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2251, 338, 4, 'Cam and Groove Couplings Dust Plugs
 COUPLING CAM&GROOVE ALUM ALLOY, DUST PLUG 1-1/2"', '351954', 6.0, NULL, 1720, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2252, 338, 5, 'Cam and Groove Couplings Type C
@@ -20005,7 +20005,7 @@ COUPLING CAM&GROOVE ALUM ALLOY, F PLUG W/MALE
 THREAD 1-1/2"', '351755', 6.0, NULL, 1722, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2254, 338, 7, 'Infrared Thermometers
 THERMOMETER INFRARED TA410N, -50 - 500DEG.C TWIN
-LASER BEAM, Merk KRISBOW', '651791', 2.0, NULL, 1723, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+LASER BEAM, Merk KRISBOW', '651791', 2.0, NULL, 1723, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2255, 338, 8, 'Brushes Angle Radiator
 BRUSH RADIATOR ANGLE(DOG LEG), 25MM WIDTH', '510165', 12.0, NULL, 1724, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2256, 338, 9, 'Brushes Angle Radiator
@@ -20013,90 +20013,90 @@ BRUSH RADIATOR ANGLE(DOG LEG), 40MM WIDTH', '510166', 12.0, NULL, 923, 'matched'
   (2257, 338, 10, 'Wire Cup Brushes
 BRUSH WIRE WHEEL THREADED NUT, TYPE
 75MMXM10THREAD', '510785', 48.0, NULL, 1725, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2258, 338, 11, 'No Offer', '670802', 2.0, NULL, 1726, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2259, 338, 12, 'No Offer', '670606', 3.0, NULL, 1727, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2260, 338, 13, 'No Offer', '710106', 4.0, NULL, 1728, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2261, 338, 14, 'No Offer', '710108', 4.0, NULL, 1729, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2258, 338, 11, 'No Offer', '670802', 2.0, NULL, 1726, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2259, 338, 12, 'No Offer', '670606', 3.0, NULL, 1727, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2260, 338, 13, 'No Offer', '710106', 4.0, NULL, 1728, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2261, 338, 14, 'No Offer', '710108', 4.0, NULL, 1729, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2262, 338, 15, 'Elbows 90deg. Malleable Cast Iron
 ELBOW MALLEABLE CAST IRON GALV, 90DEG 1-1/2', '730168', 12.0, NULL, 1730, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2263, 338, 16, 'Flanges JIS Sip-on Welding
 FLANGE STEEL WELDING SLIP-ON, FLAT FACE B-2220 
-5KG-40MM - Carbon Steel', '734606', 24.0, NULL, 1320, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2264, 338, 17, 'No Offer', '671912', 2.0, NULL, 1333, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+5KG-40MM - Carbon Steel', '734606', 24.0, NULL, 1320, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2264, 338, 17, 'No Offer', '671912', 2.0, NULL, 1333, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2265, 338, 18, 'Stainless Steel Hexagon Head Bolts and Nuts
-HEX HEAD BOLT/NUT STAINLESS, STEEL M22 X 90MM', '693110', 24.0, NULL, 1731, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HEX HEAD BOLT/NUT STAINLESS, STEEL M22 X 90MM', '693110', 24.0, NULL, 1731, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2266, 338, 19, 'Stainless Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STAINLESS, STEEL M16 X 45MM', '692920', 80.0, NULL, 1732, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2267, 338, 20, 'Stainless Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STAINLESS, STEEL M22 X 140MM', '693120', 80.0, NULL, 1733, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2268, 338, 21, 'Stainless Steel Hexagon Head Bolts and Nuts
-HEX HEAD BOLT/NUT STAINLESS, STEEL M20 X 100MM', '692974', 24.0, NULL, 1734, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HEX HEAD BOLT/NUT STAINLESS, STEEL M20 X 100MM', '692974', 24.0, NULL, 1734, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2269, 338, 22, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M8 X 25MM
-Black steel, full drat', '691139', 250.0, NULL, 1735, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691139', 250.0, NULL, 1735, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2270, 338, 23, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M8 X 50MM
-Black steel, full drat', '691145', 200.0, NULL, 243, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691145', 200.0, NULL, 243, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2271, 338, 24, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M8 X 90MM
-Black steel, full drat', '691153', 150.0, NULL, 1736, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691153', 150.0, NULL, 1736, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2272, 338, 25, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M10 X 35MM
-Black steel, full drat', '691180', 250.0, NULL, 1737, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691180', 250.0, NULL, 1737, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2273, 338, 26, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M10 X 60MM
-Black steel, full drat', '691185', 200.0, NULL, 207, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691185', 200.0, NULL, 207, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2274, 338, 27, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M10 X 100MM
-Black steel, full drat', '691193', 150.0, NULL, 1738, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691193', 150.0, NULL, 1738, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2275, 338, 28, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M12 X 40MM
-Black steel, full drat', '691220', 250.0, NULL, 1739, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691220', 250.0, NULL, 1739, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2276, 338, 29, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M12 X 65MM
-Black steel, full drat', '691225', 250.0, NULL, 1740, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691225', 250.0, NULL, 1740, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2277, 338, 30, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M12 X 100MM
-Black steel, full drat', '691232', 150.0, NULL, 1741, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691232', 150.0, NULL, 1741, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2278, 338, 31, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M16 X 45MM
-Black steel, full drat', '691280', 250.0, NULL, 1742, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691280', 250.0, NULL, 1742, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2279, 338, 32, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M16 X 70MM
-Black steel, full drat', '691285', 250.0, NULL, 1743, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691285', 250.0, NULL, 1743, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2280, 338, 33, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M20 X 50MM
-Black steel, full drat', '691325', 250.0, NULL, 1744, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691325', 250.0, NULL, 1744, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2281, 338, 34, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M20 X 80MM
-Black steel, full drat', '691331', 150.0, NULL, 1745, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691331', 150.0, NULL, 1745, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2282, 338, 35, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M22 X 50MM
-Black steel, full drat', '691357', 200.0, NULL, 1746, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691357', 200.0, NULL, 1746, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2283, 338, 36, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M22 X 80MM
-Black steel, full drat', '691363', 100.0, NULL, 1747, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Black steel, full drat', '691363', 100.0, NULL, 1747, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2284, 339, 1, 'MCB Breaker Schneider MCB C120N 3P
-100A 10KA', NULL, 1.0, NULL, 1748, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2285, 339, 2, 'UVT Under Voltage Release For MCCB NSX &CVS 200/240VAC. MX Shunt Trip - Schneider', NULL, 2.0, NULL, 1749, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+100A 10KA', NULL, 1.0, NULL, 1748, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2285, 339, 2, 'UVT Under Voltage Release For MCCB NSX &CVS 200/240VAC. MX Shunt Trip - Schneider', NULL, 2.0, NULL, 1749, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2286, 339, 3, 'Siemens auxllry contact
 3VA9988-0AA12', NULL, 2.0, NULL, 1750, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2287, 339, 4, 'Relay OMRON MY2, 8 pin 220VAC inc. socket', NULL, 4.0, NULL, 1751, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2288, 339, 5, 'Relay OMRON MY4N-GS-R, 14 pin 220VAC inc. socket', NULL, 4.0, NULL, 1752, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2287, 339, 4, 'Relay OMRON MY2, 8 pin 220VAC inc. socket', NULL, 4.0, NULL, 1751, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2288, 339, 5, 'Relay OMRON MY4N-GS-R, 14 pin 220VAC inc. socket', NULL, 4.0, NULL, 1752, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2289, 339, 6, 'Sekring(Fuse)
-2A/500V/120KA, 10×38 mm', NULL, 6.0, NULL, 1753, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+2A/500V/120KA, 10×38 mm', NULL, 6.0, NULL, 1753, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2290, 339, 7, 'Sekring(Fuse)
-4A gG/120KA /500V/IEC 269, 10x38mm', NULL, 6.0, NULL, 1754, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+4A gG/120KA /500V/IEC 269, 10x38mm', NULL, 6.0, NULL, 1754, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2291, 339, 8, 'Nozzle ME
 37560-1 7500/NP-DL1 60T3251 0NP47E', NULL, 6.0, NULL, 1755, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2292, 339, 9, 'Bearing Koyo 30205', NULL, 4.0, NULL, 1756, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2293, 339, 10, 'Mechanical seal NOK WT-3/4', NULL, 5.0, NULL, 1757, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2294, 339, 11, 'OilSeal NOK.SF - TC 24 38 7', NULL, 5.0, NULL, 1758, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2292, 339, 9, 'Bearing Koyo 30205', NULL, 4.0, NULL, 1756, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2293, 339, 10, 'Mechanical seal NOK WT-3/4', NULL, 5.0, NULL, 1757, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2294, 339, 11, 'OilSeal NOK.SF - TC 24 38 7', NULL, 5.0, NULL, 1758, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2295, 339, 12, 'Oil Seal NOK.SF - TC 20 35 10 (A0)
-AEE967-A0', NULL, 5.0, NULL, 1759, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+AEE967-A0', NULL, 5.0, NULL, 1759, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2296, 340, 1, 'IC SLA 7024M', NULL, 4.0, NULL, 1760, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2297, 341, 1, 'Mean Well RS-15-5
-15W, 5V, 3A', NULL, 2.0, NULL, 1761, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+15W, 5V, 3A', NULL, 2.0, NULL, 1761, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2298, 342, 1, 'ITU MM CD MANUAL FOR MARITIME, MOBILE&MARITIME SATE. SERVICE  Publications from various countries are available.  The most popular publications are listed below.  If your requirement is not listed, specify the name of the publication and the published year.', NULL, 1.0, NULL, 1762, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2299, 342, 2, 'ITU IV CD LIST OF COAST STATION, SOCIAL SERVICE STATION CD-ROM  Publications from various countries are available.  The most popular publications are listed below.  If your requirement is not listed, specify the name of the publication and the published year.', NULL, 1.0, NULL, 1763, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2300, 342, 3, 'ITU V CD LIST OF SHIP STATIONS, AND MARITIME MOBILE SERVICE CD  Publications from various countries are available.  The most popular publications are listed below.  If your requirement is not listed, specify the name of the publication and the published year.', NULL, 1.0, NULL, 1764, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
@@ -20106,15 +20106,15 @@ INSERT INTO quotation_item_requests (
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
   (2301, 343, 1, 'pneumatic piston pump CompIete with Drum Joint and pipe for Drum Can', '591661', 1.0, NULL, 512, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2302, 343, 2, 'air hose 3/8" (9,5mm  x 17mm)', '350102', 100.0, NULL, 1765, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2302, 343, 2, 'air hose 3/8" (9,5mm  x 17mm)', '350102', 100.0, NULL, 1765, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2303, 343, 3, 'wire spiral water hose 1-1/2 inch
-available per meter or roll', '350141', 100.0, NULL, 1766, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+available per meter or roll', '350141', 100.0, NULL, 1766, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2304, 343, 4, 'Cam and Groove CoupIings
-Type : pIug (MaIe CoupIer), with MaIe Thread, Nom. size : 1-1/2 Inch', '351785', 2.0, NULL, 1767, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Type : pIug (MaIe CoupIer), with MaIe Thread, Nom. size : 1-1/2 Inch', '351785', 2.0, NULL, 1767, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2305, 343, 5, 'Dust pIug
-Type : pIug (FemaIe CoupIer), with Hose End, Nom. size : 1-1/2 Inch, material: SS 316', '351984', 2.0, NULL, 1768, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Type : pIug (FemaIe CoupIer), with Hose End, Nom. size : 1-1/2 Inch, material: SS 316', '351984', 2.0, NULL, 1768, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2306, 343, 6, 'AODD PUMP 1-1/2" Air Operated Double Diaphragm Pump Polypropylene/PP Body
-Diafragma: FEP (F46)', '591613', 1.0, NULL, 1769, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Diafragma: FEP (F46)', '591613', 1.0, NULL, 1769, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2307, 344, 1, 'Seal Set Pompa TKW', NULL, 1.0, NULL, 1770, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2308, 344, 2, 'Seal 22x14x5,2', NULL, 1.0, NULL, 1771, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2309, 344, 3, 'Guide Ring 22x19x5,7', NULL, 2.0, NULL, 1772, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -20123,28 +20123,28 @@ Diafragma: FEP (F46)', '591613', 1.0, NULL, 1769, 'substituted', 'import', 'Back
   (2312, 344, 6, 'Seal 10x14x2,7', NULL, 4.0, NULL, 1775, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2313, 344, 7, 'Guide Ring 10x14x2,9', NULL, 4.0, NULL, 1776, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2314, 344, 8, 'Oring 12x1', NULL, 8.0, NULL, 1777, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2315, 344, 9, 'Oring 4,5x1,5', NULL, 4.0, NULL, 1778, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2315, 344, 9, 'Oring 4,5x1,5', NULL, 4.0, NULL, 1778, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2316, 345, 1, 'O RING JIS B2401 P-9', NULL, 50.0, NULL, 1779, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2317, 346, 1, 'Pressure Gauge 6Mpa Merk WIKA
 diameter 4"
-drat 1/2" SS', NULL, 4.0, NULL, 1780, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+drat 1/2" SS', NULL, 4.0, NULL, 1780, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2318, 347, 1, 'Delivery to Banjarmasin', NULL, 1.0, NULL, 1781, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2319, 348, 1, 'Wiping Rags
-Kain majun putih, jahit tumpuk', '232907', 300.0, NULL, 677, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Kain majun putih, jahit tumpuk', '232907', 300.0, NULL, 677, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2320, 348, 2, 'Sludge Bags
 Sludge Bag, Polypropylene with Inner, 600 x 1,000 mm', '232940', 200.0, NULL, 1782, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2321, 348, 3, 'Cotton Working Non Slip Dots Glove (1 lusin = 12 pasang)', '190103', 100.0, NULL, 1624, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2322, 348, 4, 'DETERGENT RINSO @1,8 KG X 100 PCS', '550111', 100.0, NULL, 1783, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2323, 348, 5, 'Permatex Fast orange Hand Cleaner 3,78L', '550285', 10.0, NULL, 1784, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2321, 348, 3, 'Cotton Working Non Slip Dots Glove (1 lusin = 12 pasang)', '190103', 100.0, NULL, 1624, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2322, 348, 4, 'DETERGENT RINSO @1,8 KG X 100 PCS', '550111', 100.0, NULL, 1783, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2323, 348, 5, 'Permatex Fast orange Hand Cleaner 3,78L', '550285', 10.0, NULL, 1784, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2324, 348, 6, 'Spring Clamp Mop Complete', '174275', 10.0, NULL, 1785, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2325, 348, 7, 'Spring Clamp Mop Head Only', '174277', 20.0, NULL, 1786, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2326, 348, 8, 'Single bucket wringer mop bucket 20Liter', '174280', 5.0, NULL, 1787, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2326, 348, 8, 'Single bucket wringer mop bucket 20Liter', '174280', 5.0, NULL, 1787, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2327, 348, 9, 'Sealing Agents Permatex Form-a-Gasket
 No.1, Size : 11 oz', '812611', 36.0, NULL, 1788, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2328, 348, 10, 'WD-40 333 ml, Type : Spray', '450702', 24.0, NULL, 666, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2328, 348, 10, 'WD-40 333 ml, Type : Spray', '450702', 24.0, NULL, 666, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2329, 349, 1, 'IC SLA 7024M
 OIL MIST DETECTOR ME', NULL, 4.0, NULL, 1789, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2330, 350, 1, 'No Offer', NULL, 3.0, NULL, 1599, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2330, 350, 1, 'No Offer', NULL, 3.0, NULL, 1599, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2331, 350, 2, 'DIODA 3 PHASE TYPE MDS 60-16 W', NULL, 3.0, NULL, 1598, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2332, 351, 1, 'AVR "AUTO VOLTAGE REGULATOR'''' TYPE (6GA2 491-1A)', NULL, 2.0, NULL, 1790, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2333, 352, 1, 'Delivery to Tarakan Kalimantan', NULL, 1.0, NULL, 1791, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -20172,7 +20172,7 @@ Lakban anti bocor
   (2345, 356, 7, 'Seal Piston 28 x 36 x 5', NULL, 5.0, NULL, 1803, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2346, 356, 8, 'Seal Piston 16 x 24 x 5', NULL, 5.0, NULL, 1804, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2347, 356, 9, '8pcs Pick and Hook Long n Short Reach Oil Seal&nsbp;
-(obeng cungkil seal)', NULL, 1.0, NULL, 1805, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+(obeng cungkil seal)', NULL, 1.0, NULL, 1805, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2348, 357, 1, 'O-Ring NOK CO 0029A', NULL, 82.0, NULL, 1806, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2349, 357, 2, 'Oil Seal Viton  NOK VR45A', NULL, 82.0, NULL, 1807, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2350, 357, 3, 'Oil Seal Viton  NOK VR32A', NULL, 82.0, NULL, 1808, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -20182,13 +20182,13 @@ Lakban anti bocor
 3 Phase (dengan box)', NULL, 1.0, NULL, 1810, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2354, 359, 1, 'Trafo Step down 440-220V, 10000 watt, 50/60Hz
 (dengan box)', NULL, 1.0, NULL, 1811, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2355, 360, 1, 'Terpal plastik tebal, ukuran 5x10m', NULL, 35.0, NULL, 1812, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2355, 360, 1, 'Terpal plastik tebal, ukuran 5x10m', NULL, 35.0, NULL, 1812, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2356, 360, 2, 'Corrugated cardboard 1x1m, ketebalan +- 2mm (mesti bersih dan baru) 7000m2', NULL, 7000.0, NULL, 1813, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2357, 361, 1, 'Terpal plastik tebal, ukuran 5x10m', NULL, 35.0, NULL, 1812, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2357, 361, 1, 'Terpal plastik tebal, ukuran 5x10m', NULL, 35.0, NULL, 1812, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2358, 361, 2, 'Corrugated cardboard 1x1m, ketebalan +- 2mm (mesti bersih dan baru) 7000m2', NULL, 7000.0, NULL, 1813, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2359, 361, 3, 'Tapes Hatch Cover
 HATCH COVER TAPE
-150X20MTR - IMPA 232453', NULL, 50.0, NULL, 1814, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+150X20MTR - IMPA 232453', NULL, 50.0, NULL, 1814, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2360, 362, 1, 'Aluminum Foil Tape Water Proof 
 Lakban anti bocor
 100mm x 10 meter', NULL, 30.0, NULL, 1794, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -20204,20 +20204,20 @@ Lakban anti bocor
 3 Phase (dengan box)', NULL, 1.0, NULL, 1810, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2366, 364, 2, 'ISOLASI HITAM UNTUK LISTRIK 
 Nitto hitam', NULL, 10.0, NULL, 1815, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2367, 365, 1, 'Oil Seal TC 28 42 8', NULL, 4.0, NULL, 1816, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2367, 365, 1, 'Oil Seal TC 28 42 8', NULL, 4.0, NULL, 1816, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2368, 365, 2, 'Oil Seal Hallite DHS 28', NULL, 10.0, NULL, 1817, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2369, 365, 3, 'Oil Seal Hallite UHS 28', NULL, 10.0, NULL, 1818, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2370, 365, 4, 'Oil Seal Hallite DHS 28', NULL, 10.0, NULL, 1817, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2371, 365, 5, 'Oil Seal Hallite UHS 28', NULL, 10.0, NULL, 1818, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2372, 365, 6, 'Oil Seal UHS 50', NULL, 6.0, NULL, 1819, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2373, 365, 7, 'Oil Seal NOK CU2692-KO USH 14 22 5 (A)', NULL, 10.0, NULL, 1820, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2374, 366, 1, 'HANDY TALKIE ICOM ICOM IC-V80', NULL, 2.0, NULL, 1821, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2374, 366, 1, 'HANDY TALKIE ICOM ICOM IC-V80', NULL, 2.0, NULL, 1821, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2375, 367, 1, 'STEP DOWN
 STEP DOWN 440-380 VOLT
-50HZ/60HZ, 5KVA - With box', NULL, 3.0, NULL, 1822, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+50HZ/60HZ, 5KVA - With box', NULL, 3.0, NULL, 1822, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2376, 367, 2, 'Floodlight 200W - Putih
 100-240V, 50/60Hz
-IP 65', NULL, 6.0, NULL, 1823, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IP 65', NULL, 6.0, NULL, 1823, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2377, 368, 1, 'MUR BAUT
 MUR BAUT M16 X 100 mm', NULL, 100.0, NULL, 1824, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2378, 368, 2, 'MUR BAUT
@@ -20290,50 +20290,50 @@ SIZE 200 MM X 5 M', NULL, 20.0, NULL, 1851, 'matched', 'import', 'Backfilled fro
   (2409, 377, 1, 'Oil Separator 
 EMERSON A-WZ 55855
 5/8" ODF SOLDER', NULL, 1.0, NULL, 1856, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2410, 378, 1, 'Kyoritsu 3005A Digital Insulation Continuity Tester Megger', NULL, 1.0, NULL, 1857, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2411, 378, 2, 'Clamp Meter Kyoritsu KEW2117R, AC/DC, max 1000A', NULL, 1.0, NULL, 1858, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2412, 378, 3, 'Multimeter Digital, AC/DC 1000V - CD 800A Sanwa', NULL, 1.0, NULL, 1859, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2413, 378, 4, 'Crimping Tools LX 03B 0,5-6mm', NULL, 1.0, NULL, 1860, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2414, 378, 5, 'Digital Thermo gun Benetech GM550 Infrared, -50~550°C', NULL, 1.0, NULL, 1861, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2415, 378, 6, 'Digital Tachometer non contact SANWA SE300, max 9999,9 RPM', NULL, 1.0, NULL, 1862, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2410, 378, 1, 'Kyoritsu 3005A Digital Insulation Continuity Tester Megger', NULL, 1.0, NULL, 1857, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2411, 378, 2, 'Clamp Meter Kyoritsu KEW2117R, AC/DC, max 1000A', NULL, 1.0, NULL, 1858, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2412, 378, 3, 'Multimeter Digital, AC/DC 1000V - CD 800A Sanwa', NULL, 1.0, NULL, 1859, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2413, 378, 4, 'Crimping Tools LX 03B 0,5-6mm', NULL, 1.0, NULL, 1860, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2414, 378, 5, 'Digital Thermo gun Benetech GM550 Infrared, -50~550°C', NULL, 1.0, NULL, 1861, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2415, 378, 6, 'Digital Tachometer non contact SANWA SE300, max 9999,9 RPM', NULL, 1.0, NULL, 1862, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2416, 378, 7, 'Fan Heater 100-200° C 1000 Watt 220 Vac', NULL, 1.0, NULL, 1863, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2417, 379, 1, 'Tuff Jet Red Insulating Varnish 400ml', NULL, 2.0, NULL, 1864, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2418, 379, 2, 'Grease LGHP 2/1 SFF, High temperature', NULL, 1.0, NULL, 1865, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2419, 379, 3, 'Skun kabel SC 70-6, kabel 70mm, baut ring 6mm', NULL, 50.0, NULL, 1866, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2417, 379, 1, 'Tuff Jet Red Insulating Varnish 400ml', NULL, 2.0, NULL, 1864, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2418, 379, 2, 'Grease LGHP 2/1 SFF, High temperature', NULL, 1.0, NULL, 1865, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2419, 379, 3, 'Skun kabel SC 70-6, kabel 70mm, baut ring 6mm', NULL, 50.0, NULL, 1866, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2420, 379, 4, 'Kabel ties nylon 20cm', NULL, 1.0, NULL, 1867, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2421, 379, 5, 'Contact Cleaner Rexco 18, 500ml', NULL, 2.0, NULL, 1868, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2421, 379, 5, 'Contact Cleaner Rexco 18, 500ml', NULL, 2.0, NULL, 1868, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2422, 380, 1, 'Air Cooler Cleaner, Merk UNITOR, ACC Plus
-25 liter', NULL, 1.0, NULL, 1869, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+25 liter', NULL, 1.0, NULL, 1869, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2423, 381, 1, 'Schneider Limit Switch 2 Pole N/C +N/O
 Snap Action XCKJ H29
 Ui 500V Uimp 6KV, AC-15 240V 3A', NULL, 1.0, NULL, 1870, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2424, 382, 1, 'Tachometer VDO RPM Meter 3000 RPM, 10-32V, 12/24V. OD 85mm
-With hour meter, sensor MPU', NULL, 2.0, NULL, 1871, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2425, 382, 2, 'Volt Meter Indicator (analog) 0-500V, Size 96x96mm', NULL, 1.0, NULL, 1872, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2426, 382, 3, 'Ampere Meter Indicator (analog) 0-100A, 100/5A, 96x96 mm', NULL, 1.0, NULL, 1873, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2427, 382, 4, 'Frequency Meter Indicator (analog) 0-55 Hz 220VAC 96x96 mm', NULL, 1.0, NULL, 1874, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2428, 382, 5, 'KWH Meter Indicator (analog) 0-60 kW 96x96 mm', NULL, 1.0, NULL, 1875, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2429, 382, 6, 'Fluorescent Pendant Light Type JCY23-2E 220V/50-60Hz, IP56, Power 2x20W', NULL, 5.0, NULL, 1876, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+With hour meter, sensor MPU', NULL, 2.0, NULL, 1871, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2425, 382, 2, 'Volt Meter Indicator (analog) 0-500V, Size 96x96mm', NULL, 1.0, NULL, 1872, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2426, 382, 3, 'Ampere Meter Indicator (analog) 0-100A, 100/5A, 96x96 mm', NULL, 1.0, NULL, 1873, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2427, 382, 4, 'Frequency Meter Indicator (analog) 0-55 Hz 220VAC 96x96 mm', NULL, 1.0, NULL, 1874, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2428, 382, 5, 'KWH Meter Indicator (analog) 0-60 kW 96x96 mm', NULL, 1.0, NULL, 1875, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2429, 382, 6, 'Fluorescent Pendant Light Type JCY23-2E 220V/50-60Hz, IP56, Power 2x20W', NULL, 5.0, NULL, 1876, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2430, 382, 7, 'Wall Light Type WB-1 
-24VDC, 15W, FB15, IP56, IMPA 792067', NULL, 2.0, NULL, 1877, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+24VDC, 15W, FB15, IP56, IMPA 792067', NULL, 2.0, NULL, 1877, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2431, 382, 8, 'Schneider 
 Emergency Stop Push Button XB2-BS542C, 1NC
-contact block included', NULL, 1.0, NULL, 1878, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2432, 382, 9, 'Fluorescent Pendant Light Type JCY23-2 220V/50-60Hz, IP56, Power 2x20W', NULL, 3.0, NULL, 1879, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+contact block included', NULL, 1.0, NULL, 1878, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2432, 382, 9, 'Fluorescent Pendant Light Type JCY23-2 220V/50-60Hz, IP56, Power 2x20W', NULL, 3.0, NULL, 1879, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2433, 382, 10, 'Marine Pendant Light Type DS7-2M 
-220VAC, 60W, FE26, IP56, IMPA 792057', NULL, 1.0, NULL, 1880, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+220VAC, 60W, FE26, IP56, IMPA 792057', NULL, 1.0, NULL, 1880, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2434, 382, 11, 'Socket Visalux 13A, 250VAC, 1G 
-Visalux VSE3113A (3 holes)', NULL, 1.0, NULL, 1881, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Visalux VSE3113A (3 holes)', NULL, 1.0, NULL, 1881, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2435, 382, 12, 'Kabel NYAF 1x70mm Panjang 10 Meter (Battery/ACU)', NULL, 10.0, NULL, 1882, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2436, 382, 13, 'Skun Kabel 70x13 mm', NULL, 20.0, NULL, 1883, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2437, 382, 14, 'Kabel NYAF 1x1,5 mm² 30 Meter (Joystick to Hyd Pump Panel)', NULL, 30.0, NULL, 1884, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2438, 382, 15, 'Hand Mic Radio SSB Icom M710 Spec Hand Mic HM-180', NULL, 1.0, NULL, 1885, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2439, 382, 16, 'Tuff Jet Red Insulating Varnish 400ml', NULL, 2.0, NULL, 1864, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2440, 382, 17, 'Grease LGHP 2/1 SFF, High temperature', NULL, 1.0, NULL, 1865, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2441, 382, 18, 'Skun kabel SC 70-6, kabel 70mm, baut ring 6mm', NULL, 50.0, NULL, 1866, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2439, 382, 16, 'Tuff Jet Red Insulating Varnish 400ml', NULL, 2.0, NULL, 1864, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2440, 382, 17, 'Grease LGHP 2/1 SFF, High temperature', NULL, 1.0, NULL, 1865, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2441, 382, 18, 'Skun kabel SC 70-6, kabel 70mm, baut ring 6mm', NULL, 50.0, NULL, 1866, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2442, 382, 19, 'Kabel ties nylon 20cm', NULL, 1.0, NULL, 1867, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2443, 382, 20, 'Contact Cleaner Rexco 18, 500ml', NULL, 2.0, NULL, 1868, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2444, 382, 21, 'Air Cooler Cleaner, Merk UPS, 20 liter', NULL, 1.0, NULL, 1869, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2443, 382, 20, 'Contact Cleaner Rexco 18, 500ml', NULL, 2.0, NULL, 1868, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2444, 382, 21, 'Air Cooler Cleaner, Merk UPS, 20 liter', NULL, 1.0, NULL, 1869, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2445, 383, 1, 'Bahan B Flute, Singgle Wall (Tebal 2,5 mm)', NULL, 7000.0, NULL, 1886, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2446, 384, 1, 'Heaving Lines 3-strand
 HEAVING LINE POLYPROPYLENE, 1"CIRX200MTR
@@ -20410,7 +20410,7 @@ Size 55x120x29mm', '770842', 4.0, NULL, 1924, 'matched', 'import', 'Backfilled f
   (2498, 391, 40, 'BALL BEARING SINGLE ROW, DEEP GROOVE NO.6311ZZ C3
 Bearing SKF 6311 ZZ C3 / 6311 2Z C3', '770762', 6.0, NULL, 1925, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2499, 391, 41, 'Cable welding Superflex 95SQMM', '794104', 100.0, NULL, 1926, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2500, 391, 42, 'isi 100 pcs', '794705', 25.0, NULL, 1927, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+  (2500, 391, 42, 'isi 100 pcs', '794705', 25.0, NULL, 1927, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
@@ -20432,16 +20432,16 @@ SIze: 3/4" x 30 ft x 0,030" (19,1mm x 9,1m x 0,762mm)', '795436', 20.0, NULL, 82
   (2509, 391, 51, 'SHEET PACKING NON-ASBESTOS, 2.0X1500X1500MM', '811295', 3.0, NULL, 1934, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2510, 391, 52, 'TAPE SEAL TEFLON (PTFE), 1/2" X 10MTR  
 Merk Safeguard USA
-Merk Wokin', '812503', 25.0, NULL, 1935, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk Wokin', '812503', 25.0, NULL, 1935, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2511, 391, 53, 'ADHESIVE CONTACT WEICON, GMK 2410 300GRM', '815237', 6.0, NULL, 1936, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2512, 391, 54, 'O-RING KIT 17SIZES/222PCS, IN ACRYL CASE  SPECIALLY DESIGNED FOR MARINE USE, CONTAINING 17 SIZES/222 PIECES.  PACKED IN A TRANSPARENT STURDY- HINGED ACRYLIC CASE.  DETAILS OF THE SIZES ARE AS FOLLOWS.', '813072', 2.0, NULL, 684, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2513, 392, 1, 'TAPE SEAL TEFLON (PTFE), 1/2" X 10MTR  
 Merk Safeguard USA
-Merk Wokin', '812503', 50.0, NULL, 1935, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2514, 392, 2, 'fan belt a72', '814156', 10.0, NULL, 1937, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk Wokin', '812503', 50.0, NULL, 1935, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2514, 392, 2, 'fan belt a72', '814156', 10.0, NULL, 1937, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2515, 392, 3, 'Cable welding Superflex 95SQMM', '794104', 100.0, NULL, 1926, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2516, 392, 4, 'SHEET PACKING NON-ASBESTOS, 2.0X1500X1500MM', '811295', 3.0, NULL, 1934, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2517, 392, 5, 'fan belt m39', '814025', 12.0, NULL, 1938, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2517, 392, 5, 'fan belt m39', '814025', 12.0, NULL, 1938, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2518, 392, 6, 'No Offer', '850102', 10.0, NULL, 1900, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2519, 392, 7, 'WD-40 333 ml, Type : Spray', '450702', 24.0, NULL, 666, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2520, 392, 8, 'STEEL FLAT HOT-ROLLED 
@@ -20449,9 +20449,9 @@ Besi Strip 9mmX75mmx6meter', '670428', 15.0, NULL, 1939, 'matched', 'import', 'B
   (2521, 392, 9, 'STEEL EQUAL ANGLE HOT-ROLLED
 Besi Siku 75mmX75mmX6mm, panjang 6 meter', '670611', 10.0, NULL, 1940, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2522, 392, 10, 'AIR FILTER 10X1600MM', '813101', 40.0, NULL, 1941, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2523, 392, 11, 'sharp R-753GX(BS)', '175098', 2.0, NULL, 1942, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2523, 392, 11, 'sharp R-753GX(BS)', '175098', 2.0, NULL, 1942, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2524, 392, 12, 'Cotton Working Non Slip Dots Glove (1 lusin = 12 pasang)', '190101', 15.0, NULL, 900, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2525, 392, 13, 'offer M10x90', '691190', 100.0, NULL, 1943, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2525, 392, 13, 'offer M10x90', '691190', 100.0, NULL, 1943, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2526, 392, 14, 'Wiping Rags
 Kain majun jahit tumpuk, Putih', '232907', 200.0, NULL, 677, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2527, 392, 15, 'Laundry soap - Rinso 1,5kg', '550103', 30.0, NULL, 1302, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -20494,9 +20494,9 @@ BOSCH GSB600', '591013', 1.0, NULL, 663, 'matched', 'import', 'Backfilled from h
 6 hours operation', '792246', 6.0, NULL, 1969, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2558, 394, 10, 'Battery AA', '792403', 50.0, NULL, 1970, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2559, 394, 11, 'Battery AAA', '792410', 50.0, NULL, 1451, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2560, 394, 12, 'Gloves working cotton woven, non slip dots', '190103', 500.0, NULL, 1624, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2561, 394, 13, 'Tali tambang catton 10mm x 200 meter', '211283', 200.0, NULL, 1629, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2562, 394, 14, 'Spare mini roller sized, 100mm width small', '510462', 100.0, NULL, 1301, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2560, 394, 12, 'Gloves working cotton woven, non slip dots', '190103', 500.0, NULL, 1624, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2561, 394, 13, 'Tali tambang catton 10mm x 200 meter', '211283', 200.0, NULL, 1629, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2562, 394, 14, 'Spare mini roller sized, 100mm width small', '510462', 100.0, NULL, 1301, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2563, 394, 15, 'BURLAP NO. 6, 12oz, 115CM WIDTH
 per Roll 100 meter (price per meter)', '232987', 500.0, NULL, 1971, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2564, 395, 1, 'Master Night Order Book', '370881', 2.0, NULL, 1972, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -20515,17 +20515,17 @@ Map bening A4 isi 1 lusin', '470375', 5.0, NULL, 1980, 'matched', 'import', 'Bac
   (2575, 395, 13, 'TAPE CLOTH SEALING COLORED 2 inch (48 MM) X 12 yard ( 11 mtr)', '471293', 10.0, NULL, 1983, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2576, 396, 1, 'BALL BEARING SINGLE ROW, ANGULAR CONTACT NO.7311
 Bearing SFK 7311 BEP
-Size 55x120x29mm', '770842', 4.0, NULL, 1924, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Size 55x120x29mm', '770842', 4.0, NULL, 1924, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2577, 396, 2, 'BALL BEARING SINGLE ROW, DEEP GROOVE NO.6311 C3
-SKF 6311 C3', '770712', 2.0, NULL, 1984, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2578, 397, 1, 'Epson 3210 dan tinta printer compatible 1 set', '472742', 2.0, NULL, 1985, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2579, 397, 2, 'COPY PAPER PLAIN A-4 500SHT  USED FOR PLAIN PAPER COPIERS. 75gms (per rim)', '472186', 5.0, NULL, 1986, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2580, 398, 1, 'Kyoritsu 3005A Digital Insulation Continuity Tester Megger', NULL, 1.0, NULL, 1857, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2581, 398, 2, 'Clamp Meter Kyoritsu KEW2117R, AC/DC, max 1000A', NULL, 1.0, NULL, 1858, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2582, 398, 3, 'Multimeter Digital, AC/DC 1000V - CD 800A Sanwa', NULL, 1.0, NULL, 1859, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2583, 398, 4, 'Crimping Tools LX 03B 0,5-6mm', NULL, 1.0, NULL, 1860, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2584, 398, 5, 'Digital Thermo gun Benetech GM550 Infrared, -50~550°C', NULL, 1.0, NULL, 1861, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2585, 398, 6, 'Digital Tachometer non contact SANWA SE300, max 99999 RPM', NULL, 1.0, NULL, 1862, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SKF 6311 C3', '770712', 2.0, NULL, 1984, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2578, 397, 1, 'Epson 3210 dan tinta printer compatible 1 set', '472742', 2.0, NULL, 1985, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2579, 397, 2, 'COPY PAPER PLAIN A-4 500SHT  USED FOR PLAIN PAPER COPIERS. 75gms (per rim)', '472186', 5.0, NULL, 1986, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2580, 398, 1, 'Kyoritsu 3005A Digital Insulation Continuity Tester Megger', NULL, 1.0, NULL, 1857, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2581, 398, 2, 'Clamp Meter Kyoritsu KEW2117R, AC/DC, max 1000A', NULL, 1.0, NULL, 1858, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2582, 398, 3, 'Multimeter Digital, AC/DC 1000V - CD 800A Sanwa', NULL, 1.0, NULL, 1859, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2583, 398, 4, 'Crimping Tools LX 03B 0,5-6mm', NULL, 1.0, NULL, 1860, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2584, 398, 5, 'Digital Thermo gun Benetech GM550 Infrared, -50~550°C', NULL, 1.0, NULL, 1861, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2585, 398, 6, 'Digital Tachometer non contact SANWA SE300, max 99999 RPM', NULL, 1.0, NULL, 1862, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2586, 398, 7, 'Fan Heater 100-200° C 1000 Watt 220 Vac', NULL, 1.0, NULL, 1863, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2587, 399, 1, 'Paralel Ruller Chart 600mm', NULL, 1.0, NULL, 1987, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2588, 399, 2, 'Mistar Plastik ukuran 1 meter', NULL, 1.0, NULL, 1988, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -20571,11 +20571,11 @@ Part no. 2866763', NULL, 5.0, NULL, 2010, 'matched', 'import', 'Backfilled from 
 1 Phase (dengan box)', NULL, 1.0, NULL, 2012, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2618, 403, 1, 'AVR "AUTO VOLTAGE REGULATOR'''' TYPE (6GA2 491-1A)', NULL, 1.0, NULL, 1790, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2619, 404, 1, 'Bearing
-NTN SL 04-5008NR', NULL, 2.0, NULL, 2013, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2620, 405, 1, 'Regulator LPG Viktor model G350', NULL, 2.0, NULL, 1007, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2621, 405, 2, 'NOZZLE TIP LPG N0. 2, merk Samato', NULL, 10.0, NULL, 2014, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+NTN SL 04-5008NR', NULL, 2.0, NULL, 2013, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2620, 405, 1, 'Regulator LPG Viktor model G350', NULL, 2.0, NULL, 1007, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2621, 405, 2, 'NOZZLE TIP LPG N0. 2, merk Samato', NULL, 10.0, NULL, 2014, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2622, 405, 3, 'Flash Back Arrestor Viktor (FB-1/FBR-1)
-1 set = 1 for oxygen, 1 for Acetylene/LPG - not sold separately', NULL, 1.0, NULL, 2015, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 set = 1 for oxygen, 1 for Acetylene/LPG - not sold separately', NULL, 1.0, NULL, 2015, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2623, 406, 1, 'Medical Oxygen 2L, 200 Bar', NULL, 1.0, NULL, 2016, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2624, 407, 1, 'BEARING SKF NU2305 ECJ
 FOR VERTICAL SHAFT FO PURIPIER', NULL, 3.0, NULL, 2017, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -20639,17 +20639,17 @@ COMP HERMATIC AC CENTRAL', NULL, 2.0, NULL, 2030, 'matched', 'import', 'Backfill
 JT125B-NFYE,400-440V
 60HZ,MFGNO:4630118
 COMPRESSOR HERMATIC FOR PROVISION REFRIGRANT', NULL, 2.0, NULL, 2031, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2642, 415, 1, 'Bearing TIMKEN Set JLM 104948/JLM 104910', NULL, 4.0, NULL, 2032, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2642, 415, 1, 'Bearing TIMKEN Set JLM 104948/JLM 104910', NULL, 4.0, NULL, 2032, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2643, 416, 1, 'Sailing Verlop Inner 1x3/4"', NULL, 2.0, NULL, 2033, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2644, 417, 1, 'Transport to Meulaboh
 ''- Jakarta - Medan by Airfreight
 ''- Medan - Meulaboh by truck', NULL, 300.0, NULL, 2034, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2645, 418, 1, 'Foil Wrapping - Plastic Cling Wrap Food Grade
-WRAPPING FOIL CELLOPHANE, 300MMX50MTR', '174207', 10.0, NULL, 2035, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+WRAPPING FOIL CELLOPHANE, 300MMX50MTR', '174207', 10.0, NULL, 2035, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2646, 418, 2, 'Heaving Lines 3-strand
 HEAVING LINE POLYPROPYLENE, 1"CIRX200MTR', '211271', 2.0, NULL, 530, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2647, 418, 3, 'Terpal Plastik, Thick 0,37mm
-Size 1850mmx10m', '232257', 3.0, NULL, 2036, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Size 1850mmx10m', '232257', 3.0, NULL, 2036, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2648, 419, 1, 'Lamps Navigation
 LAMP NAVIGATION E-26, 220V 60W
 Navigation Lamp
@@ -20659,84 +20659,84 @@ Ulir / E27', '790406', 40.0, NULL, 2037, 'matched', 'import', 'Backfilled from h
 FLOODLIGHT FIXTURE, LED200W 100-240V
 Cool White
 IMPA 791828
-input voltage 220VAC 60 Hz', '791829', 20.0, NULL, 2038, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+input voltage 220VAC 60 Hz', '791829', 20.0, NULL, 2038, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2650, 420, 1, 'Battery Rechargeable McMurdo R2 GMDSS, 
 NC08/84-211', NULL, 2.0, NULL, 2039, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2651, 421, 1, 'Sump Pumps Electric
 Voltage: 440V, Freq: 60 Hz, Output: 3 KW, Phase: 3
-Disch/Port: 50 mm(2"), Head: 35 mtr', '591630', 2.0, NULL, 2040, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Disch/Port: 50 mm(2"), Head: 35 mtr', '591630', 2.0, NULL, 2040, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2652, 422, 1, 'Silver Cooper Slipring', NULL, 1.0, NULL, 2041, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2653, 422, 2, 'Steel clamp bands', NULL, 2.0, NULL, 2042, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2654, 422, 3, 'Silver Graphite brush', NULL, 3.0, NULL, 2043, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2655, 422, 4, 'Sigle Brush Holder', NULL, 2.0, NULL, 2044, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2656, 422, 5, 'Double Brush Holder', NULL, 2.0, NULL, 2045, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2657, 423, 1, 'Globe Valves Cast Iron Flange PN16
-Size 2" DN50', '755406', 1.0, NULL, 2046, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Size 2" DN50', '755406', 1.0, NULL, 2046, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2658, 424, 1, 'Globe Valves Cast Iron Flange PN16
-Size 2" DN50', '755406', 2.0, NULL, 2046, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Size 2" DN50', '755406', 2.0, NULL, 2046, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2659, 425, 1, 'Alkaline Batteries - AA
-BATTERY ALKALINE LR6(AM-3), 1.5V', '792423', 24.0, NULL, 2047, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+BATTERY ALKALINE LR6(AM-3), 1.5V', '792423', 24.0, NULL, 2047, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2660, 425, 2, 'Rechargeable Batteries
-BATTERY RECHARGEABLE R6, 1.2V 1000MAH', '792456', 32.0, NULL, 2048, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+BATTERY RECHARGEABLE R6, 1.2V 1000MAH', '792456', 32.0, NULL, 2048, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2661, 425, 3, 'Battery Chargers for Rechargeable Battery
 BATTERY CHARGER 220V - 4 slot
-CHARGER FOR BATTERY SIZE AA, output 1,2V', '792472', 4.0, NULL, 2049, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+CHARGER FOR BATTERY SIZE AA, output 1,2V', '792472', 4.0, NULL, 2049, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2662, 425, 4, 'Alkaline Batteries - AAA
-BATTERY ALKALINE LR03(AM-4), 1.5V', '792424', 48.0, NULL, 2050, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+BATTERY ALKALINE LR03(AM-4), 1.5V', '792424', 48.0, NULL, 2050, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2663, 426, 1, 'Survival Manuals
-SURVIVAL AT SEA INSTRUCTION MANUAL (SOLAS)', '330256', 2.0, NULL, 2051, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SURVIVAL AT SEA INSTRUCTION MANUAL (SOLAS)', '330256', 2.0, NULL, 2051, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2664, 426, 2, 'Lifeboat Buckets
-LIFEBOAT BUCKET - Hitam 12 liter', '330209', 2.0, NULL, 2052, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2665, 426, 3, 'Knifezer Pocket knife EDC Multi function', '330251', 1.0, NULL, 2053, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+LIFEBOAT BUCKET - Hitam 12 liter', '330209', 2.0, NULL, 2052, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2665, 426, 3, 'Knifezer Pocket knife EDC Multi function', '330251', 1.0, NULL, 2053, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2666, 426, 4, 'First Aid Kits
 LIFEBOAT FIRST AID KIT', '330246', 2.0, NULL, 2054, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2667, 426, 5, 'Cargo Hooks with Swivel Hook
-CARGO HOOK WITH SWIVEL, SWL 1TON', '231201', 2.0, NULL, 2055, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2668, 427, 1, '1 Strip 4 tablet', NULL, 40.0, NULL, 2056, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+CARGO HOOK WITH SWIVEL, SWL 1TON', '231201', 2.0, NULL, 2055, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2668, 427, 1, '1 Strip 4 tablet', NULL, 40.0, NULL, 2056, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2669, 427, 2, 'Aciclovir Tablet
 400 mg, 35s', NULL, 2.0, NULL, 2057, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2670, 427, 3, 'Co-Ammoxiclav 625 mg', NULL, 2.0, NULL, 2058, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2671, 427, 4, 'No Offer', NULL, 3.0, NULL, 2059, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2670, 427, 3, 'Co-Ammoxiclav 625 mg', NULL, 2.0, NULL, 2058, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2671, 427, 4, 'No Offer', NULL, 3.0, NULL, 2059, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2672, 427, 5, 'ATROPINE SULFATE INJECTIONS
 1.2 mg/ml Ampoule', NULL, 7.0, NULL, 2060, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2673, 427, 6, 'Ciprofloxazine Tablet
 250 mg,10s', NULL, 2.0, NULL, 2061, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2674, 427, 7, 'Dexamethasone Injection
 4 mg,1s', NULL, 3.0, NULL, 2062, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2675, 427, 8, 'no offer', NULL, 1.0, NULL, 2063, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2675, 427, 8, 'no offer', NULL, 1.0, NULL, 2063, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2676, 427, 9, 'Ibuprofen Tablet
 400 mg, 20s', NULL, 3.0, NULL, 2064, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2677, 427, 10, 'No Offer. Prescription required', NULL, 3.0, NULL, 2065, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2678, 427, 11, 'no offer', NULL, 25.0, NULL, 2066, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2679, 427, 12, 'Siclidon Doxycycline 100 mg', NULL, 1.0, NULL, 2067, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2680, 427, 13, 'Fluorescein Sodium Ophthamic Strips', NULL, 1.0, NULL, 2068, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2681, 427, 14, 'no offer', NULL, 1.0, NULL, 2069, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2677, 427, 10, 'No Offer. Prescription required', NULL, 3.0, NULL, 2065, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2678, 427, 11, 'no offer', NULL, 25.0, NULL, 2066, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2679, 427, 12, 'Siclidon Doxycycline 100 mg', NULL, 1.0, NULL, 2067, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2680, 427, 13, 'Fluorescein Sodium Ophthamic Strips', NULL, 1.0, NULL, 2068, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2681, 427, 14, 'no offer', NULL, 1.0, NULL, 2069, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2682, 427, 15, 'HALOPERIDOL 5mg/m', NULL, 5.0, NULL, 2070, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2683, 427, 16, 'Vermoran Mebendazole 500mg 1 box isi 12 pcs', NULL, 1.0, NULL, 2071, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2683, 427, 16, 'Vermoran Mebendazole 500mg 1 box isi 12 pcs', NULL, 1.0, NULL, 2071, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2684, 427, 17, 'Metronidazol Tablet
 500mg, 10s', NULL, 3.0, NULL, 2072, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2685, 427, 18, 'No Offer. Prescrition required', NULL, 2.0, NULL, 2073, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2686, 427, 19, 'No Offee Prescription required', NULL, 1.0, NULL, 2074, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2687, 427, 20, 'No Offer. Prescription required', NULL, 7.0, NULL, 2075, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2688, 427, 21, 'No offer Prescription required', NULL, 1.0, NULL, 2076, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2689, 427, 22, 'No offer. Prescription required', NULL, 3.0, NULL, 2077, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2690, 427, 23, 'No offer. Prescription required', NULL, 1.0, NULL, 2078, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2691, 427, 24, 'No offer. Prescription required', NULL, 1.0, NULL, 2079, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2692, 427, 25, 'sodium chloride 500 ml', NULL, 5.0, NULL, 2080, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2693, 427, 26, 'No offer. Prescription required', NULL, 1.0, NULL, 2081, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2694, 427, 27, 'Water for Injection 25 ml', NULL, 1.0, NULL, 2082, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2695, 427, 28, 'No offer. Prescription required', NULL, 40.0, NULL, 2083, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2685, 427, 18, 'No Offer. Prescrition required', NULL, 2.0, NULL, 2073, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2686, 427, 19, 'No Offee Prescription required', NULL, 1.0, NULL, 2074, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2687, 427, 20, 'No Offer. Prescription required', NULL, 7.0, NULL, 2075, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2688, 427, 21, 'No offer Prescription required', NULL, 1.0, NULL, 2076, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2689, 427, 22, 'No offer. Prescription required', NULL, 3.0, NULL, 2077, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2690, 427, 23, 'No offer. Prescription required', NULL, 1.0, NULL, 2078, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2691, 427, 24, 'No offer. Prescription required', NULL, 1.0, NULL, 2079, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2692, 427, 25, 'sodium chloride 500 ml', NULL, 5.0, NULL, 2080, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2693, 427, 26, 'No offer. Prescription required', NULL, 1.0, NULL, 2081, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2694, 427, 27, 'Water for Injection 25 ml', NULL, 1.0, NULL, 2082, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2695, 427, 28, 'No offer. Prescription required', NULL, 40.0, NULL, 2083, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2696, 428, 1, 'Smoke detector 
-System Sensor Model-882 with base B801', NULL, 4.0, NULL, 2084, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+System Sensor Model-882 with base B801', NULL, 4.0, NULL, 2084, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2697, 428, 2, 'Heat detector
-System Sensor Model-885 with base B801', NULL, 4.0, NULL, 2085, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+System Sensor Model-885 with base B801', NULL, 4.0, NULL, 2085, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2698, 429, 1, 'IDEC Pilot Lamp APN116 Japan
 100/110 v x 50 60 hz x
 lamp 6.3V 1W
-Available: Red, Gree, White, Orange', NULL, 20.0, NULL, 2086, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Available: Red, Gree, White, Orange', NULL, 20.0, NULL, 2086, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2699, 429, 2, 'Push button - 600V x 10A
 Maker: Fuji electric AHX 290', NULL, 10.0, NULL, 2087, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2700, 430, 1, 'Regulator Oxygen for Unitor type impa 850191', '850191', 2.0, NULL, 675, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+  (2700, 430, 1, 'Regulator Oxygen for Unitor type impa 850191', '850191', 2.0, NULL, 675, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
@@ -20745,21 +20745,21 @@ INSERT INTO quotation_item_requests (
   (2701, 430, 2, 'Pipes Carbon Steel High Pressure Service STS
 PIPE CARBONSTEEL HIGH-PRESSURE, STS SCH-80
 3/4"(20A)X5.5MTR', '710430', 40.0, NULL, 2088, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2702, 430, 3, 'flange jis 10k nd 6 inch carbon steel', '734632', 10.0, NULL, 2089, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2703, 430, 4, 'u bolt 1" besi m10', '696732', 20.0, NULL, 2090, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2704, 430, 5, 'Kabel las 100 M 35 MM', '794102', 1.0, NULL, 2091, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2705, 430, 6, 'sarung tangan 16 inch', '851163', 12.0, NULL, 669, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2706, 430, 7, 'nippon resibon supercut iron free rsc 305x2.5', '614876', 20.0, NULL, 696, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2707, 430, 8, 'Slip-on welding square pipe flange 21 mpa 20A 3/4', '734802', 20.0, NULL, 2092, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2708, 430, 9, 'Slip-on welding square pipe flange 21 mpa 20A 3/4', '734812', 20.0, NULL, 2093, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2709, 430, 10, 'mesin las arc 400a 440v 50-60hz bx1-400', '851051', 1.0, NULL, 2094, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2702, 430, 3, 'flange jis 10k nd 6 inch carbon steel', '734632', 10.0, NULL, 2089, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2703, 430, 4, 'u bolt 1" besi m10', '696732', 20.0, NULL, 2090, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2704, 430, 5, 'Kabel las 100 M 35 MM', '794102', 1.0, NULL, 2091, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2705, 430, 6, 'sarung tangan 16 inch', '851163', 12.0, NULL, 669, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2706, 430, 7, 'nippon resibon supercut iron free rsc 305x2.5', '614876', 20.0, NULL, 696, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2707, 430, 8, 'Slip-on welding square pipe flange 21 mpa 20A 3/4', '734802', 20.0, NULL, 2092, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2708, 430, 9, 'Slip-on welding square pipe flange 21 mpa 20A 3/4', '734812', 20.0, NULL, 2093, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2709, 430, 10, 'mesin las arc 400a 440v 50-60hz bx1-400', '851051', 1.0, NULL, 2094, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2710, 431, 1, 'Sockets Stainless Steel Threaded
-SOCKET STAINLESS STEEL, 1/2" BSPT', '732569', 12.0, NULL, 1717, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SOCKET STAINLESS STEEL, 1/2" BSPT', '732569', 12.0, NULL, 1717, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2711, 431, 2, 'Plugs Square Head Stainless Steel Threaded
-PLUG SQUARE HEAD, STAINLESS STEEL 1/2" BSPT', '732604', 12.0, NULL, 1718, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+PLUG SQUARE HEAD, STAINLESS STEEL 1/2" BSPT', '732604', 12.0, NULL, 1718, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2712, 431, 3, 'Rope Mono 3-strand Polypropylene
 PP MONOFILAMENT ROPE, 3STRAND
-1-3/4"CIRX200MTR (14mm x 200 meter)', '210205', 1.0, NULL, 1719, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1-3/4"CIRX200MTR (14mm x 200 meter)', '210205', 1.0, NULL, 1719, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2713, 431, 4, 'Cam and Groove Couplings Dust Plugs
 COUPLING CAM&GROOVE ALUM ALLOY, DUST PLUG 1-1/2"', '351954', 6.0, NULL, 1720, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2714, 431, 5, 'Cam and Groove Couplings Type C
@@ -20767,10 +20767,10 @@ COUPLING CAM&GROOVE ALUM ALLOY, C SOCKET W/
 HOSE END 1-1/2"', '352004', 6.0, NULL, 1721, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2715, 431, 6, 'Cam and Groove Couplings Type F
 COUPLING CAM&GROOVE ALUM ALLOY, F PLUG W/MALE
-THREAD 1-1/2"', '351755', 6.0, NULL, 1722, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+THREAD 1-1/2"', '351755', 6.0, NULL, 1722, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2716, 431, 7, 'Infrared Thermometers
 THERMOMETER INFRARED, -50 - 500 DEG.C, 2  LASER BEAM
-Merk Krisbow', '651791', 2.0, NULL, 1723, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk Krisbow', '651791', 2.0, NULL, 1723, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2717, 431, 8, 'Brushes Angle Radiator
 BRUSH RADIATOR ANGLE(DOG LEG), 25MM WIDTH', '510165', 12.0, NULL, 1724, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2718, 431, 9, 'Brushes Angle Radiator
@@ -20779,29 +20779,29 @@ BRUSH RADIATOR ANGLE(DOG LEG), 40MM WIDTH', '510166', 12.0, NULL, 923, 'matched'
 BRUSH WIRE WHEEL THREADED NUT, TYPE
 75MMXM10THREAD', '510785', 48.0, NULL, 1725, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2720, 431, 11, 'Steel Checker Plates Hot Rolled
-STEEL CHECKER PLATE HOT-ROLLED, 4.5X1200X2400MM', '670802', 2.0, NULL, 1726, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+STEEL CHECKER PLATE HOT-ROLLED, 4.5X1200X2400MM', '670802', 2.0, NULL, 1726, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2721, 431, 12, 'Steel Equal Angles Hot Rolled
-STEEL EQUAL ANGLE HOT-ROLLED, 40X40X5MM 6MTR', '670606', 3.0, NULL, 1727, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+STEEL EQUAL ANGLE HOT-ROLLED, 40X40X5MM 6MTR', '670606', 3.0, NULL, 1727, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2722, 431, 13, 'Pipes Carbon Steel for Ordinary Piping Galvanized SGP
 PIPE CARBON STEEL SGP GALV, 1"X 6 meter
-SCH 40 3,38mm (non drat)', '710106', 4.0, NULL, 1728, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SCH 40 3,38mm (non drat)', '710106', 4.0, NULL, 1728, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2723, 431, 14, 'Pipes Carbon Steel for Ordinary Piping Galvanized SGP
 PIPE CARBON STEEL SGP GALV, 1-1/2" x 6 meter
-SCH 40 3,68mm (non drat)', '710108', 4.0, NULL, 1729, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SCH 40 3,68mm (non drat)', '710108', 4.0, NULL, 1729, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2724, 431, 15, 'Elbows 90deg. Malleable Cast Iron
 ELBOW MALLEABLE CAST IRON GALV, 90DEG 1-1/2', '730168', 12.0, NULL, 1730, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2725, 431, 16, 'Flanges JIS Sip-on Welding
-FLANGE STEEL WELDING SLIP-ON, FLAT JIS 5KG 1,5 inch DN40', '734606', 24.0, NULL, 1320, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+FLANGE STEEL WELDING SLIP-ON, FLAT JIS 5KG 1,5 inch DN40', '734606', 24.0, NULL, 1320, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2726, 431, 17, 'Copper Sheets
-COPPER SHEET 2.0X360X1200MM', '671912', 2.0, NULL, 1333, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+COPPER SHEET 2.0X360X1200MM', '671912', 2.0, NULL, 1333, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2727, 431, 18, 'Stainless Steel Hexagon Head Bolts and Nuts
-HEX HEAD BOLT/NUT STAINLESS, STEEL M22 X 90MM', '693110', 24.0, NULL, 1731, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HEX HEAD BOLT/NUT STAINLESS, STEEL M22 X 90MM', '693110', 24.0, NULL, 1731, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2728, 431, 19, 'Stainless Steel Hexagon Head Bolts and Nuts
-HEX HEAD BOLT/NUT STAINLESS, STEEL M16 X 50MM', '692920', 80.0, NULL, 1732, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HEX HEAD BOLT/NUT STAINLESS, STEEL M16 X 50MM', '692920', 80.0, NULL, 1732, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2729, 431, 20, 'Stainless Steel Hexagon Head Bolts and Nuts
-HEX HEAD BOLT/NUT STAINLESS, STEEL M22 X 150MM', '693120', 80.0, NULL, 1733, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HEX HEAD BOLT/NUT STAINLESS, STEEL M22 X 150MM', '693120', 80.0, NULL, 1733, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2730, 431, 21, 'Stainless Steel Hexagon Head Bolts and Nuts
-HEX HEAD BOLT/NUT STAINLESS, STEEL M20 X 100MM', '692974', 24.0, NULL, 1734, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HEX HEAD BOLT/NUT STAINLESS, STEEL M20 X 100MM', '692974', 24.0, NULL, 1734, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2731, 431, 22, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
 HEX HEAD BOLT/NUT STEEL UNGALV, M8 X 25MM', '691139', 250.0, NULL, 1735, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2732, 431, 23, 'Ungalvanized Steel Hexagon Head Bolts and Nuts
@@ -20845,11 +20845,11 @@ HEAVY PLATE', '851333', 10.0, NULL, 2096, 'matched', 'import', 'Backfilled from 
 ELECTRODE LB-26 4.0MM 5KG FOR, HEAVY DUTY STR &
 HEAVY PLATE', '851334', 10.0, NULL, 2097, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2750, 432, 5, 'Calipers Outside
-CALIPER OUTSIDE 150MM (6")', '650102', 2.0, NULL, 2098, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+CALIPER OUTSIDE 150MM (6")', '650102', 2.0, NULL, 2098, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2751, 432, 6, 'Calipers Outside
 CALIPER OUTSIDE 400MM', '650108', 2.0, NULL, 2099, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2752, 432, 7, 'Calipers Spring Inside
-CALIPER INSIDE WITH SPRING, 150MM (6")', '650172', 2.0, NULL, 2100, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+CALIPER INSIDE WITH SPRING, 150MM (6")', '650172', 2.0, NULL, 2100, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2753, 432, 8, 'Calipers Spring Inside
 CALIPER INSIDE WITH SPRING, 250MM', '650175', 2.0, NULL, 2101, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2754, 432, 9, 'Digital Calipers
@@ -20858,23 +20858,23 @@ CALIPER DIGITAL 150MM', '650521', 2.0, NULL, 2102, 'matched', 'import', 'Backfil
 JOINT SHEET NATURAL RUBBER, 2.0X1000X1000MM', '811113', 5.0, NULL, 1340, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2756, 432, 11, 'Joint Sheets Natural Rubber
 JOINT SHEET NATURAL RUBBER, 3.0X1000X1000MM', '811114', 5.0, NULL, 815, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2757, 432, 12, 'Safety Glasses Adjustable', '311103', 10.0, NULL, 2103, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2757, 432, 12, 'Safety Glasses Adjustable', '311103', 10.0, NULL, 2103, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2758, 432, 13, 'Tekiro Insulation Diagonal Pliers 6"
-insulataed to 1000V', '611723', 5.0, NULL, 2104, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+insulataed to 1000V', '611723', 5.0, NULL, 2104, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2759, 432, 14, 'Tekiro Pliers Long Nose Insulated 8"
-Insulated to 1000V L:200MM (8")', '611698', 3.0, NULL, 2105, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Insulated to 1000V L:200MM (8")', '611698', 3.0, NULL, 2105, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2760, 432, 15, 'Pliers Stop Ring
-PLIER STOP RING STRAIGHT, EXTERNAL Tekiro 5"', '611801', 2.0, NULL, 2106, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+PLIER STOP RING STRAIGHT, EXTERNAL Tekiro 5"', '611801', 2.0, NULL, 2106, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2761, 432, 16, 'Pliers Stop Ring
-PLIER STOP RING STRAIGHT, EXTERNAL Tekiro 7"', '611803', 2.0, NULL, 2107, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+PLIER STOP RING STRAIGHT, EXTERNAL Tekiro 7"', '611803', 2.0, NULL, 2107, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2762, 432, 17, 'Pliers Stop Ring
-PLIER STOP RING STRAIGHT, EXTERNAL Tekiro 9"', '611805', 2.0, NULL, 788, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+PLIER STOP RING STRAIGHT, EXTERNAL Tekiro 9"', '611805', 2.0, NULL, 788, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2763, 432, 18, 'Pliers Stop Ring
-PLIER STOP RING BENT, EXTERNAL Tekiro 5"', '611811', 2.0, NULL, 2108, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+PLIER STOP RING BENT, EXTERNAL Tekiro 5"', '611811', 2.0, NULL, 2108, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2764, 432, 19, 'Pliers Stop Ring
-PLIER STOP RING BENT, EXTERNAL Tekiro 7"', '611813', 2.0, NULL, 2109, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+PLIER STOP RING BENT, EXTERNAL Tekiro 7"', '611813', 2.0, NULL, 2109, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2765, 432, 20, 'Pliers Stop Ring
-PLIER STOP RING BENT, EXTERNAL Tekiro 9"', '611815', 2.0, NULL, 790, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+PLIER STOP RING BENT, EXTERNAL Tekiro 9"', '611815', 2.0, NULL, 790, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2766, 432, 21, 'Studs Whole Thread
 STUD WHOLE THREADED STEEL, M12 X PITCH1.75
 1000MM', '692027', 2.0, NULL, 2110, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -20890,19 +20890,19 @@ STUD WHOLE THREADED STEEL, M22 X PITCH2.5 1000MM', '692032', 1.0, NULL, 2114, 'm
 STUD WHOLE THREADED STEEL, M24 X PITCH3.0 1000MM', '692033', 1.0, NULL, 2115, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2772, 432, 27, 'Silicone Gaskets
 Dextone SIlicon Red Gasket
-70 gr', '812671', 20.0, NULL, 2116, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+70 gr', '812671', 20.0, NULL, 2116, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2773, 432, 28, 'Silicone Gaskets
 Extra Seal Silicone Red Gasket
-300  ml', '812672', 20.0, NULL, 2117, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+300  ml', '812672', 20.0, NULL, 2117, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2774, 432, 29, 'JIS Steel Blind Flanges
 FLANGE BLIND STEEL, JIS 10K, 6" DN 150
-8 Holes', '734872', 2.0, NULL, 2118, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+8 Holes', '734872', 2.0, NULL, 2118, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2775, 432, 30, 'Vises Parallel Bench Square Cylinder
 VISE BENCH PARALLEL, SQUARE-CYLINDER 10 inch
-255X300X140MM', '613779', 1.0, NULL, 2119, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+255X300X140MM', '613779', 1.0, NULL, 2119, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2776, 432, 31, 'Electroplated Diamond Needle File Set
 FILE SET NEEDLE ELECTROPLATED, DIAMOND 10''S
-4x160mm', '614543', 2.0, NULL, 2120, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+4x160mm', '614543', 2.0, NULL, 2120, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2777, 432, 32, 'Files
 FILE FLAT DOUBLE-CUT BASTARD, 250MM', '614303', 2.0, NULL, 2121, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2778, 432, 33, 'Files
@@ -20912,24 +20912,24 @@ FILE SQUARE DOUBLE-CUT BASTARD, 250MM', '614386', 2.0, NULL, 2123, 'matched', 'i
   (2780, 432, 35, 'Files
 FILE TRIANGLE DOUBLE-CUT, BASTARD 250MM', '614417', 2.0, NULL, 2124, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2781, 432, 36, 'Bags Plastic
-PLASTIC BAG BLACK, 900X1200MM 50''S', '174176', 10.0, NULL, 1300, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+PLASTIC BAG BLACK, 900X1200MM 50''S', '174176', 10.0, NULL, 1300, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2782, 432, 37, 'Gloves Working Cotton
-GLOVES WORKING COTTON ORDINARY (tanpa bintik anti slip)', '190101', 50.0, NULL, 900, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+GLOVES WORKING COTTON ORDINARY (tanpa bintik anti slip)', '190101', 50.0, NULL, 900, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2783, 432, 38, 'Iron Wire
 WIRE UNGALVANIZED IRON 1.2MM', '671166', 5.0, NULL, 2125, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2784, 432, 39, 'Wiping Rags
-Kain majun jahit tumpuk, Putih', '232907', 200.0, NULL, 677, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2785, 432, 40, 'No Offer', '352115', 12.0, NULL, 2126, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Kain majun jahit tumpuk, Putih', '232907', 200.0, NULL, 677, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2785, 432, 40, 'No Offer', '352115', 12.0, NULL, 2126, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2786, 432, 41, 'BOSCH IMPACT WRENCH CORDLESS, 1/2"SQ DRIVE 220V
-inc. baterry & charger', '590926', 1.0, NULL, 2127, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+inc. baterry & charger', '590926', 1.0, NULL, 2127, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2787, 432, 42, 'Angle Grinders Electric
-BOSCH Electric Grinder 4" (100mm), AC 220, 710 W', '591031', 3.0, NULL, 162, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+BOSCH Electric Grinder 4" (100mm), AC 220, 710 W', '591031', 3.0, NULL, 162, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2788, 432, 43, 'Diaphragm Pumps Pneumatic
 DIAPHRAGM PUMP AIR-OPERATED, GRACO HUSKY 307 
-PP 3/8" (9,52mm) NPT Standard Pump - D32977', '591766', 1.0, NULL, 2128, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+PP 3/8" (9,52mm) NPT Standard Pump - D32977', '591766', 1.0, NULL, 2128, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2789, 432, 44, 'Hose Bands Extra Heavy Duty
 HOSE BAND DOUBLE BOLT TYPE, MALLEABLE IRON
-40-50MM (1 1/4")', '613800', 12.0, NULL, 2129, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+40-50MM (1 1/4")', '613800', 12.0, NULL, 2129, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2790, 432, 45, 'Plain Washers
 WASHER PLAIN ROUND STEEL, M10.0', '694817', 250.0, NULL, 2130, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2791, 432, 46, 'Plain Washers
@@ -20938,7 +20938,7 @@ WASHER PLAIN ROUND STEEL, M12.0', '694818', 250.0, NULL, 2131, 'matched', 'impor
 WASHER PLAIN ROUND STEEL, M16.0', '694820', 250.0, NULL, 2132, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2793, 432, 48, 'Plain Washers
 WASHER PLAIN ROUND STEEL, M20.0', '694822', 200.0, NULL, 2133, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2794, 432, 49, 'Vacuum Cleaners 60L 220v 50/60 Hz', '174672', 1.0, NULL, 1611, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2794, 432, 49, 'Vacuum Cleaners 60L 220v 50/60 Hz', '174672', 1.0, NULL, 1611, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2795, 433, 1, 'CHAIR FOR MEETING ROOM
 FUTURA 405 ORIGINAL', NULL, 10.0, NULL, 2134, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2796, 434, 1, 'PARASETAMOL', NULL, 20.0, NULL, 2135, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -20953,70 +20953,70 @@ INSERT INTO quotation_item_requests (
 ) VALUES
   (2801, 434, 6, 'MINYAK TAWON 20 ML', NULL, 10.0, NULL, 2140, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2802, 434, 7, 'PROMAG', NULL, 15.0, NULL, 2141, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2803, 434, 8, 'SIMVASTATIN', NULL, 10.0, NULL, 2142, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2803, 434, 8, 'SIMVASTATIN', NULL, 10.0, NULL, 2142, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2804, 434, 9, 'PARAMEX', NULL, 10.0, NULL, 2143, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2805, 434, 10, 'IBUPROFEN', NULL, 5.0, NULL, 2144, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2806, 434, 11, 'FRESHCARE', NULL, 10.0, NULL, 2145, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2805, 434, 10, 'IBUPROFEN', NULL, 5.0, NULL, 2144, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2806, 434, 11, 'FRESHCARE', NULL, 10.0, NULL, 2145, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2807, 434, 12, 'CTM', NULL, 10.0, NULL, 2146, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2808, 434, 13, 'HOT IN CREAM', NULL, 10.0, NULL, 2147, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2809, 434, 14, 'COUNTERPAIN', NULL, 10.0, NULL, 2148, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2808, 434, 13, 'HOT IN CREAM', NULL, 10.0, NULL, 2147, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2809, 434, 14, 'COUNTERPAIN', NULL, 10.0, NULL, 2148, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2810, 434, 15, 'SALONPAS KOYO', NULL, 10.0, NULL, 2149, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2811, 434, 16, 'MADU TJ SACHET', NULL, 10.0, NULL, 2150, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2812, 434, 17, 'POLYSILANE', NULL, 5.0, NULL, 2151, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2813, 434, 18, 'BIOPLANCENTON', NULL, 10.0, NULL, 2152, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2813, 434, 18, 'BIOPLANCENTON', NULL, 10.0, NULL, 2152, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2814, 434, 19, 'ENTROSTOP', NULL, 10.0, NULL, 2153, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2815, 434, 20, 'AMOXICILIN', NULL, 15.0, NULL, 2154, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2815, 434, 20, 'AMOXICILIN', NULL, 15.0, NULL, 2154, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2816, 434, 21, 'ANTIMO', NULL, 20.0, NULL, 2155, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2817, 434, 22, 'COOLING 5 PLUS', NULL, 10.0, NULL, 2156, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2817, 434, 22, 'COOLING 5 PLUS', NULL, 10.0, NULL, 2156, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2818, 434, 23, 'NEUROBION', NULL, 20.0, NULL, 2157, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2819, 434, 24, 'DIAPET', NULL, 10.0, NULL, 2158, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2820, 434, 25, 'RIVANOL', NULL, 10.0, NULL, 2159, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2821, 434, 26, 'ERLAMYCETIN', NULL, 10.0, NULL, 2160, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2822, 434, 27, 'NEO NAPACIN', NULL, 10.0, NULL, 2161, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2820, 434, 25, 'RIVANOL', NULL, 10.0, NULL, 2159, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2821, 434, 26, 'ERLAMYCETIN', NULL, 10.0, NULL, 2160, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2822, 434, 27, 'NEO NAPACIN', NULL, 10.0, NULL, 2161, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2823, 434, 28, 'KONIDIN', NULL, 15.0, NULL, 2162, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2824, 434, 29, 'ASAM MEFENAMAT', NULL, 5.0, NULL, 2163, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2825, 434, 30, 'ALLOPURINOL', NULL, 5.0, NULL, 2164, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2824, 434, 29, 'ASAM MEFENAMAT', NULL, 5.0, NULL, 2163, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2825, 434, 30, 'ALLOPURINOL', NULL, 5.0, NULL, 2164, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2826, 434, 31, 'P3K', NULL, 4.0, NULL, 2165, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2827, 434, 32, 'HEROCYN POWDER', NULL, 5.0, NULL, 2166, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2827, 434, 32, 'HEROCYN POWDER', NULL, 5.0, NULL, 2166, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2828, 435, 1, 'PORTABLE DECK COMPRESSOR 5.5HP 340L 10BAR 3 PHASE
-380V CPBD0543 Krisbow 10029561', NULL, 1.0, NULL, 2167, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2829, 436, 1, 'COUPLER QUICK-CONNECT, STAINLESS STEEL 40SH 1/2"', '351223', 20.0, NULL, 736, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2830, 436, 2, 'Air Quick Coupler PH40 Stainless Steel 1/2" Quick Connector for Hose Quick Connect Fitting', '351253', 20.0, NULL, 738, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2831, 436, 3, 'QUICK COUPLER STAINLESS STEEL SM 30', '351323', 1.0, NULL, 2168, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2832, 436, 4, 'Air Quick Coupler PM30 Stainless Steel 3/8" Quick Connector Sambungan Selang Kompresor', '351353', 2.0, NULL, 2169, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2833, 436, 5, 'QUICK COUPLER STAINLESS STEEL SM 40', '351324', 1.0, NULL, 2170, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2834, 436, 6, 'Air Quick Coupler PM40 Stainless Steel 1/2" Quick Connector Sambungan Selang Kompresor', '351354', 1.0, NULL, 2171, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+380V CPBD0543 Krisbow 10029561', NULL, 1.0, NULL, 2167, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2829, 436, 1, 'COUPLER QUICK-CONNECT, STAINLESS STEEL 40SH 1/2"', '351223', 20.0, NULL, 736, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2830, 436, 2, 'Air Quick Coupler PH40 Stainless Steel 1/2" Quick Connector for Hose Quick Connect Fitting', '351253', 20.0, NULL, 738, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2831, 436, 3, 'QUICK COUPLER STAINLESS STEEL SM 30', '351323', 1.0, NULL, 2168, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2832, 436, 4, 'Air Quick Coupler PM30 Stainless Steel 3/8" Quick Connector Sambungan Selang Kompresor', '351353', 2.0, NULL, 2169, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2833, 436, 5, 'QUICK COUPLER STAINLESS STEEL SM 40', '351324', 1.0, NULL, 2170, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2834, 436, 6, 'Air Quick Coupler PM40 Stainless Steel 1/2" Quick Connector Sambungan Selang Kompresor', '351354', 1.0, NULL, 2171, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2835, 436, 7, 'Angle Grinders Electric
-BOSCH Electric Grinder 4" (100mm), AC 220, 710 W', '591031', 3.0, NULL, 162, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2836, 436, 8, 'Nitto Kohki Needle Scaler JEX-28 Jet Chisel/Scaler', '590537', 2.0, NULL, 2172, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+BOSCH Electric Grinder 4" (100mm), AC 220, 710 W', '591031', 3.0, NULL, 162, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2836, 436, 8, 'Nitto Kohki Needle Scaler JEX-28 Jet Chisel/Scaler', '590537', 2.0, NULL, 2172, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2837, 436, 9, 'SCREWDRIVERS (OBENG - ) 
-Tekiro 50mm (2")', '612201', 2.0, NULL, 2173, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Tekiro 50mm (2")', '612201', 2.0, NULL, 2173, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2838, 436, 10, 'SCREWDRIVERS (OBENG + ) 
-Tekiro 75mm (3")', '612211', 2.0, NULL, 2174, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2839, 436, 11, 'Startools Combination Wrench Set / Kunci Ring Pas 6 - 32mm 16 PCS/SET', '610536', 1.0, NULL, 2175, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2840, 436, 12, 'Tekiro Kunci Pipa 10 Inch', '616532', 1.0, NULL, 2176, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2841, 436, 13, 'Tekiro Kunci Inggris 10 Inch', '616504', 2.0, NULL, 2177, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2842, 436, 14, 'Tekiro Kunci Inggris 8 Inch', '616503', 2.0, NULL, 2178, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2843, 436, 15, 'NON WATERTIGHT PLUG 2-ROUND PIN 16A 250V', '792921', 5.0, NULL, 2179, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2844, 436, 16, 'NON WATERTIGHT RECEPTACLE DOUBLE 2-ROUND PIN 16A 250V', '792923', 5.0, NULL, 2180, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2845, 436, 17, 'Dustpan Hitam Tutup Impor', '174143', 5.0, NULL, 2181, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2846, 436, 18, 'IMPA 174275 Spring Clamp Mop', '174275', 10.0, NULL, 1785, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2847, 436, 19, 'Sikat cuci piring', '174101', 10.0, NULL, 2182, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2848, 436, 20, 'Safety LED Explosion-Proof Headtorch LED Head Light ATEX Certificate', '330620', 10.0, NULL, 2183, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Tekiro 75mm (3")', '612211', 2.0, NULL, 2174, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2839, 436, 11, 'Startools Combination Wrench Set / Kunci Ring Pas 6 - 32mm 16 PCS/SET', '610536', 1.0, NULL, 2175, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2840, 436, 12, 'Tekiro Kunci Pipa 10 Inch', '616532', 1.0, NULL, 2176, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2841, 436, 13, 'Tekiro Kunci Inggris 10 Inch', '616504', 2.0, NULL, 2177, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2842, 436, 14, 'Tekiro Kunci Inggris 8 Inch', '616503', 2.0, NULL, 2178, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2843, 436, 15, 'NON WATERTIGHT PLUG 2-ROUND PIN 16A 250V', '792921', 5.0, NULL, 2179, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2844, 436, 16, 'NON WATERTIGHT RECEPTACLE DOUBLE 2-ROUND PIN 16A 250V', '792923', 5.0, NULL, 2180, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2845, 436, 17, 'Dustpan Hitam Tutup Impor', '174143', 5.0, NULL, 2181, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2846, 436, 18, 'IMPA 174275 Spring Clamp Mop', '174275', 10.0, NULL, 1785, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2847, 436, 19, 'Sikat cuci piring', '174101', 10.0, NULL, 2182, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2848, 436, 20, 'Safety LED Explosion-Proof Headtorch LED Head Light ATEX Certificate', '330620', 10.0, NULL, 2183, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2849, 436, 21, 'VENTILATED SAFETY HELMETS (WHITE COLOUR)
-Safety Helmets MSA V-Gard H-1', '310336', 10.0, NULL, 2184, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Safety Helmets MSA V-Gard H-1', '310336', 10.0, NULL, 2184, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2850, 436, 22, 'VENTILATED SAFETY HELMETS (ORANGE COLOUR)
-Safety Helmets MSA V-Gard H-1', '310339', 15.0, NULL, 2185, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Safety Helmets MSA V-Gard H-1', '310339', 15.0, NULL, 2185, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2851, 436, 23, 'VENTILATED SAFETY HELMETS (BLUE COLOUR)
-Safety Helmets MSA V-Gard H-1', '310337', 3.0, NULL, 2186, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2852, 436, 24, 'Shell Gadus S2 A320 2 Grease 100% Original Pail 18 Kg', NULL, 10.0, NULL, 2187, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2853, 436, 25, 'Shell Gadus S2 V220 2 (shell alvania ep 2) High Perpormance Extreme Grease Original Pail 18 kg', NULL, 5.0, NULL, 2188, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2854, 437, 1, 'BEARING 6311 ZZ C3 ( TUTUP BESI ) MERK NTN JEPANG ASLI', NULL, 4.0, NULL, 2189, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Safety Helmets MSA V-Gard H-1', '310337', 3.0, NULL, 2186, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2852, 436, 24, 'Shell Gadus S2 A320 2 Grease 100% Original Pail 18 Kg', NULL, 10.0, NULL, 2187, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2853, 436, 25, 'Shell Gadus S2 V220 2 (shell alvania ep 2) High Perpormance Extreme Grease Original Pail 18 kg', NULL, 5.0, NULL, 2188, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2854, 437, 1, 'BEARING 6311 ZZ C3 ( TUTUP BESI ) MERK NTN JEPANG ASLI', NULL, 4.0, NULL, 2189, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2855, 437, 2, 'ANGULAR CONTACT BALL BEARING 
-7311 BXL TVP FAG 55X120X29', NULL, 8.0, NULL, 2190, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+7311 BXL TVP FAG 55X120X29', NULL, 8.0, NULL, 2190, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2856, 437, 3, 'MECHANICAL SEAL (TYPE AN-43)
-Diameter shaft 43.mm', NULL, 4.0, NULL, 2191, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2857, 437, 4, 'OIL SEAL TC 55 X 70 X 8 FKM', NULL, 8.0, NULL, 2192, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Diameter shaft 43.mm', NULL, 4.0, NULL, 2191, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2857, 437, 4, 'OIL SEAL TC 55 X 70 X 8 FKM', NULL, 8.0, NULL, 2192, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2858, 438, 1, 'CHAIN DRUM FOR SCALING MACHINE RUSTIBUS Model 400', '591234', 9.0, NULL, 1627, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2859, 439, 1, 'RINSO DETERGENT (770gr)
 Per box = 12 pouch', NULL, 8.0, NULL, 2193, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -21033,30 +21033,30 @@ RACUN KECOA )
 1 Dos = 50 pcs', NULL, 1.0, NULL, 2198, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2865, 440, 1, 'EYE BOLT STEEL M10', '692202', 6.0, NULL, 1344, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2866, 440, 2, 'EYE BOLT STEEL M12', '692203', 6.0, NULL, 1345, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2867, 440, 3, 'U Bolt 2" Besi M10', '696735', 50.0, NULL, 393, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2867, 440, 3, 'U Bolt 2" Besi M10', '696735', 50.0, NULL, 393, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2868, 440, 4, 'EYE BOLT STEEL M16', '692204', 6.0, NULL, 1346, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2869, 440, 5, 'U Bolt 1 1/4" Besi M10', '696732', 100.0, NULL, 2090, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2869, 440, 5, 'U Bolt 1 1/4" Besi M10', '696732', 100.0, NULL, 2090, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2870, 440, 6, 'FRP GRATING 
 MATERIAL : POLYESTER RESIN 
 GRATING THICKNESS : 7/5 MM 
 SHEET SIZE : W 3007 x L 1007 x H 38MM 
 GRATING MESH SIZE : 40x40 MM 
-COLOR : GREEN', '673817', 6.0, NULL, 2199, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2871, 440, 7, 'U Bolt 1 1/2" Besi M10', '696734', 50.0, NULL, 392, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2872, 440, 8, 'U Bolt 4" SS304 M16', '696740', 25.0, NULL, 2200, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2873, 440, 9, 'Bearing 7311 NTN Japan', '770842', 6.0, NULL, 1924, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2874, 440, 10, 'Bearing 6409 NTN Japan', '770447', 6.0, NULL, 2201, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2875, 440, 11, 'Bearing 6311 C3 NTN Japan', '770712', 6.0, NULL, 1984, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2876, 440, 12, 'Bearing 6314 C3 NTN Japan', '770715', 4.0, NULL, 2202, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2877, 440, 13, 'Bearing 6315 C3 NTN Japan', '770716', 6.0, NULL, 2203, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2878, 440, 14, 'Bearing 6317 C3 NTN Japan', '770718', 4.0, NULL, 2204, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2879, 440, 15, 'Bearing 6007ZZ NTN Japan', '770168', 4.0, NULL, 2205, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2880, 440, 16, 'Bearing 6208ZZ NTN Japan', '770259', 5.0, NULL, 2206, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2881, 440, 17, 'Bearing 6214ZZ NTN Japan', '770265', 5.0, NULL, 2207, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2882, 440, 18, 'Bearing 6406 ASB', '770444', 5.0, NULL, 2208, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2883, 440, 19, 'Bearing 6013ZZ C3 NTN Japan', '770574', 5.0, NULL, 2209, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2884, 440, 20, 'Bearing 6203ZZ C3 SKF', '770654', 5.0, NULL, 2210, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2885, 440, 21, 'Beaing 6316 C3 NTN Japan', '770717', 5.0, NULL, 2211, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+COLOR : GREEN', '673817', 6.0, NULL, 2199, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2871, 440, 7, 'U Bolt 1 1/2" Besi M10', '696734', 50.0, NULL, 392, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2872, 440, 8, 'U Bolt 4" SS304 M16', '696740', 25.0, NULL, 2200, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2873, 440, 9, 'Bearing 7311 NTN Japan', '770842', 6.0, NULL, 1924, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2874, 440, 10, 'Bearing 6409 NTN Japan', '770447', 6.0, NULL, 2201, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2875, 440, 11, 'Bearing 6311 C3 NTN Japan', '770712', 6.0, NULL, 1984, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2876, 440, 12, 'Bearing 6314 C3 NTN Japan', '770715', 4.0, NULL, 2202, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2877, 440, 13, 'Bearing 6315 C3 NTN Japan', '770716', 6.0, NULL, 2203, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2878, 440, 14, 'Bearing 6317 C3 NTN Japan', '770718', 4.0, NULL, 2204, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2879, 440, 15, 'Bearing 6007ZZ NTN Japan', '770168', 4.0, NULL, 2205, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2880, 440, 16, 'Bearing 6208ZZ NTN Japan', '770259', 5.0, NULL, 2206, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2881, 440, 17, 'Bearing 6214ZZ NTN Japan', '770265', 5.0, NULL, 2207, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2882, 440, 18, 'Bearing 6406 ASB', '770444', 5.0, NULL, 2208, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2883, 440, 19, 'Bearing 6013ZZ C3 NTN Japan', '770574', 5.0, NULL, 2209, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2884, 440, 20, 'Bearing 6203ZZ C3 SKF', '770654', 5.0, NULL, 2210, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2885, 440, 21, 'Beaing 6316 C3 NTN Japan', '770717', 5.0, NULL, 2211, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2886, 441, 1, 'WATER BLASTER HIGH PRESSURE
 - Pump: AR, from Italy
 - Voltage: 440V
@@ -21078,78 +21078,78 @@ Bearing No. SL04-5028LLNR - NTN', NULL, 2.0, NULL, 2213, 'matched', 'import', 'B
 - Flow Rate: 21L/min
 - Motor Speed: 1440r/min
 - Weight: 270kg', '590859', 1.0, NULL, 1450, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2890, 445, 1, 'Ships Log Book for Engine - Bahasa Indonesia version', '370871', 3.0, NULL, 2214, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2891, 445, 2, 'Ships Log Book for Deck - Bahasa Indonesia version', '370851', 3.0, NULL, 2215, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2890, 445, 1, 'Ships Log Book for Engine - Bahasa Indonesia version', '370871', 3.0, NULL, 2214, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2891, 445, 2, 'Ships Log Book for Deck - Bahasa Indonesia version', '370851', 3.0, NULL, 2215, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2892, 446, 1, 'Fenders Rubber Pneumatic
 FENDER RUBBER PNEUMATIC, WITH FURTHER DETAIL
 NEUMATIC RUBBER FENDERS DIAMETER 1.500 mm x LENGHT 3.000 mm
 IMPA 232411', NULL, 2.0, NULL, 2216, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2893, 447, 1, 'Acetylsalicylic Acid (Aspirin) Tablet 100 mg
-1 pack = 10 tablet', NULL, 30.0, NULL, 2217, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 tablet', NULL, 30.0, NULL, 2217, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2894, 447, 2, 'Aciclovir Tablet 400 mg
 35s, 5 pcs', NULL, 5.0, NULL, 2218, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2895, 447, 3, 'Coamioxiclav 
-1 pack = 10 tablet', NULL, 30.0, NULL, 2219, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 tablet', NULL, 30.0, NULL, 2219, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2896, 447, 4, 'Azithromycin Tablet, 500 mg
-1 pack = 10 tablet', NULL, 2.0, NULL, 2220, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 tablet', NULL, 2.0, NULL, 2220, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2897, 447, 5, 'Cetirizine Tablet
-1 pack = 10 tablet', NULL, 5.0, NULL, 2221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2898, 447, 6, 'Microlactab', NULL, 20.0, NULL, 2222, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 tablet', NULL, 5.0, NULL, 2221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2898, 447, 6, 'Microlactab', NULL, 20.0, NULL, 2222, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2899, 447, 7, 'Doxycycline Hydrochloride Tablet 100 mg
-1 pack = 10 tablet', NULL, 2.0, NULL, 2223, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 tablet', NULL, 2.0, NULL, 2223, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2900, 447, 8, 'Ibuprofen Tablet 400 mg
-1 pack = 10 tablet', NULL, 5.0, NULL, 2224, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+1 pack = 10 tablet', NULL, 5.0, NULL, 2224, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
   (2901, 447, 9, 'Isosorbide Tablet 5 mg Sublingual
-1 pack = 10 tablet', NULL, 3.0, NULL, 2225, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 tablet', NULL, 3.0, NULL, 2225, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2902, 447, 10, 'Loperamide Tablet
-1 pack = 10 tablet', NULL, 3.0, NULL, 2226, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 tablet', NULL, 3.0, NULL, 2226, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2903, 447, 11, 'Mebendazole/ albendazol Tablet 100 mg
-1 pack = 10 tablet', NULL, 1.0, NULL, 2227, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 tablet', NULL, 1.0, NULL, 2227, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2904, 447, 12, 'Metoprolol/propranolol
-1 pack = 10 tablet', NULL, 1.0, NULL, 2228, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 tablet', NULL, 1.0, NULL, 2228, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2905, 447, 13, 'Omeprazole 20 mg 
-1 pack = 10 tablet', NULL, 4.0, NULL, 2229, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 tablet', NULL, 4.0, NULL, 2229, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2906, 447, 14, 'Ondansetron Tablet 4 mg
-1 pack = 10 tablet', NULL, 2.0, NULL, 2230, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 tablet', NULL, 2.0, NULL, 2230, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2907, 447, 15, 'Cyclizine Seasickness/ dipenhydramine Tablet
-1 pack = 10 tablet', NULL, 3.0, NULL, 2231, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 tablet', NULL, 3.0, NULL, 2231, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2908, 447, 16, 'Paracetamol Tablet 500 mg
-1 pack = 10 tablet', NULL, 5.0, NULL, 2232, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 tablet', NULL, 5.0, NULL, 2232, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2909, 447, 17, 'Salbutamol 4 mg
-1 pack = 10 tablet', NULL, 2.0, NULL, 2233, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2910, 447, 18, 'Zinc Oxyde/metcovazin red 25g', NULL, 5.0, NULL, 2234, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2911, 447, 19, 'Cough Syrup 100 ml', NULL, 10.0, NULL, 2235, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2912, 447, 20, 'Vicks vapo rub 50g', NULL, 5.0, NULL, 2236, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2913, 447, 21, 'Deep Heat Rub 50g', NULL, 10.0, NULL, 2237, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 tablet', NULL, 2.0, NULL, 2233, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2910, 447, 18, 'Zinc Oxyde/metcovazin red 25g', NULL, 5.0, NULL, 2234, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2911, 447, 19, 'Cough Syrup 100 ml', NULL, 10.0, NULL, 2235, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2912, 447, 20, 'Vicks vapo rub 50g', NULL, 5.0, NULL, 2236, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2913, 447, 21, 'Deep Heat Rub 50g', NULL, 10.0, NULL, 2237, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2914, 447, 22, 'Muscular Pain Gel 50g', NULL, 5.0, NULL, 2238, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2915, 447, 23, 'Cetrimide Antiseptic 500 ml', NULL, 5.0, NULL, 2239, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2916, 447, 24, 'Bonjela Mouth Ulcer Gel 10g', NULL, 10.0, NULL, 2240, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2915, 447, 23, 'Cetrimide Antiseptic 500 ml', NULL, 5.0, NULL, 2239, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2916, 447, 24, 'Bonjela Mouth Ulcer Gel 10g', NULL, 10.0, NULL, 2240, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2917, 447, 25, 'Zovirax Coldsore Cream/ acyolovir
-Tube', NULL, 2.0, NULL, 2241, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2918, 447, 26, 'Faktu salep 20g', NULL, 2.0, NULL, 2242, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2919, 447, 27, 'Cold/Hot Pack', NULL, 20.0, NULL, 2243, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2920, 447, 28, 'Portable Oxygen Cylinder 2L, including Travel hard case', NULL, 1.0, NULL, 2244, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Tube', NULL, 2.0, NULL, 2241, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2918, 447, 26, 'Faktu salep 20g', NULL, 2.0, NULL, 2242, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2919, 447, 27, 'Cold/Hot Pack', NULL, 20.0, NULL, 2243, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2920, 447, 28, 'Portable Oxygen Cylinder 2L, including Travel hard case', NULL, 1.0, NULL, 2244, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2921, 447, 29, 'Oxygen Cylinder 10 ltr
-(cylinder only)', NULL, 2.0, NULL, 2245, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+(cylinder only)', NULL, 2.0, NULL, 2245, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2922, 447, 30, 'Bismuth/superhoid
-1 pack = 10 suppositoria', NULL, 3.0, NULL, 2246, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 suppositoria', NULL, 3.0, NULL, 2246, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2923, 447, 31, 'Supranefid 100 mg
-1 pack = 10 suppositoria', NULL, 3.0, NULL, 2247, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 10 suppositoria', NULL, 3.0, NULL, 2247, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2924, 447, 32, 'Nitrazepam 5 mg Tablet
 2 pack = 20 tablet', NULL, 2.0, NULL, 2248, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2925, 448, 1, 'Tangga Telescopic 10 meter', NULL, 1.0, NULL, 2249, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2926, 449, 1, 'R-407C Chemours Shanghai 10 kg', '850195', 5.0, NULL, 2250, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2927, 449, 2, 'LD Gunting Jahit Kain Profesional Baja Mangan Galvanis Premium Hitam 10" Tailor Scissor - Alat', '611844', 6.0, NULL, 2251, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2927, 449, 2, 'LD Gunting Jahit Kain Profesional Baja Mangan Galvanis Premium Hitam 10" Tailor Scissor - Alat', '611844', 6.0, NULL, 2251, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2928, 449, 3, 'CABLE SHOE CLAMPING TYPE-B 1,5-10', '794674', 25.0, NULL, 1928, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2929, 449, 4, 'BLADE HACKSAW HAND TUNGSTEN, ALLOY STEEL 300MMX24TEETH  High Speed Steel
 IMPA 613457
-Merk Fapro/Deli', '613447', 48.0, NULL, 2252, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2930, 449, 5, 'IMPA 610405 ; Ratchet Handle For Socket Wrenches ( Ratchet Kunci Sok)', '610405', 4.0, NULL, 2253, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk Fapro/Deli', '613447', 48.0, NULL, 2252, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2930, 449, 5, 'IMPA 610405 ; Ratchet Handle For Socket Wrenches ( Ratchet Kunci Sok)', '610405', 4.0, NULL, 2253, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2931, 449, 6, 'WRENCH SET ALLEN HEXAGON SIZE 2MM-12MM PENDEK', '611281', 2.0, NULL, 204, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2932, 449, 7, 'OPEN & TYPE 12 POINT BOX WRENCH 10 MM', '610765', 6.0, NULL, 1703, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2933, 449, 8, 'OPEN & 12-POINT BOX, 17MM
@@ -21167,7 +21167,7 @@ Brand: Tekiro', '610776', 6.0, NULL, 1707, 'matched', 'import', 'Backfilled from
 IP 65
 Merk In-Lite', '791828', 15.0, NULL, 1500, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2942, 449, 17, 'Cable NYYHY 3x1,5mm
- Supreme', '794339', 100.0, NULL, 2256, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+ Supreme', '794339', 100.0, NULL, 2256, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2943, 449, 18, 'Cable NYYHY 4x1,5mm', '794346', 100.0, NULL, 2257, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2944, 449, 19, 'Bosch Mesin Pembuka Baut GDS 18V-350 Impact Wrench Cordless 18V Procore 4 AH
 Include charger & battery', '590926', 2.0, NULL, 2127, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -21185,34 +21185,34 @@ price per set', '791537', 50.0, NULL, 2260, 'matched', 'import', 'Backfilled fro
   (2951, 449, 26, 'LED Flashlight Waterproof 1200 Lumens
 Color Temperature: 6500K
 Rechareable battery (Baterry 18650 - not included)', '792294', 10.0, NULL, 2261, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2952, 450, 1, 'Pipa besi hitam 11/4" x 6 Mtr', '710607', 20.0, NULL, 2262, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2953, 450, 2, 'U Bolt 3/4" inch Besi M8', '696732', 100.0, NULL, 2090, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2954, 450, 3, 'U Bolt 1" inch Besi M10', '696733', 100.0, NULL, 2263, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2955, 450, 4, 'U Bolt 1 1/4" inch Besi M10', '696734', 100.0, NULL, 392, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2956, 450, 5, 'U Bolt 2 inch Besi M10', '696735', 100.0, NULL, 393, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2957, 450, 6, 'Kaca Las Hitam 105 x 50 mm No.10 12Pcs', '851143', 1.0, NULL, 2264, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2952, 450, 1, 'Pipa besi hitam 11/4" x 6 Mtr', '710607', 20.0, NULL, 2262, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2953, 450, 2, 'U Bolt 3/4" inch Besi M8', '696732', 100.0, NULL, 2090, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2954, 450, 3, 'U Bolt 1" inch Besi M10', '696733', 100.0, NULL, 2263, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2955, 450, 4, 'U Bolt 1 1/4" inch Besi M10', '696734', 100.0, NULL, 392, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2956, 450, 5, 'U Bolt 2 inch Besi M10', '696735', 100.0, NULL, 393, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2957, 450, 6, 'Kaca Las Hitam 105 x 50 mm No.10 12Pcs', '851143', 1.0, NULL, 2264, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2958, 450, 7, 'KACA LAS BENING 2MM x 105MM x 50MM
-12 pcs', '851146', 1.0, NULL, 2265, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2959, 450, 8, 'Cable Connector SANRITSU type, JB-500', '794762', 10.0, NULL, 2266, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2960, 450, 9, 'Sarung Tangan Kulit Las Welding Anti Panas 14 inch Eco Red Gosave', '851163', 3.0, NULL, 669, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+12 pcs', '851146', 1.0, NULL, 2265, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2959, 450, 8, 'Cable Connector SANRITSU type, JB-500', '794762', 10.0, NULL, 2266, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2960, 450, 9, 'Sarung Tangan Kulit Las Welding Anti Panas 14 inch Eco Red Gosave', '851163', 3.0, NULL, 669, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2961, 450, 10, 'GAS CUTTING TORCH SPARE NOZZLES  NO.1', '850261', 5.0, NULL, 1021, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2962, 450, 11, 'GAS CUTTING TORCH SPARE NOZZLES  NO.2', '850262', 5.0, NULL, 2267, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2963, 450, 12, 'GAS CUTTING TORCH SPARE NOZZLES  NO.3', '850263', 5.0, NULL, 2268, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2964, 450, 13, 'KAWAT LAS LB 52 3,2 MM KOBE STEEL /LB52 3.2 KOBELCO WELDING ELECTRODE
 Merk: KOBELCO FAMILIARC
 Size: 3,2 MM x 350 MM
-1 Box = 5kg', '851342', 1.0, NULL, 2269, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 Box = 5kg', '851342', 1.0, NULL, 2269, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2965, 450, 14, 'STEEL EQUAL ANGLES – HOT ROLLED 30X30X3mm
-BESI SIKU 30 X 30 X 3 MM - PJ 6MTR', '670603', 15.0, NULL, 2270, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+BESI SIKU 30 X 30 X 3 MM - PJ 6MTR', '670603', 15.0, NULL, 2270, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2966, 450, 15, 'NOZZLE CLEANERS
-Cutting Tip Cleaner', '850280', 1.0, NULL, 670, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Cutting Tip Cleaner', '850280', 1.0, NULL, 670, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2967, 450, 16, 'WELDERS GAS LIGHTERS
-Friction Type', '850286', 1.0, NULL, 2271, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2968, 450, 17, 'CONVEX RULES 5 meter', '650828', 1.0, NULL, 662, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Friction Type', '850286', 1.0, NULL, 2271, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2968, 450, 17, 'CONVEX RULES 5 meter', '650828', 1.0, NULL, 662, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2969, 451, 1, 'DOOR HOLDERS WITH CUSHION SPRING HOOK TYPE', '490541', 10.0, NULL, 2272, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2970, 451, 2, 'impa 490603 door closer standard', '490603', 10.0, NULL, 2273, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2971, 452, 1, 'sharp R-753GX(BS)', '175098', 2.0, NULL, 1942, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2972, 453, 1, 'DOOR HOLDERS WITH CUSHION SPRING HOOK TYPE', '851051', 2.0, NULL, 2094, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2970, 451, 2, 'impa 490603 door closer standard', '490603', 10.0, NULL, 2273, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2971, 452, 1, 'sharp R-753GX(BS)', '175098', 2.0, NULL, 1942, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2972, 453, 1, 'DOOR HOLDERS WITH CUSHION SPRING HOOK TYPE', '851051', 2.0, NULL, 2094, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2973, 454, 1, 'Trafo Step down 440-380V, 10KVA, 50/60Hz
 3 Phase (dengan box)', NULL, 1.0, NULL, 1810, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2974, 455, 1, 'Micrologic 5.0A ACB AE 1
@@ -21242,8 +21242,8 @@ IMPA 232946', NULL, 200.0, NULL, 2278, 'matched', 'import', 'Backfilled from his
   (2981, 461, 1, 'Air Freight  to Banjarmasin
 Main pump Crane
  * Denison Hydraulic', NULL, 1.0, NULL, 2281, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2982, 462, 1, 'Navigation Signal Light 4" Green Starboard side. Impa 370422', NULL, 2.0, NULL, 2282, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2983, 462, 2, 'Navigation Signal Light 4" Red Port side. Impa 370423', NULL, 2.0, NULL, 2283, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2982, 462, 1, 'Navigation Signal Light 4" Green Starboard side. Impa 370422', NULL, 2.0, NULL, 2282, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (2983, 462, 2, 'Navigation Signal Light 4" Red Port side. Impa 370423', NULL, 2.0, NULL, 2283, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2984, 462, 3, 'Wastafel double set 
 P = 172 cm x L = 60 cm x inner= 25 cm x T = 85 cm', NULL, 1.0, NULL, 658, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (2985, 463, 1, 'Pneumatic 1/2" impact / wrench pneumatic 1/2 
@@ -21264,29 +21264,29 @@ IMPA 370241', NULL, 1.0, NULL, 2291, 'matched', 'import', 'Backfilled from histo
   (2995, 466, 2, '3M Comfort Grip Gloves Sarung Tangan Safety Gloves Size M
 Size M : P=21-22cm; L=8.5-9cm
 1 pcs = 1 pair', NULL, 20.0, NULL, 2293, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2996, 467, 1, 'No Offer', NULL, 1.0, NULL, 1254, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2996, 467, 1, 'No Offer', NULL, 1.0, NULL, 1254, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2997, 468, 1, 'PCB Type NNR-NS2008L-1009.2, AC 220 V LIGHT MAX
 2*150W
 PCB Card for Navigation Anchor Light Panel', NULL, 2.0, NULL, 2294, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (2998, 469, 1, 'MOORING ROPE 80 MM (CIR 10)', '211782', 2.0, NULL, 2295, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (2998, 469, 1, 'MOORING ROPE 80 MM (CIR 10)', '211782', 2.0, NULL, 2295, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (2999, 469, 2, 'Heaving Line 10mm - Cotton
-1 rol: +/- 220 m', '211282', 1.0, NULL, 2296, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3000, 469, 3, 'KAIN MAJUN PUTIH JAHIT TUMPUK', '232906', 50.0, NULL, 2297, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+1 rol: +/- 220 m', '211282', 1.0, NULL, 2296, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3000, 469, 3, 'KAIN MAJUN PUTIH JAHIT TUMPUK', '232906', 50.0, NULL, 2297, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
-  (3001, 469, 4, 'Chipping Hammer Wooden Handle Machinist Hammer 450g', '612612', 8.0, NULL, 2298, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3001, 469, 4, 'Chipping Hammer Wooden Handle Machinist Hammer 450g', '612612', 8.0, NULL, 2298, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3002, 469, 5, 'SAWDUST 10 KGS/BAG', '232946', 15.0, NULL, 2299, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3003, 470, 1, 'Oil Depth Gauging Tapes 20 Mtr (Richter Type - Steel)', NULL, 2.0, NULL, 2300, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3003, 470, 1, 'Oil Depth Gauging Tapes 20 Mtr (Richter Type - Steel)', NULL, 2.0, NULL, 2300, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3004, 470, 2, 'Rubber Boot
-Size by request', NULL, 12.0, NULL, 2301, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Size by request', NULL, 12.0, NULL, 2301, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3005, 470, 3, 'Webbing Sling Belt / Tali Angkat 12 Ton x 4 Meter Double Ply
-Brand: POWERTEC', 'SWL 12 Tons x 4 m', 2.0, NULL, 2302, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Brand: POWERTEC', 'SWL 12 Tons x 4 m', 2.0, NULL, 2302, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3006, 470, 4, 'Webbing Sling Belt / Tali Angkat 3 Ton x 3 Meter
 
-Brand: SPANSET', 'SWL 3 Tons x 3 m', 2.0, NULL, 2303, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Brand: SPANSET', 'SWL 3 Tons x 3 m', 2.0, NULL, 2303, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3007, 470, 5, 'Cargo Lifting Net Sling
 Specifications
 - Material: Polypropylene
@@ -21294,50 +21294,50 @@ Specifications
 - Edge Rope: 24mm
 - Inner Rope: 16mm.
 - Breaking Strength: 56.8KN(edge ​​rope), 32.3KN(inner rope)
-- Hole Distance: 200mm', NULL, 2.0, NULL, 2304, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3008, 470, 6, 'TERPAL PLASTIK A3 UKURAN 3X3 Meter', NULL, 2.0, NULL, 2305, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3009, 470, 7, 'Senter X2000 Sorot Led Jarak Jauh / Senter P900 Jumbo Led High Power Flashlight Super Terang - X2000-W590', NULL, 1.0, NULL, 2306, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3010, 470, 8, 'Sarung Tangan Kerja Bintik', NULL, 200.0, NULL, 2307, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+- Hole Distance: 200mm', NULL, 2.0, NULL, 2304, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3008, 470, 6, 'TERPAL PLASTIK A3 UKURAN 3X3 Meter', NULL, 2.0, NULL, 2305, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3009, 470, 7, 'Senter X2000 Sorot Led Jarak Jauh / Senter P900 Jumbo Led High Power Flashlight Super Terang - X2000-W590', NULL, 1.0, NULL, 2306, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3010, 470, 8, 'Sarung Tangan Kerja Bintik', NULL, 200.0, NULL, 2307, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3011, 470, 9, 'Mesin Cuci 2 Tabung Sharp 90 MW Cuci dan Kering Low Watt 9KG
-Brand: Sharp', NULL, 2.0, NULL, 2308, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Brand: Sharp', NULL, 2.0, NULL, 2308, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3012, 470, 10, 'Pillow
 Brand: Caroline 
-Original Silicone 100% Nanofiber', NULL, 25.0, NULL, 2309, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Original Silicone 100% Nanofiber', NULL, 25.0, NULL, 2309, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3013, 470, 11, 'Bed Cover only 
-Tidak termasuk sprei, warna putih, 50x200 cm', NULL, 25.0, NULL, 2310, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Tidak termasuk sprei, warna putih, 50x200 cm', NULL, 25.0, NULL, 2310, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3014, 470, 12, 'Lakban Plastik Bening
-45 mm x 50 m', NULL, 10.0, NULL, 2311, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+45 mm x 50 m', NULL, 10.0, NULL, 2311, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3015, 470, 13, 'Lakban Kertas (putih)
-48 mm x 21 m', NULL, 10.0, NULL, 2312, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+48 mm x 21 m', NULL, 10.0, NULL, 2312, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3016, 470, 14, 'Lakban Hitam
-44 mm x 7 m', NULL, 10.0, NULL, 2313, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+44 mm x 7 m', NULL, 10.0, NULL, 2313, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3017, 470, 15, 'Wire Rope Clip / Klem Seling Kuku Macan Galv 30-32mm - 1-1/4"
-Brand: Powertec', NULL, 2.0, NULL, 2314, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3018, 470, 16, 'HOSE CLAMP 8 INCHI', NULL, 20.0, NULL, 2315, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3019, 470, 17, 'Cutter Joyko L 500', NULL, 4.0, NULL, 2316, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3020, 470, 18, 'Refill Cutter Joyko L 150', NULL, 5.0, NULL, 2317, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3021, 470, 19, 'Polyester Cargo Sling Bulk Bag 1.5T', NULL, 100.0, NULL, 2318, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Brand: Powertec', NULL, 2.0, NULL, 2314, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3018, 470, 16, 'HOSE CLAMP 8 INCHI', NULL, 20.0, NULL, 2315, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3019, 470, 17, 'Cutter Joyko L 500', NULL, 4.0, NULL, 2316, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3020, 470, 18, 'Refill Cutter Joyko L 150', NULL, 5.0, NULL, 2317, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3021, 470, 19, 'Polyester Cargo Sling Bulk Bag 1.5T', NULL, 100.0, NULL, 2318, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3022, 470, 20, 'Water Finding Gauging Paste 75g
 
-Perubahan warna: Cokelat keemasan menjadi merah terang', NULL, 20.0, NULL, 2319, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3023, 471, 1, 'IAMSAR MANUAL VOL III MOBILE FACILITIES ED 2025', '371652', 1.0, NULL, 2320, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3024, 471, 2, 'IAMSAR VOL 2 ED 2025', '371651', 1.0, NULL, 2321, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3025, 471, 3, 'IAMSAR VOL 1 ED 2025', '371650', 1.0, NULL, 2322, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3026, 471, 4, 'SOLAS CONSOLIDATED 2024', '371601', 1.0, NULL, 2323, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3027, 471, 5, 'IMDG CODE ED 2024 (inc. AMD 42-24) Vol 1&2', '371607', 1.0, NULL, 2324, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3028, 471, 6, 'IMDG CODE SUPPLEMENT ED 2024', '371611', 1.0, NULL, 2325, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3029, 471, 7, 'IMSBC CODE & SUPPLEMENT ED 2023', '371613', 1.0, NULL, 2326, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3030, 471, 8, 'LIFE-SAVING APPLIANCES, INC. LSA CODE, ED 2023', '371660', 1.0, NULL, 2327, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Perubahan warna: Cokelat keemasan menjadi merah terang', NULL, 20.0, NULL, 2319, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3023, 471, 1, 'IAMSAR MANUAL VOL III MOBILE FACILITIES ED 2025', '371652', 1.0, NULL, 2320, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3024, 471, 2, 'IAMSAR VOL 2 ED 2025', '371651', 1.0, NULL, 2321, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3025, 471, 3, 'IAMSAR VOL 1 ED 2025', '371650', 1.0, NULL, 2322, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3026, 471, 4, 'SOLAS CONSOLIDATED 2024', '371601', 1.0, NULL, 2323, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3027, 471, 5, 'IMDG CODE ED 2024 (inc. AMD 42-24) Vol 1&2', '371607', 1.0, NULL, 2324, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3028, 471, 6, 'IMDG CODE SUPPLEMENT ED 2024', '371611', 1.0, NULL, 2325, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3029, 471, 7, 'IMSBC CODE & SUPPLEMENT ED 2023', '371613', 1.0, NULL, 2326, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3030, 471, 8, 'LIFE-SAVING APPLIANCES, INC. LSA CODE, ED 2023', '371660', 1.0, NULL, 2327, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3031, 472, 1, 'DRINKING WATER 500ML  Completely sterile, vacuum-sealed water in pouch
-AC440V, 60Hz', '330237', 100.0, NULL, 2328, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3032, 473, 1, 'Sewage And Greywater Discharge Record Book', '330237', 3.0, NULL, 2328, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+AC440V, 60Hz', '330237', 100.0, NULL, 2328, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3032, 473, 1, 'Sewage And Greywater Discharge Record Book', '330237', 3.0, NULL, 2328, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3033, 474, 1, 'HATCH COVER TAPE
 150X20MTR - 2''s/box 
 IMPA 232453
-Brand mix (base on stock)', NULL, 50.0, NULL, 2329, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Brand mix (base on stock)', NULL, 50.0, NULL, 2329, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3034, 474, 2, 'HATCH COVER TAPE
 SIZE 300 MM X 5 M
-Price per Roll', NULL, 100.0, NULL, 2330, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Price per Roll', NULL, 100.0, NULL, 2330, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3035, 475, 1, 'Relay Schneider RXM4AB2P7 230VAC, 50/60 Hz, 6 A, 14 Pin/Kaki', NULL, 6.0, NULL, 2331, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3036, 476, 1, 'SPARE WHEELS FOR PLATFORM TRUCK
 (Diameter: 6 Inch or 150 mm), Free Swivel.', '617168', 4.0, NULL, 2332, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -21352,53 +21352,53 @@ DP200A, 220-240V - 50/60Hz, 0.14A', NULL, 5.0, NULL, 2336, 'matched', 'import', 
   (3041, 476, 6, 'REGULATOR OKSIGEN YAMATO MAX YR 76 - OXYGEN GAS WELDING YAMOTO OXY', '850191', 4.0, NULL, 675, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3042, 476, 7, 'Branch Yamato Regulator LPG Welding', NULL, 4.0, NULL, 2337, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3043, 477, 1, 'Rod Seal 10*16*6,3mm', NULL, 10.0, NULL, 1222, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3044, 477, 2, 'Rod Seal 10*16*6,3mm', NULL, 10.0, NULL, 2338, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3045, 477, 3, 'Piston Seal 53*63*12mm, CFW C1', NULL, 10.0, NULL, 1221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3044, 477, 2, 'Rod Seal 10*16*6,3mm', NULL, 10.0, NULL, 2338, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3045, 477, 3, 'Piston Seal 53*63*12mm, CFW C1', NULL, 10.0, NULL, 1221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3046, 477, 4, 'Oring 58*3,1mm', NULL, 30.0, NULL, 1223, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3047, 477, 5, 'Guide Ring 60*63*3,9mm', NULL, 20.0, NULL, 1219, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3048, 477, 6, 'Piston Seal 53*63*4mm', NULL, 10.0, NULL, 1220, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3049, 477, 7, 'Rod Seal 10*16*5mm', NULL, 20.0, NULL, 1224, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3050, 478, 1, 'Roller Stator Danfoss RE-540', NULL, 1.0, NULL, 2339, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3051, 479, 1, 'Oil Seal VR 45A', NULL, 82.0, NULL, 2340, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3052, 479, 2, 'Oil Seal VR 32A', NULL, 82.0, NULL, 2340, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3052, 479, 2, 'Oil Seal VR 32A', NULL, 82.0, NULL, 2340, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3053, 480, 1, 'Hannochs Lampu LED SONIC 
 Watt : 12W 
 Warna : Cool Daylight (Putih) 
 Terang : 1380 LM
-Fitting : E27', NULL, 75.0, NULL, 2341, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Fitting : E27', NULL, 75.0, NULL, 2341, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3054, 480, 2, 'Lampu TL Phillips TL-D 36W/54-765-120cm
 Watt: 36W, Lumens: 2500 lm
 P: 1200mm, d: 28mm
 fittting: G13
-Cahaya: putih/ Cool Day Light/6500K', NULL, 50.0, NULL, 2342, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Cahaya: putih/ Cool Day Light/6500K', NULL, 50.0, NULL, 2342, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3055, 480, 3, 'Lampu TL Phillips TL-D 18W/54-765
 Watt: 18W
-Cahaya: putih/ Cool Day Light/6500K', NULL, 50.0, NULL, 2343, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3056, 480, 4, 'PHILIPS STATER S10 4-65 WATT', NULL, 100.0, NULL, 2344, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Cahaya: putih/ Cool Day Light/6500K', NULL, 50.0, NULL, 2343, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3056, 480, 4, 'PHILIPS STATER S10 4-65 WATT', NULL, 100.0, NULL, 2344, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3057, 481, 1, 'Hannochs Lampu LED SONIC 
 Watt : 12W 
 Warna : Cool Daylight (Putih) 
 Terang : 1380 LM
-Fitting : E27', NULL, 75.0, NULL, 2341, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Fitting : E27', NULL, 75.0, NULL, 2341, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3058, 481, 2, 'Lampu TL Phillips TL-D 36W/54-765-120cm
 Watt: 36W, Lumens: 2500 lm
 P: 1200mm, d: 28mm
 fittting: G13
-Cahaya: putih/ Cool Day Light/6500K', NULL, 50.0, NULL, 2342, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Cahaya: putih/ Cool Day Light/6500K', NULL, 50.0, NULL, 2342, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3059, 481, 3, 'Lampu TL Phillips TL-D 18W/54-765
 Watt: 18W
-Cahaya: putih/ Cool Day Light/6500K', NULL, 50.0, NULL, 2343, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3060, 481, 4, 'PHILIPS STATER S10 4-65 WATT', NULL, 100.0, NULL, 2344, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Cahaya: putih/ Cool Day Light/6500K', NULL, 50.0, NULL, 2343, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3060, 481, 4, 'PHILIPS STATER S10 4-65 WATT', NULL, 100.0, NULL, 2344, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3061, 482, 1, 'Panel Box Outdoor P x L x T (38 x 20 x 36)
 Custom size - made to order (7 working days)', NULL, 2.0, NULL, 2345, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3062, 482, 2, 'Panel Box Outdoor P x L x t (44 x 48 x 60)
 Custom size - made to order (7 working days)', NULL, 2.0, NULL, 2346, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3063, 482, 3, 'No Offer', NULL, 1.0, NULL, 658, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3064, 483, 1, 'Racor 2040 PM 30 Micron', NULL, 20.0, NULL, 484, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3065, 483, 2, 'Contact Cleaner Rexco 18 500 ml', NULL, 2.0, NULL, 1170, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3064, 483, 1, 'Racor 2040 PM 30 Micron', NULL, 20.0, NULL, 484, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3065, 483, 2, 'Contact Cleaner Rexco 18 500 ml', NULL, 2.0, NULL, 1170, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3066, 483, 3, 'Selang Hidrolik R2 - 3/4" 
 Brighthose 2wire 3/4" DIN 20022 EN 853 2 SN/SAE 100R2T 
-price per meter', NULL, 1.0, NULL, 2347, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+price per meter', NULL, 1.0, NULL, 2347, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3067, 484, 1, 'Nozzle Burner Kapasitas 100kg/k 60° W2
 note: available only 2pcs', NULL, 2.0, NULL, 2348, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3068, 485, 1, 'Transport to Sangatta Utara - Kalimantan Timur', NULL, 1.0, NULL, 2349, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -21437,10 +21437,10 @@ FLOODLIGHT FIXTURE DAY LIGHT, LED100W 100-240V
 325X425X200MM
 
 LED LAMP 11000LUMINS - 1P65 - 110 - 265V', NULL, 35.0, NULL, 2378, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3098, 489, 1, 'Epson 3210 dan tinta printer compatible 1 set', '472742', 2.0, NULL, 1985, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3098, 489, 1, 'Epson 3210 dan tinta printer compatible 1 set', '472742', 2.0, NULL, 1985, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3099, 490, 1, 'Air Powered Airless Paint Sprayers Air-powered 
 PAINT SPRAY PRESIDENT 
-SD CART 34:1', '270107', 1.0, NULL, 2379, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SD CART 34:1', '270107', 1.0, NULL, 2379, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3100, 491, 1, 'Detergen Rinso
 REQEUST DETERGENT 1 KG PER 3 MONTHLY', NULL, 75.0, NULL, 2380, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
@@ -21483,26 +21483,26 @@ COOKING FOIL ALUMINIUM, 450MMX30MTR', '174202', 10.0, NULL, 2391, 'matched', 'im
   (3115, 491, 16, 'Toilet Odor Balls
 TOILET ODOR BALL', '550336', 10.0, NULL, 1545, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3116, 491, 17, 'Cockroach Killer COCKROACH KILLER AEROSOL 300CC', '550621', 10.0, NULL, 2392, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3117, 492, 1, 'Bolt & Nut M20 x 50 Carbon Steel', '110125', 300.0, NULL, 2393, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3118, 492, 2, 'Stud Bolt M20 L=1mtr Carbon Steel & Mur M20 (2pcs) Carbon Steel', NULL, 300.0, NULL, 2394, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3119, 493, 1, 'Gland Packing Carbon Fiber Packing White PTFE Impa 810385', '815407', 3.0, NULL, 2395, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3120, 493, 2, 'No Offer', '815408', 3.0, NULL, 2396, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3121, 493, 3, 'Gland Packing Carbon Fiber Packing White PTFE Impa 810386', '815409', 3.0, NULL, 2397, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3122, 493, 4, 'Gland Packing Carbon Fiber Packing White PTFE Impa 810387', '815410', 3.0, NULL, 2398, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3123, 494, 1, 'No Offer', '815407', 1.0, NULL, 2395, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3124, 494, 2, 'Trafo Step up down 110/220  3000 watt', '815408', 1.0, NULL, 2396, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3117, 492, 1, 'Bolt & Nut M20 x 50 Carbon Steel', '110125', 300.0, NULL, 2393, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3118, 492, 2, 'Stud Bolt M20 L=1mtr Carbon Steel & Mur M20 (2pcs) Carbon Steel', NULL, 300.0, NULL, 2394, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3119, 493, 1, 'Gland Packing Carbon Fiber Packing White PTFE Impa 810385', '815407', 3.0, NULL, 2395, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3120, 493, 2, 'No Offer', '815408', 3.0, NULL, 2396, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3121, 493, 3, 'Gland Packing Carbon Fiber Packing White PTFE Impa 810386', '815409', 3.0, NULL, 2397, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3122, 493, 4, 'Gland Packing Carbon Fiber Packing White PTFE Impa 810387', '815410', 3.0, NULL, 2398, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3123, 494, 1, 'No Offer', '815407', 1.0, NULL, 2395, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3124, 494, 2, 'Trafo Step up down 110/220  3000 watt', '815408', 1.0, NULL, 2396, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3125, 495, 1, 'Protective Workwear/Warepack/Coverall
 Sky Blue/Biru Muda
-Size M', '312262', 2.0, NULL, 2399, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Size M', '312262', 2.0, NULL, 2399, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3126, 495, 2, 'Protective Workwear/Warepack/Coverall
 Sky Blue/Biru Muda
-Size L', '312263', 10.0, NULL, 2400, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Size L', '312263', 10.0, NULL, 2400, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3127, 495, 3, 'Protective Workwear/Warepack/Coverall
 Sky Blue/Biru Muda
-Size XL', '312264', 10.0, NULL, 2401, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Size XL', '312264', 10.0, NULL, 2401, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3128, 495, 4, 'Protective Workwear/Warepack/Coverall
 Sky Blue/Biru Muda
-Size 2XL', '312265', 2.0, NULL, 2402, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Size 2XL', '312265', 2.0, NULL, 2402, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3129, 496, 1, 'Armoured Cables
 CABLE HALOGEN-FREE ARMOURED, LKSM-HF 0.6/1KV
 1.5MM2X3C 16A', '794339', 50.0, NULL, 2256, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -21523,7 +21523,7 @@ HOLE DIA 6MM', '794513', 15.0, NULL, 2406, 'matched', 'import', 'Backfilled from
   (3134, 497, 1, 'MAKITA Cordless Impact Driver
 Drive 1/2"
 Inc 2 Battery & Power Adaptor 220V
-MAKITA JLD 1090S', '590925', 2.0, NULL, 2407, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+MAKITA JLD 1090S', '590925', 2.0, NULL, 2407, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3135, 498, 1, 'MAKITA Cordless Impact Driver
 Drive 1/2" & 1/4"
 Inc 2 Battery & Power Adaptor
@@ -21559,77 +21559,77 @@ PACKING GLAND NON-AS CARBON, FIBRE VALQUA 6201
 PACKING GLAND NON-AS CARBON, FIBRE VALQUA 6201 
 12.5MMX3MTR', NULL, 3.0, NULL, 2415, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3144, 503, 1, 'KUNCI SHOCK
-Wrench Socket Set 4-14mm square drive 1/4"Inc. Box', '610110', 2.0, NULL, 2416, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Wrench Socket Set 4-14mm square drive 1/4"Inc. Box', '610110', 2.0, NULL, 2416, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3145, 503, 2, 'Kasa Dacron Filter Turbo 20mm x 2 m x 10m
-1 Roll', '813872', 1.0, NULL, 2417, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3146, 503, 3, 'Ember hitam 20 Liter', '590612', 2.0, NULL, 2418, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3147, 503, 4, 'Stang Las 600Amp', '851027', 4.0, NULL, 2419, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3148, 503, 5, 'Sarung Tangan Las', '851163', 5.0, NULL, 669, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 Roll', '813872', 1.0, NULL, 2417, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3146, 503, 3, 'Ember hitam 20 Liter', '590612', 2.0, NULL, 2418, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3147, 503, 4, 'Stang Las 600Amp', '851027', 4.0, NULL, 2419, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3148, 503, 5, 'Sarung Tangan Las', '851163', 5.0, NULL, 669, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3149, 503, 6, 'Hacksaw Blade
 BLADE HACKSAW HAND, HIGH SPEED STEEL
-300MMX18TEETH', '613452', 24.0, NULL, 2420, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+300MMX18TEETH', '613452', 24.0, NULL, 2420, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3150, 503, 7, 'Hacksaw Blade
 BLADE HACKSAW HAND, HIGH SPEED STEEL
-300MMX18TEETH', '613452', 24.0, NULL, 2420, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+300MMX18TEETH', '613452', 24.0, NULL, 2420, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3151, 503, 8, 'ISOLASI LISTRIK Nitto warna hitam
-3/4" x 25m', '795433', 20.0, NULL, 2421, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3152, 503, 9, 'please provide details', '620229', 2.0, NULL, 2422, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3153, 503, 10, 'please provide details', '610267', 2.0, NULL, 2423, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3154, 503, 11, 'Baut Mur M12x70 (1pack isi 50pcs)', '691226', 1.0, NULL, 2424, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3155, 503, 12, 'Baut Mur M6x 70 (1pack isi 50pcs)', '690199', 1.0, NULL, 2425, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3156, 503, 13, 'Rubber Sheet 100cmx100cmx3mm', '814752', 3.0, NULL, 2426, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3157, 503, 14, 'Rubber Sheet 100cmx100cmx2mm', '814752', 3.0, NULL, 2426, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3158, 503, 15, 'Rubber Sheet 100cmx100cmx1mm', '814752', 3.0, NULL, 2426, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+3/4" x 25m', '795433', 20.0, NULL, 2421, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3152, 503, 9, 'please provide details', '620229', 2.0, NULL, 2422, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3153, 503, 10, 'please provide details', '610267', 2.0, NULL, 2423, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3154, 503, 11, 'Baut Mur M12x70 (1pack isi 50pcs)', '691226', 1.0, NULL, 2424, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3155, 503, 12, 'Baut Mur M6x 70 (1pack isi 50pcs)', '690199', 1.0, NULL, 2425, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3156, 503, 13, 'Rubber Sheet 100cmx100cmx3mm', '814752', 3.0, NULL, 2426, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3157, 503, 14, 'Rubber Sheet 100cmx100cmx2mm', '814752', 3.0, NULL, 2426, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3158, 503, 15, 'Rubber Sheet 100cmx100cmx1mm', '814752', 3.0, NULL, 2426, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3159, 503, 16, 'Flat Chisel 25x155mm
-IMPA 590535 (per pcs)', '590535', 1.0, NULL, 2427, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IMPA 590535 (per pcs)', '590535', 1.0, NULL, 2427, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3160, 503, 17, 'Refill Pel 
-Lebar Kepala Pel 19cm', '174171', 12.0, NULL, 2428, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3161, 503, 18, 'Sapu Ijuk', '510807', 6.0, NULL, 1541, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3162, 503, 19, 'KAWAT LAS RB-26/2,6mm', '850935', 20.0, NULL, 2429, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3163, 503, 20, 'KAWAT LAS RB-26/3,2mm', '850935', 20.0, NULL, 2429, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3164, 503, 21, 'KAWAT LAS LB-52/3,2mm', '850935', 10.0, NULL, 2429, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3165, 503, 22, 'KAWAT LAS LB-52/2,6mm', '850935', 10.0, NULL, 2429, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3166, 503, 23, 'Mata grinda cutting WD14" x 3mm', '614810', 12.0, NULL, 2430, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Lebar Kepala Pel 19cm', '174171', 12.0, NULL, 2428, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3161, 503, 18, 'Sapu Ijuk', '510807', 6.0, NULL, 1541, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3162, 503, 19, 'KAWAT LAS RB-26/2,6mm', '850935', 20.0, NULL, 2429, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3163, 503, 20, 'KAWAT LAS RB-26/3,2mm', '850935', 20.0, NULL, 2429, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3164, 503, 21, 'KAWAT LAS LB-52/3,2mm', '850935', 10.0, NULL, 2429, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3165, 503, 22, 'KAWAT LAS LB-52/2,6mm', '850935', 10.0, NULL, 2429, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3166, 503, 23, 'Mata grinda cutting WD14" x 3mm', '614810', 12.0, NULL, 2430, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3167, 503, 24, 'Mata grinda 7" x 3mm Nippon Resibon
-Per box = 10pcs', '614810', 5.0, NULL, 2430, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Per box = 10pcs', '614810', 5.0, NULL, 2430, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3168, 503, 25, 'Mata grinda 7" x 3mm Nippon Resibon
-Per box = 10pcs', '614810', 5.0, NULL, 2430, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Per box = 10pcs', '614810', 5.0, NULL, 2430, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3169, 503, 26, 'Super Pel Lemon Pouch 770g
-1 Box = 12 Pouch', '550234', 4.0, NULL, 2431, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3170, 503, 27, 'Senter LED Rechargeable', '792237', 10.0, NULL, 1437, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3171, 503, 28, 'Headlight Rechargeable', '792294', 10.0, NULL, 2261, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 Box = 12 Pouch', '550234', 4.0, NULL, 2431, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3170, 503, 27, 'Senter LED Rechargeable', '792237', 10.0, NULL, 1437, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3171, 503, 28, 'Headlight Rechargeable', '792294', 10.0, NULL, 2261, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3172, 503, 29, 'DRY WALL NUT
-Available only in 20kg/bag', '232975', 30.0, NULL, 2432, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Available only in 20kg/bag', '232975', 30.0, NULL, 2432, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3173, 503, 30, 'Airless Paint Spray Hand Gun With Nozzle guard pump sprayer
-IMPA 270321', '270323', 10.0, NULL, 2433, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3174, 503, 31, 'Thermo Gun -30~1100 C', '651802', 5.0, NULL, 183, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3175, 503, 32, 'Battery Kotak 9V, Alkaline', '792453', 6.0, NULL, 2434, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3176, 503, 33, 'Meteran Roll 10 m, Kenmaster', '650823', 5.0, NULL, 1388, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3177, 503, 34, 'Gunting Besar Stainless', '611841', 4.0, NULL, 2435, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3178, 503, 35, 'Gunting Seng Hollow Baja Ringan', '471003', 4.0, NULL, 2436, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IMPA 270321', '270323', 10.0, NULL, 2433, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3174, 503, 31, 'Thermo Gun -30~1100 C', '651802', 5.0, NULL, 183, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3175, 503, 32, 'Battery Kotak 9V, Alkaline', '792453', 6.0, NULL, 2434, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3176, 503, 33, 'Meteran Roll 10 m, Kenmaster', '650823', 5.0, NULL, 1388, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3177, 503, 34, 'Gunting Besar Stainless', '611841', 4.0, NULL, 2435, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3178, 503, 35, 'Gunting Seng Hollow Baja Ringan', '471003', 4.0, NULL, 2436, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3179, 503, 36, 'Loctite 495
-20gr', '812758', 1.0, NULL, 2437, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+20gr', '812758', 1.0, NULL, 2437, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3180, 503, 37, 'Selang air dengan benang 1/4"
-1 roll = 100 meter', '617680', 1.0, NULL, 2438, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3181, 503, 38, 'Molykote 1000 Paste Grease 1kg', '450511', 2.0, NULL, 2439, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3182, 503, 39, 'Oring Kit Set, 222Pcs', '813072', 2.0, NULL, 684, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3183, 503, 40, 'Copper Ring Kit 5-28mm, 568pcs', '813080', 2.0, NULL, 683, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 roll = 100 meter', '617680', 1.0, NULL, 2438, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3181, 503, 38, 'Molykote 1000 Paste Grease 1kg', '450511', 2.0, NULL, 2439, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3182, 503, 39, 'Oring Kit Set, 222Pcs', '813072', 2.0, NULL, 684, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3183, 503, 40, 'Copper Ring Kit 5-28mm, 568pcs', '813080', 2.0, NULL, 683, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3184, 503, 41, 'Kawat Las Tembaga
 1,5mmx3,2mmx450mm
-Per box = ±770pcs', '850451', 1.0, NULL, 2440, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3185, 503, 42, 'Borak Acid Bubuk 500gr', '390204', 2.0, NULL, 2441, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3186, 503, 43, 'Buku Tulis Folio isi 100 lembar, hard cover', '470121', 6.0, NULL, 2442, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3187, 503, 44, 'Porstex 1 Liter', '550235', 6.0, NULL, 936, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3188, 503, 45, 'Nozzle Cutting Tip untuk acetylene No.1', '850261', 4.0, NULL, 1021, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Per box = ±770pcs', '850451', 1.0, NULL, 2440, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3185, 503, 42, 'Borak Acid Bubuk 500gr', '390204', 2.0, NULL, 2441, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3186, 503, 43, 'Buku Tulis Folio isi 100 lembar, hard cover', '470121', 6.0, NULL, 2442, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3187, 503, 44, 'Porstex 1 Liter', '550235', 6.0, NULL, 936, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3188, 503, 45, 'Nozzle Cutting Tip untuk acetylene No.1', '850261', 4.0, NULL, 1021, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3189, 503, 46, 'Ballpoint hitam reguler 
 Joyco 0,5mm
-1 box = 12 pcs', '470603', 5.0, NULL, 2443, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 box = 12 pcs', '470603', 5.0, NULL, 2443, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3190, 503, 47, 'Paku keling aluminium 3mmx10mm
-1 pack = 50 pcs', '213577', 2.0, NULL, 2444, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 50 pcs', '213577', 2.0, NULL, 2444, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3191, 503, 48, 'Kikir Tangan Set 6pcs 5,5 Inch
-Merk Tekiro', '614315', 1.0, NULL, 2445, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3192, 504, 1, 'Smart LED TV 50"', NULL, 2.0, NULL, 2446, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3193, 504, 2, 'Player PC Karaoke 2TB + Mic 2 pcs Wireless Speaker', NULL, 1.0, NULL, 2447, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk Tekiro', '614315', 1.0, NULL, 2445, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3192, 504, 1, 'Smart LED TV 50"', NULL, 2.0, NULL, 2446, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3193, 504, 2, 'Player PC Karaoke 2TB + Mic 2 pcs Wireless Speaker', NULL, 1.0, NULL, 2447, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3194, 505, 1, 'Vention Adaptoro GaN Charger 4 Port 2 USB A 18W & Type C 100W PD Fast Charging', NULL, 2.0, NULL, 2448, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3195, 506, 1, 'Butterfly Valve, Double Flange, Worm Gear, JIS 10K, DN 400
 Outside Diameter (OD): 560 mm
@@ -21641,21 +21641,21 @@ Including delivery to Cilegon', NULL, 1.0, NULL, 2504, 'matched', 'import', 'Bac
   (3196, 507, 1, 'Embarkation Ladder 20 Meter Standar SOLAS CCS Certificate
 1 set = 2 x 20 meter embarkation ladder
 
-Note: only 4 unit available in stock', '232052', 2.0, NULL, 2449, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Note: only 4 unit available in stock', '232052', 2.0, NULL, 2449, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3197, 508, 1, 'Embarkation Ladder 20 Meter Standar SOLAS CCS Certificate
-1 set = 1 unit', '232052', 3.0, NULL, 2449, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 set = 1 unit', '232052', 3.0, NULL, 2449, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3198, 509, 1, 'SPARE MINI ROLLER 100MM', '510462', 150.0, NULL, 1301, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3199, 509, 2, '650823 - RULE CONVEX STEEL METRIC 5MTR', '650823', 5.0, NULL, 1388, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3199, 509, 2, '650823 - RULE CONVEX STEEL METRIC 5MTR', '650823', 5.0, NULL, 1388, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3200, 509, 3, 'DEMOLITION HAMMER MAKITA HR-2470 X5
-220V 780W', NULL, 2.0, NULL, 2450, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+220V 780W', NULL, 2.0, NULL, 2450, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
-  (3201, 509, 4, 'IMPA 591237 Chain Drum Disposable for Scaling Machine 1200 Watt', '591237', 10.0, NULL, 2451, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3202, 509, 5, 'Impa 590387 ; Spare Hammer Head For Scaling Hammer Single - SC 2', '590387', 10.0, NULL, 2452, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3203, 509, 6, 'Ear Plug / Earplug Ultrafit / Earplug Penutup Telinga Silikon', '50325', 50.0, NULL, 2453, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3201, 509, 4, 'IMPA 591237 Chain Drum Disposable for Scaling Machine 1200 Watt', '591237', 10.0, NULL, 2451, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3202, 509, 5, 'Impa 590387 ; Spare Hammer Head For Scaling Hammer Single - SC 2', '590387', 10.0, NULL, 2452, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3203, 509, 6, 'Ear Plug / Earplug Ultrafit / Earplug Penutup Telinga Silikon', '50325', 50.0, NULL, 2453, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3204, 509, 7, 'Rope Tarred Hemp 3-strand
 HEMP ROPE 3STRAND TARRED, 2"CIRX200MTR', '211257', 1.0, NULL, 2454, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3205, 509, 8, 'CUTTING WHEEL 
@@ -21663,128 +21663,128 @@ Brand: Nippon Resibon
 UKURAN 405 X 3 X 25.4 ( 16" )
 Max Speed : 72 m/s 
 RPM : 2.970
-1 pack = 25 pcs', '591162', 4.0, NULL, 2455, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3206, 509, 9, 'IZM Model ARTCO Gerobak Sorong / Gerobak Cor / Gerobak Dorong Pasir / Troly Pasir IZM Troli Bahan Hardened Iron Steel Ban Hidup dan Mati Berat Ringan 100-300 kg - Ban Hidup', '617145', 2.0, NULL, 2456, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 pack = 25 pcs', '591162', 4.0, NULL, 2455, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3206, 509, 9, 'IZM Model ARTCO Gerobak Sorong / Gerobak Cor / Gerobak Dorong Pasir / Troly Pasir IZM Troli Bahan Hardened Iron Steel Ban Hidup dan Mati Berat Ringan 100-300 kg - Ban Hidup', '617145', 2.0, NULL, 2456, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3207, 509, 10, 'Barrier Tapes
 TAPE BARRIER POLYETHYLENE B&Y, NON-ADHESIVE
-W75MM X L500MTR', '331198', 50.0, NULL, 2457, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+W75MM X L500MTR', '331198', 50.0, NULL, 2457, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3208, 509, 11, 'Wall Faucets Hose End
 FAUCET WALL WITH ROTARY SPOUT, 13(1/2)', '530124', 10.0, NULL, 2458, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3209, 509, 12, 'Seal Karet Untuk Coupling Dan Nozzle
 Model : NAKAJIMA
 Bahan : Karet Sintetis
-Ukuran : 1.5 Inch', '330845', 20.0, NULL, 2459, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Ukuran : 1.5 Inch', '330845', 20.0, NULL, 2459, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3210, 509, 13, 'Seal Karet Untuk Coupling Dan Nozzle 
 Model : NAKAJIMA 
 Bahan : Karet Sintetis 
-Ukuran : 2 Inch', '330846', 20.0, NULL, 2460, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3211, 509, 14, 'Kain majun putih/warna, jahit tumpuk', '232902', 200.0, NULL, 2461, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Ukuran : 2 Inch', '330846', 20.0, NULL, 2460, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3211, 509, 14, 'Kain majun putih/warna, jahit tumpuk', '232902', 200.0, NULL, 2461, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3212, 509, 15, 'WHEEL GRINDING OFFSET RESINOID, 105X3X16MM 
-Nippon Resibon 4" x 3mm x 16mm', '614801', 2.0, NULL, 2462, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Nippon Resibon 4" x 3mm x 16mm', '614801', 2.0, NULL, 2462, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3213, 509, 16, 'WHEEL CUT-OFF RESINOID GRAIN36, 105X1,6X16MM 
-Nippon Resibon 4" x 1,6mm x 16mm', '614855', 2.0, NULL, 2463, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Nippon Resibon 4" x 1,6mm x 16mm', '614855', 2.0, NULL, 2463, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3214, 509, 17, 'No leak tape
 VitalBand by Nippon
-5cm x 10m', '812492', 100.0, NULL, 2464, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3215, 509, 18, 'Baut Mur Hexagon Stainless Steel 304 M16 x 100 Diameter 16 mm Panjang 100 mm Kunci 24 Drat 2.00 Baut Mur Hexagon SS 304 Harga Termasuk Baut + Mur Terbuat dari Stainless Steel 304 Memberikan Ketahanan dan Keawetan', '692931', 200.0, NULL, 2465, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3216, 509, 19, '813072 Karet Rubber O Ring Seal Tightening Kit Set 17 sizes/222 PCS', '813072', 2.0, NULL, 684, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3217, 509, 20, 'Pipa carbon steel (seamless) sch 40 uk 1/2 inch x 6 meter', '710404', 10.0, NULL, 2466, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+5cm x 10m', '812492', 100.0, NULL, 2464, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3215, 509, 18, 'Baut Mur Hexagon Stainless Steel 304 M16 x 100 Diameter 16 mm Panjang 100 mm Kunci 24 Drat 2.00 Baut Mur Hexagon SS 304 Harga Termasuk Baut + Mur Terbuat dari Stainless Steel 304 Memberikan Ketahanan dan Keawetan', '692931', 200.0, NULL, 2465, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3216, 509, 19, '813072 Karet Rubber O Ring Seal Tightening Kit Set 17 sizes/222 PCS', '813072', 2.0, NULL, 684, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3217, 509, 20, 'Pipa carbon steel (seamless) sch 40 uk 1/2 inch x 6 meter', '710404', 10.0, NULL, 2466, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3218, 509, 21, 'HIGHT PRESSURE WATER BLASTER TURBO ROTARY 
 NOZZLE
 HIGHT PRESSURE WATER BLASTER TURBO ROTARY 
 NOZZLE(ALL-K MARINE)
 Request Rotari Nozzle 030 G1.4F 500 Bar acces for water blaster + hand gun (Merk NILFISK MC 9P)', NULL, 2.0, NULL, 2467, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3219, 509, 22, 'Kacamata Safety', '311051', 20.0, NULL, 2468, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3219, 509, 22, 'Kacamata Safety', '311051', 20.0, NULL, 2468, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3220, 510, 1, 'Regular Swivel Forged Steel
-Swivel Crosby 1 inch', '231277', 6.0, NULL, 911, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Swivel Crosby 1 inch', '231277', 6.0, NULL, 911, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3221, 510, 2, 'Tyres Used
 TYRE USED Size 16"
-Available mix brand', '232421', 35.0, NULL, 2469, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3222, 510, 3, 'Crosby Shackle Omega G2130 1/2 Inch', '234231', 65.0, NULL, 2470, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3223, 510, 4, 'Pneumatic Derusting Brushes MAG-9000', '592071', 2.0, NULL, 2471, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Available mix brand', '232421', 35.0, NULL, 2469, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3222, 510, 3, 'Crosby Shackle Omega G2130 1/2 Inch', '234231', 65.0, NULL, 2470, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3223, 510, 4, 'Pneumatic Derusting Brushes MAG-9000', '592071', 2.0, NULL, 2471, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3224, 510, 5, 'PNUEMATIC SCALLING HAMMER 
 Single Hammer S2 TD-01A-SC-2
-IMPA 590382', '590382', 2.0, NULL, 1292, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IMPA 590382', '590382', 2.0, NULL, 1292, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3225, 510, 6, 'Spare Hammer Heads for Pneumatic Scaling Hammer
 SPARE HAMMER HEAD, FOR SCALING HAMMER SINGLE', '590387', 20.0, NULL, 2452, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3226, 510, 7, 'IMPA 591237 Chain Drum Disposable for Scaling Machine 1200 Watt', '591237', 30.0, NULL, 2451, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3226, 510, 7, 'IMPA 591237 Chain Drum Disposable for Scaling Machine 1200 Watt', '591237', 30.0, NULL, 2451, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3227, 510, 8, 'Explosion-proof Deck Scalers Rustibus EX Series
 WIRE BRUSH HEAVY DUTY 120-0151, FOR RUSTIBUS 
 DECK SCALER 1200
 
 Crimped Wire IMPA 591803
-Only 4 available', NULL, 4.0, NULL, 2472, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3228, 510, 9, 'BOSCH GWS 700 MESIN GERINDRA TANGAN 4" - GWS700', '591031', 1.0, NULL, 162, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3229, 510, 10, 'Hasston Kunci Pipa Besi Heavy Duty 8" / pipe wrench', '611305', 2.0, NULL, 2473, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3230, 510, 11, 'impa 591253 flexible shaft and tube for scaling machine for KC50', '591253', 3.0, NULL, 2474, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3231, 510, 12, 'BOSCH GWS 700 MESIN GERINDRA TANGAN 4" - GWS700', '591031', 3.0, NULL, 162, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Only 4 available', NULL, 4.0, NULL, 2472, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3228, 510, 9, 'BOSCH GWS 700 MESIN GERINDRA TANGAN 4" - GWS700', '591031', 1.0, NULL, 162, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3229, 510, 10, 'Hasston Kunci Pipa Besi Heavy Duty 8" / pipe wrench', '611305', 2.0, NULL, 2473, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3230, 510, 11, 'impa 591253 flexible shaft and tube for scaling machine for KC50', '591253', 3.0, NULL, 2474, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3231, 510, 12, 'BOSCH GWS 700 MESIN GERINDRA TANGAN 4" - GWS700', '591031', 3.0, NULL, 162, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3232, 510, 13, 'Sump Pumps Electric 
-SUMP PUMP ELEC LIFT 35MTR, 50mm (2") AC440V 3KW 60Hz - IMPA 591630', '591630', 1.0, NULL, 2040, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3233, 510, 14, 'IMPA 614117 Banding Screw Buckle Stainless Steel 12.7mm 1/2"', '614117', 5.0, NULL, 2475, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+SUMP PUMP ELEC LIFT 35MTR, 50mm (2") AC440V 3KW 60Hz - IMPA 591630', '591630', 1.0, NULL, 2040, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3233, 510, 14, 'IMPA 614117 Banding Screw Buckle Stainless Steel 12.7mm 1/2"', '614117', 5.0, NULL, 2475, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3234, 510, 15, 'PISTON HEAD PNUEMATIC HAMMER
 DECK TOOL AND SPARE PART
 REQUEST SPARE PISTON HAMMER HEADS SCAILING', '590411', 30.0, NULL, 2476, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3235, 510, 16, 'PNUEMATIC SCALLING HAMMER 
 Single Hammer S2 TD-01A-SC-2
-IMPA 590382', '590382', 3.0, NULL, 1292, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3236, 510, 17, 'IMPA 591237 Chain Drum Disposable for Scaling Machine 1200 Watt', '591237', 30.0, NULL, 2451, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3237, 510, 18, 'impa 591253 flexible shaft and tube for scaling machine for KC50', '591253', 3.0, NULL, 2474, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IMPA 590382', '590382', 3.0, NULL, 1292, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3236, 510, 17, 'IMPA 591237 Chain Drum Disposable for Scaling Machine 1200 Watt', '591237', 30.0, NULL, 2451, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3237, 510, 18, 'impa 591253 flexible shaft and tube for scaling machine for KC50', '591253', 3.0, NULL, 2474, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3238, 511, 1, 'Gland Packing 8mm x 3m
 Pilar 6501L
-Per pack = 3 meter', NULL, 4.0, NULL, 2477, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Per pack = 3 meter', NULL, 4.0, NULL, 2477, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3239, 511, 2, 'Gland Packing 11mm x 3m
 Pilar 6501L
-Per pack = 3 meter', NULL, 4.0, NULL, 2478, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Per pack = 3 meter', NULL, 4.0, NULL, 2478, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3240, 511, 3, 'Gland Packing 12,5mm x 3m
 Pilar 6501L
-Per pack = 3 meter', NULL, 4.0, NULL, 2479, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Per pack = 3 meter', NULL, 4.0, NULL, 2479, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3241, 511, 4, 'Gland Packing 14mm x 3m
 Pilar 6501L
-Per pack = 3 meter', NULL, 4.0, NULL, 2480, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3242, 512, 1, 'Procedures for Port State Control 2023, 2024 Edition', '312262', 1.0, NULL, 2399, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Per pack = 3 meter', NULL, 4.0, NULL, 2480, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3242, 512, 1, 'Procedures for Port State Control 2023, 2024 Edition', '312262', 1.0, NULL, 2399, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3243, 512, 2, 'Performance Standards, 2023 Edition
-Softcopy (Online Access) via Witherby Connect (IMO browser based E-reader)', '312263', 1.0, NULL, 2400, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3244, 512, 3, 'GMDSS Manual, 2024 Edition', '312264', 1.0, NULL, 2401, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3245, 512, 4, 'International Code of Signals, 2005 Edition (Revised 2022)', '312265', 1.0, NULL, 2402, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Softcopy (Online Access) via Witherby Connect (IMO browser based E-reader)', '312263', 1.0, NULL, 2400, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3244, 512, 3, 'GMDSS Manual, 2024 Edition', '312264', 1.0, NULL, 2401, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3245, 512, 4, 'International Code of Signals, 2005 Edition (Revised 2022)', '312265', 1.0, NULL, 2402, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3246, 512, 5, 'Norie''s Nautical Tables, 2025 Edition
-Published by Imray - 2025', NULL, 1.0, NULL, 2481, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3247, 512, 6, 'Life-Saving Appliances inc. LSA Code, 2023 Edition', NULL, 1.0, NULL, 2482, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3248, 512, 7, 'MARPOL Consolidated Edition, 2022', NULL, 1.0, NULL, 2483, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3249, 512, 8, 'MARPOL Annex VI and NTC 2008, 2023 Edition', NULL, 1.0, NULL, 2484, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Published by Imray - 2025', NULL, 1.0, NULL, 2481, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3247, 512, 6, 'Life-Saving Appliances inc. LSA Code, 2023 Edition', NULL, 1.0, NULL, 2482, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3248, 512, 7, 'MARPOL Consolidated Edition, 2022', NULL, 1.0, NULL, 2483, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3249, 512, 8, 'MARPOL Annex VI and NTC 2008, 2023 Edition', NULL, 1.0, NULL, 2484, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3250, 512, 9, 'Thomas'' Stowage, 10th Edition
-Published by Brown - 2024', NULL, 1.0, NULL, 2485, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3251, 512, 10, 'Guide to Maritime Security and the ISPS Code, 2021 Edition', NULL, 1.0, NULL, 2486, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Published by Brown - 2024', NULL, 1.0, NULL, 2485, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3251, 512, 10, 'Guide to Maritime Security and the ISPS Code, 2021 Edition', NULL, 1.0, NULL, 2486, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3252, 512, 11, 'Drug Trafficking and Drug Abuse On Board Ship - Guidelines for Owners and Masters on Preparation, Prevention, 
 Protection and Response, 2025-2026 Edition 
-Published by ICS (Marisec) & Witherbys - 2025', NULL, 1.0, NULL, 2487, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Published by ICS (Marisec) & Witherbys - 2025', NULL, 1.0, NULL, 2487, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3253, 512, 12, 'A Mariner''s Guide to Preventing Collisions, 4th Edition
 by Capt. Yashwant Chhabra 
-Published by Marex Marine Consultants', NULL, 1.0, NULL, 2488, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3254, 512, 13, 'Guidelines on Fatigue, 2019 Edition', NULL, 1.0, NULL, 2489, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Published by Marex Marine Consultants', NULL, 1.0, NULL, 2488, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3254, 512, 13, 'Guidelines on Fatigue, 2019 Edition', NULL, 1.0, NULL, 2489, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3255, 512, 14, 'Manual on Oil Pollution, Section I: Prevention, 2011 Edition
 
-Softcopy (Online Access) via Witherby Connect (IMO browser based E-reader)', NULL, 1.0, NULL, 2490, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3256, 512, 15, 'Manual on Oil Pollution - Section II, 2018 Edition', NULL, 1.0, NULL, 2491, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3257, 512, 16, 'Manual on Oil Pollution - Section III, 1997 Edition', NULL, 1.0, NULL, 2492, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3258, 512, 17, 'Manual on Oil Pollution - Section V, 2009 Edition', NULL, 1.0, NULL, 2493, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3259, 512, 18, 'Manual on Oil Pollution - Section VI, 1998 Edition', NULL, 1.0, NULL, 2494, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Softcopy (Online Access) via Witherby Connect (IMO browser based E-reader)', NULL, 1.0, NULL, 2490, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3256, 512, 15, 'Manual on Oil Pollution - Section II, 2018 Edition', NULL, 1.0, NULL, 2491, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3257, 512, 16, 'Manual on Oil Pollution - Section III, 1997 Edition', NULL, 1.0, NULL, 2492, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3258, 512, 17, 'Manual on Oil Pollution - Section V, 2009 Edition', NULL, 1.0, NULL, 2493, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3259, 512, 18, 'Manual on Oil Pollution - Section VI, 1998 Edition', NULL, 1.0, NULL, 2494, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3260, 512, 19, 'ILO MARITIME LABOUR CONVENTION
 Guidelines on the Application of the ILO Maritime Labour Convention 4th Edition
 
-Published by ICS (Marisec) - 2023', NULL, 1.0, NULL, 2495, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3261, 512, 20, 'ITOPF Handbook 2025/2026 (FREE PDF)', NULL, 1.0, NULL, 2496, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Published by ICS (Marisec) - 2023', NULL, 1.0, NULL, 2495, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3261, 512, 20, 'ITOPF Handbook 2025/2026 (FREE PDF)', NULL, 1.0, NULL, 2496, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3262, 512, 21, 'ITU List IV - List of Coast Stations and Special Service Stations, 2025 edition
 
-Format: CD', NULL, 1.0, NULL, 2497, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Format: CD', NULL, 1.0, NULL, 2497, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3263, 512, 22, 'ITU List V - List of Ship Stations and Maritime Mobile Service 
 Identity Assignments, 2025 Edition 
-Format: CD', NULL, 1.0, NULL, 2498, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Format: CD', NULL, 1.0, NULL, 2498, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3264, 512, 23, 'Bulk Carrier Practice - 3rd Edition 
-Published by NI - 2023', NULL, 1.0, NULL, 2499, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3265, 512, 24, 'BA 5126 (8) Routeing Chart, Indian Ocean, August', NULL, 1.0, NULL, 2500, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Published by NI - 2023', NULL, 1.0, NULL, 2499, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3265, 512, 24, 'BA 5126 (8) Routeing Chart, Indian Ocean, August', NULL, 1.0, NULL, 2500, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3266, 512, 25, 'Drug Trafficking and Drug Abuse On Board Ship - Guidelines for Owners and Masters on Preparation, Prevention, 
 Protection and Response, 2025-2026 Edition 
-Published by ICS (Marisec) & Witherbys - 2025', NULL, 1.0, NULL, 2501, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Published by ICS (Marisec) & Witherbys - 2025', NULL, 1.0, NULL, 2501, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3267, 513, 1, 'Manual Pneumatic Grease Gun Pump Lubricator
 
 Pressure Ratio 50:1
@@ -21794,14 +21794,14 @@ Capasity 20 L
 
 including:
 ''- 1 Flexible hose 4m
-''- 1 grease gun head', NULL, 1.0, NULL, 2502, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+''- 1 grease gun head', NULL, 1.0, NULL, 2502, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3268, 513, 2, 'Hydraulic Hose 20 meter', NULL, 1.0, NULL, 2503, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3269, 514, 1, 'INDONESIA TIDAL STREAM TABLE 2026
-Table Arus Pasang Surut Kepulauan Indonesia 2026', '371727', 1.0, NULL, 2505, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Table Arus Pasang Surut Kepulauan Indonesia 2026', '371727', 1.0, NULL, 2505, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3270, 514, 2, 'INDONESIA TIDE TABLE 2026
-Table Pasang Surut Kepulauan Indonesia 2026', '370786', 1.0, NULL, 2506, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Table Pasang Surut Kepulauan Indonesia 2026', '370786', 1.0, NULL, 2506, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3271, 514, 3, 'NAUTICAL ALMANAC INDONESIA 2026
-Almanak Nautika Indonesia 2026', '370602', 1.0, NULL, 2507, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Almanak Nautika Indonesia 2026', '370602', 1.0, NULL, 2507, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3272, 515, 1, 'Impeller 
 IMPELLER EMERGENCY FIRE PUMP', NULL, 1.0, NULL, 2508, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3273, 516, 1, 'Impeller 
@@ -21818,23 +21818,23 @@ jumlah : 1 unit
 material : cast steel
 system : emergency fire pump sea chest
 ket : rusak seat ring', NULL, 1.0, NULL, 2509, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3275, 518, 1, 'HRU HAMMER H20E for Epirb', '330126', 1.0, NULL, 2510, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3276, 518, 2, 'Glue Stick', '471091', 5.0, NULL, 2511, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3277, 518, 3, 'INK CARTRIDGE FOR EPSON, INK-JET PRINTER YELLOW (Y)', '472751', 8.0, NULL, 2512, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3278, 518, 4, 'COPY PAPER PLAIN A-4 500SHT', '472186', 10.0, NULL, 1986, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3279, 518, 5, 'INK CARTRIDGE FOR EPSON, INK-JET PRINTER BLACK', '472729', 14.0, NULL, 2513, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3280, 518, 6, 'INK CARTRIDGE FOR EPSON, INK-JET PRINTER CYAN (C)', '472749', 8.0, NULL, 2514, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3281, 518, 7, 'INK CARTRIDGE FOR EPSON, INK-JET PRINTER MAGENTA (M)', '472750', 8.0, NULL, 2515, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3282, 518, 8, 'NOTEBOOK HARD COVERED A-4, 296X220MM 200PAGE', '470105', 10.0, NULL, 2516, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3283, 518, 9, 'BALL-POINT PEN WATER-SOLUBLE, BLACK 0.5MM', '470617', 24.0, NULL, 2517, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3284, 518, 10, 'BALL-POINT PEN WATER-SOLUBLE, RED 0.5MM', '470618', 6.0, NULL, 2518, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3285, 518, 11, 'BALL-POINT PEN WATER-SOLUBLE, BLUE 0.5MM', '470619', 6.0, NULL, 2519, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3286, 518, 12, 'TAPE FOR NAME-LAND TAPE WRITER, W:12MM WHITE WITH BLACK LETTER', '473463', 8.0, NULL, 2520, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3287, 518, 13, 'Tape Sealing Kraft Paper 50 MM x 21 Mtr', '471273', 10.0, NULL, 2521, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3275, 518, 1, 'HRU HAMMER H20E for Epirb', '330126', 1.0, NULL, 2510, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3276, 518, 2, 'Glue Stick', '471091', 5.0, NULL, 2511, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3277, 518, 3, 'INK CARTRIDGE FOR EPSON, INK-JET PRINTER YELLOW (Y)', '472751', 8.0, NULL, 2512, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3278, 518, 4, 'COPY PAPER PLAIN A-4 500SHT', '472186', 10.0, NULL, 1986, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3279, 518, 5, 'INK CARTRIDGE FOR EPSON, INK-JET PRINTER BLACK', '472729', 14.0, NULL, 2513, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3280, 518, 6, 'INK CARTRIDGE FOR EPSON, INK-JET PRINTER CYAN (C)', '472749', 8.0, NULL, 2514, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3281, 518, 7, 'INK CARTRIDGE FOR EPSON, INK-JET PRINTER MAGENTA (M)', '472750', 8.0, NULL, 2515, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3282, 518, 8, 'NOTEBOOK HARD COVERED A-4, 296X220MM 200PAGE', '470105', 10.0, NULL, 2516, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3283, 518, 9, 'BALL-POINT PEN WATER-SOLUBLE, BLACK 0.5MM', '470617', 24.0, NULL, 2517, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3284, 518, 10, 'BALL-POINT PEN WATER-SOLUBLE, RED 0.5MM', '470618', 6.0, NULL, 2518, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3285, 518, 11, 'BALL-POINT PEN WATER-SOLUBLE, BLUE 0.5MM', '470619', 6.0, NULL, 2519, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3286, 518, 12, 'TAPE FOR NAME-LAND TAPE WRITER, W:12MM WHITE WITH BLACK LETTER', '473463', 8.0, NULL, 2520, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3287, 518, 13, 'Tape Sealing Kraft Paper 50 MM x 21 Mtr', '471273', 10.0, NULL, 2521, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3288, 518, 14, 'Baterai AAA (A3) Alkaline
-1 Pack = 2pcs', '792424', 20.0, NULL, 2050, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 Pack = 2pcs', '792424', 20.0, NULL, 2050, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3289, 518, 15, 'Baterai AA (A2) Alkaline
-1 Pack = 2pcs', '792422', 10.0, NULL, 2522, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 Pack = 2pcs', '792422', 10.0, NULL, 2522, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3290, 519, 1, 'Butterfly Valve Center Handle Actuator
 BUTTERFLY VALVE WAFER TYPE, CENTRAL HANDLE ACTUATOR 8"
 
@@ -21885,10 +21885,10 @@ Material : Cast Iron', NULL, 3.0, NULL, 2532, 'matched', 'import', 'Backfilled f
   (3296, 523, 1, 'SEAFIRST Rudder DNR-104', NULL, 1.0, NULL, 2524, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3297, 524, 1, 'Cover Lampu TL 129,7 cm x 20,9cm x 6 cm
 Material MC
-sesuai sample', NULL, 50.0, NULL, 2525, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+sesuai sample', NULL, 50.0, NULL, 2525, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3298, 524, 2, 'End Cover Lamp TL 21,5 cm x 4,9cm x 6,2 cm
 Material Royal
-sesuai sample', NULL, 50.0, NULL, 2526, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+sesuai sample', NULL, 50.0, NULL, 2526, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3299, 524, 3, 'Fitting Lampu TL
 sesuai sample', NULL, 100.0, NULL, 2527, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3300, 525, 1, 'Marine Cast Iron 10kgf/cm² F-7307/F-7308
@@ -21912,44 +21912,44 @@ INSERT INTO quotation_item_requests (
 24 VDC, 5A/250 VAC', NULL, 1.0, NULL, 2533, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3302, 527, 1, 'Gland Packing 8mm x 12m
 Pilar 6501L
-utuh  tanpa sambungan', NULL, 1.0, NULL, 2477, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+utuh  tanpa sambungan', NULL, 1.0, NULL, 2477, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3303, 527, 2, 'Gland Packing 11mm x 12m
 Pilar 6501L
-utuh  tanpa sambungan', NULL, 1.0, NULL, 2478, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+utuh  tanpa sambungan', NULL, 1.0, NULL, 2478, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3304, 527, 3, 'Gland Packing 12,5mm x 12m
 Pilar 6501L
-utuh  tanpa sambungan', NULL, 1.0, NULL, 2479, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+utuh  tanpa sambungan', NULL, 1.0, NULL, 2479, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3305, 527, 4, 'Gland Packing 14mm x 10m
 Pilar 6501L
-utuh  tanpa sambungan', NULL, 1.0, NULL, 2480, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+utuh  tanpa sambungan', NULL, 1.0, NULL, 2480, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3306, 528, 1, 'PANEL BOX
 UKURAN TINGGI 30 CM
 LEBAR 25 CM
-TEBAL 15 CM', '332299', 15.0, NULL, 2534, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+TEBAL 15 CM', '332299', 15.0, NULL, 2534, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3307, 529, 1, 'Emergency Drench Showers / Eye Washers
-DRENCH SHOWER/EYE WASH COMBI, Material PVC', '332299', 1.0, NULL, 2534, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+DRENCH SHOWER/EYE WASH COMBI, Material PVC', '332299', 1.0, NULL, 2534, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3308, 530, 1, 'Boatswain''s Chairs
 BOATSWAIN''S CHAIR WITH ROPE, 25X160X620MM', '232121', 4.0, NULL, 2535, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3309, 530, 2, 'Cargo Net Slings PP Rope
-CARGO NET P.P. 3X3MTR, 200MM/MESH RIM ROPE 24MM DIAM', '232152', 4.0, NULL, 2536, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+CARGO NET P.P. 3X3MTR, 200MM/MESH RIM ROPE 24MM DIAM', '232152', 4.0, NULL, 2536, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3310, 530, 3, '- Papan Kayu banjar 30cmx4cmx4m
-- Kayu kaso batangan Kayu Banjar', '232111', 4.0, NULL, 2537, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3311, 531, 1, 'parachute signal rocket merk comet', NULL, 12.0, NULL, 2538, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3312, 531, 2, 'Redhand flare merk huahai', NULL, 6.0, NULL, 2539, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3313, 531, 3, 'smoke Signal paintwassex mk8', NULL, 2.0, NULL, 620, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3314, 531, 4, 'Man Over Board MOB Good Brother (LAMPU+SMOKE) ( certificate CCS )', NULL, 1.0, NULL, 2540, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3315, 531, 5, 'Line Throwing Painwessex', NULL, 2.0, NULL, 2541, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3316, 531, 6, 'Portable Smoke Detector SS-168 / Smoke Alarm', NULL, 6.0, NULL, 2542, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3317, 531, 7, 'Lampu Lifebuoy Self Igniting Light untuk Ringbuoy Pelampung ARGOS', NULL, 6.0, NULL, 2543, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3318, 531, 8, '2 Inch x 20 Mtr + Coupling STORZ Fire Hose Selang Pemadam JET STAR 13K', NULL, 20.0, NULL, 2544, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3319, 531, 9, 'JET NOZZLE SPRAY STORZ PEMADAM API 2.5"', NULL, 3.0, NULL, 2545, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3320, 531, 10, 'Aldis Light CXD8 / Lampu Aldis', NULL, 1.0, NULL, 2546, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+- Kayu kaso batangan Kayu Banjar', '232111', 4.0, NULL, 2537, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3311, 531, 1, 'parachute signal rocket merk comet', NULL, 12.0, NULL, 2538, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3312, 531, 2, 'Redhand flare merk huahai', NULL, 6.0, NULL, 2539, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3313, 531, 3, 'smoke Signal paintwassex mk8', NULL, 2.0, NULL, 620, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3314, 531, 4, 'Man Over Board MOB Good Brother (LAMPU+SMOKE) ( certificate CCS )', NULL, 1.0, NULL, 2540, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3315, 531, 5, 'Line Throwing Painwessex', NULL, 2.0, NULL, 2541, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3316, 531, 6, 'Portable Smoke Detector SS-168 / Smoke Alarm', NULL, 6.0, NULL, 2542, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3317, 531, 7, 'Lampu Lifebuoy Self Igniting Light untuk Ringbuoy Pelampung ARGOS', NULL, 6.0, NULL, 2543, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3318, 531, 8, '2 Inch x 20 Mtr + Coupling STORZ Fire Hose Selang Pemadam JET STAR 13K', NULL, 20.0, NULL, 2544, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3319, 531, 9, 'JET NOZZLE SPRAY STORZ PEMADAM API 2.5"', NULL, 3.0, NULL, 2545, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3320, 531, 10, 'Aldis Light CXD8 / Lampu Aldis', NULL, 1.0, NULL, 2546, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3321, 531, 11, 'SART MC Murdo S4', NULL, 1.0, NULL, 2547, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3322, 531, 12, 'IMPA 330950 Emergency Fire Blanket Selimut Pemadam Api Safety 1.2x1.8m', NULL, 1.0, NULL, 2548, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3323, 531, 13, 'Emergency Escape Breathing Device / EEBD 15min YEAN / FANGZHAN / DONGTAI MARTAN - DONTAI MARTIAN', NULL, 1.0, NULL, 2549, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3322, 531, 12, 'IMPA 330950 Emergency Fire Blanket Selimut Pemadam Api Safety 1.2x1.8m', NULL, 1.0, NULL, 2548, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3323, 531, 13, 'Emergency Escape Breathing Device / EEBD 15min YEAN / FANGZHAN / DONGTAI MARTAN - DONTAI MARTIAN', NULL, 1.0, NULL, 2549, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3324, 531, 14, 'IMPA 330751 Water Resistance Fire Hose Box Mould Pressed Fire Hose Cabinet 
 
-Roller&Holder', NULL, 2.0, NULL, 2550, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Roller&Holder', NULL, 2.0, NULL, 2550, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3325, 532, 1, 'Kompresor Angin Otomatis TA120-A(15hp-8bar)cw mtr 15hp-3phase', NULL, 1.0, NULL, 2551, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3326, 533, 1, 'Marine Cast Iron 10kgf/cm2 F-7364
 GATE VALVE CAST-IRON FLANGED, F7364 10KG-250MM
@@ -21964,19 +21964,19 @@ MATERIAL : CAST STEEL
 SYSTEM : EMERGENCY FIRE PUMP SEA CHEST
 KETERANGAN : RUSAK SEAT RING', NULL, 1.0, NULL, 2552, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3327, 534, 1, 'Fitting Lampu TL
-sesuai sample', '791521', 100.0, NULL, 2553, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+sesuai sample', '791521', 100.0, NULL, 2553, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3328, 534, 2, 'End Cover Lamp TL 21,5 cm x 4,9cm x 6,2 cm
 Material Royal
-sesuai sample', '791858', 50.0, NULL, 2554, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+sesuai sample', '791858', 50.0, NULL, 2554, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3329, 534, 3, 'Cover Lampu TL 129,7 cm x 20,9cm x 6 cm
 Material MC
-sesuai sample', '791842', 50.0, NULL, 2555, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3330, 535, 1, 'Sofa 3 Seater Minimalis Davinci - Grey', NULL, 2.0, NULL, 2556, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+sesuai sample', '791842', 50.0, NULL, 2555, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3330, 535, 1, 'Sofa 3 Seater Minimalis Davinci - Grey', NULL, 2.0, NULL, 2556, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3331, 536, 1, 'LADDER EMBARKATION 20 M
-CCS Certificate', '232052', 1.0, NULL, 2449, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+CCS Certificate', '232052', 1.0, NULL, 2449, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3332, 537, 1, 'SOUP TUREEN STAINLESS STEEL
 Tutup kaca, diameter 24 cm
-Kapasitas 5 Liter', '170843', 5.0, NULL, 2557, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Kapasitas 5 Liter', '170843', 5.0, NULL, 2557, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3333, 537, 2, 'Dishes Vegetable Stainless Steel
 VEGETABLE DISH W/COVER OVAL, STAINLESS STEEL 
 287X206X38MM', '170847', 5.0, NULL, 2558, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -21984,22 +21984,22 @@ VEGETABLE DISH W/COVER OVAL, STAINLESS STEEL
 VEGETABLE DISH W/COVER S.STEEL, RECTANGULAR 
 310X243X46MM', '170848', 5.0, NULL, 2559, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3335, 538, 1, 'JOHNSON COMPLETE FINISH FLOOR CARE, 
-4 LITER', '550533', 3.0, NULL, 2560, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3336, 539, 1, 'Pressure Vacuum Gauge Payung Body Stainless 4 " inchi -1 - 9 Bar', '653212', 3.0, NULL, 2561, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3337, 539, 2, 'SIKA Brass Thermometer Stick 100 Celcius Industrial - 174B Lurus', '651906', 3.0, NULL, 2562, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3338, 539, 3, 'IMPA 871801-08 Marine Anti Splashing Tape Spray Stop Anti Splash Tape', '871804', 50.0, NULL, 2563, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3339, 539, 4, 'IMPA 871801-08 Marine Anti Splashing Tape Spray Stop Anti Splash Tape', '871805', 2.0, NULL, 2564, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+4 LITER', '550533', 3.0, NULL, 2560, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3336, 539, 1, 'Pressure Vacuum Gauge Payung Body Stainless 4 " inchi -1 - 9 Bar', '653212', 3.0, NULL, 2561, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3337, 539, 2, 'SIKA Brass Thermometer Stick 100 Celcius Industrial - 174B Lurus', '651906', 3.0, NULL, 2562, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3338, 539, 3, 'IMPA 871801-08 Marine Anti Splashing Tape Spray Stop Anti Splash Tape', '871804', 50.0, NULL, 2563, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3339, 539, 4, 'IMPA 871801-08 Marine Anti Splashing Tape Spray Stop Anti Splash Tape', '871805', 2.0, NULL, 2564, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3340, 539, 5, 'Jangka sorong analog stainless 150/200/300 mm alat pengukur
 
-150 MM', '650511', 1.0, NULL, 2565, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+150 MM', '650511', 1.0, NULL, 2565, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3341, 539, 6, 'Jangka sorong analog stainless 150/200/300 mm alat pengukur
 
-300 MM', '650513', 1.0, NULL, 2566, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3342, 539, 7, 'Pipa tembaga 6 mm tebal 1 MM ketebalan 6mm 1mm cooper pipe', '711502', 20.0, NULL, 2567, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3343, 539, 8, 'Pipa tembaga 8 mm tebal 1 mm ketebalan 1mm 8mm copper pipe', '711504', 20.0, NULL, 2568, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3344, 539, 9, 'Pipa tembaga 10 mm ketebalan 1 mm tebal 1mm 10mm copper pipe', '711506', 20.0, NULL, 2569, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3345, 539, 10, 'Male Bulkhead OD 6mm x 1/8 Npt SS', '734341', 20.0, NULL, 2570, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3346, 539, 11, 'Male Bulkhead OD 6mm x 1/4 Npt SS', '734342', 20.0, NULL, 2571, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+300 MM', '650513', 1.0, NULL, 2566, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3342, 539, 7, 'Pipa tembaga 6 mm tebal 1 MM ketebalan 6mm 1mm cooper pipe', '711502', 20.0, NULL, 2567, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3343, 539, 8, 'Pipa tembaga 8 mm tebal 1 mm ketebalan 1mm 8mm copper pipe', '711504', 20.0, NULL, 2568, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3344, 539, 9, 'Pipa tembaga 10 mm ketebalan 1 mm tebal 1mm 10mm copper pipe', '711506', 20.0, NULL, 2569, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3345, 539, 10, 'Male Bulkhead OD 6mm x 1/8 Npt SS', '734341', 20.0, NULL, 2570, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3346, 539, 11, 'Male Bulkhead OD 6mm x 1/4 Npt SS', '734342', 20.0, NULL, 2571, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3347, 539, 12, 'Connectors Bulkhead Male S. Steel Flareless
 CONNECTOR BULKHEAD MALE STAINLESS FLARELESS 10MMXPT1/4', '734344', 20.0, NULL, 2572, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3348, 539, 13, 'Connectors Bulkhead Male S. Steel Flareless
@@ -22008,8 +22008,8 @@ CONNECTOR BULKHEAD MALE STAINLESS FLARELESS 12MMXPT3/8', '734345', 20.0, NULL, 2
 CONNECTOR MALE STAINLESS STEEL FLARELESS 6MMXPT1/4', '734302', 20.0, NULL, 2574, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3350, 539, 15, 'Connectors Male Stainless Steel Flareless
 CONNECTOR MALE STAINLESS STEEL FLARELESS 8MMXPT1/4', '734306', 20.0, NULL, 2575, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3351, 539, 16, 'Male Elbow Connector 6 mm x 1/4 NPT SS (sesuai impa)', '734322', 10.0, NULL, 2576, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3352, 539, 17, 'Male Elbow Connector 8 mm x 1/4 NPT SS (sesuai impa)', '734326', 10.0, NULL, 2577, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3351, 539, 16, 'Male Elbow Connector 6 mm x 1/4 NPT SS (sesuai impa)', '734322', 10.0, NULL, 2576, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3352, 539, 17, 'Male Elbow Connector 8 mm x 1/4 NPT SS (sesuai impa)', '734326', 10.0, NULL, 2577, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3353, 539, 18, 'Tees Male Run Stainless Steel Flareless
 RUN TEE MALE STAINLESS STEEL FLARELESS 6MMXPT1/4', '734352', 10.0, NULL, 2578, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3354, 539, 19, 'Tees Male Run Stainless Steel Flareless
@@ -22022,16 +22022,16 @@ BRANCH TEE MALE STAINLESS STEEL FLARELESS 8MMXPT1/8', '734363', 10.0, NULL, 2581
 CONNECTOR FEMALE STAINLESS STEEL FLARELESS 6MMXPF1/4', '734372', 10.0, NULL, 2582, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3358, 539, 23, 'Connectors Female Stainless Steel Flareless
 CONNECTOR FEMALE STAINLESS STEEL FLARELESS 8MMXPF1/4', '734375', 10.0, NULL, 2583, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3359, 539, 24, 'Fitting Straight Union 6 mm stainless 316 // Union Connector 6mm', '734401', 20.0, NULL, 2584, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3360, 539, 25, 'fitting straight union 8 mm stainless 316 // Union Connector 8mm', '734402', 20.0, NULL, 2585, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3361, 539, 26, 'Fitting Straight Union 10 mm stainless 316 // Union Connector 10mm', '734403', 20.0, NULL, 2586, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3362, 539, 27, 'Sellery Hand Rivet Tang Ripet Lobster Heavy Duty 2,4 3,3 4,0 4,8 mm - JET-101332', '615230', 2.0, NULL, 2587, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3363, 539, 28, 'Blind Rivet Sip SP 423 (3,2 mm x 7 mm) - 1 Box 1.000 pcs', '615237', 2.0, NULL, 2588, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3364, 539, 29, 'Blind Rivet Sip SP 523 (4 mm x 7 mm) - 1 Box 1.000 pcs', '615241', 2.0, NULL, 2589, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3365, 539, 30, 'Blind Rivet Sip SP 635 (4,8 mm x 9,5 mm) - 1 Box 500 pcs', '615245', 2.0, NULL, 2590, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3366, 539, 31, 'KAWAT BENDRAT (Kawat Baja) 1.0 MM', '673323', 2.5, NULL, 2591, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3367, 539, 32, 'KAWAT BENDRAT (Kawat Baja) 2.0 MM', '673325', 2.5, NULL, 2592, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3368, 539, 33, 'KAWAT BENDRAT (Kawat Baja) 3.0 MM', '673327', 2.5, NULL, 2593, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3359, 539, 24, 'Fitting Straight Union 6 mm stainless 316 // Union Connector 6mm', '734401', 20.0, NULL, 2584, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3360, 539, 25, 'fitting straight union 8 mm stainless 316 // Union Connector 8mm', '734402', 20.0, NULL, 2585, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3361, 539, 26, 'Fitting Straight Union 10 mm stainless 316 // Union Connector 10mm', '734403', 20.0, NULL, 2586, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3362, 539, 27, 'Sellery Hand Rivet Tang Ripet Lobster Heavy Duty 2,4 3,3 4,0 4,8 mm - JET-101332', '615230', 2.0, NULL, 2587, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3363, 539, 28, 'Blind Rivet Sip SP 423 (3,2 mm x 7 mm) - 1 Box 1.000 pcs', '615237', 2.0, NULL, 2588, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3364, 539, 29, 'Blind Rivet Sip SP 523 (4 mm x 7 mm) - 1 Box 1.000 pcs', '615241', 2.0, NULL, 2589, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3365, 539, 30, 'Blind Rivet Sip SP 635 (4,8 mm x 9,5 mm) - 1 Box 500 pcs', '615245', 2.0, NULL, 2590, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3366, 539, 31, 'KAWAT BENDRAT (Kawat Baja) 1.0 MM', '673323', 2.5, NULL, 2591, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3367, 539, 32, 'KAWAT BENDRAT (Kawat Baja) 2.0 MM', '673325', 2.5, NULL, 2592, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3368, 539, 33, 'KAWAT BENDRAT (Kawat Baja) 3.0 MM', '673327', 2.5, NULL, 2593, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3369, 540, 1, 'Check Valves DIN Bronze PN10/16 #497
 CHECK VALVE DIN BRONZE FLANGED, LIFT TYPE PN10/16
 #496 125MM
@@ -22044,11 +22044,11 @@ Siemens UVR 3VA9908-0BB25', NULL, 2.0, NULL, 2595, 'matched', 'import', 'Backfil
   (3371, 542, 1, 'Sump Pumps Electric
 SUMP PUMP ELEC
 Diameter 2",  35 meter, 20m³/H, AC440V, 60Hz
-IMPA 591530', '591630', 3.0, NULL, 2040, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IMPA 591530', '591630', 3.0, NULL, 2040, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3372, 542, 2, 'Spare Piston Head For Deck Scaler KC-100 22mm
-IMPA 590411', '590411', 3.0, NULL, 2476, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IMPA 590411', '590411', 3.0, NULL, 2476, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3373, 542, 3, 'Flexible Shaft & Tube For Scaling Machine KC-50
-IMPA 591253', '591253', 3.0, NULL, 2474, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+IMPA 591253', '591253', 3.0, NULL, 2474, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3374, 543, 1, 'Kompresor Angin Otomatis TA120-A(15hp-8bar)cw mtr 15hp-3phase', NULL, 1.0, NULL, 2551, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3375, 543, 2, 'Kompresor Angin Otomatis PK-50-160 5HP 8 BAR 440V, 60Hz', NULL, 1.0, NULL, 2596, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3376, 544, 1, 'Marine Cast Iron 5kgf/cm2 F-7363
@@ -22059,7 +22059,7 @@ GATE VALVE DN 150 5K FOR LINE BUNKER STASION', NULL, 3.0, NULL, 2597, 'matched',
 GATE VALVE CAST-IRON FLANGED, F7363 5KG-100MM
 
 GATE VALVE DN 100 5K FOR LINE BUNKER STASION', NULL, 1.0, NULL, 2598, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3378, 545, 1, 'HT ENTEL DX544 VHF INTRINSICALLY SAFE', '370115', 2.0, NULL, 2599, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3378, 545, 1, 'HT ENTEL DX544 VHF INTRINSICALLY SAFE', '370115', 2.0, NULL, 2599, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3379, 546, 1, 'Marine Cast Iron 5kgf/cm2 F-7363
 GATE VALVE CAST-IRON FLANGED, F7363 5KG-150MM 
 GATE VALVE DN 150 5K FOR LINE BUNKER STASION
@@ -22098,7 +22098,7 @@ BUTTERFLY VALVE DIN CAST IRON, WAFER TYPE #5720
   (3395, 553, 3, 'Relay Schneider RXG22BD 24 VDC, 8 pin', NULL, 10.0, NULL, 2614, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3396, 553, 4, 'MCCB Schneider NSX100F 100A, 3 Phase 4 Pole', NULL, 1.0, NULL, 2615, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3397, 553, 5, 'Speed Control ESD5500E/Governor ESD 5500E (Genuine)', NULL, 1.0, NULL, 2616, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3398, 554, 1, 'Genset Controller AMF ATS Module GC250 Sices', NULL, 1.0, NULL, 2617, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3398, 554, 1, 'Genset Controller AMF ATS Module GC250 Sices', NULL, 1.0, NULL, 2617, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3399, 555, 1, 'PANEL TIBOX PANEL TIBOX 50 X 40 X 20 IP65', NULL, 1.0, NULL, 2618, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3400, 555, 2, 'Power Supply UPS Meanwell DRC-180B Meanwell', NULL, 1.0, NULL, 2619, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
@@ -22121,11 +22121,11 @@ INSERT INTO quotation_item_requests (
   (3413, 555, 15, 'Bolt & Nut Hexagonal M8x30mm - Stainless 304', NULL, 4.0, NULL, 2632, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3414, 555, 16, 'SKUN FERRULE BLACK 2,5mm', NULL, 1.0, NULL, 2633, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3415, 556, 1, 'AVR STAMFORD AS-440', NULL, 2.0, NULL, 2634, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3416, 557, 1, 'CHART NO. Q6099 - Maritime Security Chart Red Sea, Gulf of Aden & Arabian Sea', NULL, 1.0, NULL, 2635, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3417, 557, 2, 'CHART NO. Q6110 - Maritime Security Chart Mediteranean Sea', NULL, 1.0, NULL, 2636, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3418, 557, 3, 'CHART NO. Q6111 - Maritime Security Chart Persian Gulf and Arabian Sea', NULL, 1.0, NULL, 2637, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3419, 557, 4, 'CHART NO. Q6112 - Maritime Security Chart Karachi to Quanzhou', NULL, 1.0, NULL, 2638, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3420, 557, 5, 'CHART NO. Q6113 - Maritime Security Chart Zhanjiang to Hokkaido', NULL, 1.0, NULL, 2639, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3416, 557, 1, 'CHART NO. Q6099 - Maritime Security Chart Red Sea, Gulf of Aden & Arabian Sea', NULL, 1.0, NULL, 2635, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3417, 557, 2, 'CHART NO. Q6110 - Maritime Security Chart Mediteranean Sea', NULL, 1.0, NULL, 2636, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3418, 557, 3, 'CHART NO. Q6111 - Maritime Security Chart Persian Gulf and Arabian Sea', NULL, 1.0, NULL, 2637, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3419, 557, 4, 'CHART NO. Q6112 - Maritime Security Chart Karachi to Quanzhou', NULL, 1.0, NULL, 2638, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3420, 557, 5, 'CHART NO. Q6113 - Maritime Security Chart Zhanjiang to Hokkaido', NULL, 1.0, NULL, 2639, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3421, 558, 1, 'First Aid Kits
 LIFEBOAT FIRST AID KIT', '330246', 2.0, NULL, 2054, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3422, 558, 2, 'Line Throwing Apparatuses
@@ -22142,7 +22142,7 @@ RED HAND FLARE MK8 PAINSWESSEX, 9529000 SOLAS/
 MED APPROVED', '330314', 6.0, NULL, 2642, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3426, 558, 6, 'Boxes Fire Hose
 FIRE HOSE BOX POLYCARBONATE, FOR 20MTR', '330751', 4.0, NULL, 1636, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3427, 559, 1, 'MASTERINDO Kursi Lipat Besi | Folding Chair | Kursi Kantor', NULL, 12.0, NULL, 2643, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3427, 559, 1, 'MASTERINDO Kursi Lipat Besi | Folding Chair | Kursi Kantor', NULL, 12.0, NULL, 2643, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3428, 560, 1, 'Microphone Radio VHF ICOM M324 - HM200B (microphone only)', NULL, 1.0, NULL, 2644, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3429, 561, 1, 'Microphone Radio VHF ICOM M324 - HM200B (microphone only)', NULL, 1.0, NULL, 2644, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3430, 562, 1, 'Heaving Lines 3-strand
@@ -22158,35 +22158,35 @@ SLING POLYESTER BELT TYPE 20T, SIZE (WIDTH X LENGTH ) : 100 MM X 6 MTR , FOR OWN
   (3434, 562, 5, 'Bags Cargo Sling
 CARGO SLING BAG POLYESTER, 1X1.2X1.2MTR
 FOR OWN USE (VESSEL)', NULL, 20.0, NULL, 2646, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3435, 563, 1, '1LUSIN BINTIK Sarung Tangan BINTIK KARET / Sarung Tangan Tukang Kerja', '190103', 60.0, NULL, 1624, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3436, 563, 2, 'Gosave Setelan Rainsuit Safety Kuning Scotlight Samudra XXL Waterproof 3 Layer Protection - XXL', '190439', 16.0, NULL, 2647, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3437, 563, 3, 'Kacamata Safety', '311051', 24.0, NULL, 2468, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3438, 563, 4, 'Helm Safety Proyek MSA Lokal VGard Fastrack - Kuning', '310143', 12.0, NULL, 2648, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3439, 563, 5, 'Helm Safety Proyek MSA Lokal VGard Fastrack - Putih', '310141', 12.0, NULL, 2649, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3435, 563, 1, '1LUSIN BINTIK Sarung Tangan BINTIK KARET / Sarung Tangan Tukang Kerja', '190103', 60.0, NULL, 1624, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3436, 563, 2, 'Gosave Setelan Rainsuit Safety Kuning Scotlight Samudra XXL Waterproof 3 Layer Protection - XXL', '190439', 16.0, NULL, 2647, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3437, 563, 3, 'Kacamata Safety', '311051', 24.0, NULL, 2468, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3438, 563, 4, 'Helm Safety Proyek MSA Lokal VGard Fastrack - Kuning', '310143', 12.0, NULL, 2648, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3439, 563, 5, 'Helm Safety Proyek MSA Lokal VGard Fastrack - Putih', '310141', 12.0, NULL, 2649, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3440, 563, 6, 'Rechargeable LED Headlamp
 Waterproof IPX45
-Battery 1000mAH, USB Cable', '330618', 12.0, NULL, 2650, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3441, 563, 7, 'Sepatu Boot APD Hitam Panjang Sepatu Boot Hijau Karet Tinggi Seaptu Boot Karet PVC FUSHA 801', '191189', 3.0, NULL, 2651, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3442, 563, 8, 'Sepatu Boot APD Hitam Panjang Sepatu Boot Hijau Karet Tinggi Seaptu Boot Karet PVC FUSHA 801', '191188', 3.0, NULL, 2652, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3443, 564, 1, '1LUSIN BINTIK Sarung Tangan BINTIK KARET / Sarung Tangan Tukang Kerja', '190103', 60.0, NULL, 1624, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3444, 564, 2, 'Gosave Setelan Rainsuit Safety Kuning Scotlight Samudra XXL Waterproof 3 Layer Protection - XXL', '190439', 16.0, NULL, 2647, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3445, 564, 3, 'Kacamata Safety', '311051', 24.0, NULL, 2468, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3446, 564, 4, 'Helm Safety Proyek MSA Lokal VGard Fastrack - Kuning', '310143', 12.0, NULL, 2648, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3447, 564, 5, 'Helm Safety Proyek MSA Lokal VGard Fastrack - Putih', '310141', 12.0, NULL, 2649, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Battery 1000mAH, USB Cable', '330618', 12.0, NULL, 2650, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3441, 563, 7, 'Sepatu Boot APD Hitam Panjang Sepatu Boot Hijau Karet Tinggi Seaptu Boot Karet PVC FUSHA 801', '191189', 3.0, NULL, 2651, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3442, 563, 8, 'Sepatu Boot APD Hitam Panjang Sepatu Boot Hijau Karet Tinggi Seaptu Boot Karet PVC FUSHA 801', '191188', 3.0, NULL, 2652, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3443, 564, 1, '1LUSIN BINTIK Sarung Tangan BINTIK KARET / Sarung Tangan Tukang Kerja', '190103', 60.0, NULL, 1624, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3444, 564, 2, 'Gosave Setelan Rainsuit Safety Kuning Scotlight Samudra XXL Waterproof 3 Layer Protection - XXL', '190439', 16.0, NULL, 2647, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3445, 564, 3, 'Kacamata Safety', '311051', 24.0, NULL, 2468, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3446, 564, 4, 'Helm Safety Proyek MSA Lokal VGard Fastrack - Kuning', '310143', 12.0, NULL, 2648, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3447, 564, 5, 'Helm Safety Proyek MSA Lokal VGard Fastrack - Putih', '310141', 12.0, NULL, 2649, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3448, 564, 6, 'Rechargeable LED Headlamp
 Waterproof IPX45
-Battery 1000mAH, USB Cable', '330618', 12.0, NULL, 2650, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3449, 564, 7, 'Sepatu Boot APD Hitam Panjang Sepatu Boot Hijau Karet Tinggi Seaptu Boot Karet PVC FUSHA 801', '191189', 3.0, NULL, 2651, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3450, 564, 8, 'Sepatu Boot APD Hitam Panjang Sepatu Boot Hijau Karet Tinggi Seaptu Boot Karet PVC FUSHA 801', '191188', 3.0, NULL, 2652, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Battery 1000mAH, USB Cable', '330618', 12.0, NULL, 2650, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3449, 564, 7, 'Sepatu Boot APD Hitam Panjang Sepatu Boot Hijau Karet Tinggi Seaptu Boot Karet PVC FUSHA 801', '191189', 3.0, NULL, 2651, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3450, 564, 8, 'Sepatu Boot APD Hitam Panjang Sepatu Boot Hijau Karet Tinggi Seaptu Boot Karet PVC FUSHA 801', '191188', 3.0, NULL, 2652, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3451, 565, 1, 'Tapes Hatch Cover
 HATCH COVER TAPE DRY-CARGO, HEAVY DUTY
 150MMX20MTR 2ROLLS
 SIZE: 200MM X 20M= 50 PCS FOR HATCH COVER
-Brand: XFBSON', '232453', 50.0, NULL, 2653, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Brand: XFBSON', '232453', 50.0, NULL, 2653, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3452, 566, 1, 'Relay FLOSSER 4268
-24 VDC 20/30 A 5 PIN - (Relay only, socket not included)', NULL, 4.0, NULL, 2654, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3453, 566, 2, 'Relay 2 CO 10A 24VDC weidmuller DRM270024L', NULL, 4.0, NULL, 2655, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3454, 566, 3, 'Relay DRM570024LT 4CO 5A 24VDC weidmuller 14 Kaki', NULL, 4.0, NULL, 2656, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+24 VDC 20/30 A 5 PIN - (Relay only, socket not included)', NULL, 4.0, NULL, 2654, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3453, 566, 2, 'Relay 2 CO 10A 24VDC weidmuller DRM270024L', NULL, 4.0, NULL, 2655, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3454, 566, 3, 'Relay DRM570024LT 4CO 5A 24VDC weidmuller 14 Kaki', NULL, 4.0, NULL, 2656, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3455, 566, 4, 'Relay Schneider RXM4AB2P7 230VAC 50/60Hz', NULL, 2.0, NULL, 2657, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3456, 566, 5, 'Relay Schneider RXG22BD 24 VDC, 8 pin', NULL, 2.0, NULL, 2614, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3457, 566, 6, 'Welding Cable 70 SQMM - SUPER FLEX', NULL, 10.0, NULL, 2658, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -22210,56 +22210,56 @@ TAPE MEASURING LINEN, WITH METAL CASE 50MTR', '650834', 2.0, NULL, 2664, 'matche
   (3470, 569, 6, 'Flanges Square Pipe Welding
 FLANGE SQUARE PIPE WELDING, CAP SCREW W/
 GROOVE SSA 25MM', '734823', 80.0, NULL, 2666, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3471, 570, 1, 'MSN Vacum Value AC Pump 1HP VE280N', NULL, 1.0, NULL, 2667, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3471, 570, 1, 'MSN Vacum Value AC Pump 1HP VE280N', NULL, 1.0, NULL, 2667, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3472, 570, 2, 'Gauge Manifolds 
 MANIFOLD GAUGE REFRIG GAS 1/4, FOR HFC-134A/ 
 R-404A/R-407C', NULL, 1.0, NULL, 2668, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3473, 571, 1, 'MSN Vacum Value AC Pump 1HP VE280N', NULL, 1.0, NULL, 2667, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3473, 571, 1, 'MSN Vacum Value AC Pump 1HP VE280N', NULL, 1.0, NULL, 2667, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3474, 571, 2, 'Gauge Manifolds 
 MANIFOLD GAUGE REFRIG GAS 1/4, FOR HFC-134A/ 
 R-404A/R-407C', NULL, 1.0, NULL, 2668, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3475, 572, 1, 'FREON R.407
-FOR AC ACCOMODATION AND PROVISION', NULL, 15.0, NULL, 2669, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+FOR AC ACCOMODATION AND PROVISION', NULL, 15.0, NULL, 2669, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3476, 573, 1, 'Devcon Pastic Steel Putty (A) 10110
 454Gr', NULL, 4.0, NULL, 2670, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3477, 573, 2, 'O''Ring viton sesuai detail ukuran', NULL, 10.0, NULL, 2671, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3478, 573, 3, 'Oring Set Viton 
 Size inch, 368 Pcs', NULL, 1.0, NULL, 2672, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3479, 574, 1, 'GAUZE STERILE COMPRESSES, 5 CM X 5 CM', NULL, 100.0, NULL, 2673, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3479, 574, 1, 'GAUZE STERILE COMPRESSES, 5 CM X 5 CM', NULL, 100.0, NULL, 2673, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3480, 574, 2, 'DISPOSABLE SYRINGE 10 ML
-1 box = 100 set', NULL, 100.0, NULL, 2674, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 box = 100 set', NULL, 100.0, NULL, 2674, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3481, 574, 3, 'PARACETAMOL TABLET 500MG', NULL, 150.0, NULL, 2675, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3482, 574, 4, 'ALCOHOL MEDICAL 1L 96% ethyl alcohol', NULL, 5.0, NULL, 2676, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3482, 574, 4, 'ALCOHOL MEDICAL 1L 96% ethyl alcohol', NULL, 5.0, NULL, 2676, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3483, 574, 5, 'GLOVES SURGICAL DISPOSABLE', NULL, 2.0, NULL, 2677, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3484, 574, 6, 'TISSUE FACIAL
 350 SHEET - 2 DOZ', NULL, 2.0, NULL, 2678, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3485, 574, 7, 'METRONIDAZOLE SUPPOSITORIES, 1 GRM
 MERK = VAGISTIN 
-1 BOX = 10 OVUL', NULL, 1.0, NULL, 2679, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 BOX = 10 OVUL', NULL, 1.0, NULL, 2679, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3486, 574, 8, 'DRESSING BURN & WOUND, INDIVIDUAL 10X10CM
-1 PKT = 10 PCS', NULL, 5.0, NULL, 2680, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 PKT = 10 PCS', NULL, 5.0, NULL, 2680, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3487, 574, 9, 'AMINOPHYLLINE TABLET, 100MG 60TAB', NULL, 1.0, NULL, 2681, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3488, 574, 10, 'INHALATION MIXTURE 100ML
-MERK = BISOLVON SOL', NULL, 5.0, NULL, 2682, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+MERK = BISOLVON SOL', NULL, 5.0, NULL, 2682, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3489, 574, 11, 'SALBUTAMOL 100 MICRO G/DOSE, INHALATION
-MERK: VANTOLIN INHALE', NULL, 25.0, NULL, 2683, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3490, 574, 12, 'BANDAGE 7 CM X 5 CM', NULL, 50.0, NULL, 2684, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+MERK: VANTOLIN INHALE', NULL, 25.0, NULL, 2683, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3490, 574, 12, 'BANDAGE 7 CM X 5 CM', NULL, 50.0, NULL, 2684, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3491, 574, 13, 'SPHYGMOMANOMETER DIGITAL 
-MERK: OMRON', NULL, 1.0, NULL, 2685, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+MERK: OMRON', NULL, 1.0, NULL, 2685, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3492, 574, 14, 'THERMOMETER DIGITAL INFRARED, FOR MEDICAL USE
-MERK: BERRCOM', NULL, 2.0, NULL, 2686, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+MERK: BERRCOM', NULL, 2.0, NULL, 2686, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3493, 574, 15, 'PULSE OXIMETER', NULL, 2.0, NULL, 2687, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3494, 574, 16, 'CALAMINE LOTION 60ML 
-MERK: CALADINE', NULL, 15.0, NULL, 2688, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+MERK: CALADINE', NULL, 15.0, NULL, 2688, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3495, 574, 17, 'SYRINGE LUER CONNECTION 10 ML, STERILE DISPOSABLE', NULL, 25.0, NULL, 2689, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3496, 574, 18, 'NEEDLE 21G BLUNT ”DRAWING UP”, TYPE
-MERK: BD', NULL, 25.0, NULL, 2690, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+MERK: BD', NULL, 25.0, NULL, 2690, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3497, 574, 19, 'SODIUM CHLORIDE ISOTONIC, (SALINE) 9 MG/ML 1 LTR', NULL, 10.0, NULL, 2691, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3498, 575, 1, 'Tinta Epson 003 Yellow Original Ink Epson Printer L1110 / L3110 / L3210 / L3150 / L3250 / L5190 
 
-Warna', '472751', 3.0, NULL, 2512, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3499, 575, 2, 'COPY PAPER A4 75GR KERTAS HVS A4 FOTOKOPI KUALITAS PAPERONE [5PCS]', '472186', 20.0, NULL, 1986, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3500, 575, 3, 'Notebook Buku Tulis Catatan Diary Agenda Joyko Hard Cover - NB-663 Black', '470105', 4.0, NULL, 2516, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
+Warna', '472751', 3.0, NULL, 2512, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3499, 575, 2, 'COPY PAPER A4 75GR KERTAS HVS A4 FOTOKOPI KUALITAS PAPERONE [5PCS]', '472186', 20.0, NULL, 1986, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3500, 575, 3, 'Notebook Buku Tulis Catatan Diary Agenda Joyko Hard Cover - NB-663 Black', '470105', 4.0, NULL, 2516, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
   matched_item_id, match_status, source_type, notes,
@@ -22267,50 +22267,50 @@ INSERT INTO quotation_item_requests (
 ) VALUES
   (3501, 575, 4, 'Tinta Epson 003 Black Original Ink Epson Printer L1110 / L3110 / L3210 / L3150 / L3250 / L5190 
 
-black', '472729', 6.0, NULL, 2513, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+black', '472729', 6.0, NULL, 2513, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3502, 575, 5, 'Tinta Epson 003 Cyan Original Ink Epson Printer L1110 / L3110 / L3210 / L3150 / L3250 / L5190 
 
-Warna', '472749', 3.0, NULL, 2514, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Warna', '472749', 3.0, NULL, 2514, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3503, 575, 6, 'Tinta Epson 003 Magenta Original Ink Epson Printer L1110 / L3110 / L3210 / L3150 / L3250 / L5190 
 
-Warna', '472750', 3.0, NULL, 2515, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Warna', '472750', 3.0, NULL, 2515, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3504, 575, 7, 'KENKO GEL PEN REFILL K-1 BLACK BLUE / ISI ULANG PENA K-1 HITAM DAN BIRU 
 
-HITAM 1 BOX', '470617', 72.0, NULL, 2517, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+HITAM 1 BOX', '470617', 72.0, NULL, 2517, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3505, 575, 8, 'GEL PEN K-1 K1 KENKO Retractable Hitam , Biru , Merah , Pink , Hijau , ungu , orange Pena / Pulpen 
 
-Merah, Standar', '470618', 6.0, NULL, 2518, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merah, Standar', '470618', 6.0, NULL, 2518, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3506, 575, 9, 'GEL PEN K-1 K1 KENKO Retractable Hitam , Biru , Merah , Pink , Hijau , ungu , orange Pena / Pulpen 
 
-Biru, Standar', '470619', 6.0, NULL, 2519, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Biru, Standar', '470619', 6.0, NULL, 2519, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3507, 575, 10, 'Stabilo Joyko Highlighter Original - Warna Kuning Orange Hijau Biru Pink 
 
-Kuning', '470673', 8.0, NULL, 2692, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Kuning', '470673', 8.0, NULL, 2692, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3508, 575, 11, 'GUNTING KENKO SCISSOR SC-828 SC-838 SC-848 STAINLESS STEEL ORIGINAL KENKO 
 
-828 Kecil Kenko, Standar', '471001', 4.0, NULL, 2693, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+828 Kecil Kenko, Standar', '471001', 4.0, NULL, 2693, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3509, 575, 12, 'Gunting Scissors Joyko SC-29 ~ 32 
 
-32', '471003', 4.0, NULL, 2436, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3510, 575, 13, 'Pita / EZ Label Tape Printer Casio 12mm', '473463', 4.0, NULL, 2520, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+32', '471003', 4.0, NULL, 2436, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3510, 575, 13, 'Pita / EZ Label Tape Printer Casio 12mm', '473463', 4.0, NULL, 2520, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3511, 575, 14, 'LAKBAN 45 MM x 50 METER / 2 INCH x 50 M KUALITAS DAIMARU 
 
-Cokelat Muda & Bening', '471273', 9.0, NULL, 2521, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Cokelat Muda & Bening', '471273', 9.0, NULL, 2521, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3512, 575, 15, 'Stabilo Joyko Highlighter Original - Warna Kuning Orange Hijau Biru Pink 
 
-Merah Muda', '470672', 8.0, NULL, 2694, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3513, 575, 16, 'Isolasi 1 inch x 50 yard / solatip / lakban 24mm', '471253', 60.0, NULL, 1982, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3514, 575, 17, 'CITIZEN Kalkulator SDC-868L 12 Digit dengan Fungsi Mark Up Calculation 2 Sets Memory', '471821', 3.0, NULL, 2695, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merah Muda', '470672', 8.0, NULL, 2694, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3513, 575, 16, 'Isolasi 1 inch x 50 yard / solatip / lakban 24mm', '471253', 60.0, NULL, 1982, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3514, 575, 17, 'CITIZEN Kalkulator SDC-868L 12 Digit dengan Fungsi Mark Up Calculation 2 Sets Memory', '471821', 3.0, NULL, 2695, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3515, 575, 18, 'Sandisk FlashDisk Cruzer Blade 64GB | USB FD CZ50 64 GB Flash Disk 
 
-Satuan', '472871', 2.0, NULL, 2696, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3516, 576, 1, 'Jangka Sorong Digital 6" / Digital Caliper 150 mm / Sigmat Digital', '650521', 1.0, NULL, 2102, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3517, 576, 2, 'Tali tambang Manila 4mm', '211251', 2.0, NULL, 2697, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3518, 576, 3, 'Jangka Sorong Digital 12" / Digital Caliper 300 mm / Sigmat Digital', '650504', 1.0, NULL, 2698, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Satuan', '472871', 2.0, NULL, 2696, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3516, 576, 1, 'Jangka Sorong Digital 6" / Digital Caliper 150 mm / Sigmat Digital', '650521', 1.0, NULL, 2102, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3517, 576, 2, 'Tali tambang Manila 4mm', '211251', 2.0, NULL, 2697, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3518, 576, 3, 'Jangka Sorong Digital 12" / Digital Caliper 300 mm / Sigmat Digital', '650504', 1.0, NULL, 2698, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3519, 576, 4, 'WIRE ROPE THIMBLE A-TYPE GALV, 30MM 
 WIRE CLIP HOLE 88mm AND SLIM', '230914', 4.0, NULL, 2699, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3520, 576, 5, 'WIRE ROPE THIMBLE A-TYPE GALV, 34MM', '230916', 2.0, NULL, 2700, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3521, 576, 6, 'Pilot Ladder 15 Meter CCS Certificated / Tangga Monyet', '232003', 1.0, NULL, 1626, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3521, 576, 6, 'Pilot Ladder 15 Meter CCS Certificated / Tangga Monyet', '232003', 1.0, NULL, 1626, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3522, 576, 7, 'CLEANSER TOILET NEUTRAL, INGREDIENT 800ML
 WIPOL', '550236', 60.0, NULL, 2701, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3523, 576, 8, 'CLEANSER TOILET BOWL, DUCK NECK BOTTLE 750ML 
@@ -22333,7 +22333,7 @@ GLADE OCEAN ESCAPE 18 BTL - WIND LAVENDER 18 BTL', '550331', 36.0, NULL, 1544, '
 SOKLIN PEMBERSIH LANTAI 700 ML - 28 PCS', '550507', 28.0, NULL, 2710, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3535, 576, 20, 'INSECT KILLER AEROSOL 300ML 
 BAYGON SPRAY 30 BTL', '550624', 30.0, NULL, 2711, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3536, 576, 21, 'IMPA 592071 Pneumatic Derusting Brush MAG-9000', '592071', 2.0, NULL, 2471, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3536, 576, 21, 'IMPA 592071 Pneumatic Derusting Brush MAG-9000', '592071', 2.0, NULL, 2471, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3537, 576, 22, 'SCALING HAMMER PNEUMATIC SF1, TUNGSTEN CARBIDE SINGLE HEAD', '590288', 3.0, NULL, 2712, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3538, 576, 23, 'GREASE LUBRICATOR PORTABLE, AIR-OPERATED SKR-55', '617501', 1.0, NULL, 903, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3539, 576, 24, 'GREASE GUN H.P. W/SWIVEL JOINT, H.P. SKR P/N.851985 H.P. Grease-Gun HPG-G P/N 851985 Standard for Model SKR-55/66/110A50 Containing Nozzle CNP-2 P/N 804911 Swivel Joint ass''y P/N 802910 Inlet PS 1/4 Female (G)
@@ -22346,7 +22346,7 @@ PEPSODENT', '110921', 50.0, NULL, 2716, 'matched', 'import', 'Backfilled from hi
   (3544, 576, 29, 'GOGGLE VALUTE FOR CHEMICAL &, METAL SPLASH', '311016', 12.0, NULL, 2718, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3545, 577, 1, 'Accu 12V 200Ah INCOE Aki Basah', NULL, 2.0, NULL, 2719, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3546, 577, 2, 'Racor 2040 PM 30 Micron', NULL, 24.0, NULL, 2720, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3547, 577, 3, 'Fuel Filter Fleetguard FF202', NULL, 6.0, NULL, 2721, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3547, 577, 3, 'Fuel Filter Fleetguard FF202', NULL, 6.0, NULL, 2721, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3548, 577, 4, 'Gembok balok silver 80 mm + 3 kunci', NULL, 3.0, NULL, 2722, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3549, 577, 5, 'Rinso 770 gr', NULL, 12.0, NULL, 2723, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3550, 577, 6, 'Kepala Aki 200 Ah', NULL, 8.0, NULL, 2724, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -22357,25 +22357,25 @@ PEPSODENT', '110921', 50.0, NULL, 2716, 'matched', 'import', 'Backfilled from hi
   (3555, 578, 1, 'VANBELT: SUPER XPOWER M=S SPZ 1077 OO22798756 OPTIBELT BERGERIGI', NULL, 10.0, NULL, 2728, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3556, 578, 2, 'SMOKE DETECTOR NOHMI BOSAI SER NO. 016097', NULL, 5.0, NULL, 658, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3557, 578, 3, 'DEMOLITION HAMMER 220V BOSCH DSH 5 HX', NULL, 2.0, NULL, 2729, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3558, 578, 4, 'KARUNG JUMBO BAG 2 TON (BARU) tali , bukan karung bekas', NULL, 20.0, NULL, 2730, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3558, 578, 4, 'KARUNG JUMBO BAG 2 TON (BARU) tali , bukan karung bekas', NULL, 20.0, NULL, 2730, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3559, 578, 5, '3/8 x UNF Straight Lurus Nipple Grease / Nipel Gemuk Sanwa SK 
 
-1 PCS', NULL, 20.0, NULL, 2731, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 PCS', NULL, 20.0, NULL, 2731, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3560, 578, 6, '1/8 x PT Straight Lurus Nipple Grease / Nipel Gemuk Sanwa SK 
 
-1 PCS', NULL, 20.0, NULL, 2732, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 PCS', NULL, 20.0, NULL, 2732, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3561, 579, 1, 'VANBELT: SUPER XPOWER M=S SPZ 1077 OO22798756 OPTIBELT BERGERIGI', NULL, 10.0, NULL, 2728, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3562, 579, 2, 'SMOKE DETECTOR NOHMI BOSAI SER NO. 016097', NULL, 5.0, NULL, 658, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3563, 579, 3, 'DEMOLITION HAMMER 220V BOSCH DSH 5 HX', NULL, 2.0, NULL, 2729, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3564, 579, 4, 'KARUNG JUMBO BAG 2 TON (BARU) tali , bukan karung bekas', NULL, 20.0, NULL, 2730, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3564, 579, 4, 'KARUNG JUMBO BAG 2 TON (BARU) tali , bukan karung bekas', NULL, 20.0, NULL, 2730, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3565, 579, 5, '3/8 x UNF Straight Lurus Nipple Grease / Nipel Gemuk Sanwa SK 
 
-1 PCS', NULL, 20.0, NULL, 2731, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 PCS', NULL, 20.0, NULL, 2731, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3566, 579, 6, '1/8 x PT Straight Lurus Nipple Grease / Nipel Gemuk Sanwa SK 
 
-1 PCS', NULL, 20.0, NULL, 2732, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3567, 580, 1, 'Horn Set Single Merk Cicada Klakson Kapal Terompet Kapal 24 Vol', NULL, 1.0, NULL, 2733, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3568, 580, 2, 'No Offer', NULL, 3.0, NULL, 2734, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1 PCS', NULL, 20.0, NULL, 2732, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3567, 580, 1, 'Horn Set Single Merk Cicada Klakson Kapal Terompet Kapal 24 Vol', NULL, 1.0, NULL, 2733, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3568, 580, 2, 'No Offer', NULL, 3.0, NULL, 2734, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3569, 581, 1, 'QIDMP OIL SEAL MHSA 28-42-8', NULL, 4.0, NULL, 2735, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3570, 581, 2, 'OIL SEAL HILLITE DHS 28', NULL, 10.0, NULL, 2736, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3571, 581, 3, 'OIL SEAL HILLITE uHS 28', NULL, 10.0, NULL, 2737, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -22409,8 +22409,8 @@ IMPA 330296 (20 meter)', NULL, 1.0, NULL, 2743, 'matched', 'import', 'Backfilled
   (3593, 590, 1, 'Noozle Cleaner Gun/Tekiro Air Washing Gun', NULL, 1.0, NULL, 2744, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3594, 590, 2, 'Air Cooler Cleaner 20Lt, Merk UPS', NULL, 1.0, NULL, 2745, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3595, 591, 1, 'Rod Seal 10*16*6,3mm', NULL, 10.0, NULL, 1222, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3596, 591, 2, 'Rod Seal 10*16*6,3mm', NULL, 10.0, NULL, 2338, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3597, 591, 3, 'Piston Seal 53*63*12mm, CFW C1', NULL, 10.0, NULL, 1221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3596, 591, 2, 'Rod Seal 10*16*6,3mm', NULL, 10.0, NULL, 2338, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3597, 591, 3, 'Piston Seal 53*63*12mm, CFW C1', NULL, 10.0, NULL, 1221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3598, 591, 4, 'Oring 58*3,1mm', NULL, 30.0, NULL, 1223, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3599, 591, 5, 'Guide Ring 60*63*3,9mm', NULL, 20.0, NULL, 1219, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3600, 591, 6, 'Piston Seal 53*63*4mm', NULL, 10.0, NULL, 1220, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
@@ -22420,7 +22420,7 @@ INSERT INTO quotation_item_requests (
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES
   (3601, 591, 7, 'Rod Seal 10*16*5mm', NULL, 20.0, NULL, 1224, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3602, 592, 1, 'Oil Seal TC 28 42 8', NULL, 4.0, NULL, 1816, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3602, 592, 1, 'Oil Seal TC 28 42 8', NULL, 4.0, NULL, 1816, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3603, 592, 2, 'Oil Seal NOK CU2692-KO USH 14 22 5 (A)', NULL, 10.0, NULL, 1820, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3604, 593, 1, 'PANEL TIBOX PANEL TIBOX 50 X 40 X 20 IP65', NULL, 1.0, NULL, 2618, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3605, 593, 2, 'Power Supply UPS Meanwell DRC-180B Meanwell', NULL, 1.0, NULL, 2619, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -22440,109 +22440,109 @@ INSERT INTO quotation_item_requests (
   (3619, 593, 16, 'SKUN FERRULE BLACK 2,5mm', NULL, 1.0, NULL, 2633, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3620, 593, 17, 'Kabel 20 Awg / kabel Awg 20 ( harga meteran )
 
-Biru', NULL, 30.0, NULL, 2746, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Biru', NULL, 30.0, NULL, 2746, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3621, 593, 18, 'Kabel Duct Abu Lubang WD 25x25 25x45 32x32 32x45 33x65 45x45 45x65 PM
 
-WD 32x45', NULL, 1.0, NULL, 2747, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+WD 32x45', NULL, 1.0, NULL, 2747, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3622, 593, 19, 'Kabel 20 Awg / kabel Awg 20 ( harga meteran )
 
-Putih', NULL, 30.0, NULL, 2748, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3623, 594, 1, 'Sonix Treadmill STR04 Portable', '110104', 1.0, NULL, 2749, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3624, 594, 2, 'BODYMASTER Standning Kick Boxing BM-E008', '110130', 1.0, NULL, 2750, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3625, 594, 3, 'Sarung Tinju Everlast / Sarung Tinju Boxing Muaythai Olahraga - Hitam, 10 OZ', '110132', 2.0, NULL, 2751, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Putih', NULL, 30.0, NULL, 2748, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3623, 594, 1, 'Sonix Treadmill STR04 Portable', '110104', 1.0, NULL, 2749, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3624, 594, 2, 'BODYMASTER Standning Kick Boxing BM-E008', '110130', 1.0, NULL, 2750, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3625, 594, 3, 'Sarung Tinju Everlast / Sarung Tinju Boxing Muaythai Olahraga - Hitam, 10 OZ', '110132', 2.0, NULL, 2751, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3626, 594, 4, 'Meja Pingpong / Tenis Meja Lokal murah
 SIZE: P X L X T (274 X 152,5 X 76 CM) 
 INCLUDE:
 - 4 PCS BAT
 - NET DAN TIANG
-- 6 PCS BOLA', '110140', 1.0, NULL, 2752, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+- 6 PCS BOLA', '110140', 1.0, NULL, 2752, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3627, 594, 5, 'NET FOR TABLE TENNIS', '110141', 1.0, NULL, 2753, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3628, 594, 6, 'SUPPORTER FOR TABLE TENNIS NET', '110142', 1.0, NULL, 2754, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3629, 594, 7, 'Bat Pingpong Stayer 3000, shakehand', '110143', 2.0, NULL, 2755, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3630, 594, 8, 'TABLE TENNIS BAT RUBBER-FACE, PENHOLDER', '110144', 2.0, NULL, 2756, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3631, 594, 9, 'TABLE TENNIS BALL', '110145', 1.0, NULL, 2757, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3632, 595, 1, 'Karet mounting diameter 80 tebal 50 mm lobang 12 mm', NULL, 4.0, NULL, 2758, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3632, 595, 1, 'Karet mounting diameter 80 tebal 50 mm lobang 12 mm', NULL, 4.0, NULL, 2758, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3633, 595, 2, 'Mur & Baut Baja M12 x 70 mm full drat', NULL, 8.0, NULL, 2759, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3634, 595, 3, 'Ring Plat Baja M12, Washer M12 Black steel', NULL, 8.0, NULL, 2760, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3635, 596, 1, 'DANFOSS TEST VALVE 
-MBV 5000-2211 (180 BAR)', NULL, 8.0, NULL, 2761, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+MBV 5000-2211 (180 BAR)', NULL, 8.0, NULL, 2761, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3636, 596, 2, 'DANFOSS PRESSURE TRANSMITER 
-MBS 3100  (4 BAR)', NULL, 8.0, NULL, 2762, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+MBS 3100  (4 BAR)', NULL, 8.0, NULL, 2762, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3637, 596, 3, 'DANFOSS PRESSURE CONTROL 
-MBC 5100 1011 (-0,2/+1bar)', NULL, 8.0, NULL, 2763, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3638, 596, 4, 'No Offer', NULL, 6.0, NULL, 2764, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3639, 596, 5, 'No Offer', NULL, 13.0, NULL, 2765, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3640, 597, 1, 'FIRE PLAN HOLDER / SAFETY PLAN CONTAINER UNTUK DI KAPAL', '332613', 2.0, NULL, 2766, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+MBC 5100 1011 (-0,2/+1bar)', NULL, 8.0, NULL, 2763, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3638, 596, 4, 'No Offer', NULL, 6.0, NULL, 2764, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3639, 596, 5, 'No Offer', NULL, 13.0, NULL, 2765, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3640, 597, 1, 'FIRE PLAN HOLDER / SAFETY PLAN CONTAINER UNTUK DI KAPAL', '332613', 2.0, NULL, 2766, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3641, 598, 1, 'Pompa Celup Submersible Pump (Sump Pump) 2" (50mm) 440V 20mtr & 35mtr IMPA 591630 & IMPA 591630B - Pompa Submersible Air Kotor / Limbah
 
-35 meter', NULL, 2.0, NULL, 2767, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+35 meter', NULL, 2.0, NULL, 2767, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3642, 599, 1, 'HT Entel DX 585 UHF 400-470MHX, 3W
-Intrinsically Safe (IS)', NULL, 2.0, NULL, 2768, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Intrinsically Safe (IS)', NULL, 2.0, NULL, 2768, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3643, 600, 1, 'GLOBE VALVE DIN CAST IRON, FLANGED PN10/16 #268
 100MM', NULL, 2.0, NULL, 2769, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3644, 601, 1, 'Oil Seal NOK TC 25x40x7', NULL, 4.0, NULL, 2770, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3645, 602, 1, 'Power Supply Diamond Antenna GZV4000, Input 220 VAC Output 0-15VDC 40 Ampere', NULL, 1.0, NULL, 2771, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3646, 602, 2, 'Timer Omron H3CR-A8 Coil 220 VAC 8 Pin/kaki', NULL, 1.0, NULL, 2772, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3647, 603, 1, 'Filter FF202 Fleetguard', NULL, 20.0, NULL, 591, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3648, 603, 2, 'Filter 2020 PM 30 Micron Parker Racor 1000FG', NULL, 10.0, NULL, 2773, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3649, 603, 3, 'Filter P558615 Donaldson', NULL, 20.0, NULL, 2774, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3650, 603, 4, 'Filter P551329 Donaldson', NULL, 20.0, NULL, 2775, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3651, 603, 5, 'Filter 2010 PM 30 Micron Parker Racor 500FG', NULL, 30.0, NULL, 866, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3652, 603, 6, 'Filter FF 5327 Fleetguard', NULL, 20.0, NULL, 2776, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3653, 603, 7, 'Seal Tape Teflon (PTFE) Waterproof 20mmx10m', NULL, 10.0, NULL, 2777, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3654, 603, 8, 'KAIN LAP MAJUN PERCA BAHAN KAIN KATUN SERAP AIR MINYAK & OLI', NULL, 30.0, NULL, 558, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3655, 603, 9, 'Headlamp Senter Kepala Mini Super Terang Baterai Cas USB Rechargeable', NULL, 3.0, NULL, 2778, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3656, 603, 10, 'YUASA AIR ACCU AKI TAMBAHAN PURE H2O DEMINERALIZED WATER PH7 LABEL BIRU NON UNSUR MOBIL MOTOR TRUK BUS GENERATOR GENSET', NULL, 2.0, NULL, 2779, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3657, 603, 11, 'Tang Kombinasi 7" Tekiro', NULL, 1.0, NULL, 2780, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3647, 603, 1, 'Filter FF202 Fleetguard', NULL, 20.0, NULL, 591, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3648, 603, 2, 'Filter 2020 PM 30 Micron Parker Racor 1000FG', NULL, 10.0, NULL, 2773, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3649, 603, 3, 'Filter P558615 Donaldson', NULL, 20.0, NULL, 2774, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3650, 603, 4, 'Filter P551329 Donaldson', NULL, 20.0, NULL, 2775, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3651, 603, 5, 'Filter 2010 PM 30 Micron Parker Racor 500FG', NULL, 30.0, NULL, 866, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3652, 603, 6, 'Filter FF 5327 Fleetguard', NULL, 20.0, NULL, 2776, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3653, 603, 7, 'Seal Tape Teflon (PTFE) Waterproof 20mmx10m', NULL, 10.0, NULL, 2777, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3654, 603, 8, 'KAIN LAP MAJUN PERCA BAHAN KAIN KATUN SERAP AIR MINYAK & OLI', NULL, 30.0, NULL, 558, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3655, 603, 9, 'Headlamp Senter Kepala Mini Super Terang Baterai Cas USB Rechargeable', NULL, 3.0, NULL, 2778, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3656, 603, 10, 'YUASA AIR ACCU AKI TAMBAHAN PURE H2O DEMINERALIZED WATER PH7 LABEL BIRU NON UNSUR MOBIL MOTOR TRUK BUS GENERATOR GENSET', NULL, 2.0, NULL, 2779, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3657, 603, 11, 'Tang Kombinasi 7" Tekiro', NULL, 1.0, NULL, 2780, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3658, 603, 12, 'TEKIRO Obeng Gagang Karet Satuan Cushion Grip Screwdriver Gagang Hijau (+) Gagang Kuning (-) 38mm - 300mm Original
 
-Plus (+), 75mm', NULL, 1.0, NULL, 2781, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Plus (+), 75mm', NULL, 1.0, NULL, 2781, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3659, 603, 13, 'TEKIRO Obeng Gagang Karet Satuan Cushion Grip Screwdriver Gagang Hijau (+) Gagang Kuning (-) 38mm - 300mm Original
 
-), 75mm', NULL, 1.0, NULL, 2782, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3660, 603, 14, 'Mata gergaji sandflex 12 inch 24 tpi', NULL, 5.0, NULL, 2783, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3661, 603, 15, 'WD-40 Pelumas Anti Karat WD40 (333ml)', NULL, 10.0, NULL, 2784, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3662, 603, 16, 'SALE Kunci Ring Pas Set Tekiro 11pcs 8-24 pcs / Tekiro 11 pcs 8-24pcs', NULL, 1.0, NULL, 2785, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3663, 603, 17, 'Alkon solar 2 inch FAW FDP50 Germany technology', NULL, 1.0, NULL, 2786, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+), 75mm', NULL, 1.0, NULL, 2782, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3660, 603, 14, 'Mata gergaji sandflex 12 inch 24 tpi', NULL, 5.0, NULL, 2783, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3661, 603, 15, 'WD-40 Pelumas Anti Karat WD40 (333ml)', NULL, 10.0, NULL, 2784, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3662, 603, 16, 'SALE Kunci Ring Pas Set Tekiro 11pcs 8-24 pcs / Tekiro 11 pcs 8-24pcs', NULL, 1.0, NULL, 2785, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3663, 603, 17, 'Alkon solar 2 inch FAW FDP50 Germany technology', NULL, 1.0, NULL, 2786, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3664, 603, 18, 'Selang Hisap Spiral Biru Size LENGKAP 1” 1-1/4” 1-1/2” 2” 2-1/2” 3” 4” 5” inch PVC Spiral Suction Hose Blue Irigasi Sedot Drainase Air Limbah Industri
 
-2 inch', NULL, 8.0, NULL, 2787, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+2 inch', NULL, 8.0, NULL, 2787, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3665, 603, 19, 'KIKIR BESI 6" PLAT - BULAT - KOTAK - SEGITIGA - SETENGAH BULAT 15CM
 
-BULAT', NULL, 2.0, NULL, 2788, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3666, 603, 20, '1LUSIN BINTIK Sarung Tangan BINTIK KARET / Sarung Tangan Tukang Kerja', NULL, 2.0, NULL, 2789, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+BULAT', NULL, 2.0, NULL, 2788, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3666, 603, 20, '1LUSIN BINTIK Sarung Tangan BINTIK KARET / Sarung Tangan Tukang Kerja', NULL, 2.0, NULL, 2789, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3667, 603, 21, 'JLD Pahat Beton Topi Batu Lancip Pipih 8/10/12 Inci Point Flat Masonry Chisel dengan Pegangan Karet Penyerap Guncangan Logam Tahan Karat Cocok untuk Memotong Batu dan Logam
 
-point 8inci', NULL, 2.0, NULL, 2790, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3668, 603, 22, 'Palu Batu Gagang Fiber KENMASTER 10lbs / 5 kg - KENMASTER Palu Batu Gagang Fiber / Karet - Palu Bodem / Palu Godam', NULL, 1.0, NULL, 2791, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3669, 604, 1, 'Water Temperatur Drat 21mm PN 3015238 Cummins', NULL, 2.0, NULL, 2792, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3670, 604, 2, 'Oil Pressure Sensor Drat 10mm VDO 0-1Mpa (0-10 bar), 1 Pin', NULL, 2.0, NULL, 2793, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3671, 604, 3, 'Selenoid Shut Off Fuel PN 4942879 Cummins - 12V', NULL, 2.0, NULL, 2794, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+point 8inci', NULL, 2.0, NULL, 2790, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3668, 603, 22, 'Palu Batu Gagang Fiber KENMASTER 10lbs / 5 kg - KENMASTER Palu Batu Gagang Fiber / Karet - Palu Bodem / Palu Godam', NULL, 1.0, NULL, 2791, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3669, 604, 1, 'Water Temperatur Drat 21mm PN 3015238 Cummins', NULL, 2.0, NULL, 2792, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3670, 604, 2, 'Oil Pressure Sensor Drat 10mm VDO 0-1Mpa (0-10 bar), 1 Pin', NULL, 2.0, NULL, 2793, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3671, 604, 3, 'Selenoid Shut Off Fuel PN 4942879 Cummins - 12V', NULL, 2.0, NULL, 2794, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3672, 604, 4, 'Rubber Packing 3mm', NULL, 4.0, NULL, 2795, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3673, 604, 5, 'Filter 2020 PM 30 Micron Parker Racor 1000FG', NULL, 10.0, NULL, 2773, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3674, 604, 6, 'Filter P558615 Donaldson', NULL, 20.0, NULL, 2774, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3675, 604, 7, 'Filter P551329 Donaldson', NULL, 20.0, NULL, 2775, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3676, 605, 1, 'Lampu Akomodasi kap RM TL T8 (kap saja)', NULL, 13.0, NULL, 2796, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3677, 605, 2, 'Lampu phillips TCW060 D18 (kap saja)', NULL, 6.0, NULL, 2797, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3678, 605, 3, 'Lampu Marine Pendant  DS7 2M', NULL, 13.0, NULL, 2798, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3679, 605, 4, 'Lampu Sorot 50-1000W LED (Cahaya Putih), IP66', NULL, 2.0, NULL, 2799, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3673, 604, 5, 'Filter 2020 PM 30 Micron Parker Racor 1000FG', NULL, 10.0, NULL, 2773, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3674, 604, 6, 'Filter P558615 Donaldson', NULL, 20.0, NULL, 2774, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3675, 604, 7, 'Filter P551329 Donaldson', NULL, 20.0, NULL, 2775, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3676, 605, 1, 'Lampu Akomodasi kap RM TL T8 (kap saja)', NULL, 13.0, NULL, 2796, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3677, 605, 2, 'Lampu phillips TCW060 D18 (kap saja)', NULL, 6.0, NULL, 2797, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3678, 605, 3, 'Lampu Marine Pendant  DS7 2M', NULL, 13.0, NULL, 2798, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3679, 605, 4, 'Lampu Sorot 50-1000W LED (Cahaya Putih), IP66', NULL, 2.0, NULL, 2799, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3680, 606, 1, 'Scneider DOL Starter 5,5KW 10-14Ampere, Coil 380 VAC LE1M35Q721', NULL, 4.0, NULL, 2800, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3681, 607, 1, 'Scneider DOL Starter 5,5KW 10-14Ampere, Coil 380 VAC LE1M35Q721', NULL, 4.0, NULL, 2800, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3682, 608, 1, 'Breaker MCCB - NS 100 N - UI 750V UIMP 8KV (3P)', NULL, 2.0, NULL, 2801, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3683, 608, 2, 'Generator AVR AS440/A10136 (Stamford Genuine Part)', NULL, 2.0, NULL, 2802, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3684, 608, 3, 'Fuse 500V - 100KA / GL 6A', NULL, 10.0, NULL, 2803, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3685, 609, 1, 'Air freight Delivery port to port Jakarta - Kendari', NULL, 1.0, NULL, 2804, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3686, 610, 1, 'asbestos tape 2" (5cm) asbes pita', NULL, 1.0, NULL, 2805, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3686, 610, 1, 'asbestos tape 2" (5cm) asbes pita', NULL, 1.0, NULL, 2805, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3687, 610, 2, 'kawat stainless 304 uk 1mm, 1,2mm, 1,5mm, 2mm, 2,5mm, 3mm hard & soft per 0,5kg
 
-1mm, soft', NULL, 1.0, NULL, 2806, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+1mm, soft', NULL, 1.0, NULL, 2806, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3688, 611, 1, 'Racor 2040PM', NULL, 24.0, NULL, 2807, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3689, 611, 2, '⁠Racor 2010PM', NULL, 12.0, NULL, 2808, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3690, 612, 1, 'Packing Sakagami', NULL, 10.0, NULL, 2809, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3691, 612, 2, 'Rod Seal 10*16*6,3mm', NULL, 10.0, NULL, 1222, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3692, 612, 3, 'Dust Seal 20x26x3,6mm
 min.order 5pcs', NULL, 10.0, NULL, 2338, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3693, 612, 4, 'Piston Seal 53*63*12mm, CFW C1', NULL, 10.0, NULL, 1221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3693, 612, 4, 'Piston Seal 53*63*12mm, CFW C1', NULL, 10.0, NULL, 1221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3694, 612, 5, 'Oring 58*3,1mm', NULL, 30.0, NULL, 1223, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3695, 612, 6, 'Guide Ring 60*63*3,9mm', NULL, 20.0, NULL, 1219, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3696, 612, 7, 'Piston Seal 53*63*4mm', NULL, 10.0, NULL, 1220, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -22575,7 +22575,7 @@ INSERT INTO quotation_item_requests (
   (3718, 613, 16, 'SKUN FERRULE BLACK 2,5mm', NULL, 1.0, NULL, 2633, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3719, 613, 17, 'Kabel Duct Abu Lubang WD 25x25 25x45 32x32 32x45 33x65 45x45 45x65 PM
 
-WD 32x45', NULL, 1.0, NULL, 2747, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+WD 32x45', NULL, 1.0, NULL, 2747, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3720, 613, 18, 'DIN RAIL TERMINAL BLOCK NS 35-S/1 Galvaniz Steel', NULL, 1.0, NULL, 2813, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3721, 614, 1, 'PANEL TIBOX PANEL TIBOX 50 X 40 X 20 IP65', NULL, 1.0, NULL, 2618, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3722, 614, 2, 'Power Supply UPS Meanwell DRC-180B Meanwell', NULL, 1.0, NULL, 2619, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -22613,16 +22613,16 @@ WD 32x45', NULL, 1.0, NULL, 2747, 'substituted', 'import', 'Backfilled from hist
   (3754, 615, 15, 'Bolt & Nut Hexagonal M8x30mm - Stainless 304', NULL, 4.0, NULL, 2632, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3755, 615, 16, 'Kabel Duct Abu Lubang WD 25x25 25x45 32x32 32x45 33x65 45x45 45x65 PM
 
-WD 32x45', NULL, 1.0, NULL, 2747, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+WD 32x45', NULL, 1.0, NULL, 2747, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3756, 616, 1, 'Dial Bore Gauge 50-160mm
-Merk Mitutoyo', NULL, 1.0, NULL, 2817, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk Mitutoyo', NULL, 1.0, NULL, 2817, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3757, 616, 2, 'Dial Bore Gauge 50-160mm
-Merk Insize', NULL, 1.0, NULL, 2817, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk Insize', NULL, 1.0, NULL, 2817, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3758, 616, 3, 'Dial Bore Gauge 50-160mm
-No Brand', NULL, 1.0, NULL, 2817, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3759, 616, 4, 'Micrometer Screw Gauge 0-150mm (Outside Micrometer) Brand Mitutoyo', NULL, 1.0, NULL, 2818, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+No Brand', NULL, 1.0, NULL, 2817, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3759, 616, 4, 'Micrometer Screw Gauge 0-150mm (Outside Micrometer) Brand Mitutoyo', NULL, 1.0, NULL, 2818, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3760, 616, 5, 'Micrometer Screw Gauge 50-100mm (Outside Micrometer)
-set 50-75mm & 75-100mm (2pcs) No brand', NULL, 1.0, NULL, 2818, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+set 50-75mm & 75-100mm (2pcs) No brand', NULL, 1.0, NULL, 2818, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3761, 617, 1, 'MCCB Schneider NSX 100F, 4 Pole, 100A', NULL, 1.0, NULL, 2819, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3762, 618, 1, 'Dioda Kiprok /  FSB3510 35A', NULL, 2.0, NULL, 2820, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3763, 619, 1, 'Peta Laut Hidros (Hidro Oseanografi) No. 38', NULL, 1.0, NULL, 2821, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -22630,19 +22630,19 @@ set 50-75mm & 75-100mm (2pcs) No brand', NULL, 1.0, NULL, 2818, 'substituted', '
   (3765, 619, 3, 'Peta Laut Hidros (Hidro Oseanografi) No. 390', NULL, 1.0, NULL, 2823, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3766, 620, 1, 'Handy Talky Maker STANDARD HORIZON SUBMERSIBLE HX400 IS INTRINSICALLY SAFE', '370134', 5.0, NULL, 2824, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3767, 621, 1, 'Binocular Nikon 7x50 CF WP Ocean Pro', '370357', 1.0, NULL, 1680, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3768, 622, 1, '12 pasang Sarung Tangan Kerja Kain Putih Katun Rajut Benang 3 Sumo B3 Safety Glove Kerja', '190101', 100.0, NULL, 900, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3768, 622, 1, '12 pasang Sarung Tangan Kerja Kain Putih Katun Rajut Benang 3 Sumo B3 Safety Glove Kerja', '190101', 100.0, NULL, 900, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3769, 622, 2, 'Sapu Lidi - Long handled', '510803', 20.0, NULL, 2825, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3770, 622, 3, 'Sapu Plastik', '510807', 25.0, NULL, 1541, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3771, 622, 4, 'RINSO 1,8 KG', '550103', 100.0, NULL, 1302, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3772, 622, 5, 'CABLE REEL EXTENSION AC220V, 20MTR', '794395', 2.0, NULL, 2826, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3773, 622, 6, '232486 - Brass Scupper Plug 110×135', '232486', 15.0, NULL, 2827, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3774, 622, 7, 'Ear Plug 3M', '331157', 30.0, NULL, 2828, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3773, 622, 6, '232486 - Brass Scupper Plug 110×135', '232486', 15.0, NULL, 2827, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3774, 622, 7, 'Ear Plug 3M', '331157', 30.0, NULL, 2828, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3775, 622, 8, 'Safety Goggle', '311016', 25.0, NULL, 2718, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3776, 623, 1, 'PUNCHING TOOL SET DIES & TABLE, 6-38MM 16''S', '613056', 1.0, NULL, 1025, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3777, 623, 2, 'PRUSIAN BLUE Permatex 22ml (Tube)', '614196', 10.0, NULL, 2829, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3778, 623, 3, 'IMPA 614202 Abrasive Grinding and Lapping Carborundum Paste / Pasta Sekir - #2000 Micro', '614202', 1.0, NULL, 2830, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3779, 623, 4, 'IMPA 614203 Abrasive Grinding and Lapping Carborundum Paste / Pasta Sekir - #1500 Micro', '614203', 1.0, NULL, 2831, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3780, 623, 5, 'IMPA 614206 Abrasive Grinding and Lapping Carborundum Paste / Pasta Sekir - #800 Micro', '614206', 1.0, NULL, 2832, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3778, 623, 3, 'IMPA 614202 Abrasive Grinding and Lapping Carborundum Paste / Pasta Sekir - #2000 Micro', '614202', 1.0, NULL, 2830, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3779, 623, 4, 'IMPA 614203 Abrasive Grinding and Lapping Carborundum Paste / Pasta Sekir - #1500 Micro', '614203', 1.0, NULL, 2831, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3780, 623, 5, 'IMPA 614206 Abrasive Grinding and Lapping Carborundum Paste / Pasta Sekir - #800 Micro', '614206', 1.0, NULL, 2832, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3781, 623, 6, 'CARBORUNDUM PASTE GRIT#500, VERY FINE 450GRM  For precision lapping, fitting, surfacing, polishing and other general use in machine shops.  Universally used for grinding valves.  Supplied in 450 grm tin.  Please specify grit number when ordering.', '614208', 1.0, NULL, 2833, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3782, 623, 7, 'PULLER GEAR & WHEEL 3-ARM, 0-200MM, Brand TEKIRO 8"', '615071', 1.0, NULL, 2834, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3783, 623, 8, 'PULLER GEAR & WHEEL 3-ARM, 0-150MM, Brand TEKIRO 6"', '615070', 1.0, NULL, 2835, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -22651,25 +22651,25 @@ Per pack 1000pcs', '615239', 1.0, NULL, 2836, 'matched', 'import', 'Backfilled f
   (3785, 623, 10, 'RIVET BLIND OPENTYPE ALUM-BODY, 3.2X6MM
 Per pack 1000pcs', '615238', 1.0, NULL, 2837, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3786, 623, 11, 'No Offer', '615237', 1.0, NULL, 2588, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3787, 623, 12, 'WRENCH HOOK SPANNER 65-75MM, CARBON STEEL, Brand  NETSUREN Japan', '616490', 3.0, NULL, 2838, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3787, 623, 12, 'WRENCH HOOK SPANNER 65-75MM, CARBON STEEL, Brand  NETSUREN Japan', '616490', 3.0, NULL, 2838, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3788, 623, 13, 'PLIER SIDE CUTTING STAINLESS, STEEL 175MM. Brand TEKIRO Tang Kombinasi 7"', '616822', 3.0, NULL, 2839, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3789, 623, 14, 'PLIER LONG-NOSE SIDE CUTTING, STAINLESS STEEL 200MM. Brand  TEKIRO Tang lancip 8''', '616829', 2.0, NULL, 2840, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3790, 623, 15, 'Tekiro Kunci Inggris 6 - 8 - 10 - 12 - 15 - 18 - 24 inch
 
-6 inch', '616469', 2.0, NULL, 2841, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+6 inch', '616469', 2.0, NULL, 2841, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3791, 623, 16, 'Tekiro Kunci Inggris 6 - 8 - 10 - 12 - 15 - 18 - 24 inch
 
-10 inch', '616467', 2.0, NULL, 1382, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+10 inch', '616467', 2.0, NULL, 1382, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3792, 623, 17, 'Round Paint Brush - Kuas Detailing Bulat 19/25/40/50mm IMPA 510136 - 138
 
-19mm', '510135', 3.0, NULL, 2842, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+19mm', '510135', 3.0, NULL, 2842, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3793, 623, 18, 'Small Paint Brush 22mm', '510202', 3.0, NULL, 2843, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3794, 623, 19, 'Small Paint Brush 16mm', '510201', 3.0, NULL, 2844, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3795, 623, 20, 'BRUSH WIRE STRAIGHT HANDLE, 270MM  Strong wire brush', '510662', 5.0, NULL, 197, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3796, 623, 21, 'BRUSH WIRE WHEEL STANDARD, 75MMX3/8"', '510771', 10.0, NULL, 2845, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3797, 623, 22, 'IMPA 510766 Cup Brush 3" Kepang Sikat Mangkok Kepang Twist 75mm x 5/8"', '510766', 10.0, NULL, 2846, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3798, 623, 23, 'IMPA 510761 Brass Wire Cup Brush 3" Sikat Mangkok 75mm x 5/8"', '510761', 10.0, NULL, 2847, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3799, 623, 24, 'IMPA 510785 - THREADED NUT TYPE 75xM10 P1.5 THREAD', '510785', 10.0, NULL, 1725, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3797, 623, 22, 'IMPA 510766 Cup Brush 3" Kepang Sikat Mangkok Kepang Twist 75mm x 5/8"', '510766', 10.0, NULL, 2846, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3798, 623, 23, 'IMPA 510761 Brass Wire Cup Brush 3" Sikat Mangkok 75mm x 5/8"', '510761', 10.0, NULL, 2847, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3799, 623, 24, 'IMPA 510785 - THREADED NUT TYPE 75xM10 P1.5 THREAD', '510785', 10.0, NULL, 1725, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3800, 623, 25, 'BRUSH WIRE CUP OD50MM, WITH 6MM ARBOR', '510787', 10.0, NULL, 2848, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
@@ -22678,21 +22678,21 @@ INSERT INTO quotation_item_requests (
 ) VALUES
   (3801, 623, 26, 'Coir Broom (Sapu Ijuk) 90cm', '510807', 10.0, NULL, 1541, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3802, 623, 27, 'No Offer', '174258', 2.0, NULL, 2849, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3803, 623, 28, 'Pompa KOP Sedot WC Toilet / Alat Pompa Vakum Karet WC Toilet Mampet', '174256', 2.0, NULL, 2850, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3803, 623, 28, 'Pompa KOP Sedot WC Toilet / Alat Pompa Vakum Karet WC Toilet Mampet', '174256', 2.0, NULL, 2850, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3804, 623, 29, 'Replaceble Head Mop (Refill)', '174272', 10.0, NULL, 1902, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3805, 623, 30, 'Holder Electrode Closed Head 400A', '851025', 3.0, NULL, 2851, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3806, 623, 31, 'wd40 333ml wd40 333 ml wd 40 333ml wd 40 333 ml', '450702', 24.0, NULL, 666, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3807, 623, 32, 'Kain Majun Putih Jahit MURAH (HARGA PER KG)', '232907', 250.0, NULL, 677, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3806, 623, 31, 'wd40 333ml wd40 333 ml wd 40 333ml wd 40 333 ml', '450702', 24.0, NULL, 666, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3807, 623, 32, 'Kain Majun Putih Jahit MURAH (HARGA PER KG)', '232907', 250.0, NULL, 677, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3808, 623, 33, 'IMPA 510462 - Spare Paint Roller - 100 mm
 
-MERK FIA', '510462', 20.0, NULL, 1301, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3809, 623, 34, '12 pasang Sarung Tangan Kerja Kain Putih Katun Rajut Benang 3 Sumo B3 Safety Glove Kerja', '190101', 60.0, NULL, 900, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+MERK FIA', '510462', 20.0, NULL, 1301, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3809, 623, 34, '12 pasang Sarung Tangan Kerja Kain Putih Katun Rajut Benang 3 Sumo B3 Safety Glove Kerja', '190101', 60.0, NULL, 900, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3810, 623, 35, 'Kawat Galvanis / Kawat seng putih BWG 12/ 14/16/18/20/22/24 per meter
 
-0.5mm', '671108', 2.0, NULL, 2852, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+0.5mm', '671108', 2.0, NULL, 2852, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3811, 623, 36, 'HT ICOM M25', '370115', 2.0, NULL, 2599, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3812, 623, 37, 'FEIBAO Scraper Kape Stainless Premium Ukuran 25–150mm Alat Pengerok Dinding Pisau', '613674', 3.0, NULL, 2853, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3813, 623, 38, 'FEIBAO Scraper Kape Stainless Premium Ukuran 25–150mm Alat Pengerok Dinding Pisau', '613677', 3.0, NULL, 2854, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3812, 623, 37, 'FEIBAO Scraper Kape Stainless Premium Ukuran 25–150mm Alat Pengerok Dinding Pisau', '613674', 3.0, NULL, 2853, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3813, 623, 38, 'FEIBAO Scraper Kape Stainless Premium Ukuran 25–150mm Alat Pengerok Dinding Pisau', '613677', 3.0, NULL, 2854, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3814, 623, 39, 'WASHER PLAIN ROUND STEEL, M24.0', '694824', 50.0, NULL, 2855, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3815, 623, 40, 'Mur baja hitam M14 Grade 10.9 Ring plat / Ring per / mur hex / Washer Plate / Spring Washer Lock
 
@@ -22700,13 +22700,13 @@ M14（Hanya Mur）
 
 Baut baja grade 10.9 M14 hex full drat / Half drat / baut mur baja hitam / hex bolt / ring plat per
 
-M14x50（Hanya Baut）', '691265', 1.0, NULL, 2856, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+M14x50（Hanya Baut）', '691265', 1.0, NULL, 2856, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3816, 623, 41, 'Mur baja hitam M8 Grade 10.9 Ring plat / Ring per / mur hex / Washer Plate / Spring Washer Lock
 
 M8（Hanya Mur）
 Baut baja hitam M8 Grade 10.9 hex full drat / Half drat / baut mur / hex bolt / ring plat per
 
-M8x50（Hanya Baut）', '691145', 1.0, NULL, 243, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+M8x50（Hanya Baut）', '691145', 1.0, NULL, 243, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3817, 623, 42, 'Rinso Laundry Soap Powder', '550111', 50.0, NULL, 1783, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3818, 623, 43, 'CLEANER HAND GENERAL PURPOSE, Fast Orange Permatex 3,78L', '551525', 4.0, NULL, 2857, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3819, 623, 44, 'RUBBER PAD FOR PNEUMATIC, GRINDER WHEEL DIA 100MM, Merk Bosch', '590316', 10.0, NULL, 2858, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -22728,16 +22728,16 @@ only 5 available', '592082', 5.0, NULL, 2859, 'matched', 'import', 'Backfilled f
   (3834, 623, 59, 'SCREWDRIVER ELECTRICIAN''S, Shaft Cover Handle Slotted 5.5X100MM  Vessel', '612303', 3.0, NULL, 2870, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3835, 623, 60, 'SCREWDRIVER ELECTRICIAN''S, PHILLIPS NO.1 150MM  ACESA', '612313', 2.0, NULL, 2871, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3836, 623, 61, 'SCREWDRIVER ELECTRICIAN''S, PHILLIPS N0.2 150mm Vessel', '612315', 2.0, NULL, 2872, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3837, 623, 62, '612366 - NUT DRIVER SET 5-12MM 7''S/SET', '612366', 1.0, NULL, 1477, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3838, 623, 63, '612431 HAMMERING SCREWDRIVERS IMPACT TYPE, 4''s', '612431', 1.0, NULL, 200, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3837, 623, 62, '612366 - NUT DRIVER SET 5-12MM 7''S/SET', '612366', 1.0, NULL, 1477, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3838, 623, 63, '612431 HAMMERING SCREWDRIVERS IMPACT TYPE, 4''s', '612431', 1.0, NULL, 200, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3839, 623, 64, 'SCREWDRIVER SET HAMMERING, IMPACT-TYPE 6 BITS ARCA', '612432', 1.0, NULL, 691, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3840, 623, 65, 'Kapusi Palu Karet/Palu Keramik 450/680/900 Gram Gagang Berlapis Karet Fiber K-0376/K-0377/K-0378
 
-450 G', '612752', 2.0, NULL, 2873, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3841, 623, 66, '612754 : rubber hammer,handle,head die = 67mm', '612754', 2.0, NULL, 808, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+450 G', '612752', 2.0, NULL, 2873, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3841, 623, 66, '612754 : rubber hammer,handle,head die = 67mm', '612754', 2.0, NULL, 808, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3842, 623, 67, 'CHISEL SET COMBINATION 150MM, 7''S', '613086', 1.0, NULL, 2874, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3843, 623, 68, 'impa 613089 chisel and punch set combination 150mm 12pcs', '613089', 1.0, NULL, 2875, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3844, 623, 69, 'Kikir set 10 Pcs 03830 Diamond Needle File Set 4x160MM Sata Tools', '614543', 1.0, NULL, 2120, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3843, 623, 68, 'impa 613089 chisel and punch set combination 150mm 12pcs', '613089', 1.0, NULL, 2875, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3844, 623, 69, 'Kikir set 10 Pcs 03830 Diamond Needle File Set 4x160MM Sata Tools', '614543', 1.0, NULL, 2120, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3845, 623, 70, 'Amplas Roll 50mm x 45m Grid #120', '614731', 1.0, NULL, 2876, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3846, 623, 71, 'Amplas Roll 50mm x 45m Grid #180', '614733', 1.0, NULL, 2877, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3847, 623, 72, 'Amplas Roll 50mm x 45m Grid #240', '614734', 1.0, NULL, 2878, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -22747,44 +22747,44 @@ only 5 available', '592082', 5.0, NULL, 2859, 'matched', 'import', 'Backfilled f
   (3851, 623, 76, 'WHEEL CUT-OFF RESINOID 105x2x16mm Nippon Resibon', '614859', 10.0, NULL, 2662, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3852, 623, 77, 'Hi-Cook Gas Cartridge Tabung Gas Kompor Portable
 
-COOK 230 G', '617017', 5.0, NULL, 2879, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3853, 623, 78, 'IMPA 630255 ; Drill set HSS 1 - 13mm - 25s. Please', '630255', 1.0, NULL, 198, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3854, 623, 79, 'ASTEEL Mata Bor Pagoda Multi Step Drill High Speed Steel 4 -12 MM Titanium Coating Spiral Kerucut Tangga Payung Step Cone Drill Bits untuk melubang Bes', '633801', 1.0, NULL, 2880, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3855, 623, 80, '632486 SCREW EXTRACTOR SET 2.0 MM, 2.7MM, 4.0MM, 6.4MM, 7.2MM (5PCS) & (6PCS) - 6PCS', '632487', 1.0, NULL, 786, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+COOK 230 G', '617017', 5.0, NULL, 2879, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3853, 623, 78, 'IMPA 630255 ; Drill set HSS 1 - 13mm - 25s. Please', '630255', 1.0, NULL, 198, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3854, 623, 79, 'ASTEEL Mata Bor Pagoda Multi Step Drill High Speed Steel 4 -12 MM Titanium Coating Spiral Kerucut Tangga Payung Step Cone Drill Bits untuk melubang Bes', '633801', 1.0, NULL, 2880, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3855, 623, 80, '632486 SCREW EXTRACTOR SET 2.0 MM, 2.7MM, 4.0MM, 6.4MM, 7.2MM (5PCS) & (6PCS) - 6PCS', '632487', 1.0, NULL, 786, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3856, 623, 81, 'Mur baja hitam M24 Grade 10.9 Ring per / Ring plat / mur hex / Washer Plate / Spring Washer Lock
 
 Mur, M24
 
 Baut baja grade 10.9 M24 hex full drat / Half drat / baut mur baja hitam / hex bolt / ring plat per
 
-M24x95, Hanya Baut', '691399', 2.0, NULL, 2881, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+M24x95, Hanya Baut', '691399', 2.0, NULL, 2881, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3857, 623, 82, 'Baut baja grade 10.9 M12 hex full drat / Half drat / baut mur baja hitam / hex bolt / ring plat per
 
 M12x80（Hanya Baut）
 
 Mur baja hitam M12 Grade 10.9 Ring plat / Ring per / mur hex / Washer Plate / Spring Washer Lock
 
-M12（Hanya Mur）', '691228', 2.0, NULL, 1946, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+M12（Hanya Mur）', '691228', 2.0, NULL, 1946, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3858, 623, 83, 'LEM SERBAGUNA LOCTITE 401 406 495 FT220 20GRAM 20GR
 
-401', '812787', 10.0, NULL, 2882, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+401', '812787', 10.0, NULL, 2882, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3859, 623, 84, 'Baut mur baja hitam M16 garde 10.9 hex full drat / Half drat / ring per / ring plat / hex bolt
 
 M16x60, Hanya Baut
 
 Mur baja hitam M16 Grade 10.9 Ring per / Ring plat / mur hex / Washer Plate / Spring Washer Lock
 
-M16 Mur', '691283', 1.0, NULL, 2883, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+M16 Mur', '691283', 1.0, NULL, 2883, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3860, 623, 85, 'kabel ties 10cm/size 2.5 x100/pengikat plastik/kabel tie/kabel serut
 
-Putih', '794849', 2.0, NULL, 2884, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Putih', '794849', 2.0, NULL, 2884, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3861, 623, 86, 'kabel ties 20cm/size 3.6 x 200 mm/cable tie/kabel tie/pengikat plastik
 
-Putih', '794857', 5.0, NULL, 2885, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Putih', '794857', 5.0, NULL, 2885, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3862, 623, 87, 'Kabel ties 35 cm/uk 4.8mm x 350 mm/kabel pengikat/cable tie/kabel ties
 
-Putih', '794860', 2.0, NULL, 1508, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3863, 623, 88, 'Fluke 27II Rugged Multimeter Multitester Avometer Ori Original Asli', '795768', 1.0, NULL, 2886, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Putih', '794860', 2.0, NULL, 1508, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3863, 623, 88, 'Fluke 27II Rugged Multimeter Multitester Avometer Ori Original Asli', '795768', 1.0, NULL, 2886, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3864, 623, 89, 'Baut baja hitam M10 Grade 10.9 hex full drat / Half drat / baut mur / hex bolt / ring plat per
 
 M10x50（Hanya Baut）
@@ -22792,33 +22792,33 @@ M10x50（Hanya Baut）
 
 Mur baja hitam M10 Grade 10.9 Ring plat / Ring per / mur hex / Washer Plate / Spring Washer Lock
 
-M10（Hanya Mur）', '691183', 2.0, NULL, 2887, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+M10（Hanya Mur）', '691183', 2.0, NULL, 2887, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3865, 623, 90, 'PACKING WATER BELDAM PILOTPACK, NO.67 3MMX15MTR', '810701', 1.0, NULL, 2888, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3866, 623, 91, 'PACKING WATER BELDAM PILOTPACK, NO.67 11MMX10MTR', '810706', 1.0, NULL, 2889, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3867, 623, 92, 'No Offer', '811322', 1.0, NULL, 2890, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3868, 623, 93, 'Rubber Sheet Viton 100 cm x 100 cm x 1 mm', '811143', 1.0, NULL, 2891, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3869, 623, 94, 'Rubber Sheet Viton 100 cm x 100 cm x 2 mm', '811145', 2.0, NULL, 2892, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3868, 623, 93, 'Rubber Sheet Viton 100 cm x 100 cm x 1 mm', '811143', 1.0, NULL, 2891, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3869, 623, 94, 'Rubber Sheet Viton 100 cm x 100 cm x 2 mm', '811145', 2.0, NULL, 2892, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3870, 623, 95, 'No Offer', '811287', 1.0, NULL, 2893, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3871, 623, 96, 'DEVCON Flexane 880 Putty 15820 1LB (454gr)', '812249', 2.0, NULL, 2894, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3872, 623, 97, 'AIR FILTER 15mm x 2 meter', '813102', 80.0, NULL, 2895, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3873, 623, 98, 'GOGGLE WELDER PLASTIC', '851112', 2.0, NULL, 2896, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3874, 623, 99, 'Kacamata Safety Cheetah Matrix Clear Anti Scratch Full Protection', '851113', 5.0, NULL, 2897, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3875, 623, 100, 'IMPA : 851116 - Welding helmet With Head Gear Complete With Spare Glas', '851116', 2.0, NULL, 678, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3874, 623, 99, 'Kacamata Safety Cheetah Matrix Clear Anti Scratch Full Protection', '851113', 5.0, NULL, 2897, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3875, 623, 100, 'IMPA : 851116 - Welding helmet With Head Gear Complete With Spare Glas', '851116', 2.0, NULL, 678, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3876, 623, 101, 'Welding Handshield 632P / 567P Blue Eagle - Topeng Las Kedok Las Gagang
 
-632P', '851121', 2.0, NULL, 2898, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+632P', '851121', 2.0, NULL, 2898, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3877, 623, 102, 'EYEWEAR PROTECTIVE CLEAR', '311061', 10.0, NULL, 2899, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3878, 623, 103, 'spring washer m16 | ring per m16 baja', '695220', 100.0, NULL, 2900, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3879, 623, 104, 'Ring Per Baja Hitam 8.8 M8', '695216', 50.0, NULL, 2901, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3880, 623, 105, 'Ring Plat Baja Hitam 8.8 M10', '694817', 100.0, NULL, 2130, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3881, 623, 106, 'spring washer m14 | ring per m14 baja', '695219', 100.0, NULL, 2902, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3882, 623, 107, 'spring washer m24 | ring per m24 baja', '695224', 50.0, NULL, 2903, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3883, 623, 108, 'Ring Per Baja Hitam 8.8 M10', '695217', 50.0, NULL, 2904, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3884, 623, 109, 'Ring Per Baja Hitam 8.8 M12', '695218', 50.0, NULL, 2905, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3885, 623, 110, 'Ring Plat Baja Hitam 8.8 M8', '694816', 100.0, NULL, 2906, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3886, 623, 111, 'Ring Plat Baja Hitam 8.8 M12', '694818', 100.0, NULL, 2131, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3887, 623, 112, 'ring plat baja M14 | washer plat baja 14mm isi 100', '694819', 100.0, NULL, 2907, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3888, 623, 113, 'Ring Plat Baja M16 Hitam Grade 8.8', '694820', 100.0, NULL, 2132, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3878, 623, 103, 'spring washer m16 | ring per m16 baja', '695220', 100.0, NULL, 2900, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3879, 623, 104, 'Ring Per Baja Hitam 8.8 M8', '695216', 50.0, NULL, 2901, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3880, 623, 105, 'Ring Plat Baja Hitam 8.8 M10', '694817', 100.0, NULL, 2130, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3881, 623, 106, 'spring washer m14 | ring per m14 baja', '695219', 100.0, NULL, 2902, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3882, 623, 107, 'spring washer m24 | ring per m24 baja', '695224', 50.0, NULL, 2903, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3883, 623, 108, 'Ring Per Baja Hitam 8.8 M10', '695217', 50.0, NULL, 2904, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3884, 623, 109, 'Ring Per Baja Hitam 8.8 M12', '695218', 50.0, NULL, 2905, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3885, 623, 110, 'Ring Plat Baja Hitam 8.8 M8', '694816', 100.0, NULL, 2906, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3886, 623, 111, 'Ring Plat Baja Hitam 8.8 M12', '694818', 100.0, NULL, 2131, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3887, 623, 112, 'ring plat baja M14 | washer plat baja 14mm isi 100', '694819', 100.0, NULL, 2907, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3888, 623, 113, 'Ring Plat Baja M16 Hitam Grade 8.8', '694820', 100.0, NULL, 2132, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3889, 623, 114, 'GAS CUTTING TORCH KOIKE MK-100, incl. Cutting tip no. 1, 2, 3 untuk gas LPG', '850252', 2.0, NULL, 2908, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3890, 623, 115, 'SPARE NOZZLE NO.2 untuk gas LPG', '850265', 3.0, NULL, 2909, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3891, 623, 116, 'SPARE NOZZLE NO.3 untuk gas LPG', '850266', 3.0, NULL, 2910, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -22829,7 +22829,7 @@ M10（Hanya Mur）', '691183', 2.0, NULL, 2887, 'substituted', 'import', 'Backfi
   (3896, 625, 3, 'Lux Sabun Cair 400ml', '550252', 75.0, NULL, 2912, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3897, 625, 4, 'PASTA GIGI MERK PEPSODENT CHARCOAL @225gram', '110921', 75.0, NULL, 2716, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3898, 625, 5, 'SABUN DETERGENT BUBUK MERK RINSO @700gram', '550134', 75.0, NULL, 2913, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3899, 625, 6, 'Bantal BSC Olive Single set', '150290', 25.0, NULL, 1957, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3899, 625, 6, 'Bantal BSC Olive Single set', '150290', 25.0, NULL, 1957, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3900, 625, 7, 'BLANKET WOOL 100% 1500X2000MM, BLUE', '150306', 20.0, NULL, 2914, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
 INSERT INTO quotation_item_requests (
   id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
@@ -22840,10 +22840,10 @@ INSERT INTO quotation_item_requests (
   (3902, 625, 9, 'Hard wood with metal hook', '150526', 50.0, NULL, 2916, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3903, 625, 10, 'BATH TOWEL COTTON BLUE, 700 X 1400MM', '150602', 30.0, NULL, 1551, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3904, 625, 11, 'Lap piring 700x700mm', '150618', 20.0, NULL, 2917, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3905, 625, 12, 'Bedsheet 100% katun sprei putih bantal guling halus', '150101', 20.0, NULL, 2918, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3906, 625, 13, 'Sendok Makan Stainless Tebal kualitas hotel', '170103', 30.0, NULL, 2919, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3907, 625, 14, 'Garpu Makan Stainless Tebal kualitas hotel', '170102', 30.0, NULL, 2920, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3908, 625, 15, '8 inchs Piring Makan Ceper 4180', '170403', 35.0, NULL, 2921, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3905, 625, 12, 'Bedsheet 100% katun sprei putih bantal guling halus', '150101', 20.0, NULL, 2918, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3906, 625, 13, 'Sendok Makan Stainless Tebal kualitas hotel', '170103', 30.0, NULL, 2919, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3907, 625, 14, 'Garpu Makan Stainless Tebal kualitas hotel', '170102', 30.0, NULL, 2920, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3908, 625, 15, '8 inchs Piring Makan Ceper 4180', '170403', 35.0, NULL, 2921, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3909, 625, 16, 'FRENCH KNIFE S. STEEL BLADE, 300MM W/BLUE PLASTIC HANDLE
 REQUEST PLASTIK SAMPAH UKRAN MEDIUM DAN LARGE', '172332', 100.0, NULL, 2922, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3910, 625, 17, 'FRENCH KNIFE S. STEEL BLADE, 300MM W/YELLOW PLASTIC HANDLE
@@ -22857,7 +22857,7 @@ REQUEST PLASTIK SAMPAH UKURAN LARGE', '172333', 50.0, NULL, 2923, 'matched', 'im
   (3917, 628, 3, 'Safety Sign  W/O Text Lifebuoy 150x150mm (IMO)', '334056', 10.0, NULL, 2927, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3918, 628, 4, 'Safety Sign  W/O Text Lifebuoy with Line 150x150mm', '334057', 6.0, NULL, 2928, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3919, 628, 5, 'Safety Sign  W/O Text Lifebuoy with Light 150x150mm', '334058', 10.0, NULL, 2929, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3920, 628, 6, 'DIRECTION INDICATOR STRAIGHT ARROW', '334420', 20.0, NULL, 2930, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3920, 628, 6, 'DIRECTION INDICATOR STRAIGHT ARROW', '334420', 20.0, NULL, 2930, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3921, 628, 7, 'Safety Sign Liferaft 150x150mm  (IMO)', '334102', 6.0, NULL, 2931, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3922, 628, 8, 'Safety Sign Fasten Seat Belts 150x150mm', '335100', 10.0, NULL, 2932, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3923, 628, 9, 'Safety Sign 1 150x75mm', '334201', 8.0, NULL, 2933, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -22874,30 +22874,30 @@ REQUEST PLASTIK SAMPAH UKURAN LARGE', '172333', 50.0, NULL, 2923, 'matched', 'im
   (3934, 628, 20, 'Direction Sign Arrow 45Deg, Down(L)/Exit150x400mm', '334406', 10.0, NULL, 2944, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3935, 628, 21, 'Fire Control Symbol ISO 17631, Manually Operated Call Point', '336872', 10.0, NULL, 2945, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3936, 628, 22, 'Fire Control Sign Powder(P6), Fire Extinguisher 150x150 mm', '336079', 20.0, NULL, 2946, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3937, 628, 23, 'READY 5PC', '335825', 5.0, NULL, 2947, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3937, 628, 23, 'READY 5PC', '335825', 5.0, NULL, 2947, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3938, 628, 24, 'Sign White Vinyl Self Adhesive, Prohibition #8530
 100X300MM', '338530', 5.0, NULL, 2948, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3939, 628, 25, 'Fire Control Symbol ISO 17631, Fire Hydrant 150 X 150 MM', '336815', 20.0, NULL, 2949, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3940, 628, 26, 'Fire Control Sign Hose Box W/, Spray/Jet 150 x 150 mm', '336058', 15.0, NULL, 2950, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3941, 629, 1, 'Kertas HVS Putih / Kertas Photocopy A4 75 gr - COPY PAPER ^^', '470161', 10.0, NULL, 2951, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3941, 629, 1, 'Kertas HVS Putih / Kertas Photocopy A4 75 gr - COPY PAPER ^^', '470161', 10.0, NULL, 2951, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3942, 629, 2, 'JLD Gunting Jahit Kain Profesional Baja Mangan Galvanis Premium Hitam 8"/9"/10"/11" Tailor Scissor - Alat
 
-8inch', '611841', 5.0, NULL, 2435, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+8inch', '611841', 5.0, NULL, 2435, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3943, 629, 3, 'Joyco cutter A300', '471011', 10.0, NULL, 2952, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3944, 629, 4, 'Joyco Cutter L 500', '471013', 5.0, NULL, 940, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3944, 629, 4, 'Joyco Cutter L 500', '471013', 5.0, NULL, 940, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3945, 629, 5, 'Keyboard USB Logitech K120 Original 100%|Keyboard JETE KB101 Garansi Resmi 1 Tahun
 
-Logitech K120', '472703', 2.0, NULL, 2953, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3946, 629, 6, 'Robot mouse wireless m206', '472776', 2.0, NULL, 2954, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Logitech K120', '472703', 2.0, NULL, 2953, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3946, 629, 6, 'Robot mouse wireless m206', '472776', 2.0, NULL, 2954, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3947, 629, 7, 'Map Bening A4  1 pack = 12 pcs', '470334', 2.0, NULL, 2955, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3948, 629, 8, 'Lakban Kain 60 mm x 20 mtr Silver', '471284', 5.0, NULL, 2956, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3949, 629, 9, '1 Pcs) Kalkulator Calculator Kantong Pocket Kecil + Cover 12 Digit JOYKO PKC-0711HC Ratusan Miliar Dual Power', '471809', 5.0, NULL, 2957, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3950, 629, 10, 'Lakban bening 24 mm', '471253', 5.0, NULL, 1982, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3951, 629, 11, 'Tempat Solatip / Tape Dispenser Isolasi Lion DL 50', '471256', 2.0, NULL, 2958, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3952, 629, 12, 'joyco clipboard plastik', '470319', 5.0, NULL, 2959, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3953, 629, 13, 'joyco clipboard a4 papan', '470304', 5.0, NULL, 2960, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3954, 629, 14, 'Joyko LAMINATING MACHINE + PAPER CUTTER A4 F4 Folio Mesin Laminating Joyko LM-06', '470285', 1.0, NULL, 2961, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (3955, 629, 15, 'Penggaris Butterfly Plastik 30 Cm', '471567', 5.0, NULL, 2962, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (3949, 629, 9, '1 Pcs) Kalkulator Calculator Kantong Pocket Kecil + Cover 12 Digit JOYKO PKC-0711HC Ratusan Miliar Dual Power', '471809', 5.0, NULL, 2957, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3950, 629, 10, 'Lakban bening 24 mm', '471253', 5.0, NULL, 1982, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3951, 629, 11, 'Tempat Solatip / Tape Dispenser Isolasi Lion DL 50', '471256', 2.0, NULL, 2958, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3952, 629, 12, 'joyco clipboard plastik', '470319', 5.0, NULL, 2959, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3953, 629, 13, 'joyco clipboard a4 papan', '470304', 5.0, NULL, 2960, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3954, 629, 14, 'Joyko LAMINATING MACHINE + PAPER CUTTER A4 F4 Folio Mesin Laminating Joyko LM-06', '470285', 1.0, NULL, 2961, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (3955, 629, 15, 'Penggaris Butterfly Plastik 30 Cm', '471567', 5.0, NULL, 2962, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3956, 629, 16, 'Casio Ez Label 12 mm x 8 mtr black on red', '473466', 3.0, NULL, 2963, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3957, 629, 17, 'Casio Ez Label 12 mm x 8 mtr black on yellow', '473467', 3.0, NULL, 2964, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3958, 629, 18, 'Casio Ez Label 12 mm x 8 mtr black on white', '473463', 3.0, NULL, 2520, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -22909,10 +22909,10 @@ Logitech K120', '472703', 2.0, NULL, 2953, 'substituted', 'import', 'Backfilled 
   (3964, 629, 24, 'Pita dymo 9 mm x 3 mtr yellow', '471223', 3.0, NULL, 2970, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3965, 629, 25, 'Double Sided Tape Joyko Perekat 2 sisi 15 Yard
 
-joyko 48 mm', '471270', 5.0, NULL, 2971, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+joyko 48 mm', '471270', 5.0, NULL, 2971, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3966, 629, 26, 'Double Sided Tape Joyko Perekat 2 sisi 15 Yard
 
-Joyko 12 mm', '471268', 5.0, NULL, 181, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Joyko 12 mm', '471268', 5.0, NULL, 181, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (3967, 630, 1, 'SCREW PLATE SET METRIC COARSE, #OK47 M6 TO M24 22PCS/SET', '632203', 1.0, NULL, 2972, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (3968, 630, 2, 'WRENCH ADJUSTABLE RIDGID #706, CHROMED PLATE 150MM
 REQ KUNCI ENGLAND FOR LIFE BOAT & ENGINE STORE', '616502', 5.0, NULL, 2973, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -22998,15 +22998,15 @@ Merk In-Lite', '791826', 35.0, NULL, 260, 'matched', 'import', 'Backfilled from 
   (4007, 633, 5, 'Floodlight Coolwhite, LED 200W, 100-240V
 350mm x 115mm x 290 mm
 IP 65
-Merk In-Lite', '791829', 35.0, NULL, 2038, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+Merk In-Lite', '791829', 35.0, NULL, 2038, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (4008, 633, 6, 'No Offer', '794143', 100.0, NULL, 2990, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4009, 634, 1, 'iala maritime bouyage system np 735', '371742', 1.0, NULL, 2991, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (4009, 634, 1, 'iala maritime bouyage system np 735', '371742', 1.0, NULL, 2991, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (4010, 634, 2, 'KG978E PERFORMANCE STANDARDS, SHIPBORNE RADIO-COM&NAV EQUIP   Publications from various countries are available.  The most popular publications are listed below.  If your requirement is not listed, specify the name of the publication and the published year.', '371670', 1.0, NULL, 2992, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4011, 634, 3, 'KB867E CODE ON ALERTS &, INDICATORS 2009  Publications from various countries are available.  The most popular publications are listed below.  If your requirement is not listed, specify the name of the publication and the published year.', '371778', 1.0, NULL, 2993, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4012, 634, 4, 'ITU RADIO REGULATIONS VOL1-4, (CD)  Publications from various countries are available.  The most popular publications are listed below.  If your requirement is not listed, specify the name of the publication and the published year.', '370796', 1.0, NULL, 2994, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4013, 634, 5, 'ITU05CD LIST OF SHIP STATIONS, AND MARITIME MOBILE SERVICE CD  Publications from various countries are available.  The most popular publications are listed below.  If your requirement is not listed, specify the name of the publication and the published year.', '370791', 1.0, NULL, 2995, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4014, 634, 6, 'ITUMMCD MANUAL FOR MARITIME, MOBILE&MARITIME SATE. SERVICE  Publications from various countries are available.  The most popular publications are listed below.  If your requirement is not listed, specify the name of the publication and the published year.', '370795', 1.0, NULL, 2996, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4015, 634, 7, 'Nories Nautical Table 2025', '370669', 1.0, NULL, 2997, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (4015, 634, 7, 'Nories Nautical Table 2025', '370669', 1.0, NULL, 2997, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (4016, 634, 8, 'Ships Routeing 2019 edition', '371644', 1.0, NULL, 2998, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4017, 634, 9, 'The Admiral ENC and ECDIS Maintenance Record (NP133C)', NULL, 1.0, NULL, 2999, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4018, 635, 1, 'Shacke D Galvanized 22 mm', '233843', 10.0, NULL, 3000, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -23015,17 +23015,17 @@ Merk In-Lite', '791829', 35.0, NULL, 2038, 'substituted', 'import', 'Backfilled 
   (4021, 635, 4, 'BRUSH COUNTER BLACK HAIR  Black bristle or nylon hair for sweeping dust or dirt on desks, counters, or tables.', '510646', 12.0, NULL, 3002, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4022, 635, 5, 'Sikat lantai, panjang 1200mm', '510615', 24.0, NULL, 3003, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4023, 635, 6, 'Floor Wiper Dust 80 Cm', '174289', 3.0, NULL, 1623, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4024, 635, 7, 'SPRING CLAMP MOP COMPLETE  Quick-way type spring clamp eliminates cutting or untangling.  Merely slide off the old mop head and slide on the new one, takes just seconds.', '174275', 24.0, NULL, 1785, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4025, 635, 8, 'mini paint roller', '510462', 200.0, NULL, 1301, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4026, 635, 9, 'Hasston HAmmer 1470 500gr', '612612', 36.0, NULL, 2298, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4027, 635, 10, 'Sekop pasir rata', '613686', 6.0, NULL, 3004, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (4024, 635, 7, 'SPRING CLAMP MOP COMPLETE  Quick-way type spring clamp eliminates cutting or untangling.  Merely slide off the old mop head and slide on the new one, takes just seconds.', '174275', 24.0, NULL, 1785, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (4025, 635, 8, 'mini paint roller', '510462', 200.0, NULL, 1301, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (4026, 635, 9, 'Hasston HAmmer 1470 500gr', '612612', 36.0, NULL, 2298, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (4027, 635, 10, 'Sekop pasir rata', '613686', 6.0, NULL, 3004, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (4028, 635, 11, 'Kabel roll 50 mtr', '794397', 1.0, NULL, 1453, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4029, 635, 12, 'Gas Span 2.5% Vol (50%LEL) Methane 58 Liter Impa 851549', '851547', 1.0, NULL, 2714, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4030, 635, 13, 'Tang Massa Las 300A kabel 25 mm panjang 2 meter', '851056', 1.0, NULL, 3005, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4031, 635, 14, 'kacamata safety hitam', '110550', 10.0, NULL, 3006, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4032, 635, 15, 'Plastik sampah ukuran 90x120cm per Pcs', '174188', 200.0, NULL, 1961, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4033, 635, 16, 'Alat Peras Pel 20 liter', '174280', 6.0, NULL, 1787, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4034, 635, 17, 'Sarung tangan Kerja bintik kuning', '190101', 120.0, NULL, 900, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (4034, 635, 17, 'Sarung tangan Kerja bintik kuning', '190101', 120.0, NULL, 900, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (4035, 635, 18, 'Rat guard 600 mm', '232363', 12.0, NULL, 3007, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4036, 635, 19, 'Kain Majun Putih jahit tumpuk', '232907', 300.0, NULL, 677, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4037, 635, 20, 'No Offer', '232950', 3.0, NULL, 3008, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -23037,8 +23037,8 @@ Merk In-Lite', '791829', 35.0, NULL, 2038, 'substituted', 'import', 'Backfilled 
   (4043, 635, 26, 'No Offer', '794320', 100.0, NULL, 3013, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4044, 635, 27, 'No Offer', '851658', 2.0, NULL, 3014, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4045, 635, 28, 'Electrode Holeder 500Amp', '851026', 3.0, NULL, 3015, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4046, 635, 29, 'Bantal Tidur Andes', '150286', 25.0, NULL, 3016, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4047, 635, 30, 'Bantal Dacron yuki', '150290', 25.0, NULL, 1957, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (4046, 635, 29, 'Bantal Tidur Andes', '150286', 25.0, NULL, 3016, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (4047, 635, 30, 'Bantal Dacron yuki', '150290', 25.0, NULL, 1957, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (4048, 636, 1, 'Heaving Lines 3-strand
 HEAVING LINE POLYPROPYLENE, 1"CIRX200MTR
 @roll = 200 mtr IMPA 211271', NULL, 12.0, NULL, 1887, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -23070,16 +23070,16 @@ GLOBE VALVE DIN CAST STEEL 398, FLANGED PN16 STRAIGHT DN 50
   (4067, 641, 4, 'Oil Plastic Jug 5 Liter', NULL, 1.0, NULL, 3035, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4068, 641, 5, 'Oil Plastic Jug 2 Liter', NULL, 1.0, NULL, 3036, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4069, 641, 6, 'Klem Selang, Hose Clamp 6"', NULL, 5.0, NULL, 3037, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4070, 642, 1, '-', NULL, 2.0, NULL, 3038, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (4070, 642, 1, '-', NULL, 2.0, NULL, 3038, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (4071, 642, 2, 'Cummin Vbelt AE - 3911588 8PK1411', NULL, 2.0, NULL, 3033, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4072, 642, 3, 'Cummin Vbelt Ribbed 5412990', NULL, 2.0, NULL, 3034, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4073, 642, 4, 'Hose Long pit-Flexible ID:5mm Panjang 125cm', NULL, 2.0, NULL, 3039, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4074, 642, 5, 'Bohlam Lampu Sorot Visalux - MHL-T46E40 400Watt-600KK', NULL, 2.0, NULL, 3040, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4075, 642, 6, 'Filter Udara KW1524TG', NULL, 4.0, NULL, 3041, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4076, 643, 1, '-', NULL, 2.0, NULL, 3038, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (4076, 643, 1, '-', NULL, 2.0, NULL, 3038, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (4077, 643, 2, 'Cummin Vbelt AE - 3911588 8PK1411', NULL, 2.0, NULL, 3033, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4078, 643, 3, 'Cummin Vbelt Ribbed 5412990', NULL, 2.0, NULL, 3034, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4079, 643, 4, 'Selang peredam knalpot', NULL, 2.0, NULL, 3039, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (4079, 643, 4, 'Selang peredam knalpot', NULL, 2.0, NULL, 3039, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (4080, 643, 5, 'Bohlam Lampu Sorot Visalux - MHL-T46E40 400Watt-600KK', NULL, 2.0, NULL, 3040, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4081, 643, 6, 'Filter Udara KW1524TG', NULL, 4.0, NULL, 3041, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4082, 644, 1, 'Delivery to Cilegon', NULL, 1.0, NULL, 3042, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -23165,10 +23165,10 @@ TAPE SEAL TEFLON, 0.1X20MMX10MTR', '812502', 24.0, NULL, 739, 'matched', 'import
   (4125, 650, 1, 'Laptop Lenovo Ideapad slim 5 14IAH10 - Intel Ultra 5 225H/ 16GB/ 512GB/ Win 11', NULL, 1.0, NULL, 3069, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4126, 650, 2, 'Microsoft Office', NULL, 1.0, NULL, 3070, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4127, 650, 3, 'Baterai Laptop Dell Latitude 3410 – Baterai type JK6Y6', NULL, 1.0, NULL, 3071, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4128, 651, 1, 'Cummin Vbelt 3288757/3911588', NULL, 2.0, NULL, 3033, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (4128, 651, 1, 'Cummin Vbelt 3288757/3911588', NULL, 2.0, NULL, 3033, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (4129, 652, 1, 'Rod Seal 10*16*6,3mm', NULL, 10.0, NULL, 1222, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4130, 652, 2, 'Rod Seal 10*16*6,3mm', NULL, 10.0, NULL, 2338, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4131, 652, 3, 'Piston Seal 53*63*12mm, CFW C1', NULL, 10.0, NULL, 1221, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (4130, 652, 2, 'Rod Seal 10*16*6,3mm', NULL, 10.0, NULL, 2338, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
+  (4131, 652, 3, 'Piston Seal 53*63*12mm, CFW C1', NULL, 10.0, NULL, 1221, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (4132, 652, 4, 'Oring 58*3,1mm', NULL, 30.0, NULL, 1223, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4133, 652, 5, 'Guide Ring 60*63*3,9mm', NULL, 20.0, NULL, 1219, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4134, 652, 6, 'Piston Seal 53*63*4mm', NULL, 10.0, NULL, 1220, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -23253,7 +23253,7 @@ NOTE: PRE-ORDER 21 days', NULL, 1.0, NULL, 3094, 'matched', 'import', 'Backfille
   (4183, 658, 15, 'Bolt & Nut Hexagonal M8x30mm - Stainless 304', NULL, 4.0, NULL, 2632, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4184, 658, 16, 'Kabel Duct Abu Lubang WD 25x25 25x45 32x32 32x45 33x65 45x45 45x65 PM
 
-WD 32x45', NULL, 1.0, NULL, 2747, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+WD 32x45', NULL, 1.0, NULL, 2747, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (4185, 658, 17, 'CABLE AWG 12 RED (diameter serabut 4mm)', NULL, 30.0, NULL, 3095, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4186, 658, 18, 'CABLE AWG 12 BLACK Diameter luar 4mm', NULL, 30.0, NULL, 3096, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4187, 658, 19, 'CABLE AWG 20 White', NULL, 30.0, NULL, 2748, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
@@ -23271,9 +23271,9 @@ Mouth Piece for Alcohol Tester AL6000
 (500 pcs per box)', NULL, 10.0, NULL, 3098, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4193, 662, 1, 'VALVE FIRE HYDRANT 10/DN 40', NULL, 4.0, NULL, 3099, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
   (4194, 662, 2, 'STICKER FIRE HYDRANT', NULL, 20.0, NULL, 3100, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
-  (4195, 663, 1, 'MPU Sensor Cummins PN 3034572 -16mm', NULL, 1.0, NULL, 3101, 'substituted', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1),
+  (4195, 663, 1, 'MPU Sensor Cummins PN 3034572 -16mm', NULL, 1.0, NULL, 3101, 'substituted', 'import', 'Backfilled from historical Excel import; offer text differs from client request text', 1, NOW(), 1, 1),
   (4196, 663, 2, 'Overload 10A Circuit Breaker Push Reset Switch MCB', NULL, 1.0, NULL, 3102, 'matched', 'import', 'Backfilled from historical Excel import', 1, NOW(), 1, 1);
-SELECT setval('quotation_item_requests_id_seq', 4196);
+SELECT setval('quotation_item_requests_id_seq', (SELECT COALESCE(MAX(id), 1) FROM quotation_item_requests));
 -- Link back: quotation_items.request_id → qir.id (same id, 1:1 historical mapping).
 UPDATE quotation_items SET request_id = id WHERE request_id IS NULL;
 ALTER TABLE quotation_item_requests ENABLE TRIGGER trg_qir_lock_parent;

@@ -427,7 +427,7 @@ def main():
     out.append("""TRUNCATE TABLE
   invoice_items, invoices,
   purchase_order_items, purchase_orders,
-  quotation_status_history, quotation_items, quotations,
+  quotation_status_history, quotation_item_requests, quotation_items, quotations,
   item_request_matches,
   vendor_products, items,
   company_contacts, company_client,
@@ -603,13 +603,25 @@ RESTART IDENTITY CASCADE;
 ) VALUES""")
     rows = []
     for li in quotation_items:
-        match_status = "'substituted'" if li.get("_is_substituted") else "'matched'"
+        # match_status precedence:
+        #   offered_item_id IS NULL  → 'unavailable' (no master catalog entry; needs owner re-link).
+        #   _is_substituted (textual)→ 'substituted' (client request text != offer text, same item).
+        #   else                     → 'matched'.
+        if li.get("offered_item_id") is None:
+            match_status = "'unavailable'"
+            note = "Backfilled from historical Excel import; offered item not in master catalog at import time"
+        elif li.get("_is_substituted"):
+            match_status = "'substituted'"
+            note = "Backfilled from historical Excel import; offer text differs from client request text"
+        else:
+            match_status = "'matched'"
+            note = "Backfilled from historical Excel import"
         rows.append(
             f"  ({li['id']}, {li['quotation_id']}, {li['line_number']}, "
             f"{sql_str(li['requested_name'])}, {sql_str(li['requested_impa'])}, "
             f"{li['qty']}, NULL, "
             f"{sql_num(li['offered_item_id'])}, {match_status}, 'import', "
-            f"'Backfilled from historical Excel import', "
+            f"{sql_str(note)}, "
             f"{SUPERADMIN_ID}, NOW(), {SUPERADMIN_ID}, {SUPERADMIN_ID})"
         )
     CHUNK_QIR = 100
@@ -622,7 +634,7 @@ RESTART IDENTITY CASCADE;
   reviewed_by, reviewed_at, created_by, updated_by
 ) VALUES""")
         out.append(",\n".join(chunk) + ";")
-    out.append(f"SELECT setval('quotation_item_requests_id_seq', {quotation_item_id_counter});")
+    out.append("SELECT setval('quotation_item_requests_id_seq', (SELECT COALESCE(MAX(id), 1) FROM quotation_item_requests));")
     out.append("-- Link back: quotation_items.request_id → qir.id (same id, 1:1 historical mapping).")
     out.append("UPDATE quotation_items SET request_id = id WHERE request_id IS NULL;")
     out.append("ALTER TABLE quotation_item_requests ENABLE TRIGGER trg_qir_lock_parent;\n")
