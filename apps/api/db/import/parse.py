@@ -281,6 +281,131 @@ def detect_has_impa(data_ws) -> bool:
     return (h4 and "IMPA" in str(h4).upper()) or (h5 and "OFFER" in str(h5).upper())
 
 
+def detect_columns(ws) -> dict[str, int]:
+    """Map logical fields → 0-based col idx by scanning row 11 + 12 headers.
+
+    Why: 2024 and 2025+ Excel templates put 'Nama Asli barang', 'Vendor', sell/cost
+    sections in different column positions. Hardcoded offsets misread 2024 files
+    (e.g. nama_asli at col 13 picks up the cost-price value instead).
+
+    2024 layout (row 11): No Qty Unit DESC . . JUAL . . . . BELI . . . %profit Laba NamaAsli Vendor Telp
+    2025 layout (row 11): No Qty Unit DESC . . HargaJual . Modal . %profit Laba NamaAsli Vendor Telp
+    """
+    cols: dict[str, int] = {}
+    SCAN = 25  # columns to inspect (A..Y is enough)
+    for c in range(0, SCAN):
+        v = cell(ws, 11, c)
+        if v is None:
+            continue
+        s = str(v).strip()
+        u = s.upper().replace(" ", "")
+        if u in ("NO.", "NO") and "no" not in cols:
+            cols["no"] = c
+        elif u == "QTY":
+            cols["qty"] = c
+        elif u == "UNIT" and "unit" not in cols:
+            cols["unit"] = c
+        elif u.startswith("DESCRIPTION") or "DESCRIPTION" in u or u == "DESC":
+            cols["desc"] = c
+        elif u == "IMPA":
+            cols["impa"] = c
+        elif "OFFER" in u and "desc" in cols:
+            cols["offer_desc"] = c
+        elif u in ("JUAL", "HARGAJUAL"):
+            cols["sell_section"] = c
+        elif u in ("BELI", "MODAL", "HARGABELI"):
+            cols["cost_section"] = c
+        elif u == "%PROFIT" or u == "PROFIT":
+            cols["profit_pct"] = c
+        elif u == "LABA":
+            cols["laba"] = c
+        elif "NAMAASLI" in u:
+            cols["nama_asli"] = c
+        elif u == "VENDOR":
+            cols["vendor"] = c
+        elif u == "TELP":
+            cols["vendor_telp"] = c
+
+    # Row 12 sub-headers ('Harga Jual'/'Unit Price'/'Harga Beli'/'Amount').
+    # Use them to locate the unit/amount columns within sell/cost sections.
+    sell_start = cols.get("sell_section")
+    cost_start = cols.get("cost_section")
+    profit_start = cols.get("profit_pct", SCAN)
+
+    sell_end = cost_start if cost_start is not None else profit_start
+    cost_end = profit_start
+
+    if sell_start is not None:
+        for c in range(sell_start, min(sell_end, SCAN)):
+            v = cell(ws, 12, c)
+            if v is None:
+                continue
+            u = str(v).upper().replace(" ", "")
+            if u in ("UNITPRICE", "HARGAJUAL") and "sell_unit" not in cols:
+                cols["sell_unit"] = c
+            elif u == "AMOUNT" and "sell_amt" not in cols:
+                cols["sell_amt"] = c
+        # Fallback when row 12 sub-headers are missing: assume section header
+        # itself sits above the unit price column (2025+ layout).
+        cols.setdefault("sell_unit", sell_start)
+
+    if cost_start is not None:
+        for c in range(cost_start, min(cost_end, SCAN)):
+            v = cell(ws, 12, c)
+            if v is None:
+                continue
+            u = str(v).upper().replace(" ", "")
+            if u in ("UNITPRICE", "HARGABELI", "MODAL") and "cost_unit" not in cols:
+                cols["cost_unit"] = c
+            elif u == "AMOUNT" and "cost_amt" not in cols:
+                cols["cost_amt"] = c
+        cols.setdefault("cost_unit", cost_start)
+
+    return cols
+
+
+def first_numeric_in_span(ws, row: int, start_col: int, span: int = 2) -> float | None:
+    """Read first numeric cell within [start_col, start_col+span-1].
+
+    Why: 2024 template puts a literal 'Rp.' in the cell directly under the section
+    header, with the numeric value one column to the right. 2025+ has the number
+    directly under the header. Scanning a 2-col window handles both.
+    """
+    for c in range(start_col, start_col + span):
+        n = parse_num(cell(ws, row, c))
+        if n is not None:
+            return n
+    return None
+
+
+def first_text_in_span(ws, row: int, start_col: int, span: int = 2) -> str | None:
+    """Skip cells that are pure 'Rp.' / 'Rp' template residue; return first real text."""
+    for c in range(start_col, start_col + span):
+        v = cell(ws, row, c)
+        if v is None:
+            continue
+        s = str(v).strip()
+        if not s:
+            continue
+        if re.fullmatch(r"Rp\.?", s, re.IGNORECASE):
+            continue
+        return s
+    return None
+
+
+def row_has_total(ws, row: int, scan_cols: int = 12) -> bool:
+    """True if any cell in row 'row' contains the word TOTAL.
+
+    Why: 2024 puts 'TOTAL' at a different column than 2025+. Scanning a small
+    range handles both without hardcoding.
+    """
+    for c in range(0, scan_cols):
+        v = cell(ws, row, c)
+        if v and isinstance(v, str) and "TOTAL" in v.upper():
+            return True
+    return False
+
+
 _VENDOR_NOISE_RE = re.compile(r"^\s*(?:Rp\.?|[\W_]+)\s*$")
 
 
@@ -299,7 +424,7 @@ def is_vendor_noise(name) -> bool:
     return bool(_VENDOR_NOISE_RE.match(s))
 
 
-def parse_items(data_ws, has_impa: bool) -> list[dict]:
+def parse_items(data_ws, has_impa: bool, cols: dict[str, int] | None = None) -> list[dict]:
     """Read data rows from DATA ENTRI starting after row 12.
 
     Multi-page DATA ENTRI sheets duplicate the customer/qno/date/PIC header
@@ -307,36 +432,48 @@ def parse_items(data_ws, has_impa: bool) -> list[dict]:
     item-row gate requires `no` to be an integer (or `qty` to be a positive
     number) so these label rows never reach the items list.
     """
+    if cols is None:
+        cols = detect_columns(data_ws)
+
+    c_no       = cols.get("no", 0)
+    c_qty      = cols.get("qty", 1)
+    c_unit     = cols.get("unit", 2)
+    c_desc     = cols.get("desc", 3)
+    c_impa     = cols.get("impa")
+    c_offer    = cols.get("offer_desc")
+    c_sellu    = cols.get("sell_unit")
+    c_sella    = cols.get("sell_amt")
+    c_costu    = cols.get("cost_unit")
+    c_costa    = cols.get("cost_amt")
+    c_nama     = cols.get("nama_asli")
+    c_vendor   = cols.get("vendor")
+    c_telp     = cols.get("vendor_telp")
+
     items: list[dict] = []
     max_row = data_ws.max_row or 200
     for r in range(13, max_row + 1):
-        # Stop at TOTAL row in column 6 (Harga Jual section)
-        c6 = cell(data_ws, r, 6)
-        if c6 and isinstance(c6, str) and "TOTAL" in c6.upper():
+        if row_has_total(data_ws, r):
             break
-        no = cell(data_ws, r, 0)
-        qty = cell(data_ws, r, 1)
-        unit = cell(data_ws, r, 2)
-        desc = cell(data_ws, r, 3)
-        # Item row: must have a description AND a numeric line number
-        # OR a positive qty. String `no` ('Customer :', 'No :', 'Tgl :') →
-        # page-header residue, drop.
+        no = cell(data_ws, r, c_no)
+        qty = cell(data_ws, r, c_qty)
+        unit = cell(data_ws, r, c_unit)
+        desc = cell(data_ws, r, c_desc)
         if not desc:
             continue
         qty_pos = isinstance(qty, (int, float)) and qty > 0
         if not (is_int_str(no) or qty_pos):
             continue
-        # Parse pieces
-        sell_unit = parse_num(cell(data_ws, r, 6))
-        sell_amt = parse_num(cell(data_ws, r, 7))
-        cost_unit = parse_num(cell(data_ws, r, 8))
-        cost_amt = parse_num(cell(data_ws, r, 9))
-        impa = cell(data_ws, r, 4) if has_impa else None
-        offer_desc = cell(data_ws, r, 5) if has_impa else None
-        nama_asli = cell(data_ws, r, 12)
-        vendor_raw = cell(data_ws, r, 13)
+
+        sell_unit = first_numeric_in_span(data_ws, r, c_sellu) if c_sellu is not None else None
+        sell_amt  = first_numeric_in_span(data_ws, r, c_sella) if c_sella is not None else None
+        cost_unit = first_numeric_in_span(data_ws, r, c_costu) if c_costu is not None else None
+        cost_amt  = first_numeric_in_span(data_ws, r, c_costa) if c_costa is not None else None
+        impa = cell(data_ws, r, c_impa) if (has_impa and c_impa is not None) else None
+        offer_desc = cell(data_ws, r, c_offer) if c_offer is not None else None
+        nama_asli = cell(data_ws, r, c_nama) if c_nama is not None else None
+        vendor_raw = cell(data_ws, r, c_vendor) if c_vendor is not None else None
         vendor = None if is_vendor_noise(vendor_raw) else str(vendor_raw)
-        vendor_telp = cell(data_ws, r, 14)
+        vendor_telp = cell(data_ws, r, c_telp) if c_telp is not None else None
         items.append({
             "row": r,
             "no": str(no) if no is not None else None,

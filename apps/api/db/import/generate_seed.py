@@ -193,7 +193,9 @@ def main():
     item_id_counter = 0
     for r in parsed:
         for it in r["items"]:
-            name = it.get("offer_desc") or it.get("nama_asli") or it.get("request_desc")
+            # Canonical OFFER name (what GNS quotes / printed on quotation).
+            # Priority: explicit OFFER column (IMPA layout) > Col D description > Col M nama_asli fallback.
+            name = it.get("offer_desc") or it.get("request_desc") or it.get("nama_asli")
             if not name:
                 continue
             key = item_dedup_key(it.get("impa"), name)
@@ -241,7 +243,9 @@ def main():
             v_id = vendors_id_map.get(norm_name(v_clean))
             if not v_id:
                 continue
-            name = it.get("offer_desc") or it.get("nama_asli") or it.get("request_desc")
+            # Canonical OFFER name (what GNS quotes / printed on quotation).
+            # Priority: explicit OFFER column (IMPA layout) > Col D description > Col M nama_asli fallback.
+            name = it.get("offer_desc") or it.get("request_desc") or it.get("nama_asli")
             if not name:
                 continue
             i_id = items_id_map.get(item_dedup_key(it.get("impa"), name))
@@ -298,7 +302,9 @@ def main():
                     cost = None
                 unit_code = canonical_unit(it.get("unit"))
                 unit_id = UNIT_CODE_TO_ID.get(unit_code) if unit_code else None
-                name = it.get("offer_desc") or it.get("nama_asli") or it.get("request_desc")
+                # Canonical OFFER name (what GNS quotes / printed on quotation).
+                # Priority: explicit OFFER column (IMPA layout) > Col D description > Col M nama_asli fallback.
+                name = it.get("offer_desc") or it.get("request_desc") or it.get("nama_asli")
                 item_id = items_id_map.get(item_dedup_key(it.get("impa"), name)) if name else None
 
                 vp_id = None
@@ -308,17 +314,27 @@ def main():
                     if v_id and item_id:
                         vp_id = vp_id_lookup.get((v_id, item_id))
 
+                # Detect substitution: client's nama_asli (Col M) different from canonical
+                # offer (`name`). Drives qir.match_status downstream.
+                nama_asli = (it.get("nama_asli") or "").strip()
+                offer_canon = (name or "").strip()
+                is_substituted = bool(nama_asli) and bool(offer_canon) and nama_asli != offer_canon
+
                 lines.append({
                     "line_number": line_no,
                     "requested_item_id": item_id,
                     "requested_impa": truncate_to(it.get("impa"), 20),
-                    "requested_name": truncate_to(it.get("request_desc") or name or "", 5000),
+                    # requested_name = client's ORIGINAL request text (Col M "Nama Asli barang").
+                    # Falls back to Col D (the offer/description) only when nama_asli is blank
+                    # (older 2024 files sometimes left Col M empty when request==offer).
+                    "requested_name": truncate_to(it.get("nama_asli") or it.get("request_desc") or name or "", 5000),
                     "offered_item_id": item_id,
                     "vendor_product_id": vp_id,
                     "qty": qty,
                     "unit_id": unit_id,
                     "selling_price": sell,
                     "cost_price": cost,
+                    "_is_substituted": is_substituted,
                 })
 
             if not lines:
@@ -570,6 +586,46 @@ RESTART IDENTITY CASCADE;
 ) VALUES""")
         out.append(",\n".join(chunk) + ";")
     out.append(f"SELECT setval('quotation_items_id_seq', {quotation_item_id_counter});\n")
+
+    # -- Quotation item requests (historical backfill) --
+    # 1 qir row per quotation_items row. qir.id mirrors qi.id so the linkage
+    # is trivial. The lock trigger blocks INSERTs when parent quotation status
+    # is not draft/revision; since this is historical bulk load we disable it
+    # for the duration of the section. DDL changes are transactional in PG, so
+    # if the surrounding BEGIN/COMMIT rolls back the trigger comes back too.
+    # ALTER TABLE requires table owner (gns_app) — no superuser needed.
+    out.append(f"-- 9. Quotation item requests historical backfill ({len(quotation_items)})")
+    out.append("ALTER TABLE quotation_item_requests DISABLE TRIGGER trg_qir_lock_parent;")
+    out.append("""INSERT INTO quotation_item_requests (
+  id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
+  matched_item_id, match_status, source_type, notes,
+  reviewed_by, reviewed_at, created_by, updated_by
+) VALUES""")
+    rows = []
+    for li in quotation_items:
+        match_status = "'substituted'" if li.get("_is_substituted") else "'matched'"
+        rows.append(
+            f"  ({li['id']}, {li['quotation_id']}, {li['line_number']}, "
+            f"{sql_str(li['requested_name'])}, {sql_str(li['requested_impa'])}, "
+            f"{li['qty']}, NULL, "
+            f"{sql_num(li['offered_item_id'])}, {match_status}, 'import', "
+            f"'Backfilled from historical Excel import', "
+            f"{SUPERADMIN_ID}, NOW(), {SUPERADMIN_ID}, {SUPERADMIN_ID})"
+        )
+    CHUNK_QIR = 100
+    for i in range(0, len(rows), CHUNK_QIR):
+        chunk = rows[i:i+CHUNK_QIR]
+        if i > 0:
+            out.append("""INSERT INTO quotation_item_requests (
+  id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
+  matched_item_id, match_status, source_type, notes,
+  reviewed_by, reviewed_at, created_by, updated_by
+) VALUES""")
+        out.append(",\n".join(chunk) + ";")
+    out.append(f"SELECT setval('quotation_item_requests_id_seq', {quotation_item_id_counter});")
+    out.append("-- Link back: quotation_items.request_id → qir.id (same id, 1:1 historical mapping).")
+    out.append("UPDATE quotation_items SET request_id = id WHERE request_id IS NULL;")
+    out.append("ALTER TABLE quotation_item_requests ENABLE TRIGGER trg_qir_lock_parent;\n")
 
     out.append("COMMIT;\n")
     out.append("-- End of historical import (2024 + 2025 + 2026)")

@@ -72,6 +72,30 @@ INSERT INTO quotation_items (
 SELECT setval('quotations_id_seq',      (SELECT MAX(id) FROM quotations));
 SELECT setval('quotation_items_id_seq', (SELECT MAX(id) FROM quotation_items));
 
+-- Backfill quotation_item_requests for these reverse-engineered lines, mirroring
+-- the historical pattern (1 qir row per qi row, qir.id = qi.id). Lock trigger
+-- blocks INSERT for non-draft parents — disable for the seed-time write, then
+-- re-enable. DDL stays inside the txn, so rollback would revert the disable too.
+ALTER TABLE quotation_item_requests DISABLE TRIGGER trg_qir_lock_parent;
+
+INSERT INTO quotation_item_requests (
+  id, quotation_id, line_no, request_text, request_impa, requested_qty, requested_uom,
+  matched_item_id, match_status, source_type, notes,
+  reviewed_by, reviewed_at, created_by, updated_by
+)
+SELECT qi.id, qi.quotation_id, qi.line_number, qi.requested_name, qi.requested_impa,
+       qi.qty, NULL, qi.offered_item_id, 'matched', 'import',
+       'Backfilled from 03b reverse-engineered quotation',
+       1, NOW(), 1, 1
+  FROM quotation_items qi
+ WHERE qi.quotation_id IN (668, 669);
+
+SELECT setval('quotation_item_requests_id_seq', (SELECT MAX(id) FROM quotation_item_requests));
+
+UPDATE quotation_items SET request_id = id WHERE quotation_id IN (668, 669);
+
+ALTER TABLE quotation_item_requests ENABLE TRIGGER trg_qir_lock_parent;
+
 -- Also append status_history rows so the 'accepted' state has audit trail
 INSERT INTO quotation_status_history (quotation_id, from_status, to_status, note, changed_by)
 VALUES

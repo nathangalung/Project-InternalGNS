@@ -26,7 +26,25 @@ INSERT INTO _real_qid VALUES
   (604),(605),(611),(614),(619),(624),(640),(641),(643),(645),
   (646),(647),(649),(654),(660),(668),(669);
 
--- 1. Promote 'sent' real-PO quotations to 'accepted'. The state-machine
+-- 1a. Force-promote 'draft' real_qid to 'sent'. Seed-time policy: source xlsx
+--     occasionally has missing prices (selling_price=0), but the real customer
+--     PO confirms the deal happened. Direct UPDATE bypasses fn_change_quotation_status
+--     because draft→accepted requires going through sent, and these quotations
+--     bypassed 'sent' due to incomplete pricing in the original Excel. Audit row
+--     captures the override so the history isn't silently lost.
+INSERT INTO quotation_status_history (quotation_id, from_status, to_status, note, changed_by)
+SELECT q.id, q.status, 'sent',
+       'Seed-time override: real customer PO confirmed despite incomplete pricing in source xlsx',
+       COALESCE(q.updated_by, q.created_by)
+  FROM quotations q
+  JOIN _real_qid rq ON rq.id = q.id
+ WHERE q.status = 'draft';
+
+UPDATE quotations
+   SET status='sent', updated_by=COALESCE(updated_by, created_by)
+ WHERE id IN (SELECT id FROM _real_qid) AND status='draft';
+
+-- 1b. Promote 'sent' real-PO quotations to 'accepted'. The state-machine
 --    function auto-creates a PO via fn_create_purchase_order (idempotent).
 DO $$
 DECLARE r RECORD;
