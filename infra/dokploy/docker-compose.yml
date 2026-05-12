@@ -11,7 +11,7 @@ services:
       TZ: Asia/Jakarta
       PGTZ: Asia/Jakarta
     volumes:
-      - internalgns_pgdata:/var/lib/postgresql/data
+      - internalgns_pgdata:/var/lib/postgresql
     command:
       - postgres
       - -c
