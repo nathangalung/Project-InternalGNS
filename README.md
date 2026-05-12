@@ -181,10 +181,13 @@ make dev          # work
 | `make test-api` | Go tests serialized (`-p=1` for godog stability) |
 | `make test-web` | TypeScript typecheck |
 | `make lint` | Lint api (go vet + golangci-lint) + web (biome) |
+| `make lint-fix` | Auto-fix lint + format issues (golangci-lint --fix + biome --write) |
 | `make fmt` | Format api (gofmt) + web (biome) |
+| `make types` | TypeScript typecheck (FE) |
 | `make hooks-install` | Install pre-commit hooks (one-time) |
 | `make hooks-run` | Run all pre-commit hooks across the repo |
 | `make sqlc` | Regenerate sqlc code |
+| `make db-erd` | Regenerate `docs/erd/` from the live dev DB via tbls |
 | `make tidy` | `go mod tidy` |
 | `make docker-build` | Build api + web container images |
 | `make clean` | Remove build artifacts |

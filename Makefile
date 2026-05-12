@@ -7,7 +7,7 @@
         tidy sqlc \
         build build-api build-web \
         test test-api test-web \
-        lint fmt \
+        lint lint-fix fmt types \
         hooks-install hooks-run \
         docker-build docker-build-api docker-build-web \
         orphan-blobs-dry orphan-blobs-purge \
@@ -169,9 +169,19 @@ lint: ## Lint api and web
 	@command -v golangci-lint >/dev/null 2>&1 && (cd $(API_DIR) && golangci-lint run) || echo "golangci-lint not installed, skipping"
 	cd $(WEB_DIR) && bun run lint
 
+# Auto-fix every fixable lint + format violation. golangci-lint --fix applies
+# the formatters + simple rewrites; biome check --write does the same for FE.
+lint-fix: ## Auto-fix lint + format issues (api + web)
+	cd $(API_DIR) && gofmt -w -s .
+	@command -v golangci-lint >/dev/null 2>&1 && (cd $(API_DIR) && golangci-lint run --fix) || echo "golangci-lint not installed, skipping --fix"
+	cd $(WEB_DIR) && bun x @biomejs/biome check --write src
+
 fmt: ## Format api and web
 	cd $(API_DIR) && gofmt -w -s .
 	cd $(WEB_DIR) && bun run format
+
+types: ## TypeScript typecheck (FE)
+	cd $(WEB_DIR) && bun run typecheck
 
 # Pre-commit hooks (.pre-commit-config.yaml). Uses `uv tool` to manage
 # the pre-commit binary so the repo stays python-toolchain-free.
