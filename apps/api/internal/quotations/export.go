@@ -14,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/money"
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
 )
 
@@ -134,8 +135,8 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 	}
 
 	subtotal := pdfgen.BigSub(d.TotalProduk, d.TotalDiscount)
-	dpp := pdfgen.BigMulDiv(subtotal, "11", "12")
-	ppn := pdfgen.BigMul(dpp, "0.12")
+	dpp := pdfgen.BigMulDiv(subtotal, money.DPPNumeratorStr, money.DPPDenominatorStr)
+	ppn := pdfgen.BigMul(dpp, money.PPNRateStr)
 
 	delivery := ""
 	deliveryTime := ""
