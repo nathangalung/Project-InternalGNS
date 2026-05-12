@@ -36,6 +36,12 @@ type Config struct {
 	PdfBankAccountNo string `env:"PDF_BANK_ACCOUNT_NO" envDefault:"-"`
 	PdfBankAccountNm string `env:"PDF_BANK_ACCOUNT_NM" envDefault:"PT GLOBAL NIAGA SAKTI"`
 	PdfPaymentTerms  string `env:"PDF_PAYMENT_TERMS"   envDefault:"Net 30 days"`
+
+	// Coretax (DJP) e-faktur export: seller-side static fields. SellerTIN is
+	// the company NPWP (16 digits, no separators); SellerIDTKU appends the
+	// branch suffix ("000000" for headquarters).
+	CoretaxSellerTIN   string `env:"CORETAX_SELLER_TIN"   envDefault:""`
+	CoretaxSellerIDTKU string `env:"CORETAX_SELLER_IDTKU" envDefault:""`
 }
 
 func LoadConfig() (Config, error) {

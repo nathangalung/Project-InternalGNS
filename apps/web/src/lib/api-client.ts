@@ -103,8 +103,17 @@ function extractErrorMessage(parsed: unknown, fallback: string): string {
   return fallback
 }
 
-// Fetch PDF as blob; let user pick dir + edit filename when supported.
-export async function downloadPdf(path: string, filename: string): Promise<void> {
+type PickerType = { description: string; accept: Record<string, string[]> }
+
+const PICKER_PDF: PickerType = { description: "PDF", accept: { "application/pdf": [".pdf"] } }
+const PICKER_XML: PickerType = { description: "XML", accept: { "application/xml": [".xml"] } }
+
+// Fetch binary endpoint as blob; let user pick dir + edit filename when supported.
+async function downloadBinary(
+  path: string,
+  filename: string,
+  pickerType: PickerType,
+): Promise<void> {
   const token = sessionStorage.getItem("gns_token")
   const res = await fetch(`${BASE_URL}${path}`, {
     method: "GET",
@@ -112,25 +121,34 @@ export async function downloadPdf(path: string, filename: string): Promise<void>
   })
   if (!res.ok) {
     const text = await res.text().catch(() => "")
-    throw new ApiError(res.status, text, `PDF download failed: ${res.statusText}`)
+    throw new ApiError(res.status, text, `Download failed: ${res.statusText}`)
   }
   const blob = await res.blob()
-  await saveBlob(blob, filename)
+  await saveBlob(blob, filename, pickerType)
 }
 
+export const downloadPdf = (path: string, filename: string) =>
+  downloadBinary(path, filename, PICKER_PDF)
+export const downloadXml = (path: string, filename: string) =>
+  downloadBinary(path, filename, PICKER_XML)
+
 // File System Access API where supported; else anchor fallback.
-export async function saveBlob(blob: Blob, filename: string): Promise<void> {
+export async function saveBlob(
+  blob: Blob,
+  filename: string,
+  pickerType: PickerType = PICKER_PDF,
+): Promise<void> {
   const w = window as unknown as {
     showSaveFilePicker?: (opts: {
       suggestedName: string
-      types?: { description: string; accept: Record<string, string[]> }[]
+      types?: PickerType[]
     }) => Promise<FileSystemFileHandle>
   }
   if (typeof w.showSaveFilePicker === "function") {
     try {
       const handle = await w.showSaveFilePicker({
         suggestedName: filename,
-        types: [{ description: "PDF", accept: { "application/pdf": [".pdf"] } }],
+        types: [pickerType],
       })
       const writable = await handle.createWritable()
       await writable.write(blob)

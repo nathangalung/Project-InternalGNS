@@ -44,23 +44,25 @@ type UpdateAttachmentRequest struct {
 
 // Invoice line snapshot row.
 type InvoiceItem struct {
-	ID              int64   `db:"id"               json:"id"`
-	InvoiceID       int64   `db:"invoice_id"       json:"invoiceId"`
-	LineNumber      *int16  `db:"line_number"      json:"lineNumber,omitempty"`
-	LineType        string  `db:"line_type"        json:"lineType"`
-	ItemCode        *string `db:"item_code"        json:"itemCode,omitempty"`
-	ItemName        string  `db:"item_name"        json:"itemName"`
-	OfferedItemID   *int64  `db:"offered_item_id"  json:"offeredItemId,omitempty"`
-	UnitID          *int16  `db:"unit_id"          json:"unitId,omitempty"`
-	UnitCode        *string `db:"unit_code"        json:"unitCode,omitempty"`
-	Qty             string  `db:"qty"              json:"qty"`
-	UnitPrice       string  `db:"unit_price"       json:"unitPrice"`
-	CostPrice       *string `db:"cost_price"       json:"costPrice,omitempty"`
-	Dpp             *string `db:"dpp"              json:"dpp,omitempty"`
-	DppNilaiLain    *string `db:"dpp_nilai_lain"   json:"dppNilaiLain,omitempty"`
-	PpnRate         *string `db:"ppn_rate"         json:"ppnRate,omitempty"`
-	PpnAmount       *string `db:"ppn_amount"       json:"ppnAmount,omitempty"`
-	ShipDestination *string `db:"ship_destination" json:"shipDestination,omitempty"`
+	ID              int64   `db:"id"                 json:"id"`
+	InvoiceID       int64   `db:"invoice_id"         json:"invoiceId"`
+	LineNumber      *int16  `db:"line_number"        json:"lineNumber,omitempty"`
+	LineType        string  `db:"line_type"          json:"lineType"`
+	ItemCode        *string `db:"item_code"          json:"itemCode,omitempty"`
+	ItemName        string  `db:"item_name"          json:"itemName"`
+	OfferedItemID   *int64  `db:"offered_item_id"    json:"offeredItemId,omitempty"`
+	UnitID          *int16  `db:"unit_id"            json:"unitId,omitempty"`
+	UnitCode        *string `db:"unit_code"          json:"unitCode,omitempty"`
+	UnitCoretaxCode *string `db:"unit_coretax_code"  json:"unitCoretaxCode,omitempty"`
+	Qty             string  `db:"qty"                json:"qty"`
+	UnitPrice       string  `db:"unit_price"         json:"unitPrice"`
+	CostPrice       *string `db:"cost_price"         json:"costPrice,omitempty"`
+	Dpp             *string `db:"dpp"                json:"dpp,omitempty"`
+	DppNilaiLain    *string `db:"dpp_nilai_lain"     json:"dppNilaiLain,omitempty"`
+	PpnRate         *string `db:"ppn_rate"           json:"ppnRate,omitempty"`
+	PpnAmount       *string `db:"ppn_amount"         json:"ppnAmount,omitempty"`
+	ShipDestination *string `db:"ship_destination"   json:"shipDestination,omitempty"`
+	GoodsOrService  *string `db:"goods_or_service"   json:"goodsOrService,omitempty"`
 }
 
 // Invoice list KPI aggregates.

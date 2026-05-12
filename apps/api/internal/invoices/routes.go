@@ -15,6 +15,7 @@ func Routes(d deps.Deps) chi.Router {
 	repo := NewRepo(d.Pool, d.Queries)
 	h := NewHandler(repo)
 	h.storage = d.Storage
+	clientsRepo := clients.NewRepo(d.Pool, d.Queries)
 
 	r.Get("/", h.List)
 	r.Get("/summary", h.Summary)
@@ -27,10 +28,13 @@ func Routes(d deps.Deps) chi.Router {
 	r.Get("/{id}/attachment/download-url", h.PresignAttachmentDownload)
 	r.Patch("/{id}/attachment", h.UpdateAttachment)
 
+	coretax := NewCoretaxHandler(repo, clientsRepo, d.Coretax)
+	r.Get("/{id}/coretax.xml", coretax.Export)
+
 	if d.TemplatesRoot != "" {
 		exp := NewExportHandler(
 			repo,
-			clients.NewRepo(d.Pool, d.Queries),
+			clientsRepo,
 			quotations.NewRepo(d.Pool, d.Queries),
 			purchaseorders.NewRepo(d.Pool, d.Queries),
 			pdfgen.NewRenderer(d.TemplatesRoot),

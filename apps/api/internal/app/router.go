@@ -57,6 +57,10 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 			BankAccountNm: cfg.PdfBankAccountNm,
 			PaymentTerms:  cfg.PdfPaymentTerms,
 		},
+		Coretax: deps.CoretaxSettings{
+			SellerTIN:   cfg.CoretaxSellerTIN,
+			SellerIDTKU: cfg.CoretaxSellerIDTKU,
+		},
 		Storage: storageClient,
 	}
 

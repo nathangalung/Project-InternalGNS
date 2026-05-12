@@ -120,6 +120,7 @@ SELECT ii.id,
        ii.offered_item_id,
        ii.unit_id,
        COALESCE(ii.unit_code, u.code) AS unit_code,
+       u.coretax_code                 AS unit_coretax_code,
        ii.qty::text             AS qty,
        ii.unit_price::text      AS unit_price,
        ii.cost_price::text      AS cost_price,
@@ -127,7 +128,8 @@ SELECT ii.id,
        ii.dpp_nilai_lain::text  AS dpp_nilai_lain,
        ii.ppn_rate::text        AS ppn_rate,
        ii.ppn_amount::text      AS ppn_amount,
-       ii.ship_destination
+       ii.ship_destination,
+       ii.goods_or_service
 FROM invoice_items ii
 LEFT JOIN units u ON u.id = ii.unit_id
 WHERE ii.invoice_id = $1
