@@ -9,6 +9,7 @@
         test test-api test-web \
         lint fmt \
         docker-build docker-build-api docker-build-web \
+        orphan-blobs-dry orphan-blobs-purge \
         clean
 
 SHELL        := /bin/bash
@@ -174,6 +175,13 @@ docker-build-web: ## Build FE image
 	docker build \
 	  --build-arg VITE_API_URL=$${VITE_API_URL:-/api/v1} \
 	  -t internalgns-web:local $(WEB_DIR)
+
+# Storage maintenance.
+orphan-blobs-dry: ## List MinIO keys not referenced by any DB row (read-only)
+	cd $(API_DIR) && go run ./cmd/orphan-blobs --dry-run
+
+orphan-blobs-purge: ## Delete unreferenced MinIO keys older than 60 min
+	cd $(API_DIR) && go run ./cmd/orphan-blobs --dry-run=false
 
 # Cleanup.
 clean: ## Remove build artifacts

@@ -72,6 +72,40 @@ func (c *Client) PresignGet(ctx context.Context, bucket, objectKey string, expir
 	return u.String(), nil
 }
 
+// ObjectInfo is the subset of MinIO metadata used by the orphan-blob sweeper.
+type ObjectInfo struct {
+	Key          string
+	LastModified time.Time
+	Size         int64
+}
+
+// ListObjects walks every key in the bucket recursively. Returns the full
+// slice — orphan cleanup is a low-frequency batch job and total key counts
+// stay small (one key per row of clients/vendors/items/POs/invoices).
+func (c *Client) ListObjects(ctx context.Context, bucket string) ([]ObjectInfo, error) {
+	var out []ObjectInfo
+	for obj := range c.mc.ListObjects(ctx, bucket, minio.ListObjectsOptions{Recursive: true}) {
+		if obj.Err != nil {
+			return nil, fmt.Errorf("storage: list %q: %w", bucket, obj.Err)
+		}
+		out = append(out, ObjectInfo{
+			Key:          obj.Key,
+			LastModified: obj.LastModified,
+			Size:         obj.Size,
+		})
+	}
+	return out, nil
+}
+
+// RemoveObject deletes a single key. Idempotent — MinIO treats missing keys
+// as a successful delete.
+func (c *Client) RemoveObject(ctx context.Context, bucket, key string) error {
+	if err := c.mc.RemoveObject(ctx, bucket, key, minio.RemoveObjectOptions{}); err != nil {
+		return fmt.Errorf("storage: remove %q/%q: %w", bucket, key, err)
+	}
+	return nil
+}
+
 // BuildObjectKey returns a deterministic key under a namespace prefix.
 // Example: BuildObjectKey("po", 42, "scan.pdf") -> "po/42/<unix>-scan.pdf".
 func BuildObjectKey(prefix string, id int64, fileName string) string {
