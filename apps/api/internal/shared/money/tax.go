@@ -17,8 +17,8 @@ const (
 
 // Decimal forms for arithmetic in domain code.
 var (
-	PPNRate   = decimal.NewFromFloat(0.12)
-	DPPRatio  = decimal.RequireFromString("11").Div(decimal.RequireFromString("12"))
+	PPNRate  = decimal.NewFromFloat(0.12)
+	DPPRatio = decimal.RequireFromString("11").Div(decimal.RequireFromString("12"))
 )
 
 // DPPNilaiLain returns subtotal × 11/12.

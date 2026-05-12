@@ -173,4 +173,3 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 		SignerName:      pdfgen.LatexEscape(h.settings.SignerName),
 	}
 }
-

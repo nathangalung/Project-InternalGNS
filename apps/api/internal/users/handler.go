@@ -207,4 +207,3 @@ func isValidRole(r Role) bool {
 		return false
 	}
 }
-

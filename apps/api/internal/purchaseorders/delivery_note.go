@@ -45,16 +45,16 @@ type dnItem struct {
 }
 
 type dnData struct {
-	DeliveryNoteNo  string
-	PONo            string
-	CompanyName     string
-	CompanyAddress  string
-	AttnName        string
-	VesselName      string
-	DateLine        string
-	Items           []dnItem
-	PreparedBy      string
-	SenderName      string
+	DeliveryNoteNo string
+	PONo           string
+	CompanyName    string
+	CompanyAddress string
+	AttnName       string
+	VesselName     string
+	DateLine       string
+	Items          []dnItem
+	PreparedBy     string
+	SenderName     string
 }
 
 func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) {
@@ -127,16 +127,15 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, i
 	}
 
 	return dnData{
-		DeliveryNoteNo:  pdfgen.LatexEscape("DN-" + po.PoNumber),
-		PONo:            pdfgen.LatexEscape(po.PoNumber),
-		CompanyName:     pdfgen.LatexEscape(po.CompanyName),
-		CompanyAddress:  pdfgen.LatexEscape(pdfgen.StrDeref(client.Address)),
-		AttnName:        pdfgen.LatexEscape(attn),
-		VesselName:      pdfgen.LatexEscape(vessel),
-		DateLine:        pdfgen.JakartaDateLine(po.PoDate.In(time.Local)),
-		Items:           expItems,
-		PreparedBy:      pdfgen.LatexEscape(h.settings.SignerName),
-		SenderName:      pdfgen.LatexEscape(h.settings.SignerName),
+		DeliveryNoteNo: pdfgen.LatexEscape("DN-" + po.PoNumber),
+		PONo:           pdfgen.LatexEscape(po.PoNumber),
+		CompanyName:    pdfgen.LatexEscape(po.CompanyName),
+		CompanyAddress: pdfgen.LatexEscape(pdfgen.StrDeref(client.Address)),
+		AttnName:       pdfgen.LatexEscape(attn),
+		VesselName:     pdfgen.LatexEscape(vessel),
+		DateLine:       pdfgen.JakartaDateLine(po.PoDate.In(time.Local)),
+		Items:          expItems,
+		PreparedBy:     pdfgen.LatexEscape(h.settings.SignerName),
+		SenderName:     pdfgen.LatexEscape(h.settings.SignerName),
 	}
 }
-

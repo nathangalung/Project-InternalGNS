@@ -35,9 +35,9 @@ func execTemplate(t *testing.T, relPath string, data any) string {
 
 func TestRealTemplate_Invoice(t *testing.T) {
 	type item struct {
-		No                                       int
-		Qty, Unit, Name, Description             string
-		UnitPrice, Amount                        string
+		No                           int
+		Qty, Unit, Name, Description string
+		UnitPrice, Amount            string
 	}
 	data := struct {
 		InvoiceNo, PONo, CompanyName, CompanyNPWP, CompanyAddress, VesselName string
@@ -78,18 +78,18 @@ func TestRealTemplate_Invoice(t *testing.T) {
 
 func TestRealTemplate_Quotation(t *testing.T) {
 	type item struct {
-		No                            int
-		Qty, Unit, Request, Offer     string
-		HasOffer                      bool
-		UnitPrice, Amount             string
+		No                        int
+		Qty, Unit, Request, Offer string
+		HasOffer                  bool
+		UnitPrice, Amount         string
 	}
 	data := struct {
-		QuotationNo, ClientRefNo, CompanyName                           string
-		AttnName, AttnEmail, AttnPhone, DateLine                        string
-		Items                                                           []item
-		TotalProduk, DiscountPct, TotalDiscount, Subtotal               string
-		DPP, PPN, GrandTotal                                            string
-		DeliveryPlace, DeliveryTime, Payment, Validity, SignerName      string
+		QuotationNo, ClientRefNo, CompanyName                      string
+		AttnName, AttnEmail, AttnPhone, DateLine                   string
+		Items                                                      []item
+		TotalProduk, DiscountPct, TotalDiscount, Subtotal          string
+		DPP, PPN, GrandTotal                                       string
+		DeliveryPlace, DeliveryTime, Payment, Validity, SignerName string
 	}{
 		QuotationNo:   "Q-2026-0001",
 		ClientRefNo:   "REF-1",
@@ -123,7 +123,7 @@ func TestRealTemplate_Quotation(t *testing.T) {
 
 func TestRealTemplate_DeliveryNote(t *testing.T) {
 	type item struct {
-		No                            int
+		No                               int
 		Qty, Unit, Name, ShipDestination string
 	}
 	data := struct {

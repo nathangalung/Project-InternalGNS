@@ -17,8 +17,8 @@ import (
 const defaultDSN = "postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable"
 
 var (
-	poolOnce sync.Once
-	poolErr  error
+	poolOnce   sync.Once
+	poolErr    error
 	sharedPool *pgxpool.Pool
 )
 

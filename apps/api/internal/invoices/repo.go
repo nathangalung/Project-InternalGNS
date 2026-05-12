@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	ErrNotFound         = errors.New("invoice not found")
-	ErrVersionMismatch  = errors.New("invoice version mismatch")
+	ErrNotFound        = errors.New("invoice not found")
+	ErrVersionMismatch = errors.New("invoice version mismatch")
 )
 
 type Repo struct {

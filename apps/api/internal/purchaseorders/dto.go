@@ -5,10 +5,10 @@ import "time"
 type Status string
 
 const (
-	StatusPending     Status = "PENDING"
-	StatusUploaded    Status = "UPLOADED"
-	StatusOnProgress  Status = "ON_PROGRESS"
-	StatusDelivered   Status = "DELIVERED"
+	StatusPending    Status = "PENDING"
+	StatusUploaded   Status = "UPLOADED"
+	StatusOnProgress Status = "ON_PROGRESS"
+	StatusDelivered  Status = "DELIVERED"
 )
 
 type PurchaseOrder struct {
@@ -73,12 +73,12 @@ type UpdateNotesRequest struct {
 
 // PO direct edit payload.
 type UpdateItemsRequest struct {
-	DiscountPct     string               `json:"discountPct"`
-	Notes           *string              `json:"notes,omitempty"`
-	ShippingAddress *string              `json:"shippingAddress,omitempty"`
-	ShippingDays    *int                 `json:"shippingDays,omitempty"`
-	ShippingCost    *string              `json:"shippingCost,omitempty"`
-	Items           []UpdateItemsLine    `json:"items"`
+	DiscountPct     string            `json:"discountPct"`
+	Notes           *string           `json:"notes,omitempty"`
+	ShippingAddress *string           `json:"shippingAddress,omitempty"`
+	ShippingDays    *int              `json:"shippingDays,omitempty"`
+	ShippingCost    *string           `json:"shippingCost,omitempty"`
+	Items           []UpdateItemsLine `json:"items"`
 }
 
 type UpdateItemsLine struct {

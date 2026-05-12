@@ -20,13 +20,13 @@ type UpdateImageRequest struct {
 }
 
 type ListFilter struct {
-	Q         string
-	IsActive  *bool
-	UnitID    *int16
-	SortBy    string
-	SortDir   string
-	Limit     int
-	Offset    int
+	Q        string
+	IsActive *bool
+	UnitID   *int16
+	SortBy   string
+	SortDir  string
+	Limit    int
+	Offset   int
 }
 
 type ListResult struct {
@@ -166,8 +166,8 @@ type AdvancedSearchHit struct {
 	IMPACode      *string  `json:"impaCode,omitempty"`
 	DefaultUnitID *int16   `json:"defaultUnitId,omitempty"`
 	Score         float32  `json:"score"`
-	Tier          string   `json:"tier"`   // ITEM_AUTO | VENDOR_OFFER | ITEM_SUGGESTED | REQUEST_HISTORY | ITEM_FUZZY
-	Tiers         []string `json:"tiers"`  // all tiers that contributed to this hit
+	Tier          string   `json:"tier"`  // ITEM_AUTO | VENDOR_OFFER | ITEM_SUGGESTED | REQUEST_HISTORY | ITEM_FUZZY
+	Tiers         []string `json:"tiers"` // all tiers that contributed to this hit
 	VendorID      *int64   `json:"vendorId,omitempty"`
 	VendorName    *string  `json:"vendorName,omitempty"`
 	VendorSKU     *string  `json:"vendorSku,omitempty"`
@@ -176,8 +176,8 @@ type AdvancedSearchHit struct {
 
 // AdvancedSearchResponse wraps the hit list with a per-tier count summary.
 type AdvancedSearchResponse struct {
-	Query string                       `json:"query"`
-	Total int                          `json:"total"`
-	Hits  []AdvancedSearchHit          `json:"hits"`
-	Counts map[string]int              `json:"counts"` // tier → count
+	Query  string              `json:"query"`
+	Total  int                 `json:"total"`
+	Hits   []AdvancedSearchHit `json:"hits"`
+	Counts map[string]int      `json:"counts"` // tier → count
 }

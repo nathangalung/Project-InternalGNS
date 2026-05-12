@@ -262,4 +262,3 @@ func (r *Repo) ListRevisions(ctx context.Context, id int64) ([]RevisionRow, erro
 	}
 	return pgx.CollectRows(rows, pgx.RowToStructByName[RevisionRow])
 }
-

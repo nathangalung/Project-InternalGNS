@@ -208,4 +208,3 @@ func (h *ExportHandler) contactComm(ctx context.Context, d QuotationDetail, c cl
 	}
 	return pdfgen.StrDeref(c.ContactEmail), pdfgen.StrDeref(c.ContactPhone)
 }
-

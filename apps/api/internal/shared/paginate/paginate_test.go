@@ -10,10 +10,10 @@ import (
 
 func TestParse(t *testing.T) {
 	cases := []struct {
-		name        string
-		query       string
-		wantLimit   int
-		wantOffset  int
+		name       string
+		query      string
+		wantLimit  int
+		wantOffset int
 	}{
 		{"defaults", "", 50, 0},
 		{"valid limit", "?limit=10", 10, 0},

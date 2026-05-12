@@ -111,10 +111,10 @@ UPDATE invoices i
     (478::bigint, '2026-01-20'::date, '2026-02-19'::date, 'paid'),  -- 015_I_2026 - Karunia Aman Selalu.xlsx
     (481::bigint, '2026-03-04'::date, '2026-04-03'::date, 'paid'),  -- 036_2_2026 - Roller Stator - Karunia Aman Selalu.x
     (571::bigint, '2026-03-12'::date, '2026-04-11'::date, 'paid'),  -- 041_3_2026 - Relay Schneider - Karunia Aman Selalu
-    (645::bigint, '2026-04-10'::date, '2026-05-10'::date, 'sent'),  -- 045_4_2026 - Vbelt Ribbed C3911588 - Karunia Aman 
+    (645::bigint, '2026-04-10'::date, '2026-05-10'::date, 'sent'),  -- 045_4_2026 - Vbelt Ribbed C3911588 - Karunia Aman
     (619::bigint, '2026-04-13'::date, '2026-05-13'::date, 'sent'),  -- 047_4_2026 - Dial Bore - Karunia Aman Selalu.xlsx
     (555::bigint, '2026-02-11'::date, '2026-02-26'::date, 'paid'),  -- 035_2_2026 - Kompresor United - Yuxin Satu - IMC S
-    (643::bigint, '2026-04-22'::date, '2026-05-22'::date, 'sent'),  -- 052_4_2026 Kompresor PUMA (used) - Yuxin Shipping 
+    (643::bigint, '2026-04-22'::date, '2026-05-22'::date, 'sent'),  -- 052_4_2026 Kompresor PUMA (used) - Yuxin Shipping
     (552::bigint, '2026-03-05'::date, '2026-04-04'::date, 'paid'),  -- 038_3_2026 - O-RING NBR NOK VR32A - Niterra.xlsx
     (589::bigint, '2026-05-05'::date, '2026-06-04'::date, 'sent'),  -- 055_5_2026 - SEAL KIT AIR CYLINDER NEW - Niterra.x
     (604::bigint, '2026-04-08'::date, '2026-05-08'::date, 'paid'),  -- 044_4_2026 - Seal Kit Oil Pump Tekawe - Niterra.xl
@@ -122,7 +122,7 @@ UPDATE invoices i
     (490::bigint, '2026-01-19'::date, '2026-02-18'::date, 'paid'),  -- 006_1_2026 - PO-TCP_I_2026-00026 - KPC Floating As
     (489::bigint, '2026-01-19'::date, '2026-02-18'::date, 'paid'),  -- 005_1_2026 - PO TCP-2512-00540 - FC PIONEER Sangat
     (488::bigint, '2026-01-08'::date, '2026-02-08'::date, 'paid'),  -- 10611_1_2026 - Pengiriman ke Sangatta - PT Transco
-    (530::bigint, '2026-02-03'::date, '2026-02-18'::date, 'paid'),  -- 026_2_2026 - PO-SML_II_2026-00004 - Gland Packing 
+    (530::bigint, '2026-02-03'::date, '2026-02-18'::date, 'paid'),  -- 026_2_2026 - PO-SML_II_2026-00004 - Gland Packing
     (576::bigint, '2026-03-04'::date, '2026-04-03'::date, 'paid'),  -- 038_3_2026 - Sentra Makmur Lines.xlsx
     (660::bigint, '2026-05-07'::date, '2026-06-06'::date, 'sent'),  -- 057_5_2026 - Flow meter - Kasen Maritim Logistik.x
     (624::bigint, '2026-04-22'::date, '2026-05-22'::date, 'sent'),  -- 049_4_2026 - Infrared Night Vision Binocular - Dew
@@ -135,7 +135,7 @@ UPDATE invoices i
     (548::bigint, '2026-02-05'::date, '2026-03-07'::date, 'paid'),  -- 022_2_2026 - HT ENTEL DX544 VHF INTRINSICALLY SAFE
     (573::bigint, '2026-02-24'::date, '2026-03-26'::date, 'paid'),  -- 030_2_2026 - Vacuum Pump Suction  - Pelita Almeira
     (492::bigint, '2026-01-19'::date, '2026-02-18'::date, 'paid'),  -- 001_I_2026 - Printer - Daidan Pertiwi - Pelita Glo
-    (575::bigint, '2026-02-24'::date, '2026-03-26'::date, 'paid'),  -- 029_2_2026 - Freon 407 - Pelita Almeira Pertiwi - 
+    (575::bigint, '2026-02-24'::date, '2026-03-26'::date, 'paid'),  -- 029_2_2026 - Freon 407 - Pelita Almeira Pertiwi -
     (528::bigint, '2026-02-03'::date, '2026-03-05'::date, 'paid'),  -- 018_1_2026 - ANGLE VALVE 10K 125 SDNR - Pelita Alm
     (523::bigint, '2026-01-27'::date, '2026-02-26'::date, 'paid'),  -- 014_1_2026 - BUTTERFLY VALVE WAFER TYPE DN 150 - D
     (509::bigint, '2026-01-19'::date, '2026-02-18'::date, 'paid'),  -- 009_1_2026 - Butterfly Valve - Daidan Pertiwi - Pe
@@ -144,7 +144,7 @@ UPDATE invoices i
     (491::bigint, '2026-01-19'::date, '2026-02-18'::date, 'paid'),  -- 002_1_2026 - Floodlight 100w - Daidan Pertiwi - Pe
     (519::bigint, '2026-01-21'::date, '2026-02-20'::date, 'paid'),  -- 011_1_2026 - Impeller - Daidan Pertiwi - Pelita Gl
     (524::bigint, '2026-01-27'::date, '2026-02-26'::date, 'paid'),  -- 013_1_2026 - Angle Valve - Daidan Pertiwi - Pelita
-    (522::bigint, '2026-01-27'::date, '2026-02-26'::date, 'paid'),  -- 012_1_2026 - Butterfly Valve double flange 5K 200 
+    (522::bigint, '2026-01-27'::date, '2026-02-26'::date, 'paid'),  -- 012_1_2026 - Butterfly Valve double flange 5K 200
     (500::bigint, '2026-01-19'::date, '2026-02-18'::date, 'paid'),  -- 004_1_2026 - Cordless Impact Wrench - Daidan Perti
     (506::bigint, '2026-01-19'::date, '2026-02-18'::date, 'paid'),  -- 008_1_2026 - kunci shock, dakron dll  - Daidan Per
     (498::bigint, '2026-01-19'::date, '2026-02-18'::date, 'paid'),  -- 003_1_2026 - Wearpacks - Daidan Pertiwi - Pelita G

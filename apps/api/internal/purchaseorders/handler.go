@@ -355,4 +355,3 @@ func (h *Handler) PresignDownload(w http.ResponseWriter, r *http.Request) {
 		"expiresAt":   time.Now().UTC().Add(downloadURLExpiry).Unix(),
 	})
 }
-

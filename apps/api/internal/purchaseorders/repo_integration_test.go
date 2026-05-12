@@ -193,9 +193,9 @@ func TestRepo_UpdateFile_AdvancesPendingToUploaded(t *testing.T) {
 
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 	require.NoError(t, repo.UpdateFile(ctx, poID, purchaseorders.UpdateFileRequest{
-		FileName: "po.pdf",
-		FileSize: 1024,
-		ObjectKey:  "data:application/pdf;base64,",
+		FileName:  "po.pdf",
+		FileSize:  1024,
+		ObjectKey: "data:application/pdf;base64,",
 	}, seedUserID))
 
 	po, err := repo.GetByID(ctx, poID)
