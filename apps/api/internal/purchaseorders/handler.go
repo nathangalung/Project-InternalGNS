@@ -309,7 +309,7 @@ func (h *Handler) PresignUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	objectKey := storage.BuildObjectKey("po", id, fileName)
-	url, err := h.storage.PresignPut(r.Context(), objectKey, uploadURLExpiry)
+	url, err := h.storage.PresignPut(r.Context(), storage.BucketPODocs, objectKey, uploadURLExpiry)
 	if err != nil {
 		httperr.Render(w, httperr.Internal("presign failed"))
 		return
@@ -344,7 +344,7 @@ func (h *Handler) PresignDownload(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.NotFound("no file attached"))
 		return
 	}
-	url, err := h.storage.PresignGet(r.Context(), *po.FileURL, downloadURLExpiry)
+	url, err := h.storage.PresignGet(r.Context(), storage.BucketPODocs, *po.FileURL, downloadURLExpiry)
 	if err != nil {
 		httperr.Render(w, httperr.Internal("presign failed"))
 		return

@@ -38,7 +38,6 @@ func NewServer(ctx context.Context, cfg Config) (*http.Server, error) {
 		Endpoint:  cfg.MinioEndpoint,
 		AccessKey: cfg.MinioAccessKey,
 		SecretKey: cfg.MinioSecretKey,
-		Bucket:    cfg.MinioBucket,
 		UseSSL:    cfg.MinioUseSSL,
 	})
 	if err != nil {

@@ -25,7 +25,6 @@ type Config struct {
 	MinioEndpoint  string `env:"MINIO_ENDPOINT"   envDefault:"minio:9000"`
 	MinioAccessKey string `env:"MINIO_ACCESS_KEY"`
 	MinioSecretKey string `env:"MINIO_SECRET_KEY"`
-	MinioBucket    string `env:"MINIO_BUCKET"     envDefault:"internalgns"`
 	MinioUseSSL    bool   `env:"MINIO_USE_SSL"    envDefault:"false"`
 
 	TZ string `env:"TZ" envDefault:"Asia/Jakarta"`

@@ -16,18 +16,18 @@ import (
 var ErrNotConfigured = errors.New("storage: minio not configured")
 
 type Client struct {
-	mc     *minio.Client
-	bucket string
+	mc *minio.Client
 }
 
 type Config struct {
 	Endpoint  string
 	AccessKey string
 	SecretKey string
-	Bucket    string
 	UseSSL    bool
 }
 
+// New initializes the MinIO client and ensures every bucket in AllBuckets
+// exists. Fails fast on the first bucket-creation error.
 func New(ctx context.Context, cfg Config) (*Client, error) {
 	if cfg.AccessKey == "" || cfg.SecretKey == "" {
 		return nil, ErrNotConfigured
@@ -39,21 +39,24 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("storage: new client: %w", err)
 	}
-	exists, err := mc.BucketExists(ctx, cfg.Bucket)
-	if err != nil {
-		return nil, fmt.Errorf("storage: bucket exists check: %w", err)
-	}
-	if !exists {
-		if err := mc.MakeBucket(ctx, cfg.Bucket, minio.MakeBucketOptions{}); err != nil {
-			return nil, fmt.Errorf("storage: make bucket: %w", err)
+	for _, b := range AllBuckets {
+		exists, err := mc.BucketExists(ctx, b)
+		if err != nil {
+			return nil, fmt.Errorf("storage: bucket exists check %q: %w", b, err)
+		}
+		if exists {
+			continue
+		}
+		if err := mc.MakeBucket(ctx, b, minio.MakeBucketOptions{}); err != nil {
+			return nil, fmt.Errorf("storage: make bucket %q: %w", b, err)
 		}
 	}
-	return &Client{mc: mc, bucket: cfg.Bucket}, nil
+	return &Client{mc: mc}, nil
 }
 
 // PresignPut returns a presigned PUT URL valid for expiry.
-func (c *Client) PresignPut(ctx context.Context, objectKey string, expiry time.Duration) (string, error) {
-	u, err := c.mc.PresignedPutObject(ctx, c.bucket, objectKey, expiry)
+func (c *Client) PresignPut(ctx context.Context, bucket, objectKey string, expiry time.Duration) (string, error) {
+	u, err := c.mc.PresignedPutObject(ctx, bucket, objectKey, expiry)
 	if err != nil {
 		return "", fmt.Errorf("storage: presign put: %w", err)
 	}
@@ -61,15 +64,13 @@ func (c *Client) PresignPut(ctx context.Context, objectKey string, expiry time.D
 }
 
 // PresignGet returns a presigned GET URL valid for expiry.
-func (c *Client) PresignGet(ctx context.Context, objectKey string, expiry time.Duration) (string, error) {
-	u, err := c.mc.PresignedGetObject(ctx, c.bucket, objectKey, expiry, url.Values{})
+func (c *Client) PresignGet(ctx context.Context, bucket, objectKey string, expiry time.Duration) (string, error) {
+	u, err := c.mc.PresignedGetObject(ctx, bucket, objectKey, expiry, url.Values{})
 	if err != nil {
 		return "", fmt.Errorf("storage: presign get: %w", err)
 	}
 	return u.String(), nil
 }
-
-func (c *Client) Bucket() string { return c.bucket }
 
 // BuildObjectKey returns a deterministic key under a namespace prefix.
 // Example: BuildObjectKey("po", 42, "scan.pdf") -> "po/42/<unix>-scan.pdf".
