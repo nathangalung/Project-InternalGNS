@@ -37,3 +37,27 @@ func TestParse(t *testing.T) {
 		})
 	}
 }
+
+func TestParseLimit(t *testing.T) {
+	cases := []struct {
+		name  string
+		query string
+		def   int
+		want  int
+	}{
+		{"missing returns default", "", 10, 10},
+		{"valid", "?limit=25", 10, 25},
+		{"zero rejected", "?limit=0", 10, 10},
+		{"negative rejected", "?limit=-1", 10, 10},
+		{"over max rejected", "?limit=500", 10, 10},
+		{"at max boundary accepted", "?limit=200", 10, 200},
+		{"non-numeric rejected", "?limit=abc", 10, 10},
+		{"default of 5 honored", "", 5, 5},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := httptest.NewRequest(http.MethodGet, "/x"+tc.query, nil)
+			assert.Equal(t, tc.want, ParseLimit(r, tc.def))
+		})
+	}
+}

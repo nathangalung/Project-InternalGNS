@@ -138,12 +138,7 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 			minScore = float32(v)
 		}
 	}
-	limit := 10
-	if s := r.URL.Query().Get("limit"); s != "" {
-		if v, err := strconv.Atoi(s); err == nil && v > 0 {
-			limit = v
-		}
-	}
+	limit := paginate.ParseLimit(r, 10)
 
 	results, err := h.repo.Search(r.Context(), q, minScore, limit)
 	if err != nil {
@@ -159,12 +154,7 @@ func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid id"))
 		return
 	}
-	limit := 50
-	if s := r.URL.Query().Get("limit"); s != "" {
-		if v, err := strconv.Atoi(s); err == nil && v > 0 && v <= 200 {
-			limit = v
-		}
-	}
+	limit := paginate.ParseLimit(r, 50)
 
 	items, err := h.repo.ListItems(r.Context(), id, limit)
 	if err != nil {
