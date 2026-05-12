@@ -1,6 +1,7 @@
 import { useQueries } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
+import { getCompanyInitials } from "@/features/clients/helpers"
 import { useClient } from "@/features/clients/hooks"
 import * as itemsApi from "@/features/items/api"
 import { useQuotation } from "@/features/quotations/hooks"
@@ -184,12 +185,7 @@ export default function PurchaseOrderDetail({
   const dppNilaiLain = Math.round((dppBase * 11) / 12)
   const ppn12 = Math.round(dppNilaiLain * 0.12)
   const grandTotal = hasProducts ? subTotal + ppn12 + totalShip : totalShip + ppn12
-  const clientInitials = quotation.client
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase()
+  const clientInitials = getCompanyInitials(quotation.client)
   const poNumber = po.poNumber || poNumberFromQuotationNo(quotationNo)
 
   function handleStatusChange(s: PoStatus) {

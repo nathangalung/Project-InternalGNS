@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
+import { getCompanyInitials } from "@/features/clients/helpers"
 import ClientSummaryCard from "@/features/quotations/QuotationDetail/ClientSummaryCard"
 import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
 import HistoryTimeline from "@/features/quotations/QuotationDetail/HistoryTimeline"
@@ -113,12 +114,7 @@ export default function InvoiceDetail({
   const ppn12 = toNum(inv.ppnAmount) || Math.round(dppNilaiLain * 0.12)
   const grandTotal =
     toNum(inv.total) || (hasProducts ? subTotal + ppn12 + totalShip : totalShip + ppn12)
-  const clientInitials = quotation.client
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase()
+  const clientInitials = getCompanyInitials(quotation.client)
   const invoiceNo = inv.invoiceNo
   const displayStatus: InvoiceStatus = status
 

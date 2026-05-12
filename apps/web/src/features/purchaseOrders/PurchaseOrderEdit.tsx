@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
 import ClientAdd from "@/features/clients/ClientAdd"
+import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
 import { useClientSearch, useClients } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
 import { usePoItems, usePurchaseOrder, useUpdatePoItems } from "@/features/purchaseOrders/hooks"
@@ -12,62 +13,7 @@ import Step4Summary from "@/features/quotations/Step4Summary"
 import { useUnits } from "@/features/units/hooks"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
 import type { Page } from "@/lib/page"
-import type { ClientRow, ClientSearchHit, PoItemInput, PoUpdateItemsInput } from "@/types/api"
-
-function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase()
-}
-
-function fromClientRow(c: ClientRow): Client & { contactId?: number } {
-  return {
-    id: String(c.id),
-    name: c.name,
-    narahubung: c.contactName ?? "",
-    country: c.countryCode,
-    initials: initialsOf(c.name),
-    phone: c.contactPhone,
-    email: c.contactEmail ?? c.email,
-    npwp: c.npwp,
-    nomorTKU: c.tkuId,
-    referenceNumber: c.number,
-    lokasi: c.address,
-    contactId: c.contactId,
-  }
-}
-
-function fromClientHit(h: ClientSearchHit): Client & { contactId?: number } {
-  return {
-    id: String(h.companyId),
-    name: h.companyName,
-    narahubung: h.contactName ?? "",
-    country: h.companyCountry,
-    initials: initialsOf(h.companyName),
-    phone: h.contactPhone,
-    email: h.contactEmail ?? h.companyEmail,
-    npwp: h.companyNpwp,
-    nomorTKU: h.companyTku,
-    referenceNumber: h.companyNumber,
-    lokasi: h.companyAddress,
-    contactId: h.contactId,
-  }
-}
-
-function dedupeByCompany(hits: ClientSearchHit[]): ClientSearchHit[] {
-  const seen = new Set<number>()
-  const out: ClientSearchHit[] = []
-  for (const h of hits) {
-    if (seen.has(h.companyId)) continue
-    seen.add(h.companyId)
-    out.push(h)
-  }
-  return out
-}
+import type { PoItemInput, PoUpdateItemsInput } from "@/types/api"
 
 interface PurchaseOrderEditProps {
   poId: string

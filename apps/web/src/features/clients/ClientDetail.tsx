@@ -1,6 +1,7 @@
 import { type CSSProperties, useEffect, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
 import Sidebar from "@/components/shared/Sidebar"
+import { getCompanyInitials } from "@/features/clients/helpers"
 import { useUpdateClient } from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
 import { ApiError } from "@/lib/api-client"
@@ -28,17 +29,6 @@ function hashCode(s: string): number {
   let h = 0
   for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i)
   return Math.abs(h)
-}
-
-function clientInitials(name: string): string {
-  const parts = name
-    .replace(/^PT\.?\s+/i, "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-  if (parts.length === 0) return "?"
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return (parts[0][0] + parts[1][0]).toUpperCase()
 }
 
 const labelStyle: CSSProperties = {
@@ -319,7 +309,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                   ) : (
-                    clientInitials(client.name)
+                    getCompanyInitials(client.name)
                   )}
                 </button>
                 <button

@@ -1,5 +1,6 @@
 import { useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
+import { getCompanyInitials } from "@/features/clients/helpers"
 import type { QuotationData, Status } from "@/features/quotations/types"
 import { downloadPdf } from "@/lib/api-client"
 import type { Page } from "@/lib/page"
@@ -58,12 +59,7 @@ export default function QuotationDetail({
   const dppNilaiLain = q.dppNilaiLain
   const ppn12 = q.ppnAmount
   const grandTotal = q.totalBayar
-  const clientInitials = q.client
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase()
+  const clientInitials = getCompanyInitials(q.client)
 
   function handleStatusChange(s: Status) {
     setStatus(s)
