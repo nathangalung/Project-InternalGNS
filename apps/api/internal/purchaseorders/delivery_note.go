@@ -3,7 +3,6 @@ package purchaseorders
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -90,9 +89,7 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 	}
 
 	dn := "DN-" + po.PoNumber
-	w.Header().Set("Content-Type", "application/pdf")
-	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.pdf"`, sanitizeFilename(dn)))
-	if _, werr := w.Write(pdf); werr != nil {
+	if werr := pdfgen.WritePDFResponse(w, dn, pdf); werr != nil {
 		slog.WarnContext(r.Context(), "pdf write failed", "doc", "delivery_note", "po_id", id, "err", werr)
 	}
 }
@@ -133,7 +130,7 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, i
 		DeliveryNoteNo:  pdfgen.LatexEscape("DN-" + po.PoNumber),
 		PONo:            pdfgen.LatexEscape(po.PoNumber),
 		CompanyName:     pdfgen.LatexEscape(po.CompanyName),
-		CompanyAddress:  pdfgen.LatexEscape(strDeref(client.Address)),
+		CompanyAddress:  pdfgen.LatexEscape(pdfgen.StrDeref(client.Address)),
 		AttnName:        pdfgen.LatexEscape(attn),
 		VesselName:      pdfgen.LatexEscape(vessel),
 		DateLine:        pdfgen.JakartaDateLine(po.PoDate.In(time.Local)),
@@ -143,28 +140,3 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, i
 	}
 }
 
-func strDeref(p *string) string {
-	if p == nil {
-		return ""
-	}
-	return *p
-}
-
-func sanitizeFilename(s string) string {
-	out := make([]rune, 0, len(s))
-	for _, r := range s {
-		switch {
-		case r >= 'a' && r <= 'z',
-			r >= 'A' && r <= 'Z',
-			r >= '0' && r <= '9',
-			r == '-' || r == '_' || r == '.':
-			out = append(out, r)
-		default:
-			out = append(out, '_')
-		}
-	}
-	if len(out) == 0 {
-		return "document"
-	}
-	return string(out)
-}

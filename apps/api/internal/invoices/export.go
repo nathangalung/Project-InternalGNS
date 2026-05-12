@@ -3,7 +3,6 @@ package invoices
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -103,9 +102,7 @@ func (h *ExportHandler) ExportPDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/pdf")
-	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.pdf"`, sanitizeFilename(inv.InvoiceNo)))
-	if _, werr := w.Write(pdf); werr != nil {
+	if werr := pdfgen.WritePDFResponse(w, inv.InvoiceNo, pdf); werr != nil {
 		slog.WarnContext(r.Context(), "pdf write failed", "doc", "invoice", "id", id, "err", werr)
 	}
 }
@@ -133,7 +130,7 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 		if it.UnitCode != nil {
 			unit = *it.UnitCode
 		}
-		amt := mulNumStr(it.Qty, it.UnitPrice)
+		amt := pdfgen.BigMul(it.Qty, it.UnitPrice)
 		desc := ""
 		if it.ShipDestination != nil {
 			desc = *it.ShipDestination
@@ -158,16 +155,16 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 		InvoiceNo:       pdfgen.LatexEscape(inv.InvoiceNo),
 		PONo:            pdfgen.LatexEscape(poNo),
 		CompanyName:     pdfgen.LatexEscape(inv.CompanyName),
-		CompanyNPWP:     pdfgen.LatexEscape(strDeref(client.NPWP)),
-		CompanyAddress:  pdfgen.LatexEscape(strDeref(client.Address)),
+		CompanyNPWP:     pdfgen.LatexEscape(pdfgen.StrDeref(client.NPWP)),
+		CompanyAddress:  pdfgen.LatexEscape(pdfgen.StrDeref(client.Address)),
 		VesselName:      pdfgen.LatexEscape(vessel),
 		InvoiceDate:     inv.InvoiceDate.Format("2 January 2006"),
 		DueDate:         dueDate,
 		Items:           expItems,
-		DPP:             pdfgen.FormatIDR(strDeref(inv.Dpp)),
-		DPPNilaiLain:    pdfgen.FormatIDR(strDeref(inv.DppNilaiLain)),
-		PPN:             pdfgen.FormatIDR(strDeref(inv.PpnAmount)),
-		Total:           pdfgen.FormatIDR(strDeref(inv.Total)),
+		DPP:             pdfgen.FormatIDR(pdfgen.StrDeref(inv.Dpp)),
+		DPPNilaiLain:    pdfgen.FormatIDR(pdfgen.StrDeref(inv.DppNilaiLain)),
+		PPN:             pdfgen.FormatIDR(pdfgen.StrDeref(inv.PpnAmount)),
+		Total:           pdfgen.FormatIDR(pdfgen.StrDeref(inv.Total)),
 		PaymentTerms:    pdfgen.LatexEscape(h.settings.PaymentTerms),
 		BankName:        pdfgen.LatexEscape(h.settings.BankName),
 		BankAccountNo:   pdfgen.LatexEscape(h.settings.BankAccountNo),
@@ -177,45 +174,3 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 	}
 }
 
-func strDeref(p *string) string {
-	if p == nil {
-		return ""
-	}
-	return *p
-}
-
-// mulNumStr multiplies two numeric strings to 2-decimal output.
-func mulNumStr(a, b string) string {
-	x, errA := strconv.ParseFloat(zero(a), 64)
-	y, errB := strconv.ParseFloat(zero(b), 64)
-	if errA != nil || errB != nil {
-		return "0"
-	}
-	return strconv.FormatFloat(x*y, 'f', 2, 64)
-}
-
-func zero(s string) string {
-	if s == "" {
-		return "0"
-	}
-	return s
-}
-
-func sanitizeFilename(s string) string {
-	out := make([]rune, 0, len(s))
-	for _, r := range s {
-		switch {
-		case r >= 'a' && r <= 'z',
-			r >= 'A' && r <= 'Z',
-			r >= '0' && r <= '9',
-			r == '-' || r == '_' || r == '.':
-			out = append(out, r)
-		default:
-			out = append(out, '_')
-		}
-	}
-	if len(out) == 0 {
-		return "document"
-	}
-	return string(out)
-}
