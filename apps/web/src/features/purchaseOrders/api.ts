@@ -1,10 +1,13 @@
 import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
+import { uploadToPresignedUrl } from "@/lib/storage-upload"
 import type {
   PoBackendStatus,
   PoUpdateItemsInput,
   PurchaseOrderItemRow,
   PurchaseOrderRow,
 } from "@/types/api"
+
+export { uploadToPresignedUrl }
 
 export type ListParams = {
   q?: string
@@ -87,19 +90,6 @@ export async function presignDownload(id: number): Promise<PresignDownload> {
   return apiRequest<PresignDownload>({
     path: `/purchase-orders/${id}/download-url`,
   })
-}
-
-// Direct PUT to MinIO using the presigned URL.
-export async function uploadToPresignedUrl(uploadUrl: string, file: File): Promise<void> {
-  const res = await fetch(uploadUrl, {
-    method: "PUT",
-    body: file,
-    headers: { "Content-Type": file.type || "application/octet-stream" },
-  })
-  if (!res.ok) {
-    const text = await res.text().catch(() => "")
-    throw new Error(`upload failed: ${res.status} ${text}`)
-  }
 }
 
 export async function updateItems(

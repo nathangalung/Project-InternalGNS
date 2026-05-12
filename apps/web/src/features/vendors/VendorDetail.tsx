@@ -1,6 +1,11 @@
 import { type CSSProperties, useEffect, useRef, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
-import { useUpdateVendor, useVendorItems } from "@/features/vendors/hooks"
+import {
+  useUpdateVendor,
+  useUploadVendorLogo,
+  useVendorItems,
+  useVendorLogoDownloadUrl,
+} from "@/features/vendors/hooks"
 import { ApiError } from "@/lib/api-client"
 import { formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
@@ -89,7 +94,14 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const updateVendor = useUpdateVendor()
+  const uploadLogo = useUploadVendorLogo()
+  const { data: logoDownload } = useVendorLogoDownloadUrl(vendor.id, vendor.logoObjectKey)
   const { data: vendorItems, isLoading: itemsLoading } = useVendorItems(vendor.id)
+
+  useEffect(() => {
+    if (logoDownload?.downloadUrl) setLogoDataUrl(logoDownload.downloadUrl)
+    else if (!vendor.logoObjectKey) setLogoDataUrl("")
+  }, [logoDownload?.downloadUrl, vendor.logoObjectKey])
 
   useEffect(() => {
     setName(vendor.name)
@@ -116,6 +128,7 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
       if (typeof reader.result === "string") setLogoDataUrl(reader.result)
     }
     reader.readAsDataURL(file)
+    uploadLogo.mutate({ id: vendor.id, file })
   }
 
   const handleCancel = () => {

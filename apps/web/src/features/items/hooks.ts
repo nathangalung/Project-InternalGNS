@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as itemsApi from "@/features/items/api"
 import { queryKeys } from "@/lib/query-keys"
+import { uploadToPresignedUrl } from "@/lib/storage-upload"
 
 export function useItems(params: itemsApi.ItemListParams = {}) {
   return useQuery({
@@ -73,5 +74,29 @@ export function useAddVendorToItem() {
       itemsApi.addVendor(itemId, input),
     onSuccess: (_data, { itemId }) =>
       qc.invalidateQueries({ queryKey: queryKeys.items.vendors(itemId) }),
+  })
+}
+
+export function useUploadItemImage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, file }: { id: number; file: File }) => {
+      const presign = await itemsApi.presignImageUpload(id, file.name)
+      await uploadToPresignedUrl(presign.uploadUrl, file)
+      await itemsApi.updateImage(id, presign.objectKey)
+    },
+    onSuccess: (_, { id }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.items.detail(id) })
+      qc.invalidateQueries({ queryKey: queryKeys.items.all })
+    },
+  })
+}
+
+export function useItemImageDownloadUrl(id: number | undefined, objectKey?: string) {
+  return useQuery({
+    queryKey: id ? [...queryKeys.items.detail(id), "image-url", objectKey] : queryKeys.items.all,
+    queryFn: () => itemsApi.presignImageDownload(id as number),
+    enabled: id !== undefined && id > 0 && Boolean(objectKey),
+    staleTime: 4 * 60 * 1000,
   })
 }

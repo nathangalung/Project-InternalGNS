@@ -98,3 +98,31 @@ export async function createContact(
     body: input,
   })
 }
+
+export type PresignLogoUpload = {
+  uploadUrl: string
+  objectKey: string
+  expiresAt: number
+}
+
+export type PresignLogoDownload = {
+  downloadUrl: string
+  expiresAt: number
+}
+
+export async function presignLogoUpload(id: number, fileName: string): Promise<PresignLogoUpload> {
+  const qs = new URLSearchParams({ fileName }).toString()
+  return apiRequest<PresignLogoUpload>({ path: `/clients/${id}/logo/upload-url?${qs}` })
+}
+
+export async function presignLogoDownload(id: number): Promise<PresignLogoDownload> {
+  return apiRequest<PresignLogoDownload>({ path: `/clients/${id}/logo/download-url` })
+}
+
+export async function updateLogo(id: number, objectKey: string): Promise<void> {
+  await apiRequest<void>({
+    path: `/clients/${id}/logo`,
+    method: "PATCH",
+    body: { objectKey },
+  })
+}

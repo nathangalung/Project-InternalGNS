@@ -122,3 +122,34 @@ export async function create(input: CreateItemInput): Promise<ItemRow> {
     body: input,
   })
 }
+
+export type PresignImageUpload = {
+  uploadUrl: string
+  objectKey: string
+  expiresAt: number
+}
+
+export type PresignImageDownload = {
+  downloadUrl: string
+  expiresAt: number
+}
+
+export async function presignImageUpload(
+  id: number,
+  fileName: string,
+): Promise<PresignImageUpload> {
+  const qs = new URLSearchParams({ fileName }).toString()
+  return apiRequest<PresignImageUpload>({ path: `/items/${id}/image/upload-url?${qs}` })
+}
+
+export async function presignImageDownload(id: number): Promise<PresignImageDownload> {
+  return apiRequest<PresignImageDownload>({ path: `/items/${id}/image/download-url` })
+}
+
+export async function updateImage(id: number, objectKey: string): Promise<void> {
+  await apiRequest<void>({
+    path: `/items/${id}/image`,
+    method: "PATCH",
+    body: { objectKey },
+  })
+}

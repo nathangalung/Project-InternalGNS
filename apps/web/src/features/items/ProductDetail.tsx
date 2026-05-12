@@ -1,8 +1,13 @@
-import { type CSSProperties, useEffect, useMemo, useState } from "react"
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
 import Sidebar from "@/components/shared/Sidebar"
 import AddVendorToItemModal from "@/features/items/AddVendorToItemModal"
-import { useItemVendors, useUpdateItem } from "@/features/items/hooks"
+import {
+  useItemImageDownloadUrl,
+  useItemVendors,
+  useUpdateItem,
+  useUploadItemImage,
+} from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
 import { ApiError } from "@/lib/api-client"
 import { formatRupiah } from "@/lib/format"
@@ -126,9 +131,29 @@ export default function ProductDetail({
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [showAddVendor, setShowAddVendor] = useState(false)
+  const [imageDataUrl, setImageDataUrl] = useState<string>("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const updateItem = useUpdateItem()
+  const uploadImage = useUploadItemImage()
+  const { data: imageDownload } = useItemImageDownloadUrl(product.id, product.imageObjectKey)
   const { data: itemVendors, isLoading: vendorsLoading } = useItemVendors(product.id)
+
+  useEffect(() => {
+    if (imageDownload?.downloadUrl) setImageDataUrl(imageDownload.downloadUrl)
+    else if (!product.imageObjectKey) setImageDataUrl("")
+  }, [imageDownload?.downloadUrl, product.imageObjectKey])
+
+  function handleImageSelect(file: File | undefined) {
+    if (!file) return
+    if (!file.type.startsWith("image/")) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result === "string") setImageDataUrl(reader.result)
+    }
+    reader.readAsDataURL(file)
+    uploadImage.mutate({ id: product.id, file })
+  }
 
   useEffect(() => {
     setName(product.name)
@@ -272,12 +297,25 @@ export default function ProductDetail({
                 gap: "20px",
               }}
             >
-              <div
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  handleImageSelect(e.target.files?.[0])
+                  e.target.value = ""
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                title="Klik untuk ganti gambar produk"
                 style={{
                   width: "64px",
                   height: "64px",
                   borderRadius: "12px",
-                  background: logoBg,
+                  background: imageDataUrl ? "#FFFFFF" : logoBg,
                   color: "#FFFFFF",
                   display: "flex",
                   alignItems: "center",
@@ -286,11 +324,23 @@ export default function ProductDetail({
                   fontWeight: 800,
                   fontSize: "20px",
                   letterSpacing: "0.5px",
+                  border: "none",
+                  cursor: "pointer",
+                  overflow: "hidden",
+                  padding: 0,
                   flexShrink: 0,
                 }}
               >
-                {productInitials(product.name)}
-              </div>
+                {imageDataUrl ? (
+                  <img
+                    src={imageDataUrl}
+                    alt="Gambar produk"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  productInitials(product.name)
+                )}
+              </button>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h2
                   style={{

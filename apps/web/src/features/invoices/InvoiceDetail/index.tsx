@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import ClientSummaryCard from "@/features/quotations/QuotationDetail/ClientSummaryCard"
@@ -12,9 +12,16 @@ import { downloadPdf } from "@/lib/api-client"
 import type { Page } from "@/lib/page"
 import type { InvoiceBackendRow, InvoiceBackendStatus } from "@/types/api"
 import { invoiceItemsToProducts, invoiceItemsToShipping } from "../adapters"
-import { useChangeInvoiceStatus, useInvoiceByQuotation, useInvoiceItems } from "../hooks"
+import {
+  useChangeInvoiceStatus,
+  useInvoiceAttachmentDownloadUrl,
+  useInvoiceByQuotation,
+  useInvoiceItems,
+  useUploadInvoiceAttachment,
+} from "../hooks"
 import type { InvoiceStatus } from "../types"
 import { INVOICE_LABEL } from "../types"
+import FileCard from "./FileCard"
 import Header from "./Header"
 import type { EditableInvoiceStatus } from "./helpers"
 import StatusBar from "./StatusBar"
@@ -57,6 +64,15 @@ const TO_BACKEND: Record<EditableInvoiceStatus, InvoiceBackendStatus> = {
   TERLAMBAT: "overdue",
 }
 
+// Derive display filename from objectKey, e.g.
+// "invoices/123/1700000000-receipt.pdf" -> "receipt.pdf"
+function deriveFileName(objectKey: string | undefined): string {
+  if (!objectKey) return ""
+  const last = objectKey.split("/").pop() ?? ""
+  const dash = last.indexOf("-")
+  return dash >= 0 ? last.slice(dash + 1) : last
+}
+
 export default function InvoiceDetail({
   quotationId,
   quotationNo,
@@ -67,6 +83,12 @@ export default function InvoiceDetail({
   const { data: inv, isLoading } = useInvoiceByQuotation(quotationId)
   const { data: invItems } = useInvoiceItems(inv?.id)
   const changeStatus = useChangeInvoiceStatus()
+  const uploadAttachment = useUploadInvoiceAttachment()
+  const { data: attachmentDownload } = useInvoiceAttachmentDownloadUrl(
+    inv?.id,
+    inv?.attachmentObjectKey,
+  )
+  const attachmentInputRef = useRef<HTMLInputElement>(null)
 
   const initialStatus = toEditable(inv)
   const [status, setStatus] = useState<EditableInvoiceStatus>(initialStatus)
@@ -129,6 +151,17 @@ export default function InvoiceDetail({
     await downloadPdf(`/invoices/${inv.id}/pdf`, `${safe}.pdf`)
   }
 
+  function handleAttachmentSelect(file: File | undefined) {
+    if (!file || !inv) return
+    uploadAttachment.mutate({ id: inv.id, file })
+  }
+
+  function handleAttachmentDownload() {
+    if (attachmentDownload?.downloadUrl) {
+      window.open(attachmentDownload.downloadUrl, "_blank", "noopener,noreferrer")
+    }
+  }
+
   function handleSave() {
     if (!inv) return
     const target = TO_BACKEND[status]
@@ -169,6 +202,20 @@ export default function InvoiceDetail({
             onToggle={() => setIsStatusOpen((o) => !o)}
             onChange={handleStatusChange}
             onSave={handleSave}
+          />
+          <input
+            ref={attachmentInputRef}
+            type="file"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              handleAttachmentSelect(e.target.files?.[0])
+              e.target.value = ""
+            }}
+          />
+          <FileCard
+            fileName={deriveFileName(inv.attachmentObjectKey)}
+            onUpload={() => attachmentInputRef.current?.click()}
+            onDownload={handleAttachmentDownload}
           />
           <ClientSummaryCard
             clientName={quotation.client}

@@ -55,3 +55,36 @@ export async function changeStatus(id: number, status: InvoiceBackendStatus): Pr
     body: { status },
   })
 }
+
+export type PresignAttachmentUpload = {
+  uploadUrl: string
+  objectKey: string
+  expiresAt: number
+}
+
+export type PresignAttachmentDownload = {
+  downloadUrl: string
+  expiresAt: number
+}
+
+export async function presignAttachmentUpload(
+  id: number,
+  fileName: string,
+): Promise<PresignAttachmentUpload> {
+  const qs = new URLSearchParams({ fileName }).toString()
+  return apiRequest<PresignAttachmentUpload>({
+    path: `/invoices/${id}/attachment/upload-url?${qs}`,
+  })
+}
+
+export async function presignAttachmentDownload(id: number): Promise<PresignAttachmentDownload> {
+  return apiRequest<PresignAttachmentDownload>({ path: `/invoices/${id}/attachment/download-url` })
+}
+
+export async function updateAttachment(id: number, objectKey: string): Promise<void> {
+  await apiRequest<void>({
+    path: `/invoices/${id}/attachment`,
+    method: "PATCH",
+    body: { objectKey },
+  })
+}

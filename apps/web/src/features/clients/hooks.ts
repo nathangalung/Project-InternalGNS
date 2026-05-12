@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as clientsApi from "@/features/clients/api"
 import { queryKeys } from "@/lib/query-keys"
+import { uploadToPresignedUrl } from "@/lib/storage-upload"
 
 export function useClients(params: clientsApi.ClientListParams = {}) {
   return useQuery({
@@ -62,5 +63,29 @@ export function useCreateContact() {
     }) => clientsApi.createContact(companyId, input),
     onSuccess: (_, { companyId }) =>
       qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) }),
+  })
+}
+
+export function useUploadClientLogo() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, file }: { id: number; file: File }) => {
+      const presign = await clientsApi.presignLogoUpload(id, file.name)
+      await uploadToPresignedUrl(presign.uploadUrl, file)
+      await clientsApi.updateLogo(id, presign.objectKey)
+    },
+    onSuccess: (_, { id }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.clients.detail(id) })
+      qc.invalidateQueries({ queryKey: queryKeys.clients.all })
+    },
+  })
+}
+
+export function useClientLogoDownloadUrl(id: number | undefined, objectKey?: string) {
+  return useQuery({
+    queryKey: id ? [...queryKeys.clients.detail(id), "logo-url", objectKey] : queryKeys.clients.all,
+    queryFn: () => clientsApi.presignLogoDownload(id as number),
+    enabled: id !== undefined && id > 0 && Boolean(objectKey),
+    staleTime: 4 * 60 * 1000,
   })
 }

@@ -2,7 +2,11 @@ import { type CSSProperties, useEffect, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
 import Sidebar from "@/components/shared/Sidebar"
 import { getCompanyInitials } from "@/features/clients/helpers"
-import { useUpdateClient } from "@/features/clients/hooks"
+import {
+  useClientLogoDownloadUrl,
+  useUpdateClient,
+  useUploadClientLogo,
+} from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
 import { ApiError } from "@/lib/api-client"
 import type { Page } from "@/lib/page"
@@ -115,6 +119,13 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
 
   const { data: countries } = useCountries()
   const updateClient = useUpdateClient()
+  const uploadLogo = useUploadClientLogo()
+  const { data: logoDownload } = useClientLogoDownloadUrl(client.id, client.logoObjectKey)
+
+  useEffect(() => {
+    if (logoDownload?.downloadUrl) setLogoDataUrl(logoDownload.downloadUrl)
+    else if (!client.logoObjectKey) setLogoDataUrl("")
+  }, [logoDownload?.downloadUrl, client.logoObjectKey])
 
   useEffect(() => {
     setName(client.name)
@@ -202,6 +213,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
       if (typeof reader.result === "string") setLogoDataUrl(reader.result)
     }
     reader.readAsDataURL(file)
+    uploadLogo.mutate({ id: client.id, file })
   }
 
   return (

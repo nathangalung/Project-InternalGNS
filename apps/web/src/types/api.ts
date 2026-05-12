@@ -33,6 +33,7 @@ export type ClientRow = {
   contactPhone?: string
   totalPurchase: string
   quotationCount: number
+  logoObjectKey?: string
 }
 
 export type ContactRow = {
@@ -98,6 +99,7 @@ export type ItemRow = {
   isActive: boolean
   createdAt: string
   updatedAt: string
+  imageObjectKey?: string
 }
 
 // Tier label exposed by /items/search-advanced.
@@ -209,6 +211,7 @@ export type VendorRow = {
   updatedAt: string
   productCount: number
   totalPurchase: string
+  logoObjectKey?: string
 }
 
 export type VendorItemRow = {
@@ -506,6 +509,7 @@ export type InvoiceBackendRow = {
   rowVersion: number
   createdAt: string
   updatedAt: string
+  attachmentObjectKey?: string
 }
 
 export type InvoiceItemRow = {

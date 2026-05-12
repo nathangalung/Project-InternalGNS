@@ -62,3 +62,31 @@ export async function update(id: number, input: UpdateVendorInput): Promise<Vend
     body: input,
   })
 }
+
+export type PresignLogoUpload = {
+  uploadUrl: string
+  objectKey: string
+  expiresAt: number
+}
+
+export type PresignLogoDownload = {
+  downloadUrl: string
+  expiresAt: number
+}
+
+export async function presignLogoUpload(id: number, fileName: string): Promise<PresignLogoUpload> {
+  const qs = new URLSearchParams({ fileName }).toString()
+  return apiRequest<PresignLogoUpload>({ path: `/vendors/${id}/logo/upload-url?${qs}` })
+}
+
+export async function presignLogoDownload(id: number): Promise<PresignLogoDownload> {
+  return apiRequest<PresignLogoDownload>({ path: `/vendors/${id}/logo/download-url` })
+}
+
+export async function updateLogo(id: number, objectKey: string): Promise<void> {
+  await apiRequest<void>({
+    path: `/vendors/${id}/logo`,
+    method: "PATCH",
+    body: { objectKey },
+  })
+}
