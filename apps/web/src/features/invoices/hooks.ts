@@ -18,14 +18,6 @@ export function useInvoiceSummary() {
   })
 }
 
-export function useInvoice(id: number | undefined) {
-  return useQuery({
-    queryKey: id ? queryKeys.invoices.detail(id) : queryKeys.invoices.all,
-    queryFn: () => invApi.get(id as number),
-    enabled: id !== undefined && id > 0,
-  })
-}
-
 export function useInvoiceItems(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.invoices.items(id) : queryKeys.invoices.all,
@@ -47,22 +39,6 @@ export function useChangeInvoiceStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: number; status: InvoiceBackendStatus }) =>
       invApi.changeStatus(id, status),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.invoices.all }),
-  })
-}
-
-export function useUpdateInvoiceDates() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({
-      id,
-      payload,
-      rowVersion,
-    }: {
-      id: number
-      payload: { invoiceDate?: string; dueDate?: string }
-      rowVersion: number
-    }) => invApi.updateDates(id, payload, rowVersion),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.invoices.all }),
   })
 }

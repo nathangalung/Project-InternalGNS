@@ -49,20 +49,6 @@ export function useChangePoStatus() {
   })
 }
 
-export function useUpdatePoFile() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({
-      id,
-      payload,
-    }: {
-      id: number
-      payload: { fileName: string; fileSize: number; objectKey: string }
-    }) => poApi.updateFile(id, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all }),
-  })
-}
-
 // Full presigned upload flow: request URL, PUT file, persist metadata.
 export function useUploadPoFile() {
   const qc = useQueryClient()
@@ -76,14 +62,6 @@ export function useUploadPoFile() {
         objectKey: presign.objectKey,
       })
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all }),
-  })
-}
-
-export function useUpdatePoNotes() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, notes }: { id: number; notes: string }) => poApi.updateNotes(id, notes),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all }),
   })
 }

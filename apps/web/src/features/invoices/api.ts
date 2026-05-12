@@ -31,10 +31,6 @@ export async function summary(): Promise<InvoiceSummary> {
   return apiRequest<InvoiceSummary>({ path: "/invoices/summary" })
 }
 
-export async function get(id: number): Promise<InvoiceBackendRow> {
-  return apiRequest<InvoiceBackendRow>({ path: `/invoices/${id}` })
-}
-
 export async function listItems(id: number): Promise<InvoiceItemRow[]> {
   return apiRequest<InvoiceItemRow[]>({ path: `/invoices/${id}/items` })
 }
@@ -57,18 +53,5 @@ export async function changeStatus(id: number, status: InvoiceBackendStatus): Pr
     path: `/invoices/${id}/status`,
     method: "PATCH",
     body: { status },
-  })
-}
-
-export async function updateDates(
-  id: number,
-  payload: { invoiceDate?: string; dueDate?: string },
-  rowVersion: number,
-): Promise<{ rowVersion: number }> {
-  return apiRequest<{ rowVersion: number }>({
-    path: `/invoices/${id}/dates`,
-    method: "PATCH",
-    body: payload,
-    headers: { "If-Match": String(rowVersion) },
   })
 }

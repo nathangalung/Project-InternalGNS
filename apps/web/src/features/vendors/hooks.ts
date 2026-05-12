@@ -18,14 +18,6 @@ export function useVendor(id: number | undefined) {
   })
 }
 
-export function useVendorSearch(q: string, options: { minScore?: number; limit?: number } = {}) {
-  return useQuery({
-    queryKey: queryKeys.vendors.search(q),
-    queryFn: () => vendorsApi.search(q, options),
-    enabled: q.trim().length > 0,
-  })
-}
-
 export function useVendorItems(vendorId: number | undefined) {
   return useQuery({
     queryKey: vendorId ? queryKeys.vendors.items(vendorId) : queryKeys.vendors.all,

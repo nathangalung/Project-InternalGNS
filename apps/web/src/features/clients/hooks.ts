@@ -33,14 +33,6 @@ export function useClientSearch(q: string, options: { minScore?: number; limit?:
   })
 }
 
-export function useClientContacts(companyId: number | undefined) {
-  return useQuery({
-    queryKey: companyId ? queryKeys.clients.contacts(companyId) : queryKeys.clients.all,
-    queryFn: () => clientsApi.listContacts(companyId as number),
-    enabled: companyId !== undefined && companyId > 0,
-  })
-}
-
 export function useCreateClient() {
   const qc = useQueryClient()
   return useMutation({

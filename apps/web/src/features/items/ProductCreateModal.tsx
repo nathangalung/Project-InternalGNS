@@ -2,7 +2,7 @@ import { type CSSProperties, useMemo, useState } from "react"
 import { useCreateItem } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
 
-export interface ProductCreateModalData {
+interface ProductCreateModalData {
   nama: string
   kode: string
   satuan: string

@@ -68,13 +68,6 @@ export async function changeStatus(
   })
 }
 
-export async function send(id: number): Promise<void> {
-  await apiRequest<void>({
-    path: `/quotations/${id}/send`,
-    method: "POST",
-  })
-}
-
 export async function listRevisions(id: number): Promise<QuotationRevisionRow[]> {
   return apiRequest<QuotationRevisionRow[]>({ path: `/quotations/${id}/revisions` })
 }

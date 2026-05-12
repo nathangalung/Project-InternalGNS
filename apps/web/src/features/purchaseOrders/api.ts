@@ -102,14 +102,6 @@ export async function uploadToPresignedUrl(uploadUrl: string, file: File): Promi
   }
 }
 
-export async function updateNotes(id: number, notes: string): Promise<void> {
-  await apiRequest<void>({
-    path: `/purchase-orders/${id}/notes`,
-    method: "PATCH",
-    body: { notes },
-  })
-}
-
 export async function updateItems(
   id: number,
   input: PoUpdateItemsInput,

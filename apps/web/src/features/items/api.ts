@@ -1,10 +1,8 @@
 import { apiList, apiRequest, type PaginatedList } from "@/lib/api-client"
 import type {
   AdvancedSearchResponse,
-  ItemMatchHit,
   ItemPriceHistoryRow,
   ItemRow,
-  ItemSearchHit,
   ItemVendorRow,
   MatchRowInput,
   MatchRowsResponse,
@@ -53,16 +51,6 @@ export async function update(id: number, input: UpdateItemInput): Promise<ItemRo
   })
 }
 
-export async function search(
-  q: string,
-  options: { minScore?: number; limit?: number } = {},
-): Promise<ItemSearchHit[]> {
-  const params = new URLSearchParams({ q })
-  if (options.minScore !== undefined) params.set("minScore", String(options.minScore))
-  if (options.limit !== undefined) params.set("limit", String(options.limit))
-  return apiRequest<ItemSearchHit[]>({ path: `/items/search?${params.toString()}` })
-}
-
 // Multi-source search: items + vendor offers + request history.
 // Tier ranks: ITEM_AUTO > VENDOR_OFFER > ITEM_SUGGESTED > REQUEST_HISTORY > ITEM_FUZZY.
 export async function searchAdvanced(
@@ -73,14 +61,6 @@ export async function searchAdvanced(
   if (options.minScore !== undefined) params.set("minScore", String(options.minScore))
   if (options.limit !== undefined) params.set("limit", String(options.limit))
   return apiRequest<AdvancedSearchResponse>({ path: `/items/search-advanced?${params.toString()}` })
-}
-
-export async function matchRequest(reqText: string, limit?: number): Promise<ItemMatchHit[]> {
-  return apiRequest<ItemMatchHit[]>({
-    path: "/items/match-request",
-    method: "POST",
-    body: { reqText, limit: limit ?? 5 },
-  })
 }
 
 export async function matchRows(

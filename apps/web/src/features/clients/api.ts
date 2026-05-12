@@ -44,10 +44,6 @@ export async function search(
   return apiRequest<ClientSearchHit[]>({ path: `/clients/search?${params.toString()}` })
 }
 
-export async function listContacts(companyId: number): Promise<ContactRow[]> {
-  return apiRequest<ContactRow[]>({ path: `/clients/${companyId}/contacts` })
-}
-
 type CreateClientInput = {
   number?: string
   name: string

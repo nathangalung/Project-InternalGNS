@@ -2,7 +2,7 @@ export type Role = "superadmin" | "operational" | "finance"
 
 export type CanonicalStatus = "draft" | "sent" | "accepted" | "rejected" | "revision" | "expired"
 
-export type MeUser = {
+type MeUser = {
   id: number
   email: string
   name: string
@@ -100,15 +100,6 @@ export type ItemRow = {
   updatedAt: string
 }
 
-export type ItemSearchHit = {
-  id: number
-  name: string
-  impaCode?: string
-  defaultUnitId?: number
-  score: number
-  matchTier: string
-}
-
 // Tier label exposed by /items/search-advanced.
 export type AdvancedSearchTier =
   | "ITEM_AUTO"
@@ -138,14 +129,6 @@ export type AdvancedSearchResponse = {
   counts: Partial<Record<AdvancedSearchTier, number>>
 }
 
-export type ItemMatchHit = {
-  itemId: number
-  itemName: string
-  impaCode?: string
-  confidence: number
-  source: string
-}
-
 // Batch row match for xlsx upload.
 export type MatchRowInput = {
   impaCode: string
@@ -154,7 +137,7 @@ export type MatchRowInput = {
   unit: string
 }
 
-export type MatchedItemWithVendor = {
+type MatchedItemWithVendor = {
   itemId: number
   itemName: string
   impaCode?: string
@@ -166,7 +149,7 @@ export type MatchedItemWithVendor = {
   costPrice?: string
 }
 
-export type MatchRowResult = {
+type MatchRowResult = {
   index: number
   requested: MatchRowInput
   matched?: MatchedItemWithVendor
@@ -226,15 +209,6 @@ export type VendorRow = {
   updatedAt: string
   productCount: number
   totalPurchase: string
-}
-
-export type VendorSearchHit = {
-  vendorId: number
-  vendorName: string
-  location?: string
-  contactInfo?: VendorContactInfo
-  score: number
-  matchTier: string
 }
 
 export type VendorItemRow = {

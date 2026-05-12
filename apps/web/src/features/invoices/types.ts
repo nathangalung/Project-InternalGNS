@@ -1,12 +1,5 @@
 export type InvoiceStatus = "DRAF" | "DIKIRIM" | "DIBAYAR" | "TERLAMBAT"
 
-export interface InvoiceLocalRecord {
-  status: InvoiceStatus
-  dueDate?: string // ISO yyyy-mm-dd
-  paidAt?: string
-  sentAt?: string
-}
-
 export interface InvoiceRow {
   id: number
   quotationId: number

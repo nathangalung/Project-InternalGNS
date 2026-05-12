@@ -71,17 +71,6 @@ export function useChangeQuotationStatus() {
   })
 }
 
-export function useSendQuotation() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (id: number) => quotationsApi.send(id),
-    onSuccess: (_, id) => {
-      qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) })
-      qc.invalidateQueries({ queryKey: queryKeys.quotations.all })
-    },
-  })
-}
-
 export function useQuotationRevisions(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.quotations.revisions(id) : queryKeys.quotations.all,

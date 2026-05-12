@@ -18,14 +18,6 @@ export function useItem(id: number | undefined) {
   })
 }
 
-export function useItemSearch(q: string, options: { minScore?: number; limit?: number } = {}) {
-  return useQuery({
-    queryKey: queryKeys.items.search(q),
-    queryFn: () => itemsApi.search(q, options),
-    enabled: q.trim().length > 0,
-  })
-}
-
 // Multi-source advanced search. keepPreviousData prevents UI flicker
 // while user types (per TanStack Query v5 paginated-queries guidance).
 export function useItemSearchAdvanced(
@@ -54,13 +46,6 @@ export function useItemPriceHistory(itemId: number | undefined, limit?: number) 
     queryKey: itemId ? queryKeys.items.priceHistory(itemId, limit) : queryKeys.items.all,
     queryFn: () => itemsApi.priceHistory(itemId as number, { limit }),
     enabled: itemId !== undefined && itemId > 0,
-  })
-}
-
-export function useMatchRequest() {
-  return useMutation({
-    mutationFn: ({ reqText, limit }: { reqText: string; limit?: number }) =>
-      itemsApi.matchRequest(reqText, limit),
   })
 }
 

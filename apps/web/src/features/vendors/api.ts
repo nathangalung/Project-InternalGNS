@@ -1,5 +1,5 @@
 import { apiList, apiRequest, type PaginatedList } from "@/lib/api-client"
-import type { VendorContactInfo, VendorItemRow, VendorRow, VendorSearchHit } from "@/types/api"
+import type { VendorContactInfo, VendorItemRow, VendorRow } from "@/types/api"
 
 export type VendorListParams = {
   q?: string
@@ -28,16 +28,6 @@ export async function list(params: VendorListParams = {}): Promise<PaginatedList
 
 export async function get(id: number): Promise<VendorRow> {
   return apiRequest<VendorRow>({ path: `/vendors/${id}` })
-}
-
-export async function search(
-  q: string,
-  options: { minScore?: number; limit?: number } = {},
-): Promise<VendorSearchHit[]> {
-  const params = new URLSearchParams({ q })
-  if (options.minScore !== undefined) params.set("minScore", String(options.minScore))
-  if (options.limit !== undefined) params.set("limit", String(options.limit))
-  return apiRequest<VendorSearchHit[]>({ path: `/vendors/search?${params.toString()}` })
 }
 
 export async function listItems(vendorId: number): Promise<VendorItemRow[]> {
