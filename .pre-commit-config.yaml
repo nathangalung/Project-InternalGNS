@@ -1,0 +1,56 @@
+# Pre-commit hooks. Install once:
+#   make hooks-install      (uses `uv tool install pre-commit` under the hood)
+# Then every `git commit` runs these against the staged diff. Run across the
+# whole repo with `make hooks-run`.
+
+default_install_hook_types: [pre-commit]
+default_stages: [pre-commit]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.svg$'
+      - id: end-of-file-fixer
+        exclude: '\.svg$'
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=1024']
+      - id: check-yaml
+        args: ['--allow-multiple-documents']
+
+  # Frontend: biome handles format + lint + organize-imports in one pass.
+  # --write mutates files; if the hook changes anything, pre-commit aborts
+  # the commit and shows the diff so the user re-stages.
+  - repo: local
+    hooks:
+      - id: biome
+        name: biome check (FE)
+        language: system
+        entry: bash -c 'cd apps/web && bun x @biomejs/biome check --write src'
+        files: '^apps/web/src/.*\.(ts|tsx|js|jsx|json|css)$'
+        pass_filenames: false
+
+      # gofmt -s -w canonicalizes the formatting + applies simple simplifications.
+      - id: gofmt
+        name: gofmt -s (API)
+        language: system
+        entry: gofmt -s -w
+        files: '^apps/api/.*\.go$'
+        pass_filenames: true
+
+      # golangci-lint v2: --fast-only runs only the linters declared "fast" in
+      # config (typically the formatters + govet + ineffassign). Full lint
+      # still runs in CI; the pre-commit gate catches the cheap stuff.
+      - id: golangci-lint
+        name: golangci-lint --fast-only (API)
+        language: system
+        entry: bash -c 'cd apps/api && golangci-lint run --fast-only --timeout 2m ./...'
+        files: '^apps/api/.*\.go$'
+        pass_filenames: false
+
+# No SQL linter: existing queries predate any style enforcement; sqlfluff-fix
+# strips aliases on building-block queries (e.g. `FROM quotations q` extended
+# at runtime), and lint-only is too noisy to be a useful gate. Acceptance +
+# integration tests exercise every query and catch real correctness bugs.

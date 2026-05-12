@@ -65,9 +65,9 @@ func TestStore_GetReturnsSQL(t *testing.T) {
 
 func TestParseHeader(t *testing.T) {
 	cases := []struct {
-		line    string
-		want    string
-		wantOK  bool
+		line   string
+		want   string
+		wantOK bool
 	}{
 		{"-- name: foo.bar", "foo.bar", true},
 		{"-- name:   spaced  ", "spaced", true},

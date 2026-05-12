@@ -182,6 +182,8 @@ make dev          # work
 | `make test-web` | TypeScript typecheck |
 | `make lint` | Lint api (go vet + golangci-lint) + web (biome) |
 | `make fmt` | Format api (gofmt) + web (biome) |
+| `make hooks-install` | Install pre-commit hooks (one-time) |
+| `make hooks-run` | Run all pre-commit hooks across the repo |
 | `make sqlc` | Regenerate sqlc code |
 | `make tidy` | `go mod tidy` |
 | `make docker-build` | Build api + web container images |

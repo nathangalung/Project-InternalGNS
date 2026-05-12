@@ -8,6 +8,7 @@
         build build-api build-web \
         test test-api test-web \
         lint fmt \
+        hooks-install hooks-run \
         docker-build docker-build-api docker-build-web \
         orphan-blobs-dry orphan-blobs-purge \
         clean
@@ -171,6 +172,17 @@ lint: ## Lint api and web
 fmt: ## Format api and web
 	cd $(API_DIR) && gofmt -w -s .
 	cd $(WEB_DIR) && bun run format
+
+# Pre-commit hooks (.pre-commit-config.yaml). Uses `uv tool` to manage
+# the pre-commit binary so the repo stays python-toolchain-free.
+hooks-install: ## Install git pre-commit hooks (auto-installs pre-commit via uv)
+	@command -v uv >/dev/null 2>&1 || { echo "missing: uv (https://docs.astral.sh/uv/)"; exit 1; }
+	@command -v pre-commit >/dev/null 2>&1 || uv tool install pre-commit
+	pre-commit install
+
+hooks-run: ## Run all hooks against every file (CI-style sweep)
+	@command -v pre-commit >/dev/null 2>&1 || { echo "run: make hooks-install"; exit 1; }
+	pre-commit run --all-files
 
 # Container images.
 docker-build: docker-build-api docker-build-web ## Build api and web images
