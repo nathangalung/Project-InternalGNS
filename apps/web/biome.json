@@ -16,7 +16,6 @@
       "!**/routeTree.gen.ts",
       "!**/dist",
       "!**/node_modules",
-      "!**/components/**",
       "!**/data/**",
       "!**/styles/**"
     ]

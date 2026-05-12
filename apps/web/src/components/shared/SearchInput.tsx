@@ -26,7 +26,7 @@ export default function SearchInput({ value, onChange, placeholder }: SearchInpu
         className="search-input"
         placeholder={placeholder}
         value={value}
-        onChange={e => onChange(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
       />
     </div>
   )
