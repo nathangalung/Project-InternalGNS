@@ -1,4 +1,5 @@
 import { type CSSProperties, useMemo, useState } from "react"
+import FilterButton from "@/components/shared/FilterButton"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
@@ -180,23 +181,7 @@ export default function PurchaseOrderList({
               }}
               placeholder="Cari purchase order, klien, atau nomor..."
             />
-            <button className="btn-admin-filter" onClick={() => setShowFilter(true)}>
-              <svg
-                viewBox="0 0 24 24"
-                width="16"
-                height="16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="4" y1="6" x2="20" y2="6" />
-                <line x1="7" y1="12" x2="17" y2="12" />
-                <line x1="10" y1="18" x2="14" y2="18" />
-              </svg>
-              Filter
-            </button>
+            <FilterButton onClick={() => setShowFilter(true)} />
           </div>
 
           <div className="tbl-container">

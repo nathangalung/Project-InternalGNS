@@ -1,3 +1,5 @@
+import FilterButton from "@/components/shared/FilterButton"
+
 interface SearchBarProps {
   search: string
   onSearch: (v: string) => void
@@ -31,23 +33,7 @@ export default function SearchBar({ search, onSearch, onOpenFilter }: SearchBarP
           onChange={(e) => onSearch(e.target.value)}
         />
       </div>
-      <button className="btn-admin-filter" onClick={onOpenFilter}>
-        <svg
-          viewBox="0 0 24 24"
-          width="16"
-          height="16"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <line x1="4" y1="6" x2="20" y2="6" />
-          <line x1="7" y1="12" x2="17" y2="12" />
-          <line x1="10" y1="18" x2="14" y2="18" />
-        </svg>
-        Filter
-      </button>
+      <FilterButton onClick={onOpenFilter} />
     </div>
   )
 }
