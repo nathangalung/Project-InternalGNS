@@ -8,6 +8,12 @@ import (
 
 // All query keys repos require.
 var RequiredKeys = []string{
+	"auth.refresh_insert",
+	"auth.refresh_lookup",
+	"auth.refresh_purge_expired",
+	"auth.refresh_redeem",
+	"auth.refresh_revoke_token",
+	"auth.refresh_revoke_user",
 	"clients.create",
 	"clients.create_contact",
 	"clients.get_by_id",

@@ -19,19 +19,31 @@ var (
 )
 
 type Service struct {
-	users  *users.Repo
-	secret []byte
-	expiry time.Duration
-	issuer string
+	users         *users.Repo
+	refresh       *RefreshRepo
+	secret        []byte
+	expiry        time.Duration
+	refreshExpiry time.Duration
+	issuer        string
 }
 
 func NewService(repo *users.Repo, secret string, expiry time.Duration) *Service {
 	return &Service{
-		users:  repo,
-		secret: []byte(secret),
-		expiry: expiry,
-		issuer: "internalgns-api",
+		users:         repo,
+		secret:        []byte(secret),
+		expiry:        expiry,
+		refreshExpiry: 0,
+		issuer:        "internalgns-api",
 	}
+}
+
+// WithRefresh enables refresh-token issuance + rotation. Without it, Login
+// still works but returns an empty RefreshToken (back-compat for callers
+// that don't wire the table yet).
+func (s *Service) WithRefresh(repo *RefreshRepo, expiry time.Duration) *Service {
+	s.refresh = repo
+	s.refreshExpiry = expiry
+	return s
 }
 
 type Claims struct {
@@ -89,11 +101,109 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 		return LoginResponse{}, err
 	}
 
-	return LoginResponse{
+	resp := LoginResponse{
 		Token:     signed,
 		ExpiresAt: expiresAt.Unix(),
 		User:      toMeUser(u),
+	}
+	if s.refresh != nil {
+		raw, hash, err := generateRefreshToken()
+		if err != nil {
+			return LoginResponse{}, err
+		}
+		refreshExpiresAt := now.Add(s.refreshExpiry)
+		if err := s.refresh.insert(ctx, u.ID, hash, refreshExpiresAt); err != nil {
+			return LoginResponse{}, err
+		}
+		resp.RefreshToken = raw
+		resp.RefreshExpiresAt = refreshExpiresAt.Unix()
+	}
+	return resp, nil
+}
+
+// Refresh redeems an opaque refresh token, rotating it and re-issuing the
+// JWT + a fresh refresh token. Reuse of an already-redeemed token triggers
+// revocation of every active refresh token for that user.
+func (s *Service) Refresh(ctx context.Context, raw string) (LoginResponse, error) {
+	if s.refresh == nil {
+		return LoginResponse{}, ErrInvalidRefresh
+	}
+	if raw == "" {
+		return LoginResponse{}, ErrInvalidRefresh
+	}
+	hash := hashRefreshToken(raw)
+
+	_, userID, err := s.refresh.redeem(ctx, hash)
+	if err != nil {
+		st, lookupErr := s.refresh.lookup(ctx, hash)
+		if lookupErr != nil {
+			return LoginResponse{}, lookupErr
+		}
+		if !st.found {
+			return LoginResponse{}, ErrInvalidRefresh
+		}
+		if st.revoked {
+			// Active token's hash matched a revoked one: classic reuse.
+			// Blast all of this user's refresh tokens.
+			if err := s.refresh.revokeAllForUser(ctx, st.userID); err != nil {
+				return LoginResponse{}, err
+			}
+			return LoginResponse{}, ErrReusedRefresh
+		}
+		return LoginResponse{}, ErrExpiredRefresh
+	}
+
+	u, err := s.users.GetByID(ctx, userID)
+	if errors.Is(err, users.ErrNotFound) {
+		return LoginResponse{}, ErrInvalidRefresh
+	}
+	if err != nil {
+		return LoginResponse{}, err
+	}
+
+	now := time.Now()
+	expiresAt := now.Add(s.expiry)
+	claims := Claims{
+		Role: u.Role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    s.issuer,
+			Subject:   fmt.Sprintf("%d", u.ID),
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+		},
+	}
+	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(s.secret)
+	if err != nil {
+		return LoginResponse{}, err
+	}
+
+	rawNext, hashNext, err := generateRefreshToken()
+	if err != nil {
+		return LoginResponse{}, err
+	}
+	refreshExpiresAt := now.Add(s.refreshExpiry)
+	if err := s.refresh.insert(ctx, u.ID, hashNext, refreshExpiresAt); err != nil {
+		return LoginResponse{}, err
+	}
+
+	return LoginResponse{
+		Token:            signed,
+		ExpiresAt:        expiresAt.Unix(),
+		RefreshToken:     rawNext,
+		RefreshExpiresAt: refreshExpiresAt.Unix(),
+		User:             toMeUser(u),
 	}, nil
+}
+
+// RevokeRefresh marks a specific refresh token revoked. Silent no-op when
+// the token is already revoked, expired, or unknown — logout must succeed
+// even on a stale tab.
+func (s *Service) RevokeRefresh(ctx context.Context, raw string) error {
+	if s.refresh == nil || raw == "" {
+		return nil
+	}
+	return s.refresh.revokeToken(ctx, hashRefreshToken(raw))
 }
 
 func (s *Service) Verify(tokenStr string) (Claims, error) {

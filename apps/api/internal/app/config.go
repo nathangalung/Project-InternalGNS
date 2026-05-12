@@ -13,8 +13,9 @@ type Config struct {
 	Env         string        `env:"ENV"           envDefault:"development"`
 	HTTPAddr    string        `env:"HTTP_ADDR"     envDefault:":8080"`
 	DatabaseURL string        `env:"DATABASE_URL,required"`
-	JWTSecret   string        `env:"JWT_SECRET,required"`
-	JWTExpiry   time.Duration `env:"JWT_EXPIRY"    envDefault:"24h"`
+	JWTSecret           string        `env:"JWT_SECRET,required"`
+	JWTExpiry           time.Duration `env:"JWT_EXPIRY"           envDefault:"24h"`
+	RefreshTokenExpiry  time.Duration `env:"REFRESH_TOKEN_EXPIRY" envDefault:"720h"`
 
 	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envDefault:"*" envSeparator:","`
 

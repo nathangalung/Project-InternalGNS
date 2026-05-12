@@ -18,7 +18,7 @@ function LoginRoute() {
     <Login
       onLogin={async (email, password) => {
         const resp = await auth.login(email, password)
-        login(resp.token)
+        login({ token: resp.token, refreshToken: resp.refreshToken })
         void navigate({ to: "/" })
       }}
     />

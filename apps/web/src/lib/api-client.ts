@@ -1,5 +1,9 @@
 const BASE_URL = (import.meta.env.VITE_API_URL ?? "/api/v1").replace(/\/+$/, "")
 
+const TOKEN_KEY = "gns_token"
+const REFRESH_KEY = "gns_refresh_token"
+const REFRESH_PATH = "/auth/refresh"
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -19,6 +23,85 @@ type RequestInput = {
   headers?: Record<string, string>
 }
 
+type TokenPair = { token: string; refreshToken?: string }
+
+// Token storage: sessionStorage means refresh-on-tab-close. The trade-off vs
+// httpOnly cookies is accepted (no CSRF surface, XSS surface in exchange);
+// document that decision in the auth section of round3_plan.md.
+export function setTokens(pair: TokenPair): void {
+  sessionStorage.setItem(TOKEN_KEY, pair.token)
+  if (pair.refreshToken) {
+    sessionStorage.setItem(REFRESH_KEY, pair.refreshToken)
+  }
+}
+
+export function clearTokens(): void {
+  sessionStorage.removeItem(TOKEN_KEY)
+  sessionStorage.removeItem(REFRESH_KEY)
+}
+
+export function getRefreshToken(): string | null {
+  return sessionStorage.getItem(REFRESH_KEY)
+}
+
+async function rawFetch(path: string, init: RequestInit & { authed?: boolean }): Promise<Response> {
+  const token = init.authed === false ? null : sessionStorage.getItem(TOKEN_KEY)
+  const headers = new Headers(init.headers)
+  if (token) headers.set("authorization", `Bearer ${token}`)
+  return fetch(`${BASE_URL}${path}`, { ...init, headers })
+}
+
+// In-flight refresh dedupe: simultaneous 401s share one /auth/refresh round-trip.
+let refreshInFlight: Promise<boolean> | null = null
+
+async function performRefresh(): Promise<boolean> {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) return false
+  const res = await fetch(`${BASE_URL}${REFRESH_PATH}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  })
+  if (!res.ok) {
+    clearTokens()
+    return false
+  }
+  const parsed = (await res.json()) as { token: string; refreshToken: string }
+  sessionStorage.setItem(TOKEN_KEY, parsed.token)
+  sessionStorage.setItem(REFRESH_KEY, parsed.refreshToken)
+  return true
+}
+
+function tryRefresh(): Promise<boolean> {
+  if (!refreshInFlight) {
+    refreshInFlight = performRefresh().finally(() => {
+      refreshInFlight = null
+    })
+  }
+  return refreshInFlight
+}
+
+// fetchAuthed: hits the API with the JWT, and on 401 transparently refreshes
+// + retries the original request once. The refresh path itself bypasses this
+// to avoid recursion.
+async function fetchAuthed(
+  path: string,
+  init: RequestInit & { authed?: boolean },
+): Promise<Response> {
+  const res = await rawFetch(path, init)
+  if (res.status !== 401 || path === REFRESH_PATH || init.authed === false) {
+    return res
+  }
+  // Drain the first response body so the connection can be reused.
+  void res.body?.cancel()
+  const refreshed = await tryRefresh()
+  if (!refreshed) {
+    clearTokens()
+    return res
+  }
+  return rawFetch(path, init)
+}
+
 async function doFetch({
   path,
   method = "GET",
@@ -26,15 +109,10 @@ async function doFetch({
   signal,
   headers,
 }: RequestInput): Promise<Response> {
-  const token = sessionStorage.getItem("gns_token")
-  return fetch(`${BASE_URL}${path}`, {
+  return fetchAuthed(path, {
     method,
     signal,
-    headers: {
-      "content-type": "application/json",
-      ...(token ? { authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
+    headers: { "content-type": "application/json", ...headers },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
 }
@@ -114,11 +192,7 @@ async function downloadBinary(
   filename: string,
   pickerType: PickerType,
 ): Promise<void> {
-  const token = sessionStorage.getItem("gns_token")
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: "GET",
-    headers: token ? { authorization: `Bearer ${token}` } : undefined,
-  })
+  const res = await fetchAuthed(path, { method: "GET" })
   if (!res.ok) {
     const text = await res.text().catch(() => "")
     throw new ApiError(res.status, text, `Download failed: ${res.statusText}`)

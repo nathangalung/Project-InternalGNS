@@ -54,8 +54,43 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, resp)
 }
 
-func (h *Handler) Logout(w http.ResponseWriter, _ *http.Request) {
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	var req LogoutRequest
+	// Body is optional — old clients that haven't been redeployed still send
+	// nothing. Best-effort decode then revoke.
+	_ = json.NewDecoder(r.Body).Decode(&req)
+	if req.RefreshToken != "" {
+		if err := h.svc.RevokeRefresh(r.Context(), req.RefreshToken); err != nil {
+			httperr.RenderDBErr(w, err)
+			return
+		}
+	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var req RefreshRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	if req.RefreshToken == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"refreshToken": "required"}))
+		return
+	}
+
+	resp, err := h.svc.Refresh(r.Context(), req.RefreshToken)
+	switch {
+	case errors.Is(err, ErrInvalidRefresh),
+		errors.Is(err, ErrExpiredRefresh),
+		errors.Is(err, ErrReusedRefresh):
+		httperr.Render(w, httperr.Unauthorized(err.Error()))
+		return
+	case err != nil:
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, resp)
 }
 
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {

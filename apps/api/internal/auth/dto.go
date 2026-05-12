@@ -8,9 +8,19 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Token     string `json:"token"`
-	ExpiresAt int64  `json:"expiresAt"`
-	User      MeUser `json:"user"`
+	Token            string `json:"token"`
+	ExpiresAt        int64  `json:"expiresAt"`
+	RefreshToken     string `json:"refreshToken"`
+	RefreshExpiresAt int64  `json:"refreshExpiresAt"`
+	User             MeUser `json:"user"`
+}
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refreshToken"`
+}
+
+type LogoutRequest struct {
+	RefreshToken string `json:"refreshToken"`
 }
 
 type MeUser struct {

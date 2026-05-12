@@ -64,7 +64,8 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 		Storage: storageClient,
 	}
 
-	authSvc := auth.NewService(users.NewRepo(pool, store), cfg.JWTSecret, cfg.JWTExpiry)
+	authSvc := auth.NewService(users.NewRepo(pool, store), cfg.JWTSecret, cfg.JWTExpiry).
+		WithRefresh(auth.NewRefreshRepo(pool, store), cfg.RefreshTokenExpiry)
 	authHandler := auth.NewHandler(authSvc)
 	requireAuth := authMiddleware(authSvc)
 

@@ -104,6 +104,105 @@ func TestHandler_Logout(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, res.StatusCode)
 }
 
+// mkAuthServerWithRefresh wires the refresh repo so we can hit /auth/refresh
+// end-to-end against the real DB tx.
+func mkAuthServerWithRefresh(t *testing.T) (*httptest.Server, users.User) {
+	t.Helper()
+	ctx, tx := testutil.BeginTx(t)
+	store := testutil.Store(t)
+	repo := users.NewRepo(tx, store)
+	u, err := repo.Create(ctx, users.CreateUserRequest{
+		Email:    "auth-handler-refresh@local",
+		Name:     "Refresh Handler",
+		Password: "hpass-123",
+		Role:     users.RoleOperational,
+	}, seedUserID)
+	require.NoError(t, err)
+
+	svc := auth.NewService(repo, testSecret, time.Hour).
+		WithRefresh(auth.NewRefreshRepo(tx, store), time.Hour)
+	h := auth.NewHandler(svc)
+	r := chi.NewRouter()
+	r.Mount("/auth", auth.Routes(h, func(next http.Handler) http.Handler { return next }))
+	srv := httptest.NewServer(r)
+	t.Cleanup(srv.Close)
+	return srv, u
+}
+
+func TestHandler_Refresh_HappyPath(t *testing.T) {
+	srv, u := mkAuthServerWithRefresh(t)
+
+	// Login to mint a refresh token.
+	body, _ := json.Marshal(auth.LoginRequest{Email: u.Email, Password: "hpass-123"})
+	res, err := srv.Client().Post(srv.URL+"/auth/login", "application/json", bytes.NewReader(body))
+	require.NoError(t, err)
+	var login auth.LoginResponse
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&login))
+	res.Body.Close()
+	require.NotEmpty(t, login.RefreshToken)
+
+	// Now refresh it.
+	body, _ = json.Marshal(auth.RefreshRequest{RefreshToken: login.RefreshToken})
+	res, err = srv.Client().Post(srv.URL+"/auth/refresh", "application/json", bytes.NewReader(body))
+	require.NoError(t, err)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+
+	var rotated auth.LoginResponse
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&rotated))
+	assert.NotEqual(t, login.RefreshToken, rotated.RefreshToken)
+	assert.NotEmpty(t, rotated.Token)
+}
+
+func TestHandler_Refresh_BadJSON(t *testing.T) {
+	srv, _ := mkAuthServerWithRefresh(t)
+	res, err := srv.Client().Post(srv.URL+"/auth/refresh", "application/json", strings.NewReader("?"))
+	require.NoError(t, err)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_Refresh_Missing(t *testing.T) {
+	srv, _ := mkAuthServerWithRefresh(t)
+	body, _ := json.Marshal(auth.RefreshRequest{})
+	res, err := srv.Client().Post(srv.URL+"/auth/refresh", "application/json", bytes.NewReader(body))
+	require.NoError(t, err)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+}
+
+func TestHandler_Refresh_Unknown(t *testing.T) {
+	srv, _ := mkAuthServerWithRefresh(t)
+	body, _ := json.Marshal(auth.RefreshRequest{RefreshToken: "not-a-token"})
+	res, err := srv.Client().Post(srv.URL+"/auth/refresh", "application/json", bytes.NewReader(body))
+	require.NoError(t, err)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+}
+
+func TestHandler_Logout_WithRefreshToken(t *testing.T) {
+	srv, u := mkAuthServerWithRefresh(t)
+	body, _ := json.Marshal(auth.LoginRequest{Email: u.Email, Password: "hpass-123"})
+	res, err := srv.Client().Post(srv.URL+"/auth/login", "application/json", bytes.NewReader(body))
+	require.NoError(t, err)
+	var login auth.LoginResponse
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&login))
+	res.Body.Close()
+
+	body, _ = json.Marshal(auth.LogoutRequest{RefreshToken: login.RefreshToken})
+	res, err = srv.Client().Post(srv.URL+"/auth/logout", "application/json", bytes.NewReader(body))
+	require.NoError(t, err)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+	// The revoked token should no longer refresh — reuse is detected.
+	body, _ = json.Marshal(auth.RefreshRequest{RefreshToken: login.RefreshToken})
+	res, err = srv.Client().Post(srv.URL+"/auth/refresh", "application/json", bytes.NewReader(body))
+	require.NoError(t, err)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+}
+
 func TestHandler_Me(t *testing.T) {
 	srv, u, _ := mkAuthServer(t)
 	req, _ := http.NewRequest(http.MethodGet, srv.URL+"/auth/me", nil)

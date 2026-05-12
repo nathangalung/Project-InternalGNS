@@ -12,8 +12,12 @@ type MeUser = {
 export type LoginResponse = {
   token: string
   expiresAt: number
+  refreshToken: string
+  refreshExpiresAt: number
   user: MeUser
 }
+
+export type RefreshResponse = LoginResponse
 
 export type ClientRow = {
   id: number
