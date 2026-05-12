@@ -5,7 +5,7 @@ import { toTableRow } from "@/features/quotations/adapters"
 import { useQuotations } from "@/features/quotations/hooks"
 import { statusConfig } from "@/features/quotations/QuotationList/helpers"
 import { formatNumber as formatId } from "@/lib/format"
-import type { Page } from "../../main"
+import type { Page } from "@/lib/page"
 import DashboardFinancialFilter, { type DashboardFilterValues } from "./DashboardFinancialFilter"
 import TrendChart, { CHART_MONTHS } from "./TrendChart"
 

@@ -9,7 +9,7 @@ import { useClientSummary, useClients } from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { formatNumber, formatRupiah } from "@/lib/format"
-import type { Page } from "@/main"
+import type { Page } from "@/lib/page"
 import type { ClientRow } from "@/types/api"
 
 interface ClientListProps {

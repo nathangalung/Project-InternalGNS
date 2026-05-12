@@ -1,5 +1,5 @@
 import type { useNavigate } from "@tanstack/react-router"
-import type { Page } from "@/main"
+import type { Page } from "@/lib/page"
 
 type Navigate = ReturnType<typeof useNavigate>
 

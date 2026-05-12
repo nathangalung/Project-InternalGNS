@@ -1,4 +1,4 @@
-import type { Page } from "@/main"
+import type { Page } from "@/lib/page"
 
 interface PageHeaderProps {
   onNavigate: (page: Page) => void

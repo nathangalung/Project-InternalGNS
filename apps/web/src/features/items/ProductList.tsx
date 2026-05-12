@@ -7,7 +7,7 @@ import ProductCreateModal from "@/features/items/ProductCreateModal"
 import ProductFilter, { type ProductFilterValues } from "@/features/items/ProductFilter"
 import { useUnits } from "@/features/units/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
-import type { Page } from "@/main"
+import type { Page } from "@/lib/page"
 import type { AdvancedSearchHit, AdvancedSearchTier, ItemRow } from "@/types/api"
 
 interface ProductListProps {

@@ -1,4 +1,4 @@
-import type { Page } from "@/main"
+import type { Page } from "@/lib/page"
 import type { InvoiceStatus } from "../types"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "../types"
 

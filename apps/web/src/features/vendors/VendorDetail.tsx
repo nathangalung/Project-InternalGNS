@@ -3,7 +3,7 @@ import Sidebar from "@/components/shared/Sidebar"
 import { useUpdateVendor, useVendorItems } from "@/features/vendors/hooks"
 import { ApiError } from "@/lib/api-client"
 import { formatRupiah } from "@/lib/format"
-import type { Page } from "@/main"
+import type { Page } from "@/lib/page"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
 
 interface VendorDetailProps {

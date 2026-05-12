@@ -6,13 +6,13 @@ import ProductAdd from "@/features/items/ProductAdd"
 import { useCreateQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
+import type { Page } from "@/lib/page"
 import type {
   ClientRow,
   ClientSearchHit,
   QuotationCreateInput,
   QuotationItemInput,
 } from "@/types/api"
-import type { Page } from "../../main"
 import DiscountModal from "./DiscountModal"
 import type { ProductItem } from "./QuotationEdit"
 import Step1Client, { type Client } from "./Step1Client"

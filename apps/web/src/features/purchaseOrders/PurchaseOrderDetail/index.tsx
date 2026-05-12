@@ -13,7 +13,7 @@ import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
 import * as vendorsApi from "@/features/vendors/api"
 import { downloadPdf, saveBlob } from "@/lib/api-client"
-import type { Page } from "@/main"
+import type { Page } from "@/lib/page"
 import { poItemsToProducts, poItemsToShipping } from "../adapters"
 import * as poApi from "../api"
 import {

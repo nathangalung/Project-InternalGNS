@@ -1,5 +1,5 @@
 import type { Status } from "@/features/quotations/types"
-import type { Page } from "@/main"
+import type { Page } from "@/lib/page"
 import { statusConfig } from "./helpers"
 
 interface HeaderProps {

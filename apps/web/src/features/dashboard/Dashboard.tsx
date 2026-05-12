@@ -2,8 +2,8 @@ import { type CSSProperties, useMemo, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { formatNumber as formatId, formatRupiah as formatRp } from "@/lib/format"
+import type { Page } from "@/lib/page"
 import type { DashboardMetric } from "@/types/api"
-import type { Page } from "../../main"
 import TrendChart, { CHART_MONTHS } from "./TrendChart"
 
 const exportBtnStyle: CSSProperties = {

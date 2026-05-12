@@ -4,7 +4,7 @@ import { useUpdateUser } from "@/features/users/hooks"
 import PasswordChecklist from "@/features/users/PasswordChecklist"
 import { passwordIsValid } from "@/features/users/password"
 import { ApiError } from "@/lib/api-client"
-import type { Page } from "@/main"
+import type { Page } from "@/lib/page"
 import type { Role, UserRow } from "@/types/api"
 
 interface UserDetailProps {

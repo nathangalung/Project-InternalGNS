@@ -11,8 +11,8 @@ import Step3Shipping from "@/features/quotations/Step3Shipping"
 import Step4Summary from "@/features/quotations/Step4Summary"
 import { useUnits } from "@/features/units/hooks"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
+import type { Page } from "@/lib/page"
 import type { ClientRow, ClientSearchHit, PoItemInput, PoUpdateItemsInput } from "@/types/api"
-import type { Page } from "../../main"
 
 function initialsOf(name: string): string {
   return name

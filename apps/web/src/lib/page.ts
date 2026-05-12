@@ -1,0 +1,18 @@
+// Page state for top-level nav.
+export type Page =
+  | "dashboard"
+  | "dashboard-financial"
+  | "dashboard-operational"
+  | "quotation"
+  | "quotation-detail"
+  | "quotation-edit"
+  | "quotation-add"
+  | "purchase-orders"
+  | "purchase-order-detail"
+  | "purchase-order-edit"
+  | "invoices"
+  | "invoice-detail"
+  | "users"
+  | "clients"
+  | "vendors"
+  | "products"

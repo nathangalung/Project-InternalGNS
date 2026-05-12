@@ -4,8 +4,8 @@ import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboar
 import { useInvoices } from "@/features/invoices/hooks"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE, type InvoiceStatus } from "@/features/invoices/types"
 import { formatDate, formatNumber as formatId, formatRupiah as formatRp } from "@/lib/format"
+import type { Page } from "@/lib/page"
 import type { DashboardMetric, InvoiceBackendRow } from "@/types/api"
-import type { Page } from "../../main"
 import DashboardFinancialFilter, { type DashboardFilterValues } from "./DashboardFinancialFilter"
 import TrendChart, { CHART_MONTHS } from "./TrendChart"
 

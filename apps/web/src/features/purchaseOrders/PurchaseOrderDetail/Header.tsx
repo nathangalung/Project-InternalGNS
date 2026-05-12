@@ -1,4 +1,4 @@
-import type { Page } from "@/main"
+import type { Page } from "@/lib/page"
 import type { PoStatus } from "../types"
 import { PO_LABEL, PO_STATUS_CONFIG } from "./helpers"
 

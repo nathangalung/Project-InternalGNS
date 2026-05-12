@@ -6,7 +6,7 @@ import { useItemVendors, useUpdateItem } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
 import { ApiError } from "@/lib/api-client"
 import { formatRupiah } from "@/lib/format"
-import type { Page } from "@/main"
+import type { Page } from "@/lib/page"
 import type { ItemRow } from "@/types/api"
 
 interface ProductDetailProps {

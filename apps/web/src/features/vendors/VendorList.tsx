@@ -8,7 +8,7 @@ import VendorAddModal from "@/features/vendors/VendorAddModal"
 import VendorFilter, { type VendorFilterValues } from "@/features/vendors/VendorFilter"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { formatRupiah } from "@/lib/format"
-import type { Page } from "@/main"
+import type { Page } from "@/lib/page"
 import type { VendorRow } from "@/types/api"
 
 interface VendorListProps {

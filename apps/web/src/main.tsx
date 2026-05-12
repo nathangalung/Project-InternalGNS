@@ -9,25 +9,6 @@ import "./styles/tailwind.css"
 import "./styles/design-tokens.css"
 import "./styles/admin.css"
 
-// Page state for nav.
-export type Page =
-  | "dashboard"
-  | "dashboard-financial"
-  | "dashboard-operational"
-  | "quotation"
-  | "quotation-detail"
-  | "quotation-edit"
-  | "quotation-add"
-  | "purchase-orders"
-  | "purchase-order-detail"
-  | "purchase-order-edit"
-  | "invoices"
-  | "invoice-detail"
-  | "users"
-  | "clients"
-  | "vendors"
-  | "products"
-
 const router = createRouter({
   routeTree,
   defaultPreload: "intent",

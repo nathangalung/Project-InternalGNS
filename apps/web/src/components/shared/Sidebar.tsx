@@ -1,4 +1,4 @@
-import type { Page } from "../../main";
+import type { Page } from "@/lib/page";
 
 const logoImg = "/logo.png";
 

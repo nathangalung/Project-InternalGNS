@@ -4,7 +4,7 @@ import Sidebar from "@/components/shared/Sidebar"
 import { useUpdateClient } from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
 import { ApiError } from "@/lib/api-client"
-import type { Page } from "@/main"
+import type { Page } from "@/lib/page"
 import type { ClientRow } from "@/types/api"
 
 interface ClientDetailProps {
