@@ -7,11 +7,14 @@ RETURNING id;
 -- Atomically revoke an active, non-expired refresh token and return its
 -- (id, user_id). 0 rows means it does not exist, is expired, or was already
 -- revoked — the caller distinguishes via refresh_lookup.
+-- expires_at is compared against clock_timestamp() (real wall-clock at
+-- statement time) so a long-running tx cannot resurrect a token that
+-- expired mid-transaction.
 UPDATE refresh_tokens
-SET revoked_at = now()
+SET revoked_at = clock_timestamp()
 WHERE token_hash = $1
   AND revoked_at IS NULL
-  AND expires_at > now()
+  AND expires_at > clock_timestamp()
 RETURNING id, user_id;
 
 -- name: auth.refresh_lookup
