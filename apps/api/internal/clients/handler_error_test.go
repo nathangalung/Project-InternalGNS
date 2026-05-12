@@ -39,7 +39,7 @@ func TestHandler_ErrorPaths(t *testing.T) {
 		{"create", http.MethodPost, "/clients/",
 			clients.CreateClientRequest{Name: "X"}, http.StatusInternalServerError},
 		{"create_contact", http.MethodPost, "/clients/1/contacts",
-			clients.CreateContactRequest{Name: "X"}, http.StatusBadRequest},
+			clients.CreateContactRequest{Name: "X"}, http.StatusInternalServerError},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

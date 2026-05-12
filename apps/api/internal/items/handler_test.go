@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -116,6 +117,50 @@ func TestHandler_Search_BadParams(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
 
+func TestHandler_SearchAdvanced(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/items/search-advanced?q=bearing&limit=5", nil)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+
+	var body items.AdvancedSearchResponse
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&body))
+	assert.Equal(t, "bearing", body.Query)
+	// tier weights guarantee ITEM_AUTO before VENDOR_OFFER before REQUEST_HISTORY.
+	for i := 1; i < len(body.Hits); i++ {
+		prev, curr := body.Hits[i-1], body.Hits[i]
+		assert.True(t, tierGE(prev.Tier, curr.Tier),
+			"tier order broken: %s before %s", prev.Tier, curr.Tier)
+	}
+}
+
+func TestHandler_SearchAdvanced_MissingQ(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/items/search-advanced", nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_SearchAdvanced_BadParams(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/items/search-advanced?q=bearing&minScore=junk&limit=zero", nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+}
+
+// tierGE returns true when a's tier weight >= b's, matching the
+// production ordering inside SearchAdvanced.
+func tierGE(a, b string) bool {
+	rank := map[string]int{
+		"ITEM_AUTO":       5,
+		"VENDOR_OFFER":    4,
+		"ITEM_SUGGESTED":  3,
+		"REQUEST_HISTORY": 2,
+		"ITEM_FUZZY":      1,
+	}
+	return rank[a] >= rank[b]
+}
+
 func TestHandler_MatchRequest(t *testing.T) {
 	srv := newSrv(t)
 	body := items.MatchRequest{ReqText: "PUNCHING TOOL", Limit: 5}
@@ -189,4 +234,203 @@ func TestHandler_PriceHistory_BadLimitFallback(t *testing.T) {
 	res := doJSON(t, srv, http.MethodGet, "/items/1/price-history?limit=junk", nil)
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusOK, res.StatusCode)
+}
+
+func TestHandler_Update_BadID(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPut, "/items/abc", items.UpdateItemRequest{Name: "X"})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_Update_BadJSON(t *testing.T) {
+	srv := newSrv(t)
+	req, _ := http.NewRequest(http.MethodPut, srv.URL+"/items/1", strings.NewReader("?"))
+	req.Header.Set("Content-Type", "application/json")
+	res, err := srv.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_Update_EmptyName(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPut, "/items/1", items.UpdateItemRequest{Name: ""})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+}
+
+func TestHandler_Update_NotFound(t *testing.T) {
+	srv := newSrv(t)
+	body := items.UpdateItemRequest{Name: "X", IsActive: true}
+	res := doJSON(t, srv, http.MethodPut, "/items/9999999", body)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+}
+
+func TestHandler_Update_OK(t *testing.T) {
+	srv := newSrv(t)
+	created := doJSON(t, srv, http.MethodPost, "/items/", items.CreateItemRequest{Name: "UPD ITEM"})
+	require.Equal(t, http.StatusCreated, created.StatusCode)
+	var it items.Item
+	require.NoError(t, json.NewDecoder(created.Body).Decode(&it))
+	created.Body.Close()
+
+	body := items.UpdateItemRequest{Name: "UPD ITEM RENAMED", IsActive: true}
+	res := doJSON(t, srv, http.MethodPut, "/items/"+itoa(it.ID), body)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+}
+
+func TestHandler_AddVendor_BadID(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPost, "/items/abc/vendors", items.AddVendorToItemRequest{VendorID: 1})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_AddVendor_BadJSON(t *testing.T) {
+	srv := newSrv(t)
+	req, _ := http.NewRequest(http.MethodPost, srv.URL+"/items/1/vendors", strings.NewReader("?"))
+	req.Header.Set("Content-Type", "application/json")
+	res, err := srv.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_AddVendor_MissingVendor(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPost, "/items/1/vendors", items.AddVendorToItemRequest{})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+}
+
+func TestHandler_AddVendor_RepoError(t *testing.T) {
+	srv := newSrv(t)
+	body := items.AddVendorToItemRequest{VendorID: 9999999}
+	res := doJSON(t, srv, http.MethodPost, "/items/9999999/vendors", body)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+}
+
+func TestHandler_MatchRows_BadJSON(t *testing.T) {
+	srv := newSrv(t)
+	req, _ := http.NewRequest(http.MethodPost, srv.URL+"/items/match-rows", strings.NewReader("?"))
+	req.Header.Set("Content-Type", "application/json")
+	res, err := srv.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_MatchRows_Empty(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", items.MatchRowsRequest{})
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var out items.MatchRowsResponse
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&out))
+	assert.Empty(t, out.Rows)
+}
+
+func TestHandler_MatchRows_IMPAExact(t *testing.T) {
+	srv := newSrv(t)
+	body := items.MatchRowsRequest{
+		Rows: []items.MatchRowInput{
+			{IMPACode: "TF9000001", Name: "Test Fixture Item", Qty: 1, Unit: "PCS"},
+		},
+	}
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", body)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var out items.MatchRowsResponse
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&out))
+	require.Len(t, out.Rows, 1)
+	require.NotNil(t, out.Rows[0].Matched)
+	assert.Equal(t, "IMPA_EXACT", out.Rows[0].Source)
+}
+
+func TestHandler_MatchRows_FuzzyFallback(t *testing.T) {
+	srv := newSrv(t)
+	body := items.MatchRowsRequest{
+		MinScore: 0.05,
+		Rows: []items.MatchRowInput{
+			{IMPACode: "", Name: "PUNCHING TOOL SET", Qty: 1, Unit: "PCS"},
+		},
+	}
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", body)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+}
+
+func TestHandler_MatchRows_NoMatch(t *testing.T) {
+	srv := newSrv(t)
+	body := items.MatchRowsRequest{
+		Rows: []items.MatchRowInput{
+			{IMPACode: "", Name: "ZZZQQQNOTHINGZZZ", Qty: 1, Unit: "PCS"},
+		},
+	}
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", body)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var out items.MatchRowsResponse
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&out))
+	require.Len(t, out.Rows, 1)
+	assert.Nil(t, out.Rows[0].Matched)
+	assert.Equal(t, "NONE", out.Rows[0].Source)
+}
+
+func TestHandler_MatchRows_IMPANotFoundFallsBack(t *testing.T) {
+	srv := newSrv(t)
+	body := items.MatchRowsRequest{
+		Rows: []items.MatchRowInput{
+			{IMPACode: "NOSUCHIMPA", Name: "ZZZQQQNOTHING", Qty: 1, Unit: "PCS"},
+		},
+	}
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", body)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+}
+
+func itoa(n int64) string {
+	return strconv.FormatInt(n, 10)
+}
+
+func TestHandler_PresignImageUpload_StorageUnavailable(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/items/1/image/upload-url?fileName=x.png", nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
+}
+
+func TestHandler_PresignImageDownload_StorageUnavailable(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/items/1/image/download-url", nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
+}
+
+func TestHandler_UpdateImage_BadID(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/items/abc/image",
+		items.UpdateImageRequest{ObjectKey: "x"})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_UpdateImage_EmptyObjectKey(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/items/1/image",
+		items.UpdateImageRequest{ObjectKey: " "})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+}
+
+func TestHandler_UpdateImage_NotFound(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/items/99999999/image",
+		items.UpdateImageRequest{ObjectKey: "items/1/x.png"})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }

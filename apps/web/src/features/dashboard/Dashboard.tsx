@@ -1,9 +1,10 @@
-import { useMemo, useState, type CSSProperties } from "react"
+import { type CSSProperties, useMemo, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
+import { formatNumber as formatId, formatRupiah as formatRp } from "@/lib/format"
+import type { Page } from "@/lib/page"
 import type { DashboardMetric } from "@/types/api"
 import TrendChart, { CHART_MONTHS } from "./TrendChart"
-import type { Page } from "../../main"
 
 const exportBtnStyle: CSSProperties = {
   display: "inline-flex",
@@ -19,14 +20,6 @@ const exportBtnStyle: CSSProperties = {
   fontSize: "14px",
   lineHeight: 1.25,
   color: "#630ED4",
-}
-
-function formatId(n: number): string {
-  return n.toLocaleString("id-ID")
-}
-
-function formatRp(n: number): string {
-  return `Rp${n.toLocaleString("id-ID")}`
 }
 
 function toNumber(v: string | undefined): number {
@@ -67,8 +60,8 @@ const RP_METRICS: ReadonlyArray<string> = ["Pendapatan", "Laba Bersih", "PPN"]
 
 function formatRpAxis(v: number): string {
   if (v >= 1_000_000_000) return `Rp ${(v / 1_000_000_000).toFixed(0)}M`
-  if (v >= 1_000_000)     return `Rp ${(v / 1_000_000).toFixed(0)}M`
-  if (v >= 1_000)         return `Rp ${(v / 1_000).toFixed(0)}K`
+  if (v >= 1_000_000) return `Rp ${(v / 1_000_000).toFixed(0)}M`
+  if (v >= 1_000) return `Rp ${(v / 1_000).toFixed(0)}K`
   return `Rp ${v}`
 }
 
@@ -124,7 +117,16 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
             <h1 className="page-title">Dashboard Utama</h1>
             <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
               <button type="button" style={exportBtnStyle}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#630ED4"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
@@ -132,7 +134,16 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
                 Ekspor Excel
               </button>
               <button className="btn-admin-filter">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <line x1="4" y1="6" x2="20" y2="6" />
                   <line x1="7" y1="12" x2="17" y2="12" />
                   <line x1="10" y1="18" x2="14" y2="18" />
@@ -219,10 +230,12 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
             <TrendChart
               series={series}
               activeKey={activeTab}
-              formatValue={v =>
-                RP_METRICS.includes(activeTab) ? `Rp${v.toLocaleString("id-ID")}` : v.toLocaleString("id-ID")
+              formatValue={(v) =>
+                RP_METRICS.includes(activeTab)
+                  ? `Rp${v.toLocaleString("id-ID")}`
+                  : v.toLocaleString("id-ID")
               }
-              formatAxisTick={v =>
+              formatAxisTick={(v) =>
                 RP_METRICS.includes(activeTab) ? formatRpAxis(v) : v.toLocaleString("id-ID")
               }
             />

@@ -1,7 +1,7 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
-import Login from "@/features/auth/Login"
-import { isAuthenticatedSync, useAuth } from "@/features/auth/hooks"
 import * as auth from "@/features/auth/api"
+import { isAuthenticatedSync, useAuth } from "@/features/auth/hooks"
+import Login from "@/features/auth/Login"
 
 export const Route = createFileRoute("/login")({
   beforeLoad: () => {
@@ -18,7 +18,7 @@ function LoginRoute() {
     <Login
       onLogin={async (email, password) => {
         const resp = await auth.login(email, password)
-        login(resp.token)
+        login({ token: resp.token, refreshToken: resp.refreshToken })
         void navigate({ to: "/" })
       }}
     />

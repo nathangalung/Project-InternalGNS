@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useMemo } from "react"
-import InvoiceDetail from "@/features/invoices/InvoiceDetail"
 import { useAuth } from "@/features/auth/hooks"
+import InvoiceDetail from "@/features/invoices/InvoiceDetail"
+import { toQuotationData } from "@/features/quotations/adapters"
 import { useQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
-import { toQuotationData } from "@/features/quotations/adapters"
 import { makePageNavigate } from "@/lib/page-nav"
 
 export const Route = createFileRoute("/_authed/invoices/$id/")({
@@ -24,7 +24,7 @@ function InvoiceDetailRoute() {
   const unitOf = useMemo(() => {
     const map = new Map<number, string>()
     for (const u of units ?? []) map.set(u.id, u.code)
-    return (unitId?: number) => (unitId !== undefined ? map.get(unitId) ?? "" : "")
+    return (unitId?: number) => (unitId !== undefined ? (map.get(unitId) ?? "") : "")
   }, [units])
 
   const quotation = detail ? toQuotationData(detail, unitOf) : undefined

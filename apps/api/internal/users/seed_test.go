@@ -52,3 +52,26 @@ func TestSeedSuperadmin_IdempotentReRun(t *testing.T) {
 	require.NoError(t, users.SeedSuperadmin(context.Background(), pool, cfg))
 	require.NoError(t, users.SeedSuperadmin(context.Background(), pool, cfg))
 }
+
+// Two distinct emails seeded back-to-back must both end up as active
+// superadmins. Mirrors the boot path that seeds SUPERADMIN_* then
+// SUPERADMIN2_* when both are configured.
+func TestSeedSuperadmin_TwoDistinctAccounts(t *testing.T) {
+	pool := testutil.Pool(t)
+	ctx := context.Background()
+
+	require.NoError(t, users.SeedSuperadmin(ctx, pool, users.SeedConfig{
+		Email: "primary-admin@local", Name: "Primary", Password: "pw-primary",
+	}))
+	require.NoError(t, users.SeedSuperadmin(ctx, pool, users.SeedConfig{
+		Email: "secondary-admin@local", Name: "Secondary", Password: "pw-secondary",
+	}))
+
+	var count int
+	require.NoError(t, pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM users
+		 WHERE role = 'superadmin' AND is_active = TRUE
+		   AND email IN ('primary-admin@local', 'secondary-admin@local')`,
+	).Scan(&count))
+	assert.Equal(t, 2, count)
+}

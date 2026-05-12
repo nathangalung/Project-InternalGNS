@@ -1,25 +1,19 @@
-import { apiRequest } from "@/lib/api-client"
+import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
 import type { Role, UserRow } from "@/types/api"
 
 export type ListParams = {
   q?: string
   role?: Role
+  isActive?: boolean
+  sortBy?: "name" | "createdAt"
+  sortDir?: "asc" | "desc"
   limit?: number
   offset?: number
 }
 
-function buildQuery(params: ListParams): string {
-  const search = new URLSearchParams()
-  if (params.q) search.set("q", params.q)
-  if (params.role) search.set("role", params.role)
-  if (params.limit !== undefined) search.set("limit", String(params.limit))
-  if (params.offset !== undefined) search.set("offset", String(params.offset))
-  return search.toString()
-}
-
-export async function list(params: ListParams = {}): Promise<UserRow[]> {
+export async function list(params: ListParams = {}): Promise<PaginatedList<UserRow>> {
   const qs = buildQuery(params)
-  return apiRequest<UserRow[]>({ path: `/users${qs ? `?${qs}` : ""}` })
+  return apiList<UserRow>({ path: `/users${qs ? `?${qs}` : ""}` })
 }
 
 export async function get(id: number): Promise<UserRow> {

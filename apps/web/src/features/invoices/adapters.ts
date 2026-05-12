@@ -8,13 +8,11 @@ function toNum(v: string | undefined | null): number {
 }
 
 // Map snapshot product items.
-export function invoiceItemsToProducts(
-  items: InvoiceItemRow[] | undefined,
-): ProductRow[] {
+export function invoiceItemsToProducts(items: InvoiceItemRow[] | undefined): ProductRow[] {
   if (!items) return []
   return items
-    .filter(it => it.lineType === "product")
-    .map(it => {
+    .filter((it) => it.lineType === "product")
+    .map((it) => {
       const qty = toNum(it.qty)
       const price = toNum(it.unitPrice)
       const cost = toNum(it.costPrice)
@@ -30,10 +28,8 @@ export function invoiceItemsToProducts(
 }
 
 // Map first shipping snapshot row.
-export function invoiceItemsToShipping(
-  items: InvoiceItemRow[] | undefined,
-): ShippingRow {
-  const ship = items?.find(it => it.lineType === "shipping")
+export function invoiceItemsToShipping(items: InvoiceItemRow[] | undefined): ShippingRow {
+  const ship = items?.find((it) => it.lineType === "shipping")
   if (!ship) return { nama: "", deadline: "", hargaSatuan: 0 }
   return {
     nama: ship.itemName,

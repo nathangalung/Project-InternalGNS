@@ -1,4 +1,4 @@
--- name: vendors.list
+-- name: vendors.list_base
 SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.updated_at,
        COALESCE((SELECT COUNT(*) FROM vendor_products vp
                   WHERE vp.vendor_id = v.id AND vp.is_active = TRUE), 0) AS product_count,
@@ -7,11 +7,14 @@ SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.up
                   JOIN vendor_products vp ON vp.id = qi.vendor_product_id
                   JOIN quotations q ON q.id = qi.quotation_id
                   WHERE vp.vendor_id = v.id
-                    AND q.status = 'accepted'), '0') AS total_purchase
+                    AND q.status = 'accepted'), '0') AS total_purchase,
+       v.logo_object_key
 FROM vendors v
-WHERE v.is_active = TRUE
-ORDER BY v.name
-LIMIT $1 OFFSET $2;
+WHERE 1=1;
+
+-- name: vendors.list_count_base
+SELECT COUNT(*) FROM vendors v
+WHERE 1=1;
 
 -- name: vendors.get_by_id
 SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.updated_at,
@@ -22,7 +25,8 @@ SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.up
                   JOIN vendor_products vp ON vp.id = qi.vendor_product_id
                   JOIN quotations q ON q.id = qi.quotation_id
                   WHERE vp.vendor_id = v.id
-                    AND q.status = 'accepted'), '0') AS total_purchase
+                    AND q.status = 'accepted'), '0') AS total_purchase,
+       v.logo_object_key
 FROM vendors v
 WHERE v.id = $1;
 
@@ -30,7 +34,8 @@ WHERE v.id = $1;
 INSERT INTO vendors (name, location, contact_info, created_by, updated_by)
 VALUES ($1, $2, $3, $4, $4)
 RETURNING id, name, location, contact_info, is_active, created_at, updated_at,
-          0::BIGINT AS product_count, '0'::TEXT AS total_purchase;
+          0::BIGINT AS product_count, '0'::TEXT AS total_purchase,
+          logo_object_key;
 
 -- name: vendors.update
 UPDATE vendors
@@ -49,14 +54,32 @@ RETURNING id, name, location, contact_info, is_active, created_at, updated_at,
                     JOIN vendor_products vp ON vp.id = qi.vendor_product_id
                     JOIN quotations q ON q.id = qi.quotation_id
                     WHERE vp.vendor_id = vendors.id
-                      AND q.status = 'accepted'), '0') AS total_purchase;
+                      AND q.status = 'accepted'), '0') AS total_purchase,
+          logo_object_key;
+
+-- name: vendors.update_logo
+UPDATE vendors
+   SET logo_object_key = $2,
+       updated_by      = $3,
+       updated_at      = NOW()
+ WHERE id = $1
+RETURNING id;
 
 -- name: vendors.search
 SELECT * FROM fn_search_vendors($1, $2, $3);
 
 -- name: vendors.list_items
 SELECT
-    item_id, item_name, impa_code, vendor_sku,
-    cost_price::text,
-    last_quoted_at::text
-FROM fn_search_items_by_vendor($1, $2);
+    i.id                  AS item_id,
+    i.name                AS item_name,
+    i.impa_code,
+    vp.vendor_sku,
+    vp.cost_price::text   AS cost_price,
+    vp.last_quoted_at::text,
+    vp.product_url
+FROM vendor_products vp
+JOIN items i ON i.id = vp.item_id AND i.is_active = TRUE
+WHERE vp.vendor_id = $1
+  AND vp.is_active = TRUE
+ORDER BY i.name ASC
+LIMIT $2;

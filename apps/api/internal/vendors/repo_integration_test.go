@@ -13,7 +13,7 @@ import (
 
 const (
 	seedUserID   int64 = 1
-	seedVendorID int64 = 1
+	seedVendorID int64 = 9000001
 )
 
 func ptr[T any](v T) *T { return &v }
@@ -22,9 +22,9 @@ func TestRepo_List(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := vendors.NewRepo(tx, testutil.Store(t))
 
-	rows, err := repo.List(ctx, 50, 0)
+	res, err := repo.List(ctx, vendors.ListFilter{Limit: 50})
 	require.NoError(t, err)
-	assert.NotEmpty(t, rows)
+	assert.NotEmpty(t, res.Rows)
 }
 
 func TestRepo_GetByID(t *testing.T) {
@@ -94,10 +94,11 @@ func TestRepo_List_IncludesProductCountAndTotalPurchase(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := vendors.NewRepo(tx, testutil.Store(t))
 
-	rows, err := repo.List(ctx, 200, 0)
+	res, err := repo.List(ctx, vendors.ListFilter{Limit: 200})
 	require.NoError(t, err)
-	require.NotEmpty(t, rows)
-	for _, v := range rows {
+	require.NotEmpty(t, res.Rows)
+	require.GreaterOrEqual(t, res.Total, int64(len(res.Rows)))
+	for _, v := range res.Rows {
 		assert.GreaterOrEqual(t, v.ProductCount, int64(0))
 		assert.NotEmpty(t, v.TotalPurchase)
 	}

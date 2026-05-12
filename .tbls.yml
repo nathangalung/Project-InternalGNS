@@ -1,0 +1,19 @@
+# tbls config — generates docs/erd from the live dev DB.
+# Run via `make db-erd` after `make migrate`.
+dsn: postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable
+
+docPath: docs/erd
+
+er:
+  format: svg
+  hideDef: true
+  showColumnTypes:
+    related: true
+
+format:
+  adjust: true
+  sort: false
+
+# Hide goose_db_version (migration bookkeeping, not part of the domain model).
+exclude:
+  - goose_db_version

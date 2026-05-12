@@ -3,7 +3,7 @@ package purchaseorders
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -45,16 +45,16 @@ type dnItem struct {
 }
 
 type dnData struct {
-	DeliveryNoteNo  string
-	PONo            string
-	CompanyName     string
-	CompanyAddress  string
-	AttnName        string
-	VesselName      string
-	DateLine        string
-	Items           []dnItem
-	PreparedBy      string
-	SenderName      string
+	DeliveryNoteNo string
+	PONo           string
+	CompanyName    string
+	CompanyAddress string
+	AttnName       string
+	VesselName     string
+	DateLine       string
+	Items          []dnItem
+	PreparedBy     string
+	SenderName     string
 }
 
 func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) {
@@ -70,13 +70,13 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 
 	items, err := h.repo.ListItems(r.Context(), id)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 
@@ -84,14 +84,14 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 
 	pdf, err := h.renderer.Render(r.Context(), "delivery_note/DeliveryNote.tex.tmpl", data)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 
 	dn := "DN-" + po.PoNumber
-	w.Header().Set("Content-Type", "application/pdf")
-	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s.pdf"`, sanitizeFilename(dn)))
-	_, _ = w.Write(pdf)
+	if werr := pdfgen.WritePDFResponse(w, dn, pdf); werr != nil {
+		slog.WarnContext(r.Context(), "pdf write failed", "doc", "delivery_note", "po_id", id, "err", werr)
+	}
 }
 
 func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, items []PurchaseOrderItem) dnData {
@@ -127,41 +127,15 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, i
 	}
 
 	return dnData{
-		DeliveryNoteNo:  pdfgen.LatexEscape("DN-" + po.PoNumber),
-		PONo:            pdfgen.LatexEscape(po.PoNumber),
-		CompanyName:     pdfgen.LatexEscape(po.CompanyName),
-		CompanyAddress:  pdfgen.LatexEscape(strDeref(client.Address)),
-		AttnName:        pdfgen.LatexEscape(attn),
-		VesselName:      pdfgen.LatexEscape(vessel),
-		DateLine:        pdfgen.JakartaDateLine(po.PoDate.In(time.Local)),
-		Items:           expItems,
-		PreparedBy:      pdfgen.LatexEscape(h.settings.SignerName),
-		SenderName:      pdfgen.LatexEscape(h.settings.SignerName),
+		DeliveryNoteNo: pdfgen.LatexEscape("DN-" + po.PoNumber),
+		PONo:           pdfgen.LatexEscape(po.PoNumber),
+		CompanyName:    pdfgen.LatexEscape(po.CompanyName),
+		CompanyAddress: pdfgen.LatexEscape(pdfgen.StrDeref(client.Address)),
+		AttnName:       pdfgen.LatexEscape(attn),
+		VesselName:     pdfgen.LatexEscape(vessel),
+		DateLine:       pdfgen.JakartaDateLine(po.PoDate.In(time.Local)),
+		Items:          expItems,
+		PreparedBy:     pdfgen.LatexEscape(h.settings.SignerName),
+		SenderName:     pdfgen.LatexEscape(h.settings.SignerName),
 	}
-}
-
-func strDeref(p *string) string {
-	if p == nil {
-		return ""
-	}
-	return *p
-}
-
-func sanitizeFilename(s string) string {
-	out := make([]rune, 0, len(s))
-	for _, r := range s {
-		switch {
-		case r >= 'a' && r <= 'z',
-			r >= 'A' && r <= 'Z',
-			r >= '0' && r <= '9',
-			r == '-' || r == '_' || r == '.':
-			out = append(out, r)
-		default:
-			out = append(out, '_')
-		}
-	}
-	if len(out) == 0 {
-		return "document"
-	}
-	return string(out)
 }

@@ -2,6 +2,24 @@ package clients
 
 import "time"
 
+// ListFilter for clients.list query.
+type ListFilter struct {
+	Q           string
+	IsActive    *bool
+	CountryCode string
+	MinTotal    *string
+	SortBy      string
+	SortDir     string
+	Limit       int
+	Offset      int
+}
+
+// ListResult wraps rows with total.
+type ListResult struct {
+	Rows  []Client
+	Total int64
+}
+
 // Client row plus active contact.
 type Client struct {
 	ID             int64     `db:"id"              json:"id"`
@@ -21,6 +39,12 @@ type Client struct {
 	ContactPhone   *string   `db:"contact_phone"   json:"contactPhone,omitempty"`
 	TotalPurchase  string    `db:"total_purchase"  json:"totalPurchase"`
 	QuotationCount int64     `db:"quotation_count" json:"quotationCount"`
+	LogoObjectKey  *string   `db:"logo_object_key" json:"logoObjectKey,omitempty"`
+}
+
+// UpdateLogoRequest persists the MinIO object key for a client logo.
+type UpdateLogoRequest struct {
+	ObjectKey string `json:"objectKey"`
 }
 
 // Contact mirrors company_contacts table.

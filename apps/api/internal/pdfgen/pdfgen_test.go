@@ -4,18 +4,18 @@ import "testing"
 
 func TestLatexEscape(t *testing.T) {
 	cases := map[string]string{
-		"a & b":   `a \& b`,
-		"100%":    `100\%`,
-		"x_y":     `x\_y`,
-		"#1":      `\#1`,
-		"a$b":     `a\$b`,
-		"{x}":     `\{x\}`,
-		"a~b":     `a\textasciitilde{}b`,
-		"a^b":     `a\textasciicircum{}b`,
-		"<x>":     `\textless{}x\textgreater{}`,
-		"a|b":     `a\textbar{}b`,
-		`a\b`:     `a\textbackslash{}b`,
-		"safe":    "safe",
+		"a & b": `a \& b`,
+		"100%":  `100\%`,
+		"x_y":   `x\_y`,
+		"#1":    `\#1`,
+		"a$b":   `a\$b`,
+		"{x}":   `\{x\}`,
+		"a~b":   `a\textasciitilde{}b`,
+		"a^b":   `a\textasciicircum{}b`,
+		"<x>":   `\textless{}x\textgreater{}`,
+		"a|b":   `a\textbar{}b`,
+		`a\b`:   `a\textbackslash{}b`,
+		"safe":  "safe",
 	}
 	for in, want := range cases {
 		if got := LatexEscape(in); got != want {
@@ -44,14 +44,14 @@ func TestFormatQty(t *testing.T) {
 
 func TestFormatIDR(t *testing.T) {
 	cases := map[string]string{
-		"":              "Rp~--",
-		"0":             "Rp~0",
-		"100":           "Rp~100",
-		"1000":          "Rp~1.000",
-		"123456789":     "Rp~123.456.789",
-		"123456789.50":  "Rp~123.456.789",
-		"-6316150":      "-Rp~6.316.150",
-		"abc":           "Rp~--",
+		"":             "Rp~--",
+		"0":            "Rp~0",
+		"100":          "Rp~100",
+		"1000":         "Rp~1.000",
+		"123456789":    "Rp~123.456.789",
+		"123456789.50": "Rp~123.456.789",
+		"-6316150":     "-Rp~6.316.150",
+		"abc":          "Rp~--",
 	}
 	for in, want := range cases {
 		if got := FormatIDR(in); got != want {

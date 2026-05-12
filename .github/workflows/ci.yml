@@ -1,0 +1,114 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  backend:
+    name: backend (api)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      postgres:
+        image: postgres:18.3-alpine
+        env:
+          POSTGRES_DB: gns_quotation
+          POSTGRES_USER: gns_app
+          POSTGRES_PASSWORD: gns_app
+          TZ: Asia/Jakarta
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U gns_app -d gns_quotation"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: apps/api/go.mod
+          cache-dependency-path: apps/api/go.sum
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.11
+          working-directory: apps/api
+          args: --timeout=5m
+
+      - name: go test
+        env:
+          DATABASE_URL: postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable
+        run: go test ./... -race -count=1 -p=1
+
+  frontend:
+    name: frontend (web)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: apps/web/package.json
+
+      - name: install deps
+        run: bun install --frozen-lockfile
+
+      - name: lint
+        run: bun run lint
+
+      - name: typecheck
+        run: bun run typecheck
+
+      - name: build
+        env:
+          VITE_API_URL: /api/v1
+        run: bun run build
+
+  images:
+    name: build images (smoke)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: [backend, frontend]
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: build api image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/api
+          push: false
+          tags: internalgns-api:ci
+
+      - name: build web image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/web
+          push: false
+          build-args: |
+            VITE_API_URL=/api/v1
+          tags: internalgns-web:ci

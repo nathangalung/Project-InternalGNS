@@ -63,3 +63,33 @@ Feature: Purchase order lifecycle
     When the user lists POs filtered by status "PENDING"
     Then the response status is 200
     And the PO list contains at least 1 row
+
+  Scenario Outline: PO direct edit allowed before delivery
+    Given an accepted quotation
+    When the user transitions the PO through "<path>"
+    Then every PO transition succeeds
+    When the user edits PO items with discount "5" and selling price "150000"
+    Then the response status is 200
+
+    Examples:
+      | path                 |
+      |                      |
+      | UPLOADED             |
+      | UPLOADED,ON_PROGRESS |
+
+  Scenario: PO direct edit locked when delivered
+    Given an accepted quotation
+    When the user transitions the PO through "UPLOADED,ON_PROGRESS,DELIVERED"
+    Then every PO transition succeeds
+    When the user edits PO items with discount "0" and selling price "100000"
+    Then the response status is 422
+
+  Scenario: Edited PO price flows into invoice
+    Given an accepted quotation
+    When the user edits PO items with discount "0" and selling price "150000"
+    Then the response status is 200
+    When the user transitions the PO through "UPLOADED,ON_PROGRESS,DELIVERED"
+    Then every PO transition succeeds
+    When the user lists invoice items by quotation
+    Then the response status is 200
+    And an invoice product line has unit price "150000"

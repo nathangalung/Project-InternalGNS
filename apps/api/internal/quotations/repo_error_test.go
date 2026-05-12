@@ -38,7 +38,7 @@ func TestRepo_ErrorPaths(t *testing.T) {
 		Items: []quotations.CreateItem{
 			{RequestedName: "X", Qty: "1", UnitID: 19, SellingPrice: "1"},
 		},
-	}, 1)
+	}, 1, nil)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
 	err = r.ChangeStatus(ctx, 1, "sent", nil, 1)

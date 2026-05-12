@@ -2,10 +2,12 @@ package httperr
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -58,4 +60,46 @@ func TestUnprocessable(t *testing.T) {
 	assert.Equal(t, http.StatusUnprocessableEntity, e.Status)
 	assert.Equal(t, "Unprocessable Entity", e.Title)
 	assert.Equal(t, "msg", e.Fields["field"])
+}
+
+func TestFromDBErr_SQLSTATE(t *testing.T) {
+	cases := []struct {
+		code   string
+		status int
+	}{
+		{"P0001", http.StatusUnprocessableEntity},
+		{"23503", http.StatusNotFound},
+		{"23505", http.StatusConflict},
+		{"23502", http.StatusUnprocessableEntity},
+		{"23514", http.StatusUnprocessableEntity},
+		{"22P02", http.StatusUnprocessableEntity},
+		{"22003", http.StatusUnprocessableEntity},
+	}
+	for _, tc := range cases {
+		t.Run(tc.code, func(t *testing.T) {
+			pgErr := &pgconn.PgError{Code: tc.code, Message: "x"}
+			got := FromDBErr(pgErr)
+			assert.Equal(t, tc.status, got.Status)
+		})
+	}
+}
+
+func TestFromDBErr_Fallback(t *testing.T) {
+	got := FromDBErr(errors.New("plain"))
+	assert.Equal(t, http.StatusInternalServerError, got.Status)
+	assert.Equal(t, "plain", got.Detail)
+}
+
+func TestFromDBErr_UnknownPgCode(t *testing.T) {
+	pgErr := &pgconn.PgError{Code: "99999", Message: "x"}
+	got := FromDBErr(pgErr)
+	assert.Equal(t, http.StatusInternalServerError, got.Status)
+}
+
+func TestRenderDBErr(t *testing.T) {
+	rec := httptest.NewRecorder()
+	RenderDBErr(rec, &pgconn.PgError{Code: "23505", Message: "dup"})
+	res := rec.Result()
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusConflict, res.StatusCode)
 }

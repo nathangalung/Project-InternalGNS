@@ -21,15 +21,15 @@ UPDATE users
 SET password_hash = $1, updated_by = $2
 WHERE id = $3;
 
--- name: users.list
+-- name: users.list_count_base
+SELECT COUNT(*) FROM users
+WHERE 1=1;
+
+-- name: users.list_base
 SELECT id, email, name, password_hash, role,
        is_active, created_at, updated_at
 FROM users
-WHERE ($1::text IS NULL OR (LOWER(name) LIKE LOWER('%' || $1 || '%')
-                             OR LOWER(email) LIKE LOWER('%' || $1 || '%')))
-  AND ($2::text IS NULL OR role = $2::text)
-ORDER BY created_at DESC, id DESC
-LIMIT $3 OFFSET $4;
+WHERE 1=1;
 
 -- name: users.update
 UPDATE users

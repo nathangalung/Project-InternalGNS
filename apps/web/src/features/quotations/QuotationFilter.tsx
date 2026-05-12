@@ -1,72 +1,79 @@
-import { useState } from "react";
-import { DateInput, presetToIsoRange } from "@/components/shared/DateRangeField";
+import { useState } from "react"
+import {
+  DATE_PRESETS,
+  DateInput,
+  type DatePreset,
+  presetToIsoRange,
+} from "@/components/shared/DateRangeField"
+import type { DisplayStatus } from "@/lib/status"
 
-export type DatePreset   = "hari-ini" | "7-hari" | "30-hari" | "kustom";
-export type StatusFilter = "Draf" | "Dikirim" | "Ditolak" | "Revisi" | "Disetujui";
+export type { DatePreset }
+export type StatusFilter = DisplayStatus
 
 interface QuotationFilterProps {
-  onClose: () => void;
+  onClose: () => void
   onApply?: (filters: {
-    preset: DatePreset;
-    startDate: string;
-    endDate: string;
-    statuses: StatusFilter[];
-    minHarga: string;
-    maxHarga: string;
-  }) => void;
+    preset: DatePreset
+    startDate: string
+    endDate: string
+    statuses: StatusFilter[]
+    minHarga: string
+    maxHarga: string
+  }) => void
   initialValues?: {
-    preset: DatePreset;
-    startDate?: string;
-    endDate?: string;
-    statuses: StatusFilter[];
-    minHarga: string;
-    maxHarga: string;
-  };
+    preset: DatePreset
+    startDate?: string
+    endDate?: string
+    statuses: StatusFilter[]
+    minHarga: string
+    maxHarga: string
+  }
 }
 
-const DATE_PRESETS: { key: DatePreset; label: string }[] = [
-  { key: "hari-ini", label: "Hari Ini" },
-  { key: "7-hari",   label: "7 Hari Terakhir" },
-  { key: "30-hari",  label: "30 Hari Terakhir" },
-  { key: "kustom",   label: "Kustom" },
-];
-
-const STATUSES: StatusFilter[] = ["Draf", "Dikirim", "Ditolak", "Revisi", "Disetujui"];
+const STATUSES: StatusFilter[] = ["Draf", "Dikirim", "Ditolak", "Revisi", "Disetujui"]
 
 function IconCalendar() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2"/>
-      <line x1="16" y1="2" x2="16" y2="6"/>
-      <line x1="8"  y1="2" x2="8"  y2="6"/>
-      <line x1="3"  y1="10" x2="21" y2="10"/>
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
     </svg>
-  );
+  )
 }
 
 export default function QuotationFilter({ onClose, onApply, initialValues }: QuotationFilterProps) {
-  const seed = presetToIsoRange("30-hari");
-  const [preset,         setPreset]         = useState<DatePreset>(initialValues?.preset ?? "30-hari");
-  const [startDate,      setStartDate]      = useState<string>(initialValues?.startDate ?? seed.start);
-  const [endDate,        setEndDate]        = useState<string>(initialValues?.endDate   ?? seed.end);
-  const [activeStatuses, setActiveStatuses] = useState<StatusFilter[]>(initialValues?.statuses ?? []);
-  const [minHarga,       setMinHarga]       = useState(initialValues?.minHarga ?? "0");
-  const [maxHarga,       setMaxHarga]       = useState(initialValues?.maxHarga ?? "500.000.000");
+  const seed = presetToIsoRange("30-hari")
+  const [preset, setPreset] = useState<DatePreset>(initialValues?.preset ?? "30-hari")
+  const [startDate, setStartDate] = useState<string>(initialValues?.startDate ?? seed.start)
+  const [endDate, setEndDate] = useState<string>(initialValues?.endDate ?? seed.end)
+  const [activeStatuses, setActiveStatuses] = useState<StatusFilter[]>(
+    initialValues?.statuses ?? [],
+  )
+  const [minHarga, setMinHarga] = useState(initialValues?.minHarga ?? "0")
+  const [maxHarga, setMaxHarga] = useState(initialValues?.maxHarga ?? "500.000.000")
 
   function pickPreset(p: DatePreset) {
-    setPreset(p);
+    setPreset(p)
     if (p !== "kustom") {
-      const r = presetToIsoRange(p);
-      setStartDate(r.start);
-      setEndDate(r.end);
+      const r = presetToIsoRange(p)
+      setStartDate(r.start)
+      setEndDate(r.end)
     }
   }
 
   const toggleStatus = (s: StatusFilter) =>
-    setActiveStatuses((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
-    );
+    setActiveStatuses((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]))
 
   const dirty =
     preset !== "30-hari" ||
@@ -74,38 +81,44 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
     endDate !== seed.end ||
     activeStatuses.length > 0 ||
     minHarga !== "0" ||
-    maxHarga !== "500.000.000";
+    maxHarga !== "500.000.000"
 
   const handleReset = () => {
-    pickPreset("30-hari");
-    setActiveStatuses([]);
-    setMinHarga("0");
-    setMaxHarga("500.000.000");
-  };
+    pickPreset("30-hari")
+    setActiveStatuses([])
+    setMinHarga("0")
+    setMaxHarga("500.000.000")
+  }
 
   const handleApply = () => {
-    onApply?.({ preset, startDate, endDate, statuses: activeStatuses, minHarga, maxHarga });
-    onClose();
-  };
+    onApply?.({ preset, startDate, endDate, statuses: activeStatuses, minHarga, maxHarga })
+    onClose()
+  }
 
   return (
     <div className="ca-overlay" onClick={onClose}>
       <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
-
         {/* Header */}
         <div className="ca-header">
           <h2 className="ca-title">Filter Quotation</h2>
           <button className="ca-close-btn" onClick={onClose} title="Tutup">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="1" y1="1" x2="13" y2="13"/>
-              <line x1="13" y1="1" x2="1" y2="13"/>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              <line x1="1" y1="1" x2="13" y2="13" />
+              <line x1="13" y1="1" x2="1" y2="13" />
             </svg>
           </button>
         </div>
 
         {/* Body */}
         <div className="ca-body">
-
           {/* Rentang Tanggal */}
           <div className="ca-section">
             <div className="ca-section-heading">Rentang Tanggal</div>
@@ -113,7 +126,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
             <div className="ca-field">
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                 {DATE_PRESETS.map(({ key, label }) => {
-                  const isActive = preset === key;
+                  const isActive = preset === key
                   return (
                     <button
                       key={key}
@@ -125,7 +138,9 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                         justifyContent: "space-between",
                         padding: "10px 14px",
                         borderRadius: "8px",
-                        border: isActive ? "1.5px solid #630ED4" : "1px solid rgba(204, 195, 216, 0.4)",
+                        border: isActive
+                          ? "1.5px solid #630ED4"
+                          : "1px solid rgba(204, 195, 216, 0.4)",
                         background: isActive ? "rgba(99, 14, 212, 0.05)" : "#F7F7F8",
                         cursor: "pointer",
                         fontFamily: "'Inter', sans-serif",
@@ -136,14 +151,23 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                       }}
                     >
                       {label}
-                      {key === "kustom"
-                        ? <span style={{ color: isActive ? "#630ED4" : "#9CA3AF" }}><IconCalendar /></span>
-                        : isActive
-                          ? <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5L4.5 9L13 1" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          : null
-                      }
+                      {key === "kustom" ? (
+                        <span style={{ color: isActive ? "#630ED4" : "#9CA3AF" }}>
+                          <IconCalendar />
+                        </span>
+                      ) : isActive ? (
+                        <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+                          <path
+                            d="M1 5.5L4.5 9L13 1"
+                            stroke="#630ED4"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : null}
                     </button>
-                  );
+                  )
                 })}
               </div>
             </div>
@@ -152,12 +176,18 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
               <DateInput
                 label="Tanggal Mulai"
                 value={startDate}
-                onChange={v => { setStartDate(v); setPreset("kustom"); }}
+                onChange={(v) => {
+                  setStartDate(v)
+                  setPreset("kustom")
+                }}
               />
               <DateInput
                 label="Tanggal Selesai"
                 value={endDate}
-                onChange={v => { setEndDate(v); setPreset("kustom"); }}
+                onChange={(v) => {
+                  setEndDate(v)
+                  setPreset("kustom")
+                }}
               />
             </div>
           </div>
@@ -168,7 +198,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
             <div className="ca-field">
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {(() => {
-                  const allActive = activeStatuses.length === 0;
+                  const allActive = activeStatuses.length === 0
                   return (
                     <button
                       type="button"
@@ -176,7 +206,9 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                       style={{
                         padding: "6px 16px",
                         borderRadius: "20px",
-                        border: allActive ? "1.5px solid #630ED4" : "1px solid rgba(204, 195, 216, 0.4)",
+                        border: allActive
+                          ? "1.5px solid #630ED4"
+                          : "1px solid rgba(204, 195, 216, 0.4)",
                         background: allActive ? "rgba(99, 14, 212, 0.07)" : "#F7F7F8",
                         cursor: "pointer",
                         fontFamily: "'Inter', sans-serif",
@@ -188,10 +220,10 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                     >
                       Semua
                     </button>
-                  );
+                  )
                 })()}
                 {STATUSES.map((s) => {
-                  const isActive = activeStatuses.includes(s);
+                  const isActive = activeStatuses.includes(s)
                   return (
                     <button
                       key={s}
@@ -200,7 +232,9 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                       style={{
                         padding: "6px 16px",
                         borderRadius: "20px",
-                        border: isActive ? "1.5px solid #630ED4" : "1px solid rgba(204, 195, 216, 0.4)",
+                        border: isActive
+                          ? "1.5px solid #630ED4"
+                          : "1px solid rgba(204, 195, 216, 0.4)",
                         background: isActive ? "rgba(99, 14, 212, 0.07)" : "#F7F7F8",
                         cursor: "pointer",
                         fontFamily: "'Inter', sans-serif",
@@ -212,7 +246,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                     >
                       {s}
                     </button>
-                  );
+                  )
                 })}
               </div>
             </div>
@@ -241,11 +275,13 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
               ))}
             </div>
           </div>
-
         </div>
 
         {/* Footer */}
-        <div className="ca-footer" style={{ justifyContent: "space-between", padding: "16px 24px" }}>
+        <div
+          className="ca-footer"
+          style={{ justifyContent: "space-between", padding: "16px 24px" }}
+        >
           <button
             type="button"
             onClick={handleReset}
@@ -284,8 +320,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
             </button>
           </div>
         </div>
-
       </div>
     </div>
-  );
+  )
 }

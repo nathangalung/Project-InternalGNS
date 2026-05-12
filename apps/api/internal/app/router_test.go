@@ -26,7 +26,7 @@ func mkRouter(t *testing.T) http.Handler {
 		JWTExpiry:          time.Hour,
 		CORSAllowedOrigins: []string{"http://localhost:5173"},
 	}
-	return NewRouter(cfg, pool, store)
+	return NewRouter(cfg, pool, store, nil)
 }
 
 func TestRouter_Healthz(t *testing.T) {

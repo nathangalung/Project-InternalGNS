@@ -2,13 +2,15 @@
         db-up db-down db-logs db-shell \
         stack-up stack-down stack-logs ps reset \
         migrate migrate-up migrate-status migrate-down migrate-new \
-        seed seed-dev check-reconcile schema-dump \
+        seed seed-dev check-reconcile schema-dump db-erd \
         api web dev \
         tidy sqlc \
         build build-api build-web \
         test test-api test-web \
-        lint fmt \
+        lint lint-fix fmt types \
+        hooks-install hooks-run \
         docker-build docker-build-api docker-build-web \
+        orphan-blobs-dry orphan-blobs-purge \
         clean
 
 SHELL        := /bin/bash
@@ -117,6 +119,13 @@ check-reconcile: ## Run reconciliation / verification queries
 schema-dump: ## Dump current schema to docs/schema_current.sql
 	pg_dump --schema-only --no-owner "$(DATABASE_URL)" > docs/schema_current.sql
 
+db-erd: db-up ## Regenerate docs/erd from the live dev DB (requires tbls)
+	@command -v tbls >/dev/null 2>&1 || { \
+	  echo "installing tbls..."; \
+	  go install github.com/k1LoW/tbls@latest; \
+	}
+	tbls doc --force
+
 # Local dev servers.
 api: db-up ## Run API on host
 	cd $(API_DIR) && go run ./cmd/api
@@ -160,9 +169,30 @@ lint: ## Lint api and web
 	@command -v golangci-lint >/dev/null 2>&1 && (cd $(API_DIR) && golangci-lint run) || echo "golangci-lint not installed, skipping"
 	cd $(WEB_DIR) && bun run lint
 
+# Auto-fix every fixable lint + format violation. golangci-lint --fix applies
+# the formatters + simple rewrites; biome check --write does the same for FE.
+lint-fix: ## Auto-fix lint + format issues (api + web)
+	cd $(API_DIR) && gofmt -w -s .
+	@command -v golangci-lint >/dev/null 2>&1 && (cd $(API_DIR) && golangci-lint run --fix) || echo "golangci-lint not installed, skipping --fix"
+	cd $(WEB_DIR) && bun x @biomejs/biome check --write src
+
 fmt: ## Format api and web
 	cd $(API_DIR) && gofmt -w -s .
 	cd $(WEB_DIR) && bun run format
+
+types: ## TypeScript typecheck (FE)
+	cd $(WEB_DIR) && bun run typecheck
+
+# Pre-commit hooks (.pre-commit-config.yaml). Uses `uv tool` to manage
+# the pre-commit binary so the repo stays python-toolchain-free.
+hooks-install: ## Install git pre-commit hooks (auto-installs pre-commit via uv)
+	@command -v uv >/dev/null 2>&1 || { echo "missing: uv (https://docs.astral.sh/uv/)"; exit 1; }
+	@command -v pre-commit >/dev/null 2>&1 || uv tool install pre-commit
+	pre-commit install
+
+hooks-run: ## Run all hooks against every file (CI-style sweep)
+	@command -v pre-commit >/dev/null 2>&1 || { echo "run: make hooks-install"; exit 1; }
+	pre-commit run --all-files
 
 # Container images.
 docker-build: docker-build-api docker-build-web ## Build api and web images
@@ -174,6 +204,13 @@ docker-build-web: ## Build FE image
 	docker build \
 	  --build-arg VITE_API_URL=$${VITE_API_URL:-/api/v1} \
 	  -t internalgns-web:local $(WEB_DIR)
+
+# Storage maintenance.
+orphan-blobs-dry: ## List MinIO keys not referenced by any DB row (read-only)
+	cd $(API_DIR) && go run ./cmd/orphan-blobs --dry-run
+
+orphan-blobs-purge: ## Delete unreferenced MinIO keys older than 60 min
+	cd $(API_DIR) && go run ./cmd/orphan-blobs --dry-run=false
 
 # Cleanup.
 clean: ## Remove build artifacts

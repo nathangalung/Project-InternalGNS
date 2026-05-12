@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import ClientList from "@/features/clients/ClientList"
 import { useAuth } from "@/features/auth/hooks"
+import ClientList from "@/features/clients/ClientList"
 import { makePageNavigate } from "@/lib/page-nav"
 
 export const Route = createFileRoute("/_authed/clients/")({

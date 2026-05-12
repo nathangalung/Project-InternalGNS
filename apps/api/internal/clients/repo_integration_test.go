@@ -1,6 +1,7 @@
 package clients_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,9 +22,64 @@ func TestRepo_List(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := clients.NewRepo(tx, testutil.Store(t))
 
-	rows, err := repo.List(ctx, 50, 0)
+	res, err := repo.List(ctx, clients.ListFilter{Limit: 50})
 	require.NoError(t, err)
-	assert.NotEmpty(t, rows)
+	assert.NotEmpty(t, res.Rows)
+	assert.Greater(t, res.Total, int64(0))
+}
+
+func TestRepo_List_FilterByQuery(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := clients.NewRepo(tx, testutil.Store(t))
+
+	res, err := repo.List(ctx, clients.ListFilter{Q: "IMC", Limit: 50})
+	require.NoError(t, err)
+	require.NotEmpty(t, res.Rows)
+	for _, c := range res.Rows {
+		assert.Contains(t, strings.ToUpper(c.Name+derefStr(c.Number)+derefStr(c.NPWP)+derefStr(c.ContactName)), "IMC")
+	}
+}
+
+func TestRepo_List_FilterByActive(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := clients.NewRepo(tx, testutil.Store(t))
+
+	active := true
+	res, err := repo.List(ctx, clients.ListFilter{IsActive: &active, Limit: 200})
+	require.NoError(t, err)
+	for _, c := range res.Rows {
+		assert.True(t, c.IsActive)
+	}
+}
+
+func TestRepo_List_TotalCountReflectsFilter(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := clients.NewRepo(tx, testutil.Store(t))
+
+	all, err := repo.List(ctx, clients.ListFilter{Limit: 1})
+	require.NoError(t, err)
+	filtered, err := repo.List(ctx, clients.ListFilter{Q: "IMC", Limit: 1})
+	require.NoError(t, err)
+	assert.LessOrEqual(t, filtered.Total, all.Total)
+}
+
+func TestRepo_List_SortByCreatedAtDesc(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := clients.NewRepo(tx, testutil.Store(t))
+
+	res, err := repo.List(ctx, clients.ListFilter{SortBy: "createdAt", SortDir: "desc", Limit: 10})
+	require.NoError(t, err)
+	require.NotEmpty(t, res.Rows)
+	for i := 1; i < len(res.Rows); i++ {
+		assert.False(t, res.Rows[i].CreatedAt.After(res.Rows[i-1].CreatedAt))
+	}
+}
+
+func derefStr(p *string) string {
+	if p == nil {
+		return ""
+	}
+	return *p
 }
 
 func TestRepo_GetByID(t *testing.T) {

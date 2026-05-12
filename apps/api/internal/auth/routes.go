@@ -11,6 +11,7 @@ func Routes(h *Handler, requireAuth func(http.Handler) http.Handler) chi.Router 
 	r := chi.NewRouter()
 	r.Post("/login", h.Login)
 	r.Post("/logout", h.Logout)
+	r.Post("/refresh", h.Refresh)
 
 	r.Group(func(r chi.Router) {
 		r.Use(requireAuth)

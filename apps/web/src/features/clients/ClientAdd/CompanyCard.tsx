@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react"
+import { useCountries } from "@/features/countries/hooks"
 import {
   CheckmarkIcon,
   type ClientAddFormData,
@@ -6,17 +7,16 @@ import {
   dropdownItemStyle,
   dropdownLabelStyle,
   dropdownPanelStyle,
-} from "./helpers";
-import { useCountries } from "@/features/countries/hooks";
+} from "./helpers"
 
 interface CompanyCardProps {
-  form: ClientAddFormData;
-  onChange: (field: keyof ClientAddFormData, value: string) => void;
-  isNamaPerusahaanFilled: boolean;
-  alamatError: string | null;
-  negaraOpen: boolean;
-  setNegaraOpen: (fn: (o: boolean) => boolean) => void;
-  closeNegara: () => void;
+  form: ClientAddFormData
+  onChange: (field: keyof ClientAddFormData, value: string) => void
+  isNamaPerusahaanFilled: boolean
+  alamatError: string | null
+  negaraOpen: boolean
+  setNegaraOpen: (fn: (o: boolean) => boolean) => void
+  closeNegara: () => void
 }
 
 // Company identity card.
@@ -29,56 +29,70 @@ export default function CompanyCard({
   setNegaraOpen,
   closeNegara,
 }: CompanyCardProps) {
-  const { data: countries } = useCountries();
-  const [negaraQuery, setNegaraQuery] = useState("");
+  const { data: countries } = useCountries()
+  const [negaraQuery, setNegaraQuery] = useState("")
   const negaraOptions = useMemo(
-    () => (countries ?? []).map(c => ({ value: c.code, label: `${c.code} - ${c.name}` })),
+    () => (countries ?? []).map((c) => ({ value: c.code, label: `${c.code} - ${c.name}` })),
     [countries],
-  );
+  )
   const filteredNegaraOptions = useMemo(() => {
-    const q = negaraQuery.trim().toLowerCase();
-    if (!q) return negaraOptions.slice(0, 5);
-    return negaraOptions.filter(o => o.label.toLowerCase().includes(q)).slice(0, 5);
-  }, [negaraOptions, negaraQuery]);
-  const selectedNegara = negaraOptions.find(n => n.value === form.kodeNegara);
+    const q = negaraQuery.trim().toLowerCase()
+    if (!q) return negaraOptions.slice(0, 5)
+    return negaraOptions.filter((o) => o.label.toLowerCase().includes(q)).slice(0, 5)
+  }, [negaraOptions, negaraQuery])
+  const selectedNegara = negaraOptions.find((n) => n.value === form.kodeNegara)
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   function handleLogoSelect(file: File | undefined) {
-    if (!file) return;
-    if (!file.type.startsWith("image/")) return;
-    const reader = new FileReader();
+    if (!file) return
+    if (!file.type.startsWith("image/")) return
+    const reader = new FileReader()
     reader.onload = () => {
-      if (typeof reader.result === "string") onChange("logo", reader.result);
-    };
-    reader.readAsDataURL(file);
+      if (typeof reader.result === "string") onChange("logo", reader.result)
+    }
+    reader.readAsDataURL(file)
   }
   return (
     <div className="ca-section">
       <div className="ca-section-heading">Identitas Perusahaan</div>
       <div className="ca-row-2">
         <div className="ca-field">
-          <label className="ca-label">Nama Perusahaan <span className="ca-required">*</span></label>
+          <label className="ca-label">
+            Nama Perusahaan <span className="ca-required">*</span>
+          </label>
           <input
             className="ca-input"
             type="text"
             placeholder="Masukkan nama lengkap klien"
             value={form.namaPerusahaan}
-            onChange={e => onChange("namaPerusahaan", e.target.value)}
+            onChange={(e) => onChange("namaPerusahaan", e.target.value)}
           />
         </div>
         <div className="ca-field">
-          <label className="ca-label">Kode Negara <span className="ca-required">*</span></label>
+          <label className="ca-label">
+            Kode Negara <span className="ca-required">*</span>
+          </label>
           <div className="ca-select-wrapper">
             <button
               type="button"
               className="ca-select-btn"
-              onClick={() => { if (isNamaPerusahaanFilled) setNegaraOpen(o => !o); }}
+              onClick={() => {
+                if (isNamaPerusahaanFilled) setNegaraOpen((o) => !o)
+              }}
               disabled={!isNamaPerusahaanFilled}
               style={!isNamaPerusahaanFilled ? disabledStyle : undefined}
             >
               <span>{selectedNegara?.label ?? "Pilih Negara"}</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              >
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
@@ -86,11 +100,10 @@ export default function CompanyCard({
               <div style={dropdownPanelStyle}>
                 <div style={{ padding: "0 12px 8px" }}>
                   <input
-                    autoFocus
                     type="text"
                     placeholder="Cari negara..."
                     value={negaraQuery}
-                    onChange={e => setNegaraQuery(e.target.value)}
+                    onChange={(e) => setNegaraQuery(e.target.value)}
                     style={{
                       width: "100%",
                       padding: "8px 12px",
@@ -105,23 +118,35 @@ export default function CompanyCard({
                   />
                 </div>
                 {filteredNegaraOptions.length === 0 && (
-                  <div style={{ padding: "12px 20px", fontSize: "13px", color: "#94A3B8", fontFamily: "'Inter', sans-serif", textAlign: "center" }}>
+                  <div
+                    style={{
+                      padding: "12px 20px",
+                      fontSize: "13px",
+                      color: "#94A3B8",
+                      fontFamily: "'Inter', sans-serif",
+                      textAlign: "center",
+                    }}
+                  >
                     Tidak ada hasil
                   </div>
                 )}
-                {filteredNegaraOptions.map(opt => {
-                  const isActive = form.kodeNegara === opt.value;
+                {filteredNegaraOptions.map((opt) => {
+                  const isActive = form.kodeNegara === opt.value
                   return (
                     <button
                       key={opt.value}
                       type="button"
                       style={dropdownItemStyle}
-                      onClick={() => { onChange("kodeNegara", opt.value); setNegaraQuery(""); closeNegara(); }}
+                      onClick={() => {
+                        onChange("kodeNegara", opt.value)
+                        setNegaraQuery("")
+                        closeNegara()
+                      }}
                     >
                       <span style={dropdownLabelStyle(isActive)}>{opt.label}</span>
                       {isActive && <CheckmarkIcon />}
                     </button>
-                  );
+                  )
                 })}
               </div>
             )}
@@ -129,39 +154,49 @@ export default function CompanyCard({
         </div>
       </div>
       <div className="ca-field">
-        <label className="ca-label">Alamat <span className="ca-required">*</span></label>
+        <label className="ca-label">
+          Alamat <span className="ca-required">*</span>
+        </label>
         <textarea
           className="ca-textarea"
           placeholder="Alamat lengkap operasional (min. 20 karakter)"
           value={form.alamat}
-          onChange={e => onChange("alamat", e.target.value)}
+          onChange={(e) => onChange("alamat", e.target.value)}
           rows={3}
           disabled={!isNamaPerusahaanFilled}
           style={!isNamaPerusahaanFilled ? disabledStyle : undefined}
         />
-        {alamatError && <span style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}>{alamatError}</span>}
+        {alamatError && (
+          <span style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}>
+            {alamatError}
+          </span>
+        )}
       </div>
       <div className="ca-field">
-        <label className="ca-label">Logo <span className="ca-optional">(Opsional)</span></label>
+        <label className="ca-label">
+          Logo <span className="ca-optional">(Opsional)</span>
+        </label>
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
           style={{ display: "none" }}
-          onChange={e => {
-            handleLogoSelect(e.target.files?.[0]);
-            e.target.value = "";
+          onChange={(e) => {
+            handleLogoSelect(e.target.files?.[0])
+            e.target.value = ""
           }}
         />
         {form.logo ? (
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "16px",
-            padding: "12px",
-            background: "#F2F4F6",
-            borderRadius: "8px",
-          }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "16px",
+              padding: "12px",
+              background: "#F2F4F6",
+              borderRadius: "8px",
+            }}
+          >
             <img
               src={form.logo}
               alt="Logo klien"
@@ -174,7 +209,14 @@ export default function CompanyCard({
                 flexShrink: 0,
               }}
             />
-            <div style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: "13px", color: "#4A4455" }}>
+            <div
+              style={{
+                flex: 1,
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "13px",
+                color: "#4A4455",
+              }}
+            >
               Logo terpilih
             </div>
             <button
@@ -238,7 +280,16 @@ export default function CompanyCard({
               transition: "all 0.15s",
             }}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#94A3B8"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <circle cx="9" cy="9" r="2" />
               <path d="M21 15l-5-5L5 21" />
@@ -253,5 +304,5 @@ export default function CompanyCard({
         )}
       </div>
     </div>
-  );
+  )
 }

@@ -25,7 +25,7 @@ Feature: User management lifecycle
   Scenario: Reject duplicate email
     Given an existing staff account
     When the user creates a staff account with the seeded email
-    Then the response status is 400
+    Then the response status is 409
 
   Scenario: Read user detail
     Given an existing staff account

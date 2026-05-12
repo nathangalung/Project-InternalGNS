@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { getPageNumbers } from "@/features/quotations/QuotationList/helpers"
+import { getPageNumbers } from "@/lib/pagination"
 
 interface PaginationProps {
   totalItems: number
@@ -28,11 +28,14 @@ export default function Pagination({
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="pagination" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div
+      className="pagination"
+      style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
         <div style={{ position: "relative", display: "inline-block" }}>
           <button
-            onClick={() => setOpen(o => !o)}
+            onClick={() => setOpen((o) => !o)}
             style={{
               display: "flex",
               alignItems: "center",
@@ -50,7 +53,13 @@ export default function Pagination({
           >
             {itemsPerPage} Baris
             <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
-              <path d="M1 1L5 5L9 1" stroke="#4A4455" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M1 1L5 5L9 1"
+                stroke="#4A4455"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
           {open && (
@@ -72,7 +81,7 @@ export default function Pagination({
                 boxSizing: "border-box",
               }}
             >
-              {rowsPerPageOptions.map(val => {
+              {rowsPerPageOptions.map((val) => {
                 const isActive = itemsPerPage === val
                 return (
                   <button
@@ -110,7 +119,13 @@ export default function Pagination({
                     </span>
                     {isActive && (
                       <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
-                        <path d="M1 5.5L4.5 9L13 1" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path
+                          d="M1 5.5L4.5 9L13 1"
+                          stroke="#630ED4"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                     )}
                   </button>
@@ -120,23 +135,47 @@ export default function Pagination({
           )}
         </div>
         <span className="pagination-info">
-          Menampilkan {totalItems === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + itemsPerPage, totalItems)} dari {totalItems} {resourceLabel}
+          Menampilkan {totalItems === 0 ? 0 : startIndex + 1}-
+          {Math.min(startIndex + itemsPerPage, totalItems)} dari {totalItems} {resourceLabel}
         </span>
       </div>
 
       <div className="page-buttons">
-        <button className="page-btn-nav" onClick={() => onPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>
+        <button
+          className="page-btn-nav"
+          onClick={() => onPage(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+        >
           <svg width="5" height="8" viewBox="0 0 5 8" fill="none">
-            <path d="M4 1L1 4L4 7" stroke="#191C1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M4 1L1 4L4 7"
+              stroke="#191C1E"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </button>
         {getPageNumbers(currentPage, totalPages).map((n, i) =>
           n === null ? (
-            <span key={`e${i}`} style={{ padding: "0 2px", color: "#9CA3AF", fontSize: "13px", alignSelf: "center", userSelect: "none" }}>
+            <span
+              key={`e${i}`}
+              style={{
+                padding: "0 2px",
+                color: "#9CA3AF",
+                fontSize: "13px",
+                alignSelf: "center",
+                userSelect: "none",
+              }}
+            >
               …
             </span>
           ) : (
-            <button key={n} onClick={() => onPage(n)} className={`page-btn${n === currentPage ? " page-btn--active" : ""}`}>
+            <button
+              key={n}
+              onClick={() => onPage(n)}
+              className={`page-btn${n === currentPage ? " page-btn--active" : ""}`}
+            >
               {n}
             </button>
           ),
@@ -147,7 +186,13 @@ export default function Pagination({
           disabled={currentPage === totalPages || totalPages === 0}
         >
           <svg width="5" height="8" viewBox="0 0 5 8" fill="none">
-            <path d="M1 1L4 4L1 7" stroke="#191C1E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M1 1L4 4L1 7"
+              stroke="#191C1E"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </button>
       </div>

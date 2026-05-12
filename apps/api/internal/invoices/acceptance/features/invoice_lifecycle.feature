@@ -38,7 +38,7 @@ Feature: Invoice lifecycle
   Scenario: Update invoice dates
     Given a delivered purchase order
     When the user updates invoice due date to "2026-12-31"
-    Then the response status is 204
+    Then the response status is 200
 
   Scenario: Summary endpoint returns aggregates
     Given a delivered purchase order

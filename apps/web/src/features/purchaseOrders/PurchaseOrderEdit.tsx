@@ -1,78 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
-import type { Page } from "../../main";
-import Sidebar from "@/components/shared/Sidebar";
-import ClientAdd from "@/features/clients/ClientAdd";
-import ProductAdd from "@/features/items/ProductAdd";
-import DiscountModal from "@/features/quotations/DiscountModal";
-import { useClients, useClientSearch } from "@/features/clients/hooks";
-import { useUnits } from "@/features/units/hooks";
-import { useQuotation, useUpdateQuotation } from "@/features/quotations/hooks";
-import type { ClientRow, ClientSearchHit, QuotationCreateInput, QuotationItemInput } from "@/types/api";
-
-import Step1Client, { type Client } from "@/features/quotations/Step1Client";
-import Step2Product from "@/features/quotations/Step2Product";
-import Step3Shipping from "@/features/quotations/Step3Shipping";
-import Step4Summary from "@/features/quotations/Step4Summary";
-
-function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
-
-function fromClientRow(c: ClientRow): Client & { contactId?: number } {
-  return {
-    id: String(c.id),
-    name: c.name,
-    narahubung: c.contactName ?? "",
-    country: c.countryCode,
-    initials: initialsOf(c.name),
-    phone: c.contactPhone,
-    email: c.contactEmail ?? c.email,
-    npwp: c.npwp,
-    nomorTKU: c.tkuId,
-    referenceNumber: c.number,
-    lokasi: c.address,
-    contactId: c.contactId,
-  };
-}
-
-function fromClientHit(h: ClientSearchHit): Client & { contactId?: number } {
-  return {
-    id: String(h.companyId),
-    name: h.companyName,
-    narahubung: h.contactName ?? "",
-    country: h.companyCountry,
-    initials: initialsOf(h.companyName),
-    phone: h.contactPhone,
-    email: h.contactEmail ?? h.companyEmail,
-    npwp: h.companyNpwp,
-    nomorTKU: h.companyTku,
-    referenceNumber: h.companyNumber,
-    lokasi: h.companyAddress,
-    contactId: h.contactId,
-  };
-}
-
-function dedupeByCompany(hits: ClientSearchHit[]): ClientSearchHit[] {
-  const seen = new Set<number>();
-  const out: ClientSearchHit[] = [];
-  for (const h of hits) {
-    if (seen.has(h.companyId)) continue;
-    seen.add(h.companyId);
-    out.push(h);
-  }
-  return out;
-}
+import { useEffect, useMemo, useState } from "react"
+import Sidebar from "@/components/shared/Sidebar"
+import ClientAdd from "@/features/clients/ClientAdd"
+import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
+import { useClientSearch, useClients } from "@/features/clients/hooks"
+import ProductAdd from "@/features/items/ProductAdd"
+import { usePoItems, usePurchaseOrder, useUpdatePoItems } from "@/features/purchaseOrders/hooks"
+import DiscountModal from "@/features/quotations/DiscountModal"
+import Step1Client, { type Client } from "@/features/quotations/Step1Client"
+import Step2Product from "@/features/quotations/Step2Product"
+import Step3Shipping from "@/features/quotations/Step3Shipping"
+import Step4Summary from "@/features/quotations/Step4Summary"
+import { useUnits } from "@/features/units/hooks"
+import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
+import type { Page } from "@/lib/page"
+import type { PoItemInput, PoUpdateItemsInput } from "@/types/api"
 
 interface PurchaseOrderEditProps {
-  quotationId: string;
-  onNavigate: (page: Page) => void;
-  onLogout: () => void;
+  poId: string
+  onNavigate: (page: Page) => void
+  onLogout: () => void
 }
 
 const steps = [
@@ -80,160 +26,173 @@ const steps = [
   { n: 2, label: "PRODUK" },
   { n: 3, label: "PENGIRIMAN" },
   { n: 4, label: "RINGKASAN" },
-];
+]
 
 export interface ProductItem {
-  id: number;
-  itemId?: number;
-  vendorId?: number;
-  vendorProductId?: number;
-  nama: string;
-  kodeImpa: string;
-  requestedNama: string;
-  requestedKodeImpa: string;
-  vendor: string;
-  jumlah: number;
-  satuan: string;
-  hargaBeli: number;
-  hargaJual: number;
+  id: number
+  quotationItemId?: number
+  itemId?: number
+  vendorId?: number
+  vendorProductId?: number
+  nama: string
+  kodeImpa: string
+  requestedNama: string
+  requestedKodeImpa: string
+  vendor: string
+  jumlah: number
+  satuan: string
+  hargaBeli: number
+  hargaJual: number
 }
 
-function formatRp(n: number): string {
-  return n.toLocaleString("id-ID");
-}
+export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: PurchaseOrderEditProps) {
+  const [step, setStep] = useState(1)
 
-export default function PurchaseOrderEdit({ quotationId, onNavigate, onLogout }: PurchaseOrderEditProps) {
-  const [step, setStep] = useState(1);
+  const [selectedClient, setSelectedClient] = useState("")
+  const [search, setSearch] = useState("")
+  const [showClientAdd, setShowClientAdd] = useState(false)
 
-  const [selectedClient, setSelectedClient] = useState("");
-  const [search, setSearch] = useState("");
-  const [showClientAdd, setShowClientAdd] = useState(false);
+  const [showProductAdd, setShowProductAdd] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null)
+  const [showDiscountModal, setShowDiscountModal] = useState(false)
+  const [discountPct, setDiscountPct] = useState<number>(0)
+  const [products, setProducts] = useState<ProductItem[]>([])
+  const [prodPageSize, setProdPageSize] = useState(5)
+  const [prodPage, setProdPage] = useState(1)
+  const [isRowDropdownOpen, setIsRowDropdownOpen] = useState(false)
 
-  const [showProductAdd, setShowProductAdd] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
-  const [showDiscountModal, setShowDiscountModal] = useState(false);
-  const [discountPct, setDiscountPct] = useState<number>(0);
-  const [products, setProducts] = useState<ProductItem[]>([]);
-  const [prodPageSize, setProdPageSize] = useState(5);
-  const [prodPage, setProdPage] = useState(1);
-  const [isRowDropdownOpen, setIsRowDropdownOpen] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState("")
+  const [shippingTime, setShippingTime] = useState("")
+  const [shippingCost, setShippingCost] = useState("")
 
-  const [shippingAddress, setShippingAddress] = useState("");
-  const [shippingTime, setShippingTime] = useState("");
-  const [shippingCost, setShippingCost] = useState("");
+  const [jatuhTempo, setJatuhTempo] = useState("")
+  const [berlakuSampai, setBerlakuSampai] = useState("")
 
-  const [jatuhTempo, setJatuhTempo] = useState("");
-  const [berlakuSampai, setBerlakuSampai] = useState("");
-
-  const isAlamatFilled = shippingAddress.trim().length >= 20 && /[a-zA-Z]/.test(shippingAddress);
-  const isWaktuFilled = isAlamatFilled && shippingTime.trim().length > 0;
-  const isTenggatWaktuFilled = jatuhTempo.trim().length > 0 && berlakuSampai.trim().length > 0;
-  const hasContent = products.length > 0 || isAlamatFilled;
+  const isAlamatFilled = shippingAddress.trim().length >= 20 && /[a-zA-Z]/.test(shippingAddress)
+  const isWaktuFilled = isAlamatFilled && shippingTime.trim().length > 0
+  const isTenggatWaktuFilled = jatuhTempo.trim().length > 0 && berlakuSampai.trim().length > 0
+  const hasContent = products.length > 0 || isAlamatFilled
 
   useEffect(() => {
-    if (!isAlamatFilled) { setShippingTime(""); setShippingCost(""); }
-  }, [isAlamatFilled]);
+    if (!isAlamatFilled) {
+      setShippingTime("")
+      setShippingCost("")
+    }
+  }, [isAlamatFilled])
 
   useEffect(() => {
-    if (!isWaktuFilled) setShippingCost("");
-  }, [isWaktuFilled]);
+    if (!isWaktuFilled) setShippingCost("")
+  }, [isWaktuFilled])
 
-  let isNextDisabled = false;
-  if (step === 1) isNextDisabled = selectedClient === "";
+  let isNextDisabled = false
+  if (step === 1) isNextDisabled = selectedClient === ""
 
-  const disabledStyle: React.CSSProperties = { opacity: 0.6, cursor: "not-allowed", backgroundColor: "#F7F7F8" };
-
-  function deleteProduct(id: number) {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+  const disabledStyle: React.CSSProperties = {
+    opacity: 0.6,
+    cursor: "not-allowed",
+    backgroundColor: "#F7F7F8",
   }
 
-  const numericQuotationId = Number(quotationId);
-  const hasNumericQuotationId = Number.isFinite(numericQuotationId) && numericQuotationId > 0;
-  const { data: detail } = useQuotation(hasNumericQuotationId ? numericQuotationId : undefined);
-  const updateMutation = useUpdateQuotation();
+  function deleteProduct(id: number) {
+    setProducts((prev) => prev.filter((p) => p.id !== id))
+  }
 
-  const trimmedSearch = search.trim();
-  const { data: clientsData } = useClients({ limit: 50 });
-  const { data: searchHits } = useClientSearch(trimmedSearch, { limit: 30 });
-  const { data: unitsData } = useUnits();
+  const numericPoId = Number(poId)
+  const hasNumericPoId = Number.isFinite(numericPoId) && numericPoId > 0
+  const { data: poDetail } = usePurchaseOrder(hasNumericPoId ? numericPoId : undefined)
+  const { data: poItems } = usePoItems(hasNumericPoId ? numericPoId : undefined)
+  const updateMutation = useUpdatePoItems()
+
+  const trimmedSearch = search.trim()
+  const { data: clientsData } = useClients({ limit: 50 })
+  const { data: searchHits } = useClientSearch(trimmedSearch, { limit: 30 })
+  const { data: unitsData } = useUnits()
 
   const remoteClients: Array<Client & { contactId?: number }> = useMemo(() => {
     if (trimmedSearch.length > 0) {
-      return dedupeByCompany(searchHits ?? []).map(fromClientHit);
+      return dedupeByCompany(searchHits ?? []).map(fromClientHit)
     }
-    return (clientsData ?? []).map(fromClientRow);
-  }, [trimmedSearch, searchHits, clientsData]);
+    return (clientsData?.rows ?? []).map(fromClientRow)
+  }, [trimmedSearch, searchHits, clientsData])
 
-  const baseClients: Client[] = remoteClients;
-  const sortedClients = [...baseClients].sort((a, b) => a.name.localeCompare(b.name, "id"));
-  const filteredClients = trimmedSearch && remoteClients.length === 0
-    ? sortedClients.filter((c) =>
-        c.name.toLowerCase().includes(trimmedSearch.toLowerCase()) ||
-        c.narahubung.toLowerCase().includes(trimmedSearch.toLowerCase()),
-      )
-    : sortedClients.slice(0, 10);
+  const baseClients: Client[] = remoteClients
+  const sortedClients = [...baseClients].sort((a, b) => a.name.localeCompare(b.name, "id"))
+  const filteredClients =
+    trimmedSearch && remoteClients.length === 0
+      ? sortedClients.filter(
+          (c) =>
+            c.name.toLowerCase().includes(trimmedSearch.toLowerCase()) ||
+            c.narahubung.toLowerCase().includes(trimmedSearch.toLowerCase()),
+        )
+      : sortedClients.slice(0, 10)
 
-  const currentClient = baseClients.find((c) => c.id === selectedClient);
+  const currentClient = baseClients.find((c) => c.id === selectedClient)
 
   const unitNameById = useMemo(() => {
-    const m = new Map<number, string>();
-    for (const u of unitsData ?? []) m.set(u.id, u.code);
-    return m;
-  }, [unitsData]);
+    const m = new Map<number, string>()
+    for (const u of unitsData ?? []) m.set(u.id, u.code)
+    return m
+  }, [unitsData])
 
   const unitIdByCode = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const u of unitsData ?? []) m.set(u.code.toUpperCase(), u.id);
-    return m;
-  }, [unitsData]);
+    const m = new Map<string, number>()
+    for (const u of unitsData ?? []) m.set(u.code.toUpperCase(), u.id)
+    return m
+  }, [unitsData])
 
   useEffect(() => {
-    if (!detail) return;
-    setSelectedClient(String(detail.companyClientId));
-    setDiscountPct(Number(detail.discountPct) || 0);
-    const productItems: ProductItem[] = detail.items
+    if (!poDetail) return
+    setSelectedClient(String(poDetail.companyClientId))
+  }, [poDetail])
+
+  useEffect(() => {
+    if (!poItems) return
+    const productItems: ProductItem[] = poItems
       .filter((it) => it.itemType === "product")
       .map((it, i) => {
-        const sell = Number(it.sellingPrice);
-        const cost = it.costPrice !== undefined ? Number(it.costPrice) : 0;
+        const sell = Number(it.sellingPrice)
+        const cost = it.costPrice !== undefined ? Number(it.costPrice) : 0
         return {
           id: it.id ?? i + 1,
-          itemId: it.offeredItemId ?? it.requestedItemId,
-          vendorProductId: it.vendorProductId,
-          nama: it.requestedName,
-          kodeImpa: it.requestedImpa ?? "",
-          requestedNama: it.requestedName,
-          requestedKodeImpa: it.requestedImpa ?? "",
+          quotationItemId: it.quotationItemId,
+          itemId: it.offeredItemId,
+          nama: it.itemName,
+          kodeImpa: it.itemCode ?? "",
+          requestedNama: it.itemName,
+          requestedKodeImpa: it.itemCode ?? "",
           vendor: "",
           jumlah: Number(it.qty) || 0,
-          satuan: it.unitId !== undefined ? unitNameById.get(it.unitId) ?? "" : "",
+          satuan: it.unitId !== undefined ? (unitNameById.get(it.unitId) ?? "") : "",
           hargaBeli: Number.isFinite(cost) ? cost : 0,
           hargaJual: Number.isFinite(sell) ? sell : 0,
-        };
-      });
-    setProducts(productItems);
-    const ship = detail.items.find((it) => it.itemType === "shipping");
+        }
+      })
+    setProducts(productItems)
+    const ship = poItems.find((it) => it.itemType === "shipping")
     if (ship) {
-      setShippingAddress(ship.shipDestination ?? "");
-      const cost = Number(ship.sellingPrice);
-      setShippingCost(Number.isFinite(cost) ? String(cost) : "");
+      setShippingAddress(ship.shipDestination ?? "")
+      const cost = Number(ship.sellingPrice)
+      setShippingCost(Number.isFinite(cost) ? String(cost) : "")
     }
-  }, [detail, unitNameById]);
+  }, [poItems, unitNameById])
 
-  const summaryTotalProdukQty = products.reduce((sum, p) => sum + p.jumlah, 0);
-  const summaryTotalHargaBeli = products.reduce((sum, p) => sum + (p.hargaBeli * p.jumlah), 0);
-  const summaryTotalHargaJual = products.reduce((sum, p) => sum + (p.hargaJual * p.jumlah), 0);
-  const nominalDiskon = summaryTotalHargaJual * (discountPct / 100);
-  const summarySubTotal = summaryTotalHargaJual - nominalDiskon;
-  const summaryShippingCost = Number(shippingCost) || 0;
-  const hasProducts = products.length > 0;
-  const dppBase = hasProducts ? summarySubTotal : summaryShippingCost;
-  const summaryDpp = Math.round(dppBase * 11 / 12);
-  const summaryPpn = Math.round(summaryDpp * 0.12);
-  const summaryGrandTotal = hasProducts
-    ? summarySubTotal + summaryPpn + summaryShippingCost
-    : summaryShippingCost + summaryPpn;
-  const summaryProfit = hasProducts ? summarySubTotal - summaryTotalHargaBeli : 0;
+  const summaryTotalProdukQty = products.reduce((sum, p) => sum + p.jumlah, 0)
+  const summaryTotalHargaBeli = products.reduce((sum, p) => sum + p.hargaBeli * p.jumlah, 0)
+  const summaryTotalHargaJual = products.reduce((sum, p) => sum + p.hargaJual * p.jumlah, 0)
+  const nominalDiskon = summaryTotalHargaJual * (discountPct / 100)
+  const summarySubTotal = summaryTotalHargaJual - nominalDiskon
+  const summaryShippingCost = Number(shippingCost) || 0
+  const hasProducts = products.length > 0
+  const {
+    dppNilaiLain: summaryDpp,
+    ppnAmount: summaryPpn,
+    grandTotal: summaryGrandTotal,
+  } = computeTaxBreakdown({
+    subtotal: summarySubTotal,
+    shipping: summaryShippingCost,
+    hasProducts,
+  })
+  const summaryProfit = hasProducts ? summarySubTotal - summaryTotalHargaBeli : 0
 
   return (
     <div className="admin-shell">
@@ -241,11 +200,18 @@ export default function PurchaseOrderEdit({ quotationId, onNavigate, onLogout }:
 
       <div className="admin-main">
         <div className="page-content">
-
-          <div className="qe-header-section" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div
+            className="qe-header-section"
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+          >
             <div className="qe-header-left">
               <nav className="qd-breadcrumb">
-                <button className="qd-breadcrumb-link" onClick={() => onNavigate("purchase-orders")}>Daftar Purchase Order</button>
+                <button
+                  className="qd-breadcrumb-link"
+                  onClick={() => onNavigate("purchase-orders")}
+                >
+                  Daftar Purchase Order
+                </button>
                 <span className="qd-breadcrumb-sep">&rsaquo;</span>
                 <span className="qd-breadcrumb-current">Edit Purchase Order</span>
               </nav>
@@ -254,47 +220,101 @@ export default function PurchaseOrderEdit({ quotationId, onNavigate, onLogout }:
               </div>
             </div>
 
-            <div className="qe-header-actions" style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+            <div
+              className="qe-header-actions"
+              style={{ display: "flex", gap: "16px", alignItems: "center" }}
+            >
               {step > 1 && (
-                <button className="btn-admin-outline" onClick={() => setStep(step - 1)} style={{ width: "148px", justifyContent: "center" }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg> Kembali
+                <button
+                  className="btn-admin-outline"
+                  onClick={() => setStep(step - 1)}
+                  style={{ width: "148px", justifyContent: "center" }}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M19 12H5M12 5l-7 7 7 7" />
+                  </svg>{" "}
+                  Kembali
                 </button>
               )}
               {step < steps.length && (
-                <button className="btn-admin-primary" onClick={() => setStep(step + 1)} disabled={isNextDisabled} style={{ width: "148px", justifyContent: "center", opacity: isNextDisabled ? 0.5 : 1, cursor: isNextDisabled ? "not-allowed" : "pointer", transition: "opacity 0.2s" }}>
-                  Lanjut <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: "scaleX(-1)" }}><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                <button
+                  className="btn-admin-primary"
+                  onClick={() => setStep(step + 1)}
+                  disabled={isNextDisabled}
+                  style={{
+                    width: "148px",
+                    justifyContent: "center",
+                    opacity: isNextDisabled ? 0.5 : 1,
+                    cursor: isNextDisabled ? "not-allowed" : "pointer",
+                    transition: "opacity 0.2s",
+                  }}
+                >
+                  Lanjut{" "}
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ transform: "scaleX(-1)" }}
+                  >
+                    <path d="M19 12H5M12 5l-7 7 7 7" />
+                  </svg>
                 </button>
               )}
               {step === steps.length && (
                 <button
                   className="btn-admin-primary"
                   disabled={!isTenggatWaktuFilled || !hasContent || updateMutation.isPending}
-                  style={{ width: "148px", justifyContent: "center", background: "#630ED4", opacity: !isTenggatWaktuFilled || !hasContent || updateMutation.isPending ? 0.5 : 1, cursor: !isTenggatWaktuFilled || !hasContent || updateMutation.isPending ? "not-allowed" : "pointer", transition: "opacity 0.2s" }}
+                  style={{
+                    width: "148px",
+                    justifyContent: "center",
+                    background: "#630ED4",
+                    opacity:
+                      !isTenggatWaktuFilled || !hasContent || updateMutation.isPending ? 0.5 : 1,
+                    cursor:
+                      !isTenggatWaktuFilled || !hasContent || updateMutation.isPending
+                        ? "not-allowed"
+                        : "pointer",
+                    transition: "opacity 0.2s",
+                  }}
                   onClick={() => {
-                    if (!hasNumericQuotationId || !detail) return;
-                    const items: QuotationItemInput[] = products.map((p) => ({
-                      requestedImpa: p.requestedKodeImpa || p.kodeImpa || undefined,
-                      requestedName: p.requestedNama || p.nama,
+                    if (!hasNumericPoId || !poDetail) return
+                    const items: PoItemInput[] = products.map((p) => ({
+                      quotationItemId: p.quotationItemId,
                       offeredItemId: p.itemId,
-                      vendorProductId: p.vendorProductId,
+                      itemName: p.requestedNama || p.nama,
+                      itemCode: p.requestedKodeImpa || p.kodeImpa || undefined,
                       qty: String(p.jumlah),
-                      unitId: unitIdByCode.get(p.satuan.toUpperCase()) ?? 0,
+                      unitId: unitIdByCode.get(p.satuan.toUpperCase()),
                       sellingPrice: String(p.hargaJual),
                       costPrice: String(p.hargaBeli),
-                    }));
-                    const shipDays = Number(shippingTime);
-                    const input: Omit<QuotationCreateInput, "companyClientId" | "contactId" | "status"> = {
-                      clientRefNo: currentClient?.referenceNumber,
+                    }))
+                    const shipDays = Number(shippingTime)
+                    const input: PoUpdateItemsInput = {
                       discountPct: String(discountPct),
                       shippingAddress: shippingAddress || undefined,
-                      shippingDays: Number.isFinite(shipDays) && shipDays > 0 ? shipDays : undefined,
+                      shippingDays:
+                        Number.isFinite(shipDays) && shipDays > 0 ? shipDays : undefined,
                       shippingCost: shippingCost || undefined,
                       items,
-                    };
+                    }
                     updateMutation.mutate(
-                      { id: numericQuotationId, input },
+                      { id: numericPoId, input, rowVersion: poDetail.rowVersion },
                       { onSuccess: () => onNavigate("purchase-order-detail") },
-                    );
+                    )
                   }}
                 >
                   {updateMutation.isPending ? "Menyimpan..." : "Simpan"}
@@ -305,10 +325,18 @@ export default function PurchaseOrderEdit({ quotationId, onNavigate, onLogout }:
 
           <div className="qe-stepper">
             {steps.map((s, i) => (
-              <div key={s.n} style={{display: 'contents'}}>
+              <div key={s.n} style={{ display: "contents" }}>
                 <div className="qe-step-slot">
-                  <div className={`qe-step-pill${i === step - 1 ? " qe-step-pill--active" : ""}`}><span className={`qe-step-num${i === step - 1 ? " qe-step-num--active" : ""}`}>{s.n}</span></div>
-                  <span className={`qe-step-label${i === step - 1 ? " qe-step-label--active" : ""}`}>{s.label}</span>
+                  <div className={`qe-step-pill${i === step - 1 ? " qe-step-pill--active" : ""}`}>
+                    <span className={`qe-step-num${i === step - 1 ? " qe-step-num--active" : ""}`}>
+                      {s.n}
+                    </span>
+                  </div>
+                  <span
+                    className={`qe-step-label${i === step - 1 ? " qe-step-label--active" : ""}`}
+                  >
+                    {s.label}
+                  </span>
                 </div>
                 {i < steps.length - 1 && <div key={`line-${i}`} className="qe-step-connector" />}
               </div>
@@ -317,74 +345,167 @@ export default function PurchaseOrderEdit({ quotationId, onNavigate, onLogout }:
 
           {step === 1 && (
             <Step1Client
-              search={search} setSearch={setSearch} filteredClients={filteredClients}
-              selectedClient={selectedClient} setSelectedClient={setSelectedClient} setShowClientAdd={setShowClientAdd}
+              search={search}
+              setSearch={setSearch}
+              filteredClients={filteredClients}
+              selectedClient={selectedClient}
+              setSelectedClient={setSelectedClient}
+              setShowClientAdd={setShowClientAdd}
             />
           )}
           {step === 2 && (
             <Step2Product
-              products={products} deleteProduct={deleteProduct} setEditingProduct={setEditingProduct} setShowProductAdd={setShowProductAdd}
-              prodPageSize={prodPageSize} setProdPageSize={setProdPageSize} prodPage={prodPage} setProdPage={setProdPage}
-              isRowDropdownOpen={isRowDropdownOpen} setIsRowDropdownOpen={setIsRowDropdownOpen}
-              setShowDiscountModal={setShowDiscountModal} discountPct={discountPct} formatRp={formatRp}
+              products={products}
+              deleteProduct={deleteProduct}
+              setEditingProduct={setEditingProduct}
+              setShowProductAdd={setShowProductAdd}
+              prodPageSize={prodPageSize}
+              setProdPageSize={setProdPageSize}
+              prodPage={prodPage}
+              setProdPage={setProdPage}
+              isRowDropdownOpen={isRowDropdownOpen}
+              setIsRowDropdownOpen={setIsRowDropdownOpen}
+              setShowDiscountModal={setShowDiscountModal}
+              discountPct={discountPct}
+              formatRp={formatRp}
               summaryTotalHargaBeli={summaryTotalHargaBeli}
-              summaryTotalHargaJual={summaryTotalHargaJual} nominalDiskon={nominalDiskon} summarySubTotal={summarySubTotal} summaryDpp={summaryDpp} summaryPpn={summaryPpn}
+              summaryTotalHargaJual={summaryTotalHargaJual}
+              nominalDiskon={nominalDiskon}
+              summarySubTotal={summarySubTotal}
+              summaryDpp={summaryDpp}
+              summaryPpn={summaryPpn}
               onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
             />
           )}
           {step === 3 && (
             <Step3Shipping
-              shippingAddress={shippingAddress} setShippingAddress={setShippingAddress}
-              shippingTime={shippingTime} setShippingTime={setShippingTime}
-              shippingCost={shippingCost} setShippingCost={setShippingCost}
-              isAlamatFilled={isAlamatFilled} isWaktuFilled={isWaktuFilled} disabledStyle={disabledStyle} formatRp={formatRp}
+              shippingAddress={shippingAddress}
+              setShippingAddress={setShippingAddress}
+              shippingTime={shippingTime}
+              setShippingTime={setShippingTime}
+              shippingCost={shippingCost}
+              setShippingCost={setShippingCost}
+              isAlamatFilled={isAlamatFilled}
+              isWaktuFilled={isWaktuFilled}
+              disabledStyle={disabledStyle}
+              formatRp={formatRp}
             />
           )}
           {step === 4 && (
             <Step4Summary
-              jatuhTempo={jatuhTempo} setJatuhTempo={setJatuhTempo} berlakuSampai={berlakuSampai} setBerlakuSampai={setBerlakuSampai}
-              currentClient={currentClient} shippingAddress={shippingAddress} shippingTime={shippingTime} shippingCost={shippingCost}
-              products={products} discountPct={discountPct} formatRp={formatRp}
-              summaryTotalProdukQty={summaryTotalProdukQty} summaryTotalHargaBeli={summaryTotalHargaBeli} summaryTotalHargaJual={summaryTotalHargaJual}
-              nominalDiskon={nominalDiskon} summarySubTotal={summarySubTotal} summaryDpp={summaryDpp} summaryPpn={summaryPpn}
-              summaryShippingCost={summaryShippingCost} summaryProfit={summaryProfit} summaryGrandTotal={summaryGrandTotal}
+              jatuhTempo={jatuhTempo}
+              setJatuhTempo={setJatuhTempo}
+              berlakuSampai={berlakuSampai}
+              setBerlakuSampai={setBerlakuSampai}
+              currentClient={currentClient}
+              shippingAddress={shippingAddress}
+              shippingTime={shippingTime}
+              shippingCost={shippingCost}
+              products={products}
+              discountPct={discountPct}
+              formatRp={formatRp}
+              summaryTotalProdukQty={summaryTotalProdukQty}
+              summaryTotalHargaBeli={summaryTotalHargaBeli}
+              summaryTotalHargaJual={summaryTotalHargaJual}
+              nominalDiskon={nominalDiskon}
+              summarySubTotal={summarySubTotal}
+              summaryDpp={summaryDpp}
+              summaryPpn={summaryPpn}
+              summaryShippingCost={summaryShippingCost}
+              summaryProfit={summaryProfit}
+              summaryGrandTotal={summaryGrandTotal}
             />
           )}
-
         </div>
       </div>
 
-      <DiscountModal open={showDiscountModal} onOpenChange={setShowDiscountModal} initialDiscount={discountPct} onSuccess={(val) => { setDiscountPct(val); setShowDiscountModal(false); }} />
-      <ClientAdd open={showClientAdd} onOpenChange={setShowClientAdd} onSuccess={() => { setShowClientAdd(false); setStep(2); }} />
+      <DiscountModal
+        open={showDiscountModal}
+        onOpenChange={setShowDiscountModal}
+        initialDiscount={discountPct}
+        onSuccess={(val) => {
+          setDiscountPct(val)
+          setShowDiscountModal(false)
+        }}
+      />
+      <ClientAdd
+        open={showClientAdd}
+        onOpenChange={setShowClientAdd}
+        onSuccess={() => {
+          setShowClientAdd(false)
+          setStep(2)
+        }}
+      />
       <ProductAdd
-        open={showProductAdd} initialData={editingProduct}
-        onOpenChange={(open) => { setShowProductAdd(open); if (!open) setEditingProduct(null); }}
+        open={showProductAdd}
+        initialData={editingProduct}
+        onOpenChange={(open) => {
+          setShowProductAdd(open)
+          if (!open) setEditingProduct(null)
+        }}
         onSuccess={(data) => {
           const splitOffer = (s: string): { kode: string; nama: string } => {
-            const trimmed = s.trim();
-            if (!trimmed) return { kode: "", nama: "" };
-            const [first, ...rest] = trimmed.split(/\s*-\s*/);
+            const trimmed = s.trim()
+            if (!trimmed) return { kode: "", nama: "" }
+            const [first, ...rest] = trimmed.split(/\s*-\s*/)
             if (rest.length > 0 && /^\d+$/.test(first)) {
-              return { kode: first, nama: rest.join(" - ") };
+              return { kode: first, nama: rest.join(" - ") }
             }
-            return { kode: "", nama: trimmed };
-          };
-          const offer = splitOffer(data.kodeImpaNama);
-          const nama = offer.nama;
-          const kodeImpa = offer.kode;
-          const reqSplit = splitOffer(data.requestedKodeImpaNama);
-          const requestedNama = reqSplit.nama || nama;
-          const requestedKodeImpa = reqSplit.kode;
+            return { kode: "", nama: trimmed }
+          }
+          const offer = splitOffer(data.kodeImpaNama)
+          const nama = offer.nama
+          const kodeImpa = offer.kode
+          const reqSplit = splitOffer(data.requestedKodeImpaNama)
+          const requestedNama = reqSplit.nama || nama
+          const requestedKodeImpa = reqSplit.kode
 
           if (editingProduct) {
-            setProducts((prev) => prev.map(p => p.id === editingProduct.id ? { ...p, itemId: data.itemId, vendorId: data.vendorId, vendorProductId: data.vendorProductId, nama, kodeImpa, requestedNama, requestedKodeImpa, vendor: data.namaVendor, jumlah: Number(data.jumlahProduk) || 1, satuan: data.satuan, hargaBeli: Number(data.hargaBeli) || 0, hargaJual: Number(data.hargaJual) || 0 } : p));
+            setProducts((prev) =>
+              prev.map((p) =>
+                p.id === editingProduct.id
+                  ? {
+                      ...p,
+                      itemId: data.itemId,
+                      vendorId: data.vendorId,
+                      vendorProductId: data.vendorProductId,
+                      nama,
+                      kodeImpa,
+                      requestedNama,
+                      requestedKodeImpa,
+                      vendor: data.namaVendor,
+                      jumlah: Number(data.jumlahProduk) || 1,
+                      satuan: data.satuan,
+                      hargaBeli: Number(data.hargaBeli) || 0,
+                      hargaJual: Number(data.hargaJual) || 0,
+                    }
+                  : p,
+              ),
+            )
           } else {
-            const nextId = products.reduce((m, p) => Math.max(m, p.id), 0) + 1;
-            setProducts((prev) => [ ...prev, { id: nextId, itemId: data.itemId, vendorId: data.vendorId, vendorProductId: data.vendorProductId, nama, kodeImpa, requestedNama, requestedKodeImpa, vendor: data.namaVendor, jumlah: Number(data.jumlahProduk) || 1, satuan: data.satuan, hargaBeli: Number(data.hargaBeli) || 0, hargaJual: Number(data.hargaJual) || 0 } ]);
+            const nextId = products.reduce((m, p) => Math.max(m, p.id), 0) + 1
+            setProducts((prev) => [
+              ...prev,
+              {
+                id: nextId,
+                itemId: data.itemId,
+                vendorId: data.vendorId,
+                vendorProductId: data.vendorProductId,
+                nama,
+                kodeImpa,
+                requestedNama,
+                requestedKodeImpa,
+                vendor: data.namaVendor,
+                jumlah: Number(data.jumlahProduk) || 1,
+                satuan: data.satuan,
+                hargaBeli: Number(data.hargaBeli) || 0,
+                hargaJual: Number(data.hargaJual) || 0,
+              },
+            ])
           }
-          setEditingProduct(null);
+          setEditingProduct(null)
         }}
       />
     </div>
-  );
+  )
 }

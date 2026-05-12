@@ -1,8 +1,9 @@
-import { useMemo, useState, type CSSProperties } from "react"
-import { ApiError } from "@/lib/api-client"
+import { type CSSProperties, useMemo, useState } from "react"
+import { CheckIcon } from "@/components/document/icons"
 import { useAddVendorToItem } from "@/features/items/hooks"
 import { useVendors } from "@/features/vendors/hooks"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
+import { ApiError } from "@/lib/api-client"
 
 interface AddVendorToItemModalProps {
   open: boolean
@@ -48,13 +49,11 @@ function dropdownLabelStyle(active: boolean): CSSProperties {
   }
 }
 
-const CheckIcon = () => (
-  <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
-    <path d="M1 5.5L4.5 9L13 1" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-)
-
-export default function AddVendorToItemModal({ open, itemId, onOpenChange }: AddVendorToItemModalProps) {
+export default function AddVendorToItemModal({
+  open,
+  itemId,
+  onOpenChange,
+}: AddVendorToItemModalProps) {
   const [vendorId, setVendorId] = useState<number | null>(null)
   const [vendorQuery, setVendorQuery] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -69,8 +68,10 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
   const filteredVendors = useMemo(() => {
     const q = vendorQuery.trim().toLowerCase()
     if (!q) return []
-    return (vendors ?? [])
-      .filter(v => v.name.toLowerCase().includes(q) || (v.location ?? "").toLowerCase().includes(q))
+    return (vendors?.rows ?? [])
+      .filter(
+        (v) => v.name.toLowerCase().includes(q) || (v.location ?? "").toLowerCase().includes(q),
+      )
       .slice(0, 5)
   }, [vendors, vendorQuery])
 
@@ -109,7 +110,8 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
       reset()
       onOpenChange(false)
     } catch (err) {
-      const msg = err instanceof ApiError ? (err.message || "Gagal menambah vendor.") : "Gagal menambah vendor."
+      const msg =
+        err instanceof ApiError ? err.message || "Gagal menambah vendor." : "Gagal menambah vendor."
       setSubmitError(msg)
     }
   }
@@ -123,12 +125,19 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
 
   return (
     <div className="ca-overlay" onClick={handleCancel}>
-      <div className="ca-modal" onClick={e => e.stopPropagation()}>
-
+      <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
         <div className="ca-header">
           <h2 className="ca-title">Tambah Vendor Terkait</h2>
           <button className="ca-close-btn" onClick={handleCancel} title="Tutup">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
               <line x1="1" y1="1" x2="13" y2="13" />
               <line x1="13" y1="1" x2="1" y2="13" />
             </svg>
@@ -136,17 +145,18 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
         </div>
 
         <div className="ca-body">
-
           <div className="ca-section">
             <div className="ca-field">
-              <label className="ca-label">Nama Vendor <span className="ca-required">*</span></label>
+              <label className="ca-label">
+                Nama Vendor <span className="ca-required">*</span>
+              </label>
               <div style={{ position: "relative" }}>
                 <input
                   className="ca-input"
                   type="text"
                   placeholder="Cari vendor..."
                   value={vendorQuery}
-                  onChange={e => {
+                  onChange={(e) => {
                     setVendorQuery(e.target.value)
                     setShowSuggestions(true)
                     if (vendorId) setVendorId(null)
@@ -179,7 +189,15 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
                       color: "#94A3B8",
                     }}
                   >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 14 14"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    >
                       <line x1="1" y1="1" x2="13" y2="13" />
                       <line x1="13" y1="1" x2="1" y2="13" />
                     </svg>
@@ -188,9 +206,25 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
                 {showSuggestions && vendorQuery.length > 0 && (
                   <div style={dropdownPanelStyle}>
                     {filteredVendors.length === 0 ? (
-                      <div style={{ padding: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                        <div style={{ fontSize: "13px", color: "#94A3B8", fontFamily: "'Inter', sans-serif", textAlign: "center", padding: "4px 0" }}>
-                          Vendor "<strong style={{ color: "#4A4455" }}>{vendorQuery}</strong>" tidak ditemukan
+                      <div
+                        style={{
+                          padding: "12px",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            color: "#94A3B8",
+                            fontFamily: "'Inter', sans-serif",
+                            textAlign: "center",
+                            padding: "4px 0",
+                          }}
+                        >
+                          Vendor "<strong style={{ color: "#4A4455" }}>{vendorQuery}</strong>" tidak
+                          ditemukan
                         </div>
                         <button
                           type="button"
@@ -214,7 +248,15 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
                             color: "#630ED4",
                           }}
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                          >
                             <line x1="12" y1="5" x2="12" y2="19" />
                             <line x1="5" y1="12" x2="19" y2="12" />
                           </svg>
@@ -222,7 +264,7 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
                         </button>
                       </div>
                     ) : (
-                      filteredVendors.map(v => {
+                      filteredVendors.map((v) => {
                         const active = vendorId === v.id
                         return (
                           <button
@@ -249,7 +291,9 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
 
           <div className="ca-section">
             <div className="ca-field">
-              <label className="ca-label">Harga Beli <span className="ca-required">*</span></label>
+              <label className="ca-label">
+                Harga Beli <span className="ca-required">*</span>
+              </label>
               <div className="ca-phone-wrapper">
                 <span className="ca-phone-prefix">IDR</span>
                 <input
@@ -258,7 +302,7 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
                   inputMode="numeric"
                   placeholder="0"
                   value={formatRupiah(costPrice)}
-                  onChange={e => setCostPrice(e.target.value.replace(/\D/g, ""))}
+                  onChange={(e) => setCostPrice(e.target.value.replace(/\D/g, ""))}
                 />
               </div>
             </div>
@@ -267,18 +311,27 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
           <div className="ca-section">
             <div className="ca-field">
               <label className="ca-label">
-                Link Produk <span style={{ fontWeight: 400, color: "#9CA3AF", textTransform: "none", letterSpacing: 0 }}>(opsional)</span>
+                Link Produk{" "}
+                <span
+                  style={{
+                    fontWeight: 400,
+                    color: "#9CA3AF",
+                    textTransform: "none",
+                    letterSpacing: 0,
+                  }}
+                >
+                  (opsional)
+                </span>
               </label>
               <input
                 className="ca-input"
                 type="url"
                 placeholder="https://vendor.com/produk/..."
                 value={productUrl}
-                onChange={e => setProductUrl(e.target.value)}
+                onChange={(e) => setProductUrl(e.target.value)}
               />
             </div>
           </div>
-
         </div>
 
         <div className="ca-footer" style={{ padding: "16px 24px" }}>
@@ -309,7 +362,6 @@ export default function AddVendorToItemModal({ open, itemId, onOpenChange }: Add
             {addVendor.isPending ? "Menyimpan..." : "Tambahkan"}
           </button>
         </div>
-
       </div>
 
       <VendorAddModal

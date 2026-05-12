@@ -21,7 +21,7 @@ func NewHandler(repo *Repo) *Handler {
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	units, err := h.repo.ListAll(r.Context())
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 

@@ -1,5 +1,5 @@
-import { apiRequest } from "@/lib/api-client"
-import type { LoginResponse, MeUser } from "@/types/api"
+import { apiRequest, getRefreshToken } from "@/lib/api-client"
+import type { LoginResponse } from "@/types/api"
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
   return apiRequest<LoginResponse>({
@@ -10,9 +10,10 @@ export async function login(email: string, password: string): Promise<LoginRespo
 }
 
 export async function logout(): Promise<void> {
-  await apiRequest<void>({ path: "/auth/logout", method: "POST" })
-}
-
-export async function me(): Promise<MeUser> {
-  return apiRequest<MeUser>({ path: "/auth/me" })
+  const refreshToken = getRefreshToken()
+  await apiRequest<void>({
+    path: "/auth/logout",
+    method: "POST",
+    body: refreshToken ? { refreshToken } : undefined,
+  })
 }

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import PurchaseOrderList from "@/features/purchaseOrders/PurchaseOrderList"
 import { useAuth } from "@/features/auth/hooks"
+import PurchaseOrderList from "@/features/purchaseOrders/PurchaseOrderList"
 import { makePageNavigate } from "@/lib/page-nav"
 
 export const Route = createFileRoute("/_authed/purchase-orders/")({
@@ -14,8 +14,12 @@ function PurchaseOrderListRoute() {
   return (
     <PurchaseOrderList
       onNavigate={makePageNavigate(navigate)}
-      onViewDetail={qid => void navigate({ to: "/purchase-orders/$id", params: { id: String(qid) } })}
-      onViewQuotation={qid => void navigate({ to: "/quotations/$id", params: { id: String(qid) } })}
+      onViewDetail={(qid) =>
+        void navigate({ to: "/purchase-orders/$id", params: { id: String(qid) } })
+      }
+      onViewQuotation={(qid) =>
+        void navigate({ to: "/quotations/$id", params: { id: String(qid) } })
+      }
       onLogout={() => {
         logout()
         void navigate({ to: "/login" })

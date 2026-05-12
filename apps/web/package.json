@@ -18,24 +18,24 @@
     "typecheck": "bun run generate:routes && tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.99.0",
-    "@tanstack/react-router": "^1.168.0",
+    "@tanstack/react-query": "^5.100.10",
+    "@tanstack/react-router": "^1.169.2",
+    "exceljs": "^4.4.0",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "xlsx": "^0.18.5"
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.12",
-    "@tailwindcss/vite": "^4.2.0",
-    "@tanstack/react-query-devtools": "^5.99.0",
+    "@biomejs/biome": "^2.4.15",
+    "@tailwindcss/vite": "^4.3.0",
+    "@tanstack/react-query-devtools": "^5.100.10",
     "@tanstack/react-router-devtools": "^1.166.13",
-    "@tanstack/router-cli": "^1.166.0",
-    "@tanstack/router-plugin": "^1.167.0",
+    "@tanstack/router-cli": "^1.166.43",
+    "@tanstack/router-plugin": "^1.167.35",
     "@types/node": "^22.10.5",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react-swc": "^4.2.3",
-    "tailwindcss": "^4.2.0",
+    "tailwindcss": "^4.3.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
   }

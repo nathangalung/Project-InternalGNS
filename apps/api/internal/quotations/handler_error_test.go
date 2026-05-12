@@ -26,31 +26,32 @@ func TestHandler_ErrorPaths(t *testing.T) {
 	srv := faultySrv(t)
 
 	cases := []struct {
-		name   string
-		method string
-		path   string
-		body   any
-		want   int
+		name    string
+		method  string
+		path    string
+		body    any
+		headers map[string]string
+		want    int
 	}{
-		{"list", http.MethodGet, "/quotations/", nil, http.StatusInternalServerError},
-		{"stats", http.MethodGet, "/quotations/stats", nil, http.StatusInternalServerError},
-		{"get", http.MethodGet, "/quotations/1", nil, http.StatusInternalServerError},
+		{"list", http.MethodGet, "/quotations/", nil, nil, http.StatusInternalServerError},
+		{"stats", http.MethodGet, "/quotations/stats", nil, nil, http.StatusInternalServerError},
+		{"get", http.MethodGet, "/quotations/1", nil, nil, http.StatusInternalServerError},
 		{"create", http.MethodPost, "/quotations/", quotations.CreateRequest{
 			CompanyClientID: 1,
 			DiscountPct:     "0",
 			Items: []quotations.CreateItem{
 				{RequestedName: "X", Qty: "1", UnitID: 19, SellingPrice: "1"},
 			},
-		}, http.StatusBadRequest},
+		}, nil, http.StatusInternalServerError},
 		{"update", http.MethodPut, "/quotations/1", quotations.UpdateRequest{
 			DiscountPct: "0",
 			Items: []quotations.CreateItem{
 				{RequestedName: "X", Qty: "1", UnitID: 19, SellingPrice: "1"},
 			},
-		}, http.StatusBadRequest},
+		}, map[string]string{"If-Match": "0"}, http.StatusInternalServerError},
 		{"status", http.MethodPatch, "/quotations/1/status",
-			quotations.ChangeStatusRequest{Status: "sent"}, http.StatusBadRequest},
-		{"send", http.MethodPost, "/quotations/1/send", nil, http.StatusBadRequest},
+			quotations.ChangeStatusRequest{Status: "sent"}, nil, http.StatusInternalServerError},
+		{"send", http.MethodPost, "/quotations/1/send", nil, nil, http.StatusInternalServerError},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -68,6 +69,9 @@ func TestHandler_ErrorPaths(t *testing.T) {
 				req, err = http.NewRequest(c.method, srv.URL+c.path, nil)
 			}
 			require.NoError(t, err)
+			for k, v := range c.headers {
+				req.Header.Set(k, v)
+			}
 			res, err := srv.Client().Do(req)
 			require.NoError(t, err)
 			defer res.Body.Close()

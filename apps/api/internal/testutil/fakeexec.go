@@ -32,7 +32,7 @@ func (fakeRow) Scan(_ ...any) error { return ErrFake }
 
 // Exec fails after N calls.
 type CountingExec struct {
-	Inner    interface {
+	Inner interface {
 		Query(context.Context, string, ...any) (pgx.Rows, error)
 		QueryRow(context.Context, string, ...any) pgx.Row
 		Exec(context.Context, string, ...any) (pgconn.CommandTag, error)

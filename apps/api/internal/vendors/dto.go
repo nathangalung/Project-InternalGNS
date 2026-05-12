@@ -5,6 +5,24 @@ import (
 	"time"
 )
 
+// ListFilter for vendors.list query.
+type ListFilter struct {
+	Q           string
+	IsActive    *bool
+	CountryName string // matches against vendors.location ILIKE
+	MinTotal    *string
+	SortBy      string
+	SortDir     string
+	Limit       int
+	Offset      int
+}
+
+// ListResult wraps rows with total.
+type ListResult struct {
+	Rows  []Vendor
+	Total int64
+}
+
 // Vendor mirrors vendors table.
 type Vendor struct {
 	ID            int64           `db:"id"             json:"id"`
@@ -16,6 +34,12 @@ type Vendor struct {
 	UpdatedAt     time.Time       `db:"updated_at"     json:"updatedAt"`
 	ProductCount  int64           `db:"product_count"  json:"productCount"`
 	TotalPurchase string          `db:"total_purchase" json:"totalPurchase"`
+	LogoObjectKey *string         `db:"logo_object_key" json:"logoObjectKey,omitempty"`
+}
+
+// UpdateLogoRequest persists the MinIO object key for a vendor logo.
+type UpdateLogoRequest struct {
+	ObjectKey string `json:"objectKey"`
 }
 
 // SearchResult mirrors fn_search_vendors return shape.
@@ -28,7 +52,7 @@ type SearchResult struct {
 	MatchTier   string          `db:"match_tier"    json:"matchTier"`
 }
 
-// ItemByVendor mirrors fn_search_items_by_vendor return shape.
+// ItemByVendor row from vendor_products joined with items.
 type ItemByVendor struct {
 	ItemID       int64   `db:"item_id"        json:"itemId"`
 	ItemName     string  `db:"item_name"      json:"itemName"`
@@ -36,6 +60,7 @@ type ItemByVendor struct {
 	VendorSKU    *string `db:"vendor_sku"     json:"vendorSku,omitempty"`
 	CostPrice    *string `db:"cost_price"     json:"costPrice,omitempty"`
 	LastQuotedAt *string `db:"last_quoted_at" json:"lastQuotedAt,omitempty"`
+	ProductURL   *string `db:"product_url"    json:"productUrl,omitempty"`
 }
 
 type CreateVendorRequest struct {

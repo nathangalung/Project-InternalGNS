@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
-import ClientDetail from "@/features/clients/ClientDetail"
 import { useAuth } from "@/features/auth/hooks"
+import ClientDetail from "@/features/clients/ClientDetail"
 import { useClient } from "@/features/clients/hooks"
 import { makePageNavigate } from "@/lib/page-nav"
 

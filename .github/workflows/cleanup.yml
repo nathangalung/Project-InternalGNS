@@ -1,0 +1,50 @@
+name: cleanup
+
+# Sweeps MinIO keys not referenced by any DB row.
+# Weekly dry-run reports orphans; manual dispatch can purge.
+on:
+  schedule:
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+    inputs:
+      purge:
+        description: "Set to 'true' to delete orphans (false = dry-run)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cleanup-${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  orphan-blobs:
+    name: orphan blob sweep
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/api
+    env:
+      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.PROD_JWT_SECRET }}
+      MINIO_ENDPOINT: ${{ secrets.PROD_MINIO_ENDPOINT }}
+      MINIO_ACCESS_KEY: ${{ secrets.PROD_MINIO_ACCESS_KEY }}
+      MINIO_SECRET_KEY: ${{ secrets.PROD_MINIO_SECRET_KEY }}
+      MINIO_USE_SSL: ${{ secrets.PROD_MINIO_USE_SSL }}
+      PURGE: ${{ github.event.inputs.purge }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: apps/api/go.mod
+          cache-dependency-path: apps/api/go.sum
+      - name: sweep
+        run: |
+          if [ "$PURGE" = "true" ] && [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            go run ./cmd/orphan-blobs --dry-run=false
+          else
+            go run ./cmd/orphan-blobs --dry-run
+          fi

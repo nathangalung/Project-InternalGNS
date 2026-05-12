@@ -3,6 +3,8 @@ package items
 import (
 	"context"
 	"errors"
+	"strconv"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 
@@ -21,12 +23,70 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 
 var ErrNotFound = errors.New("not found")
 
-func (r *Repo) List(ctx context.Context, limit, offset int) ([]Item, error) {
-	rows, err := r.db.Query(ctx, r.store.Get("items.list"), limit, offset)
-	if err != nil {
-		return nil, err
+func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
+	args := []any{}
+	addArg := func(v any) string {
+		args = append(args, v)
+		return "$" + strconv.Itoa(len(args))
 	}
-	return pgx.CollectRows(rows, pgx.RowToStructByName[Item])
+	where := strings.Builder{}
+	if f.Q != "" {
+		p := addArg("%" + f.Q + "%")
+		where.WriteString(" AND (name ILIKE " + p + " OR impa_code ILIKE " + p + ")")
+	}
+	if f.IsActive != nil {
+		p := addArg(*f.IsActive)
+		where.WriteString(" AND is_active = " + p)
+	}
+	if f.UnitID != nil {
+		p := addArg(*f.UnitID)
+		where.WriteString(" AND default_unit_id = " + p)
+	}
+
+	var out ListResult
+	countSQL := r.store.Get("items.list_count_base") + where.String()
+	if err := r.db.QueryRow(ctx, countSQL, args...).Scan(&out.Total); err != nil {
+		return out, err
+	}
+
+	sortBy := "name"
+	switch f.SortBy {
+	case "createdAt", "created_at":
+		sortBy = "created_at"
+	case "impaCode", "impa_code":
+		sortBy = "impa_code"
+	}
+	sortDir := "ASC"
+	if strings.EqualFold(f.SortDir, "desc") {
+		sortDir = "DESC"
+	}
+
+	dataArgs := append([]any{}, args...)
+	dataAdd := func(v any) string {
+		dataArgs = append(dataArgs, v)
+		return "$" + strconv.Itoa(len(dataArgs))
+	}
+	limit := f.Limit
+	if limit <= 0 {
+		limit = 50
+	}
+	if limit > 200 {
+		limit = 200
+	}
+	dataSQL := r.store.Get("items.list_base") +
+		where.String() +
+		" ORDER BY " + sortBy + " " + sortDir +
+		" LIMIT " + dataAdd(limit) + " OFFSET " + dataAdd(f.Offset)
+
+	rows, err := r.db.Query(ctx, dataSQL, dataArgs...)
+	if err != nil {
+		return out, err
+	}
+	out.Rows, err = pgx.CollectRows(rows, pgx.RowToStructByName[Item])
+	if out.Rows == nil {
+		out.Rows = []Item{}
+	}
+	return out, err
 }
 
 func (r *Repo) GetByID(ctx context.Context, id int64) (Item, error) {
@@ -63,6 +123,18 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateItemRequest, user
 		return Item{}, ErrNotFound
 	}
 	return item, err
+}
+
+// UpdateImage writes the MinIO object key for the item image.
+func (r *Repo) UpdateImage(ctx context.Context, id int64, objectKey string, userID int64) error {
+	tag, err := r.db.Exec(ctx, r.store.Get("items.update_image"), id, objectKey, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 // Upsert vendor_products row.
@@ -146,4 +218,22 @@ func (r *Repo) SuggestSellingPrices(ctx context.Context, itemID int64, limit int
 		return nil, err
 	}
 	return pgx.CollectRows(rows, pgx.RowToStructByName[PriceHistory])
+}
+
+// SearchVendorOffers runs the VENDOR_OFFER tier query.
+func (r *Repo) SearchVendorOffers(ctx context.Context, q string, limit int) ([]VendorOfferHit, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.search_vendor_offers"), q, limit)
+	if err != nil {
+		return nil, err
+	}
+	return pgx.CollectRows(rows, pgx.RowToStructByName[VendorOfferHit])
+}
+
+// SearchRequestHistory runs the REQUEST_HISTORY tier query.
+func (r *Repo) SearchRequestHistory(ctx context.Context, q string, limit int) ([]RequestHistoryHit, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.search_request_history"), q, limit)
+	if err != nil {
+		return nil, err
+	}
+	return pgx.CollectRows(rows, pgx.RowToStructByName[RequestHistoryHit])
 }

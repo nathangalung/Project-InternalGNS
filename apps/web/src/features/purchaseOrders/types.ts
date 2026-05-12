@@ -1,12 +1,6 @@
-export type PoStatus = "PENDING" | "UPLOADED" | "ON_PROGRESS" | "DELIVERED"
+import type { PoBackendStatus } from "@/types/api"
 
-export interface PoLocalRecord {
-  status: PoStatus
-  fileName?: string
-  fileSize?: number
-  fileDataUrl?: string
-  uploadedAt?: string
-}
+export type PoStatus = PoBackendStatus
 
 export interface PoRow {
   quotationId: number
@@ -17,5 +11,5 @@ export interface PoRow {
   total: string
   status: PoStatus
   fileName?: string
-  fileDataUrl?: string
+  objectKey?: string
 }

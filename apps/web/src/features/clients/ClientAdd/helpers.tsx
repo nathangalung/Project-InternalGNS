@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties } from "react"
 
 export const dropdownPanelStyle: CSSProperties = {
   position: "absolute",
@@ -13,7 +13,7 @@ export const dropdownPanelStyle: CSSProperties = {
   flexDirection: "column",
   padding: "8px 0",
   zIndex: 50,
-};
+}
 
 export const dropdownItemStyle: CSSProperties = {
   display: "flex",
@@ -26,7 +26,7 @@ export const dropdownItemStyle: CSSProperties = {
   border: "none",
   cursor: "pointer",
   textAlign: "left",
-};
+}
 
 export function dropdownLabelStyle(active: boolean): CSSProperties {
   return {
@@ -35,32 +35,38 @@ export function dropdownLabelStyle(active: boolean): CSSProperties {
     fontSize: "14px",
     lineHeight: "20px",
     color: active ? "#630ED4" : "#4A4455",
-  };
+  }
 }
 
 export const disabledStyle: CSSProperties = {
   opacity: 0.6,
   cursor: "not-allowed",
   backgroundColor: "#F7F7F8",
-};
+}
 
 export const CheckmarkIcon = () => (
   <svg width="14" height="11" viewBox="0 0 14 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M1 5.5L4.5 9L13 1" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M1 5.5L4.5 9L13 1"
+      stroke="#630ED4"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
-);
+)
 
 export interface ClientAddFormData {
-  namaPerusahaan: string;
-  kodeNegara: string;
-  alamat: string;
-  logo: string;          // data URL for preview only (not yet persisted)
-  namaKontak: string;
-  nomorTelepon: string;
-  email: string;
-  npwp: string;
-  tku: string;
-  referenceNumber: string;
+  namaPerusahaan: string
+  kodeNegara: string
+  alamat: string
+  logo: string // data URL for preview only (not yet persisted)
+  namaKontak: string
+  nomorTelepon: string
+  email: string
+  npwp: string
+  tku: string
+  referenceNumber: string
 }
 
 export const INITIAL_FORM: ClientAddFormData = {
@@ -74,18 +80,18 @@ export const INITIAL_FORM: ClientAddFormData = {
   npwp: "",
   tku: "",
   referenceNumber: "",
-};
+}
 
 export function isValidAddress(s: string): boolean {
-  const t = s.trim();
-  return t.length >= 20 && /[a-zA-Z]/.test(t);
+  const t = s.trim()
+  return t.length >= 20 && /[a-zA-Z]/.test(t)
 }
 
 export function isValidEmail(s: string): boolean {
-  return s.includes("@") && s.split("@").length === 2 && s.split("@")[1].includes(".");
+  return s.includes("@") && s.split("@").length === 2 && s.split("@")[1].includes(".")
 }
 
 export function isValidPhone(s: string): boolean {
-  const digits = s.replace(/[^0-9]/g, "");
-  return digits.length >= 9 && digits.length <= 13;
+  const digits = s.replace(/[^0-9]/g, "")
+  return digits.length >= 9 && digits.length <= 13
 }

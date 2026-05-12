@@ -12,7 +12,7 @@ import (
 
 const (
 	seedUserID int64 = 1
-	seedItemID int64 = 1
+	seedItemID int64 = 9000001
 )
 
 func ptrI16(v int16) *int16 { return &v }
@@ -22,9 +22,10 @@ func TestRepo_List(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
 
-	rows, err := repo.List(ctx, 50, 0)
+	res, err := repo.List(ctx, items.ListFilter{Limit: 50})
 	require.NoError(t, err)
-	assert.NotEmpty(t, rows)
+	assert.NotEmpty(t, res.Rows)
+	assert.Greater(t, res.Total, int64(0))
 }
 
 func TestRepo_GetByID(t *testing.T) {
@@ -104,4 +105,22 @@ func TestRepo_SuggestSellingPrices(t *testing.T) {
 	hist, err := repo.SuggestSellingPrices(ctx, seedItemID, 5)
 	require.NoError(t, err)
 	_ = hist
+}
+
+func TestRepo_SearchVendorOffers(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := items.NewRepo(tx, testutil.Store(t))
+
+	hits, err := repo.SearchVendorOffers(ctx, "bearing", 5)
+	require.NoError(t, err)
+	_ = hits
+}
+
+func TestRepo_SearchRequestHistory(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := items.NewRepo(tx, testutil.Store(t))
+
+	hits, err := repo.SearchRequestHistory(ctx, "bearing", 5)
+	require.NoError(t, err)
+	_ = hits
 }

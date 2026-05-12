@@ -1,4 +1,5 @@
-import type { Page } from "@/main"
+import StatusBadge from "@/components/shared/StatusBadge"
+import type { Page } from "@/lib/page"
 import type { InvoiceStatus } from "../types"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "../types"
 
@@ -11,7 +12,14 @@ interface HeaderProps {
   onDownload?: () => void
 }
 
-export default function Header({ invoiceNo, quotationNo, createdAt, status, onNavigate, onDownload }: HeaderProps) {
+export default function Header({
+  invoiceNo,
+  quotationNo,
+  createdAt,
+  status,
+  onNavigate,
+  onDownload,
+}: HeaderProps) {
   const badge = INVOICE_STATUS_STYLE[status]
   return (
     <>
@@ -32,9 +40,9 @@ export default function Header({ invoiceNo, quotationNo, createdAt, status, onNa
               <span className="qd-meta-sep">|</span>
               <span className="qd-meta-text">Dari Quotation {quotationNo}</span>
               <span className="qd-meta-sep">|</span>
-              <span className="status-badge" style={{ background: badge.bg, color: badge.color }}>
+              <StatusBadge bg={badge.bg} color={badge.color}>
                 {INVOICE_LABEL[status]}
-              </span>
+              </StatusBadge>
             </div>
           </div>
         </div>
@@ -45,7 +53,16 @@ export default function Header({ invoiceNo, quotationNo, createdAt, status, onNa
             onClick={onDownload}
             disabled={!onDownload}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="#fff"
+              stroke="#fff"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />

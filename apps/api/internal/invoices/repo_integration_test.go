@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
@@ -90,9 +91,10 @@ func TestRepo_List(t *testing.T) {
 	deliveredPOWithInvoice(t, tx)
 
 	repo := invoices.NewRepo(tx, testutil.Store(t))
-	rows, err := repo.List(ctx, nil, nil, 50, 0)
+	res, err := repo.List(ctx, invoices.ListFilter{Limit: 50})
 	require.NoError(t, err)
-	assert.NotEmpty(t, rows)
+	assert.NotEmpty(t, res.Rows)
+	assert.GreaterOrEqual(t, res.Total, int64(1))
 }
 
 // DPP equals subtotal, total math.
@@ -144,6 +146,56 @@ func TestRepo_ChangeStatus_NotFound(t *testing.T) {
 	repo := invoices.NewRepo(tx, testutil.Store(t))
 	err := repo.ChangeStatus(ctx, 99999999, invoices.StatusSent, seedUserID)
 	assert.ErrorIs(t, err, invoices.ErrNotFound)
+}
+
+func TestRepo_UpdateDates_VersionMatch(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, _, invID := deliveredPOWithInvoice(t, tx)
+
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+	before, err := repo.GetByID(ctx, invID)
+	require.NoError(t, err)
+
+	due := before.InvoiceDate.AddDate(0, 0, 14)
+	v := before.RowVersion
+	newVersion, err := repo.UpdateDates(ctx, invID, invoices.UpdateDatesRequest{DueDate: &due}, seedUserID, &v)
+	require.NoError(t, err)
+	assert.Greater(t, newVersion, before.RowVersion)
+
+	after, err := repo.GetByID(ctx, invID)
+	require.NoError(t, err)
+	require.NotNil(t, after.DueDate)
+	assert.WithinDuration(t, due, *after.DueDate, 0)
+	assert.Equal(t, newVersion, after.RowVersion)
+}
+
+func TestRepo_UpdateDates_VersionMismatch(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, _, invID := deliveredPOWithInvoice(t, tx)
+
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+	stale := int32(999)
+	_, err := repo.UpdateDates(ctx, invID, invoices.UpdateDatesRequest{}, seedUserID, &stale)
+	assert.ErrorIs(t, err, invoices.ErrVersionMismatch)
+}
+
+func TestRepo_UpdateDates_NotFound(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+
+	_, err := repo.UpdateDates(ctx, 99999999, invoices.UpdateDatesRequest{}, seedUserID, nil)
+	assert.ErrorIs(t, err, invoices.ErrNotFound)
+}
+
+func TestRepo_UpdateDates_NoIfMatchSkipsGuard(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, _, invID := deliveredPOWithInvoice(t, tx)
+
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+	due := time.Now().AddDate(0, 0, 7)
+	newVersion, err := repo.UpdateDates(ctx, invID, invoices.UpdateDatesRequest{DueDate: &due}, seedUserID, nil)
+	require.NoError(t, err)
+	assert.Greater(t, newVersion, int32(0))
 }
 
 func TestRepo_Summary(t *testing.T) {

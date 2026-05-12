@@ -1,65 +1,68 @@
-import { useState, type FormEvent } from "react";
+import { type FormEvent, useState } from "react"
 
-const logoImg = "/logo.png";
+const logoImg = "/logo.png"
 
 interface LoginProps {
-  onLogin: (email: string, password: string) => Promise<void>;
+  onLogin: (email: string, password: string) => Promise<void>
 }
 
 export default function Login({ onLogin }: LoginProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [emailError, setEmailError] = useState("")
+  const [passwordError, setPasswordError] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
 
   const validateEmail = (value: string) => {
     if (!value) {
-      setEmailError("");
-      return false;
+      setEmailError("")
+      return false
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(value)) {
-      setEmailError("Format surel tidak valid");
-      return false;
+      setEmailError("Format surel tidak valid")
+      return false
     }
-    setEmailError("");
-    return true;
-  };
+    setEmailError("")
+    return true
+  }
 
   const handleEmailChange = (value: string) => {
-    setEmail(value);
-    setPasswordError("");
-    validateEmail(value);
-  };
+    setEmail(value)
+    setPasswordError("")
+    validateEmail(value)
+  }
 
   const handlePasswordChange = (value: string) => {
-    setPassword(value);
-    setPasswordError("");
+    setPassword(value)
+    setPasswordError("")
     if (emailError && emailError !== "Format surel tidak valid") {
-      setEmailError("");
+      setEmailError("")
     }
-  };
+  }
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!validateEmail(email)) return;
-    if (!password) return;
+    e.preventDefault()
+    if (!validateEmail(email)) return
+    if (!password) return
     try {
-      await onLogin(email, password);
+      await onLogin(email, password)
     } catch (err) {
-      const message = (err instanceof Error ? err.message : "").toLowerCase();
+      const message = (err instanceof Error ? err.message : "").toLowerCase()
       if (message.includes("email not registered")) {
-        setEmailError("Surel belum terdaftar");
-        setPasswordError("");
-      } else if (message.includes("invalid password") || message.includes("invalid email or password")) {
-        setEmailError("");
-        setPasswordError("Kata sandi salah");
+        setEmailError("Surel belum terdaftar")
+        setPasswordError("")
+      } else if (
+        message.includes("invalid password") ||
+        message.includes("invalid email or password")
+      ) {
+        setEmailError("")
+        setPasswordError("Kata sandi salah")
       } else {
-        setPasswordError(err instanceof Error ? err.message : "Gagal masuk");
+        setPasswordError(err instanceof Error ? err.message : "Gagal masuk")
       }
     }
-  };
+  }
 
   return (
     <div className="login-page">
@@ -76,9 +79,7 @@ export default function Login({ onLogin }: LoginProps) {
       <div className="login-right">
         <div className="login-form-wrapper">
           <h2>Halo!</h2>
-          <p className="login-subtitle">
-            Masukkan kredensial Anda untuk mengakses dasbor.
-          </p>
+          <p className="login-subtitle">Masukkan kredensial Anda untuk mengakses dasbor.</p>
 
           <form onSubmit={handleSubmit}>
             {/* Email */}
@@ -103,9 +104,7 @@ export default function Login({ onLogin }: LoginProps) {
                   onChange={(e) => handleEmailChange(e.target.value)}
                 />
               </div>
-              {emailError && (
-                <span className="error-text">{emailError}</span>
-              )}
+              {emailError && <span className="error-text">{emailError}</span>}
             </div>
 
             {/* Password */}
@@ -151,23 +150,39 @@ export default function Login({ onLogin }: LoginProps) {
                   }}
                 >
                   {showPassword ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-5.94" />
                       <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-3.17 4.19" />
                       <path d="M14.12 14.12A3 3 0 0 1 9.88 9.88" />
                       <line x1="1" y1="1" x2="23" y2="23" />
                     </svg>
                   ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
                   )}
                 </button>
               </div>
-              {passwordError && (
-                <span className="error-text">{passwordError}</span>
-              )}
+              {passwordError && <span className="error-text">{passwordError}</span>}
             </div>
 
             {/* Submit */}
@@ -182,5 +197,5 @@ export default function Login({ onLogin }: LoginProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

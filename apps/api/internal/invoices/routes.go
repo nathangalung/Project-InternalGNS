@@ -14,6 +14,8 @@ func Routes(d deps.Deps) chi.Router {
 	r := chi.NewRouter()
 	repo := NewRepo(d.Pool, d.Queries)
 	h := NewHandler(repo)
+	h.storage = d.Storage
+	clientsRepo := clients.NewRepo(d.Pool, d.Queries)
 
 	r.Get("/", h.List)
 	r.Get("/summary", h.Summary)
@@ -22,11 +24,17 @@ func Routes(d deps.Deps) chi.Router {
 	r.Get("/{id}/items", h.ListItems)
 	r.Patch("/{id}/status", h.ChangeStatus)
 	r.Patch("/{id}/dates", h.UpdateDates)
+	r.Get("/{id}/attachment/upload-url", h.PresignAttachmentUpload)
+	r.Get("/{id}/attachment/download-url", h.PresignAttachmentDownload)
+	r.Patch("/{id}/attachment", h.UpdateAttachment)
+
+	coretax := NewCoretaxHandler(repo, clientsRepo, d.Coretax)
+	r.Get("/{id}/coretax.xml", coretax.Export)
 
 	if d.TemplatesRoot != "" {
 		exp := NewExportHandler(
 			repo,
-			clients.NewRepo(d.Pool, d.Queries),
+			clientsRepo,
 			quotations.NewRepo(d.Pool, d.Queries),
 			purchaseorders.NewRepo(d.Pool, d.Queries),
 			pdfgen.NewRenderer(d.TemplatesRoot),

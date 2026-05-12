@@ -2,7 +2,10 @@ package httperr
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // Wire-shape error response.
@@ -44,4 +47,30 @@ func Unprocessable(fields map[string]string) Error {
 }
 func Internal(detail string) Error {
 	return Error{Type: "about:blank", Title: "Internal Server Error", Status: http.StatusInternalServerError, Detail: detail}
+}
+func ServiceUnavailable(detail string) Error {
+	return Error{Type: "about:blank", Title: "Service Unavailable", Status: http.StatusServiceUnavailable, Detail: detail}
+}
+
+// FromDBErr maps pg SQLSTATE to HTTP.
+func FromDBErr(err error) Error {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		switch pgErr.Code {
+		case "P0001":
+			return Unprocessable(map[string]string{"db": pgErr.Message})
+		case "23503":
+			return NotFound(pgErr.Message)
+		case "23505":
+			return Conflict(pgErr.Message)
+		case "23502", "23514", "22P02", "22003":
+			return Unprocessable(map[string]string{"db": pgErr.Message})
+		}
+	}
+	return Internal(err.Error())
+}
+
+// RenderDBErr writes pg-aware error response.
+func RenderDBErr(w http.ResponseWriter, err error) {
+	Render(w, FromDBErr(err))
 }

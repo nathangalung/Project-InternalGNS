@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/api-client"
+import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
 import type {
   InvoiceBackendRow,
   InvoiceBackendStatus,
@@ -8,31 +8,27 @@ import type {
 
 export type ListParams = {
   q?: string
-  status?: InvoiceBackendStatus
+  status?: InvoiceBackendStatus | string
+  effectiveStatus?: string
+  dateFrom?: string
+  dateTo?: string
+  dueFrom?: string
+  dueTo?: string
+  minTotal?: string
+  maxTotal?: string
+  sortBy?: "invoiceDate" | "dueDate" | "total" | "createdAt"
+  sortDir?: "asc" | "desc"
   limit?: number
   offset?: number
 }
 
-function buildQuery(params: ListParams): string {
-  const search = new URLSearchParams()
-  if (params.q) search.set("q", params.q)
-  if (params.status) search.set("status", params.status)
-  if (params.limit !== undefined) search.set("limit", String(params.limit))
-  if (params.offset !== undefined) search.set("offset", String(params.offset))
-  return search.toString()
-}
-
-export async function list(params: ListParams = {}): Promise<InvoiceBackendRow[]> {
+export async function list(params: ListParams = {}): Promise<PaginatedList<InvoiceBackendRow>> {
   const qs = buildQuery(params)
-  return apiRequest<InvoiceBackendRow[]>({ path: `/invoices${qs ? `?${qs}` : ""}` })
+  return apiList<InvoiceBackendRow>({ path: `/invoices${qs ? `?${qs}` : ""}` })
 }
 
 export async function summary(): Promise<InvoiceSummary> {
   return apiRequest<InvoiceSummary>({ path: "/invoices/summary" })
-}
-
-export async function get(id: number): Promise<InvoiceBackendRow> {
-  return apiRequest<InvoiceBackendRow>({ path: `/invoices/${id}` })
 }
 
 export async function listItems(id: number): Promise<InvoiceItemRow[]> {
@@ -60,13 +56,35 @@ export async function changeStatus(id: number, status: InvoiceBackendStatus): Pr
   })
 }
 
-export async function updateDates(
+export type PresignAttachmentUpload = {
+  uploadUrl: string
+  objectKey: string
+  expiresAt: number
+}
+
+export type PresignAttachmentDownload = {
+  downloadUrl: string
+  expiresAt: number
+}
+
+export async function presignAttachmentUpload(
   id: number,
-  payload: { invoiceDate?: string; dueDate?: string },
-): Promise<void> {
+  fileName: string,
+): Promise<PresignAttachmentUpload> {
+  const qs = new URLSearchParams({ fileName }).toString()
+  return apiRequest<PresignAttachmentUpload>({
+    path: `/invoices/${id}/attachment/upload-url?${qs}`,
+  })
+}
+
+export async function presignAttachmentDownload(id: number): Promise<PresignAttachmentDownload> {
+  return apiRequest<PresignAttachmentDownload>({ path: `/invoices/${id}/attachment/download-url` })
+}
+
+export async function updateAttachment(id: number, objectKey: string): Promise<void> {
   await apiRequest<void>({
-    path: `/invoices/${id}/dates`,
+    path: `/invoices/${id}/attachment`,
     method: "PATCH",
-    body: payload,
+    body: { objectKey },
   })
 }

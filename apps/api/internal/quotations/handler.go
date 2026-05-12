@@ -12,6 +12,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 )
 
 type Handler struct {
@@ -45,29 +46,21 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if s := q.Get("maxTotal"); s != "" {
 		f.MaxTotal = &s
 	}
-	if s := q.Get("limit"); s != "" {
-		if v, err := strconv.Atoi(s); err == nil && v > 0 && v <= 200 {
-			f.Limit = v
-		}
-	}
-	if s := q.Get("offset"); s != "" {
-		if v, err := strconv.Atoi(s); err == nil && v >= 0 {
-			f.Offset = v
-		}
-	}
+	f.Limit, f.Offset = paginate.Parse(r)
 
-	rows, err := h.repo.List(r.Context(), f)
+	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, rows)
+	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
+	httpx.WriteJSON(w, http.StatusOK, res.Rows)
 }
 
 func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
 	stats, err := h.repo.Stats(r.Context())
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, stats)
@@ -86,10 +79,25 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, d)
+}
+
+func (h *Handler) Revisions(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+
+	revs, err := h.repo.ListRevisions(r.Context(), id)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, revs)
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
@@ -111,8 +119,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	userID := deps.CurrentUserID(r.Context())
 	id, err := h.repo.Create(r.Context(), req, userID)
 	if err != nil {
-		// Validation comes from DB.
-		httperr.Render(w, httperr.BadRequest(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusCreated, map[string]int64{"id": id})
@@ -122,6 +129,16 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+
+	ifMatch, err := parseIfMatch(r.Header.Get("If-Match"))
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest(err.Error()))
+		return
+	}
+	if ifMatch == nil {
+		httperr.Render(w, httperr.BadRequest("If-Match header required"))
 		return
 	}
 
@@ -136,13 +153,38 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := deps.CurrentUserID(r.Context())
-	_, err = h.repo.Update(r.Context(), id, req, userID)
+	newVersion, err := h.repo.Update(r.Context(), id, req, userID, ifMatch)
 	if err != nil {
-		// Update needs draft status.
-		httperr.Render(w, httperr.BadRequest(err.Error()))
+		// 409 per round3_plan optimistic-lock contract (not RFC 7232 412).
+		if errors.Is(err, ErrVersionMismatch) {
+			httperr.Render(w, httperr.Conflict("quotation row_version mismatch"))
+			return
+		}
+		if errors.Is(err, ErrNotFound) {
+			httperr.Render(w, httperr.NotFound("quotation not found"))
+			return
+		}
+		httperr.RenderDBErr(w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]int64{"id": id})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{
+		"id":         id,
+		"rowVersion": newVersion,
+	})
+}
+
+func parseIfMatch(raw string) (*int32, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil, nil
+	}
+	raw = strings.Trim(raw, `"`)
+	v, err := strconv.ParseInt(raw, 10, 32)
+	if err != nil {
+		return nil, errors.New("invalid If-Match")
+	}
+	r32 := int32(v)
+	return &r32, nil
 }
 
 func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
@@ -164,27 +206,33 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 
 	userID := deps.CurrentUserID(r.Context())
 	if err := h.repo.ChangeStatus(r.Context(), id, req.Status, req.Note, userID); err != nil {
-		// DB rejects bad transition.
-		httperr.Render(w, httperr.BadRequest(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Force status to sent.
+// Send forces status to sent with optional note.
 func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest("invalid id"))
 		return
 	}
-
+	note := "Quotation dikirim ke klien"
+	if r.Body != nil {
+		var body struct {
+			Note *string `json:"note,omitempty"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		if body.Note != nil && strings.TrimSpace(*body.Note) != "" {
+			note = *body.Note
+		}
+	}
 	userID := deps.CurrentUserID(r.Context())
-	if err := h.repo.ChangeStatus(r.Context(), id, "sent", strPtr("Quotation sent to client"), userID); err != nil {
-		httperr.Render(w, httperr.BadRequest(err.Error()))
+	if err := h.repo.ChangeStatus(r.Context(), id, "sent", &note, userID); err != nil {
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
-
-func strPtr(s string) *string { return &s }

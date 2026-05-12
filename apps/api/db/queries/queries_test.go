@@ -2,56 +2,12 @@ package queries
 
 import "testing"
 
-// Required named query blocks.
-var expectedNames = []string{
-	"clients.list",
-	"clients.get_by_id",
-	"clients.create",
-	"clients.search",
-	"clients.list_contacts",
-	"clients.create_contact",
-	"items.list",
-	"items.get_by_id",
-	"items.create",
-	"items.search",
-	"items.match_request",
-	"items.list_vendors_for_item",
-	"items.find_by_impa",
-	"items.match_with_vendor_by_id",
-	"items.suggest_selling_prices",
-	"vendors.list",
-	"vendors.get_by_id",
-	"vendors.create",
-	"vendors.search",
-	"vendors.list_items",
-	"units.list_all",
-	"countries.list_all",
-	"users.get_by_email",
-	"users.get_by_id",
-	"users.create",
-	"users.update_password",
-	"quotations.stats",
-	"quotations.get_header",
-	"quotations.get_items",
-	"quotations.get_history",
-	"quotations.list_base",
-	"quotations.fn_create",
-	"quotations.fn_update",
-	"quotations.fn_change_status",
-	"dashboard.summary",
-	"dashboard.ts_quotation",
-	"dashboard.ts_invoice",
-	"dashboard.ts_revenue",
-	"dashboard.ts_profit",
-	"dashboard.ts_ppn",
-}
-
-func TestLoad_AllNamesPresent(t *testing.T) {
+func TestLoad_AllRequiredPresent(t *testing.T) {
 	store, err := Load()
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	for _, name := range expectedNames {
+	for _, name := range RequiredKeys {
 		body, ok := store[name]
 		if !ok {
 			t.Errorf("missing query: %s", name)
@@ -61,6 +17,34 @@ func TestLoad_AllNamesPresent(t *testing.T) {
 			t.Errorf("empty body: %s", name)
 		}
 	}
+}
+
+func TestValidate_ReportsAllMissing(t *testing.T) {
+	s := Store{"foo": "SELECT 1"}
+	err := s.Validate([]string{"foo", "bar", "baz"})
+	if err == nil {
+		t.Fatal("expected error on missing keys")
+	}
+	msg := err.Error()
+	if !contains(msg, "bar") || !contains(msg, "baz") {
+		t.Errorf("error did not list both missing keys: %q", msg)
+	}
+}
+
+func TestValidate_AllPresent(t *testing.T) {
+	s := Store{"a": "SELECT 1", "b": "SELECT 2"}
+	if err := s.Validate([]string{"a", "b"}); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func contains(s, sub string) bool {
+	for i := 0; i+len(sub) <= len(s); i++ {
+		if s[i:i+len(sub)] == sub {
+			return true
+		}
+	}
+	return false
 }
 
 func TestStore_GetPanicsOnMissing(t *testing.T) {
@@ -81,9 +65,9 @@ func TestStore_GetReturnsSQL(t *testing.T) {
 
 func TestParseHeader(t *testing.T) {
 	cases := []struct {
-		line    string
-		want    string
-		wantOK  bool
+		line   string
+		want   string
+		wantOK bool
 	}{
 		{"-- name: foo.bar", "foo.bar", true},
 		{"-- name:   spaced  ", "spaced", true},

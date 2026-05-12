@@ -1,6 +1,6 @@
 # Architecture
 
-See also: [`ERD.drawio.xml`](./ERD.drawio.xml), [`decisions/`](./decisions/).
+See also: live-schema ERD in [`erd/`](./erd/) (regenerate via `make db-erd`), legacy [`relational_model.html`](./relational_model.html), ADRs in [`decisions/`](./decisions/).
 
 ## Context
 

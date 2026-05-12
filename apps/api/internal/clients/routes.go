@@ -9,6 +9,7 @@ import (
 func Routes(d deps.Deps) chi.Router {
 	r := chi.NewRouter()
 	h := NewHandler(NewRepo(d.Pool, d.Queries))
+	h.storage = d.Storage
 
 	r.Get("/", h.List)
 	r.Post("/", h.Create)
@@ -18,6 +19,9 @@ func Routes(d deps.Deps) chi.Router {
 	r.Put("/{id}", h.Update)
 	r.Get("/{id}/contacts", h.ListContacts)
 	r.Post("/{id}/contacts", h.CreateContact)
+	r.Get("/{id}/logo/upload-url", h.PresignLogoUpload)
+	r.Get("/{id}/logo/download-url", h.PresignLogoDownload)
+	r.Patch("/{id}/logo", h.UpdateLogo)
 
 	return r
 }

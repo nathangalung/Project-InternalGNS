@@ -1,14 +1,17 @@
--- name: items.list
+-- name: items.list_base
 SELECT id, name, impa_code, default_unit_id, description,
-       is_active, created_at, updated_at
+       is_active, created_at, updated_at, image_object_key
 FROM items
-WHERE is_active = TRUE
-ORDER BY name
-LIMIT $1 OFFSET $2;
+WHERE 1=1;
+
+-- name: items.list_count_base
+SELECT COUNT(*)
+FROM items
+WHERE 1=1;
 
 -- name: items.get_by_id
 SELECT id, name, impa_code, default_unit_id, description,
-       is_active, created_at, updated_at
+       is_active, created_at, updated_at, image_object_key
 FROM items
 WHERE id = $1;
 
@@ -16,7 +19,7 @@ WHERE id = $1;
 INSERT INTO items (name, impa_code, default_unit_id, description, created_by, updated_by)
 VALUES ($1, $2, $3, $4, $5, $5)
 RETURNING id, name, impa_code, default_unit_id, description,
-          is_active, created_at, updated_at;
+          is_active, created_at, updated_at, image_object_key;
 
 -- name: items.update
 UPDATE items
@@ -29,7 +32,15 @@ UPDATE items
        updated_at       = NOW()
  WHERE id = $1
 RETURNING id, name, impa_code, default_unit_id, description,
-          is_active, created_at, updated_at;
+          is_active, created_at, updated_at, image_object_key;
+
+-- name: items.update_image
+UPDATE items
+   SET image_object_key = $2,
+       updated_by       = $3,
+       updated_at       = NOW()
+ WHERE id = $1
+RETURNING id;
 
 -- name: items.add_vendor
 WITH ins AS (
@@ -115,3 +126,70 @@ SELECT
     selling_price::text,
     profit_pct::text
 FROM fn_suggest_selling_prices($1, $2);
+
+-- name: items.search_vendor_offers
+-- VENDOR_OFFER layer: search by vendor SKU and vendor name.
+-- Returns matched item id w/ score 0..1. Powers "find product by vendor offer".
+-- $1=query, $2=limit
+WITH q AS (
+    SELECT lower(trim($1::text)) AS nq
+), hits AS (
+    SELECT
+        vp.item_id,
+        v.id   AS vendor_id,
+        v.name AS vendor_name,
+        vp.vendor_sku,
+        GREATEST(
+            CASE WHEN COALESCE(vp.vendor_sku,'') = q.nq           THEN 1.00 ELSE 0 END,
+            CASE WHEN COALESCE(lower(vp.vendor_sku),'') LIKE '%'||q.nq||'%' THEN 0.92 ELSE 0 END,
+            CASE WHEN lower(v.name) LIKE '%'||q.nq||'%'           THEN 0.70 ELSE 0 END,
+            similarity(COALESCE(vp.vendor_sku,''), q.nq) * 0.85,
+            word_similarity(q.nq, lower(v.name)) * 0.65
+        ) AS score
+    FROM vendor_products vp
+    JOIN vendors v ON v.id = vp.vendor_id AND v.is_active = TRUE
+    CROSS JOIN q
+    WHERE vp.is_active = TRUE
+      AND (
+        COALESCE(lower(vp.vendor_sku),'') LIKE '%'||q.nq||'%'
+        OR lower(v.name) LIKE '%'||q.nq||'%'
+        OR similarity(COALESCE(vp.vendor_sku,''), q.nq) > 0.30
+        OR word_similarity(q.nq, lower(v.name))         > 0.40
+      )
+)
+SELECT DISTINCT ON (item_id)
+    item_id,
+    vendor_id,
+    vendor_name,
+    vendor_sku,
+    score::real AS score
+FROM hits
+WHERE score >= 0.30
+ORDER BY item_id, score DESC
+LIMIT $2;
+
+-- name: items.search_request_history
+-- REQUEST_HISTORY layer: search past klien request texts (item_request_matches).
+-- Returns matched item_id from cached confirmed matches.
+-- $1=query, $2=limit
+WITH q AS (
+    SELECT lower(trim($1::text)) AS nq
+)
+SELECT
+    irm.matched_item_id AS item_id,
+    irm.request_text,
+    irm.match_count,
+    GREATEST(
+        CASE WHEN lower(irm.request_text) = q.nq                       THEN 1.00 ELSE 0 END,
+        CASE WHEN lower(irm.request_text) LIKE '%'||q.nq||'%'          THEN 0.88 ELSE 0 END,
+        word_similarity(q.nq, lower(irm.request_text))
+    )::real AS score
+FROM item_request_matches irm
+CROSS JOIN q
+WHERE irm.matched_item_id IS NOT NULL
+  AND (
+    lower(irm.request_text) LIKE '%'||q.nq||'%'
+    OR word_similarity(q.nq, lower(irm.request_text)) > 0.30
+  )
+ORDER BY score DESC, irm.match_count DESC
+LIMIT $2;

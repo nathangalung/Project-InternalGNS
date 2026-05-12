@@ -6,6 +6,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
+	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
 // PdfSettings carries hardcoded PDF defaults.
@@ -17,12 +18,20 @@ type PdfSettings struct {
 	PaymentTerms  string
 }
 
+// CoretaxSettings carries seller-side identifiers for the DJP e-faktur XML.
+type CoretaxSettings struct {
+	SellerTIN   string
+	SellerIDTKU string
+}
+
 // Deps holds shared application dependencies.
 type Deps struct {
 	Pool          db.Executor
 	Queries       queries.Store
 	TemplatesRoot string
 	Pdf           PdfSettings
+	Coretax       CoretaxSettings
+	Storage       *storage.Client
 }
 
 // User id context key.
