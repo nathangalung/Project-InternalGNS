@@ -1,6 +1,7 @@
 import type React from "react"
 import { useRef, useState } from "react"
 import { matchRows } from "@/features/items/api"
+import { getPageNumbers } from "@/lib/pagination"
 import type { ProductItem } from "./QuotationEdit"
 import QuotationReviewCard from "./QuotationReviewCard"
 import { parseProductFile } from "./uploadParser"
@@ -27,22 +28,6 @@ interface Step2ProductProps {
   summaryPpn: number
   onImportProducts: (products: ProductItem[]) => void
   quotationId?: number
-}
-
-function getPageNumbers(current: number, total: number): (number | null)[] {
-  if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1)
-  const set = new Set(
-    [1, 2, current - 1, current, current + 1, total - 1, total].filter((n) => n >= 1 && n <= total),
-  )
-  const sorted = [...set].sort((a, b) => a - b)
-  const pages: (number | null)[] = []
-  let prev = 0
-  for (const n of sorted) {
-    if (n - prev > 1) pages.push(null)
-    pages.push(n)
-    prev = n
-  }
-  return pages
 }
 
 // CSV → AOA → MatchRowInput[] handled by parseProductFile (xlsx + csv).

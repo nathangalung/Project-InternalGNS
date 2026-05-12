@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { getPageNumbers } from "@/features/quotations/QuotationList/helpers"
+import { getPageNumbers } from "@/lib/pagination"
 
 interface PaginationProps {
   totalItems: number
