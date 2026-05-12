@@ -1,4 +1,5 @@
 import SortIcon from "@/components/shared/SortIcon"
+import StatusBadge from "@/components/shared/StatusBadge"
 import { type QuotationRow, statusConfig } from "./helpers"
 
 interface QuotationTableProps {
@@ -116,9 +117,9 @@ export default function QuotationTable({
               <td className="tbl-td tbl-td--center">{row.hargaBeli}</td>
               <td className="tbl-td tbl-td--total tbl-td--center">{row.total}</td>
               <td className="tbl-td tbl-td--center">
-                <span className="status-badge" style={{ background: badge.bg, color: badge.color }}>
+                <StatusBadge bg={badge.bg} color={badge.color}>
                   {row.status}
-                </span>
+                </StatusBadge>
               </td>
               <td className="tbl-td tbl-td--center">
                 <div

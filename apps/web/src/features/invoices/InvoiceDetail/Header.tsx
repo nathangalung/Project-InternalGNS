@@ -1,3 +1,4 @@
+import StatusBadge from "@/components/shared/StatusBadge"
 import type { Page } from "@/lib/page"
 import type { InvoiceStatus } from "../types"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "../types"
@@ -39,9 +40,9 @@ export default function Header({
               <span className="qd-meta-sep">|</span>
               <span className="qd-meta-text">Dari Quotation {quotationNo}</span>
               <span className="qd-meta-sep">|</span>
-              <span className="status-badge" style={{ background: badge.bg, color: badge.color }}>
+              <StatusBadge bg={badge.bg} color={badge.color}>
                 {INVOICE_LABEL[status]}
-              </span>
+              </StatusBadge>
             </div>
           </div>
         </div>

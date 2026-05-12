@@ -3,6 +3,7 @@ import EntityLogo from "@/components/shared/EntityLogo"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
+import StatusBadge from "@/components/shared/StatusBadge"
 import { useVendors } from "@/features/vendors/hooks"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
 import VendorFilter, { type VendorFilterValues } from "@/features/vendors/VendorFilter"
@@ -225,12 +226,9 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
                           {v.location ?? "-"}
                         </td>
                         <td className="tbl-td tbl-td--center">
-                          <span
-                            className="status-badge"
-                            style={{ background: status.bg, color: status.color, minWidth: 100 }}
-                          >
+                          <StatusBadge bg={status.bg} color={status.color} minWidth={100}>
                             {status.label}
-                          </span>
+                          </StatusBadge>
                         </td>
                         <td
                           className="tbl-td tbl-td--center"

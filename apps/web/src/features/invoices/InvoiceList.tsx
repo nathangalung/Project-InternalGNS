@@ -2,6 +2,7 @@ import { type CSSProperties, useMemo, useState } from "react"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
+import StatusBadge from "@/components/shared/StatusBadge"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { downloadPdf } from "@/lib/api-client"
 import { formatDate, formatNumber, formatRupiah } from "@/lib/format"
@@ -334,12 +335,9 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
                           {row.total}
                         </td>
                         <td className="tbl-td tbl-td--center">
-                          <span
-                            className="status-badge"
-                            style={{ background: style.bg, color: style.color }}
-                          >
+                          <StatusBadge bg={style.bg} color={style.color}>
                             {INVOICE_LABEL[row.status]}
-                          </span>
+                          </StatusBadge>
                         </td>
                         <td className="tbl-td tbl-td--center" style={{ padding: "12px 8px" }}>
                           <div

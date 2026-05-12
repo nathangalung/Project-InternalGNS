@@ -1,3 +1,4 @@
+import StatusBadge from "@/components/shared/StatusBadge"
 import type { Page } from "@/lib/page"
 import type { PoStatus } from "../types"
 import { PO_LABEL, PO_STATUS_CONFIG } from "./helpers"
@@ -39,9 +40,9 @@ export default function Header({
               <span className="qd-meta-sep">|</span>
               <span className="qd-meta-text">Dari Quotation {quotationNo}</span>
               <span className="qd-meta-sep">|</span>
-              <span className="status-badge" style={{ background: badge.bg, color: badge.color }}>
+              <StatusBadge bg={badge.bg} color={badge.color}>
                 {PO_LABEL[status]}
-              </span>
+              </StatusBadge>
             </div>
           </div>
         </div>

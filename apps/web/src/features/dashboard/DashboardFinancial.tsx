@@ -1,5 +1,6 @@
 import { type CSSProperties, useMemo, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
+import StatusBadge from "@/components/shared/StatusBadge"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { useInvoices } from "@/features/invoices/hooks"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE, type InvoiceStatus } from "@/features/invoices/types"
@@ -399,12 +400,9 @@ export default function DashboardFinancial({
                         {row.total}
                       </td>
                       <td className="tbl-td tbl-td--center">
-                        <span
-                          className="status-badge"
-                          style={{ background: style.bg, color: style.color }}
-                        >
+                        <StatusBadge bg={style.bg} color={style.color}>
                           {INVOICE_LABEL[row.status]}
-                        </span>
+                        </StatusBadge>
                       </td>
                     </tr>
                   )

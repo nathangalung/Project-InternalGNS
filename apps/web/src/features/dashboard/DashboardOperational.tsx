@@ -1,5 +1,6 @@
 import { type CSSProperties, useMemo, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
+import StatusBadge from "@/components/shared/StatusBadge"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { toTableRow } from "@/features/quotations/adapters"
 import { useQuotations } from "@/features/quotations/hooks"
@@ -336,12 +337,9 @@ export default function DashboardOperational({
                         Rp{row.total}
                       </td>
                       <td className="tbl-td tbl-td--center">
-                        <span
-                          className="status-badge"
-                          style={{ background: style.bg, color: style.color }}
-                        >
+                        <StatusBadge bg={style.bg} color={style.color}>
                           {row.status}
-                        </span>
+                        </StatusBadge>
                       </td>
                     </tr>
                   )

@@ -3,6 +3,7 @@ import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
 import SortIcon from "@/components/shared/SortIcon"
+import StatusBadge from "@/components/shared/StatusBadge"
 import { useUsers } from "@/features/users/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import type { Page } from "@/lib/page"
@@ -233,20 +234,14 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
                         <td className="tbl-td tbl-td--client tbl-td--center">{u.name}</td>
                         <td className="tbl-td tbl-td--center">{u.email}</td>
                         <td className="tbl-td tbl-td--center">
-                          <span
-                            className="status-badge"
-                            style={{ background: role.bg, color: role.color, minWidth: 108 }}
-                          >
+                          <StatusBadge bg={role.bg} color={role.color} minWidth={108}>
                             {role.label}
-                          </span>
+                          </StatusBadge>
                         </td>
                         <td className="tbl-td tbl-td--center">
-                          <span
-                            className="status-badge"
-                            style={{ background: status.bg, color: status.color, minWidth: 108 }}
-                          >
+                          <StatusBadge bg={status.bg} color={status.color} minWidth={108}>
                             {status.label}
-                          </span>
+                          </StatusBadge>
                         </td>
                         <td className="tbl-td tbl-td--center">{formatDateID(u.createdAt)}</td>
                         <td className="tbl-td tbl-td--center">

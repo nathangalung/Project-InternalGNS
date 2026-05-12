@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
+import StatusBadge from "@/components/shared/StatusBadge"
 import { useItemSearchAdvanced, useItems } from "@/features/items/hooks"
 import ProductCreateModal from "@/features/items/ProductCreateModal"
 import ProductFilter, { type ProductFilterValues } from "@/features/items/ProductFilter"
@@ -265,12 +266,9 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
                           {unitOf(it.defaultUnitId)}
                         </td>
                         <td className="tbl-td tbl-td--center">
-                          <span
-                            className="status-badge"
-                            style={{ background: status.bg, color: status.color, minWidth: 84 }}
-                          >
+                          <StatusBadge bg={status.bg} color={status.color} minWidth={84}>
                             {status.label}
-                          </span>
+                          </StatusBadge>
                         </td>
                         <td className="tbl-td tbl-td--center">
                           <button

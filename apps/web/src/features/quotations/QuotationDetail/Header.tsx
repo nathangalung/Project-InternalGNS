@@ -1,3 +1,4 @@
+import StatusBadge from "@/components/shared/StatusBadge"
 import type { Status } from "@/features/quotations/types"
 import type { Page } from "@/lib/page"
 import { statusConfig } from "./helpers"
@@ -40,9 +41,9 @@ export default function Header({
               <span className="qd-meta-sep">|</span>
               <span className="qd-meta-text">Versi {version}</span>
               <span className="qd-meta-sep">|</span>
-              <span className="status-badge" style={{ background: badge.bg, color: badge.color }}>
+              <StatusBadge bg={badge.bg} color={badge.color}>
                 {status}
-              </span>
+              </StatusBadge>
             </div>
           </div>
         </div>

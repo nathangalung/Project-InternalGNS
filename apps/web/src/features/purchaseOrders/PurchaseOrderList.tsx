@@ -2,6 +2,7 @@ import { type CSSProperties, useMemo, useState } from "react"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
+import StatusBadge from "@/components/shared/StatusBadge"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { downloadPdf } from "@/lib/api-client"
 import { formatDate, formatRupiah } from "@/lib/format"
@@ -305,12 +306,9 @@ export default function PurchaseOrderList({
                           {row.total}
                         </td>
                         <td className="tbl-td tbl-td--center">
-                          <span
-                            className="status-badge"
-                            style={{ background: status.bg, color: status.color }}
-                          >
+                          <StatusBadge bg={status.bg} color={status.color}>
                             {PO_LABEL[row.status]}
-                          </span>
+                          </StatusBadge>
                         </td>
                         <td className="tbl-td tbl-td--center" style={{ padding: "12px 8px" }}>
                           <div

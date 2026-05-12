@@ -3,6 +3,7 @@ import EntityLogo from "@/components/shared/EntityLogo"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
+import StatusBadge from "@/components/shared/StatusBadge"
 import ClientAdd from "@/features/clients/ClientAdd"
 import ClientFilter, { type ClientFilterValues } from "@/features/clients/ClientFilter"
 import { useClientSummary, useClients } from "@/features/clients/hooks"
@@ -262,12 +263,9 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
                           {countryOf(c.countryCode)}
                         </td>
                         <td className="tbl-td tbl-td--center">
-                          <span
-                            className="status-badge"
-                            style={{ background: status.bg, color: status.color, minWidth: 100 }}
-                          >
+                          <StatusBadge bg={status.bg} color={status.color} minWidth={100}>
                             {status.label}
-                          </span>
+                          </StatusBadge>
                         </td>
                         <td
                           className="tbl-td tbl-td--center"
