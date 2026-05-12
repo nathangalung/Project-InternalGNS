@@ -2,7 +2,7 @@
         db-up db-down db-logs db-shell \
         stack-up stack-down stack-logs ps reset \
         migrate migrate-up migrate-status migrate-down migrate-new \
-        seed seed-dev check-reconcile schema-dump \
+        seed seed-dev check-reconcile schema-dump db-erd \
         api web dev \
         tidy sqlc \
         build build-api build-web \
@@ -117,6 +117,13 @@ check-reconcile: ## Run reconciliation / verification queries
 
 schema-dump: ## Dump current schema to docs/schema_current.sql
 	pg_dump --schema-only --no-owner "$(DATABASE_URL)" > docs/schema_current.sql
+
+db-erd: db-up ## Regenerate docs/erd from the live dev DB (requires tbls)
+	@command -v tbls >/dev/null 2>&1 || { \
+	  echo "installing tbls..."; \
+	  go install github.com/k1LoW/tbls@latest; \
+	}
+	tbls doc --force
 
 # Local dev servers.
 api: db-up ## Run API on host
