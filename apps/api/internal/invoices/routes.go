@@ -14,6 +14,7 @@ func Routes(d deps.Deps) chi.Router {
 	r := chi.NewRouter()
 	repo := NewRepo(d.Pool, d.Queries)
 	h := NewHandler(repo)
+	h.storage = d.Storage
 
 	r.Get("/", h.List)
 	r.Get("/summary", h.Summary)
@@ -22,6 +23,9 @@ func Routes(d deps.Deps) chi.Router {
 	r.Get("/{id}/items", h.ListItems)
 	r.Patch("/{id}/status", h.ChangeStatus)
 	r.Patch("/{id}/dates", h.UpdateDates)
+	r.Get("/{id}/attachment/upload-url", h.PresignAttachmentUpload)
+	r.Get("/{id}/attachment/download-url", h.PresignAttachmentDownload)
+	r.Patch("/{id}/attachment", h.UpdateAttachment)
 
 	if d.TemplatesRoot != "" {
 		exp := NewExportHandler(

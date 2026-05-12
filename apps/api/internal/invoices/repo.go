@@ -195,6 +195,20 @@ func (r *Repo) Summary(ctx context.Context) (Summary, error) {
 	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Summary])
 }
 
+// UpdateAttachment writes the MinIO object key for an invoice attachment.
+// No row_version guard — attachments are administrative metadata, not part
+// of the invoice numbers contract.
+func (r *Repo) UpdateAttachment(ctx context.Context, id int64, objectKey string, actorID int64) error {
+	tag, err := r.db.Exec(ctx, r.store.Get("invoices.update_attachment"), id, objectKey, actorID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // UpdateDates writes dates with optimistic-lock guard via row_version.
 // Returns new row_version on success; ErrVersionMismatch when ifMatch stale; ErrNotFound when row gone.
 func (r *Repo) UpdateDates(ctx context.Context, id int64, req UpdateDatesRequest, actorID int64, ifMatch *int32) (int32, error) {

@@ -1,6 +1,6 @@
 -- name: items.list_base
 SELECT id, name, impa_code, default_unit_id, description,
-       is_active, created_at, updated_at
+       is_active, created_at, updated_at, image_object_key
 FROM items
 WHERE 1=1;
 
@@ -11,7 +11,7 @@ WHERE 1=1;
 
 -- name: items.get_by_id
 SELECT id, name, impa_code, default_unit_id, description,
-       is_active, created_at, updated_at
+       is_active, created_at, updated_at, image_object_key
 FROM items
 WHERE id = $1;
 
@@ -19,7 +19,7 @@ WHERE id = $1;
 INSERT INTO items (name, impa_code, default_unit_id, description, created_by, updated_by)
 VALUES ($1, $2, $3, $4, $5, $5)
 RETURNING id, name, impa_code, default_unit_id, description,
-          is_active, created_at, updated_at;
+          is_active, created_at, updated_at, image_object_key;
 
 -- name: items.update
 UPDATE items
@@ -32,7 +32,15 @@ UPDATE items
        updated_at       = NOW()
  WHERE id = $1
 RETURNING id, name, impa_code, default_unit_id, description,
-          is_active, created_at, updated_at;
+          is_active, created_at, updated_at, image_object_key;
+
+-- name: items.update_image
+UPDATE items
+   SET image_object_key = $2,
+       updated_by       = $3,
+       updated_at       = NOW()
+ WHERE id = $1
+RETURNING id;
 
 -- name: items.add_vendor
 WITH ins AS (

@@ -34,6 +34,12 @@ type Vendor struct {
 	UpdatedAt     time.Time       `db:"updated_at"     json:"updatedAt"`
 	ProductCount  int64           `db:"product_count"  json:"productCount"`
 	TotalPurchase string          `db:"total_purchase" json:"totalPurchase"`
+	LogoObjectKey *string         `db:"logo_object_key" json:"logoObjectKey,omitempty"`
+}
+
+// UpdateLogoRequest persists the MinIO object key for a vendor logo.
+type UpdateLogoRequest struct {
+	ObjectKey string `json:"objectKey"`
 }
 
 // SearchResult mirrors fn_search_vendors return shape.

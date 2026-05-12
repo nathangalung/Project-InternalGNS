@@ -184,3 +184,41 @@ func TestHandler_Update_NotFound(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }
+
+func TestHandler_PresignLogoUpload_StorageUnavailable(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/vendors/1/logo/upload-url?fileName=x.png", nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
+}
+
+func TestHandler_PresignLogoDownload_StorageUnavailable(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/vendors/1/logo/download-url", nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
+}
+
+func TestHandler_UpdateLogo_BadID(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/vendors/abc/logo",
+		vendors.UpdateLogoRequest{ObjectKey: "x"})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_UpdateLogo_EmptyObjectKey(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/vendors/1/logo",
+		vendors.UpdateLogoRequest{ObjectKey: " "})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+}
+
+func TestHandler_UpdateLogo_NotFound(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/vendors/99999999/logo",
+		vendors.UpdateLogoRequest{ObjectKey: "vendors/1/x.png"})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+}

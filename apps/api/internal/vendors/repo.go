@@ -139,6 +139,18 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateVendorRequest, us
 	return v, err
 }
 
+// UpdateLogo writes the MinIO object key for the vendor logo.
+func (r *Repo) UpdateLogo(ctx context.Context, id int64, objectKey string, userID int64) error {
+	tag, err := r.db.Exec(ctx, r.store.Get("vendors.update_logo"), id, objectKey, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // Search calls fn_search_vendors.
 func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int) ([]SearchResult, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("vendors.search"), q, minScore, limit)

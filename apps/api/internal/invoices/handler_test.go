@@ -211,3 +211,41 @@ func TestHandler_Summary(t *testing.T) {
 	assert.GreaterOrEqual(t, s.Total, int64(0))
 	assert.Equal(t, s.Total, s.Draft+s.Sent+s.Paid+s.Overdue)
 }
+
+func TestHandler_PresignAttachmentUpload_StorageUnavailable(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/invoices/1/attachment/upload-url?fileName=x.pdf", nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
+}
+
+func TestHandler_PresignAttachmentDownload_StorageUnavailable(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/invoices/1/attachment/download-url", nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
+}
+
+func TestHandler_UpdateAttachment_BadID(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/invoices/abc/attachment",
+		invoices.UpdateAttachmentRequest{ObjectKey: "x"})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_UpdateAttachment_EmptyObjectKey(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/invoices/1/attachment",
+		invoices.UpdateAttachmentRequest{ObjectKey: " "})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+}
+
+func TestHandler_UpdateAttachment_NotFound(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/invoices/99999999/attachment",
+		invoices.UpdateAttachmentRequest{ObjectKey: "invoices/1/x.pdf"})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+}

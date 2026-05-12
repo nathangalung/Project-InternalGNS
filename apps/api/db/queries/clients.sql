@@ -11,7 +11,8 @@ SELECT cc.id, cc.number, cc.name, cc.npwp, cc.address, cc.email, cc.country_code
                    AND q.status = 'accepted'), '0') AS total_purchase,
        COALESCE((SELECT COUNT(*)
                  FROM quotations q
-                 WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count
+                 WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count,
+       cc.logo_object_key
 FROM company_client cc
 LEFT JOIN LATERAL (
     SELECT id, name, email, phone
@@ -47,7 +48,8 @@ SELECT cc.id, cc.number, cc.name, cc.npwp, cc.address, cc.email, cc.country_code
                    AND q.status = 'accepted'), '0') AS total_purchase,
        COALESCE((SELECT COUNT(*)
                  FROM quotations q
-                 WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count
+                 WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count,
+       cc.logo_object_key
 FROM company_client cc
 LEFT JOIN LATERAL (
     SELECT id, name, email, phone
@@ -74,7 +76,8 @@ SELECT ins.id, ins.number, ins.name, ins.npwp, ins.address, ins.email, ins.count
        NULL::TEXT   AS contact_email,
        NULL::TEXT   AS contact_phone,
        '0'::TEXT    AS total_purchase,
-       0::BIGINT    AS quotation_count
+       0::BIGINT    AS quotation_count,
+       NULL::TEXT   AS logo_object_key
 FROM ins;
 
 -- name: clients.update
@@ -101,7 +104,16 @@ RETURNING id, number, name, npwp, address, email, country_code,
                       AND q.status = 'accepted'), '0') AS total_purchase,
           COALESCE((SELECT COUNT(*)
                     FROM quotations q
-                    WHERE q.company_client_id = company_client.id), 0)::BIGINT AS quotation_count;
+                    WHERE q.company_client_id = company_client.id), 0)::BIGINT AS quotation_count,
+          logo_object_key;
+
+-- name: clients.update_logo
+UPDATE company_client
+   SET logo_object_key = $2,
+       updated_by      = $3,
+       updated_at      = NOW()
+ WHERE id = $1
+RETURNING id;
 
 -- name: clients.search
 SELECT * FROM fn_search_clients($1, $2, $3);

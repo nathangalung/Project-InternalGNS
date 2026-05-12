@@ -396,3 +396,41 @@ func TestHandler_MatchRows_IMPANotFoundFallsBack(t *testing.T) {
 func itoa(n int64) string {
 	return strconv.FormatInt(n, 10)
 }
+
+func TestHandler_PresignImageUpload_StorageUnavailable(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/items/1/image/upload-url?fileName=x.png", nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
+}
+
+func TestHandler_PresignImageDownload_StorageUnavailable(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/items/1/image/download-url", nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
+}
+
+func TestHandler_UpdateImage_BadID(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/items/abc/image",
+		items.UpdateImageRequest{ObjectKey: "x"})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_UpdateImage_EmptyObjectKey(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/items/1/image",
+		items.UpdateImageRequest{ObjectKey: " "})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+}
+
+func TestHandler_UpdateImage_NotFound(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/items/99999999/image",
+		items.UpdateImageRequest{ObjectKey: "items/1/x.png"})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+}

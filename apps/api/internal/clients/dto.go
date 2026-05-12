@@ -39,6 +39,12 @@ type Client struct {
 	ContactPhone   *string   `db:"contact_phone"   json:"contactPhone,omitempty"`
 	TotalPurchase  string    `db:"total_purchase"  json:"totalPurchase"`
 	QuotationCount int64     `db:"quotation_count" json:"quotationCount"`
+	LogoObjectKey  *string   `db:"logo_object_key" json:"logoObjectKey,omitempty"`
+}
+
+// UpdateLogoRequest persists the MinIO object key for a client logo.
+type UpdateLogoRequest struct {
+	ObjectKey string `json:"objectKey"`
 }
 
 // Contact mirrors company_contacts table.

@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -14,10 +15,17 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
+	"github.com/nathangalung/internalgns/apps/api/internal/storage"
+)
+
+const (
+	imageUploadExpiry   = 15 * time.Minute
+	imageDownloadExpiry = 1 * time.Hour
 )
 
 type Handler struct {
-	repo *Repo
+	repo    *Repo
+	storage *storage.Client
 }
 
 func NewHandler(repo *Repo) *Handler {
@@ -447,4 +455,104 @@ func (h *Handler) PriceHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, history)
+}
+
+// PresignImageUpload handles GET /items/{id}/image/upload-url?fileName=...
+func (h *Handler) PresignImageUpload(w http.ResponseWriter, r *http.Request) {
+	if h.storage == nil {
+		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
+		return
+	}
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	if _, err := h.repo.GetByID(r.Context(), id); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			httperr.Render(w, httperr.NotFound("item not found"))
+			return
+		}
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	fileName := strings.TrimSpace(r.URL.Query().Get("fileName"))
+	if fileName == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "required"}))
+		return
+	}
+	objectKey := storage.BuildObjectKey("items", id, fileName)
+	url, err := h.storage.PresignPut(r.Context(), storage.BucketItemImages, objectKey, imageUploadExpiry)
+	if err != nil {
+		httperr.Render(w, httperr.Internal("presign failed"))
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{
+		"uploadUrl": url,
+		"objectKey": objectKey,
+		"expiresAt": time.Now().UTC().Add(imageUploadExpiry).Unix(),
+	})
+}
+
+// PresignImageDownload handles GET /items/{id}/image/download-url
+func (h *Handler) PresignImageDownload(w http.ResponseWriter, r *http.Request) {
+	if h.storage == nil {
+		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
+		return
+	}
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	item, err := h.repo.GetByID(r.Context(), id)
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("item not found"))
+		return
+	}
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	if item.ImageObjectKey == nil || *item.ImageObjectKey == "" {
+		httperr.Render(w, httperr.NotFound("no image attached"))
+		return
+	}
+	url, err := h.storage.PresignGet(r.Context(), storage.BucketItemImages, *item.ImageObjectKey, imageDownloadExpiry)
+	if err != nil {
+		httperr.Render(w, httperr.Internal("presign failed"))
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{
+		"downloadUrl": url,
+		"expiresAt":   time.Now().UTC().Add(imageDownloadExpiry).Unix(),
+	})
+}
+
+// UpdateImage handles PATCH /items/{id}/image with body {objectKey}.
+func (h *Handler) UpdateImage(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	var req UpdateImageRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	if strings.TrimSpace(req.ObjectKey) == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"objectKey": "required"}))
+		return
+	}
+	actor := deps.CurrentUserID(r.Context())
+	if err := h.repo.UpdateImage(r.Context(), id, req.ObjectKey, actor); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			httperr.Render(w, httperr.NotFound("item not found"))
+			return
+		}
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

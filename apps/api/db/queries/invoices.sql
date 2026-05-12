@@ -18,7 +18,8 @@ SELECT inv.id,
        inv.faktur_type,
        inv.row_version,
        inv.created_at,
-       inv.updated_at
+       inv.updated_at,
+       inv.attachment_object_key
 FROM invoices inv
 JOIN quotations q ON q.id = inv.quotation_id
 JOIN company_client cc ON cc.id = inv.company_client_id
@@ -51,7 +52,8 @@ SELECT inv.id,
        inv.faktur_type,
        inv.row_version,
        inv.created_at,
-       inv.updated_at
+       inv.updated_at,
+       inv.attachment_object_key
 FROM invoices inv
 JOIN quotations q ON q.id = inv.quotation_id
 JOIN company_client cc ON cc.id = inv.company_client_id
@@ -77,7 +79,8 @@ SELECT inv.id,
        inv.faktur_type,
        inv.row_version,
        inv.created_at,
-       inv.updated_at
+       inv.updated_at,
+       inv.attachment_object_key
 FROM invoices inv
 JOIN quotations q ON q.id = inv.quotation_id
 JOIN company_client cc ON cc.id = inv.company_client_id
@@ -99,6 +102,13 @@ RETURNING row_version;
 
 -- name: invoices.row_version
 SELECT row_version FROM invoices WHERE id = $1;
+
+-- name: invoices.update_attachment
+UPDATE invoices
+   SET attachment_object_key = $2,
+       updated_by            = $3
+ WHERE id = $1
+RETURNING id;
 
 -- name: invoices.list_items
 SELECT ii.id,

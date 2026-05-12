@@ -143,6 +143,20 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateClientRequest, us
 	return c, err
 }
 
+// UpdateLogo writes the MinIO object key. Empty string is allowed and stored
+// verbatim; pass NULL semantics through the SQL layer if a caller wants to
+// clear it.
+func (r *Repo) UpdateLogo(ctx context.Context, id int64, objectKey string, userID int64) error {
+	tag, err := r.db.Exec(ctx, r.store.Get("clients.update_logo"), id, objectKey, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // Search calls fn_search_clients fuzzy match.
 func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int) ([]SearchResult, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("clients.search"), q, minScore, limit)

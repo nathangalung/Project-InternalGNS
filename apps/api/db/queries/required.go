@@ -17,6 +17,7 @@ var RequiredKeys = []string{
 	"clients.search",
 	"clients.summary",
 	"clients.update",
+	"clients.update_logo",
 	"countries.list_all",
 	"dashboard.summary",
 	"dashboard.ts_invoice",
@@ -32,6 +33,7 @@ var RequiredKeys = []string{
 	"invoices.list_items",
 	"invoices.row_version",
 	"invoices.summary",
+	"invoices.update_attachment",
 	"invoices.update_dates",
 	"items.add_vendor",
 	"items.create",
@@ -47,6 +49,7 @@ var RequiredKeys = []string{
 	"items.search_vendor_offers",
 	"items.suggest_selling_prices",
 	"items.update",
+	"items.update_image",
 	"purchase_orders.change_status",
 	"purchase_orders.get_by_id",
 	"purchase_orders.get_by_quotation",
@@ -91,6 +94,7 @@ var RequiredKeys = []string{
 	"vendors.list_items",
 	"vendors.search",
 	"vendors.update",
+	"vendors.update_logo",
 }
 
 // Reports every missing required key.

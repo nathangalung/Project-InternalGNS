@@ -30,9 +30,16 @@ type Invoice struct {
 	Status             Status     `db:"status"                json:"status"`
 	TaxTransactionCode *string    `db:"tax_transaction_code"  json:"taxTransactionCode,omitempty"`
 	FakturType         *string    `db:"faktur_type"           json:"fakturType,omitempty"`
-	RowVersion         int32      `db:"row_version"           json:"rowVersion"`
-	CreatedAt          time.Time  `db:"created_at"            json:"createdAt"`
-	UpdatedAt          time.Time  `db:"updated_at"            json:"updatedAt"`
+	RowVersion          int32      `db:"row_version"             json:"rowVersion"`
+	CreatedAt           time.Time  `db:"created_at"              json:"createdAt"`
+	UpdatedAt           time.Time  `db:"updated_at"              json:"updatedAt"`
+	AttachmentObjectKey *string    `db:"attachment_object_key"   json:"attachmentObjectKey,omitempty"`
+}
+
+// UpdateAttachmentRequest persists the MinIO object key for an invoice
+// payment receipt or similar attachment.
+type UpdateAttachmentRequest struct {
+	ObjectKey string `json:"objectKey"`
 }
 
 // Invoice line snapshot row.

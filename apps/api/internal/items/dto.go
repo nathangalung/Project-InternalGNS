@@ -3,14 +3,20 @@ package items
 import "time"
 
 type Item struct {
-	ID            int64     `db:"id"               json:"id"`
-	Name          string    `db:"name"             json:"name"`
-	IMPACode      *string   `db:"impa_code"        json:"impaCode,omitempty"`
-	DefaultUnitID *int16    `db:"default_unit_id"  json:"defaultUnitId,omitempty"`
-	Description   *string   `db:"description"      json:"description,omitempty"`
-	IsActive      bool      `db:"is_active"        json:"isActive"`
-	CreatedAt     time.Time `db:"created_at"       json:"createdAt"`
-	UpdatedAt     time.Time `db:"updated_at"       json:"updatedAt"`
+	ID             int64     `db:"id"               json:"id"`
+	Name           string    `db:"name"             json:"name"`
+	IMPACode       *string   `db:"impa_code"        json:"impaCode,omitempty"`
+	DefaultUnitID  *int16    `db:"default_unit_id"  json:"defaultUnitId,omitempty"`
+	Description    *string   `db:"description"      json:"description,omitempty"`
+	IsActive       bool      `db:"is_active"        json:"isActive"`
+	CreatedAt      time.Time `db:"created_at"       json:"createdAt"`
+	UpdatedAt      time.Time `db:"updated_at"       json:"updatedAt"`
+	ImageObjectKey *string   `db:"image_object_key" json:"imageObjectKey,omitempty"`
+}
+
+// UpdateImageRequest persists the MinIO object key for an item image.
+type UpdateImageRequest struct {
+	ObjectKey string `json:"objectKey"`
 }
 
 type ListFilter struct {

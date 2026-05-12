@@ -125,6 +125,18 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateItemRequest, user
 	return item, err
 }
 
+// UpdateImage writes the MinIO object key for the item image.
+func (r *Repo) UpdateImage(ctx context.Context, id int64, objectKey string, userID int64) error {
+	tag, err := r.db.Exec(ctx, r.store.Get("items.update_image"), id, objectKey, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // Upsert vendor_products row.
 func (r *Repo) AddVendor(ctx context.Context, itemID int64, req AddVendorToItemRequest, userID int64) (VendorForItem, error) {
 	cost := "0"
