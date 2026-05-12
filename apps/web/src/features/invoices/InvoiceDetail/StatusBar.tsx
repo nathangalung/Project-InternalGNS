@@ -19,22 +19,44 @@ export default function StatusBar({ status, isOpen, onToggle, onChange, onSave }
       </div>
       <div className="qd-status-bar-actions">
         <div style={{ position: "relative" }}>
-          <button className="qd-status-trigger" style={{ background: badge.bg, color: badge.color }} onClick={onToggle}>
+          <button
+            className="qd-status-trigger"
+            style={{ background: badge.bg, color: badge.color }}
+            onClick={onToggle}
+          >
             {INVOICE_LABEL[status]}
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            >
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </button>
           {isOpen && (
             <div className="qd-status-dropdown">
-              {EDITABLE_STATUS_ORDER.map(s => {
+              {EDITABLE_STATUS_ORDER.map((s) => {
                 const isActive = s === status
                 return (
                   <button key={s} className="qd-status-option" onClick={() => onChange(s)}>
-                    <span className={isActive ? "qd-status-option--active" : "qd-status-option--label"}>{INVOICE_LABEL[s]}</span>
+                    <span
+                      className={isActive ? "qd-status-option--active" : "qd-status-option--label"}
+                    >
+                      {INVOICE_LABEL[s]}
+                    </span>
                     {isActive && (
                       <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
-                        <path d="M1 5.5L4.5 9L13 1" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path
+                          d="M1 5.5L4.5 9L13 1"
+                          stroke="#630ED4"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
                       </svg>
                     )}
                   </button>

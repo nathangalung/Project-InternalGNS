@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import Dashboard from "@/features/dashboard/Dashboard"
 import { useAuth } from "@/features/auth/hooks"
+import Dashboard from "@/features/dashboard/Dashboard"
 import { makePageNavigate } from "@/lib/page-nav"
 
 export const Route = createFileRoute("/_authed/")({

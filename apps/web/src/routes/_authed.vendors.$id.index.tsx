@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
-import VendorDetail from "@/features/vendors/VendorDetail"
 import { useAuth } from "@/features/auth/hooks"
 import { useVendor } from "@/features/vendors/hooks"
+import VendorDetail from "@/features/vendors/VendorDetail"
 import { makePageNavigate } from "@/lib/page-nav"
 
 export const Route = createFileRoute("/_authed/vendors/$id/")({

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	dbpkg "github.com/nathangalung/internalgns/apps/api/internal/shared/db"
@@ -24,7 +25,10 @@ func NewRepo(db Executor, store queries.Store) *Repo {
 	return &Repo{db: db, store: store}
 }
 
-var ErrNotFound = errors.New("not found")
+var (
+	ErrNotFound        = errors.New("not found")
+	ErrVersionMismatch = errors.New("quotation version mismatch")
+)
 
 // Filter and sort params.
 type ListFilter struct {
@@ -40,13 +44,12 @@ type ListFilter struct {
 	Offset   int
 }
 
-// List rows with cost total.
-func (r *Repo) List(ctx context.Context, f ListFilter) ([]ListRow, error) {
-	// Whitelist sort fields against injection.
+// List rows with cost total + matching count.
+func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	sortBy := "q.created_at"
 	switch f.SortBy {
-	case "total":
-		sortBy = "q.total"
+	case "grand_total", "total":
+		sortBy = "q.grand_total"
 	case "quotation_no":
 		sortBy = "q.quotation_no"
 	case "version":
@@ -58,53 +61,68 @@ func (r *Repo) List(ctx context.Context, f ListFilter) ([]ListRow, error) {
 	}
 
 	args := []any{}
-	conds := strings.Builder{}
-	conds.WriteString(r.store.Get("quotations.list_base"))
-
 	addArg := func(v any) string {
 		args = append(args, v)
 		return "$" + strconv.Itoa(len(args))
 	}
-
+	where := strings.Builder{}
 	if f.Q != "" {
 		p := addArg("%" + f.Q + "%")
-		conds.WriteString(" AND (q.quotation_no ILIKE " + p + " OR q.company_client_name ILIKE " + p + ")")
+		where.WriteString(" AND (q.quotation_no ILIKE " + p + " OR q.company_client_name ILIKE " + p + ")")
 	}
 	if len(f.Statuses) > 0 {
 		p := addArg(f.Statuses)
-		conds.WriteString(" AND q.status = ANY(" + p + ")")
+		where.WriteString(" AND q.status = ANY(" + p + ")")
 	}
 	if f.DateFrom != nil {
 		p := addArg(*f.DateFrom)
-		conds.WriteString(" AND q.created_at >= " + p + "::date")
+		where.WriteString(" AND q.created_at >= " + p + "::date")
 	}
 	if f.DateTo != nil {
 		p := addArg(*f.DateTo)
-		conds.WriteString(" AND q.created_at < (" + p + "::date + INTERVAL '1 day')")
+		where.WriteString(" AND q.created_at < (" + p + "::date + INTERVAL '1 day')")
 	}
 	if f.MinTotal != nil {
 		p := addArg(*f.MinTotal)
-		conds.WriteString(" AND q.total >= " + p + "::numeric")
+		where.WriteString(" AND q.grand_total >= " + p + "::numeric")
 	}
 	if f.MaxTotal != nil {
 		p := addArg(*f.MaxTotal)
-		conds.WriteString(" AND q.total <= " + p + "::numeric")
+		where.WriteString(" AND q.grand_total <= " + p + "::numeric")
 	}
 
-	conds.WriteString(" ORDER BY " + sortBy + " " + sortDir)
+	var out ListResult
+	countSQL := r.store.Get("quotations.list_count_base") + where.String()
+	if err := r.db.QueryRow(ctx, countSQL, args...).Scan(&out.Total); err != nil {
+		return out, err
+	}
 
+	dataArgs := append([]any{}, args...)
+	dataAdd := func(v any) string {
+		dataArgs = append(dataArgs, v)
+		return "$" + strconv.Itoa(len(dataArgs))
+	}
 	limit := f.Limit
-	if limit <= 0 || limit > 200 {
+	if limit <= 0 {
 		limit = 50
 	}
-	conds.WriteString(" LIMIT " + addArg(limit))
-	conds.WriteString(" OFFSET " + addArg(f.Offset))
-
-	rows, err := r.db.Query(ctx, conds.String(), args...)
-	if err != nil {
-		return nil, err
+	if limit > 200 {
+		limit = 200
 	}
-	return pgx.CollectRows(rows, pgx.RowToStructByName[ListRow])
+	dataSQL := r.store.Get("quotations.list_base") + where.String() +
+		" ORDER BY " + sortBy + " " + sortDir +
+		" LIMIT " + dataAdd(limit) +
+		" OFFSET " + dataAdd(f.Offset)
+
+	rows, err := r.db.Query(ctx, dataSQL, dataArgs...)
+	if err != nil {
+		return out, err
+	}
+	out.Rows, err = pgx.CollectRows(rows, pgx.RowToStructByName[ListRow])
+	if out.Rows == nil {
+		out.Rows = []ListRow{}
+	}
+	return out, err
 }
 
 // Counts grouped by status.
@@ -178,20 +196,53 @@ func (r *Repo) Create(ctx context.Context, req CreateRequest, userID int64) (int
 	return id, err
 }
 
-// Update calls fn_update_quotation. Draft only.
-func (r *Repo) Update(ctx context.Context, id int64, req UpdateRequest, userID int64) (int64, error) {
+// Update calls fn_update_quotation_versioned. Draft only.
+// ifMatch nil skips the version guard (legacy callers / tests).
+// Returns new row_version. Maps P0010 -> ErrVersionMismatch, P0011 -> ErrNotFound.
+func (r *Repo) Update(
+	ctx context.Context, id int64, req UpdateRequest, userID int64, ifMatch *int32,
+) (int32, error) {
 	itemsJSON, err := itemsToJSONB(req.Items)
 	if err != nil {
 		return 0, err
 	}
 
-	var newID int64
-	err = r.db.QueryRow(ctx, r.store.Get("quotations.fn_update"),
-		id, req.ClientRefNo, req.VesselName, req.PaymentTerms, req.ValidityDays,
+	if ifMatch == nil {
+		var legacyID int64
+		err = r.db.QueryRow(ctx, r.store.Get("quotations.fn_update"),
+			id, req.ClientRefNo, req.VesselName, req.PaymentTerms, req.ValidityDays,
+			req.DiscountPct, req.ShippingAddress, req.ShippingDays, req.ShippingCost,
+			itemsJSON, userID, req.Notes,
+		).Scan(&legacyID)
+		if err != nil {
+			return 0, err
+		}
+		var rv int32
+		if err = r.db.QueryRow(ctx, r.store.Get("quotations.row_version"), id).Scan(&rv); err != nil {
+			return 0, err
+		}
+		return rv, nil
+	}
+
+	var newVersion int32
+	err = r.db.QueryRow(ctx, r.store.Get("quotations.fn_update_versioned"),
+		id, *ifMatch, req.ClientRefNo, req.VesselName, req.PaymentTerms, req.ValidityDays,
 		req.DiscountPct, req.ShippingAddress, req.ShippingDays, req.ShippingCost,
 		itemsJSON, userID, req.Notes,
-	).Scan(&newID)
-	return newID, err
+	).Scan(&newVersion)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			switch pgErr.Code {
+			case "P0010":
+				return 0, ErrVersionMismatch
+			case "P0011":
+				return 0, ErrNotFound
+			}
+		}
+		return 0, err
+	}
+	return newVersion, nil
 }
 
 // ChangeStatus calls fn_change_quotation_status atomically.
@@ -200,5 +251,15 @@ func (r *Repo) ChangeStatus(ctx context.Context, id int64, status string, note *
 		id, status, userID, note,
 	)
 	return err
+}
+
+// ListRevisions returns the full parent/child chain ordered by version.
+// Empty slice when id is unknown.
+func (r *Repo) ListRevisions(ctx context.Context, id int64) ([]RevisionRow, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("quotations.list_revisions"), id)
+	if err != nil {
+		return nil, err
+	}
+	return pgx.CollectRows(rows, pgx.RowToStructByName[RevisionRow])
 }
 

@@ -2,6 +2,24 @@ package clients
 
 import "time"
 
+// ListFilter for clients.list query.
+type ListFilter struct {
+	Q           string
+	IsActive    *bool
+	CountryCode string
+	MinTotal    *string
+	SortBy      string
+	SortDir     string
+	Limit       int
+	Offset      int
+}
+
+// ListResult wraps rows with total.
+type ListResult struct {
+	Rows  []Client
+	Total int64
+}
+
 // Client row plus active contact.
 type Client struct {
 	ID             int64     `db:"id"              json:"id"`

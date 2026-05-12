@@ -34,6 +34,8 @@ func SeedMasterIfMissing(ctx context.Context, pool *pgxpool.Pool) error {
 		   ('SPL','Spool','UM.0033')
 		 ON CONFLICT (code) DO NOTHING`,
 
+		`SELECT setval('units_id_seq', GREATEST(40, (SELECT COALESCE(MAX(id), 1) FROM units)), true)`,
+
 		`INSERT INTO company_client (id, number, name, npwp, address, country_code, created_by, updated_by)
 		 VALUES (1, '2641', 'PT. IMC Ship Management', '0612345678901000',
 		         'Jakarta Selatan', 'IDN', 1, 1)
@@ -95,6 +97,28 @@ func SeedMasterIfMissing(ctx context.Context, pool *pgxpool.Pool) error {
 		 ON CONFLICT (id) DO NOTHING`,
 
 		`SELECT setval('vendor_products_id_seq', GREATEST(3, (SELECT COALESCE(MAX(id), 1) FROM vendor_products)), true)`,
+
+		// Reserved fixtures for tests.
+		`INSERT INTO company_contacts (id, company_id, name, email, country_code, created_by, updated_by)
+		 VALUES (9000001, 1, 'Test Fixture Contact', 'fixture@test.local', 'IDN', 1, 1)
+		 ON CONFLICT (id) DO NOTHING`,
+
+		`INSERT INTO vendors (id, name, location, contact_info, created_by, updated_by)
+		 VALUES (9000001, 'Test Fixture Vendor', 'Jakarta', '{"email":"fixture@test.local"}'::jsonb, 1, 1)
+		 ON CONFLICT (id) DO NOTHING`,
+
+		`INSERT INTO items (id, name, impa_code, default_unit_id, created_by, updated_by)
+		 VALUES (9000001, 'Test Fixture Item', 'TF9000001', 19, 1, 1)
+		 ON CONFLICT (id) DO NOTHING`,
+
+		`INSERT INTO vendor_products (id, vendor_id, item_id, vendor_sku, cost_price, created_by, updated_by)
+		 VALUES (9000001, 9000001, 9000001, 'TF-VP-9000001', 1000000, 1, 1)
+		 ON CONFLICT (id) DO NOTHING`,
+
+		`SELECT setval('company_contacts_id_seq', GREATEST(9000002, (SELECT COALESCE(MAX(id), 1) FROM company_contacts)), true)`,
+		`SELECT setval('vendors_id_seq',          GREATEST(9000002, (SELECT COALESCE(MAX(id), 1) FROM vendors)), true)`,
+		`SELECT setval('items_id_seq',            GREATEST(9000002, (SELECT COALESCE(MAX(id), 1) FROM items)), true)`,
+		`SELECT setval('vendor_products_id_seq',  GREATEST(9000002, (SELECT COALESCE(MAX(id), 1) FROM vendor_products)), true)`,
 	}
 	for _, s := range stmts {
 		if _, err := pool.Exec(ctx, s); err != nil {

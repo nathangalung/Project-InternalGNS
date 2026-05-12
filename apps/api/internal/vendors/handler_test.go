@@ -149,3 +149,38 @@ func TestHandler_ListItems_BadLimitFallback(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
+
+func TestHandler_Update_BadID(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPut, "/vendors/abc",
+		vendors.UpdateVendorRequest{Name: "X"})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_Update_BadJSON(t *testing.T) {
+	srv := newSrv(t)
+	req, err := http.NewRequest(http.MethodPut, srv.URL+"/vendors/1", bytes.NewReader([]byte("not-json")))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	res, err := srv.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_Update_EmptyName(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPut, "/vendors/1",
+		vendors.UpdateVendorRequest{Name: ""})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+}
+
+func TestHandler_Update_NotFound(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPut, "/vendors/99999999",
+		vendors.UpdateVendorRequest{Name: "X", IsActive: true})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+}

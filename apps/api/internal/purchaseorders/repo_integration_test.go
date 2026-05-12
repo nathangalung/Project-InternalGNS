@@ -79,9 +79,10 @@ func TestRepo_List(t *testing.T) {
 	acceptedQuotationWithPO(t, tx)
 
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
-	rows, err := repo.List(ctx, nil, nil, 50, 0)
+	res, err := repo.List(ctx, purchaseorders.ListFilter{Limit: 50})
 	require.NoError(t, err)
-	assert.NotEmpty(t, rows)
+	assert.NotEmpty(t, res.Rows)
+	assert.GreaterOrEqual(t, res.Total, int64(1))
 }
 
 func TestRepo_ChangeStatus_FullLifecycle(t *testing.T) {
@@ -97,6 +98,63 @@ func TestRepo_ChangeStatus_FullLifecycle(t *testing.T) {
 	po, err := repo.GetByID(ctx, poID)
 	require.NoError(t, err)
 	assert.Equal(t, purchaseorders.StatusDelivered, po.Status)
+}
+
+func TestRepo_ChangeStatus_DeliveredStampsDeliveryNote(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, poID := acceptedQuotationWithPO(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
+
+	var dn *string
+	require.NoError(t, tx.QueryRow(ctx,
+		`SELECT delivery_note_number FROM purchase_orders WHERE id = $1`, poID).Scan(&dn))
+	require.NotNil(t, dn)
+	assert.Contains(t, *dn, "DN-")
+
+	// Bounce back and re-deliver — should preserve the original DN.
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
+
+	var dnAfter *string
+	require.NoError(t, tx.QueryRow(ctx,
+		`SELECT delivery_note_number FROM purchase_orders WHERE id = $1`, poID).Scan(&dnAfter))
+	require.NotNil(t, dnAfter)
+	assert.Equal(t, *dn, *dnAfter)
+}
+
+func TestRepo_ChangeStatus_DeliveredSnapshotsGoodsOrService(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	qID, poID := acceptedQuotationWithPO(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
+
+	rows, err := tx.Query(ctx, `
+		SELECT line_type, goods_or_service
+		FROM invoice_items
+		WHERE invoice_id = (SELECT id FROM invoices WHERE quotation_id = $1)
+		ORDER BY line_number`, qID)
+	require.NoError(t, err)
+	defer rows.Close()
+
+	seen := map[string]string{}
+	for rows.Next() {
+		var lt string
+		var gos *string
+		require.NoError(t, rows.Scan(&lt, &gos))
+		require.NotNil(t, gos, "goods_or_service must be populated")
+		seen[lt] = *gos
+	}
+	assert.Equal(t, "B", seen["product"])
+	if v, ok := seen["shipping"]; ok {
+		assert.Equal(t, "J", v)
+	}
 }
 
 func TestRepo_ChangeStatus_RejectsInvalidTransition(t *testing.T) {
@@ -137,7 +195,7 @@ func TestRepo_UpdateFile_AdvancesPendingToUploaded(t *testing.T) {
 	require.NoError(t, repo.UpdateFile(ctx, poID, purchaseorders.UpdateFileRequest{
 		FileName: "po.pdf",
 		FileSize: 1024,
-		FileURL:  "data:application/pdf;base64,",
+		ObjectKey:  "data:application/pdf;base64,",
 	}, seedUserID))
 
 	po, err := repo.GetByID(ctx, poID)
@@ -152,7 +210,115 @@ func TestRepo_UpdateFile_NotFound(t *testing.T) {
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
 	err := repo.UpdateFile(ctx, 99999999, purchaseorders.UpdateFileRequest{
-		FileName: "x.pdf", FileSize: 1, FileURL: "x",
+		FileName: "x.pdf", FileSize: 1, ObjectKey: "x",
 	}, seedUserID)
 	assert.ErrorIs(t, err, purchaseorders.ErrNotFound)
 }
+
+func TestRepo_UpdateItems_ReplacesAndUpdatesDiscount(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, poID := acceptedQuotationWithPO(t, tx)
+
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	notes := "edited"
+	addr := "Jakarta Pusat"
+	cost := "50000"
+	req := purchaseorders.UpdateItemsRequest{
+		DiscountPct:     "5",
+		Notes:           &notes,
+		ShippingAddress: &addr,
+		ShippingCost:    &cost,
+		Items: []purchaseorders.UpdateItemsLine{{
+			ItemName:     "Edited Item",
+			Qty:          "3",
+			UnitID:       int16Ptr(seedUnitID),
+			SellingPrice: "200000",
+			CostPrice:    strPtr("150000"),
+		}},
+	}
+	newVersion, err := repo.UpdateItems(ctx, poID, req, seedUserID, nil)
+	require.NoError(t, err)
+	assert.Greater(t, newVersion, int32(0))
+
+	items, err := repo.ListItems(ctx, poID)
+	require.NoError(t, err)
+	require.Len(t, items, 2)
+	assert.Equal(t, "Edited Item", items[0].ItemName)
+	assert.Equal(t, "shipping", items[1].ItemType)
+}
+
+func TestRepo_UpdateItems_NotFound(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+
+	_, err := repo.UpdateItems(ctx, 99999999, purchaseorders.UpdateItemsRequest{
+		DiscountPct: "0",
+		Items:       []purchaseorders.UpdateItemsLine{},
+	}, seedUserID, nil)
+	assert.ErrorIs(t, err, purchaseorders.ErrNotFound)
+}
+
+func TestRepo_UpdateItems_LockedWhenDelivered(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, poID := acceptedQuotationWithPO(t, tx)
+
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
+
+	_, err := repo.UpdateItems(ctx, poID, purchaseorders.UpdateItemsRequest{
+		DiscountPct: "0",
+		Items:       []purchaseorders.UpdateItemsLine{},
+	}, seedUserID, nil)
+	assert.ErrorIs(t, err, purchaseorders.ErrLocked)
+}
+
+func TestRepo_UpdateItems_VersionMatch(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, poID := acceptedQuotationWithPO(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+
+	po, err := repo.GetByID(ctx, poID)
+	require.NoError(t, err)
+	current := po.RowVersion
+
+	newVersion, err := repo.UpdateItems(ctx, poID, purchaseorders.UpdateItemsRequest{
+		DiscountPct: "5",
+		Items: []purchaseorders.UpdateItemsLine{{
+			ItemName: "X", Qty: "1", UnitID: int16Ptr(seedUnitID), SellingPrice: "1000",
+		}},
+	}, seedUserID, &current)
+	require.NoError(t, err)
+	assert.Greater(t, newVersion, current)
+}
+
+func TestRepo_UpdateItems_VersionMismatch(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, poID := acceptedQuotationWithPO(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+
+	stale := int32(999)
+	_, err := repo.UpdateItems(ctx, poID, purchaseorders.UpdateItemsRequest{
+		DiscountPct: "5",
+		Items: []purchaseorders.UpdateItemsLine{{
+			ItemName: "X", Qty: "1", UnitID: int16Ptr(seedUnitID), SellingPrice: "1000",
+		}},
+	}, seedUserID, &stale)
+	assert.ErrorIs(t, err, purchaseorders.ErrVersionMismatch)
+}
+
+func TestRepo_UpdateItems_VersionedNotFound(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+
+	zero := int32(0)
+	_, err := repo.UpdateItems(ctx, 99999999, purchaseorders.UpdateItemsRequest{
+		DiscountPct: "0",
+		Items:       []purchaseorders.UpdateItemsLine{},
+	}, seedUserID, &zero)
+	assert.ErrorIs(t, err, purchaseorders.ErrNotFound)
+}
+
+func int16Ptr(v int16) *int16 { return &v }
+func strPtr(v string) *string { return &v }

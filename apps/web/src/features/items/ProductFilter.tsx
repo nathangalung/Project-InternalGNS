@@ -1,11 +1,19 @@
-import { useState, type CSSProperties } from "react"
+import { useState } from "react"
+import { CheckIcon } from "@/components/document/icons"
+import {
+  chipStyle,
+  dropdownItemStyle,
+  dropdownLabelStyle,
+  STATUS_FILTER_OPTIONS as STATUS_OPTIONS,
+  type StatusFilterValue,
+} from "@/components/shared/filter-styles"
 import { useUnits } from "@/features/units/hooks"
 
-export type ProductStatusFilter = "all" | "active" | "inactive"
+export type ProductStatusFilter = StatusFilterValue
 
 export interface ProductFilterValues {
   status: ProductStatusFilter
-  unitCode: string  // "" means all
+  unitCode: string // "" means all
 }
 
 interface ProductFilterProps {
@@ -13,56 +21,6 @@ interface ProductFilterProps {
   onApply: (filters: ProductFilterValues) => void
   initialValues?: ProductFilterValues
 }
-
-const STATUS_OPTIONS: { value: ProductStatusFilter; label: string }[] = [
-  { value: "all",      label: "Semua" },
-  { value: "active",   label: "Aktif" },
-  { value: "inactive", label: "Nonaktif" },
-]
-
-function chipStyle(active: boolean): CSSProperties {
-  return {
-    padding: "8px 18px",
-    borderRadius: "999px",
-    border: active ? "1.5px solid #630ED4" : "1px solid #E5E7EB",
-    background: active ? "rgba(99, 14, 212, 0.06)" : "#FFFFFF",
-    cursor: "pointer",
-    fontFamily: "'Inter', sans-serif",
-    fontWeight: active ? 600 : 500,
-    fontSize: "13px",
-    color: active ? "#630ED4" : "#4A4455",
-    transition: "all 0.15s",
-  }
-}
-
-const dropdownItemStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 12,
-  padding: "10px 20px",
-  width: "100%",
-  background: "transparent",
-  border: "none",
-  cursor: "pointer",
-  textAlign: "left",
-}
-
-function dropdownLabelStyle(active: boolean): CSSProperties {
-  return {
-    fontFamily: "'Inter', sans-serif",
-    fontWeight: active ? 700 : 500,
-    fontSize: "14px",
-    lineHeight: "20px",
-    color: active ? "#630ED4" : "#4A4455",
-  }
-}
-
-const CheckIcon = () => (
-  <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
-    <path d="M1 5.5L4.5 9L13 1" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-)
 
 const DEFAULTS: ProductFilterValues = { status: "all", unitCode: "" }
 
@@ -75,7 +33,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
   const { data: units } = useUnits()
 
   const filteredUnits = (units ?? [])
-    .filter(u => {
+    .filter((u) => {
       if (!unitQuery) return true
       const q = unitQuery.toLowerCase()
       return u.code.toLowerCase().includes(q) || (u.name ?? "").toLowerCase().includes(q)
@@ -98,12 +56,19 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
 
   return (
     <div className="ca-overlay" onClick={onClose}>
-      <div className="ca-modal" onClick={e => e.stopPropagation()}>
-
+      <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
         <div className="ca-header">
           <h2 className="ca-title">Filter Produk</h2>
           <button className="ca-close-btn" onClick={onClose} title="Tutup">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
               <line x1="1" y1="1" x2="13" y2="13" />
               <line x1="13" y1="1" x2="1" y2="13" />
             </svg>
@@ -111,12 +76,11 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
         </div>
 
         <div className="ca-body">
-
           <div className="ca-section">
             <div className="ca-section-heading">Status Produk</div>
             <div className="ca-field">
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {STATUS_OPTIONS.map(o => (
+                {STATUS_OPTIONS.map((o) => (
                   <button
                     key={o.value}
                     type="button"
@@ -143,7 +107,13 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
+                  style={{
+                    position: "absolute",
+                    left: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    pointerEvents: "none",
+                  }}
                 >
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -152,7 +122,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
                   type="text"
                   placeholder="Ketik nama satuan..."
                   value={unitQuery}
-                  onChange={e => {
+                  onChange={(e) => {
                     setUnitQuery(e.target.value)
                     setShowUnitSuggestions(true)
                     if (unitCode) setUnitCode("")
@@ -196,33 +166,51 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
                       color: "#94A3B8",
                     }}
                   >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 14 14"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    >
                       <line x1="1" y1="1" x2="13" y2="13" />
                       <line x1="13" y1="1" x2="1" y2="13" />
                     </svg>
                   </button>
                 )}
                 {showUnitSuggestions && unitQuery.length > 0 && (
-                  <div style={{
-                    position: "absolute",
-                    top: "calc(100% + 4px)",
-                    left: 0,
-                    right: 0,
-                    maxHeight: "240px",
-                    overflowY: "auto",
-                    background: "#FFFFFF",
-                    border: "1px solid rgba(204, 195, 216, 0.4)",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-                    padding: "4px 0",
-                    zIndex: 50,
-                  }}>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 4px)",
+                      left: 0,
+                      right: 0,
+                      maxHeight: "240px",
+                      overflowY: "auto",
+                      background: "#FFFFFF",
+                      border: "1px solid rgba(204, 195, 216, 0.4)",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+                      padding: "4px 0",
+                      zIndex: 50,
+                    }}
+                  >
                     {filteredUnits.length === 0 ? (
-                      <div style={{ padding: "12px 20px", fontSize: "13px", color: "#94A3B8", fontFamily: "'Inter', sans-serif", textAlign: "center" }}>
+                      <div
+                        style={{
+                          padding: "12px 20px",
+                          fontSize: "13px",
+                          color: "#94A3B8",
+                          fontFamily: "'Inter', sans-serif",
+                          textAlign: "center",
+                        }}
+                      >
                         Tidak ada hasil
                       </div>
                     ) : (
-                      filteredUnits.map(u => {
+                      filteredUnits.map((u) => {
                         const active = unitCode === u.code
                         const label = u.name ? `${u.code} — ${u.name}` : u.code
                         return (
@@ -247,7 +235,6 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
               </div>
             </div>
           </div>
-
         </div>
 
         <div
@@ -292,7 +279,6 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
             </button>
           </div>
         </div>
-
       </div>
     </div>
   )

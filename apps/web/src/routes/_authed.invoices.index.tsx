@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import InvoiceList from "@/features/invoices/InvoiceList"
 import { useAuth } from "@/features/auth/hooks"
+import InvoiceList from "@/features/invoices/InvoiceList"
 import { makePageNavigate } from "@/lib/page-nav"
 
 export const Route = createFileRoute("/_authed/invoices/")({
@@ -14,7 +14,7 @@ function InvoiceListRoute() {
   return (
     <InvoiceList
       onNavigate={makePageNavigate(navigate)}
-      onViewDetail={qid => void navigate({ to: "/invoices/$id", params: { id: String(qid) } })}
+      onViewDetail={(qid) => void navigate({ to: "/invoices/$id", params: { id: String(qid) } })}
       onLogout={() => {
         logout()
         void navigate({ to: "/login" })

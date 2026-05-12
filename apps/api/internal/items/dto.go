@@ -13,6 +13,21 @@ type Item struct {
 	UpdatedAt     time.Time `db:"updated_at"       json:"updatedAt"`
 }
 
+type ListFilter struct {
+	Q         string
+	IsActive  *bool
+	UnitID    *int16
+	SortBy    string
+	SortDir   string
+	Limit     int
+	Offset    int
+}
+
+type ListResult struct {
+	Rows  []Item
+	Total int64
+}
+
 // Mirrors fn_search_items return.
 type SearchResult struct {
 	ID            int64   `db:"id"               json:"id"`
@@ -119,4 +134,44 @@ type MatchRowsRequest struct {
 
 type MatchRowsResponse struct {
 	Rows []MatchRowResult `json:"rows"`
+}
+
+// VendorOfferHit mirrors items.search_vendor_offers row.
+type VendorOfferHit struct {
+	ItemID     int64   `db:"item_id"     json:"itemId"`
+	VendorID   int64   `db:"vendor_id"   json:"vendorId"`
+	VendorName string  `db:"vendor_name" json:"vendorName"`
+	VendorSKU  *string `db:"vendor_sku"  json:"vendorSku,omitempty"`
+	Score      float32 `db:"score"       json:"score"`
+}
+
+// RequestHistoryHit mirrors items.search_request_history row.
+type RequestHistoryHit struct {
+	ItemID      int64   `db:"item_id"      json:"itemId"`
+	RequestText string  `db:"request_text" json:"requestText"`
+	MatchCount  int32   `db:"match_count"  json:"matchCount"`
+	Score       float32 `db:"score"        json:"score"`
+}
+
+// AdvancedSearchHit is the merged, tier-labelled row served by /items/search-advanced.
+type AdvancedSearchHit struct {
+	ID            int64    `json:"id"`
+	Name          string   `json:"name"`
+	IMPACode      *string  `json:"impaCode,omitempty"`
+	DefaultUnitID *int16   `json:"defaultUnitId,omitempty"`
+	Score         float32  `json:"score"`
+	Tier          string   `json:"tier"`   // ITEM_AUTO | VENDOR_OFFER | ITEM_SUGGESTED | REQUEST_HISTORY | ITEM_FUZZY
+	Tiers         []string `json:"tiers"`  // all tiers that contributed to this hit
+	VendorID      *int64   `json:"vendorId,omitempty"`
+	VendorName    *string  `json:"vendorName,omitempty"`
+	VendorSKU     *string  `json:"vendorSku,omitempty"`
+	RequestText   *string  `json:"requestText,omitempty"`
+}
+
+// AdvancedSearchResponse wraps the hit list with a per-tier count summary.
+type AdvancedSearchResponse struct {
+	Query string                       `json:"query"`
+	Total int                          `json:"total"`
+	Hits  []AdvancedSearchHit          `json:"hits"`
+	Counts map[string]int              `json:"counts"` // tier → count
 }

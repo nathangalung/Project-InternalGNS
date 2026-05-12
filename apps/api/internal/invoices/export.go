@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -84,34 +85,32 @@ func (h *ExportHandler) ExportPDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 
 	items, err := h.repo.ListItems(r.Context(), id)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 
-	data, err := h.buildData(r.Context(), inv, items)
-	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
-		return
-	}
+	data := h.buildData(r.Context(), inv, items)
 
 	pdf, err := h.renderer.Render(r.Context(), "invoice/Invoice.tex.tmpl", data)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/pdf")
-	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s.pdf"`, sanitizeFilename(inv.InvoiceNo)))
-	_, _ = w.Write(pdf)
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.pdf"`, sanitizeFilename(inv.InvoiceNo)))
+	if _, werr := w.Write(pdf); werr != nil {
+		slog.WarnContext(r.Context(), "pdf write failed", "doc", "invoice", "id", id, "err", werr)
+	}
 }
 
-func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []InvoiceItem) (exportData, error) {
+func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []InvoiceItem) exportData {
 	client, _ := h.clients.GetByID(ctx, inv.CompanyClientID)
 
 	vessel := ""
@@ -175,7 +174,7 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 		BankAccountName: pdfgen.LatexEscape(h.settings.BankAccountNm),
 		DateLine:        pdfgen.JakartaDateLine(inv.InvoiceDate.In(time.Local)),
 		SignerName:      pdfgen.LatexEscape(h.settings.SignerName),
-	}, nil
+	}
 }
 
 func strDeref(p *string) string {

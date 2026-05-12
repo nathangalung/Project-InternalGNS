@@ -6,16 +6,25 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
+	"github.com/nathangalung/internalgns/apps/api/internal/storage"
+)
+
+const (
+	uploadURLExpiry   = 15 * time.Minute
+	downloadURLExpiry = 1 * time.Hour
 )
 
 type Handler struct {
-	repo *Repo
+	repo    *Repo
+	storage *storage.Client
 }
 
 func NewHandler(repo *Repo) *Handler {
@@ -24,23 +33,53 @@ func NewHandler(repo *Repo) *Handler {
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	limit := parseInt(q.Get("limit"), 50, 1, 200)
-	offset := parseInt(q.Get("offset"), 0, 0, 1_000_000)
+	limit, offset := paginate.Parse(r)
 
-	var qPtr, statusPtr *string
-	if v := strings.TrimSpace(q.Get("q")); v != "" {
-		qPtr = &v
+	f := ListFilter{
+		Q:       strings.TrimSpace(q.Get("q")),
+		SortBy:  q.Get("sortBy"),
+		SortDir: q.Get("sortDir"),
+		Limit:   limit,
+		Offset:  offset,
 	}
-	if v := strings.TrimSpace(q.Get("status")); v != "" {
-		statusPtr = &v
+	if s := strings.TrimSpace(q.Get("status")); s != "" {
+		for _, raw := range strings.Split(s, ",") {
+			if v := strings.TrimSpace(raw); v != "" {
+				f.Statuses = append(f.Statuses, v)
+			}
+		}
+	}
+	f.DateFrom = parseDateParam(q.Get("dateFrom"))
+	f.DateTo = parseDateParam(q.Get("dateTo"))
+	if s := strings.TrimSpace(q.Get("minTotal")); s != "" {
+		f.MinTotal = &s
+	}
+	if s := strings.TrimSpace(q.Get("maxTotal")); s != "" {
+		f.MaxTotal = &s
 	}
 
-	rows, err := h.repo.List(r.Context(), qPtr, statusPtr, limit, offset)
+	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, rows)
+	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
+	httpx.WriteJSON(w, http.StatusOK, res.Rows)
+}
+
+// Accepts YYYY-MM-DD or RFC3339; nil on empty/invalid.
+func parseDateParam(s string) *time.Time {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return nil
+	}
+	if t, err := time.Parse("2006-01-02", s); err == nil {
+		return &t
+	}
+	if t, err := time.Parse(time.RFC3339, s); err == nil {
+		return &t
+	}
+	return nil
 }
 
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +94,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, po)
@@ -73,7 +112,7 @@ func (h *Handler) GetByQuotation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, po)
@@ -87,7 +126,7 @@ func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 	}
 	items, err := h.repo.ListItems(r.Context(), id)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, items)
@@ -108,6 +147,10 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "required"}))
 		return
 	}
+	if strings.TrimSpace(req.ObjectKey) == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"objectKey": "required"}))
+		return
+	}
 
 	actor := deps.CurrentUserID(r.Context())
 	if err := h.repo.UpdateFile(r.Context(), id, req, actor); err != nil {
@@ -115,7 +158,7 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 			return
 		}
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -138,7 +181,7 @@ func (h *Handler) UpdateNotes(w http.ResponseWriter, r *http.Request) {
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 			return
 		}
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -167,11 +210,71 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrInvalidTransition):
 			httperr.Render(w, httperr.Unprocessable(map[string]string{"status": err.Error()}))
 		default:
-			httperr.Render(w, httperr.Internal(err.Error()))
+			httperr.RenderDBErr(w, err)
 		}
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	ifMatch, err := parseIfMatch(r.Header.Get("If-Match"))
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest(err.Error()))
+		return
+	}
+	if ifMatch == nil {
+		httperr.Render(w, httperr.BadRequest("If-Match header required"))
+		return
+	}
+	var req UpdateItemsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	if strings.TrimSpace(req.DiscountPct) == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"discountPct": "required"}))
+		return
+	}
+	actor := deps.CurrentUserID(r.Context())
+	newVersion, err := h.repo.UpdateItems(r.Context(), id, req, actor, ifMatch)
+	if err != nil {
+		switch {
+		// 409 per round3_plan optimistic-lock contract (not RFC 7232 412).
+		case errors.Is(err, ErrVersionMismatch):
+			httperr.Render(w, httperr.Conflict("purchase order row_version mismatch"))
+		case errors.Is(err, ErrNotFound):
+			httperr.Render(w, httperr.NotFound("purchase order not found"))
+		case errors.Is(err, ErrLocked):
+			httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "PO locked in DELIVERED state"}))
+		default:
+			httperr.RenderDBErr(w, err)
+		}
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{
+		"id":         id,
+		"rowVersion": newVersion,
+	})
+}
+
+func parseIfMatch(raw string) (*int32, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil, nil
+	}
+	raw = strings.Trim(raw, `"`)
+	v, err := strconv.ParseInt(raw, 10, 32)
+	if err != nil {
+		return nil, errors.New("invalid If-Match")
+	}
+	r32 := int32(v)
+	return &r32, nil
 }
 
 func isValidStatus(s Status) bool {
@@ -182,19 +285,74 @@ func isValidStatus(s Status) bool {
 	return false
 }
 
-func parseInt(raw string, def, min, max int) int {
-	if raw == "" {
-		return def
+func (h *Handler) PresignUpload(w http.ResponseWriter, r *http.Request) {
+	if h.storage == nil {
+		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
+		return
 	}
-	v, err := strconv.Atoi(raw)
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		return def
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
 	}
-	if v < min {
-		return min
+	if _, err := h.repo.GetByID(r.Context(), id); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			httperr.Render(w, httperr.NotFound("purchase order not found"))
+			return
+		}
+		httperr.RenderDBErr(w, err)
+		return
 	}
-	if v > max {
-		return max
+	fileName := strings.TrimSpace(r.URL.Query().Get("fileName"))
+	if fileName == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "required"}))
+		return
 	}
-	return v
+	objectKey := storage.BuildObjectKey("po", id, fileName)
+	url, err := h.storage.PresignPut(r.Context(), objectKey, uploadURLExpiry)
+	if err != nil {
+		httperr.Render(w, httperr.Internal("presign failed"))
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{
+		"uploadUrl": url,
+		"objectKey": objectKey,
+		"expiresAt": time.Now().UTC().Add(uploadURLExpiry).Unix(),
+	})
 }
+
+func (h *Handler) PresignDownload(w http.ResponseWriter, r *http.Request) {
+	if h.storage == nil {
+		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
+		return
+	}
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	po, err := h.repo.GetByID(r.Context(), id)
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("purchase order not found"))
+		return
+	}
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	if po.FileURL == nil || *po.FileURL == "" {
+		httperr.Render(w, httperr.NotFound("no file attached"))
+		return
+	}
+	url, err := h.storage.PresignGet(r.Context(), *po.FileURL, downloadURLExpiry)
+	if err != nil {
+		httperr.Render(w, httperr.Internal("presign failed"))
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{
+		"downloadUrl": url,
+		"fileName":    po.FileName,
+		"expiresAt":   time.Now().UTC().Add(downloadURLExpiry).Unix(),
+	})
+}
+

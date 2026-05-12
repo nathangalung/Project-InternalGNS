@@ -1,7 +1,7 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
-import Login from "@/features/auth/Login"
-import { isAuthenticatedSync, useAuth } from "@/features/auth/hooks"
 import * as auth from "@/features/auth/api"
+import { isAuthenticatedSync, useAuth } from "@/features/auth/hooks"
+import Login from "@/features/auth/Login"
 
 export const Route = createFileRoute("/login")({
   beforeLoad: () => {

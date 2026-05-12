@@ -1,16 +1,33 @@
-import { apiRequest } from "@/lib/api-client"
+import { apiList, apiRequest, type PaginatedList } from "@/lib/api-client"
 import type { ClientRow, ClientSearchHit, ClientSummary, ContactRow } from "@/types/api"
 
 export async function summary(): Promise<ClientSummary> {
   return apiRequest<ClientSummary>({ path: "/clients/summary" })
 }
 
-export async function list(params: { limit?: number; offset?: number } = {}): Promise<ClientRow[]> {
+export type ClientListParams = {
+  q?: string
+  isActive?: boolean
+  countryCode?: string
+  minTotal?: string
+  sortBy?: "name" | "createdAt" | "totalPurchase" | "quotationCount"
+  sortDir?: "asc" | "desc"
+  limit?: number
+  offset?: number
+}
+
+export async function list(params: ClientListParams = {}): Promise<PaginatedList<ClientRow>> {
   const search = new URLSearchParams()
+  if (params.q) search.set("q", params.q)
+  if (params.isActive !== undefined) search.set("isActive", String(params.isActive))
+  if (params.countryCode) search.set("countryCode", params.countryCode)
+  if (params.minTotal) search.set("minTotal", params.minTotal)
+  if (params.sortBy) search.set("sortBy", params.sortBy)
+  if (params.sortDir) search.set("sortDir", params.sortDir)
   if (params.limit !== undefined) search.set("limit", String(params.limit))
   if (params.offset !== undefined) search.set("offset", String(params.offset))
   const qs = search.toString()
-  return apiRequest<ClientRow[]>({ path: `/clients${qs ? `?${qs}` : ""}` })
+  return apiList<ClientRow>({ path: `/clients${qs ? `?${qs}` : ""}` })
 }
 
 export async function get(id: number): Promise<ClientRow> {

@@ -12,6 +12,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 )
 
 // Handler exposes user endpoints.
@@ -24,30 +25,34 @@ func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
 
-// List returns paged users.
+// List returns paged users with X-Total-Count header.
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	limit, offset := paginate.Parse(r)
 	q := r.URL.Query()
 
-	limit := parseInt(q.Get("limit"), 50, 1, 200)
-	offset := parseInt(q.Get("offset"), 0, 0, 1_000_000)
-
-	var (
-		qPtr    *string
-		rolePtr *string
-	)
-	if v := strings.TrimSpace(q.Get("q")); v != "" {
-		qPtr = &v
+	f := ListFilter{
+		Q:       strings.TrimSpace(q.Get("q")),
+		SortBy:  q.Get("sortBy"),
+		SortDir: q.Get("sortDir"),
+		Limit:   limit,
+		Offset:  offset,
 	}
 	if v := strings.TrimSpace(q.Get("role")); v != "" {
-		rolePtr = &v
+		f.Role = &v
+	}
+	if s := q.Get("isActive"); s != "" {
+		if v, err := strconv.ParseBool(s); err == nil {
+			f.IsActive = &v
+		}
 	}
 
-	rows, err := h.repo.List(r.Context(), qPtr, rolePtr, limit, offset)
+	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, rows)
+	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
+	httpx.WriteJSON(w, http.StatusOK, res.Rows)
 }
 
 // Get one user by id.
@@ -64,7 +69,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, u)
@@ -86,7 +91,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	actor := deps.CurrentUserID(r.Context())
 	u, err := h.repo.Create(r.Context(), req, actor)
 	if err != nil {
-		httperr.Render(w, httperr.BadRequest(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusCreated, u)
@@ -118,7 +123,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.Render(w, httperr.BadRequest(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, u)
@@ -148,7 +153,7 @@ func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 			httperr.Render(w, httperr.NotFound("user not found"))
 			return
 		}
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -203,20 +208,3 @@ func isValidRole(r Role) bool {
 	}
 }
 
-// parseInt clamps to bounds.
-func parseInt(raw string, def, min, max int) int {
-	if raw == "" {
-		return def
-	}
-	v, err := strconv.Atoi(raw)
-	if err != nil {
-		return def
-	}
-	if v < min {
-		return min
-	}
-	if v > max {
-		return max
-	}
-	return v
-}

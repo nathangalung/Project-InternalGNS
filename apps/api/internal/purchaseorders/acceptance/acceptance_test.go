@@ -42,6 +42,12 @@ func (s *scenarioState) reset() error {
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
+	return s.sendRequestWithHeaders(method, path, body, nil)
+}
+
+func (s *scenarioState) sendRequestWithHeaders(
+	method, path string, body any, headers map[string]string,
+) error {
 	var rdr io.Reader
 	if body != nil {
 		raw, err := json.Marshal(body)
@@ -56,6 +62,9 @@ func (s *scenarioState) sendRequest(method, path string, body any) error {
 	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
 	}
 	res, err := s.srv.Client().Do(req)
 	if err != nil {
@@ -219,6 +228,11 @@ func (s *scenarioState) poListAtLeast(min int) error {
 }
 
 func (s *scenarioState) walkPOPath(path string) error {
+	if strings.TrimSpace(path) == "" {
+		s.last = &http.Response{StatusCode: http.StatusNoContent}
+		s.body = nil
+		return nil
+	}
 	for _, step := range strings.Split(path, ",") {
 		if err := s.transitionPOTo(strings.TrimSpace(step)); err != nil {
 			return err
@@ -247,14 +261,41 @@ func (s *scenarioState) lastTransitionSucceeds() error {
 }
 
 func (s *scenarioState) uploadPOFile(name string) error {
-	body := purchaseorders.UpdateFileRequest{FileName: name, FileSize: 1024, FileURL: "data:application/pdf;base64,"}
+	body := purchaseorders.UpdateFileRequest{FileName: name, FileSize: 1024, ObjectKey: "data:application/pdf;base64,"}
 	return s.sendRequest(http.MethodPatch, "/purchase-orders/"+strconv.FormatInt(s.poID, 10)+"/file", body)
 }
 
 func (s *scenarioState) uploadPOFileEmptyName() error {
-	body := purchaseorders.UpdateFileRequest{FileName: "", FileSize: 1, FileURL: "x"}
+	body := purchaseorders.UpdateFileRequest{FileName: "", FileSize: 1, ObjectKey: "x"}
 	return s.sendRequest(http.MethodPatch, "/purchase-orders/"+strconv.FormatInt(s.poID, 10)+"/file", body)
 }
+
+func (s *scenarioState) editPOItems(discountPct, sellingPrice string) error {
+	if err := s.sendRequest(http.MethodGet, "/purchase-orders/"+strconv.FormatInt(s.poID, 10), nil); err != nil {
+		return err
+	}
+	var po purchaseorders.PurchaseOrder
+	if err := json.Unmarshal(s.body, &po); err != nil {
+		return err
+	}
+	body := purchaseorders.UpdateItemsRequest{
+		DiscountPct: discountPct,
+		Items: []purchaseorders.UpdateItemsLine{{
+			ItemName:     "Edited Product",
+			Qty:          "1",
+			UnitID:       int16PtrAcc(defaultUnit),
+			SellingPrice: sellingPrice,
+		}},
+	}
+	return s.sendRequestWithHeaders(
+		http.MethodPut,
+		"/purchase-orders/"+strconv.FormatInt(s.poID, 10)+"/items",
+		body,
+		map[string]string{"If-Match": strconv.FormatInt(int64(po.RowVersion), 10)},
+	)
+}
+
+func int16PtrAcc(v int16) *int16 { return &v }
 
 func (s *scenarioState) invoiceStatusEquals(want string) error {
 	var inv invoices.Invoice
@@ -265,6 +306,48 @@ func (s *scenarioState) invoiceStatusEquals(want string) error {
 		return fmt.Errorf("want %s got %s", want, inv.Status)
 	}
 	return nil
+}
+
+// Fetch invoice items via invoice id.
+func (s *scenarioState) listInvoiceItems() error {
+	if err := s.readInvoiceByQuotation(); err != nil {
+		return err
+	}
+	if s.last.StatusCode != http.StatusOK {
+		return fmt.Errorf("invoice fetch want 200 got %d body=%s", s.last.StatusCode, s.body)
+	}
+	var inv invoices.Invoice
+	if err := json.Unmarshal(s.body, &inv); err != nil {
+		return err
+	}
+	return s.sendRequest(http.MethodGet, "/invoices/"+strconv.FormatInt(inv.ID, 10)+"/items", nil)
+}
+
+// Assert any product line has price.
+func (s *scenarioState) invoiceProductLineUnitPriceEquals(want string) error {
+	var rows []invoices.InvoiceItem
+	if err := json.Unmarshal(s.body, &rows); err != nil {
+		return err
+	}
+	for _, it := range rows {
+		if it.LineType == "product" && numericEquals(it.UnitPrice, want) {
+			return nil
+		}
+	}
+	return fmt.Errorf("no product line with unitPrice=%s, got %+v", want, rows)
+}
+
+// Compare numeric strings ignoring scale.
+func numericEquals(a, b string) bool {
+	return trimNumeric(a) == trimNumeric(b)
+}
+
+func trimNumeric(v string) string {
+	if !strings.Contains(v, ".") {
+		return v
+	}
+	v = strings.TrimRight(v, "0")
+	return strings.TrimRight(v, ".")
 }
 
 func initScenario(t *testing.T) func(*godog.ScenarioContext) {
@@ -291,12 +374,15 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the PO file name is "([^"]+)"$`, state.poFileNameEquals)
 		sc.Step(`^the items contain at least (\d+) product line(?:s)?$`, state.poItemsAtLeastProducts)
 		sc.Step(`^the PO list contains at least (\d+) row(?:s)?$`, state.poListAtLeast)
-		sc.Step(`^the user transitions the PO through "([^"]+)"$`, state.walkPOPath)
+		sc.Step(`^the user transitions the PO through "([^"]*)"$`, state.walkPOPath)
 		sc.Step(`^every PO transition succeeds$`, state.lastTransitionSucceeds)
 		sc.Step(`^the user tries to transition the PO to "([^"]+)"$`, state.tryPOTransition)
 		sc.Step(`^the user uploads a PO file named "([^"]+)"$`, state.uploadPOFile)
 		sc.Step(`^the user uploads a PO file with empty filename$`, state.uploadPOFileEmptyName)
 		sc.Step(`^the invoice status is "([^"]+)"$`, state.invoiceStatusEquals)
+		sc.Step(`^the user edits PO items with discount "([^"]*)" and selling price "([^"]*)"$`, state.editPOItems)
+		sc.Step(`^the user lists invoice items by quotation$`, state.listInvoiceItems)
+		sc.Step(`^an invoice product line has unit price "([^"]+)"$`, state.invoiceProductLineUnitPriceEquals)
 	}
 }
 

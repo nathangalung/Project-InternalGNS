@@ -15,7 +15,7 @@ func TestRepo_ErrorPaths(t *testing.T) {
 	r := purchaseorders.NewRepo(testutil.FakeExec{}, store)
 	ctx := context.Background()
 
-	_, err := r.List(ctx, nil, nil, 10, 0)
+	_, err := r.List(ctx, purchaseorders.ListFilter{Limit: 10})
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
 	_, err = r.GetByID(ctx, 1)
@@ -31,7 +31,16 @@ func TestRepo_ErrorPaths(t *testing.T) {
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
 	err = r.UpdateFile(ctx, 1, purchaseorders.UpdateFileRequest{
-		FileName: "x.pdf", FileSize: 1, FileURL: "x",
+		FileName: "x.pdf", FileSize: 1, ObjectKey: "x",
 	}, 1)
+	assert.ErrorIs(t, err, testutil.ErrFake)
+
+	_, err = r.UpdateItems(ctx, 1, purchaseorders.UpdateItemsRequest{
+		DiscountPct: "0",
+		Items:       []purchaseorders.UpdateItemsLine{},
+	}, 1, nil)
+	assert.ErrorIs(t, err, testutil.ErrFake)
+
+	_, err = r.ListItems(ctx, 1)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 }

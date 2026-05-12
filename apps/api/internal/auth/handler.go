@@ -48,7 +48,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, resp)
@@ -71,7 +71,7 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, toMeUser(u))

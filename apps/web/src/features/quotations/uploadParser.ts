@@ -19,9 +19,9 @@ type HeaderIdx = {
 }
 
 function findIdx(headers: string[], keys: string[]): number {
-  const norm = headers.map(h => (h ?? "").toString().trim().toLowerCase())
+  const norm = headers.map((h) => (h ?? "").toString().trim().toLowerCase())
   for (const k of keys) {
-    const idx = norm.findIndex(h => h === k || h.includes(k))
+    const idx = norm.findIndex((h) => h === k || h.includes(k))
     if (idx !== -1) return idx
   }
   return -1
@@ -41,14 +41,14 @@ function detectHeaders(headers: string[]): HeaderIdx | null {
 
 function rowsFromAOA(aoa: unknown[][]): MatchRowInput[] {
   if (aoa.length < 2) return []
-  const headers = (aoa[0] as unknown[]).map(c => (c ?? "").toString())
+  const headers = (aoa[0] as unknown[]).map((c) => (c ?? "").toString())
   const idx = detectHeaders(headers)
   if (!idx) return []
 
   const out: MatchRowInput[] = []
   for (let i = 1; i < aoa.length; i++) {
     const row = aoa[i] as unknown[]
-    if (!row || row.every(c => c == null || c === "")) continue
+    if (!row || row.every((c) => c == null || c === "")) continue
     const name = idx.name >= 0 ? String(row[idx.name] ?? "").trim() : ""
     if (!name) continue
     const impaRaw = idx.impa >= 0 ? row[idx.impa] : ""
@@ -69,6 +69,10 @@ export async function parseProductFile(file: File): Promise<MatchRowInput[]> {
   const wb = XLSX.read(buf, { type: "array" })
   const sheet = wb.Sheets[wb.SheetNames[0]]
   if (!sheet) return []
-  const aoa = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, blankrows: false, defval: "" })
+  const aoa = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
+    header: 1,
+    blankrows: false,
+    defval: "",
+  })
   return rowsFromAOA(aoa)
 }

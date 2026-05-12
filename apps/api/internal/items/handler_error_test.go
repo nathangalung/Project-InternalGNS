@@ -38,6 +38,7 @@ func TestHandler_ErrorPaths(t *testing.T) {
 		{"price_history", http.MethodGet, "/items/1/price-history", nil},
 		{"create", http.MethodPost, "/items/", items.CreateItemRequest{Name: "X"}},
 		{"match", http.MethodPost, "/items/match-request", items.MatchRequest{ReqText: "X"}},
+		{"search_advanced", http.MethodGet, "/items/search-advanced?q=x", nil},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

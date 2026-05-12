@@ -1,11 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as usersApi from "@/features/users/api"
 import { queryKeys } from "@/lib/query-keys"
 
-export function useUsers(params: { limit?: number; offset?: number } = {}) {
+export function useUsers(params: usersApi.ListParams = {}) {
   return useQuery({
     queryKey: queryKeys.users.list(params),
     queryFn: () => usersApi.list(params),
+    placeholderData: keepPreviousData,
   })
 }
 

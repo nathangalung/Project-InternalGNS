@@ -109,6 +109,35 @@ export type ItemSearchHit = {
   matchTier: string
 }
 
+// Tier label exposed by /items/search-advanced.
+export type AdvancedSearchTier =
+  | "ITEM_AUTO"
+  | "VENDOR_OFFER"
+  | "ITEM_SUGGESTED"
+  | "REQUEST_HISTORY"
+  | "ITEM_FUZZY"
+
+export type AdvancedSearchHit = {
+  id: number
+  name: string
+  impaCode?: string
+  defaultUnitId?: number
+  score: number
+  tier: AdvancedSearchTier
+  tiers: AdvancedSearchTier[]
+  vendorId?: number
+  vendorName?: string
+  vendorSku?: string
+  requestText?: string
+}
+
+export type AdvancedSearchResponse = {
+  query: string
+  total: number
+  hits: AdvancedSearchHit[]
+  counts: Partial<Record<AdvancedSearchTier, number>>
+}
+
 export type ItemMatchHit = {
   itemId: number
   itemName: string
@@ -181,11 +210,17 @@ export type UserRow = {
 }
 
 // Vendors master and search.
+export type VendorContactInfo = {
+  email?: string
+  phone?: string
+  sku?: string
+}
+
 export type VendorRow = {
   id: number
   name: string
   location?: string
-  contactInfo?: unknown
+  contactInfo?: VendorContactInfo
   isActive: boolean
   createdAt: string
   updatedAt: string
@@ -197,7 +232,7 @@ export type VendorSearchHit = {
   vendorId: number
   vendorName: string
   location?: string
-  contactInfo?: unknown
+  contactInfo?: VendorContactInfo
   score: number
   matchTier: string
 }
@@ -218,7 +253,9 @@ export type QuotationListRow = {
   version: number
   companyName: string
   status: CanonicalStatus
-  total: string
+  grandTotal: string
+  subtotal: string
+  totalDiscount: string
   totalHargaBeli: string
   createdAt: string
 }
@@ -276,11 +313,28 @@ export type QuotationDetail = {
   totalProduk: string
   total: string
   totalDiscount: string
+  subtotal: string
+  dppNilaiLain: string
+  ppnAmount: string
+  grandTotal: string
   notes?: string
+  rowVersion: number
   createdAt: string
   updatedAt: string
   items: QuotationItemRow[]
   history: QuotationStatusEvent[]
+}
+
+export type QuotationRevisionRow = {
+  id: number
+  parentId?: number
+  quotationNo: string
+  version: number
+  status: CanonicalStatus
+  grandTotal: string
+  totalProduk: string
+  createdAt: string
+  updatedAt: string
 }
 
 export type QuotationItemInput = {
@@ -332,6 +386,58 @@ export type QuotationListParams = {
   offset?: number
 }
 
+// Pre-quotation request log (QIR).
+export type QuotationMatchStatus = "pending" | "matched" | "substituted" | "unavailable"
+export type QuotationRequestSource = "manual" | "ocr" | "import"
+
+export type QuotationItemRequestRow = {
+  id: number
+  quotationId: number
+  lineNo: number
+  requestText: string
+  requestImpa?: string
+  requestedQty?: string
+  requestedUom?: string
+  matchedItemId?: number
+  matchStatus: QuotationMatchStatus
+  sourceType: QuotationRequestSource
+  sourceRef?: string
+  notes?: string
+  reviewedBy?: number
+  reviewedAt?: string
+  rowVersion: number
+  createdBy: number
+  updatedBy?: number
+  createdAt: string
+  updatedAt: string
+}
+
+export type QuotationItemRequestCreateInput = {
+  lineNo: number
+  requestText: string
+  requestImpa?: string
+  requestedQty?: string
+  requestedUom?: string
+  matchedItemId?: number
+  matchStatus?: QuotationMatchStatus
+  sourceType?: QuotationRequestSource
+  sourceRef?: string
+  notes?: string
+}
+
+export type QuotationItemRequestUpdateInput = {
+  lineNo: number
+  requestText: string
+  requestImpa?: string
+  requestedQty?: string
+  requestedUom?: string
+  matchedItemId?: number
+  matchStatus: QuotationMatchStatus
+  sourceType: QuotationRequestSource
+  sourceRef?: string
+  notes?: string
+}
+
 // Purchase orders.
 export type PoBackendStatus = "PENDING" | "UPLOADED" | "ON_PROGRESS" | "DELIVERED"
 
@@ -348,19 +454,43 @@ export type PurchaseOrderRow = {
   fileSize?: number
   uploadedAt?: string
   notes?: string
-  fileUrl?: string
+  objectKey?: string
   quotationTotal?: string
   quotationSubtotal?: string
   poSubtotal: string
   poTotalProduk: string
   poTotalProfit: string
+  rowVersion: number
   createdAt: string
   updatedAt: string
+}
+
+export type PoItemInput = {
+  quotationItemId?: number
+  offeredItemId?: number
+  itemName: string
+  itemCode?: string
+  qty: string
+  unitId?: number
+  sellingPrice: string
+  costPrice?: string
+  isAvailable?: boolean
+  shipDestination?: string
+}
+
+export type PoUpdateItemsInput = {
+  discountPct: string
+  notes?: string
+  shippingAddress?: string
+  shippingDays?: number
+  shippingCost?: string
+  items: PoItemInput[]
 }
 
 export type PurchaseOrderItemRow = {
   id: number
   poId: number
+  quotationItemId?: number
   lineNumber: number
   itemType: "product" | "shipping"
   offeredItemId?: number
@@ -399,6 +529,7 @@ export type InvoiceBackendRow = {
   status: InvoiceBackendStatus
   taxTransactionCode?: string
   fakturType?: string
+  rowVersion: number
   createdAt: string
   updatedAt: string
 }

@@ -23,7 +23,12 @@ type Quotation struct {
 	TotalProduk       string    `db:"total_produk"        json:"totalProduk"`
 	Total             string    `db:"total"               json:"total"`
 	TotalDiscount     string    `db:"total_discount"      json:"totalDiscount"`
+	Subtotal          string    `db:"subtotal"            json:"subtotal"`
+	DppNilaiLain      string    `db:"dpp_nilai_lain"      json:"dppNilaiLain"`
+	PpnAmount         string    `db:"ppn_amount"          json:"ppnAmount"`
+	GrandTotal        string    `db:"grand_total"         json:"grandTotal"`
 	Notes             *string   `db:"notes"               json:"notes,omitempty"`
+	RowVersion        int32     `db:"row_version"         json:"rowVersion"`
 	CreatedAt         time.Time `db:"created_at"          json:"createdAt"`
 	UpdatedAt         time.Time `db:"updated_at"          json:"updatedAt"`
 }
@@ -35,7 +40,7 @@ type QuotationItem struct {
 	LineNumber      int16   `db:"line_number"         json:"lineNumber"`
 	ItemType        string  `db:"item_type"           json:"itemType"` // product | shipping
 	RequestedItemID *int64  `db:"requested_item_id"   json:"requestedItemId,omitempty"`
-	RequestedIMPA   *string `db:"requested_impa"      json:"requestedImpa,omitempty"`
+	RequestedImpa   *string `db:"requested_impa"      json:"requestedImpa,omitempty"`
 	RequestedName   string  `db:"requested_name"      json:"requestedName"`
 	OfferedItemID   *int64  `db:"offered_item_id"     json:"offeredItemId,omitempty"`
 	VendorProductID *int64  `db:"vendor_product_id"   json:"vendorProductId,omitempty"`
@@ -68,6 +73,19 @@ type QuotationDetail struct {
 	History []StatusHistoryEntry `json:"history"`
 }
 
+// Revision row in the parent/child chain.
+type RevisionRow struct {
+	ID          int64     `db:"id"            json:"id"`
+	ParentID    *int64    `db:"parent_id"     json:"parentId,omitempty"`
+	QuotationNo string    `db:"quotation_no"  json:"quotationNo"`
+	Version     int16     `db:"version"       json:"version"`
+	Status      string    `db:"status"        json:"status"`
+	GrandTotal  string    `db:"grand_total"   json:"grandTotal"`
+	TotalProduk string    `db:"total_produk"  json:"totalProduk"`
+	CreatedAt   time.Time `db:"created_at"    json:"createdAt"`
+	UpdatedAt   time.Time `db:"updated_at"    json:"updatedAt"`
+}
+
 // List row shape.
 type ListRow struct {
 	ID             int64     `db:"id"               json:"id"`
@@ -75,9 +93,17 @@ type ListRow struct {
 	Version        int16     `db:"version"          json:"version"`
 	CompanyName    string    `db:"company_name"     json:"companyName"`
 	Status         string    `db:"status"           json:"status"`
-	Total          string    `db:"total"            json:"total"`
-	TotalHargaBeli string    `db:"total_harga_beli" json:"totalHargaBeli"` // sum of qty * cost_price for products
+	GrandTotal     string    `db:"grand_total"      json:"grandTotal"`
+	Subtotal       string    `db:"subtotal"         json:"subtotal"`
+	TotalDiscount  string    `db:"total_discount"   json:"totalDiscount"`
+	TotalHargaBeli string    `db:"total_harga_beli" json:"totalHargaBeli"`
 	CreatedAt      time.Time `db:"created_at"       json:"createdAt"`
+}
+
+// ListResult wraps rows with total count.
+type ListResult struct {
+	Rows  []ListRow `json:"rows"`
+	Total int64     `json:"total"`
 }
 
 // Stats counts per status.
@@ -159,20 +185,7 @@ type dbItem struct {
 func itemsToJSONB(items []CreateItem) ([]byte, error) {
 	out := make([]dbItem, len(items))
 	for i, it := range items {
-		out[i] = dbItem{
-			RequestedItemID:   it.RequestedItemID,
-			RequestedImpa:     it.RequestedImpa,
-			RequestedName:     it.RequestedName,
-			OfferedItemID:     it.OfferedItemID,
-			VendorProductID:   it.VendorProductID,
-			Qty:               it.Qty,
-			UnitID:            it.UnitID,
-			SellingPrice:      it.SellingPrice,
-			CostPrice:         it.CostPrice,
-			UpdateVendorPrice: it.UpdateVendorPrice,
-			ShipDestination:   it.ShipDestination,
-			DueDate:           it.DueDate,
-		}
+		out[i] = dbItem(it)
 	}
 	return json.Marshal(out)
 }

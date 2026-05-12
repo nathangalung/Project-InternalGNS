@@ -1,13 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useMemo } from "react"
-import QuotationDetail from "@/features/quotations/QuotationDetail"
 import { useAuth } from "@/features/auth/hooks"
-import { useChangeQuotationStatus, useQuotation } from "@/features/quotations/hooks"
-import { useUnits } from "@/features/units/hooks"
 import { toQuotationData } from "@/features/quotations/adapters"
-import { labelToStatus } from "@/lib/status"
-import { makePageNavigate } from "@/lib/page-nav"
+import { useChangeQuotationStatus, useQuotation } from "@/features/quotations/hooks"
+import QuotationDetail from "@/features/quotations/QuotationDetail"
 import type { Status } from "@/features/quotations/types"
+import { useUnits } from "@/features/units/hooks"
+import { makePageNavigate } from "@/lib/page-nav"
+import { labelToStatus } from "@/lib/status"
 
 export const Route = createFileRoute("/_authed/quotations/$id/")({
   component: QuotationDetailRoute,
@@ -27,7 +27,7 @@ function QuotationDetailRoute() {
   const unitOf = useMemo(() => {
     const map = new Map<number, string>()
     for (const u of units ?? []) map.set(u.id, u.code)
-    return (unitId?: number) => (unitId !== undefined ? map.get(unitId) ?? "" : "")
+    return (unitId?: number) => (unitId !== undefined ? (map.get(unitId) ?? "") : "")
   }, [units])
 
   const quotation = detail ? toQuotationData(detail, unitOf) : undefined

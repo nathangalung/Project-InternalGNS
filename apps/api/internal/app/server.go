@@ -2,11 +2,14 @@ package app
 
 import (
 	"context"
+	"errors"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
+	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
@@ -31,7 +34,23 @@ func NewServer(ctx context.Context, cfg Config) (*http.Server, error) {
 		return nil, err
 	}
 
-	r := NewRouter(cfg, pool, store)
+	storageClient, err := storage.New(ctx, storage.Config{
+		Endpoint:  cfg.MinioEndpoint,
+		AccessKey: cfg.MinioAccessKey,
+		SecretKey: cfg.MinioSecretKey,
+		Bucket:    cfg.MinioBucket,
+		UseSSL:    cfg.MinioUseSSL,
+	})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotConfigured) {
+			slog.Warn("storage disabled (missing MINIO_ACCESS_KEY/SECRET_KEY)")
+			storageClient = nil
+		} else {
+			return nil, err
+		}
+	}
+
+	r := NewRouter(cfg, pool, store, storageClient)
 
 	return &http.Server{
 		Addr:              cfg.HTTPAddr,

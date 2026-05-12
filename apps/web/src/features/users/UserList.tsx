@@ -1,32 +1,46 @@
 import { useMemo, useState } from "react"
-import type { Page } from "@/main"
-import Sidebar from "@/components/shared/Sidebar"
-import type { Role, UserRow } from "@/types/api"
-import { SortIcon } from "@/features/quotations/QuotationList/helpers"
 import Pagination from "@/components/shared/Pagination"
-import UserFilter, { type RoleFilter, type StatusFilter } from "./UserFilter"
+import SearchInput from "@/components/shared/SearchInput"
+import Sidebar from "@/components/shared/Sidebar"
+import SortIcon from "@/components/shared/SortIcon"
+import { useUsers } from "@/features/users/hooks"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import type { Page } from "@/main"
+import type { Role } from "@/types/api"
 import UserAddModal from "./UserAddModal"
+import UserFilter, { type RoleFilter, type StatusFilter } from "./UserFilter"
 
 interface UserListProps {
   onNavigate: (page: Page) => void
   onLogout: () => void
   onViewDetail?: (id: number) => void
-  rows?: UserRow[]
-  isLoading?: boolean
 }
 
 type SortKey = "name" | "createdAt"
 
 const ROLE_BADGE: Record<Role, { label: string; bg: string; color: string }> = {
-  superadmin:  { label: "SUPERADMIN",  bg: "#EDE9FE", color: "#5B21B6" },
+  superadmin: { label: "SUPERADMIN", bg: "#EDE9FE", color: "#5B21B6" },
   operational: { label: "OPERASIONAL", bg: "#FFE16D", color: "#DA6900" },
-  finance:     { label: "FINANCE",     bg: "#DBEAFE", color: "#1D4ED8" },
+  finance: { label: "FINANCE", bg: "#DBEAFE", color: "#1D4ED8" },
 }
 
-const STATUS_AKTIF    = { label: "AKTIF",    bg: "#D1FAE5", color: "#047857" }
+const STATUS_AKTIF = { label: "AKTIF", bg: "#D1FAE5", color: "#047857" }
 const STATUS_NONAKTIF = { label: "NONAKTIF", bg: "#FEE2E2", color: "#B91C1C" }
 
-const MONTHS_ID = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
+const MONTHS_ID = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "Mei",
+  "Jun",
+  "Jul",
+  "Agu",
+  "Sep",
+  "Okt",
+  "Nov",
+  "Des",
+]
 
 function formatDateID(iso: string): string {
   const d = new Date(iso)
@@ -34,9 +48,7 @@ function formatDateID(iso: string): string {
   return `${d.getDate()} ${MONTHS_ID[d.getMonth()]} ${d.getFullYear()}`
 }
 
-export default function UserList({ onNavigate, onLogout, onViewDetail, rows, isLoading }: UserListProps) {
-  const data: UserRow[] = rows ?? []
-
+export default function UserList({ onNavigate, onLogout, onViewDetail }: UserListProps) {
   const [search, setSearch] = useState("")
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
@@ -49,50 +61,34 @@ export default function UserList({ onNavigate, onLogout, onViewDetail, rows, isL
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
-      setSortDir(d => (d === "asc" ? "desc" : "asc"))
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"))
     } else {
       setSortKey(key)
       setSortDir("asc")
     }
+    setCurrentPage(1)
   }
 
-  const processed = useMemo(() => {
-    let items = [...data]
-    if (search) {
-      const needle = search.toLowerCase()
-      items = items.filter(u =>
-        u.name.toLowerCase().includes(needle) ||
-        u.email.toLowerCase().includes(needle) ||
-        u.role.toLowerCase().includes(needle) ||
-        (u.isActive ? "aktif" : "nonaktif").includes(needle),
-      )
-    }
-    if (roleFilter !== "all") {
-      items = items.filter(u => u.role === roleFilter)
-    }
-    if (statusFilter !== "all") {
-      items = items.filter(u => (statusFilter === "active" ? u.isActive : !u.isActive))
-    }
-    items.sort((a, b) => {
-      let av: string | number, bv: string | number
-      if (sortKey === "createdAt") {
-        av = new Date(a.createdAt).getTime()
-        bv = new Date(b.createdAt).getTime()
-      } else {
-        av = a.name.toLowerCase()
-        bv = b.name.toLowerCase()
-      }
-      if (av < bv) return sortDir === "asc" ? -1 : 1
-      if (av > bv) return sortDir === "asc" ? 1 : -1
-      return 0
-    })
-    return items
-  }, [data, search, sortKey, sortDir, roleFilter, statusFilter])
+  const debouncedSearch = useDebouncedValue(search.trim(), 250)
 
-  const totalItems = processed.length
+  const queryParams = useMemo(
+    () => ({
+      q: debouncedSearch || undefined,
+      role: roleFilter === "all" ? undefined : (roleFilter as Role),
+      isActive: statusFilter === "all" ? undefined : statusFilter === "active",
+      sortBy: sortKey,
+      sortDir,
+      limit: itemsPerPage,
+      offset: (currentPage - 1) * itemsPerPage,
+    }),
+    [debouncedSearch, roleFilter, statusFilter, sortKey, sortDir, itemsPerPage, currentPage],
+  )
+
+  const { data: usersData, isLoading } = useUsers(queryParams)
+  const currentRows = usersData?.rows ?? []
+  const totalItems = usersData?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
   const startIndex = (currentPage - 1) * itemsPerPage
-  const currentRows = processed.slice(startIndex, startIndex + itemsPerPage)
 
   return (
     <div className="admin-shell">
@@ -103,8 +99,20 @@ export default function UserList({ onNavigate, onLogout, onViewDetail, rows, isL
           <div className="page-header">
             <h1 className="page-title">Manajemen Pengguna</h1>
             <div className="page-actions">
-              <button className="btn-admin-primary" style={{ width: "200px", justifyContent: "center" }} onClick={() => setShowAdd(true)}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
+              <button
+                className="btn-admin-primary"
+                style={{ width: "200px", justifyContent: "center" }}
+                onClick={() => setShowAdd(true)}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#fff"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                >
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
@@ -114,24 +122,25 @@ export default function UserList({ onNavigate, onLogout, onViewDetail, rows, isL
           </div>
 
           <div className="search-row">
-            <div className="search-wrapper">
-              <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Cari nama, peran, status admin..."
-                value={search}
-                onChange={e => {
-                  setSearch(e.target.value)
-                  setCurrentPage(1)
-                }}
-              />
-            </div>
+            <SearchInput
+              value={search}
+              onChange={(v) => {
+                setSearch(v)
+                setCurrentPage(1)
+              }}
+              placeholder="Cari nama, peran, status admin..."
+            />
             <button className="btn-admin-filter" onClick={() => setShowFilter(true)}>
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <line x1="4" y1="6" x2="20" y2="6" />
                 <line x1="7" y1="12" x2="17" y2="12" />
                 <line x1="10" y1="18" x2="14" y2="18" />
@@ -149,68 +158,122 @@ export default function UserList({ onNavigate, onLogout, onViewDetail, rows, isL
                     style={{ width: 200, cursor: "pointer" }}
                     onClick={() => toggleSort("name")}
                   >
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px",
+                      }}
+                    >
                       <span>Nama Admin</span>
                       <SortIcon direction={sortKey === "name" ? sortDir : null} />
                     </div>
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 220 }}>Email</th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>Peran</th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>Status</th>
+                  <th className="tbl-th tbl-th--center" style={{ width: 220 }}>
+                    Email
+                  </th>
+                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
+                    Peran
+                  </th>
+                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
+                    Status
+                  </th>
                   <th
                     className="tbl-th tbl-th--center"
                     style={{ width: 160, cursor: "pointer" }}
                     onClick={() => toggleSort("createdAt")}
                   >
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px",
+                      }}
+                    >
                       <span>Tanggal Pembuatan</span>
                       <SortIcon direction={sortKey === "createdAt" ? sortDir : null} />
                     </div>
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 80 }}>Aksi</th>
+                  <th className="tbl-th tbl-th--center" style={{ width: 80 }}>
+                    Aksi
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading && (
-                  <tr><td colSpan={6} className="tbl-td tbl-td--center" style={{ padding: "40px 0", color: "#64748B" }}>Memuat data…</td></tr>
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="tbl-td tbl-td--center"
+                      style={{ padding: "40px 0", color: "#64748B" }}
+                    >
+                      Memuat data…
+                    </td>
+                  </tr>
                 )}
                 {!isLoading && currentRows.length === 0 && (
-                  <tr><td colSpan={6} className="tbl-td tbl-td--center" style={{ padding: "40px 0", color: "#64748B" }}>Tidak ada pengguna.</td></tr>
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="tbl-td tbl-td--center"
+                      style={{ padding: "40px 0", color: "#64748B" }}
+                    >
+                      Tidak ada pengguna.
+                    </td>
+                  </tr>
                 )}
-                {!isLoading && currentRows.map(u => {
-                  const role = ROLE_BADGE[u.role]
-                  const status = u.isActive ? STATUS_AKTIF : STATUS_NONAKTIF
-                  return (
-                    <tr key={u.id} className="tbl-row">
-                      <td className="tbl-td tbl-td--client tbl-td--center">{u.name}</td>
-                      <td className="tbl-td tbl-td--center">{u.email}</td>
-                      <td className="tbl-td tbl-td--center">
-                        <span className="status-badge" style={{ background: role.bg, color: role.color, minWidth: 108 }}>
-                          {role.label}
-                        </span>
-                      </td>
-                      <td className="tbl-td tbl-td--center">
-                        <span className="status-badge" style={{ background: status.bg, color: status.color, minWidth: 108 }}>
-                          {status.label}
-                        </span>
-                      </td>
-                      <td className="tbl-td tbl-td--center">{formatDateID(u.createdAt)}</td>
-                      <td className="tbl-td tbl-td--center">
-                        <button
-                          className="action-btn"
-                          title="Lihat detail"
-                          style={{ color: "#7C3AED" }}
-                          onClick={() => onViewDetail?.(u.id)}
-                        >
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
+                {!isLoading &&
+                  currentRows.map((u) => {
+                    const role = ROLE_BADGE[u.role]
+                    const status = u.isActive ? STATUS_AKTIF : STATUS_NONAKTIF
+                    return (
+                      <tr key={u.id} className="tbl-row">
+                        <td className="tbl-td tbl-td--client tbl-td--center">{u.name}</td>
+                        <td className="tbl-td tbl-td--center">{u.email}</td>
+                        <td className="tbl-td tbl-td--center">
+                          <span
+                            className="status-badge"
+                            style={{ background: role.bg, color: role.color, minWidth: 108 }}
+                          >
+                            {role.label}
+                          </span>
+                        </td>
+                        <td className="tbl-td tbl-td--center">
+                          <span
+                            className="status-badge"
+                            style={{ background: status.bg, color: status.color, minWidth: 108 }}
+                          >
+                            {status.label}
+                          </span>
+                        </td>
+                        <td className="tbl-td tbl-td--center">{formatDateID(u.createdAt)}</td>
+                        <td className="tbl-td tbl-td--center">
+                          <button
+                            className="action-btn"
+                            title="Lihat detail"
+                            style={{ color: "#7C3AED" }}
+                            onClick={() => onViewDetail?.(u.id)}
+                          >
+                            <svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
               </tbody>
             </table>
 
@@ -221,7 +284,10 @@ export default function UserList({ onNavigate, onLogout, onViewDetail, rows, isL
               currentPage={currentPage}
               totalPages={totalPages}
               resourceLabel="Admin"
-              onItemsPerPage={n => { setItemsPerPage(n); setCurrentPage(1) }}
+              onItemsPerPage={(n) => {
+                setItemsPerPage(n)
+                setCurrentPage(1)
+              }}
               onPage={setCurrentPage}
             />
           </div>

@@ -1,4 +1,4 @@
--- name: vendors.list
+-- name: vendors.list_base
 SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.updated_at,
        COALESCE((SELECT COUNT(*) FROM vendor_products vp
                   WHERE vp.vendor_id = v.id AND vp.is_active = TRUE), 0) AS product_count,
@@ -9,9 +9,11 @@ SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.up
                   WHERE vp.vendor_id = v.id
                     AND q.status = 'accepted'), '0') AS total_purchase
 FROM vendors v
-WHERE v.is_active = TRUE
-ORDER BY v.name
-LIMIT $1 OFFSET $2;
+WHERE 1=1;
+
+-- name: vendors.list_count_base
+SELECT COUNT(*) FROM vendors v
+WHERE 1=1;
 
 -- name: vendors.get_by_id
 SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.updated_at,
@@ -56,7 +58,16 @@ SELECT * FROM fn_search_vendors($1, $2, $3);
 
 -- name: vendors.list_items
 SELECT
-    item_id, item_name, impa_code, vendor_sku,
-    cost_price::text,
-    last_quoted_at::text
-FROM fn_search_items_by_vendor($1, $2);
+    i.id                  AS item_id,
+    i.name                AS item_name,
+    i.impa_code,
+    vp.vendor_sku,
+    vp.cost_price::text   AS cost_price,
+    vp.last_quoted_at::text,
+    vp.product_url
+FROM vendor_products vp
+JOIN items i ON i.id = vp.item_id AND i.is_active = TRUE
+WHERE vp.vendor_id = $1
+  AND vp.is_active = TRUE
+ORDER BY i.name ASC
+LIMIT $2;

@@ -17,7 +17,7 @@ Feature: Quotation lifecycle
 
   Scenario: Reject create with invalid discount
     When the user creates a quotation with discount 200 percent and 1 product line
-    Then the response status is 400
+    Then the response status is 422
 
   Scenario: Send a draft and read its detail
     Given an existing draft quotation
@@ -44,7 +44,7 @@ Feature: Quotation lifecycle
     Given an existing draft quotation
     When the user transitions the quotation through "sent,accepted"
     And the user tries to transition the quotation to "sent"
-    Then the response status is 400
+    Then the response status is 422
 
   Scenario: List filters return matching rows
     Given an existing draft quotation

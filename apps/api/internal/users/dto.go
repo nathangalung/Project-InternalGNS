@@ -39,3 +39,18 @@ type UpdateUserRequest struct {
 type ChangePasswordRequest struct {
 	Password string `json:"password"`
 }
+
+type ListFilter struct {
+	Q        string
+	Role     *string
+	IsActive *bool
+	SortBy   string
+	SortDir  string
+	Limit    int
+	Offset   int
+}
+
+type ListResult struct {
+	Rows  []User
+	Total int64
+}

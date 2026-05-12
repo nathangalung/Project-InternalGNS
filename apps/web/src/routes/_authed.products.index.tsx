@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import ProductList from "@/features/items/ProductList"
 import { useAuth } from "@/features/auth/hooks"
+import ProductList from "@/features/items/ProductList"
 import { makePageNavigate } from "@/lib/page-nav"
 
 export const Route = createFileRoute("/_authed/products/")({

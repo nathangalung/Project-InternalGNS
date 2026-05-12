@@ -13,6 +13,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.Get("/", h.List)
 	r.Post("/", h.Create)
 	r.Get("/search", h.Search)
+	r.Get("/search-advanced", h.SearchAdvanced)
 	r.Post("/match-request", h.MatchRequest)
 	r.Post("/match-rows", h.MatchRows)
 	r.Get("/{id}", h.Get)

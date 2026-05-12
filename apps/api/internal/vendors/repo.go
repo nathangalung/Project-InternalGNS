@@ -3,6 +3,8 @@ package vendors
 import (
 	"context"
 	"errors"
+	"strconv"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 
@@ -21,12 +23,83 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 
 var ErrNotFound = errors.New("not found")
 
-func (r *Repo) List(ctx context.Context, limit, offset int) ([]Vendor, error) {
-	rows, err := r.db.Query(ctx, r.store.Get("vendors.list"), limit, offset)
-	if err != nil {
-		return nil, err
+// List returns vendors with filter/sort and total count.
+func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
+	args := []any{}
+	addArg := func(v any) string {
+		args = append(args, v)
+		return "$" + strconv.Itoa(len(args))
 	}
-	return pgx.CollectRows(rows, pgx.RowToStructByName[Vendor])
+	where := strings.Builder{}
+	if f.Q != "" {
+		p := addArg("%" + f.Q + "%")
+		where.WriteString(" AND (v.name ILIKE " + p + " OR v.location ILIKE " + p + ")")
+	}
+	if f.IsActive != nil {
+		p := addArg(*f.IsActive)
+		where.WriteString(" AND v.is_active = " + p)
+	}
+	if f.CountryName != "" {
+		p := addArg("%" + f.CountryName + "%")
+		where.WriteString(" AND v.location ILIKE " + p)
+	}
+	if f.MinTotal != nil {
+		p := addArg(*f.MinTotal)
+		where.WriteString(" AND COALESCE((SELECT SUM(qi.total_cost) FROM quotation_items qi" +
+			" JOIN vendor_products vp ON vp.id = qi.vendor_product_id" +
+			" JOIN quotations q ON q.id = qi.quotation_id" +
+			" WHERE vp.vendor_id = v.id AND q.status = 'accepted'), 0) >= " + p + "::numeric")
+	}
+
+	var out ListResult
+	countSQL := r.store.Get("vendors.list_count_base") + where.String()
+	if err := r.db.QueryRow(ctx, countSQL, args...).Scan(&out.Total); err != nil {
+		return out, err
+	}
+
+	sortBy := "v.name"
+	switch f.SortBy {
+	case "createdAt", "created_at":
+		sortBy = "v.created_at"
+	case "totalPurchase", "total_purchase":
+		sortBy = "COALESCE((SELECT SUM(qi.total_cost) FROM quotation_items qi" +
+			" JOIN vendor_products vp ON vp.id = qi.vendor_product_id" +
+			" JOIN quotations q ON q.id = qi.quotation_id" +
+			" WHERE vp.vendor_id = v.id AND q.status = 'accepted'), 0)"
+	case "productCount", "product_count":
+		sortBy = "(SELECT COUNT(*) FROM vendor_products vp WHERE vp.vendor_id = v.id AND vp.is_active = TRUE)"
+	}
+	sortDir := "ASC"
+	if strings.EqualFold(f.SortDir, "desc") {
+		sortDir = "DESC"
+	}
+
+	dataArgs := append([]any{}, args...)
+	dataAdd := func(v any) string {
+		dataArgs = append(dataArgs, v)
+		return "$" + strconv.Itoa(len(dataArgs))
+	}
+	limit := f.Limit
+	if limit <= 0 {
+		limit = 50
+	}
+	if limit > 200 {
+		limit = 200
+	}
+	dataSQL := r.store.Get("vendors.list_base") +
+		where.String() +
+		" ORDER BY " + sortBy + " " + sortDir +
+		" LIMIT " + dataAdd(limit) + " OFFSET " + dataAdd(f.Offset)
+
+	rows, err := r.db.Query(ctx, dataSQL, dataArgs...)
+	if err != nil {
+		return out, err
+	}
+	out.Rows, err = pgx.CollectRows(rows, pgx.RowToStructByName[Vendor])
+	if out.Rows == nil {
+		out.Rows = []Vendor{}
+	}
+	return out, err
 }
 
 func (r *Repo) GetByID(ctx context.Context, id int64) (Vendor, error) {

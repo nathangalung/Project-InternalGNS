@@ -13,14 +13,18 @@ func Routes(d deps.Deps) chi.Router {
 	r := chi.NewRouter()
 	repo := NewRepo(d.Pool, d.Queries)
 	h := NewHandler(repo)
+	h.storage = d.Storage
 
 	r.Get("/", h.List)
 	r.Get("/by-quotation/{quotationId}", h.GetByQuotation)
 	r.Get("/{id}", h.Get)
 	r.Get("/{id}/items", h.ListItems)
+	r.Get("/{id}/upload-url", h.PresignUpload)
+	r.Get("/{id}/download-url", h.PresignDownload)
 	r.Patch("/{id}/status", h.ChangeStatus)
 	r.Patch("/{id}/file", h.UpdateFile)
 	r.Patch("/{id}/notes", h.UpdateNotes)
+	r.Put("/{id}/items", h.UpdateItems)
 
 	if d.TemplatesRoot != "" {
 		dn := NewDeliveryNoteHandler(

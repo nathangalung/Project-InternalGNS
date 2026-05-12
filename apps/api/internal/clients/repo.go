@@ -3,6 +3,8 @@ package clients
 import (
 	"context"
 	"errors"
+	"strconv"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 
@@ -22,13 +24,82 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 // Missing client or contact.
 var ErrNotFound = errors.New("not found")
 
-// List returns active clients, paginated.
-func (r *Repo) List(ctx context.Context, limit, offset int) ([]Client, error) {
-	rows, err := r.db.Query(ctx, r.store.Get("clients.list"), limit, offset)
-	if err != nil {
-		return nil, err
+// List returns clients with filter/sort and total count.
+func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
+	args := []any{}
+	addArg := func(v any) string {
+		args = append(args, v)
+		return "$" + strconv.Itoa(len(args))
 	}
-	return pgx.CollectRows(rows, pgx.RowToStructByName[Client])
+	where := strings.Builder{}
+	if f.Q != "" {
+		p := addArg("%" + f.Q + "%")
+		where.WriteString(" AND (cc.name ILIKE " + p +
+			" OR cc.number ILIKE " + p +
+			" OR cc.npwp ILIKE " + p +
+			" OR co.name ILIKE " + p + ")")
+	}
+	if f.IsActive != nil {
+		p := addArg(*f.IsActive)
+		where.WriteString(" AND cc.is_active = " + p)
+	}
+	if f.CountryCode != "" {
+		p := addArg(f.CountryCode)
+		where.WriteString(" AND cc.country_code = " + p)
+	}
+	if f.MinTotal != nil {
+		p := addArg(*f.MinTotal)
+		where.WriteString(" AND COALESCE((SELECT SUM(q.grand_total) FROM quotations q" +
+			" WHERE q.company_client_id = cc.id AND q.status = 'accepted'), 0) >= " + p + "::numeric")
+	}
+
+	var out ListResult
+	countSQL := r.store.Get("clients.list_count_base") + where.String()
+	if err := r.db.QueryRow(ctx, countSQL, args...).Scan(&out.Total); err != nil {
+		return out, err
+	}
+
+	sortBy := "cc.name"
+	switch f.SortBy {
+	case "createdAt", "created_at":
+		sortBy = "cc.created_at"
+	case "totalPurchase", "total_purchase":
+		sortBy = "COALESCE((SELECT SUM(q.grand_total) FROM quotations q" +
+			" WHERE q.company_client_id = cc.id AND q.status = 'accepted'), 0)"
+	case "quotationCount", "quotation_count":
+		sortBy = "(SELECT COUNT(*) FROM quotations q WHERE q.company_client_id = cc.id)"
+	}
+	sortDir := "ASC"
+	if strings.EqualFold(f.SortDir, "desc") {
+		sortDir = "DESC"
+	}
+
+	dataArgs := append([]any{}, args...)
+	dataAdd := func(v any) string {
+		dataArgs = append(dataArgs, v)
+		return "$" + strconv.Itoa(len(dataArgs))
+	}
+	limit := f.Limit
+	if limit <= 0 {
+		limit = 50
+	}
+	if limit > 200 {
+		limit = 200
+	}
+	dataSQL := r.store.Get("clients.list_base") +
+		where.String() +
+		" ORDER BY " + sortBy + " " + sortDir +
+		" LIMIT " + dataAdd(limit) + " OFFSET " + dataAdd(f.Offset)
+
+	rows, err := r.db.Query(ctx, dataSQL, dataArgs...)
+	if err != nil {
+		return out, err
+	}
+	out.Rows, err = pgx.CollectRows(rows, pgx.RowToStructByName[Client])
+	if out.Rows == nil {
+		out.Rows = []Client{}
+	}
+	return out, err
 }
 
 // GetByID returns one client.

@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react"
-import type { Page } from "@/main"
+import { type CSSProperties, useEffect, useRef, useState } from "react"
+import { CheckIcon } from "@/components/document/icons"
 import Sidebar from "@/components/shared/Sidebar"
-import { ApiError } from "@/lib/api-client"
 import { useUpdateClient } from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
+import { ApiError } from "@/lib/api-client"
+import type { Page } from "@/main"
 import type { ClientRow } from "@/types/api"
 
 interface ClientDetailProps {
@@ -13,7 +14,15 @@ interface ClientDetailProps {
   onLogout: () => void
 }
 
-const LOGO_BG_PALETTE = ["#1E293B", "#334155", "#475569", "#3730A3", "#4338CA", "#0F766E", "#7C2D12"]
+const LOGO_BG_PALETTE = [
+  "#1E293B",
+  "#334155",
+  "#475569",
+  "#3730A3",
+  "#4338CA",
+  "#0F766E",
+  "#7C2D12",
+]
 
 function hashCode(s: string): number {
   let h = 0
@@ -22,7 +31,11 @@ function hashCode(s: string): number {
 }
 
 function clientInitials(name: string): string {
-  const parts = name.replace(/^PT\.?\s+/i, "").trim().split(/\s+/).filter(Boolean)
+  const parts = name
+    .replace(/^PT\.?\s+/i, "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
   if (parts.length === 0) return "?"
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return (parts[0][0] + parts[1][0]).toUpperCase()
@@ -94,12 +107,6 @@ function dropdownLabelStyle(active: boolean): CSSProperties {
   }
 }
 
-const CheckIcon = () => (
-  <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
-    <path d="M1 5.5L4.5 9L13 1" stroke="#630ED4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-)
-
 export default function ClientDetail({ client, onNavigate, onBack, onLogout }: ClientDetailProps) {
   const [name, setName] = useState(client.name)
   const [tkuId, setTkuId] = useState(client.tkuId ?? "")
@@ -128,7 +135,16 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
     setNpwp(client.npwp ?? "")
     setAddress(client.address ?? "")
     setIsActive(client.isActive)
-  }, [client.id, client.name, client.tkuId, client.countryCode, client.contactPhone, client.email, client.npwp, client.address, client.isActive])
+  }, [
+    client.name,
+    client.tkuId,
+    client.countryCode,
+    client.contactPhone,
+    client.email,
+    client.npwp,
+    client.address,
+    client.isActive,
+  ])
 
   const dirty =
     name !== client.name ||
@@ -139,7 +155,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
     address !== (client.address ?? "") ||
     isActive !== client.isActive
 
-  const countryOption = countries?.find(c => c.code === countryCode)
+  const countryOption = countries?.find((c) => c.code === countryCode)
   const dialCode = countryOption?.dialCode ?? ""
 
   const handleCancel = () => {
@@ -204,7 +220,6 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
 
       <div className="admin-main">
         <div className="page-content" style={{ gap: "29px" }}>
-
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             <nav className="qd-breadcrumb">
               <button className="qd-breadcrumb-link" onClick={onBack}>
@@ -232,31 +247,43 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                   flexShrink: 0,
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4A4455" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#4A4455"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <line x1="19" y1="12" x2="5" y2="12" />
                   <polyline points="12 19 5 12 12 5" />
                 </svg>
               </button>
-              <h1 className="page-title" style={{ margin: 0 }}>Detail Klien</h1>
+              <h1 className="page-title" style={{ margin: 0 }}>
+                Detail Klien
+              </h1>
             </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-
-            <div style={{
-              background: "#FFFFFF",
-              borderRadius: "12px",
-              padding: "20px 24px",
-              display: "flex",
-              alignItems: "center",
-              gap: "20px",
-            }}>
+            <div
+              style={{
+                background: "#FFFFFF",
+                borderRadius: "12px",
+                padding: "20px 24px",
+                display: "flex",
+                alignItems: "center",
+                gap: "20px",
+              }}
+            >
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 style={{ display: "none" }}
-                onChange={e => {
+                onChange={(e) => {
                   handleLogoSelect(e.target.files?.[0])
                   e.target.value = ""
                 }}
@@ -317,16 +344,27 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                     padding: 0,
                   }}
                 >
-                  <span style={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <span
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#FFFFFF"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                       <circle cx="12" cy="13" r="3.5" />
                     </svg>
@@ -334,106 +372,139 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                 </button>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <h2 style={{
-                  margin: 0,
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 700,
-                  fontSize: "18px",
-                  lineHeight: "24px",
-                  letterSpacing: "-0.4px",
-                  color: "#191C1E",
-                  wordBreak: "break-word",
-                }}>
+                <h2
+                  style={{
+                    margin: 0,
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: 700,
+                    fontSize: "18px",
+                    lineHeight: "24px",
+                    letterSpacing: "-0.4px",
+                    color: "#191C1E",
+                    wordBreak: "break-word",
+                  }}
+                >
                   {client.name}
                 </h2>
-                <span style={{
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 500,
-                  fontSize: "13px",
-                  lineHeight: "18px",
-                  color: "#4A4455",
-                }}>
+                <span
+                  style={{
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: 500,
+                    fontSize: "13px",
+                    lineHeight: "18px",
+                    color: "#4A4455",
+                  }}
+                >
                   Klien
                 </span>
               </div>
-              <div style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "2px",
-                padding: "10px 16px",
-                background: client.isActive ? "#F0FDF4" : "#FEF2F2",
-                border: `1px solid ${client.isActive ? "#BBF7D0" : "#FECACA"}`,
-                borderRadius: "10px",
-                flexShrink: 0,
-              }}>
-                <span style={{
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 600,
-                  fontSize: "9px",
-                  letterSpacing: "1.4px",
-                  textTransform: "uppercase",
-                  color: "#64748B",
-                  lineHeight: "11px",
-                }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px",
+                  padding: "10px 16px",
+                  background: client.isActive ? "#F0FDF4" : "#FEF2F2",
+                  border: `1px solid ${client.isActive ? "#BBF7D0" : "#FECACA"}`,
+                  borderRadius: "10px",
+                  flexShrink: 0,
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: 600,
+                    fontSize: "9px",
+                    letterSpacing: "1.4px",
+                    textTransform: "uppercase",
+                    color: "#64748B",
+                    lineHeight: "11px",
+                  }}
+                >
                   Status
                 </span>
-                <span style={{
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 800,
-                  fontSize: "13px",
-                  letterSpacing: "0.2px",
-                  color: client.isActive ? "#065F46" : "#991B1B",
-                  lineHeight: "16px",
-                }}>
+                <span
+                  style={{
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: 800,
+                    fontSize: "13px",
+                    letterSpacing: "0.2px",
+                    color: client.isActive ? "#065F46" : "#991B1B",
+                    lineHeight: "16px",
+                  }}
+                >
                   {client.isActive ? "Aktif" : "Nonaktif"}
                 </span>
               </div>
             </div>
 
-            <div style={{
-              background: "#FFFFFF",
-              borderRadius: "12px",
-              padding: "32px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "32px",
-            }}>
-
+            <div
+              style={{
+                background: "#FFFFFF",
+                borderRadius: "12px",
+                padding: "32px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "32px",
+              }}
+            >
               <div>
-                <h3 style={{
-                  margin: 0,
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 700,
-                  fontSize: "20px",
-                  lineHeight: "28px",
-                  letterSpacing: "-0.5px",
-                  color: "#191C1E",
-                }}>
+                <h3
+                  style={{
+                    margin: 0,
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: 700,
+                    fontSize: "20px",
+                    lineHeight: "28px",
+                    letterSpacing: "-0.5px",
+                    color: "#191C1E",
+                  }}
+                >
                   Informasi Utama Klien
                 </h3>
-                <p style={{
-                  margin: "4px 0 0 0",
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 400,
-                  fontSize: "14px",
-                  lineHeight: "20px",
-                  color: "#4A4455",
-                }}>
+                <p
+                  style={{
+                    margin: "4px 0 0 0",
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: 400,
+                    fontSize: "14px",
+                    lineHeight: "20px",
+                    color: "#4A4455",
+                  }}
+                >
                   Kelola informasi klien.
                 </p>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-
                 <div>
-                  <label style={labelStyle}>Nama Klien <span style={{ color: "#DC2626" }}>*</span></label>
+                  <label style={labelStyle}>
+                    Nama Klien <span style={{ color: "#DC2626" }}>*</span>
+                  </label>
                   <input
                     type="text"
                     value={name}
-                    onChange={e => { setName(e.target.value); setFieldErrors(p => ({ ...p, name: "" })) }}
-                    style={{ ...inputStyle, borderColor: fieldErrors.name ? "#DC2626" : "transparent" }}
+                    onChange={(e) => {
+                      setName(e.target.value)
+                      setFieldErrors((p) => ({ ...p, name: "" }))
+                    }}
+                    style={{
+                      ...inputStyle,
+                      borderColor: fieldErrors.name ? "#DC2626" : "transparent",
+                    }}
                   />
-                  {fieldErrors.name && <div style={{ marginTop: "6px", fontSize: "12px", color: "#DC2626", fontFamily: "'Inter', sans-serif" }}>{fieldErrors.name}</div>}
+                  {fieldErrors.name && (
+                    <div
+                      style={{
+                        marginTop: "6px",
+                        fontSize: "12px",
+                        color: "#DC2626",
+                        fontFamily: "'Inter', sans-serif",
+                      }}
+                    >
+                      {fieldErrors.name}
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
@@ -443,7 +514,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                       type="text"
                       value={tkuId}
                       placeholder="Masukkan TKU"
-                      onChange={e => setTkuId(e.target.value)}
+                      onChange={(e) => setTkuId(e.target.value)}
                       style={inputStyle}
                     />
                   </div>
@@ -452,7 +523,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                     <div style={{ position: "relative" }}>
                       <button
                         type="button"
-                        onClick={() => setCountryOpen(o => !o)}
+                        onClick={() => setCountryOpen((o) => !o)}
                         style={{
                           width: "100%",
                           height: "44px",
@@ -470,8 +541,20 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                           color: "#191C1E",
                         }}
                       >
-                        <span>{countryOption ? `${countryOption.code} - ${countryOption.name}` : countryCode}</span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round">
+                        <span>
+                          {countryOption
+                            ? `${countryOption.code} - ${countryOption.name}`
+                            : countryCode}
+                        </span>
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#94A3B8"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                        >
                           <polyline points="6 9 12 15 18 9" />
                         </svg>
                       </button>
@@ -479,11 +562,10 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                         <div style={dropdownPanelStyle}>
                           <div style={{ padding: "0 12px 8px" }}>
                             <input
-                              autoFocus
                               type="text"
                               placeholder="Cari negara..."
                               value={countryQuery}
-                              onChange={e => setCountryQuery(e.target.value)}
+                              onChange={(e) => setCountryQuery(e.target.value)}
                               style={{
                                 width: "100%",
                                 padding: "8px 12px",
@@ -500,25 +582,44 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                           {(() => {
                             const q = countryQuery.trim().toLowerCase()
                             const filtered = (countries ?? [])
-                              .filter(c => !q || c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q))
+                              .filter(
+                                (c) =>
+                                  !q ||
+                                  c.name.toLowerCase().includes(q) ||
+                                  c.code.toLowerCase().includes(q),
+                              )
                               .slice(0, 5)
                             if (filtered.length === 0) {
                               return (
-                                <div style={{ padding: "12px 20px", fontSize: "13px", color: "#94A3B8", fontFamily: "'Inter', sans-serif", textAlign: "center" }}>
+                                <div
+                                  style={{
+                                    padding: "12px 20px",
+                                    fontSize: "13px",
+                                    color: "#94A3B8",
+                                    fontFamily: "'Inter', sans-serif",
+                                    textAlign: "center",
+                                  }}
+                                >
                                   Tidak ada hasil
                                 </div>
                               )
                             }
-                            return filtered.map(c => {
+                            return filtered.map((c) => {
                               const active = countryCode === c.code
                               return (
                                 <button
                                   key={c.code}
                                   type="button"
                                   style={dropdownItemStyle}
-                                  onClick={() => { setCountryCode(c.code); setCountryQuery(""); setCountryOpen(false) }}
+                                  onClick={() => {
+                                    setCountryCode(c.code)
+                                    setCountryQuery("")
+                                    setCountryOpen(false)
+                                  }}
                                 >
-                                  <span style={dropdownLabelStyle(active)}>{c.code} - {c.name}</span>
+                                  <span style={dropdownLabelStyle(active)}>
+                                    {c.code} - {c.name}
+                                  </span>
                                   {active && <CheckIcon />}
                                 </button>
                               )
@@ -533,19 +634,28 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
                   <div>
                     <label style={labelStyle}>No HP</label>
-                    <div style={{ display: "flex", borderRadius: "8px", overflow: "hidden", height: "44px" }}>
-                      <span style={{
-                        background: "#E6E8EA",
-                        padding: "0 12px",
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 500,
-                        fontSize: "14px",
-                        color: "#4A4455",
+                    <div
+                      style={{
                         display: "flex",
-                        alignItems: "center",
-                        whiteSpace: "nowrap",
-                        flexShrink: 0,
-                      }}>
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                        height: "44px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          background: "#E6E8EA",
+                          padding: "0 12px",
+                          fontFamily: "'Inter', sans-serif",
+                          fontWeight: 500,
+                          fontSize: "14px",
+                          color: "#4A4455",
+                          display: "flex",
+                          alignItems: "center",
+                          whiteSpace: "nowrap",
+                          flexShrink: 0,
+                        }}
+                      >
                         +{dialCode || "62"}
                       </span>
                       <input
@@ -553,7 +663,14 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                         value={phone}
                         readOnly
                         placeholder="-"
-                        style={{ ...inputStyle, height: "100%", borderRadius: 0, flex: 1, minWidth: 0, color: phone ? "#191C1E" : "#94A3B8" }}
+                        style={{
+                          ...inputStyle,
+                          height: "100%",
+                          borderRadius: 0,
+                          flex: 1,
+                          minWidth: 0,
+                          color: phone ? "#191C1E" : "#94A3B8",
+                        }}
                         title="Nomor diambil dari kontak utama klien"
                       />
                     </div>
@@ -564,7 +681,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                       type="email"
                       value={email}
                       placeholder="contact@nusantara.com"
-                      onChange={e => setEmail(e.target.value)}
+                      onChange={(e) => setEmail(e.target.value)}
                       style={inputStyle}
                     />
                   </div>
@@ -576,7 +693,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                     type="text"
                     value={npwp}
                     placeholder="00.000.000.0-000.000"
-                    onChange={e => setNpwp(e.target.value)}
+                    onChange={(e) => setNpwp(e.target.value)}
                     style={{ ...inputStyle, height: "47px", fontSize: "16px" }}
                   />
                 </div>
@@ -585,7 +702,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                   <label style={labelStyle}>Alamat Rinci</label>
                   <textarea
                     value={address}
-                    onChange={e => setAddress(e.target.value)}
+                    onChange={(e) => setAddress(e.target.value)}
                     rows={3}
                     placeholder="Gedung Wisma Niaga, Lantai 12, Jl. Sudirman Kav 52-53"
                     style={{
@@ -601,39 +718,46 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
               </div>
 
               <div style={{ borderTop: "1px solid #ECEEF0", paddingTop: "24px" }}>
-                <div style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: "24px",
-                  padding: "20px 24px",
-                  background: "#F2F4F6",
-                  borderRadius: "8px",
-                }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: "24px",
+                    padding: "20px 24px",
+                    background: "#F2F4F6",
+                    borderRadius: "8px",
+                  }}
+                >
                   <div style={{ flex: 1 }}>
-                    <div style={{
-                      fontFamily: "'Inter', sans-serif",
-                      fontWeight: 700,
-                      fontSize: "14px",
-                      lineHeight: "20px",
-                      color: "#191C1E",
-                    }}>
+                    <div
+                      style={{
+                        fontFamily: "'Inter', sans-serif",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        lineHeight: "20px",
+                        color: "#191C1E",
+                      }}
+                    >
                       Status Akun
                     </div>
-                    <div style={{
-                      marginTop: "4px",
-                      fontFamily: "'Inter', sans-serif",
-                      fontWeight: 400,
-                      fontSize: "12px",
-                      lineHeight: "16px",
-                      color: "#4A4455",
-                    }}>
-                      Menonaktifkan akun akan segera memutuskan semua sesi aktif dan mencegah pengguna masuk kembali ke sistem.
+                    <div
+                      style={{
+                        marginTop: "4px",
+                        fontFamily: "'Inter', sans-serif",
+                        fontWeight: 400,
+                        fontSize: "12px",
+                        lineHeight: "16px",
+                        color: "#4A4455",
+                      }}
+                    >
+                      Menonaktifkan akun akan segera memutuskan semua sesi aktif dan mencegah
+                      pengguna masuk kembali ke sistem.
                     </div>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setIsActive(a => !a)}
+                    onClick={() => setIsActive((a) => !a)}
                     role="switch"
                     aria-checked={isActive}
                     style={{
@@ -648,38 +772,44 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                       flexShrink: 0,
                     }}
                   >
-                    <span style={{
-                      position: "absolute",
-                      top: "4px",
-                      left: isActive ? "28px" : "4px",
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50%",
-                      background: "#FFFFFF",
-                      transition: "left 0.2s",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                    }} />
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: "4px",
+                        left: isActive ? "28px" : "4px",
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "50%",
+                        background: "#FFFFFF",
+                        transition: "left 0.2s",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                      }}
+                    />
                   </button>
                 </div>
               </div>
 
               {submitError && (
-                <div style={{
-                  padding: "12px 16px",
-                  background: "#FEF2F2",
-                  borderLeft: "4px solid #DC2626",
-                  borderRadius: "8px",
-                  fontFamily: "'Inter', sans-serif",
-                  fontSize: "13px",
-                  color: "#7F1D1D",
-                }}>
+                <div
+                  style={{
+                    padding: "12px 16px",
+                    background: "#FEF2F2",
+                    borderLeft: "4px solid #DC2626",
+                    borderRadius: "8px",
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: "13px",
+                    color: "#7F1D1D",
+                  }}
+                >
                   {submitError}
                 </div>
               )}
             </div>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "16px", marginTop: "8px" }}>
+          <div
+            style={{ display: "flex", justifyContent: "flex-end", gap: "16px", marginTop: "8px" }}
+          >
             <button
               type="button"
               onClick={handleCancel}
@@ -706,10 +836,10 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                 padding: "12px 32px",
                 borderRadius: "12px",
                 border: "none",
-                background: dirty
-                  ? "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)"
-                  : "#CBD5E1",
-                boxShadow: dirty ? "0px 10px 15px -3px rgba(99, 14, 212, 0.2), 0px 4px 6px -4px rgba(99, 14, 212, 0.2)" : "none",
+                background: dirty ? "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)" : "#CBD5E1",
+                boxShadow: dirty
+                  ? "0px 10px 15px -3px rgba(99, 14, 212, 0.2), 0px 4px 6px -4px rgba(99, 14, 212, 0.2)"
+                  : "none",
                 color: "#FFFFFF",
                 fontFamily: "'Inter', sans-serif",
                 fontWeight: 700,
@@ -721,7 +851,6 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
               {updateClient.isPending ? "Menyimpan…" : "Simpan Perubahan"}
             </button>
           </div>
-
         </div>
       </div>
     </div>

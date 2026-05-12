@@ -19,12 +19,13 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
+	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 	"github.com/nathangalung/internalgns/apps/api/internal/vendors"
 )
 
-func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store) *chi.Mux {
+func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClient *storage.Client) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -35,7 +36,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store) *chi.Mux {
 		AllowedOrigins:   cfg.CORSAllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Request-Id"},
-		ExposedHeaders:   []string{"Link", "X-Request-Id"},
+		ExposedHeaders:   []string{"Link", "X-Request-Id", "X-Total-Count"},
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
@@ -56,6 +57,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store) *chi.Mux {
 			BankAccountNm: cfg.PdfBankAccountNm,
 			PaymentTerms:  cfg.PdfPaymentTerms,
 		},
+		Storage: storageClient,
 	}
 
 	authSvc := auth.NewService(users.NewRepo(pool, store), cfg.JWTSecret, cfg.JWTExpiry)

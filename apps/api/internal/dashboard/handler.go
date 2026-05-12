@@ -24,7 +24,7 @@ func NewHandler(repo *Repo) *Handler {
 func (h *Handler) Summary(w http.ResponseWriter, r *http.Request) {
 	s, err := h.repo.Summary(r.Context())
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, s)
@@ -52,7 +52,7 @@ func (h *Handler) Timeseries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, points)

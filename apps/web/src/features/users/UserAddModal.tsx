@@ -1,8 +1,8 @@
 import { useState } from "react"
-import { ApiError } from "@/lib/api-client"
 import { useCreateUser } from "@/features/users/hooks"
-import { passwordIsValid } from "@/features/users/password"
 import PasswordChecklist from "@/features/users/PasswordChecklist"
+import { passwordIsValid } from "@/features/users/password"
+import { ApiError } from "@/lib/api-client"
 import type { Role } from "@/types/api"
 
 interface UserAddModalProps {
@@ -16,8 +16,8 @@ interface RoleCard {
 }
 
 const ROLE_CARDS: RoleCard[] = [
-  { value: "superadmin",  label: "Super Admin" },
-  { value: "finance",     label: "Finance" },
+  { value: "superadmin", label: "Super Admin" },
+  { value: "finance", label: "Finance" },
   { value: "operational", label: "Operasional" },
 ]
 
@@ -42,7 +42,8 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
   const isNameFilled = name.trim().length > 0
   const isEmailValid = email.trim().length > 0 && isValidEmail(email)
   const isPasswordValid = passwordIsValid(password)
-  const emailError = email.trim().length > 0 && !isValidEmail(email) ? "Format email tidak valid." : null
+  const emailError =
+    email.trim().length > 0 && !isValidEmail(email) ? "Format email tidak valid." : null
   const canSubmit = isNameFilled && isEmailValid && isPasswordValid
 
   const reset = () => {
@@ -75,19 +76,29 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
       reset()
       onOpenChange(false)
     } catch (err) {
-      const msg = err instanceof ApiError ? (err.message || "Gagal menyimpan pengguna.") : "Gagal menyimpan pengguna."
+      const msg =
+        err instanceof ApiError
+          ? err.message || "Gagal menyimpan pengguna."
+          : "Gagal menyimpan pengguna."
       setSubmitError(msg)
     }
   }
 
   return (
     <div className="ca-overlay" onClick={handleCancel}>
-      <div className="ca-modal" onClick={e => e.stopPropagation()}>
-
+      <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
         <div className="ca-header">
           <h2 className="ca-title">Tambah Pengguna</h2>
           <button className="ca-close-btn" onClick={handleCancel} title="Tutup">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
               <line x1="1" y1="1" x2="13" y2="13" />
               <line x1="13" y1="1" x2="1" y2="13" />
             </svg>
@@ -95,30 +106,44 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
         </div>
 
         <div className="ca-body">
-
           <div className="ca-section">
             <div className="ca-section-heading">Identitas Pengguna</div>
             <div className="ca-row-2">
               <div className="ca-field">
-                <label className="ca-label">Nama Lengkap <span className="ca-required">*</span></label>
+                <label className="ca-label">
+                  Nama Lengkap <span className="ca-required">*</span>
+                </label>
                 <input
                   className="ca-input"
                   type="text"
                   placeholder="Contoh: Budi Santoso"
                   value={name}
-                  onChange={e => setName(e.target.value)}
+                  onChange={(e) => setName(e.target.value)}
                 />
               </div>
               <div className="ca-field">
-                <label className="ca-label">Alamat Email <span className="ca-required">*</span></label>
+                <label className="ca-label">
+                  Alamat Email <span className="ca-required">*</span>
+                </label>
                 <input
                   className="ca-input"
                   type="email"
                   placeholder="email@ptglobal.com"
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
-                {emailError && <span style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}>{emailError}</span>}
+                {emailError && (
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: "#EF4444",
+                      marginTop: "4px",
+                      display: "block",
+                    }}
+                  >
+                    {emailError}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -126,19 +151,21 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
           <div className="ca-section">
             <div className="ca-section-heading">Kata Sandi</div>
             <div className="ca-field">
-              <label className="ca-label">Kata Sandi <span className="ca-required">*</span></label>
+              <label className="ca-label">
+                Kata Sandi <span className="ca-required">*</span>
+              </label>
               <div style={{ position: "relative" }}>
                 <input
                   className="ca-input"
                   type={showPwd ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                   style={{ paddingRight: "44px" }}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPwd(s => !s)}
+                  onClick={() => setShowPwd((s) => !s)}
                   style={{
                     position: "absolute",
                     right: "12px",
@@ -156,14 +183,32 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
                   title={showPwd ? "Sembunyikan" : "Tampilkan"}
                 >
                   {showPwd ? (
-                    <svg width="18" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="18"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
                       <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
                       <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
                       <line x1="1" y1="1" x2="23" y2="23" />
                     </svg>
                   ) : (
-                    <svg width="18" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="18"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
@@ -178,7 +223,7 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
             <div className="ca-section-heading">Peran</div>
             <div className="ca-field">
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
-                {ROLE_CARDS.map(card => {
+                {ROLE_CARDS.map((card) => {
                   const isActive = role === card.value
                   return (
                     <button
@@ -212,40 +257,46 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
           </div>
 
           <div className="ca-section">
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "12px",
-              padding: "10px 14px",
-              background: "#F2F4F6",
-              border: "1px solid rgba(204, 195, 216, 0.1)",
-              borderRadius: "8px",
-            }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "12px",
+                padding: "10px 14px",
+                background: "#F2F4F6",
+                border: "1px solid rgba(204, 195, 216, 0.1)",
+                borderRadius: "8px",
+              }}
+            >
               <div style={{ flex: 1 }}>
-                <div style={{
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 700,
-                  fontSize: "13px",
-                  lineHeight: "18px",
-                  color: "#191C1E",
-                }}>
+                <div
+                  style={{
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: 700,
+                    fontSize: "13px",
+                    lineHeight: "18px",
+                    color: "#191C1E",
+                  }}
+                >
                   Status Aktif
                 </div>
-                <div style={{
-                  marginTop: "2px",
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 400,
-                  fontSize: "12px",
-                  lineHeight: "16px",
-                  color: "#4A4455",
-                }}>
+                <div
+                  style={{
+                    marginTop: "2px",
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: 400,
+                    fontSize: "12px",
+                    lineHeight: "16px",
+                    color: "#4A4455",
+                  }}
+                >
                   Pengguna dapat langsung login dan mengakses sistem.
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setIsActive(a => !a)}
+                onClick={() => setIsActive((a) => !a)}
                 role="switch"
                 aria-checked={isActive}
                 style={{
@@ -260,21 +311,22 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
                   flexShrink: 0,
                 }}
               >
-                <span style={{
-                  position: "absolute",
-                  top: "2px",
-                  left: isActive ? "20px" : "2px",
-                  width: "18px",
-                  height: "18px",
-                  borderRadius: "50%",
-                  background: "#FFFFFF",
-                  transition: "left 0.2s",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                }} />
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "2px",
+                    left: isActive ? "20px" : "2px",
+                    width: "18px",
+                    height: "18px",
+                    borderRadius: "50%",
+                    background: "#FFFFFF",
+                    transition: "left 0.2s",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                  }}
+                />
               </button>
             </div>
           </div>
-
         </div>
 
         <div className="ca-footer" style={{ padding: "16px 24px" }}>
@@ -305,7 +357,6 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
             {isSaving ? "Menyimpan..." : "Simpan Akun"}
           </button>
         </div>
-
       </div>
     </div>
   )

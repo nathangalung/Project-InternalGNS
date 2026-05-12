@@ -1,10 +1,10 @@
 package countries
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 )
 
 type Handler struct {
@@ -19,10 +19,8 @@ func NewHandler(repo *Repo) *Handler {
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	countries, err := h.repo.ListAll(r.Context())
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(countries)
+	httpx.WriteJSON(w, http.StatusOK, countries)
 }

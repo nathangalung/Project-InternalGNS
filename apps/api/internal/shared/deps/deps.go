@@ -6,6 +6,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
+	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
 // PdfSettings carries hardcoded PDF defaults.
@@ -23,6 +24,7 @@ type Deps struct {
 	Queries       queries.Store
 	TemplatesRoot string
 	Pdf           PdfSettings
+	Storage       *storage.Client
 }
 
 // User id context key.

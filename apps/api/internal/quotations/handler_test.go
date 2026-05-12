@@ -30,6 +30,17 @@ func resetServer(t *testing.T) (*httptest.Server, context.Context) {
 
 func doJSON(t *testing.T, srv *httptest.Server, method, path string, body any) *http.Response {
 	t.Helper()
+	return doJSONWithHeaders(t, srv, method, path, body, nil)
+}
+
+func doJSONWithHeaders(
+	t *testing.T,
+	srv *httptest.Server,
+	method, path string,
+	body any,
+	headers map[string]string,
+) *http.Response {
+	t.Helper()
 	var rdr io.Reader
 	if body != nil {
 		raw, err := json.Marshal(body)
@@ -41,9 +52,22 @@ func doJSON(t *testing.T, srv *httptest.Server, method, path string, body any) *
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
 	res, err := srv.Client().Do(req)
 	require.NoError(t, err)
 	return res
+}
+
+func getRowVersion(t *testing.T, srv *httptest.Server, id int64) int32 {
+	t.Helper()
+	res := doJSON(t, srv, http.MethodGet, "/quotations/"+strconv.FormatInt(id, 10), nil)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var d quotations.QuotationDetail
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&d))
+	return d.RowVersion
 }
 
 func decodeBody(t *testing.T, res *http.Response, v any) {
@@ -96,7 +120,7 @@ func TestHandler_Create_DBValidationError(t *testing.T) {
 	req.DiscountPct = "300"
 	res := doJSON(t, srv, http.MethodPost, "/quotations/", req)
 	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 }
 
 func TestHandler_GetAndList(t *testing.T) {
@@ -159,6 +183,7 @@ func TestHandler_Stats(t *testing.T) {
 func TestHandler_Update(t *testing.T) {
 	srv, _ := resetServer(t)
 	id := mustCreate(t, srv)
+	rv := getRowVersion(t, srv, id)
 	upd := quotations.UpdateRequest{
 		DiscountPct: "0",
 		Items: []quotations.CreateItem{{
@@ -168,9 +193,46 @@ func TestHandler_Update(t *testing.T) {
 			SellingPrice:  "1000",
 		}},
 	}
-	res := doJSON(t, srv, http.MethodPut, "/quotations/"+strconv.FormatInt(id, 10), upd)
+	res := doJSONWithHeaders(t, srv, http.MethodPut,
+		"/quotations/"+strconv.FormatInt(id, 10), upd,
+		map[string]string{"If-Match": strconv.FormatInt(int64(rv), 10)})
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusOK, res.StatusCode)
+	var got struct {
+		ID         int64 `json:"id"`
+		RowVersion int32 `json:"rowVersion"`
+	}
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&got))
+	assert.Equal(t, id, got.ID)
+	assert.Greater(t, got.RowVersion, rv)
+}
+
+func TestHandler_Update_MissingIfMatch(t *testing.T) {
+	srv, _ := resetServer(t)
+	id := mustCreate(t, srv)
+	res := doJSON(t, srv, http.MethodPut,
+		"/quotations/"+strconv.FormatInt(id, 10),
+		quotations.UpdateRequest{DiscountPct: "0", Items: []quotations.CreateItem{{
+			RequestedName: "X", Qty: "1", UnitID: seedUnitID, SellingPrice: "1",
+		}}})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_Update_VersionMismatch(t *testing.T) {
+	srv, _ := resetServer(t)
+	id := mustCreate(t, srv)
+	upd := quotations.UpdateRequest{
+		DiscountPct: "0",
+		Items: []quotations.CreateItem{{
+			RequestedName: "X", Qty: "1", UnitID: seedUnitID, SellingPrice: "1",
+		}},
+	}
+	res := doJSONWithHeaders(t, srv, http.MethodPut,
+		"/quotations/"+strconv.FormatInt(id, 10), upd,
+		map[string]string{"If-Match": "999"})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusConflict, res.StatusCode)
 }
 
 func TestHandler_Update_BadID(t *testing.T) {
@@ -183,8 +245,10 @@ func TestHandler_Update_BadID(t *testing.T) {
 func TestHandler_Update_BadJSON(t *testing.T) {
 	srv, _ := resetServer(t)
 	id := mustCreate(t, srv)
+	rv := getRowVersion(t, srv, id)
 	req, _ := http.NewRequest(http.MethodPut, srv.URL+"/quotations/"+strconv.FormatInt(id, 10), strings.NewReader("?"))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("If-Match", strconv.FormatInt(int64(rv), 10))
 	res, err := srv.Client().Do(req)
 	require.NoError(t, err)
 	defer res.Body.Close()
@@ -194,7 +258,11 @@ func TestHandler_Update_BadJSON(t *testing.T) {
 func TestHandler_Update_EmptyItems(t *testing.T) {
 	srv, _ := resetServer(t)
 	id := mustCreate(t, srv)
-	res := doJSON(t, srv, http.MethodPut, "/quotations/"+strconv.FormatInt(id, 10), quotations.UpdateRequest{DiscountPct: "0"})
+	rv := getRowVersion(t, srv, id)
+	res := doJSONWithHeaders(t, srv, http.MethodPut,
+		"/quotations/"+strconv.FormatInt(id, 10),
+		quotations.UpdateRequest{DiscountPct: "0"},
+		map[string]string{"If-Match": strconv.FormatInt(int64(rv), 10)})
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 }
@@ -205,13 +273,16 @@ func TestHandler_Update_DBRejects(t *testing.T) {
 	send := quotations.ChangeStatusRequest{Status: "sent"}
 	sres := doJSON(t, srv, http.MethodPatch, "/quotations/"+strconv.FormatInt(id, 10)+"/status", send)
 	sres.Body.Close()
+	rv := getRowVersion(t, srv, id)
 
 	upd := quotations.UpdateRequest{DiscountPct: "5", Items: []quotations.CreateItem{{
 		RequestedName: "NO", Qty: "1", UnitID: seedUnitID, SellingPrice: "1",
 	}}}
-	res := doJSON(t, srv, http.MethodPut, "/quotations/"+strconv.FormatInt(id, 10), upd)
+	res := doJSONWithHeaders(t, srv, http.MethodPut,
+		"/quotations/"+strconv.FormatInt(id, 10), upd,
+		map[string]string{"If-Match": strconv.FormatInt(int64(rv), 10)})
 	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 }
 
 func TestHandler_ChangeStatus(t *testing.T) {
@@ -254,7 +325,7 @@ func TestHandler_ChangeStatus_InvalidTransition(t *testing.T) {
 	id := mustCreate(t, srv)
 	res := doJSON(t, srv, http.MethodPatch, "/quotations/"+strconv.FormatInt(id, 10)+"/status", quotations.ChangeStatusRequest{Status: "accepted"})
 	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 }
 
 func TestHandler_Send(t *testing.T) {
@@ -280,7 +351,7 @@ func TestHandler_Send_FailsWhenAlreadyAccepted(t *testing.T) {
 
 	res := doJSON(t, srv, http.MethodPost, "/quotations/"+strconv.FormatInt(id, 10)+"/send", nil)
 	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 }
 
 func mustCreate(t *testing.T, srv *httptest.Server) int64 {

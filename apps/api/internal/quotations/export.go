@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math/big"
 	"net/http"
 	"strconv"
@@ -80,25 +81,27 @@ func (h *ExportHandler) ExportPDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 
 	data, err := h.buildData(r.Context(), d)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 
 	pdf, err := h.renderer.Render(r.Context(), "quotation/Quotation.tex.tmpl", data)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/pdf")
-	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s.pdf"`, sanitizeFilename(d.QuotationNo)))
-	_, _ = w.Write(pdf)
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.pdf"`, sanitizeFilename(d.QuotationNo)))
+	if _, werr := w.Write(pdf); werr != nil {
+		slog.WarnContext(r.Context(), "pdf write failed", "doc", "quotation", "id", id, "err", werr)
+	}
 }
 
 func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (exportData, error) {
@@ -118,8 +121,8 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 			unitCode = unitsByID[*it.UnitID]
 		}
 		req := pdfgen.LatexEscape(it.RequestedName)
-		if it.RequestedIMPA != nil && *it.RequestedIMPA != "" {
-			req += " (" + pdfgen.LatexEscape(*it.RequestedIMPA) + ")"
+		if it.RequestedImpa != nil && *it.RequestedImpa != "" {
+			req += " (" + pdfgen.LatexEscape(*it.RequestedImpa) + ")"
 		}
 		hasOffer := it.IsAvailable && it.OfferedItemID != nil
 		items = append(items, exportItem{

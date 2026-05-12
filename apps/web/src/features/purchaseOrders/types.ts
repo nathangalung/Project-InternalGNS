@@ -4,7 +4,7 @@ export interface PoLocalRecord {
   status: PoStatus
   fileName?: string
   fileSize?: number
-  fileDataUrl?: string
+  objectKey?: string
   uploadedAt?: string
 }
 
@@ -17,5 +17,5 @@ export interface PoRow {
   total: string
   status: PoStatus
   fileName?: string
-  fileDataUrl?: string
+  objectKey?: string
 }

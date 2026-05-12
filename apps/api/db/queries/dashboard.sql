@@ -22,18 +22,26 @@ qstat AS (
 po AS (
   SELECT COUNT(*) AS total_count FROM purchase_orders
 ),
--- Aggregate cost basis once per quotation.
+-- Prefer PO actuals (re-edited cost after PO creation), fall back to quotation.
+po_cost AS (
+  SELECT po.quotation_id,
+         COALESCE(SUM(poi.qty * poi.cost_price) FILTER (WHERE poi.cost_price IS NOT NULL), 0) AS cost
+    FROM purchase_orders po
+    JOIN purchase_order_items poi ON poi.po_id = po.id AND poi.item_type = 'product'
+   GROUP BY po.quotation_id
+),
 q_cost AS (
   SELECT quotation_id,
          COALESCE(SUM(qty * cost_price) FILTER (WHERE cost_price IS NOT NULL), 0) AS cost
     FROM quotation_items
    GROUP BY quotation_id
 ),
--- Sum cost across quotations with any paid invoice.
+-- Sum cost across quotations with any paid invoice; PO cost wins when present.
 exp AS (
-  SELECT COALESCE(SUM(qc.cost), 0) AS expenses
+  SELECT COALESCE(SUM(COALESCE(pc.cost, qc.cost, 0)), 0) AS expenses
     FROM (SELECT DISTINCT quotation_id FROM invoices WHERE status = 'paid') pq
-    JOIN q_cost qc ON qc.quotation_id = pq.quotation_id
+    LEFT JOIN po_cost pc ON pc.quotation_id = pq.quotation_id
+    LEFT JOIN q_cost  qc ON qc.quotation_id = pq.quotation_id
 )
 SELECT paid_inv.revenue                  AS total_revenue,
        exp.expenses                      AS total_expenses,
@@ -83,8 +91,15 @@ SELECT to_char(date_trunc('month', invoice_date), 'YYYY-MM') AS month,
  ORDER BY 1;
 
 -- name: dashboard.ts_profit
--- Book quotation cost once in earliest paid invoice month.
-WITH q_cost AS (
+-- Book cost once in earliest paid invoice month; prefer PO actuals over quotation.
+WITH po_cost AS (
+  SELECT po.quotation_id,
+         COALESCE(SUM(poi.qty * poi.cost_price) FILTER (WHERE poi.cost_price IS NOT NULL), 0) AS cost
+    FROM purchase_orders po
+    JOIN purchase_order_items poi ON poi.po_id = po.id AND poi.item_type = 'product'
+   GROUP BY po.quotation_id
+),
+q_cost AS (
   SELECT quotation_id,
          COALESCE(SUM(qty * cost_price) FILTER (WHERE cost_price IS NOT NULL), 0) AS cost
     FROM quotation_items
@@ -106,9 +121,10 @@ rev AS (
 ),
 expm AS (
   SELECT to_char(date_trunc('month', fp.first_date), 'YYYY-MM') AS month,
-         SUM(qc.cost)                                           AS expenses
+         SUM(COALESCE(pc.cost, qc.cost, 0))                     AS expenses
     FROM first_paid fp
-    JOIN q_cost qc ON qc.quotation_id = fp.quotation_id
+    LEFT JOIN po_cost pc ON pc.quotation_id = fp.quotation_id
+    LEFT JOIN q_cost  qc ON qc.quotation_id = fp.quotation_id
    WHERE fp.first_date >= $1::date AND fp.first_date < $2::date
    GROUP BY 1
 )

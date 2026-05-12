@@ -1,40 +1,40 @@
-import { useEffect, useMemo, useState } from "react"
 import { useQueries } from "@tanstack/react-query"
-import type { Page } from "@/main"
+import { useEffect, useMemo, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
-import type { QuotationData } from "@/features/quotations/types"
+import { useClient } from "@/features/clients/hooks"
+import * as itemsApi from "@/features/items/api"
+import { useQuotation } from "@/features/quotations/hooks"
 import ClientSummaryCard from "@/features/quotations/QuotationDetail/ClientSummaryCard"
-import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
-import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
 import HistoryTimeline from "@/features/quotations/QuotationDetail/HistoryTimeline"
 import { nowLabel } from "@/features/quotations/QuotationDetail/helpers"
-import { useClient } from "@/features/clients/hooks"
-import { useQuotation } from "@/features/quotations/hooks"
-import * as itemsApi from "@/features/items/api"
+import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
+import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
+import type { QuotationData } from "@/features/quotations/types"
 import * as vendorsApi from "@/features/vendors/api"
-import { downloadPdf } from "@/lib/api-client"
-
-import Header from "./Header"
-import StatusBar from "./StatusBar"
-import FileCard from "./FileCard"
-import CompletenessModal from "./CompletenessModal"
+import { downloadPdf, saveBlob } from "@/lib/api-client"
+import type { Page } from "@/main"
+import { poItemsToProducts, poItemsToShipping } from "../adapters"
+import * as poApi from "../api"
 import {
+  useChangePoStatus,
+  usePoItems,
+  usePurchaseOrderByQuotation,
+  useUploadPoFile,
+} from "../hooks"
+import type { PoRow, PoStatus } from "../types"
+import UploadPoModal from "../UploadPoModal"
+import CompletenessModal from "./CompletenessModal"
+import FileCard from "./FileCard"
+import Header from "./Header"
+import {
+  type CompletenessIssue,
   PO_LABEL,
   poNumberFromQuotationNo,
   validateClientCompleteness,
   validateVendorCompleteness,
-  type CompletenessIssue,
 } from "./helpers"
-import {
-  usePurchaseOrderByQuotation,
-  useChangePoStatus,
-  useUpdatePoFile,
-  usePoItems,
-} from "../hooks"
-import { poItemsToProducts, poItemsToShipping } from "../adapters"
-import UploadPoModal from "../UploadPoModal"
-import type { PoRow, PoStatus } from "../types"
+import StatusBar from "./StatusBar"
 
 interface HistoryEntry {
   date: string
@@ -67,7 +67,7 @@ export default function PurchaseOrderDetail({
   const { data: po, isLoading } = usePurchaseOrderByQuotation(quotationId)
   const { data: poItems } = usePoItems(po?.id)
   const changeStatus = useChangePoStatus()
-  const updateFile = useUpdatePoFile()
+  const uploadFile = useUploadPoFile()
 
   const initialStatus: PoStatus = po?.status ?? "PENDING"
   const [status, setStatus] = useState<PoStatus>(initialStatus)
@@ -83,8 +83,8 @@ export default function PurchaseOrderDetail({
   const uniqueItemIds = useMemo(() => {
     const ids = new Set<number>()
     quotationApi?.items
-      .filter(it => it.itemType === "product")
-      .forEach(it => {
+      .filter((it) => it.itemType === "product")
+      .forEach((it) => {
         const id = it.offeredItemId ?? it.requestedItemId
         if (id !== undefined) ids.add(id)
       })
@@ -92,7 +92,7 @@ export default function PurchaseOrderDetail({
   }, [quotationApi])
 
   const itemVendorsQueries = useQueries({
-    queries: uniqueItemIds.map(itemId => ({
+    queries: uniqueItemIds.map((itemId) => ({
       queryKey: ["po-item-vendors", itemId],
       queryFn: () => itemsApi.listVendors(itemId),
     })),
@@ -107,20 +107,20 @@ export default function PurchaseOrderDetail({
       if (data) itemVendorMap.set(id, data)
     })
     quotationApi.items
-      .filter(it => it.itemType === "product" && it.vendorProductId !== undefined)
-      .forEach(it => {
+      .filter((it) => it.itemType === "product" && it.vendorProductId !== undefined)
+      .forEach((it) => {
         const itemId = it.offeredItemId ?? it.requestedItemId
         if (itemId === undefined) return
         const vendors = itemVendorMap.get(itemId)
         if (!vendors) return
-        const matched = vendors.find(v => v.vendorProductId === it.vendorProductId)
+        const matched = vendors.find((v) => v.vendorProductId === it.vendorProductId)
         if (matched) ids.add(matched.vendorId)
       })
     return [...ids]
   }, [quotationApi, uniqueItemIds, itemVendorsQueries])
 
   const vendorQueries = useQueries({
-    queries: vendorIds.map(vid => ({
+    queries: vendorIds.map((vid) => ({
       queryKey: ["po-vendor-detail", vid],
       queryFn: () => vendorsApi.get(vid),
     })),
@@ -143,7 +143,13 @@ export default function PurchaseOrderDetail({
       const d = new Date(po.uploadedAt)
       const label = Number.isNaN(d.getTime())
         ? po.uploadedAt
-        : d.toLocaleString("id-ID", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+        : d.toLocaleString("id-ID", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
       items.push({ date: label, action: `Berkas PO diunggah: ${po.fileName}` })
     }
     return [...items, ...extraHistory]
@@ -152,7 +158,11 @@ export default function PurchaseOrderDetail({
   if (!quotation || (isLoading && !po) || !po) {
     return (
       <div className="admin-shell">
-        <Sidebar activePage={"purchase-orders" as Page} onNavigate={onNavigate} onLogout={onLogout} />
+        <Sidebar
+          activePage={"purchase-orders" as Page}
+          onNavigate={onNavigate}
+          onLogout={onLogout}
+        />
         <div className="admin-main">
           <div className="page-content">
             <p>{isLoading ? "Memuat data Purchase Order…" : "Purchase Order tidak ditemukan."}</p>
@@ -174,7 +184,12 @@ export default function PurchaseOrderDetail({
   const dppNilaiLain = Math.round((dppBase * 11) / 12)
   const ppn12 = Math.round(dppNilaiLain * 0.12)
   const grandTotal = hasProducts ? subTotal + ppn12 + totalShip : totalShip + ppn12
-  const clientInitials = quotation.client.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()
+  const clientInitials = quotation.client
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase()
   const poNumber = po.poNumber || poNumberFromQuotationNo(quotationNo)
 
   function handleStatusChange(s: PoStatus) {
@@ -195,10 +210,15 @@ export default function PurchaseOrderDetail({
       if (clientRow) {
         const clientMissing = validateClientCompleteness(clientRow)
         if (clientMissing.length > 0) {
-          issues.push({ scope: "Klien", id: clientRow.id, name: clientRow.name, missing: clientMissing })
+          issues.push({
+            scope: "Klien",
+            id: clientRow.id,
+            name: clientRow.name,
+            missing: clientMissing,
+          })
         }
       }
-      vendorQueries.forEach(q => {
+      vendorQueries.forEach((q) => {
         if (!q.data) return
         const missing = validateVendorCompleteness(q.data)
         if (missing.length > 0) {
@@ -215,29 +235,26 @@ export default function PurchaseOrderDetail({
       { id: po.id, status },
       {
         onSuccess: () => {
-          setExtraHistory(prev => [...prev, { date: nowLabel(), action: `Status diubah menjadi ${PO_LABEL[status]}` }])
+          setExtraHistory((prev) => [
+            ...prev,
+            { date: nowLabel(), action: `Status diubah menjadi ${PO_LABEL[status]}` },
+          ])
           onNavigate("purchase-orders")
         },
       },
     )
   }
 
-  function handleUploadSubmit(file: { name: string; size: number; dataUrl: string }) {
+  function handleUploadSubmit(file: File) {
     if (!po) return
-    updateFile.mutate(
-      { id: po.id, payload: { fileName: file.name, fileSize: file.size, fileUrl: file.dataUrl } },
-      { onSuccess: () => setShowUpload(false) },
-    )
+    uploadFile.mutate({ id: po.id, file }, { onSuccess: () => setShowUpload(false) })
   }
 
-  function handleDownload() {
-    if (!po?.fileUrl || !po?.fileName) return
-    const a = document.createElement("a")
-    a.href = po.fileUrl
-    a.download = po.fileName
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+  async function handleDownload() {
+    if (!po?.objectKey || !po?.fileName) return
+    const { downloadUrl } = await poApi.presignDownload(po.id)
+    const blob = await (await fetch(downloadUrl)).blob()
+    await saveBlob(blob, po.fileName)
   }
 
   async function handleDownloadDeliveryNote() {
@@ -255,7 +272,7 @@ export default function PurchaseOrderDetail({
     total: String(grandTotal),
     status,
     fileName: po.fileName,
-    fileDataUrl: po.fileUrl,
+    objectKey: po.objectKey,
   }
 
   return (
@@ -274,7 +291,7 @@ export default function PurchaseOrderDetail({
           <StatusBar
             status={status}
             isOpen={isStatusOpen}
-            onToggle={() => setIsStatusOpen(o => !o)}
+            onToggle={() => setIsStatusOpen((o) => !o)}
             onChange={handleStatusChange}
             onSave={handleSave}
           />
@@ -321,10 +338,14 @@ export default function PurchaseOrderDetail({
         <CompletenessModal
           issues={completenessIssues}
           onClose={() => setCompletenessIssues(null)}
-          onNavigateEntity={onNavigateEntity ? (scope, id) => {
-            setCompletenessIssues(null)
-            onNavigateEntity(scope, id)
-          } : undefined}
+          onNavigateEntity={
+            onNavigateEntity
+              ? (scope, id) => {
+                  setCompletenessIssues(null)
+                  onNavigateEntity(scope, id)
+                }
+              : undefined
+          }
         />
       )}
     </div>

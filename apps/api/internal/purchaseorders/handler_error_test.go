@@ -38,7 +38,7 @@ func TestHandler_ErrorPaths(t *testing.T) {
 		{"change_status", http.MethodPatch, "/purchase-orders/1/status",
 			purchaseorders.ChangeStatusRequest{Status: purchaseorders.StatusUploaded}, http.StatusInternalServerError},
 		{"update_file", http.MethodPatch, "/purchase-orders/1/file",
-			purchaseorders.UpdateFileRequest{FileName: "x.pdf", FileSize: 1, FileURL: "x"}, http.StatusInternalServerError},
+			purchaseorders.UpdateFileRequest{FileName: "x.pdf", FileSize: 1, ObjectKey: "x"}, http.StatusInternalServerError},
 		{"update_notes", http.MethodPatch, "/purchase-orders/1/notes",
 			purchaseorders.UpdateNotesRequest{Notes: "x"}, http.StatusInternalServerError},
 	}

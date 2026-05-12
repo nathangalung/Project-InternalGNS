@@ -1,10 +1,14 @@
-import { apiRequest } from "@/lib/api-client"
+import { apiList, apiRequest, type PaginatedList } from "@/lib/api-client"
 import type {
   CanonicalStatus,
   QuotationCreateInput,
   QuotationDetail,
+  QuotationItemRequestCreateInput,
+  QuotationItemRequestRow,
+  QuotationItemRequestUpdateInput,
   QuotationListParams,
   QuotationListRow,
+  QuotationRevisionRow,
   QuotationStatusCount,
   QuotationUpdateInput,
 } from "@/types/api"
@@ -27,9 +31,11 @@ function buildListQuery(params: QuotationListParams): string {
   return search.toString()
 }
 
-export async function list(params: QuotationListParams = {}): Promise<QuotationListRow[]> {
+export async function list(
+  params: QuotationListParams = {},
+): Promise<PaginatedList<QuotationListRow>> {
   const qs = buildListQuery(params)
-  return apiRequest<QuotationListRow[]>({
+  return apiList<QuotationListRow>({
     path: `/quotations${qs ? `?${qs}` : ""}`,
   })
 }
@@ -50,11 +56,16 @@ export async function create(input: QuotationCreateInput): Promise<{ id: number 
   })
 }
 
-export async function update(id: number, input: QuotationUpdateInput): Promise<{ id: number }> {
-  return apiRequest<{ id: number }>({
+export async function update(
+  id: number,
+  input: QuotationUpdateInput,
+  rowVersion: number,
+): Promise<{ id: number; rowVersion: number }> {
+  return apiRequest<{ id: number; rowVersion: number }>({
     path: `/quotations/${id}`,
     method: "PUT",
     body: input,
+    headers: { "If-Match": String(rowVersion) },
   })
 }
 
@@ -74,5 +85,45 @@ export async function send(id: number): Promise<void> {
   await apiRequest<void>({
     path: `/quotations/${id}/send`,
     method: "POST",
+  })
+}
+
+export async function listRevisions(id: number): Promise<QuotationRevisionRow[]> {
+  return apiRequest<QuotationRevisionRow[]>({ path: `/quotations/${id}/revisions` })
+}
+
+export async function listRequests(quotationId: number): Promise<QuotationItemRequestRow[]> {
+  return apiRequest<QuotationItemRequestRow[]>({
+    path: `/quotations/${quotationId}/requests`,
+  })
+}
+
+export async function createRequest(
+  quotationId: number,
+  input: QuotationItemRequestCreateInput,
+): Promise<QuotationItemRequestRow> {
+  return apiRequest<QuotationItemRequestRow>({
+    path: `/quotations/${quotationId}/requests`,
+    method: "POST",
+    body: input,
+  })
+}
+
+export async function updateRequest(
+  quotationId: number,
+  requestId: number,
+  input: QuotationItemRequestUpdateInput,
+): Promise<QuotationItemRequestRow> {
+  return apiRequest<QuotationItemRequestRow>({
+    path: `/quotations/${quotationId}/requests/${requestId}`,
+    method: "PUT",
+    body: input,
+  })
+}
+
+export async function deleteRequest(quotationId: number, requestId: number): Promise<void> {
+  await apiRequest<void>({
+    path: `/quotations/${quotationId}/requests/${requestId}`,
+    method: "DELETE",
   })
 }

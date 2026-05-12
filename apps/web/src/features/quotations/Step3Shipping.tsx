@@ -1,26 +1,35 @@
-import React from "react";
+import type React from "react"
 
 interface Step3ShippingProps {
-  shippingAddress: string;
-  setShippingAddress: (s: string) => void;
-  shippingTime: string;
-  setShippingTime: (s: string) => void;
-  shippingCost: string;
-  setShippingCost: (s: string) => void;
-  isAlamatFilled: boolean;
-  isWaktuFilled: boolean;
-  disabledStyle: React.CSSProperties;
-  formatRp: (n: number) => string;
+  shippingAddress: string
+  setShippingAddress: (s: string) => void
+  shippingTime: string
+  setShippingTime: (s: string) => void
+  shippingCost: string
+  setShippingCost: (s: string) => void
+  isAlamatFilled: boolean
+  isWaktuFilled: boolean
+  disabledStyle: React.CSSProperties
+  formatRp: (n: number) => string
 }
 
 export default function Step3Shipping({
-  shippingAddress, setShippingAddress, shippingTime, setShippingTime,
-  shippingCost, setShippingCost, isAlamatFilled, isWaktuFilled,
-  disabledStyle, formatRp
+  shippingAddress,
+  setShippingAddress,
+  shippingTime,
+  setShippingTime,
+  shippingCost,
+  setShippingCost,
+  isAlamatFilled,
+  isWaktuFilled,
+  disabledStyle,
+  formatRp,
 }: Step3ShippingProps) {
-  const addressError = shippingAddress.trim().length > 0 && (shippingAddress.trim().length < 20 || !/[a-zA-Z]/.test(shippingAddress))
-    ? "Alamat harus minimal 20 karakter dan mengandung huruf."
-    : null;
+  const addressError =
+    shippingAddress.trim().length > 0 &&
+    (shippingAddress.trim().length < 20 || !/[a-zA-Z]/.test(shippingAddress))
+      ? "Alamat harus minimal 20 karakter dan mengandung huruf."
+      : null
 
   return (
     <div className="qe-step-content">
@@ -33,18 +42,61 @@ export default function Step3Shipping({
 
       <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
         <div>
-          <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "#4B5563", letterSpacing: "0.5px", marginBottom: "8px", textTransform: "uppercase" }}>Alamat Lengkap <span style={{ color: "#EF4444" }}>*</span></label>
+          <label
+            style={{
+              display: "block",
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "#4B5563",
+              letterSpacing: "0.5px",
+              marginBottom: "8px",
+              textTransform: "uppercase",
+            }}
+          >
+            Alamat Lengkap <span style={{ color: "#EF4444" }}>*</span>
+          </label>
           <textarea
             placeholder="Masukkan alamat pengiriman secara detail (min. 20 karakter)..."
             value={shippingAddress}
             onChange={(e) => setShippingAddress(e.target.value)}
-            style={{ width: "100%", padding: "16px", background: "#E2E8F0", border: "none", borderRadius: "8px", fontSize: "14px", color: "#111827", fontFamily: "'Inter', sans-serif", outline: "none", resize: "vertical", minHeight: "100px", boxSizing: "border-box" }}
+            style={{
+              width: "100%",
+              padding: "16px",
+              background: "#E2E8F0",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "14px",
+              color: "#111827",
+              fontFamily: "'Inter', sans-serif",
+              outline: "none",
+              resize: "vertical",
+              minHeight: "100px",
+              boxSizing: "border-box",
+            }}
           />
-          {addressError && <span style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}>{addressError}</span>}
+          {addressError && (
+            <span
+              style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}
+            >
+              {addressError}
+            </span>
+          )}
         </div>
 
         <div style={{ opacity: !isAlamatFilled ? 0.6 : 1, transition: "opacity 0.2s ease" }}>
-          <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "#4B5563", letterSpacing: "0.5px", marginBottom: "8px", textTransform: "uppercase" }}>Waktu Pengiriman (Hari) <span style={{ color: "#EF4444" }}>*</span></label>
+          <label
+            style={{
+              display: "block",
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "#4B5563",
+              letterSpacing: "0.5px",
+              marginBottom: "8px",
+              textTransform: "uppercase",
+            }}
+          >
+            Waktu Pengiriman (Hari) <span style={{ color: "#EF4444" }}>*</span>
+          </label>
           <input
             type="number"
             min={1}
@@ -52,19 +104,55 @@ export default function Step3Shipping({
             value={shippingTime}
             onChange={(e) => setShippingTime(e.target.value)}
             disabled={!isAlamatFilled}
-            style={{ width: "100%", padding: "16px", background: "#E2E8F0", border: "none", borderRadius: "8px", fontSize: "14px", color: "#111827", fontFamily: "'Inter', sans-serif", outline: "none", boxSizing: "border-box", ...(!isAlamatFilled ? disabledStyle : {}) }}
+            style={{
+              width: "100%",
+              padding: "16px",
+              background: "#E2E8F0",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "14px",
+              color: "#111827",
+              fontFamily: "'Inter', sans-serif",
+              outline: "none",
+              boxSizing: "border-box",
+              ...(!isAlamatFilled ? disabledStyle : {}),
+            }}
           />
         </div>
 
         <div style={{ opacity: !isWaktuFilled ? 0.6 : 1, transition: "opacity 0.2s ease" }}>
-          <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "#4B5563", letterSpacing: "0.5px", marginBottom: "8px", textTransform: "uppercase" }}>Biaya Pengiriman <span style={{ color: "#EF4444" }}>*</span></label>
+          <label
+            style={{
+              display: "block",
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "#4B5563",
+              letterSpacing: "0.5px",
+              marginBottom: "8px",
+              textTransform: "uppercase",
+            }}
+          >
+            Biaya Pengiriman <span style={{ color: "#EF4444" }}>*</span>
+          </label>
           <input
             type="number"
             placeholder="3570000 (Isi hanya dengan angka)"
             value={shippingCost}
             onChange={(e) => setShippingCost(e.target.value)}
             disabled={!isWaktuFilled}
-            style={{ width: "100%", padding: "16px", background: "#E2E8F0", border: "none", borderRadius: "8px", fontSize: "14px", color: "#111827", fontFamily: "'Inter', sans-serif", outline: "none", boxSizing: "border-box", ...(!isWaktuFilled ? disabledStyle : {}) }}
+            style={{
+              width: "100%",
+              padding: "16px",
+              background: "#E2E8F0",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "14px",
+              color: "#111827",
+              fontFamily: "'Inter', sans-serif",
+              outline: "none",
+              boxSizing: "border-box",
+              ...(!isWaktuFilled ? disabledStyle : {}),
+            }}
           />
         </div>
       </div>
@@ -72,14 +160,20 @@ export default function Step3Shipping({
       <div className="qep-summary-card">
         <h3 className="qep-summary-title">Ringkasan Pengiriman</h3>
         <div className="qep-summary-row">
-          <span className="qep-summary-label" style={{ textTransform: "none", fontWeight: 500 }}>Biaya Pengiriman</span>
-          <span className="qep-summary-value" style={{ fontWeight: 700, color: "#111827" }}>Rp {formatRp(Number(shippingCost) || 0)}</span>
+          <span className="qep-summary-label" style={{ textTransform: "none", fontWeight: 500 }}>
+            Biaya Pengiriman
+          </span>
+          <span className="qep-summary-value" style={{ fontWeight: 700, color: "#111827" }}>
+            Rp {formatRp(Number(shippingCost) || 0)}
+          </span>
         </div>
         <div className="qep-summary-row">
           <span className="qep-summary-label">TOTAL PENGIRIMAN</span>
-          <span className="qep-summary-value qep-summary-value--grand">Rp {formatRp(Number(shippingCost) || 0)}</span>
+          <span className="qep-summary-value qep-summary-value--grand">
+            Rp {formatRp(Number(shippingCost) || 0)}
+          </span>
         </div>
       </div>
     </div>
-  );
+  )
 }

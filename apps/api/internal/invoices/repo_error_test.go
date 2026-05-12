@@ -15,7 +15,7 @@ func TestRepo_ErrorPaths(t *testing.T) {
 	r := invoices.NewRepo(testutil.FakeExec{}, store)
 	ctx := context.Background()
 
-	_, err := r.List(ctx, nil, nil, 10, 0)
+	_, err := r.List(ctx, invoices.ListFilter{Limit: 10})
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
 	_, err = r.GetByID(ctx, 1)
@@ -27,7 +27,7 @@ func TestRepo_ErrorPaths(t *testing.T) {
 	err = r.ChangeStatus(ctx, 1, invoices.StatusSent, 1)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
-	err = r.UpdateDates(ctx, 1, invoices.UpdateDatesRequest{}, 1)
+	_, err = r.UpdateDates(ctx, 1, invoices.UpdateDatesRequest{}, 1, nil)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
 	_, err = r.Summary(ctx)

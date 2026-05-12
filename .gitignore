@@ -49,3 +49,6 @@ docs/_build/
 __pycache__/
 *.pyc
 *.pyo
+
+# Claude session-local
+.claude/

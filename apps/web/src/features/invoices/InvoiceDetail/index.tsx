@@ -1,23 +1,22 @@
 import { useEffect, useMemo, useState } from "react"
-import type { Page } from "@/main"
 import Sidebar from "@/components/shared/Sidebar"
-import type { QuotationData } from "@/features/quotations/types"
 import ClientSummaryCard from "@/features/quotations/QuotationDetail/ClientSummaryCard"
-import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
-import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
 import HistoryTimeline from "@/features/quotations/QuotationDetail/HistoryTimeline"
 import { nowLabel } from "@/features/quotations/QuotationDetail/helpers"
+import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
+import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
+import type { QuotationData } from "@/features/quotations/types"
 import { downloadPdf } from "@/lib/api-client"
-
-import Header from "./Header"
-import StatusBar from "./StatusBar"
-import { type EditableInvoiceStatus } from "./helpers"
-import { useInvoiceByQuotation, useChangeInvoiceStatus, useInvoiceItems } from "../hooks"
+import type { Page } from "@/main"
+import type { InvoiceBackendRow, InvoiceBackendStatus } from "@/types/api"
 import { invoiceItemsToProducts, invoiceItemsToShipping } from "../adapters"
-import { INVOICE_LABEL } from "../types"
+import { useChangeInvoiceStatus, useInvoiceByQuotation, useInvoiceItems } from "../hooks"
 import type { InvoiceStatus } from "../types"
-import type { InvoiceBackendStatus, InvoiceBackendRow } from "@/types/api"
+import { INVOICE_LABEL } from "../types"
+import Header from "./Header"
+import type { EditableInvoiceStatus } from "./helpers"
+import StatusBar from "./StatusBar"
 
 interface HistoryEntry {
   date: string
@@ -109,10 +108,17 @@ export default function InvoiceDetail({
   const discountPct = quotation.discountPct ?? 0
   const nominalDiskon = (totalProduk * discountPct) / 100
   const subTotal = totalProduk - nominalDiskon
-  const dppNilaiLain = toNum(inv.dppNilaiLain) || Math.round(((hasProducts ? subTotal : totalShip) * 11) / 12)
+  const dppNilaiLain =
+    toNum(inv.dppNilaiLain) || Math.round(((hasProducts ? subTotal : totalShip) * 11) / 12)
   const ppn12 = toNum(inv.ppnAmount) || Math.round(dppNilaiLain * 0.12)
-  const grandTotal = toNum(inv.total) || (hasProducts ? subTotal + ppn12 + totalShip : totalShip + ppn12)
-  const clientInitials = quotation.client.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()
+  const grandTotal =
+    toNum(inv.total) || (hasProducts ? subTotal + ppn12 + totalShip : totalShip + ppn12)
+  const clientInitials = quotation.client
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase()
   const invoiceNo = inv.invoiceNo
   const displayStatus: InvoiceStatus = status
 
@@ -138,7 +144,10 @@ export default function InvoiceDetail({
       { id: inv.id, status: target },
       {
         onSuccess: () => {
-          setExtraHistory(prev => [...prev, { date: nowLabel(), action: `Status diubah menjadi ${INVOICE_LABEL[status]}` }])
+          setExtraHistory((prev) => [
+            ...prev,
+            { date: nowLabel(), action: `Status diubah menjadi ${INVOICE_LABEL[status]}` },
+          ])
           onNavigate("invoices")
         },
       },
@@ -161,7 +170,7 @@ export default function InvoiceDetail({
           <StatusBar
             status={status}
             isOpen={isStatusOpen}
-            onToggle={() => setIsStatusOpen(o => !o)}
+            onToggle={() => setIsStatusOpen((o) => !o)}
             onChange={handleStatusChange}
             onSave={handleSave}
           />

@@ -1,118 +1,103 @@
-import { useMemo, useState } from "react";
-import type { Page } from "@/main";
-import Sidebar from "@/components/shared/Sidebar";
-import QuotationFilter, { type DatePreset, type StatusFilter } from "../QuotationFilter";
-
-import PageHeader from "./PageHeader";
-import SummaryCards from "./SummaryCards";
-import SearchBar from "./SearchBar";
-import QuotationTable from "./QuotationTable";
-import Pagination from "./Pagination";
-import type { QuotationRow } from "./helpers";
+import { useMemo, useState } from "react"
+import Pagination from "@/components/shared/Pagination"
+import Sidebar from "@/components/shared/Sidebar"
+import { toTableRow } from "@/features/quotations/adapters"
+import { useQuotations } from "@/features/quotations/hooks"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import { labelToStatus } from "@/lib/status"
+import type { Page } from "@/main"
+import type { CanonicalStatus } from "@/types/api"
+import QuotationFilter, { type DatePreset, type StatusFilter } from "../QuotationFilter"
+import type { QuotationRow } from "./helpers"
+import PageHeader from "./PageHeader"
+import QuotationTable from "./QuotationTable"
+import SearchBar from "./SearchBar"
+import SummaryCards from "./SummaryCards"
 
 interface QuotationListProps {
-  onNavigate: (page: Page) => void;
-  onLogout: () => void;
-  onViewDetail?: (id: string) => void;
-  rows?: QuotationRow[];
+  onNavigate: (page: Page) => void
+  onLogout: () => void
+  onViewDetail?: (id: string) => void
 }
 
 interface ActiveFilters {
-  preset: DatePreset;
-  startDate: string;
-  endDate: string;
-  statuses: StatusFilter[];
-  minHarga: string;
-  maxHarga: string;
+  preset: DatePreset
+  startDate: string
+  endDate: string
+  statuses: StatusFilter[]
+  minHarga: string
+  maxHarga: string
+}
+
+function resolveRange(
+  preset: DatePreset,
+  startIso: string,
+  endIso: string,
+): { start: string; end: string } {
+  if (preset === "kustom") return { start: startIso, end: endIso }
+  const today = new Date()
+  const end = today.toISOString().slice(0, 10)
+  const start = new Date(today)
+  if (preset === "7-hari") start.setDate(start.getDate() - 7)
+  if (preset === "30-hari") start.setDate(start.getDate() - 30)
+  return { start: start.toISOString().slice(0, 10), end }
 }
 
 // Quotation list orchestrator.
-export default function QuotationList({ onNavigate, onLogout, onViewDetail, rows }: QuotationListProps) {
-  const tableData: QuotationRow[] = rows ?? [];
+export default function QuotationList({ onNavigate, onLogout, onViewDetail }: QuotationListProps) {
+  const [search, setSearch] = useState("")
+  const [showFilter, setShowFilter] = useState(false)
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters | null>(null)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof QuotationRow
+    direction: "asc" | "desc"
+  } | null>(null)
 
-  const [search, setSearch] = useState("");
-  const [showFilter, setShowFilter] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<ActiveFilters | null>(null);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortConfig, setSortConfig] = useState<{ key: keyof QuotationRow; direction: "asc" | "desc" } | null>(null);
+  const debouncedSearch = useDebouncedValue(search.trim(), 250)
 
   function requestSort(key: keyof QuotationRow) {
-    let direction: "asc" | "desc" = "asc";
+    let direction: "asc" | "desc" = "asc"
     if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
+      direction = "desc"
     }
-    setSortConfig({ key, direction });
+    setSortConfig({ key, direction })
   }
 
-  // Apply search, filters, sort.
-  const processedData = useMemo(() => {
-    let items = [...tableData];
-
-    if (search) {
-      const needle = search.toLowerCase();
-      items = items.filter(it => it.client.toLowerCase().includes(needle) || it.displayNo.toLowerCase().includes(needle));
+  const queryParams = useMemo(() => {
+    const out: Parameters<typeof useQuotations>[0] = {
+      q: debouncedSearch || undefined,
+      limit: itemsPerPage,
+      offset: (currentPage - 1) * itemsPerPage,
     }
-
-    if (activeFilters && activeFilters.statuses.length > 0) {
-      items = items.filter(it => activeFilters.statuses.includes(it.status));
+    if (sortConfig) {
+      if (sortConfig.key === "total") out.sortBy = "grandTotal"
+      else if (sortConfig.key === "date") out.sortBy = "quotationDate"
+      else if (sortConfig.key === "client") out.sortBy = "client"
+      else if (sortConfig.key === "displayNo") out.sortBy = "quotationNo"
+      out.sortDir = sortConfig.direction
     }
-
-    if (activeFilters) {
-      const min = parseInt(activeFilters.minHarga.replace(/\./g, "")) || 0;
-      const max = parseInt(activeFilters.maxHarga.replace(/\./g, "")) || Infinity;
-      items = items.filter(it => {
-        const total = parseInt(it.total.replace(/[^0-9]/g, ""));
-        return total >= min && total <= max;
-      });
+    if (!activeFilters) return out
+    if (activeFilters.statuses.length > 0) {
+      out.statuses = activeFilters.statuses.map<CanonicalStatus>(labelToStatus)
     }
+    const range = resolveRange(activeFilters.preset, activeFilters.startDate, activeFilters.endDate)
+    if (range.start) out.dateFrom = range.start
+    if (range.end) out.dateTo = range.end
+    const min = activeFilters.minHarga.replace(/\D/g, "")
+    if (min && min !== "0") out.minTotal = min
+    const max = activeFilters.maxHarga.replace(/\D/g, "")
+    if (max && max !== "0") out.maxTotal = max
+    return out
+  }, [debouncedSearch, activeFilters, itemsPerPage, currentPage, sortConfig])
 
-    if (activeFilters) {
-      let start: Date | null = null;
-      let end: Date | null = null;
-      if (activeFilters.preset === "kustom") {
-        if (activeFilters.startDate) { start = new Date(activeFilters.startDate); start.setHours(0, 0, 0, 0); }
-        if (activeFilters.endDate)   { end   = new Date(activeFilters.endDate);   end.setHours(23, 59, 59, 999); }
-      } else {
-        end = new Date(); end.setHours(23, 59, 59, 999);
-        start = new Date(); start.setHours(0, 0, 0, 0);
-        if (activeFilters.preset === "7-hari")  start.setDate(start.getDate() - 7);
-        if (activeFilters.preset === "30-hari") start.setDate(start.getDate() - 30);
-      }
-      items = items.filter(it => {
-        const d = new Date(it.date);
-        if (start && d < start) return false;
-        if (end   && d > end)   return false;
-        return true;
-      });
-    }
+  const { data } = useQuotations(queryParams)
+  const currentData: QuotationRow[] = useMemo(() => (data?.rows ?? []).map(toTableRow), [data])
 
-    if (sortConfig !== null) {
-      items.sort((a, b) => {
-        let aValue: string | number = a[sortConfig.key] as string | number;
-        let bValue: string | number = b[sortConfig.key] as string | number;
-
-        if (sortConfig.key === "total") {
-          aValue = parseInt(String(aValue).replace(/[^0-9]/g, ""));
-          bValue = parseInt(String(bValue).replace(/[^0-9]/g, ""));
-        } else if (sortConfig.key === "date") {
-          aValue = new Date(String(aValue)).getTime();
-          bValue = new Date(String(bValue)).getTime();
-        }
-
-        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
-
-    return items;
-  }, [search, sortConfig, activeFilters, tableData]);
-
-  const totalItems = processedData.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentData = processedData.slice(startIndex, startIndex + itemsPerPage);
+  const totalItems = data?.total ?? 0
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
+  const startIndex = (currentPage - 1) * itemsPerPage
 
   return (
     <div className="admin-shell">
@@ -124,9 +109,9 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail, rows
           <SummaryCards />
           <SearchBar
             search={search}
-            onSearch={v => {
-              setSearch(v);
-              setCurrentPage(1);
+            onSearch={(v) => {
+              setSearch(v)
+              setCurrentPage(1)
             }}
             onOpenFilter={() => setShowFilter(true)}
           />
@@ -145,9 +130,10 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail, rows
               itemsPerPage={itemsPerPage}
               currentPage={currentPage}
               totalPages={totalPages}
-              onItemsPerPage={n => {
-                setItemsPerPage(n);
-                setCurrentPage(1);
+              resourceLabel="Quotation"
+              onItemsPerPage={(n) => {
+                setItemsPerPage(n)
+                setCurrentPage(1)
               }}
               onPage={setCurrentPage}
             />
@@ -159,12 +145,12 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail, rows
         <QuotationFilter
           onClose={() => setShowFilter(false)}
           initialValues={activeFilters ?? undefined}
-          onApply={filters => {
-            setActiveFilters(filters);
-            setCurrentPage(1);
+          onApply={(filters) => {
+            setActiveFilters(filters)
+            setCurrentPage(1)
           }}
         />
       )}
     </div>
-  );
+  )
 }

@@ -1,0 +1,95 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  default: none
+  enable:
+    - bodyclose
+    - copyloopvar
+    - errcheck
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - nilerr
+    - prealloc
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: false
+      exclude-functions:
+        - (io.Closer).Close
+        - (*database/sql.Rows).Close
+        - (*github.com/jackc/pgx/v5.Conn).Close
+        - os.RemoveAll
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
+        - shadow
+    gosec:
+      excludes:
+        - G104
+        - G115
+        - G601
+    revive:
+      severity: warning
+      rules:
+        - name: exported
+          disabled: true
+        - name: package-comments
+          disabled: true
+        - name: var-naming
+          arguments:
+            - ["ID", "URL", "API", "DB", "HTTP", "JSON", "JWT", "PO", "QIR", "IMPA"]
+            - []
+    staticcheck:
+      checks:
+        - all
+        - "-ST1000"
+        - "-ST1020"
+        - "-ST1021"
+        - "-ST1022"
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
+          - unparam
+          - sqlclosecheck
+      - path: acceptance/
+        linters:
+          - errcheck
+          - gosec
+      - path: cmd/pdfsmoke/
+        linters:
+          - errcheck
+          - gosec
+      - path: internal/pdfgen/
+        linters:
+          - gosec
+      - path: internal/testutil/
+        linters:
+          - gosec
+      - path: internal/users/handler\.go
+        text: "G101"
+        linters:
+          - gosec
+
+issues:
+  max-same-issues: 0
+  max-issues-per-linter: 0

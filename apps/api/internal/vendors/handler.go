@@ -23,13 +23,38 @@ func NewHandler(repo *Repo) *Handler {
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
 	limit, offset := paginate.Parse(r)
-	v, err := h.repo.List(r.Context(), limit, offset)
+
+	f := ListFilter{
+		Q:           q.Get("q"),
+		CountryName: q.Get("countryName"),
+		SortBy:      q.Get("sortBy"),
+		SortDir:     q.Get("sortDir"),
+		Limit:       limit,
+		Offset:      offset,
+	}
+	if s := q.Get("isActive"); s != "" {
+		switch s {
+		case "true", "1":
+			v := true
+			f.IsActive = &v
+		case "false", "0":
+			v := false
+			f.IsActive = &v
+		}
+	}
+	if s := q.Get("minTotal"); s != "" {
+		f.MinTotal = &s
+	}
+
+	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, v)
+	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
+	httpx.WriteJSON(w, http.StatusOK, res.Rows)
 }
 
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +69,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, v)
@@ -64,7 +89,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	userID := deps.CurrentUserID(r.Context())
 	v, err := h.repo.Create(r.Context(), req, userID)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusCreated, v)
@@ -94,7 +119,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, v)
@@ -122,7 +147,7 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 
 	results, err := h.repo.Search(r.Context(), q, minScore, limit)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, results)
@@ -143,7 +168,7 @@ func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 
 	items, err := h.repo.ListItems(r.Context(), id, limit)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, items)

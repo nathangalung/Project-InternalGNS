@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react"
+import { type CSSProperties, useState } from "react"
 import {
   CheckmarkIcon,
   dropdownItemStyle,
@@ -29,9 +29,18 @@ const YEAR_OPTIONS: number[] = (() => {
 })()
 
 const MONTH_LABELS: string[] = [
-  "Januari", "Februari", "Maret",     "April",
-  "Mei",     "Juni",     "Juli",      "Agustus",
-  "September", "Oktober", "November", "Desember",
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
 ]
 
 const ALL_MONTHS: number[] = Array.from({ length: 12 }, (_, i) => i)
@@ -57,7 +66,6 @@ function monthChipStyle(active: boolean): CSSProperties {
   }
 }
 
-
 export default function DashboardFinancialFilter({
   onClose,
   onApply,
@@ -72,13 +80,14 @@ export default function DashboardFinancialFilter({
   const dirty =
     year !== DEFAULTS.year ||
     months.length !== DEFAULTS.months.length ||
-    months.some(m => !DEFAULTS.months.includes(m))
+    months.some((m) => !DEFAULTS.months.includes(m))
 
   const toggleMonth = (m: number) =>
-    setMonths(prev => (prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m].sort((a, b) => a - b)))
+    setMonths((prev) =>
+      prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m].sort((a, b) => a - b),
+    )
 
-  const selectAllMonths = () =>
-    setMonths(allSelected ? [] : ALL_MONTHS)
+  const selectAllMonths = () => setMonths(allSelected ? [] : ALL_MONTHS)
 
   const handleReset = () => {
     setYear(DEFAULTS.year)
@@ -92,12 +101,19 @@ export default function DashboardFinancialFilter({
 
   return (
     <div className="ca-overlay" onClick={onClose}>
-      <div className="ca-modal" onClick={e => e.stopPropagation()}>
-
+      <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
         <div className="ca-header">
           <h2 className="ca-title">{title}</h2>
           <button className="ca-close-btn" onClick={onClose} title="Tutup">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
               <line x1="1" y1="1" x2="13" y2="13" />
               <line x1="13" y1="1" x2="1" y2="13" />
             </svg>
@@ -105,7 +121,6 @@ export default function DashboardFinancialFilter({
         </div>
 
         <div className="ca-body">
-
           <div className="ca-section">
             <div className="ca-section-heading">Pilih Tahun</div>
             <div className="ca-field">
@@ -113,25 +128,36 @@ export default function DashboardFinancialFilter({
                 <button
                   type="button"
                   className="ca-select-btn"
-                  onClick={() => setYearOpen(o => !o)}
+                  onClick={() => setYearOpen((o) => !o)}
                   onBlur={() => setTimeout(() => setYearOpen(false), 150)}
                 >
                   <span>{year}</span>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  >
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </button>
                 {yearOpen && (
                   <div style={dropdownPanelStyle}>
-                    {YEAR_OPTIONS.map(y => {
+                    {YEAR_OPTIONS.map((y) => {
                       const isActive = year === y
                       return (
                         <button
                           key={y}
                           type="button"
                           style={dropdownItemStyle}
-                          onMouseDown={e => e.preventDefault()}
-                          onClick={() => { setYear(y); setYearOpen(false) }}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setYear(y)
+                            setYearOpen(false)
+                          }}
                         >
                           <span style={dropdownLabelStyle(isActive)}>{y}</span>
                           {isActive && <CheckmarkIcon />}
@@ -145,8 +171,17 @@ export default function DashboardFinancialFilter({
           </div>
 
           <div className="ca-section">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-              <div className="ca-section-heading" style={{ marginBottom: 0 }}>Pilih Bulan</div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "8px",
+              }}
+            >
+              <div className="ca-section-heading" style={{ marginBottom: 0 }}>
+                Pilih Bulan
+              </div>
               <button
                 type="button"
                 onClick={selectAllMonths}
@@ -182,10 +217,12 @@ export default function DashboardFinancialFilter({
               </div>
             </div>
           </div>
-
         </div>
 
-        <div className="ca-footer" style={{ justifyContent: "space-between", padding: "16px 24px" }}>
+        <div
+          className="ca-footer"
+          style={{ justifyContent: "space-between", padding: "16px 24px" }}
+        >
           <button
             type="button"
             onClick={handleReset}
@@ -206,7 +243,16 @@ export default function DashboardFinancialFilter({
               textUnderlineOffset: "3px",
             }}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="1 4 1 10 7 10" />
               <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
             </svg>
@@ -231,7 +277,6 @@ export default function DashboardFinancialFilter({
             </button>
           </div>
         </div>
-
       </div>
     </div>
   )

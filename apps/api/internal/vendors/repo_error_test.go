@@ -15,7 +15,7 @@ func TestRepo_ErrorPaths(t *testing.T) {
 	r := vendors.NewRepo(testutil.FakeExec{}, store)
 	ctx := context.Background()
 
-	_, err := r.List(ctx, 10, 0)
+	_, err := r.List(ctx, vendors.ListFilter{Limit: 10})
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
 	_, err = r.GetByID(ctx, 1)

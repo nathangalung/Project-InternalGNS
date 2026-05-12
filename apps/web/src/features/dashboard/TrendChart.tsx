@@ -1,4 +1,4 @@
-import { useMemo, useState, type MouseEvent as ReactMouseEvent } from "react"
+import { type MouseEvent as ReactMouseEvent, useMemo, useState } from "react"
 
 const W = 1000
 const H = 300
@@ -8,8 +8,18 @@ const LINE_COLOR = "#7C3AED"
 const DASHED_COLOR = "#94A3B8"
 
 export const CHART_MONTHS = [
-  "JAN", "FEB", "MAR", "APR", "MEI", "JUN",
-  "JUL", "AGS", "SEP", "OKT", "NOV", "DES",
+  "JAN",
+  "FEB",
+  "MAR",
+  "APR",
+  "MEI",
+  "JUN",
+  "JUL",
+  "AGS",
+  "SEP",
+  "OKT",
+  "NOV",
+  "DES",
 ]
 
 function defaultComputeMax(values: number[]): number {
@@ -34,14 +44,14 @@ export default function TrendChart({
   activeKey,
   comparisonKey,
   monthLabels = CHART_MONTHS,
-  formatValue = v => v.toLocaleString("id-ID"),
+  formatValue = (v) => v.toLocaleString("id-ID"),
   formatAxisTick,
   computeMax = defaultComputeMax,
 }: TrendChartProps) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null)
 
   const activeData = series[activeKey] ?? []
-  const comparisonData = comparisonKey ? series[comparisonKey] ?? [] : []
+  const comparisonData = comparisonKey ? (series[comparisonKey] ?? []) : []
 
   const maxVal = useMemo(
     () => computeMax([...activeData, ...comparisonData]),
@@ -54,7 +64,7 @@ export default function TrendChart({
   const gy = (v: number) => PAD.top + cH - (maxVal === 0 ? 0 : (v / maxVal) * cH)
   const makePath = (data: number[]) =>
     data.map((v, i) => `${i === 0 ? "M" : "L"} ${gx(i).toFixed(1)} ${gy(v).toFixed(1)}`).join(" ")
-  const yTicks = [0, 0.25, 0.5, 0.75, 1].map(f => maxVal * f)
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => maxVal * f)
 
   function handleMouseMove(e: ReactMouseEvent<SVGRectElement>) {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -233,21 +243,48 @@ function Tooltip({
         stroke="rgba(124, 58, 237, 0.4)"
         strokeWidth="1"
       />
-      <text x={tx + padX} y={monthY} fontSize={monthFontSize} fontWeight={600} fill="#94A3B8" letterSpacing="0.5">
+      <text
+        x={tx + padX}
+        y={monthY}
+        fontSize={monthFontSize}
+        fontWeight={600}
+        fill="#94A3B8"
+        letterSpacing="0.5"
+      >
         {monthLabel.toUpperCase()}
       </text>
       <text x={tx + padX} y={activeY} fontSize={labelFontSize} fontWeight={500} fill="#A78BFA">
         {activeLabel}
       </text>
-      <text x={tx + tooltipW - padX} y={activeY} fontSize={valueFontSize} fontWeight={700} fill="#fff" textAnchor="end">
+      <text
+        x={tx + tooltipW - padX}
+        y={activeY}
+        fontSize={valueFontSize}
+        fontWeight={700}
+        fill="#fff"
+        textAnchor="end"
+      >
         {activeValue}
       </text>
       {showComparison && (
         <>
-          <text x={tx + padX} y={comparisonY} fontSize={labelFontSize} fontWeight={500} fill="#94A3B8">
+          <text
+            x={tx + padX}
+            y={comparisonY}
+            fontSize={labelFontSize}
+            fontWeight={500}
+            fill="#94A3B8"
+          >
             {comparisonLabel}
           </text>
-          <text x={tx + tooltipW - padX} y={comparisonY} fontSize={valueFontSize} fontWeight={700} fill="#CBD5E1" textAnchor="end">
+          <text
+            x={tx + tooltipW - padX}
+            y={comparisonY}
+            fontSize={valueFontSize}
+            fontWeight={700}
+            fill="#CBD5E1"
+            textAnchor="end"
+          >
             {comparisonValue}
           </text>
         </>

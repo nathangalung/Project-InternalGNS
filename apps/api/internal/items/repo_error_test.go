@@ -15,7 +15,7 @@ func TestRepo_ErrorPaths(t *testing.T) {
 	r := items.NewRepo(testutil.FakeExec{}, store)
 	ctx := context.Background()
 
-	_, err := r.List(ctx, 10, 0)
+	_, err := r.List(ctx, items.ListFilter{Limit: 10})
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
 	_, err = r.GetByID(ctx, 1)
@@ -34,5 +34,11 @@ func TestRepo_ErrorPaths(t *testing.T) {
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
 	_, err = r.SuggestSellingPrices(ctx, 1, 5)
+	assert.ErrorIs(t, err, testutil.ErrFake)
+
+	_, err = r.SearchVendorOffers(ctx, "x", 5)
+	assert.ErrorIs(t, err, testutil.ErrFake)
+
+	_, err = r.SearchRequestHistory(ctx, "x", 5)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 }

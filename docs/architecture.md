@@ -1,6 +1,6 @@
 # Architecture
 
-See also: [`ERD.drawio.xml`](./ERD.drawio.xml), [`decisions/`](./decisions/).
+See also: [`relational_model.html`](./relational_model.html), [`decisions/`](./decisions/).
 
 ## Context
 

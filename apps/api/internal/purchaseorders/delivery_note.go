@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -70,13 +71,13 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 
 	items, err := h.repo.ListItems(r.Context(), id)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 
@@ -84,14 +85,16 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 
 	pdf, err := h.renderer.Render(r.Context(), "delivery_note/DeliveryNote.tex.tmpl", data)
 	if err != nil {
-		httperr.Render(w, httperr.Internal(err.Error()))
+		httperr.RenderDBErr(w, err)
 		return
 	}
 
 	dn := "DN-" + po.PoNumber
 	w.Header().Set("Content-Type", "application/pdf")
-	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s.pdf"`, sanitizeFilename(dn)))
-	_, _ = w.Write(pdf)
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.pdf"`, sanitizeFilename(dn)))
+	if _, werr := w.Write(pdf); werr != nil {
+		slog.WarnContext(r.Context(), "pdf write failed", "doc", "delivery_note", "po_id", id, "err", werr)
+	}
 }
 
 func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, items []PurchaseOrderItem) dnData {

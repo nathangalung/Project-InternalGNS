@@ -1,4 +1,4 @@
--- name: purchase_orders.list
+-- name: purchase_orders.list_base
 SELECT po.id,
        po.po_number,
        po.quotation_id,
@@ -14,21 +14,36 @@ SELECT po.id,
        po.file_url,
        q.grand_total::text AS quotation_total,
        q.subtotal::text     AS quotation_subtotal,
-       COALESCE((SELECT SUM(poi.subtotal) FROM purchase_order_items poi WHERE poi.po_id = po.id), 0)::text AS po_subtotal,
-       COALESCE((SELECT SUM(poi.total_selling) FROM purchase_order_items poi WHERE poi.po_id = po.id AND poi.item_type = 'product'), 0)::text AS po_total_produk,
-       COALESCE((SELECT SUM(poi.profit_amount) FROM purchase_order_items poi WHERE poi.po_id = po.id AND poi.item_type = 'product'), 0)::text AS po_total_profit,
+       COALESCE(s.po_subtotal, '0')     AS po_subtotal,
+       COALESCE(s.po_total_produk, '0') AS po_total_produk,
+       COALESCE(s.po_total_profit, '0') AS po_total_profit,
+       po.row_version,
        po.created_at,
        po.updated_at
 FROM purchase_orders po
 JOIN quotations q ON q.id = po.quotation_id
 JOIN company_client cc ON cc.id = po.company_client_id
-WHERE ($1::text IS NULL OR (
-       LOWER(po.po_number) LIKE LOWER('%' || $1 || '%')
-    OR LOWER(q.quotation_no) LIKE LOWER('%' || $1 || '%')
-    OR LOWER(cc.name) LIKE LOWER('%' || $1 || '%')))
-  AND ($2::text IS NULL OR po.status = $2::text)
-ORDER BY po.po_date DESC, po.id DESC
-LIMIT $3 OFFSET $4;
+LEFT JOIN LATERAL (
+  SELECT SUM(poi.subtotal)::text AS po_subtotal,
+         SUM(poi.total_selling) FILTER (WHERE poi.item_type = 'product')::text AS po_total_produk,
+         SUM(poi.profit_amount) FILTER (WHERE poi.item_type = 'product')::text AS po_total_profit
+  FROM purchase_order_items poi
+  WHERE poi.po_id = po.id
+) s ON TRUE
+WHERE 1=1;
+
+-- name: purchase_orders.list_count_base
+SELECT COUNT(*)
+FROM purchase_orders po
+JOIN quotations q ON q.id = po.quotation_id
+JOIN company_client cc ON cc.id = po.company_client_id
+LEFT JOIN LATERAL (
+  SELECT SUM(poi.subtotal)::numeric AS po_subtotal,
+         SUM(poi.total_selling) FILTER (WHERE poi.item_type = 'product')::numeric AS po_total_produk
+  FROM purchase_order_items poi
+  WHERE poi.po_id = po.id
+) s ON TRUE
+WHERE 1=1;
 
 -- name: purchase_orders.get_by_id
 SELECT po.id,
@@ -46,14 +61,22 @@ SELECT po.id,
        po.file_url,
        q.grand_total::text AS quotation_total,
        q.subtotal::text     AS quotation_subtotal,
-       COALESCE((SELECT SUM(poi.subtotal) FROM purchase_order_items poi WHERE poi.po_id = po.id), 0)::text AS po_subtotal,
-       COALESCE((SELECT SUM(poi.total_selling) FROM purchase_order_items poi WHERE poi.po_id = po.id AND poi.item_type = 'product'), 0)::text AS po_total_produk,
-       COALESCE((SELECT SUM(poi.profit_amount) FROM purchase_order_items poi WHERE poi.po_id = po.id AND poi.item_type = 'product'), 0)::text AS po_total_profit,
+       COALESCE(s.po_subtotal, '0')     AS po_subtotal,
+       COALESCE(s.po_total_produk, '0') AS po_total_produk,
+       COALESCE(s.po_total_profit, '0') AS po_total_profit,
+       po.row_version,
        po.created_at,
        po.updated_at
 FROM purchase_orders po
 JOIN quotations q ON q.id = po.quotation_id
 JOIN company_client cc ON cc.id = po.company_client_id
+LEFT JOIN LATERAL (
+  SELECT SUM(poi.subtotal)::text AS po_subtotal,
+         SUM(poi.total_selling) FILTER (WHERE poi.item_type = 'product')::text AS po_total_produk,
+         SUM(poi.profit_amount) FILTER (WHERE poi.item_type = 'product')::text AS po_total_profit
+  FROM purchase_order_items poi
+  WHERE poi.po_id = po.id
+) s ON TRUE
 WHERE po.id = $1;
 
 -- name: purchase_orders.get_by_quotation
@@ -72,19 +95,28 @@ SELECT po.id,
        po.file_url,
        q.grand_total::text AS quotation_total,
        q.subtotal::text     AS quotation_subtotal,
-       COALESCE((SELECT SUM(poi.subtotal) FROM purchase_order_items poi WHERE poi.po_id = po.id), 0)::text AS po_subtotal,
-       COALESCE((SELECT SUM(poi.total_selling) FROM purchase_order_items poi WHERE poi.po_id = po.id AND poi.item_type = 'product'), 0)::text AS po_total_produk,
-       COALESCE((SELECT SUM(poi.profit_amount) FROM purchase_order_items poi WHERE poi.po_id = po.id AND poi.item_type = 'product'), 0)::text AS po_total_profit,
+       COALESCE(s.po_subtotal, '0')     AS po_subtotal,
+       COALESCE(s.po_total_produk, '0') AS po_total_produk,
+       COALESCE(s.po_total_profit, '0') AS po_total_profit,
+       po.row_version,
        po.created_at,
        po.updated_at
 FROM purchase_orders po
 JOIN quotations q ON q.id = po.quotation_id
 JOIN company_client cc ON cc.id = po.company_client_id
+LEFT JOIN LATERAL (
+  SELECT SUM(poi.subtotal)::text AS po_subtotal,
+         SUM(poi.total_selling) FILTER (WHERE poi.item_type = 'product')::text AS po_total_produk,
+         SUM(poi.profit_amount) FILTER (WHERE poi.item_type = 'product')::text AS po_total_profit
+  FROM purchase_order_items poi
+  WHERE poi.po_id = po.id
+) s ON TRUE
 WHERE po.quotation_id = $1;
 
 -- name: purchase_orders.list_items
 SELECT poi.id,
        poi.po_id,
+       poi.quotation_item_id,
        poi.line_number,
        poi.item_type,
        poi.offered_item_id,
@@ -126,3 +158,15 @@ RETURNING id;
 
 -- name: purchase_orders.change_status
 SELECT fn_change_po_status($1::bigint, $2::text, $3::bigint);
+
+-- name: purchase_orders.update_items
+SELECT fn_update_po_items($1::bigint, $2::bigint, $3::numeric, $4::text, $5::text, $6::int, $7::numeric, $8::jsonb);
+
+-- name: purchase_orders.update_items_versioned
+SELECT fn_update_po_items_versioned(
+    $1::bigint, $2::int, $3::bigint, $4::numeric, $5::text,
+    $6::text, $7::int, $8::numeric, $9::jsonb
+);
+
+-- name: purchase_orders.row_version
+SELECT row_version FROM purchase_orders WHERE id = $1;

@@ -43,6 +43,10 @@ func (s *scenarioState) reset() error {
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
+	return s.sendRequestWithHeaders(method, path, body, nil)
+}
+
+func (s *scenarioState) sendRequestWithHeaders(method, path string, body any, headers map[string]string) error {
 	var rdr io.Reader
 	if body != nil {
 		raw, err := json.Marshal(body)
@@ -57,6 +61,9 @@ func (s *scenarioState) sendRequest(method, path string, body any) error {
 	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
 	}
 	res, err := s.srv.Client().Do(req)
 	if err != nil {
@@ -272,8 +279,20 @@ func (s *scenarioState) lastTransitionSucceeds() error {
 }
 
 func (s *scenarioState) updateInvoiceDueDate(date string) error {
+	if err := s.readInvoiceByQuotation(); err != nil {
+		return err
+	}
+	var inv invoices.Invoice
+	if err := json.Unmarshal(s.body, &inv); err != nil {
+		return err
+	}
 	body := map[string]string{"dueDate": date + "T00:00:00Z"}
-	return s.sendRequest(http.MethodPatch, "/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/dates", body)
+	return s.sendRequestWithHeaders(
+		http.MethodPatch,
+		"/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/dates",
+		body,
+		map[string]string{"If-Match": strconv.FormatInt(int64(inv.RowVersion), 10)},
+	)
 }
 
 func (s *scenarioState) summaryTotalAtLeast(min int64) error {

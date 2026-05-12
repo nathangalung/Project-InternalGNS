@@ -45,6 +45,9 @@ func Load() (Store, error) {
 			return nil, err
 		}
 	}
+	if err := store.Validate(RequiredKeys); err != nil {
+		return nil, err
+	}
 	return store, nil
 }
 

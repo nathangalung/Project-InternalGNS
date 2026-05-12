@@ -57,6 +57,10 @@ func TestHandler_ErrorPaths(t *testing.T) {
 				req, err = http.NewRequest(c.method, srv.URL+c.path, nil)
 			}
 			require.NoError(t, err)
+			// Optimistic-lock guarded routes need If-Match to reach repo.
+			if c.name == "update_dates" {
+				req.Header.Set("If-Match", "1")
+			}
 			res, err := srv.Client().Do(req)
 			require.NoError(t, err)
 			defer res.Body.Close()

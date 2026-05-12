@@ -21,6 +21,12 @@ func Routes(d deps.Deps) chi.Router {
 	r.Put("/{id}", h.Update)
 	r.Patch("/{id}/status", h.ChangeStatus)
 	r.Post("/{id}/send", h.Send)
+	r.Get("/{id}/revisions", h.Revisions)
+
+	r.Get("/{id}/requests", h.ListItemRequests)
+	r.Post("/{id}/requests", h.CreateItemRequest)
+	r.Put("/{id}/requests/{rid}", h.UpdateItemRequest)
+	r.Delete("/{id}/requests/{rid}", h.DeleteItemRequest)
 
 	if d.TemplatesRoot != "" {
 		exp := NewExportHandler(

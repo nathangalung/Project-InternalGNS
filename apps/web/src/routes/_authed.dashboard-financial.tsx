@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import DashboardFinancial from "@/features/dashboard/DashboardFinancial"
 import { useAuth } from "@/features/auth/hooks"
+import DashboardFinancial from "@/features/dashboard/DashboardFinancial"
 import { makePageNavigate } from "@/lib/page-nav"
 
 export const Route = createFileRoute("/_authed/dashboard-financial")({
@@ -14,7 +14,7 @@ function DashboardFinancialRoute() {
   return (
     <DashboardFinancial
       onNavigate={makePageNavigate(navigate)}
-      onViewInvoice={qid => void navigate({ to: "/invoices/$id", params: { id: String(qid) } })}
+      onViewInvoice={(qid) => void navigate({ to: "/invoices/$id", params: { id: String(qid) } })}
       onViewAllInvoices={() => void navigate({ to: "/invoices" })}
       onLogout={() => {
         logout()

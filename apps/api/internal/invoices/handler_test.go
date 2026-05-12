@@ -133,10 +133,72 @@ func TestHandler_UpdateDates_BadJSON(t *testing.T) {
 
 func TestHandler_UpdateDates_NotFound(t *testing.T) {
 	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodPatch, "/invoices/99999999/dates",
-		invoices.UpdateDatesRequest{})
+	body, _ := json.Marshal(invoices.UpdateDatesRequest{})
+	req, err := http.NewRequest(http.MethodPatch, srv.URL+"/invoices/99999999/dates", bytes.NewReader(body))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("If-Match", "1")
+	res, err := srv.Client().Do(req)
+	require.NoError(t, err)
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+}
+
+func TestHandler_UpdateDates_MissingIfMatch(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/invoices/1/dates",
+		invoices.UpdateDatesRequest{})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_UpdateDates_BadIfMatch(t *testing.T) {
+	srv := newSrv(t)
+	body, _ := json.Marshal(invoices.UpdateDatesRequest{})
+	req, err := http.NewRequest(http.MethodPatch, srv.URL+"/invoices/1/dates", bytes.NewReader(body))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("If-Match", "abc")
+	res, err := srv.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_ListItems_BadID(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/invoices/abc/items", nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
+func TestHandler_ListItems_Empty(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/invoices/99999999/items", nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+}
+
+func TestHandler_ChangeStatus_NotFound(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/invoices/99999999/status",
+		invoices.ChangeStatusRequest{Status: invoices.StatusSent})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+}
+
+func TestHandler_List_GarbagePagination(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/invoices/?limit=abc&offset=xyz&q=foo", nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+}
+
+func TestHandler_List_ClampsLimits(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/invoices/?limit=99999&offset=-9", nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
 
 func TestHandler_Summary(t *testing.T) {
