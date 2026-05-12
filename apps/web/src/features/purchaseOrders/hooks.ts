@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as poApi from "@/features/purchaseOrders/api"
 import { queryKeys } from "@/lib/query-keys"
+import { uploadToPresignedUrl } from "@/lib/storage-upload"
 import type { PoBackendStatus, PoUpdateItemsInput } from "@/types/api"
 
 export function usePurchaseOrders(params: poApi.ListParams = {}) {
@@ -55,7 +56,7 @@ export function useUploadPoFile() {
   return useMutation({
     mutationFn: async ({ id, file }: { id: number; file: File }) => {
       const presign = await poApi.presignUpload(id, file.name)
-      await poApi.uploadToPresignedUrl(presign.uploadUrl, file)
+      await uploadToPresignedUrl(presign.uploadUrl, file)
       await poApi.updateFile(id, {
         fileName: file.name,
         fileSize: file.size,
