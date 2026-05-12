@@ -5,9 +5,10 @@ import {
   type DatePreset,
   presetToIsoRange,
 } from "@/components/shared/DateRangeField"
+import type { DisplayStatus } from "@/lib/status"
 
 export type { DatePreset }
-export type StatusFilter = "Draf" | "Dikirim" | "Ditolak" | "Revisi" | "Disetujui"
+export type StatusFilter = DisplayStatus
 
 interface QuotationFilterProps {
   onClose: () => void

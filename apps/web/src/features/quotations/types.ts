@@ -1,4 +1,6 @@
-export type Status = "Disetujui" | "Dikirim" | "Draf" | "Revisi" | "Ditolak"
+import type { DisplayStatus } from "@/lib/status"
+
+export type Status = DisplayStatus
 
 export interface ClientInfo {
   narahubung?: string

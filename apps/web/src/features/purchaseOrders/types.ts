@@ -1,4 +1,6 @@
-export type PoStatus = "PENDING" | "UPLOADED" | "ON_PROGRESS" | "DELIVERED"
+import type { PoBackendStatus } from "@/types/api"
+
+export type PoStatus = PoBackendStatus
 
 export interface PoLocalRecord {
   status: PoStatus

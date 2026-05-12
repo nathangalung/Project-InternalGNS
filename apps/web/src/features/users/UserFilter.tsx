@@ -1,8 +1,9 @@
 import { type CSSProperties, useState } from "react"
+import type { StatusFilterValue } from "@/components/shared/filter-styles"
 import type { Role } from "@/types/api"
 
 export type RoleFilter = "all" | Role
-export type StatusFilter = "all" | "active" | "inactive"
+export type StatusFilter = StatusFilterValue
 
 interface UserFilterProps {
   onClose: () => void
