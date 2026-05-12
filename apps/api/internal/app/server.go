@@ -28,6 +28,15 @@ func NewServer(ctx context.Context, cfg Config) (*http.Server, error) {
 	}); err != nil {
 		return nil, err
 	}
+	if cfg.Superadmin2Email != "" && cfg.Superadmin2Password != "" {
+		if err := users.SeedSuperadmin(ctx, pool, users.SeedConfig{
+			Email:    cfg.Superadmin2Email,
+			Name:     cfg.Superadmin2Name,
+			Password: cfg.Superadmin2Password,
+		}); err != nil {
+			return nil, err
+		}
+	}
 
 	store, err := queries.Load()
 	if err != nil {

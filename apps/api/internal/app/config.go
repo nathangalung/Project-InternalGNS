@@ -10,18 +10,25 @@ import (
 )
 
 type Config struct {
-	Env         string        `env:"ENV"           envDefault:"development"`
-	HTTPAddr    string        `env:"HTTP_ADDR"     envDefault:":8080"`
-	DatabaseURL string        `env:"DATABASE_URL,required"`
-	JWTSecret           string        `env:"JWT_SECRET,required"`
-	JWTExpiry           time.Duration `env:"JWT_EXPIRY"           envDefault:"24h"`
-	RefreshTokenExpiry  time.Duration `env:"REFRESH_TOKEN_EXPIRY" envDefault:"720h"`
+	Env                string        `env:"ENV"           envDefault:"development"`
+	HTTPAddr           string        `env:"HTTP_ADDR"     envDefault:":8080"`
+	DatabaseURL        string        `env:"DATABASE_URL,required"`
+	JWTSecret          string        `env:"JWT_SECRET,required"`
+	JWTExpiry          time.Duration `env:"JWT_EXPIRY"           envDefault:"24h"`
+	RefreshTokenExpiry time.Duration `env:"REFRESH_TOKEN_EXPIRY" envDefault:"720h"`
 
 	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envDefault:"*" envSeparator:","`
 
 	SuperadminEmail    string `env:"SUPERADMIN_EMAIL"    envDefault:"admin@globalsakti.com"`
 	SuperadminName     string `env:"SUPERADMIN_NAME"     envDefault:"Administrator"`
 	SuperadminPassword string `env:"SUPERADMIN_PASSWORD" envDefault:"AdminGNS123!"`
+
+	// Optional second superadmin. Seeded on boot only if EMAIL + PASSWORD
+	// are both non-empty; otherwise skipped silently. SeedSuperadmin is
+	// idempotent — re-running with the same email is a no-op.
+	Superadmin2Email    string `env:"SUPERADMIN2_EMAIL"`
+	Superadmin2Name     string `env:"SUPERADMIN2_NAME"     envDefault:"Administrator 2"`
+	Superadmin2Password string `env:"SUPERADMIN2_PASSWORD"`
 
 	MinioEndpoint  string `env:"MINIO_ENDPOINT"   envDefault:"minio:9000"`
 	MinioAccessKey string `env:"MINIO_ACCESS_KEY"`

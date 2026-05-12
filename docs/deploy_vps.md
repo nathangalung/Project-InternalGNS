@@ -105,6 +105,12 @@ SUPERADMIN_EMAIL=admin@globalsakti.com
 SUPERADMIN_NAME=Administrator
 SUPERADMIN_PASSWORD=<choose a long passphrase, change after first login>
 
+# Optional second superadmin (e.g. backup operator). Both fields required;
+# leave EMAIL or PASSWORD empty to skip the second seed.
+SUPERADMIN2_EMAIL=backup-admin@globalsakti.com
+SUPERADMIN2_NAME=Backup Administrator
+SUPERADMIN2_PASSWORD=<another long passphrase, also change after first login>
+
 MINIO_USER=minioadmin
 MINIO_PASSWORD=<from openssl rand>
 
