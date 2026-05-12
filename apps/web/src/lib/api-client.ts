@@ -57,6 +57,27 @@ export async function apiRequest<T>(input: RequestInput): Promise<T> {
 
 export type PaginatedList<T> = { rows: T[]; total: number }
 
+type QueryValue = string | number | boolean | undefined | null | (string | number)[]
+
+// Encode a flat params object into a query string. Skips empty strings,
+// undefined and null. Arrays are CSV-joined. Booleans/numbers stringify.
+export function buildQuery(params: Record<string, QueryValue>): string {
+  const search = new URLSearchParams()
+  for (const [k, v] of Object.entries(params)) {
+    if (v === undefined || v === null) continue
+    if (Array.isArray(v)) {
+      if (v.length > 0) search.set(k, v.join(","))
+      continue
+    }
+    if (typeof v === "string") {
+      if (v) search.set(k, v)
+      continue
+    }
+    search.set(k, String(v))
+  }
+  return search.toString()
+}
+
 // Returns rows + total from X-Total-Count. Falls back to rows.length if absent.
 export async function apiList<T>(input: RequestInput): Promise<PaginatedList<T>> {
   const res = await doFetch(input)

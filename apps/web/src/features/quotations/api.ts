@@ -1,4 +1,4 @@
-import { apiList, apiRequest, type PaginatedList } from "@/lib/api-client"
+import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
 import type {
   CanonicalStatus,
   QuotationCreateInput,
@@ -13,22 +13,9 @@ import type {
   QuotationUpdateInput,
 } from "@/types/api"
 
-// Build list query string.
 function buildListQuery(params: QuotationListParams): string {
-  const search = new URLSearchParams()
-  if (params.q) search.set("q", params.q)
-  if (params.statuses && params.statuses.length > 0) {
-    search.set("status", params.statuses.join(","))
-  }
-  if (params.dateFrom) search.set("dateFrom", params.dateFrom)
-  if (params.dateTo) search.set("dateTo", params.dateTo)
-  if (params.minTotal) search.set("minTotal", params.minTotal)
-  if (params.maxTotal) search.set("maxTotal", params.maxTotal)
-  if (params.sortBy) search.set("sortBy", params.sortBy)
-  if (params.sortDir) search.set("sortDir", params.sortDir)
-  if (params.limit !== undefined) search.set("limit", String(params.limit))
-  if (params.offset !== undefined) search.set("offset", String(params.offset))
-  return search.toString()
+  const { statuses, ...rest } = params
+  return buildQuery({ ...rest, status: statuses })
 }
 
 export async function list(

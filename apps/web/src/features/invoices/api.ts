@@ -1,4 +1,4 @@
-import { apiList, apiRequest, type PaginatedList } from "@/lib/api-client"
+import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
 import type {
   InvoiceBackendRow,
   InvoiceBackendStatus,
@@ -20,24 +20,6 @@ export type ListParams = {
   sortDir?: "asc" | "desc"
   limit?: number
   offset?: number
-}
-
-function buildQuery(params: ListParams): string {
-  const search = new URLSearchParams()
-  if (params.q) search.set("q", params.q)
-  if (params.status) search.set("status", params.status)
-  if (params.effectiveStatus) search.set("effectiveStatus", params.effectiveStatus)
-  if (params.dateFrom) search.set("dateFrom", params.dateFrom)
-  if (params.dateTo) search.set("dateTo", params.dateTo)
-  if (params.dueFrom) search.set("dueFrom", params.dueFrom)
-  if (params.dueTo) search.set("dueTo", params.dueTo)
-  if (params.minTotal) search.set("minTotal", params.minTotal)
-  if (params.maxTotal) search.set("maxTotal", params.maxTotal)
-  if (params.sortBy) search.set("sortBy", params.sortBy)
-  if (params.sortDir) search.set("sortDir", params.sortDir)
-  if (params.limit !== undefined) search.set("limit", String(params.limit))
-  if (params.offset !== undefined) search.set("offset", String(params.offset))
-  return search.toString()
 }
 
 export async function list(params: ListParams = {}): Promise<PaginatedList<InvoiceBackendRow>> {
