@@ -1,7 +1,7 @@
 name: internalgns
 
 services:
-  postgres:
+  gns-postgres:
     image: postgres:18.3-alpine
     environment:
       POSTGRES_DB: ${DB_NAME}
@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
     networks: [internal]
 
-  minio:
+  gns-minio:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     environment:
       MINIO_ROOT_USER: ${MINIO_USER}
@@ -50,7 +50,7 @@ services:
       ENV: production
       HTTP_ADDR: :8080
       TZ: Asia/Jakarta
-      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@gns-postgres:5432/${DB_NAME}?sslmode=disable
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRY: 24h
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
@@ -60,16 +60,17 @@ services:
       SUPERADMIN2_EMAIL: ${SUPERADMIN2_EMAIL:-}
       SUPERADMIN2_NAME: ${SUPERADMIN2_NAME:-}
       SUPERADMIN2_PASSWORD: ${SUPERADMIN2_PASSWORD:-}
-      MINIO_ENDPOINT: minio:9000
+      MINIO_ENDPOINT: gns-minio:9000
       MINIO_ACCESS_KEY: ${MINIO_USER}
       MINIO_SECRET_KEY: ${MINIO_PASSWORD}
       CORETAX_SELLER_TIN: ${CORETAX_SELLER_TIN}
       CORETAX_SELLER_IDTKU: ${CORETAX_SELLER_IDTKU}
     depends_on:
-      postgres: { condition: service_healthy }
-      minio:    { condition: service_healthy }
+      gns-postgres: { condition: service_healthy }
+      gns-minio:    { condition: service_healthy }
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
       - "traefik.http.routers.internalgns-api.rule=Host(`${API_HOST}`)"
       - "traefik.http.routers.internalgns-api.entrypoints=websecure"
       - "traefik.http.routers.internalgns-api.tls.certresolver=letsencrypt"
@@ -81,6 +82,7 @@ services:
     image: ghcr.io/${GH_OWNER}/internalgns-web:${TAG:-latest}
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
       - "traefik.http.routers.internalgns-web.rule=Host(`${WEB_HOST}`)"
       - "traefik.http.routers.internalgns-web.entrypoints=websecure"
       - "traefik.http.routers.internalgns-web.tls.certresolver=letsencrypt"
