@@ -30,8 +30,6 @@ interface Step2ProductProps {
   quotationId?: number
 }
 
-// CSV → AOA → MatchRowInput[] handled by parseProductFile (xlsx + csv).
-
 export default function Step2Product({
   products,
   deleteProduct,
@@ -67,10 +65,10 @@ export default function Step2Product({
     e.target.value = ""
 
     const lower = file.name.toLowerCase()
-    const supported = lower.endsWith(".xlsx") || lower.endsWith(".xls") || lower.endsWith(".csv")
+    const supported = lower.endsWith(".xlsx") || lower.endsWith(".csv")
     if (!supported) {
       setImportMsg({
-        text: "Format file tidak didukung. Gunakan .csv, .xlsx, atau .xls.",
+        text: "Format file tidak didukung. Gunakan .csv atau .xlsx (simpan ulang file .xls sebagai .xlsx).",
         ok: false,
       })
       setTimeout(() => setImportMsg(null), 4000)
@@ -143,7 +141,7 @@ export default function Step2Product({
           <input
             ref={importFileRef}
             type="file"
-            accept=".csv,.xlsx,.xls"
+            accept=".csv,.xlsx"
             style={{ display: "none" }}
             onChange={handleImportFile}
           />
