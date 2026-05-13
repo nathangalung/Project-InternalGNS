@@ -78,7 +78,7 @@ services:
     restart: unless-stopped
     networks: [internal, dokploy-network]
 
-  web:
+  frontend:
     image: ghcr.io/${GH_OWNER}/internalgns-web:${TAG:-latest}
     labels:
       - "traefik.enable=true"
