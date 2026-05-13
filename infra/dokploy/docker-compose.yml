@@ -82,7 +82,6 @@ services:
     image: ghcr.io/${GH_OWNER}/internalgns-web:${TAG:-latest}
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=dokploy-network"
       - "traefik.http.routers.internalgns-web.rule=Host(`${WEB_HOST}`)"
       - "traefik.http.routers.internalgns-web.entrypoints=websecure"
       - "traefik.http.routers.internalgns-web.tls.certresolver=letsencrypt"
