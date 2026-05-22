@@ -1,5 +1,12 @@
-import { apiList, apiRequest, type PaginatedList } from "@/lib/api-client"
-import type { ClientRow, ClientSearchHit, ClientSummary, ContactRow } from "@/types/api"
+import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
+import type {
+  ClientRow,
+  ClientSearchHit,
+  ClientSummary,
+  ContactRow,
+  PresignDownload,
+  PresignUpload,
+} from "@/types/api"
 
 export async function summary(): Promise<ClientSummary> {
   return apiRequest<ClientSummary>({ path: "/clients/summary" })
@@ -17,16 +24,16 @@ export type ClientListParams = {
 }
 
 export async function list(params: ClientListParams = {}): Promise<PaginatedList<ClientRow>> {
-  const search = new URLSearchParams()
-  if (params.q) search.set("q", params.q)
-  if (params.isActive !== undefined) search.set("isActive", String(params.isActive))
-  if (params.countryCode) search.set("countryCode", params.countryCode)
-  if (params.minTotal) search.set("minTotal", params.minTotal)
-  if (params.sortBy) search.set("sortBy", params.sortBy)
-  if (params.sortDir) search.set("sortDir", params.sortDir)
-  if (params.limit !== undefined) search.set("limit", String(params.limit))
-  if (params.offset !== undefined) search.set("offset", String(params.offset))
-  const qs = search.toString()
+  const qs = buildQuery({
+    q: params.q,
+    isActive: params.isActive,
+    countryCode: params.countryCode,
+    minTotal: params.minTotal,
+    sortBy: params.sortBy,
+    sortDir: params.sortDir,
+    limit: params.limit,
+    offset: params.offset,
+  })
   return apiList<ClientRow>({ path: `/clients${qs ? `?${qs}` : ""}` })
 }
 
@@ -38,10 +45,8 @@ export async function search(
   q: string,
   options: { minScore?: number; limit?: number } = {},
 ): Promise<ClientSearchHit[]> {
-  const params = new URLSearchParams({ q })
-  if (options.minScore !== undefined) params.set("minScore", String(options.minScore))
-  if (options.limit !== undefined) params.set("limit", String(options.limit))
-  return apiRequest<ClientSearchHit[]>({ path: `/clients/search?${params.toString()}` })
+  const qs = buildQuery({ q, minScore: options.minScore, limit: options.limit })
+  return apiRequest<ClientSearchHit[]>({ path: `/clients/search?${qs}` })
 }
 
 type CreateClientInput = {
@@ -99,24 +104,13 @@ export async function createContact(
   })
 }
 
-export type PresignLogoUpload = {
-  uploadUrl: string
-  objectKey: string
-  expiresAt: number
-}
-
-export type PresignLogoDownload = {
-  downloadUrl: string
-  expiresAt: number
-}
-
-export async function presignLogoUpload(id: number, fileName: string): Promise<PresignLogoUpload> {
+export async function presignLogoUpload(id: number, fileName: string): Promise<PresignUpload> {
   const qs = new URLSearchParams({ fileName }).toString()
-  return apiRequest<PresignLogoUpload>({ path: `/clients/${id}/logo/upload-url?${qs}` })
+  return apiRequest<PresignUpload>({ path: `/clients/${id}/logo/upload-url?${qs}` })
 }
 
-export async function presignLogoDownload(id: number): Promise<PresignLogoDownload> {
-  return apiRequest<PresignLogoDownload>({ path: `/clients/${id}/logo/download-url` })
+export async function presignLogoDownload(id: number): Promise<PresignDownload> {
+  return apiRequest<PresignDownload>({ path: `/clients/${id}/logo/download-url` })
 }
 
 export async function updateLogo(id: number, objectKey: string): Promise<void> {

@@ -5,6 +5,7 @@ on:
     branches: [main]
   push:
     branches: [main]
+    tags: ["v*.*.*"]
 
 permissions:
   contents: read
@@ -58,6 +59,13 @@ jobs:
           DATABASE_URL: postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable
         run: go test ./... -race -count=1 -p=1
 
+      - name: govulncheck
+        uses: golang/govulncheck-action@v1
+        with:
+          go-version-file: apps/api/go.mod
+          go-package: ./...
+          work-dir: apps/api
+
   frontend:
     name: frontend (web)
     runs-on: ubuntu-24.04
@@ -75,6 +83,12 @@ jobs:
       - name: install deps
         run: bun install --frozen-lockfile
 
+      - name: audit deps
+        run: bun audit --prod
+
+      - name: openapi codegen drift
+        run: bun run codegen:check
+
       - name: lint
         run: bun run lint
 
@@ -86,12 +100,130 @@ jobs:
           VITE_API_URL: /api/v1
         run: bun run build
 
+  lighthouse:
+    name: lighthouse (all pages)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    needs: [frontend, backend]
+    services:
+      postgres:
+        image: postgres:18.3-alpine
+        env:
+          POSTGRES_DB: gns_quotation
+          POSTGRES_USER: gns_app
+          POSTGRES_PASSWORD: gns_app
+          TZ: Asia/Jakarta
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U gns_app -d gns_quotation"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable
+      HTTP_ADDR: ":8080"
+      JWT_SECRET: ci_lighthouse_secret_do_not_use_in_prod
+      JWT_EXPIRY: 1h
+      CORS_ALLOWED_ORIGINS: "*"
+      SUPERADMIN_EMAIL: admin@globalsakti.com
+      SUPERADMIN_NAME: Administrator
+      SUPERADMIN_PASSWORD: AdminGNS123!
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: apps/api/go.mod
+          cache-dependency-path: apps/api/go.sum
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: apps/web/package.json
+
+      - name: bootstrap api (migrate + seed)
+        working-directory: apps/api
+        run: go run ./cmd/api --bootstrap
+
+      - name: start api
+        working-directory: apps/api
+        run: |
+          go run ./cmd/api > /tmp/api.log 2>&1 &
+          echo "API_PID=$!" >> "$GITHUB_ENV"
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8080/healthz > /dev/null; then
+              echo "api ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "api never became ready"
+          cat /tmp/api.log
+          exit 1
+
+      - name: install web deps
+        working-directory: apps/web
+        run: bun install --frozen-lockfile
+
+      - name: install chrome
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: build web
+        working-directory: apps/web
+        env:
+          VITE_API_URL: http://127.0.0.1:8080/api/v1
+        run: bun run build
+
+      - name: run lhci
+        working-directory: apps/web
+        env:
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+          LHCI_API_URL: http://127.0.0.1:8080/api/v1
+          LHCI_EMAIL: admin@globalsakti.com
+          LHCI_PASSWORD: AdminGNS123!
+        run: bun run lighthouse
+
+      - name: dump api log on failure
+        if: failure()
+        run: tail -200 /tmp/api.log || true
+
+      - name: stop api
+        if: always()
+        run: kill $API_PID 2>/dev/null || true
+
+      - name: upload lhci report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: apps/web/.lighthouseci
+          retention-days: 14
+
+  security:
+    name: filesystem scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: trivy fs scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+          skip-dirs: apps/web/node_modules,apps/web/dist
+
   images:
     name: build images (smoke)
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     needs: [backend, frontend]
-    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
 
@@ -103,6 +235,8 @@ jobs:
           context: ./apps/api
           push: false
           tags: internalgns-api:ci
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
 
       - name: build web image
         uses: docker/build-push-action@v6
@@ -112,3 +246,5 @@ jobs:
           build-args: |
             VITE_API_URL=/api/v1
           tags: internalgns-web:ci
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max

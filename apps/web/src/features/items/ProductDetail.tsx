@@ -1,5 +1,10 @@
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
+import {
+  dropdownItemStyle,
+  dropdownLabelStyle,
+  dropdownPanelStyleCompact as dropdownPanelStyle,
+} from "@/components/shared/filter-styles"
 import Sidebar from "@/components/shared/Sidebar"
 import AddVendorToItemModal from "@/features/items/AddVendorToItemModal"
 import {
@@ -10,6 +15,7 @@ import {
 } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
 import { ApiError } from "@/lib/api-client"
+import { logoBackground } from "@/lib/avatar"
 import { formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import type { ItemRow } from "@/types/api"
@@ -19,22 +25,6 @@ interface ProductDetailProps {
   onNavigate: (page: Page) => void
   onBack: () => void
   onLogout: () => void
-}
-
-const LOGO_BG_PALETTE = [
-  "#1E293B",
-  "#334155",
-  "#475569",
-  "#3730A3",
-  "#4338CA",
-  "#0F766E",
-  "#7C2D12",
-]
-
-function hashCode(s: string): number {
-  let h = 0
-  for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i)
-  return Math.abs(h)
 }
 
 function productInitials(name: string): string {
@@ -69,43 +59,6 @@ const inputStyle: CSSProperties = {
   color: "#191C1E",
   outline: "none",
   transition: "border-color 0.15s",
-}
-
-const dropdownPanelStyle: CSSProperties = {
-  position: "absolute",
-  top: "calc(100% + 4px)",
-  left: 0,
-  right: 0,
-  background: "#FFFFFF",
-  border: "1px solid rgba(204, 195, 216, 0.4)",
-  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-  borderRadius: "8px",
-  display: "flex",
-  flexDirection: "column",
-  padding: "4px 0",
-  zIndex: 50,
-}
-
-const dropdownItemStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 12,
-  padding: "10px 20px",
-  width: "100%",
-  background: "transparent",
-  border: "none",
-  cursor: "pointer",
-  textAlign: "left",
-}
-
-function dropdownLabelStyle(active: boolean): CSSProperties {
-  return {
-    fontFamily: "'Inter', sans-serif",
-    fontWeight: active ? 700 : 500,
-    fontSize: "14px",
-    color: active ? "#630ED4" : "#4A4455",
-  }
 }
 
 export default function ProductDetail({
@@ -190,7 +143,7 @@ export default function ProductDetail({
       .slice(0, 5)
   }, [units, unitQuery])
 
-  const logoBg = LOGO_BG_PALETTE[hashCode(product.name) % LOGO_BG_PALETTE.length]
+  const logoBg = logoBackground(product.name)
 
   const handleCancel = () => {
     setName(product.name)

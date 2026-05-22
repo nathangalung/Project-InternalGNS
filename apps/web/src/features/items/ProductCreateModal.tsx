@@ -1,4 +1,10 @@
-import { type CSSProperties, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
+import { CheckIcon } from "@/components/document/icons"
+import {
+  dropdownItemStyle,
+  dropdownLabelStyle,
+  dropdownPanelStyle,
+} from "@/components/shared/filter-styles"
 import { useCreateItem } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
 
@@ -14,56 +20,6 @@ interface ProductCreateModalProps {
   onOpenChange: (open: boolean) => void
   onSuccess?: (data: ProductCreateModalData) => void
 }
-
-const dropdownPanelStyle: CSSProperties = {
-  position: "absolute",
-  top: "calc(100% + 4px)",
-  left: 0,
-  right: 0,
-  background: "#FFFFFF",
-  border: "1px solid rgba(204, 195, 216, 0.2)",
-  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-  borderRadius: "8px",
-  display: "flex",
-  flexDirection: "column",
-  padding: "8px 0",
-  zIndex: 50,
-}
-
-const dropdownItemStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 12,
-  padding: "10px 20px",
-  width: "100%",
-  background: "transparent",
-  border: "none",
-  cursor: "pointer",
-  textAlign: "left",
-}
-
-function dropdownLabelStyle(active: boolean): CSSProperties {
-  return {
-    fontFamily: "'Inter', sans-serif",
-    fontWeight: active ? 700 : 500,
-    fontSize: "14px",
-    lineHeight: "20px",
-    color: active ? "#630ED4" : "#4A4455",
-  }
-}
-
-const CheckmarkIcon = () => (
-  <svg width="14" height="11" viewBox="0 0 14 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M1 5.5L4.5 9L13 1"
-      stroke="#630ED4"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
 
 export default function ProductCreateModal({
   open,
@@ -263,7 +219,7 @@ export default function ProductCreateModal({
                             }}
                           >
                             <span style={dropdownLabelStyle(active)}>{label}</span>
-                            {active && <CheckmarkIcon />}
+                            {active && <CheckIcon />}
                           </button>
                         )
                       })

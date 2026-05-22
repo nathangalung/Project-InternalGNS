@@ -1,3 +1,10 @@
+// NaN-safe string/null → number coercion.
+export function toNum(v: string | number | null | undefined): number {
+  if (v == null || v === "") return 0
+  const n = typeof v === "number" ? v : Number(v)
+  return Number.isFinite(n) ? n : 0
+}
+
 // Currency + number formatters.
 export function formatRupiah(value: string | number | null | undefined, fallback = "Rp0"): string {
   if (value === null || value === undefined || value === "") return fallback

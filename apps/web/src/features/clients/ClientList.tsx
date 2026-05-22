@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import EntityLogo from "@/components/shared/EntityLogo"
+import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
@@ -12,6 +13,7 @@ import { useCountries } from "@/features/countries/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { formatNumber, formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
+import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import type { ClientRow } from "@/types/api"
 
 interface ClientListProps {
@@ -19,9 +21,6 @@ interface ClientListProps {
   onLogout: () => void
   onViewDetail?: (id: number) => void
 }
-
-const STATUS_AKTIF = { label: "AKTIF", bg: "#D1FAE5", color: "#047857" }
-const STATUS_NONAKTIF = { label: "NONAKTIF", bg: "#FEE2E2", color: "#B91C1C" }
 
 export default function ClientList({ onNavigate, onLogout, onViewDetail }: ClientListProps) {
   const { data: countriesData } = useCountries()
@@ -211,7 +210,7 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
                 )}
                 {!isLoading &&
                   currentRows.map((c: ClientRow) => {
-                    const status = c.isActive ? STATUS_AKTIF : STATUS_NONAKTIF
+                    const status = c.isActive ? BADGE_AKTIF : BADGE_NONAKTIF
                     return (
                       <tr key={c.id} className="tbl-row">
                         <td className="tbl-td">
@@ -271,19 +270,7 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
                             style={{ color: "#7C3AED" }}
                             onClick={() => onViewDetail?.(c.id)}
                           >
-                            <svg
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
+                            <EyeIcon />
                           </button>
                         </td>
                       </tr>

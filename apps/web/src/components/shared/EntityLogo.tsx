@@ -1,10 +1,4 @@
-const PALETTE = ["#1E293B", "#334155", "#475569", "#3730A3", "#4338CA", "#0F766E", "#7C2D12"]
-
-function hashCode(s: string): number {
-  let h = 0
-  for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i)
-  return Math.abs(h)
-}
+import { logoBackground } from "@/lib/avatar"
 
 function initials(name: string): string {
   const parts = name
@@ -18,7 +12,7 @@ function initials(name: string): string {
 }
 
 export default function EntityLogo({ name }: { name: string }) {
-  const bg = PALETTE[hashCode(name) % PALETTE.length]
+  const bg = logoBackground(name)
   return (
     <div
       style={{

@@ -1,5 +1,6 @@
 import { type CSSProperties, useEffect, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
+import { dropdownItemStyle, dropdownLabelStyle } from "@/components/shared/filter-styles"
 import Sidebar from "@/components/shared/Sidebar"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import {
@@ -9,6 +10,7 @@ import {
 } from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
 import { ApiError } from "@/lib/api-client"
+import { logoBackground } from "@/lib/avatar"
 import type { Page } from "@/lib/page"
 import type { ClientRow } from "@/types/api"
 
@@ -17,22 +19,6 @@ interface ClientDetailProps {
   onNavigate: (page: Page) => void
   onBack: () => void
   onLogout: () => void
-}
-
-const LOGO_BG_PALETTE = [
-  "#1E293B",
-  "#334155",
-  "#475569",
-  "#3730A3",
-  "#4338CA",
-  "#0F766E",
-  "#7C2D12",
-]
-
-function hashCode(s: string): number {
-  let h = 0
-  for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i)
-  return Math.abs(h)
 }
 
 const labelStyle: CSSProperties = {
@@ -77,28 +63,6 @@ const dropdownPanelStyle: CSSProperties = {
   zIndex: 50,
   maxHeight: "260px",
   overflowY: "auto",
-}
-
-const dropdownItemStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 12,
-  padding: "10px 20px",
-  width: "100%",
-  background: "transparent",
-  border: "none",
-  cursor: "pointer",
-  textAlign: "left",
-}
-
-function dropdownLabelStyle(active: boolean): CSSProperties {
-  return {
-    fontFamily: "'Inter', sans-serif",
-    fontWeight: active ? 700 : 500,
-    fontSize: "14px",
-    color: active ? "#630ED4" : "#4A4455",
-  }
 }
 
 export default function ClientDetail({ client, onNavigate, onBack, onLogout }: ClientDetailProps) {
@@ -203,7 +167,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
     }
   }
 
-  const logoBg = LOGO_BG_PALETTE[hashCode(client.name) % LOGO_BG_PALETTE.length]
+  const logoBg = logoBackground(client.name)
 
   function handleLogoSelect(file: File | undefined) {
     if (!file) return

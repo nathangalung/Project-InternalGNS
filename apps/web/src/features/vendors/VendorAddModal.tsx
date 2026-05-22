@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useCreateVendor } from "@/features/vendors/hooks"
 import { ApiError } from "@/lib/api-client"
+import { disabledStyle } from "@/lib/styles"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
 
 interface VendorAddModalProps {
@@ -24,8 +25,6 @@ function isValidAddress(s: string): boolean {
   const t = s.trim()
   return t.length >= 20 && /[a-zA-Z]/.test(t)
 }
-
-const disabledStyle = { opacity: 0.6, cursor: "not-allowed" as const, backgroundColor: "#F7F7F8" }
 
 export default function VendorAddModal({
   open,

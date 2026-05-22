@@ -24,6 +24,7 @@ WORKDIR /app
 COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /out/api /app/api
+COPY --from=build /src/templates /app/templates
 
 USER nonroot:nonroot
 ENV TZ=Asia/Jakarta

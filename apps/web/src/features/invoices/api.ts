@@ -1,10 +1,15 @@
-import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
+import { apiList, apiRequest, buildQuery, nullOn404, type PaginatedList } from "@/lib/api-client"
 import type {
   InvoiceBackendRow,
   InvoiceBackendStatus,
   InvoiceItemRow,
   InvoiceSummary,
+  PresignDownload,
+  PresignUpload,
 } from "@/types/api"
+
+export type PresignAttachmentUpload = PresignUpload
+export type PresignAttachmentDownload = PresignDownload
 
 export type ListParams = {
   q?: string
@@ -36,16 +41,9 @@ export async function listItems(id: number): Promise<InvoiceItemRow[]> {
 }
 
 export async function getByQuotation(quotationId: number): Promise<InvoiceBackendRow | null> {
-  try {
-    return await apiRequest<InvoiceBackendRow>({
-      path: `/invoices/by-quotation/${quotationId}`,
-    })
-  } catch (err) {
-    if (err instanceof Error && "status" in err && (err as { status: number }).status === 404) {
-      return null
-    }
-    throw err
-  }
+  return nullOn404(() =>
+    apiRequest<InvoiceBackendRow>({ path: `/invoices/by-quotation/${quotationId}` }),
+  )
 }
 
 export async function changeStatus(id: number, status: InvoiceBackendStatus): Promise<void> {
@@ -54,17 +52,6 @@ export async function changeStatus(id: number, status: InvoiceBackendStatus): Pr
     method: "PATCH",
     body: { status },
   })
-}
-
-export type PresignAttachmentUpload = {
-  uploadUrl: string
-  objectKey: string
-  expiresAt: number
-}
-
-export type PresignAttachmentDownload = {
-  downloadUrl: string
-  expiresAt: number
 }
 
 export async function presignAttachmentUpload(

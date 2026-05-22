@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
@@ -201,18 +202,27 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	perTier := limit * 2
 
-	items, err := h.repo.Search(ctx, q, minScore, perTier)
-	if err != nil {
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	offers, err := h.repo.SearchVendorOffers(ctx, q, perTier)
-	if err != nil {
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	requests, err := h.repo.SearchRequestHistory(ctx, q, perTier)
-	if err != nil {
+	var items []SearchResult
+	var offers []VendorOfferHit
+	var requests []RequestHistoryHit
+
+	eg, egCtx := errgroup.WithContext(ctx)
+	eg.Go(func() error {
+		var err error
+		items, err = h.repo.Search(egCtx, q, minScore, perTier)
+		return err
+	})
+	eg.Go(func() error {
+		var err error
+		offers, err = h.repo.SearchVendorOffers(egCtx, q, perTier)
+		return err
+	})
+	eg.Go(func() error {
+		var err error
+		requests, err = h.repo.SearchRequestHistory(egCtx, q, perTier)
+		return err
+	})
+	if err := eg.Wait(); err != nil {
 		httperr.RenderDBErr(w, err)
 		return
 	}
@@ -479,6 +489,10 @@ func (h *Handler) PresignImageUpload(w http.ResponseWriter, r *http.Request) {
 	fileName := strings.TrimSpace(r.URL.Query().Get("fileName"))
 	if fileName == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "required"}))
+		return
+	}
+	if err := storage.ValidateAssetFileName(storage.BucketItemImages, fileName); err != nil {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "unsupported file type"}))
 		return
 	}
 	objectKey := storage.BuildObjectKey("items", id, fileName)

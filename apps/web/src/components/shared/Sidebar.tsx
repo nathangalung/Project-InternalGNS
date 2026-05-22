@@ -1,4 +1,12 @@
+import { useMe } from "@/features/auth/hooks"
 import type { Page } from "@/lib/page"
+import type { Role } from "@/types/api"
+
+const ROLE_LABEL: Record<Role, string> = {
+  superadmin: "Super Admin",
+  operational: "Operasional",
+  finance: "Finance",
+}
 
 const logoImg = "/logo.png"
 
@@ -99,6 +107,7 @@ function NavIcon({ name }: { name: string }) {
 }
 
 export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarProps) {
+  const { data: me } = useMe()
   return (
     <aside className="admin-sidebar">
       <div className="sidebar-brand">
@@ -124,8 +133,8 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
 
       <div className="sidebar-footer">
         <div className="sidebar-user-info">
-          <div className="sidebar-user-name">Bryan P. Hutagalung</div>
-          <div className="sidebar-user-role">Admin</div>
+          <div className="sidebar-user-name">{me?.name ?? ""}</div>
+          <div className="sidebar-user-role">{me?.role ? ROLE_LABEL[me.role] : ""}</div>
         </div>
         <button className="logout-btn" onClick={onLogout} title="Keluar">
           <svg

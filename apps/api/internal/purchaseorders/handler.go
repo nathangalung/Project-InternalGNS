@@ -308,6 +308,10 @@ func (h *Handler) PresignUpload(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "required"}))
 		return
 	}
+	if err := storage.ValidateAssetFileName(storage.BucketPODocs, fileName); err != nil {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "unsupported file type"}))
+		return
+	}
 	objectKey := storage.BuildObjectKey("po", id, fileName)
 	url, err := h.storage.PresignPut(r.Context(), storage.BucketPODocs, objectKey, uploadURLExpiry)
 	if err != nil {

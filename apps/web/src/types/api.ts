@@ -2,7 +2,7 @@ export type Role = "superadmin" | "operational" | "finance"
 
 export type CanonicalStatus = "draft" | "sent" | "accepted" | "rejected" | "revision" | "expired"
 
-type MeUser = {
+export type MeUser = {
   id: number
   email: string
   name: string
@@ -560,4 +560,16 @@ export type DashboardMetric = "quotation" | "invoice" | "revenue" | "profit" | "
 export type DashboardTimeseriesPoint = {
   month: string
   value: string
+}
+
+export type PresignUpload = {
+  uploadUrl: string
+  objectKey: string
+  expiresAt: number
+}
+
+export type PresignDownload = {
+  downloadUrl: string
+  fileName?: string
+  expiresAt: number
 }

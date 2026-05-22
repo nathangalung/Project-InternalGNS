@@ -7,6 +7,7 @@ import {
 } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
 import { useCreateVendor } from "@/features/vendors/hooks"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import ProductCreateModal from "../ProductCreateModal"
 import {
   type CatalogItem,
@@ -61,11 +62,13 @@ export default function ProductAdd({
 
   const productQueryRaw = form.kodeImpaNama.trim()
   const requestQueryRaw = form.requestedKodeImpaNama.trim()
-  const { data: searchResp } = useItemSearchAdvanced(productQueryRaw, { limit: 10 })
-  const { data: requestSearchResp } = useItemSearchAdvanced(requestQueryRaw, { limit: 10 })
+  const productQueryDebounced = useDebouncedValue(productQueryRaw, 250)
+  const requestQueryDebounced = useDebouncedValue(requestQueryRaw, 250)
+  const { data: searchResp } = useItemSearchAdvanced(productQueryDebounced, { limit: 10 })
+  const { data: requestSearchResp } = useItemSearchAdvanced(requestQueryDebounced, { limit: 10 })
   const { data: itemsAll } = useItems({ limit: 50 })
   const productCatalog: CatalogItem[] = useMemo(() => {
-    if (productQueryRaw.length > 0) {
+    if (productQueryDebounced.length > 0) {
       return (searchResp?.hits ?? []).map((h) => ({
         id: h.id,
         kode: h.impaCode ?? "",
@@ -79,10 +82,10 @@ export default function ProductAdd({
       nama: r.name,
       defaultUnitId: r.defaultUnitId,
     }))
-  }, [productQueryRaw, searchResp, itemsAll])
+  }, [productQueryDebounced, searchResp, itemsAll])
 
   const requestCatalog: CatalogItem[] = useMemo(() => {
-    if (requestQueryRaw.length > 0) {
+    if (requestQueryDebounced.length > 0) {
       return (requestSearchResp?.hits ?? []).map((h) => ({
         id: h.id,
         kode: h.impaCode ?? "",
@@ -96,7 +99,7 @@ export default function ProductAdd({
       nama: r.name,
       defaultUnitId: r.defaultUnitId,
     }))
-  }, [requestQueryRaw, requestSearchResp, itemsAll])
+  }, [requestQueryDebounced, requestSearchResp, itemsAll])
 
   const { data: vendorRows } = useItemVendors(pickedItemId ?? undefined)
   const vendorOptions: VendorOption[] = useMemo(() => {
@@ -219,27 +222,8 @@ export default function ProductAdd({
     onOpenChange(false)
   }
 
-  const productQuery = form.kodeImpaNama.trim().toLowerCase()
-  const productMatches = productQuery
-    ? productCatalog
-        .filter(
-          (p) =>
-            p.kode.toLowerCase().includes(productQuery) ||
-            p.nama.toLowerCase().includes(productQuery),
-        )
-        .slice(0, 3)
-    : productCatalog.slice(0, 3)
-
-  const requestQuery = form.requestedKodeImpaNama.trim().toLowerCase()
-  const requestMatches = requestQuery
-    ? requestCatalog
-        .filter(
-          (p) =>
-            p.kode.toLowerCase().includes(requestQuery) ||
-            p.nama.toLowerCase().includes(requestQuery),
-        )
-        .slice(0, 5)
-    : requestCatalog.slice(0, 5)
+  const productMatches = productCatalog.slice(0, 3)
+  const requestMatches = requestCatalog.slice(0, 5)
 
   const activeProductLabel =
     form.kodeImpaNama.trim().length > 0

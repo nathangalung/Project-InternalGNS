@@ -30,6 +30,9 @@ export function labelToStatus(label: StatusLabel): CanonicalStatus {
   return canonicalByLabel[label]
 }
 
+export const BADGE_AKTIF = { label: "AKTIF", bg: "#D1FAE5", color: "#047857" }
+export const BADGE_NONAKTIF = { label: "NONAKTIF", bg: "#FEE2E2", color: "#B91C1C" }
+
 // Quotation labels that render.
 export type DisplayStatus = Exclude<StatusLabel, "Kadaluarsa">
 

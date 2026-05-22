@@ -11,8 +11,10 @@ import Step2Product from "@/features/quotations/Step2Product"
 import Step3Shipping from "@/features/quotations/Step3Shipping"
 import Step4Summary from "@/features/quotations/Step4Summary"
 import { useUnits } from "@/features/units/hooks"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
 import type { Page } from "@/lib/page"
+import { disabledStyle } from "@/lib/styles"
 import type { PoItemInput, PoUpdateItemsInput } from "@/types/api"
 
 interface PurchaseOrderEditProps {
@@ -87,12 +89,6 @@ export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: Purcha
   let isNextDisabled = false
   if (step === 1) isNextDisabled = selectedClient === ""
 
-  const disabledStyle: React.CSSProperties = {
-    opacity: 0.6,
-    cursor: "not-allowed",
-    backgroundColor: "#F7F7F8",
-  }
-
   function deleteProduct(id: number) {
     setProducts((prev) => prev.filter((p) => p.id !== id))
   }
@@ -104,16 +100,17 @@ export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: Purcha
   const updateMutation = useUpdatePoItems()
 
   const trimmedSearch = search.trim()
+  const debouncedSearch = useDebouncedValue(trimmedSearch, 250)
   const { data: clientsData } = useClients({ limit: 50 })
-  const { data: searchHits } = useClientSearch(trimmedSearch, { limit: 30 })
+  const { data: searchHits } = useClientSearch(debouncedSearch, { limit: 30 })
   const { data: unitsData } = useUnits()
 
   const remoteClients: Array<Client & { contactId?: number }> = useMemo(() => {
-    if (trimmedSearch.length > 0) {
+    if (debouncedSearch.length > 0) {
       return dedupeByCompany(searchHits ?? []).map(fromClientHit)
     }
     return (clientsData?.rows ?? []).map(fromClientRow)
-  }, [trimmedSearch, searchHits, clientsData])
+  }, [debouncedSearch, searchHits, clientsData])
 
   const baseClients: Client[] = remoteClients
   const sortedClients = [...baseClients].sort((a, b) => a.name.localeCompare(b.name, "id"))

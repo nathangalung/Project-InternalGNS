@@ -1,10 +1,12 @@
-import { type CSSProperties, useState } from "react"
+import { useState } from "react"
+import { IconCalendar } from "@/components/document/icons"
 import {
   DATE_PRESETS,
   DateInput,
   type DatePreset,
   presetToIsoRange,
 } from "@/components/shared/DateRangeField"
+import { chipStyle, presetChipStyle } from "@/components/shared/filter-styles"
 import type { PoStatus } from "./types"
 
 export type { DatePreset }
@@ -40,59 +42,6 @@ const STATUS_OPTIONS: { value: PoStatus; label: string }[] = [
   { value: "ON_PROGRESS", label: "On Progress" },
   { value: "DELIVERED", label: "Delivered" },
 ]
-
-function chipStyle(active: boolean): CSSProperties {
-  return {
-    padding: "8px 18px",
-    borderRadius: "999px",
-    border: active ? "1.5px solid #630ED4" : "1px solid #E5E7EB",
-    background: active ? "rgba(99, 14, 212, 0.06)" : "#FFFFFF",
-    cursor: "pointer",
-    fontFamily: "'Inter', sans-serif",
-    fontWeight: active ? 600 : 500,
-    fontSize: "13px",
-    color: active ? "#630ED4" : "#4A4455",
-    transition: "all 0.15s",
-  }
-}
-
-function presetChipStyle(active: boolean): CSSProperties {
-  return {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "10px 14px",
-    borderRadius: "8px",
-    border: active ? "1.5px solid #630ED4" : "1px solid #E5E7EB",
-    background: active ? "rgba(99, 14, 212, 0.06)" : "#FFFFFF",
-    cursor: "pointer",
-    fontFamily: "'Inter', sans-serif",
-    fontWeight: active ? 600 : 500,
-    fontSize: "13px",
-    color: active ? "#630ED4" : "#4A4455",
-    transition: "all 0.15s",
-  }
-}
-
-function IconCalendar() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  )
-}
 
 export default function PurchaseOrderFilter({
   onClose,

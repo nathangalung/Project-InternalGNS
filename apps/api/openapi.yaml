@@ -1,0 +1,140 @@
+openapi: 3.1.0
+info:
+  title: InternalGNS API
+  version: 0.1.0
+  description: Internal quotation, PO, and invoice system.
+servers:
+  - url: /api/v1
+    description: Versioned base path.
+security:
+  - bearerAuth: []
+paths:
+  /items/search:
+    get:
+      summary: Multi-tier product search (legacy)
+      description: Trigram + IMPA prefix match scored across tiers.
+      tags: [items]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+        - name: minScore
+          in: query
+          schema: { type: number, format: float, minimum: 0, maximum: 1, default: 0.3 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 10 }
+      responses:
+        "200":
+          description: Matched items ranked by score.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SearchResult" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /items/search-advanced:
+    get:
+      summary: Multi-tier product search with vendor offers and request history
+      description: >
+        Parallel merge of item-name trigram, vendor-offer match, and historical
+        request-text match. Each hit is labelled with the strongest contributing
+        tier and the full set of tiers that matched.
+      tags: [items]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+        - name: minScore
+          in: query
+          schema: { type: number, format: float, minimum: 0, maximum: 1, default: 0.3 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 20 }
+      responses:
+        "200":
+          description: Merged tier-ranked hits.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdvancedSearchResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    SearchResult:
+      type: object
+      required: [id, name, score, matchTier]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        impaCode: { type: string, nullable: true }
+        defaultUnitId: { type: integer, format: int32, nullable: true }
+        score: { type: number, format: float }
+        matchTier:
+          type: string
+          enum: [EXACT_IMPA, PREFIX_IMPA, TRIGRAM_NAME, VENDOR_OFFER, REQUEST_HISTORY]
+    AdvancedSearchTier:
+      type: string
+      description: Canonical tier label exposed by /items/search-advanced.
+      enum: [ITEM_AUTO, VENDOR_OFFER, ITEM_SUGGESTED, REQUEST_HISTORY, ITEM_FUZZY]
+    AdvancedSearchHit:
+      type: object
+      required: [id, name, score, tier, tiers]
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        impaCode: { type: string, nullable: true }
+        defaultUnitId: { type: integer, format: int32, nullable: true }
+        score: { type: number, format: float }
+        tier: { $ref: "#/components/schemas/AdvancedSearchTier" }
+        tiers:
+          type: array
+          items: { $ref: "#/components/schemas/AdvancedSearchTier" }
+        vendorId: { type: integer, format: int64, nullable: true }
+        vendorName: { type: string, nullable: true }
+        vendorSku: { type: string, nullable: true }
+        requestText: { type: string, nullable: true }
+    AdvancedSearchResponse:
+      type: object
+      required: [query, total, hits, counts]
+      properties:
+        query: { type: string }
+        total: { type: integer }
+        hits:
+          type: array
+          items: { $ref: "#/components/schemas/AdvancedSearchHit" }
+        counts:
+          type: object
+          additionalProperties: { type: integer }
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [message]
+          properties:
+            message: { type: string }
+            code: { type: string }
+            fields:
+              type: object
+              additionalProperties: { type: string }
+  responses:
+    BadRequest:
+      description: Request malformed.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Unauthorized:
+      description: Missing or invalid bearer token.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }

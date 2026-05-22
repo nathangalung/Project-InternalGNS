@@ -1,10 +1,10 @@
 import { type CSSProperties, useState } from "react"
+import { CheckIcon } from "@/components/document/icons"
 import {
-  CheckmarkIcon,
   dropdownItemStyle,
   dropdownLabelStyle,
   dropdownPanelStyle,
-} from "@/features/items/ProductAdd/helpers"
+} from "@/components/shared/filter-styles"
 
 export interface DashboardFilterValues {
   year: number
@@ -160,7 +160,7 @@ export default function DashboardFinancialFilter({
                           }}
                         >
                           <span style={dropdownLabelStyle(isActive)}>{y}</span>
-                          {isActive && <CheckmarkIcon />}
+                          {isActive && <CheckIcon />}
                         </button>
                       )
                     })}

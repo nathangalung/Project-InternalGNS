@@ -4,6 +4,7 @@ import Sidebar from "@/components/shared/Sidebar"
 import { toTableRow } from "@/features/quotations/adapters"
 import { useQuotations } from "@/features/quotations/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import { resolveRange } from "@/lib/date-range"
 import type { Page } from "@/lib/page"
 import { labelToStatus } from "@/lib/status"
 import type { CanonicalStatus } from "@/types/api"
@@ -27,20 +28,6 @@ interface ActiveFilters {
   statuses: StatusFilter[]
   minHarga: string
   maxHarga: string
-}
-
-function resolveRange(
-  preset: DatePreset,
-  startIso: string,
-  endIso: string,
-): { start: string; end: string } {
-  if (preset === "kustom") return { start: startIso, end: endIso }
-  const today = new Date()
-  const end = today.toISOString().slice(0, 10)
-  const start = new Date(today)
-  if (preset === "7-hari") start.setDate(start.getDate() - 7)
-  if (preset === "30-hari") start.setDate(start.getDate() - 30)
-  return { start: start.toISOString().slice(0, 10), end }
 }
 
 // Quotation list orchestrator.

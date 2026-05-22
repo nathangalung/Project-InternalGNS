@@ -1,7 +1,10 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as vendorsApi from "@/features/vendors/api"
+import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadToPresignedUrl } from "@/lib/storage-upload"
+import { toast } from "@/lib/toast"
+import { validateAsset } from "@/lib/upload-validation"
 
 export function useVendors(params: vendorsApi.VendorListParams = {}) {
   return useQuery({
@@ -41,6 +44,7 @@ export function useUpdateVendor() {
     mutationFn: ({ id, input }: { id: number; input: vendorsApi.UpdateVendorInput }) =>
       vendorsApi.update(id, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.vendors.all }),
+    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui vendor.")),
   })
 }
 
@@ -48,6 +52,7 @@ export function useUploadVendorLogo() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, file }: { id: number; file: File }) => {
+      validateAsset("vendorLogo", file)
       const presign = await vendorsApi.presignLogoUpload(id, file.name)
       await uploadToPresignedUrl(presign.uploadUrl, file)
       await vendorsApi.updateLogo(id, presign.objectKey)
@@ -56,6 +61,7 @@ export function useUploadVendorLogo() {
       qc.invalidateQueries({ queryKey: queryKeys.vendors.detail(id) })
       qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
     },
+    onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah logo vendor.")),
   })
 }
 

@@ -9,6 +9,7 @@ import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
 import { downloadPdf } from "@/lib/api-client"
+import { toNum } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import type { InvoiceBackendRow, InvoiceBackendStatus } from "@/types/api"
 import { invoiceItemsToProducts, invoiceItemsToShipping } from "../adapters"
@@ -37,12 +38,6 @@ interface InvoiceDetailProps {
   quotation?: QuotationData
   onNavigate: (page: Page) => void
   onLogout: () => void
-}
-
-function toNum(v: string | undefined | null): number {
-  if (v == null) return 0
-  const n = Number(v)
-  return Number.isFinite(n) ? n : 0
 }
 
 // Backend status to editable.

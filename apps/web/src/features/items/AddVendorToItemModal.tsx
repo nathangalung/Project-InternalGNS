@@ -1,5 +1,10 @@
-import { type CSSProperties, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
+import {
+  dropdownItemStyle,
+  dropdownLabelStyle,
+  dropdownPanelStyleCompact as dropdownPanelStyle,
+} from "@/components/shared/filter-styles"
 import { useAddVendorToItem } from "@/features/items/hooks"
 import { useVendors } from "@/features/vendors/hooks"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
@@ -9,44 +14,6 @@ interface AddVendorToItemModalProps {
   open: boolean
   itemId: number
   onOpenChange: (open: boolean) => void
-}
-
-const dropdownPanelStyle: CSSProperties = {
-  position: "absolute",
-  top: "calc(100% + 4px)",
-  left: 0,
-  right: 0,
-  background: "#FFFFFF",
-  border: "1px solid rgba(204, 195, 216, 0.4)",
-  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-  borderRadius: "8px",
-  display: "flex",
-  flexDirection: "column",
-  padding: "4px 0",
-  zIndex: 50,
-}
-
-const dropdownItemStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 12,
-  padding: "10px 20px",
-  width: "100%",
-  background: "transparent",
-  border: "none",
-  cursor: "pointer",
-  textAlign: "left",
-}
-
-function dropdownLabelStyle(active: boolean): CSSProperties {
-  return {
-    fontFamily: "'Inter', sans-serif",
-    fontWeight: active ? 700 : 500,
-    fontSize: "14px",
-    lineHeight: "20px",
-    color: active ? "#630ED4" : "#4A4455",
-  }
 }
 
 export default function AddVendorToItemModal({

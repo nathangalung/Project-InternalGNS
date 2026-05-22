@@ -6,41 +6,17 @@ import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboar
 import { toTableRow } from "@/features/quotations/adapters"
 import { useQuotations } from "@/features/quotations/hooks"
 import { statusConfig } from "@/features/quotations/QuotationList/helpers"
+import { buildSeries } from "@/lib/chart"
 import { formatNumber as formatId } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import DashboardFinancialFilter, { type DashboardFilterValues } from "./DashboardFinancialFilter"
-import TrendChart, { CHART_MONTHS } from "./TrendChart"
-
-function toNumber(v: string | undefined): number {
-  if (!v) return 0
-  const n = Number(v)
-  return Number.isFinite(n) ? n : 0
-}
+import TrendChart from "./TrendChart"
 
 const chartTabs = [
   { label: "Quotation", metric: "quotation" as const },
   { label: "Purchase Order", metric: "invoice" as const }, // PO ≈ delivered invoices proxy
   { label: "Invoice", metric: "invoice" as const },
 ]
-
-function mapToMonthIndex(month: string, baseYear: number): number {
-  const [y, m] = month.split("-").map(Number)
-  if (y !== baseYear) return -1
-  return m - 1
-}
-
-function buildSeries(
-  points: { month: string; value: string }[] | undefined,
-  baseYear: number,
-): number[] {
-  const series = new Array(CHART_MONTHS.length).fill(0)
-  if (!points) return series
-  for (const p of points) {
-    const idx = mapToMonthIndex(p.month, baseYear)
-    if (idx >= 0 && idx < series.length) series[idx] = toNumber(p.value)
-  }
-  return series
-}
 
 interface DashboardOperationalProps {
   onLogout: () => void

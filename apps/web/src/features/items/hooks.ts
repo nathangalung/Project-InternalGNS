@@ -1,7 +1,10 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as itemsApi from "@/features/items/api"
+import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadToPresignedUrl } from "@/lib/storage-upload"
+import { toast } from "@/lib/toast"
+import { validateAsset } from "@/lib/upload-validation"
 
 export function useItems(params: itemsApi.ItemListParams = {}) {
   return useQuery({
@@ -23,10 +26,10 @@ export function useItem(id: number | undefined) {
 // while user types (per TanStack Query v5 paginated-queries guidance).
 export function useItemSearchAdvanced(
   q: string,
-  options: { minScore?: number; limit?: number } = {},
+  options: { minScore?: number; limit?: number; isActive?: boolean } = {},
 ) {
   return useQuery({
-    queryKey: queryKeys.items.searchAdvanced(q, options.minScore, options.limit),
+    queryKey: queryKeys.items.searchAdvanced(q, options.minScore, options.limit, options.isActive),
     queryFn: () => itemsApi.searchAdvanced(q, options),
     enabled: q.trim().length > 0,
     placeholderData: keepPreviousData,
@@ -64,6 +67,7 @@ export function useUpdateItem() {
     mutationFn: ({ id, input }: { id: number; input: itemsApi.UpdateItemInput }) =>
       itemsApi.update(id, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.items.all }),
+    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui produk.")),
   })
 }
 
@@ -81,6 +85,7 @@ export function useUploadItemImage() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, file }: { id: number; file: File }) => {
+      validateAsset("itemImage", file)
       const presign = await itemsApi.presignImageUpload(id, file.name)
       await uploadToPresignedUrl(presign.uploadUrl, file)
       await itemsApi.updateImage(id, presign.objectKey)
@@ -89,6 +94,7 @@ export function useUploadItemImage() {
       qc.invalidateQueries({ queryKey: queryKeys.items.detail(id) })
       qc.invalidateQueries({ queryKey: queryKeys.items.all })
     },
+    onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah gambar produk.")),
   })
 }
 

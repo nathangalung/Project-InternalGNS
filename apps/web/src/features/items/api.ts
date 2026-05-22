@@ -1,4 +1,4 @@
-import { apiList, apiRequest, type PaginatedList } from "@/lib/api-client"
+import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
 import type {
   AdvancedSearchResponse,
   ItemPriceHistoryRow,
@@ -6,6 +6,8 @@ import type {
   ItemVendorRow,
   MatchRowInput,
   MatchRowsResponse,
+  PresignDownload,
+  PresignUpload,
 } from "@/types/api"
 
 export type ItemListParams = {
@@ -19,15 +21,15 @@ export type ItemListParams = {
 }
 
 export async function list(params: ItemListParams = {}): Promise<PaginatedList<ItemRow>> {
-  const search = new URLSearchParams()
-  if (params.q) search.set("q", params.q)
-  if (params.isActive !== undefined) search.set("isActive", String(params.isActive))
-  if (params.unitId !== undefined) search.set("unitId", String(params.unitId))
-  if (params.sortBy) search.set("sortBy", params.sortBy)
-  if (params.sortDir) search.set("sortDir", params.sortDir)
-  if (params.limit !== undefined) search.set("limit", String(params.limit))
-  if (params.offset !== undefined) search.set("offset", String(params.offset))
-  const qs = search.toString()
+  const qs = buildQuery({
+    q: params.q,
+    isActive: params.isActive,
+    unitId: params.unitId,
+    sortBy: params.sortBy,
+    sortDir: params.sortDir,
+    limit: params.limit,
+    offset: params.offset,
+  })
   return apiList<ItemRow>({ path: `/items${qs ? `?${qs}` : ""}` })
 }
 
@@ -55,12 +57,15 @@ export async function update(id: number, input: UpdateItemInput): Promise<ItemRo
 // Tier ranks: ITEM_AUTO > VENDOR_OFFER > ITEM_SUGGESTED > REQUEST_HISTORY > ITEM_FUZZY.
 export async function searchAdvanced(
   q: string,
-  options: { minScore?: number; limit?: number } = {},
+  options: { minScore?: number; limit?: number; isActive?: boolean } = {},
 ): Promise<AdvancedSearchResponse> {
-  const params = new URLSearchParams({ q })
-  if (options.minScore !== undefined) params.set("minScore", String(options.minScore))
-  if (options.limit !== undefined) params.set("limit", String(options.limit))
-  return apiRequest<AdvancedSearchResponse>({ path: `/items/search-advanced?${params.toString()}` })
+  const qs = buildQuery({
+    q,
+    minScore: options.minScore,
+    limit: options.limit,
+    isActive: options.isActive,
+  })
+  return apiRequest<AdvancedSearchResponse>({ path: `/items/search-advanced?${qs}` })
 }
 
 export async function matchRows(
@@ -100,9 +105,7 @@ export async function priceHistory(
   itemId: number,
   options: { limit?: number } = {},
 ): Promise<ItemPriceHistoryRow[]> {
-  const params = new URLSearchParams()
-  if (options.limit !== undefined) params.set("limit", String(options.limit))
-  const qs = params.toString()
+  const qs = buildQuery({ limit: options.limit })
   return apiRequest<ItemPriceHistoryRow[]>({
     path: `/items/${itemId}/price-history${qs ? `?${qs}` : ""}`,
   })
@@ -123,27 +126,13 @@ export async function create(input: CreateItemInput): Promise<ItemRow> {
   })
 }
 
-export type PresignImageUpload = {
-  uploadUrl: string
-  objectKey: string
-  expiresAt: number
-}
-
-export type PresignImageDownload = {
-  downloadUrl: string
-  expiresAt: number
-}
-
-export async function presignImageUpload(
-  id: number,
-  fileName: string,
-): Promise<PresignImageUpload> {
+export async function presignImageUpload(id: number, fileName: string): Promise<PresignUpload> {
   const qs = new URLSearchParams({ fileName }).toString()
-  return apiRequest<PresignImageUpload>({ path: `/items/${id}/image/upload-url?${qs}` })
+  return apiRequest<PresignUpload>({ path: `/items/${id}/image/upload-url?${qs}` })
 }
 
-export async function presignImageDownload(id: number): Promise<PresignImageDownload> {
-  return apiRequest<PresignImageDownload>({ path: `/items/${id}/image/download-url` })
+export async function presignImageDownload(id: number): Promise<PresignDownload> {
+  return apiRequest<PresignDownload>({ path: `/items/${id}/image/download-url` })
 }
 
 export async function updateImage(id: number, objectKey: string): Promise<void> {

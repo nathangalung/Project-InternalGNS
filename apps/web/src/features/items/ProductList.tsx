@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
@@ -10,6 +11,7 @@ import ProductFilter, { type ProductFilterValues } from "@/features/items/Produc
 import { useUnits } from "@/features/units/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import type { Page } from "@/lib/page"
+import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import type { AdvancedSearchHit, AdvancedSearchTier, ItemRow } from "@/types/api"
 
 interface ProductListProps {
@@ -17,9 +19,6 @@ interface ProductListProps {
   onLogout: () => void
   onViewDetail?: (id: number) => void
 }
-
-const STATUS_AKTIF = { label: "AKTIF", bg: "#D1FAE5", color: "#047857" }
-const STATUS_NONAKTIF = { label: "NONAKTIF", bg: "#FEE2E2", color: "#B91C1C" }
 
 // Tier → small inline label shown next to product name.
 // Layout-neutral: same line, same height, only adds badge content.
@@ -64,10 +63,15 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
     return out
   }, [filters, itemsPerPage, currentPage, unitIdByCode])
 
+  const filterActive = filters.status === "active"
+  const filterInactive = filters.status === "inactive"
+  const filterIsActive = filterActive ? true : filterInactive ? false : undefined
+
   const { data: listData, isLoading: itemsLoading } = useItems(listParams)
   const { data: searchData, isFetching: searchLoading } = useItemSearchAdvanced(debouncedSearch, {
     minScore: 0.3,
     limit: 100,
+    isActive: filterIsActive,
   })
   const searchHits: AdvancedSearchHit[] = searchData?.hits ?? []
   const tierById = useMemo(() => {
@@ -85,25 +89,23 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
 
   const searchRows: ItemRow[] = useMemo(() => {
     if (!isSearchActive) return []
+    const rowIsActive = !filterInactive
     let rows: ItemRow[] = searchHits.map((h) => ({
       id: h.id,
       name: h.name,
       impaCode: h.impaCode,
       defaultUnitId: h.defaultUnitId,
       description: undefined,
-      isActive: true,
+      isActive: rowIsActive,
       createdAt: "",
       updatedAt: "",
     }))
-    if (filters.status !== "all") {
-      rows = rows.filter((it) => (filters.status === "active" ? it.isActive : !it.isActive))
-    }
     if (filters.unitCode) {
       const targetId = unitIdByCode.get(filters.unitCode)
       if (targetId !== undefined) rows = rows.filter((it) => it.defaultUnitId === targetId)
     }
     return rows
-  }, [isSearchActive, searchHits, filters, unitIdByCode])
+  }, [isSearchActive, searchHits, filterInactive, filters.unitCode, unitIdByCode])
 
   const serverRows = listData?.rows ?? []
   const totalItems = isSearchActive ? searchRows.length : (listData?.total ?? 0)
@@ -156,6 +158,39 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
             <FilterButton onClick={() => setShowFilter(true)} />
           </div>
 
+          {isSearchActive && searchData && (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: -12 }}>
+              {(
+                [
+                  "ITEM_AUTO",
+                  "VENDOR_OFFER",
+                  "ITEM_SUGGESTED",
+                  "REQUEST_HISTORY",
+                  "ITEM_FUZZY",
+                ] as AdvancedSearchTier[]
+              )
+                .filter((t) => (searchData.counts[t] ?? 0) > 0)
+                .map((t) => {
+                  const b = TIER_BADGE[t]
+                  return (
+                    <span
+                      key={t}
+                      style={{
+                        padding: "2px 8px",
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        background: b.bg,
+                        color: b.color,
+                      }}
+                    >
+                      {searchData.counts[t]} {b.label}
+                    </span>
+                  )
+                })}
+            </div>
+          )}
+
           <div className="tbl-container">
             <table className="tbl">
               <thead>
@@ -196,13 +231,15 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
                       className="tbl-td tbl-td--center"
                       style={{ padding: "40px 0", color: "#64748B" }}
                     >
-                      Tidak ada produk.
+                      {isSearchActive
+                        ? `Tidak ada hasil untuk "${debouncedSearch}".`
+                        : "Tidak ada produk."}
                     </td>
                   </tr>
                 )}
                 {!isLoading &&
                   currentRows.map((it: ItemRow) => {
-                    const status = it.isActive ? STATUS_AKTIF : STATUS_NONAKTIF
+                    const status = it.isActive ? BADGE_AKTIF : BADGE_NONAKTIF
                     const tier = isSearchActive ? tierById.get(it.id) : undefined
                     const tierBadge = tier ? TIER_BADGE[tier] : undefined
                     return (
@@ -262,19 +299,7 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
                             style={{ color: "#7C3AED" }}
                             onClick={() => onViewDetail?.(it.id)}
                           >
-                            <svg
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
+                            <EyeIcon />
                           </button>
                         </td>
                       </tr>

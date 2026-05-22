@@ -1,5 +1,5 @@
-import { type CSSProperties, useState } from "react"
-import type { StatusFilterValue } from "@/components/shared/filter-styles"
+import { useState } from "react"
+import { chipStyle, type StatusFilterValue } from "@/components/shared/filter-styles"
 import type { Role } from "@/types/api"
 
 export type RoleFilter = "all" | Role
@@ -23,21 +23,6 @@ const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "active", label: "Aktif" },
   { value: "inactive", label: "Nonaktif" },
 ]
-
-function chipStyle(active: boolean): CSSProperties {
-  return {
-    padding: "8px 18px",
-    borderRadius: "999px",
-    border: active ? "1.5px solid #630ED4" : "1px solid #E5E7EB",
-    background: active ? "rgba(99, 14, 212, 0.06)" : "#FFFFFF",
-    cursor: "pointer",
-    fontFamily: "'Inter', sans-serif",
-    fontWeight: active ? 600 : 500,
-    fontSize: "13px",
-    color: active ? "#630ED4" : "#4A4455",
-    transition: "all 0.15s",
-  }
-}
 
 export default function UserFilter({ onClose, onApply, initialValues }: UserFilterProps) {
   const [role, setRole] = useState<RoleFilter>(initialValues?.role ?? "all")

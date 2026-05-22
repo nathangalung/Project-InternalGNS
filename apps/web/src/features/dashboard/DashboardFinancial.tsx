@@ -5,17 +5,12 @@ import StatusBadge from "@/components/shared/StatusBadge"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { useInvoices } from "@/features/invoices/hooks"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE, type InvoiceStatus } from "@/features/invoices/types"
-import { formatDate, formatNumber as formatId, formatRupiah as formatRp } from "@/lib/format"
+import { buildSeries } from "@/lib/chart"
+import { formatDate, formatNumber as formatId, formatRupiah as formatRp, toNum } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import type { DashboardMetric, InvoiceBackendRow } from "@/types/api"
 import DashboardFinancialFilter, { type DashboardFilterValues } from "./DashboardFinancialFilter"
-import TrendChart, { CHART_MONTHS } from "./TrendChart"
-
-function toNumber(v: string | undefined): number {
-  if (!v) return 0
-  const n = Number(v)
-  return Number.isFinite(n) ? n : 0
-}
+import TrendChart from "./TrendChart"
 
 const chartTabs: { label: string; metric: DashboardMetric }[] = [
   { label: "Pendapatan", metric: "revenue" },
@@ -23,25 +18,6 @@ const chartTabs: { label: string; metric: DashboardMetric }[] = [
   { label: "Laba Bersih", metric: "profit" },
   { label: "PPN", metric: "ppn" },
 ]
-
-function mapToMonthIndex(month: string, baseYear: number): number {
-  const [y, m] = month.split("-").map(Number)
-  if (y !== baseYear) return -1
-  return m - 1
-}
-
-function buildSeries(
-  points: { month: string; value: string }[] | undefined,
-  baseYear: number,
-): number[] {
-  const series = new Array(CHART_MONTHS.length).fill(0)
-  if (!points) return series
-  for (const p of points) {
-    const idx = mapToMonthIndex(p.month, baseYear)
-    if (idx >= 0 && idx < series.length) series[idx] = toNumber(p.value)
-  }
-  return series
-}
 
 function computeRpMax(values: number[]): number {
   const m = Math.max(...values, 0)
@@ -128,10 +104,10 @@ export default function DashboardFinancial({
     }
   }, [tsRevenue.data, tsProfit.data, tsPpn.data, baseYear, selectedMonths])
 
-  const totalRevenue = toNumber(summary?.totalRevenue)
-  const totalExpenses = toNumber(summary?.totalExpenses)
-  const totalProfit = toNumber(summary?.totalProfit)
-  const totalPpn = toNumber(summary?.totalPpn)
+  const totalRevenue = toNum(summary?.totalRevenue)
+  const totalExpenses = toNum(summary?.totalExpenses)
+  const totalProfit = toNum(summary?.totalProfit)
+  const totalPpn = toNum(summary?.totalPpn)
   const totalPo = summary?.totalPo ?? 0
   const totalInvoice = summary?.totalInvoices ?? 0
   const dueSoon = summary?.invoicesDueSoon ?? 0
@@ -149,7 +125,7 @@ export default function DashboardFinancial({
           client: inv.companyName,
           createdAt: inv.invoiceDate,
           dueDate: inv.dueDate ?? inv.invoiceDate,
-          total: formatRp(toNumber(inv.total ?? inv.subtotal)),
+          total: formatRp(toNum(inv.total ?? inv.subtotal)),
           status,
         }
       })

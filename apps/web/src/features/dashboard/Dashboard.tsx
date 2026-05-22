@@ -1,10 +1,11 @@
 import { type CSSProperties, useMemo, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
-import { formatNumber as formatId, formatRupiah as formatRp } from "@/lib/format"
+import { buildSeries } from "@/lib/chart"
+import { formatNumber as formatId, formatRupiah as formatRp, toNum } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import type { DashboardMetric } from "@/types/api"
-import TrendChart, { CHART_MONTHS } from "./TrendChart"
+import TrendChart from "./TrendChart"
 
 const exportBtnStyle: CSSProperties = {
   display: "inline-flex",
@@ -22,12 +23,6 @@ const exportBtnStyle: CSSProperties = {
   color: "#630ED4",
 }
 
-function toNumber(v: string | undefined): number {
-  if (!v) return 0
-  const n = Number(v)
-  return Number.isFinite(n) ? n : 0
-}
-
 const chartTabs: { label: string; metric: DashboardMetric }[] = [
   { label: "Quotation", metric: "quotation" },
   { label: "Invoice", metric: "invoice" },
@@ -35,26 +30,6 @@ const chartTabs: { label: string; metric: DashboardMetric }[] = [
   { label: "Laba Bersih", metric: "profit" },
   { label: "PPN", metric: "ppn" },
 ]
-
-// YYYY-MM to chart index.
-function mapToMonthIndex(month: string, baseYear: number): number {
-  const [y, m] = month.split("-").map(Number)
-  if (y !== baseYear) return -1
-  return m - 1
-}
-
-function buildSeries(
-  points: { month: string; value: string }[] | undefined,
-  baseYear: number,
-): number[] {
-  const series = new Array(CHART_MONTHS.length).fill(0)
-  if (!points) return series
-  for (const p of points) {
-    const idx = mapToMonthIndex(p.month, baseYear)
-    if (idx >= 0 && idx < series.length) series[idx] = toNumber(p.value)
-  }
-  return series
-}
 
 const RP_METRICS: ReadonlyArray<string> = ["Pendapatan", "Laba Bersih", "PPN"]
 
@@ -95,10 +70,10 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
     [tsQuotation.data, tsInvoice.data, tsRevenue.data, tsProfit.data, tsPpn.data, baseYear],
   )
 
-  const totalRevenue = toNumber(summary?.totalRevenue)
-  const totalExpenses = toNumber(summary?.totalExpenses)
-  const totalProfit = toNumber(summary?.totalProfit)
-  const totalPpn = toNumber(summary?.totalPpn)
+  const totalRevenue = toNum(summary?.totalRevenue)
+  const totalExpenses = toNum(summary?.totalExpenses)
+  const totalProfit = toNum(summary?.totalProfit)
+  const totalPpn = toNum(summary?.totalPpn)
   const totalQuotation = summary?.totalQuotations ?? 0
   const totalRejected = summary?.totalQuotationsRejected ?? 0
   const totalPo = summary?.totalPo ?? 0

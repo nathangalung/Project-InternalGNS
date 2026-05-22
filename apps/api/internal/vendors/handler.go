@@ -197,6 +197,10 @@ func (h *Handler) PresignLogoUpload(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "required"}))
 		return
 	}
+	if err := storage.ValidateAssetFileName(storage.BucketVendorLogos, fileName); err != nil {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "unsupported file type"}))
+		return
+	}
 	objectKey := storage.BuildObjectKey("vendors", id, fileName)
 	url, err := h.storage.PresignPut(r.Context(), storage.BucketVendorLogos, objectKey, logoUploadExpiry)
 	if err != nil {

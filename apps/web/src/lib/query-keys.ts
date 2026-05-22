@@ -1,5 +1,8 @@
 // Query key factory.
 export const queryKeys = {
+  auth: {
+    me: () => ["me"] as const,
+  },
   clients: {
     all: ["clients"] as const,
     list: (params: { limit?: number; offset?: number } = {}) =>
@@ -18,8 +21,8 @@ export const queryKeys = {
     list: (params: Record<string, unknown> = {}) => ["items", "list", params] as const,
     detail: (id: number) => ["items", "detail", id] as const,
     search: (q: string) => ["items", "search", q] as const,
-    searchAdvanced: (q: string, minScore?: number, limit?: number) =>
-      ["items", "search-advanced", q, minScore ?? null, limit ?? null] as const,
+    searchAdvanced: (q: string, minScore?: number, limit?: number, isActive?: boolean) =>
+      ["items", "search-advanced", q, minScore ?? null, limit ?? null, isActive ?? null] as const,
     vendors: (id: number) => ["items", id, "vendors"] as const,
     priceHistory: (id: number, limit?: number) => ["items", id, "price-history", limit] as const,
   },
@@ -54,6 +57,8 @@ export const queryKeys = {
     detail: (id: number) => ["purchase-orders", "detail", id] as const,
     items: (id: number) => ["purchase-orders", id, "items"] as const,
     byQuotation: (quotationId: number) => ["purchase-orders", "by-quotation", quotationId] as const,
+    itemVendors: (itemId: number) => ["purchase-orders", "item-vendors", itemId] as const,
+    vendorDetail: (vendorId: number) => ["purchase-orders", "vendor-detail", vendorId] as const,
   },
   invoices: {
     all: ["invoices"] as const,

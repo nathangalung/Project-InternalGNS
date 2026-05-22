@@ -1,12 +1,6 @@
 import type { ProductRow, ShippingRow } from "@/features/quotations/types"
+import { toNum } from "@/lib/format"
 import type { PurchaseOrderItemRow } from "@/types/api"
-
-// Numeric coerce, NaN-safe.
-function toNum(v: string | undefined | null): number {
-  if (v == null) return 0
-  const n = Number(v)
-  return Number.isFinite(n) ? n : 0
-}
 
 // Map snapshot product items.
 export function poItemsToProducts(items: PurchaseOrderItemRow[] | undefined): ProductRow[] {

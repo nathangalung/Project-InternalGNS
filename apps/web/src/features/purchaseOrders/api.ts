@@ -1,10 +1,14 @@
-import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
+import { apiList, apiRequest, buildQuery, nullOn404, type PaginatedList } from "@/lib/api-client"
 import type {
   PoBackendStatus,
   PoUpdateItemsInput,
+  PresignDownload,
+  PresignUpload,
   PurchaseOrderItemRow,
   PurchaseOrderRow,
 } from "@/types/api"
+
+export type { PresignDownload, PresignUpload } from "@/types/api"
 
 export type ListParams = {
   q?: string
@@ -33,16 +37,9 @@ export async function listItems(id: number): Promise<PurchaseOrderItemRow[]> {
 }
 
 export async function getByQuotation(quotationId: number): Promise<PurchaseOrderRow | null> {
-  try {
-    return await apiRequest<PurchaseOrderRow>({
-      path: `/purchase-orders/by-quotation/${quotationId}`,
-    })
-  } catch (err) {
-    if (err instanceof Error && "status" in err && (err as { status: number }).status === 404) {
-      return null
-    }
-    throw err
-  }
+  return nullOn404(() =>
+    apiRequest<PurchaseOrderRow>({ path: `/purchase-orders/by-quotation/${quotationId}` }),
+  )
 }
 
 export async function changeStatus(id: number, status: PoBackendStatus): Promise<void> {
@@ -64,23 +61,11 @@ export async function updateFile(
   })
 }
 
-export type PresignUpload = {
-  uploadUrl: string
-  objectKey: string
-  expiresAt: number
-}
-
 export async function presignUpload(id: number, fileName: string): Promise<PresignUpload> {
   const qs = new URLSearchParams({ fileName }).toString()
   return apiRequest<PresignUpload>({
     path: `/purchase-orders/${id}/upload-url?${qs}`,
   })
-}
-
-export type PresignDownload = {
-  downloadUrl: string
-  fileName?: string
-  expiresAt: number
 }
 
 export async function presignDownload(id: number): Promise<PresignDownload> {

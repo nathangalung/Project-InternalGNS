@@ -1,5 +1,11 @@
-import { apiList, apiRequest, type PaginatedList } from "@/lib/api-client"
-import type { VendorContactInfo, VendorItemRow, VendorRow } from "@/types/api"
+import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
+import type {
+  PresignDownload,
+  PresignUpload,
+  VendorContactInfo,
+  VendorItemRow,
+  VendorRow,
+} from "@/types/api"
 
 export type VendorListParams = {
   q?: string
@@ -13,16 +19,16 @@ export type VendorListParams = {
 }
 
 export async function list(params: VendorListParams = {}): Promise<PaginatedList<VendorRow>> {
-  const search = new URLSearchParams()
-  if (params.q) search.set("q", params.q)
-  if (params.isActive !== undefined) search.set("isActive", String(params.isActive))
-  if (params.countryName) search.set("countryName", params.countryName)
-  if (params.minTotal) search.set("minTotal", params.minTotal)
-  if (params.sortBy) search.set("sortBy", params.sortBy)
-  if (params.sortDir) search.set("sortDir", params.sortDir)
-  if (params.limit !== undefined) search.set("limit", String(params.limit))
-  if (params.offset !== undefined) search.set("offset", String(params.offset))
-  const qs = search.toString()
+  const qs = buildQuery({
+    q: params.q,
+    isActive: params.isActive,
+    countryName: params.countryName,
+    minTotal: params.minTotal,
+    sortBy: params.sortBy,
+    sortDir: params.sortDir,
+    limit: params.limit,
+    offset: params.offset,
+  })
   return apiList<VendorRow>({ path: `/vendors${qs ? `?${qs}` : ""}` })
 }
 
@@ -63,24 +69,13 @@ export async function update(id: number, input: UpdateVendorInput): Promise<Vend
   })
 }
 
-export type PresignLogoUpload = {
-  uploadUrl: string
-  objectKey: string
-  expiresAt: number
-}
-
-export type PresignLogoDownload = {
-  downloadUrl: string
-  expiresAt: number
-}
-
-export async function presignLogoUpload(id: number, fileName: string): Promise<PresignLogoUpload> {
+export async function presignLogoUpload(id: number, fileName: string): Promise<PresignUpload> {
   const qs = new URLSearchParams({ fileName }).toString()
-  return apiRequest<PresignLogoUpload>({ path: `/vendors/${id}/logo/upload-url?${qs}` })
+  return apiRequest<PresignUpload>({ path: `/vendors/${id}/logo/upload-url?${qs}` })
 }
 
-export async function presignLogoDownload(id: number): Promise<PresignLogoDownload> {
-  return apiRequest<PresignLogoDownload>({ path: `/vendors/${id}/logo/download-url` })
+export async function presignLogoDownload(id: number): Promise<PresignDownload> {
+  return apiRequest<PresignDownload>({ path: `/vendors/${id}/logo/download-url` })
 }
 
 export async function updateLogo(id: number, objectKey: string): Promise<void> {

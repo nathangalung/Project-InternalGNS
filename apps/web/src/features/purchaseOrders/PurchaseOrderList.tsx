@@ -1,4 +1,5 @@
 import { type CSSProperties, useMemo, useState } from "react"
+import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
@@ -6,6 +7,7 @@ import Sidebar from "@/components/shared/Sidebar"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { downloadPdf } from "@/lib/api-client"
+import { resolveRange } from "@/lib/date-range"
 import { formatDate, formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import type { PurchaseOrderRow } from "@/types/api"
@@ -27,20 +29,6 @@ const STATUS_STYLE: Record<PoStatus, { bg: string; color: string }> = {
   UPLOADED: { bg: "#DBEAFE", color: "#1D4ED8" },
   ON_PROGRESS: { bg: "#CEC2FF", color: "#9333EA" },
   DELIVERED: { bg: "#D1FAE5", color: "#047857" },
-}
-
-function resolveRange(
-  preset: string,
-  startIso: string,
-  endIso: string,
-): { start: string; end: string } {
-  if (preset === "kustom") return { start: startIso, end: endIso }
-  const today = new Date()
-  const end = today.toISOString().slice(0, 10)
-  const start = new Date(today)
-  if (preset === "7-hari") start.setDate(start.getDate() - 7)
-  if (preset === "30-hari") start.setDate(start.getDate() - 30)
-  return { start: start.toISOString().slice(0, 10), end }
 }
 
 function rowFromBackend(po: PurchaseOrderRow): PoRow {
@@ -310,19 +298,7 @@ export default function PurchaseOrderList({
                               style={iconBtnStyle}
                               onClick={() => onViewDetail?.(row.quotationId)}
                             >
-                              <svg
-                                width="18"
-                                height="18"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                <circle cx="12" cy="12" r="3" />
-                              </svg>
+                              <EyeIcon size={18} />
                             </button>
                             <button
                               type="button"

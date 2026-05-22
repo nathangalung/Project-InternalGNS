@@ -14,7 +14,9 @@ import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
 import * as vendorsApi from "@/features/vendors/api"
 import { downloadPdf, saveBlob } from "@/lib/api-client"
+import { toNum } from "@/lib/format"
 import type { Page } from "@/lib/page"
+import { queryKeys } from "@/lib/query-keys"
 import { poItemsToProducts, poItemsToShipping } from "../adapters"
 import * as poApi from "../api"
 import {
@@ -49,12 +51,6 @@ interface PurchaseOrderDetailProps {
   onNavigate: (page: Page) => void
   onLogout: () => void
   onNavigateEntity?: (scope: "Klien" | "Vendor", id: number) => void
-}
-
-function toNum(v: string | undefined | null): number {
-  if (v == null) return 0
-  const n = Number(v)
-  return Number.isFinite(n) ? n : 0
 }
 
 export default function PurchaseOrderDetail({
@@ -94,7 +90,7 @@ export default function PurchaseOrderDetail({
 
   const itemVendorsQueries = useQueries({
     queries: uniqueItemIds.map((itemId) => ({
-      queryKey: ["po-item-vendors", itemId],
+      queryKey: queryKeys.purchaseOrders.itemVendors(itemId),
       queryFn: () => itemsApi.listVendors(itemId),
     })),
   })
@@ -122,7 +118,7 @@ export default function PurchaseOrderDetail({
 
   const vendorQueries = useQueries({
     queries: vendorIds.map((vid) => ({
-      queryKey: ["po-vendor-detail", vid],
+      queryKey: queryKeys.purchaseOrders.vendorDetail(vid),
       queryFn: () => vendorsApi.get(vid),
     })),
   })

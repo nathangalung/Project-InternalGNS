@@ -1,6 +1,8 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as quotationsApi from "@/features/quotations/api"
+import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
+import { toast } from "@/lib/toast"
 import type {
   CanonicalStatus,
   QuotationItemRequestCreateInput,
@@ -36,6 +38,7 @@ export function useCreateQuotation() {
   return useMutation({
     mutationFn: quotationsApi.create,
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.quotations.all }),
+    onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan quotation.")),
   })
 }
 
@@ -55,6 +58,7 @@ export function useUpdateQuotation() {
       qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) })
       qc.invalidateQueries({ queryKey: queryKeys.quotations.all })
     },
+    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui quotation.")),
   })
 }
 
@@ -62,12 +66,15 @@ export function useChangeQuotationStatus() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, status, note }: { id: number; status: CanonicalStatus; note?: string }) =>
-      quotationsApi.changeStatus(id, status, note),
+      status === "sent"
+        ? quotationsApi.send(id, note)
+        : quotationsApi.changeStatus(id, status, note),
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) })
       qc.invalidateQueries({ queryKey: queryKeys.quotations.all })
       qc.invalidateQueries({ queryKey: queryKeys.quotations.stats() })
     },
+    onError: (err) => toast.error(errorMessage(err, "Gagal mengubah status quotation.")),
   })
 }
 
@@ -103,6 +110,7 @@ export function useUpsertQuotationRequest() {
     onSuccess: (_, { quotationId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.quotations.requests(quotationId) })
     },
+    onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan item request.")),
   })
 }
 
@@ -114,5 +122,6 @@ export function useDeleteQuotationRequest() {
     onSuccess: (_, { quotationId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.quotations.requests(quotationId) })
     },
+    onError: (err) => toast.error(errorMessage(err, "Gagal menghapus item request.")),
   })
 }

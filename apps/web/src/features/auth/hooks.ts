@@ -1,6 +1,8 @@
+import { useQuery } from "@tanstack/react-query"
 import { useCallback, useSyncExternalStore } from "react"
 import * as auth from "@/features/auth/api"
 import { clearTokens, getRefreshToken, setTokens } from "@/lib/api-client"
+import { queryKeys } from "@/lib/query-keys"
 
 const AUTH_KEY = "gns_auth"
 const EVENT_NAME = "gns:auth-change"
@@ -46,4 +48,19 @@ export function useAuth() {
 
 export function isAuthenticatedSync(): boolean {
   return read()
+}
+
+export function clearAuthState(): void {
+  sessionStorage.removeItem(AUTH_KEY)
+  clearTokens()
+  window.dispatchEvent(new Event(EVENT_NAME))
+}
+
+export function useMe() {
+  return useQuery({
+    queryKey: queryKeys.auth.me(),
+    queryFn: auth.me,
+    staleTime: 5 * 60 * 1000,
+    enabled: read(),
+  })
 }

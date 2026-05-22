@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import EntityLogo from "@/components/shared/EntityLogo"
+import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
@@ -11,6 +12,7 @@ import VendorFilter, { type VendorFilterValues } from "@/features/vendors/Vendor
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
+import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import type { VendorRow } from "@/types/api"
 
 interface VendorListProps {
@@ -18,9 +20,6 @@ interface VendorListProps {
   onLogout: () => void
   onViewDetail?: (id: number) => void
 }
-
-const STATUS_AKTIF = { label: "AKTIF", bg: "#D1FAE5", color: "#047857" }
-const STATUS_NONAKTIF = { label: "NONAKTIF", bg: "#FEE2E2", color: "#B91C1C" }
 
 type SortKey = "totalPembelian" | "productCount"
 
@@ -174,7 +173,7 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
                 )}
                 {!isLoading &&
                   currentRows.map((v: VendorRow) => {
-                    const status = v.isActive ? STATUS_AKTIF : STATUS_NONAKTIF
+                    const status = v.isActive ? BADGE_AKTIF : BADGE_NONAKTIF
                     return (
                       <tr key={v.id} className="tbl-row">
                         <td className="tbl-td">
@@ -234,19 +233,7 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
                             style={{ color: "#7C3AED" }}
                             onClick={() => onViewDetail?.(v.id)}
                           >
-                            <svg
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
+                            <EyeIcon />
                           </button>
                         </td>
                       </tr>

@@ -1,7 +1,10 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as invApi from "@/features/invoices/api"
+import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadToPresignedUrl } from "@/lib/storage-upload"
+import { toast } from "@/lib/toast"
+import { validateAsset } from "@/lib/upload-validation"
 import type { InvoiceBackendStatus } from "@/types/api"
 
 export function useInvoices(params: invApi.ListParams = {}) {
@@ -41,6 +44,7 @@ export function useChangeInvoiceStatus() {
     mutationFn: ({ id, status }: { id: number; status: InvoiceBackendStatus }) =>
       invApi.changeStatus(id, status),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.invoices.all }),
+    onError: (err) => toast.error(errorMessage(err, "Gagal mengubah status invoice.")),
   })
 }
 
@@ -48,18 +52,20 @@ export function useUploadInvoiceAttachment() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, file }: { id: number; file: File }) => {
+      validateAsset("invoiceAttachment", file)
       const presign = await invApi.presignAttachmentUpload(id, file.name)
       await uploadToPresignedUrl(presign.uploadUrl, file)
       await invApi.updateAttachment(id, presign.objectKey)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.invoices.all }),
+    onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah lampiran.")),
   })
 }
 
 export function useInvoiceAttachmentDownloadUrl(id: number | undefined, objectKey?: string) {
   return useQuery({
     queryKey: id
-      ? [...queryKeys.invoices.list({}), id, "attachment-url", objectKey]
+      ? [...queryKeys.invoices.detail(id), "attachment-url", objectKey]
       : queryKeys.invoices.all,
     queryFn: () => invApi.presignAttachmentDownload(id as number),
     enabled: id !== undefined && id > 0 && Boolean(objectKey),

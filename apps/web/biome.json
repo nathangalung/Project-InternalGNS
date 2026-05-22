@@ -14,6 +14,7 @@
       "**/*.js",
       "**/*.json",
       "!**/routeTree.gen.ts",
+      "!**/openapi.gen.ts",
       "!**/dist",
       "!**/node_modules",
       "!**/data/**",

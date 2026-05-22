@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
@@ -8,6 +9,7 @@ import StatusBadge from "@/components/shared/StatusBadge"
 import { useUsers } from "@/features/users/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import type { Page } from "@/lib/page"
+import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import type { Role } from "@/types/api"
 import UserAddModal from "./UserAddModal"
 import UserFilter, { type RoleFilter, type StatusFilter } from "./UserFilter"
@@ -25,9 +27,6 @@ const ROLE_BADGE: Record<Role, { label: string; bg: string; color: string }> = {
   operational: { label: "OPERASIONAL", bg: "#FFE16D", color: "#DA6900" },
   finance: { label: "FINANCE", bg: "#DBEAFE", color: "#1D4ED8" },
 }
-
-const STATUS_AKTIF = { label: "AKTIF", bg: "#D1FAE5", color: "#047857" }
-const STATUS_NONAKTIF = { label: "NONAKTIF", bg: "#FEE2E2", color: "#B91C1C" }
 
 const MONTHS_ID = [
   "Jan",
@@ -213,7 +212,7 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
                 {!isLoading &&
                   currentRows.map((u) => {
                     const role = ROLE_BADGE[u.role]
-                    const status = u.isActive ? STATUS_AKTIF : STATUS_NONAKTIF
+                    const status = u.isActive ? BADGE_AKTIF : BADGE_NONAKTIF
                     return (
                       <tr key={u.id} className="tbl-row">
                         <td className="tbl-td tbl-td--client tbl-td--center">{u.name}</td>
@@ -236,19 +235,7 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
                             style={{ color: "#7C3AED" }}
                             onClick={() => onViewDetail?.(u.id)}
                           >
-                            <svg
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
+                            <EyeIcon />
                           </button>
                         </td>
                       </tr>

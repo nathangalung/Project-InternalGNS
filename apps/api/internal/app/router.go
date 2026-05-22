@@ -28,15 +28,19 @@ import (
 func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClient *storage.Client) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
+	r.Use(requestIDResponseMiddleware)
 	r.Use(middleware.RealIP)
+	r.Use(accessLogMiddleware)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(30 * time.Second))
+	r.Use(securityHeadersMiddleware)
+	r.Use(bodyLimitMiddleware(2 * 1024 * 1024))
 
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   cfg.CORSAllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Request-Id"},
-		ExposedHeaders:   []string{"Link", "X-Request-Id", "X-Total-Count"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "If-Match", "X-Request-Id"},
+		ExposedHeaders:   []string{"ETag", "Link", "X-Request-Id", "X-Total-Count"},
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))

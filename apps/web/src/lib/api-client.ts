@@ -133,6 +133,16 @@ export async function apiRequest<T>(input: RequestInput): Promise<T> {
   return parsed as T
 }
 
+// Resolves to null on 404, rethrows otherwise.
+export async function nullOn404<T>(fn: () => Promise<T>): Promise<T | null> {
+  try {
+    return await fn()
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null
+    throw err
+  }
+}
+
 export type PaginatedList<T> = { rows: T[]; total: number }
 
 type QueryValue = string | number | boolean | undefined | null | (string | number)[]

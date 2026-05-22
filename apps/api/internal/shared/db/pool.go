@@ -15,6 +15,7 @@ func NewPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
 	cfg.MaxConns = 20
 	cfg.MinConns = 2
 	cfg.MaxConnLifetime = time.Hour
+	cfg.MaxConnLifetimeJitter = 5 * time.Minute
 	cfg.MaxConnIdleTime = 30 * time.Minute
 	cfg.HealthCheckPeriod = 30 * time.Second
 

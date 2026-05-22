@@ -7,6 +7,7 @@ import {
   useVendorLogoDownloadUrl,
 } from "@/features/vendors/hooks"
 import { ApiError } from "@/lib/api-client"
+import { logoBackground } from "@/lib/avatar"
 import { formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
@@ -16,22 +17,6 @@ interface VendorDetailProps {
   onNavigate: (page: Page) => void
   onBack: () => void
   onLogout: () => void
-}
-
-const LOGO_BG_PALETTE = [
-  "#1E293B",
-  "#334155",
-  "#475569",
-  "#3730A3",
-  "#4338CA",
-  "#0F766E",
-  "#7C2D12",
-]
-
-function hashCode(s: string): number {
-  let h = 0
-  for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i)
-  return Math.abs(h)
 }
 
 function vendorInitials(name: string): string {
@@ -118,7 +103,7 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
     address !== (vendor.location ?? "") ||
     isActive !== vendor.isActive
 
-  const logoBg = LOGO_BG_PALETTE[hashCode(vendor.name) % LOGO_BG_PALETTE.length]
+  const logoBg = logoBackground(vendor.name)
 
   function handleLogoSelect(file: File | undefined) {
     if (!file) return

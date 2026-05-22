@@ -1,7 +1,10 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as clientsApi from "@/features/clients/api"
+import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadToPresignedUrl } from "@/lib/storage-upload"
+import { toast } from "@/lib/toast"
+import { validateAsset } from "@/lib/upload-validation"
 
 export function useClients(params: clientsApi.ClientListParams = {}) {
   return useQuery({
@@ -39,6 +42,7 @@ export function useCreateClient() {
   return useMutation({
     mutationFn: clientsApi.create,
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clients.all }),
+    onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan klien.")),
   })
 }
 
@@ -48,6 +52,7 @@ export function useUpdateClient() {
     mutationFn: ({ id, input }: { id: number; input: clientsApi.UpdateClientInput }) =>
       clientsApi.update(id, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clients.all }),
+    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui klien.")),
   })
 }
 
@@ -63,6 +68,7 @@ export function useCreateContact() {
     }) => clientsApi.createContact(companyId, input),
     onSuccess: (_, { companyId }) =>
       qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) }),
+    onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan kontak.")),
   })
 }
 
@@ -70,6 +76,7 @@ export function useUploadClientLogo() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, file }: { id: number; file: File }) => {
+      validateAsset("clientLogo", file)
       const presign = await clientsApi.presignLogoUpload(id, file.name)
       await uploadToPresignedUrl(presign.uploadUrl, file)
       await clientsApi.updateLogo(id, presign.objectKey)
@@ -78,6 +85,7 @@ export function useUploadClientLogo() {
       qc.invalidateQueries({ queryKey: queryKeys.clients.detail(id) })
       qc.invalidateQueries({ queryKey: queryKeys.clients.all })
     },
+    onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah logo.")),
   })
 }
 
