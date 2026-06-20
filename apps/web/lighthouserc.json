@@ -19,8 +19,12 @@
       ],
       "numberOfRuns": 3,
       "puppeteerScript": "./lighthouse/login-fixture.cjs",
+      "puppeteerLaunchOptions": {
+        "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+      },
       "settings": {
         "preset": "desktop",
+        "chromeFlags": "--no-sandbox --disable-setuid-sandbox",
         "onlyCategories": ["performance", "accessibility", "best-practices", "seo"],
         "skipAudits": ["uses-http2", "is-crawlable", "canonical"]
       }
