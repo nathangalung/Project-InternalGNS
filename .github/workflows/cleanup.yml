@@ -36,7 +36,7 @@ jobs:
       MINIO_USE_SSL: ${{ secrets.PROD_MINIO_USE_SSL }}
       PURGE: ${{ github.event.inputs.purge }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v5
         with:
           go-version-file: apps/api/go.mod
