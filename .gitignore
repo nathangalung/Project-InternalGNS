@@ -22,6 +22,9 @@ build/
 *.log
 coverage/
 
+# Lighthouse CI reports
+.lighthouseci/
+
 # Generated
 apps/web/src/routeTree.gen.ts
 apps/web/vite.config.d.ts
