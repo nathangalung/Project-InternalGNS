@@ -83,8 +83,9 @@ jobs:
       - name: install deps
         run: bun install --frozen-lockfile
 
+      # Ignore uuid GHSA: exceljs/lhci use v4 only, no buf param, not exploitable.
       - name: audit deps
-        run: bun audit --prod
+        run: bun audit --prod --ignore GHSA-w5hq-g745-h8pq
 
       - name: openapi codegen drift
         run: bun run codegen:check
@@ -209,7 +210,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: trivy fs scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: fs
           scan-ref: .
