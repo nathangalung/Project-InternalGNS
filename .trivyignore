@@ -1,0 +1,6 @@
+# Accepted, non-exploitable findings. Review when base images update.
+
+# libexpat DoS via crafted XML. The web image serves a static SPA through
+# nginx; no request path parses XML, so this is not reachable. Fix (2.8.1-r0)
+# not yet published in Alpine. Drop this line once the base image ships it.
+CVE-2026-45186
