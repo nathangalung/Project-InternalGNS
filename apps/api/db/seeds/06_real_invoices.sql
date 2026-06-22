@@ -10,7 +10,8 @@
 --      because items mirror purchase_order_items (snapshot rebuilt by 05).
 --
 -- Status heuristic: invoice with due_date <= 2026-05-09 -> 'paid', else 'sent'.
--- Coverage: 56/57 POs matched to invoice files.
+-- Coverage: 56/57 POs matched to invoice files. qid 549 (Q-2640061) has a real
+-- PO but no invoice file yet, so it stays accepted with a PO and no invoice.
 
 BEGIN;
 
@@ -48,7 +49,6 @@ BEGIN
         (543::bigint),
         (544::bigint),
         (548::bigint),
-        (549::bigint),
         (552::bigint),
         (555::bigint),
         (556::bigint),
@@ -192,7 +192,6 @@ BEGIN
         (543::bigint),
         (544::bigint),
         (548::bigint),
-        (549::bigint),
         (552::bigint),
         (555::bigint),
         (556::bigint),
