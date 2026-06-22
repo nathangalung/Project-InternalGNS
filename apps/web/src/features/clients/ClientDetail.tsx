@@ -2,6 +2,7 @@ import { type CSSProperties, useEffect, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
 import { dropdownItemStyle, dropdownLabelStyle } from "@/components/shared/filter-styles"
 import Sidebar from "@/components/shared/Sidebar"
+import * as clientsApi from "@/features/clients/api"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import {
   useClientLogoDownloadUrl,
@@ -118,6 +119,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
     email !== (client.email ?? "") ||
     npwp !== (client.npwp ?? "") ||
     address !== (client.address ?? "") ||
+    phone !== (client.contactPhone ?? "") ||
     isActive !== client.isActive
 
   const countryOption = countries?.find((c) => c.code === countryCode)
@@ -145,6 +147,14 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
       return
     }
     try {
+      // Phone lives on the main contact, updated via its own endpoint.
+      if (client.contactId && phone !== (client.contactPhone ?? "")) {
+        await clientsApi.updateContact(client.id, client.contactId, {
+          name: client.contactName ?? name.trim(),
+          phone: phone.trim() || undefined,
+          countryCode,
+        })
+      }
       await updateClient.mutateAsync({
         id: client.id,
         input: {
@@ -627,7 +637,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                       <input
                         type="text"
                         value={phone}
-                        readOnly
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
                         placeholder="-"
                         style={{
                           ...inputStyle,
@@ -637,7 +647,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                           minWidth: 0,
                           color: phone ? "#191C1E" : "#94A3B8",
                         }}
-                        title="Nomor diambil dari kontak utama klien"
+                        title="Nomor kontak utama klien"
                       />
                     </div>
                   </div>

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -183,6 +184,35 @@ func TestHandler_CreateContact(t *testing.T) {
 	var c clients.Contact
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&c))
 	assert.Equal(t, "API Contact", c.Name)
+}
+
+func TestHandler_UpdateContact(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPost, "/clients/1/contacts", clients.CreateContactRequest{
+		Name: "Edit Me", Phone: ptr("081000000000"), CountryCode: "IDN",
+	})
+	require.Equal(t, http.StatusCreated, res.StatusCode)
+	var created clients.Contact
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&created))
+	res.Body.Close()
+
+	upd := doJSON(t, srv, http.MethodPatch,
+		"/clients/1/contacts/"+strconv.FormatInt(created.ID, 10),
+		clients.CreateContactRequest{Name: "Edit Me", Phone: ptr("089999888777"), CountryCode: "IDN"})
+	defer upd.Body.Close()
+	require.Equal(t, http.StatusOK, upd.StatusCode)
+	var got clients.Contact
+	require.NoError(t, json.NewDecoder(upd.Body).Decode(&got))
+	require.NotNil(t, got.Phone)
+	assert.Equal(t, "089999888777", *got.Phone)
+}
+
+func TestHandler_UpdateContact_NotFound(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/clients/1/contacts/99999999",
+		clients.CreateContactRequest{Name: "x", CountryCode: "IDN"})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
 func TestHandler_CreateContact_BadID(t *testing.T) {

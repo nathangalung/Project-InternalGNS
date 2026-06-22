@@ -19,6 +19,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.Put("/{id}", h.Update)
 	r.Get("/{id}/contacts", h.ListContacts)
 	r.Post("/{id}/contacts", h.CreateContact)
+	r.Patch("/{id}/contacts/{contactId}", h.UpdateContact)
 	r.Get("/{id}/logo/upload-url", h.PresignLogoUpload)
 	r.Get("/{id}/logo/download-url", h.PresignLogoDownload)
 	r.Patch("/{id}/logo", h.UpdateLogo)

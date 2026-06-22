@@ -217,6 +217,42 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusCreated, c)
 }
 
+// UpdateContact edits an existing contact (PATCH /clients/{id}/contacts/{cid}).
+func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	cid, err := strconv.ParseInt(chi.URLParam(r, "contactId"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid contact id"))
+		return
+	}
+
+	var req CreateContactRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	if req.Name == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
+		return
+	}
+
+	userID := deps.CurrentUserID(r.Context())
+	c, err := h.repo.UpdateContact(r.Context(), id, cid, req, userID)
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("contact not found"))
+		return
+	}
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, c)
+}
+
 // PresignLogoUpload handles GET /clients/{id}/logo/upload-url?fileName=...
 func (h *Handler) PresignLogoUpload(w http.ResponseWriter, r *http.Request) {
 	if h.storage == nil {

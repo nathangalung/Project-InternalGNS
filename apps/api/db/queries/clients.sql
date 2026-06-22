@@ -133,6 +133,18 @@ VALUES
 RETURNING id, company_id, name, email, phone, title, country_code,
           is_active, created_at, updated_at;
 
+-- name: clients.update_contact
+UPDATE company_contacts
+   SET name = $3,
+       email = COALESCE($4, email),
+       phone = $5,
+       title = COALESCE($6, title),
+       country_code = COALESCE(NULLIF($7, ''), country_code),
+       updated_by = $8
+ WHERE id = $2 AND company_id = $1
+RETURNING id, company_id, name, email, phone, title, country_code,
+          is_active, created_at, updated_at;
+
 
 -- name: clients.summary
 SELECT
