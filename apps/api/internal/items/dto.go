@@ -134,8 +134,9 @@ type MatchRowResult struct {
 }
 
 type MatchRowsRequest struct {
-	Rows     []MatchRowInput `json:"rows"`
-	MinScore float32         `json:"minScore"` // default 0.5
+	Rows       []MatchRowInput `json:"rows"`
+	MinScore   float32         `json:"minScore"`   // default 0.5
+	AutoCreate bool            `json:"autoCreate"` // create catalog item for no-match rows
 }
 
 type MatchRowsResponse struct {

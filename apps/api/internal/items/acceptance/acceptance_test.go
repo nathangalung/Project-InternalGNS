@@ -207,6 +207,36 @@ func (s *scenarioState) vendorListAtLeast(min int) error {
 	return nil
 }
 
+func (s *scenarioState) importUnknownAutoCreate() error {
+	body := items.MatchRowsRequest{
+		AutoCreate: true,
+		MinScore:   0.99, // isolate the no-match -> create path
+		Rows:       []items.MatchRowInput{{Name: s.uniqueName("BDD AutoCreate Unknown"), Qty: 1, Unit: "PCS"}},
+	}
+	return s.sendRequest(http.MethodPost, "/items/match-rows", body)
+}
+
+func (s *scenarioState) rowCreatedWithEmptyPrice() error {
+	var out items.MatchRowsResponse
+	if err := json.Unmarshal(s.body, &out); err != nil {
+		return err
+	}
+	if len(out.Rows) != 1 {
+		return fmt.Errorf("want 1 row got %d", len(out.Rows))
+	}
+	r := out.Rows[0]
+	if r.Source != "CREATED" {
+		return fmt.Errorf("want source CREATED got %q body=%s", r.Source, s.body)
+	}
+	if r.Matched == nil || r.Matched.ItemID == 0 {
+		return fmt.Errorf("expected created item with id body=%s", s.body)
+	}
+	if r.Matched.CostPrice != nil {
+		return fmt.Errorf("expected empty price got %q", *r.Matched.CostPrice)
+	}
+	return nil
+}
+
 func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
 		state := &scenarioState{t: t}
@@ -236,6 +266,8 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the user links vendor (\d+) to the item$`, state.linkVendor)
 		sc.Step(`^the user lists vendors for the item$`, state.listVendorsForItem)
 		sc.Step(`^the vendor list contains at least (\d+) row(?:s)?$`, state.vendorListAtLeast)
+		sc.Step(`^the user imports an unknown product row with auto-create$`, state.importUnknownAutoCreate)
+		sc.Step(`^the imported row is a newly created product with empty price$`, state.rowCreatedWithEmptyPrice)
 	}
 }
 

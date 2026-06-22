@@ -87,7 +87,7 @@ export default function Step2Product({
         return
       }
 
-      const resp = await matchRows(rows)
+      const resp = await matchRows(rows, { autoCreate: true })
       const baseId = products.reduce((m, p) => Math.max(m, p.id), 0)
       const built: ProductItem[] = resp.rows.map((r, i) => {
         const m = r.matched
@@ -110,9 +110,10 @@ export default function Step2Product({
         }
       })
       onImportProducts(built)
-      const matchedCount = resp.rows.filter((r) => r.matched).length
+      const createdCount = resp.rows.filter((r) => r.source === "CREATED").length
+      const matchedCount = resp.rows.filter((r) => r.matched && r.source !== "CREATED").length
       setImportMsg({
-        text: `${built.length} produk diimport (${matchedCount} cocok dengan katalog, ${built.length - matchedCount} kosong).`,
+        text: `${built.length} produk diimport (${matchedCount} cocok katalog, ${createdCount} produk baru, harga kosong).`,
         ok: true,
       })
     } catch (err) {

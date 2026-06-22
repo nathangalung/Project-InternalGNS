@@ -70,12 +70,12 @@ export async function searchAdvanced(
 
 export async function matchRows(
   rows: MatchRowInput[],
-  options: { minScore?: number } = {},
+  options: { minScore?: number; autoCreate?: boolean } = {},
 ): Promise<MatchRowsResponse> {
   return apiRequest<MatchRowsResponse>({
     path: "/items/match-rows",
     method: "POST",
-    body: { rows, minScore: options.minScore },
+    body: { rows, minScore: options.minScore, autoCreate: options.autoCreate },
   })
 }
 

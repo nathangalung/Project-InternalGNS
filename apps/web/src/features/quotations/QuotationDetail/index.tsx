@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import type { QuotationData, Status } from "@/features/quotations/types"
@@ -35,6 +35,13 @@ export default function QuotationDetail({
   const [status, setStatus] = useState<Status>(q?.status ?? "Draf")
   const [isStatusOpen, setIsStatusOpen] = useState(false)
   const [history, setHistory] = useState(q?.history ?? [])
+
+  // Sync local state when the quotation loads or changes.
+  useEffect(() => {
+    if (!q) return
+    setStatus(q.status)
+    setHistory(q.history)
+  }, [q])
 
   if (!q) {
     return (

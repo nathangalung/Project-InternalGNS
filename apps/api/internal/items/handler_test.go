@@ -3,12 +3,14 @@ package items_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -433,4 +435,67 @@ func TestHandler_UpdateImage_NotFound(t *testing.T) {
 		items.UpdateImageRequest{ObjectKey: "items/1/x.png"})
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+}
+
+// Import auto-create: unmatched rows become new catalog products, empty price.
+func TestHandler_MatchRows_AutoCreate_CreatesProduct(t *testing.T) {
+	srv := newSrv(t)
+	name := fmt.Sprintf("AutoCreate New Product %d", time.Now().UnixNano())
+	body := items.MatchRowsRequest{
+		AutoCreate: true,
+		MinScore:   0.99, // isolate the no-match -> create path
+		Rows: []items.MatchRowInput{
+			{IMPACode: "", Name: name, Qty: 2, Unit: "PCS"},
+		},
+	}
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", body)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var out items.MatchRowsResponse
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&out))
+	require.Len(t, out.Rows, 1)
+	require.NotNil(t, out.Rows[0].Matched, "unmatched row should be auto-created")
+	assert.Equal(t, "CREATED", out.Rows[0].Source)
+	assert.Greater(t, out.Rows[0].Matched.ItemID, int64(0))
+	assert.Nil(t, out.Rows[0].Matched.CostPrice, "new product has empty price")
+}
+
+func TestHandler_MatchRows_AutoCreate_DedupsSameName(t *testing.T) {
+	srv := newSrv(t)
+	base := fmt.Sprintf("Duplicate Import Item %d", time.Now().UnixNano())
+	body := items.MatchRowsRequest{
+		AutoCreate: true,
+		MinScore:   0.99, // first row creates; second dedups within the batch
+		Rows: []items.MatchRowInput{
+			{Name: base, Qty: 1, Unit: "PCS"},
+			{Name: strings.ToLower(base) + " ", Qty: 3, Unit: "PCS"},
+		},
+	}
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", body)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var out items.MatchRowsResponse
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&out))
+	require.Len(t, out.Rows, 2)
+	require.NotNil(t, out.Rows[0].Matched)
+	require.NotNil(t, out.Rows[1].Matched)
+	assert.Equal(t, out.Rows[0].Matched.ItemID, out.Rows[1].Matched.ItemID,
+		"same normalized name should map to one product")
+}
+
+func TestHandler_MatchRows_NoAutoCreate_LeavesNil(t *testing.T) {
+	srv := newSrv(t)
+	body := items.MatchRowsRequest{
+		Rows: []items.MatchRowInput{
+			{Name: "Totally Unknown Item QQQ-0000-NoCreate", Qty: 1, Unit: "PCS"},
+		},
+	}
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", body)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var out items.MatchRowsResponse
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&out))
+	require.Len(t, out.Rows, 1)
+	assert.Nil(t, out.Rows[0].Matched, "without autoCreate, unmatched stays nil")
+	assert.Equal(t, "NONE", out.Rows[0].Source)
 }

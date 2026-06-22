@@ -352,6 +352,14 @@ func contains(xs []string, s string) bool {
 	return false
 }
 
+// autoCreateKey dedups import rows: impa wins, else normalized name.
+func autoCreateKey(impa, name string) string {
+	if impa != "" {
+		return "impa:" + impa
+	}
+	return "name:" + strings.ToLower(strings.Join(strings.Fields(name), " "))
+}
+
 func (h *Handler) MatchRequest(w http.ResponseWriter, r *http.Request) {
 	var req MatchRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -392,6 +400,9 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
+	userID := deps.CurrentUserID(ctx)
+	// Dedup auto-created rows within this batch by impa-or-normalized-name.
+	created := map[string]int64{}
 	out := make([]MatchRowResult, 0, len(req.Rows))
 	for i, row := range req.Rows {
 		res := MatchRowResult{Index: i, Requested: row, Source: "NONE"}
@@ -418,6 +429,29 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 			}
 			if len(matches) > 0 && matches[0].Confidence >= minScore {
 				itemID, confidence, source = matches[0].ItemID, matches[0].Confidence, matches[0].Source
+			}
+		}
+
+		// No catalog match: create a new product (empty price) when asked.
+		if itemID == 0 && req.AutoCreate {
+			name := strings.TrimSpace(row.Name)
+			if name != "" {
+				key := autoCreateKey(impa, name)
+				if existing, ok := created[key]; ok {
+					itemID, confidence, source = existing, 1.0, "CREATED"
+				} else {
+					var impaPtr *string
+					if impa != "" {
+						impaPtr = &impa
+					}
+					it, err := h.repo.Create(ctx, CreateItemRequest{Name: name, IMPACode: impaPtr}, userID)
+					if err != nil {
+						httperr.RenderDBErr(w, err)
+						return
+					}
+					created[key] = it.ID
+					itemID, confidence, source = it.ID, 1.0, "CREATED"
+				}
 			}
 		}
 
