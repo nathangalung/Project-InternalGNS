@@ -1,4 +1,5 @@
 import { type CSSProperties, useMemo, useState } from "react"
+import ActiveFilters, { type FilterChip } from "@/components/shared/ActiveFilters"
 import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
 import Pagination from "@/components/shared/Pagination"
@@ -128,6 +129,45 @@ export default function PurchaseOrderList({
     await downloadPdf(`/purchase-orders/${poId}/delivery-note.pdf`, `DN-${row.poNumber}.pdf`)
   }
 
+  // Active-filter chips shown above the table.
+  const filterChips = useMemo<FilterChip[]>(() => {
+    const out: FilterChip[] = []
+    if (debouncedSearch) {
+      out.push({ key: "q", label: `Cari: "${debouncedSearch}"`, onRemove: () => setSearch("") })
+    }
+    if (activeFilters) {
+      for (const s of activeFilters.statuses) {
+        out.push({
+          key: `status-${s}`,
+          label: `Status: ${s}`,
+          onRemove: () =>
+            setActiveFilters((p) =>
+              p ? { ...p, statuses: p.statuses.filter((x) => x !== s) } : p,
+            ),
+        })
+      }
+      if (activeFilters.preset !== "30-hari") {
+        out.push({
+          key: "date",
+          label: `Tanggal: ${activeFilters.startDate} s/d ${activeFilters.endDate}`,
+        })
+      }
+      if (activeFilters.minHarga !== "0" || activeFilters.maxHarga !== "500.000.000") {
+        out.push({
+          key: "total",
+          label: `Total: ${activeFilters.minHarga} – ${activeFilters.maxHarga}`,
+        })
+      }
+    }
+    return out
+  }, [debouncedSearch, activeFilters])
+
+  const clearAllFilters = () => {
+    setSearch("")
+    setActiveFilters(null)
+    setCurrentPage(1)
+  }
+
   return (
     <div className="admin-shell">
       <Sidebar activePage={"purchase-orders" as Page} onNavigate={onNavigate} onLogout={onLogout} />
@@ -173,6 +213,8 @@ export default function PurchaseOrderList({
             />
             <FilterButton onClick={() => setShowFilter(true)} />
           </div>
+
+          <ActiveFilters chips={filterChips} onClearAll={clearAllFilters} />
 
           <div className="tbl-container">
             <table className="tbl">

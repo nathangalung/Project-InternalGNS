@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import ActiveFiltersBar, { type FilterChip } from "@/components/shared/ActiveFilters"
 import Pagination from "@/components/shared/Pagination"
 import Sidebar from "@/components/shared/Sidebar"
 import { toTableRow } from "@/features/quotations/adapters"
@@ -87,6 +88,45 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
   const startIndex = (currentPage - 1) * itemsPerPage
 
+  // Active-filter chips shown above the table.
+  const filterChips = useMemo<FilterChip[]>(() => {
+    const out: FilterChip[] = []
+    if (debouncedSearch) {
+      out.push({ key: "q", label: `Cari: "${debouncedSearch}"`, onRemove: () => setSearch("") })
+    }
+    if (activeFilters) {
+      for (const s of activeFilters.statuses) {
+        out.push({
+          key: `status-${s}`,
+          label: `Status: ${s}`,
+          onRemove: () =>
+            setActiveFilters((p) =>
+              p ? { ...p, statuses: p.statuses.filter((x) => x !== s) } : p,
+            ),
+        })
+      }
+      if (activeFilters.preset !== "30-hari") {
+        out.push({
+          key: "date",
+          label: `Tanggal: ${activeFilters.startDate} s/d ${activeFilters.endDate}`,
+        })
+      }
+      if (activeFilters.minHarga !== "0" || activeFilters.maxHarga !== "500.000.000") {
+        out.push({
+          key: "harga",
+          label: `Harga: ${activeFilters.minHarga} – ${activeFilters.maxHarga}`,
+        })
+      }
+    }
+    return out
+  }, [debouncedSearch, activeFilters])
+
+  const clearAllFilters = () => {
+    setSearch("")
+    setActiveFilters(null)
+    setCurrentPage(1)
+  }
+
   return (
     <div className="admin-shell">
       <Sidebar activePage="quotation" onNavigate={onNavigate} onLogout={onLogout} />
@@ -106,6 +146,8 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
             }}
             onOpenFilter={() => setShowFilter(true)}
           />
+
+          <ActiveFiltersBar chips={filterChips} onClearAll={clearAllFilters} />
 
           <div className="tbl-container">
             <QuotationTable

@@ -1,4 +1,5 @@
 import { type CSSProperties, type KeyboardEvent, useMemo, useState } from "react"
+import ActiveFilters from "@/components/shared/ActiveFilters"
 import Sidebar from "@/components/shared/Sidebar"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { buildSeries } from "@/lib/chart"
@@ -249,6 +250,15 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
           </div>
 
           {/* Chart */}
+          <ActiveFilters
+            chips={[
+              {
+                key: "year",
+                label: `Grafik: Tahun ${baseYear}`,
+                onRemove: baseYear !== thisYear ? () => setBaseYear(thisYear) : undefined,
+              },
+            ]}
+          />
           <div className="chart-section">
             <div className="chart-header">
               <h3 className="chart-title">Tren Performa</h3>
