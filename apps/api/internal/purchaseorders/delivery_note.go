@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -80,7 +81,7 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	data := h.buildData(r.Context(), po, items)
+	data, dnNo := h.buildData(r.Context(), po, items)
 
 	pdf, err := h.renderer.Render(r.Context(), "delivery_note/DeliveryNote.tex.tmpl", data)
 	if err != nil {
@@ -88,17 +89,26 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	dn := "DN-" + po.PoNumber
-	if werr := pdfgen.WritePDFResponse(w, dn, pdf); werr != nil {
+	if werr := pdfgen.WritePDFResponse(w, dnNo, pdf); werr != nil {
 		slog.WarnContext(r.Context(), "pdf write failed", "doc", "delivery_note", "po_id", id, "err", werr)
 	}
 }
 
-func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, items []PurchaseOrderItem) dnData {
+// deliveryNoteNumber mirrors the quotation number with a DN- prefix
+// (e.g. DN-2640034/GNS/I/2026), matching invoice and quotation numbering.
+func deliveryNoteNumber(quotationNo, poNumber string) string {
+	if quotationNo != "" {
+		return "DN-" + strings.TrimPrefix(quotationNo, "Q-")
+	}
+	return "DN-" + poNumber
+}
+
+func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, items []PurchaseOrderItem) (dnData, string) {
 	client, _ := h.clients.GetByID(ctx, po.CompanyClientID)
 
-	attn, vessel := "", ""
+	attn, vessel, quotationNo := "", "", ""
 	if q, err := h.quotations.GetDetail(ctx, po.QuotationID); err == nil {
+		quotationNo = q.QuotationNo
 		if q.ContactName != nil {
 			attn = *q.ContactName
 		}
@@ -106,6 +116,7 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, i
 			vessel = *q.VesselName
 		}
 	}
+	dnNo := deliveryNoteNumber(quotationNo, po.PoNumber)
 
 	expItems := make([]dnItem, 0, len(items))
 	for i, it := range items {
@@ -127,7 +138,7 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, i
 	}
 
 	return dnData{
-		DeliveryNoteNo: pdfgen.LatexEscape("DN-" + po.PoNumber),
+		DeliveryNoteNo: pdfgen.LatexEscape(dnNo),
 		PONo:           pdfgen.LatexEscape(po.PoNumber),
 		CompanyName:    pdfgen.LatexEscape(po.CompanyName),
 		CompanyAddress: pdfgen.LatexEscape(pdfgen.StrDeref(client.Address)),
@@ -137,5 +148,5 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, i
 		Items:          expItems,
 		PreparedBy:     pdfgen.LatexEscape(h.settings.SignerName),
 		SenderName:     pdfgen.LatexEscape(h.settings.SignerName),
-	}
+	}, dnNo
 }
