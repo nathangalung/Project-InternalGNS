@@ -11,6 +11,7 @@ import { resolveRange } from "@/lib/date-range"
 import { formatDate, formatNumber, formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import type { InvoiceBackendRow } from "@/types/api"
+import * as invoicesApi from "./api"
 import { useInvoiceSummary, useInvoices } from "./hooks"
 import InvoiceFilter, { type InvoiceFilterValues } from "./InvoiceFilter"
 import type { InvoiceRow, InvoiceStatus } from "./types"
@@ -155,6 +156,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
               <button
                 type="button"
                 className="btn-admin-outline"
+                onClick={() => invoicesApi.exportXlsx(queryParams)}
                 style={{ width: "160px", justifyContent: "center" }}
               >
                 <svg
@@ -171,7 +173,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                Ekspor PDF
+                Ekspor Excel
               </button>
             </div>
           </div>

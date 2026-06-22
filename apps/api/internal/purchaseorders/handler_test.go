@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xuri/excelize/v2"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
@@ -18,6 +19,23 @@ import (
 func newSrv(t *testing.T) *httptest.Server {
 	t.Helper()
 	return testutil.PurchaseOrdersServer(t, seedUserID)
+}
+
+// Bulk list export: filtered POs -> XLSX with delivery-note number column.
+func TestHandler_Export_XLSX(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/purchase-orders/export.xlsx", nil)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Contains(t, res.Header.Get("Content-Type"), "spreadsheetml")
+	body, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+	f, err := excelize.OpenReader(bytes.NewReader(body))
+	require.NoError(t, err)
+	rows, err := f.GetRows("Delivery Note")
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(rows), 1)
+	assert.Equal(t, "No. Delivery Note", rows[0][0])
 }
 
 func doJSON(t *testing.T, srv *httptest.Server, method, path string, body any) *http.Response {

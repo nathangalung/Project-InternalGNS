@@ -11,6 +11,7 @@ import { resolveRange } from "@/lib/date-range"
 import { formatDate, formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import type { PurchaseOrderRow } from "@/types/api"
+import * as purchaseOrdersApi from "./api"
 import { usePurchaseOrders, useUploadPoFile } from "./hooks"
 import { PO_LABEL, shortDocNo } from "./PurchaseOrderDetail/helpers"
 import PurchaseOrderFilter, { type PoFilterValues } from "./PurchaseOrderFilter"
@@ -139,6 +140,7 @@ export default function PurchaseOrderList({
               <button
                 type="button"
                 className="btn-admin-outline"
+                onClick={() => purchaseOrdersApi.exportXlsx(queryParams)}
                 style={{ width: "160px", justifyContent: "center" }}
               >
                 <svg
@@ -155,7 +157,7 @@ export default function PurchaseOrderList({
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                Ekspor PDF
+                Ekspor Excel
               </button>
             </div>
           </div>

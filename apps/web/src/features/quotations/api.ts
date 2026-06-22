@@ -1,4 +1,4 @@
-import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
+import { apiList, apiRequest, buildQuery, downloadXlsx, type PaginatedList } from "@/lib/api-client"
 import type {
   CanonicalStatus,
   QuotationCreateInput,
@@ -25,6 +25,12 @@ export async function list(
   return apiList<QuotationListRow>({
     path: `/quotations${qs ? `?${qs}` : ""}`,
   })
+}
+
+// Download the filtered list as XLSX.
+export function exportXlsx(params: QuotationListParams = {}): Promise<void> {
+  const qs = buildListQuery(params)
+  return downloadXlsx(`/quotations/export.xlsx${qs ? `?${qs}` : ""}`, "quotation-export.xlsx")
 }
 
 export async function stats(): Promise<QuotationStatusCount[]> {

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
 )
 
 type Handler struct {
@@ -23,9 +25,9 @@ func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
 
-func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+// parseListFilter reads the shared list filters (no pagination).
+func parseListFilter(r *http.Request) ListFilter {
 	q := r.URL.Query()
-
 	f := ListFilter{
 		Q:       q.Get("q"),
 		SortBy:  q.Get("sortBy"),
@@ -46,6 +48,11 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if s := q.Get("maxTotal"); s != "" {
 		f.MaxTotal = &s
 	}
+	return f
+}
+
+func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	f := parseListFilter(r)
 	f.Limit, f.Offset = paginate.Parse(r)
 
 	res, err := h.repo.List(r.Context(), f)
@@ -55,6 +62,40 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
+}
+
+// exportMaxRows caps a filtered export to the full result set.
+const exportMaxRows = 100000
+
+// Export streams the filtered quotation list as an XLSX table.
+func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
+	f := parseListFilter(r)
+	f.Limit, f.Offset = exportMaxRows, 0
+
+	res, err := h.repo.List(r.Context(), f)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	headers := []string{"No. Quotation", "Tanggal", "Klien", "Status", "Subtotal", "Diskon", "Grand Total"}
+	rows := make([][]string, 0, len(res.Rows))
+	for _, q := range res.Rows {
+		rows = append(rows, []string{
+			q.QuotationNo,
+			q.CreatedAt.In(time.Local).Format("2006-01-02"),
+			q.CompanyName,
+			q.Status,
+			q.Subtotal,
+			q.TotalDiscount,
+			q.GrandTotal,
+		})
+	}
+	data, err := sheet.Write("Quotation", headers, rows)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	httpx.WriteXLSX(w, "quotation-export", data)
 }
 
 func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {

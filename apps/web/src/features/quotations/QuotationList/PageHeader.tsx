@@ -2,15 +2,20 @@ import type { Page } from "@/lib/page"
 
 interface PageHeaderProps {
   onNavigate: (page: Page) => void
+  onExport: () => void
 }
 
 // Title bar plus three actions.
-export default function PageHeader({ onNavigate }: PageHeaderProps) {
+export default function PageHeader({ onNavigate, onExport }: PageHeaderProps) {
   return (
     <div className="page-header">
       <h1 className="page-title">Daftar Quotation</h1>
       <div className="page-actions">
-        <button className="btn-admin-outline" style={{ width: "160px", justifyContent: "center" }}>
+        <button
+          className="btn-admin-outline"
+          onClick={onExport}
+          style={{ width: "160px", justifyContent: "center" }}
+        >
           <svg
             width="14"
             height="14"
@@ -25,7 +30,7 @@ export default function PageHeader({ onNavigate }: PageHeaderProps) {
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          Ekspor PDF
+          Ekspor Excel
         </button>
         <button
           className="btn-admin-primary"

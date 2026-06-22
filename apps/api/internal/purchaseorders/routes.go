@@ -16,6 +16,7 @@ func Routes(d deps.Deps) chi.Router {
 	h.storage = d.Storage
 
 	r.Get("/", h.List)
+	r.Get("/export.xlsx", h.Export)
 	r.Get("/by-quotation/{quotationId}", h.GetByQuotation)
 	r.Get("/{id}", h.Get)
 	r.Get("/{id}/items", h.ListItems)

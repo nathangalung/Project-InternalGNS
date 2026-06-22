@@ -13,6 +13,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xuri/excelize/v2"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
@@ -292,6 +293,26 @@ func TestHandler_ChangeStatus(t *testing.T) {
 	res := doJSON(t, srv, http.MethodPatch, "/quotations/"+strconv.FormatInt(id, 10)+"/status", quotations.ChangeStatusRequest{Status: "sent"})
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNoContent, res.StatusCode)
+}
+
+// Bulk list export: filtered rows -> XLSX, header + one row per quotation.
+func TestHandler_Export_XLSX(t *testing.T) {
+	srv, _ := resetServer(t)
+	mustCreate(t, srv)
+
+	res := doJSON(t, srv, http.MethodGet, "/quotations/export.xlsx", nil)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Contains(t, res.Header.Get("Content-Type"), "spreadsheetml")
+
+	body, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+	f, err := excelize.OpenReader(bytes.NewReader(body))
+	require.NoError(t, err)
+	rows, err := f.GetRows("Quotation")
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(rows), 2, "header + at least one data row")
+	assert.Equal(t, "No. Quotation", rows[0][0])
 }
 
 // Send-time guard: a product line with no selling price blocks finalizing.

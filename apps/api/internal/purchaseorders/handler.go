@@ -14,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
@@ -31,16 +32,13 @@ func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
 
-func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+// parseListFilter reads the shared PO list filters (no pagination).
+func parseListFilter(r *http.Request) ListFilter {
 	q := r.URL.Query()
-	limit, offset := paginate.Parse(r)
-
 	f := ListFilter{
 		Q:       strings.TrimSpace(q.Get("q")),
 		SortBy:  q.Get("sortBy"),
 		SortDir: q.Get("sortDir"),
-		Limit:   limit,
-		Offset:  offset,
 	}
 	if s := strings.TrimSpace(q.Get("status")); s != "" {
 		for _, raw := range strings.Split(s, ",") {
@@ -57,6 +55,12 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if s := strings.TrimSpace(q.Get("maxTotal")); s != "" {
 		f.MaxTotal = &s
 	}
+	return f
+}
+
+func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	f := parseListFilter(r)
+	f.Limit, f.Offset = paginate.Parse(r)
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
@@ -65,6 +69,40 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
+}
+
+// exportMaxRows caps a filtered export to the full result set.
+const exportMaxRows = 100000
+
+// Export streams the filtered PO list (with delivery-note numbers) as XLSX.
+func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
+	f := parseListFilter(r)
+	f.Limit, f.Offset = exportMaxRows, 0
+
+	res, err := h.repo.List(r.Context(), f)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	headers := []string{"No. Delivery Note", "No. PO", "No. Quotation", "Tanggal", "Klien", "Status", "Total"}
+	rows := make([][]string, 0, len(res.Rows))
+	for _, po := range res.Rows {
+		rows = append(rows, []string{
+			deliveryNoteNumber(po.QuotationNo, po.PoNumber),
+			po.PoNumber,
+			po.QuotationNo,
+			po.PoDate.In(time.Local).Format("2006-01-02"),
+			po.CompanyName,
+			string(po.Status),
+			po.PoTotalProduk,
+		})
+	}
+	data, err := sheet.Write("Delivery Note", headers, rows)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	httpx.WriteXLSX(w, "delivery-note-export", data)
 }
 
 // Accepts YYYY-MM-DD or RFC3339; nil on empty/invalid.

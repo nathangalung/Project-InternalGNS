@@ -195,6 +195,12 @@ type PickerType = { description: string; accept: Record<string, string[]> }
 
 const PICKER_PDF: PickerType = { description: "PDF", accept: { "application/pdf": [".pdf"] } }
 const PICKER_XML: PickerType = { description: "XML", accept: { "application/xml": [".xml"] } }
+const PICKER_XLSX: PickerType = {
+  description: "Excel",
+  accept: {
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+  },
+}
 
 // Fetch binary endpoint as blob; let user pick dir + edit filename when supported.
 async function downloadBinary(
@@ -215,6 +221,8 @@ export const downloadPdf = (path: string, filename: string) =>
   downloadBinary(path, filename, PICKER_PDF)
 export const downloadXml = (path: string, filename: string) =>
   downloadBinary(path, filename, PICKER_XML)
+export const downloadXlsx = (path: string, filename: string) =>
+  downloadBinary(path, filename, PICKER_XLSX)
 
 // File System Access API where supported; else anchor fallback.
 export async function saveBlob(

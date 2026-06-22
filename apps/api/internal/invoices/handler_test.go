@@ -10,10 +10,28 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xuri/excelize/v2"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/invoices"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
+
+// Bulk list export: filtered invoices -> XLSX with a header row.
+func TestHandler_Export_XLSX(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/invoices/export.xlsx", nil)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Contains(t, res.Header.Get("Content-Type"), "spreadsheetml")
+	body, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+	f, err := excelize.OpenReader(bytes.NewReader(body))
+	require.NoError(t, err)
+	rows, err := f.GetRows("Invoice")
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(rows), 1)
+	assert.Equal(t, "No. Invoice", rows[0][0])
+}
 
 func newSrv(t *testing.T) *httptest.Server {
 	t.Helper()

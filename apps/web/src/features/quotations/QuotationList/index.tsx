@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import Pagination from "@/components/shared/Pagination"
 import Sidebar from "@/components/shared/Sidebar"
 import { toTableRow } from "@/features/quotations/adapters"
+import * as quotationsApi from "@/features/quotations/api"
 import { useQuotations } from "@/features/quotations/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { resolveRange } from "@/lib/date-range"
@@ -92,7 +93,10 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
 
       <div className="admin-main">
         <div className="page-content">
-          <PageHeader onNavigate={onNavigate} />
+          <PageHeader
+            onNavigate={onNavigate}
+            onExport={() => quotationsApi.exportXlsx(queryParams)}
+          />
           <SummaryCards />
           <SearchBar
             search={search}
