@@ -206,10 +206,21 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 
 	userID := deps.CurrentUserID(r.Context())
 	if err := h.repo.ChangeStatus(r.Context(), id, req.Status, req.Note, userID); err != nil {
-		httperr.RenderDBErr(w, err)
+		renderStatusErr(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// renderStatusErr maps the unpriced-products guard to 422, else a DB error.
+func renderStatusErr(w http.ResponseWriter, err error) {
+	if errors.Is(err, ErrUnpricedProducts) {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{
+			"items": "all product lines must have a selling price before sending",
+		}))
+		return
+	}
+	httperr.RenderDBErr(w, err)
 }
 
 // Send forces status to sent with optional note.
@@ -231,7 +242,7 @@ func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 	}
 	userID := deps.CurrentUserID(r.Context())
 	if err := h.repo.ChangeStatus(r.Context(), id, "sent", &note, userID); err != nil {
-		httperr.RenderDBErr(w, err)
+		renderStatusErr(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)

@@ -294,6 +294,31 @@ func TestHandler_ChangeStatus(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, res.StatusCode)
 }
 
+// Send-time guard: a product line with no selling price blocks finalizing.
+func TestHandler_ChangeStatus_RejectsUnpricedOnSend(t *testing.T) {
+	srv, _ := resetServer(t)
+	req := sampleCreate()
+	req.Items = []quotations.CreateItem{{
+		RequestedItemID: int64Ptr(seedItemID),
+		RequestedName:   "Unpriced Imported Item",
+		Qty:             "1",
+		UnitID:          seedUnitID,
+		SellingPrice:    "0",
+	}}
+	cres := doJSON(t, srv, http.MethodPost, "/quotations/", req)
+	require.Equal(t, http.StatusCreated, cres.StatusCode)
+	var got map[string]int64
+	require.NoError(t, json.NewDecoder(cres.Body).Decode(&got))
+	cres.Body.Close()
+	id := got["id"]
+
+	sres := doJSON(t, srv, http.MethodPatch,
+		"/quotations/"+strconv.FormatInt(id, 10)+"/status",
+		quotations.ChangeStatusRequest{Status: "sent"})
+	defer sres.Body.Close()
+	assert.Equal(t, http.StatusUnprocessableEntity, sres.StatusCode)
+}
+
 func TestHandler_ChangeStatus_BadID(t *testing.T) {
 	srv, _ := resetServer(t)
 	res := doJSON(t, srv, http.MethodPatch, "/quotations/foo/status", quotations.ChangeStatusRequest{Status: "sent"})

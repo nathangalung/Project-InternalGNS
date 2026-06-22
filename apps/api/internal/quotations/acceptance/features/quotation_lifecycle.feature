@@ -27,6 +27,11 @@ Feature: Quotation lifecycle
     Then the response status is 200
     And the quotation status is "sent"
 
+  Scenario: Cannot send a quotation with an unpriced product line
+    When the user creates a quotation with an unpriced product line
+    And the user sends the quotation
+    Then the response status is 422
+
   Scenario Outline: Valid status transitions
     Given an existing draft quotation
     When the user transitions the quotation through "<path>"
