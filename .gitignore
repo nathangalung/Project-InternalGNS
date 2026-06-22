@@ -55,3 +55,6 @@ __pycache__/
 
 # Claude session-local
 .claude/
+
+# Source documents for seed generation (large binaries, not needed at build/runtime)
+apps/api/db/extracts/
