@@ -622,7 +622,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                           flexShrink: 0,
                         }}
                       >
-                        +{dialCode || "62"}
+                        {dialCode || "+62"}
                       </span>
                       <input
                         type="text"

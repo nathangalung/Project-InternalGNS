@@ -16,7 +16,8 @@ import (
 var ErrNotConfigured = errors.New("storage: minio not configured")
 
 type Client struct {
-	mc *minio.Client
+	mc      *minio.Client
+	presign *minio.Client
 }
 
 type Config struct {
@@ -24,6 +25,10 @@ type Config struct {
 	AccessKey string
 	SecretKey string
 	UseSSL    bool
+	// PublicEndpoint signs presigned URLs with a browser-reachable host.
+	// Empty falls back to Endpoint (dev / same-network).
+	PublicEndpoint string
+	PublicUseSSL   bool
 }
 
 // New initializes the MinIO client and ensures every bucket in AllBuckets
@@ -51,12 +56,26 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 			return nil, fmt.Errorf("storage: make bucket %q: %w", b, err)
 		}
 	}
-	return &Client{mc: mc}, nil
+
+	// Presign with the public host so browsers can reach the signed URL.
+	presign := mc
+	if cfg.PublicEndpoint != "" && cfg.PublicEndpoint != cfg.Endpoint {
+		pmc, err := minio.New(cfg.PublicEndpoint, &minio.Options{
+			Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
+			Secure: cfg.PublicUseSSL,
+			Region: "us-east-1", // avoid a per-presign bucket-location lookup
+		})
+		if err != nil {
+			return nil, fmt.Errorf("storage: new presign client: %w", err)
+		}
+		presign = pmc
+	}
+	return &Client{mc: mc, presign: presign}, nil
 }
 
 // PresignPut returns a presigned PUT URL valid for expiry.
 func (c *Client) PresignPut(ctx context.Context, bucket, objectKey string, expiry time.Duration) (string, error) {
-	u, err := c.mc.PresignedPutObject(ctx, bucket, objectKey, expiry)
+	u, err := c.presign.PresignedPutObject(ctx, bucket, objectKey, expiry)
 	if err != nil {
 		return "", fmt.Errorf("storage: presign put: %w", err)
 	}
@@ -65,7 +84,7 @@ func (c *Client) PresignPut(ctx context.Context, bucket, objectKey string, expir
 
 // PresignGet returns a presigned GET URL valid for expiry.
 func (c *Client) PresignGet(ctx context.Context, bucket, objectKey string, expiry time.Duration) (string, error) {
-	u, err := c.mc.PresignedGetObject(ctx, bucket, objectKey, expiry, url.Values{})
+	u, err := c.presign.PresignedGetObject(ctx, bucket, objectKey, expiry, url.Values{})
 	if err != nil {
 		return "", fmt.Errorf("storage: presign get: %w", err)
 	}

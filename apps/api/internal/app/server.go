@@ -44,10 +44,12 @@ func NewServer(ctx context.Context, cfg Config) (*http.Server, error) {
 	}
 
 	storageClient, err := storage.New(ctx, storage.Config{
-		Endpoint:  cfg.MinioEndpoint,
-		AccessKey: cfg.MinioAccessKey,
-		SecretKey: cfg.MinioSecretKey,
-		UseSSL:    cfg.MinioUseSSL,
+		Endpoint:       cfg.MinioEndpoint,
+		AccessKey:      cfg.MinioAccessKey,
+		SecretKey:      cfg.MinioSecretKey,
+		UseSSL:         cfg.MinioUseSSL,
+		PublicEndpoint: cfg.MinioPublicEndpoint,
+		PublicUseSSL:   cfg.MinioPublicUseSSL,
 	})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotConfigured) {
