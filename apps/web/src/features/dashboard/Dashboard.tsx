@@ -1,4 +1,4 @@
-import { type CSSProperties, useMemo, useState } from "react"
+import { type CSSProperties, type KeyboardEvent, useMemo, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { buildSeries } from "@/lib/chart"
@@ -49,7 +49,10 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
   const [activeTab, setActiveTab] = useState("Quotation")
   const { data: summary } = useDashboardSummary()
 
-  const baseYear = new Date().getFullYear()
+  const thisYear = new Date().getFullYear()
+  const [baseYear, setBaseYear] = useState(thisYear)
+  const [showYearMenu, setShowYearMenu] = useState(false)
+  const yearOptions = [thisYear, thisYear - 1, thisYear - 2, thisYear - 3]
   const fromDate = `${baseYear}-01-01`
   const toDate = `${baseYear}-12-31`
 
@@ -82,6 +85,17 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
   const dueSoon = summary?.invoicesDueSoon ?? 0
   const overdue = summary?.invoicesOverdue ?? 0
 
+  // Stat cards jump to the related list page.
+  const cardNav = (page: Page) => ({
+    onClick: () => onNavigate(page),
+    onKeyDown: (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") onNavigate(page)
+    },
+    role: "button",
+    tabIndex: 0,
+    style: { cursor: "pointer" },
+  })
+
   return (
     <div className="admin-shell">
       <Sidebar activePage="dashboard" onNavigate={onNavigate} onLogout={onLogout} />
@@ -108,36 +122,84 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
                 </svg>
                 Ekspor Excel
               </button>
-              <button className="btn-admin-filter">
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              <div style={{ position: "relative" }}>
+                <button
+                  type="button"
+                  className="btn-admin-filter"
+                  onClick={() => setShowYearMenu((v) => !v)}
                 >
-                  <line x1="4" y1="6" x2="20" y2="6" />
-                  <line x1="7" y1="12" x2="17" y2="12" />
-                  <line x1="10" y1="18" x2="14" y2="18" />
-                </svg>
-                Filter
-              </button>
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="4" y1="6" x2="20" y2="6" />
+                    <line x1="7" y1="12" x2="17" y2="12" />
+                    <line x1="10" y1="18" x2="14" y2="18" />
+                  </svg>
+                  Filter: {baseYear}
+                </button>
+                {showYearMenu && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      right: 0,
+                      top: "calc(100% + 4px)",
+                      background: "#fff",
+                      border: "1px solid #E5E7EB",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,.12)",
+                      zIndex: 20,
+                      minWidth: "130px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {yearOptions.map((y) => (
+                      <button
+                        key={y}
+                        type="button"
+                        onClick={() => {
+                          setBaseYear(y)
+                          setShowYearMenu(false)
+                        }}
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          textAlign: "left",
+                          padding: "9px 14px",
+                          border: "none",
+                          background: y === baseYear ? "rgba(99,14,212,.06)" : "#fff",
+                          cursor: "pointer",
+                          fontFamily: "'Inter', sans-serif",
+                          fontWeight: y === baseYear ? 600 : 500,
+                          fontSize: "13px",
+                          color: y === baseYear ? "#630ED4" : "#4A4455",
+                        }}
+                      >
+                        Tahun {y}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           {/* Row 1 */}
           <div className="stats-grid-3">
-            <div className="stat-card">
+            <div className="stat-card" {...cardNav("invoices")}>
               <div className="stat-label">Total Pendapatan</div>
               <div className="stat-value">{formatRp(totalRevenue)}</div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card" {...cardNav("purchase-orders")}>
               <div className="stat-label">Total Pengeluaran</div>
               <div className="stat-value">{formatRp(totalExpenses)}</div>
             </div>
-            <div className="stat-card stat-card--accent">
+            <div className="stat-card stat-card--accent" {...cardNav("purchase-orders")}>
               <div className="stat-label">Total Purchase Order</div>
               <div className="stat-value">{formatId(totalPo)}</div>
             </div>
@@ -145,15 +207,15 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
 
           {/* Row 2 */}
           <div className="stats-grid-3">
-            <div className="stat-card">
+            <div className="stat-card" {...cardNav("invoices")}>
               <div className="stat-label">Total Laba Bersih</div>
               <div className="stat-value">{formatRp(totalProfit)}</div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card" {...cardNav("invoices")}>
               <div className="stat-label">Total PPN</div>
               <div className="stat-value">{formatRp(totalPpn)}</div>
             </div>
-            <div className="stat-card stat-card--accent-light">
+            <div className="stat-card stat-card--accent-light" {...cardNav("invoices")}>
               <div
                 className="card-overlay"
                 style={{
@@ -168,19 +230,19 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
 
           {/* Row 3 */}
           <div className="stats-grid-4">
-            <div className="stat-card">
+            <div className="stat-card" {...cardNav("quotation")}>
               <div className="stat-label">Total Quotation</div>
               <div className="stat-value">{formatId(totalQuotation)}</div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card" {...cardNav("quotation")}>
               <div className="stat-label">Total Quotation Ditolak</div>
               <div className="stat-value">{formatId(totalRejected)}</div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card" {...cardNav("purchase-orders")}>
               <div className="stat-label">Total Purchase Order</div>
               <div className="stat-value">{formatId(totalPo)}</div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card" {...cardNav("invoices")}>
               <div className="stat-label">Total Invoice Dibayar</div>
               <div className="stat-value">{formatId(totalPaid)}</div>
             </div>
@@ -231,7 +293,9 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
                 <h3>{formatId(dueSoon)} Invoice</h3>
                 <p>Invoice akan segera jatuh tempo</p>
               </div>
-              <button className="alert-btn">Tinjau</button>
+              <button type="button" className="alert-btn" onClick={() => onNavigate("invoices")}>
+                Tinjau
+              </button>
             </div>
             <div className="alert-card alert--danger">
               <div className="card-glow" style={{ background: "rgba(239,94,94,.3)" }} />
@@ -239,7 +303,9 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
                 <h3>{formatId(overdue)} Invoice</h3>
                 <p>Invoice telah jatuh tempo</p>
               </div>
-              <button className="alert-btn">Tinjau</button>
+              <button type="button" className="alert-btn" onClick={() => onNavigate("invoices")}>
+                Tinjau
+              </button>
             </div>
           </div>
         </div>
