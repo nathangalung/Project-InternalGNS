@@ -45,6 +45,12 @@ export function exportXlsx(params: ListParams = {}): Promise<void> {
   return downloadXlsx(`/invoices/export.xlsx${qs ? `?${qs}` : ""}`, "invoice-export.xlsx")
 }
 
+// Download the filtered list as the DJP Coretax bulk-import workbook.
+export function exportCoretaxXlsx(params: ListParams = {}): Promise<void> {
+  const qs = buildQuery(params)
+  return downloadXlsx(`/invoices/coretax.xlsx${qs ? `?${qs}` : ""}`, "coretax-export.xlsx")
+}
+
 export async function summary(): Promise<InvoiceSummary> {
   return apiRequest<InvoiceSummary>({ path: "/invoices/summary" })
 }

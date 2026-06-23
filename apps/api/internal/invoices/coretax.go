@@ -23,13 +23,14 @@ import (
 // Field names use DJP's casing — including the literal `BuyerAdress` typo —
 // because the coretax importer does string-match validation.
 type CoretaxHandler struct {
-	repo     *Repo
-	clients  *clients.Repo
-	settings deps.CoretaxSettings
+	repo          *Repo
+	clients       *clients.Repo
+	settings      deps.CoretaxSettings
+	templatesRoot string
 }
 
-func NewCoretaxHandler(repo *Repo, c *clients.Repo, s deps.CoretaxSettings) *CoretaxHandler {
-	return &CoretaxHandler{repo: repo, clients: c, settings: s}
+func NewCoretaxHandler(repo *Repo, c *clients.Repo, s deps.CoretaxSettings, templatesRoot string) *CoretaxHandler {
+	return &CoretaxHandler{repo: repo, clients: c, settings: s, templatesRoot: templatesRoot}
 }
 
 type coretaxGoodService struct {
@@ -125,6 +126,16 @@ func (h *CoretaxHandler) Export(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CoretaxHandler) buildBulk(inv Invoice, items []InvoiceItem, client clients.Client) coretaxBulk {
+	return coretaxBulk{
+		TIN:      h.settings.SellerTIN,
+		Invoices: []coretaxTaxInvoice{coretaxInvoiceFor(h.settings, inv, items, client)},
+	}
+}
+
+// coretaxInvoiceFor maps one invoice + its items + buyer into a TaxInvoice.
+// Shared by the single-invoice XML export and the bulk XLSX export so the
+// field derivation lives in one place.
+func coretaxInvoiceFor(settings deps.CoretaxSettings, inv Invoice, items []InvoiceItem, client clients.Client) coretaxTaxInvoice {
 	trxCode := "04"
 	if inv.TaxTransactionCode != nil && *inv.TaxTransactionCode != "" {
 		trxCode = *inv.TaxTransactionCode
@@ -155,12 +166,12 @@ func (h *CoretaxHandler) buildBulk(inv Invoice, items []InvoiceItem, client clie
 		goods = append(goods, buildGoodService(it))
 	}
 
-	tx := coretaxTaxInvoice{
+	return coretaxTaxInvoice{
 		TaxInvoiceDate: inv.InvoiceDate.Format("2006-01-02"),
 		TaxInvoiceOpt:  fakturType,
 		TrxCode:        trxCode,
 		RefDesc:        inv.InvoiceNo,
-		SellerIDTKU:    h.settings.SellerIDTKU,
+		SellerIDTKU:    settings.SellerIDTKU,
 		BuyerTin:       buyerTIN,
 		BuyerDocument:  buyerDoc,
 		BuyerCountry:   buyerCountry,
@@ -169,11 +180,6 @@ func (h *CoretaxHandler) buildBulk(inv Invoice, items []InvoiceItem, client clie
 		BuyerEmail:     strDeref(client.Email),
 		BuyerIDTKU:     buyerIDTKU,
 		ListOfGoodSrv:  goods,
-	}
-
-	return coretaxBulk{
-		TIN:      h.settings.SellerTIN,
-		Invoices: []coretaxTaxInvoice{tx},
 	}
 }
 

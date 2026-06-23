@@ -29,7 +29,8 @@ func Routes(d deps.Deps) chi.Router {
 	r.Get("/{id}/attachment/download-url", h.PresignAttachmentDownload)
 	r.Patch("/{id}/attachment", h.UpdateAttachment)
 
-	coretax := NewCoretaxHandler(repo, clientsRepo, d.Coretax)
+	coretax := NewCoretaxHandler(repo, clientsRepo, d.Coretax, d.TemplatesRoot)
+	r.Get("/coretax.xlsx", coretax.ExportBulkXLSX)
 	r.Get("/{id}/coretax.xml", coretax.Export)
 
 	if d.TemplatesRoot != "" {
