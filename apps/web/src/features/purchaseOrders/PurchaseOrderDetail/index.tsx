@@ -13,7 +13,7 @@ import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
 import * as vendorsApi from "@/features/vendors/api"
-import { downloadPdf, saveBlob } from "@/lib/api-client"
+import { downloadPdf, fetchObjectUrl, saveBlob } from "@/lib/api-client"
 import { toNum } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import { queryKeys } from "@/lib/query-keys"
@@ -245,8 +245,13 @@ export default function PurchaseOrderDetail({
   async function handleDownload() {
     if (!po?.objectKey || !po?.fileName) return
     const { downloadUrl } = await poApi.presignDownload(po.id)
-    const blob = await (await fetch(downloadUrl)).blob()
-    await saveBlob(blob, po.fileName)
+    const objectUrl = await fetchObjectUrl(downloadUrl)
+    try {
+      const blob = await (await fetch(objectUrl)).blob()
+      await saveBlob(blob, po.fileName)
+    } finally {
+      URL.revokeObjectURL(objectUrl)
+    }
   }
 
   async function handleDownloadDeliveryNote() {

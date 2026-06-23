@@ -71,6 +71,11 @@ func bodyLimitMiddleware(maxBytes int64) func(http.Handler) http.Handler {
 				next.ServeHTTP(w, r)
 				return
 			}
+			// Asset uploads stream large files; they cap their own body.
+			if strings.HasPrefix(r.URL.Path, "/api/v1/storage/") {
+				next.ServeHTTP(w, r)
+				return
+			}
 			r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
 			next.ServeHTTP(w, r)
 		})

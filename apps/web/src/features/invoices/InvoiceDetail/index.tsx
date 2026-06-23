@@ -8,7 +8,7 @@ import { nowLabel } from "@/features/quotations/QuotationDetail/helpers"
 import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
-import { downloadPdf } from "@/lib/api-client"
+import { downloadPdf, fetchObjectUrl } from "@/lib/api-client"
 import { toNum } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import type { InvoiceBackendRow, InvoiceBackendStatus } from "@/types/api"
@@ -151,10 +151,11 @@ export default function InvoiceDetail({
     uploadAttachment.mutate({ id: inv.id, file })
   }
 
-  function handleAttachmentDownload() {
-    if (attachmentDownload?.downloadUrl) {
-      window.open(attachmentDownload.downloadUrl, "_blank", "noopener,noreferrer")
-    }
+  async function handleAttachmentDownload() {
+    if (!attachmentDownload?.downloadUrl) return
+    const objectUrl = await fetchObjectUrl(attachmentDownload.downloadUrl)
+    window.open(objectUrl, "_blank", "noopener,noreferrer")
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
   }
 
   function handleSave() {

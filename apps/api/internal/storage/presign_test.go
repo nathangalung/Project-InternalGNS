@@ -2,31 +2,40 @@ package storage
 
 import (
 	"context"
-	"strings"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
-
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-// Presigned URLs must carry the public host so a browser can reach them.
-func TestPresignPut_UsesPublicEndpoint(t *testing.T) {
-	pmc, err := minio.New("s3.public.example.com", &minio.Options{
-		Creds:  credentials.NewStaticV4("ak", "sk", ""),
-		Secure: true,
-		Region: "us-east-1",
-	})
-	if err != nil {
-		t.Fatalf("new presign client: %v", err)
-	}
-	c := &Client{presign: pmc}
-
+// Presign now returns the API-relative proxy path (no public MinIO host).
+func TestPresign_ReturnsProxyPath(t *testing.T) {
+	c := &Client{}
 	u, err := c.PresignPut(context.Background(), "po-files", "po/1/scan.pdf", time.Minute)
 	if err != nil {
 		t.Fatalf("presign put: %v", err)
 	}
-	if !strings.HasPrefix(u, "https://s3.public.example.com/") {
-		t.Fatalf("presigned URL not on public host: %q", u)
+	const want = "/storage/object?bucket=po-files&key=po%2F1%2Fscan.pdf"
+	if u != want {
+		t.Fatalf("PresignPut = %q, want %q", u, want)
+	}
+}
+
+// The proxy rejects unknown buckets and traversal keys before touching MinIO.
+func TestHandler_RejectsBadInput(t *testing.T) {
+	h := NewHandler(nil)
+	cases := []struct{ name, q string }{
+		{"unknown bucket", "?bucket=evil&key=a.png"},
+		{"traversal key", "?bucket=" + AllBuckets[0] + "&key=../etc/passwd"},
+		{"empty key", "?bucket=" + AllBuckets[0] + "&key="},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			h.Get(rec, httptest.NewRequest(http.MethodGet, "/storage/object"+c.q, nil))
+			if rec.Code != http.StatusBadRequest {
+				t.Fatalf("want 400, got %d", rec.Code)
+			}
+		})
 	}
 }

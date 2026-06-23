@@ -224,6 +224,29 @@ export const downloadXml = (path: string, filename: string) =>
 export const downloadXlsx = (path: string, filename: string) =>
   downloadBinary(path, filename, PICKER_XLSX)
 
+// Authed PUT of a file to an API asset path (proxy upload to MinIO).
+export async function uploadAsset(path: string, file: File): Promise<void> {
+  const res = await fetchAuthed(path, {
+    method: "PUT",
+    body: file,
+    headers: { "Content-Type": file.type || "application/octet-stream" },
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => "")
+    throw new ApiError(res.status, text, `Upload failed: ${res.statusText}`)
+  }
+}
+
+// Authed GET of an asset as a blob object URL (for <img src>). Caller revokes.
+export async function fetchObjectUrl(path: string): Promise<string> {
+  const res = await fetchAuthed(path, { method: "GET" })
+  if (!res.ok) {
+    throw new ApiError(res.status, null, `Fetch failed: ${res.statusText}`)
+  }
+  const blob = await res.blob()
+  return URL.createObjectURL(blob)
+}
+
 // File System Access API where supported; else anchor fallback.
 export async function saveBlob(
   blob: Blob,

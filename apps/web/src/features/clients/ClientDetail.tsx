@@ -10,7 +10,7 @@ import {
   useUploadClientLogo,
 } from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
-import { ApiError } from "@/lib/api-client"
+import { ApiError, fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
 import type { Page } from "@/lib/page"
 import type { ClientRow } from "@/types/api"
@@ -88,8 +88,27 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
   const { data: logoDownload } = useClientLogoDownloadUrl(client.id, client.logoObjectKey)
 
   useEffect(() => {
-    if (logoDownload?.downloadUrl) setLogoDataUrl(logoDownload.downloadUrl)
-    else if (!client.logoObjectKey) setLogoDataUrl("")
+    const path = logoDownload?.downloadUrl
+    if (!path) {
+      if (!client.logoObjectKey) setLogoDataUrl("")
+      return
+    }
+    let active = true
+    let objectUrl = ""
+    fetchObjectUrl(path)
+      .then((u) => {
+        if (active) {
+          objectUrl = u
+          setLogoDataUrl(u)
+        } else {
+          URL.revokeObjectURL(u)
+        }
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
   }, [logoDownload?.downloadUrl, client.logoObjectKey])
 
   useEffect(() => {

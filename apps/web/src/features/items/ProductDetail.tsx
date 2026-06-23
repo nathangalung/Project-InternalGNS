@@ -14,7 +14,7 @@ import {
   useUploadItemImage,
 } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
-import { ApiError } from "@/lib/api-client"
+import { ApiError, fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
 import { formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
@@ -93,8 +93,27 @@ export default function ProductDetail({
   const { data: itemVendors, isLoading: vendorsLoading } = useItemVendors(product.id)
 
   useEffect(() => {
-    if (imageDownload?.downloadUrl) setImageDataUrl(imageDownload.downloadUrl)
-    else if (!product.imageObjectKey) setImageDataUrl("")
+    const path = imageDownload?.downloadUrl
+    if (!path) {
+      if (!product.imageObjectKey) setImageDataUrl("")
+      return
+    }
+    let active = true
+    let objectUrl = ""
+    fetchObjectUrl(path)
+      .then((u) => {
+        if (active) {
+          objectUrl = u
+          setImageDataUrl(u)
+        } else {
+          URL.revokeObjectURL(u)
+        }
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
   }, [imageDownload?.downloadUrl, product.imageObjectKey])
 
   function handleImageSelect(file: File | undefined) {

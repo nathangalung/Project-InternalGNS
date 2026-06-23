@@ -34,10 +34,6 @@ type Config struct {
 	MinioAccessKey string `env:"MINIO_ACCESS_KEY"`
 	MinioSecretKey string `env:"MINIO_SECRET_KEY"`
 	MinioUseSSL    bool   `env:"MINIO_USE_SSL"    envDefault:"false"`
-	// Browser-reachable host used only when signing presigned URLs. Falls back
-	// to MinioEndpoint when empty (dev). In prod set to the public S3 host.
-	MinioPublicEndpoint string `env:"MINIO_PUBLIC_ENDPOINT"`
-	MinioPublicUseSSL   bool   `env:"MINIO_PUBLIC_USE_SSL" envDefault:"true"`
 
 	TZ string `env:"TZ" envDefault:"Asia/Jakarta"`
 

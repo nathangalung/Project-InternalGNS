@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/url"
 	"path"
 	"strings"
@@ -13,11 +14,13 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-var ErrNotConfigured = errors.New("storage: minio not configured")
+var (
+	ErrNotConfigured  = errors.New("storage: minio not configured")
+	ErrObjectNotFound = errors.New("storage: object not found")
+)
 
 type Client struct {
-	mc      *minio.Client
-	presign *minio.Client
+	mc *minio.Client
 }
 
 type Config struct {
@@ -25,10 +28,6 @@ type Config struct {
 	AccessKey string
 	SecretKey string
 	UseSSL    bool
-	// PublicEndpoint signs presigned URLs with a browser-reachable host.
-	// Empty falls back to Endpoint (dev / same-network).
-	PublicEndpoint string
-	PublicUseSSL   bool
 }
 
 // New initializes the MinIO client and ensures every bucket in AllBuckets
@@ -57,38 +56,55 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 		}
 	}
 
-	// Presign with the public host so browsers can reach the signed URL.
-	presign := mc
-	if cfg.PublicEndpoint != "" && cfg.PublicEndpoint != cfg.Endpoint {
-		pmc, err := minio.New(cfg.PublicEndpoint, &minio.Options{
-			Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
-			Secure: cfg.PublicUseSSL,
-			Region: "us-east-1", // avoid a per-presign bucket-location lookup
-		})
-		if err != nil {
-			return nil, fmt.Errorf("storage: new presign client: %w", err)
+	return &Client{mc: mc}, nil
+}
+
+// PutObject streams an object into the bucket (server-side, internal network).
+func (c *Client) PutObject(ctx context.Context, bucket, objectKey string, r io.Reader, size int64, contentType string) error {
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	_, err := c.mc.PutObject(ctx, bucket, objectKey, r, size, minio.PutObjectOptions{ContentType: contentType})
+	if err != nil {
+		return fmt.Errorf("storage: put object: %w", err)
+	}
+	return nil
+}
+
+// GetObject opens an object for streaming back to the client. Caller closes.
+func (c *Client) GetObject(ctx context.Context, bucket, objectKey string) (io.ReadCloser, string, int64, error) {
+	obj, err := c.mc.GetObject(ctx, bucket, objectKey, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, "", 0, fmt.Errorf("storage: get object: %w", err)
+	}
+	info, err := obj.Stat()
+	if err != nil {
+		_ = obj.Close()
+		if minio.ToErrorResponse(err).Code == "NoSuchKey" {
+			return nil, "", 0, ErrObjectNotFound
 		}
-		presign = pmc
+		return nil, "", 0, fmt.Errorf("storage: stat object: %w", err)
 	}
-	return &Client{mc: mc, presign: presign}, nil
+	return obj, info.ContentType, info.Size, nil
 }
 
-// PresignPut returns a presigned PUT URL valid for expiry.
-func (c *Client) PresignPut(ctx context.Context, bucket, objectKey string, expiry time.Duration) (string, error) {
-	u, err := c.presign.PresignedPutObject(ctx, bucket, objectKey, expiry)
-	if err != nil {
-		return "", fmt.Errorf("storage: presign put: %w", err)
-	}
-	return u.String(), nil
+// objectPath builds the API-relative proxy path for an asset. Uploads and
+// downloads go through the authenticated API, so MinIO needs no public host.
+func objectPath(bucket, objectKey string) string {
+	v := url.Values{}
+	v.Set("bucket", bucket)
+	v.Set("key", objectKey)
+	return "/storage/object?" + v.Encode()
 }
 
-// PresignGet returns a presigned GET URL valid for expiry.
-func (c *Client) PresignGet(ctx context.Context, bucket, objectKey string, expiry time.Duration) (string, error) {
-	u, err := c.presign.PresignedGetObject(ctx, bucket, objectKey, expiry, url.Values{})
-	if err != nil {
-		return "", fmt.Errorf("storage: presign get: %w", err)
-	}
-	return u.String(), nil
+// PresignPut returns the proxy path the browser PUTs the asset to.
+func (c *Client) PresignPut(_ context.Context, bucket, objectKey string, _ time.Duration) (string, error) {
+	return objectPath(bucket, objectKey), nil
+}
+
+// PresignGet returns the proxy path the browser GETs the asset from.
+func (c *Client) PresignGet(_ context.Context, bucket, objectKey string, _ time.Duration) (string, error) {
+	return objectPath(bucket, objectKey), nil
 }
 
 // ObjectInfo is the subset of MinIO metadata used by the orphan-blob sweeper.

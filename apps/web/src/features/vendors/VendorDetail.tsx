@@ -6,7 +6,7 @@ import {
   useVendorItems,
   useVendorLogoDownloadUrl,
 } from "@/features/vendors/hooks"
-import { ApiError } from "@/lib/api-client"
+import { ApiError, fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
 import { formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
@@ -84,8 +84,27 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
   const { data: vendorItems, isLoading: itemsLoading } = useVendorItems(vendor.id)
 
   useEffect(() => {
-    if (logoDownload?.downloadUrl) setLogoDataUrl(logoDownload.downloadUrl)
-    else if (!vendor.logoObjectKey) setLogoDataUrl("")
+    const path = logoDownload?.downloadUrl
+    if (!path) {
+      if (!vendor.logoObjectKey) setLogoDataUrl("")
+      return
+    }
+    let active = true
+    let objectUrl = ""
+    fetchObjectUrl(path)
+      .then((u) => {
+        if (active) {
+          objectUrl = u
+          setLogoDataUrl(u)
+        } else {
+          URL.revokeObjectURL(u)
+        }
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
   }, [logoDownload?.downloadUrl, vendor.logoObjectKey])
 
   useEffect(() => {
