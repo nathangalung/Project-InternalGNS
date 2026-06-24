@@ -92,7 +92,7 @@ func buildDashboardWorkbook(
 	defer func() { _ = f.Close() }()
 
 	const sumSheet = "Ringkasan"
-	f.SetSheetName("Sheet1", sumSheet)
+	_ = f.SetSheetName("Sheet1", sumSheet)
 	summaryRows := [][]any{
 		{"Metrik", "Nilai"},
 		{"Total Pendapatan", num(s.TotalRevenue)},
