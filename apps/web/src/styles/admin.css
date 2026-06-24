@@ -697,6 +697,12 @@
 .btn-admin-filter:hover { opacity: 0.9; }
 
 /* ── Dashboard Stat Grids ── */
+.stats-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
 .stats-grid-3 {
   display: grid;
   grid-template-columns: 3fr 3fr 2fr;

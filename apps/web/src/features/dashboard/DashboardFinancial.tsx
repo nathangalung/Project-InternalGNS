@@ -1,7 +1,9 @@
 import { type CSSProperties, useMemo, useState } from "react"
+import ActiveFilters from "@/components/shared/ActiveFilters"
 import FilterButton from "@/components/shared/FilterButton"
 import Sidebar from "@/components/shared/Sidebar"
 import StatusBadge from "@/components/shared/StatusBadge"
+import * as dashboardApi from "@/features/dashboard/api"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { useInvoices } from "@/features/invoices/hooks"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE, type InvoiceStatus } from "@/features/invoices/types"
@@ -93,7 +95,9 @@ export default function DashboardFinancial({
     const revenue = buildSeries(tsRevenue.data, baseYear)
     const profit = buildSeries(tsProfit.data, baseYear)
     const ppn = buildSeries(tsPpn.data, baseYear)
-    const expenses = revenue.map((v, i) => Math.max(0, v - profit[i] - ppn[i]))
+    // Expenses = cost = revenue - profit (profit already nets PPN out);
+    // matches the Total Pengeluaran stat card (SUM of cost).
+    const expenses = revenue.map((v, i) => Math.max(0, v - profit[i]))
     const maskMonths = (arr: number[]): number[] =>
       selectedMonths === null ? arr : arr.map((v, i) => (selectedMonths.includes(i) ? v : 0))
     return {
@@ -146,7 +150,11 @@ export default function DashboardFinancial({
           <div className="page-header">
             <h1 className="page-title">Dashboard Finansial</h1>
             <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
-              <button type="button" style={exportBtnStyle}>
+              <button
+                type="button"
+                style={exportBtnStyle}
+                onClick={() => dashboardApi.exportXlsx(baseYear)}
+              >
                 <svg
                   width="16"
                   height="16"
@@ -166,6 +174,18 @@ export default function DashboardFinancial({
               <FilterButton onClick={() => setShowFilter(true)} />
             </div>
           </div>
+
+          {filters && (
+            <ActiveFilters
+              chips={[
+                { key: "year", label: `Tahun ${filters.year}` },
+                ...(selectedMonths && selectedMonths.length < 12
+                  ? [{ key: "months", label: `${selectedMonths.length} bulan dipilih` }]
+                  : []),
+              ]}
+              onClearAll={() => setFilters(null)}
+            />
+          )}
 
           {/* Row 1 */}
           <div className="stats-grid-3">

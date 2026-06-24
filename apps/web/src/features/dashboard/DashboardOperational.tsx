@@ -1,7 +1,9 @@
 import { type CSSProperties, useMemo, useState } from "react"
+import ActiveFilters from "@/components/shared/ActiveFilters"
 import FilterButton from "@/components/shared/FilterButton"
 import Sidebar from "@/components/shared/Sidebar"
 import StatusBadge from "@/components/shared/StatusBadge"
+import * as dashboardApi from "@/features/dashboard/api"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { toTableRow } from "@/features/quotations/adapters"
 import { useQuotations } from "@/features/quotations/hooks"
@@ -14,7 +16,6 @@ import TrendChart from "./TrendChart"
 
 const chartTabs = [
   { label: "Quotation", metric: "quotation" as const },
-  { label: "Purchase Order", metric: "invoice" as const }, // PO ≈ delivered invoices proxy
   { label: "Invoice", metric: "invoice" as const },
 ]
 
@@ -71,7 +72,6 @@ export default function DashboardOperational({
       selectedMonths === null ? arr : arr.map((v, i) => (selectedMonths.includes(i) ? v : 0))
     return {
       Quotation: maskMonths(quotation),
-      "Purchase Order": maskMonths(invoice),
       Invoice: maskMonths(invoice),
     }
   }, [tsQuotation.data, tsInvoice.data, baseYear, selectedMonths])
@@ -106,7 +106,11 @@ export default function DashboardOperational({
           <div className="page-header">
             <h1 className="page-title">Dashboard Operasional</h1>
             <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
-              <button type="button" style={exportBtnStyle}>
+              <button
+                type="button"
+                style={exportBtnStyle}
+                onClick={() => dashboardApi.exportXlsx(baseYear)}
+              >
                 <svg
                   width="16"
                   height="16"
@@ -126,6 +130,18 @@ export default function DashboardOperational({
               <FilterButton onClick={() => setShowFilter(true)} />
             </div>
           </div>
+
+          {filters && (
+            <ActiveFilters
+              chips={[
+                { key: "year", label: `Tahun ${filters.year}` },
+                ...(selectedMonths && selectedMonths.length < 12
+                  ? [{ key: "months", label: `${selectedMonths.length} bulan dipilih` }]
+                  : []),
+              ]}
+              onClearAll={() => setFilters(null)}
+            />
+          )}
 
           <div className="stats-grid-4">
             <div className="stat-card">

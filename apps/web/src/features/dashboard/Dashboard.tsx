@@ -1,6 +1,7 @@
 import { type CSSProperties, type KeyboardEvent, useMemo, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
 import Sidebar from "@/components/shared/Sidebar"
+import * as dashboardApi from "@/features/dashboard/api"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { buildSeries } from "@/lib/chart"
 import { formatNumber as formatId, formatRupiah as formatRp, toNum } from "@/lib/format"
@@ -106,7 +107,11 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
           <div className="page-header">
             <h1 className="page-title">Dashboard Utama</h1>
             <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
-              <button type="button" style={exportBtnStyle}>
+              <button
+                type="button"
+                style={exportBtnStyle}
+                onClick={() => dashboardApi.exportXlsx(baseYear)}
+              >
                 <svg
                   width="16"
                   height="16"
@@ -143,7 +148,7 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
                     <line x1="7" y1="12" x2="17" y2="12" />
                     <line x1="10" y1="18" x2="14" y2="18" />
                   </svg>
-                  Filter: {baseYear}
+                  Grafik: {baseYear}
                 </button>
                 {showYearMenu && (
                   <div
@@ -191,7 +196,7 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
             </div>
           </div>
           {/* Row 1 */}
-          <div className="stats-grid-3">
+          <div className="stats-grid-2">
             <div className="stat-card" {...cardNav("invoices")}>
               <div className="stat-label">Total Pendapatan</div>
               <div className="stat-value">{formatRp(totalRevenue)}</div>
@@ -199,10 +204,6 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
             <div className="stat-card" {...cardNav("purchase-orders")}>
               <div className="stat-label">Total Pengeluaran</div>
               <div className="stat-value">{formatRp(totalExpenses)}</div>
-            </div>
-            <div className="stat-card stat-card--accent" {...cardNav("purchase-orders")}>
-              <div className="stat-label">Total Purchase Order</div>
-              <div className="stat-value">{formatId(totalPo)}</div>
             </div>
           </div>
 
