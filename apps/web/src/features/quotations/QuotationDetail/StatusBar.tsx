@@ -3,6 +3,7 @@ import { statusConfig } from "./helpers"
 
 interface StatusBarProps {
   status: Status
+  allowedStatuses: Status[]
   isOpen: boolean
   onToggle: () => void
   onChange: (s: Status) => void
@@ -10,8 +11,17 @@ interface StatusBarProps {
 }
 
 // Status switcher and save action.
-export default function StatusBar({ status, isOpen, onToggle, onChange, onSave }: StatusBarProps) {
+export default function StatusBar({
+  status,
+  allowedStatuses,
+  isOpen,
+  onToggle,
+  onChange,
+  onSave,
+}: StatusBarProps) {
   const badge = statusConfig[status]
+  // Empty transition set means a terminal status.
+  const locked = allowedStatuses.length === 0
   return (
     <div className="qd-status-bar">
       <div>
@@ -24,25 +34,32 @@ export default function StatusBar({ status, isOpen, onToggle, onChange, onSave }
         <div style={{ position: "relative" }}>
           <button
             className="qd-status-trigger"
-            style={{ background: badge.bg, color: badge.color }}
-            onClick={onToggle}
+            style={{
+              background: badge.bg,
+              color: badge.color,
+              cursor: locked ? "default" : undefined,
+            }}
+            onClick={locked ? undefined : onToggle}
+            disabled={locked}
           >
             {status}
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            {!locked && (
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            )}
           </button>
-          {isOpen && (
+          {isOpen && !locked && (
             <div className="qd-status-dropdown">
-              {(Object.keys(statusConfig) as Status[]).map((s) => {
+              {allowedStatuses.map((s) => {
                 const isActive = s === status
                 return (
                   <button key={s} className="qd-status-option" onClick={() => onChange(s)}>

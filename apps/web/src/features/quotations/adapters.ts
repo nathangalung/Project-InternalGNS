@@ -1,4 +1,4 @@
-import type { ProductRow, QuotationData, ShippingRow, Status } from "@/features/quotations/types"
+import type { ProductRow, QuotationData, ShippingRow } from "@/features/quotations/types"
 import { formatDate, formatDateTime, formatNumber } from "@/lib/format"
 import { statusToLabel } from "@/lib/status"
 import type {
@@ -8,11 +8,6 @@ import type {
   QuotationStatusEvent as ApiStatusEvent,
 } from "@/types/api"
 import type { QuotationRow } from "./QuotationList/helpers"
-
-// Expired displays as rejected.
-function collapseExpiredToRejected(label: ReturnType<typeof statusToLabel>): Status {
-  return label === "Kadaluarsa" ? "Ditolak" : label
-}
 
 function actionFromEvent(ev: ApiStatusEvent): string {
   const label = statusToLabel(ev.toStatus)
@@ -62,7 +57,7 @@ export function toQuotationData(
   const ppn = Number(api.ppnAmount)
   const totalDiscount = Number(api.totalDiscount)
   const discount = Number(api.discountPct)
-  const status = collapseExpiredToRejected(statusToLabel(api.status))
+  const status = statusToLabel(api.status)
   return {
     id: String(api.id),
     version: api.version,
@@ -100,6 +95,6 @@ export function toTableRow(api: ApiQuotationRow): QuotationRow {
     date: formatDate(api.createdAt),
     hargaBeli: Number.isFinite(hargaBeli) ? formatNumber(hargaBeli) : api.totalHargaBeli,
     total: Number.isFinite(grand) ? formatNumber(grand) : api.grandTotal,
-    status: collapseExpiredToRejected(statusToLabel(api.status)),
+    status: statusToLabel(api.status),
   }
 }

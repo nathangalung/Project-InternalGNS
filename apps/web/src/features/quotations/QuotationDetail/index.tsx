@@ -4,6 +4,7 @@ import { getCompanyInitials } from "@/features/clients/helpers"
 import type { QuotationData, Status } from "@/features/quotations/types"
 import { downloadPdf } from "@/lib/api-client"
 import type { Page } from "@/lib/page"
+import { QUOTATION_TRANSITIONS } from "@/lib/status"
 import ClientSummaryCard from "./ClientSummaryCard"
 import CostBreakdown from "./CostBreakdown"
 import Header from "./Header"
@@ -107,6 +108,7 @@ export default function QuotationDetail({
           />
           <StatusBar
             status={status}
+            allowedStatuses={QUOTATION_TRANSITIONS[q.status]}
             isOpen={isStatusOpen}
             onToggle={() => setIsStatusOpen((o) => !o)}
             onChange={handleStatusChange}

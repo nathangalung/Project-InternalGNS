@@ -20,6 +20,18 @@ const canonicalByLabel: Record<StatusLabel, CanonicalStatus> = {
   Kadaluarsa: "expired",
 }
 
+// Allowed manual transitions, mirroring fn_change_quotation_status.
+// Accepted, rejected and expired are terminal. Expired is set by a job,
+// never offered as a manual target.
+export const QUOTATION_TRANSITIONS: Record<StatusLabel, StatusLabel[]> = {
+  Draf: ["Dikirim"],
+  Dikirim: ["Disetujui", "Ditolak", "Revisi"],
+  Revisi: ["Dikirim", "Ditolak"],
+  Disetujui: [],
+  Ditolak: [],
+  Kadaluarsa: [],
+}
+
 // BE status to label.
 export function statusToLabel(s: CanonicalStatus): StatusLabel {
   return labelByCanonical[s]
@@ -33,8 +45,8 @@ export function labelToStatus(label: StatusLabel): CanonicalStatus {
 export const BADGE_AKTIF = { label: "AKTIF", bg: "#D1FAE5", color: "#047857" }
 export const BADGE_NONAKTIF = { label: "NONAKTIF", bg: "#FEE2E2", color: "#B91C1C" }
 
-// Quotation labels that render.
-export type DisplayStatus = Exclude<StatusLabel, "Kadaluarsa">
+// Quotation labels that render. Includes expired as its own state.
+export type DisplayStatus = StatusLabel
 
 // Visual tokens per quotation status.
 export const quotationStatusConfig: Record<DisplayStatus, { bg: string; color: string }> = {
@@ -43,4 +55,5 @@ export const quotationStatusConfig: Record<DisplayStatus, { bg: string; color: s
   Draf: { bg: "var(--status-draf-bg)", color: "var(--status-draf-color)" },
   Revisi: { bg: "var(--status-revisi-bg)", color: "var(--status-revisi-color)" },
   Ditolak: { bg: "var(--status-ditolak-bg)", color: "var(--status-ditolak-color)" },
+  Kadaluarsa: { bg: "#F1F5F9", color: "#64748B" },
 }

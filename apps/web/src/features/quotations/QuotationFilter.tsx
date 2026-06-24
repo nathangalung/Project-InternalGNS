@@ -31,7 +31,7 @@ interface QuotationFilterProps {
   }
 }
 
-const STATUSES: StatusFilter[] = ["Draf", "Dikirim", "Ditolak", "Revisi", "Disetujui"]
+const STATUSES: StatusFilter[] = ["Draf", "Dikirim", "Ditolak", "Revisi", "Disetujui", "Kadaluarsa"]
 
 export default function QuotationFilter({ onClose, onApply, initialValues }: QuotationFilterProps) {
   const seed = presetToIsoRange("30-hari")
