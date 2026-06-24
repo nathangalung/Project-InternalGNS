@@ -98,6 +98,20 @@ export default function InvoiceDetail({
     )
   }
 
+  // Cancelled is terminal: the list hides it, so the detail is read-only.
+  if (inv.status === "cancelled") {
+    return (
+      <div className="admin-shell">
+        <Sidebar activePage={"invoices" as Page} onNavigate={onNavigate} onLogout={onLogout} />
+        <div className="admin-main">
+          <div className="page-content">
+            <p>Invoice {inv.invoiceNo} telah dibatalkan.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Compute totals from snapshot items; PPN/grand from BE persisted.
   const totalProduk = products.reduce((s, p) => s + p.qty * p.hargaSatuan, 0)
   const totalProfit = products.reduce((s, p) => s + p.qty * p.profitSatuan, 0)

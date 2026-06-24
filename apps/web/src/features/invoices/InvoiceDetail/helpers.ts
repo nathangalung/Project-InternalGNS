@@ -10,18 +10,19 @@ export type EditableInvoiceStatus = Extract<
 
 export const EDITABLE_STATUS_ORDER: EditableInvoiceStatus[] = ["DRAF", "DIKIRIM", "TERLAMBAT"]
 
-// Map backend status to the editable display value. A paid invoice maps to
-// DIBAYAR so the detail page matches the list and is never demoted on save.
+// Map backend status to the editable display value. Mirrors InvoiceList
+// deriveStatus exactly so list and detail never disagree: paid -> DIBAYAR,
+// and a sent invoice past its due date reads as TERLAMBAT.
 export function toEditable(inv: InvoiceBackendRow | null | undefined): EditableInvoiceStatus {
   if (!inv) return "DRAF"
   if (inv.status === "paid") return "DIBAYAR"
-  if (inv.status === "sent") return "DIKIRIM"
   if (inv.status === "overdue") return "TERLAMBAT"
+  const base: EditableInvoiceStatus = inv.status === "sent" ? "DIKIRIM" : "DRAF"
   if (inv.dueDate) {
     const due = new Date(inv.dueDate)
     if (!Number.isNaN(due.getTime()) && new Date() > due) return "TERLAMBAT"
   }
-  return "DRAF"
+  return base
 }
 
 export const TO_BACKEND: Record<EditableInvoiceStatus, InvoiceBackendStatus> = {

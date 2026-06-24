@@ -15,6 +15,14 @@ describe("toEditable", () => {
     expect(toEditable(row("sent"))).toBe("DIKIRIM")
   })
 
+  it("maps sent past its due date to TERLAMBAT, matching the list", () => {
+    expect(toEditable(row("sent", "2000-01-01"))).toBe("TERLAMBAT")
+  })
+
+  it("keeps sent with a future due date as DIKIRIM", () => {
+    expect(toEditable(row("sent", "2999-01-01"))).toBe("DIKIRIM")
+  })
+
   it("maps overdue to TERLAMBAT", () => {
     expect(toEditable(row("overdue"))).toBe("TERLAMBAT")
   })
