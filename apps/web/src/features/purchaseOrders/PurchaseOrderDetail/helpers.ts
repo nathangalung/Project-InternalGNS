@@ -21,7 +21,7 @@ export const PO_STATUS_ORDER: PoStatus[] = ["PENDING", "UPLOADED", "ON_PROGRESS"
 
 export function poNumberFromQuotationNo(no: string): string {
   if (no.startsWith("Q-")) return `PO-${no.slice(2)}`
-  if (no.startsWith("Q")) return `PO${no.slice(1)}`
+  if (no.startsWith("Q")) return `PO-${no.slice(1)}`
   return `PO-${no}`
 }
 

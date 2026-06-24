@@ -201,6 +201,16 @@ const PICKER_XLSX: PickerType = {
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
   },
 }
+const PICKER_ANY: PickerType = { description: "Berkas", accept: { "*/*": [] } }
+
+// Pick the save dialog filter from a filename's extension.
+function pickerForFilename(filename: string): PickerType {
+  const ext = filename.split(".").pop()?.toLowerCase()
+  if (ext === "pdf") return PICKER_PDF
+  if (ext === "xlsx") return PICKER_XLSX
+  if (ext === "xml") return PICKER_XML
+  return PICKER_ANY
+}
 
 // Fetch binary endpoint as blob; let user pick dir + edit filename when supported.
 async function downloadBinary(
@@ -223,6 +233,11 @@ export const downloadXml = (path: string, filename: string) =>
   downloadBinary(path, filename, PICKER_XML)
 export const downloadXlsx = (path: string, filename: string) =>
   downloadBinary(path, filename, PICKER_XLSX)
+
+// Authed download of an arbitrary asset; save dialog filter inferred from the
+// filename extension. One authed GET, no intermediate blob: URL round-trip.
+export const downloadFile = (path: string, filename: string) =>
+  downloadBinary(path, filename, pickerForFilename(filename))
 
 // Authed PUT of a file to an API asset path (proxy upload to MinIO).
 export async function uploadAsset(path: string, file: File): Promise<void> {

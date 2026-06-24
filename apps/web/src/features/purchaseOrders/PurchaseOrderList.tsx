@@ -126,7 +126,12 @@ export default function PurchaseOrderList({
   async function handleDownloadDN(row: PoRow) {
     const poId = poIdFor(row.quotationId)
     if (!poId) return
-    await downloadPdf(`/purchase-orders/${poId}/delivery-note.pdf`, `DN-${row.poNumber}.pdf`)
+    // Match the in-document DN number ("DN-" + quotation no without "Q-").
+    const base = (row.quotationNo.replace(/^Q-/, "") || row.poNumber).replace(
+      /[^A-Za-z0-9._-]/g,
+      "_",
+    )
+    await downloadPdf(`/purchase-orders/${poId}/delivery-note.pdf`, `DN-${base}.pdf`)
   }
 
   // Active-filter chips shown above the table.
