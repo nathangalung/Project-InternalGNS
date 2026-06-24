@@ -11,7 +11,6 @@ import type { QuotationData } from "@/features/quotations/types"
 import { downloadPdf, fetchObjectUrl } from "@/lib/api-client"
 import { toNum } from "@/lib/format"
 import type { Page } from "@/lib/page"
-import type { InvoiceBackendRow, InvoiceBackendStatus } from "@/types/api"
 import { invoiceItemsToProducts, invoiceItemsToShipping } from "../adapters"
 import {
   useChangeInvoiceStatus,
@@ -24,7 +23,7 @@ import type { InvoiceStatus } from "../types"
 import { INVOICE_LABEL } from "../types"
 import FileCard from "./FileCard"
 import Header from "./Header"
-import type { EditableInvoiceStatus } from "./helpers"
+import { type EditableInvoiceStatus, TO_BACKEND, toEditable } from "./helpers"
 import StatusBar from "./StatusBar"
 
 interface HistoryEntry {
@@ -38,25 +37,6 @@ interface InvoiceDetailProps {
   quotation?: QuotationData
   onNavigate: (page: Page) => void
   onLogout: () => void
-}
-
-// Backend status to editable.
-function toEditable(inv: InvoiceBackendRow | null | undefined): EditableInvoiceStatus {
-  if (!inv) return "DRAF"
-  if (inv.status === "paid") return "DIKIRIM"
-  if (inv.status === "sent") return "DIKIRIM"
-  if (inv.status === "overdue") return "TERLAMBAT"
-  if (inv.dueDate) {
-    const due = new Date(inv.dueDate)
-    if (!Number.isNaN(due.getTime()) && new Date() > due) return "TERLAMBAT"
-  }
-  return "DRAF"
-}
-
-const TO_BACKEND: Record<EditableInvoiceStatus, InvoiceBackendStatus> = {
-  DRAF: "draft",
-  DIKIRIM: "sent",
-  TERLAMBAT: "overdue",
 }
 
 // Derive display filename from objectKey, e.g.

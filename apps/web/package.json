@@ -13,6 +13,8 @@
     "generate:routes": "tsr generate",
     "build": "bun run generate:routes && tsc -b && vite build",
     "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "biome check src",
     "format": "biome format --write src",
     "typecheck": "bun run generate:routes && tsc --noEmit -p tsconfig.json",
@@ -35,7 +37,6 @@
     "@biomejs/biome": "^2.4.15",
     "@lhci/cli": "^0.15.0",
     "@tailwindcss/vite": "^4.3.0",
-    "openapi-typescript": "^7.6.1",
     "@tanstack/react-query-devtools": "^5.100.10",
     "@tanstack/react-router-devtools": "^1.166.13",
     "@tanstack/router-cli": "^1.166.43",
@@ -44,9 +45,11 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react-swc": "^4.2.3",
+    "openapi-typescript": "^7.6.1",
     "rollup-plugin-visualizer": "^7.0.1",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.9.3",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^4.1.9"
   }
 }
