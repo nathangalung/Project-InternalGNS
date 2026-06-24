@@ -115,15 +115,9 @@ func TestRepo_ChangeStatus_DeliveredStampsDeliveryNote(t *testing.T) {
 	require.NotNil(t, dn)
 	assert.Contains(t, *dn, "DN-")
 
-	// Bounce back and re-deliver — should preserve the original DN.
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
-
-	var dnAfter *string
-	require.NoError(t, tx.QueryRow(ctx,
-		`SELECT delivery_note_number FROM purchase_orders WHERE id = $1`, poID).Scan(&dnAfter))
-	require.NotNil(t, dnAfter)
-	assert.Equal(t, *dn, *dnAfter)
+	// Reverting from DELIVERED is blocked once the invoice exists. The raise
+	// aborts the surrounding transaction, so the error itself is the assertion.
+	require.Error(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 }
 
 func TestRepo_ChangeStatus_DeliveredSnapshotsGoodsOrService(t *testing.T) {

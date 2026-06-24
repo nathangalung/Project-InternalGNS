@@ -229,14 +229,17 @@ BEGIN
   END IF;
 END $$;
 
--- 4. A paid invoice means the goods were delivered. Advance those POs to
---    DELIVERED even though no PO document was uploaded. Direct UPDATE is the
---    seed-time exception: fn_change_po_status would re-run the invoice draft.
+-- 4. An invoice existing means the goods were delivered. Advance every PO
+--    that has an invoice to DELIVERED and stamp its delivery note number,
+--    matching fn_change_po_status. Direct UPDATE is the seed-time exception:
+--    fn_change_po_status would re-run the invoice draft.
 UPDATE purchase_orders po
-   SET status = 'DELIVERED'
-  FROM invoices i
- WHERE i.po_id = po.id
-   AND i.status = 'paid'
-   AND po.status <> 'DELIVERED';
+   SET status               = 'DELIVERED',
+       delivery_note_number = COALESCE(
+         po.delivery_note_number,
+         fn_next_doc_no('DN', po.company_client_id)
+       )
+ WHERE po.status <> 'DELIVERED'
+   AND EXISTS (SELECT 1 FROM invoices i WHERE i.po_id = po.id);
 
 COMMIT;
