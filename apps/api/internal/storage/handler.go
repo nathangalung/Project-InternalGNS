@@ -30,9 +30,19 @@ func allowedBucket(b string) bool {
 	return false
 }
 
-// safeKey rejects empty, absolute, or traversal keys.
+// safeKey rejects empty, absolute, or traversal keys. The ".." check is per
+// segment, not a substring match, so legitimate filenames containing
+// consecutive dots (e.g. "report..final.pdf") are still accepted.
 func safeKey(k string) bool {
-	return k != "" && !strings.HasPrefix(k, "/") && !strings.Contains(k, "..")
+	if k == "" || strings.HasPrefix(k, "/") {
+		return false
+	}
+	for _, seg := range strings.Split(k, "/") {
+		if seg == "." || seg == ".." {
+			return false
+		}
+	}
+	return true
 }
 
 // Put streams the request body into MinIO. PUT /storage/object?bucket=&key=
@@ -43,7 +53,11 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid bucket or key", http.StatusBadRequest)
 		return
 	}
-	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
+	limit := MaxBytes(bucket) // per-bucket policy cap (bucket already validated)
+	if limit <= 0 {
+		limit = maxUploadBytes
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, limit)
 	defer r.Body.Close()
 	if err := h.client.PutObject(r.Context(), bucket, key, r.Body, r.ContentLength, r.Header.Get("Content-Type")); err != nil {
 		http.Error(w, "upload failed", http.StatusBadGateway)

@@ -11,13 +11,36 @@ import (
 // Presign now returns the API-relative proxy path (no public MinIO host).
 func TestPresign_ReturnsProxyPath(t *testing.T) {
 	c := &Client{}
-	u, err := c.PresignPut(context.Background(), "po-files", "po/1/scan.pdf", time.Minute)
+	u, err := c.PresignPut(context.Background(), BucketPODocs, "po/1/scan.pdf", time.Minute)
 	if err != nil {
 		t.Fatalf("presign put: %v", err)
 	}
-	const want = "/storage/object?bucket=po-files&key=po%2F1%2Fscan.pdf"
+	const want = "/storage/object?bucket=po-docs&key=po%2F1%2Fscan.pdf"
 	if u != want {
 		t.Fatalf("PresignPut = %q, want %q", u, want)
+	}
+}
+
+// safeKey must allow filenames with consecutive dots while still blocking
+// path traversal (the ".." segment).
+func TestSafeKey(t *testing.T) {
+	cases := []struct {
+		key  string
+		want bool
+	}{
+		{"invoices/7/1700-report..final.pdf", true},
+		{"po/1/scan.pdf", true},
+		{"a..b/c.png", true},
+		{"", false},
+		{"/abs/key.png", false},
+		{"../etc/passwd", false},
+		{"po/../../etc/passwd", false},
+		{"a/./b", false},
+	}
+	for _, c := range cases {
+		if got := safeKey(c.key); got != c.want {
+			t.Errorf("safeKey(%q) = %v, want %v", c.key, got, c.want)
+		}
 	}
 }
 

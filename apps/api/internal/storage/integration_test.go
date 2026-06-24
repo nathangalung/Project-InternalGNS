@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -38,7 +37,7 @@ func requireMinio(t *testing.T) storage.Config {
 	}
 }
 
-func TestClient_PresignRoundtrip(t *testing.T) {
+func TestClient_PutGetRoundtrip(t *testing.T) {
 	cfg := requireMinio(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
@@ -49,25 +48,17 @@ func TestClient_PresignRoundtrip(t *testing.T) {
 	key := storage.BuildObjectKey("integration-test", time.Now().UnixNano(), "hello.txt")
 	body := []byte("integration-test-payload")
 
-	putURL, err := c.PresignPut(ctx, storage.BucketClientLogos, key, 5*time.Minute)
-	require.NoError(t, err)
-	require.NotEmpty(t, putURL)
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, putURL, bytes.NewReader(body))
-	require.NoError(t, err)
-	resp, err := http.DefaultClient.Do(req)
-	require.NoError(t, err)
-	_ = resp.Body.Close()
-	require.Equal(t, http.StatusOK, resp.StatusCode, "presigned PUT must accept upload")
-
-	getURL, err := c.PresignGet(ctx, storage.BucketClientLogos, key, 5*time.Minute)
+	// Presign returns a relative proxy path now, so exercise the MinIO
+	// roundtrip directly via PutObject/GetObject (the proxy handler that
+	// fronts these is covered in presign_test.go).
+	err = c.PutObject(ctx, storage.BucketClientLogos, key, bytes.NewReader(body), int64(len(body)), "text/plain")
 	require.NoError(t, err)
 
-	getResp, err := http.Get(getURL)
+	rc, _, size, err := c.GetObject(ctx, storage.BucketClientLogos, key)
 	require.NoError(t, err)
-	t.Cleanup(func() { _ = getResp.Body.Close() })
-	require.Equal(t, http.StatusOK, getResp.StatusCode)
-	got, err := io.ReadAll(getResp.Body)
+	t.Cleanup(func() { _ = rc.Close() })
+	assert.EqualValues(t, len(body), size)
+	got, err := io.ReadAll(rc)
 	require.NoError(t, err)
 	assert.Equal(t, body, got)
 
