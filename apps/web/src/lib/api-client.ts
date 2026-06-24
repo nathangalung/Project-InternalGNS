@@ -234,8 +234,7 @@ export const downloadXml = (path: string, filename: string) =>
 export const downloadXlsx = (path: string, filename: string) =>
   downloadBinary(path, filename, PICKER_XLSX)
 
-// Authed download of an arbitrary asset; save dialog filter inferred from the
-// filename extension. One authed GET, no intermediate blob: URL round-trip.
+// Authed download; picker inferred from extension.
 export const downloadFile = (path: string, filename: string) =>
   downloadBinary(path, filename, pickerForFilename(filename))
 

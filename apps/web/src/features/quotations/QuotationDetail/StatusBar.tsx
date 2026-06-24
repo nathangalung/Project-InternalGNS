@@ -20,7 +20,7 @@ export default function StatusBar({
   onSave,
 }: StatusBarProps) {
   const badge = statusConfig[status]
-  // Empty transition set means a terminal status.
+  // Terminal status, no transitions.
   const locked = allowedStatuses.length === 0
   return (
     <div className="qd-status-bar">

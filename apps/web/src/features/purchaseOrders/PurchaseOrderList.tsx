@@ -126,7 +126,7 @@ export default function PurchaseOrderList({
   async function handleDownloadDN(row: PoRow) {
     const poId = poIdFor(row.quotationId)
     if (!poId) return
-    // Match the in-document DN number ("DN-" + quotation no without "Q-").
+    // Match the in-document DN number.
     const base = (row.quotationNo.replace(/^Q-/, "") || row.poNumber).replace(
       /[^A-Za-z0-9._-]/g,
       "_",

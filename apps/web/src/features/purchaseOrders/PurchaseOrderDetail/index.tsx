@@ -252,7 +252,7 @@ export default function PurchaseOrderDetail({
 
   async function handleDownloadDeliveryNote() {
     if (!po) return
-    // Match the in-document DN number ("DN-" + quotation no without "Q-").
+    // Match the in-document DN number.
     const base = quotationNo.replace(/^Q-/, "") || poNumber
     const safe = base.replace(/[^A-Za-z0-9._-]/g, "_")
     await downloadPdf(`/purchase-orders/${po.id}/delivery-note.pdf`, `DN-${safe}.pdf`)

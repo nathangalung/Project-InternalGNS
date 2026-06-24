@@ -98,7 +98,7 @@ export default function InvoiceDetail({
     )
   }
 
-  // Cancelled is terminal: the list hides it, so the detail is read-only.
+  // Cancelled is terminal and read-only.
   if (inv.status === "cancelled") {
     return (
       <div className="admin-shell">

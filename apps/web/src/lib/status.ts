@@ -20,9 +20,7 @@ const canonicalByLabel: Record<StatusLabel, CanonicalStatus> = {
   Kadaluarsa: "expired",
 }
 
-// Allowed manual transitions, mirroring fn_change_quotation_status.
-// Accepted, rejected and expired are terminal. Expired is set by a job,
-// never offered as a manual target.
+// Allowed manual transitions; terminal states map to empty.
 export const QUOTATION_TRANSITIONS: Record<StatusLabel, StatusLabel[]> = {
   Draf: ["Dikirim"],
   Dikirim: ["Disetujui", "Ditolak", "Revisi"],
@@ -45,7 +43,7 @@ export function labelToStatus(label: StatusLabel): CanonicalStatus {
 export const BADGE_AKTIF = { label: "AKTIF", bg: "#D1FAE5", color: "#047857" }
 export const BADGE_NONAKTIF = { label: "NONAKTIF", bg: "#FEE2E2", color: "#B91C1C" }
 
-// Quotation labels that render. Includes expired as its own state.
+// All quotation labels render, including expired.
 export type DisplayStatus = StatusLabel
 
 // Visual tokens per quotation status.

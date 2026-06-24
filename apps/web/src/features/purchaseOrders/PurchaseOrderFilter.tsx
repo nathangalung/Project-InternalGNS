@@ -37,7 +37,7 @@ const DEFAULTS: PoFilterValues = {
   maxHarga: "500.000.000",
 }
 
-// Labels come from PO_LABEL so the filter chips match the table badges.
+// Labels from PO_LABEL match the badges.
 const STATUS_OPTIONS: { value: PoStatus; label: string }[] = PO_STATUS_ORDER.map((value) => ({
   value,
   label: PO_LABEL[value],
