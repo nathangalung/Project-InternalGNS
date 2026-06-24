@@ -280,7 +280,6 @@ func mergeAdvanced(q string, items []SearchResult, offers []VendorOfferHit, requ
 				h.Score = score
 			}
 		}
-		counts[tier]++
 		if enrich != nil {
 			enrich(h)
 		}
@@ -333,6 +332,13 @@ func mergeAdvanced(q string, items []SearchResult, offers []VendorOfferHit, requ
 	})
 	if len(out) > limit {
 		out = out[:limit]
+	}
+
+	// Count tiers from the final, deduplicated, truncated output so badge
+	// counts reflect what is actually returned (each item by its winning
+	// tier only — not per input contribution before truncation).
+	for i := range out {
+		counts[out[i].Tier]++
 	}
 
 	return AdvancedSearchResponse{
