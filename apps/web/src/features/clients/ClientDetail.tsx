@@ -166,13 +166,22 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
       return
     }
     try {
-      // Phone lives on the main contact, updated via its own endpoint.
-      if (client.contactId && phone !== (client.contactPhone ?? "")) {
-        await clientsApi.updateContact(client.id, client.contactId, {
-          name: client.contactName ?? name.trim(),
-          phone: phone.trim() || undefined,
-          countryCode,
-        })
+      // Phone lives on the main contact. Update it when one exists, otherwise
+      // create the contact so a phone can be set on a contactless client.
+      if (phone !== (client.contactPhone ?? "")) {
+        if (client.contactId) {
+          await clientsApi.updateContact(client.id, client.contactId, {
+            name: client.contactName ?? name.trim(),
+            phone: phone.trim() || undefined,
+            countryCode,
+          })
+        } else if (phone.trim()) {
+          await clientsApi.createContact(client.id, {
+            name: client.contactName ?? name.trim(),
+            phone: phone.trim(),
+            countryCode,
+          })
+        }
       }
       await updateClient.mutateAsync({
         id: client.id,
