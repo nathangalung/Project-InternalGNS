@@ -9,7 +9,7 @@ import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
 import { downloadPdf, fetchObjectUrl } from "@/lib/api-client"
-import { toNum } from "@/lib/format"
+import { computeTaxBreakdown, toNum } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import { invoiceItemsToProducts, invoiceItemsToShipping } from "../adapters"
 import {
@@ -106,11 +106,11 @@ export default function InvoiceDetail({
   const discountPct = quotation.discountPct ?? 0
   const nominalDiskon = (totalProduk * discountPct) / 100
   const subTotal = totalProduk - nominalDiskon
-  const dppNilaiLain =
-    toNum(inv.dppNilaiLain) || Math.round(((hasProducts ? subTotal : totalShip) * 11) / 12)
-  const ppn12 = toNum(inv.ppnAmount) || Math.round(dppNilaiLain * 0.12)
-  const grandTotal =
-    toNum(inv.total) || (hasProducts ? subTotal + ppn12 + totalShip : totalShip + ppn12)
+  // Prefer BE-persisted tax values; fall back to the shared computation.
+  const fallback = computeTaxBreakdown({ subtotal: subTotal, shipping: totalShip })
+  const dppNilaiLain = toNum(inv.dppNilaiLain) || fallback.dppNilaiLain
+  const ppn12 = toNum(inv.ppnAmount) || fallback.ppnAmount
+  const grandTotal = toNum(inv.total) || fallback.grandTotal
   const clientInitials = getCompanyInitials(quotation.client)
   const invoiceNo = inv.invoiceNo
   const displayStatus: InvoiceStatus = status

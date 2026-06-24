@@ -49,17 +49,17 @@ export function formatDateTime(iso: string | null | undefined): string {
   return `${date}, ${time}`
 }
 
-// Indonesian tax math: 11/12 base, 12% PPN.
-export function computeTaxBreakdown(input: {
-  subtotal: number
-  shipping: number
-  hasProducts: boolean
-}): { dppNilaiLain: number; ppnAmount: number; grandTotal: number } {
-  const dppBase = input.hasProducts ? input.subtotal : input.shipping
+// Indonesian tax math: 11/12 base, 12% PPN. The taxable base always includes
+// shipping, matching the DB GENERATED columns ((total - discount) where total
+// folds in shipping). subtotal here is products minus discount.
+export function computeTaxBreakdown(input: { subtotal: number; shipping: number }): {
+  dppNilaiLain: number
+  ppnAmount: number
+  grandTotal: number
+} {
+  const dppBase = input.subtotal + input.shipping
   const dppNilaiLain = Math.round((dppBase * 11) / 12)
   const ppnAmount = Math.round(dppNilaiLain * 0.12)
-  const grandTotal = input.hasProducts
-    ? input.subtotal + ppnAmount + input.shipping
-    : input.shipping + ppnAmount
+  const grandTotal = dppBase + ppnAmount
   return { dppNilaiLain, ppnAmount, grandTotal }
 }

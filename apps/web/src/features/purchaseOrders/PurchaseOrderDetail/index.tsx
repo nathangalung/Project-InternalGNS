@@ -14,7 +14,7 @@ import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
 import * as vendorsApi from "@/features/vendors/api"
 import { downloadPdf, fetchObjectUrl, saveBlob } from "@/lib/api-client"
-import { toNum } from "@/lib/format"
+import { computeTaxBreakdown, toNum } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import { queryKeys } from "@/lib/query-keys"
 import { poItemsToProducts, poItemsToShipping } from "../adapters"
@@ -177,10 +177,11 @@ export default function PurchaseOrderDetail({
   const discountPct = quotation.discountPct ?? 0
   const nominalDiskon = (totalProduk * discountPct) / 100
   const subTotal = totalProduk - nominalDiskon
-  const dppBase = hasProducts ? subTotal : totalShip
-  const dppNilaiLain = Math.round((dppBase * 11) / 12)
-  const ppn12 = Math.round(dppNilaiLain * 0.12)
-  const grandTotal = hasProducts ? subTotal + ppn12 + totalShip : totalShip + ppn12
+  const {
+    dppNilaiLain,
+    ppnAmount: ppn12,
+    grandTotal,
+  } = computeTaxBreakdown({ subtotal: subTotal, shipping: totalShip })
   const clientInitials = getCompanyInitials(quotation.client)
   const poNumber = po.poNumber || poNumberFromQuotationNo(quotationNo)
 

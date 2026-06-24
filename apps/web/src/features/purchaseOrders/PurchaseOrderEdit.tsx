@@ -187,7 +187,6 @@ export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: Purcha
   } = computeTaxBreakdown({
     subtotal: summarySubTotal,
     shipping: summaryShippingCost,
-    hasProducts,
   })
   const summaryProfit = hasProducts ? summarySubTotal - summaryTotalHargaBeli : 0
 

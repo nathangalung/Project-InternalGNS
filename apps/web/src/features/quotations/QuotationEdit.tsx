@@ -187,7 +187,6 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
   } = computeTaxBreakdown({
     subtotal: summarySubTotal,
     shipping: summaryShippingCost,
-    hasProducts,
   })
   const summaryProfit = hasProducts ? summarySubTotal - summaryTotalHargaBeli : 0
 
