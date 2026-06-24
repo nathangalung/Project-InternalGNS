@@ -144,7 +144,7 @@ export default function PurchaseOrderList({
       for (const s of activeFilters.statuses) {
         out.push({
           key: `status-${s}`,
-          label: `Status: ${s}`,
+          label: `Status: ${PO_LABEL[s]}`,
           onRemove: () =>
             setActiveFilters((p) =>
               p ? { ...p, statuses: p.statuses.filter((x) => x !== s) } : p,

@@ -7,6 +7,7 @@ import {
   presetToIsoRange,
 } from "@/components/shared/DateRangeField"
 import { chipStyle, presetChipStyle } from "@/components/shared/filter-styles"
+import { PO_LABEL, PO_STATUS_ORDER } from "./PurchaseOrderDetail/helpers"
 import type { PoStatus } from "./types"
 
 export type { DatePreset }
@@ -36,12 +37,11 @@ const DEFAULTS: PoFilterValues = {
   maxHarga: "500.000.000",
 }
 
-const STATUS_OPTIONS: { value: PoStatus; label: string }[] = [
-  { value: "PENDING", label: "Pending" },
-  { value: "UPLOADED", label: "PO Uploaded" },
-  { value: "ON_PROGRESS", label: "On Progress" },
-  { value: "DELIVERED", label: "Delivered" },
-]
+// Labels come from PO_LABEL so the filter chips match the table badges.
+const STATUS_OPTIONS: { value: PoStatus; label: string }[] = PO_STATUS_ORDER.map((value) => ({
+  value,
+  label: PO_LABEL[value],
+}))
 
 export default function PurchaseOrderFilter({
   onClose,

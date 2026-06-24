@@ -33,6 +33,7 @@ import Header from "./Header"
 import {
   type CompletenessIssue,
   PO_LABEL,
+  PO_TRANSITIONS,
   poNumberFromQuotationNo,
   validateClientCompleteness,
   validateVendorCompleteness,
@@ -280,10 +281,15 @@ export default function PurchaseOrderDetail({
             createdAt={quotation.createdAt}
             status={status}
             onNavigate={onNavigate}
-            onDownloadDeliveryNote={handleDownloadDeliveryNote}
+            onDownloadDeliveryNote={
+              status === "ON_PROGRESS" || status === "DELIVERED"
+                ? handleDownloadDeliveryNote
+                : undefined
+            }
           />
           <StatusBar
             status={status}
+            allowedStatuses={PO_TRANSITIONS[po.status]}
             isOpen={isStatusOpen}
             onToggle={() => setIsStatusOpen((o) => !o)}
             onChange={handleStatusChange}
