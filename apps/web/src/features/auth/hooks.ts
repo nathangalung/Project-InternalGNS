@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { useCallback, useSyncExternalStore } from "react"
 import * as auth from "@/features/auth/api"
-import { clearTokens, getRefreshToken, setTokens } from "@/lib/api-client"
+import { clearTokens, getRefreshToken, setOnAuthExpired, setTokens } from "@/lib/api-client"
 import { queryKeys } from "@/lib/query-keys"
 
 const AUTH_KEY = "gns_auth"
@@ -55,6 +55,9 @@ export function clearAuthState(): void {
   clearTokens()
   window.dispatchEvent(new Event(EVENT_NAME))
 }
+
+// Expired session drops auth state immediately.
+setOnAuthExpired(clearAuthState)
 
 export function useMe() {
   return useQuery({

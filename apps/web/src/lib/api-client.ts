@@ -81,6 +81,13 @@ function tryRefresh(): Promise<boolean> {
   return refreshInFlight
 }
 
+// Notifies the auth layer once refresh definitively fails.
+let onAuthExpired: (() => void) | null = null
+
+export function setOnAuthExpired(fn: () => void): void {
+  onAuthExpired = fn
+}
+
 // fetchAuthed: hits the API with the JWT, and on 401 transparently refreshes
 // + retries the original request once. The refresh path itself bypasses this
 // to avoid recursion.
@@ -97,7 +104,9 @@ async function fetchAuthed(
   const refreshed = await tryRefresh()
   if (!refreshed) {
     clearTokens()
-    return res
+    onAuthExpired?.()
+    // The drained body cannot be re-read, so surface a typed error.
+    throw new ApiError(401, null, "Sesi berakhir, silakan masuk kembali.")
   }
   return rawFetch(path, init)
 }

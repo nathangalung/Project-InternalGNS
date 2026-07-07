@@ -35,6 +35,14 @@ export function useUpdateUser() {
     mutationFn: ({ id, input }: { id: number; input: usersApi.UpdateUserInput }) =>
       usersApi.update(id, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.users.all }),
-    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui user.")),
+    onError: (err) => {
+      if (err instanceof usersApi.PartialUserUpdateError) {
+        // Profile persisted, so refresh the cache anyway.
+        void qc.invalidateQueries({ queryKey: queryKeys.users.all })
+        toast.error("Profil tersimpan, tetapi kata sandi gagal diperbarui.")
+        return
+      }
+      toast.error(errorMessage(err, "Gagal memperbarui user."))
+    },
   })
 }

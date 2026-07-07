@@ -1,5 +1,6 @@
 import { type CSSProperties, useEffect, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
+import { PartialUserUpdateError } from "@/features/users/api"
 import { useUpdateUser } from "@/features/users/hooks"
 import PasswordChecklist from "@/features/users/PasswordChecklist"
 import { passwordIsValid } from "@/features/users/password"
@@ -117,7 +118,9 @@ export default function UserDetail({ user, onNavigate, onBack, onLogout }: UserD
       setPassword("")
       setFieldErrors({})
     } catch (err) {
-      if (err instanceof ApiError) {
+      if (err instanceof PartialUserUpdateError) {
+        setSubmitError("Profil tersimpan, tetapi kata sandi gagal diperbarui.")
+      } else if (err instanceof ApiError) {
         setSubmitError(err.message || "Gagal menyimpan perubahan")
       } else {
         setSubmitError("Gagal menyimpan perubahan")
