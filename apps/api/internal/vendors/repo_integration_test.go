@@ -57,6 +57,20 @@ func TestRepo_Create(t *testing.T) {
 	require.NoError(t, err)
 	assert.Greater(t, v.ID, int64(0))
 	assert.Equal(t, "PT Test Vendor", v.Name)
+	assert.True(t, v.IsActive)
+}
+
+func TestRepo_Create_Inactive(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := vendors.NewRepo(tx, testutil.Store(t))
+
+	inactive := false
+	v, err := repo.Create(ctx, vendors.CreateVendorRequest{
+		Name:     "PT Nonaktif",
+		IsActive: &inactive,
+	}, seedUserID)
+	require.NoError(t, err)
+	assert.False(t, v.IsActive)
 }
 
 func TestRepo_Create_NullContactInfo(t *testing.T) {

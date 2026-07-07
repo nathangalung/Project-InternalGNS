@@ -96,6 +96,7 @@ export default function VendorAddModal({
         name: name.trim(),
         location: address.trim() || undefined,
         contactInfo: Object.keys(contactInfo).length > 0 ? contactInfo : undefined,
+        isActive,
       })
       onSuccess?.(created)
       reset()

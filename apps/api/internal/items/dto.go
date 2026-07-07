@@ -80,6 +80,7 @@ type CreateItemRequest struct {
 	IMPACode      *string `json:"impaCode"`
 	DefaultUnitID *int16  `json:"defaultUnitId"`
 	Description   *string `json:"description"`
+	IsActive      *bool   `json:"isActive"` // nil defaults to true
 }
 
 type UpdateItemRequest struct {

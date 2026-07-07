@@ -69,6 +69,20 @@ func TestRepo_Create_MinimalFields(t *testing.T) {
 	it, err := repo.Create(ctx, req, seedUserID)
 	require.NoError(t, err)
 	assert.Greater(t, it.ID, int64(0))
+	assert.True(t, it.IsActive)
+}
+
+func TestRepo_Create_Inactive(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := items.NewRepo(tx, testutil.Store(t))
+
+	inactive := false
+	it, err := repo.Create(ctx, items.CreateItemRequest{
+		Name:     "INACTIVE ITEM",
+		IsActive: &inactive,
+	}, seedUserID)
+	require.NoError(t, err)
+	assert.False(t, it.IsActive)
 }
 
 func TestRepo_Search(t *testing.T) {

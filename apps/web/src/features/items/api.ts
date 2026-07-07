@@ -116,6 +116,7 @@ type CreateItemInput = {
   impaCode?: string
   defaultUnitId?: number
   description?: string
+  isActive?: boolean
 }
 
 export async function create(input: CreateItemInput): Promise<ItemRow> {

@@ -66,8 +66,11 @@ export function useCreateContact() {
       companyId: number
       input: Parameters<typeof clientsApi.createContact>[1]
     }) => clientsApi.createContact(companyId, input),
-    onSuccess: (_, { companyId }) =>
-      qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) }),
+    onSuccess: (_, { companyId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) })
+      // List rows embed contact fields, so refresh them too.
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.all })
+    },
     onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan kontak.")),
   })
 }

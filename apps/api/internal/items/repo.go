@@ -103,7 +103,7 @@ func (r *Repo) GetByID(ctx context.Context, id int64) (Item, error) {
 
 func (r *Repo) Create(ctx context.Context, req CreateItemRequest, userID int64) (Item, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("items.create"),
-		req.Name, req.IMPACode, req.DefaultUnitID, req.Description, userID,
+		req.Name, req.IMPACode, req.DefaultUnitID, req.Description, req.IsActive, userID,
 	)
 	if err != nil {
 		return Item{}, err

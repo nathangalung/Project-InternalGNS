@@ -44,6 +44,7 @@ type CreateVendorInput = {
   name: string
   location?: string
   contactInfo?: VendorContactInfo
+  isActive?: boolean
 }
 
 export async function create(input: CreateVendorInput): Promise<VendorRow> {

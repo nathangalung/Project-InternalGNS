@@ -57,6 +57,7 @@ export default function ProductCreateModal({
         name: nama.trim(),
         impaCode: kode.trim() || undefined,
         defaultUnitId: unit?.id,
+        isActive: aktif,
       })
       onSuccess?.({ nama: nama.trim(), kode: kode.trim(), satuan, aktif })
       reset()

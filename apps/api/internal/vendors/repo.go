@@ -116,7 +116,7 @@ func (r *Repo) GetByID(ctx context.Context, id int64) (Vendor, error) {
 
 func (r *Repo) Create(ctx context.Context, req CreateVendorRequest, userID int64) (Vendor, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("vendors.create"),
-		req.Name, req.Location, req.ContactInfo, userID,
+		req.Name, req.Location, req.ContactInfo, req.IsActive, userID,
 	)
 	if err != nil {
 		return Vendor{}, err

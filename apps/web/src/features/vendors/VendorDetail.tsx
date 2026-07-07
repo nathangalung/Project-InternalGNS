@@ -153,7 +153,7 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
       setFieldErrors(errs)
       return
     }
-    const contactInfo: VendorContactInfo = {}
+    const contactInfo: VendorContactInfo = { ...vendor.contactInfo }
     if (email.trim()) contactInfo.email = email.trim()
     if (phone.trim()) contactInfo.phone = phone.trim()
     try {

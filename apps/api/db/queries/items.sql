@@ -16,8 +16,8 @@ FROM items
 WHERE id = $1;
 
 -- name: items.create
-INSERT INTO items (name, impa_code, default_unit_id, description, created_by, updated_by)
-VALUES ($1, $2, $3, $4, $5, $5)
+INSERT INTO items (name, impa_code, default_unit_id, description, is_active, created_by, updated_by)
+VALUES ($1, $2, $3, $4, COALESCE($5, TRUE), $6, $6)
 RETURNING id, name, impa_code, default_unit_id, description,
           is_active, created_at, updated_at, image_object_key;
 

@@ -31,8 +31,8 @@ FROM vendors v
 WHERE v.id = $1;
 
 -- name: vendors.create
-INSERT INTO vendors (name, location, contact_info, created_by, updated_by)
-VALUES ($1, $2, $3, $4, $4)
+INSERT INTO vendors (name, location, contact_info, is_active, created_by, updated_by)
+VALUES ($1, $2, $3, COALESCE($4, TRUE), $5, $5)
 RETURNING id, name, location, contact_info, is_active, created_at, updated_at,
           0::BIGINT AS product_count, '0'::TEXT AS total_purchase,
           logo_object_key;
