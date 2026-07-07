@@ -138,6 +138,10 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
     return m
   }, [unitsData])
 
+  // Blocks save on unresolved units.
+  const canSave =
+    products.length > 0 && products.every((p) => unitIdByCode.has(p.satuan.toUpperCase()))
+
   useEffect(() => {
     if (!detail) return
     setSelectedClient(String(detail.companyClientId))
@@ -170,6 +174,9 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
       const cost = Number(ship.sellingPrice)
       setShippingCost(Number.isFinite(cost) ? String(cost) : "")
     }
+    if (detail.validityDays) setBerlakuSampai(String(detail.validityDays))
+    const termDays = Number.parseInt(detail.paymentTerms ?? "", 10)
+    if (Number.isFinite(termDays) && termDays > 0) setJatuhTempo(String(termDays))
   }, [detail, unitNameById])
 
   // Summary computation.
@@ -271,21 +278,25 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
               {step === steps.length && (
                 <button
                   className="btn-admin-primary"
-                  disabled={!isTenggatWaktuFilled || !hasContent || updateMutation.isPending}
+                  disabled={
+                    !isTenggatWaktuFilled || !hasContent || !canSave || updateMutation.isPending
+                  }
                   style={{
                     width: "148px",
                     justifyContent: "center",
                     background: "#630ED4",
                     opacity:
-                      !isTenggatWaktuFilled || !hasContent || updateMutation.isPending ? 0.5 : 1,
+                      !isTenggatWaktuFilled || !hasContent || !canSave || updateMutation.isPending
+                        ? 0.5
+                        : 1,
                     cursor:
-                      !isTenggatWaktuFilled || !hasContent || updateMutation.isPending
+                      !isTenggatWaktuFilled || !hasContent || !canSave || updateMutation.isPending
                         ? "not-allowed"
                         : "pointer",
                     transition: "opacity 0.2s",
                   }}
                   onClick={() => {
-                    if (!hasNumericQuotationId || !detail) return
+                    if (!hasNumericQuotationId || !detail || !canSave) return
                     const items: QuotationItemInput[] = products.map((p) => ({
                       requestedItemId: p.requestedItemId,
                       requestedImpa: p.requestedKodeImpa || p.kodeImpa || undefined,
@@ -302,7 +313,9 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
                       QuotationCreateInput,
                       "companyClientId" | "contactId" | "status"
                     > = {
-                      clientRefNo: currentClient?.referenceNumber,
+                      clientRefNo: detail.clientRefNo ?? undefined,
+                      paymentTerms: jatuhTempo.trim() ? `${jatuhTempo.trim()} days` : undefined,
+                      validityDays: Number(berlakuSampai) > 0 ? Number(berlakuSampai) : undefined,
                       discountPct: String(discountPct),
                       shippingAddress: shippingAddress || undefined,
                       shippingDays:

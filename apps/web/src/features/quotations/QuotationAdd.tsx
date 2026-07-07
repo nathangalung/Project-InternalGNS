@@ -122,7 +122,8 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
   const canSubmit =
     Number.isFinite(numericClientId) &&
     numericClientId > 0 &&
-    (products.length === 0 || products.every((p) => unitIdByCode.has(p.satuan.toUpperCase()))) &&
+    products.length > 0 &&
+    products.every((p) => unitIdByCode.has(p.satuan.toUpperCase())) &&
     isTenggatWaktuFilled &&
     hasContent
 
@@ -141,22 +142,16 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
     return items
   }
 
-  function daysBetween(fromIso: string, toIso: string): number | undefined {
-    const a = new Date(fromIso).getTime()
-    const b = new Date(toIso).getTime()
-    if (!Number.isFinite(a) || !Number.isFinite(b)) return undefined
-    return Math.max(0, Math.round((b - a) / 86_400_000))
-  }
-
   function handleSubmit() {
     if (!canSubmit) return
-    const validity = daysBetween(jatuhTempo, berlakuSampai)
+    const validity = Number(berlakuSampai)
     const shippingDays = Number(shippingTime)
     const input: QuotationCreateInput = {
       companyClientId: numericClientId,
       contactId: currentContactId,
       clientRefNo: currentClient?.referenceNumber,
-      validityDays: validity,
+      paymentTerms: jatuhTempo.trim() ? `${jatuhTempo.trim()} days` : undefined,
+      validityDays: Number.isFinite(validity) && validity > 0 ? validity : undefined,
       discountPct: String(discountPct),
       shippingAddress: shippingAddress || undefined,
       shippingDays: Number.isFinite(shippingDays) && shippingDays > 0 ? shippingDays : undefined,
@@ -268,17 +263,13 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
                 <button
                   className="btn-admin-primary"
                   onClick={handleSubmit}
-                  disabled={!isTenggatWaktuFilled || !hasContent || createQuotation.isPending}
+                  disabled={!canSubmit || createQuotation.isPending}
                   style={{
                     width: "180px",
                     justifyContent: "center",
                     background: "#630ED4",
-                    opacity:
-                      !isTenggatWaktuFilled || !hasContent || createQuotation.isPending ? 0.5 : 1,
-                    cursor:
-                      !isTenggatWaktuFilled || !hasContent || createQuotation.isPending
-                        ? "not-allowed"
-                        : "pointer",
+                    opacity: !canSubmit || createQuotation.isPending ? 0.5 : 1,
+                    cursor: !canSubmit || createQuotation.isPending ? "not-allowed" : "pointer",
                     transition: "opacity 0.2s",
                   }}
                 >
