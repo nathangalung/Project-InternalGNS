@@ -171,6 +171,7 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
     const ship = detail.items.find((it) => it.itemType === "shipping")
     if (ship) {
       setShippingAddress(ship.shipDestination ?? "")
+      if (ship.shippingDays) setShippingTime(String(ship.shippingDays))
       const cost = Number(ship.sellingPrice)
       setShippingCost(Number.isFinite(cost) ? String(cost) : "")
     }

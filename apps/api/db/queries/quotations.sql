@@ -22,7 +22,7 @@ SELECT id, quotation_id, line_number, item_type,
        selling_price::text, cost_price::text,
        discount_pct::text, total_selling::text,
        discount_amount::text, subtotal::text,
-       is_available, ship_destination
+       is_available, ship_destination, shipping_days
 FROM quotation_items
 WHERE quotation_id = $1
 ORDER BY line_number;

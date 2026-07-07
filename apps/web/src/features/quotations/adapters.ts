@@ -38,7 +38,7 @@ function toShipping(items: ApiQuotationItem[]): ShippingRow {
     deadline: "",
     hargaSatuan: Number.isFinite(cost) ? cost : 0,
     alamat: ship.shipDestination,
-    hari: undefined,
+    hari: ship.shippingDays,
   }
 }
 

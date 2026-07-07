@@ -54,6 +54,7 @@ type QuotationItem struct {
 	Subtotal        string  `db:"subtotal"            json:"subtotal"`
 	IsAvailable     bool    `db:"is_available"        json:"isAvailable"`
 	ShipDestination *string `db:"ship_destination"    json:"shipDestination,omitempty"`
+	ShippingDays    *int    `db:"shipping_days"       json:"shippingDays,omitempty"`
 }
 
 // StatusHistoryEntry mirrors quotation_status_history.

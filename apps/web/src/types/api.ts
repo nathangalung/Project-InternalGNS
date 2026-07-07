@@ -266,6 +266,7 @@ export type QuotationItemRow = {
   subtotal: string
   isAvailable: boolean
   shipDestination?: string
+  shippingDays?: number
 }
 
 export type QuotationStatusEvent = {
