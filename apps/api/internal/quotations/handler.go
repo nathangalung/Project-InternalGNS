@@ -264,6 +264,41 @@ func renderStatusErr(w http.ResponseWriter, err error) {
 	httperr.RenderDBErr(w, err)
 }
 
+func (h *Handler) ChangeContact(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+
+	var req ChangeContactRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	if req.ContactID == 0 {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"contactId": "required"}))
+		return
+	}
+
+	userID := deps.CurrentUserID(r.Context())
+	if err := h.repo.UpdateContact(r.Context(), id, req.ContactID, userID); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			httperr.Render(w, httperr.NotFound("quotation not found"))
+			return
+		}
+		if errors.Is(err, ErrContactNotAllowed) {
+			httperr.Render(w, httperr.Unprocessable(map[string]string{
+				"contactId": "contact not found or does not belong to this client",
+			}))
+			return
+		}
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // Send forces status to sent with optional note.
 func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)

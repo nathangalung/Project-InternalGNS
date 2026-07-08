@@ -2,9 +2,13 @@ import { useEffect, useMemo, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
 import ClientAdd from "@/features/clients/ClientAdd"
 import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
-import { useClientSearch, useClients } from "@/features/clients/hooks"
+import { useClientContacts, useClientSearch, useClients } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
-import { useQuotation, useUpdateQuotation } from "@/features/quotations/hooks"
+import {
+  useQuotation,
+  useUpdateQuotation,
+  useUpdateQuotationContact,
+} from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
@@ -53,6 +57,7 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
   const [selectedClient, setSelectedClient] = useState("")
   const [search, setSearch] = useState("")
   const [showClientAdd, setShowClientAdd] = useState(false)
+  const [selectedContactId, setSelectedContactId] = useState<number | undefined>(undefined)
 
   const [showProductAdd, setShowProductAdd] = useState(false)
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null)
@@ -99,6 +104,9 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
   const hasNumericQuotationId = Number.isFinite(numericQuotationId) && numericQuotationId > 0
   const { data: detail } = useQuotation(hasNumericQuotationId ? numericQuotationId : undefined)
   const updateMutation = useUpdateQuotation()
+  const updateContactMutation = useUpdateQuotationContact()
+  // Fetch contacts by quotation's own company, not selected client.
+  const { data: contacts = [] } = useClientContacts(detail?.companyClientId)
 
   const trimmedSearch = search.trim()
   const debouncedSearch = useDebouncedValue(trimmedSearch, 250)
@@ -145,6 +153,7 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
   useEffect(() => {
     if (!detail) return
     setSelectedClient(String(detail.companyClientId))
+    if (detail.contactId) setSelectedContactId(detail.contactId)
     setDiscountPct(Number(detail.discountPct) || 0)
     const productItems: ProductItem[] = detail.items
       .filter((it) => it.itemType === "product")
@@ -280,18 +289,30 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
                 <button
                   className="btn-admin-primary"
                   disabled={
-                    !isTenggatWaktuFilled || !hasContent || !canSave || updateMutation.isPending
+                    !isTenggatWaktuFilled ||
+                    !hasContent ||
+                    !canSave ||
+                    updateMutation.isPending ||
+                    updateContactMutation.isPending
                   }
                   style={{
                     width: "148px",
                     justifyContent: "center",
                     background: "#630ED4",
                     opacity:
-                      !isTenggatWaktuFilled || !hasContent || !canSave || updateMutation.isPending
+                      !isTenggatWaktuFilled ||
+                      !hasContent ||
+                      !canSave ||
+                      updateMutation.isPending ||
+                      updateContactMutation.isPending
                         ? 0.5
                         : 1,
                     cursor:
-                      !isTenggatWaktuFilled || !hasContent || !canSave || updateMutation.isPending
+                      !isTenggatWaktuFilled ||
+                      !hasContent ||
+                      !canSave ||
+                      updateMutation.isPending ||
+                      updateContactMutation.isPending
                         ? "not-allowed"
                         : "pointer",
                     transition: "opacity 0.2s",
@@ -327,11 +348,28 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
                     if (!detail) return
                     updateMutation.mutate(
                       { id: numericQuotationId, input, rowVersion: detail.rowVersion },
-                      { onSuccess: () => onNavigate("quotation-detail") },
+                      {
+                        onSuccess: () => {
+                          // Chain contact update when selection changed.
+                          if (
+                            selectedContactId !== undefined &&
+                            selectedContactId !== detail.contactId
+                          ) {
+                            updateContactMutation.mutate(
+                              { id: numericQuotationId, contactId: selectedContactId },
+                              { onSuccess: () => onNavigate("quotation-detail") },
+                            )
+                          } else {
+                            onNavigate("quotation-detail")
+                          }
+                        },
+                      },
                     )
                   }}
                 >
-                  {updateMutation.isPending ? "Menyimpan..." : "Simpan"}
+                  {updateMutation.isPending || updateContactMutation.isPending
+                    ? "Menyimpan..."
+                    : "Simpan"}
                 </button>
               )}
             </div>
@@ -366,6 +404,9 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
               selectedClient={selectedClient}
               setSelectedClient={setSelectedClient}
               setShowClientAdd={setShowClientAdd}
+              contacts={contacts}
+              selectedContactId={selectedContactId}
+              setSelectedContactId={setSelectedContactId}
             />
           )}
           {step === 2 && (

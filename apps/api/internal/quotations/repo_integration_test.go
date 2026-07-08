@@ -468,4 +468,42 @@ func TestRepo_ListRevisions_NotFound(t *testing.T) {
 	assert.Empty(t, revs)
 }
 
+func TestRepo_UpdateContact_HappyPath(t *testing.T) {
+	ctx, repo, _ := newRepo(t)
+	id, err := repo.Create(ctx, sampleCreate(), seedUserID)
+	require.NoError(t, err)
+
+	// sampleCreate seeds contactID=9000001; switch to contact 1 (same company).
+	const altContactID int64 = 1
+	require.NoError(t, repo.UpdateContact(ctx, id, altContactID, seedUserID))
+
+	d, err := repo.GetDetail(ctx, id)
+	require.NoError(t, err)
+	require.NotNil(t, d.ContactID)
+	assert.Equal(t, altContactID, *d.ContactID)
+	assert.NotNil(t, d.ContactName)
+}
+
+func TestRepo_UpdateContact_WrongCompany(t *testing.T) {
+	ctx, repo, tx := newRepo(t)
+	id, err := repo.Create(ctx, sampleCreate(), seedUserID)
+	require.NoError(t, err)
+
+	// Insert a contact for company 2 inside the tx.
+	var wrongContactID int64
+	require.NoError(t, tx.QueryRow(ctx, `
+		INSERT INTO company_contacts (company_id, name, country_code, created_by, updated_by)
+		VALUES (2, 'Wrong Contact', 'IDN', $1, $1)
+		RETURNING id`, seedUserID).Scan(&wrongContactID))
+
+	err = repo.UpdateContact(ctx, id, wrongContactID, seedUserID)
+	assert.ErrorIs(t, err, quotations.ErrContactNotAllowed)
+}
+
+func TestRepo_UpdateContact_NotFound(t *testing.T) {
+	ctx, repo, _ := newRepo(t)
+	err := repo.UpdateContact(ctx, 9_999_999, seedContactID, seedUserID)
+	assert.ErrorIs(t, err, quotations.ErrNotFound)
+}
+
 func int64Ptr(v int64) *int64 { return &v }

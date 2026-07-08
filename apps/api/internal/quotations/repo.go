@@ -26,9 +26,10 @@ func NewRepo(db Executor, store queries.Store) *Repo {
 }
 
 var (
-	ErrNotFound         = errors.New("not found")
-	ErrVersionMismatch  = errors.New("quotation version mismatch")
-	ErrUnpricedProducts = errors.New("product lines without a selling price")
+	ErrNotFound          = errors.New("not found")
+	ErrVersionMismatch   = errors.New("quotation version mismatch")
+	ErrUnpricedProducts  = errors.New("product lines without a selling price")
+	ErrContactNotAllowed = errors.New("contact not allowed")
 )
 
 // Filter and sort params.
@@ -271,6 +272,22 @@ func (r *Repo) countUnpricedProducts(ctx context.Context, id int64) (int, error)
 		return 0, err
 	}
 	return pgx.CollectOneRow(rows, pgx.RowTo[int])
+}
+
+// UpdateContact updates contact snapshot.
+func (r *Repo) UpdateContact(ctx context.Context, id, contactID, userID int64) error {
+	var result string
+	err := r.db.QueryRow(ctx, r.store.Get("quotations.update_contact"), id, contactID, userID).Scan(&result)
+	if err != nil {
+		return err
+	}
+	switch result {
+	case "not_found":
+		return ErrNotFound
+	case "contact_invalid":
+		return ErrContactNotAllowed
+	}
+	return nil
 }
 
 // ListRevisions returns the full parent/child chain ordered by version.

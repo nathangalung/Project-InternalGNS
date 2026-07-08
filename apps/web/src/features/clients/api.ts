@@ -93,6 +93,10 @@ type CreateContactInput = {
   countryCode?: string
 }
 
+export async function listContacts(companyId: number): Promise<ContactRow[]> {
+  return apiRequest<ContactRow[]>({ path: `/clients/${companyId}/contacts` })
+}
+
 export async function createContact(
   companyId: number,
   input: CreateContactInput,

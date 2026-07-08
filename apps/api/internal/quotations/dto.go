@@ -166,6 +166,11 @@ type ChangeStatusRequest struct {
 	Note   *string `json:"note,omitempty"`
 }
 
+// Change contact body.
+type ChangeContactRequest struct {
+	ContactID int64 `json:"contactId"`
+}
+
 // dbItem mirrors fn_create_quotation keys.
 type dbItem struct {
 	RequestedItemID   *int64  `json:"requested_item_id,omitempty"`

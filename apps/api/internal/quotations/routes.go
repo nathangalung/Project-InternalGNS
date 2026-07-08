@@ -21,6 +21,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.Get("/{id}", h.Get)
 	r.Put("/{id}", h.Update)
 	r.Patch("/{id}/status", h.ChangeStatus)
+	r.Patch("/{id}/contact", h.ChangeContact)
 	r.Post("/{id}/send", h.Send)
 	r.Get("/{id}/revisions", h.Revisions)
 

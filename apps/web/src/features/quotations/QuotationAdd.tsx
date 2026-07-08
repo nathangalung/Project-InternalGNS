@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
 import ClientAdd from "@/features/clients/ClientAdd"
 import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
-import { useClientSearch, useClients } from "@/features/clients/hooks"
+import { useClientContacts, useClientSearch, useClients } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
 import { useCreateQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
@@ -37,6 +37,7 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
   const [selectedClient, setSelectedClient] = useState("")
   const [search, setSearch] = useState("")
   const [showClientAdd, setShowClientAdd] = useState(false)
+  const [selectedContactId, setSelectedContactId] = useState<number | undefined>(undefined)
 
   // ProductAdd form state.
   const [showProductAdd, setShowProductAdd] = useState(false)
@@ -90,6 +91,11 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
   const { data: unitsData } = useUnits()
   const createQuotation = useCreateQuotation()
 
+  const numericClientId = Number(selectedClient)
+  const { data: contacts = [] } = useClientContacts(
+    numericClientId > 0 ? numericClientId : undefined,
+  )
+
   const remoteClients: Array<Client & { contactId?: number }> = useMemo(() => {
     if (debouncedSearch.length > 0) {
       return dedupeByCompany(searchHits ?? []).map(fromClientHit)
@@ -109,8 +115,24 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
       : sortedClients.slice(0, 10)
 
   const currentClient = baseClients.find((c) => c.id === selectedClient)
-  const currentContactId = (currentClient as (Client & { contactId?: number }) | undefined)
-    ?.contactId
+
+  // Auto-select contact when client or contacts list changes.
+  useEffect(() => {
+    if (!selectedClient) {
+      setSelectedContactId(undefined)
+      return
+    }
+    const clientContactId = (currentClient as (Client & { contactId?: number }) | undefined)
+      ?.contactId
+    const ids = contacts.map((c) => c.id)
+    if (clientContactId && ids.includes(clientContactId)) {
+      setSelectedContactId(clientContactId)
+    } else if (contacts.length > 0) {
+      setSelectedContactId(contacts[0].id)
+    } else {
+      setSelectedContactId(clientContactId)
+    }
+  }, [selectedClient, contacts, currentClient])
 
   const unitIdByCode = useMemo(() => {
     const m = new Map<string, number>()
@@ -118,7 +140,6 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
     return m
   }, [unitsData])
 
-  const numericClientId = Number(selectedClient)
   const canSubmit =
     Number.isFinite(numericClientId) &&
     numericClientId > 0 &&
@@ -148,7 +169,7 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
     const shippingDays = Number(shippingTime)
     const input: QuotationCreateInput = {
       companyClientId: numericClientId,
-      contactId: currentContactId,
+      contactId: selectedContactId,
       clientRefNo: currentClient?.referenceNumber,
       paymentTerms: jatuhTempo.trim() ? `${jatuhTempo.trim()} days` : undefined,
       validityDays: Number.isFinite(validity) && validity > 0 ? validity : undefined,
@@ -308,6 +329,9 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
               selectedClient={selectedClient}
               setSelectedClient={setSelectedClient}
               setShowClientAdd={setShowClientAdd}
+              contacts={contacts}
+              selectedContactId={selectedContactId}
+              setSelectedContactId={setSelectedContactId}
             />
           )}
           {step === 2 && (

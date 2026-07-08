@@ -176,3 +176,27 @@ FROM quotation_items
 WHERE quotation_id = $1
   AND item_type = 'product'
   AND (selling_price IS NULL OR selling_price <= 0);
+
+-- name: quotations.update_contact
+WITH q AS (
+    SELECT id, company_client_id FROM quotations WHERE id = $1
+),
+upd AS (
+    UPDATE quotations
+       SET contact_id   = cc.id,
+           contact_name = cc.name,
+           updated_by   = $3,
+           updated_at   = NOW()
+      FROM q
+      JOIN company_contacts cc ON cc.id = $2
+                                AND cc.company_id = q.company_client_id
+                                AND cc.is_active = TRUE
+     WHERE quotations.id = q.id
+    RETURNING quotations.id
+)
+SELECT
+    CASE
+        WHEN NOT EXISTS(SELECT 1 FROM q)   THEN 'not_found'
+        WHEN NOT EXISTS(SELECT 1 FROM upd) THEN 'contact_invalid'
+        ELSE 'ok'
+    END AS result;

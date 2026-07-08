@@ -1,3 +1,5 @@
+import type { ContactRow } from "@/types/api"
+
 export interface Client {
   id: string
   name: string
@@ -19,6 +21,9 @@ interface Step1ClientProps {
   selectedClient: string
   setSelectedClient: (id: string) => void
   setShowClientAdd: (show: boolean) => void
+  contacts?: ContactRow[]
+  selectedContactId?: number | undefined
+  setSelectedContactId?: (id: number | undefined) => void
 }
 
 export default function Step1Client({
@@ -28,6 +33,9 @@ export default function Step1Client({
   selectedClient,
   setSelectedClient,
   setShowClientAdd,
+  contacts = [],
+  selectedContactId,
+  setSelectedContactId,
 }: Step1ClientProps) {
   return (
     <div className="qe-step-content">
@@ -114,6 +122,86 @@ export default function Step1Client({
           )
         })}
       </div>
+
+      {selectedClient && contacts.length > 0 && setSelectedContactId && (
+        <div style={{ marginTop: "24px" }}>
+          <h3
+            style={{
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: 700,
+              fontSize: "14px",
+              color: "#191C1E",
+              margin: "0 0 12px 0",
+            }}
+          >
+            Pilih Narahubung
+          </h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {contacts.map((c) => {
+              const isSelected = c.id === selectedContactId
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setSelectedContactId?.(c.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "12px 16px",
+                    background: isSelected ? "#F5F0FF" : "#F2F4F6",
+                    border: `1.5px solid ${isSelected ? "#630ED4" : "transparent"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    width: "100%",
+                  }}
+                >
+                  <div className={`qe-radio${isSelected ? " qe-radio--selected" : ""}`}>
+                    {isSelected && <div className="qe-radio-dot" />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontFamily: "'Inter', sans-serif",
+                        fontWeight: 600,
+                        fontSize: "14px",
+                        color: "#191C1E",
+                      }}
+                    >
+                      {c.name}
+                      {c.title && (
+                        <span
+                          style={{
+                            fontWeight: 400,
+                            fontSize: "12px",
+                            color: "#64748B",
+                            marginLeft: "8px",
+                          }}
+                        >
+                          {c.title}
+                        </span>
+                      )}
+                    </div>
+                    {(c.phone || c.email) && (
+                      <div
+                        style={{
+                          fontFamily: "'Inter', sans-serif",
+                          fontSize: "12px",
+                          color: "#64748B",
+                          marginTop: "2px",
+                        }}
+                      >
+                        {[c.phone, c.email].filter(Boolean).join(" · ")}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

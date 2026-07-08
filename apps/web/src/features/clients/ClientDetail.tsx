@@ -5,8 +5,11 @@ import Sidebar from "@/components/shared/Sidebar"
 import * as clientsApi from "@/features/clients/api"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import {
+  useClientContacts,
   useClientLogoDownloadUrl,
+  useCreateContact,
   useUpdateClient,
+  useUpdateContact,
   useUploadClientLogo,
 } from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
@@ -82,10 +85,27 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
+  // Contact form state.
+  const [contactFormOpen, setContactFormOpen] = useState(false)
+  const [newContactName, setNewContactName] = useState("")
+  const [newContactPhone, setNewContactPhone] = useState("")
+  const [newContactEmail, setNewContactEmail] = useState("")
+  const [newContactTitle, setNewContactTitle] = useState("")
+
+  // Per-row inline edit state.
+  const [editingContactId, setEditingContactId] = useState<number | null>(null)
+  const [editName, setEditName] = useState("")
+  const [editPhone, setEditPhone] = useState("")
+  const [editEmail, setEditEmail] = useState("")
+  const [editTitle, setEditTitle] = useState("")
+
   const { data: countries } = useCountries()
   const updateClient = useUpdateClient()
   const uploadLogo = useUploadClientLogo()
   const { data: logoDownload } = useClientLogoDownloadUrl(client.id, client.logoObjectKey)
+  const { data: contactList = [] } = useClientContacts(client.id)
+  const createContact = useCreateContact()
+  const updateContact = useUpdateContact()
 
   useEffect(() => {
     const path = logoDownload?.downloadUrl
@@ -203,6 +223,28 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
         setSubmitError("Gagal menyimpan perubahan")
       }
     }
+  }
+
+  function closeAddContactForm() {
+    setContactFormOpen(false)
+    setNewContactName("")
+    setNewContactPhone("")
+    setNewContactEmail("")
+    setNewContactTitle("")
+  }
+
+  function openEditContact(c: {
+    id: number
+    name: string
+    phone?: string
+    email?: string
+    title?: string
+  }) {
+    setEditingContactId(c.id)
+    setEditName(c.name)
+    setEditPhone(c.phone ?? "")
+    setEditEmail(c.email ?? "")
+    setEditTitle(c.title ?? "")
   }
 
   const logoBg = logoBackground(client.name)
@@ -809,6 +851,379 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Contacts card */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              borderRadius: "12px",
+              padding: "32px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "24px",
+            }}
+          >
+            <div
+              style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}
+            >
+              <div>
+                <h3
+                  style={{
+                    margin: 0,
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: 700,
+                    fontSize: "20px",
+                    lineHeight: "28px",
+                    letterSpacing: "-0.5px",
+                    color: "#191C1E",
+                  }}
+                >
+                  Daftar Narahubung
+                </h3>
+                <p
+                  style={{
+                    margin: "4px 0 0 0",
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: 400,
+                    fontSize: "14px",
+                    lineHeight: "20px",
+                    color: "#4A4455",
+                  }}
+                >
+                  Kelola narahubung klien.
+                </p>
+              </div>
+              {!contactFormOpen && (
+                <button
+                  type="button"
+                  onClick={() => setContactFormOpen(true)}
+                  style={{
+                    padding: "8px 16px",
+                    background: "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)",
+                    borderRadius: "8px",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#FFFFFF",
+                    fontFamily: "'Inter', sans-serif",
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    flexShrink: 0,
+                  }}
+                >
+                  + Tambah Narahubung
+                </button>
+              )}
+            </div>
+
+            {contactList.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {contactList.map((c) =>
+                  editingContactId === c.id ? (
+                    <div
+                      key={c.id}
+                      style={{
+                        padding: "16px",
+                        background: "#F5F0FF",
+                        borderRadius: "8px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "12px",
+                      }}
+                    >
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                        <div>
+                          <label style={labelStyle}>
+                            Nama <span style={{ color: "#DC2626" }}>*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            style={inputStyle}
+                          />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Jabatan</label>
+                          <input
+                            type="text"
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            style={inputStyle}
+                          />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>No HP</label>
+                          <input
+                            type="text"
+                            value={editPhone}
+                            onChange={(e) => setEditPhone(e.target.value.replace(/\D/g, ""))}
+                            style={inputStyle}
+                          />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Email</label>
+                          <input
+                            type="email"
+                            value={editEmail}
+                            onChange={(e) => setEditEmail(e.target.value)}
+                            style={inputStyle}
+                          />
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                        <button
+                          type="button"
+                          onClick={() => setEditingContactId(null)}
+                          style={{
+                            padding: "8px 16px",
+                            background: "transparent",
+                            border: "none",
+                            cursor: "pointer",
+                            color: "#630ED4",
+                            fontFamily: "'Inter', sans-serif",
+                            fontWeight: 600,
+                            fontSize: "13px",
+                          }}
+                        >
+                          Batal
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!editName.trim() || updateContact.isPending}
+                          onClick={() => {
+                            if (!editName.trim()) return
+                            updateContact.mutate(
+                              {
+                                companyId: client.id,
+                                contactId: c.id,
+                                input: {
+                                  name: editName.trim(),
+                                  phone: editPhone.trim() || undefined,
+                                  email: editEmail.trim() || undefined,
+                                  title: editTitle.trim() || undefined,
+                                },
+                              },
+                              { onSuccess: () => setEditingContactId(null) },
+                            )
+                          }}
+                          style={{
+                            padding: "8px 16px",
+                            background: editName.trim()
+                              ? "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)"
+                              : "#CBD5E1",
+                            borderRadius: "8px",
+                            border: "none",
+                            cursor: editName.trim() ? "pointer" : "default",
+                            color: "#FFFFFF",
+                            fontFamily: "'Inter', sans-serif",
+                            fontWeight: 600,
+                            fontSize: "13px",
+                          }}
+                        >
+                          {updateContact.isPending ? "Menyimpan..." : "Simpan"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      key={c.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "12px 16px",
+                        background: "#F2F4F6",
+                        borderRadius: "8px",
+                        gap: "16px",
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontFamily: "'Inter', sans-serif",
+                            fontWeight: 600,
+                            fontSize: "14px",
+                            color: "#191C1E",
+                          }}
+                        >
+                          {c.name}
+                          {c.title && (
+                            <span
+                              style={{
+                                fontWeight: 400,
+                                fontSize: "12px",
+                                color: "#64748B",
+                                marginLeft: "8px",
+                              }}
+                            >
+                              {c.title}
+                            </span>
+                          )}
+                        </div>
+                        {(c.phone || c.email) && (
+                          <div
+                            style={{
+                              fontFamily: "'Inter', sans-serif",
+                              fontSize: "12px",
+                              color: "#64748B",
+                              marginTop: "2px",
+                            }}
+                          >
+                            {[c.phone, c.email].filter(Boolean).join(" · ")}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openEditContact(c)}
+                        style={{
+                          padding: "6px 12px",
+                          background: "transparent",
+                          border: "1.5px solid #630ED4",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          color: "#630ED4",
+                          fontFamily: "'Inter', sans-serif",
+                          fontWeight: 600,
+                          fontSize: "12px",
+                          flexShrink: 0,
+                        }}
+                      >
+                        Ubah
+                      </button>
+                    </div>
+                  ),
+                )}
+              </div>
+            )}
+
+            {contactFormOpen && (
+              <div
+                style={{
+                  padding: "16px",
+                  background: "#F5F0FF",
+                  borderRadius: "8px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}
+              >
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div>
+                    <label style={labelStyle}>
+                      Nama <span style={{ color: "#DC2626" }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={newContactName}
+                      onChange={(e) => setNewContactName(e.target.value)}
+                      placeholder="Nama narahubung"
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Jabatan</label>
+                    <input
+                      type="text"
+                      value={newContactTitle}
+                      onChange={(e) => setNewContactTitle(e.target.value)}
+                      placeholder="Jabatan"
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>No HP</label>
+                    <input
+                      type="text"
+                      value={newContactPhone}
+                      onChange={(e) => setNewContactPhone(e.target.value.replace(/\D/g, ""))}
+                      placeholder="-"
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Email</label>
+                    <input
+                      type="email"
+                      value={newContactEmail}
+                      onChange={(e) => setNewContactEmail(e.target.value)}
+                      placeholder="email@perusahaan.com"
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                  <button
+                    type="button"
+                    onClick={closeAddContactForm}
+                    style={{
+                      padding: "8px 16px",
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "#630ED4",
+                      fontFamily: "'Inter', sans-serif",
+                      fontWeight: 600,
+                      fontSize: "13px",
+                    }}
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!newContactName.trim() || createContact.isPending}
+                    onClick={() => {
+                      if (!newContactName.trim()) return
+                      createContact.mutate(
+                        {
+                          companyId: client.id,
+                          input: {
+                            name: newContactName.trim(),
+                            phone: newContactPhone.trim() || undefined,
+                            email: newContactEmail.trim() || undefined,
+                            title: newContactTitle.trim() || undefined,
+                          },
+                        },
+                        { onSuccess: closeAddContactForm },
+                      )
+                    }}
+                    style={{
+                      padding: "8px 16px",
+                      background: newContactName.trim()
+                        ? "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)"
+                        : "#CBD5E1",
+                      borderRadius: "8px",
+                      border: "none",
+                      cursor: newContactName.trim() ? "pointer" : "default",
+                      color: "#FFFFFF",
+                      fontFamily: "'Inter', sans-serif",
+                      fontWeight: 600,
+                      fontSize: "13px",
+                    }}
+                  >
+                    {createContact.isPending ? "Menyimpan..." : "Simpan"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {contactList.length === 0 && !contactFormOpen && (
+              <div
+                style={{
+                  padding: "24px",
+                  textAlign: "center",
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "14px",
+                  color: "#94A3B8",
+                }}
+              >
+                Belum ada narahubung. Klik Tambah Narahubung untuk menambahkan.
+              </div>
+            )}
           </div>
 
           <div

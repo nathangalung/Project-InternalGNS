@@ -82,6 +82,14 @@ export async function send(id: number, note?: string): Promise<void> {
   })
 }
 
+export async function updateQuotationContact(id: number, contactId: number): Promise<void> {
+  await apiRequest<void>({
+    path: `/quotations/${id}/contact`,
+    method: "PATCH",
+    body: { contactId },
+  })
+}
+
 export async function listRevisions(id: number): Promise<QuotationRevisionRow[]> {
   return apiRequest<QuotationRevisionRow[]>({ path: `/quotations/${id}/revisions` })
 }

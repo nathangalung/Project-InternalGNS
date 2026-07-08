@@ -84,6 +84,7 @@ var RequiredKeys = []string{
 	"quotations.qir_update",
 	"quotations.row_version",
 	"quotations.stats",
+	"quotations.update_contact",
 	"units.list_all",
 	"users.create",
 	"users.exists_email_other",

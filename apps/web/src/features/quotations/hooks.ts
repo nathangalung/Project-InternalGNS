@@ -78,6 +78,18 @@ export function useChangeQuotationStatus() {
   })
 }
 
+export function useUpdateQuotationContact() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, contactId }: { id: number; contactId: number }) =>
+      quotationsApi.updateQuotationContact(id, contactId),
+    onSuccess: (_, { id }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) })
+    },
+    onError: (err) => toast.error(errorMessage(err, "Gagal mengubah narahubung quotation.")),
+  })
+}
+
 export function useQuotationRevisions(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.quotations.revisions(id) : queryKeys.quotations.all,

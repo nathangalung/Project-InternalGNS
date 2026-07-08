@@ -56,6 +56,34 @@ export function useUpdateClient() {
   })
 }
 
+export function useClientContacts(companyId: number | undefined) {
+  return useQuery({
+    queryKey: companyId ? queryKeys.clients.contacts(companyId) : queryKeys.clients.all,
+    queryFn: () => clientsApi.listContacts(companyId as number),
+    enabled: companyId !== undefined && companyId > 0,
+  })
+}
+
+export function useUpdateContact() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      companyId,
+      contactId,
+      input,
+    }: {
+      companyId: number
+      contactId: number
+      input: Parameters<typeof clientsApi.updateContact>[2]
+    }) => clientsApi.updateContact(companyId, contactId, input),
+    onSuccess: (_, { companyId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) })
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.all })
+    },
+    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui kontak.")),
+  })
+}
+
 export function useCreateContact() {
   const qc = useQueryClient()
   return useMutation({
