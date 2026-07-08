@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
 import { getCompanyInitials } from "@/features/clients/helpers"
+import { usePurchaseOrderByQuotation } from "@/features/purchaseOrders/hooks"
 import ClientSummaryCard from "@/features/quotations/QuotationDetail/ClientSummaryCard"
 import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
 import HistoryTimeline from "@/features/quotations/QuotationDetail/HistoryTimeline"
@@ -57,6 +58,7 @@ export default function InvoiceDetail({
 }: InvoiceDetailProps) {
   const { data: inv, isLoading } = useInvoiceByQuotation(quotationId)
   const { data: invItems } = useInvoiceItems(inv?.id)
+  const { data: linkedPo } = usePurchaseOrderByQuotation(quotationId)
   const changeStatus = useChangeInvoiceStatus()
   const uploadAttachment = useUploadInvoiceAttachment()
   const { data: attachmentDownload } = useInvoiceAttachmentDownloadUrl(
@@ -187,6 +189,8 @@ export default function InvoiceDetail({
             status={displayStatus}
             onNavigate={onNavigate}
             onDownload={handleDownload}
+            poNumber={linkedPo?.poNumber}
+            poDate={linkedPo?.poDate}
           />
           <StatusBar
             status={status}

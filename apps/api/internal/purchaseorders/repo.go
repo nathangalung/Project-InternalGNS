@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -15,10 +16,11 @@ import (
 )
 
 var (
-	ErrNotFound          = errors.New("purchase order not found")
-	ErrInvalidTransition = errors.New("invalid PO status transition")
-	ErrLocked            = errors.New("purchase order locked")
-	ErrVersionMismatch   = errors.New("purchase order version mismatch")
+	ErrNotFound            = errors.New("purchase order not found")
+	ErrInvalidTransition   = errors.New("invalid PO status transition")
+	ErrLocked              = errors.New("purchase order locked")
+	ErrVersionMismatch     = errors.New("purchase order version mismatch")
+	ErrDuplicatePoNumber   = errors.New("po_number already exists")
 )
 
 type Repo struct {
@@ -153,6 +155,22 @@ func (r *Repo) UpdateNotes(ctx context.Context, id int64, notes string, actorID 
 	tag, err := r.db.Exec(ctx, r.store.Get("purchase_orders.update_notes"),
 		id, notes, actorID)
 	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (r *Repo) UpdateDetails(ctx context.Context, id int64, poNumber string, poDate time.Time, actorID int64) error {
+	tag, err := r.db.Exec(ctx, r.store.Get("purchase_orders.update_details"),
+		id, poNumber, poDate, actorID)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return ErrDuplicatePoNumber
+		}
 		return err
 	}
 	if tag.RowsAffected() == 0 {

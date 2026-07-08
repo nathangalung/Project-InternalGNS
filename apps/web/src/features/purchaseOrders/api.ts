@@ -90,6 +90,17 @@ export async function presignDownload(id: number): Promise<PresignDownload> {
   })
 }
 
+export async function updateDetails(
+  id: number,
+  payload: { poNumber: string; poDate: string },
+): Promise<void> {
+  await apiRequest<void>({
+    path: `/purchase-orders/${id}/details`,
+    method: "PATCH",
+    body: payload,
+  })
+}
+
 export async function updateItems(
   id: number,
   input: PoUpdateItemsInput,

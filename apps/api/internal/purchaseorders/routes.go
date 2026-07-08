@@ -25,6 +25,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.Patch("/{id}/status", h.ChangeStatus)
 	r.Patch("/{id}/file", h.UpdateFile)
 	r.Patch("/{id}/notes", h.UpdateNotes)
+	r.Patch("/{id}/details", h.UpdateDetails)
 	r.Put("/{id}/items", h.UpdateItems)
 
 	if d.TemplatesRoot != "" {

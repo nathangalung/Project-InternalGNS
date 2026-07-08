@@ -71,6 +71,11 @@ type UpdateNotesRequest struct {
 	Notes string `json:"notes"`
 }
 
+type UpdateDetailsRequest struct {
+	PoNumber string `json:"poNumber"`
+	PoDate   string `json:"poDate"` // YYYY-MM-DD
+}
+
 // PO direct edit payload.
 type UpdateItemsRequest struct {
 	DiscountPct     string            `json:"discountPct"`

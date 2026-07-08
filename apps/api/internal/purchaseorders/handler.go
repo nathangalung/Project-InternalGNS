@@ -225,6 +225,41 @@ func (h *Handler) UpdateNotes(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	var req UpdateDetailsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	if strings.TrimSpace(req.PoNumber) == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"poNumber": "required"}))
+		return
+	}
+	poDate, err := time.Parse("2006-01-02", strings.TrimSpace(req.PoDate))
+	if err != nil {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"poDate": "must be YYYY-MM-DD"}))
+		return
+	}
+	actor := deps.CurrentUserID(r.Context())
+	if err := h.repo.UpdateDetails(r.Context(), id, strings.TrimSpace(req.PoNumber), poDate, actor); err != nil {
+		switch {
+		case errors.Is(err, ErrNotFound):
+			httperr.Render(w, httperr.NotFound("purchase order not found"))
+		case errors.Is(err, ErrDuplicatePoNumber):
+			httperr.Render(w, httperr.Unprocessable(map[string]string{"poNumber": "already used by another PO"}))
+		default:
+			httperr.RenderDBErr(w, err)
+		}
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {

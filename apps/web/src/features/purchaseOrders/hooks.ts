@@ -54,6 +54,16 @@ export function useChangePoStatus() {
   })
 }
 
+export function useUpdatePoDetails() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, poNumber, poDate }: { id: number; poNumber: string; poDate: string }) =>
+      poApi.updateDetails(id, { poNumber, poDate }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all }),
+    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui detail PO.")),
+  })
+}
+
 // Full presigned upload flow.
 export function useUploadPoFile() {
   const qc = useQueryClient()

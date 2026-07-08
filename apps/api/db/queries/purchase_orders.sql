@@ -156,6 +156,14 @@ SET notes      = $2,
 WHERE id = $1
 RETURNING id;
 
+-- name: purchase_orders.update_details
+UPDATE purchase_orders
+SET po_number  = $2,
+    po_date    = $3,
+    updated_by = $4
+WHERE id = $1
+RETURNING id;
+
 -- name: purchase_orders.change_status
 SELECT fn_change_po_status($1::bigint, $2::text, $3::bigint);
 

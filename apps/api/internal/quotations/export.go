@@ -64,6 +64,7 @@ type exportData struct {
 	Payment       string
 	Validity      string
 	SignerName    string
+	UseA4         bool
 }
 
 // ExportPDF returns the quotation as a PDF stream.
@@ -110,6 +111,13 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 	client, _ := h.clients.GetByID(ctx, d.CompanyClientID)
 
 	contactEmail, contactPhone := h.contactComm(ctx, d, client)
+
+	productCount := 0
+	for _, it := range d.Items {
+		if it.ItemType == "product" {
+			productCount++
+		}
+	}
 
 	items := make([]exportItem, 0, len(d.Items))
 	for i, it := range d.Items {
@@ -178,6 +186,7 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 		Payment:       pdfgen.LatexEscape(payment),
 		Validity:      pdfgen.LatexEscape(validity),
 		SignerName:    pdfgen.LatexEscape(h.settings.SignerName),
+		UseA4:         productCount > 5,
 	}, nil
 }
 

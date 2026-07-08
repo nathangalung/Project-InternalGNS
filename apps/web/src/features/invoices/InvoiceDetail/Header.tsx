@@ -10,6 +10,8 @@ interface HeaderProps {
   status: InvoiceStatus
   onNavigate: (page: Page) => void
   onDownload?: () => void
+  poNumber?: string
+  poDate?: string
 }
 
 export default function Header({
@@ -19,6 +21,8 @@ export default function Header({
   status,
   onNavigate,
   onDownload,
+  poNumber,
+  poDate,
 }: HeaderProps) {
   const badge = INVOICE_STATUS_STYLE[status]
   return (
@@ -39,6 +43,18 @@ export default function Header({
               <span className="qd-meta-text">Dibuat pada: {createdAt}</span>
               <span className="qd-meta-sep">|</span>
               <span className="qd-meta-text">Dari Quotation {quotationNo}</span>
+              {poNumber && (
+                <>
+                  <span className="qd-meta-sep">|</span>
+                  <span className="qd-meta-text">No. PO: {poNumber}</span>
+                </>
+              )}
+              {poDate && (
+                <>
+                  <span className="qd-meta-sep">|</span>
+                  <span className="qd-meta-text">Tanggal PO: {poDate.slice(0, 10)}</span>
+                </>
+              )}
               <span className="qd-meta-sep">|</span>
               <StatusBadge bg={badge.bg} color={badge.color}>
                 {INVOICE_LABEL[status]}

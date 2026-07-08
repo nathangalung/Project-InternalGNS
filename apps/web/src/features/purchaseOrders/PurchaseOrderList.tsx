@@ -13,7 +13,7 @@ import { formatDate, formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import type { PurchaseOrderRow } from "@/types/api"
 import * as purchaseOrdersApi from "./api"
-import { usePurchaseOrders, useUploadPoFile } from "./hooks"
+import { usePurchaseOrders, useUpdatePoDetails, useUploadPoFile } from "./hooks"
 import { PO_LABEL, shortDocNo } from "./PurchaseOrderDetail/helpers"
 import PurchaseOrderFilter, { type PoFilterValues } from "./PurchaseOrderFilter"
 import type { PoRow, PoStatus } from "./types"
@@ -35,9 +35,11 @@ const STATUS_STYLE: Record<PoStatus, { bg: string; color: string }> = {
 
 function rowFromBackend(po: PurchaseOrderRow): PoRow {
   return {
+    id: po.id,
     quotationId: po.quotationId,
     quotationNo: po.quotationNo,
     poNumber: po.poNumber,
+    poDate: po.poDate.slice(0, 10),
     client: po.companyName,
     date: po.poDate,
     total: formatRupiah(po.quotationTotal),
@@ -67,6 +69,7 @@ export default function PurchaseOrderList({
   onViewQuotation,
 }: PurchaseOrderListProps) {
   const uploadFile = useUploadPoFile()
+  const updateDetails = useUpdatePoDetails()
 
   const [search, setSearch] = useState("")
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -118,9 +121,19 @@ export default function PurchaseOrderList({
     setUploadTarget({ row, poId })
   }
 
-  function handleUploadSubmit(file: File) {
+  function handleUploadSubmit(file: File, details: { poNumber: string; poDate: string }) {
     if (!uploadTarget) return
-    uploadFile.mutate({ id: uploadTarget.poId, file }, { onSuccess: () => setUploadTarget(null) })
+    uploadFile.mutate(
+      { id: uploadTarget.poId, file },
+      {
+        onSuccess: () => {
+          updateDetails.mutate(
+            { id: uploadTarget.poId, ...details },
+            { onSuccess: () => setUploadTarget(null) },
+          )
+        },
+      },
+    )
   }
 
   async function handleDownloadDN(row: PoRow) {

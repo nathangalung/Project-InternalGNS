@@ -2,7 +2,7 @@
 % Compile: xelatex Invoice.tex
 % Mirrors quotation layout, replaces totals with DPP, DPP Nilai Lain, PPN, Total.
 
-\documentclass[9pt,a4paper,landscape]{article}
+[[if .UseA4]]\documentclass[9pt,a4paper,landscape]{article}[[else]]\documentclass[9pt,a5paper,landscape]{article}[[end]]
 
 \usepackage{fontspec}
 \setmainfont{Plus Jakarta Sans}[
@@ -11,7 +11,7 @@
   BoldItalicFont = Plus Jakarta Sans Bold Italic,
 ]
 
-\usepackage[a4paper, landscape, top=1.5cm, bottom=1.8cm, left=1.5cm, right=1.5cm]{geometry}
+[[if .UseA4]]\usepackage[a4paper, landscape, top=1.5cm, bottom=1.8cm, left=1.5cm, right=1.5cm]{geometry}[[else]]\usepackage[a5paper, landscape, top=1.0cm, bottom=1.2cm, left=1.0cm, right=1.0cm]{geometry}[[end]]
 \usepackage{longtable}
 \usepackage{array}
 \usepackage{colortbl}
@@ -100,6 +100,7 @@
   \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
     Invoice No   & : & [[.InvoiceNo]] \\[1pt]
     PO No        & : & [[.PONo]] \\[1pt]
+    PO Date      & : & [[.PODate]] \\[1pt]
     Invoice Date & : & [[.InvoiceDate]] \\[1pt]
     Due Date     & : & [[.DueDate]] \\
   \end{tabular}
@@ -114,7 +115,23 @@
 
 \setlength{\tabcolsep}{3pt}
 
-\begin{longtable}{|C{0.6cm}|C{0.6cm}|C{0.8cm}|L{8.0cm}|L{9.5cm}|R{2.5cm}|R{2.5cm}|}
+[[if .UseA4]]
+\newlength{\INcol}\setlength{\INcol}{0.6cm}
+\newlength{\IQcol}\setlength{\IQcol}{0.6cm}
+\newlength{\IUcol}\setlength{\IUcol}{0.8cm}
+\newlength{\ILcol}\setlength{\ILcol}{8.0cm}
+\newlength{\IDcol}\setlength{\IDcol}{9.5cm}
+\newlength{\IMcol}\setlength{\IMcol}{2.5cm}
+[[else]]
+\newlength{\INcol}\setlength{\INcol}{0.4cm}
+\newlength{\IQcol}\setlength{\IQcol}{0.4cm}
+\newlength{\IUcol}\setlength{\IUcol}{0.5cm}
+\newlength{\ILcol}\setlength{\ILcol}{4.8cm}
+\newlength{\IDcol}\setlength{\IDcol}{6.2cm}
+\newlength{\IMcol}\setlength{\IMcol}{1.9cm}
+[[end]]
+
+\begin{longtable}{|C{\INcol}|C{\IQcol}|C{\IUcol}|L{\ILcol}|L{\IDcol}|R{\IMcol}|R{\IMcol}|}
 \hline
 \multicolumn{1}{|c|}{\footnotesize\bfseries No.} &
 \multicolumn{1}{c|}{\footnotesize\bfseries Qty} &
@@ -151,7 +168,11 @@
 \hline
 [[end]]
 
-\multicolumn{5}{|r|}{\footnotesize DPP} &
+\multicolumn{5}{|r|}{\footnotesize HARGA TOTAL} &
+  \multicolumn{2}{r|}{\footnotesize [[.TotalProduk]]} \\
+[[if .Diskon]]\multicolumn{5}{|r|}{\footnotesize Diskon [[.DiscountPct]]\%} &
+  \multicolumn{2}{r|}{\footnotesize -[[.Diskon]]} \\
+[[end]]\multicolumn{5}{|r|}{\footnotesize DPP} &
   \multicolumn{2}{r|}{\footnotesize [[.DPP]]} \\
 \multicolumn{5}{|r|}{\footnotesize DPP Nilai Lain} &
   \multicolumn{2}{r|}{\footnotesize [[.DPPNilaiLain]]} \\

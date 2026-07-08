@@ -4,7 +4,7 @@ import type { PoRow } from "./types"
 interface UploadPoModalProps {
   row: PoRow
   onClose: () => void
-  onSubmit: (file: File) => void
+  onSubmit: (file: File, details: { poNumber: string; poDate: string }) => void
 }
 
 const overlayStyle: CSSProperties = {
@@ -32,6 +32,8 @@ const modalStyle: CSSProperties = {
 export default function UploadPoModal({ row, onClose, onSubmit }: UploadPoModalProps) {
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState<string>("")
+  const [poNumber, setPoNumber] = useState(row.poNumber)
+  const [poDate, setPoDate] = useState(row.poDate.slice(0, 10))
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -65,7 +67,15 @@ export default function UploadPoModal({ row, onClose, onSubmit }: UploadPoModalP
 
   function handleSubmit() {
     if (!file) return
-    onSubmit(file)
+    if (!poNumber.trim()) {
+      setError("Nomor PO wajib diisi.")
+      return
+    }
+    if (!poDate) {
+      setError("Tanggal PO wajib diisi.")
+      return
+    }
+    onSubmit(file, { poNumber: poNumber.trim(), poDate })
   }
 
   return (
@@ -136,6 +146,66 @@ export default function UploadPoModal({ row, onClose, onSubmit }: UploadPoModalP
         </div>
 
         <div style={{ padding: "24px" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <label
+                htmlFor="po-number"
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#374151",
+                }}
+              >
+                Nomor PO <span style={{ color: "#DC2626" }}>*</span>
+              </label>
+              <input
+                id="po-number"
+                type="text"
+                value={poNumber}
+                onChange={(e) => setPoNumber(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  border: "1px solid #D1D5DB",
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "13px",
+                  color: "#191C1E",
+                  outline: "none",
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <label
+                htmlFor="po-date"
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#374151",
+                }}
+              >
+                Tanggal PO <span style={{ color: "#DC2626" }}>*</span>
+              </label>
+              <input
+                id="po-date"
+                type="date"
+                value={poDate}
+                onChange={(e) => setPoDate(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  border: "1px solid #D1D5DB",
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "13px",
+                  color: "#191C1E",
+                  outline: "none",
+                }}
+              />
+            </div>
+          </div>
           <input
             ref={fileInputRef}
             type="file"
@@ -292,11 +362,11 @@ export default function UploadPoModal({ row, onClose, onSubmit }: UploadPoModalP
             type="button"
             className="ca-btn-submit"
             onClick={handleSubmit}
-            disabled={!file}
+            disabled={!file || !poNumber.trim() || !poDate}
             style={{
-              opacity: file ? 1 : 0.5,
-              cursor: file ? "pointer" : "default",
-              background: file ? undefined : "#CBD5E1",
+              opacity: file && poNumber.trim() && poDate ? 1 : 0.5,
+              cursor: file && poNumber.trim() && poDate ? "pointer" : "default",
+              background: file && poNumber.trim() && poDate ? undefined : "#CBD5E1",
             }}
           >
             Upload

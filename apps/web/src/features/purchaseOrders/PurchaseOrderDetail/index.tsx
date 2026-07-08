@@ -23,6 +23,7 @@ import {
   useChangePoStatus,
   usePoItems,
   usePurchaseOrderByQuotation,
+  useUpdatePoDetails,
   useUploadPoFile,
 } from "../hooks"
 import type { PoRow, PoStatus } from "../types"
@@ -66,6 +67,7 @@ export default function PurchaseOrderDetail({
   const { data: poItems } = usePoItems(po?.id)
   const changeStatus = useChangePoStatus()
   const uploadFile = useUploadPoFile()
+  const updateDetails = useUpdatePoDetails()
 
   const initialStatus: PoStatus = po?.status ?? "PENDING"
   const [status, setStatus] = useState<PoStatus>(initialStatus)
@@ -241,9 +243,16 @@ export default function PurchaseOrderDetail({
     )
   }
 
-  function handleUploadSubmit(file: File) {
+  function handleUploadSubmit(file: File, details: { poNumber: string; poDate: string }) {
     if (!po) return
-    uploadFile.mutate({ id: po.id, file }, { onSuccess: () => setShowUpload(false) })
+    uploadFile.mutate(
+      { id: po.id, file },
+      {
+        onSuccess: () => {
+          updateDetails.mutate({ id: po.id, ...details }, { onSuccess: () => setShowUpload(false) })
+        },
+      },
+    )
   }
 
   async function handleDownload() {
@@ -261,9 +270,11 @@ export default function PurchaseOrderDetail({
   }
 
   const uploadRow: PoRow = {
+    id: po.id,
     quotationId,
     quotationNo,
     poNumber,
+    poDate: po.poDate.slice(0, 10),
     client: quotation.client,
     date: quotation.createdAt,
     total: String(grandTotal),
