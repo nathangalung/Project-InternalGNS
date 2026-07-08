@@ -22,7 +22,9 @@ export default function VendorAddModal({
 }: VendorAddModalProps) {
   if (!open) return null
   const trimmed = form.nama.trim()
-  const disableSubmit = !trimmed || Boolean(isSaving)
+  const hargaVal = Number(form.harga)
+  const isHargaValid = hargaVal > 0
+  const disableSubmit = !trimmed || !isHargaValid || Boolean(isSaving)
   return (
     <div style={confirmOverlayStyle} onClick={onClose}>
       <div style={{ ...confirmModalStyle, maxWidth: "480px" }} onClick={(e) => e.stopPropagation()}>
@@ -87,7 +89,7 @@ export default function VendorAddModal({
                 marginBottom: "6px",
               }}
             >
-              Harga Beli (Rp)
+              Harga Beli (Rp) <span style={{ color: "#EF4444" }}>*</span>
             </label>
             <input
               className="ca-input"
@@ -101,6 +103,9 @@ export default function VendorAddModal({
           </div>
         </div>
         {error && <div style={{ fontSize: "12px", color: "#EF4444" }}>{error}</div>}
+        {trimmed && !isHargaValid && (
+          <div style={{ fontSize: "12px", color: "#EF4444" }}>Harga beli harus lebih dari 0</div>
+        )}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
           <button
             onClick={onClose}

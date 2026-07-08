@@ -171,7 +171,8 @@ export default function ProductAdd({
   const isJumlahFilled = isSatuanFilled && form.jumlahProduk.trim().length > 0
   const exactVendor = vendorOptions.find((v) => v.nama === form.namaVendor)
   const isVendorFilled = isJumlahFilled && exactVendor !== undefined
-  const canSubmit = isRequestFilled && isVendorFilled
+  const isHargaJualValid = parseRp(form.hargaJual) > 0
+  const canSubmit = isRequestFilled && isVendorFilled && isHargaJualValid
 
   function handleChange(field: keyof ProductAddFormData, value: string) {
     if (field === "requestedKodeImpaNama") {
@@ -397,6 +398,11 @@ export default function ProductAdd({
           </div>
 
           <div className="ca-footer">
+            {isVendorFilled && !isHargaJualValid && (
+              <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>
+                Harga jual harus lebih dari 0
+              </span>
+            )}
             <button type="button" className="ca-btn-cancel" onClick={handleCancel}>
               Batal
             </button>

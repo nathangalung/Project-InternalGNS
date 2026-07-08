@@ -23,7 +23,7 @@ export default function ShippingTable({ shipping }: ShippingTableProps) {
                 Waktu Pengiriman (Hari Kerja)
               </th>
               <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
-                Harga Satuan
+                Harga Jual Satuan
               </th>
               <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
                 Total (Rp)

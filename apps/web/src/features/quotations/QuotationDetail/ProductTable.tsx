@@ -257,7 +257,7 @@ export default function ProductTable({ products }: ProductTableProps) {
                   Satuan
                 </th>
                 <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
-                  Harga Satuan
+                  Harga Jual Satuan
                 </th>
                 <th className="tbl-th tbl-th--center qd-th--profit" style={{ width: 150 }}>
                   Profit (Rp)
