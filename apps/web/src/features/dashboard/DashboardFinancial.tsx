@@ -328,7 +328,7 @@ export default function DashboardFinancial({
                     Jatuh Tempo
                   </th>
                   <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
-                    Total Harga
+                    Total Tagihan
                   </th>
                   <th className="tbl-th tbl-th--center" style={{ width: 130 }}>
                     Status

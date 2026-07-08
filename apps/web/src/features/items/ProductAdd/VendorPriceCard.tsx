@@ -57,7 +57,7 @@ export default function VendorPriceCard({
       className="ca-section"
       style={{ opacity: !isJumlahFilled ? 0.6 : 1, transition: "opacity 0.2s ease" }}
     >
-      <div className="ca-section-heading">Vendor dan Harga</div>
+      <div className="ca-section-heading">Vendor dan Harga Beli</div>
 
       <div className="ca-field">
         <label className="ca-label">

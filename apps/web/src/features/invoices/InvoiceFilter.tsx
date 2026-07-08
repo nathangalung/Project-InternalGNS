@@ -223,11 +223,11 @@ export default function InvoiceFilter({ onClose, onApply, initialValues }: Invoi
           />
 
           <div className="ca-section">
-            <div className="ca-section-heading">Rentang Harga</div>
+            <div className="ca-section-heading">Rentang Total Tagihan</div>
             <div className="ca-row-2">
               {[
-                { label: "Min Harga", value: minHarga, set: setMinHarga },
-                { label: "Max Harga", value: maxHarga, set: setMaxHarga },
+                { label: "Min Total", value: minHarga, set: setMinHarga },
+                { label: "Max Total", value: maxHarga, set: setMaxHarga },
               ].map(({ label, value, set }) => (
                 <div className="ca-field" key={label}>
                   <label className="ca-label">{label}</label>

@@ -238,7 +238,7 @@ export default function PurchaseOrderList({
                     Tanggal Pembuatan
                   </th>
                   <th className="tbl-th tbl-th--center" style={{ width: 150 }}>
-                    Total Harga
+                    Total PO
                   </th>
                   <th className="tbl-th tbl-th--center" style={{ width: 150 }}>
                     Status
