@@ -130,6 +130,8 @@ export default function PurchaseOrderDetail({
   }, [po])
 
   const products = useMemo(() => poItemsToProducts(poItems), [poItems])
+  // Profit needs real cost data.
+  const hasCost = useMemo(() => (poItems ?? []).some((it) => toNum(it.costPrice) > 0), [poItems])
   const shipping = useMemo(() => poItemsToShipping(poItems), [poItems])
 
   const history: HistoryEntry[] = useMemo(() => {
@@ -309,7 +311,7 @@ export default function PurchaseOrderDetail({
             shippingAlamat={shipping.alamat}
           />
           {totalShip > 0 && <ShippingTable shipping={shipping} />}
-          <ProductTable products={products} />
+          <ProductTable products={products} showProfit={hasCost} />
           <CostBreakdown
             hasProducts={hasProducts}
             totalProduk={totalProduk}
@@ -320,6 +322,7 @@ export default function PurchaseOrderDetail({
             ppn12={ppn12}
             totalShip={totalShip}
             totalProfit={totalProfit}
+            showProfit={hasCost}
             grandTotal={grandTotal}
           />
           <HistoryTimeline history={history} />

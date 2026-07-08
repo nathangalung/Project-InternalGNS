@@ -10,6 +10,7 @@ interface CostBreakdownProps {
   ppn12: number
   totalShip: number
   totalProfit: number
+  showProfit?: boolean
   grandTotal: number
 }
 
@@ -24,6 +25,7 @@ export default function CostBreakdown({
   ppn12,
   totalShip,
   totalProfit,
+  showProfit = true,
   grandTotal,
 }: CostBreakdownProps) {
   return (
@@ -125,7 +127,7 @@ export default function CostBreakdown({
 
         <div style={{ height: "1px", background: "#E5E7EB", marginBottom: "16px" }} />
 
-        {hasProducts && (
+        {hasProducts && showProfit && (
           <div
             style={{
               display: "flex",

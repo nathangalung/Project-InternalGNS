@@ -4,11 +4,12 @@ import { formatRupiah as formatRp } from "@/lib/format"
 import { getPageNumbers, PAGE_SIZE_OPTIONS } from "./helpers"
 
 interface ProductTableProps {
+  showProfit?: boolean
   products: ProductRow[]
 }
 
 // Collapsible paginated product list.
-export default function ProductTable({ products }: ProductTableProps) {
+export default function ProductTable({ products, showProfit = true }: ProductTableProps) {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(5)
   const [isRowDropdownOpen, setIsRowDropdownOpen] = useState(false)
@@ -259,9 +260,11 @@ export default function ProductTable({ products }: ProductTableProps) {
                 <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
                   Harga Jual Satuan
                 </th>
-                <th className="tbl-th tbl-th--center qd-th--profit" style={{ width: 150 }}>
-                  Profit (Rp)
-                </th>
+                {showProfit && (
+                  <th className="tbl-th tbl-th--center qd-th--profit" style={{ width: 150 }}>
+                    Profit (Rp)
+                  </th>
+                )}
                 <th className="tbl-th tbl-th--center" style={{ width: 150 }}>
                   Total (Rp)
                 </th>
@@ -300,9 +303,11 @@ export default function ProductTable({ products }: ProductTableProps) {
                     <td className="tbl-td tbl-td--center">{p.qty}</td>
                     <td className="tbl-td tbl-td--center">{p.satuan}</td>
                     <td className="tbl-td tbl-td--center">{formatRp(p.hargaSatuan)}</td>
-                    <td className="tbl-td tbl-td--center qd-td--profit">
-                      {formatRp(p.qty * p.profitSatuan)}
-                    </td>
+                    {showProfit && (
+                      <td className="tbl-td tbl-td--center qd-td--profit">
+                        {formatRp(p.qty * p.profitSatuan)}
+                      </td>
+                    )}
                     <td className="tbl-td tbl-td--center tbl-td--total">
                       {formatRp(p.qty * p.hargaSatuan)}
                     </td>

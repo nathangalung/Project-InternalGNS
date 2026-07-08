@@ -75,6 +75,8 @@ export default function InvoiceDetail({
   }, [inv])
 
   const products = useMemo(() => invoiceItemsToProducts(invItems), [invItems])
+  // Profit needs real cost data.
+  const hasCost = useMemo(() => (invItems ?? []).some((it) => toNum(it.costPrice) > 0), [invItems])
   const shipping = useMemo(() => invoiceItemsToShipping(invItems), [invItems])
 
   const history: HistoryEntry[] = useMemo(() => {
@@ -214,7 +216,7 @@ export default function InvoiceDetail({
             shippingAlamat={shipping.alamat}
           />
           {totalShip > 0 && <ShippingTable shipping={shipping} />}
-          <ProductTable products={products} />
+          <ProductTable products={products} showProfit={hasCost} />
           <CostBreakdown
             hasProducts={hasProducts}
             totalProduk={totalProduk}
@@ -225,6 +227,7 @@ export default function InvoiceDetail({
             ppn12={ppn12}
             totalShip={totalShip}
             totalProfit={totalProfit}
+            showProfit={hasCost}
             grandTotal={grandTotal}
           />
           <HistoryTimeline history={history} />
