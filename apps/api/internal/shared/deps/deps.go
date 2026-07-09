@@ -52,3 +52,18 @@ func CurrentUserID(ctx context.Context) int64 {
 	}
 	return 0
 }
+
+const userRoleKey ctxKey = iota + 100
+
+// WithUserRole stores user role.
+func WithUserRole(ctx context.Context, role string) context.Context {
+	return context.WithValue(ctx, userRoleKey, role)
+}
+
+// CurrentUserRole reads user role.
+func CurrentUserRole(ctx context.Context) string {
+	if v, ok := ctx.Value(userRoleKey).(string); ok {
+		return v
+	}
+	return ""
+}

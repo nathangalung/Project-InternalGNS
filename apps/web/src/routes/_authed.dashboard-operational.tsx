@@ -18,7 +18,6 @@ function DashboardOperationalRoute() {
         void navigate({ to: "/quotations/$id", params: { id: String(qid) } })
       }
       onViewAllQuotations={() => void navigate({ to: "/quotations" })}
-      onViewAllInvoices={() => void navigate({ to: "/invoices" })}
       onLogout={() => {
         logout()
         void navigate({ to: "/login" })

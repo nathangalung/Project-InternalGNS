@@ -38,6 +38,16 @@ func renderInvTexWithLog(t *testing.T, root string, data exportData) (pdf []byte
 	}
 
 	dir, _ := os.MkdirTemp("", "pdfsmoke-i-*")
+	// Stage shared images like Renderer.
+	if assets, err := os.ReadDir("../../templates/assets"); err == nil {
+		for _, e := range assets {
+			if e.IsDir() {
+				continue
+			}
+			b, _ := os.ReadFile(filepath.Join("../../templates/assets", e.Name()))
+			_ = os.WriteFile(filepath.Join(dir, e.Name()), b, 0o644)
+		}
+	}
 	t.Cleanup(func() { os.RemoveAll(dir) })
 
 	texPath := filepath.Join(dir, "doc.tex")

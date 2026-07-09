@@ -86,8 +86,10 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 			r.Mount("/vendors", vendors.Routes(d))
 			r.Mount("/quotations", quotations.Routes(d))
 			r.Mount("/purchase-orders", purchaseorders.Routes(d))
-			r.Mount("/invoices", invoices.Routes(d))
-			r.Mount("/users", users.Routes(d))
+			r.With(requireRole("superadmin", "finance")).
+				Mount("/invoices", invoices.Routes(d))
+			r.With(requireRole("superadmin")).
+				Mount("/users", users.Routes(d))
 			r.Mount("/dashboard", dashboard.Routes(d))
 
 			// Proxy asset bytes through the authenticated API (MinIO stays internal).

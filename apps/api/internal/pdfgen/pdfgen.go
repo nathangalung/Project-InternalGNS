@@ -52,6 +52,10 @@ func (r *Renderer) Render(ctx context.Context, name string, data any) ([]byte, e
 	}
 	defer os.RemoveAll(dir)
 
+	if err := r.copyAssets(dir); err != nil {
+		return nil, err
+	}
+
 	texPath := filepath.Join(dir, "doc.tex")
 	if err := os.WriteFile(texPath, rendered.Bytes(), 0o644); err != nil {
 		return nil, err
@@ -68,6 +72,31 @@ func (r *Renderer) Render(ctx context.Context, name string, data any) ([]byte, e
 		return nil, fmt.Errorf("pdf not produced: %w", err)
 	}
 	return pdf, nil
+}
+
+// copyAssets stages shared images beside doc.tex.
+func (r *Renderer) copyAssets(dir string) error {
+	assets := filepath.Join(r.templatesRoot, "..", "assets")
+	entries, err := os.ReadDir(assets)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		b, err := os.ReadFile(filepath.Join(assets, e.Name()))
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(filepath.Join(dir, e.Name()), b, 0o644); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *Renderer) runLatex(ctx context.Context, dir, texPath string) error {

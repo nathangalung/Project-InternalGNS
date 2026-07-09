@@ -14,17 +14,13 @@ import type { Page } from "@/lib/page"
 import DashboardFinancialFilter, { type DashboardFilterValues } from "./DashboardFinancialFilter"
 import TrendChart from "./TrendChart"
 
-const chartTabs = [
-  { label: "Quotation", metric: "quotation" as const },
-  { label: "Invoice", metric: "invoice" as const },
-]
+const chartTabs = [{ label: "Quotation", metric: "quotation" as const }]
 
 interface DashboardOperationalProps {
   onLogout: () => void
   onNavigate: (page: Page) => void
   onViewQuotation?: (quotationId: number) => void
   onViewAllQuotations?: () => void
-  onViewAllInvoices?: () => void
 }
 
 const exportBtnStyle: CSSProperties = {
@@ -48,7 +44,6 @@ export default function DashboardOperational({
   onNavigate,
   onViewQuotation,
   onViewAllQuotations,
-  onViewAllInvoices,
 }: DashboardOperationalProps) {
   const [activeTab, setActiveTab] = useState("Quotation")
   const [showFilter, setShowFilter] = useState(false)
@@ -63,25 +58,19 @@ export default function DashboardOperational({
   const selectedMonths = filters?.months ?? null
 
   const tsQuotation = useDashboardTimeseries("quotation", fromDate, toDate)
-  const tsInvoice = useDashboardTimeseries("invoice", fromDate, toDate)
 
   const series = useMemo<Record<string, number[]>>(() => {
     const quotation = buildSeries(tsQuotation.data, baseYear)
-    const invoice = buildSeries(tsInvoice.data, baseYear)
     const maskMonths = (arr: number[]): number[] =>
       selectedMonths === null ? arr : arr.map((v, i) => (selectedMonths.includes(i) ? v : 0))
     return {
       Quotation: maskMonths(quotation),
-      Invoice: maskMonths(invoice),
     }
-  }, [tsQuotation.data, tsInvoice.data, baseYear, selectedMonths])
+  }, [tsQuotation.data, baseYear, selectedMonths])
 
   const totalQuotation = summary?.totalQuotations ?? 0
   const totalRejected = summary?.totalQuotationsRejected ?? 0
   const totalPo = summary?.totalPo ?? 0
-  const totalPaid = summary?.totalInvoicesPaid ?? 0
-  const dueSoon = summary?.invoicesDueSoon ?? 0
-  const overdue = summary?.invoicesOverdue ?? 0
 
   const recentQuotations = useMemo(() => {
     return (rawQuotations?.rows ?? []).slice(0, 5).map((q) => {
@@ -143,7 +132,7 @@ export default function DashboardOperational({
             />
           )}
 
-          <div className="stats-grid-4">
+          <div className="stats-grid-3">
             <div className="stat-card">
               <div className="stat-label">Total Quotation</div>
               <div className="stat-value">{formatId(totalQuotation)}</div>
@@ -155,10 +144,6 @@ export default function DashboardOperational({
             <div className="stat-card">
               <div className="stat-label">Total Purchase Order</div>
               <div className="stat-value">{formatId(totalPo)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Total Invoice Dibayar</div>
-              <div className="stat-value">{formatId(totalPaid)}</div>
             </div>
           </div>
 
@@ -178,36 +163,6 @@ export default function DashboardOperational({
               </div>
             </div>
             <TrendChart series={series} activeKey={activeTab} />
-          </div>
-
-          <div className="alert-row">
-            <div className="alert-card alert--warning">
-              <div
-                className="card-overlay"
-                style={{
-                  background:
-                    "linear-gradient(82.48deg, rgba(217,119,6,.5) 6.42%, rgba(245,158,11,.1) 93.58%)",
-                  opacity: 0.5,
-                }}
-              />
-              <div className="alert-content">
-                <h3>{formatId(dueSoon)} Invoice</h3>
-                <p>Invoice akan segera jatuh tempo</p>
-              </div>
-              <button className="alert-btn" onClick={onViewAllInvoices}>
-                Tinjau
-              </button>
-            </div>
-            <div className="alert-card alert--danger">
-              <div className="card-glow" style={{ background: "rgba(239,94,94,.3)" }} />
-              <div className="alert-content">
-                <h3>{formatId(overdue)} Invoice</h3>
-                <p>Invoice telah jatuh tempo</p>
-              </div>
-              <button className="alert-btn" onClick={onViewAllInvoices}>
-                Tinjau
-              </button>
-            </div>
           </div>
 
           <div className="tbl-container">

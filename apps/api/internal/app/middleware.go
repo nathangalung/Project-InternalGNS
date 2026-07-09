@@ -105,7 +105,25 @@ func authMiddleware(svc *auth.Service) func(http.Handler) http.Handler {
 			}
 
 			ctx := deps.WithUserID(r.Context(), userID)
+			ctx = deps.WithUserRole(ctx, string(claims.Role))
 			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+// requireRole gates a subtree by role.
+func requireRole(roles ...string) func(http.Handler) http.Handler {
+	allowed := make(map[string]struct{}, len(roles))
+	for _, role := range roles {
+		allowed[role] = struct{}{}
+	}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if _, ok := allowed[deps.CurrentUserRole(r.Context())]; !ok {
+				httperr.Render(w, httperr.Forbidden("insufficient role"))
+				return
+			}
+			next.ServeHTTP(w, r)
 		})
 	}
 }

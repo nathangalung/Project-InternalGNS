@@ -1,5 +1,6 @@
 import { useMe } from "@/features/auth/hooks"
 import type { Page } from "@/lib/page"
+import { roleCanAccess, type Section } from "@/lib/rbac"
 import type { Role } from "@/types/api"
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -119,16 +120,18 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
       </div>
 
       <nav className="sidebar-nav">
-        {navItems.map((item) => (
-          <button
-            key={item.label}
-            className={`nav-item${item.page === activePage ? " nav-item--active" : ""}`}
-            onClick={() => item.page && onNavigate(item.page)}
-          >
-            <NavIcon name={item.icon} />
-            {item.label}
-          </button>
-        ))}
+        {navItems
+          .filter((item) => !item.page || roleCanAccess(me?.role, item.page as Section))
+          .map((item) => (
+            <button
+              key={item.label}
+              className={`nav-item${item.page === activePage ? " nav-item--active" : ""}`}
+              onClick={() => item.page && onNavigate(item.page)}
+            >
+              <NavIcon name={item.icon} />
+              {item.label}
+            </button>
+          ))}
       </nav>
 
       <div className="sidebar-footer">
