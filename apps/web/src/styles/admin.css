@@ -18,6 +18,7 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   width: 576px;
   max-width: 90vw;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
 }
@@ -67,6 +68,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .modal-section-label {
@@ -408,7 +411,6 @@
 .admin-shell {
   display: flex;
   min-height: 100vh;
-  min-width: 960px;
   background: var(--color-light);
 }
 
@@ -611,7 +613,7 @@
 
 /* ── Page Content Area ── */
 .page-content {
-  padding: var(--space-12);
+  padding: clamp(var(--space-4), 4vw, var(--space-12));
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
@@ -699,7 +701,7 @@
 /* ── Dashboard Stat Grids ── */
 .stats-grid-2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
   gap: var(--space-4);
 }
 
@@ -711,7 +713,7 @@
 
 .stats-grid-4 {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-4);
 }
 
@@ -778,7 +780,7 @@
 /* ── Summary Cards (Quotation 5-col) ── */
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--space-6);
 }
 
@@ -915,7 +917,8 @@
 .tbl-container {
   background: var(--color-bg);
   border-radius: var(--radius-md);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tbl {
@@ -1112,7 +1115,7 @@
   color: var(--color-text);
 }
 
-.chart-tabs { display: flex; gap: var(--space-2); }
+.chart-tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
 .chart-tab {
   padding: var(--space-1) var(--space-3);
@@ -1148,7 +1151,7 @@
 /* ── Alert Banners ── */
 .alert-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
   gap: var(--space-4);
 }
 
@@ -1885,6 +1888,7 @@
   display: flex;
   flex-direction: column;
   width: 672px;
+  max-width: 92vw;
   max-height: 92vh;
   background: var(--color-bg);
   border-radius: var(--radius-xl);
@@ -2503,4 +2507,156 @@
 .shared-date-input::-webkit-inner-spin-button,
 .shared-date-input::-webkit-clear-button {
   display: none;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Responsive — automatic reflow by viewport size
+   ≥1024px  full fixed sidebar (desktop, iPad landscape)
+   <1024px  off-canvas drawer + mobile top bar (tablet portrait, phone)
+   Stat grids reflow via auto-fit; wide tables scroll horizontally.
+   ───────────────────────────────────────────────────────────── */
+
+/* Auto-reflow grid utilities — swap in for fixed inline templates */
+.rgrid-2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
+.rgrid-3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); }
+.rgrid-4 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); }
+
+/* Drawer chrome — hidden until the sidebar collapses */
+.mobile-topbar { display: none; }
+.sidebar-overlay { display: none; }
+.sidebar-close { display: none; }
+
+@media (max-width: 1023px) {
+  .admin-main {
+    margin-left: 0;
+    padding-top: 56px;
+  }
+
+  .admin-sidebar {
+    transform: translateX(-100%);
+    transition: transform var(--transition-base);
+  }
+  .admin-sidebar--open {
+    transform: translateX(0);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-dark-300);
+    cursor: pointer;
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    padding: 0;
+    border: none;
+    background: rgba(15, 23, 42, 0.5);
+    cursor: pointer;
+  }
+
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    padding: 0 var(--space-4);
+    background: var(--color-dark-900);
+    z-index: 90;
+  }
+  .mobile-topbar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-left: calc(var(--space-2) * -1);
+    border: none;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+  }
+  .mobile-topbar-logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+  }
+  .mobile-topbar-title {
+    min-width: 0;
+    font-size: var(--text-body);
+    font-weight: var(--font-bold);
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stats-grid-3,
+  .stats-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .summary-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  .qep-layout { flex-direction: column; }
+  .qep-sidebar { width: 100%; }
+  .qd-bottom-grid { grid-template-columns: 1fr; }
+
+  .tbl { table-layout: auto; min-width: 100%; }
+}
+
+@media (max-width: 640px) {
+  .stats-grid-3,
+  .stats-grid-4,
+  .ca-row-2 { grid-template-columns: 1fr; }
+  .summary-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .page-header,
+  .dash-header,
+  .qd-header,
+  .qd-status-bar,
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .page-actions,
+  .qd-header-actions,
+  .qd-status-bar-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .qd-header-actions { padding-top: 0; }
+
+  .search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: var(--space-4);
+    align-items: stretch;
+  }
+  .pagination-left { justify-content: space-between; }
+  .page-buttons { justify-content: center; flex-wrap: wrap; }
+
+  .qe-stepper { overflow-x: auto; padding-bottom: var(--space-2); }
+  .qe-step-pill { width: 120px; }
+
+  .modal,
+  .ca-modal { width: min(100%, 92vw); }
 }

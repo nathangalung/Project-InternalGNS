@@ -222,7 +222,7 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
           <div className="ca-section">
             <div className="ca-section-heading">Peran</div>
             <div className="ca-field">
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
+              <div className="rgrid-3" style={{ display: "grid", gap: "12px" }}>
                 {ROLE_CARDS.map((card) => {
                   const isActive = role === card.value
                   return (

@@ -198,7 +198,7 @@ body {
   line-height: var(--leading-body-lg);
   color: var(--color-text);
   background-color: var(--color-bg);
-  min-width: 960px;
+  min-width: 320px;
 }
 
 

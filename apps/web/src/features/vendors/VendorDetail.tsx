@@ -469,7 +469,7 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
                   )}
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                <div className="rgrid-2" style={{ display: "grid", gap: "24px" }}>
                   <div>
                     <label style={labelStyle}>No HP</label>
                     <div

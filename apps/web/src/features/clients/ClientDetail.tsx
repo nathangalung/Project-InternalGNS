@@ -553,7 +553,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                   )}
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                <div className="rgrid-2" style={{ display: "grid", gap: "24px" }}>
                   <div>
                     <label style={labelStyle}>Nomor TKU</label>
                     <input
@@ -677,7 +677,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                <div className="rgrid-2" style={{ display: "grid", gap: "24px" }}>
                   <div>
                     <label style={labelStyle}>No HP</label>
                     <div
@@ -934,7 +934,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                         gap: "12px",
                       }}
                     >
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div className="rgrid-2" style={{ display: "grid", gap: "12px" }}>
                         <div>
                           <label style={labelStyle}>
                             Nama <span style={{ color: "#DC2626" }}>*</span>
@@ -1112,7 +1112,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                   gap: "12px",
                 }}
               >
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div className="rgrid-2" style={{ display: "grid", gap: "12px" }}>
                   <div>
                     <label style={labelStyle}>
                       Nama <span style={{ color: "#DC2626" }}>*</span>

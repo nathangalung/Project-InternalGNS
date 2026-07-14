@@ -423,9 +423,9 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                 />
               </div>
               <div
+                className="rgrid-3"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr 1fr",
                   gap: 8,
                   marginTop: 8,
                 }}

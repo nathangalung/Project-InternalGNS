@@ -318,7 +318,7 @@ export default function UserDetail({ user, onNavigate, onBack, onLogout }: UserD
                 </p>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px 32px" }}>
+              <div className="rgrid-2" style={{ display: "grid", gap: "24px 32px" }}>
                 <div>
                   <label style={labelStyle}>Nama Lengkap</label>
                   <input

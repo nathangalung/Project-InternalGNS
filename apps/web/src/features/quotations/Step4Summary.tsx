@@ -85,7 +85,7 @@ export default function Step4Summary({
         <h2 className="qe-section-title" style={{ marginBottom: "12px" }}>
           Tenggat Waktu Penawaran
         </h2>
-        <div style={{ ...card, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+        <div className="rgrid-2" style={{ ...card, display: "grid", gap: "24px" }}>
           <div>
             <label
               style={{
@@ -248,9 +248,9 @@ export default function Step4Summary({
               Kontak &amp; Legalitas
             </div>
             <div
+              className="rgrid-3"
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
                 rowGap: "20px",
                 columnGap: "24px",
               }}
@@ -310,10 +310,10 @@ export default function Step4Summary({
 
           {/* Addresses */}
           <div
+            className="rgrid-2"
             style={{
               padding: "20px 24px",
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
               gap: "24px",
             }}
           >
@@ -377,10 +377,10 @@ export default function Step4Summary({
         {/* Shipping detail (when set) */}
         {shippingAddress && (
           <div
+            className="rgrid-2"
             style={{
               ...card,
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
               gap: "24px",
               marginBottom: "24px",
             }}

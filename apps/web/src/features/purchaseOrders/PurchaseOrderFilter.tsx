@@ -125,7 +125,7 @@ export default function PurchaseOrderFilter({
           <div className="ca-section">
             <div className="ca-section-heading">Rentang Tanggal</div>
             <div className="ca-field">
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+              <div className="rgrid-2" style={{ display: "grid", gap: "8px" }}>
                 {DATE_PRESETS.map(({ key, label }) => {
                   const isActive = preset === key
                   return (

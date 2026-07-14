@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useMe } from "@/features/auth/hooks"
 import type { Page } from "@/lib/page"
 import { roleCanAccess, type Section } from "@/lib/rbac"
@@ -109,53 +110,118 @@ function NavIcon({ name }: { name: string }) {
 
 export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarProps) {
   const { data: me } = useMe()
-  return (
-    <aside className="admin-sidebar">
-      <div className="sidebar-brand">
-        <img src={logoImg} className="sidebar-logo" alt="GNS" />
-        <div className="sidebar-brand-text">
-          <h2>PT Global Niaga Sakti</h2>
-          <span>Admin Panel</span>
-        </div>
-      </div>
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
-      <nav className="sidebar-nav">
-        {navItems
-          .filter((item) => !item.page || roleCanAccess(me?.role, item.page as Section))
-          .map((item) => (
+  const visibleItems = navItems.filter(
+    (item) => !item.page || roleCanAccess(me?.role, item.page as Section),
+  )
+
+  const handleNavigate = (page: Page) => {
+    setDrawerOpen(false)
+    onNavigate(page)
+  }
+
+  return (
+    <>
+      <header className="mobile-topbar">
+        <button
+          type="button"
+          className="mobile-topbar-toggle"
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Buka menu"
+          aria-expanded={drawerOpen}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <img src={logoImg} className="mobile-topbar-logo" alt="GNS" />
+        <span className="mobile-topbar-title">PT Global Niaga Sakti</span>
+      </header>
+
+      {drawerOpen && (
+        <button
+          type="button"
+          className="sidebar-overlay"
+          aria-label="Tutup menu"
+          onClick={() => setDrawerOpen(false)}
+        />
+      )}
+
+      <aside className={`admin-sidebar${drawerOpen ? " admin-sidebar--open" : ""}`}>
+        <div className="sidebar-brand">
+          <img src={logoImg} className="sidebar-logo" alt="GNS" />
+          <div className="sidebar-brand-text">
+            <h2>PT Global Niaga Sakti</h2>
+            <span>Admin Panel</span>
+          </div>
+          <button
+            type="button"
+            className="sidebar-close"
+            onClick={() => setDrawerOpen(false)}
+            aria-label="Tutup menu"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <nav className="sidebar-nav">
+          {visibleItems.map((item) => (
             <button
               key={item.label}
               className={`nav-item${item.page === activePage ? " nav-item--active" : ""}`}
-              onClick={() => item.page && onNavigate(item.page)}
+              onClick={() => item.page && handleNavigate(item.page)}
             >
               <NavIcon name={item.icon} />
               {item.label}
             </button>
           ))}
-      </nav>
+        </nav>
 
-      <div className="sidebar-footer">
-        <div className="sidebar-user-info">
-          <div className="sidebar-user-name">{me?.name ?? ""}</div>
-          <div className="sidebar-user-role">{me?.role ? ROLE_LABEL[me.role] : ""}</div>
+        <div className="sidebar-footer">
+          <div className="sidebar-user-info">
+            <div className="sidebar-user-name">{me?.name ?? ""}</div>
+            <div className="sidebar-user-role">{me?.role ? ROLE_LABEL[me.role] : ""}</div>
+          </div>
+          <button className="logout-btn" onClick={onLogout} title="Keluar">
+            <svg
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
         </div>
-        <button className="logout-btn" onClick={onLogout} title="Keluar">
-          <svg
-            viewBox="0 0 24 24"
-            width="16"
-            height="16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
-        </button>
-      </div>
-    </aside>
+      </aside>
+    </>
   )
 }

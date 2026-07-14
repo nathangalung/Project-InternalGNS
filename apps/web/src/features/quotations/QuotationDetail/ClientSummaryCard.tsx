@@ -87,9 +87,9 @@ export default function ClientSummaryCard({
             Kontak &amp; Legalitas
           </div>
           <div
+            className="rgrid-3"
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
               rowGap: "20px",
               columnGap: "24px",
             }}
@@ -146,10 +146,10 @@ export default function ClientSummaryCard({
         </div>
 
         <div
+          className="rgrid-2"
           style={{
             padding: "20px 24px",
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
             gap: "24px",
           }}
         >
