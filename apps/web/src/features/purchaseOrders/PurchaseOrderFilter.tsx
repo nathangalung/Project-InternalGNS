@@ -29,12 +29,12 @@ interface PurchaseOrderFilterProps {
 
 const seed = presetToIsoRange("30-hari")
 const DEFAULTS: PoFilterValues = {
-  preset: "30-hari",
+  preset: "semua",
   startDate: seed.start,
   endDate: seed.end,
   statuses: [],
-  minHarga: "0",
-  maxHarga: "500.000.000",
+  minHarga: "",
+  maxHarga: "",
 }
 
 // Labels from PO_LABEL match the badges.

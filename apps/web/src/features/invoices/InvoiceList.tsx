@@ -162,22 +162,22 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
             ),
         })
       }
-      if (activeFilters.createdPreset !== "30-hari") {
+      if (activeFilters.createdPreset !== "semua") {
         out.push({
           key: "created",
           label: `Dibuat: ${activeFilters.createdStart} s/d ${activeFilters.createdEnd}`,
         })
       }
-      if (activeFilters.duePreset !== "30-hari") {
+      if (activeFilters.duePreset !== "semua") {
         out.push({
           key: "due",
           label: `Jatuh tempo: ${activeFilters.dueStart} s/d ${activeFilters.dueEnd}`,
         })
       }
-      if (activeFilters.minHarga !== "0" || activeFilters.maxHarga !== "500.000.000") {
+      if (activeFilters.minHarga !== "" || activeFilters.maxHarga !== "") {
         out.push({
           key: "total",
-          label: `Total: ${activeFilters.minHarga} – ${activeFilters.maxHarga}`,
+          label: `Total: ${activeFilters.minHarga || "0"} - ${activeFilters.maxHarga || "tanpa batas"}`,
         })
       }
     }

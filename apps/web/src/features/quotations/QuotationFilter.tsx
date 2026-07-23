@@ -31,18 +31,18 @@ interface QuotationFilterProps {
   }
 }
 
-const STATUSES: StatusFilter[] = ["Draf", "Dikirim", "Ditolak", "Revisi", "Disetujui", "Kadaluarsa"]
+const STATUSES: StatusFilter[] = ["Draf", "Dikirim", "Ditolak", "Revisi", "Disetujui"]
 
 export default function QuotationFilter({ onClose, onApply, initialValues }: QuotationFilterProps) {
   const seed = presetToIsoRange("30-hari")
-  const [preset, setPreset] = useState<DatePreset>(initialValues?.preset ?? "30-hari")
+  const [preset, setPreset] = useState<DatePreset>(initialValues?.preset ?? "semua")
   const [startDate, setStartDate] = useState<string>(initialValues?.startDate ?? seed.start)
   const [endDate, setEndDate] = useState<string>(initialValues?.endDate ?? seed.end)
   const [activeStatuses, setActiveStatuses] = useState<StatusFilter[]>(
     initialValues?.statuses ?? [],
   )
-  const [minHarga, setMinHarga] = useState(initialValues?.minHarga ?? "0")
-  const [maxHarga, setMaxHarga] = useState(initialValues?.maxHarga ?? "500.000.000")
+  const [minHarga, setMinHarga] = useState(initialValues?.minHarga ?? "")
+  const [maxHarga, setMaxHarga] = useState(initialValues?.maxHarga ?? "")
 
   function pickPreset(p: DatePreset) {
     setPreset(p)
@@ -57,18 +57,13 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
     setActiveStatuses((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]))
 
   const dirty =
-    preset !== "30-hari" ||
-    startDate !== seed.start ||
-    endDate !== seed.end ||
-    activeStatuses.length > 0 ||
-    minHarga !== "0" ||
-    maxHarga !== "500.000.000"
+    preset !== "semua" || activeStatuses.length > 0 || minHarga !== "" || maxHarga !== ""
 
   const handleReset = () => {
-    pickPreset("30-hari")
+    pickPreset("semua")
     setActiveStatuses([])
-    setMinHarga("0")
-    setMaxHarga("500.000.000")
+    setMinHarga("")
+    setMaxHarga("")
   }
 
   const handleApply = () => {

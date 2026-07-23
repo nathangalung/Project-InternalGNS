@@ -4,6 +4,7 @@ export function resolveRange(
   endIso: string,
 ): { start: string; end: string } {
   if (preset === "kustom") return { start: startIso, end: endIso }
+  if (preset === "semua") return { start: "", end: "" }
   const today = new Date()
   const end = today.toISOString().slice(0, 10)
   const start = new Date(today)

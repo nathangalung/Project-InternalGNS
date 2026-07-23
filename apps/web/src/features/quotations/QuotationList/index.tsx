@@ -106,16 +106,16 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
             ),
         })
       }
-      if (activeFilters.preset !== "30-hari") {
+      if (activeFilters.preset !== "semua") {
         out.push({
           key: "date",
           label: `Tanggal: ${activeFilters.startDate} s/d ${activeFilters.endDate}`,
         })
       }
-      if (activeFilters.minHarga !== "0" || activeFilters.maxHarga !== "500.000.000") {
+      if (activeFilters.minHarga !== "" || activeFilters.maxHarga !== "") {
         out.push({
           key: "harga",
-          label: `Harga: ${activeFilters.minHarga} – ${activeFilters.maxHarga}`,
+          label: `Harga: ${activeFilters.minHarga || "0"} - ${activeFilters.maxHarga || "tanpa batas"}`,
         })
       }
     }

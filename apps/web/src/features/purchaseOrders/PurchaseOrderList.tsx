@@ -164,16 +164,16 @@ export default function PurchaseOrderList({
             ),
         })
       }
-      if (activeFilters.preset !== "30-hari") {
+      if (activeFilters.preset !== "semua") {
         out.push({
           key: "date",
           label: `Tanggal: ${activeFilters.startDate} s/d ${activeFilters.endDate}`,
         })
       }
-      if (activeFilters.minHarga !== "0" || activeFilters.maxHarga !== "500.000.000") {
+      if (activeFilters.minHarga !== "" || activeFilters.maxHarga !== "") {
         out.push({
           key: "total",
-          label: `Total: ${activeFilters.minHarga} – ${activeFilters.maxHarga}`,
+          label: `Total: ${activeFilters.minHarga || "0"} - ${activeFilters.maxHarga || "tanpa batas"}`,
         })
       }
     }

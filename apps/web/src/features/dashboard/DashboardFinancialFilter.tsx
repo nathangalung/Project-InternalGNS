@@ -121,6 +121,16 @@ export default function DashboardFinancialFilter({
         </div>
 
         <div className="ca-body">
+          <p
+            style={{
+              margin: 0,
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "12px",
+              color: "#64748B",
+            }}
+          >
+            Filter ini hanya memengaruhi grafik tren, bukan kartu ringkasan.
+          </p>
           <div className="ca-section">
             <div className="ca-section-heading">Pilih Tahun</div>
             <div className="ca-field">

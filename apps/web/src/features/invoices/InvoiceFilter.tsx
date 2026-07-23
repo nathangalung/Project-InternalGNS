@@ -32,15 +32,15 @@ interface InvoiceFilterProps {
 
 const seed = presetToIsoRange("30-hari")
 const DEFAULTS: InvoiceFilterValues = {
-  createdPreset: "30-hari",
+  createdPreset: "semua",
   createdStart: seed.start,
   createdEnd: seed.end,
-  duePreset: "30-hari",
+  duePreset: "semua",
   dueStart: seed.start,
   dueEnd: seed.end,
   statuses: [],
-  minHarga: "0",
-  maxHarga: "500.000.000",
+  minHarga: "",
+  maxHarga: "",
 }
 
 const STATUS_OPTIONS: InvoiceStatus[] = ["DRAF", "DIKIRIM", "DIBAYAR", "TERLAMBAT"]
