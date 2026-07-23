@@ -69,6 +69,12 @@ func Pool(t testing.TB) *pgxpool.Pool {
 	return sharedPool
 }
 
+// Skip suite without test DB.
+func RequireDB(t testing.TB) {
+	t.Helper()
+	Pool(t)
+}
+
 // Begin tx with rollback cleanup.
 func BeginTx(t testing.TB) (context.Context, pgx.Tx) {
 	t.Helper()

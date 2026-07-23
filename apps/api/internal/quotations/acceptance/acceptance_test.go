@@ -231,6 +231,7 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 }
 
 func TestQuotationFeatures(t *testing.T) {
+	testutil.RequireDB(t)
 	suite := godog.TestSuite{
 		ScenarioInitializer: initScenario(t),
 		Options: &godog.Options{

@@ -469,12 +469,16 @@ func TestRepo_ListRevisions_NotFound(t *testing.T) {
 }
 
 func TestRepo_UpdateContact_HappyPath(t *testing.T) {
-	ctx, repo, _ := newRepo(t)
+	ctx, repo, tx := newRepo(t)
 	id, err := repo.Create(ctx, sampleCreate(), seedUserID)
 	require.NoError(t, err)
 
-	// sampleCreate seeds contactID=9000001; switch to contact 1 (same company).
-	const altContactID int64 = 1
+	// Sibling contact, same company.
+	var altContactID int64
+	require.NoError(t, tx.QueryRow(ctx, `
+		INSERT INTO company_contacts (company_id, name, country_code, created_by, updated_by)
+		VALUES ($1, 'Alt Contact', 'IDN', $2, $2)
+		RETURNING id`, seedCompanyID, seedUserID).Scan(&altContactID))
 	require.NoError(t, repo.UpdateContact(ctx, id, altContactID, seedUserID))
 
 	d, err := repo.GetDetail(ctx, id)
