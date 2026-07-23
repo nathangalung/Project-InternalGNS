@@ -16,11 +16,11 @@ import (
 )
 
 var (
-	ErrNotFound            = errors.New("purchase order not found")
-	ErrInvalidTransition   = errors.New("invalid PO status transition")
-	ErrLocked              = errors.New("purchase order locked")
-	ErrVersionMismatch     = errors.New("purchase order version mismatch")
-	ErrDuplicatePoNumber   = errors.New("po_number already exists")
+	ErrNotFound          = errors.New("purchase order not found")
+	ErrInvalidTransition = errors.New("invalid PO status transition")
+	ErrLocked            = errors.New("purchase order locked")
+	ErrVersionMismatch   = errors.New("purchase order version mismatch")
+	ErrDuplicatePoNumber = errors.New("po_number already exists")
 )
 
 type Repo struct {
@@ -58,11 +58,11 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	}
 	if f.MinTotal != nil {
 		p := addArg(*f.MinTotal)
-		where.WriteString(" AND COALESCE(s.po_subtotal, 0) >= " + p + "::numeric")
+		where.WriteString(" AND COALESCE(q.grand_total, 0) >= " + p + "::numeric")
 	}
 	if f.MaxTotal != nil {
 		p := addArg(*f.MaxTotal)
-		where.WriteString(" AND COALESCE(s.po_subtotal, 0) <= " + p + "::numeric")
+		where.WriteString(" AND COALESCE(q.grand_total, 0) <= " + p + "::numeric")
 	}
 
 	var out ListResult
@@ -78,7 +78,7 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	case "createdAt", "created_at":
 		sortBy = "po.created_at"
 	case "total":
-		sortBy = "COALESCE(s.po_subtotal, 0)"
+		sortBy = "COALESCE(q.grand_total, 0)"
 	case "poNumber", "po_number":
 		sortBy = "po.po_number"
 	}
