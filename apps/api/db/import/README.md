@@ -59,21 +59,22 @@ All loaders:
 
 ```bash
 cd apps/api/db/import
-pip install psycopg[binary] openpyxl
+# Dependencies are declared in pyproject.toml; install them with:
+uv sync
 
 # 1. parse.py SOURCE_DIRS already points at all 3 year folders.
 #    Edit if you only want a single year (load_*.py filter by date_iso anyway).
 # 2. Parse Excel → staged.json
-python parse.py
+uv run parse.py
 
 # 3a. Dry run a year-specific loader against the dev DB
-python load_2024.py --dry-run     # or load_2025.py / load.py
+uv run load_2024.py --dry-run     # or load_2025.py / load.py
 
 # 3b. Real run (commits)
-python load_2024.py
+uv run load_2024.py
 
 # OR — regenerate the SQL seed instead (covers all 3 years, no live DB needed)
-python generate_seed.py
+uv run generate_seed.py
 # → writes apps/api/db/seeds/03_historical.sql
 # → applied automatically by `make seed-dev` alongside 01_master.sql
 ```

@@ -116,25 +116,25 @@ components:
           additionalProperties: { type: integer }
     ApiError:
       type: object
-      required: [error]
+      description: RFC 7807 problem+json error body. Served as application/problem+json.
+      required: [type, title, status]
       properties:
-        error:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        fields:
           type: object
-          required: [message]
-          properties:
-            message: { type: string }
-            code: { type: string }
-            fields:
-              type: object
-              additionalProperties: { type: string }
+          additionalProperties: { type: string }
   responses:
     BadRequest:
       description: Request malformed.
       content:
-        application/json:
+        application/problem+json:
           schema: { $ref: "#/components/schemas/ApiError" }
     Unauthorized:
       description: Missing or invalid bearer token.
       content:
-        application/json:
+        application/problem+json:
           schema: { $ref: "#/components/schemas/ApiError" }

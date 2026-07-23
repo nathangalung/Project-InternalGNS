@@ -8,7 +8,7 @@ historical 2025 date (so a January 2025 file gets `/I/2025`). After all
 inserts, doc_sequences is upserted for (Q, company_id, 2025) so the API's
 fn_next_doc_no continues from the right last_seq going forward.
 
-Run:  python load_2025.py [--dry-run]
+Run:  uv run load_2025.py [--dry-run]
 """
 from __future__ import annotations
 import argparse
@@ -23,7 +23,7 @@ from pathlib import Path
 try:
     import psycopg
 except ImportError:
-    print("Need psycopg: pip install 'psycopg[binary]'", file=sys.stderr)
+    print("Need psycopg: uv add 'psycopg[binary]'", file=sys.stderr)
     sys.exit(1)
 
 # Reuse helpers from the 2026 loader so behaviour stays in sync.

@@ -6,7 +6,7 @@ catalog from the historical line items, then inserts every quotation in
 chronological order. Duplicates within a group of files sharing the same
 original Q-number are linked via parent_id as version chains.
 
-Run: python load.py [--dry-run]
+Run: uv run load.py [--dry-run]
 
 Connects via DATABASE_URL or the default dev DSN.
 """
@@ -23,7 +23,7 @@ from pathlib import Path
 try:
     import psycopg
 except ImportError:
-    print("Need psycopg: pip install 'psycopg[binary]'", file=sys.stderr)
+    print("Need psycopg: uv add 'psycopg[binary]'", file=sys.stderr)
     sys.exit(1)
 
 from unit_map import canonical_unit
