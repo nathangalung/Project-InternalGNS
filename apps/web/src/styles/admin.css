@@ -298,7 +298,7 @@
 }
 .btn-modal-apply:hover { opacity: 0.9; }
 
-/* ── Login Page ── */
+/* Login Page */
 .login-page {
   display: flex;
   min-height: 100vh;
@@ -407,7 +407,7 @@
   .login-right { padding: var(--space-8) var(--space-6); }
 }
 
-/* ── Layout ── */
+/* Layout */
 .admin-shell {
   display: flex;
   height: 100dvh;
@@ -425,7 +425,7 @@
   flex-direction: column;
 }
 
-/* ── Sidebar ── */
+/* Sidebar */
 .admin-sidebar {
   position: fixed;
   top: 0;
@@ -597,7 +597,7 @@
   border-color: rgba(220, 38, 38, 0.4);
 }
 
-/* ── Dashboard Header Bar ── */
+/* Dashboard Header Bar */
 .dash-header {
   display: flex;
   align-items: center;
@@ -614,7 +614,7 @@
   letter-spacing: -0.025em;
 }
 
-/* ── Page Content Area ── */
+/* Page Content Area */
 .page-content {
   padding: clamp(var(--space-4), 4vw, var(--space-12));
   display: flex;
@@ -643,7 +643,7 @@
   gap: var(--space-3);
 }
 
-/* ── Shared Buttons ── */
+/* Shared Buttons */
 .btn-admin-outline {
   display: inline-flex;
   align-items: center;
@@ -700,7 +700,7 @@
 }
 .btn-admin-filter:hover { opacity: 0.9; }
 
-/* ── Dashboard Stat Grids ── */
+/* Dashboard Stat Grids */
 .stats-grid-2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
@@ -719,7 +719,7 @@
   gap: var(--space-4);
 }
 
-/* ── Stat Card (Dashboard) ── */
+/* Stat Card (Dashboard) */
 .stat-card {
   background: var(--color-bg);
   border: 1.5px solid var(--color-primary-300);
@@ -779,7 +779,7 @@
   color: #231DD8;
 }
 
-/* ── Summary Cards (Quotation 5-col) ── */
+/* Summary Cards (Quotation 5-col) */
 .summary-cards {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -879,7 +879,7 @@
   z-index: 0;
 }
 
-/* ── Search Row ── */
+/* Search Row */
 .search-row {
   display: flex;
   align-items: center;
@@ -915,7 +915,7 @@
 .search-input::placeholder { color: var(--color-text-muted); }
 .search-input:focus { border-color: var(--color-primary-300); }
 
-/* ── Table ── */
+/* Table */
 .tbl-container {
   background: var(--color-bg);
   border-radius: var(--radius-md);
@@ -965,7 +965,7 @@
 .tbl-td--client { color: var(--color-text) !important; font-weight: var(--font-medium); }
 .tbl-td--total  { color: var(--color-text) !important; font-weight: var(--font-bold); }
 
-/* ── Status Badge ── */
+/* Status Badge */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -980,7 +980,7 @@
   min-width: 90px;
 }
 
-/* ── Table Action Buttons ── */
+/* Table Action Buttons */
 .action-btn {
   background: none;
   border: none;
@@ -994,7 +994,7 @@
 }
 .action-btn:hover { background: rgba(99, 14, 212, 0.08); }
 
-/* ── Pagination ── */
+/* Pagination */
 .pagination {
   display: flex;
   justify-content: space-between;
@@ -1094,7 +1094,7 @@
   line-height: 32px;
 }
 
-/* ── Chart Section ── */
+/* Chart Section */
 .chart-section {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
@@ -1150,7 +1150,7 @@
 
 .chart-svg { width: 100%; height: auto; display: block; }
 
-/* ── Alert Banners ── */
+/* Alert Banners */
 .alert-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
@@ -1212,7 +1212,7 @@
 }
 .alert-btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-/* ── Quotation Detail ── */
+/* Quotation Detail */
 .qd-breadcrumb {
   display: flex;
   align-items: center;
@@ -1591,7 +1591,7 @@
 }
 
 
-/* ── QuotationEdit ─────────────────────────────────────── */
+/* QuotationEdit */
 
 .qe-header-section {
   display: flex;
@@ -1873,7 +1873,7 @@
 }
 
 
-/* ── ClientAdd Modal ── */
+/* ClientAdd Modal */
 
 .ca-overlay {
   position: fixed;
@@ -2165,7 +2165,7 @@
   box-shadow: var(--shadow-btn-primary-hover);
 }
 
-/* ── Quotation Edit: Step 2 Produk ── */
+/* Quotation Edit: Step 2 Products */
 
 .qe-header-actions {
   display: flex;
@@ -2511,14 +2511,11 @@
   display: none;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Responsive — automatic reflow by viewport size
-   ≥1024px  full fixed sidebar (desktop, iPad landscape)
-   <1024px  off-canvas drawer + mobile top bar (tablet portrait, phone)
-   Stat grids reflow via auto-fit; wide tables scroll horizontally.
-   ───────────────────────────────────────────────────────────── */
+/* Responsive layout by viewport.
+   1024px and up keeps the fixed sidebar; below it becomes a drawer.
+   Stat grids reflow via auto-fit; wide tables scroll horizontally. */
 
-/* Auto-reflow grid utilities — swap in for fixed inline templates */
+/* Auto-reflow grid utilities */
 .rgrid-2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
 .rgrid-3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); }
 .rgrid-4 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); }
