@@ -1,34 +1,37 @@
 import type { MatchRowInput } from "@/types/api"
 
-// Required + optional headers (case-insensitive, partial match).
+// Required + optional headers (case-insensitive).
 const HEADER_KEYS = {
   no: ["no", "nomor", "#"],
-  impa: ["impa", "kode impa", "code"],
+  impa: ["impa", "kode impa", "kode"],
   name: ["nama", "produk", "name", "deskripsi"],
   qty: ["kuantitas", "jumlah", "qty", "quantity"],
   unit: ["satuan", "unit"],
 }
 
 type HeaderIdx = {
-  no: number
   impa: number
   name: number
   qty: number
   unit: number
 }
 
+// Match a header column by key.
 function findIdx(headers: string[], keys: string[]): number {
   const norm = headers.map((h) => (h ?? "").toString().trim().toLowerCase())
   for (const k of keys) {
-    const idx = norm.findIndex((h) => h === k || h.includes(k))
-    if (idx !== -1) return idx
+    const exact = norm.findIndex((h) => h === k)
+    if (exact !== -1) return exact
+  }
+  for (const k of keys) {
+    const partial = norm.findIndex((h) => h.includes(k))
+    if (partial !== -1) return partial
   }
   return -1
 }
 
 function detectHeaders(headers: string[]): HeaderIdx | null {
   const idx: HeaderIdx = {
-    no: findIdx(headers, HEADER_KEYS.no),
     impa: findIdx(headers, HEADER_KEYS.impa),
     name: findIdx(headers, HEADER_KEYS.name),
     qty: findIdx(headers, HEADER_KEYS.qty),
@@ -38,15 +41,39 @@ function detectHeaders(headers: string[]): HeaderIdx | null {
   return idx
 }
 
-function rowsFromAOA(aoa: unknown[][]): MatchRowInput[] {
-  if (aoa.length < 2) return []
-  const headers = (aoa[0] as unknown[]).map((c) => (c ?? "").toString())
-  const idx = detectHeaders(headers)
-  if (!idx) return []
+// Locate the header row within leading rows.
+function findHeaderRow(aoa: unknown[][]): { row: number; idx: HeaderIdx } | null {
+  const scan = Math.min(aoa.length, 15)
+  let best: { row: number; idx: HeaderIdx; score: number } | null = null
+  for (let r = 0; r < scan; r++) {
+    const headers = (aoa[r] ?? []).map((c) => (c ?? "").toString())
+    const idx = detectHeaders(headers)
+    if (!idx) continue
+    const score = [idx.impa, idx.name, idx.qty, idx.unit].filter((x) => x >= 0).length
+    if (!best || score > best.score) best = { row: r, idx, score }
+  }
+  return best ? { row: best.row, idx: best.idx } : null
+}
+
+// Parse quantity tolerating id-ID format.
+export function parseQty(raw: unknown): number {
+  if (typeof raw === "number") return Number.isFinite(raw) ? raw : 0
+  const s = String(raw ?? "").trim()
+  if (!s) return 0
+  const normalized = s.replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".")
+  const n = Number(normalized)
+  return Number.isFinite(n) ? n : 0
+}
+
+// Extract product rows from a sheet.
+export function rowsFromAOA(aoa: unknown[][]): MatchRowInput[] {
+  const found = findHeaderRow(aoa)
+  if (!found) return []
+  const { row: headerRow, idx } = found
 
   const out: MatchRowInput[] = []
-  for (let i = 1; i < aoa.length; i++) {
-    const row = aoa[i] as unknown[]
+  for (let i = headerRow + 1; i < aoa.length; i++) {
+    const row = aoa[i]
     if (!row || row.every((c) => c == null || c === "")) continue
     const name = idx.name >= 0 ? String(row[idx.name] ?? "").trim() : ""
     if (!name) continue
@@ -56,16 +83,15 @@ function rowsFromAOA(aoa: unknown[][]): MatchRowInput[] {
     out.push({
       impaCode: impaRaw == null ? "" : String(impaRaw).trim(),
       name,
-      qty: Number(qtyRaw) || 0,
+      qty: parseQty(qtyRaw),
       unit: unitRaw == null ? "" : String(unitRaw).trim(),
     })
   }
   return out
 }
 
-// ExcelJS cell values can be primitives, formula objects, hyperlink objects,
-// or rich text. Reduce each to its display text so header detection + row
-// extraction stay format-agnostic.
+// ExcelJS cells may be formulas, rich text, or hyperlinks; reduce each to its
+// display text so detection and extraction stay format-agnostic.
 function cellToPrimitive(value: unknown): unknown {
   if (value == null) return ""
   if (typeof value === "object") {
@@ -81,34 +107,37 @@ function cellToPrimitive(value: unknown): unknown {
   return value
 }
 
-async function parseXlsx(buf: ArrayBuffer): Promise<unknown[][]> {
+// Read every sheet into arrays of rows.
+async function parseXlsx(buf: ArrayBuffer): Promise<unknown[][][]> {
   const { default: ExcelJS } = await import("exceljs")
   const wb = new ExcelJS.Workbook()
   await wb.xlsx.load(buf)
-  const ws = wb.worksheets[0]
-  if (!ws) return []
-  const aoa: unknown[][] = []
-  ws.eachRow({ includeEmpty: false }, (row) => {
-    // row.values is 1-indexed (slot 0 is unused). Trim the leading slot.
-    const values = row.values as unknown[]
-    const arr = Array.isArray(values) ? values.slice(1) : []
-    aoa.push(arr.map(cellToPrimitive))
-  })
-  return aoa
+  const sheets: unknown[][][] = []
+  for (const ws of wb.worksheets) {
+    const aoa: unknown[][] = []
+    ws.eachRow({ includeEmpty: false }, (row) => {
+      // row.values is 1-indexed; slot 0 is unused.
+      const values = row.values as unknown[]
+      const arr = Array.isArray(values) ? values.slice(1) : []
+      aoa.push(arr.map(cellToPrimitive))
+    })
+    if (aoa.length) sheets.push(aoa)
+  }
+  return sheets
 }
 
-// Minimal RFC 4180 CSV parser: handles quoted fields, escaped quotes ("")
-// and CRLF/LF line endings. Trailing empty lines are dropped by the caller.
-function parseCsv(text: string): unknown[][] {
+// Minimal RFC 4180 CSV parser: quoted fields, escaped quotes, CRLF or LF.
+export function parseCsv(text: string): unknown[][] {
+  const clean = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text
   const rows: string[][] = []
   let row: string[] = []
   let field = ""
   let inQuotes = false
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i]
+  for (let i = 0; i < clean.length; i++) {
+    const c = clean[i]
     if (inQuotes) {
       if (c === '"') {
-        if (text[i + 1] === '"') {
+        if (clean[i + 1] === '"') {
           field += '"'
           i++
         } else {
@@ -129,7 +158,7 @@ function parseCsv(text: string): unknown[][] {
       continue
     }
     if (c === "\n" || c === "\r") {
-      if (c === "\r" && text[i + 1] === "\n") i++
+      if (c === "\r" && clean[i + 1] === "\n") i++
       row.push(field)
       field = ""
       rows.push(row)
@@ -145,6 +174,7 @@ function parseCsv(text: string): unknown[][] {
   return rows.filter((r) => r.some((c) => c !== ""))
 }
 
+// Parse an uploaded product file.
 export async function parseProductFile(file: File): Promise<MatchRowInput[]> {
   const lower = file.name.toLowerCase()
   if (lower.endsWith(".csv")) {
@@ -152,5 +182,10 @@ export async function parseProductFile(file: File): Promise<MatchRowInput[]> {
     return rowsFromAOA(parseCsv(text))
   }
   const buf = await file.arrayBuffer()
-  return rowsFromAOA(await parseXlsx(buf))
+  const sheets = await parseXlsx(buf)
+  for (const sheet of sheets) {
+    const rows = rowsFromAOA(sheet)
+    if (rows.length) return rows
+  }
+  return []
 }
