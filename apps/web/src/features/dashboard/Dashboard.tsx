@@ -1,11 +1,13 @@
 import { type CSSProperties, type KeyboardEvent, useMemo, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
 import Sidebar from "@/components/shared/Sidebar"
+import { useMe } from "@/features/auth/hooks"
 import * as dashboardApi from "@/features/dashboard/api"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { buildSeries } from "@/lib/chart"
 import { formatNumber as formatId, formatRupiah as formatRp, toNum } from "@/lib/format"
 import type { Page } from "@/lib/page"
+import { roleCanAccess } from "@/lib/rbac"
 import type { DashboardMetric } from "@/types/api"
 import TrendChart from "./TrendChart"
 
@@ -49,6 +51,9 @@ interface DashboardProps {
 
 export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
   const [activeTab, setActiveTab] = useState("Quotation")
+  const { data: me } = useMe()
+  const canFinance = roleCanAccess(me?.role, "invoices")
+  const visibleTabs = canFinance ? chartTabs : chartTabs.filter((tab) => tab.metric === "quotation")
   const { data: summary } = useDashboardSummary()
 
   const thisYear = new Date().getFullYear()
@@ -59,10 +64,10 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
   const toDate = `${baseYear}-12-31`
 
   const tsQuotation = useDashboardTimeseries("quotation", fromDate, toDate)
-  const tsInvoice = useDashboardTimeseries("invoice", fromDate, toDate)
-  const tsRevenue = useDashboardTimeseries("revenue", fromDate, toDate)
-  const tsProfit = useDashboardTimeseries("profit", fromDate, toDate)
-  const tsPpn = useDashboardTimeseries("ppn", fromDate, toDate)
+  const tsInvoice = useDashboardTimeseries("invoice", fromDate, toDate, canFinance)
+  const tsRevenue = useDashboardTimeseries("revenue", fromDate, toDate, canFinance)
+  const tsProfit = useDashboardTimeseries("profit", fromDate, toDate, canFinance)
+  const tsPpn = useDashboardTimeseries("ppn", fromDate, toDate, canFinance)
 
   const series = useMemo<Record<string, number[]>>(
     () => ({
@@ -107,27 +112,29 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
           <div className="page-header">
             <h1 className="page-title">Dashboard Utama</h1>
             <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
-              <button
-                type="button"
-                style={exportBtnStyle}
-                onClick={() => dashboardApi.exportXlsx(baseYear)}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#630ED4"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              {canFinance && (
+                <button
+                  type="button"
+                  style={exportBtnStyle}
+                  onClick={() => dashboardApi.exportXlsx(baseYear)}
                 >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Ekspor Excel
-              </button>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#630ED4"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Ekspor Excel
+                </button>
+              )}
               <div style={{ position: "relative" }}>
                 <button
                   type="button"
@@ -195,43 +202,45 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
               </div>
             </div>
           </div>
-          {/* Row 1 */}
-          <div className="stats-grid-2">
-            <div className="stat-card" {...cardNav("invoices")}>
-              <div className="stat-label">Total Pendapatan</div>
-              <div className="stat-value">{formatRp(totalRevenue)}</div>
+          {canFinance && (
+            <div className="stats-grid-2">
+              <div className="stat-card" {...cardNav("invoices")}>
+                <div className="stat-label">Total Pendapatan</div>
+                <div className="stat-value">{formatRp(totalRevenue)}</div>
+              </div>
+              <div className="stat-card" {...cardNav("purchase-orders")}>
+                <div className="stat-label">Total Pengeluaran</div>
+                <div className="stat-value">{formatRp(totalExpenses)}</div>
+              </div>
             </div>
-            <div className="stat-card" {...cardNav("purchase-orders")}>
-              <div className="stat-label">Total Pengeluaran</div>
-              <div className="stat-value">{formatRp(totalExpenses)}</div>
-            </div>
-          </div>
+          )}
 
-          {/* Row 2 */}
-          <div className="stats-grid-3">
-            <div className="stat-card" {...cardNav("invoices")}>
-              <div className="stat-label">Total Laba Bersih</div>
-              <div className="stat-value">{formatRp(totalProfit)}</div>
+          {canFinance && (
+            <div className="stats-grid-3">
+              <div className="stat-card" {...cardNav("invoices")}>
+                <div className="stat-label">Total Laba Bersih</div>
+                <div className="stat-value">{formatRp(totalProfit)}</div>
+              </div>
+              <div className="stat-card" {...cardNav("invoices")}>
+                <div className="stat-label">Total PPN</div>
+                <div className="stat-value">{formatRp(totalPpn)}</div>
+              </div>
+              <div className="stat-card stat-card--accent-light" {...cardNav("invoices")}>
+                <div
+                  className="card-overlay"
+                  style={{
+                    background:
+                      "linear-gradient(82.48deg, rgba(63,86,255,.5) 6.42%, #DBEAFE 93.58%)",
+                    opacity: 0.5,
+                  }}
+                />
+                <div className="stat-label">Total Invoice</div>
+                <div className="stat-value">{formatId(totalInvoice)}</div>
+              </div>
             </div>
-            <div className="stat-card" {...cardNav("invoices")}>
-              <div className="stat-label">Total PPN</div>
-              <div className="stat-value">{formatRp(totalPpn)}</div>
-            </div>
-            <div className="stat-card stat-card--accent-light" {...cardNav("invoices")}>
-              <div
-                className="card-overlay"
-                style={{
-                  background: "linear-gradient(82.48deg, rgba(63,86,255,.5) 6.42%, #DBEAFE 93.58%)",
-                  opacity: 0.5,
-                }}
-              />
-              <div className="stat-label">Total Invoice</div>
-              <div className="stat-value">{formatId(totalInvoice)}</div>
-            </div>
-          </div>
+          )}
 
-          {/* Row 3 */}
-          <div className="stats-grid-4">
+          <div className={canFinance ? "stats-grid-4" : "stats-grid-3"}>
             <div className="stat-card" {...cardNav("quotation")}>
               <div className="stat-label">Total Quotation</div>
               <div className="stat-value">{formatId(totalQuotation)}</div>
@@ -244,10 +253,12 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
               <div className="stat-label">Total Purchase Order</div>
               <div className="stat-value">{formatId(totalPo)}</div>
             </div>
-            <div className="stat-card" {...cardNav("invoices")}>
-              <div className="stat-label">Total Invoice Dibayar</div>
-              <div className="stat-value">{formatId(totalPaid)}</div>
-            </div>
+            {canFinance && (
+              <div className="stat-card" {...cardNav("invoices")}>
+                <div className="stat-label">Total Invoice Dibayar</div>
+                <div className="stat-value">{formatId(totalPaid)}</div>
+              </div>
+            )}
           </div>
 
           {/* Chart */}
@@ -264,7 +275,7 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
             <div className="chart-header">
               <h3 className="chart-title">Tren Performa</h3>
               <div className="chart-tabs">
-                {chartTabs.map((tab) => (
+                {visibleTabs.map((tab) => (
                   <button
                     key={tab.label}
                     className={`chart-tab${activeTab === tab.label ? " chart-tab--active" : ""}`}
@@ -289,36 +300,37 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
             />
           </div>
 
-          {/* Alerts */}
-          <div className="alert-row">
-            <div className="alert-card alert--warning">
-              <div
-                className="card-overlay"
-                style={{
-                  background:
-                    "linear-gradient(82.48deg, rgba(217,119,6,.5) 6.42%, rgba(245,158,11,.1) 93.58%)",
-                  opacity: 0.5,
-                }}
-              />
-              <div className="alert-content">
-                <h3>{formatId(dueSoon)} Invoice</h3>
-                <p>Invoice akan segera jatuh tempo</p>
+          {canFinance && (
+            <div className="alert-row">
+              <div className="alert-card alert--warning">
+                <div
+                  className="card-overlay"
+                  style={{
+                    background:
+                      "linear-gradient(82.48deg, rgba(217,119,6,.5) 6.42%, rgba(245,158,11,.1) 93.58%)",
+                    opacity: 0.5,
+                  }}
+                />
+                <div className="alert-content">
+                  <h3>{formatId(dueSoon)} Invoice</h3>
+                  <p>Invoice akan segera jatuh tempo</p>
+                </div>
+                <button type="button" className="alert-btn" onClick={() => onNavigate("invoices")}>
+                  Tinjau
+                </button>
               </div>
-              <button type="button" className="alert-btn" onClick={() => onNavigate("invoices")}>
-                Tinjau
-              </button>
-            </div>
-            <div className="alert-card alert--danger">
-              <div className="card-glow" style={{ background: "rgba(239,94,94,.3)" }} />
-              <div className="alert-content">
-                <h3>{formatId(overdue)} Invoice</h3>
-                <p>Invoice telah jatuh tempo</p>
+              <div className="alert-card alert--danger">
+                <div className="card-glow" style={{ background: "rgba(239,94,94,.3)" }} />
+                <div className="alert-content">
+                  <h3>{formatId(overdue)} Invoice</h3>
+                  <p>Invoice telah jatuh tempo</p>
+                </div>
+                <button type="button" className="alert-btn" onClick={() => onNavigate("invoices")}>
+                  Tinjau
+                </button>
               </div>
-              <button type="button" className="alert-btn" onClick={() => onNavigate("invoices")}>
-                Tinjau
-              </button>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

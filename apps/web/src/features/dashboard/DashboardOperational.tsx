@@ -1,9 +1,8 @@
-import { type CSSProperties, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
 import FilterButton from "@/components/shared/FilterButton"
 import Sidebar from "@/components/shared/Sidebar"
 import StatusBadge from "@/components/shared/StatusBadge"
-import * as dashboardApi from "@/features/dashboard/api"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { toTableRow } from "@/features/quotations/adapters"
 import { useQuotations } from "@/features/quotations/hooks"
@@ -21,22 +20,6 @@ interface DashboardOperationalProps {
   onNavigate: (page: Page) => void
   onViewQuotation?: (quotationId: number) => void
   onViewAllQuotations?: () => void
-}
-
-const exportBtnStyle: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "8px",
-  padding: "8px 20px",
-  border: "1px solid rgba(99, 14, 212, 0.2)",
-  borderRadius: "8px",
-  background: "#FFFFFF",
-  cursor: "pointer",
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: 600,
-  fontSize: "14px",
-  lineHeight: 1.25,
-  color: "#630ED4",
 }
 
 export default function DashboardOperational({
@@ -95,27 +78,6 @@ export default function DashboardOperational({
           <div className="page-header">
             <h1 className="page-title">Dashboard Operasional</h1>
             <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
-              <button
-                type="button"
-                style={exportBtnStyle}
-                onClick={() => dashboardApi.exportXlsx(baseYear)}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#630ED4"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Ekspor Excel
-              </button>
               <FilterButton onClick={() => setShowFilter(true)} />
             </div>
           </div>

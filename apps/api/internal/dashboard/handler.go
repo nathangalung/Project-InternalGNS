@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 )
@@ -27,6 +28,9 @@ func (h *Handler) Summary(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErr(w, err)
 		return
 	}
+	if !canViewFinancial(deps.CurrentUserRole(r.Context())) {
+		s.StripFinancial()
+	}
 	httpx.WriteJSON(w, http.StatusOK, s)
 }
 
@@ -37,6 +41,10 @@ func (h *Handler) Timeseries(w http.ResponseWriter, r *http.Request) {
 	metric := q.Get("metric")
 	if metric == "" {
 		httperr.Render(w, httperr.BadRequest("metric required"))
+		return
+	}
+	if isFinancialMetric(metric) && !canViewFinancial(deps.CurrentUserRole(r.Context())) {
+		httperr.Render(w, httperr.Forbidden("insufficient role"))
 		return
 	}
 
@@ -88,4 +96,19 @@ func parseRange(rawFrom, rawTo string) (time.Time, time.Time, error) {
 func firstOfNextMonth(t time.Time) time.Time {
 	y, m, _ := t.Date()
 	return time.Date(y, m+1, 1, 0, 0, 0, 0, time.UTC)
+}
+
+// Roles allowed financial figures.
+func canViewFinancial(role string) bool {
+	return role == "superadmin" || role == "finance"
+}
+
+// Finance-only timeseries metrics.
+func isFinancialMetric(metric string) bool {
+	switch metric {
+	case "revenue", "profit", "ppn", "invoice":
+		return true
+	default:
+		return false
+	}
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/xuri/excelize/v2"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 )
@@ -28,6 +29,10 @@ var exportMetrics = []struct{ key, header string }{
 // Export writes the dashboard summary + monthly series as XLSX.
 // GET /dashboard/export.xlsx?year=YYYY (year optional; defaults to last 12 months).
 func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
+	if !canViewFinancial(deps.CurrentUserRole(r.Context())) {
+		httperr.Render(w, httperr.Forbidden("insufficient role"))
+		return
+	}
 	from, to, err := exportRange(r.URL.Query().Get("year"))
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest(err.Error()))

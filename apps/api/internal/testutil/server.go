@@ -42,6 +42,16 @@ func withUserID(userID int64) func(http.Handler) http.Handler {
 	}
 }
 
+// Inject user role into ctx.
+func withRole(role string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			ctx := deps.WithUserRole(req.Context(), role)
+			next.ServeHTTP(w, req.WithContext(ctx))
+		})
+	}
+}
+
 // QuotationServer wires routes for ATDD.
 func QuotationServer(t testing.TB, userID int64) *httptest.Server {
 	t.Helper()
@@ -132,11 +142,17 @@ func CountriesServer(t testing.TB) *httptest.Server {
 
 // DashboardServer wires dashboard routes.
 func DashboardServer(t testing.TB) *httptest.Server {
+	return DashboardServerAs(t, "superadmin")
+}
+
+// DashboardServerAs wires dashboard routes with a role.
+func DashboardServerAs(t testing.TB, role string) *httptest.Server {
 	t.Helper()
 	pool := Pool(t)
 	store := Store(t)
 
 	r := chi.NewRouter()
+	r.Use(withRole(role))
 	r.Mount("/dashboard", dashboard.Routes(deps.Deps{Pool: pool, Queries: store}))
 
 	srv := httptest.NewServer(r)

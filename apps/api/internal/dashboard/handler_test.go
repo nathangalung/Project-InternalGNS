@@ -103,3 +103,49 @@ func TestHandler_Timeseries_EqualRange(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 }
+
+func TestHandler_Summary_OperationalStripsFinancial(t *testing.T) {
+	srv := testutil.DashboardServerAs(t, "operational")
+	res, err := srv.Client().Get(srv.URL + "/dashboard/summary")
+	require.NoError(t, err)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var s dashboard.Summary
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&s))
+	assert.Equal(t, "0", s.TotalRevenue)
+	assert.Equal(t, "0", s.TotalExpenses)
+	assert.Equal(t, "0", s.TotalProfit)
+	assert.Equal(t, "0", s.TotalPpn)
+	assert.Zero(t, s.TotalInvoices)
+	assert.Zero(t, s.TotalInvoicesPaid)
+	assert.Zero(t, s.InvoicesDueSoon)
+	assert.Zero(t, s.InvoicesOverdue)
+}
+
+func TestHandler_Timeseries_OperationalForbidsFinancial(t *testing.T) {
+	srv := testutil.DashboardServerAs(t, "operational")
+	for _, m := range []string{"revenue", "profit", "ppn", "invoice"} {
+		t.Run(m, func(t *testing.T) {
+			res, err := srv.Client().Get(srv.URL + "/dashboard/timeseries?metric=" + m)
+			require.NoError(t, err)
+			defer res.Body.Close()
+			assert.Equal(t, http.StatusForbidden, res.StatusCode)
+		})
+	}
+}
+
+func TestHandler_Timeseries_OperationalAllowsQuotation(t *testing.T) {
+	srv := testutil.DashboardServerAs(t, "operational")
+	res, err := srv.Client().Get(srv.URL + "/dashboard/timeseries?metric=quotation")
+	require.NoError(t, err)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+}
+
+func TestHandler_Export_OperationalForbidden(t *testing.T) {
+	srv := testutil.DashboardServerAs(t, "operational")
+	res, err := srv.Client().Get(srv.URL + "/dashboard/export.xlsx")
+	require.NoError(t, err)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusForbidden, res.StatusCode)
+}
