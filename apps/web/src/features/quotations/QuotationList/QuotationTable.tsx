@@ -9,6 +9,7 @@ interface QuotationTableProps {
   sortDir: "asc" | "desc" | null
   onSort: (key: keyof QuotationRow) => void
   onViewDetail?: (id: string) => void
+  onDownload?: (row: QuotationRow) => void
 }
 
 // Sortable rows with action buttons.
@@ -18,6 +19,7 @@ export default function QuotationTable({
   sortDir,
   onSort,
   onViewDetail,
+  onDownload,
 }: QuotationTableProps) {
   const dirOf = (key: keyof QuotationRow) => (sortKey === key ? sortDir : null)
   return (
@@ -138,7 +140,7 @@ export default function QuotationTable({
                   >
                     <EyeIcon size={18} />
                   </button>
-                  <button className="action-btn" title="Download">
+                  <button className="action-btn" title="Download" onClick={() => onDownload?.(row)}>
                     <svg
                       width="18"
                       height="18"

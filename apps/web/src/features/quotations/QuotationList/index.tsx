@@ -6,6 +6,7 @@ import { toTableRow } from "@/features/quotations/adapters"
 import * as quotationsApi from "@/features/quotations/api"
 import { useQuotations } from "@/features/quotations/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import { downloadPdf } from "@/lib/api-client"
 import { resolveRange } from "@/lib/date-range"
 import type { Page } from "@/lib/page"
 import { labelToStatus } from "@/lib/status"
@@ -127,6 +128,12 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
     setCurrentPage(1)
   }
 
+  // Download the quotation PDF.
+  const handleDownload = (row: QuotationRow) => {
+    const safe = row.displayNo.replace(/[\\/]/g, "-")
+    void downloadPdf(`/quotations/${row.id}/pdf`, `${safe}.pdf`)
+  }
+
   return (
     <div className="admin-shell">
       <Sidebar activePage="quotation" onNavigate={onNavigate} onLogout={onLogout} />
@@ -156,6 +163,7 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
               sortDir={sortConfig?.direction ?? null}
               onSort={requestSort}
               onViewDetail={onViewDetail}
+              onDownload={handleDownload}
             />
             <Pagination
               totalItems={totalItems}

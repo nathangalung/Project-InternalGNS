@@ -41,34 +41,6 @@ export default function ShippingTable({ shipping }: ShippingTableProps) {
             </tr>
           </tbody>
         </table>
-        <div className="pagination" style={{ justifyContent: "space-between" }}>
-          <span className="pagination-info">Menampilkan 1 dari 1 Pengiriman</span>
-          <div className="page-buttons">
-            <button className="page-btn-nav" disabled>
-              <svg width="5" height="8" viewBox="0 0 5 8" fill="none">
-                <path
-                  d="M4 1L1 4L4 7"
-                  stroke="#191C1E"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-            <button className="page-btn page-btn--active">1</button>
-            <button className="page-btn-nav" disabled>
-              <svg width="5" height="8" viewBox="0 0 5 8" fill="none">
-                <path
-                  d="M1 1L4 4L1 7"
-                  stroke="#191C1E"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   )
