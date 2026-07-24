@@ -49,6 +49,10 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 		httperr.Render(w, httperr.ServiceUnavailable("templates root not configured"))
 		return
 	}
+	if h.settings.SellerTIN == "" || h.settings.SellerIDTKU == "" {
+		httperr.Render(w, httperr.ServiceUnavailable("coretax seller identifiers not configured"))
+		return
+	}
 
 	f := parseListFilter(r)
 	f.Limit, f.Offset = exportMaxRows, 0

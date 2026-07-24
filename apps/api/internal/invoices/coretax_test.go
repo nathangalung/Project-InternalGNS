@@ -1,6 +1,8 @@
 package invoices
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -8,6 +10,28 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 )
+
+func TestCoretaxExport_RequiresSellerConfig(t *testing.T) {
+	t.Parallel()
+	t.Run("xml export rejects a missing seller IDTKU", func(t *testing.T) {
+		t.Parallel()
+		h := &CoretaxHandler{settings: deps.CoretaxSettings{SellerTIN: "x"}}
+		rec := httptest.NewRecorder()
+		h.Export(rec, httptest.NewRequest(http.MethodGet, "/invoices/1/coretax.xml", nil))
+		if rec.Code != http.StatusServiceUnavailable {
+			t.Fatalf("want 503, got %d", rec.Code)
+		}
+	})
+	t.Run("xlsx export rejects a missing seller config", func(t *testing.T) {
+		t.Parallel()
+		h := &CoretaxHandler{templatesRoot: "x", settings: deps.CoretaxSettings{}}
+		rec := httptest.NewRecorder()
+		h.ExportBulkXLSX(rec, httptest.NewRequest(http.MethodGet, "/invoices/coretax.xlsx", nil))
+		if rec.Code != http.StatusServiceUnavailable {
+			t.Fatalf("want 503, got %d", rec.Code)
+		}
+	})
+}
 
 func TestBuildGoodService_DBToCoretaxOptRemap(t *testing.T) {
 	t.Parallel()

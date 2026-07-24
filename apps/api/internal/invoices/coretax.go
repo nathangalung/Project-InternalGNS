@@ -83,6 +83,10 @@ func (h *CoretaxHandler) Export(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.ServiceUnavailable("coretax seller TIN not configured"))
 		return
 	}
+	if h.settings.SellerIDTKU == "" {
+		httperr.Render(w, httperr.ServiceUnavailable("coretax seller IDTKU not configured"))
+		return
+	}
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest("invalid id"))
