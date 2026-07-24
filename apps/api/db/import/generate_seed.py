@@ -1,13 +1,13 @@
 """Generate a deterministic SQL seed file from staged.json.
 
-Mirrors load.py's logic but writes a single .sql file instead of executing
-against a live DB. Output: apps/api/db/seeds/03_historical.sql.
+Writes a single .sql file instead of executing against a live DB.
+Output: apps/api/db/seeds/03_historical.sql.
 
 Covers all 3 historical years (2024 + 2025 + 2026) in one TRUNCATE+rebuild
 seed. Lets a teammate without the local Excel folders bootstrap a dev DB
 from psql alone.
 
-Decisions are identical to load.py:
+Decisions:
 - Customers 4001..4018, explicit IDs 1..18
 - Q-numbers regenerated via the schema's `fn_next_doc_no` formula computed
   ahead of time (same monotonic per-company-per-year seq behaviour). Each
@@ -37,7 +37,7 @@ OUTPUT_FILE = HERE.parent / "seeds" / "03_historical.sql"
 
 SUPERADMIN_ID = 1
 
-# Mirrors load.py CUSTOMERS — 4001..4010 from 2026, 4011..4015 from 2025,
+# CUSTOMERS — 4001..4010 from 2026, 4011..4015 from 2025,
 # 4016..4018 from 2024. parse.py CANONICAL_CUSTOMERS uses the same set.
 CUSTOMERS = [
     (1, "4001", "PT. IMC Ship Management"),
@@ -357,8 +357,8 @@ def main():
             seq_counter[seq_key] += 1
             new_qno = fn_next_doc_no("Q", cust_no, seq_counter[seq_key], year, month)
 
-            # Status: 'draft' if no line has positive selling_price (matches
-            # load.py — Excel pricing not yet entered). Else 'sent'.
+            # Status: 'draft' if no line has positive selling_price
+            # (Excel pricing not yet entered). Else 'sent'.
             is_draft = not any((li["selling_price"] or 0) > 0 for li in lines)
             status = "draft" if is_draft else "sent"
 
