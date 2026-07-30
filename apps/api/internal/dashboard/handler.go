@@ -54,7 +54,13 @@ func (h *Handler) Timeseries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	points, err := h.repo.Timeseries(r.Context(), metric, from, to)
+	interval := q.Get("interval")
+	if interval != "" && interval != "month" && interval != "day" {
+		httperr.Render(w, httperr.BadRequest("interval must be month or day"))
+		return
+	}
+
+	points, err := h.repo.Timeseries(r.Context(), metric, from, to, interval)
 	if errors.Is(err, ErrUnknownMetric) {
 		httperr.Render(w, httperr.BadRequest("unknown metric"))
 		return

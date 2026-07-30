@@ -15,10 +15,12 @@ export async function timeseries(
   metric: DashboardMetric,
   from?: string,
   to?: string,
+  interval?: "month" | "day",
 ): Promise<DashboardTimeseriesPoint[]> {
   const params = new URLSearchParams({ metric })
   if (from) params.set("from", from)
   if (to) params.set("to", to)
+  if (interval) params.set("interval", interval)
   return apiRequest<DashboardTimeseriesPoint[]>({
     path: `/dashboard/timeseries?${params.toString()}`,
   })

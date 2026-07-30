@@ -7,12 +7,15 @@ import * as dashboardApi from "@/features/dashboard/api"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { useInvoices } from "@/features/invoices/hooks"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE, type InvoiceStatus } from "@/features/invoices/types"
-import { buildSeries } from "@/lib/chart"
+import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
 import { formatDate, formatNumber as formatId, formatRupiah as formatRp, toNum } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import type { DashboardMetric, InvoiceBackendRow } from "@/types/api"
-import DashboardFinancialFilter, { type DashboardFilterValues } from "./DashboardFinancialFilter"
-import TrendChart from "./TrendChart"
+import DashboardFinancialFilter, {
+  type DashboardFilterValues,
+  MONTH_LABELS,
+} from "./DashboardFinancialFilter"
+import TrendChart, { CHART_MONTHS } from "./TrendChart"
 
 const chartTabs: { label: string; metric: DashboardMetric }[] = [
   { label: "Pendapatan", metric: "revenue" },
@@ -83,30 +86,34 @@ export default function DashboardFinancial({
   const { data: rawInvoices } = useInvoices({ limit: 5 })
 
   const baseYear = filters?.year ?? new Date().getFullYear()
-  const fromDate = `${baseYear}-01-01`
-  const toDate = `${baseYear}-12-31`
-  const selectedMonths = filters?.months ?? null // null = all months
+  const selectedMonth = filters?.month ?? null // null = whole year
+  const interval: "month" | "day" = selectedMonth === null ? "month" : "day"
+  const { from, to } =
+    selectedMonth === null ? yearRange(baseYear) : monthRange(baseYear, selectedMonth)
+  const chartLabels = selectedMonth === null ? CHART_MONTHS : dayLabels(baseYear, selectedMonth)
 
-  const tsRevenue = useDashboardTimeseries("revenue", fromDate, toDate)
-  const tsProfit = useDashboardTimeseries("profit", fromDate, toDate)
-  const tsPpn = useDashboardTimeseries("ppn", fromDate, toDate)
+  const tsRevenue = useDashboardTimeseries("revenue", from, to, interval)
+  const tsProfit = useDashboardTimeseries("profit", from, to, interval)
+  const tsPpn = useDashboardTimeseries("ppn", from, to, interval)
 
   const series = useMemo<Record<string, number[]>>(() => {
-    const revenue = buildSeries(tsRevenue.data, baseYear)
-    const profit = buildSeries(tsProfit.data, baseYear)
-    const ppn = buildSeries(tsPpn.data, baseYear)
+    const build = (data: { month: string; value: string }[] | undefined) =>
+      selectedMonth === null
+        ? buildSeries(data, baseYear)
+        : buildDailySeries(data, baseYear, selectedMonth)
+    const revenue = build(tsRevenue.data)
+    const profit = build(tsProfit.data)
+    const ppn = build(tsPpn.data)
     // Expenses = cost = revenue - profit (profit already nets PPN out);
     // matches the Total Pengeluaran stat card (SUM of cost).
     const expenses = revenue.map((v, i) => Math.max(0, v - profit[i]))
-    const maskMonths = (arr: number[]): number[] =>
-      selectedMonths === null ? arr : arr.map((v, i) => (selectedMonths.includes(i) ? v : 0))
     return {
-      Pendapatan: maskMonths(revenue),
-      Pengeluaran: maskMonths(expenses),
-      "Laba Bersih": maskMonths(profit),
-      PPN: maskMonths(ppn),
+      Pendapatan: revenue,
+      Pengeluaran: expenses,
+      "Laba Bersih": profit,
+      PPN: ppn,
     }
-  }, [tsRevenue.data, tsProfit.data, tsPpn.data, baseYear, selectedMonths])
+  }, [tsRevenue.data, tsProfit.data, tsPpn.data, baseYear, selectedMonth])
 
   const totalRevenue = toNum(summary?.totalRevenue)
   const totalExpenses = toNum(summary?.totalExpenses)
@@ -179,8 +186,8 @@ export default function DashboardFinancial({
             <ActiveFilters
               chips={[
                 { key: "year", label: `Tahun ${filters.year}` },
-                ...(selectedMonths && selectedMonths.length < 12
-                  ? [{ key: "months", label: `${selectedMonths.length} bulan dipilih` }]
+                ...(selectedMonth !== null
+                  ? [{ key: "month", label: MONTH_LABELS[selectedMonth] }]
                   : []),
               ]}
               onClearAll={() => setFilters(null)}
@@ -245,6 +252,7 @@ export default function DashboardFinancial({
             <TrendChart
               series={series}
               activeKey={activeTab}
+              monthLabels={chartLabels}
               formatValue={(v) => `Rp${v.toLocaleString("id-ID")}`}
               formatAxisTick={formatRpAxis}
               computeMax={computeRpMax}

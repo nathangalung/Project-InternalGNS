@@ -49,7 +49,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	series := make(map[string]map[string]string, len(exportMetrics))
 	monthsSet := map[string]struct{}{}
 	for _, m := range exportMetrics {
-		points, err := h.repo.Timeseries(r.Context(), m.key, from, to)
+		points, err := h.repo.Timeseries(r.Context(), m.key, from, to, "month")
 		if err != nil {
 			httperr.RenderDBErr(w, err)
 			return

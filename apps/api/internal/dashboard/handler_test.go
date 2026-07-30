@@ -36,6 +36,22 @@ func TestHandler_Timeseries_HappyPath(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
 
+func TestHandler_Timeseries_DailyInterval(t *testing.T) {
+	srv := newSrv(t)
+	res, err := srv.Client().Get(srv.URL + "/dashboard/timeseries?metric=revenue&from=2025-04-01&to=2025-05-01&interval=day")
+	require.NoError(t, err)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+}
+
+func TestHandler_Timeseries_BadInterval(t *testing.T) {
+	srv := newSrv(t)
+	res, err := srv.Client().Get(srv.URL + "/dashboard/timeseries?metric=quotation&interval=weekly")
+	require.NoError(t, err)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+}
+
 func TestHandler_Timeseries_AllValidMetrics(t *testing.T) {
 	srv := newSrv(t)
 	for _, m := range []string{"quotation", "invoice", "revenue", "profit", "ppn"} {

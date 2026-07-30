@@ -7,11 +7,14 @@ import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboar
 import { toTableRow } from "@/features/quotations/adapters"
 import { useQuotations } from "@/features/quotations/hooks"
 import { statusConfig } from "@/features/quotations/QuotationList/helpers"
-import { buildSeries } from "@/lib/chart"
+import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
 import { formatNumber as formatId } from "@/lib/format"
 import type { Page } from "@/lib/page"
-import DashboardFinancialFilter, { type DashboardFilterValues } from "./DashboardFinancialFilter"
-import TrendChart from "./TrendChart"
+import DashboardFinancialFilter, {
+  type DashboardFilterValues,
+  MONTH_LABELS,
+} from "./DashboardFinancialFilter"
+import TrendChart, { CHART_MONTHS } from "./TrendChart"
 
 const chartTabs = [{ label: "Quotation", metric: "quotation" as const }]
 
@@ -36,20 +39,23 @@ export default function DashboardOperational({
   const { data: rawQuotations } = useQuotations({ limit: 5 })
 
   const baseYear = filters?.year ?? new Date().getFullYear()
-  const fromDate = `${baseYear}-01-01`
-  const toDate = `${baseYear}-12-31`
-  const selectedMonths = filters?.months ?? null
+  const selectedMonth = filters?.month ?? null // null = whole year
+  const interval: "month" | "day" = selectedMonth === null ? "month" : "day"
+  const { from, to } =
+    selectedMonth === null ? yearRange(baseYear) : monthRange(baseYear, selectedMonth)
+  const chartLabels = selectedMonth === null ? CHART_MONTHS : dayLabels(baseYear, selectedMonth)
 
-  const tsQuotation = useDashboardTimeseries("quotation", fromDate, toDate)
+  const tsQuotation = useDashboardTimeseries("quotation", from, to, interval)
 
   const series = useMemo<Record<string, number[]>>(() => {
-    const quotation = buildSeries(tsQuotation.data, baseYear)
-    const maskMonths = (arr: number[]): number[] =>
-      selectedMonths === null ? arr : arr.map((v, i) => (selectedMonths.includes(i) ? v : 0))
+    const quotation =
+      selectedMonth === null
+        ? buildSeries(tsQuotation.data, baseYear)
+        : buildDailySeries(tsQuotation.data, baseYear, selectedMonth)
     return {
-      Quotation: maskMonths(quotation),
+      Quotation: quotation,
     }
-  }, [tsQuotation.data, baseYear, selectedMonths])
+  }, [tsQuotation.data, baseYear, selectedMonth])
 
   const totalQuotation = summary?.totalQuotations ?? 0
   const totalRejected = summary?.totalQuotationsRejected ?? 0
@@ -86,8 +92,8 @@ export default function DashboardOperational({
             <ActiveFilters
               chips={[
                 { key: "year", label: `Tahun ${filters.year}` },
-                ...(selectedMonths && selectedMonths.length < 12
-                  ? [{ key: "months", label: `${selectedMonths.length} bulan dipilih` }]
+                ...(selectedMonth !== null
+                  ? [{ key: "month", label: MONTH_LABELS[selectedMonth] }]
                   : []),
               ]}
               onClearAll={() => setFilters(null)}
@@ -124,7 +130,7 @@ export default function DashboardOperational({
                 ))}
               </div>
             </div>
-            <TrendChart series={series} activeKey={activeTab} />
+            <TrendChart series={series} activeKey={activeTab} monthLabels={chartLabels} />
           </div>
 
           <div className="tbl-container">

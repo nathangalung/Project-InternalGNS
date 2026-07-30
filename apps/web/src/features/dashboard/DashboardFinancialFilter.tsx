@@ -8,7 +8,7 @@ import {
 
 export interface DashboardFilterValues {
   year: number
-  months: number[] // 0-based month indexes (Jan=0, Dec=11)
+  month: number | null // 0-based index (Jan=0); null = whole year
 }
 
 interface DashboardFinancialFilterProps {
@@ -21,14 +21,14 @@ interface DashboardFinancialFilterProps {
 const EARLIEST_YEAR = 2024
 const CURRENT_YEAR = new Date().getFullYear()
 // Earliest year is fixed at 2024; latest extends with the current year (2024..now), descending.
-const YEAR_OPTIONS: number[] = (() => {
+export const YEAR_OPTIONS: number[] = (() => {
   const max = Math.max(CURRENT_YEAR, EARLIEST_YEAR)
   const years: number[] = []
   for (let y = max; y >= EARLIEST_YEAR; y--) years.push(y)
   return years
 })()
 
-const MONTH_LABELS: string[] = [
+export const MONTH_LABELS: string[] = [
   "Januari",
   "Februari",
   "Maret",
@@ -43,11 +43,9 @@ const MONTH_LABELS: string[] = [
   "Desember",
 ]
 
-const ALL_MONTHS: number[] = Array.from({ length: 12 }, (_, i) => i)
-
 const DEFAULTS: DashboardFilterValues = {
   year: CURRENT_YEAR,
-  months: ALL_MONTHS,
+  month: null,
 }
 
 function monthChipStyle(active: boolean): CSSProperties {
@@ -73,29 +71,21 @@ export default function DashboardFinancialFilter({
   title = "Filter Dashboard Finansial",
 }: DashboardFinancialFilterProps) {
   const [year, setYear] = useState<number>(initialValues?.year ?? DEFAULTS.year)
-  const [months, setMonths] = useState<number[]>(initialValues?.months ?? DEFAULTS.months)
+  const [month, setMonth] = useState<number | null>(initialValues?.month ?? DEFAULTS.month)
   const [yearOpen, setYearOpen] = useState(false)
 
-  const allSelected = months.length === 12
-  const dirty =
-    year !== DEFAULTS.year ||
-    months.length !== DEFAULTS.months.length ||
-    months.some((m) => !DEFAULTS.months.includes(m))
+  const dirty = year !== DEFAULTS.year || month !== DEFAULTS.month
 
-  const toggleMonth = (m: number) =>
-    setMonths((prev) =>
-      prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m].sort((a, b) => a - b),
-    )
-
-  const selectAllMonths = () => setMonths(allSelected ? [] : ALL_MONTHS)
+  // Clicking the active month clears back to the whole year.
+  const pickMonth = (m: number) => setMonth((prev) => (prev === m ? null : m))
 
   const handleReset = () => {
     setYear(DEFAULTS.year)
-    setMonths(DEFAULTS.months)
+    setMonth(DEFAULTS.month)
   }
 
   const handleApply = () => {
-    onApply({ year, months })
+    onApply({ year, month })
     onClose()
   }
 
@@ -129,7 +119,8 @@ export default function DashboardFinancialFilter({
               color: "#64748B",
             }}
           >
-            Filter ini hanya memengaruhi grafik tren, bukan kartu ringkasan.
+            Pilih bulan untuk melihat rincian harian pada grafik tren. Kartu ringkasan tetap
+            menampilkan total keseluruhan.
           </p>
           <div className="ca-section">
             <div className="ca-section-heading">Pilih Tahun</div>
@@ -181,49 +172,26 @@ export default function DashboardFinancialFilter({
           </div>
 
           <div className="ca-section">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "8px",
-              }}
-            >
-              <div className="ca-section-heading" style={{ marginBottom: 0 }}>
-                Pilih Bulan
-              </div>
+            <div className="ca-section-heading">Pilih Bulan</div>
+            <div className="ca-field">
               <button
                 type="button"
-                onClick={selectAllMonths}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 500,
-                  fontSize: "13px",
-                  color: "#630ED4",
-                  padding: 0,
-                }}
+                onClick={() => setMonth(null)}
+                style={{ ...monthChipStyle(month === null), width: "100%", marginBottom: "8px" }}
               >
-                {allSelected ? "Hapus Semua Bulan" : "Pilih Semua Bulan"}
+                Semua Bulan
               </button>
-            </div>
-            <div className="ca-field">
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
-                {MONTH_LABELS.map((label, idx) => {
-                  const isActive = months.includes(idx)
-                  return (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => toggleMonth(idx)}
-                      style={monthChipStyle(isActive)}
-                    >
-                      {label}
-                    </button>
-                  )
-                })}
+                {MONTH_LABELS.map((label, idx) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => pickMonth(idx)}
+                    style={monthChipStyle(month === idx)}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>

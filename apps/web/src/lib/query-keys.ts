@@ -71,7 +71,7 @@ export const queryKeys = {
   dashboard: {
     all: ["dashboard"] as const,
     summary: () => ["dashboard", "summary"] as const,
-    timeseries: (metric: string, from?: string, to?: string) =>
-      ["dashboard", "timeseries", metric, from ?? null, to ?? null] as const,
+    timeseries: (metric: string, from?: string, to?: string, interval?: string) =>
+      ["dashboard", "timeseries", metric, from ?? null, to ?? null, interval ?? null] as const,
   },
 } as const

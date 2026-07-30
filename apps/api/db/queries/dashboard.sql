@@ -57,7 +57,8 @@ SELECT paid_inv.revenue                  AS total_revenue,
   FROM paid_inv, inv, qstat, po, exp;
 
 -- name: dashboard.ts_quotation
-SELECT to_char(date_trunc('month', created_at), 'YYYY-MM') AS month,
+SELECT to_char(date_trunc($3::text, created_at),
+               CASE $3::text WHEN 'day' THEN 'YYYY-MM-DD' ELSE 'YYYY-MM' END) AS month,
        COUNT(*)::text                                       AS value
   FROM quotations
  WHERE created_at >= $1::date AND created_at < $2::date
@@ -65,7 +66,7 @@ SELECT to_char(date_trunc('month', created_at), 'YYYY-MM') AS month,
  ORDER BY 1;
 
 -- name: dashboard.ts_invoice
-SELECT to_char(date_trunc('month', invoice_date), 'YYYY-MM') AS month,
+SELECT to_char(date_trunc($3::text, invoice_date), CASE $3::text WHEN 'day' THEN 'YYYY-MM-DD' ELSE 'YYYY-MM' END) AS month,
        COUNT(*)::text                                         AS value
   FROM invoices
  WHERE invoice_date >= $1::date AND invoice_date < $2::date
@@ -73,7 +74,7 @@ SELECT to_char(date_trunc('month', invoice_date), 'YYYY-MM') AS month,
  ORDER BY 1;
 
 -- name: dashboard.ts_revenue
-SELECT to_char(date_trunc('month', invoice_date), 'YYYY-MM') AS month,
+SELECT to_char(date_trunc($3::text, invoice_date), CASE $3::text WHEN 'day' THEN 'YYYY-MM-DD' ELSE 'YYYY-MM' END) AS month,
        COALESCE(SUM(total), 0)::text                          AS value
   FROM invoices
  WHERE status = 'paid'
@@ -82,7 +83,7 @@ SELECT to_char(date_trunc('month', invoice_date), 'YYYY-MM') AS month,
  ORDER BY 1;
 
 -- name: dashboard.ts_ppn
-SELECT to_char(date_trunc('month', invoice_date), 'YYYY-MM') AS month,
+SELECT to_char(date_trunc($3::text, invoice_date), CASE $3::text WHEN 'day' THEN 'YYYY-MM-DD' ELSE 'YYYY-MM' END) AS month,
        COALESCE(SUM(ppn_amount), 0)::text                     AS value
   FROM invoices
  WHERE status = 'paid'
@@ -112,7 +113,7 @@ first_paid AS (
    GROUP BY quotation_id
 ),
 rev AS (
-  SELECT to_char(date_trunc('month', invoice_date), 'YYYY-MM') AS month,
+  SELECT to_char(date_trunc($3::text, invoice_date), CASE $3::text WHEN 'day' THEN 'YYYY-MM-DD' ELSE 'YYYY-MM' END) AS month,
          SUM(total)                                            AS revenue
     FROM invoices
    WHERE status = 'paid'
@@ -120,7 +121,8 @@ rev AS (
    GROUP BY 1
 ),
 expm AS (
-  SELECT to_char(date_trunc('month', fp.first_date), 'YYYY-MM') AS month,
+  SELECT to_char(date_trunc($3::text, fp.first_date),
+                 CASE $3::text WHEN 'day' THEN 'YYYY-MM-DD' ELSE 'YYYY-MM' END) AS month,
          SUM(COALESCE(pc.cost, qc.cost, 0))                     AS expenses
     FROM first_paid fp
     LEFT JOIN po_cost pc ON pc.quotation_id = fp.quotation_id

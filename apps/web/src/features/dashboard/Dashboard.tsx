@@ -4,11 +4,12 @@ import Sidebar from "@/components/shared/Sidebar"
 import { useMe } from "@/features/auth/hooks"
 import * as dashboardApi from "@/features/dashboard/api"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
-import { buildSeries } from "@/lib/chart"
+import { buildSeries, yearRange } from "@/lib/chart"
 import { formatNumber as formatId, formatRupiah as formatRp, toNum } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import { roleCanAccess } from "@/lib/rbac"
 import type { DashboardMetric } from "@/types/api"
+import { YEAR_OPTIONS } from "./DashboardFinancialFilter"
 import TrendChart from "./TrendChart"
 
 const exportBtnStyle: CSSProperties = {
@@ -59,15 +60,14 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
   const thisYear = new Date().getFullYear()
   const [baseYear, setBaseYear] = useState(thisYear)
   const [showYearMenu, setShowYearMenu] = useState(false)
-  const yearOptions = [thisYear, thisYear - 1, thisYear - 2, thisYear - 3]
-  const fromDate = `${baseYear}-01-01`
-  const toDate = `${baseYear}-12-31`
+  const yearOptions = YEAR_OPTIONS
+  const { from, to } = yearRange(baseYear)
 
-  const tsQuotation = useDashboardTimeseries("quotation", fromDate, toDate)
-  const tsInvoice = useDashboardTimeseries("invoice", fromDate, toDate, canFinance)
-  const tsRevenue = useDashboardTimeseries("revenue", fromDate, toDate, canFinance)
-  const tsProfit = useDashboardTimeseries("profit", fromDate, toDate, canFinance)
-  const tsPpn = useDashboardTimeseries("ppn", fromDate, toDate, canFinance)
+  const tsQuotation = useDashboardTimeseries("quotation", from, to)
+  const tsInvoice = useDashboardTimeseries("invoice", from, to, "month", canFinance)
+  const tsRevenue = useDashboardTimeseries("revenue", from, to, "month", canFinance)
+  const tsProfit = useDashboardTimeseries("profit", from, to, "month", canFinance)
+  const tsPpn = useDashboardTimeseries("ppn", from, to, "month", canFinance)
 
   const series = useMemo<Record<string, number[]>>(
     () => ({

@@ -42,13 +42,16 @@ func (r *Repo) Summary(ctx context.Context) (Summary, error) {
 	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Summary])
 }
 
-// Timeseries returns monthly buckets.
-func (r *Repo) Timeseries(ctx context.Context, metric string, from, to time.Time) ([]TimeseriesPoint, error) {
+// Timeseries returns metric buckets by interval.
+func (r *Repo) Timeseries(ctx context.Context, metric string, from, to time.Time, interval string) ([]TimeseriesPoint, error) {
 	key, ok := metricQuery[metric]
 	if !ok {
 		return nil, ErrUnknownMetric
 	}
-	rows, err := r.db.Query(ctx, r.store.Get(key), from, to)
+	if interval != "day" {
+		interval = "month"
+	}
+	rows, err := r.db.Query(ctx, r.store.Get(key), from, to, interval)
 	if err != nil {
 		return nil, err
 	}
