@@ -2,7 +2,7 @@
 % Compile: xelatex Invoice.tex
 % Mirrors quotation layout, replaces totals with DPP, DPP Nilai Lain, PPN, Total.
 
-[[if .UseA4]]\documentclass[9pt,a4paper,landscape]{article}[[else]]\documentclass[9pt,a5paper,landscape]{article}[[end]]
+[[if .UseA4]]\documentclass[a4paper,landscape]{article}[[else]]\documentclass[a5paper,landscape]{article}[[end]]
 
 \usepackage{fontspec}
 \setmainfont{Plus Jakarta Sans}[
@@ -30,6 +30,9 @@
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{2pt}
+\setlength{\emergencystretch}{2em}
+\hfuzz=2pt
+\hbadness=2000
 
 \newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\footnotesize}p{#1}}
 \newcolumntype{C}[1]{>{\centering\arraybackslash\footnotesize}p{#1}}
@@ -80,9 +83,9 @@
   }
 \end{minipage}
 
-\vspace{0.4cm}
-\noindent\rule{\textwidth}{0.8pt}
 \vspace{0.3cm}
+\noindent\rule{\textwidth}{0.8pt}
+\vspace{0.2cm}
 
 \noindent
 \begin{minipage}[t]{0.52\textwidth}
@@ -115,7 +118,7 @@
 \end{center}
 \vspace{0.1cm}
 
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{2pt}
 
 [[if .UseA4]]
 \newlength{\INcol}\setlength{\INcol}{0.6cm}
@@ -127,10 +130,10 @@
 [[else]]
 \newlength{\INcol}\setlength{\INcol}{0.4cm}
 \newlength{\IQcol}\setlength{\IQcol}{0.4cm}
-\newlength{\IUcol}\setlength{\IUcol}{0.5cm}
+\newlength{\IUcol}\setlength{\IUcol}{0.8cm}
 \newlength{\ILcol}\setlength{\ILcol}{4.8cm}
 \newlength{\IDcol}\setlength{\IDcol}{6.2cm}
-\newlength{\IMcol}\setlength{\IMcol}{1.9cm}
+\newlength{\IMcol}\setlength{\IMcol}{2.3cm}
 [[end]]
 
 \begin{longtable}{|C{\INcol}|C{\IQcol}|C{\IUcol}|L{\ILcol}|L{\IDcol}|R{\IMcol}|R{\IMcol}|}

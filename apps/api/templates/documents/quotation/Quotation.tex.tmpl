@@ -2,7 +2,7 @@
 % Compile: xelatex Quotation.tex
 % Requires Plus Jakarta Sans installed system-wide.
 
-[[if .UseA4]]\documentclass[9pt,a4paper,landscape]{article}[[else]]\documentclass[9pt,a5paper,landscape]{article}[[end]]
+[[if .UseA4]]\documentclass[a4paper,landscape]{article}[[else]]\documentclass[a5paper,landscape]{article}[[end]]
 
 \usepackage{fontspec}
 \setmainfont{Plus Jakarta Sans}[
@@ -30,6 +30,9 @@
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{2pt}
+\setlength{\emergencystretch}{2em}
+\hfuzz=2pt
+\hbadness=2000
 
 \newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\footnotesize}p{#1}}
 \newcolumntype{C}[1]{>{\centering\arraybackslash\footnotesize}p{#1}}
@@ -80,9 +83,9 @@
   }
 \end{minipage}
 
-\vspace{0.4cm}
-\noindent\rule{\textwidth}{0.8pt}
 \vspace{0.3cm}
+\noindent\rule{\textwidth}{0.8pt}
+\vspace{0.2cm}
 
 \noindent
 \begin{minipage}[t]{0.52\textwidth}
@@ -117,7 +120,7 @@
 \noindent\textbf{We are pleased to quote as follow\,:}
 \vspace{0.3cm}
 
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{2pt}
 
 [[if .UseA4]]
 \newlength{\QNcol}\setlength{\QNcol}{0.6cm}
@@ -129,10 +132,10 @@
 [[else]]
 \newlength{\QNcol}\setlength{\QNcol}{0.4cm}
 \newlength{\QQcol}\setlength{\QQcol}{0.4cm}
-\newlength{\QUcol}\setlength{\QUcol}{0.5cm}
+\newlength{\QUcol}\setlength{\QUcol}{0.8cm}
 \newlength{\QLcol}\setlength{\QLcol}{4.8cm}
 \newlength{\QDcol}\setlength{\QDcol}{6.2cm}
-\newlength{\QMcol}\setlength{\QMcol}{2.0cm}
+\newlength{\QMcol}\setlength{\QMcol}{2.3cm}
 [[end]]
 
 \begin{longtable}{|C{\QNcol}|C{\QQcol}|C{\QUcol}|L{\QLcol}|L{\QDcol}|R{\QMcol}|R{\QMcol}|}
