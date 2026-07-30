@@ -121,8 +121,16 @@ export default function PurchaseOrderList({
     setUploadTarget({ row, poId })
   }
 
-  function handleUploadSubmit(file: File, details: { poNumber: string; poDate: string }) {
+  function handleUploadSubmit(file: File | null, details: { poNumber: string; poDate: string }) {
     if (!uploadTarget) return
+    // Edit details only when no new file.
+    if (!file) {
+      updateDetails.mutate(
+        { id: uploadTarget.poId, ...details },
+        { onSuccess: () => setUploadTarget(null) },
+      )
+      return
+    }
     uploadFile.mutate(
       { id: uploadTarget.poId, file },
       {
@@ -447,6 +455,7 @@ export default function PurchaseOrderList({
       {uploadTarget && (
         <UploadPoModal
           row={uploadTarget.row}
+          hasExistingFile={Boolean(uploadTarget.row.objectKey && uploadTarget.row.fileName)}
           onClose={() => setUploadTarget(null)}
           onSubmit={handleUploadSubmit}
         />

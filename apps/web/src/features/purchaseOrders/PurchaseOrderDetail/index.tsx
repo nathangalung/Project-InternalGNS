@@ -243,8 +243,13 @@ export default function PurchaseOrderDetail({
     )
   }
 
-  function handleUploadSubmit(file: File, details: { poNumber: string; poDate: string }) {
+  function handleUploadSubmit(file: File | null, details: { poNumber: string; poDate: string }) {
     if (!po) return
+    // Edit details only when no new file.
+    if (!file) {
+      updateDetails.mutate({ id: po.id, ...details }, { onSuccess: () => setShowUpload(false) })
+      return
+    }
     uploadFile.mutate(
       { id: po.id, file },
       {
@@ -343,6 +348,7 @@ export default function PurchaseOrderDetail({
       {showUpload && (
         <UploadPoModal
           row={uploadRow}
+          hasExistingFile={Boolean(po?.objectKey && po?.fileName)}
           onClose={() => setShowUpload(false)}
           onSubmit={handleUploadSubmit}
         />

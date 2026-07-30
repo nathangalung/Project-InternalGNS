@@ -3,8 +3,9 @@ import type { PoRow } from "./types"
 
 interface UploadPoModalProps {
   row: PoRow
+  hasExistingFile?: boolean
   onClose: () => void
-  onSubmit: (file: File, details: { poNumber: string; poDate: string }) => void
+  onSubmit: (file: File | null, details: { poNumber: string; poDate: string }) => void
 }
 
 const overlayStyle: CSSProperties = {
@@ -29,7 +30,12 @@ const modalStyle: CSSProperties = {
   flexDirection: "column",
 }
 
-export default function UploadPoModal({ row, onClose, onSubmit }: UploadPoModalProps) {
+export default function UploadPoModal({
+  row,
+  hasExistingFile = false,
+  onClose,
+  onSubmit,
+}: UploadPoModalProps) {
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState<string>("")
   const [poNumber, setPoNumber] = useState(row.poNumber)
@@ -65,8 +71,13 @@ export default function UploadPoModal({ row, onClose, onSubmit }: UploadPoModalP
     setFile(f)
   }
 
+  const canSubmit = (hasExistingFile || file !== null) && poNumber.trim() !== "" && poDate !== ""
+
   function handleSubmit() {
-    if (!file) return
+    if (!hasExistingFile && !file) {
+      setError("Berkas PO wajib diunggah.")
+      return
+    }
     if (!poNumber.trim()) {
       setError("Nomor PO wajib diisi.")
       return
@@ -101,7 +112,7 @@ export default function UploadPoModal({ row, onClose, onSubmit }: UploadPoModalP
                 color: "#191C1E",
               }}
             >
-              Upload Berkas Purchase Order
+              {hasExistingFile ? "Ubah Detail Purchase Order" : "Upload Berkas Purchase Order"}
             </h3>
             <p
               style={{
@@ -254,6 +265,7 @@ export default function UploadPoModal({ row, onClose, onSubmit }: UploadPoModalP
               </div>
               <div style={{ marginTop: "4px", fontSize: "12px", color: "#64748B" }}>
                 PDF, DOC, JPG, PNG • maks 10 MB
+                {hasExistingFile ? " • opsional, ganti berkas" : ""}
               </div>
             </div>
           </button>
@@ -362,14 +374,14 @@ export default function UploadPoModal({ row, onClose, onSubmit }: UploadPoModalP
             type="button"
             className="ca-btn-submit"
             onClick={handleSubmit}
-            disabled={!file || !poNumber.trim() || !poDate}
+            disabled={!canSubmit}
             style={{
-              opacity: file && poNumber.trim() && poDate ? 1 : 0.5,
-              cursor: file && poNumber.trim() && poDate ? "pointer" : "default",
-              background: file && poNumber.trim() && poDate ? undefined : "#CBD5E1",
+              opacity: canSubmit ? 1 : 0.5,
+              cursor: canSubmit ? "pointer" : "default",
+              background: canSubmit ? undefined : "#CBD5E1",
             }}
           >
-            Upload
+            {hasExistingFile ? "Simpan" : "Upload"}
           </button>
         </div>
       </div>
