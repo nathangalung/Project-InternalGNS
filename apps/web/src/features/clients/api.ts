@@ -120,6 +120,13 @@ export async function updateContact(
   })
 }
 
+export async function deleteContact(companyId: number, contactId: number): Promise<void> {
+  await apiRequest<void>({
+    path: `/clients/${companyId}/contacts/${contactId}`,
+    method: "DELETE",
+  })
+}
+
 export async function presignLogoUpload(id: number, fileName: string): Promise<PresignUpload> {
   const qs = new URLSearchParams({ fileName }).toString()
   return apiRequest<PresignUpload>({ path: `/clients/${id}/logo/upload-url?${qs}` })

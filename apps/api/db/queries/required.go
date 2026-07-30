@@ -16,6 +16,7 @@ var RequiredKeys = []string{
 	"auth.refresh_revoke_user",
 	"clients.create",
 	"clients.create_contact",
+	"clients.deactivate_contact",
 	"clients.get_by_id",
 	"clients.list_base",
 	"clients.list_contacts",

@@ -253,6 +253,29 @@ func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, c)
 }
 
+// DeleteContact soft-deletes a contact.
+func (h *Handler) DeleteContact(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	cid, err := strconv.ParseInt(chi.URLParam(r, "contactId"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid contact id"))
+		return
+	}
+	if err := h.repo.DeactivateContact(r.Context(), id, cid, deps.CurrentUserID(r.Context())); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			httperr.Render(w, httperr.NotFound("contact not found"))
+			return
+		}
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // PresignLogoUpload handles GET /clients/{id}/logo/upload-url?fileName=...
 func (h *Handler) PresignLogoUpload(w http.ResponseWriter, r *http.Request) {
 	if h.storage == nil {

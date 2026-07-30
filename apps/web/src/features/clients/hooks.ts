@@ -103,6 +103,19 @@ export function useCreateContact() {
   })
 }
 
+export function useDeleteContact() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ companyId, contactId }: { companyId: number; contactId: number }) =>
+      clientsApi.deleteContact(companyId, contactId),
+    onSuccess: (_, { companyId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) })
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.all })
+    },
+    onError: (err) => toast.error(errorMessage(err, "Gagal menghapus kontak.")),
+  })
+}
+
 export function useUploadClientLogo() {
   const qc = useQueryClient()
   return useMutation({

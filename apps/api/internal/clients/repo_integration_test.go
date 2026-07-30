@@ -153,6 +153,41 @@ func TestRepo_ListContacts(t *testing.T) {
 	assert.NotEmpty(t, rows)
 }
 
+func TestRepo_DeactivateContact(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := clients.NewRepo(tx, testutil.Store(t))
+
+	c, err := repo.CreateContact(ctx, seedCompanyID,
+		clients.CreateContactRequest{Name: "To Remove", CountryCode: "IDN"}, seedUserID)
+	require.NoError(t, err)
+
+	require.NoError(t, repo.DeactivateContact(ctx, seedCompanyID, c.ID, seedUserID))
+
+	// Gone from the active list.
+	rows, err := repo.ListContacts(ctx, seedCompanyID)
+	require.NoError(t, err)
+	for _, row := range rows {
+		assert.NotEqual(t, c.ID, row.ID)
+	}
+
+	// Second removal reports not found.
+	err = repo.DeactivateContact(ctx, seedCompanyID, c.ID, seedUserID)
+	assert.ErrorIs(t, err, clients.ErrNotFound)
+}
+
+func TestRepo_DeactivateContact_WrongCompany(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := clients.NewRepo(tx, testutil.Store(t))
+
+	c, err := repo.CreateContact(ctx, seedCompanyID,
+		clients.CreateContactRequest{Name: "Other Company", CountryCode: "IDN"}, seedUserID)
+	require.NoError(t, err)
+
+	// Wrong company cannot remove it.
+	err = repo.DeactivateContact(ctx, seedCompanyID+999999, c.ID, seedUserID)
+	assert.ErrorIs(t, err, clients.ErrNotFound)
+}
+
 func TestRepo_CreateContact(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := clients.NewRepo(tx, testutil.Store(t))

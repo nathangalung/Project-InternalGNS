@@ -145,6 +145,11 @@ UPDATE company_contacts
 RETURNING id, company_id, name, email, phone, title, country_code,
           is_active, created_at, updated_at;
 
+-- name: clients.deactivate_contact
+UPDATE company_contacts
+   SET is_active = FALSE, updated_by = $3
+ WHERE id = $2 AND company_id = $1 AND is_active = TRUE;
+
 
 -- name: clients.summary
 SELECT

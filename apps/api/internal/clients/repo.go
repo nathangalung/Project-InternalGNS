@@ -212,3 +212,15 @@ func (r *Repo) UpdateContact(ctx context.Context, companyID, contactID int64, re
 	}
 	return c, err
 }
+
+// DeactivateContact soft-deletes a contact.
+func (r *Repo) DeactivateContact(ctx context.Context, companyID, contactID, userID int64) error {
+	tag, err := r.db.Exec(ctx, r.store.Get("clients.deactivate_contact"), companyID, contactID, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}

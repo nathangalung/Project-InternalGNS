@@ -8,6 +8,7 @@ import {
   useClientContacts,
   useClientLogoDownloadUrl,
   useCreateContact,
+  useDeleteContact,
   useUpdateClient,
   useUpdateContact,
   useUploadClientLogo,
@@ -106,6 +107,12 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
   const { data: contactList = [] } = useClientContacts(client.id)
   const createContact = useCreateContact()
   const updateContact = useUpdateContact()
+  const deleteContact = useDeleteContact()
+
+  const handleRemoveContact = (contactId: number) => {
+    if (!window.confirm("Hapus narahubung ini?")) return
+    deleteContact.mutate({ companyId: client.id, contactId })
+  }
 
   useEffect(() => {
     const path = logoDownload?.downloadUrl
@@ -1077,24 +1084,42 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                           </div>
                         )}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => openEditContact(c)}
-                        style={{
-                          padding: "6px 12px",
-                          background: "transparent",
-                          border: "1.5px solid #630ED4",
-                          borderRadius: "6px",
-                          cursor: "pointer",
-                          color: "#630ED4",
-                          fontFamily: "'Inter', sans-serif",
-                          fontWeight: 600,
-                          fontSize: "12px",
-                          flexShrink: 0,
-                        }}
-                      >
-                        Ubah
-                      </button>
+                      <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          onClick={() => openEditContact(c)}
+                          style={{
+                            padding: "6px 12px",
+                            background: "transparent",
+                            border: "1.5px solid #630ED4",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            color: "#630ED4",
+                            fontFamily: "'Inter', sans-serif",
+                            fontWeight: 600,
+                            fontSize: "12px",
+                          }}
+                        >
+                          Ubah
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveContact(c.id)}
+                          style={{
+                            padding: "6px 12px",
+                            background: "transparent",
+                            border: "1.5px solid #DC2626",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            color: "#DC2626",
+                            fontFamily: "'Inter', sans-serif",
+                            fontWeight: 600,
+                            fontSize: "12px",
+                          }}
+                        >
+                          Hapus
+                        </button>
+                      </div>
                     </div>
                   ),
                 )}
