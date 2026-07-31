@@ -44,15 +44,9 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
-    # Public S3 host (port 9000) via Traefik so browsers can reach presigned URLs.
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=dokploy-network"
-      - "traefik.http.routers.internalgns-minio.rule=Host(`${MINIO_HOST}`)"
-      - "traefik.http.routers.internalgns-minio.entrypoints=websecure"
-      - "traefik.http.routers.internalgns-minio.tls.certresolver=letsencrypt"
-      - "traefik.http.services.internalgns-minio.loadbalancer.server.port=9000"
-    networks: [internal, dokploy-network]
+    # No Traefik router: MinIO stays on the internal network only. The browser
+    # never reaches it directly; asset bytes are proxied through the API.
+    networks: [internal]
 
   api:
     image: ghcr.io/${GH_OWNER}/internalgns-api:${TAG:-latest}
@@ -73,9 +67,6 @@ services:
       MINIO_ENDPOINT: gns-minio:9000
       MINIO_ACCESS_KEY: ${MINIO_USER}
       MINIO_SECRET_KEY: ${MINIO_PASSWORD}
-      # Public host used only to sign presigned URLs the browser can reach.
-      MINIO_PUBLIC_ENDPOINT: ${MINIO_HOST}
-      MINIO_PUBLIC_USE_SSL: "true"
       CORETAX_SELLER_TIN: ${CORETAX_SELLER_TIN}
       CORETAX_SELLER_IDTKU: ${CORETAX_SELLER_IDTKU}
     depends_on:
