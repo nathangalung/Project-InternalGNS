@@ -87,7 +87,9 @@ func TestFromDBErr_SQLSTATE(t *testing.T) {
 func TestFromDBErr_Fallback(t *testing.T) {
 	got := FromDBErr(errors.New("plain"))
 	assert.Equal(t, http.StatusInternalServerError, got.Status)
-	assert.Equal(t, "plain", got.Detail)
+	// Raw error text must never reach the client.
+	assert.Equal(t, "internal server error", got.Detail)
+	assert.NotContains(t, got.Detail, "plain")
 }
 
 func TestFromDBErr_UnknownPgCode(t *testing.T) {

@@ -268,7 +268,7 @@ func parseIfMatch(raw string) (*int32, error) {
 	}
 	n, err := strconv.ParseInt(raw, 10, 32)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("invalid If-Match header")
 	}
 	v := int32(n)
 	return &v, nil

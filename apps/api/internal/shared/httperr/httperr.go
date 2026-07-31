@@ -3,6 +3,7 @@ package httperr
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgconn"
@@ -55,25 +56,31 @@ func ServiceUnavailable(detail string) Error {
 	return Error{Type: "about:blank", Title: "Service Unavailable", Status: http.StatusServiceUnavailable, Detail: detail}
 }
 
-// FromDBErr maps pg SQLSTATE to HTTP.
+// FromDBErr maps pg SQLSTATE to HTTP with a curated, non-leaking message.
 func FromDBErr(err error) Error {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		switch pgErr.Code {
 		case "P0001":
+			// Business-rule message raised intentionally by plpgsql; safe to surface.
 			return Unprocessable(map[string]string{"db": pgErr.Message})
 		case "23503":
-			return NotFound(pgErr.Message)
+			return NotFound("referenced record does not exist")
 		case "23505":
-			return Conflict(pgErr.Message)
+			return Conflict("a record with these values already exists")
 		case "23502", "23514", "22P02", "22003":
-			return Unprocessable(map[string]string{"db": pgErr.Message})
+			return Unprocessable(map[string]string{"field": "invalid value"})
 		}
 	}
-	return Internal(err.Error())
+	// Never surface raw internal error text to the client; RenderDBErr logs it.
+	return Internal("internal server error")
 }
 
-// RenderDBErr writes pg-aware error response.
+// RenderDBErr writes a pg-aware response and logs the real error on a 500.
 func RenderDBErr(w http.ResponseWriter, err error) {
-	Render(w, FromDBErr(err))
+	e := FromDBErr(err)
+	if e.Status >= http.StatusInternalServerError {
+		slog.Error("unhandled server error", "error", err.Error())
+	}
+	Render(w, e)
 }
