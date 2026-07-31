@@ -23,9 +23,17 @@ export const ui = {
     "w-full rounded-lg border-[1.5px] border-transparent bg-dark-100 px-4 py-2.5 text-sm text-dark-900 outline-none transition placeholder:text-dark-400 focus:border-primary-600 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]",
   label: "mb-2 block text-overline font-semibold uppercase tracking-[0.06em] text-dark-600",
 
-  // Table
-  th: "px-4 py-3 text-center text-overline font-bold uppercase tracking-[0.05em] text-dark-500",
-  td: "px-4 py-4 text-center text-sm text-dark-700",
+  // Table (values kept faithful to the legacy .tbl-* classes)
+  tableWrap: "overflow-x-auto rounded-md bg-white",
+  theadRow: "bg-dark-100",
+  th: "px-5 py-4 text-left align-middle text-overline font-bold uppercase tracking-[0.05em] whitespace-nowrap text-[#4A4455]",
+  thCenter:
+    "px-5 py-4 text-center align-middle text-overline font-bold uppercase tracking-[0.05em] whitespace-nowrap text-[#4A4455]",
+  tr: "border-t border-dark-200 transition hover:bg-primary-50",
+  td: "p-5 align-middle text-sm text-[#4A4455]",
+  tdCenter: "p-5 text-center align-middle text-sm text-[#4A4455]",
+  searchInput:
+    "w-full rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-[13px] pl-12 pr-4 text-sm text-dark-900 outline-none transition placeholder:text-dark-500 focus:border-primary-300",
 }
 
 // Small pill toggle used for chart metric tabs and similar.

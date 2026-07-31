@@ -6,6 +6,7 @@ import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
 import StatusBadge from "@/components/shared/StatusBadge"
+import SummaryCard from "@/components/shared/SummaryCard"
 import ClientAdd from "@/features/clients/ClientAdd"
 import ClientFilter, { type ClientFilterValues } from "@/features/clients/ClientFilter"
 import { useClientSummary, useClients } from "@/features/clients/hooks"
@@ -14,6 +15,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { formatNumber, formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
+import { ui } from "@/lib/ui"
 import type { ClientRow } from "@/types/api"
 
 interface ClientListProps {
@@ -93,8 +95,8 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
             <h1 className="page-title">Daftar Klien</h1>
             <div className="page-actions">
               <button
-                className="btn-admin-primary"
-                style={{ width: "200px", justifyContent: "center" }}
+                className={`${ui.btnPrimary} w-[200px]`}
+                type="button"
                 onClick={() => setShowAdd(true)}
               >
                 <svg
@@ -102,7 +104,7 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
                   height="14"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="#fff"
+                  stroke="currentColor"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                 >
@@ -114,42 +116,18 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
             </div>
           </div>
 
-          <div className="summary-cards" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
-            <div className="card-violet">
-              <div className="card-label">Total Klien</div>
-              <div className="card-value">{formatNumber(kpis.total)}</div>
-            </div>
-            <div className="card-blue">
-              <div
-                className="card-overlay"
-                style={{
-                  background: "linear-gradient(82.48deg, rgba(63,86,255,.5) 6.42%, #DBEAFE 93.58%)",
-                  opacity: 0.5,
-                }}
-              />
-              <div className="card-label">Pertumbuhan (YoY)</div>
-              <div className="card-value">{kpis.yoy}</div>
-            </div>
-            <div className="card-green">
-              <div className="card-glow" style={{ background: "rgba(52,211,153,.2)" }} />
-              <div className="card-label">Baru bulan ini</div>
-              <div className="card-value">{formatNumber(kpis.newThisMonth)}</div>
-            </div>
-            <div className="card-gold">
-              <div
-                className="card-overlay"
-                style={{
-                  background:
-                    "linear-gradient(82.48deg, rgba(217,119,6,.5) 6.42%, rgba(245,158,11,.1) 93.58%)",
-                  opacity: 0.5,
-                }}
-              />
-              <div className="card-label">Retensi klien</div>
-              <div className="card-value">{kpis.retention}</div>
-            </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <SummaryCard variant="violet" label="Total Klien" value={formatNumber(kpis.total)} />
+            <SummaryCard variant="blue" label="Pertumbuhan (YoY)" value={kpis.yoy} />
+            <SummaryCard
+              variant="green"
+              label="Baru bulan ini"
+              value={formatNumber(kpis.newThisMonth)}
+            />
+            <SummaryCard variant="gold" label="Retensi klien" value={kpis.retention} />
           </div>
 
-          <div className="search-row">
+          <div className="flex items-center gap-4 pt-2">
             <SearchInput
               value={search}
               onChange={(v) => {
@@ -161,26 +139,26 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
             <FilterButton onClick={() => setShowFilter(true)} />
           </div>
 
-          <div className="tbl-container">
-            <table className="tbl">
+          <div className={ui.tableWrap}>
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="tbl-header-row">
-                  <th className="tbl-th tbl-th--center" style={{ width: 240 }}>
+                <tr className={ui.theadRow}>
+                  <th className={ui.thCenter} style={{ width: 240 }}>
                     Nama Klien
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
+                  <th className={ui.thCenter} style={{ width: 160 }}>
                     Negara
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
+                  <th className={ui.thCenter} style={{ width: 140 }}>
                     Status
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 180 }}>
+                  <th className={ui.thCenter} style={{ width: 180 }}>
                     Total Pembelian
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
+                  <th className={ui.thCenter} style={{ width: 160 }}>
                     Jumlah Pembelian
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 80 }}>
+                  <th className={ui.thCenter} style={{ width: 80 }}>
                     Aksi
                   </th>
                 </tr>
@@ -188,22 +166,14 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
               <tbody>
                 {isLoading && (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={6} className="py-10 text-center text-sm text-dark-500">
                       Memuat data…
                     </td>
                   </tr>
                 )}
                 {!isLoading && currentRows.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={6} className="py-10 text-center text-sm text-dark-500">
                       Tidak ada klien.
                     </td>
                   </tr>
@@ -212,62 +182,34 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
                   currentRows.map((c: ClientRow) => {
                     const status = c.isActive ? BADGE_AKTIF : BADGE_NONAKTIF
                     return (
-                      <tr key={c.id} className="tbl-row">
-                        <td className="tbl-td">
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "16px",
-                              paddingLeft: "12px",
-                            }}
-                          >
+                      <tr key={c.id} className={ui.tr}>
+                        <td className={ui.td}>
+                          <div className="flex items-center gap-4 pl-3">
                             <EntityLogo name={c.name} />
-                            <span
-                              style={{
-                                fontFamily: "'Inter', sans-serif",
-                                fontWeight: 700,
-                                fontSize: "14px",
-                                lineHeight: "1.35",
-                                color: "#191C1E",
-                                flex: 1,
-                                minWidth: 0,
-                                wordBreak: "break-word",
-                                whiteSpace: "normal",
-                              }}
-                            >
+                            <span className="min-w-0 flex-1 break-words text-sm font-bold leading-[1.35] text-[#191C1E]">
                               {c.name}
                             </span>
                           </div>
                         </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ color: "#191C1E", fontWeight: 500, fontSize: "14px" }}
-                        >
+                        <td className={`${ui.tdCenter} text-sm font-medium text-[#191C1E]`}>
                           {countryOf(c.countryCode)}
                         </td>
-                        <td className="tbl-td tbl-td--center">
+                        <td className={ui.tdCenter}>
                           <StatusBadge bg={status.bg} color={status.color} minWidth={100}>
                             {status.label}
                           </StatusBadge>
                         </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ fontWeight: 700, color: "#191C1E" }}
-                        >
+                        <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
                           {formatRupiah(c.totalPurchase, "-")}
                         </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ fontWeight: 700, color: "#191C1E" }}
-                        >
+                        <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
                           {c.quotationCount}
                         </td>
-                        <td className="tbl-td tbl-td--center">
+                        <td className={ui.tdCenter}>
                           <button
-                            className="action-btn"
+                            type="button"
+                            className="inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
                             title="Lihat detail"
-                            style={{ color: "#7C3AED" }}
                             onClick={() => onViewDetail?.(c.id)}
                           >
                             <EyeIcon />
