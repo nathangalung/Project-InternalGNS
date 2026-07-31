@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import Modal from "@/components/shared/Modal"
 import {
   useItemPriceHistory,
   useItemSearchAdvanced,
@@ -8,6 +9,7 @@ import {
 import { useUnits } from "@/features/units/hooks"
 import { useCreateVendor } from "@/features/vendors/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import { ui } from "@/lib/ui"
 import ProductCreateModal from "../ProductCreateModal"
 import {
   type CatalogItem,
@@ -304,115 +306,94 @@ export default function ProductAdd({
 
   return (
     <>
-      <div
-        className={`ca-overlay ${showProductNew || showVendorNew ? "hidden" : ""}`}
-        onClick={handleCancel}
-      >
-        <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
-          <div className="ca-header">
-            <h2 className="ca-title">
-              {initialData ? "Edit Produk Quotation" : "Tambah Produk ke Quotation"}
-            </h2>
-            <button className="ca-close-btn" onClick={handleCancel} title="Tutup">
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 14 14"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
+      <div className={showProductNew || showVendorNew ? "hidden" : ""}>
+        <Modal
+          title={initialData ? "Edit Produk Quotation" : "Tambah Produk ke Quotation"}
+          onClose={handleCancel}
+          footer={
+            <>
+              {isVendorFilled && !isHargaJualValid && (
+                <span className="flex-1 text-[12px] text-error">Harga jual harus lebih dari 0</span>
+              )}
+              <button type="button" className={ui.modalCancel} onClick={handleCancel}>
+                Batal
+              </button>
+              <button
+                type="button"
+                className={ui.modalSubmit}
+                onClick={handlePreSubmit}
+                disabled={!canSubmit}
               >
-                <line x1="1" y1="1" x2="13" y2="13" />
-                <line x1="13" y1="1" x2="1" y2="13" />
-              </svg>
-            </button>
-          </div>
+                {initialData ? "Simpan Perubahan" : "Simpan Data"}
+              </button>
+            </>
+          }
+        >
+          <IdentityCard
+            form={form}
+            onChange={handleChange}
+            productCatalog={productCatalog}
+            productMatches={productMatches}
+            requestMatches={requestMatches}
+            activeProductLabel={activeProductLabel}
+            productOpen={productOpen}
+            productRequestOpen={productRequestOpen}
+            satuanOpen={satuanOpen}
+            satuanOptions={satuanOptions}
+            setOpenDropdown={setOpenDropdown}
+            closeIfMatch={closeIfMatch}
+            toggleDropdown={toggleDropdown}
+            isProductFilled={isProductFilled}
+            isSatuanFilled={isSatuanFilled}
+            onAddProductNew={() => {
+              setOpenDropdown(null)
+              setShowProductNew(true)
+            }}
+            onPickProduct={pickProduct}
+            onPickRequestSuggestion={(item) => {
+              const label = formatKodeNama(item.kode, item.nama)
+              setForm((prev) => ({
+                ...prev,
+                requestedKodeImpaNama: label,
+                requestedItemId: item.id,
+              }))
+            }}
+            onCopyRequestToOffer={() => {
+              setForm((prev) => ({
+                ...prev,
+                kodeImpaNama: prev.requestedKodeImpaNama,
+                itemId: prev.requestedItemId,
+                vendorId: undefined,
+                vendorProductId: undefined,
+              }))
+              setPickedItemId(null)
+            }}
+          />
 
-          <div className="ca-body">
-            <IdentityCard
-              form={form}
-              onChange={handleChange}
-              productCatalog={productCatalog}
-              productMatches={productMatches}
-              requestMatches={requestMatches}
-              activeProductLabel={activeProductLabel}
-              productOpen={productOpen}
-              productRequestOpen={productRequestOpen}
-              satuanOpen={satuanOpen}
-              satuanOptions={satuanOptions}
-              setOpenDropdown={setOpenDropdown}
-              closeIfMatch={closeIfMatch}
-              toggleDropdown={toggleDropdown}
-              isProductFilled={isProductFilled}
-              isSatuanFilled={isSatuanFilled}
-              onAddProductNew={() => {
-                setOpenDropdown(null)
-                setShowProductNew(true)
-              }}
-              onPickProduct={pickProduct}
-              onPickRequestSuggestion={(item) => {
-                const label = formatKodeNama(item.kode, item.nama)
-                setForm((prev) => ({
-                  ...prev,
-                  requestedKodeImpaNama: label,
-                  requestedItemId: item.id,
-                }))
-              }}
-              onCopyRequestToOffer={() => {
-                setForm((prev) => ({
-                  ...prev,
-                  kodeImpaNama: prev.requestedKodeImpaNama,
-                  itemId: prev.requestedItemId,
-                  vendorId: undefined,
-                  vendorProductId: undefined,
-                }))
-                setPickedItemId(null)
-              }}
-            />
-
-            <VendorPriceCard
-              form={form}
-              onChange={handleChange}
-              onPickVendor={pickVendor}
-              onPickHistoris={pickHistoris}
-              vendorMatches={vendorMatches}
-              exactVendor={exactVendor}
-              vendorOpen={vendorOpen}
-              historisOpen={historisOpen}
-              historisOptions={historisOptions}
-              setOpenDropdown={setOpenDropdown}
-              closeIfMatch={closeIfMatch}
-              toggleDropdown={toggleDropdown}
-              isJumlahFilled={isJumlahFilled}
-              isVendorFilled={isVendorFilled}
-              profit={profit}
-              profitPct={profitPct}
-              onAddVendorNew={() => {
-                setOpenDropdown(null)
-                setNewVendorForm({ nama: "", harga: "" })
-                setShowVendorNew(true)
-              }}
-            />
-          </div>
-
-          <div className="ca-footer">
-            {isVendorFilled && !isHargaJualValid && (
-              <span className="flex-1 text-[12px] text-error">Harga jual harus lebih dari 0</span>
-            )}
-            <button type="button" className="ca-btn-cancel" onClick={handleCancel}>
-              Batal
-            </button>
-            <button
-              type="button"
-              className="ca-btn-submit disabled:cursor-not-allowed disabled:opacity-50"
-              onClick={handlePreSubmit}
-              disabled={!canSubmit}
-            >
-              {initialData ? "Simpan Perubahan" : "Simpan Data"}
-            </button>
-          </div>
-        </div>
+          <VendorPriceCard
+            form={form}
+            onChange={handleChange}
+            onPickVendor={pickVendor}
+            onPickHistoris={pickHistoris}
+            vendorMatches={vendorMatches}
+            exactVendor={exactVendor}
+            vendorOpen={vendorOpen}
+            historisOpen={historisOpen}
+            historisOptions={historisOptions}
+            setOpenDropdown={setOpenDropdown}
+            closeIfMatch={closeIfMatch}
+            toggleDropdown={toggleDropdown}
+            isJumlahFilled={isJumlahFilled}
+            isVendorFilled={isVendorFilled}
+            profit={profit}
+            profitPct={profitPct}
+            onAddVendorNew={() => {
+              setOpenDropdown(null)
+              setNewVendorForm({ nama: "", harga: "" })
+              setShowVendorNew(true)
+            }}
+          />
+        </Modal>
       </div>
 
       <ProductCreateModal

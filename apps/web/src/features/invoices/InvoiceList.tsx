@@ -190,7 +190,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
         <div className="page-content" style={{ gap: "29px" }}>
           <div className="page-header">
             <h1 className="page-title">Daftar Invoice</h1>
-            <div className="page-actions flex gap-2.5">
+            <div className="flex items-center gap-2.5 max-sm:w-full max-sm:flex-wrap">
               <button
                 type="button"
                 className={`${ui.btnOutline} w-[160px]`}

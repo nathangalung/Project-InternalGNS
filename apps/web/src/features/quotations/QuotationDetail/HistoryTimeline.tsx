@@ -1,3 +1,5 @@
+import { qd, qe, timelineAction, timelineDate, timelineDot } from "../wizard-styles"
+
 interface HistoryEntry {
   date: string
   action: string
@@ -11,20 +13,16 @@ interface HistoryTimelineProps {
 export default function HistoryTimeline({ history }: HistoryTimelineProps) {
   return (
     <div>
-      <h2 className="qe-section-title mb-3">Riwayat Penawaran</h2>
-      <div className="qd-history-card">
-        <div className="qd-timeline">
+      <h2 className={`${qe.sectionTitle} mb-3`}>Riwayat Penawaran</h2>
+      <div className={qd.historyCard}>
+        <div className={qd.timeline}>
           {history.map((item, i) => {
             const isLast = i === history.length - 1
             return (
-              <div key={i} className="qd-timeline-item">
-                <div className={`qd-timeline-dot${isLast ? " qd-timeline-dot--active" : ""}`} />
-                <span className={`qd-timeline-date${isLast ? " qd-timeline-date--active" : ""}`}>
-                  {item.date}
-                </span>
-                <span className={`qd-timeline-action${isLast ? " qd-timeline-action--bold" : ""}`}>
-                  {item.action}
-                </span>
+              <div key={i} className={qd.timelineItem}>
+                <div className={timelineDot(isLast)} />
+                <span className={timelineDate(isLast)}>{item.date}</span>
+                <span className={timelineAction(isLast)}>{item.action}</span>
               </div>
             )
           })}

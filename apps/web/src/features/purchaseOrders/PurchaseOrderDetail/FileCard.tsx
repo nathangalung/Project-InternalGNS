@@ -38,7 +38,9 @@ export default function FileCard({
 
   return (
     <div>
-      <h2 className="qe-section-title mb-3">Berkas Purchase Order</h2>
+      <h2 className="mb-3 text-base font-bold leading-6 tracking-tight text-dark-900">
+        Berkas Purchase Order
+      </h2>
       <div className="flex items-center gap-4 rounded-lg border border-[rgba(204,195,216,0.2)] bg-white px-6 py-5">
         <div
           className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${

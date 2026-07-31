@@ -15,15 +15,17 @@ export default function StatusBar({ status, isOpen, onToggle, onChange, onSave }
   // Paid is terminal: show the badge but offer no manual transitions.
   const locked = !EDITABLE_STATUS_ORDER.includes(status)
   return (
-    <div className="qd-status-bar">
+    <div className={ui.statusBar}>
       <div>
-        <div className="qd-status-bar-title">Status Invoice</div>
-        <div className="qd-status-bar-desc">Ubah status invoice sesuai dengan kondisi aktual.</div>
+        <div className="text-sm font-bold text-dark-900">Status Invoice</div>
+        <div className="mt-0.5 text-caption text-[#4A4455]">
+          Ubah status invoice sesuai dengan kondisi aktual.
+        </div>
       </div>
-      <div className="qd-status-bar-actions">
+      <div className="flex items-center gap-3">
         <div className="relative">
           <button
-            className="qd-status-trigger"
+            className={`${ui.statusTrigger} whitespace-nowrap`}
             style={{
               background: badge.bg,
               color: badge.color,
@@ -48,13 +50,17 @@ export default function StatusBar({ status, isOpen, onToggle, onChange, onSave }
             )}
           </button>
           {isOpen && !locked && (
-            <div className="qd-status-dropdown">
+            <div className={`${ui.statusDropdown} z-[100]`}>
               {EDITABLE_STATUS_ORDER.map((s) => {
                 const isActive = s === status
                 return (
-                  <button key={s} className="qd-status-option" onClick={() => onChange(s)}>
+                  <button key={s} className={ui.statusOption} onClick={() => onChange(s)}>
                     <span
-                      className={isActive ? "qd-status-option--active" : "qd-status-option--label"}
+                      className={
+                        isActive
+                          ? "text-caption font-semibold text-primary-700"
+                          : "text-caption font-normal text-[#4A4455]"
+                      }
                     >
                       {INVOICE_LABEL[s]}
                     </span>

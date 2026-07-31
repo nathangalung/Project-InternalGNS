@@ -7,6 +7,8 @@ import {
   presetToIsoRange,
 } from "@/components/shared/DateRangeField"
 import { chipStyle, presetChipStyle } from "@/components/shared/filter-styles"
+import Modal from "@/components/shared/Modal"
+import { ui } from "@/lib/ui"
 import { PO_LABEL, PO_STATUS_ORDER } from "./PurchaseOrderDetail/helpers"
 import type { PoStatus } from "./types"
 
@@ -101,118 +103,11 @@ export default function PurchaseOrderFilter({
   }
 
   return (
-    <div className="ca-overlay" onClick={onClose}>
-      <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="ca-header">
-          <h2 className="ca-title">Filter Purchase Order</h2>
-          <button className="ca-close-btn" onClick={onClose} title="Tutup">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <line x1="1" y1="1" x2="13" y2="13" />
-              <line x1="13" y1="1" x2="1" y2="13" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="ca-body">
-          <div className="ca-section">
-            <div className="ca-section-heading">Rentang Tanggal</div>
-            <div className="ca-field">
-              <div className="rgrid-2 grid gap-2">
-                {DATE_PRESETS.map(({ key, label }) => {
-                  const isActive = preset === key
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => handlePresetClick(key)}
-                      style={presetChipStyle(isActive)}
-                    >
-                      {label}
-                      {key === "kustom" ? (
-                        <span className={isActive ? "text-[#630ED4]" : "text-[#9CA3AF]"}>
-                          <IconCalendar />
-                        </span>
-                      ) : isActive ? (
-                        <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
-                          <path
-                            d="M1 5.5L4.5 9L13 1"
-                            stroke="#630ED4"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      ) : null}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="ca-row-2">
-              <DateInput label="Tanggal Mulai" value={startDate} onChange={handleStartChange} />
-              <DateInput label="Tanggal Selesai" value={endDate} onChange={handleEndChange} />
-            </div>
-          </div>
-
-          <div className="ca-section">
-            <div className="ca-section-heading">Status Purchase Order</div>
-            <div className="ca-field">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveStatuses([])}
-                  style={chipStyle(activeStatuses.length === 0)}
-                >
-                  Semua
-                </button>
-                {STATUS_OPTIONS.map(({ value, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => toggleStatus(value)}
-                    style={chipStyle(activeStatuses.includes(value))}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="ca-section">
-            <div className="ca-section-heading">Rentang Total PO</div>
-            <div className="ca-row-2">
-              {[
-                { label: "Min Total", value: minHarga, set: setMinHarga },
-                { label: "Max Total", value: maxHarga, set: setMaxHarga },
-              ].map(({ label, value, set }) => (
-                <div className="ca-field" key={label}>
-                  <label className="ca-label">{label}</label>
-                  <div className="ca-phone-wrapper">
-                    <span className="ca-phone-prefix">IDR</span>
-                    <input
-                      className="ca-phone-input"
-                      type="text"
-                      value={value}
-                      onChange={(e) => set(e.target.value)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="ca-footer justify-between px-6 py-4">
+    <Modal
+      title="Filter Purchase Order"
+      onClose={onClose}
+      footer={
+        <div className="flex w-full items-center justify-between">
           <button
             type="button"
             onClick={handleReset}
@@ -223,24 +118,107 @@ export default function PurchaseOrderFilter({
           >
             Hapus Filter
           </button>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className="ca-btn-cancel px-[18px] py-2 text-[13px]"
-              onClick={onClose}
-            >
+          <div className="flex items-center gap-4">
+            <button type="button" className={ui.modalCancel} onClick={onClose}>
               Batal
             </button>
-            <button
-              type="button"
-              className="ca-btn-submit px-[22px] py-2 text-[13px]"
-              onClick={handleApply}
-            >
+            <button type="button" className={ui.modalSubmit} onClick={handleApply}>
               Terapkan
             </button>
           </div>
         </div>
+      }
+    >
+      <div className={ui.modalSection}>
+        <div className={ui.modalSectionHeading}>Rentang Tanggal</div>
+        <div className={ui.field}>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-2">
+            {DATE_PRESETS.map(({ key, label }) => {
+              const isActive = preset === key
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => handlePresetClick(key)}
+                  style={presetChipStyle(isActive)}
+                >
+                  {label}
+                  {key === "kustom" ? (
+                    <span className={isActive ? "text-[#630ED4]" : "text-[#9CA3AF]"}>
+                      <IconCalendar />
+                    </span>
+                  ) : isActive ? (
+                    <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+                      <path
+                        d="M1 5.5L4.5 9L13 1"
+                        stroke="#630ED4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : null}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className={ui.row2}>
+          <DateInput label="Tanggal Mulai" value={startDate} onChange={handleStartChange} />
+          <DateInput label="Tanggal Selesai" value={endDate} onChange={handleEndChange} />
+        </div>
       </div>
-    </div>
+
+      <div className={ui.modalSection}>
+        <div className={ui.modalSectionHeading}>Status Purchase Order</div>
+        <div className={ui.field}>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveStatuses([])}
+              style={chipStyle(activeStatuses.length === 0)}
+            >
+              Semua
+            </button>
+            {STATUS_OPTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => toggleStatus(value)}
+                style={chipStyle(activeStatuses.includes(value))}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className={ui.modalSection}>
+        <div className={ui.modalSectionHeading}>Rentang Total PO</div>
+        <div className={ui.row2}>
+          {[
+            { label: "Min Total", value: minHarga, set: setMinHarga },
+            { label: "Max Total", value: maxHarga, set: setMaxHarga },
+          ].map(({ label, value, set }) => (
+            <div className={ui.field} key={label}>
+              <label className={ui.fieldLabel}>{label}</label>
+              <div className="flex h-11 overflow-hidden rounded-md border-[1.5px] border-transparent bg-dark-200 transition focus-within:border-primary-600 focus-within:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]">
+                <span className="flex items-center whitespace-nowrap border-r border-dark-300 px-3 text-sm font-medium text-dark-600">
+                  IDR
+                </span>
+                <input
+                  className="flex-1 border-none bg-transparent px-3 text-sm text-dark-900 outline-none placeholder:text-dark-500"
+                  type="text"
+                  value={value}
+                  onChange={(e) => set(e.target.value)}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Modal>
   )
 }

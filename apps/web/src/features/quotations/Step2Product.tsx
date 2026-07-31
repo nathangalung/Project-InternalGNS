@@ -5,6 +5,7 @@ import { getPageNumbers } from "@/lib/pagination"
 import type { ProductItem } from "./QuotationEdit"
 import QuotationReviewCard from "./QuotationReviewCard"
 import { parseProductFile } from "./uploadParser"
+import { qe, qep } from "./wizard-styles"
 
 const pageBtn = "flex h-8 w-8 items-center justify-center rounded-sm text-sm transition"
 const pageBtnIdle = "font-medium text-[#4A4455] hover:bg-dark-100"
@@ -138,13 +139,13 @@ export default function Step2Product({
   const summaryProfit = summarySubTotal - summaryTotalHargaBeli
 
   return (
-    <div className="qe-step-content">
+    <div className={qe.stepContent}>
       {quotationId !== undefined && <QuotationReviewCard quotationId={quotationId} />}
       {/* Header */}
-      <div className="qe-section-header">
+      <div className={qe.sectionHeader}>
         <div>
-          <h2 className="qe-section-title">Pilih Produk &amp; Harga</h2>
-          <p className="qe-section-desc">Tentukan produk dan harga penawaran.</p>
+          <h2 className={qe.sectionTitle}>Pilih Produk &amp; Harga</h2>
+          <p className={qe.sectionDesc}>Tentukan produk dan harga penawaran.</p>
         </div>
         <div className="flex items-center gap-2.5">
           <input
@@ -156,7 +157,7 @@ export default function Step2Product({
           />
           <button
             type="button"
-            className="qe-add-client-btn w-[210px] justify-center disabled:cursor-wait disabled:opacity-60"
+            className={`${qe.addBtn} w-[210px] justify-center disabled:cursor-wait disabled:opacity-60`}
             onClick={() => importFileRef.current?.click()}
             disabled={importing}
           >
@@ -178,7 +179,7 @@ export default function Step2Product({
           </button>
           <button
             type="button"
-            className="qe-add-client-btn w-[210px] justify-center"
+            className={`${qe.addBtn} w-[210px] justify-center`}
             onClick={() => setShowDiscountModal(true)}
           >
             <svg
@@ -197,7 +198,7 @@ export default function Step2Product({
           </button>
           <button
             type="button"
-            className="qe-add-client-btn w-[210px] justify-center"
+            className={`${qe.addBtn} w-[210px] justify-center`}
             onClick={() => {
               setEditingProduct(null)
               setShowProductAdd(true)
@@ -400,13 +401,13 @@ export default function Step2Product({
                 const requestKode = p.requestedKodeImpa || p.kodeImpa
                 const isDifferent = requestNama !== p.nama || requestKode !== p.kodeImpa
                 return (
-                  <div key={p.id} className="qep-card mb-0">
-                    <div className="qep-card-header">
-                      <div className="qep-card-meta">
-                        <span className="qep-card-label">PRODUK {globalIndex}</span>
-                        <span className="qep-card-name">{p.nama}</span>
+                  <div key={p.id} className={`${qep.card} mb-0`}>
+                    <div className={qep.cardHeader}>
+                      <div className={qep.cardMeta}>
+                        <span className={qep.cardLabel}>PRODUK {globalIndex}</span>
+                        <span className={qep.cardName}>{p.nama}</span>
                         {p.kodeImpa && (
-                          <span className="qep-card-code">KODE IMPA: {p.kodeImpa}</span>
+                          <span className={qep.cardCode}>KODE IMPA: {p.kodeImpa}</span>
                         )}
                       </div>
                       <div className="flex items-center gap-3">
@@ -484,39 +485,39 @@ export default function Step2Product({
                         </div>
                       </div>
                     </div>
-                    <div className="qep-card-body">
-                      <div className="qep-col-left">
-                        <div className="qep-field">
-                          <span className="qep-field-label">VENDOR</span>
-                          <div className="qep-field-input">{p.vendor}</div>
+                    <div className={qep.cardBody}>
+                      <div className={qep.col}>
+                        <div className={qep.field}>
+                          <span className={qep.fieldLabel}>VENDOR</span>
+                          <div className={qep.fieldInput}>{p.vendor}</div>
                         </div>
-                        <div className="qep-field">
-                          <span className="qep-field-label">JUMLAH</span>
-                          <div className="qep-field-input">{p.jumlah}</div>
+                        <div className={qep.field}>
+                          <span className={qep.fieldLabel}>JUMLAH</span>
+                          <div className={qep.fieldInput}>{p.jumlah}</div>
                         </div>
-                        <div className="qep-field">
-                          <span className="qep-field-label">SATUAN</span>
-                          <div className="qep-field-input">{p.satuan}</div>
+                        <div className={qep.field}>
+                          <span className={qep.fieldLabel}>SATUAN</span>
+                          <div className={qep.fieldInput}>{p.satuan}</div>
                         </div>
                       </div>
-                      <div className="qep-col-right">
-                        <div className="qep-field">
-                          <span className="qep-field-label">HARGA BELI SATUAN</span>
-                          <div className="qep-field-input">
-                            <span className="qep-rp">Rp</span> {formatRp(p.hargaBeli)}
+                      <div className={qep.col}>
+                        <div className={qep.field}>
+                          <span className={qep.fieldLabel}>HARGA BELI SATUAN</span>
+                          <div className={qep.fieldInput}>
+                            <span className={qep.rp}>Rp</span> {formatRp(p.hargaBeli)}
                           </div>
                         </div>
-                        <div className="qep-field">
-                          <span className="qep-field-label">HARGA JUAL SATUAN</span>
-                          <div className="qep-field-input">
-                            <span className="qep-rp">Rp</span> {formatRp(p.hargaJual)}
+                        <div className={qep.field}>
+                          <span className={qep.fieldLabel}>HARGA JUAL SATUAN</span>
+                          <div className={qep.fieldInput}>
+                            <span className={qep.rp}>Rp</span> {formatRp(p.hargaJual)}
                           </div>
                         </div>
-                        <div className="qep-field">
-                          <span className="qep-field-label">PROFIT</span>
-                          <div className="qep-field-input">
-                            <span className="qep-rp">Rp</span> {formatRp(profit)}{" "}
-                            <span className="qep-profit-pct">({profitPct}%)</span>
+                        <div className={qep.field}>
+                          <span className={qep.fieldLabel}>PROFIT</span>
+                          <div className={qep.fieldInput}>
+                            <span className={qep.rp}>Rp</span> {formatRp(profit)}{" "}
+                            <span className={qep.profitPct}>({profitPct}%)</span>
                           </div>
                         </div>
                       </div>

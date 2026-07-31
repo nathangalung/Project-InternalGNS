@@ -17,11 +17,16 @@ import Step1Client, { type Client } from "./Step1Client"
 import Step2Product from "./Step2Product"
 import Step3Shipping from "./Step3Shipping"
 import Step4Summary from "./Step4Summary"
+import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
 
 interface QuotationAddProps {
   onNavigate: (page: Page) => void
   onLogout: () => void
 }
+
+// Flat brand submit (legacy used a solid #630ED4, not the primary gradient).
+const flatSubmit =
+  "inline-flex items-center justify-center gap-2 rounded-md bg-[#630ED4] px-6 py-2 text-sm font-bold text-white shadow-sm transition hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
 
 const steps = [
   { n: 1, label: "KLIEN" },
@@ -209,21 +214,25 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
       <div className="admin-main">
         <div className="page-content">
           {/* Header & Stepper */}
-          <div className="qe-header-section flex items-center justify-between">
-            <div className="qe-header-left">
-              <nav className="qd-breadcrumb">
-                <button className="qd-breadcrumb-link" onClick={() => onNavigate("quotation")}>
+          <div className={qe.headerSection}>
+            <div className={qe.headerLeft}>
+              <nav className={ui.breadcrumb}>
+                <button
+                  type="button"
+                  className={ui.breadcrumbLink}
+                  onClick={() => onNavigate("quotation")}
+                >
                   Daftar Quotation
                 </button>
-                <span className="qd-breadcrumb-sep">&rsaquo;</span>
-                <span className="qd-breadcrumb-current">Tambah Quotation</span>
+                <span className={ui.breadcrumbSep}>&rsaquo;</span>
+                <span className={ui.breadcrumbCurrent}>Tambah Quotation</span>
               </nav>
-              <div className="qe-title-row">
-                <h1 className="qe-title">Tambah Quotation Baru</h1>
+              <div className={qe.titleRow}>
+                <h1 className={qe.title}>Tambah Quotation Baru</h1>
               </div>
             </div>
 
-            <div className="qe-header-actions flex items-center gap-4">
+            <div className={qe.headerActions}>
               {step > 1 && (
                 <button
                   type="button"
@@ -271,7 +280,7 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
               {step === steps.length && (
                 <button
                   type="button"
-                  className={`${ui.btnPrimary} w-[180px] bg-[#630ED4] bg-none`}
+                  className={`${flatSubmit} w-[180px]`}
                   onClick={handleSubmit}
                   disabled={!canSubmit || createQuotation.isPending}
                 >
@@ -281,22 +290,16 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
             </div>
           </div>
 
-          <div className="qe-stepper">
+          <div className={qe.stepper}>
             {steps.map((s, i) => (
               <div key={s.n} className="contents">
-                <div className="qe-step-slot">
-                  <div className={`qe-step-pill${i === step - 1 ? " qe-step-pill--active" : ""}`}>
-                    <span className={`qe-step-num${i === step - 1 ? " qe-step-num--active" : ""}`}>
-                      {s.n}
-                    </span>
+                <div className={qe.stepSlot}>
+                  <div className={stepPill(i === step - 1)}>
+                    <span className={stepNum(i === step - 1)}>{s.n}</span>
                   </div>
-                  <span
-                    className={`qe-step-label${i === step - 1 ? " qe-step-label--active" : ""}`}
-                  >
-                    {s.label}
-                  </span>
+                  <span className={stepLabel(i === step - 1)}>{s.label}</span>
                 </div>
-                {i < steps.length - 1 && <div key={`line-${i}`} className="qe-step-connector" />}
+                {i < steps.length - 1 && <div key={`line-${i}`} className={qe.stepConnector} />}
               </div>
             ))}
           </div>

@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react"
+import { qe, qep } from "./wizard-styles"
 
 interface Step3ShippingProps {
   shippingAddress: string
@@ -36,11 +37,11 @@ export default function Step3Shipping({
       : null
 
   return (
-    <div className="qe-step-content">
-      <div className="qe-section-header">
+    <div className={qe.stepContent}>
+      <div className={qe.sectionHeader}>
         <div>
-          <h2 className="qe-section-title">Detail Pengiriman</h2>
-          <p className="qe-section-desc">Isi informasi pengiriman barang ke klien.</p>
+          <h2 className={qe.sectionTitle}>Detail Pengiriman</h2>
+          <p className={qe.sectionDesc}>Isi informasi pengiriman barang ke klien.</p>
         </div>
       </div>
 
@@ -88,19 +89,19 @@ export default function Step3Shipping({
         </div>
       </div>
 
-      <div className="qep-summary-card">
-        <h3 className="qep-summary-title">Ringkasan Pengiriman</h3>
-        <div className="qep-summary-row">
-          <span className="qep-summary-label font-medium normal-case">Biaya Pengiriman</span>
-          <span className="qep-summary-value font-bold text-[#111827]">
+      <div className={qep.summaryCard}>
+        <h3 className={qep.summaryTitle}>Ringkasan Pengiriman</h3>
+        <div className={qep.summaryRow}>
+          <span className="text-[0.6875rem] font-medium tracking-[0.06em] text-dark-500">
+            Biaya Pengiriman
+          </span>
+          <span className="text-base font-bold leading-6 tracking-tight text-[#111827]">
             Rp {formatRp(Number(shippingCost) || 0)}
           </span>
         </div>
-        <div className="qep-summary-row">
-          <span className="qep-summary-label">TOTAL PENGIRIMAN</span>
-          <span className="qep-summary-value qep-summary-value--grand">
-            Rp {formatRp(Number(shippingCost) || 0)}
-          </span>
+        <div className={qep.summaryRow}>
+          <span className={qep.summaryLabel}>TOTAL PENGIRIMAN</span>
+          <span className={qep.summaryValueGrand}>Rp {formatRp(Number(shippingCost) || 0)}</span>
         </div>
       </div>
     </div>

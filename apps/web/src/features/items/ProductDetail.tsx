@@ -195,12 +195,12 @@ export default function ProductDetail({
       <div className="admin-main">
         <div className="page-content" style={{ gap: "29px" }}>
           <div className="flex flex-col gap-3">
-            <nav className="qd-breadcrumb">
-              <button className="qd-breadcrumb-link" onClick={onBack}>
+            <nav className={ui.breadcrumb}>
+              <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
                 Katalog Produk
               </button>
-              <span className="qd-breadcrumb-sep">&rsaquo;</span>
-              <span className="qd-breadcrumb-current">Detail Produk</span>
+              <span className={ui.breadcrumbSep}>&rsaquo;</span>
+              <span className={ui.breadcrumbCurrent}>Detail Produk</span>
             </nav>
 
             <div className="flex items-center gap-5">

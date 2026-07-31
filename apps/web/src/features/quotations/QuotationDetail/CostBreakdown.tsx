@@ -1,4 +1,5 @@
 import { formatRupiah as formatRp } from "@/lib/format"
+import { qe } from "../wizard-styles"
 
 interface CostBreakdownProps {
   hasProducts: boolean
@@ -33,7 +34,7 @@ export default function CostBreakdown({
 }: CostBreakdownProps) {
   return (
     <div>
-      <h2 className="qe-section-title mb-3">Rincian Biaya</h2>
+      <h2 className={`${qe.sectionTitle} mb-3`}>Rincian Biaya</h2>
       <div className="rounded-lg border border-[rgba(204,195,216,0.1)] bg-dark-50 p-6">
         <div className="mb-5 flex flex-col gap-3">
           {hasProducts && (

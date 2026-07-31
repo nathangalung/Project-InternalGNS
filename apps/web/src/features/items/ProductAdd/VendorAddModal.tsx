@@ -1,3 +1,4 @@
+import { ui } from "@/lib/ui"
 import { confirmModalCls, confirmOverlayCls, type NewVendorForm } from "./helpers"
 
 interface VendorAddModalProps {
@@ -53,7 +54,7 @@ export default function VendorAddModal({
               Nama Vendor <span className="text-error">*</span>
             </label>
             <input
-              className="ca-input"
+              className={`${ui.fieldInput} font-sans`}
               type="text"
               placeholder="Masukkan nama vendor"
               value={form.nama}
@@ -65,7 +66,7 @@ export default function VendorAddModal({
               Harga Beli (Rp) <span className="text-error">*</span>
             </label>
             <input
-              className="ca-input"
+              className={`${ui.fieldInput} font-sans`}
               type="number"
               min={0}
               placeholder="Masukkan harga beli"

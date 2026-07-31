@@ -1,4 +1,5 @@
 import type { ClientInfo } from "@/features/quotations/types"
+import { qe } from "../wizard-styles"
 
 interface ClientSummaryCardProps {
   clientName: string
@@ -22,7 +23,7 @@ export default function ClientSummaryCard({
   const ci = clientInfo
   return (
     <div>
-      <h2 className="qe-section-title mb-3">Ringkasan Klien</h2>
+      <h2 className={`${qe.sectionTitle} mb-3`}>Ringkasan Klien</h2>
       <div className="overflow-hidden rounded-lg border border-[rgba(204,195,216,0.2)] bg-white">
         <div className="flex items-center gap-4 border-b border-[rgba(204,195,216,0.15)] bg-[linear-gradient(135deg,rgba(99,14,212,0.04)_0%,rgba(99,14,212,0.01)_100%)] px-6 py-5">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[rgba(99,14,212,0.12)]">

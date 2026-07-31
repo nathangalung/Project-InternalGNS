@@ -5,10 +5,12 @@ import {
   dropdownLabelStyle,
   dropdownPanelStyleCompact as dropdownPanelStyle,
 } from "@/components/shared/filter-styles"
+import Modal from "@/components/shared/Modal"
 import { useAddVendorToItem } from "@/features/items/hooks"
 import { useVendors } from "@/features/vendors/hooks"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
 import { ApiError } from "@/lib/api-client"
+import { ui } from "@/lib/ui"
 
 interface AddVendorToItemModalProps {
   open: boolean
@@ -91,187 +93,173 @@ export default function AddVendorToItemModal({
   }
 
   return (
-    <div className="ca-overlay" onClick={handleCancel}>
-      <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="ca-header">
-          <h2 className="ca-title">Tambah Vendor Terkait</h2>
-          <button className="ca-close-btn" onClick={handleCancel} title="Tutup">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
+    <>
+      <Modal
+        title="Tambah Vendor Terkait"
+        onClose={handleCancel}
+        footer={
+          <>
+            {submitError && <span className="flex-1 text-[12px] text-error">{submitError}</span>}
+            <button
+              type="button"
+              className={ui.modalCancel}
+              onClick={handleCancel}
+              disabled={addVendor.isPending}
             >
-              <line x1="1" y1="1" x2="13" y2="13" />
-              <line x1="13" y1="1" x2="1" y2="13" />
-            </svg>
-          </button>
+              Batal
+            </button>
+            <button
+              type="button"
+              className={ui.modalSubmit}
+              onClick={handleSubmit}
+              disabled={!isValid || addVendor.isPending}
+            >
+              {addVendor.isPending ? "Menyimpan..." : "Tambahkan"}
+            </button>
+          </>
+        }
+      >
+        <div className={ui.modalSection}>
+          <div className={ui.field}>
+            <label className={ui.fieldLabel}>
+              Nama Vendor <span className="text-primary-700">*</span>
+            </label>
+            <div className="relative">
+              <input
+                className={`${ui.fieldInput} font-sans ${vendorQuery ? "pr-9" : ""}`}
+                type="text"
+                placeholder="Cari vendor..."
+                value={vendorQuery}
+                onChange={(e) => {
+                  setVendorQuery(e.target.value)
+                  setShowSuggestions(true)
+                  if (vendorId) setVendorId(null)
+                }}
+                onFocus={() => {
+                  if (vendorQuery.length > 0 && !vendorId) setShowSuggestions(true)
+                }}
+              />
+              {vendorQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVendorQuery("")
+                    setVendorId(null)
+                    setShowSuggestions(false)
+                  }}
+                  title="Bersihkan"
+                  className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-[#94A3B8]"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
+                    <line x1="1" y1="1" x2="13" y2="13" />
+                    <line x1="13" y1="1" x2="1" y2="13" />
+                  </svg>
+                </button>
+              )}
+              {showSuggestions && vendorQuery.length > 0 && (
+                <div style={dropdownPanelStyle}>
+                  {filteredVendors.length === 0 ? (
+                    <div className="flex flex-col gap-2 p-3">
+                      <div className="px-0 py-1 text-center text-[13px] text-[#94A3B8]">
+                        Vendor "<strong className="text-[#4A4455]">{vendorQuery}</strong>" tidak
+                        ditemukan
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowSuggestions(false)
+                          setShowCreateVendor(true)
+                        }}
+                        className="flex items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed border-[rgba(99,14,212,0.4)] bg-[rgba(99,14,212,0.04)] px-3.5 py-2.5 text-[13px] font-bold text-[#630ED4]"
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                        >
+                          <line x1="12" y1="5" x2="12" y2="19" />
+                          <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        Tambah Vendor Baru
+                      </button>
+                    </div>
+                  ) : (
+                    filteredVendors.map((v) => {
+                      const active = vendorId === v.id
+                      return (
+                        <button
+                          key={v.id}
+                          type="button"
+                          style={dropdownItemStyle}
+                          onClick={() => {
+                            setVendorId(v.id)
+                            setVendorQuery(v.name)
+                            setShowSuggestions(false)
+                          }}
+                        >
+                          <span style={dropdownLabelStyle(active)}>{v.name}</span>
+                          {active && <CheckIcon />}
+                        </button>
+                      )
+                    })
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        <div className="ca-body">
-          <div className="ca-section">
-            <div className="ca-field">
-              <label className="ca-label">
-                Nama Vendor <span className="ca-required">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  className={`ca-input ${vendorQuery ? "pr-9" : ""}`}
-                  type="text"
-                  placeholder="Cari vendor..."
-                  value={vendorQuery}
-                  onChange={(e) => {
-                    setVendorQuery(e.target.value)
-                    setShowSuggestions(true)
-                    if (vendorId) setVendorId(null)
-                  }}
-                  onFocus={() => {
-                    if (vendorQuery.length > 0 && !vendorId) setShowSuggestions(true)
-                  }}
-                />
-                {vendorQuery && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setVendorQuery("")
-                      setVendorId(null)
-                      setShowSuggestions(false)
-                    }}
-                    title="Bersihkan"
-                    className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-[#94A3B8]"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 14 14"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    >
-                      <line x1="1" y1="1" x2="13" y2="13" />
-                      <line x1="13" y1="1" x2="1" y2="13" />
-                    </svg>
-                  </button>
-                )}
-                {showSuggestions && vendorQuery.length > 0 && (
-                  <div style={dropdownPanelStyle}>
-                    {filteredVendors.length === 0 ? (
-                      <div className="flex flex-col gap-2 p-3">
-                        <div className="px-0 py-1 text-center text-[13px] text-[#94A3B8]">
-                          Vendor "<strong className="text-[#4A4455]">{vendorQuery}</strong>" tidak
-                          ditemukan
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowSuggestions(false)
-                            setShowCreateVendor(true)
-                          }}
-                          className="flex items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed border-[rgba(99,14,212,0.4)] bg-[rgba(99,14,212,0.04)] px-3.5 py-2.5 text-[13px] font-bold text-[#630ED4]"
-                        >
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                          >
-                            <line x1="12" y1="5" x2="12" y2="19" />
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                          </svg>
-                          Tambah Vendor Baru
-                        </button>
-                      </div>
-                    ) : (
-                      filteredVendors.map((v) => {
-                        const active = vendorId === v.id
-                        return (
-                          <button
-                            key={v.id}
-                            type="button"
-                            style={dropdownItemStyle}
-                            onClick={() => {
-                              setVendorId(v.id)
-                              setVendorQuery(v.name)
-                              setShowSuggestions(false)
-                            }}
-                          >
-                            <span style={dropdownLabelStyle(active)}>{v.name}</span>
-                            {active && <CheckIcon />}
-                          </button>
-                        )
-                      })
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="ca-section">
-            <div className="ca-field">
-              <label className="ca-label">
-                Harga Beli <span className="ca-required">*</span>
-              </label>
-              <div className="ca-phone-wrapper">
-                <span className="ca-phone-prefix">IDR</span>
-                <input
-                  className="ca-phone-input"
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatRupiah(costPrice)}
-                  onChange={(e) => setCostPrice(e.target.value.replace(/\D/g, ""))}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="ca-section">
-            <div className="ca-field">
-              <label className="ca-label">
-                Link Produk{" "}
-                <span className="font-normal normal-case tracking-normal text-[#9CA3AF]">
-                  (opsional)
-                </span>
-              </label>
+        <div className={ui.modalSection}>
+          <div className={ui.field}>
+            <label className={ui.fieldLabel}>
+              Harga Beli <span className="text-primary-700">*</span>
+            </label>
+            <div className="flex h-11 overflow-hidden rounded-md border-[1.5px] border-transparent bg-dark-200 transition focus-within:border-primary-600 focus-within:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]">
+              <span className="flex items-center whitespace-nowrap border-r border-dark-300 px-3 text-sm font-medium text-dark-600">
+                IDR
+              </span>
               <input
-                className="ca-input"
-                type="url"
-                placeholder="https://vendor.com/produk/..."
-                value={productUrl}
-                onChange={(e) => setProductUrl(e.target.value)}
+                className="flex-1 border-none bg-transparent px-3 py-0 font-sans text-sm text-dark-900 outline-none placeholder:text-dark-500"
+                type="text"
+                inputMode="numeric"
+                placeholder="0"
+                value={formatRupiah(costPrice)}
+                onChange={(e) => setCostPrice(e.target.value.replace(/\D/g, ""))}
               />
             </div>
           </div>
         </div>
 
-        <div className="ca-footer px-6 py-4">
-          {submitError && <span className="flex-1 text-[12px] text-error">{submitError}</span>}
-          <button
-            type="button"
-            className="ca-btn-cancel px-[18px] py-2 text-[13px]"
-            onClick={handleCancel}
-            disabled={addVendor.isPending}
-          >
-            Batal
-          </button>
-          <button
-            type="button"
-            className="ca-btn-submit px-[22px] py-2 text-[13px] disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={handleSubmit}
-            disabled={!isValid || addVendor.isPending}
-          >
-            {addVendor.isPending ? "Menyimpan..." : "Tambahkan"}
-          </button>
+        <div className={ui.modalSection}>
+          <div className={ui.field}>
+            <label className={ui.fieldLabel}>
+              Link Produk{" "}
+              <span className="font-normal normal-case tracking-normal text-[#9CA3AF]">
+                (opsional)
+              </span>
+            </label>
+            <input
+              className={`${ui.fieldInput} font-sans`}
+              type="url"
+              placeholder="https://vendor.com/produk/..."
+              value={productUrl}
+              onChange={(e) => setProductUrl(e.target.value)}
+            />
+          </div>
         </div>
-      </div>
+      </Modal>
 
       <VendorAddModal
         open={showCreateVendor}
@@ -283,6 +271,6 @@ export default function AddVendorToItemModal({
           setShowSuggestions(false)
         }}
       />
-    </div>
+    </>
   )
 }

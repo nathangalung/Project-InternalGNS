@@ -1,3 +1,4 @@
+import { ui } from "@/lib/ui"
 import {
   AddNewButton,
   CheckmarkIcon,
@@ -54,19 +55,19 @@ export default function VendorPriceCard({
 }: VendorPriceCardProps) {
   return (
     <div
-      className={`ca-section transition-opacity duration-200 ease-[ease] ${
+      className={`${ui.modalSection} transition-opacity duration-200 ease-[ease] ${
         !isJumlahFilled ? "opacity-60" : "opacity-100"
       }`}
     >
-      <div className="ca-section-heading">Vendor dan Harga Beli</div>
+      <div className={ui.modalSectionHeading}>Vendor dan Harga Beli</div>
 
-      <div className="ca-field">
-        <label className="ca-label">
-          Nama Vendor <span className="ca-required">*</span>
+      <div className={ui.field}>
+        <label className={ui.fieldLabel}>
+          Nama Vendor <span className="text-primary-700">*</span>
         </label>
         <div className="relative">
           <input
-            className="ca-input"
+            className={`${ui.fieldInput} font-sans`}
             type="text"
             placeholder="Ketik atau pilih vendor"
             value={form.namaVendor}
@@ -120,13 +121,13 @@ export default function VendorPriceCard({
         </div>
       </div>
 
-      <div className="ca-row-2">
-        <div className="ca-field">
-          <label className="ca-label">
-            Harga Beli Satuan <span className="ca-required">*</span>
+      <div className={ui.row2}>
+        <div className={ui.field}>
+          <label className={ui.fieldLabel}>
+            Harga Beli Satuan <span className="text-primary-700">*</span>
           </label>
           <input
-            className="ca-input"
+            className={`${ui.fieldInput} font-sans`}
             type="number"
             min={0}
             placeholder="Masukkan harga beli"
@@ -136,12 +137,12 @@ export default function VendorPriceCard({
             style={!isVendorFilled ? disabledStyle : undefined}
           />
         </div>
-        <div className="ca-field">
-          <label className="ca-label">
-            Harga Jual Satuan <span className="ca-required">*</span>
+        <div className={ui.field}>
+          <label className={ui.fieldLabel}>
+            Harga Jual Satuan <span className="text-primary-700">*</span>
           </label>
           <input
-            className="ca-input"
+            className={`${ui.fieldInput} font-sans`}
             type="number"
             min={0}
             placeholder="Masukkan harga jual"
@@ -153,7 +154,7 @@ export default function VendorPriceCard({
         </div>
       </div>
 
-      <div className="ca-select-wrapper relative w-full">
+      <div className="relative w-full">
         <button
           type="button"
           disabled={!isVendorFilled}
@@ -217,10 +218,10 @@ export default function VendorPriceCard({
         )}
       </div>
 
-      <div className="ca-field">
-        <label className="ca-label">Profit</label>
+      <div className={ui.field}>
+        <label className={ui.fieldLabel}>Profit</label>
         <div
-          className={`ca-input flex cursor-default items-center ${
+          className={`${ui.fieldInput} flex cursor-default items-center ${
             profit === 0 ? "text-dark-500" : "text-dark-900"
           } ${!isVendorFilled ? "bg-[#F7F7F8]" : ""}`}
         >

@@ -1,3 +1,4 @@
+import { ui } from "@/lib/ui"
 import {
   AddNewButton,
   type CatalogItem,
@@ -58,15 +59,15 @@ export default function IdentityCard({
   const activeRequestLabel = form.requestedKodeImpaNama.trim()
   return (
     <>
-      <div className="ca-section">
-        <div className="ca-section-heading">Permintaan Klien (Request)</div>
-        <div className="ca-field">
-          <label className="ca-label">
-            Kode IMPA/Nama Produk Request <span className="ca-required">*</span>
+      <div className={ui.modalSection}>
+        <div className={ui.modalSectionHeading}>Permintaan Klien (Request)</div>
+        <div className={ui.field}>
+          <label className={ui.fieldLabel}>
+            Kode IMPA/Nama Produk Request <span className="text-primary-700">*</span>
           </label>
           <div className="relative">
             <input
-              className="ca-input"
+              className={`${ui.fieldInput} font-sans`}
               type="text"
               placeholder="Cari produk atau ketik permintaan klien"
               value={form.requestedKodeImpaNama}
@@ -170,16 +171,16 @@ export default function IdentityCard({
         </div>
       )}
 
-      <div className="ca-section">
-        <div className="ca-section-heading">Produk yang Ditawarkan (Offer)</div>
+      <div className={ui.modalSection}>
+        <div className={ui.modalSectionHeading}>Produk yang Ditawarkan (Offer)</div>
 
-        <div className="ca-field">
-          <label className="ca-label">
-            Kode IMPA/Nama Produk <span className="ca-required">*</span>
+        <div className={ui.field}>
+          <label className={ui.fieldLabel}>
+            Kode IMPA/Nama Produk <span className="text-primary-700">*</span>
           </label>
           <div className="relative">
             <input
-              className="ca-input"
+              className={`${ui.fieldInput} font-sans`}
               type="text"
               placeholder="Masukkan nama atau kode IMPA"
               value={form.kodeImpaNama}
@@ -224,15 +225,15 @@ export default function IdentityCard({
           </div>
         </div>
 
-        <div className="ca-row-2">
-          <div className="ca-field">
-            <label className="ca-label">
-              Satuan <span className="ca-required">*</span>
+        <div className={ui.row2}>
+          <div className={ui.field}>
+            <label className={ui.fieldLabel}>
+              Satuan <span className="text-primary-700">*</span>
             </label>
-            <div className="ca-select-wrapper">
+            <div className="relative">
               <button
                 type="button"
-                className="ca-select-btn"
+                className="flex w-full items-center justify-between rounded-md border-[1.5px] border-transparent bg-dark-200 px-4 py-3 text-sm font-normal text-dark-900 outline-none transition focus:border-primary-600 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
                 onClick={() => {
                   if (isProductFilled) toggleDropdown("satuan")
                 }}
@@ -279,12 +280,12 @@ export default function IdentityCard({
               )}
             </div>
           </div>
-          <div className="ca-field">
-            <label className="ca-label">
-              Jumlah Produk <span className="ca-required">*</span>
+          <div className={ui.field}>
+            <label className={ui.fieldLabel}>
+              Jumlah Produk <span className="text-primary-700">*</span>
             </label>
             <input
-              className="ca-input"
+              className={`${ui.fieldInput} font-sans`}
               type="number"
               min={1}
               placeholder="Masukkan jumlah produk"

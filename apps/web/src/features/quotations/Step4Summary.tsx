@@ -2,6 +2,7 @@ import { useState } from "react"
 import { getPageNumbers } from "@/lib/pagination"
 import type { ProductItem } from "./QuotationEdit"
 import type { Client } from "./Step1Client"
+import { qe, qep } from "./wizard-styles"
 
 interface Step4SummaryProps {
   jatuhTempo: string
@@ -84,10 +85,10 @@ export default function Step4Summary({
     products.length > 0 || (shippingAddress.trim().length >= 20 && /[a-zA-Z]/.test(shippingAddress))
 
   return (
-    <div className="qe-step-content">
+    <div className={qe.stepContent}>
       {/* Tenggat Waktu Penawaran */}
       <div>
-        <h2 className="qe-section-title mb-3">Tenggat Waktu Penawaran</h2>
+        <h2 className={`${qe.sectionTitle} mb-3`}>Tenggat Waktu Penawaran</h2>
         <div className={`${card} ${grid2} gap-6`}>
           <div>
             <label className={formLabel}>
@@ -125,7 +126,7 @@ export default function Step4Summary({
 
       {/* Ringkasan Klien */}
       <div>
-        <h2 className="qe-section-title mb-3">Ringkasan Klien</h2>
+        <h2 className={`${qe.sectionTitle} mb-3`}>Ringkasan Klien</h2>
         <div className="overflow-hidden rounded-lg border border-[rgba(204,195,216,0.2)] bg-white">
           {/* Card header with avatar */}
           <div className="flex items-center gap-4 border-b border-[rgba(204,195,216,0.15)] bg-[linear-gradient(135deg,rgba(99,14,212,0.04)_0%,rgba(99,14,212,0.01)_100%)] px-6 py-5">
@@ -211,7 +212,7 @@ export default function Step4Summary({
 
       {/* Ringkasan Penawaran */}
       <div>
-        <h2 className="qe-section-title mb-3">Ringkasan Penawaran</h2>
+        <h2 className={`${qe.sectionTitle} mb-3`}>Ringkasan Penawaran</h2>
 
         {!hasContent && (
           <div className={`${alertBox} mb-5`}>
@@ -348,13 +349,13 @@ export default function Step4Summary({
                     const requestKode = p.requestedKodeImpa || p.kodeImpa
                     const isDifferent = requestNama !== p.nama || requestKode !== p.kodeImpa
                     return (
-                      <div key={p.id} className="qep-card mb-0">
-                        <div className="qep-card-header">
-                          <div className="qep-card-meta">
-                            <span className="qep-card-label">PRODUK {globalIndex}</span>
-                            <span className="qep-card-name">{p.nama}</span>
+                      <div key={p.id} className={`${qep.card} mb-0`}>
+                        <div className={qep.cardHeader}>
+                          <div className={qep.cardMeta}>
+                            <span className={qep.cardLabel}>PRODUK {globalIndex}</span>
+                            <span className={qep.cardName}>{p.nama}</span>
                             {p.kodeImpa && (
-                              <span className="qep-card-code">KODE IMPA: {p.kodeImpa}</span>
+                              <span className={qep.cardCode}>KODE IMPA: {p.kodeImpa}</span>
                             )}
                           </div>
                         </div>
@@ -388,39 +389,39 @@ export default function Step4Summary({
                             </div>
                           </div>
                         </div>
-                        <div className="qep-card-body">
-                          <div className="qep-col-left">
-                            <div className="qep-field">
-                              <span className="qep-field-label">VENDOR</span>
-                              <div className="qep-field-input">{p.vendor}</div>
+                        <div className={qep.cardBody}>
+                          <div className={qep.col}>
+                            <div className={qep.field}>
+                              <span className={qep.fieldLabel}>VENDOR</span>
+                              <div className={qep.fieldInput}>{p.vendor}</div>
                             </div>
-                            <div className="qep-field">
-                              <span className="qep-field-label">JUMLAH</span>
-                              <div className="qep-field-input">{p.jumlah}</div>
+                            <div className={qep.field}>
+                              <span className={qep.fieldLabel}>JUMLAH</span>
+                              <div className={qep.fieldInput}>{p.jumlah}</div>
                             </div>
-                            <div className="qep-field">
-                              <span className="qep-field-label">SATUAN</span>
-                              <div className="qep-field-input">{p.satuan}</div>
+                            <div className={qep.field}>
+                              <span className={qep.fieldLabel}>SATUAN</span>
+                              <div className={qep.fieldInput}>{p.satuan}</div>
                             </div>
                           </div>
-                          <div className="qep-col-right">
-                            <div className="qep-field">
-                              <span className="qep-field-label">HARGA BELI SATUAN</span>
-                              <div className="qep-field-input">
-                                <span className="qep-rp">Rp</span> {formatRp(p.hargaBeli)}
+                          <div className={qep.col}>
+                            <div className={qep.field}>
+                              <span className={qep.fieldLabel}>HARGA BELI SATUAN</span>
+                              <div className={qep.fieldInput}>
+                                <span className={qep.rp}>Rp</span> {formatRp(p.hargaBeli)}
                               </div>
                             </div>
-                            <div className="qep-field">
-                              <span className="qep-field-label">HARGA JUAL SATUAN</span>
-                              <div className="qep-field-input">
-                                <span className="qep-rp">Rp</span> {formatRp(p.hargaJual)}
+                            <div className={qep.field}>
+                              <span className={qep.fieldLabel}>HARGA JUAL SATUAN</span>
+                              <div className={qep.fieldInput}>
+                                <span className={qep.rp}>Rp</span> {formatRp(p.hargaJual)}
                               </div>
                             </div>
-                            <div className="qep-field">
-                              <span className="qep-field-label">PROFIT</span>
-                              <div className="qep-field-input">
-                                <span className="qep-rp">Rp</span> {formatRp(profit)}{" "}
-                                <span className="qep-profit-pct">({profitPct}%)</span>
+                            <div className={qep.field}>
+                              <span className={qep.fieldLabel}>PROFIT</span>
+                              <div className={qep.fieldInput}>
+                                <span className={qep.rp}>Rp</span> {formatRp(profit)}{" "}
+                                <span className={qep.profitPct}>({profitPct}%)</span>
                               </div>
                             </div>
                           </div>

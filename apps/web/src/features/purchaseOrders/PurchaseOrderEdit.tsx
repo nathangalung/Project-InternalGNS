@@ -197,24 +197,23 @@ export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: Purcha
 
       <div className="admin-main">
         <div className="page-content">
-          <div className="qe-header-section flex items-center justify-between">
-            <div className="qe-header-left">
-              <nav className="qd-breadcrumb">
-                <button
-                  className="qd-breadcrumb-link"
-                  onClick={() => onNavigate("purchase-orders")}
-                >
+          <div className="flex w-full items-center justify-between">
+            <div className="flex flex-col gap-3">
+              <nav className={ui.breadcrumb}>
+                <button className={ui.breadcrumbLink} onClick={() => onNavigate("purchase-orders")}>
                   Daftar Purchase Order
                 </button>
-                <span className="qd-breadcrumb-sep">&rsaquo;</span>
-                <span className="qd-breadcrumb-current">Edit Purchase Order</span>
+                <span className={ui.breadcrumbSep}>&rsaquo;</span>
+                <span className={ui.breadcrumbCurrent}>Edit Purchase Order</span>
               </nav>
-              <div className="qe-title-row">
-                <h1 className="qe-title">Edit Purchase Order</h1>
+              <div className="flex items-center gap-5">
+                <h1 className="text-2xl font-bold leading-8 tracking-tight text-dark-900">
+                  Edit Purchase Order
+                </h1>
               </div>
             </div>
 
-            <div className="qe-header-actions flex items-center gap-4">
+            <div className="flex items-center gap-4">
               {step > 1 && (
                 <button className={`${ui.btnOutline} w-[148px]`} onClick={() => setStep(step - 1)}>
                   <svg
@@ -291,24 +290,42 @@ export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: Purcha
             </div>
           </div>
 
-          <div className="qe-stepper">
-            {steps.map((s, i) => (
-              <div key={s.n} className="contents">
-                <div className="qe-step-slot">
-                  <div className={`qe-step-pill${i === step - 1 ? " qe-step-pill--active" : ""}`}>
-                    <span className={`qe-step-num${i === step - 1 ? " qe-step-num--active" : ""}`}>
-                      {s.n}
+          <div className="flex w-full items-start">
+            {steps.map((s, i) => {
+              const isActive = i === step - 1
+              return (
+                <div key={s.n} className="contents">
+                  <div className="flex flex-col items-center gap-2">
+                    <div
+                      className={`flex h-10 w-[162px] items-center justify-center rounded-lg transition-all duration-300 ease-[ease] ${
+                        isActive
+                          ? "bg-primary-700 opacity-100 shadow-[0px_10px_15px_-3px_rgba(109,40,217,0.2),0px_4px_6px_-4px_rgba(109,40,217,0.2)]"
+                          : "bg-dark-200 opacity-50"
+                      }`}
+                    >
+                      <span
+                        className={`text-sm font-bold ${isActive ? "text-white" : "text-dark-600"}`}
+                      >
+                        {s.n}
+                      </span>
+                    </div>
+                    <span
+                      className={`text-caption uppercase tracking-[1px] ${
+                        isActive ? "font-bold text-primary-700" : "font-normal text-dark-600"
+                      }`}
+                    >
+                      {s.label}
                     </span>
                   </div>
-                  <span
-                    className={`qe-step-label${i === step - 1 ? " qe-step-label--active" : ""}`}
-                  >
-                    {s.label}
-                  </span>
+                  {i < steps.length - 1 && (
+                    <div
+                      key={`line-${i}`}
+                      className="mt-5 h-0.5 flex-1 bg-[rgba(203,213,225,0.3)]"
+                    />
+                  )}
                 </div>
-                {i < steps.length - 1 && <div key={`line-${i}`} className="qe-step-connector" />}
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           {step === 1 && (

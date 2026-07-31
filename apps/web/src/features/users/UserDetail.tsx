@@ -6,6 +6,7 @@ import PasswordChecklist from "@/features/users/PasswordChecklist"
 import { passwordIsValid } from "@/features/users/password"
 import { ApiError } from "@/lib/api-client"
 import type { Page } from "@/lib/page"
+import { ui } from "@/lib/ui"
 import type { Role, UserRow } from "@/types/api"
 
 interface UserDetailProps {
@@ -34,6 +35,10 @@ const inputClass =
   "h-11 w-full rounded-md border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans text-[14px] font-medium text-[#191C1E] outline-none transition-colors duration-150"
 
 const fieldErrorClass = "mt-1.5 text-[12px] text-[#DC2626]"
+
+// Faithful port of the legacy .ca-select-btn
+const selectBtnClass =
+  "flex w-full cursor-pointer items-center justify-between rounded-md border-[1.5px] border-transparent bg-dark-200 px-4 py-3 font-sans text-sm font-normal text-dark-900 outline-none transition-colors duration-200 focus:border-primary-600 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
 
 export default function UserDetail({ user, onNavigate, onBack, onLogout }: UserDetailProps) {
   const [name, setName] = useState(user.name)
@@ -115,12 +120,12 @@ export default function UserDetail({ user, onNavigate, onBack, onLogout }: UserD
       <div className="admin-main">
         <div className="page-content" style={{ gap: "29px" }}>
           <div className="flex flex-col gap-3">
-            <nav className="qd-breadcrumb">
-              <button className="qd-breadcrumb-link" onClick={onBack}>
+            <nav className={ui.breadcrumb}>
+              <button className={ui.breadcrumbLink} onClick={onBack}>
                 Manajemen Pengguna
               </button>
-              <span className="qd-breadcrumb-sep">&rsaquo;</span>
-              <span className="qd-breadcrumb-current">Detail Pengguna</span>
+              <span className={ui.breadcrumbSep}>&rsaquo;</span>
+              <span className={ui.breadcrumbCurrent}>Detail Pengguna</span>
             </nav>
 
             <div className="flex items-center gap-5">
@@ -194,7 +199,7 @@ export default function UserDetail({ user, onNavigate, onBack, onLogout }: UserD
                 </p>
               </div>
 
-              <div className="rgrid-2 grid gap-x-8 gap-y-6">
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-x-8 gap-y-6">
                 <div>
                   <label className={labelClass}>Nama Lengkap</label>
                   <input
@@ -289,10 +294,10 @@ export default function UserDetail({ user, onNavigate, onBack, onLogout }: UserD
 
                 <div>
                   <label className={labelClass}>Peran</label>
-                  <div className="ca-select-wrapper">
+                  <div className="relative">
                     <button
                       type="button"
-                      className="ca-select-btn"
+                      className={selectBtnClass}
                       onClick={() => setRoleOpen((o) => !o)}
                     >
                       <span>{ROLE_LABEL[role]}</span>

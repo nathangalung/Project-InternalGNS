@@ -2,6 +2,7 @@ import { useState } from "react"
 import type { ProductRow } from "@/features/quotations/types"
 import { formatRupiah as formatRp } from "@/lib/format"
 import { ui } from "@/lib/ui"
+import { qe } from "../wizard-styles"
 import { getPageNumbers, PAGE_SIZE_OPTIONS } from "./helpers"
 
 interface ProductTableProps {
@@ -15,6 +16,12 @@ const pageBtnActive = "bg-primary-700 font-bold text-white"
 const pageBtnNav =
   "flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100"
 const requestedNote = "mt-0.5 text-[11px] text-[#B45309]"
+// Profit column: legacy qd-th--profit / qd-td--profit, written standalone so no
+// ui.* colour utility competes with the override.
+const thProfit =
+  "px-5 py-4 text-center align-middle text-overline font-bold uppercase tracking-[0.05em] whitespace-nowrap text-primary-700"
+const tdProfit =
+  "truncate p-5 text-center align-middle text-sm font-bold text-primary-700 bg-[rgba(99,14,212,0.05)]"
 
 // Collapsible paginated product list.
 export default function ProductTable({ products, showProfit = true }: ProductTableProps) {
@@ -32,7 +39,7 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
 
   return (
     <div>
-      <h2 className="qe-section-title mb-3">Detail Produk</h2>
+      <h2 className={`${qe.sectionTitle} mb-3`}>Detail Produk</h2>
       <div
         className={`flex items-center justify-between border border-[rgba(204,195,216,0.2)] bg-white px-5 py-3.5 ${
           expanded ? "rounded-t-lg" : "rounded-lg"
@@ -198,7 +205,7 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
                   Harga Jual Satuan
                 </th>
                 {showProfit && (
-                  <th className={`${ui.thCenter} qd-th--profit`} style={{ width: 150 }}>
+                  <th className={thProfit} style={{ width: 150 }}>
                     Profit (Rp)
                   </th>
                 )}
@@ -234,11 +241,7 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
                     <td className={`${ui.tdCenter} truncate`}>{p.qty}</td>
                     <td className={`${ui.tdCenter} truncate`}>{p.satuan}</td>
                     <td className={`${ui.tdCenter} truncate`}>{formatRp(p.hargaSatuan)}</td>
-                    {showProfit && (
-                      <td className={`${ui.tdCenter} truncate qd-td--profit`}>
-                        {formatRp(p.qty * p.profitSatuan)}
-                      </td>
-                    )}
+                    {showProfit && <td className={tdProfit}>{formatRp(p.qty * p.profitSatuan)}</td>}
                     <td className={`${ui.tdCenter} truncate font-bold text-dark-900`}>
                       {formatRp(p.qty * p.hargaSatuan)}
                     </td>

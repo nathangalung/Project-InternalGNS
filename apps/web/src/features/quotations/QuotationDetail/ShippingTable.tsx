@@ -1,6 +1,7 @@
 import type { ShippingRow } from "@/features/quotations/types"
 import { formatRupiah as formatRp } from "@/lib/format"
 import { ui } from "@/lib/ui"
+import { qe } from "../wizard-styles"
 
 interface ShippingTableProps {
   shipping: ShippingRow
@@ -10,7 +11,7 @@ interface ShippingTableProps {
 export default function ShippingTable({ shipping }: ShippingTableProps) {
   return (
     <div>
-      <h2 className="qe-section-title mb-3">Detail Pengiriman</h2>
+      <h2 className={`${qe.sectionTitle} mb-3`}>Detail Pengiriman</h2>
       <div className={ui.tableWrap}>
         <table className="w-full min-w-full table-auto border-collapse lg:table-fixed">
           <thead>

@@ -23,15 +23,17 @@ export default function StatusBar({
   // Terminal status, no transitions.
   const locked = allowedStatuses.length === 0
   return (
-    <div className="qd-status-bar">
+    <div className={ui.statusBar}>
       <div>
-        <div className="qd-status-bar-title">Status Purchase Order</div>
-        <div className="qd-status-bar-desc">Ubah status PO sesuai dengan kondisi aktual.</div>
+        <div className="text-sm font-bold text-dark-900">Status Purchase Order</div>
+        <div className="mt-0.5 text-caption text-[#4A4455]">
+          Ubah status PO sesuai dengan kondisi aktual.
+        </div>
       </div>
-      <div className="qd-status-bar-actions">
+      <div className="flex items-center gap-3">
         <div className="relative">
           <button
-            className={`qd-status-trigger${locked ? " cursor-default" : ""}`}
+            className={`${ui.statusTrigger} whitespace-nowrap${locked ? " cursor-default" : ""}`}
             style={{ background: badge.bg, color: badge.color }}
             onClick={locked ? undefined : onToggle}
             disabled={locked}
@@ -52,13 +54,17 @@ export default function StatusBar({
             )}
           </button>
           {isOpen && !locked && (
-            <div className="qd-status-dropdown">
+            <div className={`${ui.statusDropdown} z-[100]`}>
               {allowedStatuses.map((s) => {
                 const isActive = s === status
                 return (
-                  <button key={s} className="qd-status-option" onClick={() => onChange(s)}>
+                  <button key={s} className={ui.statusOption} onClick={() => onChange(s)}>
                     <span
-                      className={isActive ? "qd-status-option--active" : "qd-status-option--label"}
+                      className={
+                        isActive
+                          ? "text-caption font-semibold text-primary-700"
+                          : "text-caption font-normal text-[#4A4455]"
+                      }
                     >
                       {PO_LABEL[s]}
                     </span>

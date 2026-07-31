@@ -4,6 +4,16 @@ import {
   STATUS_FILTER_OPTIONS as STATUS_OPTIONS,
   type StatusFilterValue,
 } from "@/components/shared/filter-styles"
+import Modal from "@/components/shared/Modal"
+import { ui } from "@/lib/ui"
+
+// Faithful port of the legacy amount-input group.
+const amountWrapCls =
+  "flex h-11 overflow-hidden rounded-md border-[1.5px] border-transparent bg-dark-200 transition focus-within:border-primary-600 focus-within:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
+const amountPrefixCls =
+  "flex items-center whitespace-nowrap border-r border-dark-300 px-3 text-sm font-medium text-dark-600"
+const amountInputCls =
+  "min-w-0 flex-1 border-0 bg-transparent px-3 text-sm text-dark-900 outline-none placeholder:text-dark-500"
 
 export type VendorStatusFilter = StatusFilterValue
 
@@ -50,82 +60,16 @@ export default function VendorFilter({ onClose, onApply, initialValues }: Vendor
   }
 
   return (
-    <div className="ca-overlay" onClick={onClose}>
-      <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="ca-header">
-          <h2 className="ca-title">Filter Vendor</h2>
-          <button className="ca-close-btn" onClick={onClose} title="Tutup">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <line x1="1" y1="1" x2="13" y2="13" />
-              <line x1="13" y1="1" x2="1" y2="13" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="ca-body">
-          <div className="ca-section">
-            <div className="ca-section-heading">Status Vendor</div>
-            <div className="ca-field">
-              <div className="flex flex-wrap gap-2">
-                {STATUS_OPTIONS.map((o) => (
-                  <button
-                    key={o.value}
-                    type="button"
-                    onClick={() => setStatus(o.value)}
-                    style={chipStyle(status === o.value)}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="ca-section">
-            <div className="ca-section-heading">Lokasi</div>
-            <div className="ca-field">
-              <input
-                type="text"
-                placeholder="Ketik lokasi vendor..."
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="h-11 w-full rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-3.5 py-2.5 text-sm text-[#191C1E] outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="ca-section">
-            <div className="ca-section-heading">Min Total Pembelian</div>
-            <div className="ca-field">
-              <div className="ca-phone-wrapper">
-                <span className="ca-phone-prefix">IDR</span>
-                <input
-                  className="ca-phone-input"
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={formatRupiah(minTotal)}
-                  onChange={(e) => setMinTotal(e.target.value.replace(/\D/g, ""))}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="ca-footer justify-between px-6 py-4">
+    <Modal
+      title="Filter Vendor"
+      onClose={onClose}
+      footer={
+        <>
           <button
             type="button"
             onClick={handleReset}
             disabled={!dirty}
-            className={`border-0 bg-transparent p-0 text-[13px] font-medium underline-offset-[3px] ${
+            className={`mr-auto border-0 bg-transparent p-0 text-[13px] font-medium underline-offset-[3px] ${
               dirty
                 ? "cursor-pointer text-[#630ED4] underline"
                 : "cursor-default text-[#CBD5E1] no-underline"
@@ -133,24 +77,62 @@ export default function VendorFilter({ onClose, onApply, initialValues }: Vendor
           >
             Hapus Filter
           </button>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className="ca-btn-cancel px-[18px] py-2 text-[13px]"
-              onClick={onClose}
-            >
-              Batal
-            </button>
-            <button
-              type="button"
-              className="ca-btn-submit px-[22px] py-2 text-[13px]"
-              onClick={handleApply}
-            >
-              Terapkan
-            </button>
+          <button type="button" className={ui.modalCancel} onClick={onClose}>
+            Batal
+          </button>
+          <button type="button" className={ui.modalSubmit} onClick={handleApply}>
+            Terapkan
+          </button>
+        </>
+      }
+    >
+      <div className={ui.modalSection}>
+        <div className={ui.modalSectionHeading}>Status Vendor</div>
+        <div className={ui.field}>
+          <div className="flex flex-wrap gap-2">
+            {STATUS_OPTIONS.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => setStatus(o.value)}
+                style={chipStyle(status === o.value)}
+              >
+                {o.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
-    </div>
+
+      <div className={ui.modalSection}>
+        <div className={ui.modalSectionHeading}>Lokasi</div>
+        <div className={ui.field}>
+          <input
+            type="text"
+            placeholder="Ketik lokasi vendor..."
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className="h-11 w-full rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-3.5 py-2.5 text-sm text-[#191C1E] outline-none"
+          />
+        </div>
+      </div>
+
+      <div className={ui.modalSection}>
+        <div className={ui.modalSectionHeading}>Min Total Pembelian</div>
+        <div className={ui.field}>
+          <div className={amountWrapCls}>
+            <span className={amountPrefixCls}>IDR</span>
+            <input
+              className={amountInputCls}
+              type="text"
+              inputMode="numeric"
+              placeholder="0"
+              value={formatRupiah(minTotal)}
+              onChange={(e) => setMinTotal(e.target.value.replace(/\D/g, ""))}
+            />
+          </div>
+        </div>
+      </div>
+    </Modal>
   )
 }

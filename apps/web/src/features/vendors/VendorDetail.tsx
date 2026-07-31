@@ -166,12 +166,12 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
       <div className="admin-main">
         <div className="page-content" style={{ gap: "29px" }}>
           <div className="flex flex-col gap-3">
-            <nav className="qd-breadcrumb">
-              <button className="qd-breadcrumb-link" onClick={onBack}>
+            <nav className={ui.breadcrumb}>
+              <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
                 Daftar Vendor
               </button>
-              <span className="qd-breadcrumb-sep">&rsaquo;</span>
-              <span className="qd-breadcrumb-current">Detail Vendor</span>
+              <span className={ui.breadcrumbSep}>&rsaquo;</span>
+              <span className={ui.breadcrumbCurrent}>Detail Vendor</span>
             </nav>
 
             <div className="flex items-center gap-5">
@@ -311,7 +311,7 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
                   )}
                 </div>
 
-                <div className="rgrid-2 grid gap-6">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-6">
                   <div>
                     <label className={labelCls}>No HP</label>
                     <div className="flex h-11 overflow-hidden rounded-md">
