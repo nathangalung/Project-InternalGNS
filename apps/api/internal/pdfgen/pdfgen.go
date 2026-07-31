@@ -8,11 +8,27 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"text/template"
 	"time"
 )
+
+// Bound concurrent xelatex processes so a burst of exports cannot exhaust the
+// host. Sized to half the CPUs, clamped to [2, 8]. Shared across renderers.
+var renderSem = make(chan struct{}, renderConcurrency())
+
+func renderConcurrency() int {
+	switch n := runtime.NumCPU() / 2; {
+	case n < 2:
+		return 2
+	case n > 8:
+		return 8
+	default:
+		return n
+	}
+}
 
 // Renderer compiles LaTeX templates to PDF bytes via xelatex.
 type Renderer struct {
@@ -32,6 +48,11 @@ func NewRenderer(templatesRoot string) *Renderer {
 
 // Render fills the named template and runs xelatex twice for accurate page refs.
 func (r *Renderer) Render(ctx context.Context, name string, data any) ([]byte, error) {
+	// Bound each render by the renderer's own timeout, independent of the
+	// request deadline, and wire it (previously the field was unused).
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
 	path := filepath.Join(r.templatesRoot, name)
 	tmpl, err := template.New(filepath.Base(path)).
 		Delims("[[", "]]").
@@ -59,6 +80,14 @@ func (r *Renderer) Render(ctx context.Context, name string, data any) ([]byte, e
 	texPath := filepath.Join(dir, "doc.tex")
 	if err := os.WriteFile(texPath, rendered.Bytes(), 0o644); err != nil {
 		return nil, err
+	}
+
+	// Acquire a render slot, or fail if the deadline passes while waiting.
+	select {
+	case renderSem <- struct{}{}:
+		defer func() { <-renderSem }()
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
 
 	for i := 0; i < 2; i++ {
@@ -111,6 +140,9 @@ func (r *Renderer) runLatex(ctx context.Context, dir, texPath string) error {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stdout
 	if err := cmd.Run(); err != nil {
+		if ctx.Err() != nil {
+			return fmt.Errorf("xelatex: %w", ctx.Err())
+		}
 		return errors.New("xelatex failed: " + truncate(stdout.String(), 4000))
 	}
 	return nil
