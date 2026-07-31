@@ -176,3 +176,42 @@ func TestAuthMiddleware_PreservesProtectedHandler(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
+
+func TestAuthorizeBucket(t *testing.T) {
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	guarded := authorizeBucket(next)
+
+	cases := []struct {
+		role, bucket string
+		want         int
+	}{
+		{"finance", "invoice-attachments", http.StatusOK},
+		{"operational", "invoice-attachments", http.StatusForbidden},
+		{"operational", "po-docs", http.StatusOK},
+		{"finance", "po-docs", http.StatusForbidden},
+		{"operational", "client-logos", http.StatusOK},
+		{"operational", "", http.StatusForbidden},
+	}
+	for _, c := range cases {
+		req := httptest.NewRequest(http.MethodGet, "/storage/object?bucket="+c.bucket, nil)
+		req = req.WithContext(deps.WithUserRole(req.Context(), c.role))
+		rec := httptest.NewRecorder()
+		guarded.ServeHTTP(rec, req)
+		if rec.Code != c.want {
+			t.Errorf("role %q bucket %q: got %d want %d", c.role, c.bucket, rec.Code, c.want)
+		}
+	}
+}
+
+func TestSecurityHeaders(t *testing.T) {
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	rec := httptest.NewRecorder()
+	securityHeadersMiddleware(next).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
+	assert.Equal(t, "DENY", rec.Header().Get("X-Frame-Options"))
+	assert.Contains(t, rec.Header().Get("Content-Security-Policy"), "default-src 'none'")
+}

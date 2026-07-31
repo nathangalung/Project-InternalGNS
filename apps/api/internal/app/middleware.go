@@ -10,6 +10,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/auth"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
+	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
 // Sets client IP from the last proxy hop.
@@ -74,6 +75,23 @@ func accessLogMiddleware(next http.Handler) http.Handler {
 func securityHeadersMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		// The API serves JSON and proxied asset bytes; nothing it returns
+		// should execute script or be framed. Embedding pages (the SPA) are
+		// governed by their own CSP, not this one.
+		w.Header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Gates the storage proxy by bucket role.
+func authorizeBucket(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		bucket := r.URL.Query().Get("bucket")
+		if !storage.CanAccessBucket(deps.CurrentUserRole(r.Context()), bucket) {
+			httperr.Render(w, httperr.Forbidden("insufficient role for bucket"))
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }

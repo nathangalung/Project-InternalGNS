@@ -97,8 +97,8 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 			// Proxy asset bytes through the authenticated API (MinIO stays internal).
 			if storageClient != nil {
 				storageH := storage.NewHandler(storageClient)
-				r.Put("/storage/object", storageH.Put)
-				r.Get("/storage/object", storageH.Get)
+				r.With(authorizeBucket).Put("/storage/object", storageH.Put)
+				r.With(authorizeBucket).Get("/storage/object", storageH.Get)
 			}
 		})
 	})

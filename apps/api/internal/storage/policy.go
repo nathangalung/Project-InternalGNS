@@ -15,6 +15,27 @@ var bucketExtensions = map[string]map[string]struct{}{
 	BucketPODocs:             docExts(),
 }
 
+// Per-bucket role allowlist, mirroring the resource RBAC: logos and item
+// images are shared master data; invoice attachments follow /invoices;
+// PO documents follow /purchase-orders.
+var bucketRoles = map[string][]string{
+	BucketClientLogos:        {"superadmin", "operational", "finance"},
+	BucketVendorLogos:        {"superadmin", "operational", "finance"},
+	BucketItemImages:         {"superadmin", "operational", "finance"},
+	BucketInvoiceAttachments: {"superadmin", "finance"},
+	BucketPODocs:             {"superadmin", "operational"},
+}
+
+// CanAccessBucket reports whether a role may read or write a bucket.
+func CanAccessBucket(role, bucket string) bool {
+	for _, r := range bucketRoles[bucket] {
+		if r == role {
+			return true
+		}
+	}
+	return false
+}
+
 // Per-bucket size cap in bytes.
 var bucketMaxBytes = map[string]int64{
 	BucketClientLogos:        2 * 1024 * 1024,

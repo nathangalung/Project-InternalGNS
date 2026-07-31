@@ -2,8 +2,11 @@ package storage
 
 import (
 	"errors"
+	"fmt"
 	"io"
+	"mime"
 	"net/http"
+	"path"
 	"strconv"
 	"strings"
 )
@@ -53,6 +56,12 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid bucket or key", http.StatusBadRequest)
 		return
 	}
+	// Enforce the per-bucket extension allowlist so the proxy cannot be used
+	// to plant arbitrary content types (the presign path already does this).
+	if err := ValidateAssetFileName(bucket, key); err != nil {
+		http.Error(w, "file type not allowed", http.StatusBadRequest)
+		return
+	}
 	limit := MaxBytes(bucket) // per-bucket policy cap (bucket already validated)
 	if limit <= 0 {
 		limit = maxUploadBytes
@@ -74,7 +83,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid bucket or key", http.StatusBadRequest)
 		return
 	}
-	rc, contentType, size, err := h.client.GetObject(r.Context(), bucket, key)
+	rc, _, size, err := h.client.GetObject(r.Context(), bucket, key)
 	if errors.Is(err, ErrObjectNotFound) {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
@@ -84,9 +93,16 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer rc.Close()
-	if contentType != "" {
-		w.Header().Set("Content-Type", contentType)
+	// Derive the type from the allow-listed extension, not the stored (and
+	// therefore attacker-influenced) content type, and force a download so a
+	// document can never execute as HTML on the API origin. Images embedded
+	// via <img> still render; only direct navigation is neutralized.
+	ct := mime.TypeByExtension(strings.ToLower(path.Ext(key)))
+	if ct == "" {
+		ct = "application/octet-stream"
 	}
+	w.Header().Set("Content-Type", ct)
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", path.Base(key)))
 	if size > 0 {
 		w.Header().Set("Content-Length", strconv.FormatInt(size, 10))
 	}
