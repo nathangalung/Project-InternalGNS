@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import { type ReactNode, useEffect } from "react"
 
 interface ModalProps {
   title: ReactNode
@@ -12,6 +12,15 @@ interface ModalProps {
 // Shared modal shell — faithful port of the legacy ca-overlay/ca-modal/ca-header/
 // ca-body/ca-footer system. Body content uses ui.modalSection / ui.field etc.
 export default function Modal({ title, onClose, children, footer, className = "" }: ModalProps) {
+  // Close on Escape.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [onClose])
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-[4px]"
