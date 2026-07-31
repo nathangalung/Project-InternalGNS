@@ -5,9 +5,13 @@
  * the brand scale — utilities (bg-primary-600, text-dark-500, rounded-lg …)
  * and the emitted CSS variables both come from here.
  */
-@layer theme, base, components, utilities;
+@layer theme, base, legacy, utilities;
 
 @import "tailwindcss/theme.css" layer(theme);
+/* Legacy stylesheets live below utilities so migrated components (which use
+   utilities) win over the old reset and classes during the migration. */
+@import "./design-tokens.css" layer(base);
+@import "./admin.css" layer(legacy);
 @import "tailwindcss/utilities.css" layer(utilities);
 
 @theme {

@@ -11,8 +11,6 @@ import "@fontsource/inter/500.css"
 import "@fontsource/inter/600.css"
 import "@fontsource/inter/700.css"
 import "./styles/tailwind.css"
-import "./styles/design-tokens.css"
-import "./styles/admin.css"
 
 const router = createRouter({
   routeTree,
