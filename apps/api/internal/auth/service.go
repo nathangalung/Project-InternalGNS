@@ -160,10 +160,15 @@ func (s *Service) Refresh(ctx context.Context, raw string) (LoginResponse, error
 			return LoginResponse{}, ErrInvalidRefresh
 		}
 		if st.revoked {
-			// Active token's hash matched a revoked one: classic reuse.
-			// Blast all of this user's refresh tokens.
-			if err := s.refresh.revokeAllForUser(ctx, st.userID); err != nil {
-				return LoginResponse{}, err
+			// A concurrent or retried redeem (a duplicate tab, a network retry)
+			// revokes the token moments before the loser looks it up. Only a
+			// token revoked longer ago than the grace window is treated as a
+			// genuine replay worth revoking every session; a very recent
+			// revocation is a benign race, so the other sessions survive.
+			if time.Since(st.revokedAt) > refreshReuseGrace {
+				if err := s.refresh.revokeAllForUser(ctx, st.userID); err != nil {
+					return LoginResponse{}, err
+				}
 			}
 			return LoginResponse{}, ErrReusedRefresh
 		}

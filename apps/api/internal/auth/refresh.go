@@ -23,6 +23,10 @@ var (
 // 32 bytes of CSPRNG output, base64url-encoded (43 chars, no padding).
 const refreshTokenBytes = 32
 
+// Window in which a redeemed-then-reused token is treated as a benign race
+// (concurrent tabs, retried request) rather than a replay attack.
+const refreshReuseGrace = 10 * time.Second
+
 type RefreshRepo struct {
 	db    db.Executor
 	store queries.Store
@@ -71,6 +75,7 @@ type lookupState struct {
 	userID    int64
 	expiresAt time.Time
 	revoked   bool
+	revokedAt time.Time
 	found     bool
 }
 
@@ -88,6 +93,9 @@ func (r *RefreshRepo) lookup(ctx context.Context, hash []byte) (lookupState, err
 	}
 	st.found = true
 	st.revoked = revokedAt != nil
+	if revokedAt != nil {
+		st.revokedAt = *revokedAt
+	}
 	return st, nil
 }
 
