@@ -103,7 +103,7 @@ export default function VendorPriceCard({
                       {v.harga > 0 ? (
                         <span
                           className={`text-caption leading-6 ${
-                            isActive ? "font-bold text-[#630ED4]" : "font-normal text-[#4A4455]"
+                            isActive ? "font-bold text-primary-700" : "font-normal text-[#4A4455]"
                           }`}
                         >
                           Rp {formatRp(v.harga)}
@@ -165,7 +165,7 @@ export default function VendorPriceCard({
           onBlur={() => setTimeout(() => closeIfMatch("historis"), 150)}
           className={`flex w-full items-center justify-center rounded-md border px-6 py-[11px] text-sm font-bold ${
             isVendorFilled
-              ? "cursor-pointer border-[rgba(99,14,212,0.2)] bg-transparent text-[#630ED4]"
+              ? "cursor-pointer border-[rgba(99,14,212,0.2)] bg-transparent text-primary-700"
               : "cursor-not-allowed border-[rgba(99,14,212,0.1)] bg-[#F7F7F8] text-[#A386D6]"
           }`}
         >
@@ -206,7 +206,7 @@ export default function VendorPriceCard({
                   <span style={dropdownLabelStyle(isActive)}>{h.keterangan}</span>
                   <span
                     className={`text-caption leading-6 ${
-                      isActive ? "font-bold text-[#630ED4]" : "font-normal text-[#4A4455]"
+                      isActive ? "font-bold text-primary-700" : "font-normal text-[#4A4455]"
                     }`}
                   >
                     Rp {formatRp(h.harga)}

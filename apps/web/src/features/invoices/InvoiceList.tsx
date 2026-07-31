@@ -309,7 +309,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
                     const style = INVOICE_STATUS_STYLE[row.status]
                     return (
                       <tr key={row.quotationId} className={ui.tr}>
-                        <td className={`${ui.tdCenter} font-bold text-[#630ED4]`}>
+                        <td className={`${ui.tdCenter} font-bold text-primary-700`}>
                           {row.invoiceNo}
                         </td>
                         <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>

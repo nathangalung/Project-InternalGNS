@@ -27,7 +27,7 @@ export default function ClientSummaryCard({
       <div className="overflow-hidden rounded-lg border border-[rgba(204,195,216,0.2)] bg-white">
         <div className="flex items-center gap-4 border-b border-[rgba(204,195,216,0.15)] bg-[linear-gradient(135deg,rgba(99,14,212,0.04)_0%,rgba(99,14,212,0.01)_100%)] px-6 py-5">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[rgba(99,14,212,0.12)]">
-            <span className="text-base font-extrabold tracking-[-0.5px] text-[#630ED4]">
+            <span className="text-base font-extrabold tracking-[-0.5px] text-primary-700">
               {clientInitials}
             </span>
           </div>

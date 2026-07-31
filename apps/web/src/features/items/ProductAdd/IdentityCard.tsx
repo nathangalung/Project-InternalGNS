@@ -120,7 +120,7 @@ export default function IdentityCard({
       {onCopyRequestToOffer && (
         <div className="-mt-2 mb-2 flex items-center gap-3 rounded-md border border-dashed border-[rgba(99,14,212,0.25)] bg-[rgba(99,14,212,0.04)] px-3.5 py-2.5">
           <div
-            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[rgba(99,14,212,0.12)] text-[#630ED4]"
+            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[rgba(99,14,212,0.12)] text-primary-700"
             aria-hidden
           >
             <svg
@@ -149,7 +149,7 @@ export default function IdentityCard({
             title="Pakai nilai request sebagai offer (untuk produk baru di luar katalog)"
             className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-sm px-3.5 py-2 text-[12px] font-semibold transition-colors duration-150 ${
               canCopy
-                ? "cursor-pointer bg-[#630ED4] text-white"
+                ? "cursor-pointer bg-primary-700 text-white"
                 : "cursor-not-allowed bg-[rgba(99,14,212,0.18)] text-[rgba(99,14,212,0.55)]"
             }`}
           >

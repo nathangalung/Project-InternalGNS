@@ -68,7 +68,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
             disabled={!dirty}
             className={`mr-auto p-0 text-[13px] font-medium ${
               dirty
-                ? "cursor-pointer text-[#630ED4] underline underline-offset-[3px]"
+                ? "cursor-pointer text-primary-700 underline underline-offset-[3px]"
                 : "cursor-default text-[#CBD5E1] no-underline"
             }`}
           >

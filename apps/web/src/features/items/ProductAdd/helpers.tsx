@@ -100,7 +100,7 @@ export function AddNewButton({ label, onClick }: { label: string; onClick: () =>
         type="button"
         onMouseDown={(e) => e.preventDefault()}
         onClick={onClick}
-        className="inline-flex items-center gap-1 px-5 py-1 text-caption font-bold text-[#630ED4]"
+        className="inline-flex items-center gap-1 px-5 py-1 text-caption font-bold text-primary-700"
       >
         <svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
           <line

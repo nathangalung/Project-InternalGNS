@@ -69,7 +69,7 @@ export default function Pagination({
                   >
                     <span
                       className={`flex items-center text-[12px] leading-6 ${
-                        isActive ? "font-semibold text-[#630ED4]" : "font-normal text-[#4A4455]"
+                        isActive ? "font-semibold text-primary-700" : "font-normal text-[#4A4455]"
                       }`}
                     >
                       {val} Baris

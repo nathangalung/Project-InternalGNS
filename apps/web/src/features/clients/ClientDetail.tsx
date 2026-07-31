@@ -46,7 +46,7 @@ const grid2 = "grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))]"
 const dropdownPanelCls =
   "absolute left-0 right-0 top-[calc(100%+4px)] z-50 flex max-h-[260px] flex-col overflow-y-auto rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
 
-const contactCancelCls = "px-4 py-2 text-[13px] font-semibold text-[#630ED4]"
+const contactCancelCls = "px-4 py-2 text-[13px] font-semibold text-primary-700"
 
 // Brand gradient, faithful to legacy inline.
 const gradientCls = "bg-[linear-gradient(135deg,#630ED4_0%,#7C3AED_100%)]"
@@ -567,7 +567,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                     role="switch"
                     aria-checked={isActive}
                     className={`relative h-8 w-14 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] ${
-                      isActive ? "bg-[#630ED4]" : "bg-[#CBD5E1]"
+                      isActive ? "bg-primary-700" : "bg-[#CBD5E1]"
                     }`}
                   >
                     <span
@@ -711,7 +711,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                         <button
                           type="button"
                           onClick={() => openEditContact(c)}
-                          className="rounded-sm border-[1.5px] border-[#630ED4] px-3 py-1.5 text-xs font-semibold text-[#630ED4]"
+                          className="rounded-sm border-[1.5px] border-primary-700 px-3 py-1.5 text-xs font-semibold text-primary-700"
                         >
                           Ubah
                         </button>
@@ -819,7 +819,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
               disabled={!dirty || updateClient.isPending}
               className={`rounded-lg bg-transparent px-7 py-3 text-sm font-bold ${
                 dirty && !updateClient.isPending
-                  ? "cursor-pointer text-[#630ED4]"
+                  ? "cursor-pointer text-primary-700"
                   : "cursor-default text-[#CBD5E1]"
               }`}
             >

@@ -178,7 +178,7 @@ export default function AddVendorToItemModal({
                           setShowSuggestions(false)
                           setShowCreateVendor(true)
                         }}
-                        className="flex items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed border-[rgba(99,14,212,0.4)] bg-[rgba(99,14,212,0.04)] px-3.5 py-2.5 text-[13px] font-bold text-[#630ED4]"
+                        className="flex items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed border-[rgba(99,14,212,0.4)] bg-[rgba(99,14,212,0.04)] px-3.5 py-2.5 text-[13px] font-bold text-primary-700"
                       >
                         <svg
                           width="14"

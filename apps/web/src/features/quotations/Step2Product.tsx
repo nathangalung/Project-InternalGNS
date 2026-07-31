@@ -278,7 +278,9 @@ export default function Step2Product({
                       >
                         <span
                           className={`text-xs ${
-                            isActive ? "font-semibold text-[#630ED4]" : "font-normal text-[#4A4455]"
+                            isActive
+                              ? "font-semibold text-primary-700"
+                              : "font-normal text-[#4A4455]"
                           }`}
                         >
                           {val} Baris
@@ -417,7 +419,7 @@ export default function Step2Product({
                             setEditingProduct(p)
                             setShowProductAdd(true)
                           }}
-                          className="text-[#630ED4]"
+                          className="text-primary-700"
                           title="Edit Produk"
                         >
                           <svg
@@ -580,14 +582,14 @@ export default function Step2Product({
 
         <div className="mb-5 flex justify-between text-[11px] font-bold uppercase text-[#6B7280]">
           <span>Total Estimasi Profit</span>
-          <span className="text-xs text-[#630ED4]">Rp {formatRp(summaryProfit)}</span>
+          <span className="text-xs text-primary-700">Rp {formatRp(summaryProfit)}</span>
         </div>
 
         <div className="flex flex-col gap-1.5">
           <span className="text-[11px] font-bold uppercase tracking-[1px] text-[#6B7280]">
             Grand Total
           </span>
-          <span className="text-[28px] font-extrabold tracking-[-0.5px] text-[#630ED4]">
+          <span className="text-[28px] font-extrabold tracking-[-0.5px] text-primary-700">
             Rp {formatRp(summarySubTotal + summaryPpn)}
           </span>
         </div>

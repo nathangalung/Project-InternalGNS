@@ -113,7 +113,7 @@ export default function PurchaseOrderFilter({
             onClick={handleReset}
             disabled={!dirty}
             className={`p-0 text-[13px] font-medium underline-offset-[3px] ${
-              dirty ? "cursor-pointer text-[#630ED4] underline" : "cursor-default text-dark-300"
+              dirty ? "cursor-pointer text-primary-700 underline" : "cursor-default text-dark-300"
             }`}
           >
             Hapus Filter
@@ -144,7 +144,7 @@ export default function PurchaseOrderFilter({
                 >
                   {label}
                   {key === "kustom" ? (
-                    <span className={isActive ? "text-[#630ED4]" : "text-[#9CA3AF]"}>
+                    <span className={isActive ? "text-primary-700" : "text-[#9CA3AF]"}>
                       <IconCalendar />
                     </span>
                   ) : isActive ? (

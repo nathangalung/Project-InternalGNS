@@ -296,7 +296,9 @@ export default function DashboardFinancial({
                       className={`${ui.tr} ${onViewInvoice ? "cursor-pointer" : "cursor-default"}`}
                       onClick={() => onViewInvoice?.(row.quotationId)}
                     >
-                      <td className={`${ui.tdCenter} font-bold text-[#630ED4]`}>{row.invoiceNo}</td>
+                      <td className={`${ui.tdCenter} font-bold text-primary-700`}>
+                        {row.invoiceNo}
+                      </td>
                       <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>{row.client}</td>
                       <td className={ui.tdCenter}>{formatDate(row.createdAt)}</td>
                       <td className={ui.tdCenter}>{formatDate(row.dueDate)}</td>

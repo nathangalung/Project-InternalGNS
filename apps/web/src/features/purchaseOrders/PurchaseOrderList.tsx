@@ -281,14 +281,14 @@ export default function PurchaseOrderList({
                     return (
                       <tr key={row.quotationId} className={ui.tr}>
                         <td
-                          className={`${ui.tdCenter} font-bold text-[#630ED4]`}
+                          className={`${ui.tdCenter} font-bold text-primary-700`}
                           title={row.quotationNo}
                         >
                           {onViewQuotation ? (
                             <button
                               type="button"
                               onClick={() => onViewQuotation(row.quotationId)}
-                              className="p-0 text-sm font-bold text-[#630ED4] underline decoration-[rgba(99,14,212,0.35)] underline-offset-[3px]"
+                              className="p-0 text-sm font-bold text-primary-700 underline decoration-[rgba(99,14,212,0.35)] underline-offset-[3px]"
                             >
                               {shortDocNo(row.quotationNo)}
                             </button>
@@ -297,7 +297,7 @@ export default function PurchaseOrderList({
                           )}
                         </td>
                         <td
-                          className={`${ui.tdCenter} font-bold text-[#630ED4]`}
+                          className={`${ui.tdCenter} font-bold text-primary-700`}
                           title={row.poNumber}
                         >
                           {shortDocNo(row.poNumber)}

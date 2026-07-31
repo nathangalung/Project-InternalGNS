@@ -150,7 +150,9 @@ export default function Step1Client({
                   type="button"
                   onClick={() => setSelectedContactId?.(c.id)}
                   className={`flex w-full items-center gap-3 rounded-md border-[1.5px] px-4 py-3 text-left ${
-                    isSelected ? "border-[#630ED4] bg-[#F5F0FF]" : "border-transparent bg-[#F2F4F6]"
+                    isSelected
+                      ? "border-primary-700 bg-[#F5F0FF]"
+                      : "border-transparent bg-[#F2F4F6]"
                   }`}
                 >
                   <div className={`${radioBase} ${isSelected ? radioSelected : radioIdle}`}>

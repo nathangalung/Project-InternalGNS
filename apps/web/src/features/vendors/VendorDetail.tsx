@@ -367,7 +367,7 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
                     role="switch"
                     aria-checked={isActive}
                     className={`relative h-8 w-14 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] ${
-                      isActive ? "bg-[#630ED4]" : "bg-[#CBD5E1]"
+                      isActive ? "bg-primary-700" : "bg-[#CBD5E1]"
                     }`}
                   >
                     <span
@@ -394,7 +394,7 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
               disabled={!dirty || updateVendor.isPending}
               className={`rounded-lg bg-transparent px-7 py-3 text-sm font-bold ${
                 dirty && !updateVendor.isPending
-                  ? "cursor-pointer text-[#630ED4]"
+                  ? "cursor-pointer text-primary-700"
                   : "cursor-default text-[#CBD5E1]"
               }`}
             >
@@ -462,7 +462,7 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
                         </td>
                         <td className={ui.tdCenter}>{item.impaCode ?? "-"}</td>
                         <td className={ui.tdCenter}>{item.vendorSku ?? "-"}</td>
-                        <td className={`${ui.tdCenter} font-extrabold text-[#630ED4]`}>
+                        <td className={`${ui.tdCenter} font-extrabold text-primary-700`}>
                           {formatRupiah(item.costPrice, "-")}
                         </td>
                       </tr>

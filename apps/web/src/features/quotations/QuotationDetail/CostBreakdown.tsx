@@ -77,7 +77,7 @@ export default function CostBreakdown({
         {hasProducts && showProfit && (
           <div className="mb-5 flex justify-between text-[11px] font-bold uppercase text-[#6B7280]">
             <span>Total Estimasi Profit</span>
-            <span className="text-xs text-[#630ED4]">{formatRp(totalProfit)}</span>
+            <span className="text-xs text-primary-700">{formatRp(totalProfit)}</span>
           </div>
         )}
 
@@ -85,7 +85,7 @@ export default function CostBreakdown({
           <span className="text-[11px] font-bold uppercase tracking-[1px] text-[#6B7280]">
             Grand Total
           </span>
-          <span className="text-[28px] font-extrabold tracking-[-0.5px] text-[#630ED4]">
+          <span className="text-[28px] font-extrabold tracking-[-0.5px] text-primary-700">
             {formatRp(grandTotal)}
           </span>
         </div>

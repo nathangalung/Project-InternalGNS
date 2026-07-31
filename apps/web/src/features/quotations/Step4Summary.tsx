@@ -131,7 +131,7 @@ export default function Step4Summary({
           {/* Card header with avatar */}
           <div className="flex items-center gap-4 border-b border-[rgba(204,195,216,0.15)] bg-[linear-gradient(135deg,rgba(99,14,212,0.04)_0%,rgba(99,14,212,0.01)_100%)] px-6 py-5">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[rgba(99,14,212,0.12)]">
-              <span className="text-base font-extrabold tracking-[-0.5px] text-[#630ED4]">
+              <span className="text-base font-extrabold tracking-[-0.5px] text-primary-700">
                 {currentClient?.initials || "—"}
               </span>
             </div>
@@ -489,14 +489,14 @@ export default function Step4Summary({
 
           <div className="mb-5 flex justify-between text-[11px] font-bold uppercase text-[#6B7280]">
             <span>Total Estimasi Profit</span>
-            <span className="text-xs text-[#630ED4]">Rp {formatRp(summaryProfit)}</span>
+            <span className="text-xs text-primary-700">Rp {formatRp(summaryProfit)}</span>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <span className="text-[11px] font-bold uppercase tracking-[1px] text-[#6B7280]">
               Grand Total
             </span>
-            <span className="text-[28px] font-extrabold tracking-[-0.5px] text-[#630ED4]">
+            <span className="text-[28px] font-extrabold tracking-[-0.5px] text-primary-700">
               Rp {formatRp(summaryGrandTotal)}
             </span>
           </div>

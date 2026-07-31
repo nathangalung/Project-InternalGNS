@@ -79,7 +79,7 @@ export default function ClientFilter({ onClose, onApply, initialValues }: Client
             disabled={!dirty}
             className={`mr-auto border-0 bg-transparent p-0 text-[13px] font-medium underline-offset-[3px] ${
               dirty
-                ? "cursor-pointer text-[#630ED4] underline"
+                ? "cursor-pointer text-primary-700 underline"
                 : "cursor-default text-[#CBD5E1] no-underline"
             }`}
           >

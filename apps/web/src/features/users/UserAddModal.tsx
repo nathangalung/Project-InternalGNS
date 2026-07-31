@@ -240,7 +240,7 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
             role="switch"
             aria-checked={isActive}
             className={`relative h-[22px] w-10 shrink-0 rounded-full transition-colors duration-200 ${
-              isActive ? "bg-[#630ED4]" : "bg-dark-300"
+              isActive ? "bg-primary-700" : "bg-dark-300"
             }`}
           >
             <span

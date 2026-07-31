@@ -14,7 +14,7 @@ export default function ActiveFilters({ chips, onClearAll }: ActiveFiltersProps)
       {chips.map((c) => (
         <span
           key={c.key}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(99,14,212,0.2)] bg-[rgba(99,14,212,0.07)] px-2.5 py-1 text-[12px] font-medium text-[#630ED4]"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(99,14,212,0.2)] bg-[rgba(99,14,212,0.07)] px-2.5 py-1 text-[12px] font-medium text-primary-700"
         >
           {c.label}
           {c.onRemove && (
@@ -22,7 +22,7 @@ export default function ActiveFilters({ chips, onClearAll }: ActiveFiltersProps)
               type="button"
               onClick={c.onRemove}
               aria-label={`Hapus filter ${c.label}`}
-              className="p-0 text-[15px] leading-none text-[#630ED4]"
+              className="p-0 text-[15px] leading-none text-primary-700"
             >
               ×
             </button>

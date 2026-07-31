@@ -85,7 +85,7 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
                     >
                       <span
                         className={`text-xs ${
-                          isActive ? "font-semibold text-[#630ED4]" : "font-normal text-[#4A4455]"
+                          isActive ? "font-semibold text-primary-700" : "font-normal text-[#4A4455]"
                         }`}
                       >
                         {val} Baris

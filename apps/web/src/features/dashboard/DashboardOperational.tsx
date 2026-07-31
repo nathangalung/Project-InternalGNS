@@ -178,7 +178,9 @@ export default function DashboardOperational({
                       className={`${ui.tr} ${onViewQuotation ? "cursor-pointer" : "cursor-default"}`}
                       onClick={() => onViewQuotation?.(Number(row.id))}
                     >
-                      <td className={`${ui.tdCenter} font-bold text-[#630ED4]`}>{row.displayNo}</td>
+                      <td className={`${ui.tdCenter} font-bold text-primary-700`}>
+                        {row.displayNo}
+                      </td>
                       <td className={ui.tdCenter}>{row.version}</td>
                       <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>{row.client}</td>
                       <td className={ui.tdCenter}>{row.date}</td>

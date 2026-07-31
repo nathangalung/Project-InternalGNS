@@ -264,7 +264,7 @@ export default function VendorAddModal({
               role="switch"
               aria-checked={isActive}
               className={`relative h-[22px] w-10 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] ${
-                isActive ? "bg-[#630ED4]" : "bg-[#CBD5E1]"
+                isActive ? "bg-primary-700" : "bg-[#CBD5E1]"
               }`}
             >
               <span

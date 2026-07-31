@@ -231,7 +231,7 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
                     const tierBadge = tier ? TIER_BADGE[tier] : undefined
                     return (
                       <tr key={it.id} className={ui.tr}>
-                        <td className={`${ui.tdCenter} font-bold text-[#630ED4]`}>
+                        <td className={`${ui.tdCenter} font-bold text-primary-700`}>
                           {it.impaCode ?? "-"}
                         </td>
                         <td

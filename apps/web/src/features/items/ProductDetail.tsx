@@ -260,7 +260,7 @@ export default function ProductDetail({
                 <h2 className="break-words text-lg font-bold leading-6 tracking-[-0.4px] text-[#191C1E]">
                   {product.name}
                 </h2>
-                <span className="text-[13px] font-bold leading-[18px] tracking-[0.3px] text-[#630ED4]">
+                <span className="text-[13px] font-bold leading-[18px] tracking-[0.3px] text-primary-700">
                   {product.impaCode ? `IMPA ${product.impaCode}` : "Produk"}
                 </span>
               </div>
@@ -428,7 +428,7 @@ export default function ProductDetail({
                     role="switch"
                     aria-checked={isActive}
                     className={`relative h-8 w-14 flex-shrink-0 rounded-full transition-colors duration-200 ${
-                      isActive ? "bg-[#630ED4]" : "bg-dark-300"
+                      isActive ? "bg-primary-700" : "bg-dark-300"
                     }`}
                   >
                     <span
@@ -455,7 +455,7 @@ export default function ProductDetail({
               disabled={!dirty || updateItem.isPending}
               className={`rounded-lg px-7 py-3 text-sm font-bold ${
                 dirty && !updateItem.isPending
-                  ? "cursor-pointer text-[#630ED4]"
+                  ? "cursor-pointer text-primary-700"
                   : "cursor-default text-[#CBD5E1]"
               }`}
             >
@@ -483,7 +483,7 @@ export default function ProductDetail({
                 <h3 className="text-xl font-extrabold leading-7 tracking-[-0.5px] text-[#191C1E]">
                   Daftar Vendor Terkait
                 </h3>
-                <span className="inline-flex items-center rounded-full bg-[rgba(99,14,212,0.08)] px-2.5 py-[3px] text-[11px] font-bold tracking-[0.2px] text-[#630ED4]">
+                <span className="inline-flex items-center rounded-full bg-[rgba(99,14,212,0.08)] px-2.5 py-[3px] text-[11px] font-bold tracking-[0.2px] text-primary-700">
                   {(itemVendors ?? []).length}
                 </span>
               </div>
@@ -563,7 +563,7 @@ export default function ProductDetail({
                       <tr key={v.vendorProductId} className={ui.tr}>
                         <td className={ui.td}>
                           <div className="flex items-center gap-3 pl-4">
-                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-dark-100 text-[13px] font-bold text-[#630ED4]">
+                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-dark-100 text-[13px] font-bold text-primary-700">
                               {initials || "?"}
                             </div>
                             <span className="text-sm font-medium text-[#191C1E]">

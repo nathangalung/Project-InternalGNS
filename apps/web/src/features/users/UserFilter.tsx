@@ -47,7 +47,7 @@ export default function UserFilter({ onClose, onApply, initialValues }: UserFilt
             disabled={!dirty}
             className={`mr-auto p-0 text-[13px] font-medium underline-offset-[3px] ${
               dirty
-                ? "cursor-pointer text-[#630ED4] underline"
+                ? "cursor-pointer text-primary-700 underline"
                 : "cursor-default text-dark-300 no-underline"
             }`}
           >

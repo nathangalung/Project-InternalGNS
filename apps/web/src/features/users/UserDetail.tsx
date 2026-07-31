@@ -325,7 +325,9 @@ export default function UserDetail({ user, onNavigate, onBack, onLogout }: UserD
                             >
                               <span
                                 className={`text-[14px] ${
-                                  active ? "font-bold text-[#630ED4]" : "font-medium text-[#4A4455]"
+                                  active
+                                    ? "font-bold text-primary-700"
+                                    : "font-medium text-[#4A4455]"
                                 }`}
                               >
                                 {opt.label}
@@ -367,7 +369,7 @@ export default function UserDetail({ user, onNavigate, onBack, onLogout }: UserD
                     role="switch"
                     aria-checked={isActive}
                     className={`relative h-8 w-14 shrink-0 rounded-full transition-colors duration-200 ${
-                      isActive ? "bg-[#630ED4]" : "bg-dark-300"
+                      isActive ? "bg-primary-700" : "bg-dark-300"
                     }`}
                   >
                     <span
@@ -394,7 +396,7 @@ export default function UserDetail({ user, onNavigate, onBack, onLogout }: UserD
               disabled={!dirty || updateUser.isPending}
               className={`rounded-lg px-7 py-3 text-[14px] font-bold ${
                 dirty && !updateUser.isPending
-                  ? "cursor-pointer text-[#630ED4]"
+                  ? "cursor-pointer text-primary-700"
                   : "cursor-default text-dark-300"
               }`}
             >

@@ -52,7 +52,7 @@ const DEFAULTS: DashboardFilterValues = {
 
 // Month chip: solid fill when active, muted surface when idle.
 const monthChip = "rounded-md px-3.5 py-3 text-center text-[13px] transition-all duration-150"
-const monthChipActive = "border-[1.5px] border-[#630ED4] bg-[#630ED4] font-semibold text-white"
+const monthChipActive = "border-[1.5px] border-primary-700 bg-primary-700 font-semibold text-white"
 const monthChipIdle = "border border-[#E5E7EB] bg-[#F7F7F8] font-medium text-[#4A4455]"
 
 export default function DashboardFinancialFilter({
@@ -92,7 +92,7 @@ export default function DashboardFinancialFilter({
             disabled={!dirty}
             className={`mr-auto inline-flex items-center gap-1.5 border-0 bg-transparent p-0 text-[13px] font-medium underline-offset-[3px] ${
               dirty
-                ? "cursor-pointer text-[#630ED4] underline"
+                ? "cursor-pointer text-primary-700 underline"
                 : "cursor-default text-[#CBD5E1] no-underline"
             }`}
           >

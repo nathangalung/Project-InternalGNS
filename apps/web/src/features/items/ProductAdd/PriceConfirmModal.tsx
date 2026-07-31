@@ -57,7 +57,7 @@ export default function PriceConfirmModal({
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-sm bg-[#630ED4] px-4 py-2 text-sm font-semibold text-white"
+            className="rounded-sm bg-primary-700 px-4 py-2 text-sm font-semibold text-white"
           >
             Iya
           </button>

@@ -92,7 +92,7 @@ export default function VendorAddModal({
             type="button"
             onClick={onSubmit}
             disabled={disableSubmit}
-            className="rounded-sm bg-[#630ED4] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-sm bg-primary-700 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSaving ? "Menyimpan..." : "Simpan"}
           </button>

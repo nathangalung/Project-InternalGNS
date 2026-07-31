@@ -39,9 +39,9 @@ const presetChip =
   "flex items-center justify-between rounded-md px-3.5 py-2.5 text-[13px] transition-all duration-150"
 const statusChip = "rounded-[20px] px-4 py-1.5 text-[13px] transition-all duration-150"
 const chipActive =
-  "border-[1.5px] border-[#630ED4] bg-[rgba(99,14,212,0.05)] font-bold text-[#630ED4]"
+  "border-[1.5px] border-primary-700 bg-[rgba(99,14,212,0.05)] font-bold text-primary-700"
 const statusChipActive =
-  "border-[1.5px] border-[#630ED4] bg-[rgba(99,14,212,0.07)] font-bold text-[#630ED4]"
+  "border-[1.5px] border-primary-700 bg-[rgba(99,14,212,0.07)] font-bold text-primary-700"
 const chipIdle = "border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] font-medium text-[#4A4455]"
 
 // Faithful port of the legacy ca-phone-wrapper/-prefix/-input trio.
@@ -101,7 +101,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
             onClick={handleReset}
             disabled={!dirty}
             className={`mr-auto p-0 text-[13px] font-medium underline-offset-[3px] ${
-              dirty ? "cursor-pointer text-[#630ED4] underline" : "cursor-default text-dark-300"
+              dirty ? "cursor-pointer text-primary-700 underline" : "cursor-default text-dark-300"
             }`}
           >
             Hapus Filter
@@ -132,7 +132,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                 >
                   {label}
                   {key === "kustom" ? (
-                    <span className={isActive ? "text-[#630ED4]" : "text-[#9CA3AF]"}>
+                    <span className={isActive ? "text-primary-700" : "text-[#9CA3AF]"}>
                       <IconCalendar />
                     </span>
                   ) : isActive ? (

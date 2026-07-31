@@ -30,7 +30,7 @@ interface QuotationEditProps {
 
 // Flat brand submit (legacy used a solid #630ED4, not the primary gradient).
 const flatSubmit =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-[#630ED4] px-6 py-2 text-sm font-bold text-white shadow-sm transition hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
+  "inline-flex items-center justify-center gap-2 rounded-md bg-primary-700 px-6 py-2 text-sm font-bold text-white shadow-sm transition hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
 
 const steps = [
   { n: 1, label: "KLIEN" },

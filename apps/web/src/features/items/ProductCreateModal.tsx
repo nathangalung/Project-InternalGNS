@@ -219,7 +219,7 @@ export default function ProductCreateModal({
           <div className="flex items-center gap-2.5">
             <span
               className={`text-[12px] font-bold uppercase tracking-[0.04em] ${
-                aktif ? "text-[#630ED4]" : "text-[#9CA3AF]"
+                aktif ? "text-primary-700" : "text-[#9CA3AF]"
               }`}
             >
               {aktif ? "AKTIF" : "NONAKTIF"}
@@ -230,7 +230,7 @@ export default function ProductCreateModal({
               role="switch"
               aria-checked={aktif}
               className={`relative h-[22px] w-10 flex-shrink-0 rounded-[11px] transition-colors duration-200 ${
-                aktif ? "bg-[#630ED4]" : "bg-[#D1D5DB]"
+                aktif ? "bg-primary-700" : "bg-[#D1D5DB]"
               }`}
             >
               <span

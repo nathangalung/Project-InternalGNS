@@ -187,7 +187,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
             <button
               type="button"
               onClick={startCreate}
-              className="rounded-sm border border-[#630ED4] bg-white px-3 py-1.5 text-xs font-semibold text-[#630ED4]"
+              className="rounded-sm border border-primary-700 bg-white px-3 py-1.5 text-xs font-semibold text-primary-700"
             >
               + Tambah Permintaan
             </button>
@@ -276,7 +276,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                         <button
                           type="button"
                           onClick={() => startEdit(r)}
-                          className="mr-2 text-xs text-[#630ED4]"
+                          className="mr-2 text-xs text-primary-700"
                         >
                           Edit
                         </button>
@@ -364,7 +364,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                   type="button"
                   onClick={submitDraft}
                   disabled={upsert.isPending}
-                  className="rounded-sm bg-[#630ED4] px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-wait disabled:opacity-70"
+                  className="rounded-sm bg-primary-700 px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-wait disabled:opacity-70"
                 >
                   {upsert.isPending ? "Menyimpan…" : "Simpan"}
                 </button>
