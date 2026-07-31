@@ -50,10 +50,6 @@ const DEFAULTS: DashboardFilterValues = {
   month: null,
 }
 
-// Faithful port of the legacy .ca-select-btn
-const selectBtnClass =
-  "flex w-full cursor-pointer items-center justify-between rounded-md border-[1.5px] border-transparent bg-dark-200 px-4 py-3 font-sans text-sm font-normal text-dark-900 outline-none transition-colors duration-200 focus:border-primary-600 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
-
 // Month chip: solid fill when active, muted surface when idle.
 const monthChip = "rounded-md px-3.5 py-3 text-center text-[13px] transition-all duration-150"
 const monthChipActive = "border-[1.5px] border-[#630ED4] bg-[#630ED4] font-semibold text-white"
@@ -136,7 +132,7 @@ export default function DashboardFinancialFilter({
           <div className="relative">
             <button
               type="button"
-              className={selectBtnClass}
+              className={ui.selectBtn}
               onClick={() => setYearOpen((o) => !o)}
               onBlur={() => setTimeout(() => setYearOpen(false), 150)}
             >

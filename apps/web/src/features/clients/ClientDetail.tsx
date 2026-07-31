@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
+import { dropdownItemStyle, dropdownLabelStyle } from "@/components/shared/filter-styles"
 import Sidebar from "@/components/shared/Sidebar"
 import * as clientsApi from "@/features/clients/api"
 import { getCompanyInitials } from "@/features/clients/helpers"
@@ -45,10 +46,9 @@ const grid2 = "grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))]"
 const dropdownPanelCls =
   "absolute left-0 right-0 top-[calc(100%+4px)] z-50 flex max-h-[260px] flex-col overflow-y-auto rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
 
-const dropdownItemCls = "flex w-full items-center justify-between gap-3 px-5 py-2.5 text-left"
-
 const contactCancelCls = "px-4 py-2 text-[13px] font-semibold text-[#630ED4]"
 
+// Brand gradient, faithful to legacy inline.
 const gradientCls = "bg-[linear-gradient(135deg,#630ED4_0%,#7C3AED_100%)]"
 
 // Contact form save button, enabled or not.
@@ -477,20 +477,14 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                                 <button
                                   key={c.code}
                                   type="button"
-                                  className={dropdownItemCls}
+                                  style={dropdownItemStyle}
                                   onClick={() => {
                                     setCountryCode(c.code)
                                     setCountryQuery("")
                                     setCountryOpen(false)
                                   }}
                                 >
-                                  <span
-                                    className={`text-sm leading-5 ${
-                                      active
-                                        ? "font-bold text-[#630ED4]"
-                                        : "font-medium text-[#4A4455]"
-                                    }`}
-                                  >
+                                  <span style={dropdownLabelStyle(active)}>
                                     {c.code} - {c.name}
                                   </span>
                                   {active && <CheckIcon />}

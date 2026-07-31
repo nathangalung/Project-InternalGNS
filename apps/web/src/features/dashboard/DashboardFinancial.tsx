@@ -145,7 +145,7 @@ export default function DashboardFinancial({
             <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
               <button
                 type="button"
-                className={`${ui.btnOutline} border-[rgba(99,14,212,0.2)] text-[#630ED4]`}
+                className={ui.btnOutline}
                 onClick={() => dashboardApi.exportXlsx(baseYear)}
               >
                 <svg

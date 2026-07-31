@@ -78,7 +78,7 @@ export default function TrendChart({
   }
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="chart-svg">
+    <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full">
       {yTicks.map((tick, i) => (
         <g key={i}>
           <line

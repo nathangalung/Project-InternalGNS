@@ -10,7 +10,6 @@ import {
   fieldErrorCls,
   inputCls,
   optionalCls,
-  selectBtnCls,
 } from "./helpers"
 
 interface CompanyCardProps {
@@ -83,7 +82,7 @@ export default function CompanyCard({
           <div className="relative">
             <button
               type="button"
-              className={selectBtnCls}
+              className={ui.selectBtn}
               onClick={() => {
                 if (isNamaPerusahaanFilled) setNegaraOpen((o) => !o)
               }}

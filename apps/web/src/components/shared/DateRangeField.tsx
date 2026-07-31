@@ -81,10 +81,8 @@ const iconStyle: CSSProperties = {
 // Date input with calendar icon.
 export function DateInput({ value, onChange, label }: DateInputProps) {
   return (
-    <div className="ca-field">
-      <label className="ca-label" style={labelStyle}>
-        {label}
-      </label>
+    <div className="flex flex-col gap-2">
+      <label style={labelStyle}>{label}</label>
       <div style={inputWrapStyle}>
         <span style={iconStyle}>
           <svg

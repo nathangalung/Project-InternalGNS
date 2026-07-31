@@ -5,7 +5,13 @@
 const gradientPrimary =
   "bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)]"
 
+// Disabled treatment for form controls.
+const disabledField = "disabled:cursor-not-allowed disabled:bg-[#F7F7F8] disabled:opacity-60"
+
 export const ui = {
+  // Disabled form control treatment
+  disabledField,
+
   // Layout
   pageTitle: "text-3xl font-bold tracking-tight text-dark-900",
   panel: "rounded-lg border border-dark-200 bg-white p-6 shadow-sm",
@@ -22,6 +28,16 @@ export const ui = {
   input:
     "w-full rounded-lg border-[1.5px] border-transparent bg-dark-100 px-4 py-2.5 text-sm text-dark-900 outline-none transition placeholder:text-dark-400 focus:border-primary-600 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]",
   label: "mb-2 block text-overline font-semibold uppercase tracking-[0.06em] text-dark-600",
+
+  // Select trigger, faithful to ca-select-btn
+  selectBtn: `flex w-full items-center justify-between rounded-md border-[1.5px] border-transparent bg-dark-200 px-4 py-3 font-sans text-sm font-normal text-dark-900 outline-none transition-[border-color] duration-200 focus:border-primary-600 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)] ${disabledField}`,
+
+  // Prefixed input group, from ca-phone-*
+  prefixWrap:
+    "flex h-11 overflow-hidden rounded-md border-[1.5px] border-transparent bg-dark-200 transition focus-within:border-primary-600 focus-within:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]",
+  prefixLabel:
+    "flex items-center whitespace-nowrap border-r border-dark-300 px-3 text-sm font-medium text-dark-600",
+  prefixInput: `min-w-0 flex-1 border-0 bg-transparent px-3 font-sans text-sm text-dark-900 outline-none placeholder:text-dark-500 ${disabledField}`,
 
   // Table (values kept faithful to the legacy .tbl-* classes)
   tableWrap: "overflow-x-auto rounded-md bg-white",

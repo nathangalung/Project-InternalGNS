@@ -1,13 +1,5 @@
 import { ui } from "@/lib/ui"
-import {
-  type ClientAddFormData,
-  fieldErrorCls,
-  inputCls,
-  optionalCls,
-  phoneInputCls,
-  phonePrefixCls,
-  phoneWrapCls,
-} from "./helpers"
+import { type ClientAddFormData, fieldErrorCls, inputCls, optionalCls } from "./helpers"
 
 interface ContactCardProps {
   form: ClientAddFormData
@@ -52,10 +44,10 @@ export default function ContactCard({
           <label className={ui.fieldLabel}>
             Nomor Telepon <span className={optionalCls}>(Opsional)</span>
           </label>
-          <div className={phoneWrapCls}>
-            <span className={phonePrefixCls}>+62</span>
+          <div className={ui.prefixWrap}>
+            <span className={ui.prefixLabel}>+62</span>
             <input
-              className={phoneInputCls}
+              className={ui.prefixInput}
               type="tel"
               placeholder="812xxxx"
               value={form.nomorTelepon}

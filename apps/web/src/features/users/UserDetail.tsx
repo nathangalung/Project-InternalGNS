@@ -36,10 +36,6 @@ const inputClass =
 
 const fieldErrorClass = "mt-1.5 text-[12px] text-[#DC2626]"
 
-// Faithful port of the legacy .ca-select-btn
-const selectBtnClass =
-  "flex w-full cursor-pointer items-center justify-between rounded-md border-[1.5px] border-transparent bg-dark-200 px-4 py-3 font-sans text-sm font-normal text-dark-900 outline-none transition-colors duration-200 focus:border-primary-600 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
-
 export default function UserDetail({ user, onNavigate, onBack, onLogout }: UserDetailProps) {
   const [name, setName] = useState(user.name)
   const [email, setEmail] = useState(user.email)
@@ -297,7 +293,7 @@ export default function UserDetail({ user, onNavigate, onBack, onLogout }: UserD
                   <div className="relative">
                     <button
                       type="button"
-                      className={selectBtnClass}
+                      className={ui.selectBtn}
                       onClick={() => setRoleOpen((o) => !o)}
                     >
                       <span>{ROLE_LABEL[role]}</span>
