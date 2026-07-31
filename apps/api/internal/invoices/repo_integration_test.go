@@ -128,6 +128,61 @@ func TestRepo_InvoiceMoneyMath(t *testing.T) {
 	assert.InDelta(t, dpp*0.11, ppn, 0.01)
 }
 
+func parseF(t *testing.T, s *string) float64 {
+	t.Helper()
+	require.NotNil(t, s)
+	v, err := strconv.ParseFloat(*s, 64)
+	require.NoError(t, err)
+	return v
+}
+
+// Header tax equals the sum of the per-line rounded values (matches the DJP
+// e-faktur filing), not ROUND of the summed base.
+func TestRepo_InvoiceHeaderEqualsLineSums(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	store := testutil.Store(t)
+
+	// Two lines of 100000: each line's dpp_nilai_lain rounds to 91666.67,
+	// summing to 183333.34, whereas ROUND(200000*11/12) is 183333.33.
+	qrepo := quotations.NewRepo(tx, store)
+	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		CompanyClientID: seedCompanyID,
+		DiscountPct:     "0",
+		Items: []quotations.CreateItem{
+			{RequestedName: "Product A", Qty: "1", UnitID: seedUnitID, SellingPrice: "100000"},
+			{RequestedName: "Product B", Qty: "1", UnitID: seedUnitID, SellingPrice: "100000"},
+		},
+	}, seedUserID)
+	require.NoError(t, err)
+	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "sent", nil, seedUserID))
+	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "accepted", nil, seedUserID))
+
+	porepo := purchaseorders.NewRepo(tx, store)
+	po, err := porepo.GetByQuotation(ctx, qid)
+	require.NoError(t, err)
+	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusOnProgress, seedUserID))
+	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusDelivered, seedUserID))
+
+	repo := invoices.NewRepo(tx, store)
+	inv, err := repo.GetByQuotation(ctx, qid)
+	require.NoError(t, err)
+	items, err := repo.ListItems(ctx, inv.ID)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(items), 2)
+
+	var sumDnl, sumPpn float64
+	for _, it := range items {
+		sumDnl += parseF(t, it.DppNilaiLain)
+		sumPpn += parseF(t, it.PpnAmount)
+	}
+	// Header must equal the per-line sums exactly.
+	assert.InDelta(t, sumDnl, parseF(t, inv.DppNilaiLain), 0.001)
+	assert.InDelta(t, sumPpn, parseF(t, inv.PpnAmount), 0.001)
+	// Grand total is dpp plus the summed ppn.
+	assert.InDelta(t, parseF(t, inv.Dpp)+sumPpn, parseF(t, inv.Total), 0.001)
+}
+
 func TestRepo_ChangeStatus_Lifecycle(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
