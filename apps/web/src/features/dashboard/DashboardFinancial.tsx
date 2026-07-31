@@ -2,6 +2,7 @@ import { type CSSProperties, useMemo, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
 import FilterButton from "@/components/shared/FilterButton"
 import Sidebar from "@/components/shared/Sidebar"
+import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
 import * as dashboardApi from "@/features/dashboard/api"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
@@ -9,6 +10,7 @@ import { useInvoices } from "@/features/invoices/hooks"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE, type InvoiceStatus } from "@/features/invoices/types"
 import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
 import { formatDate, formatNumber as formatId, formatRupiah as formatRp, toNum } from "@/lib/format"
+import { pill, ui } from "@/lib/ui"
 import type { Page } from "@/lib/page"
 import type { DashboardMetric, InvoiceBackendRow } from "@/types/api"
 import DashboardFinancialFilter, {
@@ -195,53 +197,28 @@ export default function DashboardFinancial({
           )}
 
           {/* Row 1 */}
-          <div className="stats-grid-3">
-            <div className="stat-card">
-              <div className="stat-label">Total Pendapatan</div>
-              <div className="stat-value">{formatRp(totalRevenue)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Total Pengeluaran</div>
-              <div className="stat-value">{formatRp(totalExpenses)}</div>
-            </div>
-            <div className="stat-card stat-card--accent">
-              <div className="stat-label">Total Purchase Order</div>
-              <div className="stat-value">{formatId(totalPo)}</div>
-            </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard label="Total Pendapatan" value={formatRp(totalRevenue)} />
+            <StatCard label="Total Pengeluaran" value={formatRp(totalExpenses)} />
+            <StatCard label="Total Purchase Order" value={formatId(totalPo)} />
           </div>
 
           {/* Row 2 */}
-          <div className="stats-grid-3">
-            <div className="stat-card">
-              <div className="stat-label">Total Laba Bersih</div>
-              <div className="stat-value">{formatRp(totalProfit)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Total PPN</div>
-              <div className="stat-value">{formatRp(totalPpn)}</div>
-            </div>
-            <div className="stat-card stat-card--accent-light">
-              <div
-                className="card-overlay"
-                style={{
-                  background: "linear-gradient(82.48deg, rgba(63,86,255,.5) 6.42%, #DBEAFE 93.58%)",
-                  opacity: 0.5,
-                }}
-              />
-              <div className="stat-label">Total Invoice</div>
-              <div className="stat-value">{formatId(totalInvoice)}</div>
-            </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard label="Total Laba Bersih" value={formatRp(totalProfit)} />
+            <StatCard label="Total PPN" value={formatRp(totalPpn)} />
+            <StatCard label="Total Invoice" value={formatId(totalInvoice)} />
           </div>
 
           {/* Chart */}
-          <div className="chart-section">
-            <div className="chart-header">
-              <h3 className="chart-title">Tren Performa Finansial</h3>
-              <div className="chart-tabs">
+          <div className={ui.panel}>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h3 className={ui.sectionTitle}>Tren Performa Finansial</h3>
+              <div className="flex flex-wrap gap-2">
                 {chartTabs.map((tab) => (
                   <button
                     key={tab.label}
-                    className={`chart-tab${activeTab === tab.label ? " chart-tab--active" : ""}`}
+                    className={pill(activeTab === tab.label)}
                     onClick={() => setActiveTab(tab.label)}
                   >
                     {tab.label}
@@ -260,31 +237,26 @@ export default function DashboardFinancial({
           </div>
 
           {/* Alerts */}
-          <div className="alert-row">
-            <div className="alert-card alert--warning">
-              <div
-                className="card-overlay"
-                style={{
-                  background:
-                    "linear-gradient(82.48deg, rgba(217,119,6,.5) 6.42%, rgba(245,158,11,.1) 93.58%)",
-                  opacity: 0.5,
-                }}
-              />
-              <div className="alert-content">
-                <h3>{formatId(dueSoon)} Invoice</h3>
-                <p>Invoice akan segera jatuh tempo</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-warning/30 bg-warning/10 px-6 py-6">
+              <div>
+                <h3 className="text-xl font-bold text-accent-900">{formatId(dueSoon)} Invoice</h3>
+                <p className="mt-1 text-overline font-semibold uppercase tracking-[0.05em] text-accent-800/70">
+                  Invoice akan segera jatuh tempo
+                </p>
               </div>
-              <button className="alert-btn" onClick={onViewAllInvoices}>
+              <button type="button" className={ui.btnPrimary} onClick={onViewAllInvoices}>
                 Tinjau
               </button>
             </div>
-            <div className="alert-card alert--danger">
-              <div className="card-glow" style={{ background: "rgba(239,94,94,.3)" }} />
-              <div className="alert-content">
-                <h3>{formatId(overdue)} Invoice</h3>
-                <p>Invoice telah jatuh tempo</p>
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-error/30 bg-error/10 px-6 py-6">
+              <div>
+                <h3 className="text-xl font-bold text-red-800">{formatId(overdue)} Invoice</h3>
+                <p className="mt-1 text-overline font-semibold uppercase tracking-[0.05em] text-red-700/70">
+                  Invoice telah jatuh tempo
+                </p>
               </div>
-              <button className="alert-btn" onClick={onViewAllInvoices}>
+              <button type="button" className={ui.btnPrimary} onClick={onViewAllInvoices}>
                 Tinjau
               </button>
             </div>
