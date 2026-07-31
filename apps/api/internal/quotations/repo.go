@@ -247,31 +247,20 @@ func (r *Repo) Update(
 	return newVersion, nil
 }
 
-// ChangeStatus calls fn_change_quotation_status atomically.
-// Finalizing (sent/accepted) requires every product line to be priced.
+// ChangeStatus calls fn_change_quotation_status atomically. Finalizing
+// (sent/accepted) requires every product priced; that guard runs inside the
+// function under its row lock and surfaces as SQLSTATE P0100.
 func (r *Repo) ChangeStatus(ctx context.Context, id int64, status string, note *string, userID int64) error {
-	if status == "sent" || status == "accepted" {
-		n, err := r.countUnpricedProducts(ctx, id)
-		if err != nil {
-			return err
-		}
-		if n > 0 {
-			return ErrUnpricedProducts
-		}
-	}
 	_, err := r.db.Exec(ctx, r.store.Get("quotations.fn_change_status"),
 		id, status, userID, note,
 	)
-	return err
-}
-
-// countUnpricedProducts counts product lines with no positive selling price.
-func (r *Repo) countUnpricedProducts(ctx context.Context, id int64) (int, error) {
-	rows, err := r.db.Query(ctx, r.store.Get("quotations.count_unpriced_products"), id)
 	if err != nil {
-		return 0, err
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "P0100" {
+			return ErrUnpricedProducts
+		}
 	}
-	return pgx.CollectOneRow(rows, pgx.RowTo[int])
+	return err
 }
 
 // UpdateContact updates contact snapshot.

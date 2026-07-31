@@ -170,12 +170,6 @@ DELETE FROM quotation_item_requests
 WHERE id = $1
 RETURNING id;
 
--- name: quotations.count_unpriced_products
-SELECT count(*)::int
-FROM quotation_items
-WHERE quotation_id = $1
-  AND item_type = 'product'
-  AND (selling_price IS NULL OR selling_price <= 0);
 
 -- name: quotations.update_contact
 WITH q AS (
