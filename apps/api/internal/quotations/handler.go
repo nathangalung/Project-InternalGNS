@@ -173,7 +173,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ifMatch, err := parseIfMatch(r.Header.Get("If-Match"))
+	ifMatch, err := httpx.ParseIfMatch(r.Header.Get("If-Match"))
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest(err.Error()))
 		return
@@ -212,20 +212,6 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		"id":         id,
 		"rowVersion": newVersion,
 	})
-}
-
-func parseIfMatch(raw string) (*int32, error) {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return nil, nil
-	}
-	raw = strings.Trim(raw, `"`)
-	v, err := strconv.ParseInt(raw, 10, 32)
-	if err != nil {
-		return nil, errors.New("invalid If-Match")
-	}
-	r32 := int32(v)
-	return &r32, nil
 }
 
 func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {

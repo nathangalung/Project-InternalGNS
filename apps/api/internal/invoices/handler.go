@@ -234,7 +234,7 @@ func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
-	ifMatch, err := parseIfMatch(r.Header.Get("If-Match"))
+	ifMatch, err := httpx.ParseIfMatch(r.Header.Get("If-Match"))
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest("invalid If-Match header"))
 		return
@@ -258,20 +258,6 @@ func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]int32{"rowVersion": newVersion})
-}
-
-// parseIfMatch reads optimistic-lock header. Required when present-but-empty rejected.
-func parseIfMatch(raw string) (*int32, error) {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return nil, nil
-	}
-	n, err := strconv.ParseInt(raw, 10, 32)
-	if err != nil {
-		return nil, errors.New("invalid If-Match header")
-	}
-	v := int32(n)
-	return &v, nil
 }
 
 func isValidStatus(s Status) bool {
