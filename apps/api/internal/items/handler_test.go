@@ -336,6 +336,17 @@ func TestHandler_MatchRows_Empty(t *testing.T) {
 	assert.Empty(t, out.Rows)
 }
 
+func TestHandler_MatchRows_TooManyRows(t *testing.T) {
+	srv := newSrv(t)
+	rows := make([]items.MatchRowInput, 501)
+	for i := range rows {
+		rows[i] = items.MatchRowInput{Name: "x"}
+	}
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", items.MatchRowsRequest{Rows: rows})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+}
+
 func TestHandler_MatchRows_IMPAExact(t *testing.T) {
 	srv := newSrv(t)
 	body := items.MatchRowsRequest{

@@ -3,6 +3,7 @@ package items
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"sort"
 	"strconv"
@@ -398,6 +399,15 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(req.Rows) == 0 {
 		httpx.WriteJSON(w, http.StatusOK, MatchRowsResponse{Rows: []MatchRowResult{}})
+		return
+	}
+	// Bound the batch: each row runs 1-3 sequential queries on one connection,
+	// so an unbounded batch holds a pool connection open indefinitely.
+	const maxMatchRows = 500
+	if len(req.Rows) > maxMatchRows {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{
+			"rows": fmt.Sprintf("too many rows in one request; split into batches of %d", maxMatchRows),
+		}))
 		return
 	}
 	minScore := req.MinScore
