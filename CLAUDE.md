@@ -13,9 +13,11 @@ Bun-managed monorepo.
   hand-written in `.sql` files that are embedded and parsed at startup
   (`apps/api/db/queries`); there is no ORM or code generator.
 - Frontend (`apps/web`): React 19 with strict TypeScript, Vite 7, TanStack
-  Router/Query/Table, Bun runtime, Biome for lint and format. Styling is plain
-  CSS (`src/styles/admin.css`, `src/styles/design-tokens.css`) and the layout is
-  responsive down to 320px.
+  Router/Query/Table, Bun runtime, Biome for lint and format. Styling is
+  Tailwind CSS v4: shared class-string primitives in `src/lib/ui.ts` and the
+  `Modal` shell in `src/components/shared`, with `src/styles/design-tokens.css`
+  (the brand scale) and a small `src/styles/layout.css` (app shell + page
+  scaffold) as the only stylesheets. Preflight is off. Responsive down to 320px.
 - Infra: PostgreSQL 18, MinIO for object storage, xelatex for PDF rendering,
   Dokploy with Traefik for deployment, Nginx to serve the built frontend.
 
@@ -95,8 +97,8 @@ src/
   routes/            TanStack Router, auto-generated route tree
   features/          One folder per feature: api.ts, hooks.ts, components
   components/shared/ Sidebar, tables, pagination, shared UI
-  lib/               api-client, rbac, format, status, chart helpers
-  styles/            admin.css, design-tokens.css
+  lib/               api-client, rbac, format, status, chart helpers, ui (tailwind primitives)
+  styles/            tailwind.css (entry), design-tokens.css, layout.css
   types/             Hand-maintained API types
 ```
 
