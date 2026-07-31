@@ -1,6 +1,7 @@
-import { type CSSProperties, type KeyboardEvent, useMemo, useState } from "react"
+import { type CSSProperties, useMemo, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
 import Sidebar from "@/components/shared/Sidebar"
+import StatCard from "@/components/shared/StatCard"
 import { useMe } from "@/features/auth/hooks"
 import * as dashboardApi from "@/features/dashboard/api"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
@@ -91,17 +92,6 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
   const totalPaid = summary?.totalInvoicesPaid ?? 0
   const dueSoon = summary?.invoicesDueSoon ?? 0
   const overdue = summary?.invoicesOverdue ?? 0
-
-  // Stat cards jump to the related list page.
-  const cardNav = (page: Page) => ({
-    onClick: () => onNavigate(page),
-    onKeyDown: (e: KeyboardEvent) => {
-      if (e.key === "Enter" || e.key === " ") onNavigate(page)
-    },
-    role: "button",
-    tabIndex: 0,
-    style: { cursor: "pointer" },
-  })
 
   return (
     <div className="admin-shell">
@@ -203,61 +193,64 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
             </div>
           </div>
           {canFinance && (
-            <div className="stats-grid-2">
-              <div className="stat-card" {...cardNav("invoices")}>
-                <div className="stat-label">Total Pendapatan</div>
-                <div className="stat-value">{formatRp(totalRevenue)}</div>
-              </div>
-              <div className="stat-card" {...cardNav("purchase-orders")}>
-                <div className="stat-label">Total Pengeluaran</div>
-                <div className="stat-value">{formatRp(totalExpenses)}</div>
-              </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <StatCard
+                label="Total Pendapatan"
+                value={formatRp(totalRevenue)}
+                onClick={() => onNavigate("invoices")}
+              />
+              <StatCard
+                label="Total Pengeluaran"
+                value={formatRp(totalExpenses)}
+                onClick={() => onNavigate("purchase-orders")}
+              />
             </div>
           )}
 
           {canFinance && (
-            <div className="stats-grid-3">
-              <div className="stat-card" {...cardNav("invoices")}>
-                <div className="stat-label">Total Laba Bersih</div>
-                <div className="stat-value">{formatRp(totalProfit)}</div>
-              </div>
-              <div className="stat-card" {...cardNav("invoices")}>
-                <div className="stat-label">Total PPN</div>
-                <div className="stat-value">{formatRp(totalPpn)}</div>
-              </div>
-              <div className="stat-card stat-card--accent-light" {...cardNav("invoices")}>
-                <div
-                  className="card-overlay"
-                  style={{
-                    background:
-                      "linear-gradient(82.48deg, rgba(63,86,255,.5) 6.42%, #DBEAFE 93.58%)",
-                    opacity: 0.5,
-                  }}
-                />
-                <div className="stat-label">Total Invoice</div>
-                <div className="stat-value">{formatId(totalInvoice)}</div>
-              </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <StatCard
+                label="Total Laba Bersih"
+                value={formatRp(totalProfit)}
+                onClick={() => onNavigate("invoices")}
+              />
+              <StatCard
+                label="Total PPN"
+                value={formatRp(totalPpn)}
+                onClick={() => onNavigate("invoices")}
+              />
+              <StatCard
+                label="Total Invoice"
+                value={formatId(totalInvoice)}
+                onClick={() => onNavigate("invoices")}
+              />
             </div>
           )}
 
-          <div className={canFinance ? "stats-grid-4" : "stats-grid-3"}>
-            <div className="stat-card" {...cardNav("quotation")}>
-              <div className="stat-label">Total Quotation</div>
-              <div className="stat-value">{formatId(totalQuotation)}</div>
-            </div>
-            <div className="stat-card" {...cardNav("quotation")}>
-              <div className="stat-label">Total Quotation Ditolak</div>
-              <div className="stat-value">{formatId(totalRejected)}</div>
-            </div>
-            <div className="stat-card" {...cardNav("purchase-orders")}>
-              <div className="stat-label">Total Purchase Order</div>
-              <div className="stat-value">{formatId(totalPo)}</div>
-            </div>
+          <div
+            className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${canFinance ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}
+          >
+            <StatCard
+              label="Total Quotation"
+              value={formatId(totalQuotation)}
+              onClick={() => onNavigate("quotation")}
+            />
+            <StatCard
+              label="Total Quotation Ditolak"
+              value={formatId(totalRejected)}
+              onClick={() => onNavigate("quotation")}
+            />
+            <StatCard
+              label="Total Purchase Order"
+              value={formatId(totalPo)}
+              onClick={() => onNavigate("purchase-orders")}
+            />
             {canFinance && (
-              <div className="stat-card" {...cardNav("invoices")}>
-                <div className="stat-label">Total Invoice Dibayar</div>
-                <div className="stat-value">{formatId(totalPaid)}</div>
-              </div>
+              <StatCard
+                label="Total Invoice Dibayar"
+                value={formatId(totalPaid)}
+                onClick={() => onNavigate("invoices")}
+              />
             )}
           </div>
 
