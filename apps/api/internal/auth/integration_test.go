@@ -78,6 +78,55 @@ func TestService_Login_UnknownEmail_RealDB(t *testing.T) {
 	assert.ErrorIs(t, err, auth.ErrEmailNotRegistered)
 }
 
+func TestService_Login_LocksAfterFiveFailures_RealDB(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := users.NewRepo(tx, testutil.Store(t))
+	email := uniqueEmail(t)
+	_, err := repo.Create(ctx, users.CreateUserRequest{
+		Email: email, Name: "x", Password: "right-pw", Role: users.RoleOperational,
+	}, 1)
+	require.NoError(t, err)
+
+	svc := auth.NewService(repo, "test-secret-please-change", time.Minute)
+
+	for i := 0; i < 5; i++ {
+		_, err = svc.Login(ctx, email, "wrong-pw")
+		assert.ErrorIs(t, err, auth.ErrInvalidCredentials)
+	}
+
+	// Locked now: even the correct password is refused.
+	_, err = svc.Login(ctx, email, "right-pw")
+	assert.ErrorIs(t, err, auth.ErrAccountLocked)
+
+	st, err := repo.LockStatus(ctx, email)
+	require.NoError(t, err)
+	require.NotNil(t, st.LockedUntil)
+	assert.True(t, st.LockedUntil.After(time.Now()))
+}
+
+func TestService_Login_SuccessResetsAttempts_RealDB(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := users.NewRepo(tx, testutil.Store(t))
+	email := uniqueEmail(t)
+	_, err := repo.Create(ctx, users.CreateUserRequest{
+		Email: email, Name: "x", Password: "right-pw", Role: users.RoleOperational,
+	}, 1)
+	require.NoError(t, err)
+
+	svc := auth.NewService(repo, "test-secret-please-change", time.Minute)
+
+	for i := 0; i < 3; i++ {
+		_, _ = svc.Login(ctx, email, "wrong-pw")
+	}
+	_, err = svc.Login(ctx, email, "right-pw")
+	require.NoError(t, err)
+
+	st, err := repo.LockStatus(ctx, email)
+	require.NoError(t, err)
+	assert.Equal(t, 0, st.FailedLoginAttempts)
+	assert.Nil(t, st.LockedUntil)
+}
+
 // uniqueEmail keeps tests in the same process from colliding on the unique
 // email index even though each test runs in its own rolled-back tx.
 func uniqueEmail(t *testing.T) string {

@@ -47,6 +47,10 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unauthorized("invalid password"))
 		return
 	}
+	if errors.Is(err, ErrAccountLocked) {
+		httperr.Render(w, httperr.TooManyRequests("account temporarily locked, try again later"))
+		return
+	}
 	if err != nil {
 		httperr.RenderDBErr(w, err)
 		return

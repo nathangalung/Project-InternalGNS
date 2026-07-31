@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -34,6 +35,37 @@ func (r *Repo) GetByEmail(ctx context.Context, email string) (User, error) {
 		return User{}, ErrNotFound
 	}
 	return u, err
+}
+
+// LockStatus reports login-lockout state for an email.
+type LockStatus struct {
+	FailedLoginAttempts int        `db:"failed_login_attempts"`
+	LockedUntil         *time.Time `db:"locked_until"`
+}
+
+// LockStatus reads the account's lockout state.
+func (r *Repo) LockStatus(ctx context.Context, email string) (LockStatus, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("users.lock_status"), email)
+	if err != nil {
+		return LockStatus{}, err
+	}
+	s, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[LockStatus])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return LockStatus{}, ErrNotFound
+	}
+	return s, err
+}
+
+// RecordFailedLogin increments the counter and locks past the threshold.
+func (r *Repo) RecordFailedLogin(ctx context.Context, email string) error {
+	_, err := r.db.Exec(ctx, r.store.Get("users.record_failed_login"), email)
+	return err
+}
+
+// ResetLoginAttempts clears the counter after a successful login.
+func (r *Repo) ResetLoginAttempts(ctx context.Context, email string) error {
+	_, err := r.db.Exec(ctx, r.store.Get("users.reset_login_attempts"), email)
+	return err
 }
 
 func (r *Repo) GetByID(ctx context.Context, id int64) (User, error) {

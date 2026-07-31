@@ -10,6 +10,26 @@ SELECT id, email, name, password_hash, role,
 FROM users
 WHERE id = $1 AND is_active = TRUE;
 
+-- name: users.lock_status
+SELECT failed_login_attempts, locked_until
+FROM users
+WHERE LOWER(email) = LOWER($1) AND is_active = TRUE;
+
+-- name: users.record_failed_login
+UPDATE users
+   SET failed_login_attempts = failed_login_attempts + 1,
+       locked_until = CASE
+         WHEN failed_login_attempts + 1 >= 5
+         THEN now() + interval '15 minutes'
+         ELSE locked_until
+       END
+ WHERE LOWER(email) = LOWER($1) AND is_active = TRUE;
+
+-- name: users.reset_login_attempts
+UPDATE users
+   SET failed_login_attempts = 0, locked_until = NULL
+ WHERE LOWER(email) = LOWER($1) AND is_active = TRUE;
+
 -- name: users.create
 INSERT INTO users (email, name, password_hash, role, is_active, created_by, updated_by)
 VALUES ($1, $2, $3, $4, COALESCE($5, TRUE), $6, $6)

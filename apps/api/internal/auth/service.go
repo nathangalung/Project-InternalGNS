@@ -16,6 +16,7 @@ var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrEmailNotRegistered = errors.New("email not registered")
 	ErrInvalidToken       = errors.New("invalid token")
+	ErrAccountLocked      = errors.New("account temporarily locked")
 )
 
 type Service struct {
@@ -78,8 +79,24 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 		return LoginResponse{}, err
 	}
 
+	// Per-account lockout: reject before checking the password so a locked
+	// account cannot be probed, and count each miss toward the threshold.
+	lock, err := s.users.LockStatus(ctx, email)
+	if err != nil {
+		return LoginResponse{}, err
+	}
+	if lock.LockedUntil != nil && lock.LockedUntil.After(time.Now()) {
+		return LoginResponse{}, ErrAccountLocked
+	}
+
 	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)); err != nil {
+		if rerr := s.users.RecordFailedLogin(ctx, email); rerr != nil {
+			return LoginResponse{}, rerr
+		}
 		return LoginResponse{}, ErrInvalidCredentials
+	}
+	if err := s.users.ResetLoginAttempts(ctx, email); err != nil {
+		return LoginResponse{}, err
 	}
 
 	now := time.Now()

@@ -45,6 +45,9 @@ func Conflict(detail string) Error {
 func Unprocessable(fields map[string]string) Error {
 	return Error{Type: "about:blank", Title: "Unprocessable Entity", Status: http.StatusUnprocessableEntity, Fields: fields}
 }
+func TooManyRequests(detail string) Error {
+	return Error{Type: "about:blank", Title: "Too Many Requests", Status: http.StatusTooManyRequests, Detail: detail}
+}
 func Internal(detail string) Error {
 	return Error{Type: "about:blank", Title: "Internal Server Error", Status: http.StatusInternalServerError, Detail: detail}
 }
