@@ -1,4 +1,4 @@
-import { type CSSProperties, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
 import Sidebar from "@/components/shared/Sidebar"
 import StatCard from "@/components/shared/StatCard"
@@ -9,25 +9,10 @@ import { buildSeries, yearRange } from "@/lib/chart"
 import { formatNumber as formatId, formatRupiah as formatRp, toNum } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import { roleCanAccess } from "@/lib/rbac"
+import { pill, ui } from "@/lib/ui"
 import type { DashboardMetric } from "@/types/api"
 import { YEAR_OPTIONS } from "./DashboardFinancialFilter"
 import TrendChart from "./TrendChart"
-
-const exportBtnStyle: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "8px",
-  padding: "8px 20px",
-  border: "1px solid rgba(99, 14, 212, 0.2)",
-  borderRadius: "8px",
-  background: "#FFFFFF",
-  cursor: "pointer",
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: 600,
-  fontSize: "14px",
-  lineHeight: 1.25,
-  color: "#630ED4",
-}
 
 const chartTabs: { label: string; metric: DashboardMetric }[] = [
   { label: "Quotation", metric: "quotation" },
@@ -101,11 +86,11 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
         <div className="page-content" style={{ gap: "29px" }}>
           <div className="page-header">
             <h1 className="page-title">Dashboard Utama</h1>
-            <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
+            <div className="flex flex-wrap items-center gap-2.5">
               {canFinance && (
                 <button
                   type="button"
-                  style={exportBtnStyle}
+                  className={ui.btnOutline}
                   onClick={() => dashboardApi.exportXlsx(baseYear)}
                 >
                   <svg
@@ -113,7 +98,7 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
                     height="16"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke="#630ED4"
+                    stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -125,10 +110,10 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
                   Ekspor Excel
                 </button>
               )}
-              <div style={{ position: "relative" }}>
+              <div className="relative">
                 <button
                   type="button"
-                  className="btn-admin-filter"
+                  className={ui.btnPrimary}
                   onClick={() => setShowYearMenu((v) => !v)}
                 >
                   <svg
@@ -148,20 +133,7 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
                   Grafik: {baseYear}
                 </button>
                 {showYearMenu && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      right: 0,
-                      top: "calc(100% + 4px)",
-                      background: "#fff",
-                      border: "1px solid #E5E7EB",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 12px rgba(0,0,0,.12)",
-                      zIndex: 20,
-                      minWidth: "130px",
-                      overflow: "hidden",
-                    }}
-                  >
+                  <div className="absolute right-0 top-[calc(100%+4px)] z-20 min-w-[130px] overflow-hidden rounded-lg border border-dark-200 bg-white shadow-lg">
                     {yearOptions.map((y) => (
                       <button
                         key={y}
@@ -170,19 +142,11 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
                           setBaseYear(y)
                           setShowYearMenu(false)
                         }}
-                        style={{
-                          display: "block",
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "9px 14px",
-                          border: "none",
-                          background: y === baseYear ? "rgba(99,14,212,.06)" : "#fff",
-                          cursor: "pointer",
-                          fontFamily: "'Inter', sans-serif",
-                          fontWeight: y === baseYear ? 600 : 500,
-                          fontSize: "13px",
-                          color: y === baseYear ? "#630ED4" : "#4A4455",
-                        }}
+                        className={`block w-full px-3.5 py-2 text-left text-[13px] transition hover:bg-dark-100 ${
+                          y === baseYear
+                            ? "bg-primary-50 font-semibold text-primary-700"
+                            : "font-medium text-dark-600"
+                        }`}
                       >
                         Tahun {y}
                       </button>
@@ -264,14 +228,14 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
               },
             ]}
           />
-          <div className="chart-section">
-            <div className="chart-header">
-              <h3 className="chart-title">Tren Performa</h3>
-              <div className="chart-tabs">
+          <div className={ui.panel}>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h3 className={ui.sectionTitle}>Tren Performa</h3>
+              <div className="flex flex-wrap gap-2">
                 {visibleTabs.map((tab) => (
                   <button
                     key={tab.label}
-                    className={`chart-tab${activeTab === tab.label ? " chart-tab--active" : ""}`}
+                    className={pill(activeTab === tab.label)}
                     onClick={() => setActiveTab(tab.label)}
                   >
                     {tab.label}
@@ -294,31 +258,34 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
           </div>
 
           {canFinance && (
-            <div className="alert-row">
-              <div className="alert-card alert--warning">
-                <div
-                  className="card-overlay"
-                  style={{
-                    background:
-                      "linear-gradient(82.48deg, rgba(217,119,6,.5) 6.42%, rgba(245,158,11,.1) 93.58%)",
-                    opacity: 0.5,
-                  }}
-                />
-                <div className="alert-content">
-                  <h3>{formatId(dueSoon)} Invoice</h3>
-                  <p>Invoice akan segera jatuh tempo</p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="flex items-center justify-between gap-4 rounded-xl border border-warning/30 bg-warning/10 px-6 py-6">
+                <div>
+                  <h3 className="text-xl font-bold text-accent-900">{formatId(dueSoon)} Invoice</h3>
+                  <p className="mt-1 text-overline font-semibold uppercase tracking-[0.05em] text-accent-800/70">
+                    Invoice akan segera jatuh tempo
+                  </p>
                 </div>
-                <button type="button" className="alert-btn" onClick={() => onNavigate("invoices")}>
+                <button
+                  type="button"
+                  className={ui.btnPrimary}
+                  onClick={() => onNavigate("invoices")}
+                >
                   Tinjau
                 </button>
               </div>
-              <div className="alert-card alert--danger">
-                <div className="card-glow" style={{ background: "rgba(239,94,94,.3)" }} />
-                <div className="alert-content">
-                  <h3>{formatId(overdue)} Invoice</h3>
-                  <p>Invoice telah jatuh tempo</p>
+              <div className="flex items-center justify-between gap-4 rounded-xl border border-error/30 bg-error/10 px-6 py-6">
+                <div>
+                  <h3 className="text-xl font-bold text-red-800">{formatId(overdue)} Invoice</h3>
+                  <p className="mt-1 text-overline font-semibold uppercase tracking-[0.05em] text-red-700/70">
+                    Invoice telah jatuh tempo
+                  </p>
                 </div>
-                <button type="button" className="alert-btn" onClick={() => onNavigate("invoices")}>
+                <button
+                  type="button"
+                  className={ui.btnPrimary}
+                  onClick={() => onNavigate("invoices")}
+                >
                   Tinjau
                 </button>
               </div>
