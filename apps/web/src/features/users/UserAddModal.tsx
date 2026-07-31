@@ -133,16 +133,7 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
                   onChange={(e) => setEmail(e.target.value)}
                 />
                 {emailError && (
-                  <span
-                    style={{
-                      fontSize: "12px",
-                      color: "#EF4444",
-                      marginTop: "4px",
-                      display: "block",
-                    }}
-                  >
-                    {emailError}
-                  </span>
+                  <span className="mt-1 block text-[12px] text-error">{emailError}</span>
                 )}
               </div>
             </div>
@@ -154,31 +145,18 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
               <label className="ca-label">
                 Kata Sandi <span className="ca-required">*</span>
               </label>
-              <div style={{ position: "relative" }}>
+              <div className="relative">
                 <input
-                  className="ca-input"
+                  className="ca-input pr-11"
                   type={showPwd ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  style={{ paddingRight: "44px" }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPwd((s) => !s)}
-                  style={{
-                    position: "absolute",
-                    right: "12px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    color: "#94A3B8",
-                    padding: "4px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
+                  className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center p-1 text-dark-400"
                   tabIndex={-1}
                   title={showPwd ? "Sembunyikan" : "Tampilkan"}
                 >
@@ -222,7 +200,7 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
           <div className="ca-section">
             <div className="ca-section-heading">Peran</div>
             <div className="ca-field">
-              <div className="rgrid-3" style={{ display: "grid", gap: "12px" }}>
+              <div className="rgrid-3 grid gap-3">
                 {ROLE_CARDS.map((card) => {
                   const isActive = role === card.value
                   return (
@@ -230,23 +208,11 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
                       key={card.value}
                       type="button"
                       onClick={() => setRole(card.value)}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: "14px 12px",
-                        borderRadius: "8px",
-                        border: "none",
-                        background: isActive ? "#EADDFF" : "#F2F4F6",
-                        boxShadow: isActive ? "0 0 0 1.5px rgba(99, 14, 212, 0.4)" : "none",
-                        cursor: "pointer",
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: isActive ? 700 : 500,
-                        fontSize: "13px",
-                        letterSpacing: "-0.2px",
-                        color: isActive ? "#5B21B6" : "#191C1E",
-                        transition: "all 0.15s",
-                      }}
+                      className={`flex items-center justify-center rounded-md px-3 py-[14px] text-[13px] tracking-[-0.2px] transition-all duration-150 ${
+                        isActive
+                          ? "bg-[#EADDFF] font-bold text-primary-800 shadow-[0_0_0_1.5px_rgba(99,14,212,0.4)]"
+                          : "bg-[#F2F4F6] font-medium text-[#191C1E]"
+                      }`}
                     >
                       {card.label}
                     </button>
@@ -257,40 +223,12 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
           </div>
 
           <div className="ca-section">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "12px",
-                padding: "10px 14px",
-                background: "#F2F4F6",
-                border: "1px solid rgba(204, 195, 216, 0.1)",
-                borderRadius: "8px",
-              }}
-            >
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "13px",
-                    lineHeight: "18px",
-                    color: "#191C1E",
-                  }}
-                >
+            <div className="flex items-center justify-between gap-3 rounded-md border border-[rgba(204,195,216,0.1)] bg-[#F2F4F6] px-[14px] py-2.5">
+              <div className="flex-1">
+                <div className="text-[13px] font-bold leading-[18px] text-[#191C1E]">
                   Status Aktif
                 </div>
-                <div
-                  style={{
-                    marginTop: "2px",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 400,
-                    fontSize: "12px",
-                    lineHeight: "16px",
-                    color: "#4A4455",
-                  }}
-                >
+                <div className="mt-0.5 text-[12px] font-normal leading-4 text-[#4A4455]">
                   Pengguna dapat langsung login dan mengakses sistem.
                 </div>
               </div>
@@ -299,60 +237,35 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
                 onClick={() => setIsActive((a) => !a)}
                 role="switch"
                 aria-checked={isActive}
-                style={{
-                  width: "40px",
-                  height: "22px",
-                  borderRadius: "999px",
-                  border: "none",
-                  background: isActive ? "#630ED4" : "#CBD5E1",
-                  cursor: "pointer",
-                  position: "relative",
-                  transition: "background 0.2s",
-                  flexShrink: 0,
-                }}
+                className={`relative h-[22px] w-10 shrink-0 rounded-full transition-colors duration-200 ${
+                  isActive ? "bg-[#630ED4]" : "bg-dark-300"
+                }`}
               >
                 <span
-                  style={{
-                    position: "absolute",
-                    top: "2px",
-                    left: isActive ? "20px" : "2px",
-                    width: "18px",
-                    height: "18px",
-                    borderRadius: "50%",
-                    background: "#FFFFFF",
-                    transition: "left 0.2s",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                  }}
+                  className={`absolute top-0.5 h-[18px] w-[18px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ${
+                    isActive ? "left-5" : "left-0.5"
+                  }`}
                 />
               </button>
             </div>
           </div>
         </div>
 
-        <div className="ca-footer" style={{ padding: "16px 24px" }}>
-          {submitError && (
-            <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>{submitError}</span>
-          )}
+        <div className="ca-footer px-6 py-4">
+          {submitError && <span className="flex-1 text-[12px] text-error">{submitError}</span>}
           <button
             type="button"
-            className="ca-btn-cancel"
+            className="ca-btn-cancel px-[18px] py-2 text-[13px]"
             onClick={handleCancel}
             disabled={isSaving}
-            style={{ padding: "8px 18px", fontSize: "13px" }}
           >
             Batal
           </button>
           <button
             type="button"
-            className="ca-btn-submit"
+            className="ca-btn-submit px-[22px] py-2 text-[13px] disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleSubmit}
             disabled={!canSubmit || isSaving}
-            style={{
-              padding: "8px 22px",
-              fontSize: "13px",
-              opacity: !canSubmit || isSaving ? 0.5 : 1,
-              cursor: !canSubmit || isSaving ? "not-allowed" : "pointer",
-            }}
           >
             {isSaving ? "Menyimpan..." : "Simpan Akun"}
           </button>

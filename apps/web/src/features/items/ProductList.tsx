@@ -12,6 +12,7 @@ import { useUnits } from "@/features/units/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import type { Page } from "@/lib/page"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
+import { ui } from "@/lib/ui"
 import type { AdvancedSearchHit, AdvancedSearchTier, ItemRow } from "@/types/api"
 
 interface ProductListProps {
@@ -125,8 +126,8 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
             <h1 className="page-title">Katalog Produk</h1>
             <div className="page-actions">
               <button
-                className="btn-admin-primary"
-                style={{ width: "200px", justifyContent: "center" }}
+                className={`${ui.btnPrimary} w-[200px]`}
+                type="button"
                 onClick={() => setShowAdd(true)}
               >
                 <svg
@@ -134,7 +135,7 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
                   height="14"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="#fff"
+                  stroke="currentColor"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                 >
@@ -146,7 +147,7 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
             </div>
           </div>
 
-          <div className="search-row">
+          <div className="flex items-center gap-4 pt-2">
             <SearchInput
               value={search}
               onChange={(v) => {
@@ -159,7 +160,7 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
           </div>
 
           {isSearchActive && searchData && (
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: -12 }}>
+            <div className="-mb-3 flex flex-wrap gap-2">
               {(
                 [
                   "ITEM_AUTO",
@@ -175,14 +176,8 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
                   return (
                     <span
                       key={t}
-                      style={{
-                        padding: "2px 8px",
-                        borderRadius: 4,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        background: b.bg,
-                        color: b.color,
-                      }}
+                      className="rounded-[4px] px-2 py-0.5 text-[11px] font-bold"
+                      style={{ background: b.bg, color: b.color }}
                     >
                       {searchData.counts[t]} {b.label}
                     </span>
@@ -191,23 +186,23 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
             </div>
           )}
 
-          <div className="tbl-container">
-            <table className="tbl">
+          <div className={ui.tableWrap}>
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="tbl-header-row">
-                  <th className="tbl-th tbl-th--center" style={{ width: 110 }}>
+                <tr className={ui.theadRow}>
+                  <th className={ui.thCenter} style={{ width: 110 }}>
                     Kode IMPA
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: "auto" }}>
+                  <th className={ui.thCenter} style={{ width: "auto" }}>
                     Nama Produk
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
+                  <th className={ui.thCenter} style={{ width: 140 }}>
                     Unit
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
+                  <th className={ui.thCenter} style={{ width: 160 }}>
                     Status
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 80 }}>
+                  <th className={ui.thCenter} style={{ width: 80 }}>
                     Aksi
                   </th>
                 </tr>
@@ -215,22 +210,14 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
               <tbody>
                 {isLoading && (
                   <tr>
-                    <td
-                      colSpan={5}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={5} className="py-10 text-center text-sm text-dark-500">
                       Memuat data…
                     </td>
                   </tr>
                 )}
                 {!isLoading && currentRows.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={5}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={5} className="py-10 text-center text-sm text-dark-500">
                       {isSearchActive
                         ? `Tidak ada hasil untuk "${debouncedSearch}".`
                         : "Tidak ada produk."}
@@ -243,60 +230,34 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
                     const tier = isSearchActive ? tierById.get(it.id) : undefined
                     const tierBadge = tier ? TIER_BADGE[tier] : undefined
                     return (
-                      <tr key={it.id} className="tbl-row">
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ fontWeight: 700, color: "#630ED4" }}
-                        >
+                      <tr key={it.id} className={ui.tr}>
+                        <td className={`${ui.tdCenter} font-bold text-[#630ED4]`}>
                           {it.impaCode ?? "-"}
                         </td>
                         <td
-                          className="tbl-td tbl-td--client tbl-td--center"
-                          style={{
-                            fontWeight: 700,
-                            whiteSpace: "normal",
-                            overflow: "visible",
-                            textOverflow: "clip",
-                            wordBreak: "break-word",
-                            lineHeight: "20px",
-                          }}
+                          className={`${ui.tdCenter} break-words font-bold leading-5 text-dark-900`}
                         >
                           {it.name}
                           {tierBadge && (
                             <span
-                              style={{
-                                display: "inline-block",
-                                marginLeft: 6,
-                                padding: "1px 6px",
-                                borderRadius: 4,
-                                fontSize: 10,
-                                fontWeight: 700,
-                                letterSpacing: 0.3,
-                                background: tierBadge.bg,
-                                color: tierBadge.color,
-                                verticalAlign: "middle",
-                              }}
+                              className="ml-1.5 inline-block rounded-[4px] px-1.5 py-px align-middle text-[10px] font-bold tracking-[0.3px]"
+                              style={{ background: tierBadge.bg, color: tierBadge.color }}
                             >
                               {tierBadge.label}
                             </span>
                           )}
                         </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ color: "#4A4455", fontWeight: 500 }}
-                        >
-                          {unitOf(it.defaultUnitId)}
-                        </td>
-                        <td className="tbl-td tbl-td--center">
+                        <td className={`${ui.tdCenter} font-medium`}>{unitOf(it.defaultUnitId)}</td>
+                        <td className={ui.tdCenter}>
                           <StatusBadge bg={status.bg} color={status.color} minWidth={84}>
                             {status.label}
                           </StatusBadge>
                         </td>
-                        <td className="tbl-td tbl-td--center">
+                        <td className={ui.tdCenter}>
                           <button
-                            className="action-btn"
+                            type="button"
+                            className="inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
                             title="Lihat detail"
-                            style={{ color: "#7C3AED" }}
                             onClick={() => onViewDetail?.(it.id)}
                           >
                             <EyeIcon />

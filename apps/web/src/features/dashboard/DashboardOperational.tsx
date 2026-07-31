@@ -10,8 +10,8 @@ import { useQuotations } from "@/features/quotations/hooks"
 import { statusConfig } from "@/features/quotations/QuotationList/helpers"
 import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
 import { formatNumber as formatId } from "@/lib/format"
-import { pill, ui } from "@/lib/ui"
 import type { Page } from "@/lib/page"
+import { pill, ui } from "@/lib/ui"
 import DashboardFinancialFilter, {
   type DashboardFilterValues,
   MONTH_LABELS,

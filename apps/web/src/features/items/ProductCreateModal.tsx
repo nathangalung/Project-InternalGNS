@@ -137,9 +137,9 @@ export default function ProductCreateModal({
             {/* Satuan Default — typeahead */}
             <div className="ca-field">
               <label className="ca-label">Satuan Default</label>
-              <div style={{ position: "relative" }}>
+              <div className="relative">
                 <input
-                  className="ca-input"
+                  className={`ca-input ${satuanQuery ? "pr-9" : ""}`}
                   type="text"
                   placeholder="Ketik nama satuan..."
                   value={satuanQuery}
@@ -151,7 +151,6 @@ export default function ProductCreateModal({
                   onFocus={() => {
                     if (satuanQuery.length > 0 && !satuan) setShowSatuanSuggestions(true)
                   }}
-                  style={{ paddingRight: satuanQuery ? "36px" : undefined }}
                 />
                 {satuanQuery && (
                   <button
@@ -162,19 +161,7 @@ export default function ProductCreateModal({
                       setShowSatuanSuggestions(false)
                     }}
                     title="Bersihkan"
-                    style={{
-                      position: "absolute",
-                      right: "10px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "4px",
-                      display: "flex",
-                      alignItems: "center",
-                      color: "#94A3B8",
-                    }}
+                    className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-[#94A3B8]"
                   >
                     <svg
                       width="14"
@@ -193,15 +180,7 @@ export default function ProductCreateModal({
                 {showSatuanSuggestions && satuanQuery.length > 0 && (
                   <div style={dropdownPanelStyle}>
                     {filteredUnits.length === 0 ? (
-                      <div
-                        style={{
-                          padding: "12px 20px",
-                          fontSize: "13px",
-                          color: "#94A3B8",
-                          fontFamily: "'Inter', sans-serif",
-                          textAlign: "center",
-                        }}
-                      >
+                      <div className="px-5 py-3 text-center text-[13px] text-[#94A3B8]">
                         Tidak ada hasil
                       </div>
                     ) : (
@@ -231,27 +210,13 @@ export default function ProductCreateModal({
             </div>
 
             {/* Status Produk */}
-            <div
-              className="ca-field"
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <label className="ca-label" style={{ margin: 0 }}>
-                Status Produk
-              </label>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div className="ca-field flex-row items-center justify-between">
+              <label className="ca-label">Status Produk</label>
+              <div className="flex items-center gap-2.5">
                 <span
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "12px",
-                    color: aktif ? "#630ED4" : "#9CA3AF",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                  }}
+                  className={`text-[12px] font-bold uppercase tracking-[0.04em] ${
+                    aktif ? "text-[#630ED4]" : "text-[#9CA3AF]"
+                  }`}
                 >
                   {aktif ? "AKTIF" : "NONAKTIF"}
                 </span>
@@ -260,29 +225,14 @@ export default function ProductCreateModal({
                   onClick={() => setAktif((a) => !a)}
                   role="switch"
                   aria-checked={aktif}
-                  style={{
-                    width: "40px",
-                    height: "22px",
-                    borderRadius: "11px",
-                    border: "none",
-                    background: aktif ? "#630ED4" : "#D1D5DB",
-                    cursor: "pointer",
-                    position: "relative",
-                    transition: "background 0.2s",
-                    flexShrink: 0,
-                  }}
+                  className={`relative h-[22px] w-10 flex-shrink-0 rounded-[11px] transition-colors duration-200 ${
+                    aktif ? "bg-[#630ED4]" : "bg-[#D1D5DB]"
+                  }`}
                 >
                   <span
-                    style={{
-                      position: "absolute",
-                      top: "3px",
-                      left: aktif ? "21px" : "3px",
-                      width: "16px",
-                      height: "16px",
-                      borderRadius: "50%",
-                      background: "#FFFFFF",
-                      transition: "left 0.2s",
-                    }}
+                    className={`absolute top-[3px] h-4 w-4 rounded-full bg-white transition-[left] duration-200 ${
+                      aktif ? "left-[21px]" : "left-[3px]"
+                    }`}
                   />
                 </button>
               </div>
@@ -291,30 +241,21 @@ export default function ProductCreateModal({
         </div>
 
         {/* Footer */}
-        <div className="ca-footer" style={{ padding: "16px 24px" }}>
-          {submitError && (
-            <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>{submitError}</span>
-          )}
+        <div className="ca-footer px-6 py-4">
+          {submitError && <span className="flex-1 text-[12px] text-error">{submitError}</span>}
           <button
             type="button"
-            className="ca-btn-cancel"
+            className="ca-btn-cancel px-[18px] py-2 text-[13px]"
             onClick={handleCancel}
             disabled={createItem.isPending}
-            style={{ padding: "8px 18px", fontSize: "13px" }}
           >
             Batal
           </button>
           <button
             type="button"
-            className="ca-btn-submit"
+            className="ca-btn-submit px-[22px] py-2 text-[13px] disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleSubmit}
             disabled={!isValid || createItem.isPending}
-            style={{
-              padding: "8px 22px",
-              fontSize: "13px",
-              opacity: !isValid || createItem.isPending ? 0.5 : 1,
-              cursor: !isValid || createItem.isPending ? "not-allowed" : "pointer",
-            }}
           >
             {createItem.isPending ? "Menyimpan..." : "Tambahkan"}
           </button>

@@ -6,6 +6,14 @@ import type { ProductItem } from "./QuotationEdit"
 import QuotationReviewCard from "./QuotationReviewCard"
 import { parseProductFile } from "./uploadParser"
 
+const pageBtn = "flex h-8 w-8 items-center justify-center rounded-sm text-sm transition"
+const pageBtnIdle = "font-medium text-[#4A4455] hover:bg-dark-100"
+const pageBtnActive = "bg-primary-700 font-bold text-white"
+const pageBtnNav =
+  "flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100"
+const costRow = "flex justify-between text-xs text-[#4B5563]"
+const costValue = "font-semibold text-[#111827]"
+
 interface Step2ProductProps {
   products: ProductItem[]
   deleteProduct: (id: number) => void
@@ -138,22 +146,17 @@ export default function Step2Product({
           <h2 className="qe-section-title">Pilih Produk &amp; Harga</h2>
           <p className="qe-section-desc">Tentukan produk dan harga penawaran.</p>
         </div>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div className="flex items-center gap-2.5">
           <input
             ref={importFileRef}
             type="file"
             accept=".csv,.xlsx"
-            style={{ display: "none" }}
+            className="hidden"
             onChange={handleImportFile}
           />
           <button
-            className="qe-add-client-btn"
-            style={{
-              width: "210px",
-              justifyContent: "center",
-              opacity: importing ? 0.6 : 1,
-              cursor: importing ? "wait" : "pointer",
-            }}
+            type="button"
+            className="qe-add-client-btn w-[210px] justify-center disabled:cursor-wait disabled:opacity-60"
             onClick={() => importFileRef.current?.click()}
             disabled={importing}
           >
@@ -174,8 +177,8 @@ export default function Step2Product({
             {importing ? "Memproses…" : "Unggah Excel/CSV"}
           </button>
           <button
-            className="qe-add-client-btn"
-            style={{ width: "210px", justifyContent: "center" }}
+            type="button"
+            className="qe-add-client-btn w-[210px] justify-center"
             onClick={() => setShowDiscountModal(true)}
           >
             <svg
@@ -193,8 +196,8 @@ export default function Step2Product({
             {discountPct > 0 ? `Diskon (${discountPct}%)` : "Tambah Diskon"}
           </button>
           <button
-            className="qe-add-client-btn"
-            style={{ width: "210px", justifyContent: "center" }}
+            type="button"
+            className="qe-add-client-btn w-[210px] justify-center"
             onClick={() => {
               setEditingProduct(null)
               setShowProductAdd(true)
@@ -219,16 +222,11 @@ export default function Step2Product({
 
       {importMsg && (
         <div
-          style={{
-            padding: "10px 16px",
-            borderRadius: "8px",
-            fontSize: "13px",
-            fontWeight: 500,
-            fontFamily: "'Inter', sans-serif",
-            background: importMsg.ok ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)",
-            color: importMsg.ok ? "#059669" : "#DC2626",
-            border: `1px solid ${importMsg.ok ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}`,
-          }}
+          className={`rounded-md border px-4 py-2.5 text-[13px] font-medium ${
+            importMsg.ok
+              ? "border-[rgba(16,185,129,0.2)] bg-[rgba(16,185,129,0.08)] text-[#059669]"
+              : "border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.08)] text-[#DC2626]"
+          }`}
         >
           {importMsg.text}
         </div>
@@ -238,36 +236,16 @@ export default function Step2Product({
       <div>
         {/* Toolbar */}
         <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "12px 20px",
-            background: "#FFFFFF",
-            border: "1px solid rgba(204,195,216,0.2)",
-            borderRadius: prodExpanded ? "12px 12px 0 0" : "12px",
-            borderBottom: prodExpanded
-              ? "1px solid rgba(204,195,216,0.15)"
-              : "1px solid rgba(204,195,216,0.2)",
-          }}
+          className={`flex items-center justify-between border border-[rgba(204,195,216,0.2)] bg-white px-5 py-3 ${
+            prodExpanded ? "rounded-t-lg border-b-[rgba(204,195,216,0.15)]" : "rounded-lg"
+          }`}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{ position: "relative", display: "inline-block" }}>
+          <div className="flex items-center gap-3">
+            <div className="relative inline-block">
               <button
+                type="button"
                 onClick={() => setIsRowDropdownOpen(!isRowDropdownOpen)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "5px 10px",
-                  borderRadius: "6px",
-                  border: "1px solid #E2E8F0",
-                  background: "#fff",
-                  cursor: "pointer",
-                  fontSize: "13px",
-                  color: "#4A4455",
-                  fontFamily: "'Inter', sans-serif",
-                }}
+                className="flex items-center gap-2 rounded-sm border border-dark-200 bg-white px-2.5 py-[5px] text-[13px] text-[#4A4455]"
               >
                 {prodPageSize} Baris
                 <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
@@ -281,51 +259,26 @@ export default function Step2Product({
                 </svg>
               </button>
               {isRowDropdownOpen && (
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: "calc(100% + 8px)",
-                    left: 0,
-                    background: "#fff",
-                    border: "1px solid rgba(204,195,216,0.2)",
-                    boxShadow: "0px 4px 16px rgba(0,0,0,0.08)",
-                    borderRadius: "8px",
-                    display: "flex",
-                    flexDirection: "column",
-                    padding: "8px 0",
-                    width: "140px",
-                    zIndex: 50,
-                  }}
-                >
+                <div className="absolute bottom-[calc(100%+8px)] left-0 z-50 flex w-[140px] flex-col rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-2 shadow-[0px_4px_16px_rgba(0,0,0,0.08)]">
                   {[5, 10, 15].map((val) => {
                     const isActive = prodPageSize === val
                     return (
                       <button
                         key={val}
+                        type="button"
                         onClick={() => {
                           setProdPageSize(val)
                           setProdPage(1)
                           setIsRowDropdownOpen(false)
                         }}
-                        style={{
-                          display: "flex",
-                          justifyContent: isActive ? "space-between" : "flex-start",
-                          alignItems: "center",
-                          padding: "4px 16px",
-                          width: "100%",
-                          height: "32px",
-                          background: "transparent",
-                          border: "none",
-                          cursor: "pointer",
-                        }}
+                        className={`flex h-8 w-full items-center px-4 py-1 ${
+                          isActive ? "justify-between" : "justify-start"
+                        }`}
                       >
                         <span
-                          style={{
-                            fontFamily: "'Inter', sans-serif",
-                            fontWeight: isActive ? 600 : 400,
-                            fontSize: "12px",
-                            color: isActive ? "#630ED4" : "#4A4455",
-                          }}
+                          className={`text-xs ${
+                            isActive ? "font-semibold text-[#630ED4]" : "font-normal text-[#4A4455]"
+                          }`}
                         >
                           {val} Baris
                         </span>
@@ -346,15 +299,16 @@ export default function Step2Product({
                 </div>
               )}
             </div>
-            <span style={{ fontSize: "12px", color: "#6B7280", fontWeight: 500 }}>
+            <span className="text-xs font-medium text-[#6B7280]">
               Menampilkan {totalProds === 0 ? 0 : start + 1}–
               {Math.min(start + prodPageSize, totalProds)} dari {totalProds} produk
             </span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div className="page-buttons">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
               <button
-                className="page-btn-nav"
+                type="button"
+                className={pageBtnNav}
                 disabled={prodPage === 1}
                 onClick={() => setProdPage((p) => Math.max(1, p - 1))}
               >
@@ -372,28 +326,24 @@ export default function Step2Product({
                 n === null ? (
                   <span
                     key={`e${i}`}
-                    style={{
-                      padding: "0 2px",
-                      color: "#9CA3AF",
-                      fontSize: "13px",
-                      alignSelf: "center",
-                      userSelect: "none",
-                    }}
+                    className="select-none self-center px-0.5 text-[13px] text-[#9CA3AF]"
                   >
                     …
                   </span>
                 ) : (
                   <button
                     key={n}
+                    type="button"
                     onClick={() => setProdPage(n)}
-                    className={`page-btn${n === prodPage ? " page-btn--active" : ""}`}
+                    className={`${pageBtn} ${n === prodPage ? pageBtnActive : pageBtnIdle}`}
                   >
                     {n}
                   </button>
                 ),
               )}
               <button
-                className="page-btn-nav"
+                type="button"
+                className={pageBtnNav}
                 disabled={prodPage === totalPages}
                 onClick={() => setProdPage((p) => Math.min(totalPages, p + 1))}
               >
@@ -409,21 +359,9 @@ export default function Step2Product({
               </button>
             </div>
             <button
+              type="button"
               onClick={() => setProdExpanded((e) => !e)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
-                background: "none",
-                border: "1px solid rgba(204,195,216,0.5)",
-                borderRadius: "6px",
-                padding: "5px 10px",
-                cursor: "pointer",
-                fontSize: "12px",
-                color: "#6B7280",
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 500,
-              }}
+              className="flex items-center gap-[5px] rounded-sm border border-[rgba(204,195,216,0.5)] px-2.5 py-[5px] text-xs font-medium text-[#6B7280]"
             >
               {prodExpanded ? "Sembunyikan" : "Tampilkan"}
               <svg
@@ -431,10 +369,7 @@ export default function Step2Product({
                 height="6"
                 viewBox="0 0 10 6"
                 fill="none"
-                style={{
-                  transform: prodExpanded ? "rotate(0deg)" : "rotate(180deg)",
-                  transition: "transform 0.2s ease",
-                }}
+                className={`transition-transform duration-200 ${prodExpanded ? "" : "rotate-180"}`}
               >
                 <path
                   d="M1 5L5 1L9 5"
@@ -450,27 +385,9 @@ export default function Step2Product({
 
         {/* Cards */}
         {prodExpanded && (
-          <div
-            style={{
-              background: "#FFFFFF",
-              border: "1px solid rgba(204,195,216,0.2)",
-              borderTop: "none",
-              borderRadius: "0 0 12px 12px",
-              padding: "20px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-            }}
-          >
+          <div className="flex flex-col gap-4 rounded-b-lg border border-t-0 border-[rgba(204,195,216,0.2)] bg-white p-5">
             {products.length === 0 ? (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "48px 0",
-                  color: "#9CA3AF",
-                  fontSize: "14px",
-                }}
-              >
+              <div className="py-12 text-center text-sm text-[#9CA3AF]">
                 Belum ada produk. Klik "Tambah Produk" untuk mulai.
               </div>
             ) : (
@@ -483,7 +400,7 @@ export default function Step2Product({
                 const requestKode = p.requestedKodeImpa || p.kodeImpa
                 const isDifferent = requestNama !== p.nama || requestKode !== p.kodeImpa
                 return (
-                  <div key={p.id} className="qep-card" style={{ marginBottom: 0 }}>
+                  <div key={p.id} className="qep-card mb-0">
                     <div className="qep-card-header">
                       <div className="qep-card-meta">
                         <span className="qep-card-label">PRODUK {globalIndex}</span>
@@ -492,18 +409,14 @@ export default function Step2Product({
                           <span className="qep-card-code">KODE IMPA: {p.kodeImpa}</span>
                         )}
                       </div>
-                      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                      <div className="flex items-center gap-3">
                         <button
+                          type="button"
                           onClick={() => {
                             setEditingProduct(p)
                             setShowProductAdd(true)
                           }}
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            cursor: "pointer",
-                            color: "#630ED4",
-                          }}
+                          className="text-[#630ED4]"
                           title="Edit Produk"
                         >
                           <svg
@@ -521,13 +434,9 @@ export default function Step2Product({
                           </svg>
                         </button>
                         <button
+                          type="button"
                           onClick={() => deleteProduct(p.id)}
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            cursor: "pointer",
-                            color: "#EF4444",
-                          }}
+                          className="text-error"
                           title="Hapus Produk"
                         >
                           <svg
@@ -546,52 +455,32 @@ export default function Step2Product({
                       </div>
                     </div>
                     <div
-                      style={{
-                        padding: "12px 20px",
-                        borderTop: "1px solid rgba(204,195,216,0.2)",
-                        borderBottom: "1px solid rgba(204,195,216,0.2)",
-                        background: isDifferent
-                          ? "rgba(245, 158, 11, 0.04)"
-                          : "rgba(99, 14, 212, 0.02)",
-                      }}
+                      className={`border-y border-[rgba(204,195,216,0.2)] px-5 py-3 ${
+                        isDifferent ? "bg-[rgba(245,158,11,0.04)]" : "bg-[rgba(99,14,212,0.02)]"
+                      }`}
                     >
-                      <div
-                        style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}
-                      >
+                      <div className="mb-1.5 flex items-center gap-2">
                         <span
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 700,
-                            letterSpacing: "0.6px",
-                            textTransform: "uppercase",
-                            color: isDifferent ? "#B45309" : "#6B7280",
-                          }}
+                          className={`text-[10px] font-bold uppercase tracking-[0.6px] ${
+                            isDifferent ? "text-[#B45309]" : "text-[#6B7280]"
+                          }`}
                         >
                           Permintaan Klien
                         </span>
                         {isDifferent && (
-                          <span
-                            style={{
-                              fontSize: 10,
-                              fontWeight: 600,
-                              padding: "2px 6px",
-                              borderRadius: 4,
-                              background: "rgba(245, 158, 11, 0.15)",
-                              color: "#B45309",
-                            }}
-                          >
+                          <span className="rounded-[4px] bg-[rgba(245,158,11,0.15)] px-1.5 py-0.5 text-[10px] font-semibold text-[#B45309]">
                             Berbeda dari Offer
                           </span>
                         )}
                       </div>
-                      <div style={{ display: "flex", gap: 24, fontSize: 13, color: "#374151" }}>
+                      <div className="flex gap-6 text-[13px] text-[#374151]">
                         <div>
-                          <span style={{ color: "#9CA3AF", marginRight: 6 }}>Kode IMPA:</span>
-                          <span style={{ fontWeight: 600 }}>{requestKode || "-"}</span>
+                          <span className="mr-1.5 text-[#9CA3AF]">Kode IMPA:</span>
+                          <span className="font-semibold">{requestKode || "-"}</span>
                         </div>
                         <div>
-                          <span style={{ color: "#9CA3AF", marginRight: 6 }}>Nama:</span>
-                          <span style={{ fontWeight: 600 }}>{requestNama || "-"}</span>
+                          <span className="mr-1.5 text-[#9CA3AF]">Nama:</span>
+                          <span className="font-semibold">{requestNama || "-"}</span>
                         </div>
                       </div>
                     </div>
@@ -641,158 +530,63 @@ export default function Step2Product({
       </div>
 
       {/* Rincian Biaya */}
-      <div
-        style={{
-          background: "#F8FAFC",
-          borderRadius: "12px",
-          padding: "24px",
-          border: "1px solid rgba(204,195,216,0.1)",
-        }}
-      >
-        <div
-          style={{
-            fontSize: "13px",
-            fontWeight: 700,
-            color: "#6B7280",
-            letterSpacing: "0.5px",
-            textTransform: "uppercase",
-            marginBottom: "20px",
-          }}
-        >
+      <div className="rounded-lg border border-[rgba(204,195,216,0.1)] bg-dark-50 p-6">
+        <div className="mb-5 text-[13px] font-bold uppercase tracking-[0.5px] text-[#6B7280]">
           Rincian Biaya
         </div>
 
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "12px",
-              color: "#4B5563",
-            }}
-          >
+        <div className="mb-5 flex flex-col gap-3">
+          <div className={costRow}>
             <span>Total Produk</span>
-            <span style={{ fontWeight: 600, color: "#111827" }}>{totalProds} Produk</span>
+            <span className={costValue}>{totalProds} Produk</span>
           </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "12px",
-              color: "#4B5563",
-            }}
-          >
+          <div className={costRow}>
             <span>Total Harga Beli</span>
-            <span style={{ fontWeight: 600, color: "#111827" }}>
-              Rp {formatRp(summaryTotalHargaBeli)}
-            </span>
+            <span className={costValue}>Rp {formatRp(summaryTotalHargaBeli)}</span>
           </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "12px",
-              color: "#4B5563",
-            }}
-          >
+          <div className={costRow}>
             <span>Total Harga Jual</span>
-            <span style={{ fontWeight: 600, color: "#111827" }}>
-              Rp {formatRp(summaryTotalHargaJual)}
-            </span>
+            <span className={costValue}>Rp {formatRp(summaryTotalHargaJual)}</span>
           </div>
           {discountPct > 0 && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "12px",
-                color: "#4B5563",
-              }}
-            >
+            <div className={costRow}>
               <span>Diskon ({discountPct}%)</span>
-              <span style={{ fontWeight: 600, color: "#10B981" }}>
-                - Rp {formatRp(nominalDiskon)}
-              </span>
+              <span className="font-semibold text-[#10B981]">- Rp {formatRp(nominalDiskon)}</span>
             </div>
           )}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "12px",
-              color: "#4B5563",
-            }}
-          >
+          <div className={costRow}>
             <span>Sub Total</span>
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <div className="flex items-center gap-2">
               {discountPct > 0 && (
-                <span style={{ textDecoration: "line-through", color: "#9CA3AF" }}>
+                <span className="text-[#9CA3AF] line-through">
                   Rp {formatRp(summaryTotalHargaJual)}
                 </span>
               )}
-              <span style={{ fontWeight: 600, color: "#111827" }}>
-                Rp {formatRp(summarySubTotal)}
-              </span>
+              <span className={costValue}>Rp {formatRp(summarySubTotal)}</span>
             </div>
           </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "12px",
-              color: "#4B5563",
-            }}
-          >
+          <div className={costRow}>
             <span>DPP Nilai Lain</span>
-            <span style={{ fontWeight: 600, color: "#111827" }}>Rp {formatRp(summaryDpp)}</span>
+            <span className={costValue}>Rp {formatRp(summaryDpp)}</span>
           </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "12px",
-              color: "#4B5563",
-            }}
-          >
+          <div className={costRow}>
             <span>PPN 12%</span>
-            <span style={{ fontWeight: 600, color: "#111827" }}>Rp {formatRp(summaryPpn)}</span>
+            <span className={costValue}>Rp {formatRp(summaryPpn)}</span>
           </div>
         </div>
 
-        <div style={{ height: "1px", background: "#E5E7EB", marginBottom: "16px" }} />
+        <div className="mb-4 h-px bg-[#E5E7EB]" />
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontSize: "11px",
-            fontWeight: 700,
-            color: "#6B7280",
-            textTransform: "uppercase",
-            marginBottom: "20px",
-          }}
-        >
+        <div className="mb-5 flex justify-between text-[11px] font-bold uppercase text-[#6B7280]">
           <span>Total Estimasi Profit</span>
-          <span style={{ color: "#630ED4", fontSize: "12px" }}>Rp {formatRp(summaryProfit)}</span>
+          <span className="text-xs text-[#630ED4]">Rp {formatRp(summaryProfit)}</span>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <span
-            style={{
-              fontSize: "11px",
-              fontWeight: 700,
-              color: "#6B7280",
-              letterSpacing: "1px",
-              textTransform: "uppercase",
-            }}
-          >
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[11px] font-bold uppercase tracking-[1px] text-[#6B7280]">
             Grand Total
           </span>
-          <span
-            style={{ fontSize: "28px", fontWeight: 800, color: "#630ED4", letterSpacing: "-0.5px" }}
-          >
+          <span className="text-[28px] font-extrabold tracking-[-0.5px] text-[#630ED4]">
             Rp {formatRp(summarySubTotal + summaryPpn)}
           </span>
         </div>

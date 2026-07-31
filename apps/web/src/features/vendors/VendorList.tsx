@@ -13,6 +13,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
+import { ui } from "@/lib/ui"
 import type { VendorRow } from "@/types/api"
 
 interface VendorListProps {
@@ -83,8 +84,8 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
             <h1 className="page-title">Daftar Vendor</h1>
             <div className="page-actions">
               <button
-                className="btn-admin-primary"
-                style={{ width: "200px", justifyContent: "center" }}
+                className={`${ui.btnPrimary} w-[200px]`}
+                type="button"
                 onClick={() => setShowAdd(true)}
               >
                 <svg
@@ -92,7 +93,7 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
                   height="14"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="#fff"
+                  stroke="currentColor"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                 >
@@ -104,7 +105,7 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
             </div>
           </div>
 
-          <div className="search-row">
+          <div className="flex items-center gap-4 pt-2">
             <SearchInput
               value={search}
               onChange={(v) => {
@@ -116,34 +117,34 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
             <FilterButton onClick={() => setShowFilter(true)} />
           </div>
 
-          <div className="tbl-container">
-            <table className="tbl">
+          <div className={ui.tableWrap}>
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="tbl-header-row">
-                  <th className="tbl-th tbl-th--center" style={{ width: 240 }}>
+                <tr className={ui.theadRow}>
+                  <th className={ui.thCenter} style={{ width: 240 }}>
                     Nama Vendor
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
+                  <th className={ui.thCenter} style={{ width: 160 }}>
                     Negara
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
+                  <th className={ui.thCenter} style={{ width: 140 }}>
                     Status
                   </th>
                   <th
-                    className="tbl-th tbl-th--center"
-                    style={{ width: 180, cursor: "pointer" }}
+                    className={`${ui.thCenter} cursor-pointer`}
+                    style={{ width: 180 }}
                     onClick={() => toggleSort("totalPembelian")}
                   >
                     Total Pembelian
                   </th>
                   <th
-                    className="tbl-th tbl-th--center"
-                    style={{ width: 160, cursor: "pointer" }}
+                    className={`${ui.thCenter} cursor-pointer`}
+                    style={{ width: 160 }}
                     onClick={() => toggleSort("productCount")}
                   >
                     Jumlah Produk
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 80 }}>
+                  <th className={ui.thCenter} style={{ width: 80 }}>
                     Aksi
                   </th>
                 </tr>
@@ -151,22 +152,14 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
               <tbody>
                 {isLoading && (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={6} className="py-10 text-center text-sm text-dark-500">
                       Memuat data…
                     </td>
                   </tr>
                 )}
                 {!isLoading && currentRows.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={6} className="py-10 text-center text-sm text-dark-500">
                       Tidak ada vendor.
                     </td>
                   </tr>
@@ -175,62 +168,34 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
                   currentRows.map((v: VendorRow) => {
                     const status = v.isActive ? BADGE_AKTIF : BADGE_NONAKTIF
                     return (
-                      <tr key={v.id} className="tbl-row">
-                        <td className="tbl-td">
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "16px",
-                              paddingLeft: "12px",
-                            }}
-                          >
+                      <tr key={v.id} className={ui.tr}>
+                        <td className={ui.td}>
+                          <div className="flex items-center gap-4 pl-3">
                             <EntityLogo name={v.name} />
-                            <span
-                              style={{
-                                fontFamily: "'Inter', sans-serif",
-                                fontWeight: 700,
-                                fontSize: "14px",
-                                lineHeight: "1.35",
-                                color: "#191C1E",
-                                flex: 1,
-                                minWidth: 0,
-                                wordBreak: "break-word",
-                                whiteSpace: "normal",
-                              }}
-                            >
+                            <span className="min-w-0 flex-1 break-words text-sm font-bold leading-[1.35] text-[#191C1E]">
                               {v.name}
                             </span>
                           </div>
                         </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ color: "#191C1E", fontWeight: 500, fontSize: "14px" }}
-                        >
+                        <td className={`${ui.tdCenter} text-sm font-medium text-[#191C1E]`}>
                           {v.location ?? "-"}
                         </td>
-                        <td className="tbl-td tbl-td--center">
+                        <td className={ui.tdCenter}>
                           <StatusBadge bg={status.bg} color={status.color} minWidth={100}>
                             {status.label}
                           </StatusBadge>
                         </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ fontWeight: 700, color: "#191C1E" }}
-                        >
+                        <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
                           {formatRupiah(v.totalPurchase, "-")}
                         </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ fontWeight: 700, color: "#191C1E" }}
-                        >
+                        <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
                           {v.productCount}
                         </td>
-                        <td className="tbl-td tbl-td--center">
+                        <td className={ui.tdCenter}>
                           <button
-                            className="action-btn"
+                            type="button"
+                            className="inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
                             title="Lihat detail"
-                            style={{ color: "#7C3AED" }}
                             onClick={() => onViewDetail?.(v.id)}
                           >
                             <EyeIcon />

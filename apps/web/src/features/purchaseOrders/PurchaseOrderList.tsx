@@ -1,4 +1,4 @@
-import { type CSSProperties, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import ActiveFilters, { type FilterChip } from "@/components/shared/ActiveFilters"
 import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
@@ -11,6 +11,7 @@ import { downloadPdf } from "@/lib/api-client"
 import { resolveRange } from "@/lib/date-range"
 import { formatDate, formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
+import { ui } from "@/lib/ui"
 import type { PurchaseOrderRow } from "@/types/api"
 import * as purchaseOrdersApi from "./api"
 import { usePurchaseOrders, useUpdatePoDetails, useUploadPoFile } from "./hooks"
@@ -49,18 +50,9 @@ function rowFromBackend(po: PurchaseOrderRow): PoRow {
   }
 }
 
-const iconBtnStyle: CSSProperties = {
-  background: "transparent",
-  border: "none",
-  cursor: "pointer",
-  padding: "4px",
-  color: "#630ED4",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: "6px",
-  transition: "background 0.15s",
-}
+// Table action icon button (eye, upload, delivery note).
+const iconBtn =
+  "inline-flex items-center justify-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
 
 export default function PurchaseOrderList({
   onNavigate,
@@ -202,12 +194,11 @@ export default function PurchaseOrderList({
         <div className="page-content" style={{ gap: "29px" }}>
           <div className="page-header">
             <h1 className="page-title">Daftar Purchase Order</h1>
-            <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
+            <div className="page-actions flex gap-2.5">
               <button
                 type="button"
-                className="btn-admin-outline"
+                className={`${ui.btnOutline} w-[160px]`}
                 onClick={() => purchaseOrdersApi.exportXlsx(queryParams)}
-                style={{ width: "160px", justifyContent: "center" }}
               >
                 <svg
                   width="14"
@@ -228,7 +219,7 @@ export default function PurchaseOrderList({
             </div>
           </div>
 
-          <div className="search-row">
+          <div className="flex items-center gap-4 pt-2">
             <SearchInput
               value={search}
               onChange={(v) => {
@@ -242,29 +233,29 @@ export default function PurchaseOrderList({
 
           <ActiveFilters chips={filterChips} onClearAll={clearAllFilters} />
 
-          <div className="tbl-container">
-            <table className="tbl">
+          <div className={ui.tableWrap}>
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="tbl-header-row">
-                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
+                <tr className={ui.theadRow}>
+                  <th className={ui.thCenter} style={{ width: 140 }}>
                     Nomor Quotation
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 130 }}>
+                  <th className={ui.thCenter} style={{ width: 130 }}>
                     Nomor PO
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 200 }}>
+                  <th className={ui.thCenter} style={{ width: 200 }}>
                     Nama Klien
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
+                  <th className={ui.thCenter} style={{ width: 160 }}>
                     Tanggal Pembuatan
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 150 }}>
+                  <th className={ui.thCenter} style={{ width: 150 }}>
                     Total PO
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 150 }}>
+                  <th className={ui.thCenter} style={{ width: 150 }}>
                     Status
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 110 }}>
+                  <th className={ui.thCenter} style={{ width: 110 }}>
                     Aksi
                   </th>
                 </tr>
@@ -272,22 +263,14 @@ export default function PurchaseOrderList({
               <tbody>
                 {isLoading && (
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={7} className="py-10 text-center text-sm text-dark-500">
                       Memuat data…
                     </td>
                   </tr>
                 )}
                 {!isLoading && currentRows.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={7} className="py-10 text-center text-sm text-dark-500">
                       Belum ada Purchase Order. PO terbuat otomatis ketika quotation disetujui.
                     </td>
                   </tr>
@@ -296,29 +279,16 @@ export default function PurchaseOrderList({
                   currentRows.map((row) => {
                     const status = STATUS_STYLE[row.status]
                     return (
-                      <tr key={row.quotationId} className="tbl-row">
+                      <tr key={row.quotationId} className={ui.tr}>
                         <td
-                          className="tbl-td tbl-td--center"
-                          style={{ fontWeight: 700, color: "#630ED4" }}
+                          className={`${ui.tdCenter} font-bold text-[#630ED4]`}
                           title={row.quotationNo}
                         >
                           {onViewQuotation ? (
                             <button
                               type="button"
                               onClick={() => onViewQuotation(row.quotationId)}
-                              style={{
-                                background: "transparent",
-                                border: "none",
-                                padding: 0,
-                                cursor: "pointer",
-                                color: "inherit",
-                                fontWeight: "inherit",
-                                fontFamily: "inherit",
-                                fontSize: "inherit",
-                                textDecoration: "underline",
-                                textUnderlineOffset: 3,
-                                textDecorationColor: "rgba(99, 14, 212, 0.35)",
-                              }}
+                              className="p-0 text-sm font-bold text-[#630ED4] underline decoration-[rgba(99,14,212,0.35)] underline-offset-[3px]"
                             >
                               {shortDocNo(row.quotationNo)}
                             </button>
@@ -327,45 +297,27 @@ export default function PurchaseOrderList({
                           )}
                         </td>
                         <td
-                          className="tbl-td tbl-td--center"
-                          style={{ fontWeight: 700, color: "#630ED4" }}
+                          className={`${ui.tdCenter} font-bold text-[#630ED4]`}
                           title={row.poNumber}
                         >
                           {shortDocNo(row.poNumber)}
                         </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ color: "#191C1E", fontWeight: 500 }}
-                        >
+                        <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>
                           {row.client}
                         </td>
-                        <td className="tbl-td tbl-td--center" style={{ color: "#4A4455" }}>
-                          {formatDate(row.date)}
-                        </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ fontWeight: 700, color: "#191C1E" }}
-                        >
-                          {row.total}
-                        </td>
-                        <td className="tbl-td tbl-td--center">
+                        <td className={ui.tdCenter}>{formatDate(row.date)}</td>
+                        <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>{row.total}</td>
+                        <td className={ui.tdCenter}>
                           <StatusBadge bg={status.bg} color={status.color}>
                             {PO_LABEL[row.status]}
                           </StatusBadge>
                         </td>
-                        <td className="tbl-td tbl-td--center" style={{ padding: "12px 8px" }}>
-                          <div
-                            style={{
-                              display: "inline-flex",
-                              gap: "2px",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
+                        <td className="px-2 py-3 text-center align-middle text-sm text-[#4A4455]">
+                          <div className="inline-flex items-center justify-center gap-0.5">
                             <button
                               type="button"
                               title="Lihat detail"
-                              style={iconBtnStyle}
+                              className={iconBtn}
                               onClick={() => onViewDetail?.(row.quotationId)}
                             >
                               <EyeIcon size={18} />
@@ -373,7 +325,7 @@ export default function PurchaseOrderList({
                             <button
                               type="button"
                               title="Upload berkas PO"
-                              style={iconBtnStyle}
+                              className={iconBtn}
                               onClick={() => openUpload(row)}
                             >
                               <svg
@@ -403,11 +355,11 @@ export default function PurchaseOrderList({
                                       : "Delivery note tersedia ketika status ON PROGRESS"
                                   }
                                   disabled={!canDownloadDN}
-                                  style={{
-                                    ...iconBtnStyle,
-                                    color: canDownloadDN ? "#630ED4" : "#CBD5E1",
-                                    cursor: canDownloadDN ? "pointer" : "default",
-                                  }}
+                                  className={
+                                    canDownloadDN
+                                      ? iconBtn
+                                      : "inline-flex cursor-default items-center justify-center rounded-sm p-1 text-dark-300"
+                                  }
                                   onClick={() => canDownloadDN && handleDownloadDN(row)}
                                 >
                                   <svg

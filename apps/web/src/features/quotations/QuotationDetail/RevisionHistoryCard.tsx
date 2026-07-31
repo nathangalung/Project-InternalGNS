@@ -12,9 +12,7 @@ export default function RevisionHistoryCard({ quotationId }: RevisionHistoryCard
 
   return (
     <div>
-      <h2 className="qe-section-title" style={{ marginBottom: "12px" }}>
-        Riwayat Revisi
-      </h2>
+      <h2 className="qe-section-title mb-3">Riwayat Revisi</h2>
       <div className="qd-history-card">
         <div className="qd-timeline">
           {data.map((rev) => {

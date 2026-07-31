@@ -125,7 +125,7 @@ export default function PurchaseOrderFilter({
           <div className="ca-section">
             <div className="ca-section-heading">Rentang Tanggal</div>
             <div className="ca-field">
-              <div className="rgrid-2" style={{ display: "grid", gap: "8px" }}>
+              <div className="rgrid-2 grid gap-2">
                 {DATE_PRESETS.map(({ key, label }) => {
                   const isActive = preset === key
                   return (
@@ -137,7 +137,7 @@ export default function PurchaseOrderFilter({
                     >
                       {label}
                       {key === "kustom" ? (
-                        <span style={{ color: isActive ? "#630ED4" : "#9CA3AF" }}>
+                        <span className={isActive ? "text-[#630ED4]" : "text-[#9CA3AF]"}>
                           <IconCalendar />
                         </span>
                       ) : isActive ? (
@@ -166,7 +166,7 @@ export default function PurchaseOrderFilter({
           <div className="ca-section">
             <div className="ca-section-heading">Status Purchase Order</div>
             <div className="ca-field">
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => setActiveStatuses([])}
@@ -212,43 +212,29 @@ export default function PurchaseOrderFilter({
           </div>
         </div>
 
-        <div
-          className="ca-footer"
-          style={{ justifyContent: "space-between", padding: "16px 24px" }}
-        >
+        <div className="ca-footer justify-between px-6 py-4">
           <button
             type="button"
             onClick={handleReset}
             disabled={!dirty}
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: dirty ? "pointer" : "default",
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 500,
-              fontSize: "13px",
-              color: dirty ? "#630ED4" : "#CBD5E1",
-              padding: 0,
-              textDecoration: dirty ? "underline" : "none",
-              textUnderlineOffset: "3px",
-            }}
+            className={`p-0 text-[13px] font-medium underline-offset-[3px] ${
+              dirty ? "cursor-pointer text-[#630ED4] underline" : "cursor-default text-dark-300"
+            }`}
           >
             Hapus Filter
           </button>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="flex gap-2">
             <button
               type="button"
-              className="ca-btn-cancel"
+              className="ca-btn-cancel px-[18px] py-2 text-[13px]"
               onClick={onClose}
-              style={{ padding: "8px 18px", fontSize: "13px" }}
             >
               Batal
             </button>
             <button
               type="button"
-              className="ca-btn-submit"
+              className="ca-btn-submit px-[22px] py-2 text-[13px]"
               onClick={handleApply}
-              style={{ padding: "8px 22px", fontSize: "13px" }}
             >
               Terapkan
             </button>

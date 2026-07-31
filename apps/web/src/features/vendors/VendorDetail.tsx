@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
 import {
   useUpdateVendor,
@@ -10,6 +10,7 @@ import { ApiError, fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
 import { formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
+import { ui } from "@/lib/ui"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
 
 interface VendorDetailProps {
@@ -37,32 +38,14 @@ function getContactField(
   return contactInfo?.[key] ?? ""
 }
 
-const labelStyle: CSSProperties = {
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: 700,
-  fontSize: "10px",
-  lineHeight: "15px",
-  letterSpacing: "1px",
-  textTransform: "uppercase",
-  color: "#4A4455",
-  display: "block",
-  marginBottom: "8px",
-}
+const labelCls =
+  "mb-2 block text-[10px] font-bold uppercase leading-[15px] tracking-[1px] text-[#4A4455]"
 
-const inputStyle: CSSProperties = {
-  width: "100%",
-  height: "44px",
-  padding: "12px 16px",
-  background: "#F2F4F6",
-  borderRadius: "8px",
-  border: "1.5px solid transparent",
-  fontFamily: "'Inter', sans-serif",
-  fontSize: "14px",
-  fontWeight: 500,
-  color: "#191C1E",
-  outline: "none",
-  transition: "border-color 0.15s",
-}
+// Shared field shell; height and radius vary per use, so they stay out of here.
+const inputBase =
+  "w-full border-[1.5px] bg-[#F2F4F6] px-4 py-3 text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150"
+
+const inputCls = `${inputBase} h-11 rounded-md border-transparent`
 
 export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: VendorDetailProps) {
   const initialEmail = getContactField(vendor.contactInfo, "email")
@@ -182,7 +165,7 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
 
       <div className="admin-main">
         <div className="page-content" style={{ gap: "29px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div className="flex flex-col gap-3">
             <nav className="qd-breadcrumb">
               <button className="qd-breadcrumb-link" onClick={onBack}>
                 Daftar Vendor
@@ -191,23 +174,11 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
               <span className="qd-breadcrumb-current">Detail Vendor</span>
             </nav>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            <div className="flex items-center gap-5">
               <button
                 type="button"
                 onClick={onBack}
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  background: "#FFFFFF",
-                  boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)",
-                  borderRadius: "8px",
-                  border: "none",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.05)]"
               >
                 <svg
                   width="16"
@@ -223,62 +194,35 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
                   <polyline points="12 19 5 12 12 5" />
                 </svg>
               </button>
-              <h1 className="page-title" style={{ margin: 0 }}>
-                Detail Vendor
-              </h1>
+              <h1 className="page-title m-0">Detail Vendor</h1>
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <div
-              style={{
-                background: "#FFFFFF",
-                borderRadius: "12px",
-                padding: "20px 24px",
-                display: "flex",
-                alignItems: "center",
-                gap: "20px",
-              }}
-            >
+          <div className="flex flex-col gap-5">
+            <div className="flex items-center gap-5 rounded-lg bg-white px-6 py-5">
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                style={{ display: "none" }}
+                className="hidden"
                 onChange={(e) => {
                   handleLogoSelect(e.target.files?.[0])
                   e.target.value = ""
                 }}
               />
-              <div style={{ position: "relative", flexShrink: 0 }}>
+              <div className="relative shrink-0">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   title="Klik untuk ganti logo"
-                  style={{
-                    width: "64px",
-                    height: "64px",
-                    borderRadius: "12px",
-                    background: logoDataUrl ? "#FFFFFF" : logoBg,
-                    color: "#FFFFFF",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 800,
-                    fontSize: "20px",
-                    letterSpacing: "0.5px",
-                    border: "none",
-                    cursor: "pointer",
-                    overflow: "hidden",
-                    padding: 0,
-                  }}
+                  className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg p-0 text-[20px] font-extrabold tracking-[0.5px] text-white"
+                  style={{ background: logoDataUrl ? "#FFFFFF" : logoBg }}
                 >
                   {logoDataUrl ? (
                     <img
                       src={logoDataUrl}
                       alt="Logo vendor"
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      className="h-full w-full object-cover"
                     />
                   ) : (
                     vendorInitials(vendor.name)
@@ -289,34 +233,9 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
                   onClick={() => fileInputRef.current?.click()}
                   title="Ganti logo"
                   aria-label="Ganti logo"
-                  style={{
-                    position: "absolute",
-                    bottom: "-4px",
-                    right: "-4px",
-                    width: "26px",
-                    height: "26px",
-                    borderRadius: "50%",
-                    background: "#FFFFFF",
-                    border: "2px solid #FFFFFF",
-                    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.15)",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: 0,
-                  }}
+                  className="absolute -bottom-1 -right-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 border-white bg-white p-0 shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
                 >
-                  <span
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      borderRadius: "50%",
-                      background: "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
+                  <span className="flex h-full w-full items-center justify-center rounded-full bg-[linear-gradient(135deg,#630ED4_0%,#7C3AED_100%)]">
                     <svg
                       width="13"
                       height="13"
@@ -333,115 +252,48 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
                   </span>
                 </button>
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h2
-                  style={{
-                    margin: 0,
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "18px",
-                    lineHeight: "24px",
-                    letterSpacing: "-0.4px",
-                    color: "#191C1E",
-                    wordBreak: "break-word",
-                  }}
-                >
+              <div className="min-w-0 flex-1">
+                <h2 className="m-0 break-words text-[18px] font-bold leading-6 tracking-[-0.4px] text-[#191C1E]">
                   {vendor.name}
                 </h2>
-                <span
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 500,
-                    fontSize: "13px",
-                    lineHeight: "18px",
-                    color: "#4A4455",
-                  }}
-                >
+                <span className="text-[13px] font-medium leading-[18px] text-[#4A4455]">
                   Vendor
                 </span>
               </div>
               <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
-                  padding: "10px 16px",
-                  background: vendor.isActive ? "#F0FDF4" : "#FEF2F2",
-                  border: `1px solid ${vendor.isActive ? "#BBF7D0" : "#FECACA"}`,
-                  borderRadius: "10px",
-                  flexShrink: 0,
-                }}
+                className={`flex shrink-0 flex-col gap-0.5 rounded-[10px] border px-4 py-2.5 ${
+                  vendor.isActive
+                    ? "border-[#BBF7D0] bg-[#F0FDF4]"
+                    : "border-[#FECACA] bg-[#FEF2F2]"
+                }`}
               >
-                <span
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 600,
-                    fontSize: "9px",
-                    letterSpacing: "1.4px",
-                    textTransform: "uppercase",
-                    color: "#64748B",
-                    lineHeight: "11px",
-                  }}
-                >
+                <span className="text-[9px] font-semibold uppercase leading-[11px] tracking-[1.4px] text-dark-500">
                   Status
                 </span>
                 <span
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 800,
-                    fontSize: "13px",
-                    letterSpacing: "0.2px",
-                    color: vendor.isActive ? "#065F46" : "#991B1B",
-                    lineHeight: "16px",
-                  }}
+                  className={`text-[13px] font-extrabold leading-4 tracking-[0.2px] ${
+                    vendor.isActive ? "text-[#065F46]" : "text-[#991B1B]"
+                  }`}
                 >
                   {vendor.isActive ? "Aktif" : "Nonaktif"}
                 </span>
               </div>
             </div>
 
-            <div
-              style={{
-                background: "#FFFFFF",
-                borderRadius: "12px",
-                padding: "32px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "32px",
-              }}
-            >
+            <div className="flex flex-col gap-8 rounded-lg bg-white p-8">
               <div>
-                <h3
-                  style={{
-                    margin: 0,
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "20px",
-                    lineHeight: "28px",
-                    letterSpacing: "-0.5px",
-                    color: "#191C1E",
-                  }}
-                >
+                <h3 className="m-0 text-[20px] font-bold leading-7 tracking-[-0.5px] text-[#191C1E]">
                   Informasi Utama Vendor
                 </h3>
-                <p
-                  style={{
-                    margin: "4px 0 0 0",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 400,
-                    fontSize: "14px",
-                    lineHeight: "20px",
-                    color: "#4A4455",
-                  }}
-                >
+                <p className="m-0 mt-1 text-sm font-normal leading-5 text-[#4A4455]">
                   Kelola informasi vendor.
                 </p>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              <div className="flex flex-col gap-6">
                 <div>
-                  <label style={labelStyle}>
-                    Nama Vendor <span style={{ color: "#DC2626" }}>*</span>
+                  <label className={labelCls}>
+                    Nama Vendor <span className="text-[#DC2626]">*</span>
                   </label>
                   <input
                     type="text"
@@ -450,50 +302,20 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
                       setName(e.target.value)
                       setFieldErrors((p) => ({ ...p, name: "" }))
                     }}
-                    style={{
-                      ...inputStyle,
-                      borderColor: fieldErrors.name ? "#DC2626" : "transparent",
-                    }}
+                    className={`${inputBase} h-11 rounded-md ${
+                      fieldErrors.name ? "border-[#DC2626]" : "border-transparent"
+                    }`}
                   />
                   {fieldErrors.name && (
-                    <div
-                      style={{
-                        marginTop: "6px",
-                        fontSize: "12px",
-                        color: "#DC2626",
-                        fontFamily: "'Inter', sans-serif",
-                      }}
-                    >
-                      {fieldErrors.name}
-                    </div>
+                    <div className="mt-1.5 text-xs text-[#DC2626]">{fieldErrors.name}</div>
                   )}
                 </div>
 
-                <div className="rgrid-2" style={{ display: "grid", gap: "24px" }}>
+                <div className="rgrid-2 grid gap-6">
                   <div>
-                    <label style={labelStyle}>No HP</label>
-                    <div
-                      style={{
-                        display: "flex",
-                        borderRadius: "8px",
-                        overflow: "hidden",
-                        height: "44px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          background: "#E6E8EA",
-                          padding: "0 12px",
-                          fontFamily: "'Inter', sans-serif",
-                          fontWeight: 500,
-                          fontSize: "14px",
-                          color: "#4A4455",
-                          display: "flex",
-                          alignItems: "center",
-                          whiteSpace: "nowrap",
-                          flexShrink: 0,
-                        }}
-                      >
+                    <label className={labelCls}>No HP</label>
+                    <div className="flex h-11 overflow-hidden rounded-md">
+                      <span className="flex shrink-0 items-center whitespace-nowrap bg-[#E6E8EA] px-3 text-sm font-medium text-[#4A4455]">
                         +62
                       </span>
                       <input
@@ -502,81 +324,39 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
                         value={phone}
                         placeholder="81234567890"
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                        style={{
-                          ...inputStyle,
-                          height: "100%",
-                          borderRadius: 0,
-                          flex: 1,
-                          minWidth: 0,
-                        }}
+                        className={`${inputBase} h-full min-w-0 flex-1 rounded-none border-transparent`}
                       />
                     </div>
                   </div>
                   <div>
-                    <label style={labelStyle}>Email</label>
+                    <label className={labelCls}>Email</label>
                     <input
                       type="email"
                       value={email}
                       placeholder="contact@vendor.com"
                       onChange={(e) => setEmail(e.target.value)}
-                      style={inputStyle}
+                      className={inputCls}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Alamat Rinci</label>
+                  <label className={labelCls}>Alamat Rinci</label>
                   <textarea
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     rows={3}
                     placeholder="Alamat lengkap kantor pusat atau operasional"
-                    style={{
-                      ...inputStyle,
-                      height: "auto",
-                      minHeight: "96px",
-                      padding: "12px 16px",
-                      resize: "vertical",
-                      fontFamily: "'Inter', sans-serif",
-                    }}
+                    className={`${inputBase} h-auto min-h-24 resize-y rounded-md border-transparent`}
                   />
                 </div>
               </div>
 
-              <div style={{ borderTop: "1px solid #ECEEF0", paddingTop: "24px" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "24px",
-                    padding: "20px 24px",
-                    background: "#F2F4F6",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 700,
-                        fontSize: "14px",
-                        lineHeight: "20px",
-                        color: "#191C1E",
-                      }}
-                    >
-                      Status Akun
-                    </div>
-                    <div
-                      style={{
-                        marginTop: "4px",
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 400,
-                        fontSize: "12px",
-                        lineHeight: "16px",
-                        color: "#4A4455",
-                      }}
-                    >
+              <div className="border-t border-[#ECEEF0] pt-6">
+                <div className="flex items-center justify-between gap-6 rounded-md bg-[#F2F4F6] px-6 py-5">
+                  <div className="flex-1">
+                    <div className="text-sm font-bold leading-5 text-[#191C1E]">Status Akun</div>
+                    <div className="mt-1 text-xs font-normal leading-4 text-[#4A4455]">
                       Menonaktifkan vendor mencegah penggunaan dalam transaksi procurement
                       berikutnya.
                     </div>
@@ -586,71 +366,37 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
                     onClick={() => setIsActive((a) => !a)}
                     role="switch"
                     aria-checked={isActive}
-                    style={{
-                      width: "56px",
-                      height: "32px",
-                      borderRadius: "999px",
-                      border: "none",
-                      background: isActive ? "#630ED4" : "#CBD5E1",
-                      cursor: "pointer",
-                      position: "relative",
-                      transition: "background 0.2s",
-                      flexShrink: 0,
-                    }}
+                    className={`relative h-8 w-14 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] ${
+                      isActive ? "bg-[#630ED4]" : "bg-[#CBD5E1]"
+                    }`}
                   >
                     <span
-                      style={{
-                        position: "absolute",
-                        top: "4px",
-                        left: isActive ? "28px" : "4px",
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "50%",
-                        background: "#FFFFFF",
-                        transition: "left 0.2s",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                      }}
+                      className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ease-[ease] ${
+                        isActive ? "left-7" : "left-1"
+                      }`}
                     />
                   </button>
                 </div>
               </div>
 
               {submitError && (
-                <div
-                  style={{
-                    padding: "12px 16px",
-                    background: "#FEF2F2",
-                    borderLeft: "4px solid #DC2626",
-                    borderRadius: "8px",
-                    fontFamily: "'Inter', sans-serif",
-                    fontSize: "13px",
-                    color: "#7F1D1D",
-                  }}
-                >
+                <div className="rounded-md border-l-4 border-[#DC2626] bg-[#FEF2F2] px-4 py-3 text-[13px] text-[#7F1D1D]">
                   {submitError}
                 </div>
               )}
             </div>
           </div>
 
-          <div
-            style={{ display: "flex", justifyContent: "flex-end", gap: "16px", marginTop: "8px" }}
-          >
+          <div className="mt-2 flex justify-end gap-4">
             <button
               type="button"
               onClick={handleCancel}
               disabled={!dirty || updateVendor.isPending}
-              style={{
-                padding: "12px 28px",
-                borderRadius: "12px",
-                border: "none",
-                background: "transparent",
-                color: dirty && !updateVendor.isPending ? "#630ED4" : "#CBD5E1",
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 700,
-                fontSize: "14px",
-                cursor: dirty && !updateVendor.isPending ? "pointer" : "default",
-              }}
+              className={`rounded-lg bg-transparent px-7 py-3 text-sm font-bold ${
+                dirty && !updateVendor.isPending
+                  ? "cursor-pointer text-[#630ED4]"
+                  : "cursor-default text-[#CBD5E1]"
+              }`}
             >
               Batal
             </button>
@@ -658,55 +404,37 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
               type="button"
               onClick={handleSubmit}
               disabled={!dirty || updateVendor.isPending}
-              style={{
-                padding: "12px 32px",
-                borderRadius: "12px",
-                border: "none",
-                background: dirty ? "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)" : "#CBD5E1",
-                boxShadow: dirty
-                  ? "0px 10px 15px -3px rgba(99, 14, 212, 0.2), 0px 4px 6px -4px rgba(99, 14, 212, 0.2)"
-                  : "none",
-                color: "#FFFFFF",
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 700,
-                fontSize: "14px",
-                cursor: dirty && !updateVendor.isPending ? "pointer" : "default",
-                opacity: updateVendor.isPending ? 0.7 : 1,
-              }}
+              className={`rounded-lg px-8 py-3 text-sm font-bold text-white ${
+                dirty
+                  ? "bg-[linear-gradient(135deg,#630ED4_0%,#7C3AED_100%)] shadow-[0px_10px_15px_-3px_rgba(99,14,212,0.2),0px_4px_6px_-4px_rgba(99,14,212,0.2)]"
+                  : "bg-[#CBD5E1] shadow-none"
+              } ${
+                dirty && !updateVendor.isPending ? "cursor-pointer" : "cursor-default"
+              } ${updateVendor.isPending ? "opacity-70" : "opacity-100"}`}
             >
               {updateVendor.isPending ? "Menyimpan…" : "Simpan Perubahan"}
             </button>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "8px" }}>
-            <h3
-              style={{
-                margin: 0,
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 800,
-                fontSize: "20px",
-                lineHeight: "28px",
-                letterSpacing: "-0.5px",
-                color: "#191C1E",
-              }}
-            >
+          <div className="mt-2 flex flex-col gap-4">
+            <h3 className="m-0 text-[20px] font-extrabold leading-7 tracking-[-0.5px] text-[#191C1E]">
               Daftar Produk Vendor
             </h3>
 
-            <div className="tbl-container" style={{ marginTop: 0 }}>
-              <table className="tbl">
+            <div className={ui.tableWrap}>
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr className="tbl-header-row">
-                    <th className="tbl-th tbl-th--center" style={{ width: 360 }}>
+                  <tr className={ui.theadRow}>
+                    <th className={ui.thCenter} style={{ width: 360 }}>
                       Nama Produk
                     </th>
-                    <th className="tbl-th tbl-th--center" style={{ width: 200 }}>
+                    <th className={ui.thCenter} style={{ width: 200 }}>
                       Kode IMPA
                     </th>
-                    <th className="tbl-th tbl-th--center" style={{ width: 200 }}>
+                    <th className={ui.thCenter} style={{ width: 200 }}>
                       SKU Vendor
                     </th>
-                    <th className="tbl-th tbl-th--center" style={{ width: 200 }}>
+                    <th className={ui.thCenter} style={{ width: 200 }}>
                       Harga Beli
                     </th>
                   </tr>
@@ -714,36 +442,27 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
                 <tbody>
                   {itemsLoading && (
                     <tr>
-                      <td
-                        colSpan={4}
-                        className="tbl-td tbl-td--center"
-                        style={{ padding: "40px 0", color: "#64748B" }}
-                      >
+                      <td colSpan={4} className="py-10 text-center text-sm text-dark-500">
                         Memuat data…
                       </td>
                     </tr>
                   )}
                   {!itemsLoading && (vendorItems ?? []).length === 0 && (
                     <tr>
-                      <td
-                        colSpan={4}
-                        className="tbl-td tbl-td--center"
-                        style={{ padding: "40px 0", color: "#64748B" }}
-                      >
+                      <td colSpan={4} className="py-10 text-center text-sm text-dark-500">
                         Belum ada produk vendor.
                       </td>
                     </tr>
                   )}
                   {!itemsLoading &&
                     (vendorItems ?? []).map((item) => (
-                      <tr key={item.itemId} className="tbl-row">
-                        <td className="tbl-td tbl-td--client tbl-td--center">{item.itemName}</td>
-                        <td className="tbl-td tbl-td--center">{item.impaCode ?? "-"}</td>
-                        <td className="tbl-td tbl-td--center">{item.vendorSku ?? "-"}</td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ fontWeight: 800, color: "#630ED4" }}
-                        >
+                      <tr key={item.itemId} className={ui.tr}>
+                        <td className={`${ui.tdCenter} font-medium text-dark-900`}>
+                          {item.itemName}
+                        </td>
+                        <td className={ui.tdCenter}>{item.impaCode ?? "-"}</td>
+                        <td className={ui.tdCenter}>{item.vendorSku ?? "-"}</td>
+                        <td className={`${ui.tdCenter} font-extrabold text-[#630ED4]`}>
                           {formatRupiah(item.costPrice, "-")}
                         </td>
                       </tr>

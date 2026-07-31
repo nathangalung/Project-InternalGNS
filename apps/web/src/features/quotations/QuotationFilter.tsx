@@ -33,6 +33,15 @@ interface QuotationFilterProps {
 
 const STATUSES: StatusFilter[] = ["Draf", "Dikirim", "Ditolak", "Revisi", "Disetujui"]
 
+const presetChip =
+  "flex items-center justify-between rounded-md px-3.5 py-2.5 text-[13px] transition-all duration-150"
+const statusChip = "rounded-[20px] px-4 py-1.5 text-[13px] transition-all duration-150"
+const chipActive =
+  "border-[1.5px] border-[#630ED4] bg-[rgba(99,14,212,0.05)] font-bold text-[#630ED4]"
+const statusChipActive =
+  "border-[1.5px] border-[#630ED4] bg-[rgba(99,14,212,0.07)] font-bold text-[#630ED4]"
+const chipIdle = "border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] font-medium text-[#4A4455]"
+
 export default function QuotationFilter({ onClose, onApply, initialValues }: QuotationFilterProps) {
   const seed = presetToIsoRange("30-hari")
   const [preset, setPreset] = useState<DatePreset>(initialValues?.preset ?? "semua")
@@ -100,7 +109,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
             <div className="ca-section-heading">Rentang Tanggal</div>
 
             <div className="ca-field">
-              <div className="rgrid-2" style={{ display: "grid", gap: "8px" }}>
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-2">
                 {DATE_PRESETS.map(({ key, label }) => {
                   const isActive = preset === key
                   return (
@@ -108,27 +117,11 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                       key={key}
                       type="button"
                       onClick={() => pickPreset(key)}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "10px 14px",
-                        borderRadius: "8px",
-                        border: isActive
-                          ? "1.5px solid #630ED4"
-                          : "1px solid rgba(204, 195, 216, 0.4)",
-                        background: isActive ? "rgba(99, 14, 212, 0.05)" : "#F7F7F8",
-                        cursor: "pointer",
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: isActive ? 700 : 500,
-                        fontSize: "13px",
-                        color: isActive ? "#630ED4" : "#4A4455",
-                        transition: "all 0.15s",
-                      }}
+                      className={`${presetChip} ${isActive ? chipActive : chipIdle}`}
                     >
                       {label}
                       {key === "kustom" ? (
-                        <span style={{ color: isActive ? "#630ED4" : "#9CA3AF" }}>
+                        <span className={isActive ? "text-[#630ED4]" : "text-[#9CA3AF]"}>
                           <IconCalendar />
                         </span>
                       ) : isActive ? (
@@ -172,27 +165,14 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
           <div className="ca-section">
             <div className="ca-section-heading">Status Penawaran</div>
             <div className="ca-field">
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              <div className="flex flex-wrap gap-2">
                 {(() => {
                   const allActive = activeStatuses.length === 0
                   return (
                     <button
                       type="button"
                       onClick={() => setActiveStatuses([])}
-                      style={{
-                        padding: "6px 16px",
-                        borderRadius: "20px",
-                        border: allActive
-                          ? "1.5px solid #630ED4"
-                          : "1px solid rgba(204, 195, 216, 0.4)",
-                        background: allActive ? "rgba(99, 14, 212, 0.07)" : "#F7F7F8",
-                        cursor: "pointer",
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: allActive ? 700 : 500,
-                        fontSize: "13px",
-                        color: allActive ? "#630ED4" : "#4A4455",
-                        transition: "all 0.15s",
-                      }}
+                      className={`${statusChip} ${allActive ? statusChipActive : chipIdle}`}
                     >
                       Semua
                     </button>
@@ -205,20 +185,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                       key={s}
                       type="button"
                       onClick={() => toggleStatus(s)}
-                      style={{
-                        padding: "6px 16px",
-                        borderRadius: "20px",
-                        border: isActive
-                          ? "1.5px solid #630ED4"
-                          : "1px solid rgba(204, 195, 216, 0.4)",
-                        background: isActive ? "rgba(99, 14, 212, 0.07)" : "#F7F7F8",
-                        cursor: "pointer",
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: isActive ? 700 : 500,
-                        fontSize: "13px",
-                        color: isActive ? "#630ED4" : "#4A4455",
-                        transition: "all 0.15s",
-                      }}
+                      className={`${statusChip} ${isActive ? statusChipActive : chipIdle}`}
                     >
                       {s}
                     </button>
@@ -254,43 +221,29 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
         </div>
 
         {/* Footer */}
-        <div
-          className="ca-footer"
-          style={{ justifyContent: "space-between", padding: "16px 24px" }}
-        >
+        <div className="ca-footer justify-between px-6 py-4">
           <button
             type="button"
             onClick={handleReset}
             disabled={!dirty}
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: dirty ? "pointer" : "default",
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 500,
-              fontSize: "13px",
-              color: dirty ? "#630ED4" : "#CBD5E1",
-              padding: 0,
-              textDecoration: dirty ? "underline" : "none",
-              textUnderlineOffset: "3px",
-            }}
+            className={`p-0 text-[13px] font-medium underline-offset-[3px] ${
+              dirty ? "cursor-pointer text-[#630ED4] underline" : "cursor-default text-dark-300"
+            }`}
           >
             Hapus Filter
           </button>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="flex gap-2">
             <button
               type="button"
-              className="ca-btn-cancel"
+              className="ca-btn-cancel px-[18px] py-2 text-[13px]"
               onClick={onClose}
-              style={{ padding: "8px 18px", fontSize: "13px" }}
             >
               Batal
             </button>
             <button
               type="button"
-              className="ca-btn-submit"
+              className="ca-btn-submit px-[22px] py-2 text-[13px]"
               onClick={handleApply}
-              style={{ padding: "8px 22px", fontSize: "13px" }}
             >
               Terapkan
             </button>

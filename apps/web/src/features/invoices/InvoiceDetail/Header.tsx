@@ -1,5 +1,6 @@
 import StatusBadge from "@/components/shared/StatusBadge"
 import type { Page } from "@/lib/page"
+import { ui } from "@/lib/ui"
 import type { InvoiceStatus } from "../types"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "../types"
 
@@ -64,8 +65,8 @@ export default function Header({
         </div>
         <div className="qd-header-actions">
           <button
-            className="btn-admin-primary"
-            style={{ minWidth: "130px", justifyContent: "center" }}
+            type="button"
+            className={`${ui.btnPrimary} min-w-[130px]`}
             onClick={onDownload}
             disabled={!onDownload}
           >

@@ -74,7 +74,7 @@ export default function VendorFilter({ onClose, onApply, initialValues }: Vendor
           <div className="ca-section">
             <div className="ca-section-heading">Status Vendor</div>
             <div className="ca-field">
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              <div className="flex flex-wrap gap-2">
                 {STATUS_OPTIONS.map((o) => (
                   <button
                     key={o.value}
@@ -97,19 +97,7 @@ export default function VendorFilter({ onClose, onApply, initialValues }: Vendor
                 placeholder="Ketik lokasi vendor..."
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                style={{
-                  width: "100%",
-                  height: "44px",
-                  padding: "10px 14px",
-                  fontSize: "14px",
-                  fontFamily: "'Inter', sans-serif",
-                  color: "#191C1E",
-                  background: "#F7F7F8",
-                  border: "1px solid rgba(204, 195, 216, 0.4)",
-                  borderRadius: "8px",
-                  outline: "none",
-                  boxSizing: "border-box",
-                }}
+                className="h-11 w-full rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-3.5 py-2.5 text-sm text-[#191C1E] outline-none"
               />
             </div>
           </div>
@@ -132,43 +120,31 @@ export default function VendorFilter({ onClose, onApply, initialValues }: Vendor
           </div>
         </div>
 
-        <div
-          className="ca-footer"
-          style={{ justifyContent: "space-between", padding: "16px 24px" }}
-        >
+        <div className="ca-footer justify-between px-6 py-4">
           <button
             type="button"
             onClick={handleReset}
             disabled={!dirty}
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: dirty ? "pointer" : "default",
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 500,
-              fontSize: "13px",
-              color: dirty ? "#630ED4" : "#CBD5E1",
-              padding: 0,
-              textDecoration: dirty ? "underline" : "none",
-              textUnderlineOffset: "3px",
-            }}
+            className={`border-0 bg-transparent p-0 text-[13px] font-medium underline-offset-[3px] ${
+              dirty
+                ? "cursor-pointer text-[#630ED4] underline"
+                : "cursor-default text-[#CBD5E1] no-underline"
+            }`}
           >
             Hapus Filter
           </button>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="flex gap-2">
             <button
               type="button"
-              className="ca-btn-cancel"
+              className="ca-btn-cancel px-[18px] py-2 text-[13px]"
               onClick={onClose}
-              style={{ padding: "8px 18px", fontSize: "13px" }}
             >
               Batal
             </button>
             <button
               type="button"
-              className="ca-btn-submit"
+              className="ca-btn-submit px-[22px] py-2 text-[13px]"
               onClick={handleApply}
-              style={{ padding: "8px 22px", fontSize: "13px" }}
             >
               Terapkan
             </button>

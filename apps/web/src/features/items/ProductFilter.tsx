@@ -79,7 +79,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
           <div className="ca-section">
             <div className="ca-section-heading">Status Produk</div>
             <div className="ca-field">
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              <div className="flex flex-wrap gap-2">
                 {STATUS_OPTIONS.map((o) => (
                   <button
                     key={o.value}
@@ -97,7 +97,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
           <div className="ca-section">
             <div className="ca-section-heading">Satuan</div>
             <div className="ca-field">
-              <div style={{ position: "relative" }}>
+              <div className="relative">
                 <svg
                   width="14"
                   height="14"
@@ -107,13 +107,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  style={{
-                    position: "absolute",
-                    left: "12px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    pointerEvents: "none",
-                  }}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
                 >
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -130,18 +124,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
                   onFocus={() => {
                     if (unitQuery.length > 0 && !unitCode) setShowUnitSuggestions(true)
                   }}
-                  style={{
-                    width: "100%",
-                    height: "44px",
-                    padding: "10px 36px 10px 36px",
-                    fontSize: "14px",
-                    fontFamily: "'Inter', sans-serif",
-                    color: "#191C1E",
-                    background: "#F7F7F8",
-                    border: "1px solid rgba(204, 195, 216, 0.4)",
-                    borderRadius: "8px",
-                    outline: "none",
-                  }}
+                  className="h-11 w-full rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-9 py-2.5 font-sans text-sm text-[#191C1E] outline-none"
                 />
                 {unitQuery && (
                   <button
@@ -152,19 +135,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
                       setShowUnitSuggestions(false)
                     }}
                     title="Bersihkan"
-                    style={{
-                      position: "absolute",
-                      right: "10px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "4px",
-                      display: "flex",
-                      alignItems: "center",
-                      color: "#94A3B8",
-                    }}
+                    className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-[#94A3B8]"
                   >
                     <svg
                       width="14"
@@ -181,32 +152,9 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
                   </button>
                 )}
                 {showUnitSuggestions && unitQuery.length > 0 && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "calc(100% + 4px)",
-                      left: 0,
-                      right: 0,
-                      maxHeight: "240px",
-                      overflowY: "auto",
-                      background: "#FFFFFF",
-                      border: "1px solid rgba(204, 195, 216, 0.4)",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-                      padding: "4px 0",
-                      zIndex: 50,
-                    }}
-                  >
+                  <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 max-h-60 overflow-y-auto rounded-md border border-[rgba(204,195,216,0.4)] bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
                     {filteredUnits.length === 0 ? (
-                      <div
-                        style={{
-                          padding: "12px 20px",
-                          fontSize: "13px",
-                          color: "#94A3B8",
-                          fontFamily: "'Inter', sans-serif",
-                          textAlign: "center",
-                        }}
-                      >
+                      <div className="px-5 py-3 text-center text-[13px] text-[#94A3B8]">
                         Tidak ada hasil
                       </div>
                     ) : (
@@ -237,43 +185,31 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
           </div>
         </div>
 
-        <div
-          className="ca-footer"
-          style={{ justifyContent: "space-between", padding: "16px 24px" }}
-        >
+        <div className="ca-footer justify-between px-6 py-4">
           <button
             type="button"
             onClick={handleReset}
             disabled={!dirty}
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: dirty ? "pointer" : "default",
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 500,
-              fontSize: "13px",
-              color: dirty ? "#630ED4" : "#CBD5E1",
-              padding: 0,
-              textDecoration: dirty ? "underline" : "none",
-              textUnderlineOffset: "3px",
-            }}
+            className={`p-0 text-[13px] font-medium ${
+              dirty
+                ? "cursor-pointer text-[#630ED4] underline underline-offset-[3px]"
+                : "cursor-default text-[#CBD5E1] no-underline"
+            }`}
           >
             Hapus Filter
           </button>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="flex gap-2">
             <button
               type="button"
-              className="ca-btn-cancel"
+              className="ca-btn-cancel px-[18px] py-2 text-[13px]"
               onClick={onClose}
-              style={{ padding: "8px 18px", fontSize: "13px" }}
             >
               Batal
             </button>
             <button
               type="button"
-              className="ca-btn-submit"
+              className="ca-btn-submit px-[22px] py-2 text-[13px]"
               onClick={handleApply}
-              style={{ padding: "8px 22px", fontSize: "13px" }}
             >
               Terapkan
             </button>

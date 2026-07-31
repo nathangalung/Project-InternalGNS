@@ -1,5 +1,4 @@
 import type { ClientInfo } from "@/features/quotations/types"
-import { fieldLabel, fieldValue } from "./helpers"
 
 interface ClientSummaryCardProps {
   clientName: string
@@ -7,6 +6,11 @@ interface ClientSummaryCardProps {
   clientInfo?: ClientInfo
   shippingAlamat?: string
 }
+
+const fieldLabel = "mb-1 text-[11px] font-semibold uppercase text-[#6B7280]"
+const fieldValue = "text-sm font-medium text-[#111827]"
+const fieldValueSemibold = "text-sm font-semibold text-[#111827]"
+const emptyValue = "text-sm font-medium italic text-[#9CA3AF]"
 
 // Client header card.
 export default function ClientSummaryCard({
@@ -18,167 +22,73 @@ export default function ClientSummaryCard({
   const ci = clientInfo
   return (
     <div>
-      <h2 className="qe-section-title" style={{ marginBottom: "12px" }}>
-        Ringkasan Klien
-      </h2>
-      <div
-        style={{
-          background: "#FFFFFF",
-          border: "1px solid rgba(204,195,216,0.2)",
-          borderRadius: "12px",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "16px",
-            padding: "20px 24px",
-            borderBottom: "1px solid rgba(204,195,216,0.15)",
-            background:
-              "linear-gradient(135deg, rgba(99,14,212,0.04) 0%, rgba(99,14,212,0.01) 100%)",
-          }}
-        >
-          <div
-            style={{
-              width: "48px",
-              height: "48px",
-              borderRadius: "12px",
-              background: "rgba(99,14,212,0.12)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <span
-              style={{
-                fontSize: "16px",
-                fontWeight: 800,
-                color: "#630ED4",
-                letterSpacing: "-0.5px",
-              }}
-            >
+      <h2 className="qe-section-title mb-3">Ringkasan Klien</h2>
+      <div className="overflow-hidden rounded-lg border border-[rgba(204,195,216,0.2)] bg-white">
+        <div className="flex items-center gap-4 border-b border-[rgba(204,195,216,0.15)] bg-[linear-gradient(135deg,rgba(99,14,212,0.04)_0%,rgba(99,14,212,0.01)_100%)] px-6 py-5">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[rgba(99,14,212,0.12)]">
+            <span className="text-base font-extrabold tracking-[-0.5px] text-[#630ED4]">
               {clientInitials}
             </span>
           </div>
           <div>
-            <div
-              style={{ fontSize: "16px", fontWeight: 700, color: "#111827", marginBottom: "4px" }}
-            >
-              {clientName}
-            </div>
-            <span style={{ fontSize: "12px", color: "#6B7280", fontWeight: 500 }}>Indonesia</span>
+            <div className="mb-1 text-base font-bold text-[#111827]">{clientName}</div>
+            <span className="text-xs font-medium text-[#6B7280]">Indonesia</span>
           </div>
         </div>
 
-        <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(204,195,216,0.15)" }}>
-          <div
-            style={{
-              fontSize: "10px",
-              fontWeight: 700,
-              color: "#9CA3AF",
-              letterSpacing: "1px",
-              textTransform: "uppercase",
-              marginBottom: "16px",
-            }}
-          >
+        <div className="border-b border-[rgba(204,195,216,0.15)] px-6 py-5">
+          <div className="mb-4 text-[10px] font-bold uppercase tracking-[1px] text-[#9CA3AF]">
             Kontak &amp; Legalitas
           </div>
-          <div
-            className="rgrid-3"
-            style={{
-              display: "grid",
-              rowGap: "20px",
-              columnGap: "24px",
-            }}
-          >
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-x-6 gap-y-5">
             <div>
-              <div style={fieldLabel}>Narahubung</div>
-              <div style={{ ...fieldValue, fontWeight: 600 }}>{ci?.narahubung || "-"}</div>
+              <div className={fieldLabel}>Narahubung</div>
+              <div className={fieldValueSemibold}>{ci?.narahubung || "-"}</div>
             </div>
             <div>
-              <div style={fieldLabel}>Nomor HP</div>
-              <div style={fieldValue}>{ci?.phone || "-"}</div>
+              <div className={fieldLabel}>Nomor HP</div>
+              <div className={fieldValue}>{ci?.phone || "-"}</div>
             </div>
             <div>
-              <div style={fieldLabel}>Email Kontak</div>
-              <div style={fieldValue}>{ci?.email || "-"}</div>
+              <div className={fieldLabel}>Email Kontak</div>
+              <div className={fieldValue}>{ci?.email || "-"}</div>
             </div>
             <div>
-              <div style={fieldLabel}>Nomor TKU</div>
-              <div
-                style={{
-                  ...fieldValue,
-                  color: ci?.nomorTKU ? "#111827" : "#9CA3AF",
-                  fontStyle: ci?.nomorTKU ? "normal" : "italic",
-                }}
-              >
+              <div className={fieldLabel}>Nomor TKU</div>
+              <div className={ci?.nomorTKU ? fieldValue : emptyValue}>
                 {ci?.nomorTKU || "Belum diisi"}
               </div>
             </div>
             <div>
-              <div style={fieldLabel}>NPWP</div>
-              <div
-                style={{
-                  ...fieldValue,
-                  color: ci?.npwp ? "#111827" : "#9CA3AF",
-                  fontStyle: ci?.npwp ? "normal" : "italic",
-                }}
-              >
-                {ci?.npwp || "Belum diisi"}
-              </div>
+              <div className={fieldLabel}>NPWP</div>
+              <div className={ci?.npwp ? fieldValue : emptyValue}>{ci?.npwp || "Belum diisi"}</div>
             </div>
             <div>
-              <div style={fieldLabel}>Reference Number</div>
-              <div
-                style={{
-                  ...fieldValue,
-                  color: ci?.referenceNumber ? "#111827" : "#9CA3AF",
-                  fontStyle: ci?.referenceNumber ? "normal" : "italic",
-                }}
-              >
+              <div className={fieldLabel}>Reference Number</div>
+              <div className={ci?.referenceNumber ? fieldValue : emptyValue}>
                 {ci?.referenceNumber || "Belum diisi"}
               </div>
             </div>
           </div>
         </div>
 
-        <div
-          className="rgrid-2"
-          style={{
-            padding: "20px 24px",
-            display: "grid",
-            gap: "24px",
-          }}
-        >
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-6 px-6 py-5">
           <div>
-            <div style={fieldLabel}>Lokasi Perusahaan</div>
+            <div className={fieldLabel}>Lokasi Perusahaan</div>
             <div
-              style={{
-                fontSize: "13px",
-                fontWeight: 500,
-                lineHeight: "1.6",
-                marginTop: "4px",
-                color: ci?.lokasi ? "#374151" : "#9CA3AF",
-                fontStyle: ci?.lokasi ? "normal" : "italic",
-              }}
+              className={`mt-1 text-[13px] font-medium leading-[1.6] ${
+                ci?.lokasi ? "text-[#374151]" : "italic text-[#9CA3AF]"
+              }`}
             >
               {ci?.lokasi || "Belum diisi"}
             </div>
           </div>
           <div>
-            <div style={fieldLabel}>Alamat Pengiriman Barang</div>
+            <div className={fieldLabel}>Alamat Pengiriman Barang</div>
             <div
-              style={{
-                fontSize: "13px",
-                fontWeight: 500,
-                lineHeight: "1.6",
-                marginTop: "4px",
-                color: shippingAlamat ? "#374151" : "#9CA3AF",
-                fontStyle: shippingAlamat ? "normal" : "italic",
-              }}
+              className={`mt-1 text-[13px] font-medium leading-[1.6] ${
+                shippingAlamat ? "text-[#374151]" : "italic text-[#9CA3AF]"
+              }`}
             >
               {shippingAlamat || "Belum diisi"}
             </div>

@@ -1,4 +1,4 @@
-import { type CSSProperties, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import ActiveFilters, { type FilterChip } from "@/components/shared/ActiveFilters"
 import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
@@ -6,11 +6,13 @@ import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
 import StatusBadge from "@/components/shared/StatusBadge"
+import SummaryCard from "@/components/shared/SummaryCard"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { downloadPdf, downloadXml } from "@/lib/api-client"
 import { resolveRange } from "@/lib/date-range"
 import { formatDate, formatNumber, formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
+import { ui } from "@/lib/ui"
 import type { InvoiceBackendRow } from "@/types/api"
 import * as invoicesApi from "./api"
 import { useInvoiceSummary, useInvoices } from "./hooks"
@@ -71,18 +73,8 @@ function rowFromBackend(inv: InvoiceBackendRow): InvoiceRow | null {
   }
 }
 
-const iconBtnStyle: CSSProperties = {
-  background: "transparent",
-  border: "none",
-  cursor: "pointer",
-  padding: "4px",
-  color: "#630ED4",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: "6px",
-  transition: "background 0.15s",
-}
+const actionBtn =
+  "inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
 
 export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: InvoiceListProps) {
   const [search, setSearch] = useState("")
@@ -198,12 +190,11 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
         <div className="page-content" style={{ gap: "29px" }}>
           <div className="page-header">
             <h1 className="page-title">Daftar Invoice</h1>
-            <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
+            <div className="page-actions flex gap-2.5">
               <button
                 type="button"
-                className="btn-admin-outline"
+                className={`${ui.btnOutline} w-[160px]`}
                 onClick={() => invoicesApi.exportXlsx(queryParams)}
-                style={{ width: "160px", justifyContent: "center" }}
               >
                 <svg
                   width="14"
@@ -223,9 +214,8 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
               </button>
               <button
                 type="button"
-                className="btn-admin-outline"
+                className={`${ui.btnOutline} w-[180px]`}
                 onClick={() => invoicesApi.exportCoretaxXlsx(queryParams)}
-                style={{ width: "180px", justifyContent: "center" }}
               >
                 <svg
                   width="14"
@@ -246,47 +236,19 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
             </div>
           </div>
 
-          <div className="summary-cards">
-            <div className="card-violet">
-              <div className="card-label">Total Invoice</div>
-              <div className="card-value">{formatNumber(counts.total)}</div>
-            </div>
-            <div className="card-gold">
-              <div
-                className="card-overlay"
-                style={{
-                  background:
-                    "linear-gradient(82.48deg, rgba(217,119,6,.5) 6.42%, rgba(245,158,11,.1) 93.58%)",
-                  opacity: 0.5,
-                }}
-              />
-              <div className="card-label">Draf</div>
-              <div className="card-value">{formatNumber(counts.DRAF)}</div>
-            </div>
-            <div className="card-blue">
-              <div
-                className="card-overlay"
-                style={{
-                  background: "linear-gradient(82.48deg, rgba(63,86,255,.5) 6.42%, #DBEAFE 93.58%)",
-                  opacity: 0.5,
-                }}
-              />
-              <div className="card-label">Dikirim</div>
-              <div className="card-value">{formatNumber(counts.DIKIRIM)}</div>
-            </div>
-            <div className="card-green">
-              <div className="card-glow" style={{ background: "rgba(52,211,153,.2)" }} />
-              <div className="card-label">Dibayar</div>
-              <div className="card-value">{formatNumber(counts.DIBAYAR)}</div>
-            </div>
-            <div className="card-red">
-              <div className="card-glow" style={{ background: "rgba(239,94,94,.3)" }} />
-              <div className="card-label">Terlambat</div>
-              <div className="card-value">{formatNumber(counts.TERLAMBAT)}</div>
-            </div>
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
+            <SummaryCard
+              variant="violet"
+              label="Total Invoice"
+              value={formatNumber(counts.total)}
+            />
+            <SummaryCard variant="gold" label="Draf" value={formatNumber(counts.DRAF)} />
+            <SummaryCard variant="blue" label="Dikirim" value={formatNumber(counts.DIKIRIM)} />
+            <SummaryCard variant="green" label="Dibayar" value={formatNumber(counts.DIBAYAR)} />
+            <SummaryCard variant="red" label="Terlambat" value={formatNumber(counts.TERLAMBAT)} />
           </div>
 
-          <div className="search-row">
+          <div className="flex items-center gap-4 pt-2">
             <SearchInput
               value={search}
               onChange={(v) => {
@@ -300,29 +262,29 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
 
           <ActiveFilters chips={filterChips} onClearAll={clearAllFilters} />
 
-          <div className="tbl-container">
-            <table className="tbl">
+          <div className={ui.tableWrap}>
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="tbl-header-row">
-                  <th className="tbl-th tbl-th--center" style={{ width: 150 }}>
+                <tr className={ui.theadRow}>
+                  <th className={ui.thCenter} style={{ width: 150 }}>
                     Nomor Invoice
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 200 }}>
+                  <th className={ui.thCenter} style={{ width: 200 }}>
                     Nama Klien
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
+                  <th className={ui.thCenter} style={{ width: 160 }}>
                     Tanggal Pembuatan
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
+                  <th className={ui.thCenter} style={{ width: 140 }}>
                     Jatuh Tempo
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
+                  <th className={ui.thCenter} style={{ width: 160 }}>
                     Total Tagihan
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 130 }}>
+                  <th className={ui.thCenter} style={{ width: 130 }}>
                     Status
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 100 }}>
+                  <th className={ui.thCenter} style={{ width: 100 }}>
                     Aksi
                   </th>
                 </tr>
@@ -330,22 +292,14 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
               <tbody>
                 {isLoading && (
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={7} className="py-10 text-center text-sm text-dark-500">
                       Memuat data…
                     </td>
                   </tr>
                 )}
                 {!isLoading && currentRows.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={7} className="py-10 text-center text-sm text-dark-500">
                       Belum ada Invoice. Invoice dibuat otomatis ketika status PO menjadi Dikirim.
                     </td>
                   </tr>
@@ -354,49 +308,27 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
                   currentRows.map((row) => {
                     const style = INVOICE_STATUS_STYLE[row.status]
                     return (
-                      <tr key={row.quotationId} className="tbl-row">
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ fontWeight: 700, color: "#630ED4" }}
-                        >
+                      <tr key={row.quotationId} className={ui.tr}>
+                        <td className={`${ui.tdCenter} font-bold text-[#630ED4]`}>
                           {row.invoiceNo}
                         </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ color: "#191C1E", fontWeight: 500 }}
-                        >
+                        <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>
                           {row.client}
                         </td>
-                        <td className="tbl-td tbl-td--center" style={{ color: "#4A4455" }}>
-                          {formatDate(row.createdAt)}
-                        </td>
-                        <td className="tbl-td tbl-td--center" style={{ color: "#4A4455" }}>
-                          {formatDate(row.dueDate)}
-                        </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ fontWeight: 700, color: "#191C1E" }}
-                        >
-                          {row.total}
-                        </td>
-                        <td className="tbl-td tbl-td--center">
+                        <td className={ui.tdCenter}>{formatDate(row.createdAt)}</td>
+                        <td className={ui.tdCenter}>{formatDate(row.dueDate)}</td>
+                        <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>{row.total}</td>
+                        <td className={ui.tdCenter}>
                           <StatusBadge bg={style.bg} color={style.color}>
                             {INVOICE_LABEL[row.status]}
                           </StatusBadge>
                         </td>
-                        <td className="tbl-td tbl-td--center" style={{ padding: "12px 8px" }}>
-                          <div
-                            style={{
-                              display: "inline-flex",
-                              gap: "2px",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
+                        <td className="px-2 py-3 text-center align-middle text-sm text-[#4A4455]">
+                          <div className="inline-flex items-center justify-center gap-0.5">
                             <button
                               type="button"
                               title="Lihat detail"
-                              style={iconBtnStyle}
+                              className={actionBtn}
                               onClick={() => onViewDetail?.(row.quotationId)}
                             >
                               <EyeIcon size={18} />
@@ -404,7 +336,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
                             <button
                               type="button"
                               title="Unduh invoice"
-                              style={iconBtnStyle}
+                              className={actionBtn}
                               onClick={() =>
                                 downloadPdf(`/invoices/${row.id}/pdf`, `${row.invoiceNo}.pdf`)
                               }
@@ -427,7 +359,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
                             <button
                               type="button"
                               title="Unduh Coretax XML"
-                              style={iconBtnStyle}
+                              className={actionBtn}
                               onClick={() =>
                                 downloadXml(
                                   `/invoices/${row.id}/coretax.xml`,

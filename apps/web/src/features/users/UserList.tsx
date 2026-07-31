@@ -10,6 +10,7 @@ import { useUsers } from "@/features/users/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import type { Page } from "@/lib/page"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
+import { ui } from "@/lib/ui"
 import type { Role } from "@/types/api"
 import UserAddModal from "./UserAddModal"
 import UserFilter, { type RoleFilter, type StatusFilter } from "./UserFilter"
@@ -101,8 +102,8 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
             <h1 className="page-title">Manajemen Pengguna</h1>
             <div className="page-actions">
               <button
-                className="btn-admin-primary"
-                style={{ width: "200px", justifyContent: "center" }}
+                className={`${ui.btnPrimary} w-[200px]`}
+                type="button"
                 onClick={() => setShowAdd(true)}
               >
                 <svg
@@ -110,7 +111,7 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
                   height="14"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="#fff"
+                  stroke="currentColor"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                 >
@@ -122,7 +123,7 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
             </div>
           </div>
 
-          <div className="search-row">
+          <div className="flex items-center gap-4 pt-2">
             <SearchInput
               value={search}
               onChange={(v) => {
@@ -134,54 +135,40 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
             <FilterButton onClick={() => setShowFilter(true)} />
           </div>
 
-          <div className="tbl-container">
-            <table className="tbl">
+          <div className={ui.tableWrap}>
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="tbl-header-row">
+                <tr className={ui.theadRow}>
                   <th
-                    className="tbl-th tbl-th--center"
-                    style={{ width: 200, cursor: "pointer" }}
+                    className={`${ui.thCenter} cursor-pointer`}
+                    style={{ width: 200 }}
                     onClick={() => toggleSort("name")}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "6px",
-                      }}
-                    >
+                    <div className="flex items-center justify-center gap-1.5">
                       <span>Nama Admin</span>
                       <SortIcon direction={sortKey === "name" ? sortDir : null} />
                     </div>
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 220 }}>
+                  <th className={ui.thCenter} style={{ width: 220 }}>
                     Email
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
+                  <th className={ui.thCenter} style={{ width: 140 }}>
                     Peran
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
+                  <th className={ui.thCenter} style={{ width: 140 }}>
                     Status
                   </th>
                   <th
-                    className="tbl-th tbl-th--center"
-                    style={{ width: 160, cursor: "pointer" }}
+                    className={`${ui.thCenter} cursor-pointer`}
+                    style={{ width: 160 }}
                     onClick={() => toggleSort("createdAt")}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "6px",
-                      }}
-                    >
+                    <div className="flex items-center justify-center gap-1.5">
                       <span>Tanggal Pembuatan</span>
                       <SortIcon direction={sortKey === "createdAt" ? sortDir : null} />
                     </div>
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 80 }}>
+                  <th className={ui.thCenter} style={{ width: 80 }}>
                     Aksi
                   </th>
                 </tr>
@@ -189,22 +176,14 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
               <tbody>
                 {isLoading && (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={6} className="py-10 text-center text-sm text-dark-500">
                       Memuat data…
                     </td>
                   </tr>
                 )}
                 {!isLoading && currentRows.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={6} className="py-10 text-center text-sm text-dark-500">
                       Tidak ada pengguna.
                     </td>
                   </tr>
@@ -214,25 +193,27 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
                     const role = ROLE_BADGE[u.role]
                     const status = u.isActive ? BADGE_AKTIF : BADGE_NONAKTIF
                     return (
-                      <tr key={u.id} className="tbl-row">
-                        <td className="tbl-td tbl-td--client tbl-td--center">{u.name}</td>
-                        <td className="tbl-td tbl-td--center">{u.email}</td>
-                        <td className="tbl-td tbl-td--center">
+                      <tr key={u.id} className={ui.tr}>
+                        <td className={ui.tdCenter}>
+                          <span className="font-medium text-dark-900">{u.name}</span>
+                        </td>
+                        <td className={ui.tdCenter}>{u.email}</td>
+                        <td className={ui.tdCenter}>
                           <StatusBadge bg={role.bg} color={role.color} minWidth={108}>
                             {role.label}
                           </StatusBadge>
                         </td>
-                        <td className="tbl-td tbl-td--center">
+                        <td className={ui.tdCenter}>
                           <StatusBadge bg={status.bg} color={status.color} minWidth={108}>
                             {status.label}
                           </StatusBadge>
                         </td>
-                        <td className="tbl-td tbl-td--center">{formatDateID(u.createdAt)}</td>
-                        <td className="tbl-td tbl-td--center">
+                        <td className={ui.tdCenter}>{formatDateID(u.createdAt)}</td>
+                        <td className={ui.tdCenter}>
                           <button
-                            className="action-btn"
+                            type="button"
+                            className="inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
                             title="Lihat detail"
-                            style={{ color: "#7C3AED" }}
                             onClick={() => onViewDetail?.(u.id)}
                           >
                             <EyeIcon />

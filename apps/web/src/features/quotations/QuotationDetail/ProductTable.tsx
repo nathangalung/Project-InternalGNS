@@ -1,12 +1,20 @@
 import { useState } from "react"
 import type { ProductRow } from "@/features/quotations/types"
 import { formatRupiah as formatRp } from "@/lib/format"
+import { ui } from "@/lib/ui"
 import { getPageNumbers, PAGE_SIZE_OPTIONS } from "./helpers"
 
 interface ProductTableProps {
   showProfit?: boolean
   products: ProductRow[]
 }
+
+const pageBtn = "flex h-8 w-8 items-center justify-center rounded-sm text-sm transition"
+const pageBtnIdle = "font-medium text-[#4A4455] hover:bg-dark-100"
+const pageBtnActive = "bg-primary-700 font-bold text-white"
+const pageBtnNav =
+  "flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100"
+const requestedNote = "mt-0.5 text-[11px] text-[#B45309]"
 
 // Collapsible paginated product list.
 export default function ProductTable({ products, showProfit = true }: ProductTableProps) {
@@ -24,42 +32,21 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
 
   return (
     <div>
-      <h2 className="qe-section-title" style={{ marginBottom: "12px" }}>
-        Detail Produk
-      </h2>
+      <h2 className="qe-section-title mb-3">Detail Produk</h2>
       <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "14px 20px",
-          background: "#FFFFFF",
-          border: "1px solid rgba(204,195,216,0.2)",
-          borderRadius: expanded ? "12px 12px 0 0" : "12px",
-        }}
+        className={`flex items-center justify-between border border-[rgba(204,195,216,0.2)] bg-white px-5 py-3.5 ${
+          expanded ? "rounded-t-lg" : "rounded-lg"
+        }`}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "13px", fontWeight: 600, color: "#374151" }}>
-            {products.length} produk
-          </span>
+        <div className="flex items-center gap-2.5">
+          <span className="text-[13px] font-semibold text-[#374151]">{products.length} produk</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ position: "relative" }}>
+        <div className="flex items-center gap-3">
+          <div className="relative">
             <button
+              type="button"
               onClick={() => setIsRowDropdownOpen((o) => !o)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "5px 10px",
-                borderRadius: "6px",
-                border: "1px solid #E2E8F0",
-                background: "#fff",
-                cursor: "pointer",
-                fontSize: "12px",
-                color: "#4A4455",
-                fontFamily: "'Inter', sans-serif",
-              }}
+              className="flex items-center gap-1.5 rounded-sm border border-dark-200 bg-white px-2.5 py-[5px] text-xs text-[#4A4455]"
             >
               {pageSize} Baris
               <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
@@ -73,51 +60,26 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
               </svg>
             </button>
             {isRowDropdownOpen && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "calc(100% + 8px)",
-                  left: 0,
-                  background: "#FFFFFF",
-                  border: "1px solid rgba(204,195,216,0.2)",
-                  boxShadow: "0px 0px 0px 1px rgba(0,0,0,0.05)",
-                  borderRadius: "8px",
-                  display: "flex",
-                  flexDirection: "column",
-                  padding: "8px 0",
-                  width: "162px",
-                  zIndex: 50,
-                }}
-              >
+              <div className="absolute bottom-[calc(100%+8px)] left-0 z-50 flex w-[162px] flex-col rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-2 shadow-[0px_0px_0px_1px_rgba(0,0,0,0.05)]">
                 {PAGE_SIZE_OPTIONS.map((val) => {
                   const isActive = pageSize === val
                   return (
                     <button
                       key={val}
+                      type="button"
                       onClick={() => {
                         setPageSize(val)
                         setPage(1)
                         setIsRowDropdownOpen(false)
                       }}
-                      style={{
-                        display: "flex",
-                        justifyContent: isActive ? "space-between" : "flex-start",
-                        alignItems: "center",
-                        padding: "4px 20px",
-                        width: "100%",
-                        height: "32px",
-                        background: "transparent",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
+                      className={`flex h-8 w-full items-center px-5 py-1 ${
+                        isActive ? "justify-between" : "justify-start"
+                      }`}
                     >
                       <span
-                        style={{
-                          fontFamily: "'Inter', sans-serif",
-                          fontWeight: isActive ? 600 : 400,
-                          fontSize: "12px",
-                          color: isActive ? "#630ED4" : "#4A4455",
-                        }}
+                        className={`text-xs ${
+                          isActive ? "font-semibold text-[#630ED4]" : "font-normal text-[#4A4455]"
+                        }`}
                       >
                         {val} Baris
                       </span>
@@ -138,9 +100,10 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
               </div>
             )}
           </div>
-          <div className="page-buttons">
+          <div className="flex items-center gap-1">
             <button
-              className="page-btn-nav"
+              type="button"
+              className={pageBtnNav}
               disabled={page === 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
@@ -158,28 +121,24 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
               n === null ? (
                 <span
                   key={`e${i}`}
-                  style={{
-                    padding: "0 2px",
-                    color: "#9CA3AF",
-                    fontSize: "13px",
-                    alignSelf: "center",
-                    userSelect: "none",
-                  }}
+                  className="select-none self-center px-0.5 text-[13px] text-[#9CA3AF]"
                 >
                   …
                 </span>
               ) : (
                 <button
                   key={n}
+                  type="button"
                   onClick={() => setPage(n)}
-                  className={`page-btn${n === page ? " page-btn--active" : ""}`}
+                  className={`${pageBtn} ${n === page ? pageBtnActive : pageBtnIdle}`}
                 >
                   {n}
                 </button>
               ),
             )}
             <button
-              className="page-btn-nav"
+              type="button"
+              className={pageBtnNav}
               disabled={page === totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             >
@@ -195,21 +154,9 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
             </button>
           </div>
           <button
+            type="button"
             onClick={() => setExpanded((e) => !e)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "5px",
-              background: "none",
-              border: "1px solid rgba(204,195,216,0.5)",
-              borderRadius: "6px",
-              padding: "5px 10px",
-              cursor: "pointer",
-              fontSize: "12px",
-              color: "#6B7280",
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 500,
-            }}
+            className="flex items-center gap-[5px] rounded-sm border border-[rgba(204,195,216,0.5)] px-2.5 py-[5px] text-xs font-medium text-[#6B7280]"
           >
             {expanded ? "Sembunyikan" : "Tampilkan"}
             <svg
@@ -217,10 +164,7 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
               height="6"
               viewBox="0 0 10 6"
               fill="none"
-              style={{
-                transform: expanded ? "rotate(0deg)" : "rotate(180deg)",
-                transition: "transform 0.2s ease",
-              }}
+              className={`transition-transform duration-200 ${expanded ? "" : "rotate-180"}`}
             >
               <path
                 d="M1 5L5 1L9 5"
@@ -234,38 +178,31 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
         </div>
       </div>
       {expanded && (
-        <div
-          style={{
-            border: "1px solid rgba(204,195,216,0.2)",
-            borderTop: "none",
-            borderRadius: "0 0 12px 12px",
-            overflow: "hidden",
-          }}
-        >
-          <table className="tbl">
+        <div className="overflow-hidden rounded-b-lg border border-t-0 border-[rgba(204,195,216,0.2)]">
+          <table className="w-full min-w-full table-auto border-collapse lg:table-fixed">
             <thead>
-              <tr className="tbl-header-row">
-                <th className="tbl-th tbl-th--center" style={{ width: 110 }}>
+              <tr className={ui.theadRow}>
+                <th className={ui.thCenter} style={{ width: 110 }}>
                   Kode IMPA
                 </th>
-                <th className="tbl-th tbl-th--center" style={{ width: 220 }}>
+                <th className={ui.thCenter} style={{ width: 220 }}>
                   Nama Produk
                 </th>
-                <th className="tbl-th tbl-th--center" style={{ width: 80 }}>
+                <th className={ui.thCenter} style={{ width: 80 }}>
                   Jumlah
                 </th>
-                <th className="tbl-th tbl-th--center" style={{ width: 80 }}>
+                <th className={ui.thCenter} style={{ width: 80 }}>
                   Satuan
                 </th>
-                <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
+                <th className={ui.thCenter} style={{ width: 140 }}>
                   Harga Jual Satuan
                 </th>
                 {showProfit && (
-                  <th className="tbl-th tbl-th--center qd-th--profit" style={{ width: 150 }}>
+                  <th className={`${ui.thCenter} qd-th--profit`} style={{ width: 150 }}>
                     Profit (Rp)
                   </th>
                 )}
-                <th className="tbl-th tbl-th--center" style={{ width: 150 }}>
+                <th className={ui.thCenter} style={{ width: 150 }}>
                   Total (Rp)
                 </th>
               </tr>
@@ -277,38 +214,32 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
                 const kodeDiffers = reqKode.length > 0 && reqKode !== p.kode
                 const namaDiffers = reqNama.length > 0 && reqNama !== p.nama
                 return (
-                  <tr key={i} className="tbl-row">
-                    <td className="tbl-td tbl-td--center tbl-td--id">
+                  <tr key={i} className={ui.tr}>
+                    <td className={`${ui.tdCenter} truncate font-bold text-primary-700`}>
                       <div>{p.kode || "-"}</div>
                       {kodeDiffers && (
-                        <div
-                          style={{ fontSize: 11, color: "#B45309", marginTop: 2 }}
-                          title="Kode IMPA yang diminta klien"
-                        >
+                        <div className={requestedNote} title="Kode IMPA yang diminta klien">
                           Diminta: {reqKode}
                         </div>
                       )}
                     </td>
-                    <td className="tbl-td tbl-td--center tbl-td--client">
+                    <td className={`${ui.tdCenter} truncate font-medium text-dark-900`}>
                       <div>{p.nama}</div>
                       {namaDiffers && (
-                        <div
-                          style={{ fontSize: 11, color: "#B45309", marginTop: 2 }}
-                          title="Nama produk yang diminta klien"
-                        >
+                        <div className={requestedNote} title="Nama produk yang diminta klien">
                           Diminta: {reqNama}
                         </div>
                       )}
                     </td>
-                    <td className="tbl-td tbl-td--center">{p.qty}</td>
-                    <td className="tbl-td tbl-td--center">{p.satuan}</td>
-                    <td className="tbl-td tbl-td--center">{formatRp(p.hargaSatuan)}</td>
+                    <td className={`${ui.tdCenter} truncate`}>{p.qty}</td>
+                    <td className={`${ui.tdCenter} truncate`}>{p.satuan}</td>
+                    <td className={`${ui.tdCenter} truncate`}>{formatRp(p.hargaSatuan)}</td>
                     {showProfit && (
-                      <td className="tbl-td tbl-td--center qd-td--profit">
+                      <td className={`${ui.tdCenter} truncate qd-td--profit`}>
                         {formatRp(p.qty * p.profitSatuan)}
                       </td>
                     )}
-                    <td className="tbl-td tbl-td--center tbl-td--total">
+                    <td className={`${ui.tdCenter} truncate font-bold text-dark-900`}>
                       {formatRp(p.qty * p.hargaSatuan)}
                     </td>
                   </tr>
@@ -316,8 +247,8 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
               })}
             </tbody>
           </table>
-          <div className="pagination" style={{ justifyContent: "space-between" }}>
-            <span className="pagination-info">
+          <div className="flex items-center justify-between border-t border-dark-200 p-6">
+            <span className="text-sm text-[#4A4455]">
               Menampilkan {total === 0 ? 0 : start + 1}–{Math.min(start + pageSize, total)} dari{" "}
               {total} Produk
             </span>

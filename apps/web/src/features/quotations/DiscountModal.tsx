@@ -30,49 +30,15 @@ export default function DiscountModal({
   }
 
   return (
-    <div className="ca-overlay" onClick={() => onOpenChange(false)} style={{ zIndex: 9999 }}>
+    <div className="ca-overlay z-[9999]" onClick={() => onOpenChange(false)}>
       <div
-        className="ca-modal"
+        className="ca-modal w-full max-w-[520px] overflow-hidden rounded-lg p-0 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)]"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "100%",
-          maxWidth: "520px",
-          padding: 0,
-          overflow: "hidden",
-          borderRadius: "12px",
-          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-        }}
       >
         {/* Header Pop-Up */}
-        <div
-          style={{
-            padding: "24px 24px 16px 24px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: "20px",
-              fontWeight: 700,
-              color: "#111827",
-              margin: 0,
-              fontFamily: "'Inter', sans-serif",
-            }}
-          >
-            Tambah Diskon Pembayaran
-          </h2>
-          <button
-            onClick={() => onOpenChange(false)}
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-              display: "flex",
-            }}
-          >
+        <div className="flex items-center justify-between px-6 pb-4 pt-6">
+          <h2 className="m-0 text-xl font-bold text-[#111827]">Tambah Diskon Pembayaran</h2>
+          <button type="button" className="flex p-0" onClick={() => onOpenChange(false)}>
             <svg
               width="24"
               height="24"
@@ -90,31 +56,14 @@ export default function DiscountModal({
         </div>
 
         {/* Body Pop-Up */}
-        <div style={{ padding: "0 24px 32px 24px", fontFamily: "'Inter', sans-serif" }}>
-          <div
-            style={{
-              fontSize: "11px",
-              fontWeight: 700,
-              color: "#630ED4",
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-              marginBottom: "12px",
-            }}
-          >
+        <div className="px-6 pb-8">
+          <div className="mb-3 text-[11px] font-bold uppercase tracking-[1px] text-[#630ED4]">
             DISKON
           </div>
-          <div style={{ height: "1px", background: "#F3F4F6", marginBottom: "20px" }}></div>
+          <div className="mb-5 h-px bg-[#F3F4F6]"></div>
 
-          <label
-            style={{
-              display: "block",
-              fontSize: "14px",
-              fontWeight: 600,
-              color: "#111827",
-              marginBottom: "8px",
-            }}
-          >
-            Persentase Diskon <span style={{ color: "#EF4444" }}>*</span>
+          <label className="mb-2 block text-sm font-semibold text-[#111827]">
+            Persentase Diskon <span className="text-error">*</span>
           </label>
           <input
             type="number"
@@ -123,58 +72,23 @@ export default function DiscountModal({
             placeholder="Masukkan persentase diskon (contoh: 5 untuk diskon 5%)"
             value={tempDiscount}
             onChange={(e) => setTempDiscount(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "12px 16px",
-              background: "#E2E8F0",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "14px",
-              color: "#111827",
-              boxSizing: "border-box",
-              fontFamily: "'Inter', sans-serif",
-              outline: "none",
-            }}
+            className="box-border w-full rounded-md bg-dark-200 px-4 py-3 text-sm text-[#111827] outline-none"
           />
         </div>
 
         {/* Footer Pop-Up */}
-        <div
-          style={{
-            background: "#F8FAFC",
-            padding: "16px 24px",
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "16px",
-          }}
-        >
+        <div className="flex justify-end gap-4 bg-dark-50 px-6 py-4">
           <button
+            type="button"
+            className="text-sm font-bold text-[#374151]"
             onClick={() => onOpenChange(false)}
-            style={{
-              background: "transparent",
-              border: "none",
-              fontWeight: 700,
-              fontSize: "14px",
-              color: "#374151",
-              cursor: "pointer",
-              fontFamily: "'Inter', sans-serif",
-            }}
           >
             Batal
           </button>
           <button
+            type="button"
+            className="rounded-md bg-[#630ED4] px-6 py-2.5 text-sm font-semibold text-white"
             onClick={handleSaveDiscount}
-            style={{
-              background: "#630ED4",
-              color: "#FFFFFF",
-              border: "none",
-              padding: "10px 24px",
-              borderRadius: "8px",
-              fontWeight: 600,
-              fontSize: "14px",
-              cursor: "pointer",
-              fontFamily: "'Inter', sans-serif",
-            }}
           >
             Simpan Data
           </button>

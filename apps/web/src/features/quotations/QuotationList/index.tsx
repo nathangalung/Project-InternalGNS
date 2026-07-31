@@ -10,6 +10,7 @@ import { downloadPdf } from "@/lib/api-client"
 import { resolveRange } from "@/lib/date-range"
 import type { Page } from "@/lib/page"
 import { labelToStatus } from "@/lib/status"
+import { ui } from "@/lib/ui"
 import type { CanonicalStatus } from "@/types/api"
 import QuotationFilter, { type DatePreset, type StatusFilter } from "../QuotationFilter"
 import type { QuotationRow } from "./helpers"
@@ -156,7 +157,7 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
 
           <ActiveFiltersBar chips={filterChips} onClearAll={clearAllFilters} />
 
-          <div className="tbl-container">
+          <div className={ui.tableWrap}>
             <QuotationTable
               rows={currentData}
               sortKey={sortConfig?.key ?? null}

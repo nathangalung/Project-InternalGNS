@@ -1,4 +1,4 @@
-import { confirmModalStyle, confirmOverlayStyle, type NewVendorForm } from "./helpers"
+import { confirmModalCls, confirmOverlayCls, type NewVendorForm } from "./helpers"
 
 interface VendorAddModalProps {
   open: boolean
@@ -9,6 +9,8 @@ interface VendorAddModalProps {
   isSaving?: boolean
   error?: string | null
 }
+
+const fieldLabelCls = "mb-1.5 block text-[11px] font-bold uppercase text-[#6B7280]"
 
 // New vendor inline modal.
 export default function VendorAddModal({
@@ -26,21 +28,11 @@ export default function VendorAddModal({
   const isHargaValid = hargaVal > 0
   const disableSubmit = !trimmed || !isHargaValid || Boolean(isSaving)
   return (
-    <div style={confirmOverlayStyle} onClick={onClose}>
-      <div style={{ ...confirmModalStyle, maxWidth: "480px" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#111827" }}>
-            Tambah Vendor Baru
-          </h3>
-          <button
-            onClick={onClose}
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              color: "#6B7280",
-            }}
-          >
+    <div className={confirmOverlayCls} onClick={onClose}>
+      <div className={`${confirmModalCls} max-w-[480px]`} onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold text-[#111827]">Tambah Vendor Baru</h3>
+          <button type="button" onClick={onClose} className="text-[#6B7280]">
             <svg
               width="14"
               height="14"
@@ -55,19 +47,10 @@ export default function VendorAddModal({
             </svg>
           </button>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div className="flex flex-col gap-4">
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "11px",
-                fontWeight: 700,
-                color: "#6B7280",
-                textTransform: "uppercase",
-                marginBottom: "6px",
-              }}
-            >
-              Nama Vendor <span style={{ color: "#EF4444" }}>*</span>
+            <label className={fieldLabelCls}>
+              Nama Vendor <span className="text-error">*</span>
             </label>
             <input
               className="ca-input"
@@ -75,21 +58,11 @@ export default function VendorAddModal({
               placeholder="Masukkan nama vendor"
               value={form.nama}
               onChange={(e) => onChange({ ...form, nama: e.target.value })}
-              style={{ width: "100%", boxSizing: "border-box" }}
             />
           </div>
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "11px",
-                fontWeight: 700,
-                color: "#6B7280",
-                textTransform: "uppercase",
-                marginBottom: "6px",
-              }}
-            >
-              Harga Beli (Rp) <span style={{ color: "#EF4444" }}>*</span>
+            <label className={fieldLabelCls}>
+              Harga Beli (Rp) <span className="text-error">*</span>
             </label>
             <input
               className="ca-input"
@@ -98,45 +71,27 @@ export default function VendorAddModal({
               placeholder="Masukkan harga beli"
               value={form.harga}
               onChange={(e) => onChange({ ...form, harga: e.target.value })}
-              style={{ width: "100%", boxSizing: "border-box" }}
             />
           </div>
         </div>
-        {error && <div style={{ fontSize: "12px", color: "#EF4444" }}>{error}</div>}
+        {error && <div className="text-[12px] text-error">{error}</div>}
         {trimmed && !isHargaValid && (
-          <div style={{ fontSize: "12px", color: "#EF4444" }}>Harga beli harus lebih dari 0</div>
+          <div className="text-[12px] text-error">Harga beli harus lebih dari 0</div>
         )}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+        <div className="flex justify-end gap-3">
           <button
+            type="button"
             onClick={onClose}
             disabled={isSaving}
-            style={{
-              padding: "8px 16px",
-              borderRadius: "6px",
-              border: "1px solid #D1D5DB",
-              background: "#fff",
-              color: "#374151",
-              fontWeight: 600,
-              fontSize: "14px",
-              cursor: isSaving ? "not-allowed" : "pointer",
-            }}
+            className="rounded-sm border border-[#D1D5DB] bg-white px-4 py-2 text-sm font-semibold text-[#374151] disabled:cursor-not-allowed"
           >
             Batal
           </button>
           <button
+            type="button"
             onClick={onSubmit}
             disabled={disableSubmit}
-            style={{
-              padding: "8px 16px",
-              borderRadius: "6px",
-              border: "none",
-              background: "#630ED4",
-              color: "#fff",
-              fontWeight: 600,
-              fontSize: "14px",
-              cursor: disableSubmit ? "not-allowed" : "pointer",
-              opacity: disableSubmit ? 0.5 : 1,
-            }}
+            className="rounded-sm bg-[#630ED4] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSaving ? "Menyimpan..." : "Simpan"}
           </button>

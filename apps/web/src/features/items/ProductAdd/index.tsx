@@ -305,9 +305,8 @@ export default function ProductAdd({
   return (
     <>
       <div
-        className="ca-overlay"
+        className={`ca-overlay ${showProductNew || showVendorNew ? "hidden" : ""}`}
         onClick={handleCancel}
-        style={{ display: showProductNew || showVendorNew ? "none" : undefined }}
       >
         <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
           <div className="ca-header">
@@ -399,19 +398,16 @@ export default function ProductAdd({
 
           <div className="ca-footer">
             {isVendorFilled && !isHargaJualValid && (
-              <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>
-                Harga jual harus lebih dari 0
-              </span>
+              <span className="flex-1 text-[12px] text-error">Harga jual harus lebih dari 0</span>
             )}
             <button type="button" className="ca-btn-cancel" onClick={handleCancel}>
               Batal
             </button>
             <button
               type="button"
-              className="ca-btn-submit"
+              className="ca-btn-submit disabled:cursor-not-allowed disabled:opacity-50"
               onClick={handlePreSubmit}
               disabled={!canSubmit}
-              style={!canSubmit ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
             >
               {initialData ? "Simpan Perubahan" : "Simpan Data"}
             </button>

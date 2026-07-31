@@ -202,7 +202,7 @@ export default function InvoiceDetail({
           <input
             ref={attachmentInputRef}
             type="file"
-            style={{ display: "none" }}
+            className="hidden"
             onChange={(e) => {
               handleAttachmentSelect(e.target.files?.[0])
               e.target.value = ""

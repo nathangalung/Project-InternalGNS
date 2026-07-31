@@ -9,41 +9,12 @@ interface ActiveFiltersProps {
 export default function ActiveFilters({ chips, onClearAll }: ActiveFiltersProps) {
   if (chips.length === 0) return null
   return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        alignItems: "center",
-        gap: "8px",
-        marginBottom: "12px",
-      }}
-    >
-      <span
-        style={{
-          fontFamily: "'Inter', sans-serif",
-          fontSize: "13px",
-          fontWeight: 500,
-          color: "#6B7280",
-        }}
-      >
-        Filter aktif:
-      </span>
+    <div className="mb-3 flex flex-wrap items-center gap-2">
+      <span className="text-[13px] font-medium text-[#6B7280]">Filter aktif:</span>
       {chips.map((c) => (
         <span
           key={c.key}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "4px 10px",
-            borderRadius: "16px",
-            background: "rgba(99, 14, 212, 0.07)",
-            border: "1px solid rgba(99, 14, 212, 0.2)",
-            fontFamily: "'Inter', sans-serif",
-            fontSize: "12px",
-            fontWeight: 500,
-            color: "#630ED4",
-          }}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(99,14,212,0.2)] bg-[rgba(99,14,212,0.07)] px-2.5 py-1 text-[12px] font-medium text-[#630ED4]"
         >
           {c.label}
           {c.onRemove && (
@@ -51,15 +22,7 @@ export default function ActiveFilters({ chips, onClearAll }: ActiveFiltersProps)
               type="button"
               onClick={c.onRemove}
               aria-label={`Hapus filter ${c.label}`}
-              style={{
-                border: "none",
-                background: "transparent",
-                cursor: "pointer",
-                color: "#630ED4",
-                lineHeight: 1,
-                padding: 0,
-                fontSize: "15px",
-              }}
+              className="p-0 text-[15px] leading-none text-[#630ED4]"
             >
               ×
             </button>
@@ -70,17 +33,7 @@ export default function ActiveFilters({ chips, onClearAll }: ActiveFiltersProps)
         <button
           type="button"
           onClick={onClearAll}
-          style={{
-            border: "none",
-            background: "transparent",
-            cursor: "pointer",
-            fontFamily: "'Inter', sans-serif",
-            fontSize: "12px",
-            color: "#6B7280",
-            textDecoration: "underline",
-            textUnderlineOffset: "2px",
-            padding: 0,
-          }}
+          className="p-0 text-[12px] text-[#6B7280] underline underline-offset-2"
         >
           Hapus semua
         </button>

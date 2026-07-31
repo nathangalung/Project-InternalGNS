@@ -45,8 +45,8 @@ export default function Step1Client({
           <p className="qe-section-desc">Tentukan mitra bisnis untuk penawaran harga ini.</p>
         </div>
         <button
-          className="qe-add-client-btn"
-          style={{ width: "210px", justifyContent: "center" }}
+          type="button"
+          className="qe-add-client-btn w-[210px] justify-center"
           onClick={() => setShowClientAdd(true)}
         >
           <svg
@@ -124,19 +124,9 @@ export default function Step1Client({
       </div>
 
       {selectedClient && contacts.length > 0 && setSelectedContactId && (
-        <div style={{ marginTop: "24px" }}>
-          <h3
-            style={{
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 700,
-              fontSize: "14px",
-              color: "#191C1E",
-              margin: "0 0 12px 0",
-            }}
-          >
-            Pilih Narahubung
-          </h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div className="mt-6">
+          <h3 className="m-0 mb-3 text-sm font-bold text-[#191C1E]">Pilih Narahubung</h3>
+          <div className="flex flex-col gap-2">
             {contacts.map((c) => {
               const isSelected = c.id === selectedContactId
               return (
@@ -144,54 +134,22 @@ export default function Step1Client({
                   key={c.id}
                   type="button"
                   onClick={() => setSelectedContactId?.(c.id)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    padding: "12px 16px",
-                    background: isSelected ? "#F5F0FF" : "#F2F4F6",
-                    border: `1.5px solid ${isSelected ? "#630ED4" : "transparent"}`,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    width: "100%",
-                  }}
+                  className={`flex w-full items-center gap-3 rounded-md border-[1.5px] px-4 py-3 text-left ${
+                    isSelected ? "border-[#630ED4] bg-[#F5F0FF]" : "border-transparent bg-[#F2F4F6]"
+                  }`}
                 >
                   <div className={`qe-radio${isSelected ? " qe-radio--selected" : ""}`}>
                     {isSelected && <div className="qe-radio-dot" />}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 600,
-                        fontSize: "14px",
-                        color: "#191C1E",
-                      }}
-                    >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold text-[#191C1E]">
                       {c.name}
                       {c.title && (
-                        <span
-                          style={{
-                            fontWeight: 400,
-                            fontSize: "12px",
-                            color: "#64748B",
-                            marginLeft: "8px",
-                          }}
-                        >
-                          {c.title}
-                        </span>
+                        <span className="ml-2 text-xs font-normal text-dark-500">{c.title}</span>
                       )}
                     </div>
                     {(c.phone || c.email) && (
-                      <div
-                        style={{
-                          fontFamily: "'Inter', sans-serif",
-                          fontSize: "12px",
-                          color: "#64748B",
-                          marginTop: "2px",
-                        }}
-                      >
+                      <div className="mt-0.5 text-xs text-dark-500">
                         {[c.phone, c.email].filter(Boolean).join(" · ")}
                       </div>
                     )}

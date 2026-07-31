@@ -33,18 +33,10 @@ export default function CompletenessModal({
         </div>
 
         <div className="ca-body">
-          <p
-            style={{
-              fontFamily: "'Inter', sans-serif",
-              fontSize: "13px",
-              color: "#4A4455",
-              margin: "0 0 16px 0",
-              lineHeight: 1.5,
-            }}
-          >
+          <p className="m-0 mb-4 text-[13px] leading-[1.5] text-[#4A4455]">
             Sebelum mengubah status menjadi{" "}
-            <strong style={{ color: "#9333EA" }}>Dalam Progres</strong>, data berikut harus
-            dilengkapi terlebih dahulu. Klik kartu untuk membuka halaman edit.
+            <strong className="text-[#9333EA]">Dalam Progres</strong>, data berikut harus dilengkapi
+            terlebih dahulu. Klik kartu untuk membuka halaman edit.
           </p>
 
           {issues.map((issue, idx) => (
@@ -52,41 +44,15 @@ export default function CompletenessModal({
               key={idx}
               type="button"
               onClick={() => onNavigateEntity?.(issue.scope, issue.id)}
-              style={{
-                display: "block",
-                width: "100%",
-                textAlign: "left",
-                background: "#FEF3C7",
-                border: "1px solid #FDE68A",
-                borderRadius: "8px",
-                padding: "12px 14px",
-                marginBottom: idx < issues.length - 1 ? "10px" : 0,
-                cursor: onNavigateEntity ? "pointer" : "default",
-                fontFamily: "'Inter', sans-serif",
-                transition: "background 0.15s, border-color 0.15s, transform 0.15s",
-              }}
-              onMouseEnter={(e) => {
-                if (!onNavigateEntity) return
-                e.currentTarget.style.background = "#FDE68A"
-                e.currentTarget.style.borderColor = "#F59E0B"
-              }}
-              onMouseLeave={(e) => {
-                if (!onNavigateEntity) return
-                e.currentTarget.style.background = "#FEF3C7"
-                e.currentTarget.style.borderColor = "#FDE68A"
-              }}
+              className={`block w-full rounded-md border border-accent-200 bg-accent-100 px-3.5 py-3 text-left transition ${
+                idx < issues.length - 1 ? "mb-2.5" : ""
+              } ${
+                onNavigateEntity
+                  ? "cursor-pointer hover:border-warning hover:bg-accent-200"
+                  : "cursor-default"
+              }`}
             >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  fontWeight: 700,
-                  fontSize: "13px",
-                  color: "#78350F",
-                  marginBottom: "4px",
-                }}
-              >
+              <div className="mb-1 flex items-center justify-between text-[13px] font-bold text-accent-900">
                 <span>
                   {issue.scope}: {issue.name}
                 </span>
@@ -105,15 +71,7 @@ export default function CompletenessModal({
                   </svg>
                 )}
               </div>
-              <ul
-                style={{
-                  margin: 0,
-                  paddingLeft: "20px",
-                  fontSize: "12px",
-                  color: "#78350F",
-                  lineHeight: 1.6,
-                }}
-              >
+              <ul className="m-0 list-disc pl-5 text-xs leading-[1.6] text-accent-900">
                 {issue.missing.map((field) => (
                   <li key={field}>{field}</li>
                 ))}
@@ -122,12 +80,11 @@ export default function CompletenessModal({
           ))}
         </div>
 
-        <div className="ca-footer" style={{ justifyContent: "flex-end", padding: "16px 24px" }}>
+        <div className="ca-footer justify-end px-6 py-4">
           <button
             type="button"
-            className="ca-btn-submit"
+            className="ca-btn-submit px-[22px] py-2 text-[13px]"
             onClick={onClose}
-            style={{ padding: "8px 22px", fontSize: "13px" }}
           >
             Mengerti
           </button>

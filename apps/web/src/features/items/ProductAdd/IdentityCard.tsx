@@ -64,7 +64,7 @@ export default function IdentityCard({
           <label className="ca-label">
             Kode IMPA/Nama Produk Request <span className="ca-required">*</span>
           </label>
-          <div style={{ position: "relative" }}>
+          <div className="relative">
             <input
               className="ca-input"
               type="text"
@@ -80,22 +80,12 @@ export default function IdentityCard({
             {productRequestOpen && (
               <div style={dropdownPanelStyle}>
                 {requestMatches.length === 0 ? (
-                  <div style={{ padding: "10px 20px", ...dropdownLabelStyle(false) }}>
+                  <div className="px-5 py-2.5" style={dropdownLabelStyle(false)}>
                     Tidak ada rekomendasi — input akan disimpan apa adanya.
                   </div>
                 ) : (
                   <>
-                    <div
-                      style={{
-                        padding: "6px 20px 4px",
-                        fontFamily: "'Inter', sans-serif",
-                        fontSize: 10,
-                        fontWeight: 700,
-                        letterSpacing: "0.6px",
-                        textTransform: "uppercase",
-                        color: "#9CA3AF",
-                      }}
-                    >
+                    <div className="px-5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-[0.6px] text-[#9CA3AF]">
                       Rekomendasi dari katalog
                     </div>
                     {requestMatches.map((p) => {
@@ -127,30 +117,9 @@ export default function IdentityCard({
       </div>
 
       {onCopyRequestToOffer && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "10px 14px",
-            margin: "-8px 0 8px",
-            background: "rgba(99, 14, 212, 0.04)",
-            border: "1px dashed rgba(99, 14, 212, 0.25)",
-            borderRadius: 8,
-          }}
-        >
+        <div className="-mt-2 mb-2 flex items-center gap-3 rounded-md border border-dashed border-[rgba(99,14,212,0.25)] bg-[rgba(99,14,212,0.04)] px-3.5 py-2.5">
           <div
-            style={{
-              flexShrink: 0,
-              width: 28,
-              height: 28,
-              borderRadius: 999,
-              background: "rgba(99, 14, 212, 0.12)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#630ED4",
-            }}
+            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[rgba(99,14,212,0.12)] text-[#630ED4]"
             aria-hidden
           >
             <svg
@@ -167,16 +136,8 @@ export default function IdentityCard({
               <path d="M19 12l-7 7-7-7" />
             </svg>
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                fontFamily: "'Inter', sans-serif",
-                fontSize: 12,
-                fontWeight: 600,
-                color: "#4A4455",
-                lineHeight: 1.4,
-              }}
-            >
+          <div className="min-w-0 flex-1">
+            <div className="text-caption font-semibold leading-[1.4] text-[#4A4455]">
               Salin produk request langsung sebagai offer.
             </div>
           </div>
@@ -185,22 +146,11 @@ export default function IdentityCard({
             onClick={onCopyRequestToOffer}
             disabled={!canCopy}
             title="Pakai nilai request sebagai offer (untuk produk baru di luar katalog)"
-            style={{
-              flexShrink: 0,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "8px 14px",
-              background: canCopy ? "#630ED4" : "rgba(99, 14, 212, 0.18)",
-              border: "none",
-              borderRadius: 6,
-              cursor: canCopy ? "pointer" : "not-allowed",
-              fontFamily: "'Inter', sans-serif",
-              fontSize: 12,
-              fontWeight: 600,
-              color: canCopy ? "#FFFFFF" : "rgba(99, 14, 212, 0.55)",
-              transition: "background 0.15s",
-            }}
+            className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-sm px-3.5 py-2 text-[12px] font-semibold transition-colors duration-150 ${
+              canCopy
+                ? "cursor-pointer bg-[#630ED4] text-white"
+                : "cursor-not-allowed bg-[rgba(99,14,212,0.18)] text-[rgba(99,14,212,0.55)]"
+            }`}
           >
             <svg
               width="12"
@@ -227,7 +177,7 @@ export default function IdentityCard({
           <label className="ca-label">
             Kode IMPA/Nama Produk <span className="ca-required">*</span>
           </label>
-          <div style={{ position: "relative" }}>
+          <div className="relative">
             <input
               className="ca-input"
               type="text"
@@ -243,7 +193,7 @@ export default function IdentityCard({
             {productOpen && (
               <div style={dropdownPanelStyle}>
                 {productMatches.length === 0 ? (
-                  <div style={{ padding: "10px 20px", ...dropdownLabelStyle(false) }}>
+                  <div className="px-5 py-2.5" style={dropdownLabelStyle(false)}>
                     Tidak ada hasil
                   </div>
                 ) : (

@@ -1,8 +1,12 @@
 import { useState } from "react"
 import { useCreateVendor } from "@/features/vendors/hooks"
 import { ApiError } from "@/lib/api-client"
-import { disabledStyle } from "@/lib/styles"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
+
+// Visual disabled treatment, matching lib/styles disabledStyle.
+const disabledCls = "cursor-not-allowed bg-[#F7F7F8] opacity-60"
+
+const fieldErrorCls = "mt-1 block text-xs text-[#EF4444]"
 
 interface VendorAddModalProps {
   open: boolean
@@ -112,9 +116,8 @@ export default function VendorAddModal({
 
   return (
     <div
-      className="ca-overlay"
+      className={`ca-overlay${nested ? " bg-transparent [backdrop-filter:none]" : ""}`}
       onClick={handleCancel}
-      style={nested ? { background: "transparent", backdropFilter: "none" } : undefined}
     >
       <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
         <div className="ca-header">
@@ -154,41 +157,34 @@ export default function VendorAddModal({
                 Alamat <span className="ca-required">*</span>
               </label>
               <textarea
-                className="ca-textarea"
+                className={`ca-textarea${!isNameFilled ? ` ${disabledCls}` : ""}`}
                 placeholder="Alamat lengkap kantor pusat atau operasional (min. 20 karakter)"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 rows={3}
                 disabled={!isNameFilled}
-                style={!isNameFilled ? disabledStyle : undefined}
               />
-              {addressError && (
-                <span
-                  style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}
-                >
-                  {addressError}
-                </span>
-              )}
+              {addressError && <span className={fieldErrorCls}>{addressError}</span>}
             </div>
             <div className="ca-field">
               <label className="ca-label">
                 SKU Vendor <span className="ca-optional">(Opsional)</span>
               </label>
               <input
-                className="ca-input"
+                className={`ca-input${!isNameFilled ? ` ${disabledCls}` : ""}`}
                 type="text"
                 placeholder="Masukkan SKU khusus vendor"
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
                 disabled={!isNameFilled}
-                style={!isNameFilled ? disabledStyle : undefined}
               />
             </div>
           </div>
 
           <div
-            className="ca-section"
-            style={{ opacity: !isAddressFilled ? 0.6 : 1, transition: "opacity 0.2s ease" }}
+            className={`ca-section transition-opacity duration-200 ease-[ease] ${
+              !isAddressFilled ? "opacity-60" : "opacity-100"
+            }`}
           >
             <div className="ca-section-heading">Informasi Kontak</div>
             <div className="ca-row-2">
@@ -197,26 +193,14 @@ export default function VendorAddModal({
                   Email <span className="ca-optional">(Opsional)</span>
                 </label>
                 <input
-                  className="ca-input"
+                  className={`ca-input${!isAddressFilled ? ` ${disabledCls}` : ""}`}
                   type="text"
                   placeholder="example@vendor.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={!isAddressFilled}
-                  style={!isAddressFilled ? disabledStyle : undefined}
                 />
-                {emailError && (
-                  <span
-                    style={{
-                      fontSize: "12px",
-                      color: "#EF4444",
-                      marginTop: "4px",
-                      display: "block",
-                    }}
-                  >
-                    {emailError}
-                  </span>
-                )}
+                {emailError && <span className={fieldErrorCls}>{emailError}</span>}
               </div>
               <div className="ca-field">
                 <label className="ca-label">
@@ -225,67 +209,27 @@ export default function VendorAddModal({
                 <div className="ca-phone-wrapper">
                   <span className="ca-phone-prefix">+62</span>
                   <input
-                    className="ca-phone-input"
+                    className={`ca-phone-input${!isAddressFilled ? ` ${disabledCls}` : ""}`}
                     type="tel"
                     inputMode="numeric"
                     placeholder="812xxxx"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
                     disabled={!isAddressFilled}
-                    style={!isAddressFilled ? disabledStyle : undefined}
                   />
                 </div>
-                {phoneError && (
-                  <span
-                    style={{
-                      fontSize: "12px",
-                      color: "#EF4444",
-                      marginTop: "4px",
-                      display: "block",
-                    }}
-                  >
-                    {phoneError}
-                  </span>
-                )}
+                {phoneError && <span className={fieldErrorCls}>{phoneError}</span>}
               </div>
             </div>
           </div>
 
           <div className="ca-section">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "12px",
-                padding: "10px 14px",
-                background: "#F2F4F6",
-                border: "1px solid rgba(204, 195, 216, 0.1)",
-                borderRadius: "8px",
-              }}
-            >
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "13px",
-                    lineHeight: "18px",
-                    color: "#191C1E",
-                  }}
-                >
+            <div className="flex items-center justify-between gap-3 rounded-md border border-[rgba(204,195,216,0.1)] bg-[#F2F4F6] px-3.5 py-2.5">
+              <div className="flex-1">
+                <div className="text-[13px] font-bold leading-[18px] text-[#191C1E]">
                   Status Aktif
                 </div>
-                <div
-                  style={{
-                    marginTop: "2px",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 400,
-                    fontSize: "12px",
-                    lineHeight: "16px",
-                    color: "#4A4455",
-                  }}
-                >
+                <div className="mt-0.5 text-xs font-normal leading-4 text-[#4A4455]">
                   Vendor dapat langsung digunakan dalam transaksi procurement.
                 </div>
               </div>
@@ -294,65 +238,44 @@ export default function VendorAddModal({
                 onClick={() => setIsActive((a) => !a)}
                 role="switch"
                 aria-checked={isActive}
-                style={{
-                  width: "40px",
-                  height: "22px",
-                  borderRadius: "999px",
-                  border: "none",
-                  background: isActive ? "#630ED4" : "#CBD5E1",
-                  cursor: "pointer",
-                  position: "relative",
-                  transition: "background 0.2s",
-                  flexShrink: 0,
-                }}
+                className={`relative h-[22px] w-10 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] ${
+                  isActive ? "bg-[#630ED4]" : "bg-[#CBD5E1]"
+                }`}
               >
                 <span
-                  style={{
-                    position: "absolute",
-                    top: "2px",
-                    left: isActive ? "20px" : "2px",
-                    width: "18px",
-                    height: "18px",
-                    borderRadius: "50%",
-                    background: "#FFFFFF",
-                    transition: "left 0.2s",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                  }}
+                  className={`absolute top-0.5 h-[18px] w-[18px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ease-[ease] ${
+                    isActive ? "left-5" : "left-0.5"
+                  }`}
                 />
               </button>
             </div>
           </div>
         </div>
 
-        <div className="ca-footer" style={{ padding: "16px 24px" }}>
-          {submitError && (
-            <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>{submitError}</span>
-          )}
+        <div className="ca-footer px-6 py-4">
+          {submitError && <span className="flex-1 text-xs text-[#EF4444]">{submitError}</span>}
           {!submitError && isAddressFilled && !isContactValid && (
-            <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>
+            <span className="flex-1 text-xs text-[#EF4444]">
               Isi minimal email atau nomor telepon.
             </span>
           )}
           <button
             type="button"
-            className="ca-btn-cancel"
+            className="ca-btn-cancel px-[18px] py-2 text-[13px]"
             onClick={handleCancel}
             disabled={isSaving}
-            style={{ padding: "8px 18px", fontSize: "13px" }}
           >
             Batal
           </button>
           <button
             type="button"
-            className="ca-btn-submit"
+            className={`ca-btn-submit px-[22px] py-2 text-[13px] ${
+              !canSubmit || isSaving
+                ? "cursor-not-allowed opacity-50"
+                : "cursor-pointer opacity-100"
+            }`}
             onClick={handleSubmit}
             disabled={!canSubmit || isSaving}
-            style={{
-              padding: "8px 22px",
-              fontSize: "13px",
-              opacity: !canSubmit || isSaving ? 0.5 : 1,
-              cursor: !canSubmit || isSaving ? "not-allowed" : "pointer",
-            }}
           >
             {isSaving ? "Menyimpan..." : "Simpan Vendor"}
           </button>

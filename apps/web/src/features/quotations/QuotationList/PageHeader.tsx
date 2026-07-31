@@ -1,4 +1,5 @@
 import type { Page } from "@/lib/page"
+import { ui } from "@/lib/ui"
 
 interface PageHeaderProps {
   onNavigate: (page: Page) => void
@@ -11,11 +12,7 @@ export default function PageHeader({ onNavigate, onExport }: PageHeaderProps) {
     <div className="page-header">
       <h1 className="page-title">Daftar Quotation</h1>
       <div className="page-actions">
-        <button
-          className="btn-admin-outline"
-          onClick={onExport}
-          style={{ width: "160px", justifyContent: "center" }}
-        >
+        <button type="button" className={`${ui.btnOutline} w-[160px]`} onClick={onExport}>
           <svg
             width="14"
             height="14"
@@ -33,9 +30,9 @@ export default function PageHeader({ onNavigate, onExport }: PageHeaderProps) {
           Ekspor Excel
         </button>
         <button
-          className="btn-admin-primary"
+          type="button"
+          className={`${ui.btnPrimary} w-[180px]`}
           onClick={() => onNavigate("quotation-add" as Page)}
-          style={{ width: "180px", justifyContent: "center" }}
         >
           <svg
             width="14"

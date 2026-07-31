@@ -15,6 +15,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import { disabledStyle } from "@/lib/styles"
+import { ui } from "@/lib/ui"
 import type { PoItemInput, PoUpdateItemsInput } from "@/types/api"
 
 interface PurchaseOrderEditProps {
@@ -196,10 +197,7 @@ export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: Purcha
 
       <div className="admin-main">
         <div className="page-content">
-          <div
-            className="qe-header-section"
-            style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
-          >
+          <div className="qe-header-section flex items-center justify-between">
             <div className="qe-header-left">
               <nav className="qd-breadcrumb">
                 <button
@@ -216,16 +214,9 @@ export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: Purcha
               </div>
             </div>
 
-            <div
-              className="qe-header-actions"
-              style={{ display: "flex", gap: "16px", alignItems: "center" }}
-            >
+            <div className="qe-header-actions flex items-center gap-4">
               {step > 1 && (
-                <button
-                  className="btn-admin-outline"
-                  onClick={() => setStep(step - 1)}
-                  style={{ width: "148px", justifyContent: "center" }}
-                >
+                <button className={`${ui.btnOutline} w-[148px]`} onClick={() => setStep(step - 1)}>
                   <svg
                     width="16"
                     height="16"
@@ -243,16 +234,9 @@ export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: Purcha
               )}
               {step < steps.length && (
                 <button
-                  className="btn-admin-primary"
+                  className={`${ui.btnPrimary} w-[148px]`}
                   onClick={() => setStep(step + 1)}
                   disabled={isNextDisabled}
-                  style={{
-                    width: "148px",
-                    justifyContent: "center",
-                    opacity: isNextDisabled ? 0.5 : 1,
-                    cursor: isNextDisabled ? "not-allowed" : "pointer",
-                    transition: "opacity 0.2s",
-                  }}
                 >
                   Lanjut{" "}
                   <svg
@@ -272,20 +256,8 @@ export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: Purcha
               )}
               {step === steps.length && (
                 <button
-                  className="btn-admin-primary"
+                  className={`${ui.btnPrimary} w-[148px]`}
                   disabled={!isTenggatWaktuFilled || !hasContent || updateMutation.isPending}
-                  style={{
-                    width: "148px",
-                    justifyContent: "center",
-                    background: "#630ED4",
-                    opacity:
-                      !isTenggatWaktuFilled || !hasContent || updateMutation.isPending ? 0.5 : 1,
-                    cursor:
-                      !isTenggatWaktuFilled || !hasContent || updateMutation.isPending
-                        ? "not-allowed"
-                        : "pointer",
-                    transition: "opacity 0.2s",
-                  }}
                   onClick={() => {
                     if (!hasNumericPoId || !poDetail) return
                     const items: PoItemInput[] = products.map((p) => ({
@@ -321,7 +293,7 @@ export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: Purcha
 
           <div className="qe-stepper">
             {steps.map((s, i) => (
-              <div key={s.n} style={{ display: "contents" }}>
+              <div key={s.n} className="contents">
                 <div className="qe-step-slot">
                   <div className={`qe-step-pill${i === step - 1 ? " qe-step-pill--active" : ""}`}>
                     <span className={`qe-step-num${i === step - 1 ? " qe-step-num--active" : ""}`}>

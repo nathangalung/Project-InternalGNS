@@ -117,9 +117,9 @@ export default function AddVendorToItemModal({
               <label className="ca-label">
                 Nama Vendor <span className="ca-required">*</span>
               </label>
-              <div style={{ position: "relative" }}>
+              <div className="relative">
                 <input
-                  className="ca-input"
+                  className={`ca-input ${vendorQuery ? "pr-9" : ""}`}
                   type="text"
                   placeholder="Cari vendor..."
                   value={vendorQuery}
@@ -131,7 +131,6 @@ export default function AddVendorToItemModal({
                   onFocus={() => {
                     if (vendorQuery.length > 0 && !vendorId) setShowSuggestions(true)
                   }}
-                  style={{ paddingRight: vendorQuery ? "36px" : undefined }}
                 />
                 {vendorQuery && (
                   <button
@@ -142,19 +141,7 @@ export default function AddVendorToItemModal({
                       setShowSuggestions(false)
                     }}
                     title="Bersihkan"
-                    style={{
-                      position: "absolute",
-                      right: "10px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "4px",
-                      display: "flex",
-                      alignItems: "center",
-                      color: "#94A3B8",
-                    }}
+                    className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-[#94A3B8]"
                   >
                     <svg
                       width="14"
@@ -173,24 +160,9 @@ export default function AddVendorToItemModal({
                 {showSuggestions && vendorQuery.length > 0 && (
                   <div style={dropdownPanelStyle}>
                     {filteredVendors.length === 0 ? (
-                      <div
-                        style={{
-                          padding: "12px",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "8px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: "13px",
-                            color: "#94A3B8",
-                            fontFamily: "'Inter', sans-serif",
-                            textAlign: "center",
-                            padding: "4px 0",
-                          }}
-                        >
-                          Vendor "<strong style={{ color: "#4A4455" }}>{vendorQuery}</strong>" tidak
+                      <div className="flex flex-col gap-2 p-3">
+                        <div className="px-0 py-1 text-center text-[13px] text-[#94A3B8]">
+                          Vendor "<strong className="text-[#4A4455]">{vendorQuery}</strong>" tidak
                           ditemukan
                         </div>
                         <button
@@ -199,21 +171,7 @@ export default function AddVendorToItemModal({
                             setShowSuggestions(false)
                             setShowCreateVendor(true)
                           }}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: "8px",
-                            padding: "10px 14px",
-                            border: "1.5px dashed rgba(99, 14, 212, 0.4)",
-                            background: "rgba(99, 14, 212, 0.04)",
-                            borderRadius: "8px",
-                            cursor: "pointer",
-                            fontFamily: "'Inter', sans-serif",
-                            fontWeight: 700,
-                            fontSize: "13px",
-                            color: "#630ED4",
-                          }}
+                          className="flex items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed border-[rgba(99,14,212,0.4)] bg-[rgba(99,14,212,0.04)] px-3.5 py-2.5 text-[13px] font-bold text-[#630ED4]"
                         >
                           <svg
                             width="14"
@@ -279,14 +237,7 @@ export default function AddVendorToItemModal({
             <div className="ca-field">
               <label className="ca-label">
                 Link Produk{" "}
-                <span
-                  style={{
-                    fontWeight: 400,
-                    color: "#9CA3AF",
-                    textTransform: "none",
-                    letterSpacing: 0,
-                  }}
-                >
+                <span className="font-normal normal-case tracking-normal text-[#9CA3AF]">
                   (opsional)
                 </span>
               </label>
@@ -301,30 +252,21 @@ export default function AddVendorToItemModal({
           </div>
         </div>
 
-        <div className="ca-footer" style={{ padding: "16px 24px" }}>
-          {submitError && (
-            <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>{submitError}</span>
-          )}
+        <div className="ca-footer px-6 py-4">
+          {submitError && <span className="flex-1 text-[12px] text-error">{submitError}</span>}
           <button
             type="button"
-            className="ca-btn-cancel"
+            className="ca-btn-cancel px-[18px] py-2 text-[13px]"
             onClick={handleCancel}
             disabled={addVendor.isPending}
-            style={{ padding: "8px 18px", fontSize: "13px" }}
           >
             Batal
           </button>
           <button
             type="button"
-            className="ca-btn-submit"
+            className="ca-btn-submit px-[22px] py-2 text-[13px] disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleSubmit}
             disabled={!isValid || addVendor.isPending}
-            style={{
-              padding: "8px 22px",
-              fontSize: "13px",
-              opacity: !isValid || addVendor.isPending ? 0.5 : 1,
-              cursor: !isValid || addVendor.isPending ? "not-allowed" : "pointer",
-            }}
           >
             {addVendor.isPending ? "Menyimpan..." : "Tambahkan"}
           </button>

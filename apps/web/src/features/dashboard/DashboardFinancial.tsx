@@ -10,8 +10,8 @@ import { useInvoices } from "@/features/invoices/hooks"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE, type InvoiceStatus } from "@/features/invoices/types"
 import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
 import { formatDate, formatNumber as formatId, formatRupiah as formatRp, toNum } from "@/lib/format"
-import { pill, ui } from "@/lib/ui"
 import type { Page } from "@/lib/page"
+import { pill, ui } from "@/lib/ui"
 import type { DashboardMetric, InvoiceBackendRow } from "@/types/api"
 import DashboardFinancialFilter, {
   type DashboardFilterValues,

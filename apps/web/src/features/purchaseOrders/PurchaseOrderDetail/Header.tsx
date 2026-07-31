@@ -1,5 +1,6 @@
 import StatusBadge from "@/components/shared/StatusBadge"
 import type { Page } from "@/lib/page"
+import { ui } from "@/lib/ui"
 import type { PoStatus } from "../types"
 import { PO_LABEL, PO_STATUS_CONFIG } from "./helpers"
 
@@ -48,9 +49,8 @@ export default function Header({
         </div>
         <div className="qd-header-actions">
           <button
-            className="btn-admin-outline"
+            className={`${ui.btnOutline} min-w-[130px]`}
             onClick={() => onNavigate("purchase-order-edit")}
-            style={{ minWidth: "130px", justifyContent: "center" }}
           >
             <svg
               width="14"
@@ -69,8 +69,7 @@ export default function Header({
           </button>
           <button
             type="button"
-            className="btn-admin-primary"
-            style={{ minWidth: "130px", justifyContent: "center" }}
+            className={`${ui.btnPrimary} min-w-[130px]`}
             onClick={onDownloadDeliveryNote}
             disabled={!onDownloadDeliveryNote}
           >

@@ -11,9 +11,7 @@ interface HistoryTimelineProps {
 export default function HistoryTimeline({ history }: HistoryTimelineProps) {
   return (
     <div>
-      <h2 className="qe-section-title" style={{ marginBottom: "12px" }}>
-        Riwayat Penawaran
-      </h2>
+      <h2 className="qe-section-title mb-3">Riwayat Penawaran</h2>
       <div className="qd-history-card">
         <div className="qd-timeline">
           {history.map((item, i) => {

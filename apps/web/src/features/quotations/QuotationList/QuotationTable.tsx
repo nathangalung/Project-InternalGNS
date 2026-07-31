@@ -1,6 +1,7 @@
 import EyeIcon from "@/components/shared/EyeIcon"
 import SortIcon from "@/components/shared/SortIcon"
 import StatusBadge from "@/components/shared/StatusBadge"
+import { ui } from "@/lib/ui"
 import { type QuotationRow, statusConfig } from "./helpers"
 
 interface QuotationTableProps {
@@ -11,6 +12,10 @@ interface QuotationTableProps {
   onViewDetail?: (id: string) => void
   onDownload?: (row: QuotationRow) => void
 }
+
+const actionBtn =
+  "inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
+const sortHead = "flex items-center justify-center gap-1.5"
 
 // Sortable rows with action buttons.
 export default function QuotationTable({
@@ -23,87 +28,59 @@ export default function QuotationTable({
 }: QuotationTableProps) {
   const dirOf = (key: keyof QuotationRow) => (sortKey === key ? sortDir : null)
   return (
-    <table className="tbl">
+    <table className="w-full min-w-full table-auto border-collapse lg:table-fixed">
       <thead>
-        <tr className="tbl-header-row">
+        <tr className={ui.theadRow}>
           <th
-            className="tbl-th tbl-th--center"
-            style={{ width: 160, cursor: "pointer" }}
+            className={`${ui.thCenter} cursor-pointer`}
+            style={{ width: 160 }}
             onClick={() => onSort("displayNo")}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-              }}
-            >
+            <div className={sortHead}>
               <span>Nomor Quotation</span>
               <SortIcon direction={dirOf("displayNo")} />
             </div>
           </th>
           <th
-            className="tbl-th tbl-th--center"
-            style={{ width: 70, cursor: "pointer" }}
+            className={`${ui.thCenter} cursor-pointer`}
+            style={{ width: 70 }}
             onClick={() => onSort("version")}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-              }}
-            >
+            <div className={sortHead}>
               <span>Versi</span>
               <SortIcon direction={dirOf("version")} />
             </div>
           </th>
-          <th className="tbl-th tbl-th--center" style={{ width: 170 }}>
+          <th className={ui.thCenter} style={{ width: 170 }}>
             Nama Klien
           </th>
           <th
-            className="tbl-th tbl-th--center"
-            style={{ width: 120, cursor: "pointer" }}
+            className={`${ui.thCenter} cursor-pointer`}
+            style={{ width: 120 }}
             onClick={() => onSort("date")}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-              }}
-            >
+            <div className={sortHead}>
               <span>Tanggal</span>
               <SortIcon direction={dirOf("date")} />
             </div>
           </th>
-          <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
+          <th className={ui.thCenter} style={{ width: 160 }}>
             Total Harga Beli
           </th>
           <th
-            className="tbl-th tbl-th--center"
-            style={{ width: 160, cursor: "pointer" }}
+            className={`${ui.thCenter} cursor-pointer`}
+            style={{ width: 160 }}
             onClick={() => onSort("total")}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-              }}
-            >
+            <div className={sortHead}>
               <span>Total Penawaran</span>
               <SortIcon direction={dirOf("total")} />
             </div>
           </th>
-          <th className="tbl-th tbl-th--center" style={{ width: 120 }}>
+          <th className={ui.thCenter} style={{ width: 120 }}>
             Status
           </th>
-          <th className="tbl-th tbl-th--center" style={{ width: 80 }}>
+          <th className={ui.thCenter} style={{ width: 80 }}>
             Aksi
           </th>
         </tr>
@@ -112,35 +89,36 @@ export default function QuotationTable({
         {rows.map((row) => {
           const badge = statusConfig[row.status]
           return (
-            <tr key={row.id} className="tbl-row">
-              <td className="tbl-td tbl-td--id tbl-td--center">{row.displayNo}</td>
-              <td className="tbl-td tbl-td--center">{row.version}</td>
-              <td className="tbl-td tbl-td--client tbl-td--center">{row.client}</td>
-              <td className="tbl-td tbl-td--center">{row.date}</td>
-              <td className="tbl-td tbl-td--center">{row.hargaBeli}</td>
-              <td className="tbl-td tbl-td--total tbl-td--center">{row.total}</td>
-              <td className="tbl-td tbl-td--center">
+            <tr key={row.id} className={ui.tr}>
+              <td className={`${ui.tdCenter} truncate font-bold text-primary-700`}>
+                {row.displayNo}
+              </td>
+              <td className={`${ui.tdCenter} truncate`}>{row.version}</td>
+              <td className={`${ui.tdCenter} truncate font-medium text-dark-900`}>{row.client}</td>
+              <td className={`${ui.tdCenter} truncate`}>{row.date}</td>
+              <td className={`${ui.tdCenter} truncate`}>{row.hargaBeli}</td>
+              <td className={`${ui.tdCenter} truncate font-bold text-dark-900`}>{row.total}</td>
+              <td className={ui.tdCenter}>
                 <StatusBadge bg={badge.bg} color={badge.color}>
                   {row.status}
                 </StatusBadge>
               </td>
-              <td className="tbl-td tbl-td--center">
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "12px",
-                  }}
-                >
+              <td className={ui.tdCenter}>
+                <div className="flex items-center justify-center gap-3">
                   <button
-                    className="action-btn"
+                    type="button"
+                    className={actionBtn}
                     title="Lihat"
                     onClick={() => onViewDetail?.(row.id)}
                   >
                     <EyeIcon size={18} />
                   </button>
-                  <button className="action-btn" title="Download" onClick={() => onDownload?.(row)}>
+                  <button
+                    type="button"
+                    className={actionBtn}
+                    title="Download"
+                    onClick={() => onDownload?.(row)}
+                  >
                     <svg
                       width="18"
                       height="18"

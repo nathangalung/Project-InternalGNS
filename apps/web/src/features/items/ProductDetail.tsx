@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
 import {
   dropdownItemStyle,
@@ -18,6 +18,7 @@ import { ApiError, fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
 import { formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
+import { ui } from "@/lib/ui"
 import type { ItemRow } from "@/types/api"
 
 interface ProductDetailProps {
@@ -34,32 +35,14 @@ function productInitials(name: string): string {
   return (parts[0][0] + parts[1][0]).toUpperCase()
 }
 
-const labelStyle: CSSProperties = {
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: 700,
-  fontSize: "10px",
-  lineHeight: "15px",
-  letterSpacing: "1px",
-  textTransform: "uppercase",
-  color: "#4A4455",
-  display: "block",
-  marginBottom: "8px",
-}
+const labelCls =
+  "mb-2 block text-[10px] font-bold uppercase leading-[15px] tracking-[1px] text-[#4A4455]"
 
-const inputStyle: CSSProperties = {
-  width: "100%",
-  height: "44px",
-  padding: "12px 16px",
-  background: "#F2F4F6",
-  borderRadius: "8px",
-  border: "1.5px solid transparent",
-  fontFamily: "'Inter', sans-serif",
-  fontSize: "14px",
-  fontWeight: 500,
-  color: "#191C1E",
-  outline: "none",
-  transition: "border-color 0.15s",
-}
+const inputBase =
+  "h-11 w-full rounded-md border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150"
+
+const textareaCls =
+  "min-h-24 w-full resize-y rounded-md border-[1.5px] border-transparent bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150"
 
 export default function ProductDetail({
   product,
@@ -211,7 +194,7 @@ export default function ProductDetail({
 
       <div className="admin-main">
         <div className="page-content" style={{ gap: "29px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div className="flex flex-col gap-3">
             <nav className="qd-breadcrumb">
               <button className="qd-breadcrumb-link" onClick={onBack}>
                 Katalog Produk
@@ -220,23 +203,11 @@ export default function ProductDetail({
               <span className="qd-breadcrumb-current">Detail Produk</span>
             </nav>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            <div className="flex items-center gap-5">
               <button
                 type="button"
                 onClick={onBack}
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  background: "#FFFFFF",
-                  boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)",
-                  borderRadius: "8px",
-                  border: "none",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
+                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-white shadow-sm"
               >
                 <svg
                   width="16"
@@ -252,28 +223,17 @@ export default function ProductDetail({
                   <polyline points="12 19 5 12 12 5" />
                 </svg>
               </button>
-              <h1 className="page-title" style={{ margin: 0 }}>
-                Detail Produk
-              </h1>
+              <h1 className="page-title">Detail Produk</h1>
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <div
-              style={{
-                background: "#FFFFFF",
-                borderRadius: "12px",
-                padding: "20px 24px",
-                display: "flex",
-                alignItems: "center",
-                gap: "20px",
-              }}
-            >
+          <div className="flex flex-col gap-5">
+            <div className="flex items-center gap-5 rounded-lg bg-white px-6 py-5">
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                style={{ display: "none" }}
+                className="hidden"
                 onChange={(e) => {
                   handleImageSelect(e.target.files?.[0])
                   e.target.value = ""
@@ -283,146 +243,61 @@ export default function ProductDetail({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 title="Klik untuk ganti gambar produk"
-                style={{
-                  width: "64px",
-                  height: "64px",
-                  borderRadius: "12px",
-                  background: imageDataUrl ? "#FFFFFF" : logoBg,
-                  color: "#FFFFFF",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 800,
-                  fontSize: "20px",
-                  letterSpacing: "0.5px",
-                  border: "none",
-                  cursor: "pointer",
-                  overflow: "hidden",
-                  padding: 0,
-                  flexShrink: 0,
-                }}
+                className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg p-0 text-xl font-extrabold tracking-[0.5px] text-white"
+                style={{ background: imageDataUrl ? "#FFFFFF" : logoBg }}
               >
                 {imageDataUrl ? (
                   <img
                     src={imageDataUrl}
                     alt="Gambar produk"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    className="h-full w-full object-cover"
                   />
                 ) : (
                   productInitials(product.name)
                 )}
               </button>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h2
-                  style={{
-                    margin: 0,
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "18px",
-                    lineHeight: "24px",
-                    letterSpacing: "-0.4px",
-                    color: "#191C1E",
-                    wordBreak: "break-word",
-                  }}
-                >
+              <div className="min-w-0 flex-1">
+                <h2 className="break-words text-lg font-bold leading-6 tracking-[-0.4px] text-[#191C1E]">
                   {product.name}
                 </h2>
-                <span
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "13px",
-                    lineHeight: "18px",
-                    color: "#630ED4",
-                    letterSpacing: "0.3px",
-                  }}
-                >
+                <span className="text-[13px] font-bold leading-[18px] tracking-[0.3px] text-[#630ED4]">
                   {product.impaCode ? `IMPA ${product.impaCode}` : "Produk"}
                 </span>
               </div>
               <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
-                  padding: "10px 16px",
-                  background: product.isActive ? "#F0FDF4" : "#FEF2F2",
-                  border: `1px solid ${product.isActive ? "#BBF7D0" : "#FECACA"}`,
-                  borderRadius: "10px",
-                  flexShrink: 0,
-                }}
+                className={`flex flex-shrink-0 flex-col gap-0.5 rounded-[10px] border px-4 py-2.5 ${
+                  product.isActive
+                    ? "border-[#BBF7D0] bg-[#F0FDF4]"
+                    : "border-[#FECACA] bg-[#FEF2F2]"
+                }`}
               >
-                <span
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 600,
-                    fontSize: "9px",
-                    letterSpacing: "1.4px",
-                    textTransform: "uppercase",
-                    color: "#64748B",
-                    lineHeight: "11px",
-                  }}
-                >
+                <span className="text-[9px] font-semibold uppercase leading-[11px] tracking-[1.4px] text-dark-500">
                   Status
                 </span>
                 <span
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 800,
-                    fontSize: "13px",
-                    letterSpacing: "0.2px",
-                    color: product.isActive ? "#065F46" : "#991B1B",
-                    lineHeight: "16px",
-                  }}
+                  className={`text-[13px] font-extrabold leading-4 tracking-[0.2px] ${
+                    product.isActive ? "text-[#065F46]" : "text-[#991B1B]"
+                  }`}
                 >
                   {product.isActive ? "Aktif" : "Nonaktif"}
                 </span>
               </div>
             </div>
 
-            <div
-              style={{
-                background: "#FFFFFF",
-                borderRadius: "12px",
-                padding: "32px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "32px",
-              }}
-            >
+            <div className="flex flex-col gap-8 rounded-lg bg-white p-8">
               <div>
-                <h3
-                  style={{
-                    margin: 0,
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "20px",
-                    lineHeight: "28px",
-                    letterSpacing: "-0.5px",
-                    color: "#191C1E",
-                  }}
-                >
+                <h3 className="text-xl font-bold leading-7 tracking-[-0.5px] text-[#191C1E]">
                   Informasi Utama Produk
                 </h3>
-                <p
-                  style={{
-                    margin: "4px 0 0 0",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 400,
-                    fontSize: "14px",
-                    lineHeight: "20px",
-                    color: "#4A4455",
-                  }}
-                >
+                <p className="mt-1 text-sm font-normal leading-5 text-[#4A4455]">
                   Kelola informasi produk.
                 </p>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              <div className="flex flex-col gap-6">
                 <div>
-                  <label style={labelStyle}>
-                    Nama Produk <span style={{ color: "#DC2626" }}>*</span>
+                  <label className={labelCls}>
+                    Nama Produk <span className="text-[#DC2626]">*</span>
                   </label>
                   <input
                     type="text"
@@ -431,40 +306,30 @@ export default function ProductDetail({
                       setName(e.target.value)
                       setFieldErrors((p) => ({ ...p, name: "" }))
                     }}
-                    style={{
-                      ...inputStyle,
-                      borderColor: fieldErrors.name ? "#DC2626" : "transparent",
-                    }}
+                    className={`${inputBase} ${
+                      fieldErrors.name ? "border-[#DC2626]" : "border-transparent"
+                    }`}
                   />
                   {fieldErrors.name && (
-                    <div
-                      style={{
-                        marginTop: "6px",
-                        fontSize: "12px",
-                        color: "#DC2626",
-                        fontFamily: "'Inter', sans-serif",
-                      }}
-                    >
-                      {fieldErrors.name}
-                    </div>
+                    <div className="mt-1.5 text-[12px] text-[#DC2626]">{fieldErrors.name}</div>
                   )}
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Kode IMPA</label>
+                  <label className={labelCls}>Kode IMPA</label>
                   <input
                     type="text"
                     inputMode="numeric"
                     value={impa}
                     placeholder="Contoh: 330212"
                     onChange={(e) => setImpa(e.target.value.replace(/\D/g, ""))}
-                    style={inputStyle}
+                    className={`${inputBase} border-transparent`}
                   />
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Satuan Default</label>
-                  <div style={{ position: "relative" }}>
+                  <label className={labelCls}>Satuan Default</label>
+                  <div className="relative">
                     <input
                       type="text"
                       placeholder="Ketik nama satuan..."
@@ -477,7 +342,7 @@ export default function ProductDetail({
                       onFocus={() => {
                         if (unitQuery.length > 0 && !unitCode) setShowUnitSuggestions(true)
                       }}
-                      style={{ ...inputStyle, paddingRight: unitQuery ? "36px" : undefined }}
+                      className={`${inputBase} border-transparent ${unitQuery ? "pr-9" : ""}`}
                     />
                     {unitQuery && (
                       <button
@@ -488,19 +353,7 @@ export default function ProductDetail({
                           setShowUnitSuggestions(false)
                         }}
                         title="Bersihkan"
-                        style={{
-                          position: "absolute",
-                          right: "10px",
-                          top: "50%",
-                          transform: "translateY(-50%)",
-                          background: "transparent",
-                          border: "none",
-                          cursor: "pointer",
-                          padding: "4px",
-                          display: "flex",
-                          alignItems: "center",
-                          color: "#94A3B8",
-                        }}
+                        className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-[#94A3B8]"
                       >
                         <svg
                           width="14"
@@ -519,15 +372,7 @@ export default function ProductDetail({
                     {showUnitSuggestions && unitQuery.length > 0 && (
                       <div style={dropdownPanelStyle}>
                         {filteredUnits.length === 0 ? (
-                          <div
-                            style={{
-                              padding: "12px 20px",
-                              fontSize: "13px",
-                              color: "#94A3B8",
-                              fontFamily: "'Inter', sans-serif",
-                              textAlign: "center",
-                            }}
-                          >
+                          <div className="px-5 py-3 text-center text-[13px] text-[#94A3B8]">
                             Tidak ada hasil
                           </div>
                         ) : (
@@ -557,58 +402,22 @@ export default function ProductDetail({
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Deskripsi</label>
+                  <label className={labelCls}>Deskripsi</label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={3}
                     placeholder="Deskripsi tambahan produk (opsional)"
-                    style={{
-                      ...inputStyle,
-                      height: "auto",
-                      minHeight: "96px",
-                      padding: "12px 16px",
-                      resize: "vertical",
-                      fontFamily: "'Inter', sans-serif",
-                    }}
+                    className={textareaCls}
                   />
                 </div>
               </div>
 
-              <div style={{ borderTop: "1px solid #ECEEF0", paddingTop: "24px" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "24px",
-                    padding: "20px 24px",
-                    background: "#F2F4F6",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 700,
-                        fontSize: "14px",
-                        lineHeight: "20px",
-                        color: "#191C1E",
-                      }}
-                    >
-                      Status Produk
-                    </div>
-                    <div
-                      style={{
-                        marginTop: "4px",
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 400,
-                        fontSize: "12px",
-                        lineHeight: "16px",
-                        color: "#4A4455",
-                      }}
-                    >
+              <div className="border-t border-[#ECEEF0] pt-6">
+                <div className="flex items-center justify-between gap-6 rounded-md bg-[#F2F4F6] px-6 py-5">
+                  <div className="flex-1">
+                    <div className="text-sm font-bold leading-5 text-[#191C1E]">Status Produk</div>
+                    <div className="mt-1 text-caption font-normal text-[#4A4455]">
                       Menonaktifkan produk akan menyembunyikan dari katalog dan mencegah penggunaan
                       dalam quotation baru.
                     </div>
@@ -618,71 +427,37 @@ export default function ProductDetail({
                     onClick={() => setIsActive((a) => !a)}
                     role="switch"
                     aria-checked={isActive}
-                    style={{
-                      width: "56px",
-                      height: "32px",
-                      borderRadius: "999px",
-                      border: "none",
-                      background: isActive ? "#630ED4" : "#CBD5E1",
-                      cursor: "pointer",
-                      position: "relative",
-                      transition: "background 0.2s",
-                      flexShrink: 0,
-                    }}
+                    className={`relative h-8 w-14 flex-shrink-0 rounded-full transition-colors duration-200 ${
+                      isActive ? "bg-[#630ED4]" : "bg-dark-300"
+                    }`}
                   >
                     <span
-                      style={{
-                        position: "absolute",
-                        top: "4px",
-                        left: isActive ? "28px" : "4px",
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "50%",
-                        background: "#FFFFFF",
-                        transition: "left 0.2s",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                      }}
+                      className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ${
+                        isActive ? "left-7" : "left-1"
+                      }`}
                     />
                   </button>
                 </div>
               </div>
 
               {submitError && (
-                <div
-                  style={{
-                    padding: "12px 16px",
-                    background: "#FEF2F2",
-                    borderLeft: "4px solid #DC2626",
-                    borderRadius: "8px",
-                    fontFamily: "'Inter', sans-serif",
-                    fontSize: "13px",
-                    color: "#7F1D1D",
-                  }}
-                >
+                <div className="rounded-md border-l-4 border-[#DC2626] bg-[#FEF2F2] px-4 py-3 text-[13px] text-[#7F1D1D]">
                   {submitError}
                 </div>
               )}
             </div>
           </div>
 
-          <div
-            style={{ display: "flex", justifyContent: "flex-end", gap: "16px", marginTop: "8px" }}
-          >
+          <div className="mt-2 flex justify-end gap-4">
             <button
               type="button"
               onClick={handleCancel}
               disabled={!dirty || updateItem.isPending}
-              style={{
-                padding: "12px 28px",
-                borderRadius: "12px",
-                border: "none",
-                background: "transparent",
-                color: dirty && !updateItem.isPending ? "#630ED4" : "#CBD5E1",
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 700,
-                fontSize: "14px",
-                cursor: dirty && !updateItem.isPending ? "pointer" : "default",
-              }}
+              className={`rounded-lg px-7 py-3 text-sm font-bold ${
+                dirty && !updateItem.isPending
+                  ? "cursor-pointer text-[#630ED4]"
+                  : "cursor-default text-[#CBD5E1]"
+              }`}
             >
               Batal
             </button>
@@ -690,88 +465,39 @@ export default function ProductDetail({
               type="button"
               onClick={handleSubmit}
               disabled={!dirty || updateItem.isPending}
-              style={{
-                padding: "12px 32px",
-                borderRadius: "12px",
-                border: "none",
-                background: dirty ? "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)" : "#CBD5E1",
-                boxShadow: dirty
-                  ? "0px 10px 15px -3px rgba(99, 14, 212, 0.2), 0px 4px 6px -4px rgba(99, 14, 212, 0.2)"
-                  : "none",
-                color: "#FFFFFF",
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 700,
-                fontSize: "14px",
-                cursor: dirty && !updateItem.isPending ? "pointer" : "default",
-                opacity: updateItem.isPending ? 0.7 : 1,
-              }}
+              className={`rounded-lg px-8 py-3 text-sm font-bold text-white ${
+                dirty
+                  ? "bg-[linear-gradient(135deg,#630ED4_0%,#7C3AED_100%)] shadow-[0px_10px_15px_-3px_rgba(99,14,212,0.2),0px_4px_6px_-4px_rgba(99,14,212,0.2)]"
+                  : "bg-[#CBD5E1]"
+              } ${dirty && !updateItem.isPending ? "cursor-pointer" : "cursor-default"} ${
+                updateItem.isPending ? "opacity-70" : "opacity-100"
+              }`}
             >
               {updateItem.isPending ? "Menyimpan…" : "Simpan Perubahan"}
             </button>
           </div>
 
-          <div
-            style={{
-              background: "#FFFFFF",
-              borderRadius: "12px",
-              padding: "32px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "24px",
-              marginTop: "8px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "16px",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <h3
-                  style={{
-                    margin: 0,
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 800,
-                    fontSize: "20px",
-                    lineHeight: "28px",
-                    letterSpacing: "-0.5px",
-                    color: "#191C1E",
-                  }}
-                >
+          <div className="mt-2 flex flex-col gap-6 rounded-lg bg-white p-8">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <h3 className="text-xl font-extrabold leading-7 tracking-[-0.5px] text-[#191C1E]">
                   Daftar Vendor Terkait
                 </h3>
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    padding: "3px 10px",
-                    borderRadius: 999,
-                    background: "rgba(99, 14, 212, 0.08)",
-                    color: "#630ED4",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "11px",
-                    letterSpacing: "0.2px",
-                  }}
-                >
+                <span className="inline-flex items-center rounded-full bg-[rgba(99,14,212,0.08)] px-2.5 py-[3px] text-[11px] font-bold tracking-[0.2px] text-[#630ED4]">
                   {(itemVendors ?? []).length}
                 </span>
               </div>
               <button
                 type="button"
-                className="btn-admin-primary"
+                className={`${ui.btnPrimary} w-[200px]`}
                 onClick={() => setShowAddVendor(true)}
-                style={{ width: "200px", justifyContent: "center" }}
               >
                 <svg
                   width="14"
                   height="14"
                   viewBox="0 0 24 24"
-                  fill="#fff"
-                  stroke="#fff"
+                  fill="currentColor"
+                  stroke="currentColor"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                 >
@@ -782,19 +508,19 @@ export default function ProductDetail({
               </button>
             </div>
 
-            <table className="tbl">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="tbl-header-row">
-                  <th className="tbl-th tbl-th--center" style={{ width: 280 }}>
+                <tr className={ui.theadRow}>
+                  <th className={ui.thCenter} style={{ width: 280 }}>
                     Nama Vendor
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 200 }}>
+                  <th className={ui.thCenter} style={{ width: 200 }}>
                     SKU Vendor
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 180 }}>
+                  <th className={ui.thCenter} style={{ width: 180 }}>
                     Harga Beli
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 200 }}>
+                  <th className={ui.thCenter} style={{ width: 200 }}>
                     Penawaran Terakhir
                   </th>
                 </tr>
@@ -802,22 +528,14 @@ export default function ProductDetail({
               <tbody>
                 {vendorsLoading && (
                   <tr>
-                    <td
-                      colSpan={4}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={4} className="py-10 text-center text-sm text-dark-500">
                       Memuat data…
                     </td>
                   </tr>
                 )}
                 {!vendorsLoading && (itemVendors ?? []).length === 0 && (
                   <tr>
-                    <td
-                      colSpan={4}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={4} className="py-10 text-center text-sm text-dark-500">
                       Belum ada vendor terkait. Klik "Tambah Vendor" untuk menambah.
                     </td>
                   </tr>
@@ -842,64 +560,22 @@ export default function ProductDetail({
                         })
                       : "-"
                     return (
-                      <tr key={v.vendorProductId} className="tbl-row">
-                        <td className="tbl-td">
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "12px",
-                              paddingLeft: "16px",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "32px",
-                                height: "32px",
-                                borderRadius: "8px",
-                                background: "#F1F5F9",
-                                color: "#630ED4",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontFamily: "'Inter', sans-serif",
-                                fontWeight: 700,
-                                fontSize: "13px",
-                                flexShrink: 0,
-                              }}
-                            >
+                      <tr key={v.vendorProductId} className={ui.tr}>
+                        <td className={ui.td}>
+                          <div className="flex items-center gap-3 pl-4">
+                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-dark-100 text-[13px] font-bold text-[#630ED4]">
                               {initials || "?"}
                             </div>
-                            <span
-                              style={{
-                                fontFamily: "'Inter', sans-serif",
-                                fontWeight: 500,
-                                fontSize: "14px",
-                                color: "#191C1E",
-                              }}
-                            >
+                            <span className="text-sm font-medium text-[#191C1E]">
                               {v.vendorName}
                             </span>
                           </div>
                         </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ color: "#4A4455", fontWeight: 500 }}
-                        >
-                          {v.vendorSku ?? "-"}
-                        </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ fontWeight: 700, color: "#191C1E" }}
-                        >
+                        <td className={`${ui.tdCenter} font-medium`}>{v.vendorSku ?? "-"}</td>
+                        <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
                           {formattedPrice}
                         </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ color: "#4A4455", fontWeight: 500 }}
-                        >
-                          {formattedDate}
-                        </td>
+                        <td className={`${ui.tdCenter} font-medium`}>{formattedDate}</td>
                       </tr>
                     )
                   })}

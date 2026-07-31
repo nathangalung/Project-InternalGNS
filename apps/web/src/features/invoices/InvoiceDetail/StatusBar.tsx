@@ -1,3 +1,4 @@
+import { ui } from "@/lib/ui"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "../types"
 import { EDITABLE_STATUS_ORDER, type EditableInvoiceStatus } from "./helpers"
 
@@ -20,7 +21,7 @@ export default function StatusBar({ status, isOpen, onToggle, onChange, onSave }
         <div className="qd-status-bar-desc">Ubah status invoice sesuai dengan kondisi aktual.</div>
       </div>
       <div className="qd-status-bar-actions">
-        <div style={{ position: "relative" }}>
+        <div className="relative">
           <button
             className="qd-status-trigger"
             style={{
@@ -74,7 +75,7 @@ export default function StatusBar({ status, isOpen, onToggle, onChange, onSave }
             </div>
           )}
         </div>
-        <button className="btn-admin-primary" onClick={onSave}>
+        <button type="button" className={ui.btnPrimary} onClick={onSave}>
           Simpan Data
         </button>
       </div>

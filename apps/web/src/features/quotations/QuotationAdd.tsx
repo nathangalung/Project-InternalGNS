@@ -9,7 +9,7 @@ import { useUnits } from "@/features/units/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
 import type { Page } from "@/lib/page"
-import { disabledStyle } from "@/lib/styles"
+import { ui } from "@/lib/ui"
 import type { QuotationCreateInput, QuotationItemInput } from "@/types/api"
 import DiscountModal from "./DiscountModal"
 import type { ProductItem } from "./QuotationEdit"
@@ -209,10 +209,7 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
       <div className="admin-main">
         <div className="page-content">
           {/* Header & Stepper */}
-          <div
-            className="qe-header-section"
-            style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
-          >
+          <div className="qe-header-section flex items-center justify-between">
             <div className="qe-header-left">
               <nav className="qd-breadcrumb">
                 <button className="qd-breadcrumb-link" onClick={() => onNavigate("quotation")}>
@@ -226,15 +223,12 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
               </div>
             </div>
 
-            <div
-              className="qe-header-actions"
-              style={{ display: "flex", gap: "16px", alignItems: "center" }}
-            >
+            <div className="qe-header-actions flex items-center gap-4">
               {step > 1 && (
                 <button
-                  className="btn-admin-outline"
+                  type="button"
+                  className={`${ui.btnOutline} w-[148px]`}
                   onClick={() => setStep(step - 1)}
-                  style={{ width: "148px", justifyContent: "center" }}
                 >
                   <svg
                     width="16"
@@ -253,16 +247,10 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
               )}
               {step < steps.length && (
                 <button
-                  className="btn-admin-primary"
+                  type="button"
+                  className={`${ui.btnPrimary} w-[148px]`}
                   onClick={() => setStep(step + 1)}
                   disabled={isNextDisabled}
-                  style={{
-                    width: "148px",
-                    justifyContent: "center",
-                    opacity: isNextDisabled ? 0.5 : 1,
-                    cursor: isNextDisabled ? "not-allowed" : "pointer",
-                    transition: "opacity 0.2s",
-                  }}
                 >
                   Lanjut{" "}
                   <svg
@@ -274,7 +262,7 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
                     strokeWidth="2.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    style={{ transform: "scaleX(-1)" }}
+                    className="-scale-x-100"
                   >
                     <path d="M19 12H5M12 5l-7 7 7 7" />
                   </svg>
@@ -282,17 +270,10 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
               )}
               {step === steps.length && (
                 <button
-                  className="btn-admin-primary"
+                  type="button"
+                  className={`${ui.btnPrimary} w-[180px] bg-[#630ED4] bg-none`}
                   onClick={handleSubmit}
                   disabled={!canSubmit || createQuotation.isPending}
-                  style={{
-                    width: "180px",
-                    justifyContent: "center",
-                    background: "#630ED4",
-                    opacity: !canSubmit || createQuotation.isPending ? 0.5 : 1,
-                    cursor: !canSubmit || createQuotation.isPending ? "not-allowed" : "pointer",
-                    transition: "opacity 0.2s",
-                  }}
                 >
                   {createQuotation.isPending ? "Menyimpan..." : "Buat Penawaran"}
                 </button>
@@ -302,7 +283,7 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
 
           <div className="qe-stepper">
             {steps.map((s, i) => (
-              <div key={s.n} style={{ display: "contents" }}>
+              <div key={s.n} className="contents">
                 <div className="qe-step-slot">
                   <div className={`qe-step-pill${i === step - 1 ? " qe-step-pill--active" : ""}`}>
                     <span className={`qe-step-num${i === step - 1 ? " qe-step-num--active" : ""}`}>
@@ -368,7 +349,6 @@ export default function QuotationAdd({ onNavigate, onLogout }: QuotationAddProps
               setShippingCost={setShippingCost}
               isAlamatFilled={isAlamatFilled}
               isWaktuFilled={isWaktuFilled}
-              disabledStyle={disabledStyle}
               formatRp={formatRp}
             />
           )}

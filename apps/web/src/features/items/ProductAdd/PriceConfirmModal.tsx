@@ -1,4 +1,4 @@
-import { confirmModalStyle, confirmOverlayStyle, formatRp } from "./helpers"
+import { confirmModalCls, confirmOverlayCls, formatRp } from "./helpers"
 
 interface PriceConfirmModalProps {
   open: boolean
@@ -26,60 +26,38 @@ export default function PriceConfirmModal({
 }: PriceConfirmModalProps) {
   if (!open) return null
   return (
-    <div style={confirmOverlayStyle} onClick={onCancel}>
-      <div style={confirmModalStyle} onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#111827" }}>
-          Konfirmasi Perubahan Harga
-        </h3>
-        <p style={{ margin: 0, fontSize: "14px", color: "#4B5563", lineHeight: "1.5" }}>
-          Apakah Anda yakin mengubah:
-        </p>
-        <ul style={{ margin: "0", paddingLeft: "20px", fontSize: "14px", color: "#374151" }}>
+    <div className={confirmOverlayCls} onClick={onCancel}>
+      <div className={`${confirmModalCls} max-w-[400px]`} onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-base font-bold text-[#111827]">Konfirmasi Perubahan Harga</h3>
+        <p className="text-sm leading-[1.5] text-[#4B5563]">Apakah Anda yakin mengubah:</p>
+        <ul className="pl-5 text-sm text-[#374151]">
           {isBeliChanged && initialBeli !== null && (
-            <li style={{ marginBottom: "8px" }}>
+            <li className="mb-2">
               Harga beli dari{" "}
-              <strong style={{ whiteSpace: "nowrap" }}>Rp{formatRp(initialBeli)}</strong> menjadi{" "}
-              <strong style={{ whiteSpace: "nowrap" }}>Rp{formatRp(currentBeli)}</strong>
+              <strong className="whitespace-nowrap">Rp{formatRp(initialBeli)}</strong> menjadi{" "}
+              <strong className="whitespace-nowrap">Rp{formatRp(currentBeli)}</strong>
             </li>
           )}
           {isJualChanged && initialJual !== null && (
             <li>
               Harga jual dari{" "}
-              <strong style={{ whiteSpace: "nowrap" }}>Rp{formatRp(initialJual)}</strong> menjadi{" "}
-              <strong style={{ whiteSpace: "nowrap" }}>Rp{formatRp(currentJual)}</strong>
+              <strong className="whitespace-nowrap">Rp{formatRp(initialJual)}</strong> menjadi{" "}
+              <strong className="whitespace-nowrap">Rp{formatRp(currentJual)}</strong>
             </li>
           )}
         </ul>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "8px" }}>
+        <div className="mt-2 flex justify-end gap-3">
           <button
             type="button"
             onClick={onCancel}
-            style={{
-              padding: "8px 16px",
-              borderRadius: "6px",
-              border: "1px solid #D1D5DB",
-              background: "#FFFFFF",
-              color: "#374151",
-              fontWeight: 600,
-              fontSize: "14px",
-              cursor: "pointer",
-            }}
+            className="rounded-sm border border-[#D1D5DB] bg-white px-4 py-2 text-sm font-semibold text-[#374151]"
           >
             Batal
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            style={{
-              padding: "8px 16px",
-              borderRadius: "6px",
-              border: "none",
-              background: "#630ED4",
-              color: "#FFFFFF",
-              fontWeight: 600,
-              fontSize: "14px",
-              cursor: "pointer",
-            }}
+            className="rounded-sm bg-[#630ED4] px-4 py-2 text-sm font-semibold text-white"
           >
             Iya
           </button>

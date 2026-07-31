@@ -1,4 +1,3 @@
-import type React from "react"
 import { useState } from "react"
 import { getPageNumbers } from "@/lib/pagination"
 import type { ProductItem } from "./QuotationEdit"
@@ -30,20 +29,26 @@ interface Step4SummaryProps {
 
 const PAGE_SIZE = 5
 
-const card: React.CSSProperties = {
-  background: "#FFFFFF",
-  border: "1px solid rgba(204, 195, 216, 0.2)",
-  borderRadius: "12px",
-  padding: "24px",
-}
-const fieldLabel: React.CSSProperties = {
-  fontSize: "11px",
-  color: "#6B7280",
-  fontWeight: 600,
-  textTransform: "uppercase",
-  marginBottom: "4px",
-}
-const fieldValue: React.CSSProperties = { fontSize: "14px", fontWeight: 500, color: "#111827" }
+const card = "rounded-lg border border-[rgba(204,195,216,0.2)] bg-white p-6"
+const grid2 = "grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))]"
+const grid3 = "grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))]"
+const fieldLabel = "mb-1 text-[11px] font-semibold uppercase text-[#6B7280]"
+const fieldValue = "text-sm font-medium text-[#111827]"
+const fieldValueSemibold = "text-sm font-semibold text-[#111827]"
+const fieldValueBold = "text-sm font-bold text-[#111827]"
+const emptyValue = "text-sm font-medium italic text-[#9CA3AF]"
+const formLabel = "mb-2 block text-[11px] font-bold uppercase tracking-[0.5px] text-[#6B7280]"
+const formInput =
+  "box-border w-full rounded-md border border-[rgba(204,195,216,0.2)] bg-dark-50 px-4 py-3 text-sm text-[#111827] outline-none"
+const alertBox =
+  "rounded-md border border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.06)] px-3.5 py-2.5 text-xs font-medium text-[#DC2626]"
+const pageBtn = "flex h-8 w-8 items-center justify-center rounded-sm text-sm transition"
+const pageBtnIdle = "font-medium text-[#4A4455] hover:bg-dark-100"
+const pageBtnActive = "bg-primary-700 font-bold text-white"
+const pageBtnNav =
+  "flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100"
+const costRow = "flex justify-between text-xs text-[#4B5563]"
+const costValue = "font-semibold text-[#111827]"
 
 export default function Step4Summary({
   jatuhTempo,
@@ -82,23 +87,11 @@ export default function Step4Summary({
     <div className="qe-step-content">
       {/* Tenggat Waktu Penawaran */}
       <div>
-        <h2 className="qe-section-title" style={{ marginBottom: "12px" }}>
-          Tenggat Waktu Penawaran
-        </h2>
-        <div className="rgrid-2" style={{ ...card, display: "grid", gap: "24px" }}>
+        <h2 className="qe-section-title mb-3">Tenggat Waktu Penawaran</h2>
+        <div className={`${card} ${grid2} gap-6`}>
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "11px",
-                fontWeight: 700,
-                color: "#6B7280",
-                letterSpacing: "0.5px",
-                marginBottom: "8px",
-                textTransform: "uppercase",
-              }}
-            >
-              JATUH TEMPO PEMBAYARAN (HARI) <span style={{ color: "#EF4444" }}>*</span>
+            <label className={formLabel}>
+              JATUH TEMPO PEMBAYARAN (HARI) <span className="text-error">*</span>
             </label>
             <input
               type="number"
@@ -106,33 +99,12 @@ export default function Step4Summary({
               placeholder="Masukkan hari sampai jatuh tempo"
               value={jatuhTempo}
               onChange={(e) => setJatuhTempo(e.target.value)}
-              style={{
-                width: "100%",
-                background: "#F8FAFC",
-                border: "1px solid rgba(204,195,216,0.2)",
-                outline: "none",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                fontSize: "14px",
-                color: "#111827",
-                boxSizing: "border-box",
-                fontFamily: "'Inter', sans-serif",
-              }}
+              className={formInput}
             />
           </div>
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "11px",
-                fontWeight: 700,
-                color: "#6B7280",
-                letterSpacing: "0.5px",
-                marginBottom: "8px",
-                textTransform: "uppercase",
-              }}
-            >
-              BERLAKU SAMPAI (HARI) <span style={{ color: "#EF4444" }}>*</span>
+            <label className={formLabel}>
+              BERLAKU SAMPAI (HARI) <span className="text-error">*</span>
             </label>
             <input
               type="number"
@@ -140,34 +112,12 @@ export default function Step4Summary({
               placeholder="Masukkan jumlah hari"
               value={berlakuSampai}
               onChange={(e) => setBerlakuSampai(e.target.value)}
-              style={{
-                width: "100%",
-                background: "#F8FAFC",
-                border: "1px solid rgba(204,195,216,0.2)",
-                outline: "none",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                fontSize: "14px",
-                color: "#111827",
-                boxSizing: "border-box",
-                fontFamily: "'Inter', sans-serif",
-              }}
+              className={formInput}
             />
           </div>
         </div>
         {!isTenggatWaktuFilled && (
-          <div
-            style={{
-              marginTop: "10px",
-              padding: "10px 14px",
-              borderRadius: "8px",
-              background: "rgba(239,68,68,0.06)",
-              border: "1px solid rgba(239,68,68,0.18)",
-              fontSize: "12px",
-              color: "#DC2626",
-              fontWeight: 500,
-            }}
-          >
+          <div className={`${alertBox} mt-2.5`}>
             Jatuh tempo pembayaran dan berlaku sampai wajib diisi sebelum menyimpan.
           </div>
         )}
@@ -175,133 +125,58 @@ export default function Step4Summary({
 
       {/* Ringkasan Klien */}
       <div>
-        <h2 className="qe-section-title" style={{ marginBottom: "12px" }}>
-          Ringkasan Klien
-        </h2>
-        <div
-          style={{
-            background: "#FFFFFF",
-            border: "1px solid rgba(204,195,216,0.2)",
-            borderRadius: "12px",
-            overflow: "hidden",
-          }}
-        >
+        <h2 className="qe-section-title mb-3">Ringkasan Klien</h2>
+        <div className="overflow-hidden rounded-lg border border-[rgba(204,195,216,0.2)] bg-white">
           {/* Card header with avatar */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "16px",
-              padding: "20px 24px",
-              borderBottom: "1px solid rgba(204,195,216,0.15)",
-              background:
-                "linear-gradient(135deg, rgba(99,14,212,0.04) 0%, rgba(99,14,212,0.01) 100%)",
-            }}
-          >
-            <div
-              style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "12px",
-                background: "rgba(99,14,212,0.12)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 800,
-                  color: "#630ED4",
-                  letterSpacing: "-0.5px",
-                }}
-              >
+          <div className="flex items-center gap-4 border-b border-[rgba(204,195,216,0.15)] bg-[linear-gradient(135deg,rgba(99,14,212,0.04)_0%,rgba(99,14,212,0.01)_100%)] px-6 py-5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[rgba(99,14,212,0.12)]">
+              <span className="text-base font-extrabold tracking-[-0.5px] text-[#630ED4]">
                 {currentClient?.initials || "—"}
               </span>
             </div>
             <div>
-              <div
-                style={{ fontSize: "16px", fontWeight: 700, color: "#111827", marginBottom: "4px" }}
-              >
+              <div className="mb-1 text-base font-bold text-[#111827]">
                 {currentClient?.name || "-"}
               </div>
-              <span style={{ fontSize: "12px", color: "#6B7280", fontWeight: 500 }}>
+              <span className="text-xs font-medium text-[#6B7280]">
                 {currentClient?.country || "-"}
               </span>
             </div>
           </div>
 
           {/* Contact & legal info */}
-          <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(204,195,216,0.15)" }}>
-            <div
-              style={{
-                fontSize: "10px",
-                fontWeight: 700,
-                color: "#9CA3AF",
-                letterSpacing: "1px",
-                textTransform: "uppercase",
-                marginBottom: "16px",
-              }}
-            >
+          <div className="border-b border-[rgba(204,195,216,0.15)] px-6 py-5">
+            <div className="mb-4 text-[10px] font-bold uppercase tracking-[1px] text-[#9CA3AF]">
               Kontak &amp; Legalitas
             </div>
-            <div
-              className="rgrid-3"
-              style={{
-                display: "grid",
-                rowGap: "20px",
-                columnGap: "24px",
-              }}
-            >
+            <div className={`${grid3} gap-x-6 gap-y-5`}>
               <div>
-                <div style={fieldLabel}>Narahubung</div>
-                <div style={{ ...fieldValue, fontWeight: 600 }}>
-                  {currentClient?.narahubung || "-"}
-                </div>
+                <div className={fieldLabel}>Narahubung</div>
+                <div className={fieldValueSemibold}>{currentClient?.narahubung || "-"}</div>
               </div>
               <div>
-                <div style={fieldLabel}>Nomor HP</div>
-                <div style={fieldValue}>{currentClient?.phone || "-"}</div>
+                <div className={fieldLabel}>Nomor HP</div>
+                <div className={fieldValue}>{currentClient?.phone || "-"}</div>
               </div>
               <div>
-                <div style={fieldLabel}>Email Kontak</div>
-                <div style={fieldValue}>{currentClient?.email || "-"}</div>
+                <div className={fieldLabel}>Email Kontak</div>
+                <div className={fieldValue}>{currentClient?.email || "-"}</div>
               </div>
               <div>
-                <div style={fieldLabel}>Nomor TKU</div>
-                <div
-                  style={{
-                    ...fieldValue,
-                    color: currentClient?.nomorTKU ? "#111827" : "#9CA3AF",
-                    fontStyle: currentClient?.nomorTKU ? "normal" : "italic",
-                  }}
-                >
+                <div className={fieldLabel}>Nomor TKU</div>
+                <div className={currentClient?.nomorTKU ? fieldValue : emptyValue}>
                   {currentClient?.nomorTKU || "Belum diisi"}
                 </div>
               </div>
               <div>
-                <div style={fieldLabel}>NPWP</div>
-                <div
-                  style={{
-                    ...fieldValue,
-                    color: currentClient?.npwp ? "#111827" : "#9CA3AF",
-                    fontStyle: currentClient?.npwp ? "normal" : "italic",
-                  }}
-                >
+                <div className={fieldLabel}>NPWP</div>
+                <div className={currentClient?.npwp ? fieldValue : emptyValue}>
                   {currentClient?.npwp || "Belum diisi"}
                 </div>
               </div>
               <div>
-                <div style={fieldLabel}>Reference Number</div>
-                <div
-                  style={{
-                    ...fieldValue,
-                    color: currentClient?.referenceNumber ? "#111827" : "#9CA3AF",
-                    fontStyle: currentClient?.referenceNumber ? "normal" : "italic",
-                  }}
-                >
+                <div className={fieldLabel}>Reference Number</div>
+                <div className={currentClient?.referenceNumber ? fieldValue : emptyValue}>
                   {currentClient?.referenceNumber || "Belum diisi"}
                 </div>
               </div>
@@ -309,40 +184,23 @@ export default function Step4Summary({
           </div>
 
           {/* Addresses */}
-          <div
-            className="rgrid-2"
-            style={{
-              padding: "20px 24px",
-              display: "grid",
-              gap: "24px",
-            }}
-          >
+          <div className={`${grid2} gap-6 px-6 py-5`}>
             <div>
-              <div style={fieldLabel}>Lokasi Perusahaan</div>
+              <div className={fieldLabel}>Lokasi Perusahaan</div>
               <div
-                style={{
-                  fontSize: "13px",
-                  fontWeight: 500,
-                  lineHeight: "1.6",
-                  marginTop: "4px",
-                  color: currentClient?.lokasi ? "#374151" : "#9CA3AF",
-                  fontStyle: currentClient?.lokasi ? "normal" : "italic",
-                }}
+                className={`mt-1 text-[13px] font-medium leading-[1.6] ${
+                  currentClient?.lokasi ? "text-[#374151]" : "italic text-[#9CA3AF]"
+                }`}
               >
                 {currentClient?.lokasi || "Belum diisi"}
               </div>
             </div>
             <div>
-              <div style={fieldLabel}>Alamat Pengiriman Barang</div>
+              <div className={fieldLabel}>Alamat Pengiriman Barang</div>
               <div
-                style={{
-                  fontSize: "13px",
-                  fontWeight: 500,
-                  lineHeight: "1.6",
-                  marginTop: "4px",
-                  color: shippingAddress ? "#374151" : "#9CA3AF",
-                  fontStyle: shippingAddress ? "normal" : "italic",
-                }}
+                className={`mt-1 text-[13px] font-medium leading-[1.6] ${
+                  shippingAddress ? "text-[#374151]" : "italic text-[#9CA3AF]"
+                }`}
               >
                 {shippingAddress || "Belum diisi"}
               </div>
@@ -353,47 +211,26 @@ export default function Step4Summary({
 
       {/* Ringkasan Penawaran */}
       <div>
-        <h2 className="qe-section-title" style={{ marginBottom: "12px" }}>
-          Ringkasan Penawaran
-        </h2>
+        <h2 className="qe-section-title mb-3">Ringkasan Penawaran</h2>
 
         {!hasContent && (
-          <div
-            style={{
-              marginBottom: "20px",
-              padding: "10px 14px",
-              borderRadius: "8px",
-              background: "rgba(239,68,68,0.06)",
-              border: "1px solid rgba(239,68,68,0.18)",
-              fontSize: "12px",
-              color: "#DC2626",
-              fontWeight: 500,
-            }}
-          >
+          <div className={`${alertBox} mb-5`}>
             Isi minimal satu produk atau informasi pengiriman sebelum menyimpan.
           </div>
         )}
 
         {/* Shipping detail (when set) */}
         {shippingAddress && (
-          <div
-            className="rgrid-2"
-            style={{
-              ...card,
-              display: "grid",
-              gap: "24px",
-              marginBottom: "24px",
-            }}
-          >
+          <div className={`${card} ${grid2} mb-6 gap-6`}>
             <div>
-              <div style={fieldLabel}>WAKTU PENGIRIMAN (HARI)</div>
-              <div style={{ ...fieldValue, marginTop: "4px" }}>
+              <div className={fieldLabel}>WAKTU PENGIRIMAN (HARI)</div>
+              <div className={`${fieldValue} mt-1`}>
                 {shippingTime ? `${shippingTime} hari` : "-"}
               </div>
             </div>
             <div>
-              <div style={fieldLabel}>BIAYA PENGIRIMAN</div>
-              <div style={{ ...fieldValue, fontWeight: 700, color: "#111827", marginTop: "4px" }}>
+              <div className={fieldLabel}>BIAYA PENGIRIMAN</div>
+              <div className={`${fieldValueBold} mt-1`}>
                 Rp {formatRp(Number(shippingCost) || 0)}
               </div>
             </div>
@@ -402,43 +239,25 @@ export default function Step4Summary({
 
         {/* Detail Produk - collapsible */}
         {products.length > 0 && (
-          <div style={{ marginBottom: "24px" }}>
+          <div className="mb-6">
             {/* Header row */}
             <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "14px 20px",
-                background: "#FFFFFF",
-                border: "1px solid rgba(204,195,216,0.2)",
-                borderRadius: prodExpanded ? "12px 12px 0 0" : "12px",
-                borderBottom: prodExpanded
-                  ? "1px solid rgba(204,195,216,0.15)"
-                  : "1px solid rgba(204,195,216,0.2)",
-              }}
+              className={`flex items-center justify-between border border-[rgba(204,195,216,0.2)] bg-white px-5 py-3.5 ${
+                prodExpanded ? "rounded-t-lg border-b-[rgba(204,195,216,0.15)]" : "rounded-lg"
+              }`}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: "#111827",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                  }}
-                >
+              <div className="flex items-center gap-2.5">
+                <span className="text-xs font-bold uppercase tracking-[0.5px] text-[#111827]">
                   Detail Produk
                 </span>
-                <span style={{ fontSize: "12px", color: "#9CA3AF", fontWeight: 500 }}>
-                  {products.length} produk
-                </span>
+                <span className="text-xs font-medium text-[#9CA3AF]">{products.length} produk</span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div className="flex items-center gap-3">
                 {/* Pagination — always visible */}
-                <div className="page-buttons">
+                <div className="flex items-center gap-1">
                   <button
-                    className="page-btn-nav"
+                    type="button"
+                    className={pageBtnNav}
                     disabled={prodPage === 1}
                     onClick={() => setProdPage((p) => Math.max(1, p - 1))}
                   >
@@ -456,28 +275,24 @@ export default function Step4Summary({
                     n === null ? (
                       <span
                         key={`e${i}`}
-                        style={{
-                          padding: "0 2px",
-                          color: "#9CA3AF",
-                          fontSize: "13px",
-                          alignSelf: "center",
-                          userSelect: "none",
-                        }}
+                        className="select-none self-center px-0.5 text-[13px] text-[#9CA3AF]"
                       >
                         …
                       </span>
                     ) : (
                       <button
                         key={n}
+                        type="button"
                         onClick={() => setProdPage(n)}
-                        className={`page-btn${n === prodPage ? " page-btn--active" : ""}`}
+                        className={`${pageBtn} ${n === prodPage ? pageBtnActive : pageBtnIdle}`}
                       >
                         {n}
                       </button>
                     ),
                   )}
                   <button
-                    className="page-btn-nav"
+                    type="button"
+                    className={pageBtnNav}
                     disabled={prodPage === totalPages}
                     onClick={() => setProdPage((p) => Math.min(totalPages, p + 1))}
                   >
@@ -494,21 +309,9 @@ export default function Step4Summary({
                 </div>
                 {/* Toggle */}
                 <button
+                  type="button"
                   onClick={() => setProdExpanded((e) => !e)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "5px",
-                    background: "none",
-                    border: "1px solid rgba(204,195,216,0.5)",
-                    borderRadius: "6px",
-                    padding: "5px 10px",
-                    cursor: "pointer",
-                    fontSize: "12px",
-                    color: "#6B7280",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 500,
-                  }}
+                  className="flex items-center gap-[5px] rounded-sm border border-[rgba(204,195,216,0.5)] px-2.5 py-[5px] text-xs font-medium text-[#6B7280]"
                 >
                   {prodExpanded ? "Sembunyikan" : "Tampilkan"}
                   <svg
@@ -516,10 +319,9 @@ export default function Step4Summary({
                     height="6"
                     viewBox="0 0 10 6"
                     fill="none"
-                    style={{
-                      transform: prodExpanded ? "rotate(0deg)" : "rotate(180deg)",
-                      transition: "transform 0.2s ease",
-                    }}
+                    className={`transition-transform duration-200 ${
+                      prodExpanded ? "" : "rotate-180"
+                    }`}
                   >
                     <path
                       d="M1 5L5 1L9 5"
@@ -535,16 +337,8 @@ export default function Step4Summary({
 
             {/* Product cards */}
             {prodExpanded && (
-              <div
-                style={{
-                  background: "#FFFFFF",
-                  border: "1px solid rgba(204,195,216,0.2)",
-                  borderTop: "none",
-                  borderRadius: "0 0 12px 12px",
-                  padding: "20px",
-                }}
-              >
-                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div className="rounded-b-lg border border-t-0 border-[rgba(204,195,216,0.2)] bg-white p-5">
+                <div className="flex flex-col gap-4">
                   {pageSlice.map((p, i) => {
                     const globalIndex = (prodPage - 1) * PAGE_SIZE + i + 1
                     const profit = p.hargaJual - p.hargaBeli
@@ -554,7 +348,7 @@ export default function Step4Summary({
                     const requestKode = p.requestedKodeImpa || p.kodeImpa
                     const isDifferent = requestNama !== p.nama || requestKode !== p.kodeImpa
                     return (
-                      <div key={p.id} className="qep-card" style={{ marginBottom: 0 }}>
+                      <div key={p.id} className="qep-card mb-0">
                         <div className="qep-card-header">
                           <div className="qep-card-meta">
                             <span className="qep-card-label">PRODUK {globalIndex}</span>
@@ -565,57 +359,32 @@ export default function Step4Summary({
                           </div>
                         </div>
                         <div
-                          style={{
-                            padding: "12px 20px",
-                            borderTop: "1px solid rgba(204,195,216,0.2)",
-                            borderBottom: "1px solid rgba(204,195,216,0.2)",
-                            background: isDifferent
-                              ? "rgba(245, 158, 11, 0.04)"
-                              : "rgba(99, 14, 212, 0.02)",
-                          }}
+                          className={`border-y border-[rgba(204,195,216,0.2)] px-5 py-3 ${
+                            isDifferent ? "bg-[rgba(245,158,11,0.04)]" : "bg-[rgba(99,14,212,0.02)]"
+                          }`}
                         >
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 8,
-                              marginBottom: 6,
-                            }}
-                          >
+                          <div className="mb-1.5 flex items-center gap-2">
                             <span
-                              style={{
-                                fontSize: 10,
-                                fontWeight: 700,
-                                letterSpacing: "0.6px",
-                                textTransform: "uppercase",
-                                color: isDifferent ? "#B45309" : "#6B7280",
-                              }}
+                              className={`text-[10px] font-bold uppercase tracking-[0.6px] ${
+                                isDifferent ? "text-[#B45309]" : "text-[#6B7280]"
+                              }`}
                             >
                               Permintaan Klien
                             </span>
                             {isDifferent && (
-                              <span
-                                style={{
-                                  fontSize: 10,
-                                  fontWeight: 600,
-                                  padding: "2px 6px",
-                                  borderRadius: 4,
-                                  background: "rgba(245, 158, 11, 0.15)",
-                                  color: "#B45309",
-                                }}
-                              >
+                              <span className="rounded-[4px] bg-[rgba(245,158,11,0.15)] px-1.5 py-0.5 text-[10px] font-semibold text-[#B45309]">
                                 Berbeda dari Offer
                               </span>
                             )}
                           </div>
-                          <div style={{ display: "flex", gap: 24, fontSize: 13, color: "#374151" }}>
+                          <div className="flex gap-6 text-[13px] text-[#374151]">
                             <div>
-                              <span style={{ color: "#9CA3AF", marginRight: 6 }}>Kode IMPA:</span>
-                              <span style={{ fontWeight: 600 }}>{requestKode || "-"}</span>
+                              <span className="mr-1.5 text-[#9CA3AF]">Kode IMPA:</span>
+                              <span className="font-semibold">{requestKode || "-"}</span>
                             </div>
                             <div>
-                              <span style={{ color: "#9CA3AF", marginRight: 6 }}>Nama:</span>
-                              <span style={{ fontWeight: 600 }}>{requestNama || "-"}</span>
+                              <span className="mr-1.5 text-[#9CA3AF]">Nama:</span>
+                              <span className="font-semibold">{requestNama || "-"}</span>
                             </div>
                           </div>
                         </div>
@@ -666,178 +435,67 @@ export default function Step4Summary({
         )}
 
         {/* Summary totals */}
-        <div
-          style={{
-            background: "#F8FAFC",
-            borderRadius: "12px",
-            padding: "24px",
-            border: "1px solid rgba(204,195,216,0.1)",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "13px",
-              fontWeight: 700,
-              color: "#6B7280",
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-              marginBottom: "20px",
-            }}
-          >
+        <div className="rounded-lg border border-[rgba(204,195,216,0.1)] bg-dark-50 p-6">
+          <div className="mb-5 text-[13px] font-bold uppercase tracking-[0.5px] text-[#6B7280]">
             Rincian Biaya
           </div>
 
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "12px",
-                color: "#4B5563",
-              }}
-            >
+          <div className="mb-5 flex flex-col gap-3">
+            <div className={costRow}>
               <span>Total Produk</span>
-              <span style={{ fontWeight: 600, color: "#111827" }}>
-                {summaryTotalProdukQty} Produk
-              </span>
+              <span className={costValue}>{summaryTotalProdukQty} Produk</span>
             </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "12px",
-                color: "#4B5563",
-              }}
-            >
+            <div className={costRow}>
               <span>Total Harga Beli</span>
-              <span style={{ fontWeight: 600, color: "#111827" }}>
-                Rp {formatRp(summaryTotalHargaBeli)}
-              </span>
+              <span className={costValue}>Rp {formatRp(summaryTotalHargaBeli)}</span>
             </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "12px",
-                color: "#4B5563",
-              }}
-            >
+            <div className={costRow}>
               <span>Total Harga Jual</span>
-              <span style={{ fontWeight: 600, color: "#111827" }}>
-                Rp {formatRp(summaryTotalHargaJual)}
-              </span>
+              <span className={costValue}>Rp {formatRp(summaryTotalHargaJual)}</span>
             </div>
             {discountPct > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "12px",
-                  color: "#4B5563",
-                }}
-              >
+              <div className={costRow}>
                 <span>Diskon ({discountPct}%)</span>
-                <span style={{ fontWeight: 600, color: "#10B981" }}>
-                  - Rp {formatRp(nominalDiskon)}
-                </span>
+                <span className="font-semibold text-[#10B981]">- Rp {formatRp(nominalDiskon)}</span>
               </div>
             )}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "12px",
-                color: "#4B5563",
-              }}
-            >
+            <div className={costRow}>
               <span>Sub Total</span>
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <div className="flex items-center gap-2">
                 {discountPct > 0 && (
-                  <span style={{ textDecoration: "line-through", color: "#9CA3AF" }}>
+                  <span className="text-[#9CA3AF] line-through">
                     Rp {formatRp(summaryTotalHargaJual)}
                   </span>
                 )}
-                <span style={{ fontWeight: 600, color: "#111827" }}>
-                  Rp {formatRp(summarySubTotal)}
-                </span>
+                <span className={costValue}>Rp {formatRp(summarySubTotal)}</span>
               </div>
             </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "12px",
-                color: "#4B5563",
-              }}
-            >
+            <div className={costRow}>
               <span>DPP Nilai Lain</span>
-              <span style={{ fontWeight: 600, color: "#111827" }}>Rp {formatRp(summaryDpp)}</span>
+              <span className={costValue}>Rp {formatRp(summaryDpp)}</span>
             </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "12px",
-                color: "#4B5563",
-              }}
-            >
+            <div className={costRow}>
               <span>PPN 12%</span>
-              <span style={{ fontWeight: 600, color: "#111827" }}>Rp {formatRp(summaryPpn)}</span>
+              <span className={costValue}>Rp {formatRp(summaryPpn)}</span>
             </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "12px",
-                color: "#4B5563",
-              }}
-            >
+            <div className={costRow}>
               <span>Biaya Pengiriman</span>
-              <span style={{ fontWeight: 600, color: "#111827" }}>
-                Rp {formatRp(summaryShippingCost)}
-              </span>
+              <span className={costValue}>Rp {formatRp(summaryShippingCost)}</span>
             </div>
           </div>
 
-          <div style={{ height: "1px", background: "#E5E7EB", marginBottom: "16px" }} />
+          <div className="mb-4 h-px bg-[#E5E7EB]" />
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "11px",
-              fontWeight: 700,
-              color: "#6B7280",
-              textTransform: "uppercase",
-              marginBottom: "20px",
-            }}
-          >
+          <div className="mb-5 flex justify-between text-[11px] font-bold uppercase text-[#6B7280]">
             <span>Total Estimasi Profit</span>
-            <span style={{ color: "#630ED4", fontSize: "12px" }}>Rp {formatRp(summaryProfit)}</span>
+            <span className="text-xs text-[#630ED4]">Rp {formatRp(summaryProfit)}</span>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <span
-              style={{
-                fontSize: "11px",
-                fontWeight: 700,
-                color: "#6B7280",
-                letterSpacing: "1px",
-                textTransform: "uppercase",
-              }}
-            >
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-bold uppercase tracking-[1px] text-[#6B7280]">
               Grand Total
             </span>
-            <span
-              style={{
-                fontSize: "28px",
-                fontWeight: 800,
-                color: "#630ED4",
-                letterSpacing: "-0.5px",
-              }}
-            >
+            <span className="text-[28px] font-extrabold tracking-[-0.5px] text-[#630ED4]">
               Rp {formatRp(summaryGrandTotal)}
             </span>
           </div>

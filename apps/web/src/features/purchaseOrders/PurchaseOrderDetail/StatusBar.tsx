@@ -1,3 +1,4 @@
+import { ui } from "@/lib/ui"
 import type { PoStatus } from "../types"
 import { PO_LABEL, PO_STATUS_CONFIG } from "./helpers"
 
@@ -28,14 +29,10 @@ export default function StatusBar({
         <div className="qd-status-bar-desc">Ubah status PO sesuai dengan kondisi aktual.</div>
       </div>
       <div className="qd-status-bar-actions">
-        <div style={{ position: "relative" }}>
+        <div className="relative">
           <button
-            className="qd-status-trigger"
-            style={{
-              background: badge.bg,
-              color: badge.color,
-              cursor: locked ? "default" : undefined,
-            }}
+            className={`qd-status-trigger${locked ? " cursor-default" : ""}`}
+            style={{ background: badge.bg, color: badge.color }}
             onClick={locked ? undefined : onToggle}
             disabled={locked}
           >
@@ -82,7 +79,7 @@ export default function StatusBar({
             </div>
           )}
         </div>
-        <button className="btn-admin-primary" onClick={onSave}>
+        <button className={ui.btnPrimary} onClick={onSave}>
           Simpan Data
         </button>
       </div>
