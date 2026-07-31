@@ -1,6 +1,5 @@
-import { type CSSProperties, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
-import { dropdownItemStyle, dropdownLabelStyle } from "@/components/shared/filter-styles"
 import Sidebar from "@/components/shared/Sidebar"
 import * as clientsApi from "@/features/clients/api"
 import { getCompanyInitials } from "@/features/clients/helpers"
@@ -17,6 +16,7 @@ import { useCountries } from "@/features/countries/hooks"
 import { ApiError, fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
 import type { Page } from "@/lib/page"
+import { ui } from "@/lib/ui"
 import type { ClientRow } from "@/types/api"
 
 interface ClientDetailProps {
@@ -26,48 +26,36 @@ interface ClientDetailProps {
   onLogout: () => void
 }
 
-const labelStyle: CSSProperties = {
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: 700,
-  fontSize: "10px",
-  lineHeight: "15px",
-  letterSpacing: "1px",
-  textTransform: "uppercase",
-  color: "#4A4455",
-  display: "block",
-  marginBottom: "8px",
-}
+const labelCls =
+  "mb-2 block text-[10px] font-bold uppercase leading-[15px] tracking-[1px] text-[#4A4455]"
 
-const inputStyle: CSSProperties = {
-  width: "100%",
-  height: "44px",
-  padding: "12px 16px",
-  background: "#F2F4F6",
-  borderRadius: "8px",
-  border: "1.5px solid transparent",
-  fontFamily: "'Inter', sans-serif",
-  fontSize: "14px",
-  fontWeight: 500,
-  color: "#191C1E",
-  outline: "none",
-  transition: "border-color 0.15s",
-}
+// Shared field shell; height and radius vary per use, so they stay out of here.
+const inputBase =
+  "w-full border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150"
 
-const dropdownPanelStyle: CSSProperties = {
-  position: "absolute",
-  top: "calc(100% + 4px)",
-  left: 0,
-  right: 0,
-  background: "#FFFFFF",
-  border: "1px solid rgba(204, 195, 216, 0.2)",
-  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-  borderRadius: "8px",
-  display: "flex",
-  flexDirection: "column",
-  padding: "4px 0",
-  zIndex: 50,
-  maxHeight: "260px",
-  overflowY: "auto",
+const inputCls = `${inputBase} h-11 rounded-md border-transparent`
+
+// Same shell without a text color, for value-dependent coloring.
+const inputBaseNoColor =
+  "w-full border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium outline-none transition-[border-color] duration-150"
+
+// Responsive two column track sizing.
+const grid2 = "grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))]"
+
+const dropdownPanelCls =
+  "absolute left-0 right-0 top-[calc(100%+4px)] z-50 flex max-h-[260px] flex-col overflow-y-auto rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+
+const dropdownItemCls = "flex w-full items-center justify-between gap-3 px-5 py-2.5 text-left"
+
+const contactCancelCls = "px-4 py-2 text-[13px] font-semibold text-[#630ED4]"
+
+const gradientCls = "bg-[linear-gradient(135deg,#630ED4_0%,#7C3AED_100%)]"
+
+// Contact form save button, enabled or not.
+function contactSaveCls(enabled: boolean): string {
+  return `rounded-md px-4 py-2 text-[13px] font-semibold text-white ${
+    enabled ? `${gradientCls} cursor-pointer` : "cursor-default bg-[#CBD5E1]"
+  }`
 }
 
 export default function ClientDetail({ client, onNavigate, onBack, onLogout }: ClientDetailProps) {
@@ -273,32 +261,20 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
 
       <div className="admin-main">
         <div className="page-content" style={{ gap: "29px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <nav className="qd-breadcrumb">
-              <button className="qd-breadcrumb-link" onClick={onBack}>
+          <div className="flex flex-col gap-3">
+            <nav className={ui.breadcrumb}>
+              <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
                 Daftar Klien
               </button>
-              <span className="qd-breadcrumb-sep">&rsaquo;</span>
-              <span className="qd-breadcrumb-current">Detail Klien</span>
+              <span className={ui.breadcrumbSep}>&rsaquo;</span>
+              <span className={ui.breadcrumbCurrent}>Detail Klien</span>
             </nav>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            <div className="flex items-center gap-5">
               <button
                 type="button"
                 onClick={onBack}
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  background: "#FFFFFF",
-                  boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)",
-                  borderRadius: "8px",
-                  border: "none",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.05)]"
               >
                 <svg
                   width="16"
@@ -314,62 +290,35 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                   <polyline points="12 19 5 12 12 5" />
                 </svg>
               </button>
-              <h1 className="page-title" style={{ margin: 0 }}>
-                Detail Klien
-              </h1>
+              <h1 className="page-title m-0">Detail Klien</h1>
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <div
-              style={{
-                background: "#FFFFFF",
-                borderRadius: "12px",
-                padding: "20px 24px",
-                display: "flex",
-                alignItems: "center",
-                gap: "20px",
-              }}
-            >
+          <div className="flex flex-col gap-5">
+            <div className="flex items-center gap-5 rounded-lg bg-white px-6 py-5">
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                style={{ display: "none" }}
+                className="hidden"
                 onChange={(e) => {
                   handleLogoSelect(e.target.files?.[0])
                   e.target.value = ""
                 }}
               />
-              <div style={{ position: "relative", flexShrink: 0 }}>
+              <div className="relative shrink-0">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   title="Klik untuk ganti logo"
-                  style={{
-                    width: "64px",
-                    height: "64px",
-                    borderRadius: "12px",
-                    background: logoDataUrl ? "#FFFFFF" : logoBg,
-                    color: "#FFFFFF",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 800,
-                    fontSize: "20px",
-                    letterSpacing: "0.5px",
-                    border: "none",
-                    cursor: "pointer",
-                    overflow: "hidden",
-                    padding: 0,
-                  }}
+                  className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg p-0 text-[20px] font-extrabold tracking-[0.5px] text-white"
+                  style={{ background: logoDataUrl ? "#FFFFFF" : logoBg }}
                 >
                   {logoDataUrl ? (
                     <img
                       src={logoDataUrl}
                       alt="Logo klien"
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      className="h-full w-full object-cover"
                     />
                   ) : (
                     getCompanyInitials(client.name)
@@ -380,33 +329,10 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                   onClick={() => fileInputRef.current?.click()}
                   title="Ganti logo"
                   aria-label="Ganti logo"
-                  style={{
-                    position: "absolute",
-                    bottom: "-4px",
-                    right: "-4px",
-                    width: "26px",
-                    height: "26px",
-                    borderRadius: "50%",
-                    background: "#FFFFFF",
-                    border: "2px solid #FFFFFF",
-                    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.15)",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: 0,
-                  }}
+                  className="absolute -bottom-1 -right-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 border-white bg-white p-0 shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
                 >
                   <span
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      borderRadius: "50%",
-                      background: "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+                    className={`flex h-full w-full items-center justify-center rounded-full ${gradientCls}`}
                   >
                     <svg
                       width="13"
@@ -424,115 +350,46 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                   </span>
                 </button>
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h2
-                  style={{
-                    margin: 0,
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "18px",
-                    lineHeight: "24px",
-                    letterSpacing: "-0.4px",
-                    color: "#191C1E",
-                    wordBreak: "break-word",
-                  }}
-                >
+              <div className="min-w-0 flex-1">
+                <h2 className="m-0 break-words text-[18px] font-bold leading-6 tracking-[-0.4px] text-[#191C1E]">
                   {client.name}
                 </h2>
-                <span
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 500,
-                    fontSize: "13px",
-                    lineHeight: "18px",
-                    color: "#4A4455",
-                  }}
-                >
-                  Klien
-                </span>
+                <span className="text-[13px] font-medium leading-[18px] text-[#4A4455]">Klien</span>
               </div>
               <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
-                  padding: "10px 16px",
-                  background: client.isActive ? "#F0FDF4" : "#FEF2F2",
-                  border: `1px solid ${client.isActive ? "#BBF7D0" : "#FECACA"}`,
-                  borderRadius: "10px",
-                  flexShrink: 0,
-                }}
+                className={`flex shrink-0 flex-col gap-0.5 rounded-[10px] border px-4 py-2.5 ${
+                  client.isActive
+                    ? "border-[#BBF7D0] bg-[#F0FDF4]"
+                    : "border-[#FECACA] bg-[#FEF2F2]"
+                }`}
               >
-                <span
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 600,
-                    fontSize: "9px",
-                    letterSpacing: "1.4px",
-                    textTransform: "uppercase",
-                    color: "#64748B",
-                    lineHeight: "11px",
-                  }}
-                >
+                <span className="text-[9px] font-semibold uppercase leading-[11px] tracking-[1.4px] text-dark-500">
                   Status
                 </span>
                 <span
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 800,
-                    fontSize: "13px",
-                    letterSpacing: "0.2px",
-                    color: client.isActive ? "#065F46" : "#991B1B",
-                    lineHeight: "16px",
-                  }}
+                  className={`text-[13px] font-extrabold leading-4 tracking-[0.2px] ${
+                    client.isActive ? "text-[#065F46]" : "text-[#991B1B]"
+                  }`}
                 >
                   {client.isActive ? "Aktif" : "Nonaktif"}
                 </span>
               </div>
             </div>
 
-            <div
-              style={{
-                background: "#FFFFFF",
-                borderRadius: "12px",
-                padding: "32px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "32px",
-              }}
-            >
+            <div className="flex flex-col gap-8 rounded-lg bg-white p-8">
               <div>
-                <h3
-                  style={{
-                    margin: 0,
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "20px",
-                    lineHeight: "28px",
-                    letterSpacing: "-0.5px",
-                    color: "#191C1E",
-                  }}
-                >
+                <h3 className="m-0 text-[20px] font-bold leading-7 tracking-[-0.5px] text-[#191C1E]">
                   Informasi Utama Klien
                 </h3>
-                <p
-                  style={{
-                    margin: "4px 0 0 0",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 400,
-                    fontSize: "14px",
-                    lineHeight: "20px",
-                    color: "#4A4455",
-                  }}
-                >
+                <p className="m-0 mt-1 text-sm font-normal leading-5 text-[#4A4455]">
                   Kelola informasi klien.
                 </p>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              <div className="flex flex-col gap-6">
                 <div>
-                  <label style={labelStyle}>
-                    Nama Klien <span style={{ color: "#DC2626" }}>*</span>
+                  <label className={labelCls}>
+                    Nama Klien <span className="text-[#DC2626]">*</span>
                   </label>
                   <input
                     type="text"
@@ -541,58 +398,33 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                       setName(e.target.value)
                       setFieldErrors((p) => ({ ...p, name: "" }))
                     }}
-                    style={{
-                      ...inputStyle,
-                      borderColor: fieldErrors.name ? "#DC2626" : "transparent",
-                    }}
+                    className={`${inputBase} h-11 rounded-md ${
+                      fieldErrors.name ? "border-[#DC2626]" : "border-transparent"
+                    }`}
                   />
                   {fieldErrors.name && (
-                    <div
-                      style={{
-                        marginTop: "6px",
-                        fontSize: "12px",
-                        color: "#DC2626",
-                        fontFamily: "'Inter', sans-serif",
-                      }}
-                    >
-                      {fieldErrors.name}
-                    </div>
+                    <div className="mt-1.5 text-xs text-[#DC2626]">{fieldErrors.name}</div>
                   )}
                 </div>
 
-                <div className="rgrid-2" style={{ display: "grid", gap: "24px" }}>
+                <div className={`${grid2} gap-6`}>
                   <div>
-                    <label style={labelStyle}>Nomor TKU</label>
+                    <label className={labelCls}>Nomor TKU</label>
                     <input
                       type="text"
                       value={tkuId}
                       placeholder="Masukkan TKU"
                       onChange={(e) => setTkuId(e.target.value)}
-                      style={inputStyle}
+                      className={inputCls}
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>Kode Negara</label>
-                    <div style={{ position: "relative" }}>
+                    <label className={labelCls}>Kode Negara</label>
+                    <div className="relative">
                       <button
                         type="button"
                         onClick={() => setCountryOpen((o) => !o)}
-                        style={{
-                          width: "100%",
-                          height: "44px",
-                          padding: "12px 16px",
-                          background: "#F2F4F6",
-                          border: "1.5px solid transparent",
-                          borderRadius: "8px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          cursor: "pointer",
-                          fontFamily: "'Inter', sans-serif",
-                          fontWeight: 500,
-                          fontSize: "14px",
-                          color: "#191C1E",
-                        }}
+                        className={`${inputBase} flex h-11 items-center justify-between rounded-md border-transparent text-left`}
                       >
                         <span>
                           {countryOption
@@ -612,24 +444,14 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                         </svg>
                       </button>
                       {countryOpen && (
-                        <div style={dropdownPanelStyle}>
-                          <div style={{ padding: "0 12px 8px" }}>
+                        <div className={dropdownPanelCls}>
+                          <div className="px-3 pb-2">
                             <input
                               type="text"
                               placeholder="Cari negara..."
                               value={countryQuery}
                               onChange={(e) => setCountryQuery(e.target.value)}
-                              style={{
-                                width: "100%",
-                                padding: "8px 12px",
-                                fontSize: "13px",
-                                fontFamily: "'Inter', sans-serif",
-                                color: "#191C1E",
-                                background: "#F7F7F8",
-                                border: "1px solid rgba(204, 195, 216, 0.4)",
-                                borderRadius: "6px",
-                                outline: "none",
-                              }}
+                              className="w-full rounded-sm border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-3 py-2 font-sans text-[13px] text-[#191C1E] outline-none"
                             />
                           </div>
                           {(() => {
@@ -644,15 +466,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                               .slice(0, 5)
                             if (filtered.length === 0) {
                               return (
-                                <div
-                                  style={{
-                                    padding: "12px 20px",
-                                    fontSize: "13px",
-                                    color: "#94A3B8",
-                                    fontFamily: "'Inter', sans-serif",
-                                    textAlign: "center",
-                                  }}
-                                >
+                                <div className="px-5 py-3 text-center text-[13px] text-[#94A3B8]">
                                   Tidak ada hasil
                                 </div>
                               )
@@ -663,14 +477,20 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                                 <button
                                   key={c.code}
                                   type="button"
-                                  style={dropdownItemStyle}
+                                  className={dropdownItemCls}
                                   onClick={() => {
                                     setCountryCode(c.code)
                                     setCountryQuery("")
                                     setCountryOpen(false)
                                   }}
                                 >
-                                  <span style={dropdownLabelStyle(active)}>
+                                  <span
+                                    className={`text-sm leading-5 ${
+                                      active
+                                        ? "font-bold text-[#630ED4]"
+                                        : "font-medium text-[#4A4455]"
+                                    }`}
+                                  >
                                     {c.code} - {c.name}
                                   </span>
                                   {active && <CheckIcon />}
@@ -684,31 +504,11 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                   </div>
                 </div>
 
-                <div className="rgrid-2" style={{ display: "grid", gap: "24px" }}>
+                <div className={`${grid2} gap-6`}>
                   <div>
-                    <label style={labelStyle}>No HP</label>
-                    <div
-                      style={{
-                        display: "flex",
-                        borderRadius: "8px",
-                        overflow: "hidden",
-                        height: "44px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          background: "#E6E8EA",
-                          padding: "0 12px",
-                          fontFamily: "'Inter', sans-serif",
-                          fontWeight: 500,
-                          fontSize: "14px",
-                          color: "#4A4455",
-                          display: "flex",
-                          alignItems: "center",
-                          whiteSpace: "nowrap",
-                          flexShrink: 0,
-                        }}
-                      >
+                    <label className={labelCls}>No HP</label>
+                    <div className="flex h-11 overflow-hidden rounded-md">
+                      <span className="flex shrink-0 items-center whitespace-nowrap bg-[#E6E8EA] px-3 text-sm font-medium text-[#4A4455]">
                         {dialCode || "+62"}
                       </span>
                       <input
@@ -716,94 +516,53 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                         value={phone}
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
                         placeholder="-"
-                        style={{
-                          ...inputStyle,
-                          height: "100%",
-                          borderRadius: 0,
-                          flex: 1,
-                          minWidth: 0,
-                          color: phone ? "#191C1E" : "#94A3B8",
-                        }}
+                        className={`${inputBaseNoColor} h-full min-w-0 flex-1 rounded-none border-transparent ${
+                          phone ? "text-[#191C1E]" : "text-[#94A3B8]"
+                        }`}
                         title="Nomor kontak utama klien"
                       />
                     </div>
                   </div>
                   <div>
-                    <label style={labelStyle}>Email</label>
+                    <label className={labelCls}>Email</label>
                     <input
                       type="email"
                       value={email}
                       placeholder="contact@nusantara.com"
                       onChange={(e) => setEmail(e.target.value)}
-                      style={inputStyle}
+                      className={inputCls}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label style={labelStyle}>NPWP</label>
+                  <label className={labelCls}>NPWP</label>
                   <input
                     type="text"
                     value={npwp}
                     placeholder="00.000.000.0-000.000"
                     onChange={(e) => setNpwp(e.target.value)}
-                    style={{ ...inputStyle, height: "47px", fontSize: "16px" }}
+                    className="h-[47px] w-full rounded-md border-[1.5px] border-transparent bg-[#F2F4F6] px-4 py-3 font-sans text-base font-medium text-[#191C1E] outline-none transition-[border-color] duration-150"
                   />
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Alamat Rinci</label>
+                  <label className={labelCls}>Alamat Rinci</label>
                   <textarea
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     rows={3}
                     placeholder="Gedung Wisma Niaga, Lantai 12, Jl. Sudirman Kav 52-53"
-                    style={{
-                      ...inputStyle,
-                      height: "auto",
-                      minHeight: "96px",
-                      padding: "12px 16px",
-                      resize: "vertical",
-                      fontFamily: "'Inter', sans-serif",
-                    }}
+                    className={`${inputBase} h-auto min-h-24 resize-y rounded-md border-transparent`}
                   />
                 </div>
               </div>
 
-              <div style={{ borderTop: "1px solid #ECEEF0", paddingTop: "24px" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "24px",
-                    padding: "20px 24px",
-                    background: "#F2F4F6",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 700,
-                        fontSize: "14px",
-                        lineHeight: "20px",
-                        color: "#191C1E",
-                      }}
-                    >
-                      Status Akun
-                    </div>
-                    <div
-                      style={{
-                        marginTop: "4px",
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 400,
-                        fontSize: "12px",
-                        lineHeight: "16px",
-                        color: "#4A4455",
-                      }}
-                    >
+              <div className="border-t border-[#ECEEF0] pt-6">
+                <div className="flex items-center justify-between gap-6 rounded-md bg-[#F2F4F6] px-6 py-5">
+                  <div className="flex-1">
+                    <div className="text-sm font-bold leading-5 text-[#191C1E]">Status Akun</div>
+                    <div className="mt-1 text-xs font-normal leading-4 text-[#4A4455]">
                       Menonaktifkan akun akan segera memutuskan semua sesi aktif dan mencegah
                       pengguna masuk kembali ke sistem.
                     </div>
@@ -813,47 +572,21 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                     onClick={() => setIsActive((a) => !a)}
                     role="switch"
                     aria-checked={isActive}
-                    style={{
-                      width: "56px",
-                      height: "32px",
-                      borderRadius: "999px",
-                      border: "none",
-                      background: isActive ? "#630ED4" : "#CBD5E1",
-                      cursor: "pointer",
-                      position: "relative",
-                      transition: "background 0.2s",
-                      flexShrink: 0,
-                    }}
+                    className={`relative h-8 w-14 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] ${
+                      isActive ? "bg-[#630ED4]" : "bg-[#CBD5E1]"
+                    }`}
                   >
                     <span
-                      style={{
-                        position: "absolute",
-                        top: "4px",
-                        left: isActive ? "28px" : "4px",
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "50%",
-                        background: "#FFFFFF",
-                        transition: "left 0.2s",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                      }}
+                      className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ease-[ease] ${
+                        isActive ? "left-7" : "left-1"
+                      }`}
                     />
                   </button>
                 </div>
               </div>
 
               {submitError && (
-                <div
-                  style={{
-                    padding: "12px 16px",
-                    background: "#FEF2F2",
-                    borderLeft: "4px solid #DC2626",
-                    borderRadius: "8px",
-                    fontFamily: "'Inter', sans-serif",
-                    fontSize: "13px",
-                    color: "#7F1D1D",
-                  }}
-                >
+                <div className="rounded-md border-l-4 border-[#DC2626] bg-[#FEF2F2] px-4 py-3 text-[13px] text-[#7F1D1D]">
                   {submitError}
                 </div>
               )}
@@ -861,43 +594,13 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
           </div>
 
           {/* Contacts card */}
-          <div
-            style={{
-              background: "#FFFFFF",
-              borderRadius: "12px",
-              padding: "32px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "24px",
-            }}
-          >
-            <div
-              style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}
-            >
+          <div className="flex flex-col gap-6 rounded-lg bg-white p-8">
+            <div className="flex items-start justify-between">
               <div>
-                <h3
-                  style={{
-                    margin: 0,
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "20px",
-                    lineHeight: "28px",
-                    letterSpacing: "-0.5px",
-                    color: "#191C1E",
-                  }}
-                >
+                <h3 className="m-0 text-[20px] font-bold leading-7 tracking-[-0.5px] text-[#191C1E]">
                   Daftar Narahubung
                 </h3>
-                <p
-                  style={{
-                    margin: "4px 0 0 0",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 400,
-                    fontSize: "14px",
-                    lineHeight: "20px",
-                    color: "#4A4455",
-                  }}
-                >
+                <p className="m-0 mt-1 text-sm font-normal leading-5 text-[#4A4455]">
                   Kelola narahubung klien.
                 </p>
               </div>
@@ -905,21 +608,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                 <button
                   type="button"
                   onClick={() => setContactFormOpen(true)}
-                  style={{
-                    padding: "8px 16px",
-                    background: "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)",
-                    borderRadius: "8px",
-                    border: "none",
-                    cursor: "pointer",
-                    color: "#FFFFFF",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 600,
-                    fontSize: "13px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    flexShrink: 0,
-                  }}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-md px-4 py-2 text-[13px] font-semibold text-white ${gradientCls}`}
                 >
                   + Tambah Narahubung
                 </button>
@@ -927,74 +616,55 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
             </div>
 
             {contactList.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div className="flex flex-col gap-3">
                 {contactList.map((c) =>
                   editingContactId === c.id ? (
-                    <div
-                      key={c.id}
-                      style={{
-                        padding: "16px",
-                        background: "#F5F0FF",
-                        borderRadius: "8px",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "12px",
-                      }}
-                    >
-                      <div className="rgrid-2" style={{ display: "grid", gap: "12px" }}>
+                    <div key={c.id} className="flex flex-col gap-3 rounded-md bg-[#F5F0FF] p-4">
+                      <div className={`${grid2} gap-3`}>
                         <div>
-                          <label style={labelStyle}>
-                            Nama <span style={{ color: "#DC2626" }}>*</span>
+                          <label className={labelCls}>
+                            Nama <span className="text-[#DC2626]">*</span>
                           </label>
                           <input
                             type="text"
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
-                            style={inputStyle}
+                            className={inputCls}
                           />
                         </div>
                         <div>
-                          <label style={labelStyle}>Jabatan</label>
+                          <label className={labelCls}>Jabatan</label>
                           <input
                             type="text"
                             value={editTitle}
                             onChange={(e) => setEditTitle(e.target.value)}
-                            style={inputStyle}
+                            className={inputCls}
                           />
                         </div>
                         <div>
-                          <label style={labelStyle}>No HP</label>
+                          <label className={labelCls}>No HP</label>
                           <input
                             type="text"
                             value={editPhone}
                             onChange={(e) => setEditPhone(e.target.value.replace(/\D/g, ""))}
-                            style={inputStyle}
+                            className={inputCls}
                           />
                         </div>
                         <div>
-                          <label style={labelStyle}>Email</label>
+                          <label className={labelCls}>Email</label>
                           <input
                             type="email"
                             value={editEmail}
                             onChange={(e) => setEditEmail(e.target.value)}
-                            style={inputStyle}
+                            className={inputCls}
                           />
                         </div>
                       </div>
-                      <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                      <div className="flex justify-end gap-2">
                         <button
                           type="button"
                           onClick={() => setEditingContactId(null)}
-                          style={{
-                            padding: "8px 16px",
-                            background: "transparent",
-                            border: "none",
-                            cursor: "pointer",
-                            color: "#630ED4",
-                            fontFamily: "'Inter', sans-serif",
-                            fontWeight: 600,
-                            fontSize: "13px",
-                          }}
+                          className={contactCancelCls}
                         >
                           Batal
                         </button>
@@ -1017,19 +687,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                               { onSuccess: () => setEditingContactId(null) },
                             )
                           }}
-                          style={{
-                            padding: "8px 16px",
-                            background: editName.trim()
-                              ? "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)"
-                              : "#CBD5E1",
-                            borderRadius: "8px",
-                            border: "none",
-                            cursor: editName.trim() ? "pointer" : "default",
-                            color: "#FFFFFF",
-                            fontFamily: "'Inter', sans-serif",
-                            fontWeight: 600,
-                            fontSize: "13px",
-                          }}
+                          className={contactSaveCls(Boolean(editName.trim()))}
                         >
                           {updateContact.isPending ? "Menyimpan..." : "Simpan"}
                         </button>
@@ -1038,84 +696,35 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                   ) : (
                     <div
                       key={c.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "12px 16px",
-                        background: "#F2F4F6",
-                        borderRadius: "8px",
-                        gap: "16px",
-                      }}
+                      className="flex items-center justify-between gap-4 rounded-md bg-[#F2F4F6] px-4 py-3"
                     >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                          style={{
-                            fontFamily: "'Inter', sans-serif",
-                            fontWeight: 600,
-                            fontSize: "14px",
-                            color: "#191C1E",
-                          }}
-                        >
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-[#191C1E]">
                           {c.name}
                           {c.title && (
-                            <span
-                              style={{
-                                fontWeight: 400,
-                                fontSize: "12px",
-                                color: "#64748B",
-                                marginLeft: "8px",
-                              }}
-                            >
+                            <span className="ml-2 text-xs font-normal text-dark-500">
                               {c.title}
                             </span>
                           )}
                         </div>
                         {(c.phone || c.email) && (
-                          <div
-                            style={{
-                              fontFamily: "'Inter', sans-serif",
-                              fontSize: "12px",
-                              color: "#64748B",
-                              marginTop: "2px",
-                            }}
-                          >
+                          <div className="mt-0.5 text-xs text-dark-500">
                             {[c.phone, c.email].filter(Boolean).join(" · ")}
                           </div>
                         )}
                       </div>
-                      <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                      <div className="flex shrink-0 gap-2">
                         <button
                           type="button"
                           onClick={() => openEditContact(c)}
-                          style={{
-                            padding: "6px 12px",
-                            background: "transparent",
-                            border: "1.5px solid #630ED4",
-                            borderRadius: "6px",
-                            cursor: "pointer",
-                            color: "#630ED4",
-                            fontFamily: "'Inter', sans-serif",
-                            fontWeight: 600,
-                            fontSize: "12px",
-                          }}
+                          className="rounded-sm border-[1.5px] border-[#630ED4] px-3 py-1.5 text-xs font-semibold text-[#630ED4]"
                         >
                           Ubah
                         </button>
                         <button
                           type="button"
                           onClick={() => handleRemoveContact(c.id)}
-                          style={{
-                            padding: "6px 12px",
-                            background: "transparent",
-                            border: "1.5px solid #DC2626",
-                            borderRadius: "6px",
-                            cursor: "pointer",
-                            color: "#DC2626",
-                            fontFamily: "'Inter', sans-serif",
-                            fontWeight: 600,
-                            fontSize: "12px",
-                          }}
+                          className="rounded-sm border-[1.5px] border-[#DC2626] px-3 py-1.5 text-xs font-semibold text-[#DC2626]"
                         >
                           Hapus
                         </button>
@@ -1127,75 +736,53 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
             )}
 
             {contactFormOpen && (
-              <div
-                style={{
-                  padding: "16px",
-                  background: "#F5F0FF",
-                  borderRadius: "8px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                }}
-              >
-                <div className="rgrid-2" style={{ display: "grid", gap: "12px" }}>
+              <div className="flex flex-col gap-3 rounded-md bg-[#F5F0FF] p-4">
+                <div className={`${grid2} gap-3`}>
                   <div>
-                    <label style={labelStyle}>
-                      Nama <span style={{ color: "#DC2626" }}>*</span>
+                    <label className={labelCls}>
+                      Nama <span className="text-[#DC2626]">*</span>
                     </label>
                     <input
                       type="text"
                       value={newContactName}
                       onChange={(e) => setNewContactName(e.target.value)}
                       placeholder="Nama narahubung"
-                      style={inputStyle}
+                      className={inputCls}
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>Jabatan</label>
+                    <label className={labelCls}>Jabatan</label>
                     <input
                       type="text"
                       value={newContactTitle}
                       onChange={(e) => setNewContactTitle(e.target.value)}
                       placeholder="Jabatan"
-                      style={inputStyle}
+                      className={inputCls}
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>No HP</label>
+                    <label className={labelCls}>No HP</label>
                     <input
                       type="text"
                       value={newContactPhone}
                       onChange={(e) => setNewContactPhone(e.target.value.replace(/\D/g, ""))}
                       placeholder="-"
-                      style={inputStyle}
+                      className={inputCls}
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>Email</label>
+                    <label className={labelCls}>Email</label>
                     <input
                       type="email"
                       value={newContactEmail}
                       onChange={(e) => setNewContactEmail(e.target.value)}
                       placeholder="email@perusahaan.com"
-                      style={inputStyle}
+                      className={inputCls}
                     />
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-                  <button
-                    type="button"
-                    onClick={closeAddContactForm}
-                    style={{
-                      padding: "8px 16px",
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      color: "#630ED4",
-                      fontFamily: "'Inter', sans-serif",
-                      fontWeight: 600,
-                      fontSize: "13px",
-                    }}
-                  >
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={closeAddContactForm} className={contactCancelCls}>
                     Batal
                   </button>
                   <button
@@ -1216,19 +803,7 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
                         { onSuccess: closeAddContactForm },
                       )
                     }}
-                    style={{
-                      padding: "8px 16px",
-                      background: newContactName.trim()
-                        ? "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)"
-                        : "#CBD5E1",
-                      borderRadius: "8px",
-                      border: "none",
-                      cursor: newContactName.trim() ? "pointer" : "default",
-                      color: "#FFFFFF",
-                      fontFamily: "'Inter', sans-serif",
-                      fontWeight: 600,
-                      fontSize: "13px",
-                    }}
+                    className={contactSaveCls(Boolean(newContactName.trim()))}
                   >
                     {createContact.isPending ? "Menyimpan..." : "Simpan"}
                   </button>
@@ -1237,38 +812,22 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
             )}
 
             {contactList.length === 0 && !contactFormOpen && (
-              <div
-                style={{
-                  padding: "24px",
-                  textAlign: "center",
-                  fontFamily: "'Inter', sans-serif",
-                  fontSize: "14px",
-                  color: "#94A3B8",
-                }}
-              >
+              <div className="p-6 text-center text-sm text-[#94A3B8]">
                 Belum ada narahubung. Klik Tambah Narahubung untuk menambahkan.
               </div>
             )}
           </div>
 
-          <div
-            style={{ display: "flex", justifyContent: "flex-end", gap: "16px", marginTop: "8px" }}
-          >
+          <div className="mt-2 flex justify-end gap-4">
             <button
               type="button"
               onClick={handleCancel}
               disabled={!dirty || updateClient.isPending}
-              style={{
-                padding: "12px 28px",
-                borderRadius: "12px",
-                border: "none",
-                background: "transparent",
-                color: dirty && !updateClient.isPending ? "#630ED4" : "#CBD5E1",
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 700,
-                fontSize: "14px",
-                cursor: dirty && !updateClient.isPending ? "pointer" : "default",
-              }}
+              className={`rounded-lg bg-transparent px-7 py-3 text-sm font-bold ${
+                dirty && !updateClient.isPending
+                  ? "cursor-pointer text-[#630ED4]"
+                  : "cursor-default text-[#CBD5E1]"
+              }`}
             >
               Batal
             </button>
@@ -1276,21 +835,13 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
               type="button"
               onClick={handleSubmit}
               disabled={!dirty || updateClient.isPending}
-              style={{
-                padding: "12px 32px",
-                borderRadius: "12px",
-                border: "none",
-                background: dirty ? "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)" : "#CBD5E1",
-                boxShadow: dirty
-                  ? "0px 10px 15px -3px rgba(99, 14, 212, 0.2), 0px 4px 6px -4px rgba(99, 14, 212, 0.2)"
-                  : "none",
-                color: "#FFFFFF",
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 700,
-                fontSize: "14px",
-                cursor: dirty && !updateClient.isPending ? "pointer" : "default",
-                opacity: updateClient.isPending ? 0.7 : 1,
-              }}
+              className={`rounded-lg px-8 py-3 text-sm font-bold text-white ${
+                dirty
+                  ? `${gradientCls} shadow-[0px_10px_15px_-3px_rgba(99,14,212,0.2),0px_4px_6px_-4px_rgba(99,14,212,0.2)]`
+                  : "bg-[#CBD5E1] shadow-none"
+              } ${dirty && !updateClient.isPending ? "cursor-pointer" : "cursor-default"} ${
+                updateClient.isPending ? "opacity-70" : "opacity-100"
+              }`}
             >
               {updateClient.isPending ? "Menyimpan…" : "Simpan Perubahan"}
             </button>

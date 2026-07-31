@@ -127,56 +127,37 @@ export default function DashboardOperational({
           </div>
 
           <div className="tbl-container">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "20px 32px",
-                borderBottom: "1px solid #F1F5F9",
-                background: "rgba(242, 244, 246, 0.3)",
-              }}
-            >
-              <h3
-                style={{
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 700,
-                  fontSize: "18px",
-                  lineHeight: "28px",
-                  letterSpacing: "-0.45px",
-                  color: "#191C1E",
-                  margin: 0,
-                }}
-              >
+            <div className="flex items-center justify-between border-b border-[#F1F5F9] bg-[rgba(242,244,246,0.3)] px-8 py-5">
+              <h3 className="text-lg font-bold leading-7 tracking-[-0.45px] text-[#191C1E]">
                 Quotation Terkini
               </h3>
-              <button className="btn-admin-filter" onClick={onViewAllQuotations}>
+              <button type="button" className={ui.btnPrimary} onClick={onViewAllQuotations}>
                 Lihat Semua
               </button>
             </div>
 
-            <table className="tbl">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="tbl-header-row">
-                  <th className="tbl-th tbl-th--center" style={{ width: 150 }}>
+                <tr className={ui.theadRow}>
+                  <th className={ui.thCenter} style={{ width: 150 }}>
                     Nomor Quotation
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 80 }}>
+                  <th className={ui.thCenter} style={{ width: 80 }}>
                     Versi
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 200 }}>
+                  <th className={ui.thCenter} style={{ width: 200 }}>
                     Nama Klien
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
+                  <th className={ui.thCenter} style={{ width: 140 }}>
                     Tanggal
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 130 }}>
+                  <th className={ui.thCenter} style={{ width: 130 }}>
                     Jumlah Produk
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
+                  <th className={ui.thCenter} style={{ width: 160 }}>
                     Total Penawaran
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 130 }}>
+                  <th className={ui.thCenter} style={{ width: 130 }}>
                     Status
                   </th>
                 </tr>
@@ -184,11 +165,7 @@ export default function DashboardOperational({
               <tbody>
                 {recentQuotations.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={7} className="py-10 text-center text-sm text-dark-500">
                       Belum ada Quotation.
                     </td>
                   </tr>
@@ -198,38 +175,16 @@ export default function DashboardOperational({
                   return (
                     <tr
                       key={row.id}
-                      className="tbl-row"
-                      style={{ cursor: onViewQuotation ? "pointer" : "default" }}
+                      className={`${ui.tr} ${onViewQuotation ? "cursor-pointer" : "cursor-default"}`}
                       onClick={() => onViewQuotation?.(Number(row.id))}
                     >
-                      <td
-                        className="tbl-td tbl-td--center"
-                        style={{ fontWeight: 700, color: "#630ED4" }}
-                      >
-                        {row.displayNo}
-                      </td>
-                      <td className="tbl-td tbl-td--center" style={{ color: "#4A4455" }}>
-                        {row.version}
-                      </td>
-                      <td
-                        className="tbl-td tbl-td--center"
-                        style={{ color: "#191C1E", fontWeight: 500 }}
-                      >
-                        {row.client}
-                      </td>
-                      <td className="tbl-td tbl-td--center" style={{ color: "#4A4455" }}>
-                        {row.date}
-                      </td>
-                      <td className="tbl-td tbl-td--center" style={{ color: "#4A4455" }}>
-                        {row.productCount || "-"}
-                      </td>
-                      <td
-                        className="tbl-td tbl-td--center"
-                        style={{ fontWeight: 700, color: "#191C1E" }}
-                      >
-                        Rp{row.total}
-                      </td>
-                      <td className="tbl-td tbl-td--center">
+                      <td className={`${ui.tdCenter} font-bold text-[#630ED4]`}>{row.displayNo}</td>
+                      <td className={ui.tdCenter}>{row.version}</td>
+                      <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>{row.client}</td>
+                      <td className={ui.tdCenter}>{row.date}</td>
+                      <td className={ui.tdCenter}>{row.productCount || "-"}</td>
+                      <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>Rp{row.total}</td>
+                      <td className={ui.tdCenter}>
                         <StatusBadge bg={style.bg} color={style.color}>
                           {row.status}
                         </StatusBadge>

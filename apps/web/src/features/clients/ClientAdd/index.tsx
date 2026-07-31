@@ -1,5 +1,7 @@
 import { useState } from "react"
+import Modal from "@/components/shared/Modal"
 import { useCreateClient, useCreateContact } from "@/features/clients/hooks"
+import { ui } from "@/lib/ui"
 import CompanyCard from "./CompanyCard"
 import ContactCard from "./ContactCard"
 import {
@@ -92,81 +94,54 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
   }
 
   return (
-    <div className="ca-overlay" onClick={handleCancel}>
-      <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="ca-header">
-          <h2 className="ca-title">Tambah Klien</h2>
-          <button className="ca-close-btn" onClick={handleCancel} title="Tutup">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <line x1="1" y1="1" x2="13" y2="13" />
-              <line x1="13" y1="1" x2="1" y2="13" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="ca-body">
-          <CompanyCard
-            form={form}
-            onChange={handleChange}
-            isNamaPerusahaanFilled={isNamaPerusahaanFilled}
-            alamatError={alamatError}
-            negaraOpen={negaraOpen}
-            setNegaraOpen={(fn) => setNegaraOpen(fn)}
-            closeNegara={() => setNegaraOpen(false)}
-          />
-          <ContactCard
-            form={form}
-            onChange={handleChange}
-            isAlamatFilled={isAlamatFilled}
-            isNamaKontakFilled={isNamaKontakFilled}
-            phoneError={phoneError}
-            emailError={emailError}
-          />
-          <LegalCard form={form} onChange={handleChange} isNamaKontakFilled={isNamaKontakFilled} />
-        </div>
-
-        <div className="ca-footer" style={{ padding: "16px 24px" }}>
-          {submitError && (
-            <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>{submitError}</span>
-          )}
+    <Modal
+      title="Tambah Klien"
+      onClose={handleCancel}
+      footer={
+        <>
+          {submitError && <span className="flex-1 text-xs text-[#EF4444]">{submitError}</span>}
           {!submitError && isNamaKontakFilled && !isContactValid && (
-            <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>
+            <span className="flex-1 text-xs text-[#EF4444]">
               Isi minimal nomor telepon atau email.
             </span>
           )}
           <button
             type="button"
-            className="ca-btn-cancel"
+            className={ui.modalCancel}
             onClick={handleCancel}
             disabled={isSaving}
-            style={{ padding: "8px 18px", fontSize: "13px" }}
           >
             Batal
           </button>
           <button
             type="button"
-            className="ca-btn-submit"
+            className={ui.modalSubmit}
             onClick={handleSubmit}
             disabled={!isContactValid || isSaving}
-            style={{
-              padding: "8px 22px",
-              fontSize: "13px",
-              opacity: !isContactValid || isSaving ? 0.5 : 1,
-              cursor: !isContactValid || isSaving ? "not-allowed" : "pointer",
-            }}
           >
             {isSaving ? "Menyimpan..." : "Simpan Data"}
           </button>
-        </div>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <CompanyCard
+        form={form}
+        onChange={handleChange}
+        isNamaPerusahaanFilled={isNamaPerusahaanFilled}
+        alamatError={alamatError}
+        negaraOpen={negaraOpen}
+        setNegaraOpen={(fn) => setNegaraOpen(fn)}
+        closeNegara={() => setNegaraOpen(false)}
+      />
+      <ContactCard
+        form={form}
+        onChange={handleChange}
+        isAlamatFilled={isAlamatFilled}
+        isNamaKontakFilled={isNamaKontakFilled}
+        phoneError={phoneError}
+        emailError={emailError}
+      />
+      <LegalCard form={form} onChange={handleChange} isNamaKontakFilled={isNamaKontakFilled} />
+    </Modal>
   )
 }

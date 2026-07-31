@@ -1,4 +1,4 @@
-import { type CSSProperties, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
 import FilterButton from "@/components/shared/FilterButton"
 import Sidebar from "@/components/shared/Sidebar"
@@ -45,22 +45,6 @@ interface DashboardFinancialProps {
   onNavigate: (page: Page) => void
   onViewInvoice?: (quotationId: number) => void
   onViewAllInvoices?: () => void
-}
-
-const exportBtnStyle: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "8px",
-  padding: "8px 20px",
-  border: "1px solid rgba(99, 14, 212, 0.2)",
-  borderRadius: "8px",
-  background: "#FFFFFF",
-  cursor: "pointer",
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: 600,
-  fontSize: "14px",
-  lineHeight: 1.25,
-  color: "#630ED4",
 }
 
 function deriveStatus(inv: InvoiceBackendRow): InvoiceStatus | null {
@@ -161,7 +145,7 @@ export default function DashboardFinancial({
             <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
               <button
                 type="button"
-                style={exportBtnStyle}
+                className={`${ui.btnOutline} border-[rgba(99,14,212,0.2)] text-[#630ED4]`}
                 onClick={() => dashboardApi.exportXlsx(baseYear)}
               >
                 <svg
@@ -169,7 +153,7 @@ export default function DashboardFinancial({
                   height="16"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="#630ED4"
+                  stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -264,53 +248,34 @@ export default function DashboardFinancial({
 
           {/* Recent invoices */}
           <div className="tbl-container">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "20px 32px",
-                borderBottom: "1px solid #F1F5F9",
-                background: "rgba(242, 244, 246, 0.3)",
-              }}
-            >
-              <h3
-                style={{
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 700,
-                  fontSize: "18px",
-                  lineHeight: "28px",
-                  letterSpacing: "-0.45px",
-                  color: "#191C1E",
-                  margin: 0,
-                }}
-              >
+            <div className="flex items-center justify-between border-b border-[#F1F5F9] bg-[rgba(242,244,246,0.3)] px-8 py-5">
+              <h3 className="text-lg font-bold leading-7 tracking-[-0.45px] text-[#191C1E]">
                 Invoice Terkini
               </h3>
-              <button className="btn-admin-filter" onClick={onViewAllInvoices}>
+              <button type="button" className={ui.btnPrimary} onClick={onViewAllInvoices}>
                 Lihat Semua
               </button>
             </div>
 
-            <table className="tbl">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="tbl-header-row">
-                  <th className="tbl-th tbl-th--center" style={{ width: 150 }}>
+                <tr className={ui.theadRow}>
+                  <th className={ui.thCenter} style={{ width: 150 }}>
                     Nomor Invoice
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 200 }}>
+                  <th className={ui.thCenter} style={{ width: 200 }}>
                     Nama Klien
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
+                  <th className={ui.thCenter} style={{ width: 160 }}>
                     Tanggal Pembuatan
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
+                  <th className={ui.thCenter} style={{ width: 140 }}>
                     Jatuh Tempo
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
+                  <th className={ui.thCenter} style={{ width: 160 }}>
                     Total Tagihan
                   </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 130 }}>
+                  <th className={ui.thCenter} style={{ width: 130 }}>
                     Status
                   </th>
                 </tr>
@@ -318,11 +283,7 @@ export default function DashboardFinancial({
               <tbody>
                 {recentInvoices.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
+                    <td colSpan={6} className="py-10 text-center text-sm text-dark-500">
                       Belum ada Invoice.
                     </td>
                   </tr>
@@ -332,35 +293,15 @@ export default function DashboardFinancial({
                   return (
                     <tr
                       key={row.id}
-                      className="tbl-row"
-                      style={{ cursor: onViewInvoice ? "pointer" : "default" }}
+                      className={`${ui.tr} ${onViewInvoice ? "cursor-pointer" : "cursor-default"}`}
                       onClick={() => onViewInvoice?.(row.quotationId)}
                     >
-                      <td
-                        className="tbl-td tbl-td--center"
-                        style={{ fontWeight: 700, color: "#630ED4" }}
-                      >
-                        {row.invoiceNo}
-                      </td>
-                      <td
-                        className="tbl-td tbl-td--center"
-                        style={{ color: "#191C1E", fontWeight: 500 }}
-                      >
-                        {row.client}
-                      </td>
-                      <td className="tbl-td tbl-td--center" style={{ color: "#4A4455" }}>
-                        {formatDate(row.createdAt)}
-                      </td>
-                      <td className="tbl-td tbl-td--center" style={{ color: "#4A4455" }}>
-                        {formatDate(row.dueDate)}
-                      </td>
-                      <td
-                        className="tbl-td tbl-td--center"
-                        style={{ fontWeight: 700, color: "#191C1E" }}
-                      >
-                        {row.total}
-                      </td>
-                      <td className="tbl-td tbl-td--center">
+                      <td className={`${ui.tdCenter} font-bold text-[#630ED4]`}>{row.invoiceNo}</td>
+                      <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>{row.client}</td>
+                      <td className={ui.tdCenter}>{formatDate(row.createdAt)}</td>
+                      <td className={ui.tdCenter}>{formatDate(row.dueDate)}</td>
+                      <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>{row.total}</td>
+                      <td className={ui.tdCenter}>
                         <StatusBadge bg={style.bg} color={style.color}>
                           {INVOICE_LABEL[row.status]}
                         </StatusBadge>
