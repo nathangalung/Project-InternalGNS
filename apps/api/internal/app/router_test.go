@@ -8,11 +8,78 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/auth"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
+	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
+
+// Mint a valid bearer token for a role.
+func mintToken(t *testing.T, role string) string {
+	t.Helper()
+	now := time.Now()
+	claims := auth.Claims{
+		Role: users.Role(role),
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "internalgns-api",
+			Subject:   "1",
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour)),
+		},
+	}
+	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte("router-test-secret"))
+	require.NoError(t, err)
+	return signed
+}
+
+// Each role-gated mount enforces its policy at the router.
+func TestRouter_RBACPerMount(t *testing.T) {
+	r := mkRouter(t)
+	srv := httptest.NewServer(r)
+	t.Cleanup(srv.Close)
+
+	// allowed = expect any status except 403; denied = expect 403.
+	type policy struct{ superadmin, finance, operational bool }
+	subtrees := []struct {
+		path string
+		want policy
+	}{
+		{"/api/v1/quotations", policy{true, false, true}},
+		{"/api/v1/purchase-orders", policy{true, false, true}},
+		{"/api/v1/invoices", policy{true, true, false}},
+		{"/api/v1/users", policy{true, false, false}},
+	}
+	roles := []struct {
+		name    string
+		allowed func(policy) bool
+	}{
+		{"superadmin", func(p policy) bool { return p.superadmin }},
+		{"finance", func(p policy) bool { return p.finance }},
+		{"operational", func(p policy) bool { return p.operational }},
+	}
+	for _, st := range subtrees {
+		for _, role := range roles {
+			t.Run(st.path+"/"+role.name, func(t *testing.T) {
+				req, _ := http.NewRequest(http.MethodGet, srv.URL+st.path, nil)
+				req.Header.Set("Authorization", "Bearer "+mintToken(t, role.name))
+				res, err := srv.Client().Do(req)
+				require.NoError(t, err)
+				defer res.Body.Close()
+				if role.allowed(st.want) {
+					assert.NotEqual(t, http.StatusForbidden, res.StatusCode,
+						"%s should reach %s", role.name, st.path)
+				} else {
+					assert.Equal(t, http.StatusForbidden, res.StatusCode,
+						"%s must be forbidden on %s", role.name, st.path)
+				}
+			})
+		}
+	}
+}
 
 func mkRouter(t *testing.T) http.Handler {
 	t.Helper()

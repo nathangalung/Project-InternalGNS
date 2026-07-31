@@ -12,6 +12,22 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 )
 
+// Sets client IP from the last proxy hop.
+func trustedProxyIP(next http.Handler) http.Handler {
+	// Our single reverse proxy appends the real client to X-Forwarded-For,
+	// so the last hop is trustworthy. True-Client-IP, X-Real-IP, and earlier
+	// XFF entries are attacker-controlled and must not key the rate limiter.
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+			parts := strings.Split(xff, ",")
+			if last := strings.TrimSpace(parts[len(parts)-1]); last != "" {
+				r.RemoteAddr = last
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 // Propagate request id header.
 func requestIDResponseMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

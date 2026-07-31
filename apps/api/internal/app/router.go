@@ -29,7 +29,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(requestIDResponseMiddleware)
-	r.Use(middleware.RealIP)
+	r.Use(trustedProxyIP)
 	r.Use(accessLogMiddleware)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(30 * time.Second))
@@ -84,8 +84,10 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 			r.Mount("/clients", clients.Routes(d))
 			r.Mount("/items", items.Routes(d))
 			r.Mount("/vendors", vendors.Routes(d))
-			r.Mount("/quotations", quotations.Routes(d))
-			r.Mount("/purchase-orders", purchaseorders.Routes(d))
+			r.With(requireRole("superadmin", "operational")).
+				Mount("/quotations", quotations.Routes(d))
+			r.With(requireRole("superadmin", "operational")).
+				Mount("/purchase-orders", purchaseorders.Routes(d))
 			r.With(requireRole("superadmin", "finance")).
 				Mount("/invoices", invoices.Routes(d))
 			r.With(requireRole("superadmin")).

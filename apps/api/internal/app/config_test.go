@@ -2,6 +2,7 @@ package app
 
 import (
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -9,9 +10,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// A 40-byte placeholder that satisfies the length guard; not a real key.
+var testSecret = strings.Repeat("x", 40)
+
 func TestLoadConfig_HappyPath(t *testing.T) {
 	t.Setenv("DATABASE_URL", "postgres://test:test@localhost:5432/test?sslmode=disable")
-	t.Setenv("JWT_SECRET", "topsecret")
+	t.Setenv("JWT_SECRET", testSecret)
 	t.Setenv("JWT_EXPIRY", "12h")
 	t.Setenv("HTTP_ADDR", ":9999")
 	t.Setenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
@@ -20,14 +24,14 @@ func TestLoadConfig_HappyPath(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, ":9999", c.HTTPAddr)
-	assert.Equal(t, "topsecret", c.JWTSecret)
+	assert.Equal(t, testSecret, c.JWTSecret)
 	assert.Equal(t, 12*time.Hour, c.JWTExpiry)
 	assert.Equal(t, []string{"http://localhost:3000", "http://localhost:5173"}, c.CORSAllowedOrigins)
 }
 
 func TestLoadConfig_DefaultValues(t *testing.T) {
 	t.Setenv("DATABASE_URL", "postgres://test:test@localhost:5432/test?sslmode=disable")
-	t.Setenv("JWT_SECRET", "topsecret")
+	t.Setenv("JWT_SECRET", testSecret)
 
 	c, err := LoadConfig()
 	require.NoError(t, err)
@@ -47,8 +51,47 @@ func TestLoadConfig_MissingRequired(t *testing.T) {
 
 func TestLoadConfig_BadJWTExpiry(t *testing.T) {
 	t.Setenv("DATABASE_URL", "postgres://x")
-	t.Setenv("JWT_SECRET", "x")
+	t.Setenv("JWT_SECRET", testSecret)
 	t.Setenv("JWT_EXPIRY", "not-a-duration")
 	_, err := LoadConfig()
 	require.Error(t, err)
+}
+
+func TestLoadConfig_ShortJWTSecretRejected(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("JWT_SECRET", "too-short")
+	_, err := LoadConfig()
+	require.Error(t, err)
+}
+
+func TestLoadConfig_ProductionRejectsWeakDefaults(t *testing.T) {
+	base := func() {
+		t.Setenv("DATABASE_URL", "postgres://x")
+		t.Setenv("JWT_SECRET", testSecret)
+		t.Setenv("ENV", "production")
+	}
+
+	t.Run("empty superadmin password", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("wildcard CORS", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "*")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("valid production config", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		_, err := LoadConfig()
+		require.NoError(t, err)
+	})
 }

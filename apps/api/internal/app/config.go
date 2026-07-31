@@ -13,7 +13,7 @@ type Config struct {
 	Env                string        `env:"ENV"           envDefault:"development"`
 	HTTPAddr           string        `env:"HTTP_ADDR"     envDefault:":8080"`
 	DatabaseURL        string        `env:"DATABASE_URL,required"`
-	JWTSecret          string        `env:"JWT_SECRET,required"`
+	JWTSecret          string        `env:"JWT_SECRET,required,notEmpty"`
 	JWTExpiry          time.Duration `env:"JWT_EXPIRY"           envDefault:"24h"`
 	RefreshTokenExpiry time.Duration `env:"REFRESH_TOKEN_EXPIRY" envDefault:"720h"`
 
@@ -21,7 +21,7 @@ type Config struct {
 
 	SuperadminEmail    string `env:"SUPERADMIN_EMAIL"    envDefault:"admin@globalsakti.com"`
 	SuperadminName     string `env:"SUPERADMIN_NAME"     envDefault:"Administrator"`
-	SuperadminPassword string `env:"SUPERADMIN_PASSWORD" envDefault:"AdminGNS123!"`
+	SuperadminPassword string `env:"SUPERADMIN_PASSWORD"`
 
 	// Optional second superadmin. Seeded on boot only if EMAIL + PASSWORD
 	// are both non-empty; otherwise skipped silently. SeedSuperadmin is
@@ -60,5 +60,27 @@ func LoadConfig() (Config, error) {
 	if err := env.Parse(&c); err != nil {
 		return Config{}, err
 	}
+	if err := c.validate(); err != nil {
+		return Config{}, err
+	}
 	return c, nil
+}
+
+// validate rejects fail-open configuration.
+func (c Config) validate() error {
+	// A short HMAC key is trivially brute-forced; reject empty or weak keys.
+	if len(c.JWTSecret) < 32 {
+		return errors.New("JWT_SECRET must be at least 32 bytes")
+	}
+	if c.Env == "production" {
+		if c.SuperadminPassword == "" {
+			return errors.New("SUPERADMIN_PASSWORD is required in production")
+		}
+		for _, o := range c.CORSAllowedOrigins {
+			if o == "*" {
+				return errors.New("CORS_ALLOWED_ORIGINS must not be * in production")
+			}
+		}
+	}
+	return nil
 }
