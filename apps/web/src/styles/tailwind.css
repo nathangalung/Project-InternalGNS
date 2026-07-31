@@ -14,6 +14,20 @@
 @import "./admin.css" layer(legacy);
 @import "tailwindcss/utilities.css" layer(utilities);
 
+/* Preflight is off; supply the minimal control reset it would provide, in the
+   base layer so migrated (utility-styled) controls get it while legacy admin.css
+   classes — in a higher layer — keep overriding where they set their own. */
+@layer base {
+  button {
+    border: 0;
+    background-color: transparent;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    line-height: inherit;
+  }
+}
+
 @theme {
   /* Primary — purple (brand) */
   --color-primary-50: #f5f3ff;
