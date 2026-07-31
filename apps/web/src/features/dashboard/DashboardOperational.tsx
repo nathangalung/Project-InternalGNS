@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
 import FilterButton from "@/components/shared/FilterButton"
 import Sidebar from "@/components/shared/Sidebar"
+import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { toTableRow } from "@/features/quotations/adapters"
@@ -9,6 +10,7 @@ import { useQuotations } from "@/features/quotations/hooks"
 import { statusConfig } from "@/features/quotations/QuotationList/helpers"
 import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
 import { formatNumber as formatId } from "@/lib/format"
+import { pill, ui } from "@/lib/ui"
 import type { Page } from "@/lib/page"
 import DashboardFinancialFilter, {
   type DashboardFilterValues,
@@ -100,29 +102,20 @@ export default function DashboardOperational({
             />
           )}
 
-          <div className="stats-grid-3">
-            <div className="stat-card">
-              <div className="stat-label">Total Quotation</div>
-              <div className="stat-value">{formatId(totalQuotation)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Total Quotation Ditolak</div>
-              <div className="stat-value">{formatId(totalRejected)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Total Purchase Order</div>
-              <div className="stat-value">{formatId(totalPo)}</div>
-            </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard label="Total Quotation" value={formatId(totalQuotation)} />
+            <StatCard label="Total Quotation Ditolak" value={formatId(totalRejected)} />
+            <StatCard label="Total Purchase Order" value={formatId(totalPo)} />
           </div>
 
-          <div className="chart-section">
-            <div className="chart-header">
-              <h3 className="chart-title">Tren Performa Operasional</h3>
-              <div className="chart-tabs">
+          <div className={ui.panel}>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h3 className={ui.sectionTitle}>Tren Performa Operasional</h3>
+              <div className="flex flex-wrap gap-2">
                 {chartTabs.map((tab) => (
                   <button
                     key={tab.label}
-                    className={`chart-tab${activeTab === tab.label ? " chart-tab--active" : ""}`}
+                    className={pill(activeTab === tab.label)}
                     onClick={() => setActiveTab(tab.label)}
                   >
                     {tab.label}
