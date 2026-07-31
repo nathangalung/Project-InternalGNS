@@ -5,6 +5,11 @@ import { createRoot } from "react-dom/client"
 
 import { queryClient } from "@/lib/query-client"
 import { routeTree } from "./routeTree.gen"
+// Self-hosted Inter; no render-blocking external font request.
+import "@fontsource/inter/400.css"
+import "@fontsource/inter/500.css"
+import "@fontsource/inter/600.css"
+import "@fontsource/inter/700.css"
 import "./styles/tailwind.css"
 import "./styles/design-tokens.css"
 import "./styles/admin.css"
