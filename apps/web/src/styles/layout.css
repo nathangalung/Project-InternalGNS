@@ -1,0 +1,93 @@
+/*
+ * App layout scaffold. The only non-utility classes left after the tailwind
+ * migration: the admin shell/main split, page header/content/actions, the
+ * horizontally scrollable table container, and the native date-input reset
+ * (webkit pseudo-elements a utility class cannot reach). Values are unchanged
+ * from the retired admin.css; tokens come from design-tokens.css.
+ */
+
+.admin-shell {
+  display: flex;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--color-light);
+}
+
+.admin-main {
+  margin-left: 220px;
+  flex: 1;
+  min-width: 0;
+  height: 100dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  padding: clamp(var(--space-4), 4vw, var(--space-12));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  flex: 1;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page-title {
+  font-size: var(--text-h1);
+  line-height: var(--leading-h1);
+  font-weight: var(--font-bold);
+  color: var(--color-text);
+  letter-spacing: -0.025em;
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.tbl-container {
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Native date input: hide default indicator, keep whole field clickable. */
+.shared-date-input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+.shared-date-input::-webkit-inner-spin-button,
+.shared-date-input::-webkit-clear-button {
+  display: none;
+}
+
+/* Sidebar becomes a drawer; make room for the mobile topbar. */
+@media (max-width: 1023px) {
+  .admin-main {
+    margin-left: 0;
+    padding-top: 56px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+  .page-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}

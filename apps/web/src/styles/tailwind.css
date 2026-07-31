@@ -1,17 +1,17 @@
 /*
- * Tailwind v4 entry. Preflight stays off while legacy admin.css screens are
- * migrated (it relies on browser defaults); design-tokens.css already provides
- * the box-sizing/margin reset. @theme below is the single source of truth for
+ * Tailwind v4 entry. Preflight stays off (design-tokens.css already provides
+ * the box-sizing/margin reset and the app never depended on preflight); the
+ * base layer below re-adds the control reset. @theme below is the single source of truth for
  * the brand scale — utilities (bg-primary-600, text-dark-500, rounded-lg …)
  * and the emitted CSS variables both come from here.
  */
-@layer theme, base, legacy, utilities;
+@layer theme, base, layout, utilities;
 
 @import "tailwindcss/theme.css" layer(theme);
-/* Legacy stylesheets live below utilities so migrated components (which use
-   utilities) win over the old reset and classes during the migration. */
+/* Tokens in base; the layout scaffold sits below utilities so utility-styled
+   components always win. admin.css is fully retired. */
 @import "./design-tokens.css" layer(base);
-@import "./admin.css" layer(legacy);
+@import "./layout.css" layer(layout);
 @import "tailwindcss/utilities.css" layer(utilities);
 
 /* Preflight is off; supply the minimal control reset it would provide, in the
