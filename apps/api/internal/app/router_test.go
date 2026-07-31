@@ -111,6 +111,22 @@ func TestRouter_Healthz(t *testing.T) {
 	assert.Equal(t, "ok", body["status"])
 }
 
+func TestRouter_Readyz(t *testing.T) {
+	r := mkRouter(t)
+	srv := httptest.NewServer(r)
+	t.Cleanup(srv.Close)
+
+	res, err := srv.Client().Get(srv.URL + "/readyz")
+	require.NoError(t, err)
+	defer res.Body.Close()
+	// mkRouter wires a live pool, so readiness passes.
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+
+	var body map[string]string
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&body))
+	assert.Equal(t, "ready", body["status"])
+}
+
 func TestRouter_ProtectedRoutesRequireAuth(t *testing.T) {
 	r := mkRouter(t)
 	srv := httptest.NewServer(r)
