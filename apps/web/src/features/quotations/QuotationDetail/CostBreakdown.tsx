@@ -4,7 +4,8 @@ import { qe } from "../wizard-styles"
 interface CostBreakdownProps {
   hasProducts: boolean
   totalProduk: number
-  discountPct: number
+  // Omitted where the discount is per line and no single percent applies.
+  discountPct?: number
   nominalDiskon: number
   subTotal: number
   dppNilaiLain: number
@@ -22,7 +23,7 @@ const rowValue = "font-semibold text-[#111827]"
 export default function CostBreakdown({
   hasProducts,
   totalProduk,
-  discountPct,
+  discountPct = 0,
   nominalDiskon,
   subTotal,
   dppNilaiLain,
@@ -43,9 +44,9 @@ export default function CostBreakdown({
               <span className={rowValue}>{formatRp(totalProduk)}</span>
             </div>
           )}
-          {hasProducts && discountPct > 0 && (
+          {hasProducts && nominalDiskon > 0 && (
             <div className={row}>
-              <span>Diskon ({discountPct}%)</span>
+              <span>{discountPct > 0 ? `Diskon (${discountPct}%)` : "Diskon"}</span>
               <div className="flex items-center gap-2">
                 <span className="text-[#9CA3AF] line-through">{formatRp(totalProduk)}</span>
                 <span className="font-semibold text-[#10B981]">- {formatRp(nominalDiskon)}</span>

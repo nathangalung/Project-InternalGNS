@@ -1,7 +1,9 @@
--- Canonical current body of fn_create_invoice (deployed by migration 00039).
+-- Canonical current body of fn_create_invoice (deployed by migration 00042).
 -- Snapshots a delivered PO's items into a draft invoice. Line tax figures are
 -- rounded per line; the header tax figures are the SUM of those per-line values
 -- so the invoice matches what is filed with DJP per line via e-faktur.
+-- gross_unit_price and total_discount are snapshotted so the printed totals
+-- block satisfies TotalProduk - Diskon = DPP without reading the quotation.
 CREATE OR REPLACE FUNCTION fn_create_invoice(p_po_id BIGINT, p_user_id BIGINT)
 RETURNS BIGINT AS $$
 DECLARE
@@ -42,7 +44,7 @@ BEGIN
   INSERT INTO invoice_items (
     invoice_id, quotation_item_id, line_type, line_number,
     item_name, item_code, offered_item_id, unit_id, unit_code,
-    qty, unit_price, cost_price, ship_destination, goods_or_service,
+    qty, unit_price, gross_unit_price, cost_price, ship_destination, goods_or_service,
     dpp, dpp_nilai_lain, ppn_rate, ppn_amount,
     created_by, updated_by
   )
@@ -54,6 +56,7 @@ BEGIN
       WHEN pi.item_type = 'product' THEN pi.selling_price * (1 - pi.discount_pct / 100)
       ELSE pi.selling_price
     END,
+    pi.selling_price,
     pi.cost_price,
     pi.ship_destination,
     CASE pi.item_type WHEN 'shipping' THEN 'J' ELSE 'B' END,
@@ -78,6 +81,18 @@ BEGIN
     FROM invoice_items WHERE invoice_id = v_inv_id
   ) li
   WHERE inv.id = v_inv_id;
+
+  -- Realised discount = gross line amounts minus the net subtotals that make
+  -- up dpp. Read from purchase_order_items: invoice_items.unit_price is
+  -- already net, so the same difference there would be zero. Gross is rounded
+  -- per line, matching both the generated subtotal column and the per-line
+  -- Amount printed on the PDF, so shipping lines contribute exactly 0.
+  UPDATE invoices SET total_discount = (
+    SELECT COALESCE(SUM(ROUND(pi.qty * pi.selling_price, 2)) - SUM(pi.subtotal), 0)
+    FROM purchase_order_items pi
+    WHERE pi.po_id = p_po_id
+  )
+  WHERE id = v_inv_id;
 
   RETURN v_inv_id;
 END;

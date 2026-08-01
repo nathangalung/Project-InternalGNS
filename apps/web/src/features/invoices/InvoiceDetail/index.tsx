@@ -121,8 +121,9 @@ export default function InvoiceDetail({
   const totalProfit = products.reduce((s, p) => s + p.qty * p.profitSatuan, 0)
   const totalShip = shipping.hargaSatuan
   const hasProducts = products.length > 0
-  const discountPct = quotation.discountPct ?? 0
-  const nominalDiskon = (totalProduk * discountPct) / 100
+  // Discount is snapshotted on the invoice, so totalProduk (gross) minus it
+  // lands on the persisted DPP. The quotation may have moved on since.
+  const nominalDiskon = toNum(inv.totalDiscount)
   const subTotal = totalProduk - nominalDiskon
   // Prefer BE-persisted tax values; fall back to the shared computation.
   const fallback = computeTaxBreakdown({ subtotal: subTotal, shipping: totalShip })
@@ -224,7 +225,6 @@ export default function InvoiceDetail({
           <CostBreakdown
             hasProducts={hasProducts}
             totalProduk={totalProduk}
-            discountPct={discountPct}
             nominalDiskon={nominalDiskon}
             subTotal={subTotal}
             dppNilaiLain={dppNilaiLain}

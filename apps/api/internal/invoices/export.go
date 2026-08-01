@@ -62,7 +62,6 @@ type exportData struct {
 	Items           []exportItem
 	TotalProduk     string
 	Diskon          string
-	DiscountPct     string
 	DPP             string
 	DPPNilaiLain    string
 	PPN             string
@@ -116,16 +115,18 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 	client, _ := h.clients.GetByID(ctx, inv.CompanyClientID)
 
 	vessel := ""
-	diskon := ""
-	discountPct := ""
 	if q, err := h.quotations.GetDetail(ctx, inv.QuotationID); err == nil {
 		if q.VesselName != nil {
 			vessel = *q.VesselName
 		}
-		// Only set when numerically non-zero
-		if v, _ := strconv.ParseFloat(q.TotalDiscount, 64); v != 0 {
-			diskon = q.TotalDiscount
-			discountPct = q.DiscountPct
+	}
+
+	// Discount comes from the invoice snapshot, not the quotation: it is the
+	// realised per-line discount, so TotalProduk - Diskon = DPP by construction.
+	diskon := ""
+	if inv.TotalDiscount != nil {
+		if v, _ := strconv.ParseFloat(*inv.TotalDiscount, 64); v != 0 {
+			diskon = *inv.TotalDiscount
 		}
 	}
 
@@ -146,10 +147,18 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 		if it.UnitCode != nil {
 			unit = *it.UnitCode
 		}
-		amt := pdfgen.BigMul(it.Qty, it.UnitPrice)
+		// Print the gross price; the discount is a separate row. Historical
+		// rows predate the snapshot and fall back to the net unit price.
+		gross := it.UnitPrice
+		if it.GrossUnitPrice != nil {
+			gross = *it.GrossUnitPrice
+		}
+		amt := pdfgen.BigMul(it.Qty, gross)
+		// HARGA TOTAL spans every line, shipping included, so that
+		// TotalProduk - Diskon lands exactly on DPP.
+		totalProdukStr = pdfgen.BigAdd(totalProdukStr, amt)
 		if it.LineType == "product" {
 			productCount++
-			totalProdukStr = pdfgen.BigAdd(totalProdukStr, amt)
 		}
 		desc := ""
 		if it.ShipDestination != nil {
@@ -161,7 +170,7 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 			Unit:        pdfgen.LatexEscape(unit),
 			Name:        pdfgen.LatexEscape(it.ItemName),
 			Description: pdfgen.LatexEscape(desc),
-			UnitPrice:   pdfgen.FormatIDR(it.UnitPrice),
+			UnitPrice:   pdfgen.FormatIDR(gross),
 			Amount:      pdfgen.FormatIDR(amt),
 		})
 	}
@@ -189,7 +198,6 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 			}
 			return pdfgen.FormatIDR(diskon)
 		}(),
-		DiscountPct:     discountPct,
 		DPP:             pdfgen.FormatIDR(pdfgen.StrDeref(inv.Dpp)),
 		DPPNilaiLain:    pdfgen.FormatIDR(pdfgen.StrDeref(inv.DppNilaiLain)),
 		PPN:             pdfgen.FormatIDR(pdfgen.StrDeref(inv.PpnAmount)),

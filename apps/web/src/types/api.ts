@@ -505,6 +505,7 @@ export type InvoiceBackendRow = {
   invoiceDate: string
   dueDate?: string
   subtotal?: string
+  totalDiscount?: string
   dpp?: string
   dppNilaiLain?: string
   ppnAmount?: string
@@ -531,6 +532,7 @@ export type InvoiceItemRow = {
   unitCoretaxCode?: string
   qty: string
   unitPrice: string
+  grossUnitPrice?: string
   costPrice?: string
   dpp?: string
   dppNilaiLain?: string

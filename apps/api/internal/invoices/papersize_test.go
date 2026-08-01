@@ -78,6 +78,35 @@ func renderInvTexWithLog(t *testing.T, root string, data exportData) (pdf []byte
 	return pdf, latexLog
 }
 
+// The Diskon branch must reference only fields exportData still has.
+// TestExport_PDF_HappyPath tolerates a 500, so it cannot catch this.
+func TestInvoiceTemplateDiscountRow(t *testing.T) {
+	root, _ := filepath.Abs("../../templates/documents")
+	tmpl, err := template.New("Invoice.tex.tmpl").
+		Delims("[[", "]]").
+		Option("missingkey=error").
+		ParseFiles(filepath.Join(root, "invoice/Invoice.tex.tmpl"))
+	if err != nil {
+		t.Skipf("template not available: %v", err)
+	}
+	var buf bytes.Buffer
+	data := exportData{
+		Items:       []exportItem{makeInvItem(1)},
+		TotalProduk: "Rp 350.000",
+		Diskon:      "Rp 30.000",
+		DPP:         "Rp 320.000",
+	}
+	if err := tmpl.ExecuteTemplate(&buf, "Invoice.tex.tmpl", data); err != nil {
+		t.Fatalf("execute with discount: %v", err)
+	}
+	if !strings.Contains(buf.String(), "Diskon") {
+		t.Error("discount row missing")
+	}
+	if strings.Contains(buf.String(), `Diskon [[`) {
+		t.Error("unrendered field left in the discount row")
+	}
+}
+
 func TestInvoicePaperSize(t *testing.T) {
 	if _, err := exec.LookPath("xelatex"); err != nil {
 		t.Skip("xelatex not in PATH")
@@ -122,7 +151,6 @@ func TestInvoicePaperSize(t *testing.T) {
 				Items:           items,
 				TotalProduk:     "Rp 100.000",
 				Diskon:          "",
-				DiscountPct:     "0",
 				DPP:             "Rp 90.909",
 				DPPNilaiLain:    "Rp 9.091",
 				PPN:             "Rp 10.909",
