@@ -62,9 +62,16 @@ func FromDBErr(err error) Error {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		switch pgErr.Code {
-		case "P0001":
-			// Business-rule message raised intentionally by plpgsql; safe to surface.
+		case "P0001", "P0012", "P0014":
+			// Business-rule message raised intentionally by plpgsql; safe to
+			// surface. P0012 invalid transition and P0014 validation are the
+			// typed successors assigned by migration 00046.
 			return Unprocessable(map[string]string{"db": pgErr.Message})
+		case "P0011":
+			return NotFound(pgErr.Message)
+		case "P0013":
+			// Blocked by the state of a related record.
+			return Conflict(pgErr.Message)
 		case "23503":
 			return NotFound("referenced record does not exist")
 		case "23505":

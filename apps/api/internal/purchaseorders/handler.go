@@ -262,6 +262,10 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 		case errors.Is(err, ErrInvalidTransition):
 			httperr.Render(w, httperr.Unprocessable(map[string]string{"status": err.Error()}))
+		// 409, unlike the 422 UpdateItems returns for the same sentinel: here
+		// the PO itself is valid and a dependent invoice blocks the change.
+		case errors.Is(err, ErrLocked):
+			httperr.Render(w, httperr.Conflict(err.Error()))
 		default:
 			httperr.RenderDBErr(w, err)
 		}

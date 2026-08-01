@@ -2,14 +2,17 @@ package purchaseorders_test
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -118,6 +121,80 @@ func TestRepo_ChangeStatus_DeliveredStampsDeliveryNote(t *testing.T) {
 	// Reverting from DELIVERED is blocked once the invoice exists. The raise
 	// aborts the surrounding transaction, so the error itself is the assertion.
 	require.Error(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
+}
+
+// Migration 00046: the invoice guard raises P0013, so the caller learns the
+// real reason instead of the generic invalid-transition error 00035 collapsed
+// into. The raise aborts the transaction, so it is the last DB action here.
+func TestRepo_ChangeStatus_RevertBlockedByInvoiceReportsReason(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, poID := acceptedQuotationWithPO(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
+
+	err := repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, purchaseorders.ErrLocked)
+	assert.NotErrorIs(t, err, purchaseorders.ErrInvalidTransition)
+	assert.Contains(t, err.Error(), "has an invoice; cannot revert from DELIVERED")
+}
+
+// The DELIVERED edit lock shares P0013 with the invoice guard but keeps its
+// own 422: the handler matches ErrLocked before falling through to FromDBErr.
+func TestRepo_UpdateItems_DeliveredIsLocked(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, poID := acceptedQuotationWithPO(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
+
+	var rowVersion int32
+	require.NoError(t, tx.QueryRow(ctx,
+		`SELECT row_version FROM purchase_orders WHERE id = $1`, poID).Scan(&rowVersion))
+
+	_, err := repo.UpdateItems(ctx, poID, purchaseorders.UpdateItemsRequest{
+		DiscountPct: "0",
+		Items:       []purchaseorders.UpdateItemsLine{},
+	}, seedUserID, &rowVersion)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, purchaseorders.ErrLocked)
+	assert.Contains(t, err.Error(), "Cannot edit PO in DELIVERED state")
+}
+
+// Migration 00046: fn_update_po_items validation now raises the typed P0014
+// rather than the untyped P0001, and the handler's default branch still
+// renders 422 carrying the raise message.
+func TestRepo_UpdateItems_DiscountOutOfRangeIsUnprocessable(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, poID := acceptedQuotationWithPO(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+
+	var rowVersion int32
+	require.NoError(t, tx.QueryRow(ctx,
+		`SELECT row_version FROM purchase_orders WHERE id = $1`, poID).Scan(&rowVersion))
+
+	_, err := repo.UpdateItems(ctx, poID, purchaseorders.UpdateItemsRequest{
+		DiscountPct: "150",
+		Items:       []purchaseorders.UpdateItemsLine{},
+	}, seedUserID, &rowVersion)
+	require.Error(t, err)
+	assert.NotErrorIs(t, err, purchaseorders.ErrNotFound)
+	assert.NotErrorIs(t, err, purchaseorders.ErrLocked)
+	assert.NotErrorIs(t, err, purchaseorders.ErrVersionMismatch)
+
+	var pgErr *pgconn.PgError
+	require.ErrorAs(t, err, &pgErr)
+	assert.Equal(t, "P0014", pgErr.Code)
+
+	// The handler falls through to RenderDBErr, so FromDBErr is the contract.
+	e := httperr.FromDBErr(err)
+	assert.Equal(t, http.StatusUnprocessableEntity, e.Status)
+	assert.Equal(t, "discount_pct must be between 0 and 100", e.Fields["db"])
 }
 
 func TestRepo_ChangeStatus_DeliveredSnapshotsGoodsOrService(t *testing.T) {

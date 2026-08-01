@@ -172,16 +172,19 @@ func (r *Repo) ListItems(ctx context.Context, invoiceID int64) ([]InvoiceItem, e
 
 func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, actorID int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("invoices.change_status"), id, string(status), actorID)
-	return classifyChangeStatusErr(err)
+	return classifyPgErr(err)
 }
 
-// Map P0001 "not found" to ErrNotFound; other P0001 pass through for 422.
-func classifyChangeStatusErr(err error) error {
+// Single ERRCODE to domain error table for this slice.
+// Codes are assigned by migration 00046; P0012 invalid transitions and P0014
+// validation raises pass through so httperr renders them as 422 with the
+// raise message, which is what the invoice contract already returned.
+func classifyPgErr(err error) error {
 	if err == nil {
 		return nil
 	}
 	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == "P0001" && strings.Contains(pgErr.Message, "not found") {
+	if errors.As(err, &pgErr) && pgErr.Code == "P0011" {
 		return ErrNotFound
 	}
 	return err

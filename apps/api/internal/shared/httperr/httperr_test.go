@@ -68,6 +68,10 @@ func TestFromDBErr_SQLSTATE(t *testing.T) {
 		status int
 	}{
 		{"P0001", http.StatusUnprocessableEntity},
+		{"P0011", http.StatusNotFound},
+		{"P0012", http.StatusUnprocessableEntity},
+		{"P0013", http.StatusConflict},
+		{"P0014", http.StatusUnprocessableEntity},
 		{"23503", http.StatusNotFound},
 		{"23505", http.StatusConflict},
 		{"23502", http.StatusUnprocessableEntity},
@@ -82,6 +86,15 @@ func TestFromDBErr_SQLSTATE(t *testing.T) {
 			assert.Equal(t, tc.status, got.Status)
 		})
 	}
+}
+
+// Business-rule raises must keep their message; only opaque codes are curated.
+func TestFromDBErr_BusinessCodesKeepMessage(t *testing.T) {
+	got := FromDBErr(&pgconn.PgError{Code: "P0014", Message: "discount_pct must be between 0 and 100"})
+	assert.Equal(t, "discount_pct must be between 0 and 100", got.Fields["db"])
+
+	got = FromDBErr(&pgconn.PgError{Code: "P0013", Message: "PO 7 has an invoice; cannot revert from DELIVERED"})
+	assert.Equal(t, "PO 7 has an invoice; cannot revert from DELIVERED", got.Detail)
 }
 
 func TestFromDBErr_Fallback(t *testing.T) {

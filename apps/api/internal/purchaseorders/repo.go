@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -189,27 +190,38 @@ func (r *Repo) ListItems(ctx context.Context, poID int64) ([]PurchaseOrderItem, 
 
 func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, actorID int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("purchase_orders.change_status"), id, string(status), actorID)
-	return classifyChangeStatusErr(err)
+	return classifyPgErr(err)
 }
 
-// PG raise to domain errors.
-func classifyChangeStatusErr(err error) error {
+// Single ERRCODE to domain error table for this slice.
+// Codes are assigned by migration 00046; P0014 validation raises pass
+// through so httperr renders them as 422 with the raise message.
+func classifyPgErr(err error) error {
 	if err == nil {
 		return nil
 	}
 	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == "P0001" {
-		if strings.Contains(pgErr.Message, "not found") {
-			return ErrNotFound
-		}
+	if !errors.As(err, &pgErr) {
+		return err
+	}
+	switch pgErr.Code {
+	case "P0010":
+		return ErrVersionMismatch
+	case "P0011":
+		return ErrNotFound
+	case "P0012":
 		return ErrInvalidTransition
+	case "P0013":
+		// Wrapped so the caller can surface the real reason, which differs
+		// per guard (DELIVERED edit lock vs. existing invoice).
+		return fmt.Errorf("%w: %s", ErrLocked, pgErr.Message)
 	}
 	return err
 }
 
 // UpdateItems wholesale-replaces PO lines.
 // ifMatch nil skips optimistic-lock guard (legacy callers / tests).
-// Returns new row_version. Maps P0010 -> ErrVersionMismatch, P0011 -> ErrNotFound.
+// Returns new row_version; DB raises are mapped by classifyPgErr.
 func (r *Repo) UpdateItems(
 	ctx context.Context, id int64, req UpdateItemsRequest, actorID int64, ifMatch *int32,
 ) (int32, error) {
@@ -226,7 +238,7 @@ func (r *Repo) UpdateItems(
 		_, err = r.db.Exec(ctx, r.store.Get("purchase_orders.update_items"),
 			id, actorID, req.DiscountPct, req.Notes, req.ShippingAddress, req.ShippingDays, req.ShippingCost, payload)
 		if err != nil {
-			return 0, classifyUpdateItemsErr(err)
+			return 0, classifyPgErr(err)
 		}
 		var rv int32
 		if err = r.db.QueryRow(ctx, r.store.Get("purchase_orders.row_version"), id).Scan(&rv); err != nil {
@@ -241,34 +253,7 @@ func (r *Repo) UpdateItems(
 		req.ShippingAddress, req.ShippingDays, req.ShippingCost, payload,
 	).Scan(&newVersion)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) {
-			switch pgErr.Code {
-			case "P0010":
-				return 0, ErrVersionMismatch
-			case "P0011":
-				return 0, ErrNotFound
-			}
-		}
-		return 0, classifyUpdateItemsErr(err)
+		return 0, classifyPgErr(err)
 	}
 	return newVersion, nil
-}
-
-// Map P0001 to ErrNotFound/ErrLocked/passthrough.
-func classifyUpdateItemsErr(err error) error {
-	if err == nil {
-		return nil
-	}
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == "P0001" {
-		msg := pgErr.Message
-		switch {
-		case strings.Contains(msg, "not found"):
-			return ErrNotFound
-		case strings.Contains(msg, "DELIVERED"):
-			return ErrLocked
-		}
-	}
-	return err
 }
