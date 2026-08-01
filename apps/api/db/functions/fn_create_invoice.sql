@@ -4,8 +4,10 @@
 -- so the invoice matches what is filed with DJP per line via e-faktur.
 -- gross_unit_price and total_discount are snapshotted so the printed totals
 -- block satisfies TotalProduk - Diskon = DPP without reading the quotation.
-CREATE OR REPLACE FUNCTION fn_create_invoice(p_po_id BIGINT, p_user_id BIGINT)
-RETURNS BIGINT AS $$
+CREATE OR REPLACE FUNCTION public.fn_create_invoice(p_po_id bigint, p_user_id bigint)
+ RETURNS bigint
+ LANGUAGE plpgsql
+AS $function$
 DECLARE
   v_inv_id        BIGINT;
   v_inv_no        TEXT;
@@ -96,4 +98,4 @@ BEGIN
 
   RETURN v_inv_id;
 END;
-$$ LANGUAGE plpgsql;
+$function$

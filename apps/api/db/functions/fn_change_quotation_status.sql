@@ -2,8 +2,10 @@
 -- Validates the transition under a FOR UPDATE lock, blocks finalizing a
 -- quotation with unpriced products (ERRCODE P0100), records history, and
 -- creates the purchase order on acceptance.
-CREATE OR REPLACE FUNCTION fn_change_quotation_status(p_quotation_id BIGINT, p_new_status TEXT, p_user_id BIGINT, p_note TEXT DEFAULT NULL)
-RETURNS void AS $$
+CREATE OR REPLACE FUNCTION public.fn_change_quotation_status(p_quotation_id bigint, p_new_status text, p_user_id bigint, p_note text DEFAULT NULL::text)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
 DECLARE
   v_old_status VARCHAR(20);
   v_valid      BOOLEAN;
@@ -59,4 +61,4 @@ BEGIN
     PERFORM fn_create_purchase_order(p_quotation_id, p_user_id);
   END IF;
 END;
-$$ LANGUAGE plpgsql;
+$function$

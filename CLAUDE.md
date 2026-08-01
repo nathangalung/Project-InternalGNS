@@ -83,12 +83,18 @@ internal/
 db/
   migrations/       Goose SQL migrations
   queries/          Embedded, hand-written SQL parsed by Load()
+  functions/        Canonical current body of every plpgsql/sql function
   seeds/            Master and dev sample data
 ```
 
 Handlers stay thin; each feature owns its repo and DTOs. The API is mounted
 under `/api/v1`. Errors are RFC 7807 problem+json (`shared/httperr`). List
 endpoints return the total count in the `X-Total-Count` header.
+
+`db/functions` holds the current body of each database function, since a
+migration only records one edit. It is generated from the live DB and a test
+fails when it drifts; after a migration changes a function run
+`make db-functions-dump`.
 
 ## Frontend layout (`apps/web`)
 

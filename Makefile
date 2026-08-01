@@ -2,7 +2,7 @@
         db-up db-down db-logs db-shell \
         stack-up stack-down stack-logs ps reset \
         migrate migrate-up migrate-status migrate-down migrate-new \
-        seed seed-dev check-reconcile schema-dump db-erd \
+        seed seed-dev check-reconcile schema-dump db-erd db-functions-dump \
         api web dev \
         tidy sqlc \
         build build-api build-web \
@@ -118,6 +118,12 @@ check-reconcile: ## Run reconciliation / verification queries
 
 schema-dump: ## Dump current schema to docs/schema_current.sql
 	pg_dump --schema-only --no-owner "$(DATABASE_URL)" > docs/schema_current.sql
+
+# Canonical plpgsql bodies. The drift test is the enforcement; this only
+# refreshes the files after a migration changes a function.
+db-functions-dump: db-up ## Regenerate db/functions from the live DB
+	cd $(API_DIR) && DATABASE_URL="$(DATABASE_URL)" GNS_UPDATE_FUNCTIONS=1 \
+	  go test ./db/functions -run TestFunctionBodiesMatchDatabase -count=1
 
 db-erd: db-up ## Regenerate docs/erd from the live dev DB (requires tbls)
 	@command -v tbls >/dev/null 2>&1 || { \
