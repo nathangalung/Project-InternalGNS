@@ -71,6 +71,16 @@ JOIN vendors v ON v.id = ins.vendor_id;
 -- name: items.search
 SELECT * FROM fn_search_items($1, $2, $3);
 
+-- name: items.active_flags_by_ids
+-- Advanced-search enrichment: real is_active plus catalog identity per merged
+-- hit. fn_search_items only returns active items, but the vendor-offer and
+-- request-history layers can surface a deactivated item (and carry no name),
+-- so we backfill name/impa/unit for hits those layers produced.
+-- $1=item ids
+SELECT id, is_active, name, impa_code, default_unit_id
+FROM items
+WHERE id = ANY($1);
+
 -- name: items.match_request
 SELECT * FROM fn_match_request($1, $2);
 

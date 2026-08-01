@@ -191,6 +191,13 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 	}
 	limit := paginate.ParseLimit(r, 20)
 
+	var onlyActive *bool
+	if s := r.URL.Query().Get("isActive"); s != "" {
+		if v, err := strconv.ParseBool(s); err == nil {
+			onlyActive = &v
+		}
+	}
+
 	ctx := r.Context()
 	perTier := limit * 2
 
@@ -219,7 +226,16 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := mergeAdvanced(q, items, offers, requests, limit)
+	// fn_search_items filters to active items, but the vendor-offer and
+	// request-history layers do not, so read the real flag and catalog identity
+	// per candidate (those layers carry no item name).
+	meta, err := h.repo.ItemMetaByIDs(ctx, candidateItemIDs(items, offers, requests))
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+
+	resp := mergeAdvanced(q, items, offers, requests, meta, onlyActive, limit)
 	httpx.WriteJSON(w, http.StatusOK, resp)
 }
 

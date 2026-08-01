@@ -35,7 +35,34 @@ func classifyItem(t string) string {
 	}
 }
 
-func mergeAdvanced(q string, items []SearchResult, offers []VendorOfferHit, requests []RequestHistoryHit, limit int) AdvancedSearchResponse {
+// candidateItemIDs collects every distinct item id the three layers produced.
+func candidateItemIDs(items []SearchResult, offers []VendorOfferHit, requests []RequestHistoryHit) []int64 {
+	seen := map[int64]struct{}{}
+	out := make([]int64, 0, len(items)+len(offers)+len(requests))
+	add := func(id int64) {
+		if _, ok := seen[id]; ok {
+			return
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	for _, it := range items {
+		add(it.ID)
+	}
+	for _, o := range offers {
+		add(o.ItemID)
+	}
+	for _, rq := range requests {
+		add(rq.ItemID)
+	}
+	return out
+}
+
+// mergeAdvanced dedups the three search layers into tier-ranked hits.
+// meta carries the real is_active and catalog identity per item id; onlyActive,
+// when set, keeps just the hits matching it. Both are applied before the limit
+// and the counts so hits, total and counts stay consistent.
+func mergeAdvanced(q string, items []SearchResult, offers []VendorOfferHit, requests []RequestHistoryHit, meta map[int64]ItemMeta, onlyActive *bool, limit int) AdvancedSearchResponse {
 	hits := map[int64]*AdvancedSearchHit{}
 	counts := map[string]int{}
 
@@ -92,6 +119,25 @@ func mergeAdvanced(q string, items []SearchResult, offers []VendorOfferHit, requ
 
 	out := make([]AdvancedSearchHit, 0, len(hits))
 	for _, h := range hits {
+		// A missing id means the item row is gone; treat it as inactive so a
+		// stale vendor-offer or request-history hit never claims to be active.
+		m := meta[h.ID]
+		h.IsActive = m.Active
+		// The item loop only enriches fuzzy/suggested/auto hits, so a
+		// vendor-offer- or history-only hit reaches here nameless; backfill its
+		// catalog identity from meta.
+		if h.Name == "" {
+			h.Name = m.Name
+			if h.IMPACode == nil {
+				h.IMPACode = m.IMPACode
+			}
+			if h.DefaultUnitID == nil {
+				h.DefaultUnitID = m.DefaultUnitID
+			}
+		}
+		if onlyActive != nil && h.IsActive != *onlyActive {
+			continue
+		}
 		out = append(out, *h)
 	}
 	sort.SliceStable(out, func(i, j int) bool {

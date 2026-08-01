@@ -136,6 +136,35 @@ func TestHandler_SearchAdvanced(t *testing.T) {
 	}
 }
 
+// isActive on a search hit must be the catalog value, so it has to agree with
+// what GET /items/{id} reports for the same item.
+func TestHandler_SearchAdvanced_IsActiveMatchesCatalog(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodGet, "/items/search-advanced?q=bearing&limit=5", nil)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+
+	// Decode raw so a missing isActive key is caught, not defaulted to false.
+	var body struct {
+		Hits []map[string]any `json:"hits"`
+	}
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&body))
+	require.NotEmpty(t, body.Hits, "seed data must produce at least one hit")
+
+	for _, hit := range body.Hits {
+		require.Contains(t, hit, "isActive", "hit must expose isActive")
+		id := int64(hit["id"].(float64))
+
+		one := doJSON(t, srv, http.MethodGet, "/items/"+strconv.FormatInt(id, 10), nil)
+		var item items.Item
+		require.NoError(t, json.NewDecoder(one.Body).Decode(&item))
+		one.Body.Close()
+
+		assert.Equal(t, item.IsActive, hit["isActive"],
+			"item %d: search says isActive=%v, catalog says %v", id, hit["isActive"], item.IsActive)
+	}
+}
+
 func TestHandler_SearchAdvanced_MissingQ(t *testing.T) {
 	srv := newSrv(t)
 	res := doJSON(t, srv, http.MethodGet, "/items/search-advanced", nil)

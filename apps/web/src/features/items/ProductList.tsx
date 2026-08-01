@@ -68,7 +68,10 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
   const filterInactive = filters.status === "inactive"
   const filterIsActive = filterActive ? true : filterInactive ? false : undefined
 
-  const { data: listData, isLoading: itemsLoading } = useItems(listParams)
+  // Skipped while searching: the search layer supplies the rows instead.
+  const { data: listData, isLoading: itemsLoading } = useItems(listParams, {
+    enabled: !isSearchActive,
+  })
   const { data: searchData, isFetching: searchLoading } = useItemSearchAdvanced(debouncedSearch, {
     minScore: 0.3,
     limit: 100,
@@ -90,14 +93,13 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
 
   const searchRows: ItemRow[] = useMemo(() => {
     if (!isSearchActive) return []
-    const rowIsActive = !filterInactive
     let rows: ItemRow[] = searchHits.map((h) => ({
       id: h.id,
       name: h.name,
       impaCode: h.impaCode,
       defaultUnitId: h.defaultUnitId,
       description: undefined,
-      isActive: rowIsActive,
+      isActive: h.isActive,
       createdAt: "",
       updatedAt: "",
     }))
@@ -106,7 +108,7 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
       if (targetId !== undefined) rows = rows.filter((it) => it.defaultUnitId === targetId)
     }
     return rows
-  }, [isSearchActive, searchHits, filterInactive, filters.unitCode, unitIdByCode])
+  }, [isSearchActive, searchHits, filters.unitCode, unitIdByCode])
 
   const serverRows = listData?.rows ?? []
   const totalItems = isSearchActive ? searchRows.length : (listData?.total ?? 0)

@@ -119,6 +119,7 @@ export type AdvancedSearchHit = {
   name: string
   impaCode?: string
   defaultUnitId?: number
+  isActive: boolean
   score: number
   tier: AdvancedSearchTier
   tiers: AdvancedSearchTier[]

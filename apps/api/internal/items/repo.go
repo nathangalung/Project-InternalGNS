@@ -164,6 +164,39 @@ func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int
 	return pgx.CollectRows(rows, pgx.RowToStructByName[SearchResult])
 }
 
+// ItemMeta is the real catalog identity for a merged search hit, used to set
+// the true is_active flag and to backfill name/impa/unit for hits that came
+// only from the vendor-offer or request-history layers.
+type ItemMeta struct {
+	Active        bool
+	Name          string
+	IMPACode      *string
+	DefaultUnitID *int16
+}
+
+// ItemMetaByIDs maps item id to its catalog identity. Ids with no row are
+// absent from the map (treated as inactive by the caller).
+func (r *Repo) ItemMetaByIDs(ctx context.Context, ids []int64) (map[int64]ItemMeta, error) {
+	out := map[int64]ItemMeta{}
+	if len(ids) == 0 {
+		return out, nil
+	}
+	rows, err := r.db.Query(ctx, r.store.Get("items.active_flags_by_ids"), ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int64
+		var m ItemMeta
+		if err := rows.Scan(&id, &m.Active, &m.Name, &m.IMPACode, &m.DefaultUnitID); err != nil {
+			return nil, err
+		}
+		out[id] = m
+	}
+	return out, rows.Err()
+}
+
 func (r *Repo) MatchRequest(ctx context.Context, reqText string, limit int) ([]MatchResult, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("items.match_request"), reqText, limit)
 	if err != nil {

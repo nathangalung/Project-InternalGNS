@@ -27,6 +27,12 @@ const STATUS_TO_EFFECTIVE: Record<InvoiceStatus, string> = {
   TERLAMBAT: "overdue",
 }
 
+// Every displayable status. Sent when no explicit status filter is set so the
+// server excludes cancelled invoices and X-Total-Count matches the rows shown.
+// Never map a status to "cancelled" above: it would re-admit cancelled rows
+// here and desync the pagination denominator again.
+const ALL_EFFECTIVE_STATUSES = Object.values(STATUS_TO_EFFECTIVE).join(",")
+
 function rupiahToDigits(s: string): string {
   return s.replace(/\D/g, "")
 }
@@ -43,9 +49,9 @@ function parseRupiahNumber(s: string | undefined): number {
   return Number.isFinite(n) ? n : 0
 }
 
-// Backend status, overdue from due.
-function deriveStatus(inv: InvoiceBackendRow): InvoiceStatus | null {
-  if (inv.status === "cancelled") return null
+// Backend status, overdue from due. Cancelled invoices never reach here: the
+// list query always sends effectiveStatus, which has no cancelled clause.
+function deriveStatus(inv: InvoiceBackendRow): InvoiceStatus {
   if (inv.status === "paid") return "DIBAYAR"
   if (inv.status === "overdue") return "TERLAMBAT"
   const base: InvoiceStatus = inv.status === "sent" ? "DIKIRIM" : "DRAF"
@@ -56,9 +62,7 @@ function deriveStatus(inv: InvoiceBackendRow): InvoiceStatus | null {
   return base
 }
 
-function rowFromBackend(inv: InvoiceBackendRow): InvoiceRow | null {
-  const status = deriveStatus(inv)
-  if (!status) return null
+function rowFromBackend(inv: InvoiceBackendRow): InvoiceRow {
   const totalNumber = parseRupiahNumber(inv.total ?? inv.subtotal)
   return {
     id: inv.id,
@@ -69,7 +73,7 @@ function rowFromBackend(inv: InvoiceBackendRow): InvoiceRow | null {
     dueDate: inv.dueDate ?? inv.invoiceDate,
     total: formatRupiah(totalNumber),
     totalNumber,
-    status,
+    status: deriveStatus(inv),
   }
 }
 
@@ -92,6 +96,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
       offset: (currentPage - 1) * itemsPerPage,
       sortBy: "createdAt",
       sortDir: "desc",
+      effectiveStatus: ALL_EFFECTIVE_STATUSES,
     }
     if (!activeFilters) return out
     if (activeFilters.statuses.length > 0) {
@@ -122,7 +127,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
   const { data: summaryData } = useInvoiceSummary()
 
   const currentRows: InvoiceRow[] = useMemo(() => {
-    return (rawList?.rows ?? []).map(rowFromBackend).filter((r): r is InvoiceRow => r !== null)
+    return (rawList?.rows ?? []).map(rowFromBackend)
   }, [rawList])
 
   const totalItems = rawList?.total ?? 0

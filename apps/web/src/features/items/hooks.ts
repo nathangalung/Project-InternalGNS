@@ -12,10 +12,14 @@ import { uploadToPresignedUrl } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
 
-export function useItems(params: itemsApi.ItemListParams = {}) {
+export function useItems(
+  params: itemsApi.ItemListParams = {},
+  options: { enabled?: boolean } = {},
+) {
   return useQuery({
     queryKey: queryKeys.items.list(params),
     queryFn: () => itemsApi.list(params),
+    enabled: options.enabled ?? true,
     placeholderData: keepPreviousData,
   })
 }

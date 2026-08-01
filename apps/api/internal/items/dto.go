@@ -167,6 +167,7 @@ type AdvancedSearchHit struct {
 	Name          string   `json:"name"`
 	IMPACode      *string  `json:"impaCode,omitempty"`
 	DefaultUnitID *int16   `json:"defaultUnitId,omitempty"`
+	IsActive      bool     `json:"isActive"` // real catalog flag, not derived from the filter
 	Score         float32  `json:"score"`
 	Tier          string   `json:"tier"`  // ITEM_AUTO | VENDOR_OFFER | ITEM_SUGGESTED | REQUEST_HISTORY | ITEM_FUZZY
 	Tiers         []string `json:"tiers"` // all tiers that contributed to this hit
