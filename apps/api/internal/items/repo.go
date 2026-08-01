@@ -3,13 +3,12 @@ package items
 import (
 	"context"
 	"errors"
-	"strconv"
-	"strings"
 
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 )
 
 type Repo struct {
@@ -28,60 +27,47 @@ func (r *Repo) WithExec(exec db.Executor) *Repo {
 
 var ErrNotFound = errors.New("not found")
 
+// sortable is the closed set of item sort keys.
+var sortable = listq.Whitelist{
+	Default: "name",
+	Columns: map[string]listq.Column{
+		"name":       {Expr: "name", Dir: listq.Asc},
+		"createdAt":  {Expr: "created_at", Dir: listq.Desc},
+		"created_at": {Expr: "created_at", Dir: listq.Desc},
+		"impaCode":   {Expr: "impa_code", Dir: listq.Asc},
+		"impa_code":  {Expr: "impa_code", Dir: listq.Asc},
+	},
+}
+
+// tiebreak keeps paging stable when the sort key ties.
+var tiebreak = listq.Column{Expr: "id", Dir: listq.Desc}
+
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
-	args := []any{}
-	addArg := func(v any) string {
-		args = append(args, v)
-		return "$" + strconv.Itoa(len(args))
-	}
-	where := strings.Builder{}
+	c := listq.New()
 	if f.Q != "" {
-		p := addArg("%" + f.Q + "%")
-		where.WriteString(" AND (name ILIKE " + p + " OR impa_code ILIKE " + p + ")")
+		p := c.Arg("%" + f.Q + "%")
+		c.And("(name ILIKE " + p + " OR impa_code ILIKE " + p + ")")
 	}
 	if f.IsActive != nil {
-		p := addArg(*f.IsActive)
-		where.WriteString(" AND is_active = " + p)
+		p := c.Arg(*f.IsActive)
+		c.And("is_active = " + p)
 	}
 	if f.UnitID != nil {
-		p := addArg(*f.UnitID)
-		where.WriteString(" AND default_unit_id = " + p)
+		p := c.Arg(*f.UnitID)
+		c.And("default_unit_id = " + p)
 	}
 
 	var out ListResult
-	countSQL := r.store.Get("items.list_count_base") + where.String()
-	if err := r.db.QueryRow(ctx, countSQL, args...).Scan(&out.Total); err != nil {
+	countSQL, countArgs := c.Count(r.store.Get("items.list_count_base"))
+	if err := r.db.QueryRow(ctx, countSQL, countArgs...).Scan(&out.Total); err != nil {
 		return out, err
 	}
 
-	sortBy := "name"
-	switch f.SortBy {
-	case "createdAt", "created_at":
-		sortBy = "created_at"
-	case "impaCode", "impa_code":
-		sortBy = "impa_code"
-	}
-	sortDir := "ASC"
-	if strings.EqualFold(f.SortDir, "desc") {
-		sortDir = "DESC"
-	}
-
-	dataArgs := append([]any{}, args...)
-	dataAdd := func(v any) string {
-		dataArgs = append(dataArgs, v)
-		return "$" + strconv.Itoa(len(dataArgs))
-	}
-	limit := f.Limit
-	if limit <= 0 {
-		limit = 50
-	}
-	if limit > 200 {
-		limit = 200
-	}
-	dataSQL := r.store.Get("items.list_base") +
-		where.String() +
-		" ORDER BY " + sortBy + " " + sortDir +
-		" LIMIT " + dataAdd(limit) + " OFFSET " + dataAdd(f.Offset)
+	dataSQL, dataArgs := c.Data(
+		r.store.Get("items.list_base"),
+		listq.OrderBy(sortable, f.SortBy, f.SortDir, tiebreak),
+		listq.Page(f.Limit, f.Offset),
+	)
 
 	rows, err := r.db.Query(ctx, dataSQL, dataArgs...)
 	if err != nil {

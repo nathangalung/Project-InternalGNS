@@ -256,3 +256,49 @@ func TestRepo_Summary(t *testing.T) {
 	assert.GreaterOrEqual(t, s.NewThisYear, int64(0))
 	assert.GreaterOrEqual(t, s.PrevYearTotal, int64(0))
 }
+
+// Count and data queries must agree under the same filter.
+func TestRepo_List_CountAgreesWithData(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := clients.NewRepo(tx, testutil.Store(t))
+
+	active := true
+	f := clients.ListFilter{
+		Q: "PT", IsActive: &active, CountryCode: "IDN", MinTotal: ptr("0"), Limit: 200,
+	}
+	res, err := repo.List(ctx, f)
+	require.NoError(t, err)
+	require.Positive(t, res.Total, "filter matched nothing, test proves nothing")
+	require.Less(t, res.Total, int64(200), "seed too large for a single page")
+	assert.Equal(t, res.Total, int64(len(res.Rows)),
+		"count query and data query disagree under the same filter")
+}
+
+// Paging must not repeat or drop a row when the sort key ties.
+func TestRepo_List_PagingIsStableOnTiedSortKey(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := clients.NewRepo(tx, testutil.Store(t))
+
+	// Nearly every seeded client has zero quotations, so this sort key ties
+	// across the whole table and only the id tiebreaker orders it.
+	const pageSize = 5
+	const pages = 8
+
+	f := clients.ListFilter{SortBy: "quotationCount", Limit: 1}
+	head, err := repo.List(ctx, f)
+	require.NoError(t, err)
+	require.Greater(t, head.Total, int64(pageSize*pages), "seed too small for this test")
+
+	seen := map[int64]bool{}
+	for page := range pages {
+		f.Limit, f.Offset = pageSize, page*pageSize
+		got, err := repo.List(ctx, f)
+		require.NoError(t, err)
+		require.Len(t, got.Rows, pageSize)
+		for _, row := range got.Rows {
+			require.False(t, seen[row.ID], "client %d repeated across pages", row.ID)
+			seen[row.ID] = true
+		}
+	}
+	assert.Len(t, seen, pageSize*pages, "paging dropped rows")
+}

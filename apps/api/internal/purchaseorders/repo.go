@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -14,6 +12,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 )
 
 var (
@@ -33,77 +32,62 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 	return &Repo{db: exec, store: store}
 }
 
+// sortable is the closed set of PO sort keys.
+var sortable = listq.Whitelist{
+	Default: "po_date",
+	Columns: map[string]listq.Column{
+		"poDate":     {Expr: "po.po_date", Dir: listq.Desc},
+		"po_date":    {Expr: "po.po_date", Dir: listq.Desc},
+		"createdAt":  {Expr: "po.created_at", Dir: listq.Desc},
+		"created_at": {Expr: "po.created_at", Dir: listq.Desc},
+		"total":      {Expr: "COALESCE(q.grand_total, 0)", Dir: listq.Desc},
+		"poNumber":   {Expr: "po.po_number", Dir: listq.Desc},
+		"po_number":  {Expr: "po.po_number", Dir: listq.Desc},
+	},
+}
+
+// tiebreak keeps paging stable when the sort key ties.
+var tiebreak = listq.Column{Expr: "po.id", Dir: listq.Desc}
+
 // List returns POs with filter/sort and total count.
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
-	args := []any{}
-	addArg := func(v any) string {
-		args = append(args, v)
-		return "$" + strconv.Itoa(len(args))
-	}
-	where := strings.Builder{}
+	c := listq.New()
 	if f.Q != "" {
-		p := addArg("%" + f.Q + "%")
-		where.WriteString(" AND (po.po_number ILIKE " + p + " OR q.quotation_no ILIKE " + p + " OR cc.name ILIKE " + p + ")")
+		p := c.Arg("%" + f.Q + "%")
+		c.And("(po.po_number ILIKE " + p + " OR q.quotation_no ILIKE " + p + " OR cc.name ILIKE " + p + ")")
 	}
 	if len(f.Statuses) > 0 {
-		p := addArg(f.Statuses)
-		where.WriteString(" AND po.status = ANY(" + p + ")")
+		p := c.Arg(f.Statuses)
+		c.And("po.status = ANY(" + p + ")")
 	}
 	if f.DateFrom != nil {
-		p := addArg(*f.DateFrom)
-		where.WriteString(" AND po.po_date >= " + p)
+		p := c.Arg(*f.DateFrom)
+		c.And("po.po_date >= " + p)
 	}
 	if f.DateTo != nil {
-		p := addArg(*f.DateTo)
-		where.WriteString(" AND po.po_date <= " + p)
+		p := c.Arg(*f.DateTo)
+		c.And("po.po_date <= " + p)
 	}
 	if f.MinTotal != nil {
-		p := addArg(*f.MinTotal)
-		where.WriteString(" AND COALESCE(q.grand_total, 0) >= " + p + "::numeric")
+		p := c.Arg(*f.MinTotal)
+		c.And("COALESCE(q.grand_total, 0) >= " + p + "::numeric")
 	}
 	if f.MaxTotal != nil {
-		p := addArg(*f.MaxTotal)
-		where.WriteString(" AND COALESCE(q.grand_total, 0) <= " + p + "::numeric")
+		p := c.Arg(*f.MaxTotal)
+		c.And("COALESCE(q.grand_total, 0) <= " + p + "::numeric")
 	}
 
 	var out ListResult
-	countSQL := r.store.Get("purchase_orders.list_count_base") + where.String()
-	if err := r.db.QueryRow(ctx, countSQL, args...).Scan(&out.Total); err != nil {
+	countSQL, countArgs := c.Count(r.store.Get("purchase_orders.list_count_base"))
+	if err := r.db.QueryRow(ctx, countSQL, countArgs...).Scan(&out.Total); err != nil {
 		return out, err
 	}
 
-	sortBy := "po.po_date"
-	switch f.SortBy {
-	case "poDate", "po_date":
-		sortBy = "po.po_date"
-	case "createdAt", "created_at":
-		sortBy = "po.created_at"
-	case "total":
-		sortBy = "COALESCE(q.grand_total, 0)"
-	case "poNumber", "po_number":
-		sortBy = "po.po_number"
-	}
-	sortDir := "DESC"
-	if strings.EqualFold(f.SortDir, "asc") {
-		sortDir = "ASC"
-	}
-
-	dataArgs := append([]any{}, args...)
-	dataAdd := func(v any) string {
-		dataArgs = append(dataArgs, v)
-		return "$" + strconv.Itoa(len(dataArgs))
-	}
-	limit := f.Limit
-	if limit <= 0 {
-		limit = 50
-	}
-	if limit > 200 {
-		limit = 200
-	}
-	dataSQL := r.store.Get("purchase_orders.list_base") +
-		where.String() +
-		" ORDER BY " + sortBy + " " + sortDir + ", po.id DESC" +
-		" LIMIT " + dataAdd(limit) + " OFFSET " + dataAdd(f.Offset)
+	dataSQL, dataArgs := c.Data(
+		r.store.Get("purchase_orders.list_base"),
+		listq.OrderBy(sortable, f.SortBy, f.SortDir, tiebreak),
+		listq.Page(f.Limit, f.Offset),
+	)
 
 	rows, err := r.db.Query(ctx, dataSQL, dataArgs...)
 	if err != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"strconv"
 	"strings"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 )
 
 var (
@@ -108,61 +108,46 @@ func (r *Repo) Create(ctx context.Context, req CreateUserRequest, actorID int64)
 	return pgx.CollectOneRow(rows, pgx.RowToStructByName[User])
 }
 
+// sortable is the closed set of user sort keys.
+var sortable = listq.Whitelist{
+	Default: "created_at",
+	Columns: map[string]listq.Column{
+		"name":       {Expr: "name", Dir: listq.Asc},
+		"createdAt":  {Expr: "created_at", Dir: listq.Desc},
+		"created_at": {Expr: "created_at", Dir: listq.Desc},
+	},
+}
+
+// tiebreak keeps paging stable when the sort key ties.
+var tiebreak = listq.Column{Expr: "id", Dir: listq.Desc}
+
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
-	args := []any{}
-	addArg := func(v any) string {
-		args = append(args, v)
-		return "$" + strconv.Itoa(len(args))
-	}
-	where := strings.Builder{}
+	c := listq.New()
 	if f.Q != "" {
-		p := addArg("%" + f.Q + "%")
-		where.WriteString(" AND (LOWER(name) LIKE LOWER(" + p +
+		p := c.Arg("%" + f.Q + "%")
+		c.And("(LOWER(name) LIKE LOWER(" + p +
 			") OR LOWER(email) LIKE LOWER(" + p + "))")
 	}
 	if f.Role != nil {
-		p := addArg(*f.Role)
-		where.WriteString(" AND role = " + p)
+		p := c.Arg(*f.Role)
+		c.And("role = " + p)
 	}
 	if f.IsActive != nil {
-		p := addArg(*f.IsActive)
-		where.WriteString(" AND is_active = " + p)
+		p := c.Arg(*f.IsActive)
+		c.And("is_active = " + p)
 	}
 
 	var out ListResult
-	countSQL := r.store.Get("users.list_count_base") + where.String()
-	if err := r.db.QueryRow(ctx, countSQL, args...).Scan(&out.Total); err != nil {
+	countSQL, countArgs := c.Count(r.store.Get("users.list_count_base"))
+	if err := r.db.QueryRow(ctx, countSQL, countArgs...).Scan(&out.Total); err != nil {
 		return out, err
 	}
 
-	sortBy := "created_at"
-	switch f.SortBy {
-	case "name":
-		sortBy = "name"
-	case "createdAt", "created_at":
-		sortBy = "created_at"
-	}
-	sortDir := "DESC"
-	if strings.EqualFold(f.SortDir, "asc") {
-		sortDir = "ASC"
-	}
-
-	dataArgs := append([]any{}, args...)
-	dataAdd := func(v any) string {
-		dataArgs = append(dataArgs, v)
-		return "$" + strconv.Itoa(len(dataArgs))
-	}
-	limit := f.Limit
-	if limit <= 0 {
-		limit = 50
-	}
-	if limit > 200 {
-		limit = 200
-	}
-	dataSQL := r.store.Get("users.list_base") +
-		where.String() +
-		" ORDER BY " + sortBy + " " + sortDir + ", id DESC" +
-		" LIMIT " + dataAdd(limit) + " OFFSET " + dataAdd(f.Offset)
+	dataSQL, dataArgs := c.Data(
+		r.store.Get("users.list_base"),
+		listq.OrderBy(sortable, f.SortBy, f.SortDir, tiebreak),
+		listq.Page(f.Limit, f.Offset),
+	)
 
 	rows, err := r.db.Query(ctx, dataSQL, dataArgs...)
 	if err != nil {
