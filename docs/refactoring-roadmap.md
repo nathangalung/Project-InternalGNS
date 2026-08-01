@@ -28,7 +28,10 @@ answer to its question.** Numbers are audit finding IDs.
 ### Phase 1 — tax & legal correctness (highest stakes)
 - **#1 (CRITICAL)** exports silently truncate at 200 rows, incl. the DJP
   coretax bulk workbook. Fix bundles with the coretax N+1 and a per-route
-  timeout (Phase 2). Filings change size/content → sign-off.
+  timeout (Phase 2). Filings change size/content → sign-off. *Partial mitigation
+  shipped: all four export paths now emit a truncation Warn log
+  (`httpx.WarnIfTruncated`), so a period filed incomplete is no longer silent —
+  the actual unbounded fix still needs sign-off.*
 - **#2 (CRITICAL)** invoice PDF totals block prints a false arithmetic
   identity (post-00021 discount subtracted twice; shipping line excluded).
   Blocked on **Q2** (should the invoice show a discount line at all?).
@@ -59,9 +62,14 @@ answer to its question.** Numbers are audit finding IDs.
 Safe in principle, deferred because they touch central wiring or need manual
 browser QA, not because they change behavior.
 
-- **#17** widen the DI seam (`Deps.Pool` has no `Begin`) so a slice can open a
-  transaction; rewrite the non-atomic 500-row item import. **The structural
-  spine — every backend error-contract fix depends on it.** (L)
+- **#17a** widen the DI seam (`Deps.Pool` has no `Begin`) so a slice *can* open
+  a transaction — additive plumbing, nothing calls it yet, behavior-preserving.
+  **The structural spine — every backend error-contract fix and #12 depend on
+  it.** (S/M, safe)
+- **#17b** rewrite the 500-row item import (`MatchRows`) as one transaction.
+  Behavior-change: today a mid-loop failure persists the already-created items
+  and a retry duplicates them; after, nothing persists. Better, but a changed
+  failure-path workflow → **sign-off**. Depends on #17a.
 - **#131** `NewHandler(repo, storage)` so a missing dep is a compile error;
   construct shared repos once in `app.NewRouter` instead of each slice building
   its siblings. (M)
