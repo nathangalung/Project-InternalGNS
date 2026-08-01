@@ -126,18 +126,16 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
     return (clientsData?.rows ?? []).map(fromClientRow)
   }, [debouncedSearch, searchHits, clientsData])
 
-  const baseClients: Client[] = remoteClients
-  const sortedClients = [...baseClients].sort((a, b) => a.name.localeCompare(b.name, "id"))
-  const filteredClients =
-    trimmedSearch && remoteClients.length === 0
-      ? sortedClients.filter(
-          (c) =>
-            c.name.toLowerCase().includes(trimmedSearch.toLowerCase()) ||
-            c.narahubung.toLowerCase().includes(trimmedSearch.toLowerCase()),
-        )
-      : sortedClients.slice(0, 10)
+  // Sorted once per client set. The old search-filter branch was dead: it only
+  // ran when remoteClients was empty, so it always produced [] — identical to
+  // slicing an empty array.
+  const sortedClients = useMemo(
+    () => [...remoteClients].sort((a, b) => a.name.localeCompare(b.name, "id")),
+    [remoteClients],
+  )
+  const filteredClients = sortedClients.slice(0, 10)
 
-  const currentClient = baseClients.find((c) => c.id === selectedClient)
+  const currentClient = remoteClients.find((c) => c.id === selectedClient)
 
   const unitNameById = useMemo(() => {
     const m = new Map<number, string>()
