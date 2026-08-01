@@ -33,12 +33,14 @@ answer to its question.** Numbers are audit finding IDs.
 - **Remaining:** #6 PO shipping_days (data loss), #7 overdue boundary + consolidation. Low-priority: rewrite the manual `db/checks/01_verify_advanced.sql` B.3 (asserts the pre-00039 header formula, misleads).
 
 ### Phase 1 — tax & legal correctness (highest stakes)
-- **#1 (CRITICAL)** exports silently truncate at 200 rows, incl. the DJP
-  coretax bulk workbook. Fix bundles with the coretax N+1 and a per-route
-  timeout (Phase 2). Filings change size/content → sign-off. *Partial mitigation
-  shipped: all four export paths now emit a truncation Warn log
-  (`httpx.WarnIfTruncated`), so a period filed incomplete is no longer silent —
-  the actual unbounded fix still needs sign-off.*
+- **DONE #1 (CRITICAL)** (`ef89e5f`): exports are unbounded. Once `listq` owned
+  the clamp, exports got an explicit `listq.Unbounded` window (no LIMIT clause)
+  rather than a bigger sentinel; the thrice-declared `exportMaxRows` is gone and
+  `httpx.WarnIfTruncated` remains as a canary. **Coretax filings now contain
+  every matching invoice — periods over 200 invoices were previously filed
+  incomplete.** Remaining from the Phase 2 bundle, worth doing when convenient:
+  the coretax N+1 (`invoices.list_items_bulk`), a per-route export timeout, and
+  streaming the workbook instead of buffering it.
 - **#2 (CRITICAL)** invoice PDF totals block prints a false arithmetic
   identity (post-00021 discount subtracted twice; shipping line excluded).
   Blocked on **Q2** (should the invoice show a discount line at all?).
