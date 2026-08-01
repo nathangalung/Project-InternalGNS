@@ -115,6 +115,14 @@ Server state is TanStack Query; `lib/api-client.ts` attaches the JWT and maps
 errors. `types/api.ts` is the effective API contract, since `openapi.yaml` only
 documents part of the surface.
 
+The app shell lives in the layout route. `routes/_authed.tsx` renders
+`.admin-shell` with the `Sidebar` and `.admin-main` around the `Outlet`, so page
+components render only their own content and take no navigation props. `Sidebar`
+derives its active section from the router via `sectionFromPathname` (which
+covers detail and edit routes) and calls `logout` itself. Navigate with
+`useNavigate` or `Link` against the generated route tree; the old `lib/page.ts`
+string union and its `page-nav.ts` switch are gone and must not come back.
+
 List screens share one state machine, `lib/useListScreen.ts`: search with
 debounce, filters, page, per-page, and the reset-to-page-1 invariant. Note which
 mutator resets the page — `setSearch`, `applyFilters` and `setItemsPerPage` do,
