@@ -60,9 +60,10 @@ func main() {
 
 	<-ctx.Done()
 	logger.Info("shutting down")
-	// Drain budget must exceed the 30s handler timeout and stay under the
-	// compose stop_grace_period (45s). See docker-compose.yml api service.
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
+	// Drain budget must exceed the longest handler timeout (60s, the export
+	// and PDF routes) and stay under the compose stop_grace_period (80s).
+	// See docker-compose.yml api service and app/middleware.go.
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 70*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		logger.Error("shutdown", "err", err)

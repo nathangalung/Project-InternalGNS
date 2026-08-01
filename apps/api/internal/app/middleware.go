@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -74,6 +75,43 @@ func accessLogMiddleware(next http.Handler) http.Handler {
 		}
 		slog.LogAttrs(r.Context(), level, "http_request", attrs...)
 	})
+}
+
+// Request budgets. See the shutdown chain comment in cmd/api/main.go:
+// grace (80s) > drain (70s) > longest handler (60s), and the server's
+// WriteTimeout (90s) sits above all of them so the handler deadline is what
+// fires, rendering 503 + Retry-After instead of a severed connection.
+const (
+	defaultRequestTimeout = 30 * time.Second
+	// Workbook and PDF renders get a longer budget: pdfgen already reserves
+	// 45s for xelatex, which the 30s default silently cut short, and the
+	// coretax export is unbounded in row count.
+	renderRequestTimeout = 60 * time.Second
+)
+
+// requestTimeout applies a per-request deadline, longer for export and render
+// routes. Nesting a second chi Timeout inside a subtree cannot do this: nested
+// contexts take the minimum, so the choice has to be made once, up front.
+func requestTimeout(def, render time.Duration) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			d := def
+			if isRenderRoute(r.URL.Path) {
+				d = render
+			}
+			ctx, cancel := context.WithTimeout(r.Context(), d)
+			defer cancel()
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+// isRenderRoute reports whether a path is one of the workbook or PDF routes.
+// TestRouter_RenderRoutesClassified pins this against the mounted route table.
+func isRenderRoute(path string) bool {
+	return strings.HasSuffix(path, ".xlsx") ||
+		strings.HasSuffix(path, ".pdf") ||
+		strings.HasSuffix(path, "/pdf")
 }
 
 // Set nosniff on every response.

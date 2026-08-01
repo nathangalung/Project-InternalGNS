@@ -65,28 +65,45 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 	}
 	httpx.WarnIfTruncated(r.Context(), "invoices.coretax_export", res.Total, len(res.Rows))
 
-	invs := make([]Invoice, 0, len(res.Rows))
-	itemsByID := make(map[int64][]InvoiceItem, len(res.Rows))
-	clientsByID := make(map[int64]clients.Client)
+	// Two bulk reads, not two per invoice: the export is unbounded, so a
+	// per-invoice round-trip would scale the whole request with the result set.
+	invoiceIDs := make([]int64, 0, len(res.Rows))
 	for _, inv := range res.Rows {
-		items, err := h.repo.ListItems(r.Context(), inv.ID)
-		if err != nil {
-			httperr.RenderDBErr(w, err)
-			return
-		}
-		if len(items) == 0 {
+		invoiceIDs = append(invoiceIDs, inv.ID)
+	}
+	itemsByID, err := h.repo.ListItemsBulk(r.Context(), invoiceIDs)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+
+	// Filter first, so a line-less invoice still never triggers a client read.
+	invs := make([]Invoice, 0, len(res.Rows))
+	clientIDs := make([]int64, 0, len(res.Rows))
+	seenClient := make(map[int64]struct{}, len(res.Rows))
+	for _, inv := range res.Rows {
+		if len(itemsByID[inv.ID]) == 0 {
 			continue // skip invoices with no lines
 		}
-		if _, ok := clientsByID[inv.CompanyClientID]; !ok {
-			c, err := h.clients.GetByID(r.Context(), inv.CompanyClientID)
-			if err != nil {
-				httperr.RenderDBErr(w, err)
-				return
-			}
-			clientsByID[inv.CompanyClientID] = c
+		if _, ok := seenClient[inv.CompanyClientID]; !ok {
+			seenClient[inv.CompanyClientID] = struct{}{}
+			clientIDs = append(clientIDs, inv.CompanyClientID)
 		}
 		invs = append(invs, inv)
-		itemsByID[inv.ID] = items
+	}
+
+	clientsByID, err := h.clients.GetByIDs(r.Context(), clientIDs)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	// A bulk read returns fewer rows where GetByID returned ErrNotFound; keep
+	// the old hard failure instead of exporting a blank buyer.
+	for _, id := range clientIDs {
+		if _, ok := clientsByID[id]; !ok {
+			httperr.RenderDBErr(w, clients.ErrNotFound)
+			return
+		}
 	}
 
 	tmpl, err := os.ReadFile(filepath.Join(h.templatesRoot, coretaxTemplateRel))

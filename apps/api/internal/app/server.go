@@ -84,7 +84,9 @@ func NewServer(ctx context.Context, cfg Config) (*http.Server, error) {
 		Handler:           r,
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,
-		WriteTimeout:      60 * time.Second,
-		IdleTimeout:       120 * time.Second,
+		// Above renderRequestTimeout (60s) so the handler deadline fires first
+		// and renders 503 + Retry-After, instead of the connection being cut.
+		WriteTimeout: 90 * time.Second,
+		IdleTimeout:  120 * time.Second,
 	}, nil
 }

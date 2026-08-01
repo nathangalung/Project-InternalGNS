@@ -75,10 +75,11 @@ services:
     depends_on:
       gns-postgres: { condition: service_healthy }
       gns-minio:    { condition: service_healthy }
-    # Graceful-shutdown budget: grace (45s) > server drain (35s) > handler
-    # timeout (30s). Without this, Docker's 10s default SIGKILLs in-flight
-    # requests before drain finishes on every redeploy.
-    stop_grace_period: 45s
+    # Graceful-shutdown budget: grace (80s) > server drain (70s) > longest
+    # handler timeout (60s, the export and PDF routes; 30s elsewhere). Without
+    # this, Docker's 10s default SIGKILLs in-flight requests before drain
+    # finishes on every redeploy.
+    stop_grace_period: 80s
     healthcheck:
       test: ["CMD", "/app/api", "--healthcheck"]
       interval: 15s

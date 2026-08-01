@@ -103,6 +103,27 @@ func (r *Repo) GetByID(ctx context.Context, id int64) (Client, error) {
 	return c, err
 }
 
+// GetByIDs maps client id to client in one round-trip. Ids with no row are
+// absent from the map; callers decide whether that is an error.
+func (r *Repo) GetByIDs(ctx context.Context, ids []int64) (map[int64]Client, error) {
+	out := map[int64]Client{}
+	if len(ids) == 0 {
+		return out, nil
+	}
+	rows, err := r.db.Query(ctx, r.store.Get("clients.get_by_ids"), ids)
+	if err != nil {
+		return nil, err
+	}
+	found, err := pgx.CollectRows(rows, pgx.RowToStructByName[Client])
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range found {
+		out[c.ID] = c
+	}
+	return out, nil
+}
+
 // Create inserts a new client.
 func (r *Repo) Create(ctx context.Context, req CreateClientRequest, userID int64) (Client, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("clients.create"),

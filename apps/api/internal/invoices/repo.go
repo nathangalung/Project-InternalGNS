@@ -156,6 +156,28 @@ func (r *Repo) ListItems(ctx context.Context, invoiceID int64) ([]InvoiceItem, e
 	return pgx.CollectRows(rows, pgx.RowToStructByName[InvoiceItem])
 }
 
+// ListItemsBulk groups the line items of many invoices in one round-trip.
+// Invoices with no lines are absent from the map, matching what ListItems
+// returns empty for.
+func (r *Repo) ListItemsBulk(ctx context.Context, ids []int64) (map[int64][]InvoiceItem, error) {
+	out := map[int64][]InvoiceItem{}
+	if len(ids) == 0 {
+		return out, nil
+	}
+	rows, err := r.db.Query(ctx, r.store.Get("invoices.list_items_bulk"), ids)
+	if err != nil {
+		return nil, err
+	}
+	items, err := pgx.CollectRows(rows, pgx.RowToStructByName[InvoiceItem])
+	if err != nil {
+		return nil, err
+	}
+	for _, it := range items {
+		out[it.InvoiceID] = append(out[it.InvoiceID], it)
+	}
+	return out, nil
+}
+
 func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, actorID int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("invoices.change_status"), id, string(status), actorID)
 	return classifyPgErr(err)

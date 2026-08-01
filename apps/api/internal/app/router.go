@@ -33,7 +33,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 	r.Use(trustedProxyIP)
 	r.Use(accessLogMiddleware)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(30 * time.Second))
+	r.Use(requestTimeout(defaultRequestTimeout, renderRequestTimeout))
 	r.Use(securityHeadersMiddleware)
 	r.Use(bodyLimitMiddleware(2 * 1024 * 1024))
 

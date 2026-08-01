@@ -5,13 +5,16 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"testing"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/auth"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
@@ -261,4 +264,43 @@ func TestNewServer_HappyPath(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, srv)
 	assert.Equal(t, ":0", srv.Addr)
+}
+
+// The long request budget covers exactly the workbook and PDF routes.
+func TestRouter_RenderRoutesClassified(t *testing.T) {
+	store, err := queries.Load()
+	require.NoError(t, err)
+	cfg := Config{
+		Env:           "test",
+		HTTPAddr:      ":0",
+		JWTSecret:     "render-route-secret",
+		JWTExpiry:     time.Hour,
+		TemplatesRoot: t.TempDir(), // registers the PDF routes
+	}
+	r := NewRouter(cfg, nil, store, nil)
+
+	var long, short []string
+	err = chi.Walk(r, func(_, route string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
+		if isRenderRoute(route) {
+			long = append(long, route)
+			return nil
+		}
+		short = append(short, route)
+		return nil
+	})
+	require.NoError(t, err)
+	sort.Strings(long)
+
+	assert.Equal(t, []string{
+		"/api/v1/dashboard/export.xlsx",
+		"/api/v1/invoices/coretax.xlsx",
+		"/api/v1/invoices/export.xlsx",
+		"/api/v1/invoices/{id}/pdf",
+		"/api/v1/purchase-orders/export.xlsx",
+		"/api/v1/purchase-orders/{id}/delivery-note.pdf",
+		"/api/v1/quotations/export.xlsx",
+		"/api/v1/quotations/{id}/pdf",
+	}, long)
+	// Guard the other direction: a single-invoice XML render is not a bulk job.
+	assert.Contains(t, short, "/api/v1/invoices/{id}/coretax.xml")
 }

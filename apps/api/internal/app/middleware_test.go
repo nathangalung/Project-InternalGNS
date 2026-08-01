@@ -215,3 +215,38 @@ func TestSecurityHeaders(t *testing.T) {
 	assert.Equal(t, "DENY", rec.Header().Get("X-Frame-Options"))
 	assert.Contains(t, rec.Header().Get("Content-Security-Policy"), "default-src 'none'")
 }
+
+// Render routes get the long budget, everything else the default.
+func TestRequestTimeout_BudgetPerPath(t *testing.T) {
+	const short, long = 50 * time.Millisecond, time.Hour
+
+	tests := []struct {
+		name     string
+		path     string
+		wantLong bool
+	}{
+		{"list", "/api/v1/invoices", false},
+		{"single xml", "/api/v1/invoices/1/coretax.xml", false},
+		{"list export", "/api/v1/invoices/export.xlsx", true},
+		{"coretax export", "/api/v1/invoices/coretax.xlsx", true},
+		{"invoice pdf", "/api/v1/invoices/1/pdf", true},
+		{"delivery note", "/api/v1/purchase-orders/1/delivery-note.pdf", true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var budget time.Duration
+			h := requestTimeout(short, long)(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+				deadline, ok := r.Context().Deadline()
+				require.True(t, ok)
+				budget = time.Until(deadline)
+			}))
+			h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, tc.path, nil))
+
+			if tc.wantLong {
+				assert.Greater(t, budget, short)
+			} else {
+				assert.LessOrEqual(t, budget, short)
+			}
+		})
+	}
+}

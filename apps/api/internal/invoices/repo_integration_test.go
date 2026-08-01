@@ -253,6 +253,71 @@ func TestRepo_UpdateDates_NoIfMatchSkipsGuard(t *testing.T) {
 	assert.Greater(t, newVersion, int32(0))
 }
 
+// Clone an invoice line under a new line number.
+func addInvoiceLine(t *testing.T, ctx context.Context, tx pgx.Tx, invID int64, lineNumber *int16) {
+	t.Helper()
+	_, err := tx.Exec(ctx, `
+INSERT INTO invoice_items (
+    invoice_id, quotation_item_id, line_number, line_type, item_name, item_code,
+    goods_or_service, offered_item_id, unit_id, unit_code, qty, unit_price,
+    gross_unit_price, cost_price, dpp, dpp_nilai_lain, ppn_rate, ppn_amount,
+    ship_destination, created_by)
+SELECT invoice_id, quotation_item_id, $2, line_type, item_name, item_code,
+       goods_or_service, offered_item_id, unit_id, unit_code, qty, unit_price,
+       gross_unit_price, cost_price, dpp, dpp_nilai_lain, ppn_rate, ppn_amount,
+       ship_destination, created_by
+FROM invoice_items WHERE invoice_id = $1 ORDER BY id LIMIT 1`, invID, lineNumber)
+	require.NoError(t, err)
+}
+
+// Bulk grouping equals N ListItems calls.
+func TestRepo_ListItemsBulk_MatchesListItems(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, _, invA := deliveredPOWithInvoice(t, tx)
+	_, _, invB := deliveredPOWithInvoice(t, tx)
+	require.NotEqual(t, invA, invB)
+
+	// A NULL line number must sort as 0 (first), not last, and invoice A must
+	// carry several lines so within-invoice ordering is actually exercised.
+	high := int16(9)
+	addInvoiceLine(t, ctx, tx, invA, &high)
+	addInvoiceLine(t, ctx, tx, invA, nil)
+
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+	const noItems int64 = 99999999
+	ids := []int64{invA, invB, noItems}
+
+	bulk, err := repo.ListItemsBulk(ctx, ids)
+	require.NoError(t, err)
+
+	want := map[int64][]invoices.InvoiceItem{}
+	for _, id := range ids {
+		items, err := repo.ListItems(ctx, id)
+		require.NoError(t, err)
+		if len(items) == 0 {
+			continue
+		}
+		want[id] = items
+	}
+	require.Len(t, want[invA], 3)
+	require.Nil(t, want[noItems])
+	assert.Equal(t, want, bulk)
+	// An id with no lines is absent, not present with an empty slice: the
+	// coretax export keys its skip on exactly that.
+	_, present := bulk[noItems]
+	assert.False(t, present)
+}
+
+func TestRepo_ListItemsBulk_EmptyIDs(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+
+	got, err := repo.ListItemsBulk(ctx, nil)
+	require.NoError(t, err)
+	assert.NotNil(t, got)
+	assert.Empty(t, got)
+}
+
 func TestRepo_Summary(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	deliveredPOWithInvoice(t, tx)
