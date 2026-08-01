@@ -6,6 +6,7 @@ import {
   dropdownPanelStyleCompact as dropdownPanelStyle,
 } from "@/components/shared/filter-styles"
 import Sidebar from "@/components/shared/Sidebar"
+import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import AddVendorToItemModal from "@/features/items/AddVendorToItemModal"
 import {
   useItemImageDownloadUrl,
@@ -517,19 +518,11 @@ export default function ProductDetail({
                 </tr>
               </thead>
               <tbody>
-                {vendorsLoading && (
-                  <tr>
-                    <td colSpan={4} className="py-10 text-center text-sm text-dark-500">
-                      Memuat data…
-                    </td>
-                  </tr>
-                )}
+                {vendorsLoading && <TableLoadingRow colSpan={4} />}
                 {!vendorsLoading && (itemVendors ?? []).length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="py-10 text-center text-sm text-dark-500">
-                      Belum ada vendor terkait. Klik "Tambah Vendor" untuk menambah.
-                    </td>
-                  </tr>
+                  <TableEmptyRow colSpan={4}>
+                    Belum ada vendor terkait. Klik "Tambah Vendor" untuk menambah.
+                  </TableEmptyRow>
                 )}
                 {!vendorsLoading &&
                   (itemVendors ?? []).map((v) => {

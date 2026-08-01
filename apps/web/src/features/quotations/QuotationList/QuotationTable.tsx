@@ -13,8 +13,6 @@ interface QuotationTableProps {
   onDownload?: (row: QuotationRow) => void
 }
 
-const actionBtn =
-  "inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
 const sortHead = "flex items-center justify-center gap-1.5"
 
 // Sortable rows with action buttons.
@@ -107,7 +105,7 @@ export default function QuotationTable({
                 <div className="flex items-center justify-center gap-3">
                   <button
                     type="button"
-                    className={actionBtn}
+                    className={ui.iconAction}
                     title="Lihat"
                     onClick={() => onViewDetail?.(row.id)}
                   >
@@ -115,7 +113,7 @@ export default function QuotationTable({
                   </button>
                   <button
                     type="button"
-                    className={actionBtn}
+                    className={ui.iconAction}
                     title="Download"
                     onClick={() => onDownload?.(row)}
                   >

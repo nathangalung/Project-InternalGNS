@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
+import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import {
   useUpdateVendor,
   useUploadVendorLogo,
@@ -436,19 +437,9 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
                   </tr>
                 </thead>
                 <tbody>
-                  {itemsLoading && (
-                    <tr>
-                      <td colSpan={4} className="py-10 text-center text-sm text-dark-500">
-                        Memuat data…
-                      </td>
-                    </tr>
-                  )}
+                  {itemsLoading && <TableLoadingRow colSpan={4} />}
                   {!itemsLoading && (vendorItems ?? []).length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="py-10 text-center text-sm text-dark-500">
-                        Belum ada produk vendor.
-                      </td>
-                    </tr>
+                    <TableEmptyRow colSpan={4}>Belum ada produk vendor.</TableEmptyRow>
                   )}
                   {!itemsLoading &&
                     (vendorItems ?? []).map((item) => (

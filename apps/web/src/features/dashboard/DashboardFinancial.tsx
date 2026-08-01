@@ -4,6 +4,7 @@ import FilterButton from "@/components/shared/FilterButton"
 import Sidebar from "@/components/shared/Sidebar"
 import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
+import { TableEmptyRow } from "@/components/shared/TableStates"
 import * as dashboardApi from "@/features/dashboard/api"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { useInvoices } from "@/features/invoices/hooks"
@@ -271,11 +272,7 @@ export default function DashboardFinancial({
               </thead>
               <tbody>
                 {recentInvoices.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="py-10 text-center text-sm text-dark-500">
-                      Belum ada Invoice.
-                    </td>
-                  </tr>
+                  <TableEmptyRow colSpan={6}>Belum ada Invoice.</TableEmptyRow>
                 )}
                 {recentInvoices.map((row) => {
                   const style = INVOICE_STATUS_STYLE[row.status]

@@ -4,6 +4,7 @@ import FilterButton from "@/components/shared/FilterButton"
 import Sidebar from "@/components/shared/Sidebar"
 import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
+import { TableEmptyRow } from "@/components/shared/TableStates"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { toTableRow } from "@/features/quotations/adapters"
 import { useQuotations } from "@/features/quotations/hooks"
@@ -164,11 +165,7 @@ export default function DashboardOperational({
               </thead>
               <tbody>
                 {recentQuotations.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="py-10 text-center text-sm text-dark-500">
-                      Belum ada Quotation.
-                    </td>
-                  </tr>
+                  <TableEmptyRow colSpan={7}>Belum ada Quotation.</TableEmptyRow>
                 )}
                 {recentQuotations.map((row) => {
                   const style = statusConfig[row.status]
