@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -14,9 +15,22 @@ import (
 )
 
 func NewServer(ctx context.Context, cfg Config) (*http.Server, error) {
-	pool, err := db.NewPool(ctx, cfg.DatabaseURL)
+	pool, err := db.NewPool(ctx, cfg.DatabaseURL, cfg.TZ)
 	if err != nil {
 		return nil, err
+	}
+	// Fail fast if the session zone did not take: every date-derived value
+	// (invoice_date, document numbers) depends on it.
+	if cfg.TZ != "" {
+		var sessionTZ string
+		if err := pool.QueryRow(ctx, "SHOW timezone").Scan(&sessionTZ); err != nil {
+			pool.Close()
+			return nil, err
+		}
+		if sessionTZ != cfg.TZ {
+			pool.Close()
+			return nil, fmt.Errorf("db session timezone is %q, want %q", sessionTZ, cfg.TZ)
+		}
 	}
 	if err := db.RunMigrations(ctx, pool); err != nil {
 		return nil, err

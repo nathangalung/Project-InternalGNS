@@ -39,7 +39,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	pool, err := db.NewPool(ctx, dsn)
+	pool, err := db.NewPool(ctx, dsn, "Asia/Jakarta")
 	if err != nil {
 		die(err)
 	}

@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/money"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
 )
 
@@ -172,7 +172,7 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 		AttnName:      pdfgen.LatexEscape(attn),
 		AttnEmail:     pdfgen.LatexEscape(contactEmail),
 		AttnPhone:     pdfgen.LatexEscape(contactPhone),
-		DateLine:      pdfgen.JakartaDateLine(d.CreatedAt.In(time.Local)),
+		DateLine:      pdfgen.JakartaDateLine(d.CreatedAt.In(tz.Jakarta())),
 		Items:         items,
 		TotalProduk:   pdfgen.FormatIDR(d.TotalProduk),
 		DiscountPct:   d.DiscountPct,

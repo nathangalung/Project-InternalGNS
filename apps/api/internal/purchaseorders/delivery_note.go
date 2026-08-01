@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -16,6 +15,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
 
 // DeliveryNoteHandler renders the SURAT JALAN PDF mirror of a PO.
@@ -144,7 +144,7 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, i
 		CompanyAddress: pdfgen.LatexEscape(pdfgen.StrDeref(client.Address)),
 		AttnName:       pdfgen.LatexEscape(attn),
 		VesselName:     pdfgen.LatexEscape(vessel),
-		DateLine:       pdfgen.JakartaDateLine(po.PoDate.In(time.Local)),
+		DateLine:       pdfgen.JakartaDateLine(po.PoDate.In(tz.Jakarta())),
 		Items:          expItems,
 		PreparedBy:     pdfgen.LatexEscape(h.settings.SignerName),
 		SenderName:     pdfgen.LatexEscape(h.settings.SignerName),

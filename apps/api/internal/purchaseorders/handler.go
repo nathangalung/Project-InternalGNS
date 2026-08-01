@@ -15,6 +15,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
 
 type Handler struct {
@@ -85,7 +86,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 			deliveryNoteNumber(po.QuotationNo, po.PoNumber),
 			po.PoNumber,
 			po.QuotationNo,
-			po.PoDate.In(time.Local).Format("2006-01-02"),
+			po.PoDate.In(tz.Jakarta()).Format("2006-01-02"),
 			po.CompanyName,
 			string(po.Status),
 			po.PoTotalProduk,

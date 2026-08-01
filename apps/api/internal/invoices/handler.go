@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
 
 type Handler struct {
@@ -92,7 +92,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	for _, inv := range res.Rows {
 		due := ""
 		if inv.DueDate != nil {
-			due = inv.DueDate.In(time.Local).Format("2006-01-02")
+			due = inv.DueDate.In(tz.Jakarta()).Format("2006-01-02")
 		}
 		total := ""
 		if inv.Total != nil {
@@ -101,7 +101,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 		rows = append(rows, []string{
 			inv.InvoiceNo,
 			inv.QuotationNo,
-			inv.InvoiceDate.In(time.Local).Format("2006-01-02"),
+			inv.InvoiceDate.In(tz.Jakarta()).Format("2006-01-02"),
 			due,
 			inv.CompanyName,
 			string(inv.Status),

@@ -43,6 +43,9 @@ func Pool(t testing.TB) *pgxpool.Pool {
 			poolErr = err
 			return
 		}
+		// Match the app pool: pin the business zone so date-derived assertions
+		// do not depend on the server default.
+		cfg.ConnConfig.RuntimeParams["timezone"] = "Asia/Jakarta"
 		cfg.MaxConns = 8
 		p, err := pgxpool.NewWithConfig(ctx, cfg)
 		if err != nil {

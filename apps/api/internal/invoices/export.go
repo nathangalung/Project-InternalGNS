@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -16,6 +15,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
 
 // ExportHandler renders an invoice PDF.
@@ -172,24 +172,24 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 	}
 
 	return exportData{
-		InvoiceNo:       pdfgen.LatexEscape(inv.InvoiceNo),
-		PONo:            pdfgen.LatexEscape(poNo),
-		PODate:          poDate,
-		CompanyName:     pdfgen.LatexEscape(inv.CompanyName),
-		CompanyNPWP:     pdfgen.LatexEscape(pdfgen.StrDeref(client.NPWP)),
-		CompanyAddress:  pdfgen.LatexEscape(pdfgen.StrDeref(client.Address)),
-		VesselName:      pdfgen.LatexEscape(vessel),
-		InvoiceDate:     inv.InvoiceDate.Format("2 January 2006"),
-		DueDate:         dueDate,
-		Items:           expItems,
-		TotalProduk: pdfgen.FormatIDR(totalProdukStr),
+		InvoiceNo:      pdfgen.LatexEscape(inv.InvoiceNo),
+		PONo:           pdfgen.LatexEscape(poNo),
+		PODate:         poDate,
+		CompanyName:    pdfgen.LatexEscape(inv.CompanyName),
+		CompanyNPWP:    pdfgen.LatexEscape(pdfgen.StrDeref(client.NPWP)),
+		CompanyAddress: pdfgen.LatexEscape(pdfgen.StrDeref(client.Address)),
+		VesselName:     pdfgen.LatexEscape(vessel),
+		InvoiceDate:    inv.InvoiceDate.Format("2 January 2006"),
+		DueDate:        dueDate,
+		Items:          expItems,
+		TotalProduk:    pdfgen.FormatIDR(totalProdukStr),
 		Diskon: func() string {
 			if diskon == "" {
 				return ""
 			}
 			return pdfgen.FormatIDR(diskon)
 		}(),
-		DiscountPct: discountPct,
+		DiscountPct:     discountPct,
 		DPP:             pdfgen.FormatIDR(pdfgen.StrDeref(inv.Dpp)),
 		DPPNilaiLain:    pdfgen.FormatIDR(pdfgen.StrDeref(inv.DppNilaiLain)),
 		PPN:             pdfgen.FormatIDR(pdfgen.StrDeref(inv.PpnAmount)),
@@ -198,7 +198,7 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 		BankName:        pdfgen.LatexEscape(h.settings.BankName),
 		BankAccountNo:   pdfgen.LatexEscape(h.settings.BankAccountNo),
 		BankAccountName: pdfgen.LatexEscape(h.settings.BankAccountNm),
-		DateLine:        pdfgen.JakartaDateLine(inv.InvoiceDate.In(time.Local)),
+		DateLine:        pdfgen.JakartaDateLine(inv.InvoiceDate.In(tz.Jakarta())),
 		SignerName:      pdfgen.LatexEscape(h.settings.SignerName),
 		UseA4:           productCount > 5,
 	}

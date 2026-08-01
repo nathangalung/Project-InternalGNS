@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
 
 type Handler struct {
@@ -83,7 +83,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	for _, q := range res.Rows {
 		rows = append(rows, []string{
 			q.QuotationNo,
-			q.CreatedAt.In(time.Local).Format("2006-01-02"),
+			q.CreatedAt.In(tz.Jakarta()).Format("2006-01-02"),
 			q.CompanyName,
 			q.Status,
 			q.Subtotal,
