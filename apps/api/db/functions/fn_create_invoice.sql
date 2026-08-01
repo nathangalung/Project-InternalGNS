@@ -60,7 +60,7 @@ BEGIN
     pi.subtotal,
     ROUND(pi.subtotal * 11.0 / 12.0, 2),
     12.00,
-    ROUND(pi.subtotal * 11.0 / 12.0 * 0.12, 2),
+    ROUND(ROUND(pi.subtotal * 11.0 / 12.0, 2) * 0.12, 2),
     p_user_id, p_user_id
   FROM purchase_order_items pi
   LEFT JOIN units u ON u.id = pi.unit_id
