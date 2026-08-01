@@ -78,6 +78,22 @@ answer to its question.** Numbers are audit finding IDs.
   `/dashboard` router so financial routes have a mount gate; last-superadmin
   guard; storage-proxy object-key signing; per-user rate limits on PDF/XLSX.
 
+## Phase 6 (perf/ops) progress
+- **DONE** reachable vendor-SKU trigram index + refresh-token purge ticker
+  (`1ffbf61`); shutdown budget, request-id logs, LOG_LEVEL, export-truncation
+  warn (earlier commits).
+- **#15 re-diagnosed with EXPLAIN (audit was wrong):** only `search_vendor_offers`
+  was fixable. `fn_search_vendors`/`fn_search_clients` cannot reach their name
+  trigram indexes at all (join filter / cross-table OR — never a BitmapOr
+  candidate), and `items.impa_code` has no trigram index. Net: three name
+  trigram indexes (`idx_vendors_name_trgm`, `idx_company_client_name_trgm`,
+  `idx_company_contacts_name_trgm`) are dead weight — **owner call:** drop them
+  (correct at current ≤few-thousand-row scale) or restructure the search
+  functions into per-table UNION branches (only worth it if the catalog grows
+  large). `idx_items_name_trgm` is live — keep it.
+- **Deferred, low value at scale:** #16 dashboard cost CTEs, count-query LATERAL
+  removal, container resource limits + PDF_RENDER_CONCURRENCY, two-phase boot.
+
 ## Remaining — behavior-preserving but large / needs QA
 
 Safe in principle, deferred because they touch central wiring or need manual
