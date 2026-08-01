@@ -1,5 +1,5 @@
+import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useRef, useState } from "react"
-import Sidebar from "@/components/shared/Sidebar"
 import ClientAdd from "@/features/clients/ClientAdd"
 import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
 import { useClientContacts, useClientSearch, useClients } from "@/features/clients/hooks"
@@ -12,7 +12,6 @@ import {
 import { useUnits } from "@/features/units/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
-import type { Page } from "@/lib/page"
 import { ui } from "@/lib/ui"
 import type { QuotationCreateInput, QuotationItemInput } from "@/types/api"
 import DiscountModal from "./DiscountModal"
@@ -24,8 +23,6 @@ import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
 
 interface QuotationEditProps {
   quotationId: string
-  onNavigate: (page: Page) => void
-  onLogout: () => void
 }
 
 // Flat brand submit (legacy used a solid #630ED4, not the primary gradient).
@@ -56,7 +53,8 @@ export interface ProductItem {
   hargaJual: number
 }
 
-export default function QuotationEdit({ quotationId, onNavigate, onLogout }: QuotationEditProps) {
+export default function QuotationEdit({ quotationId }: QuotationEditProps) {
+  const navigate = useNavigate()
   const [step, setStep] = useState(1)
 
   const [selectedClient, setSelectedClient] = useState("")
@@ -217,236 +215,237 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
   const summaryProfit = hasProducts ? summarySubTotal - summaryTotalHargaBeli : 0
 
   return (
-    <div className="admin-shell">
-      <Sidebar activePage="quotation" onNavigate={onNavigate} onLogout={onLogout} />
-
-      <div className="admin-main">
-        <div className="page-content">
-          {/* Header & Stepper */}
-          <div className={qe.headerSection}>
-            <div className={qe.headerLeft}>
-              <nav className={ui.breadcrumb}>
-                <button
-                  type="button"
-                  className={ui.breadcrumbLink}
-                  onClick={() => onNavigate("quotation")}
-                >
-                  Daftar Quotation
-                </button>
-                <span className={ui.breadcrumbSep}>&rsaquo;</span>
-                <span className={ui.breadcrumbCurrent}>Edit Quotation</span>
-              </nav>
-              <div className={qe.titleRow}>
-                <h1 className={qe.title}>Edit Quotation</h1>
-              </div>
+    <>
+      <div className="page-content">
+        {/* Header & Stepper */}
+        <div className={qe.headerSection}>
+          <div className={qe.headerLeft}>
+            <nav className={ui.breadcrumb}>
+              <button
+                type="button"
+                className={ui.breadcrumbLink}
+                onClick={() => void navigate({ to: "/quotations" })}
+              >
+                Daftar Quotation
+              </button>
+              <span className={ui.breadcrumbSep}>&rsaquo;</span>
+              <span className={ui.breadcrumbCurrent}>Edit Quotation</span>
+            </nav>
+            <div className={qe.titleRow}>
+              <h1 className={qe.title}>Edit Quotation</h1>
             </div>
+          </div>
 
-            <div className={qe.headerActions}>
-              {step > 1 && (
-                <button
-                  type="button"
-                  className={`${ui.btnOutline} w-[148px]`}
-                  onClick={() => setStep(step - 1)}
+          <div className={qe.headerActions}>
+            {step > 1 && (
+              <button
+                type="button"
+                className={`${ui.btnOutline} w-[148px]`}
+                onClick={() => setStep(step - 1)}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M19 12H5M12 5l-7 7 7 7" />
-                  </svg>{" "}
-                  Kembali
-                </button>
-              )}
-              {step < steps.length && (
-                <button
-                  type="button"
-                  className={`${ui.btnPrimary} w-[148px]`}
-                  onClick={() => setStep(step + 1)}
-                  disabled={isNextDisabled}
+                  <path d="M19 12H5M12 5l-7 7 7 7" />
+                </svg>{" "}
+                Kembali
+              </button>
+            )}
+            {step < steps.length && (
+              <button
+                type="button"
+                className={`${ui.btnPrimary} w-[148px]`}
+                onClick={() => setStep(step + 1)}
+                disabled={isNextDisabled}
+              >
+                Lanjut{" "}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="-scale-x-100"
                 >
-                  Lanjut{" "}
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="-scale-x-100"
-                  >
-                    <path d="M19 12H5M12 5l-7 7 7 7" />
-                  </svg>
-                </button>
-              )}
-              {step === steps.length && (
-                <button
-                  type="button"
-                  className={`${flatSubmit} w-[148px]`}
-                  disabled={
-                    !isTenggatWaktuFilled ||
-                    !hasContent ||
-                    !canSave ||
-                    updateMutation.isPending ||
-                    updateContactMutation.isPending
+                  <path d="M19 12H5M12 5l-7 7 7 7" />
+                </svg>
+              </button>
+            )}
+            {step === steps.length && (
+              <button
+                type="button"
+                className={`${flatSubmit} w-[148px]`}
+                disabled={
+                  !isTenggatWaktuFilled ||
+                  !hasContent ||
+                  !canSave ||
+                  updateMutation.isPending ||
+                  updateContactMutation.isPending
+                }
+                onClick={() => {
+                  if (!hasNumericQuotationId || !detail || !canSave) return
+                  const items: QuotationItemInput[] = products.map((p) => ({
+                    requestedItemId: p.requestedItemId,
+                    requestedImpa: p.requestedKodeImpa || p.kodeImpa || undefined,
+                    requestedName: p.requestedNama || p.nama,
+                    offeredItemId: p.itemId,
+                    vendorProductId: p.vendorProductId,
+                    qty: String(p.jumlah),
+                    unitId: unitIdByCode.get(p.satuan.toUpperCase()) ?? 0,
+                    sellingPrice: String(p.hargaJual),
+                    costPrice: String(p.hargaBeli),
+                  }))
+                  const shipDays = Number(shippingTime)
+                  const input: Omit<
+                    QuotationCreateInput,
+                    "companyClientId" | "contactId" | "status"
+                  > = {
+                    clientRefNo: detail.clientRefNo ?? undefined,
+                    paymentTerms: jatuhTempo.trim() ? `${jatuhTempo.trim()} days` : undefined,
+                    validityDays: Number(berlakuSampai) > 0 ? Number(berlakuSampai) : undefined,
+                    discountPct: String(discountPct),
+                    shippingAddress: shippingAddress || undefined,
+                    shippingDays: Number.isFinite(shipDays) && shipDays > 0 ? shipDays : undefined,
+                    shippingCost: shippingCost || undefined,
+                    items,
                   }
-                  onClick={() => {
-                    if (!hasNumericQuotationId || !detail || !canSave) return
-                    const items: QuotationItemInput[] = products.map((p) => ({
-                      requestedItemId: p.requestedItemId,
-                      requestedImpa: p.requestedKodeImpa || p.kodeImpa || undefined,
-                      requestedName: p.requestedNama || p.nama,
-                      offeredItemId: p.itemId,
-                      vendorProductId: p.vendorProductId,
-                      qty: String(p.jumlah),
-                      unitId: unitIdByCode.get(p.satuan.toUpperCase()) ?? 0,
-                      sellingPrice: String(p.hargaJual),
-                      costPrice: String(p.hargaBeli),
-                    }))
-                    const shipDays = Number(shippingTime)
-                    const input: Omit<
-                      QuotationCreateInput,
-                      "companyClientId" | "contactId" | "status"
-                    > = {
-                      clientRefNo: detail.clientRefNo ?? undefined,
-                      paymentTerms: jatuhTempo.trim() ? `${jatuhTempo.trim()} days` : undefined,
-                      validityDays: Number(berlakuSampai) > 0 ? Number(berlakuSampai) : undefined,
-                      discountPct: String(discountPct),
-                      shippingAddress: shippingAddress || undefined,
-                      shippingDays:
-                        Number.isFinite(shipDays) && shipDays > 0 ? shipDays : undefined,
-                      shippingCost: shippingCost || undefined,
-                      items,
-                    }
-                    if (!detail) return
-                    updateMutation.mutate(
-                      { id: numericQuotationId, input, rowVersion: detail.rowVersion },
-                      {
-                        onSuccess: () => {
-                          // Chain contact update when selection changed.
-                          if (
-                            selectedContactId !== undefined &&
-                            selectedContactId !== detail.contactId
-                          ) {
-                            updateContactMutation.mutate(
-                              { id: numericQuotationId, contactId: selectedContactId },
-                              { onSuccess: () => onNavigate("quotation-detail") },
-                            )
-                          } else {
-                            onNavigate("quotation-detail")
-                          }
-                        },
+                  if (!detail) return
+                  updateMutation.mutate(
+                    { id: numericQuotationId, input, rowVersion: detail.rowVersion },
+                    {
+                      onSuccess: () => {
+                        // Chain contact update when selection changed.
+                        if (
+                          selectedContactId !== undefined &&
+                          selectedContactId !== detail.contactId
+                        ) {
+                          updateContactMutation.mutate(
+                            { id: numericQuotationId, contactId: selectedContactId },
+                            {
+                              onSuccess: () =>
+                                void navigate({
+                                  to: "/quotations/$id",
+                                  params: { id: quotationId },
+                                }),
+                            },
+                          )
+                        } else {
+                          void navigate({ to: "/quotations/$id", params: { id: quotationId } })
+                        }
                       },
-                    )
-                  }}
-                >
-                  {updateMutation.isPending || updateContactMutation.isPending
-                    ? "Menyimpan..."
-                    : "Simpan"}
-                </button>
-              )}
-            </div>
+                    },
+                  )
+                }}
+              >
+                {updateMutation.isPending || updateContactMutation.isPending
+                  ? "Menyimpan..."
+                  : "Simpan"}
+              </button>
+            )}
           </div>
-
-          <div className={qe.stepper}>
-            {steps.map((s, i) => (
-              <div key={s.n} className="contents">
-                <div className={qe.stepSlot}>
-                  <div className={stepPill(i === step - 1)}>
-                    <span className={stepNum(i === step - 1)}>{s.n}</span>
-                  </div>
-                  <span className={stepLabel(i === step - 1)}>{s.label}</span>
-                </div>
-                {i < steps.length - 1 && <div key={`line-${i}`} className={qe.stepConnector} />}
-              </div>
-            ))}
-          </div>
-
-          {/* Render Step Components */}
-          {step === 1 && (
-            <Step1Client
-              search={search}
-              setSearch={setSearch}
-              filteredClients={filteredClients}
-              selectedClient={selectedClient}
-              setSelectedClient={setSelectedClient}
-              setShowClientAdd={setShowClientAdd}
-              contacts={contacts}
-              selectedContactId={selectedContactId}
-              setSelectedContactId={setSelectedContactId}
-            />
-          )}
-          {step === 2 && (
-            <Step2Product
-              products={products}
-              deleteProduct={deleteProduct}
-              setEditingProduct={setEditingProduct}
-              setShowProductAdd={setShowProductAdd}
-              prodPageSize={prodPageSize}
-              setProdPageSize={setProdPageSize}
-              prodPage={prodPage}
-              setProdPage={setProdPage}
-              isRowDropdownOpen={isRowDropdownOpen}
-              setIsRowDropdownOpen={setIsRowDropdownOpen}
-              setShowDiscountModal={setShowDiscountModal}
-              discountPct={discountPct}
-              formatRp={formatRp}
-              summaryTotalHargaBeli={summaryTotalHargaBeli}
-              summaryTotalHargaJual={summaryTotalHargaJual}
-              nominalDiskon={nominalDiskon}
-              summarySubTotal={summarySubTotal}
-              summaryDpp={summaryDpp}
-              summaryPpn={summaryPpn}
-              onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
-              quotationId={numericQuotationId}
-            />
-          )}
-          {step === 3 && (
-            <Step3Shipping
-              shippingAddress={shippingAddress}
-              setShippingAddress={setShippingAddress}
-              shippingTime={shippingTime}
-              setShippingTime={setShippingTime}
-              shippingCost={shippingCost}
-              setShippingCost={setShippingCost}
-              isAlamatFilled={isAlamatFilled}
-              isWaktuFilled={isWaktuFilled}
-              formatRp={formatRp}
-            />
-          )}
-          {step === 4 && (
-            <Step4Summary
-              jatuhTempo={jatuhTempo}
-              setJatuhTempo={setJatuhTempo}
-              berlakuSampai={berlakuSampai}
-              setBerlakuSampai={setBerlakuSampai}
-              currentClient={currentClient}
-              shippingAddress={shippingAddress}
-              shippingTime={shippingTime}
-              shippingCost={shippingCost}
-              products={products}
-              discountPct={discountPct}
-              formatRp={formatRp}
-              summaryTotalProdukQty={summaryTotalProdukQty}
-              summaryTotalHargaBeli={summaryTotalHargaBeli}
-              summaryTotalHargaJual={summaryTotalHargaJual}
-              nominalDiskon={nominalDiskon}
-              summarySubTotal={summarySubTotal}
-              summaryDpp={summaryDpp}
-              summaryPpn={summaryPpn}
-              summaryShippingCost={summaryShippingCost}
-              summaryProfit={summaryProfit}
-              summaryGrandTotal={summaryGrandTotal}
-            />
-          )}
         </div>
+
+        <div className={qe.stepper}>
+          {steps.map((s, i) => (
+            <div key={s.n} className="contents">
+              <div className={qe.stepSlot}>
+                <div className={stepPill(i === step - 1)}>
+                  <span className={stepNum(i === step - 1)}>{s.n}</span>
+                </div>
+                <span className={stepLabel(i === step - 1)}>{s.label}</span>
+              </div>
+              {i < steps.length - 1 && <div key={`line-${i}`} className={qe.stepConnector} />}
+            </div>
+          ))}
+        </div>
+
+        {/* Render Step Components */}
+        {step === 1 && (
+          <Step1Client
+            search={search}
+            setSearch={setSearch}
+            filteredClients={filteredClients}
+            selectedClient={selectedClient}
+            setSelectedClient={setSelectedClient}
+            setShowClientAdd={setShowClientAdd}
+            contacts={contacts}
+            selectedContactId={selectedContactId}
+            setSelectedContactId={setSelectedContactId}
+          />
+        )}
+        {step === 2 && (
+          <Step2Product
+            products={products}
+            deleteProduct={deleteProduct}
+            setEditingProduct={setEditingProduct}
+            setShowProductAdd={setShowProductAdd}
+            prodPageSize={prodPageSize}
+            setProdPageSize={setProdPageSize}
+            prodPage={prodPage}
+            setProdPage={setProdPage}
+            isRowDropdownOpen={isRowDropdownOpen}
+            setIsRowDropdownOpen={setIsRowDropdownOpen}
+            setShowDiscountModal={setShowDiscountModal}
+            discountPct={discountPct}
+            formatRp={formatRp}
+            summaryTotalHargaBeli={summaryTotalHargaBeli}
+            summaryTotalHargaJual={summaryTotalHargaJual}
+            nominalDiskon={nominalDiskon}
+            summarySubTotal={summarySubTotal}
+            summaryDpp={summaryDpp}
+            summaryPpn={summaryPpn}
+            onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
+            quotationId={numericQuotationId}
+          />
+        )}
+        {step === 3 && (
+          <Step3Shipping
+            shippingAddress={shippingAddress}
+            setShippingAddress={setShippingAddress}
+            shippingTime={shippingTime}
+            setShippingTime={setShippingTime}
+            shippingCost={shippingCost}
+            setShippingCost={setShippingCost}
+            isAlamatFilled={isAlamatFilled}
+            isWaktuFilled={isWaktuFilled}
+            formatRp={formatRp}
+          />
+        )}
+        {step === 4 && (
+          <Step4Summary
+            jatuhTempo={jatuhTempo}
+            setJatuhTempo={setJatuhTempo}
+            berlakuSampai={berlakuSampai}
+            setBerlakuSampai={setBerlakuSampai}
+            currentClient={currentClient}
+            shippingAddress={shippingAddress}
+            shippingTime={shippingTime}
+            shippingCost={shippingCost}
+            products={products}
+            discountPct={discountPct}
+            formatRp={formatRp}
+            summaryTotalProdukQty={summaryTotalProdukQty}
+            summaryTotalHargaBeli={summaryTotalHargaBeli}
+            summaryTotalHargaJual={summaryTotalHargaJual}
+            nominalDiskon={nominalDiskon}
+            summarySubTotal={summarySubTotal}
+            summaryDpp={summaryDpp}
+            summaryPpn={summaryPpn}
+            summaryShippingCost={summaryShippingCost}
+            summaryProfit={summaryProfit}
+            summaryGrandTotal={summaryGrandTotal}
+          />
+        )}
       </div>
 
       {/* Modals */}
@@ -539,6 +538,6 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
           setEditingProduct(null)
         }}
       />
-    </div>
+    </>
   )
 }

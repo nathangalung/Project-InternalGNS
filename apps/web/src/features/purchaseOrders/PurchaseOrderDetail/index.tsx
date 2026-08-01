@@ -1,6 +1,6 @@
 import { useQueries } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
-import Sidebar from "@/components/shared/Sidebar"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import { useClient } from "@/features/clients/hooks"
 import * as itemsApi from "@/features/items/api"
@@ -15,7 +15,6 @@ import type { QuotationData } from "@/features/quotations/types"
 import * as vendorsApi from "@/features/vendors/api"
 import { downloadFile, downloadPdf } from "@/lib/api-client"
 import { computeTaxBreakdown, toNum } from "@/lib/format"
-import type { Page } from "@/lib/page"
 import { queryKeys } from "@/lib/query-keys"
 import { poItemsToProducts, poItemsToShipping } from "../adapters"
 import * as poApi from "../api"
@@ -50,8 +49,7 @@ interface PurchaseOrderDetailProps {
   quotationId: number
   quotationNo: string
   quotation?: QuotationData
-  onNavigate: (page: Page) => void
-  onLogout: () => void
+  onEdit: () => void
   onNavigateEntity?: (scope: "Klien" | "Vendor", id: number) => void
 }
 
@@ -59,10 +57,10 @@ export default function PurchaseOrderDetail({
   quotationId,
   quotationNo,
   quotation,
-  onNavigate,
-  onLogout,
+  onEdit,
   onNavigateEntity,
 }: PurchaseOrderDetailProps) {
+  const navigate = useNavigate()
   const { data: po, isLoading } = usePurchaseOrderByQuotation(quotationId)
   const { data: poItems } = usePoItems(po?.id)
   const changeStatus = useChangePoStatus()
@@ -159,17 +157,8 @@ export default function PurchaseOrderDetail({
 
   if (!quotation || (isLoading && !po) || !po) {
     return (
-      <div className="admin-shell">
-        <Sidebar
-          activePage={"purchase-orders" as Page}
-          onNavigate={onNavigate}
-          onLogout={onLogout}
-        />
-        <div className="admin-main">
-          <div className="page-content">
-            <p>{isLoading ? "Memuat data Purchase Order…" : "Purchase Order tidak ditemukan."}</p>
-          </div>
-        </div>
+      <div className="page-content">
+        <p>{isLoading ? "Memuat data Purchase Order…" : "Purchase Order tidak ditemukan."}</p>
       </div>
     )
   }
@@ -198,7 +187,7 @@ export default function PurchaseOrderDetail({
   function handleSave() {
     if (!po) return
     if (status === po.status) {
-      onNavigate("purchase-orders")
+      void navigate({ to: "/purchase-orders" })
       return
     }
 
@@ -237,7 +226,7 @@ export default function PurchaseOrderDetail({
             ...prev,
             { date: nowLabel(), action: `Status diubah menjadi ${PO_LABEL[status]}` },
           ])
-          onNavigate("purchase-orders")
+          void navigate({ to: "/purchase-orders" })
         },
       },
     )
@@ -289,60 +278,57 @@ export default function PurchaseOrderDetail({
   }
 
   return (
-    <div className="admin-shell">
-      <Sidebar activePage={"purchase-orders" as Page} onNavigate={onNavigate} onLogout={onLogout} />
-      <div className="admin-main">
-        <div className="page-content">
-          <Header
-            poNumber={poNumber}
-            quotationNo={quotationNo}
-            createdAt={quotation.createdAt}
-            status={status}
-            onNavigate={onNavigate}
-            onDownloadDeliveryNote={
-              status === "ON_PROGRESS" || status === "DELIVERED"
-                ? handleDownloadDeliveryNote
-                : undefined
-            }
-          />
-          <StatusBar
-            status={status}
-            allowedStatuses={PO_TRANSITIONS[po.status]}
-            isOpen={isStatusOpen}
-            onToggle={() => setIsStatusOpen((o) => !o)}
-            onChange={handleStatusChange}
-            onSave={handleSave}
-          />
-          <FileCard
-            fileName={po.fileName}
-            fileSize={po.fileSize}
-            uploadedAt={po.uploadedAt}
-            onUpload={() => setShowUpload(true)}
-            onDownload={handleDownload}
-          />
-          <ClientSummaryCard
-            clientName={quotation.client}
-            clientInitials={clientInitials}
-            clientInfo={quotation.clientInfo}
-            shippingAlamat={shipping.alamat}
-          />
-          {totalShip > 0 && <ShippingTable shipping={shipping} />}
-          <ProductTable products={products} showProfit={hasCost} />
-          <CostBreakdown
-            hasProducts={hasProducts}
-            totalProduk={totalProduk}
-            discountPct={discountPct}
-            nominalDiskon={nominalDiskon}
-            subTotal={subTotal}
-            dppNilaiLain={dppNilaiLain}
-            ppn12={ppn12}
-            totalShip={totalShip}
-            totalProfit={totalProfit}
-            showProfit={hasCost}
-            grandTotal={grandTotal}
-          />
-          <HistoryTimeline history={history} />
-        </div>
+    <>
+      <div className="page-content">
+        <Header
+          poNumber={poNumber}
+          quotationNo={quotationNo}
+          createdAt={quotation.createdAt}
+          status={status}
+          onEdit={onEdit}
+          onDownloadDeliveryNote={
+            status === "ON_PROGRESS" || status === "DELIVERED"
+              ? handleDownloadDeliveryNote
+              : undefined
+          }
+        />
+        <StatusBar
+          status={status}
+          allowedStatuses={PO_TRANSITIONS[po.status]}
+          isOpen={isStatusOpen}
+          onToggle={() => setIsStatusOpen((o) => !o)}
+          onChange={handleStatusChange}
+          onSave={handleSave}
+        />
+        <FileCard
+          fileName={po.fileName}
+          fileSize={po.fileSize}
+          uploadedAt={po.uploadedAt}
+          onUpload={() => setShowUpload(true)}
+          onDownload={handleDownload}
+        />
+        <ClientSummaryCard
+          clientName={quotation.client}
+          clientInitials={clientInitials}
+          clientInfo={quotation.clientInfo}
+          shippingAlamat={shipping.alamat}
+        />
+        {totalShip > 0 && <ShippingTable shipping={shipping} />}
+        <ProductTable products={products} showProfit={hasCost} />
+        <CostBreakdown
+          hasProducts={hasProducts}
+          totalProduk={totalProduk}
+          discountPct={discountPct}
+          nominalDiskon={nominalDiskon}
+          subTotal={subTotal}
+          dppNilaiLain={dppNilaiLain}
+          ppn12={ppn12}
+          totalShip={totalShip}
+          totalProfit={totalProfit}
+          showProfit={hasCost}
+          grandTotal={grandTotal}
+        />
+        <HistoryTimeline history={history} />
       </div>
 
       {showUpload && (
@@ -368,6 +354,6 @@ export default function PurchaseOrderDetail({
           }
         />
       )}
-    </div>
+    </>
   )
 }

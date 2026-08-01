@@ -1,13 +1,11 @@
 import { useMemo, useState } from "react"
 import ActiveFiltersBar, { type FilterChip } from "@/components/shared/ActiveFilters"
 import Pagination from "@/components/shared/Pagination"
-import Sidebar from "@/components/shared/Sidebar"
 import { toTableRow } from "@/features/quotations/adapters"
 import * as quotationsApi from "@/features/quotations/api"
 import { useQuotations } from "@/features/quotations/hooks"
 import { downloadPdf } from "@/lib/api-client"
 import { resolveRange } from "@/lib/date-range"
-import type { Page } from "@/lib/page"
 import { labelToStatus } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen } from "@/lib/useListScreen"
@@ -20,8 +18,6 @@ import SearchBar from "./SearchBar"
 import SummaryCards from "./SummaryCards"
 
 interface QuotationListProps {
-  onNavigate: (page: Page) => void
-  onLogout: () => void
   onViewDetail?: (id: string) => void
 }
 
@@ -35,7 +31,7 @@ interface ActiveFilters {
 }
 
 // Quotation list orchestrator.
-export default function QuotationList({ onNavigate, onLogout, onViewDetail }: QuotationListProps) {
+export default function QuotationList({ onViewDetail }: QuotationListProps) {
   const [showFilter, setShowFilter] = useState(false)
   const [sortConfig, setSortConfig] = useState<{
     key: keyof QuotationRow
@@ -130,44 +126,37 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
   }
 
   return (
-    <div className="admin-shell">
-      <Sidebar activePage="quotation" onNavigate={onNavigate} onLogout={onLogout} />
+    <>
+      <div className="page-content">
+        <PageHeader onExport={() => quotationsApi.exportXlsx(queryParams)} />
+        <SummaryCards />
+        <SearchBar
+          search={list.search}
+          onSearch={list.setSearch}
+          onOpenFilter={() => setShowFilter(true)}
+        />
 
-      <div className="admin-main">
-        <div className="page-content">
-          <PageHeader
-            onNavigate={onNavigate}
-            onExport={() => quotationsApi.exportXlsx(queryParams)}
+        <ActiveFiltersBar chips={filterChips} onClearAll={clearAllFilters} />
+
+        <div className={ui.tableWrap}>
+          <QuotationTable
+            rows={currentData}
+            sortKey={sortConfig?.key ?? null}
+            sortDir={sortConfig?.direction ?? null}
+            onSort={requestSort}
+            onViewDetail={onViewDetail}
+            onDownload={handleDownload}
           />
-          <SummaryCards />
-          <SearchBar
-            search={list.search}
-            onSearch={list.setSearch}
-            onOpenFilter={() => setShowFilter(true)}
+          <Pagination
+            totalItems={totalItems}
+            startIndex={startIndex}
+            itemsPerPage={itemsPerPage}
+            currentPage={list.currentPage}
+            totalPages={totalPages}
+            resourceLabel="Quotation"
+            onItemsPerPage={list.setItemsPerPage}
+            onPage={list.setCurrentPage}
           />
-
-          <ActiveFiltersBar chips={filterChips} onClearAll={clearAllFilters} />
-
-          <div className={ui.tableWrap}>
-            <QuotationTable
-              rows={currentData}
-              sortKey={sortConfig?.key ?? null}
-              sortDir={sortConfig?.direction ?? null}
-              onSort={requestSort}
-              onViewDetail={onViewDetail}
-              onDownload={handleDownload}
-            />
-            <Pagination
-              totalItems={totalItems}
-              startIndex={startIndex}
-              itemsPerPage={itemsPerPage}
-              currentPage={list.currentPage}
-              totalPages={totalPages}
-              resourceLabel="Quotation"
-              onItemsPerPage={list.setItemsPerPage}
-              onPage={list.setCurrentPage}
-            />
-          </div>
         </div>
       </div>
 
@@ -178,6 +167,6 @@ export default function QuotationList({ onNavigate, onLogout, onViewDetail }: Qu
           onApply={list.applyFilters}
         />
       )}
-    </div>
+    </>
   )
 }

@@ -1,5 +1,5 @@
+import { useNavigate } from "@tanstack/react-router"
 import StatusBadge from "@/components/shared/StatusBadge"
-import type { Page } from "@/lib/page"
 import { ui } from "@/lib/ui"
 import type { PoStatus } from "../types"
 import { PO_LABEL, PO_STATUS_CONFIG } from "./helpers"
@@ -9,7 +9,7 @@ interface HeaderProps {
   quotationNo: string
   createdAt: string
   status: PoStatus
-  onNavigate: (page: Page) => void
+  onEdit: () => void
   onDownloadDeliveryNote?: () => void
 }
 
@@ -18,14 +18,18 @@ export default function Header({
   quotationNo,
   createdAt,
   status,
-  onNavigate,
+  onEdit,
   onDownloadDeliveryNote,
 }: HeaderProps) {
+  const navigate = useNavigate()
   const badge = PO_STATUS_CONFIG[status]
   return (
     <>
       <nav className={ui.breadcrumb}>
-        <button className={ui.breadcrumbLink} onClick={() => onNavigate("purchase-orders")}>
+        <button
+          className={ui.breadcrumbLink}
+          onClick={() => void navigate({ to: "/purchase-orders" })}
+        >
           Daftar Purchase Order
         </button>
         <span className={ui.breadcrumbSep}>&rsaquo;</span>
@@ -48,10 +52,7 @@ export default function Header({
           </div>
         </div>
         <div className={ui.detailActions}>
-          <button
-            className={`${ui.btnOutline} min-w-[130px]`}
-            onClick={() => onNavigate("purchase-order-edit")}
-          >
+          <button className={`${ui.btnOutline} min-w-[130px]`} onClick={onEdit}>
             <svg
               width="14"
               height="14"

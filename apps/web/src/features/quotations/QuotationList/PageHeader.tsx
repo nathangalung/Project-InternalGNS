@@ -1,13 +1,13 @@
-import type { Page } from "@/lib/page"
+import { useNavigate } from "@tanstack/react-router"
 import { ui } from "@/lib/ui"
 
 interface PageHeaderProps {
-  onNavigate: (page: Page) => void
   onExport: () => void
 }
 
 // Title bar plus three actions.
-export default function PageHeader({ onNavigate, onExport }: PageHeaderProps) {
+export default function PageHeader({ onExport }: PageHeaderProps) {
+  const navigate = useNavigate()
   return (
     <div className="page-header">
       <h1 className="page-title">Daftar Quotation</h1>
@@ -32,7 +32,7 @@ export default function PageHeader({ onNavigate, onExport }: PageHeaderProps) {
         <button
           type="button"
           className={`${ui.btnPrimary} w-[180px]`}
-          onClick={() => onNavigate("quotation-add" as Page)}
+          onClick={() => void navigate({ to: "/quotations/add" })}
         >
           <svg
             width="14"

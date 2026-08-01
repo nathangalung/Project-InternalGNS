@@ -1,11 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useMemo } from "react"
-import { useAuth } from "@/features/auth/hooks"
 import PurchaseOrderDetail from "@/features/purchaseOrders/PurchaseOrderDetail"
 import { toQuotationData } from "@/features/quotations/adapters"
 import { useQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
-import { makePageNavigate } from "@/lib/page-nav"
 
 export const Route = createFileRoute("/_authed/purchase-orders/$id/")({
   component: PurchaseOrderDetailRoute,
@@ -14,7 +12,6 @@ export const Route = createFileRoute("/_authed/purchase-orders/$id/")({
 function PurchaseOrderDetailRoute() {
   const { id } = Route.useParams()
   const navigate = useNavigate()
-  const { logout } = useAuth()
 
   const numericId = Number(id)
   const hasNumericId = Number.isFinite(numericId) && numericId > 0
@@ -34,17 +31,13 @@ function PurchaseOrderDetailRoute() {
       quotationId={numericId}
       quotationNo={detail?.quotationNo ?? id}
       quotation={quotation}
-      onNavigate={makePageNavigate(navigate, id)}
+      onEdit={() => void navigate({ to: "/purchase-orders/$id/edit", params: { id } })}
       onNavigateEntity={(scope, entityId) => {
         if (scope === "Klien") {
           void navigate({ to: "/clients/$id", params: { id: String(entityId) } })
         } else {
           void navigate({ to: "/vendors/$id", params: { id: String(entityId) } })
         }
-      }}
-      onLogout={() => {
-        logout()
-        void navigate({ to: "/login" })
       }}
     />
   )

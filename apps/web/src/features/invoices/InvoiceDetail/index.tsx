@@ -1,5 +1,5 @@
+import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useRef, useState } from "react"
-import Sidebar from "@/components/shared/Sidebar"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import { usePurchaseOrderByQuotation } from "@/features/purchaseOrders/hooks"
 import ClientSummaryCard from "@/features/quotations/QuotationDetail/ClientSummaryCard"
@@ -11,7 +11,6 @@ import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
 import { downloadPdf, fetchObjectUrl } from "@/lib/api-client"
 import { computeTaxBreakdown, toNum } from "@/lib/format"
-import type { Page } from "@/lib/page"
 import { invoiceItemsToProducts, invoiceItemsToShipping } from "../adapters"
 import {
   useChangeInvoiceStatus,
@@ -36,8 +35,6 @@ interface InvoiceDetailProps {
   quotationId: number
   quotationNo: string
   quotation?: QuotationData
-  onNavigate: (page: Page) => void
-  onLogout: () => void
 }
 
 // Derive display filename from objectKey, e.g.
@@ -49,13 +46,8 @@ function deriveFileName(objectKey: string | undefined): string {
   return dash >= 0 ? last.slice(dash + 1) : last
 }
 
-export default function InvoiceDetail({
-  quotationId,
-  quotationNo,
-  quotation,
-  onNavigate,
-  onLogout,
-}: InvoiceDetailProps) {
+export default function InvoiceDetail({ quotationId, quotationNo, quotation }: InvoiceDetailProps) {
+  const navigate = useNavigate()
   const { data: inv, isLoading } = useInvoiceByQuotation(quotationId)
   const { data: invItems } = useInvoiceItems(inv?.id)
   const { data: linkedPo } = usePurchaseOrderByQuotation(quotationId)
@@ -91,13 +83,8 @@ export default function InvoiceDetail({
 
   if (!quotation || (isLoading && !inv) || !inv) {
     return (
-      <div className="admin-shell">
-        <Sidebar activePage={"invoices" as Page} onNavigate={onNavigate} onLogout={onLogout} />
-        <div className="admin-main">
-          <div className="page-content">
-            <p>{isLoading ? "Memuat data Invoice…" : "Invoice tidak ditemukan."}</p>
-          </div>
-        </div>
+      <div className="page-content">
+        <p>{isLoading ? "Memuat data Invoice…" : "Invoice tidak ditemukan."}</p>
       </div>
     )
   }
@@ -105,13 +92,8 @@ export default function InvoiceDetail({
   // Cancelled is terminal and read-only.
   if (inv.status === "cancelled") {
     return (
-      <div className="admin-shell">
-        <Sidebar activePage={"invoices" as Page} onNavigate={onNavigate} onLogout={onLogout} />
-        <div className="admin-main">
-          <div className="page-content">
-            <p>Invoice {inv.invoiceNo} telah dibatalkan.</p>
-          </div>
-        </div>
+      <div className="page-content">
+        <p>Invoice {inv.invoiceNo} telah dibatalkan.</p>
       </div>
     )
   }
@@ -161,7 +143,7 @@ export default function InvoiceDetail({
     if (!inv) return
     const target = TO_BACKEND[status]
     if (target === inv.status) {
-      onNavigate("invoices")
+      void navigate({ to: "/invoices" })
       return
     }
     changeStatus.mutate(
@@ -172,71 +154,65 @@ export default function InvoiceDetail({
             ...prev,
             { date: nowLabel(), action: `Status diubah menjadi ${INVOICE_LABEL[status]}` },
           ])
-          onNavigate("invoices")
+          void navigate({ to: "/invoices" })
         },
       },
     )
   }
 
   return (
-    <div className="admin-shell">
-      <Sidebar activePage={"invoices" as Page} onNavigate={onNavigate} onLogout={onLogout} />
-      <div className="admin-main">
-        <div className="page-content">
-          <Header
-            invoiceNo={invoiceNo}
-            quotationNo={quotationNo}
-            createdAt={quotation.createdAt}
-            status={displayStatus}
-            onNavigate={onNavigate}
-            onDownload={handleDownload}
-            poNumber={linkedPo?.poNumber}
-            poDate={linkedPo?.poDate}
-          />
-          <StatusBar
-            status={status}
-            isOpen={isStatusOpen}
-            onToggle={() => setIsStatusOpen((o) => !o)}
-            onChange={handleStatusChange}
-            onSave={handleSave}
-          />
-          <input
-            ref={attachmentInputRef}
-            type="file"
-            className="hidden"
-            onChange={(e) => {
-              handleAttachmentSelect(e.target.files?.[0])
-              e.target.value = ""
-            }}
-          />
-          <FileCard
-            fileName={deriveFileName(inv.attachmentObjectKey)}
-            onUpload={() => attachmentInputRef.current?.click()}
-            onDownload={handleAttachmentDownload}
-          />
-          <ClientSummaryCard
-            clientName={quotation.client}
-            clientInitials={clientInitials}
-            clientInfo={quotation.clientInfo}
-            shippingAlamat={shipping.alamat}
-          />
-          {totalShip > 0 && <ShippingTable shipping={shipping} />}
-          <ProductTable products={products} showProfit={hasCost} />
-          <CostBreakdown
-            hasProducts={hasProducts}
-            totalProduk={totalProduk}
-            nominalDiskon={nominalDiskon}
-            subTotal={subTotal}
-            dppNilaiLain={dppNilaiLain}
-            ppn12={ppn12}
-            totalShip={totalShip}
-            totalProfit={totalProfit}
-            showProfit={hasCost}
-            grandTotal={grandTotal}
-          />
-          <HistoryTimeline history={history} />
-        </div>
-      </div>
+    <div className="page-content">
+      <Header
+        invoiceNo={invoiceNo}
+        quotationNo={quotationNo}
+        createdAt={quotation.createdAt}
+        status={displayStatus}
+        onDownload={handleDownload}
+        poNumber={linkedPo?.poNumber}
+        poDate={linkedPo?.poDate}
+      />
+      <StatusBar
+        status={status}
+        isOpen={isStatusOpen}
+        onToggle={() => setIsStatusOpen((o) => !o)}
+        onChange={handleStatusChange}
+        onSave={handleSave}
+      />
+      <input
+        ref={attachmentInputRef}
+        type="file"
+        className="hidden"
+        onChange={(e) => {
+          handleAttachmentSelect(e.target.files?.[0])
+          e.target.value = ""
+        }}
+      />
+      <FileCard
+        fileName={deriveFileName(inv.attachmentObjectKey)}
+        onUpload={() => attachmentInputRef.current?.click()}
+        onDownload={handleAttachmentDownload}
+      />
+      <ClientSummaryCard
+        clientName={quotation.client}
+        clientInitials={clientInitials}
+        clientInfo={quotation.clientInfo}
+        shippingAlamat={shipping.alamat}
+      />
+      {totalShip > 0 && <ShippingTable shipping={shipping} />}
+      <ProductTable products={products} showProfit={hasCost} />
+      <CostBreakdown
+        hasProducts={hasProducts}
+        totalProduk={totalProduk}
+        nominalDiskon={nominalDiskon}
+        subTotal={subTotal}
+        dppNilaiLain={dppNilaiLain}
+        ppn12={ppn12}
+        totalShip={totalShip}
+        totalProfit={totalProfit}
+        showProfit={hasCost}
+        grandTotal={grandTotal}
+      />
+      <HistoryTimeline history={history} />
     </div>
   )
 }

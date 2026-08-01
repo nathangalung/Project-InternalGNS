@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
 import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
+import Sidebar from "@/components/shared/Sidebar"
 import * as authApi from "@/features/auth/api"
 import { clearAuthState, isAuthenticatedSync } from "@/features/auth/hooks"
 import { queryKeys } from "@/lib/query-keys"
@@ -28,6 +29,14 @@ export const Route = createFileRoute("/_authed")({
   errorComponent: ({ error, reset }) => <RouteErrorFallback error={error} reset={reset} />,
 })
 
+// App shell for every authenticated route.
 function AuthedLayout() {
-  return <Outlet />
+  return (
+    <div className="admin-shell">
+      <Sidebar />
+      <div className="admin-main">
+        <Outlet />
+      </div>
+    </div>
+  )
 }

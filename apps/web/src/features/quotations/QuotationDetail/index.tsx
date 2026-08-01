@@ -1,9 +1,8 @@
+import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
-import Sidebar from "@/components/shared/Sidebar"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import type { QuotationData, Status } from "@/features/quotations/types"
 import { downloadPdf } from "@/lib/api-client"
-import type { Page } from "@/lib/page"
 import { QUOTATION_TRANSITIONS } from "@/lib/status"
 import ClientSummaryCard from "./ClientSummaryCard"
 import CostBreakdown from "./CostBreakdown"
@@ -19,8 +18,7 @@ interface QuotationDetailProps {
   quotationId: string
   quotation?: QuotationData
   onSaveStatus?: (next: Status) => void
-  onNavigate: (page: Page) => void
-  onLogout: () => void
+  onEdit: () => void
 }
 
 // Quotation detail orchestrator.
@@ -28,9 +26,9 @@ export default function QuotationDetail({
   quotationId,
   quotation,
   onSaveStatus,
-  onNavigate,
-  onLogout,
+  onEdit,
 }: QuotationDetailProps) {
+  const navigate = useNavigate()
   const q = quotation
 
   const [status, setStatus] = useState<Status>(q?.status ?? "Draf")
@@ -46,13 +44,8 @@ export default function QuotationDetail({
 
   if (!q) {
     return (
-      <div className="admin-shell">
-        <Sidebar activePage="quotation" onNavigate={onNavigate} onLogout={onLogout} />
-        <div className="admin-main">
-          <div className="page-content">
-            <p>Quotation tidak ditemukan.</p>
-          </div>
-        </div>
+      <div className="page-content">
+        <p>Quotation tidak ditemukan.</p>
       </div>
     )
   }
@@ -90,56 +83,51 @@ export default function QuotationDetail({
         : history
     if (onSaveStatus && status !== q.status) onSaveStatus(status)
     setHistory(newHistory)
-    onNavigate("quotation")
+    void navigate({ to: "/quotations" })
   }
 
   return (
-    <div className="admin-shell">
-      <Sidebar activePage="quotation" onNavigate={onNavigate} onLogout={onLogout} />
-      <div className="admin-main">
-        <div className="page-content">
-          <Header
-            quotationId={quotationId}
-            createdAt={q.createdAt}
-            version={q.version}
-            status={status}
-            onNavigate={onNavigate}
-            onDownload={handleDownload}
-          />
-          <StatusBar
-            status={status}
-            allowedStatuses={QUOTATION_TRANSITIONS[q.status]}
-            isOpen={isStatusOpen}
-            onToggle={() => setIsStatusOpen((o) => !o)}
-            onChange={handleStatusChange}
-            onSave={handleSave}
-          />
-          <ClientSummaryCard
-            clientName={q.client}
-            clientInitials={clientInitials}
-            clientInfo={q.clientInfo}
-            shippingAlamat={q.shipping.alamat}
-          />
-          {totalShip > 0 && <ShippingTable shipping={q.shipping} />}
-          <ProductTable products={q.products} />
-          <CostBreakdown
-            hasProducts={hasProducts}
-            totalProduk={totalProduk}
-            discountPct={discountPct}
-            nominalDiskon={nominalDiskon}
-            subTotal={subTotal}
-            dppNilaiLain={dppNilaiLain}
-            ppn12={ppn12}
-            totalShip={totalShip}
-            totalProfit={totalProfit}
-            grandTotal={grandTotal}
-          />
-          <HistoryTimeline history={history} />
-          {Number.isFinite(Number(q.id)) && Number(q.id) > 0 && (
-            <RevisionHistoryCard quotationId={Number(q.id)} />
-          )}
-        </div>
-      </div>
+    <div className="page-content">
+      <Header
+        quotationId={quotationId}
+        createdAt={q.createdAt}
+        version={q.version}
+        status={status}
+        onEdit={onEdit}
+        onDownload={handleDownload}
+      />
+      <StatusBar
+        status={status}
+        allowedStatuses={QUOTATION_TRANSITIONS[q.status]}
+        isOpen={isStatusOpen}
+        onToggle={() => setIsStatusOpen((o) => !o)}
+        onChange={handleStatusChange}
+        onSave={handleSave}
+      />
+      <ClientSummaryCard
+        clientName={q.client}
+        clientInitials={clientInitials}
+        clientInfo={q.clientInfo}
+        shippingAlamat={q.shipping.alamat}
+      />
+      {totalShip > 0 && <ShippingTable shipping={q.shipping} />}
+      <ProductTable products={q.products} />
+      <CostBreakdown
+        hasProducts={hasProducts}
+        totalProduk={totalProduk}
+        discountPct={discountPct}
+        nominalDiskon={nominalDiskon}
+        subTotal={subTotal}
+        dppNilaiLain={dppNilaiLain}
+        ppn12={ppn12}
+        totalShip={totalShip}
+        totalProfit={totalProfit}
+        grandTotal={grandTotal}
+      />
+      <HistoryTimeline history={history} />
+      {Number.isFinite(Number(q.id)) && Number(q.id) > 0 && (
+        <RevisionHistoryCard quotationId={Number(q.id)} />
+      )}
     </div>
   )
 }

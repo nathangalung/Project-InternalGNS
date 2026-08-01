@@ -1,8 +1,7 @@
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router"
 import { useState } from "react"
-import { useMe } from "@/features/auth/hooks"
-import type { Page } from "@/lib/page"
-import { roleCanAccess, type Section } from "@/lib/rbac"
+import { useAuth, useMe } from "@/features/auth/hooks"
+import { roleCanAccess, type Section, sectionFromPathname } from "@/lib/rbac"
 import type { Role } from "@/types/api"
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -40,13 +39,6 @@ const navItems = [
   { label: "Daftar Klien", icon: "users", page: "clients", to: "/clients" },
   { label: "Manajemen Pengguna", icon: "settings", page: "users", to: "/users" },
 ] as const satisfies readonly { label: string; icon: string; page: Section; to: string }[]
-
-interface SidebarProps {
-  activePage: Page
-  // Kept for existing callers.
-  onNavigate: (page: Page) => void
-  onLogout: () => void
-}
 
 const iconWrap =
   "h-4 w-4 flex-shrink-0 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-width:1.8] [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]"
@@ -131,11 +123,23 @@ function NavIcon({ name }: { name: string }) {
 const iconBtn =
   "flex items-center justify-center [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-linecap:round]"
 
-export default function Sidebar({ activePage, onLogout }: SidebarProps) {
+export default function Sidebar() {
   const { data: me } = useMe()
+  const navigate = useNavigate()
+  const { logout } = useAuth()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
+  // Highlight follows the router, detail routes included.
+  const activeSection = useRouterState({
+    select: (state) => sectionFromPathname(state.location.pathname),
+  })
+
   const visibleItems = navItems.filter((item) => roleCanAccess(me?.role, item.page))
+
+  function handleLogout() {
+    logout()
+    void navigate({ to: "/login" })
+  }
 
   return (
     <>
@@ -194,11 +198,13 @@ export default function Sidebar({ activePage, onLogout }: SidebarProps) {
 
         <nav className="flex flex-1 flex-col gap-1 px-3">
           {visibleItems.map((item) => {
-            const active = item.page === activePage
+            const active = item.page === activeSection
             return (
               <Link
                 key={item.label}
                 to={item.to}
+                // Root must match exactly so aria-current tracks the highlight.
+                activeOptions={{ exact: item.to === "/" }}
                 className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md py-2 pl-3 text-left text-sm font-medium no-underline transition-colors ${
                   active
                     ? "rounded-r-none border-r-[3px] border-primary-400 bg-primary-600/15 pr-[calc(0.75rem-3px)] text-primary-400 hover:bg-primary-600/20 hover:text-primary-300"
@@ -224,7 +230,7 @@ export default function Sidebar({ activePage, onLogout }: SidebarProps) {
           </div>
           <button
             className={`${iconBtn} h-[30px] w-[30px] flex-shrink-0 rounded-md border border-white/[0.06] bg-white/[0.04] text-dark-400 transition-colors hover:border-red-600/40 hover:bg-red-600/20 hover:text-red-300`}
-            onClick={onLogout}
+            onClick={handleLogout}
             title="Keluar"
           >
             <svg viewBox="0 0 24 24" width="16" height="16" strokeWidth="2" strokeLinejoin="round">

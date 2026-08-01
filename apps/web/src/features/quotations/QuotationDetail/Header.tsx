@@ -1,6 +1,6 @@
+import { useNavigate } from "@tanstack/react-router"
 import StatusBadge from "@/components/shared/StatusBadge"
 import type { Status } from "@/features/quotations/types"
-import type { Page } from "@/lib/page"
 import { ui } from "@/lib/ui"
 import { statusConfig } from "./helpers"
 
@@ -9,7 +9,7 @@ interface HeaderProps {
   createdAt: string
   version: number | string
   status: Status
-  onNavigate: (page: Page) => void
+  onEdit: () => void
   onDownload?: () => void
 }
 
@@ -19,14 +19,19 @@ export default function Header({
   createdAt,
   version,
   status,
-  onNavigate,
+  onEdit,
   onDownload,
 }: HeaderProps) {
+  const navigate = useNavigate()
   const badge = statusConfig[status]
   return (
     <>
       <nav className={ui.breadcrumb}>
-        <button type="button" className={ui.breadcrumbLink} onClick={() => onNavigate("quotation")}>
+        <button
+          type="button"
+          className={ui.breadcrumbLink}
+          onClick={() => void navigate({ to: "/quotations" })}
+        >
           Daftar Quotation
         </button>
         <span className={ui.breadcrumbSep}>&rsaquo;</span>
@@ -49,11 +54,7 @@ export default function Header({
           </div>
         </div>
         <div className={ui.detailActions}>
-          <button
-            type="button"
-            className={`${ui.btnOutline} min-w-[130px]`}
-            onClick={() => onNavigate("quotation-edit")}
-          >
+          <button type="button" className={`${ui.btnOutline} min-w-[130px]`} onClick={onEdit}>
             <svg
               width="14"
               height="14"

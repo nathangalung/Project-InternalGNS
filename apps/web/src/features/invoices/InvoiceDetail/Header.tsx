@@ -1,5 +1,5 @@
+import { useNavigate } from "@tanstack/react-router"
 import StatusBadge from "@/components/shared/StatusBadge"
-import type { Page } from "@/lib/page"
 import { ui } from "@/lib/ui"
 import type { InvoiceStatus } from "../types"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "../types"
@@ -9,7 +9,6 @@ interface HeaderProps {
   quotationNo: string
   createdAt: string
   status: InvoiceStatus
-  onNavigate: (page: Page) => void
   onDownload?: () => void
   poNumber?: string
   poDate?: string
@@ -20,16 +19,16 @@ export default function Header({
   quotationNo,
   createdAt,
   status,
-  onNavigate,
   onDownload,
   poNumber,
   poDate,
 }: HeaderProps) {
+  const navigate = useNavigate()
   const badge = INVOICE_STATUS_STYLE[status]
   return (
     <>
       <nav className={ui.breadcrumb}>
-        <button className={ui.breadcrumbLink} onClick={() => onNavigate("invoices")}>
+        <button className={ui.breadcrumbLink} onClick={() => void navigate({ to: "/invoices" })}>
           Daftar Invoice
         </button>
         <span className={ui.breadcrumbSep}>&rsaquo;</span>

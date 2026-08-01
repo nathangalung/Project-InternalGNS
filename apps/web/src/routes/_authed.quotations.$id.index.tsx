@@ -1,12 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useMemo } from "react"
-import { useAuth } from "@/features/auth/hooks"
 import { toQuotationData } from "@/features/quotations/adapters"
 import { useChangeQuotationStatus, useQuotation } from "@/features/quotations/hooks"
 import QuotationDetail from "@/features/quotations/QuotationDetail"
 import type { Status } from "@/features/quotations/types"
 import { useUnits } from "@/features/units/hooks"
-import { makePageNavigate } from "@/lib/page-nav"
 import { labelToStatus } from "@/lib/status"
 
 export const Route = createFileRoute("/_authed/quotations/$id/")({
@@ -16,7 +14,6 @@ export const Route = createFileRoute("/_authed/quotations/$id/")({
 function QuotationDetailRoute() {
   const { id } = Route.useParams()
   const navigate = useNavigate()
-  const { logout } = useAuth()
 
   const numericId = Number(id)
   const hasNumericId = Number.isFinite(numericId) && numericId > 0
@@ -42,11 +39,7 @@ function QuotationDetailRoute() {
       quotationId={detail?.quotationNo ?? id}
       quotation={quotation}
       onSaveStatus={detail ? handleSaveStatus : undefined}
-      onNavigate={makePageNavigate(navigate, id)}
-      onLogout={() => {
-        logout()
-        void navigate({ to: "/login" })
-      }}
+      onEdit={() => void navigate({ to: "/quotations/$id/edit", params: { id } })}
     />
   )
 }
