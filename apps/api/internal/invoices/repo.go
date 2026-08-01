@@ -48,13 +48,13 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 		for _, s := range f.EffectiveStatuses {
 			switch s {
 			case "draft":
-				clauses = append(clauses, "(inv.status = 'draft' AND (inv.due_date IS NULL OR inv.due_date >= NOW()))")
+				clauses = append(clauses, "(inv.status = 'draft' AND (inv.due_date IS NULL OR inv.due_date >= CURRENT_DATE))")
 			case "sent":
-				clauses = append(clauses, "(inv.status = 'sent' AND (inv.due_date IS NULL OR inv.due_date >= NOW()))")
+				clauses = append(clauses, "(inv.status = 'sent' AND (inv.due_date IS NULL OR inv.due_date >= CURRENT_DATE))")
 			case "paid":
 				clauses = append(clauses, "inv.status = 'paid'")
 			case "overdue":
-				clauses = append(clauses, "(inv.status = 'overdue' OR (inv.status IN ('draft','sent') AND inv.due_date IS NOT NULL AND inv.due_date < NOW()))")
+				clauses = append(clauses, "(inv.status = 'overdue' OR (inv.status IN ('draft','sent') AND inv.due_date IS NOT NULL AND inv.due_date < CURRENT_DATE))")
 			}
 		}
 		if len(clauses) > 0 {

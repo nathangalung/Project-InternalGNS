@@ -144,16 +144,16 @@ SELECT
   COUNT(*)::BIGINT AS total,
   COUNT(*) FILTER (
     WHERE status = 'draft'
-      AND (due_date IS NULL OR due_date >= NOW())
+      AND (due_date IS NULL OR due_date >= CURRENT_DATE)
   )::BIGINT AS draft,
   COUNT(*) FILTER (
     WHERE status = 'sent'
-      AND (due_date IS NULL OR due_date >= NOW())
+      AND (due_date IS NULL OR due_date >= CURRENT_DATE)
   )::BIGINT AS sent,
   COUNT(*) FILTER (WHERE status = 'paid')::BIGINT AS paid,
   COUNT(*) FILTER (
     WHERE status = 'overdue'
-       OR (status IN ('draft', 'sent') AND due_date IS NOT NULL AND due_date < NOW())
+       OR (status IN ('draft', 'sent') AND due_date IS NOT NULL AND due_date < CURRENT_DATE)
   )::BIGINT AS overdue
 FROM invoices
 WHERE status <> 'cancelled';
