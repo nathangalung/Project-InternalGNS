@@ -7,15 +7,16 @@ import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
 import StatusBadge from "@/components/shared/StatusBadge"
 import SummaryCard from "@/components/shared/SummaryCard"
+import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import ClientAdd from "@/features/clients/ClientAdd"
 import ClientFilter, { type ClientFilterValues } from "@/features/clients/ClientFilter"
 import { useClientSummary, useClients } from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
-import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { formatNumber, formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
+import { useListScreen } from "@/lib/useListScreen"
 import type { ClientRow } from "@/types/api"
 
 interface ClientListProps {
@@ -28,18 +29,15 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
   const { data: countriesData } = useCountries()
   const { data: summaryData } = useClientSummary()
 
-  const [search, setSearch] = useState("")
   const [showAdd, setShowAdd] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
-  const [filters, setFilters] = useState<ClientFilterValues>({
+
+  const list = useListScreen<ClientFilterValues>({
     status: "all",
     countryCode: "",
     minTotal: "",
   })
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [currentPage, setCurrentPage] = useState(1)
-
-  const debouncedSearch = useDebouncedValue(search.trim(), 250)
+  const { debouncedSearch, filters, itemsPerPage, startIndex } = list
 
   const queryParams = useMemo(
     () => ({
@@ -48,9 +46,9 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
       countryCode: filters.countryCode || undefined,
       minTotal: filters.minTotal && filters.minTotal !== "0" ? filters.minTotal : undefined,
       limit: itemsPerPage,
-      offset: (currentPage - 1) * itemsPerPage,
+      offset: startIndex,
     }),
-    [debouncedSearch, filters, itemsPerPage, currentPage],
+    [debouncedSearch, filters, itemsPerPage, startIndex],
   )
 
   const { data: clientsData, isLoading } = useClients(queryParams)
@@ -82,8 +80,7 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
     }
   }, [summaryData])
 
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
-  const startIndex = (currentPage - 1) * itemsPerPage
+  const totalPages = list.totalPagesOf(totalItems)
 
   return (
     <div className="admin-shell">
@@ -129,11 +126,8 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
 
           <div className="flex items-center gap-4 pt-2">
             <SearchInput
-              value={search}
-              onChange={(v) => {
-                setSearch(v)
-                setCurrentPage(1)
-              }}
+              value={list.search}
+              onChange={list.setSearch}
               placeholder="Cari nama, negara asal klien..."
             />
             <FilterButton onClick={() => setShowFilter(true)} />
@@ -164,19 +158,9 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
                 </tr>
               </thead>
               <tbody>
-                {isLoading && (
-                  <tr>
-                    <td colSpan={6} className="py-10 text-center text-sm text-dark-500">
-                      Memuat data…
-                    </td>
-                  </tr>
-                )}
+                {isLoading && <TableLoadingRow colSpan={6} />}
                 {!isLoading && currentRows.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="py-10 text-center text-sm text-dark-500">
-                      Tidak ada klien.
-                    </td>
-                  </tr>
+                  <TableEmptyRow colSpan={6}>Tidak ada klien.</TableEmptyRow>
                 )}
                 {!isLoading &&
                   currentRows.map((c: ClientRow) => {
@@ -208,7 +192,7 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
                         <td className={ui.tdCenter}>
                           <button
                             type="button"
-                            className="inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
+                            className={ui.iconAction}
                             title="Lihat detail"
                             onClick={() => onViewDetail?.(c.id)}
                           >
@@ -225,14 +209,11 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
               totalItems={totalItems}
               startIndex={startIndex}
               itemsPerPage={itemsPerPage}
-              currentPage={currentPage}
+              currentPage={list.currentPage}
               totalPages={totalPages}
               resourceLabel="Klien"
-              onItemsPerPage={(n) => {
-                setItemsPerPage(n)
-                setCurrentPage(1)
-              }}
-              onPage={setCurrentPage}
+              onItemsPerPage={list.setItemsPerPage}
+              onPage={list.setCurrentPage}
             />
           </div>
         </div>
@@ -244,10 +225,7 @@ export default function ClientList({ onNavigate, onLogout, onViewDetail }: Clien
         <ClientFilter
           onClose={() => setShowFilter(false)}
           initialValues={filters}
-          onApply={(f) => {
-            setFilters(f)
-            setCurrentPage(1)
-          }}
+          onApply={list.applyFilters}
         />
       )}
     </div>

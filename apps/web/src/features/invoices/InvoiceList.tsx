@@ -7,13 +7,14 @@ import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
 import StatusBadge from "@/components/shared/StatusBadge"
 import SummaryCard from "@/components/shared/SummaryCard"
-import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { downloadPdf, downloadXml } from "@/lib/api-client"
 import { resolveRange } from "@/lib/date-range"
 import { formatDate, formatNumber, formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import { deriveInvoiceStatus } from "@/lib/status"
 import { ui } from "@/lib/ui"
+import { useListScreen } from "@/lib/useListScreen"
 import type { InvoiceBackendRow } from "@/types/api"
 import * as invoicesApi from "./api"
 import { useInvoiceSummary, useInvoices } from "./hooks"
@@ -67,23 +68,18 @@ function rowFromBackend(inv: InvoiceBackendRow): InvoiceRow {
   }
 }
 
-const actionBtn =
-  "inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
-
 export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: InvoiceListProps) {
-  const [search, setSearch] = useState("")
   const [showFilter, setShowFilter] = useState(false)
-  const [activeFilters, setActiveFilters] = useState<InvoiceFilterValues | null>(null)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [currentPage, setCurrentPage] = useState(1)
 
-  const debouncedSearch = useDebouncedValue(search.trim(), 250)
+  const list = useListScreen<InvoiceFilterValues | null>(null)
+  const { debouncedSearch, filters: activeFilters, itemsPerPage, startIndex } = list
+  const { clearSearch, patchFilters } = list
 
   const queryParams = useMemo(() => {
     const out: Parameters<typeof useInvoices>[0] = {
       q: debouncedSearch || undefined,
       limit: itemsPerPage,
-      offset: (currentPage - 1) * itemsPerPage,
+      offset: startIndex,
       sortBy: "createdAt",
       sortDir: "desc",
       effectiveStatus: ALL_EFFECTIVE_STATUSES,
@@ -111,7 +107,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
     const max = rupiahToDigits(activeFilters.maxHarga)
     if (max && max !== "0") out.maxTotal = max
     return out
-  }, [debouncedSearch, activeFilters, itemsPerPage, currentPage])
+  }, [debouncedSearch, activeFilters, itemsPerPage, startIndex])
 
   const { data: rawList, isLoading } = useInvoices(queryParams)
   const { data: summaryData } = useInvoiceSummary()
@@ -121,8 +117,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
   }, [rawList])
 
   const totalItems = rawList?.total ?? 0
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
-  const startIndex = (currentPage - 1) * itemsPerPage
+  const totalPages = list.totalPagesOf(totalItems)
 
   const counts = {
     total: summaryData?.total ?? 0,
@@ -136,7 +131,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
   const filterChips = useMemo<FilterChip[]>(() => {
     const out: FilterChip[] = []
     if (debouncedSearch) {
-      out.push({ key: "q", label: `Cari: "${debouncedSearch}"`, onRemove: () => setSearch("") })
+      out.push({ key: "q", label: `Cari: "${debouncedSearch}"`, onRemove: clearSearch })
     }
     if (activeFilters) {
       for (const s of activeFilters.statuses) {
@@ -144,9 +139,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
           key: `status-${s}`,
           label: `Status: ${s}`,
           onRemove: () =>
-            setActiveFilters((p) =>
-              p ? { ...p, statuses: p.statuses.filter((x) => x !== s) } : p,
-            ),
+            patchFilters((p) => (p ? { ...p, statuses: p.statuses.filter((x) => x !== s) } : p)),
         })
       }
       if (activeFilters.createdPreset !== "semua") {
@@ -169,12 +162,11 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
       }
     }
     return out
-  }, [debouncedSearch, activeFilters])
+  }, [debouncedSearch, activeFilters, clearSearch, patchFilters])
 
   const clearAllFilters = () => {
-    setSearch("")
-    setActiveFilters(null)
-    setCurrentPage(1)
+    clearSearch()
+    list.applyFilters(null)
   }
 
   return (
@@ -245,11 +237,8 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
 
           <div className="flex items-center gap-4 pt-2">
             <SearchInput
-              value={search}
-              onChange={(v) => {
-                setSearch(v)
-                setCurrentPage(1)
-              }}
+              value={list.search}
+              onChange={list.setSearch}
               placeholder="Cari invoice, klien, atau nomor..."
             />
             <FilterButton onClick={() => setShowFilter(true)} />
@@ -285,19 +274,11 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
                 </tr>
               </thead>
               <tbody>
-                {isLoading && (
-                  <tr>
-                    <td colSpan={7} className="py-10 text-center text-sm text-dark-500">
-                      Memuat data…
-                    </td>
-                  </tr>
-                )}
+                {isLoading && <TableLoadingRow colSpan={7} />}
                 {!isLoading && currentRows.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="py-10 text-center text-sm text-dark-500">
-                      Belum ada Invoice. Invoice dibuat otomatis ketika status PO menjadi Dikirim.
-                    </td>
-                  </tr>
+                  <TableEmptyRow colSpan={7}>
+                    Belum ada Invoice. Invoice dibuat otomatis ketika status PO menjadi Dikirim.
+                  </TableEmptyRow>
                 )}
                 {!isLoading &&
                   currentRows.map((row) => {
@@ -323,7 +304,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
                             <button
                               type="button"
                               title="Lihat detail"
-                              className={actionBtn}
+                              className={ui.iconAction}
                               onClick={() => onViewDetail?.(row.quotationId)}
                             >
                               <EyeIcon size={18} />
@@ -331,7 +312,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
                             <button
                               type="button"
                               title="Unduh invoice"
-                              className={actionBtn}
+                              className={ui.iconAction}
                               onClick={() =>
                                 downloadPdf(`/invoices/${row.id}/pdf`, `${row.invoiceNo}.pdf`)
                               }
@@ -354,7 +335,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
                             <button
                               type="button"
                               title="Unduh Coretax XML"
-                              className={actionBtn}
+                              className={ui.iconAction}
                               onClick={() =>
                                 downloadXml(
                                   `/invoices/${row.id}/coretax.xml`,
@@ -389,14 +370,11 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
               totalItems={totalItems}
               startIndex={startIndex}
               itemsPerPage={itemsPerPage}
-              currentPage={currentPage}
+              currentPage={list.currentPage}
               totalPages={totalPages}
               resourceLabel="Invoice"
-              onItemsPerPage={(n) => {
-                setItemsPerPage(n)
-                setCurrentPage(1)
-              }}
-              onPage={setCurrentPage}
+              onItemsPerPage={list.setItemsPerPage}
+              onPage={list.setCurrentPage}
             />
           </div>
         </div>
@@ -406,10 +384,7 @@ export default function InvoiceList({ onNavigate, onLogout, onViewDetail }: Invo
         <InvoiceFilter
           onClose={() => setShowFilter(false)}
           initialValues={activeFilters ?? undefined}
-          onApply={(f) => {
-            setActiveFilters(f)
-            setCurrentPage(1)
-          }}
+          onApply={list.applyFilters}
         />
       )}
     </div>

@@ -5,14 +5,15 @@ import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
 import StatusBadge from "@/components/shared/StatusBadge"
+import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useItemSearchAdvanced, useItems } from "@/features/items/hooks"
 import ProductCreateModal from "@/features/items/ProductCreateModal"
 import ProductFilter, { type ProductFilterValues } from "@/features/items/ProductFilter"
 import { useUnits } from "@/features/units/hooks"
-import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import type { Page } from "@/lib/page"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
+import { useListScreen } from "@/lib/useListScreen"
 import type { AdvancedSearchHit, AdvancedSearchTier, ItemRow } from "@/types/api"
 
 interface ProductListProps {
@@ -34,14 +35,11 @@ const TIER_BADGE: Record<AdvancedSearchTier, { label: string; bg: string; color:
 export default function ProductList({ onNavigate, onLogout, onViewDetail }: ProductListProps) {
   const { data: unitsData } = useUnits()
 
-  const [search, setSearch] = useState("")
   const [showAdd, setShowAdd] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
-  const [filters, setFilters] = useState<ProductFilterValues>({ status: "all", unitCode: "" })
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [currentPage, setCurrentPage] = useState(1)
 
-  const debouncedSearch = useDebouncedValue(search.trim(), 250)
+  const list = useListScreen<ProductFilterValues>({ status: "all", unitCode: "" })
+  const { debouncedSearch, filters, itemsPerPage, startIndex } = list
   const isSearchActive = debouncedSearch.length > 0
 
   const unitIdByCode = useMemo(() => {
@@ -53,7 +51,7 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
   const listParams = useMemo(() => {
     const out: Parameters<typeof useItems>[0] = {
       limit: itemsPerPage,
-      offset: (currentPage - 1) * itemsPerPage,
+      offset: startIndex,
     }
     if (filters.status === "active") out.isActive = true
     if (filters.status === "inactive") out.isActive = false
@@ -62,7 +60,7 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
       if (id !== undefined) out.unitId = id
     }
     return out
-  }, [filters, itemsPerPage, currentPage, unitIdByCode])
+  }, [filters, itemsPerPage, startIndex, unitIdByCode])
 
   const filterActive = filters.status === "active"
   const filterInactive = filters.status === "inactive"
@@ -112,8 +110,7 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
 
   const serverRows = listData?.rows ?? []
   const totalItems = isSearchActive ? searchRows.length : (listData?.total ?? 0)
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
-  const startIndex = (currentPage - 1) * itemsPerPage
+  const totalPages = list.totalPagesOf(totalItems)
   const currentRows = isSearchActive
     ? searchRows.slice(startIndex, startIndex + itemsPerPage)
     : serverRows
@@ -151,11 +148,8 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
 
           <div className="flex items-center gap-4 pt-2">
             <SearchInput
-              value={search}
-              onChange={(v) => {
-                setSearch(v)
-                setCurrentPage(1)
-              }}
+              value={list.search}
+              onChange={list.setSearch}
               placeholder="Cari kode IMPA, nama, kategori produk..."
             />
             <FilterButton onClick={() => setShowFilter(true)} />
@@ -210,21 +204,13 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
                 </tr>
               </thead>
               <tbody>
-                {isLoading && (
-                  <tr>
-                    <td colSpan={5} className="py-10 text-center text-sm text-dark-500">
-                      Memuat data…
-                    </td>
-                  </tr>
-                )}
+                {isLoading && <TableLoadingRow colSpan={5} />}
                 {!isLoading && currentRows.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="py-10 text-center text-sm text-dark-500">
-                      {isSearchActive
-                        ? `Tidak ada hasil untuk "${debouncedSearch}".`
-                        : "Tidak ada produk."}
-                    </td>
-                  </tr>
+                  <TableEmptyRow colSpan={5}>
+                    {isSearchActive
+                      ? `Tidak ada hasil untuk "${debouncedSearch}".`
+                      : "Tidak ada produk."}
+                  </TableEmptyRow>
                 )}
                 {!isLoading &&
                   currentRows.map((it: ItemRow) => {
@@ -258,7 +244,7 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
                         <td className={ui.tdCenter}>
                           <button
                             type="button"
-                            className="inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
+                            className={ui.iconAction}
                             title="Lihat detail"
                             onClick={() => onViewDetail?.(it.id)}
                           >
@@ -275,14 +261,11 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
               totalItems={totalItems}
               startIndex={startIndex}
               itemsPerPage={itemsPerPage}
-              currentPage={currentPage}
+              currentPage={list.currentPage}
               totalPages={totalPages}
               resourceLabel="Produk"
-              onItemsPerPage={(n) => {
-                setItemsPerPage(n)
-                setCurrentPage(1)
-              }}
-              onPage={setCurrentPage}
+              onItemsPerPage={list.setItemsPerPage}
+              onPage={list.setCurrentPage}
             />
           </div>
         </div>
@@ -294,10 +277,7 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
         <ProductFilter
           onClose={() => setShowFilter(false)}
           initialValues={filters}
-          onApply={(f) => {
-            setFilters(f)
-            setCurrentPage(1)
-          }}
+          onApply={list.applyFilters}
         />
       )}
     </div>

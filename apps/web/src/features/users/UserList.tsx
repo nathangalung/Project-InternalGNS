@@ -6,11 +6,12 @@ import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
 import SortIcon from "@/components/shared/SortIcon"
 import StatusBadge from "@/components/shared/StatusBadge"
+import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useUsers } from "@/features/users/hooks"
-import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import type { Page } from "@/lib/page"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
+import { useListScreen } from "@/lib/useListScreen"
 import type { Role } from "@/types/api"
 import UserAddModal from "./UserAddModal"
 import UserFilter, { type RoleFilter, type StatusFilter } from "./UserFilter"
@@ -22,6 +23,8 @@ interface UserListProps {
 }
 
 type SortKey = "name" | "createdAt"
+
+type UserFilters = { role: RoleFilter; status: StatusFilter }
 
 const ROLE_BADGE: Record<Role, { label: string; bg: string; color: string }> = {
   superadmin: { label: "SUPERADMIN", bg: "#EDE9FE", color: "#5B21B6" },
@@ -51,15 +54,13 @@ function formatDateID(iso: string): string {
 }
 
 export default function UserList({ onNavigate, onLogout, onViewDetail }: UserListProps) {
-  const [search, setSearch] = useState("")
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [currentPage, setCurrentPage] = useState(1)
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
   const [sortKey, setSortKey] = useState<SortKey>("createdAt")
   const [showFilter, setShowFilter] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all")
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
+
+  const list = useListScreen<UserFilters>({ role: "all", status: "all" })
+  const { debouncedSearch, filters, itemsPerPage, startIndex } = list
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
@@ -68,29 +69,26 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
       setSortKey(key)
       setSortDir("asc")
     }
-    setCurrentPage(1)
+    list.setCurrentPage(1)
   }
-
-  const debouncedSearch = useDebouncedValue(search.trim(), 250)
 
   const queryParams = useMemo(
     () => ({
       q: debouncedSearch || undefined,
-      role: roleFilter === "all" ? undefined : (roleFilter as Role),
-      isActive: statusFilter === "all" ? undefined : statusFilter === "active",
+      role: filters.role === "all" ? undefined : (filters.role as Role),
+      isActive: filters.status === "all" ? undefined : filters.status === "active",
       sortBy: sortKey,
       sortDir,
       limit: itemsPerPage,
-      offset: (currentPage - 1) * itemsPerPage,
+      offset: startIndex,
     }),
-    [debouncedSearch, roleFilter, statusFilter, sortKey, sortDir, itemsPerPage, currentPage],
+    [debouncedSearch, filters, sortKey, sortDir, itemsPerPage, startIndex],
   )
 
   const { data: usersData, isLoading } = useUsers(queryParams)
   const currentRows = usersData?.rows ?? []
   const totalItems = usersData?.total ?? 0
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
-  const startIndex = (currentPage - 1) * itemsPerPage
+  const totalPages = list.totalPagesOf(totalItems)
 
   return (
     <div className="admin-shell">
@@ -125,11 +123,8 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
 
           <div className="flex items-center gap-4 pt-2">
             <SearchInput
-              value={search}
-              onChange={(v) => {
-                setSearch(v)
-                setCurrentPage(1)
-              }}
+              value={list.search}
+              onChange={list.setSearch}
               placeholder="Cari nama, peran, status admin..."
             />
             <FilterButton onClick={() => setShowFilter(true)} />
@@ -174,19 +169,9 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
                 </tr>
               </thead>
               <tbody>
-                {isLoading && (
-                  <tr>
-                    <td colSpan={6} className="py-10 text-center text-sm text-dark-500">
-                      Memuat data…
-                    </td>
-                  </tr>
-                )}
+                {isLoading && <TableLoadingRow colSpan={6} />}
                 {!isLoading && currentRows.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="py-10 text-center text-sm text-dark-500">
-                      Tidak ada pengguna.
-                    </td>
-                  </tr>
+                  <TableEmptyRow colSpan={6}>Tidak ada pengguna.</TableEmptyRow>
                 )}
                 {!isLoading &&
                   currentRows.map((u) => {
@@ -212,7 +197,7 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
                         <td className={ui.tdCenter}>
                           <button
                             type="button"
-                            className="inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
+                            className={ui.iconAction}
                             title="Lihat detail"
                             onClick={() => onViewDetail?.(u.id)}
                           >
@@ -229,14 +214,11 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
               totalItems={totalItems}
               startIndex={startIndex}
               itemsPerPage={itemsPerPage}
-              currentPage={currentPage}
+              currentPage={list.currentPage}
               totalPages={totalPages}
               resourceLabel="Admin"
-              onItemsPerPage={(n) => {
-                setItemsPerPage(n)
-                setCurrentPage(1)
-              }}
-              onPage={setCurrentPage}
+              onItemsPerPage={list.setItemsPerPage}
+              onPage={list.setCurrentPage}
             />
           </div>
         </div>
@@ -245,12 +227,8 @@ export default function UserList({ onNavigate, onLogout, onViewDetail }: UserLis
       {showFilter && (
         <UserFilter
           onClose={() => setShowFilter(false)}
-          initialValues={{ role: roleFilter, status: statusFilter }}
-          onApply={({ role, status }) => {
-            setRoleFilter(role)
-            setStatusFilter(status)
-            setCurrentPage(1)
-          }}
+          initialValues={filters}
+          onApply={list.applyFilters}
         />
       )}
 

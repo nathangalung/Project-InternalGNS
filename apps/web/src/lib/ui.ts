@@ -23,6 +23,9 @@ export const ui = {
     "inline-flex items-center justify-center gap-2 rounded-md border border-primary-700/20 bg-white px-6 py-2 text-sm font-bold text-primary-700 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40",
   btnGhost:
     "inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-dark-500 transition hover:bg-dark-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40",
+  // Table row icon button, from the list screens
+  iconAction:
+    "inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40",
 
   // Form controls
   input:

@@ -6,12 +6,13 @@ import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
 import StatusBadge from "@/components/shared/StatusBadge"
-import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { downloadPdf } from "@/lib/api-client"
 import { resolveRange } from "@/lib/date-range"
 import { formatDate, formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import { ui } from "@/lib/ui"
+import { useListScreen } from "@/lib/useListScreen"
 import type { PurchaseOrderRow } from "@/types/api"
 import * as purchaseOrdersApi from "./api"
 import { usePurchaseOrders, useUpdatePoDetails, useUploadPoFile } from "./hooks"
@@ -63,20 +64,18 @@ export default function PurchaseOrderList({
   const uploadFile = useUploadPoFile()
   const updateDetails = useUpdatePoDetails()
 
-  const [search, setSearch] = useState("")
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [currentPage, setCurrentPage] = useState(1)
   const [uploadTarget, setUploadTarget] = useState<{ row: PoRow; poId: number } | null>(null)
   const [showFilter, setShowFilter] = useState(false)
-  const [activeFilters, setActiveFilters] = useState<PoFilterValues | null>(null)
 
-  const debouncedSearch = useDebouncedValue(search.trim(), 250)
+  const list = useListScreen<PoFilterValues | null>(null)
+  const { debouncedSearch, filters: activeFilters, itemsPerPage, startIndex } = list
+  const { clearSearch, patchFilters } = list
 
   const queryParams = useMemo(() => {
     const out: Parameters<typeof usePurchaseOrders>[0] = {
       q: debouncedSearch || undefined,
       limit: itemsPerPage,
-      offset: (currentPage - 1) * itemsPerPage,
+      offset: startIndex,
       sortBy: "poDate",
       sortDir: "desc",
     }
@@ -92,7 +91,7 @@ export default function PurchaseOrderList({
     const max = activeFilters.maxHarga.replace(/\D/g, "")
     if (max && max !== "0") out.maxTotal = max
     return out
-  }, [debouncedSearch, activeFilters, itemsPerPage, currentPage])
+  }, [debouncedSearch, activeFilters, itemsPerPage, startIndex])
 
   const { data: rawList, isLoading } = usePurchaseOrders(queryParams)
 
@@ -100,8 +99,7 @@ export default function PurchaseOrderList({
   const currentRows: PoRow[] = useMemo(() => backend.map(rowFromBackend), [backend])
 
   const totalItems = rawList?.total ?? 0
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
-  const startIndex = (currentPage - 1) * itemsPerPage
+  const totalPages = list.totalPagesOf(totalItems)
 
   function poIdFor(quotationId: number): number | undefined {
     return backend.find((p) => p.quotationId === quotationId)?.id
@@ -151,7 +149,7 @@ export default function PurchaseOrderList({
   const filterChips = useMemo<FilterChip[]>(() => {
     const out: FilterChip[] = []
     if (debouncedSearch) {
-      out.push({ key: "q", label: `Cari: "${debouncedSearch}"`, onRemove: () => setSearch("") })
+      out.push({ key: "q", label: `Cari: "${debouncedSearch}"`, onRemove: clearSearch })
     }
     if (activeFilters) {
       for (const s of activeFilters.statuses) {
@@ -159,9 +157,7 @@ export default function PurchaseOrderList({
           key: `status-${s}`,
           label: `Status: ${PO_LABEL[s]}`,
           onRemove: () =>
-            setActiveFilters((p) =>
-              p ? { ...p, statuses: p.statuses.filter((x) => x !== s) } : p,
-            ),
+            patchFilters((p) => (p ? { ...p, statuses: p.statuses.filter((x) => x !== s) } : p)),
         })
       }
       if (activeFilters.preset !== "semua") {
@@ -178,12 +174,11 @@ export default function PurchaseOrderList({
       }
     }
     return out
-  }, [debouncedSearch, activeFilters])
+  }, [debouncedSearch, activeFilters, clearSearch, patchFilters])
 
   const clearAllFilters = () => {
-    setSearch("")
-    setActiveFilters(null)
-    setCurrentPage(1)
+    clearSearch()
+    list.applyFilters(null)
   }
 
   return (
@@ -221,11 +216,8 @@ export default function PurchaseOrderList({
 
           <div className="flex items-center gap-4 pt-2">
             <SearchInput
-              value={search}
-              onChange={(v) => {
-                setSearch(v)
-                setCurrentPage(1)
-              }}
+              value={list.search}
+              onChange={list.setSearch}
               placeholder="Cari purchase order, klien, atau nomor..."
             />
             <FilterButton onClick={() => setShowFilter(true)} />
@@ -261,19 +253,11 @@ export default function PurchaseOrderList({
                 </tr>
               </thead>
               <tbody>
-                {isLoading && (
-                  <tr>
-                    <td colSpan={7} className="py-10 text-center text-sm text-dark-500">
-                      Memuat data…
-                    </td>
-                  </tr>
-                )}
+                {isLoading && <TableLoadingRow colSpan={7} />}
                 {!isLoading && currentRows.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="py-10 text-center text-sm text-dark-500">
-                      Belum ada Purchase Order. PO terbuat otomatis ketika quotation disetujui.
-                    </td>
-                  </tr>
+                  <TableEmptyRow colSpan={7}>
+                    Belum ada Purchase Order. PO terbuat otomatis ketika quotation disetujui.
+                  </TableEmptyRow>
                 )}
                 {!isLoading &&
                   currentRows.map((row) => {
@@ -391,14 +375,11 @@ export default function PurchaseOrderList({
               totalItems={totalItems}
               startIndex={startIndex}
               itemsPerPage={itemsPerPage}
-              currentPage={currentPage}
+              currentPage={list.currentPage}
               totalPages={totalPages}
               resourceLabel="Purchase Order"
-              onItemsPerPage={(n) => {
-                setItemsPerPage(n)
-                setCurrentPage(1)
-              }}
-              onPage={setCurrentPage}
+              onItemsPerPage={list.setItemsPerPage}
+              onPage={list.setCurrentPage}
             />
           </div>
         </div>
@@ -417,10 +398,7 @@ export default function PurchaseOrderList({
         <PurchaseOrderFilter
           onClose={() => setShowFilter(false)}
           initialValues={activeFilters ?? undefined}
-          onApply={(f) => {
-            setActiveFilters(f)
-            setCurrentPage(1)
-          }}
+          onApply={list.applyFilters}
         />
       )}
     </div>

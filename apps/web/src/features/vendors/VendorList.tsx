@@ -6,14 +6,15 @@ import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import Sidebar from "@/components/shared/Sidebar"
 import StatusBadge from "@/components/shared/StatusBadge"
+import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useVendors } from "@/features/vendors/hooks"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
 import VendorFilter, { type VendorFilterValues } from "@/features/vendors/VendorFilter"
-import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
+import { useListScreen } from "@/lib/useListScreen"
 import type { VendorRow } from "@/types/api"
 
 interface VendorListProps {
@@ -25,18 +26,17 @@ interface VendorListProps {
 type SortKey = "totalPembelian" | "productCount"
 
 export default function VendorList({ onNavigate, onLogout, onViewDetail }: VendorListProps) {
-  const [search, setSearch] = useState("")
   const [showAdd, setShowAdd] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
-  const [filters, setFilters] = useState<VendorFilterValues>({
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
+
+  const list = useListScreen<VendorFilterValues>({
     status: "all",
     countryName: "",
     minTotal: "",
   })
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [sortKey, setSortKey] = useState<SortKey | null>(null)
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
+  const { debouncedSearch, filters, itemsPerPage, startIndex } = list
 
   function toggleSort(k: SortKey) {
     if (sortKey === k) {
@@ -46,8 +46,6 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
       setSortDir("desc")
     }
   }
-
-  const debouncedSearch = useDebouncedValue(search.trim(), 250)
 
   const queryParams = useMemo(
     () => ({
@@ -63,16 +61,15 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
             : undefined,
       sortDir: sortKey ? sortDir : undefined,
       limit: itemsPerPage,
-      offset: (currentPage - 1) * itemsPerPage,
+      offset: startIndex,
     }),
-    [debouncedSearch, filters, sortKey, sortDir, itemsPerPage, currentPage],
+    [debouncedSearch, filters, sortKey, sortDir, itemsPerPage, startIndex],
   )
 
   const { data, isLoading } = useVendors(queryParams)
   const currentRows = data?.rows ?? []
   const totalItems = data?.total ?? 0
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
-  const startIndex = (currentPage - 1) * itemsPerPage
+  const totalPages = list.totalPagesOf(totalItems)
 
   return (
     <div className="admin-shell">
@@ -107,11 +104,8 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
 
           <div className="flex items-center gap-4 pt-2">
             <SearchInput
-              value={search}
-              onChange={(v) => {
-                setSearch(v)
-                setCurrentPage(1)
-              }}
+              value={list.search}
+              onChange={list.setSearch}
               placeholder="Cari nama, negara asal vendor..."
             />
             <FilterButton onClick={() => setShowFilter(true)} />
@@ -150,19 +144,9 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
                 </tr>
               </thead>
               <tbody>
-                {isLoading && (
-                  <tr>
-                    <td colSpan={6} className="py-10 text-center text-sm text-dark-500">
-                      Memuat data…
-                    </td>
-                  </tr>
-                )}
+                {isLoading && <TableLoadingRow colSpan={6} />}
                 {!isLoading && currentRows.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="py-10 text-center text-sm text-dark-500">
-                      Tidak ada vendor.
-                    </td>
-                  </tr>
+                  <TableEmptyRow colSpan={6}>Tidak ada vendor.</TableEmptyRow>
                 )}
                 {!isLoading &&
                   currentRows.map((v: VendorRow) => {
@@ -194,7 +178,7 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
                         <td className={ui.tdCenter}>
                           <button
                             type="button"
-                            className="inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
+                            className={ui.iconAction}
                             title="Lihat detail"
                             onClick={() => onViewDetail?.(v.id)}
                           >
@@ -211,14 +195,11 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
               totalItems={totalItems}
               startIndex={startIndex}
               itemsPerPage={itemsPerPage}
-              currentPage={currentPage}
+              currentPage={list.currentPage}
               totalPages={totalPages}
               resourceLabel="Vendor"
-              onItemsPerPage={(n) => {
-                setItemsPerPage(n)
-                setCurrentPage(1)
-              }}
-              onPage={setCurrentPage}
+              onItemsPerPage={list.setItemsPerPage}
+              onPage={list.setCurrentPage}
             />
           </div>
         </div>
@@ -230,10 +211,7 @@ export default function VendorList({ onNavigate, onLogout, onViewDetail }: Vendo
         <VendorFilter
           onClose={() => setShowFilter(false)}
           initialValues={filters}
-          onApply={(f) => {
-            setFilters(f)
-            setCurrentPage(1)
-          }}
+          onApply={list.applyFilters}
         />
       )}
     </div>
