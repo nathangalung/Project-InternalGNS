@@ -62,6 +62,7 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 		httperr.RenderDBErr(w, err)
 		return
 	}
+	httpx.WarnIfTruncated(r.Context(), "invoices.coretax_export", res.Total, len(res.Rows))
 
 	invs := make([]Invoice, 0, len(res.Rows))
 	itemsByID := make(map[int64][]InvoiceItem, len(res.Rows))

@@ -86,6 +86,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErr(w, err)
 		return
 	}
+	httpx.WarnIfTruncated(r.Context(), "invoices.export", res.Total, len(res.Rows))
 	headers := []string{"No. Invoice", "No. Quotation", "Tanggal", "Jatuh Tempo", "Klien", "Status", "Total"}
 	rows := make([][]string, 0, len(res.Rows))
 	for _, inv := range res.Rows {
