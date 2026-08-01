@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -107,4 +108,15 @@ func (r *RefreshRepo) revokeToken(ctx context.Context, hash []byte) error {
 func (r *RefreshRepo) revokeAllForUser(ctx context.Context, userID int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("auth.refresh_revoke_user"), userID)
 	return err
+}
+
+// PurgeExpired drops tokens past the retention window, returning rows deleted.
+// Called by the background sweep in internal/app; without it revoked and
+// expired rows accumulate forever.
+func (r *RefreshRepo) PurgeExpired(ctx context.Context) (int64, error) {
+	tag, err := r.db.Exec(ctx, r.store.Get("auth.refresh_purge_expired"))
+	if err != nil {
+		return 0, fmt.Errorf("purge expired refresh tokens: %w", err)
+	}
+	return tag.RowsAffected(), nil
 }

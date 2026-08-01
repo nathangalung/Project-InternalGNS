@@ -158,6 +158,55 @@ func TestService_RevokeRefresh_Idempotent(t *testing.T) {
 	require.NoError(t, svc.RevokeRefresh(ctx, "garbage"))
 }
 
+// PurgeExpired drops only rows past the retention window, leaving live and
+// recently expired tokens alone.
+func TestRefreshRepo_PurgeExpired(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	store := testutil.Store(t)
+	userRepo := users.NewRepo(tx, store)
+
+	u, err := userRepo.Create(ctx, users.CreateUserRequest{
+		Email: uniqueEmail(t), Name: "Purge IT",
+		Password: "Sup3rSecret!", Role: users.RoleOperational,
+	}, 1)
+	require.NoError(t, err)
+
+	// Isolate the assertion from seeded rows: only these three are counted.
+	seed := func(label string, expiresAt time.Time) {
+		hash := sha256.Sum256([]byte(t.Name() + label))
+		_, err := tx.Exec(ctx, store.Get("auth.refresh_insert"), u.ID, hash[:], expiresAt)
+		require.NoError(t, err)
+	}
+	// Seeds bracket the 7-day retention boundary in auth.refresh_purge_expired.
+	now := time.Now()
+	seed("live", now.Add(24*time.Hour))
+	seed("recent", now.Add(-1*time.Hour))
+	seed("inside", now.Add(-6*24*time.Hour))
+	seed("outside", now.Add(-8*24*time.Hour))
+
+	repo := auth.NewRefreshRepo(tx, store)
+	_, err = repo.PurgeExpired(ctx)
+	require.NoError(t, err)
+
+	gone := func(label string) bool {
+		hash := sha256.Sum256([]byte(t.Name() + label))
+		var absent bool
+		require.NoError(t, tx.QueryRow(ctx,
+			`SELECT NOT EXISTS(SELECT 1 FROM refresh_tokens WHERE token_hash = $1)`,
+			hash[:]).Scan(&absent))
+		return absent
+	}
+	assert.True(t, gone("outside"), "token past the 7-day window must be purged")
+	assert.False(t, gone("inside"), "token inside the window must survive")
+	assert.False(t, gone("recent"), "recently expired token must survive")
+	assert.False(t, gone("live"), "unexpired token must survive")
+
+	var remaining int
+	require.NoError(t, tx.QueryRow(ctx,
+		`SELECT count(*) FROM refresh_tokens WHERE user_id = $1`, u.ID).Scan(&remaining))
+	assert.Equal(t, 3, remaining)
+}
+
 // Raw token never reaches the DB — only its SHA-256 digest does. Sanity check
 // that the digest size matches what migration 00032 expects.
 func TestRefreshToken_HashShape(t *testing.T) {

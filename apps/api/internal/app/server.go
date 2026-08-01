@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
+	"github.com/nathangalung/internalgns/apps/api/internal/auth"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
@@ -73,6 +74,10 @@ func NewServer(ctx context.Context, cfg Config) (*http.Server, error) {
 	}
 
 	r := NewRouter(cfg, pool, store, storageClient)
+
+	// Tied to ctx, which main builds from signal.NotifyContext, so SIGTERM
+	// stops the sweep along with the server.
+	go runRefreshPurgeLoop(ctx, auth.NewRefreshRepo(pool, store), refreshPurgeInterval)
 
 	return &http.Server{
 		Addr:              cfg.HTTPAddr,

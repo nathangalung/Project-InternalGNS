@@ -161,7 +161,10 @@ WITH q AS (
     CROSS JOIN q
     WHERE vp.is_active = TRUE
       AND (
-        COALESCE(lower(vp.vendor_sku),'') LIKE '%'||q.nq||'%'
+        -- Bare lower(vendor_sku) so idx_vendor_products_sku_trgm stays
+        -- reachable; COALESCE would hide the indexed expression. NULL LIKE
+        -- yields NULL, which WHERE treats as no match, same as '' did.
+        lower(vp.vendor_sku) LIKE '%'||q.nq||'%'
         OR lower(v.name) LIKE '%'||q.nq||'%'
         OR similarity(COALESCE(vp.vendor_sku,''), q.nq) > 0.30
         OR word_similarity(q.nq, lower(v.name))         > 0.40
