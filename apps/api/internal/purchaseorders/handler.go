@@ -40,8 +40,8 @@ func parseListFilter(r *http.Request) ListFilter {
 			}
 		}
 	}
-	f.DateFrom = parseDateParam(q.Get("dateFrom"))
-	f.DateTo = parseDateParam(q.Get("dateTo"))
+	f.DateFrom = httpx.ParseDateParam(q.Get("dateFrom"))
+	f.DateTo = httpx.ParseDateParam(q.Get("dateTo"))
 	if s := strings.TrimSpace(q.Get("minTotal")); s != "" {
 		f.MinTotal = &s
 	}
@@ -96,21 +96,6 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteXLSX(w, "delivery-note-export", data)
-}
-
-// Accepts YYYY-MM-DD or RFC3339; nil on empty/invalid.
-func parseDateParam(s string) *time.Time {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return nil
-	}
-	if t, err := time.Parse("2006-01-02", s); err == nil {
-		return &t
-	}
-	if t, err := time.Parse(time.RFC3339, s); err == nil {
-		return &t
-	}
-	return nil
 }
 
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
