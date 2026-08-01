@@ -55,6 +55,20 @@ answer to its question.** Numbers are audit finding IDs.
   timeout + streaming XLSX. Splitting #1 out first only converts silent
   truncation into a 30s timeout.
 
+### Phase 3 progress
+- **DONE credential hardening** (`8a55eb0`): login enumeration/timing/500→401,
+  LOWER(email) unique index + normalize, last-superadmin guard, and #12 (revoke
+  refresh tokens on password/role/deactivation change).
+- **Dashboard RBAC**: verified already correctly gated in-handler (overview
+  strips financial, timeseries gates per-metric, export finance-only, all with
+  negative tests). No hole; CLAUDE.md convention 6 corrected to the real model.
+- **Deferred as low-value given Q7 (≤5 trusted internal users):** per-user rate
+  limits on PDF/XLSX/upload, unconditional CORS/env checks, trustedProxyIP CIDR
+  allowlist, storage object-key signing (cross-user overwrite is within the
+  "all authed users manage master data" model, not a bug). #11 JWT_EXPIRY→15m
+  still worth doing (small, transparent via auto-refresh) but is a session
+  behavior change.
+
 ### Phase 3 — security (strictly ordered, #12 before #11)
 - **#12** password-change / deactivation / role-change do not revoke refresh
   tokens (720h window). Needs the transaction seam (#17).

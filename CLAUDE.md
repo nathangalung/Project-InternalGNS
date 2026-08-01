@@ -124,7 +124,11 @@ documents part of the surface.
 4. Go errors are wrapped with `fmt.Errorf("...: %w", err)`; tests are
    table-driven.
 5. SQL is snake_case, parameterized, and hand-written in `db/queries`.
-6. RBAC is enforced at the middleware and the handler, mirrored in the frontend.
+6. RBAC is enforced at the router mount (`requireRole` on the quotations,
+   purchase-orders, invoices, and users subtrees) and mirrored in the frontend.
+   The dashboard has mixed access, so its financial gating lives in the handlers
+   — the overview is open with financial fields stripped, timeseries gates per
+   metric, the XLSX export is finance-only — each covered by a negative test.
 7. Dates resolve to WIB. The pool session timezone is pinned from `Config.TZ`
    (Asia/Jakarta) in `shared/db.NewPool`, so `CURRENT_DATE`/`NOW()`, invoice
    dates, and document-number periods are business-zone. Go-side date
