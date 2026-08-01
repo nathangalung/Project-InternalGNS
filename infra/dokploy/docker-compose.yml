@@ -56,7 +56,10 @@ services:
       TZ: Asia/Jakarta
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@gns-postgres:5432/${DB_NAME}?sslmode=disable
       JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRY: 24h
+      # Short access-token window; refresh rotation auto-renews transparently and
+      # logout/password-change now revoke refresh tokens, so a leaked JWT is
+      # useful for minutes, not a day.
+      JWT_EXPIRY: 15m
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
       SUPERADMIN_EMAIL: ${SUPERADMIN_EMAIL}
       SUPERADMIN_NAME: ${SUPERADMIN_NAME}
