@@ -1,4 +1,4 @@
-import type { CanonicalStatus } from "@/types/api"
+import type { CanonicalStatus, InvoiceBackendRow } from "@/types/api"
 
 export type StatusLabel = "Disetujui" | "Dikirim" | "Draf" | "Revisi" | "Ditolak" | "Kadaluarsa"
 
@@ -54,4 +54,32 @@ export const quotationStatusConfig: Record<DisplayStatus, { bg: string; color: s
   Revisi: { bg: "var(--status-revisi-bg)", color: "var(--status-revisi-color)" },
   Ditolak: { bg: "var(--status-ditolak-bg)", color: "var(--status-ditolak-color)" },
   Kadaluarsa: { bg: "#F1F5F9", color: "#64748B" },
+}
+
+// Displayed invoice statuses.
+export type InvoiceStatus = "DRAF" | "DIKIRIM" | "DIBAYAR" | "TERLAMBAT"
+
+// Backend status, overdue from due.
+export function deriveInvoiceStatus(
+  inv: InvoiceBackendRow | null | undefined,
+  opts: { cancelledAsNull: true },
+): InvoiceStatus | null
+export function deriveInvoiceStatus(
+  inv: InvoiceBackendRow | null | undefined,
+  opts?: { cancelledAsNull?: false },
+): InvoiceStatus
+export function deriveInvoiceStatus(
+  inv: InvoiceBackendRow | null | undefined,
+  opts?: { cancelledAsNull?: boolean },
+): InvoiceStatus | null {
+  if (!inv) return "DRAF"
+  if (opts?.cancelledAsNull && inv.status === "cancelled") return null
+  if (inv.status === "paid") return "DIBAYAR"
+  if (inv.status === "overdue") return "TERLAMBAT"
+  const base: InvoiceStatus = inv.status === "sent" ? "DIKIRIM" : "DRAF"
+  if (inv.dueDate) {
+    const due = new Date(inv.dueDate)
+    if (!Number.isNaN(due.getTime()) && new Date() > due) return "TERLAMBAT"
+  }
+  return base
 }

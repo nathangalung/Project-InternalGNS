@@ -7,12 +7,13 @@ import StatusBadge from "@/components/shared/StatusBadge"
 import * as dashboardApi from "@/features/dashboard/api"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { useInvoices } from "@/features/invoices/hooks"
-import { INVOICE_LABEL, INVOICE_STATUS_STYLE, type InvoiceStatus } from "@/features/invoices/types"
+import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "@/features/invoices/types"
 import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
 import { formatDate, formatNumber as formatId, formatRupiah as formatRp, toNum } from "@/lib/format"
 import type { Page } from "@/lib/page"
+import { deriveInvoiceStatus } from "@/lib/status"
 import { pill, ui } from "@/lib/ui"
-import type { DashboardMetric, InvoiceBackendRow } from "@/types/api"
+import type { DashboardMetric } from "@/types/api"
 import DashboardFinancialFilter, {
   type DashboardFilterValues,
   MONTH_LABELS,
@@ -45,18 +46,6 @@ interface DashboardFinancialProps {
   onNavigate: (page: Page) => void
   onViewInvoice?: (quotationId: number) => void
   onViewAllInvoices?: () => void
-}
-
-function deriveStatus(inv: InvoiceBackendRow): InvoiceStatus | null {
-  if (inv.status === "cancelled") return null
-  if (inv.status === "paid") return "DIBAYAR"
-  if (inv.status === "overdue") return "TERLAMBAT"
-  const base: InvoiceStatus = inv.status === "sent" ? "DIKIRIM" : "DRAF"
-  if (inv.dueDate) {
-    const due = new Date(inv.dueDate)
-    if (!Number.isNaN(due.getTime()) && new Date() > due) return "TERLAMBAT"
-  }
-  return base
 }
 
 export default function DashboardFinancial({
@@ -113,7 +102,7 @@ export default function DashboardFinancial({
   const recentInvoices = useMemo(() => {
     return (rawInvoices?.rows ?? [])
       .map((inv) => {
-        const status = deriveStatus(inv)
+        const status = deriveInvoiceStatus(inv, { cancelledAsNull: true })
         if (!status) return null
         return {
           id: inv.id,

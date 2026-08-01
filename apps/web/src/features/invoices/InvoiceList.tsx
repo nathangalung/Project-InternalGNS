@@ -12,6 +12,7 @@ import { downloadPdf, downloadXml } from "@/lib/api-client"
 import { resolveRange } from "@/lib/date-range"
 import { formatDate, formatNumber, formatRupiah } from "@/lib/format"
 import type { Page } from "@/lib/page"
+import { deriveInvoiceStatus } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import type { InvoiceBackendRow } from "@/types/api"
 import * as invoicesApi from "./api"
@@ -49,19 +50,6 @@ function parseRupiahNumber(s: string | undefined): number {
   return Number.isFinite(n) ? n : 0
 }
 
-// Backend status, overdue from due. Cancelled invoices never reach here: the
-// list query always sends effectiveStatus, which has no cancelled clause.
-function deriveStatus(inv: InvoiceBackendRow): InvoiceStatus {
-  if (inv.status === "paid") return "DIBAYAR"
-  if (inv.status === "overdue") return "TERLAMBAT"
-  const base: InvoiceStatus = inv.status === "sent" ? "DIKIRIM" : "DRAF"
-  if (inv.dueDate) {
-    const due = new Date(inv.dueDate)
-    if (!Number.isNaN(due.getTime()) && new Date() > due) return "TERLAMBAT"
-  }
-  return base
-}
-
 function rowFromBackend(inv: InvoiceBackendRow): InvoiceRow {
   const totalNumber = parseRupiahNumber(inv.total ?? inv.subtotal)
   return {
@@ -73,7 +61,9 @@ function rowFromBackend(inv: InvoiceBackendRow): InvoiceRow {
     dueDate: inv.dueDate ?? inv.invoiceDate,
     total: formatRupiah(totalNumber),
     totalNumber,
-    status: deriveStatus(inv),
+    // Cancelled invoices never reach here: the list query always sends
+    // effectiveStatus, which has no cancelled clause.
+    status: deriveInvoiceStatus(inv),
   }
 }
 
