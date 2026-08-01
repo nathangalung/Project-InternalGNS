@@ -13,6 +13,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
@@ -65,13 +66,10 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
 }
 
-// exportMaxRows caps a filtered export to the full result set.
-const exportMaxRows = 100000
-
 // Export streams the filtered PO list (with delivery-note numbers) as XLSX.
 func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	f := parseListFilter(r)
-	f.Limit, f.Offset = exportMaxRows, 0
+	f.Limit, f.Offset = listq.Unbounded, 0
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {

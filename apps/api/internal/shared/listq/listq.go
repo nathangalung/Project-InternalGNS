@@ -84,8 +84,15 @@ type Paging struct {
 	Offset int
 }
 
+// Unbounded is the Limit a caller sets to opt out of pagination entirely.
+// Exports use it; it survives Page unclamped, unlike a large sentinel value.
+const Unbounded = -1
+
 // Page clamps a requested window to (0, paginate.MaxLimit].
 func Page(limit, offset int) Paging {
+	if limit == Unbounded {
+		return All()
+	}
 	if limit <= 0 {
 		limit = DefaultLimit
 	}
@@ -96,6 +103,13 @@ func Page(limit, offset int) Paging {
 		offset = 0
 	}
 	return Paging{Limit: limit, Offset: offset}
+}
+
+// All returns an unclamped window for exports, which must contain every
+// matching row. Explicit rather than a large Limit sentinel: overloading the
+// limit is what let the repo clamp silently truncate exports to 200 rows.
+func All() Paging {
+	return Paging{Limit: 0, Offset: 0}
 }
 
 // Conditions accumulates WHERE fragments and their arguments.
@@ -134,6 +148,11 @@ func (c *Conditions) Count(base string) (string, []any) {
 // Data stay consistent no matter which is rendered first or how often.
 func (c *Conditions) Data(base string, order Order, p Paging) (string, []any) {
 	args := c.cloneArgs()
+	// Limit 0 is the unbounded export window (see All): emit no LIMIT clause so
+	// the caller receives every matching row.
+	if p.Limit <= 0 {
+		return base + c.where.String() + " ORDER BY " + order.clause, args
+	}
 	limit := "$" + strconv.Itoa(len(args)+1)
 	offset := "$" + strconv.Itoa(len(args)+2)
 	args = append(args, p.Limit, p.Offset)

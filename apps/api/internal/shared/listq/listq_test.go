@@ -190,3 +190,27 @@ func TestNoConditions(t *testing.T) {
 		t.Fatalf("data args = %d, want 2", len(dataArgs))
 	}
 }
+
+// Exports opt out of pagination: the clamp must not silently cap them, which is
+// how every XLSX export (including the DJP coretax workbook) was truncated to
+// 200 rows while X-Total-Count kept reporting the true total.
+func TestPage_UnboundedSkipsClampAndLimitClause(t *testing.T) {
+	p := Page(Unbounded, 0)
+	if p.Limit != 0 {
+		t.Fatalf("Page(Unbounded).Limit = %d, want 0 (no LIMIT)", p.Limit)
+	}
+
+	c := New()
+	c.And("status = " + c.Arg("draft"))
+	sql, args := c.Data("SELECT * FROM t WHERE 1=1", OrderBy(
+		Whitelist{Default: "id", Columns: map[string]Column{"id": {Expr: "id", Dir: Desc}}},
+		"", "", Column{},
+	), p)
+
+	if strings.Contains(sql, "LIMIT") {
+		t.Errorf("unbounded page emitted a LIMIT clause: %s", sql)
+	}
+	if len(args) != 1 {
+		t.Errorf("args = %v, want only the filter arg", args)
+	}
+}

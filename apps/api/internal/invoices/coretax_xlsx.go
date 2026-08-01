@@ -14,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 )
 
 // coretaxTemplateRel is the DJP bulk-import workbook bundled with the image.
@@ -55,7 +56,7 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 	}
 
 	f := parseListFilter(r)
-	f.Limit, f.Offset = exportMaxRows, 0
+	f.Limit, f.Offset = listq.Unbounded, 0
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
