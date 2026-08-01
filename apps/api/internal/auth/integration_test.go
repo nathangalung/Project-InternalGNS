@@ -2,6 +2,7 @@ package auth_test
 
 import (
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -52,7 +53,8 @@ func TestService_LoginCycle_IntegratesUsersRepo(t *testing.T) {
 
 	me, err := svc.Me(ctx, uid)
 	require.NoError(t, err)
-	assert.Equal(t, email, me.Email)
+	// Stored case-folded; login still matches the mixed-case input above.
+	assert.Equal(t, strings.ToLower(email), me.Email)
 }
 
 func TestService_Login_WrongPassword_RealDB(t *testing.T) {
@@ -75,7 +77,7 @@ func TestService_Login_UnknownEmail_RealDB(t *testing.T) {
 
 	svc := auth.NewService(repo, "s", time.Minute)
 	_, err := svc.Login(ctx, "nobody@example.test", "anything")
-	assert.ErrorIs(t, err, auth.ErrEmailNotRegistered)
+	assert.ErrorIs(t, err, auth.ErrInvalidCredentials)
 }
 
 func TestService_Login_LocksAfterFiveFailures_RealDB(t *testing.T) {

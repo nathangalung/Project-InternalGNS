@@ -62,6 +62,18 @@ WHERE id = $1
 RETURNING id, email, name, password_hash, role,
           is_active, created_at, updated_at;
 
+-- name: users.update_precheck
+-- Prior state of the target plus whether another active superadmin remains.
+-- No is_active filter: an inactive user is still updatable (reactivation).
+SELECT role,
+       is_active,
+       EXISTS (
+         SELECT 1 FROM users
+         WHERE role = 'superadmin' AND is_active = TRUE AND id <> $1
+       ) AS other_active_superadmin
+FROM users
+WHERE id = $1;
+
 -- name: users.exists_email_other
 SELECT COUNT(*)
 FROM users

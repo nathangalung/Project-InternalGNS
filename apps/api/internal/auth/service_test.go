@@ -60,7 +60,20 @@ func TestService_Login_UserNotFound(t *testing.T) {
 	svc := mkSvc(t)
 
 	_, err := svc.Login(context.Background(), "missing@nowhere.local", "any")
-	assert.ErrorIs(t, err, auth.ErrEmailNotRegistered)
+	assert.ErrorIs(t, err, auth.ErrInvalidCredentials)
+}
+
+// An unknown email must be indistinguishable from a bad password.
+func TestService_Login_UnknownEmailMatchesWrongPassword(t *testing.T) {
+	svc, u := mkUserAndSvc(t)
+
+	_, wrongPw := svc.Login(context.Background(), u.Email, "wrong-password")
+	_, unknown := svc.Login(context.Background(), "missing@nowhere.local", "wrong-password")
+
+	require.Error(t, wrongPw)
+	require.Error(t, unknown)
+	assert.Equal(t, wrongPw.Error(), unknown.Error())
+	assert.ErrorIs(t, unknown, auth.ErrInvalidCredentials)
 }
 
 func TestService_Login_DBError(t *testing.T) {

@@ -100,6 +100,7 @@ var RequiredKeys = []string{
 	"users.list_count_base",
 	"users.update",
 	"users.update_password",
+	"users.update_precheck",
 	"vendors.create",
 	"vendors.get_by_id",
 	"vendors.list_base",

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -14,10 +15,22 @@ import (
 
 var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
-	ErrEmailNotRegistered = errors.New("email not registered")
 	ErrInvalidToken       = errors.New("invalid token")
 	ErrAccountLocked      = errors.New("account temporarily locked")
 )
+
+// Compared against when the email is unknown so an unregistered address costs
+// the same bcrypt work as a real one. Built at init with the same cost
+// Repo.Create uses, so the two never drift apart.
+var dummyPasswordHash = mustDummyHash()
+
+func mustDummyHash() []byte {
+	h, err := bcrypt.GenerateFromPassword([]byte("no-such-account"), bcrypt.DefaultCost)
+	if err != nil {
+		panic("auth: dummy bcrypt hash: " + err.Error())
+	}
+	return h
+}
 
 type Service struct {
 	users         *users.Repo
@@ -73,15 +86,24 @@ func parseInt64(s string) (int64, error) {
 func (s *Service) Login(ctx context.Context, email, password string) (LoginResponse, error) {
 	u, err := s.users.GetByEmail(ctx, email)
 	if errors.Is(err, users.ErrNotFound) {
-		return LoginResponse{}, ErrEmailNotRegistered
+		// Burn the same bcrypt work a real account would, then give the same
+		// verdict, so neither the response nor its timing tells an attacker
+		// whether the address is registered.
+		_ = bcrypt.CompareHashAndPassword(dummyPasswordHash, []byte(password))
+		return LoginResponse{}, ErrInvalidCredentials
 	}
 	if err != nil {
+		// A database outage is not a credential verdict; let it surface.
 		return LoginResponse{}, err
 	}
 
 	// Per-account lockout: reject before checking the password so a locked
 	// account cannot be probed, and count each miss toward the threshold.
 	lock, err := s.users.LockStatus(ctx, email)
+	if errors.Is(err, users.ErrNotFound) {
+		// Deactivated or removed between the two reads: same verdict.
+		return LoginResponse{}, ErrInvalidCredentials
+	}
 	if err != nil {
 		return LoginResponse{}, err
 	}
@@ -90,8 +112,10 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)); err != nil {
+		// Bookkeeping must never overturn the verdict nor raise a 500 that
+		// only failing accounts see. Log and still reject.
 		if rerr := s.users.RecordFailedLogin(ctx, email); rerr != nil {
-			return LoginResponse{}, rerr
+			slog.ErrorContext(ctx, "record failed login", "error", rerr, "user_id", u.ID)
 		}
 		return LoginResponse{}, ErrInvalidCredentials
 	}

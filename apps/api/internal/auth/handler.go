@@ -39,12 +39,10 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := h.svc.Login(r.Context(), req.Email, req.Password)
-	if errors.Is(err, ErrEmailNotRegistered) {
-		httperr.Render(w, httperr.Unauthorized("email not registered"))
-		return
-	}
+	// One neutral 401 for every credential failure: a distinct "email not
+	// registered" reply enumerated accounts for anyone who could POST.
 	if errors.Is(err, ErrInvalidCredentials) {
-		httperr.Render(w, httperr.Unauthorized("invalid password"))
+		httperr.Render(w, httperr.Unauthorized("invalid email or password"))
 		return
 	}
 	if errors.Is(err, ErrAccountLocked) {

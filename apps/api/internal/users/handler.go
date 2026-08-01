@@ -122,6 +122,10 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.NotFound("user not found"))
 		return
 	}
+	if errors.Is(err, ErrLastSuperadmin) {
+		httperr.Render(w, httperr.Conflict(err.Error()))
+		return
+	}
 	if err != nil {
 		httperr.RenderDBErr(w, err)
 		return

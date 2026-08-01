@@ -55,15 +55,10 @@ export default function Login({ onLogin }: LoginProps) {
       await onLogin(email, password)
     } catch (err) {
       const message = (err instanceof Error ? err.message : "").toLowerCase()
-      if (message.includes("email not registered")) {
-        setEmailError("Surel belum terdaftar")
-        setPasswordError("")
-      } else if (
-        message.includes("invalid password") ||
-        message.includes("invalid email or password")
-      ) {
+      if (message.includes("invalid password") || message.includes("invalid email or password")) {
+        // Backend no longer says whether the email exists; keep it neutral.
         setEmailError("")
-        setPasswordError("Kata sandi salah")
+        setPasswordError("Surel atau kata sandi salah")
       } else {
         setPasswordError(err instanceof Error ? err.message : "Gagal masuk")
       }
