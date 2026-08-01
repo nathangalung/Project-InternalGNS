@@ -2,7 +2,7 @@
         db-up db-down db-logs db-shell \
         stack-up stack-down stack-logs ps reset \
         migrate migrate-up migrate-status migrate-down migrate-new \
-        seed seed-dev check-reconcile schema-dump db-erd db-functions-dump \
+        seed seed-dev db-clean-testdata check-reconcile schema-dump db-erd db-functions-dump \
         api web dev \
         tidy sqlc \
         build build-api build-web \
@@ -23,6 +23,7 @@ WEB_DIR      := apps/web
 MIG_DIR      := $(API_DIR)/db/migrations
 SEED_DIR     := $(API_DIR)/db/seeds
 CHECK_DIR    := $(API_DIR)/db/checks
+MAINT_DIR    := $(API_DIR)/db/maintenance
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -112,6 +113,20 @@ seed-dev: migrate ## Migrate + load master + dev sample data (DEV ONLY)
 	  echo ">> $$f"; \
 	  PGCLIENTENCODING=UTF8 psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 < $$f; \
 	done
+
+# One-time backlog purge. Acceptance suites clean up after themselves now
+# (internal/testutil/cleanup.go); this only clears rows left by older runs.
+# Guarded to local hosts so it can never touch staging or production.
+db-clean-testdata: ## Purge leftover ATDD/BDD acceptance rows (DEV ONLY)
+	@host=$$(echo "$(DATABASE_URL)" \
+	  | sed -e 's#^.*://##' -e 's#^[^@/]*@##' -e 's#[/?].*$$##' \
+	        -e 's#:[0-9]*$$##' -e 's#^\[##' -e 's#\]$$##'); \
+	case "$$host" in \
+	  localhost|127.0.0.1|::1|postgres) ;; \
+	  *) echo "refusing: DATABASE_URL host '$$host' is not a local dev database"; exit 1 ;; \
+	esac
+	@echo ">> $(MAINT_DIR)/clean_test_data.sql"
+	@PGCLIENTENCODING=UTF8 psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 < $(MAINT_DIR)/clean_test_data.sql
 
 check-reconcile: ## Run reconciliation / verification queries
 	psql "$(DATABASE_URL)" -f $(CHECK_DIR)/01_verify_advanced.sql

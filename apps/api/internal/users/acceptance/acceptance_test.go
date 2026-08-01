@@ -22,13 +22,14 @@ import (
 const defaultUserID int64 = 1
 
 type scenarioState struct {
-	t      *testing.T
-	srv    *httptest.Server
-	last   *http.Response
-	body   []byte
-	userID int64
-	email  string
-	name   string
+	t       *testing.T
+	cleaner *testutil.Cleaner
+	srv     *httptest.Server
+	last    *http.Response
+	body    []byte
+	userID  int64
+	email   string
+	name    string
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
@@ -139,6 +140,7 @@ func (s *scenarioState) captureID() error {
 		return fmt.Errorf("missing id body=%s", s.body)
 	}
 	s.userID = resp.ID
+	s.cleaner.User(resp.ID)
 	return nil
 }
 
@@ -218,9 +220,9 @@ func (s *scenarioState) staffListAtLeast(min int) error {
 	return nil
 }
 
-func initScenario(t *testing.T) func(*godog.ScenarioContext) {
+func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
-		state := &scenarioState{t: t}
+		state := &scenarioState{t: t, cleaner: cleaner}
 		sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 			state.last = nil
 			state.body = nil
@@ -251,8 +253,9 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 
 func TestUsersFeatures(t *testing.T) {
 	testutil.RequireDB(t)
+	cleaner := testutil.NewCleaner(t)
 	suite := godog.TestSuite{
-		ScenarioInitializer: initScenario(t),
+		ScenarioInitializer: initScenario(t, cleaner),
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"features"},

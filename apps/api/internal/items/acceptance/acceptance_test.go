@@ -27,12 +27,13 @@ const (
 )
 
 type scenarioState struct {
-	t      *testing.T
-	srv    *httptest.Server
-	last   *http.Response
-	body   []byte
-	itemID int64
-	name   string
+	t       *testing.T
+	cleaner *testutil.Cleaner
+	srv     *httptest.Server
+	last    *http.Response
+	body    []byte
+	itemID  int64
+	name    string
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
@@ -103,6 +104,7 @@ func (s *scenarioState) captureID() error {
 		return fmt.Errorf("missing id body=%s", s.body)
 	}
 	s.itemID = resp.ID
+	s.cleaner.Item(resp.ID)
 	return nil
 }
 
@@ -213,7 +215,24 @@ func (s *scenarioState) importUnknownAutoCreate() error {
 		MinScore:   0.99, // isolate the no-match -> create path
 		Rows:       []items.MatchRowInput{{Name: s.uniqueName("BDD AutoCreate Unknown"), Qty: 1, Unit: "PCS"}},
 	}
-	return s.sendRequest(http.MethodPost, "/items/match-rows", body)
+	if err := s.sendRequest(http.MethodPost, "/items/match-rows", body); err != nil {
+		return err
+	}
+	s.trackAutoCreated()
+	return nil
+}
+
+// Track auto-created rows before asserting.
+func (s *scenarioState) trackAutoCreated() {
+	var out items.MatchRowsResponse
+	if err := json.Unmarshal(s.body, &out); err != nil {
+		return
+	}
+	for _, r := range out.Rows {
+		if r.Source == "CREATED" && r.Matched != nil {
+			s.cleaner.Item(r.Matched.ItemID)
+		}
+	}
 }
 
 func (s *scenarioState) rowCreatedWithEmptyPrice() error {
@@ -237,9 +256,9 @@ func (s *scenarioState) rowCreatedWithEmptyPrice() error {
 	return nil
 }
 
-func initScenario(t *testing.T) func(*godog.ScenarioContext) {
+func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
-		state := &scenarioState{t: t}
+		state := &scenarioState{t: t, cleaner: cleaner}
 		sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 			state.last = nil
 			state.body = nil
@@ -273,8 +292,9 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 
 func TestItemsFeatures(t *testing.T) {
 	testutil.RequireDB(t)
+	cleaner := testutil.NewCleaner(t)
 	suite := godog.TestSuite{
-		ScenarioInitializer: initScenario(t),
+		ScenarioInitializer: initScenario(t, cleaner),
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"features"},
