@@ -10,10 +10,40 @@ routes ingress by hostname. Nothing in this stack collides with the existing
 projects.
 
 Source files referenced:
-- `infra/dokploy/docker-compose.yml` — production compose
-- `infra/dokploy/.env.example` — env template
+- `compose.prod.yml` — production compose
+- `.env.prod.example` — env template
 - `apps/api/Dockerfile`, `apps/web/Dockerfile` — image builds
 - `.github/workflows/release.yml` — image publisher
+
+## Compose files
+
+| File | Purpose |
+|---|---|
+| `compose.dev.yml` | Local development. Builds `api` from source, exposes Postgres on `:5432`, pgweb on `:8081`, MinIO on `:9000/:9001`. CORS open. |
+| `compose.prod.yml` | Production on the VPS via Dokploy. Pulls prebuilt images from GHCR, publishes no host ports, Traefik handles ingress. |
+
+They stay separate because dev needs host-port access and a writable source
+bind, while prod must not expose Postgres or MinIO outside Traefik. Neither is
+named `docker-compose.yml`, so a bare `docker compose up` in the repo root
+selects nothing and cannot start the production topology by accident. Always
+pass `-f`.
+
+## Coexistence on a shared VPS
+
+The VPS hosts other Dokploy projects, so the compose is scoped to avoid
+collisions:
+
+- **Project name** `internalgns` (top-level `name:`) namespaces every container,
+  the default network, and resource labels.
+- **Volumes** are prefixed `internalgns_pgdata` and `internalgns_minio`, so
+  `docker volume ls` never matches another project's names.
+- **Traefik routers** use `internalgns-api` and `internalgns-web`. Router name
+  collisions across projects are a common failure mode; keep these unique.
+- **Hostnames** come from `${API_HOST}` and `${WEB_HOST}`. Traefik routes by
+  `Host()`, not by port, so every project needs distinct DNS names.
+- **No host ports** are published. Postgres and MinIO are reachable only on the
+  internal network, so neither co-tenant projects nor the public internet can
+  reach them.
 
 ## 0. Prerequisites
 
@@ -81,13 +111,18 @@ In the Dokploy web UI:
 1. **Projects → New Project → InternalGNS** (or reuse an existing project).
 2. **+ Create Service → Compose**.
 3. **Source** = Git, repo URL = this repo, branch = `main`, compose path =
-   `infra/dokploy/docker-compose.yml`.
+   `compose.prod.yml`.
 4. **Save** (do not deploy yet — env is empty).
+
+If you are updating an existing Dokploy app, change the compose path to
+`compose.prod.yml` before the next deploy. The old
+`infra/dokploy/docker-compose.yml` path no longer exists, and a deploy pointing
+at it will fail.
 
 ## 4. Fill environment
 
 Open the Compose app → **Environment** tab. Paste the body of
-`infra/dokploy/.env.example` and fill every placeholder:
+`.env.prod.example` and fill every placeholder:
 
 ```ini
 GH_OWNER=<your-github-username-or-org>

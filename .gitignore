@@ -8,11 +8,11 @@ Thumbs.db
 *.swp
 *.swo
 
-# Env / secrets
+# Env / secrets. Ignore every env file, keep only the templates.
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
+!.env.prod.example
 
 # Node / Bun
 node_modules/
@@ -41,8 +41,7 @@ coverage.*
 # sqlc caches
 apps/api/.sqlc-cache/
 
-# Docker / Dokploy local
-infra/dokploy/.env
+# Docker local
 docker-data/
 
 # Docs build

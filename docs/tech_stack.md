@@ -8,7 +8,7 @@ the matching `go.mod`, `package.json`, `Dockerfile`, or compose.
 | What | Version | Pinned in |
 |---|---|---|
 | Go | 1.25.0 | `go.mod`, `apps/api/Dockerfile` (`golang:1.25-alpine`) |
-| Postgres | 18-alpine | `compose.dev.yml`, `infra/dokploy/docker-compose.yml` |
+| Postgres | 18-alpine | `compose.dev.yml`, `compose.prod.yml` |
 | chi router | v5.1.0 | `go.mod` |
 | pgx | v5 | `go.mod` |
 | goose (embedded) | v3 | `go.mod` |
@@ -41,8 +41,8 @@ Caret ranges are intentional — exact versions are pinned by `bun.lock`. Run
 
 | What | Version | Pinned in |
 |---|---|---|
-| Docker Compose schema | v2 (no `version:` key) | `compose.dev.yml`, `infra/dokploy/docker-compose.yml` |
-| MinIO | latest (production only) | `infra/dokploy/docker-compose.yml` |
+| Docker Compose schema | v2 (no `version:` key) | `compose.dev.yml`, `compose.prod.yml` |
+| MinIO | latest (production only) | `compose.prod.yml` |
 | Dokploy | follow upstream stable | external |
 | Traefik | provided by Dokploy | external |
 

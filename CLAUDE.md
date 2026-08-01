@@ -20,6 +20,11 @@ Bun-managed monorepo.
   scaffold) as the only stylesheets. Preflight is off. Responsive down to 320px.
 - Infra: PostgreSQL 18, MinIO for object storage, xelatex for PDF rendering,
   Dokploy with Traefik for deployment, Nginx to serve the built frontend.
+  Two compose files sit at the repo root: `compose.dev.yml` for local work and
+  `compose.prod.yml` for the VPS, with `.env.prod.example` as its template.
+  Neither is named `docker-compose.yml`, so a bare `docker compose up` selects
+  nothing and cannot start the production topology by accident; always pass
+  `-f`. Deployment steps live in `docs/deploy_vps.md`.
 
 ## Roles
 

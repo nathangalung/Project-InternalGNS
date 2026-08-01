@@ -248,6 +248,7 @@ so godog ATDD scenarios don't race with integration TRUNCATE.
 
 ## Deploy
 
-Production stack runs on Dokploy. See `infra/dokploy/` for the
-`docker-compose.yml` and `.env.example`. CI publishes images to
-`ghcr.io/<owner>/internalgns-api` and `ghcr.io/<owner>/internalgns-web`.
+Production stack runs on Dokploy from `compose.prod.yml`, with `.env.prod.example`
+as the environment template and `docs/deploy_vps.md` as the deployment guide. CI
+publishes images to `ghcr.io/<owner>/internalgns-api` and
+`ghcr.io/<owner>/internalgns-web`.

@@ -16,7 +16,7 @@
 SHELL        := /bin/bash
 DATABASE_URL ?= postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable
 COMPOSE_DEV  := docker compose -f compose.dev.yml
-COMPOSE_PROD := docker compose -f infra/dokploy/docker-compose.yml --env-file infra/dokploy/.env
+COMPOSE_PROD := docker compose -f compose.prod.yml --env-file .env.prod
 
 API_DIR      := apps/api
 WEB_DIR      := apps/web
