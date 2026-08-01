@@ -75,8 +75,10 @@ internal/
                     Handler, repo, and DTOs per feature, with tests
   users/ countries/ units/
   pdfgen/           LaTeX (xelatex) document rendering
-  storage/          MinIO presigned upload and download proxy
-  shared/           deps, db helpers, httperr (RFC 7807), httpx, money, tz
+  storage/          MinIO client, bucket policy, authenticated download proxy
+  shared/           deps, db helpers, httperr (RFC 7807), httpx, paginate,
+                    assetproxy (descriptor-driven presign handlers, one set
+                    reused by every slice), money, tz
   testutil/         Test server, pool, and seed helpers
 db/
   migrations/       Goose SQL migrations
@@ -123,6 +125,16 @@ documents part of the surface.
    table-driven.
 5. SQL is snake_case, parameterized, and hand-written in `db/queries`.
 6. RBAC is enforced at the middleware and the handler, mirrored in the frontend.
+7. Dates resolve to WIB. The pool session timezone is pinned from `Config.TZ`
+   (Asia/Jakarta) in `shared/db.NewPool`, so `CURRENT_DATE`/`NOW()`, invoice
+   dates, and document-number periods are business-zone. Go-side date
+   formatting goes through `shared/tz`, never `time.Local`. Do not remove the
+   pin or the startup timezone assertion.
+8. Invoice tax figures are rounded per line, then summed to the header (matching
+   DJP e-faktur), and `ppn_amount` is computed from the already-rounded DPP
+   base. Invoices snapshot `gross_unit_price` and `total_discount`, so the PDF
+   prints a gross line plus a real discount row (`TotalProduk − Diskon = DPP`)
+   without reading the quotation. Do not restate already-filed invoices.
 
 ## Tooling and style
 
