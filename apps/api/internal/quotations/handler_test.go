@@ -16,6 +16,7 @@ import (
 	"github.com/xuri/excelize/v2"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -408,4 +409,66 @@ func mustCreate(t *testing.T, srv *httptest.Server) int64 {
 	var got map[string]int64
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&got))
 	return got["id"]
+}
+
+// Migration 00046 retyped the quotation_item_requests parent lock from
+// check_violation to P0013 and its not-found raise from P0001 to P0011. That
+// moved /quotations/{id}/requests from a generic 422 to 409-with-reason and
+// 404 on every write verb. The new contract is the intended one; pin it here
+// so it cannot drift back silently.
+func TestHandler_QIR_LockedParentConflicts(t *testing.T) {
+	srv, _ := resetServer(t)
+	id := mustCreate(t, srv)
+	base := "/quotations/" + strconv.FormatInt(id, 10) + "/requests"
+
+	cres := doJSON(t, srv, http.MethodPost, base,
+		map[string]any{"lineNo": 1, "requestText": "LAMP LED 12W"})
+	require.Equal(t, http.StatusCreated, cres.StatusCode)
+	var created quotations.ItemRequestRow
+	decodeBody(t, cres, &created)
+
+	sres := doJSON(t, srv, http.MethodPatch,
+		"/quotations/"+strconv.FormatInt(id, 10)+"/status",
+		quotations.ChangeStatusRequest{Status: "sent"})
+	sres.Body.Close()
+	require.Equal(t, http.StatusNoContent, sres.StatusCode)
+
+	rid := strconv.FormatInt(created.ID, 10)
+	cases := []struct {
+		name   string
+		method string
+		path   string
+		body   any
+	}{
+		{"create", http.MethodPost, base, map[string]any{"lineNo": 2, "requestText": "ANOTHER"}},
+		{"update", http.MethodPut, base + "/" + rid, map[string]any{
+			"lineNo": 1, "requestText": "changed", "matchStatus": "pending", "sourceType": "manual",
+		}},
+		{"delete", http.MethodDelete, base + "/" + rid, nil},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			res := doJSON(t, srv, tc.method, tc.path, tc.body)
+			var e httperr.Error
+			decodeBody(t, res, &e)
+			assert.Equal(t, http.StatusConflict, res.StatusCode)
+			assert.Equal(t, http.StatusConflict, e.Status)
+			assert.Contains(t, e.Detail, `has status "sent"`)
+			assert.Contains(t, e.Detail, "Only draft/revision allow request edits")
+		})
+	}
+}
+
+// The same trigger raises P0011 for a missing parent, which must surface as
+// 404 rather than the pre-00046 422.
+func TestHandler_QIR_UnknownParentNotFound(t *testing.T) {
+	srv, _ := resetServer(t)
+
+	res := doJSON(t, srv, http.MethodPost, "/quotations/9999999/requests",
+		map[string]any{"lineNo": 1, "requestText": "ORPHAN"})
+	var e httperr.Error
+	decodeBody(t, res, &e)
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+	assert.Equal(t, http.StatusNotFound, e.Status)
+	assert.Contains(t, e.Detail, "Parent quotation 9999999 not found")
 }

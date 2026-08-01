@@ -123,6 +123,25 @@ browser QA, not because they change behavior.
   (six duplicated list screens); `deriveInvoiceStatus` single source (#127,
   tie in with #7). (M each)
 
+## Known behavior facts from this round (not bugs, but finance/ops should know)
+
+- **Re-downloading a historical invoice PDF that has a shipping line now prints
+  a higher HARGA TOTAL.** Before, the total summed product lines only, so it did
+  not equal the Amount column printed directly above it; it now sums every line.
+  The new figure is the correct one and `dpp`/`ppn`/`total` are untouched (nothing
+  filed with DJP changes), but the face value of an already-issued document
+  differs on reprint. Flagged rather than reverted because reprinting a document
+  that contradicts its own line items is worse.
+- **Login still leaks account existence through the lockout path.** Six wrong
+  passwords return 429 "account temporarily locked" for a real active account
+  and 401 for an unknown or deactivated one, because failed-attempt bookkeeping
+  only runs after a successful user lookup. The single-request oracle (message,
+  status, bcrypt timing) is closed; this one is not, and the same asymmetry lets
+  six unauthenticated requests lock a known account for 15 minutes. Closing it
+  means recording attempts for unknown emails too (a shared/hashed bucket) or
+  returning 401 with a constant-time delay instead of 429 — a deliberate
+  usability trade-off, so it needs a decision rather than a silent change.
+
 ## Open questions for the owner
 
 Answers unblock Phase 1/3. Full context in the audit §7.
