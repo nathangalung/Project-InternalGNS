@@ -99,14 +99,11 @@ answer to its question.** Numbers are audit finding IDs.
 Safe in principle, deferred because they touch central wiring or need manual
 browser QA, not because they change behavior.
 
-- **#17a** widen the DI seam (`Deps.Pool` has no `Begin`) so a slice *can* open
-  a transaction — additive plumbing, nothing calls it yet, behavior-preserving.
-  **The structural spine — every backend error-contract fix and #12 depend on
-  it.** (S/M, safe)
-- **#17b** rewrite the 500-row item import (`MatchRows`) as one transaction.
-  Behavior-change: today a mid-loop failure persists the already-created items
-  and a retry duplicates them; after, nothing persists. Better, but a changed
-  failure-path workflow → **sign-off**. Depends on #17a.
+- **DONE #17a + #17b** (`b8d82f1`): `db.TxBeginner` on `Deps`, `Repo.WithExec`
+  rebinds a repo to a `pgx.Tx`, and `MatchRows` runs the whole 500-row import in
+  one transaction (rollback on any row error, retry creates no duplicates).
+  Atomicity test is HTTP-level and mutation-tested. **This unblocks the
+  error-contract SQLSTATE work and a same-transaction version of #12.**
 - **#131** `NewHandler(repo, storage)` so a missing dep is a compile error;
   construct shared repos once in `app.NewRouter` instead of each slice building
   its siblings. (M)
