@@ -4,7 +4,7 @@ import FilterButton from "@/components/shared/FilterButton"
 import Sidebar from "@/components/shared/Sidebar"
 import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
-import { TableEmptyRow } from "@/components/shared/TableStates"
+import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { toTableRow } from "@/features/quotations/adapters"
 import { useQuotations } from "@/features/quotations/hooks"
@@ -39,7 +39,7 @@ export default function DashboardOperational({
   const [filters, setFilters] = useState<DashboardFilterValues | null>(null)
 
   const { data: summary } = useDashboardSummary()
-  const { data: rawQuotations } = useQuotations({ limit: 5 })
+  const { data: rawQuotations, isPending: quotationsPending } = useQuotations({ limit: 5 })
 
   const baseYear = filters?.year ?? new Date().getFullYear()
   const selectedMonth = filters?.month ?? null // null = whole year
@@ -164,7 +164,8 @@ export default function DashboardOperational({
                 </tr>
               </thead>
               <tbody>
-                {recentQuotations.length === 0 && (
+                {quotationsPending && <TableLoadingRow colSpan={7} />}
+                {!quotationsPending && recentQuotations.length === 0 && (
                   <TableEmptyRow colSpan={7}>Belum ada Quotation.</TableEmptyRow>
                 )}
                 {recentQuotations.map((row) => {
