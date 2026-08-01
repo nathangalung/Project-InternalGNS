@@ -67,6 +67,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 
 	d := deps.Deps{
 		Pool:          pool,
+		Tx:            pool,
 		Queries:       store,
 		TemplatesRoot: cfg.TemplatesRoot,
 		Pdf: deps.PdfSettings{

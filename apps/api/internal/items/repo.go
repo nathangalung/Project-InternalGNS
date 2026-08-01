@@ -21,6 +21,11 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 	return &Repo{db: exec, store: store}
 }
 
+// WithExec rebinds the repo to another executor, e.g. a pgx.Tx.
+func (r *Repo) WithExec(exec db.Executor) *Repo {
+	return &Repo{db: exec, store: r.store}
+}
+
 var ErrNotFound = errors.New("not found")
 
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {

@@ -2,6 +2,7 @@ package items_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -538,4 +539,56 @@ func TestHandler_MatchRows_NoAutoCreate_LeavesNil(t *testing.T) {
 	require.Len(t, out.Rows, 1)
 	assert.Nil(t, out.Rows[0].Matched, "without autoCreate, unmatched stays nil")
 	assert.Equal(t, "NONE", out.Rows[0].Source)
+}
+
+// A batch that fails mid-loop must persist nothing, so retrying the same import
+// cannot duplicate the rows created before the failure. The oversized name
+// overflows items.name (VARCHAR(500)) and fails the third insert.
+func TestHandler_MatchRows_FailedBatchRollsBack(t *testing.T) {
+	srv := newSrv(t)
+	pool := testutil.Pool(t)
+	ctx := context.Background()
+
+	stamp := time.Now().UnixNano()
+	first := fmt.Sprintf("Atomic Import One %d", stamp)
+	second := fmt.Sprintf("Atomic Import Two %d", stamp)
+	t.Cleanup(func() {
+		_, _ = pool.Exec(ctx, `DELETE FROM items WHERE name IN ($1, $2)`, first, second)
+	})
+
+	countCreated := func() int {
+		var n int
+		require.NoError(t, pool.QueryRow(ctx,
+			`SELECT count(*) FROM items WHERE name IN ($1, $2)`, first, second).Scan(&n))
+		return n
+	}
+
+	failing := items.MatchRowsRequest{
+		AutoCreate: true,
+		MinScore:   0.99, // isolate the no-match -> create path
+		Rows: []items.MatchRowInput{
+			{Name: first, Qty: 1, Unit: "PCS"},
+			{Name: second, Qty: 1, Unit: "PCS"},
+			{Name: strings.Repeat("X", 600), Qty: 1, Unit: "PCS"},
+		},
+	}
+
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", failing)
+	res.Body.Close()
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode, "oversized row must fail the batch")
+	require.Equal(t, 0, countCreated(), "a failed batch must not leave earlier rows behind")
+
+	// Retrying the same broken batch stays at zero, never doubling.
+	res = doJSON(t, srv, http.MethodPost, "/items/match-rows", failing)
+	res.Body.Close()
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode)
+	require.Equal(t, 0, countCreated(), "retry of a failed batch must not duplicate")
+
+	// Retry without the bad row creates each product exactly once.
+	fixed := failing
+	fixed.Rows = failing.Rows[:2]
+	res = doJSON(t, srv, http.MethodPost, "/items/match-rows", fixed)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, 2, countCreated(), "clean retry creates each product once")
 }

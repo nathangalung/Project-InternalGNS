@@ -90,7 +90,7 @@ func ItemsServer(t testing.TB, userID int64) *httptest.Server {
 
 	r := chi.NewRouter()
 	r.Use(withUserID(userID))
-	r.Mount("/items", items.Routes(deps.Deps{Pool: pool, Queries: store}))
+	r.Mount("/items", items.Routes(deps.Deps{Pool: pool, Tx: pool, Queries: store}))
 
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)
@@ -227,7 +227,7 @@ func FullServer(t testing.TB, userID int64) *httptest.Server {
 func FaultyServer(t testing.TB, userID int64, mount func(chi.Router, deps.Deps)) *httptest.Server {
 	t.Helper()
 	store := Store(t)
-	d := deps.Deps{Pool: FakeExec{}, Queries: store}
+	d := deps.Deps{Pool: FakeExec{}, Tx: FakeBeginner{}, Queries: store}
 
 	r := chi.NewRouter()
 	r.Use(withUserID(userID))

@@ -1,6 +1,7 @@
 package items
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
@@ -19,10 +21,11 @@ import (
 
 type Handler struct {
 	repo *Repo
+	tx   db.TxBeginner
 }
 
-func NewHandler(repo *Repo) *Handler {
-	return &Handler{repo: repo}
+func NewHandler(repo *Repo, tx db.TxBeginner) *Handler {
+	return &Handler{repo: repo, tx: tx}
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
@@ -289,6 +292,31 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	userID := deps.CurrentUserID(ctx)
+
+	// Auto-create writes one catalog row per unmatched import row, so the whole
+	// batch runs in one transaction: any row error rolls back every earlier
+	// create, leaving a retry of the same batch free of duplicates.
+	tx, err := h.tx.Begin(ctx)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	out, err := matchRows(ctx, h.repo.WithExec(tx), req, minScore, userID)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	if err := tx.Commit(ctx); err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, MatchRowsResponse{Rows: out})
+}
+
+// matchRows resolves every import row on one executor.
+func matchRows(ctx context.Context, repo *Repo, req MatchRowsRequest, minScore float32, userID int64) ([]MatchRowResult, error) {
 	// Dedup auto-created rows within this batch by impa-or-normalized-name.
 	created := map[string]int64{}
 	out := make([]MatchRowResult, 0, len(req.Rows))
@@ -300,20 +328,18 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 
 		impa := strings.ToUpper(strings.TrimSpace(row.IMPACode))
 		if impa != "" {
-			id, err := h.repo.FindByIMPA(ctx, impa)
+			id, err := repo.FindByIMPA(ctx, impa)
 			if err == nil {
 				itemID, confidence, source = id, 1.0, "IMPA_EXACT"
 			} else if !errors.Is(err, ErrNotFound) {
-				httperr.RenderDBErr(w, err)
-				return
+				return nil, err
 			}
 		}
 
 		if itemID == 0 && strings.TrimSpace(row.Name) != "" {
-			matches, err := h.repo.MatchRequest(ctx, row.Name, 1)
+			matches, err := repo.MatchRequest(ctx, row.Name, 1)
 			if err != nil {
-				httperr.RenderDBErr(w, err)
-				return
+				return nil, err
 			}
 			if len(matches) > 0 && matches[0].Confidence >= minScore {
 				itemID, confidence, source = matches[0].ItemID, matches[0].Confidence, matches[0].Source
@@ -332,10 +358,9 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 					if impa != "" {
 						impaPtr = &impa
 					}
-					it, err := h.repo.Create(ctx, CreateItemRequest{Name: name, IMPACode: impaPtr}, userID)
+					it, err := repo.Create(ctx, CreateItemRequest{Name: name, IMPACode: impaPtr}, userID)
 					if err != nil {
-						httperr.RenderDBErr(w, err)
-						return
+						return nil, err
 					}
 					created[key] = it.ID
 					itemID, confidence, source = it.ID, 1.0, "CREATED"
@@ -344,19 +369,18 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if itemID > 0 {
-			m, err := h.repo.MatchWithVendorByID(ctx, itemID)
+			m, err := repo.MatchWithVendorByID(ctx, itemID)
 			if err == nil {
 				res.Matched = &m
 				res.Confidence = confidence
 				res.Source = source
 			} else if !errors.Is(err, ErrNotFound) {
-				httperr.RenderDBErr(w, err)
-				return
+				return nil, err
 			}
 		}
 		out = append(out, res)
 	}
-	httpx.WriteJSON(w, http.StatusOK, MatchRowsResponse{Rows: out})
+	return out, nil
 }
 
 func (h *Handler) ListVendorsForItem(w http.ResponseWriter, r *http.Request) {

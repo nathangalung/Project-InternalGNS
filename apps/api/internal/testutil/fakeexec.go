@@ -30,6 +30,11 @@ type fakeRow struct{}
 
 func (fakeRow) Scan(_ ...any) error { return ErrFake }
 
+// FakeBeginner always fails to begin.
+type FakeBeginner struct{}
+
+func (FakeBeginner) Begin(_ context.Context) (pgx.Tx, error) { return nil, ErrFake }
+
 // Exec fails after N calls.
 type CountingExec struct {
 	Inner interface {

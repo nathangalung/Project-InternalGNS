@@ -26,7 +26,9 @@ type CoretaxSettings struct {
 
 // Deps holds shared application dependencies.
 type Deps struct {
+	// Pool serves reads; Tx opens a transaction for multi-write handlers.
 	Pool          db.Executor
+	Tx            db.TxBeginner
 	Queries       queries.Store
 	TemplatesRoot string
 	Pdf           PdfSettings
