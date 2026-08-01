@@ -1,6 +1,7 @@
 package httperr
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -78,6 +79,14 @@ func FromDBErr(err error) Error {
 
 // RenderDBErr writes a pg-aware response and logs the real error on a 500.
 func RenderDBErr(w http.ResponseWriter, err error) {
+	// A deadline is backpressure, not a crash: 503 + Retry-After is retryable
+	// and must not page a 5xx alert. Logged Warn, never Error.
+	if errors.Is(err, context.DeadlineExceeded) {
+		slog.Warn("request deadline exceeded", "error", err.Error())
+		w.Header().Set("Retry-After", "2")
+		Render(w, ServiceUnavailable("request timed out, please retry"))
+		return
+	}
 	e := FromDBErr(err)
 	if e.Status >= http.StatusInternalServerError {
 		slog.Error("unhandled server error", "error", err.Error())

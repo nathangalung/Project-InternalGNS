@@ -69,6 +69,8 @@ func TestLoadConfig_ProductionRejectsWeakDefaults(t *testing.T) {
 		t.Setenv("DATABASE_URL", "postgres://x")
 		t.Setenv("JWT_SECRET", testSecret)
 		t.Setenv("ENV", "production")
+		t.Setenv("MINIO_ACCESS_KEY", "real-access-key")
+		t.Setenv("MINIO_SECRET_KEY", "real-secret-key")
 	}
 
 	t.Run("empty superadmin password", func(t *testing.T) {
@@ -83,6 +85,33 @@ func TestLoadConfig_ProductionRejectsWeakDefaults(t *testing.T) {
 		base()
 		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
 		t.Setenv("CORS_ALLOWED_ORIGINS", "*")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("vendor-default minio credentials", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		t.Setenv("MINIO_ACCESS_KEY", "minioadmin")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("empty minio credentials", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		t.Setenv("MINIO_SECRET_KEY", "")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("placeholder database password", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		t.Setenv("DATABASE_URL", "postgres://user:change_me@db:5432/gns")
 		_, err := LoadConfig()
 		require.Error(t, err)
 	})

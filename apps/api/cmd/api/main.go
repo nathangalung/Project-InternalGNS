@@ -32,6 +32,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Rebuild at the configured level with request-id stamping now that config loaded.
+	logger = app.NewLogger(os.Stdout, cfg.SlogLevel())
+	slog.SetDefault(logger)
+
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
@@ -56,7 +60,9 @@ func main() {
 
 	<-ctx.Done()
 	logger.Info("shutting down")
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	// Drain budget must exceed the 30s handler timeout and stay under the
+	// compose stop_grace_period (45s). See docker-compose.yml api service.
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		logger.Error("shutdown", "err", err)

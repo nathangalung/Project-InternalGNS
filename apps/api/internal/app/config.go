@@ -3,6 +3,8 @@ package app
 import (
 	"errors"
 	"io/fs"
+	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/caarlos0/env/v11"
@@ -11,6 +13,7 @@ import (
 
 type Config struct {
 	Env                string        `env:"ENV"           envDefault:"development"`
+	LogLevel           string        `env:"LOG_LEVEL"     envDefault:"info"`
 	HTTPAddr           string        `env:"HTTP_ADDR"     envDefault:":8080"`
 	DatabaseURL        string        `env:"DATABASE_URL,required"`
 	JWTSecret          string        `env:"JWT_SECRET,required,notEmpty"`
@@ -81,6 +84,36 @@ func (c Config) validate() error {
 				return errors.New("CORS_ALLOWED_ORIGINS must not be * in production")
 			}
 		}
+		// Fail closed on shipped placeholder / vendor-default credentials.
+		if isWeakCred(c.MinioAccessKey) || isWeakCred(c.MinioSecretKey) {
+			return errors.New("MINIO_ACCESS_KEY/MINIO_SECRET_KEY must not be empty or a placeholder in production")
+		}
+		if strings.Contains(strings.ToLower(c.DatabaseURL), "change_me") {
+			return errors.New("DATABASE_URL still contains a placeholder password in production")
+		}
 	}
 	return nil
+}
+
+// isWeakCred flags empty, vendor-default, or unreplaced-placeholder secrets.
+func isWeakCred(v string) bool {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "", "minioadmin", "change_me", "changeme", "change_me_strong_password":
+		return true
+	}
+	return false
+}
+
+// SlogLevel maps LOG_LEVEL to a slog level, defaulting to Info on anything else.
+func (c Config) SlogLevel() slog.Level {
+	switch strings.ToLower(strings.TrimSpace(c.LogLevel)) {
+	case "debug":
+		return slog.LevelDebug
+	case "warn", "warning":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
 }
