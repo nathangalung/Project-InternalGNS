@@ -15,17 +15,10 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
-	"github.com/nathangalung/internalgns/apps/api/internal/storage"
-)
-
-const (
-	uploadURLExpiry   = 15 * time.Minute
-	downloadURLExpiry = 1 * time.Hour
 )
 
 type Handler struct {
-	repo    *Repo
-	storage *storage.Client
+	repo *Repo
 }
 
 func NewHandler(repo *Repo) *Handler {
@@ -342,79 +335,4 @@ func isValidStatus(s Status) bool {
 		return true
 	}
 	return false
-}
-
-func (h *Handler) PresignUpload(w http.ResponseWriter, r *http.Request) {
-	if h.storage == nil {
-		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
-		return
-	}
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
-	if err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid id"))
-		return
-	}
-	if _, err := h.repo.GetByID(r.Context(), id); err != nil {
-		if errors.Is(err, ErrNotFound) {
-			httperr.Render(w, httperr.NotFound("purchase order not found"))
-			return
-		}
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	fileName := strings.TrimSpace(r.URL.Query().Get("fileName"))
-	if fileName == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "required"}))
-		return
-	}
-	if err := storage.ValidateAssetFileName(storage.BucketPODocs, fileName); err != nil {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "unsupported file type"}))
-		return
-	}
-	objectKey := storage.BuildObjectKey("po", id, fileName)
-	url, err := h.storage.PresignPut(r.Context(), storage.BucketPODocs, objectKey, uploadURLExpiry)
-	if err != nil {
-		httperr.Render(w, httperr.Internal("presign failed"))
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"uploadUrl": url,
-		"objectKey": objectKey,
-		"expiresAt": time.Now().UTC().Add(uploadURLExpiry).Unix(),
-	})
-}
-
-func (h *Handler) PresignDownload(w http.ResponseWriter, r *http.Request) {
-	if h.storage == nil {
-		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
-		return
-	}
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
-	if err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid id"))
-		return
-	}
-	po, err := h.repo.GetByID(r.Context(), id)
-	if errors.Is(err, ErrNotFound) {
-		httperr.Render(w, httperr.NotFound("purchase order not found"))
-		return
-	}
-	if err != nil {
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	if po.FileURL == nil || *po.FileURL == "" {
-		httperr.Render(w, httperr.NotFound("no file attached"))
-		return
-	}
-	url, err := h.storage.PresignGet(r.Context(), storage.BucketPODocs, *po.FileURL, downloadURLExpiry)
-	if err != nil {
-		httperr.Render(w, httperr.Internal("presign failed"))
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"downloadUrl": url,
-		"fileName":    po.FileName,
-		"expiresAt":   time.Now().UTC().Add(downloadURLExpiry).Unix(),
-	})
 }

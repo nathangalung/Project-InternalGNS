@@ -15,17 +15,10 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
-	"github.com/nathangalung/internalgns/apps/api/internal/storage"
-)
-
-const (
-	attachmentUploadExpiry   = 15 * time.Minute
-	attachmentDownloadExpiry = 1 * time.Hour
 )
 
 type Handler struct {
-	repo    *Repo
-	storage *storage.Client
+	repo *Repo
 }
 
 func NewHandler(repo *Repo) *Handler {
@@ -266,108 +259,4 @@ func isValidStatus(s Status) bool {
 		return true
 	}
 	return false
-}
-
-// PresignAttachmentUpload handles GET /invoices/{id}/attachment/upload-url?fileName=...
-func (h *Handler) PresignAttachmentUpload(w http.ResponseWriter, r *http.Request) {
-	if h.storage == nil {
-		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
-		return
-	}
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
-	if err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid id"))
-		return
-	}
-	if _, err := h.repo.GetByID(r.Context(), id); err != nil {
-		if errors.Is(err, ErrNotFound) {
-			httperr.Render(w, httperr.NotFound("invoice not found"))
-			return
-		}
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	fileName := strings.TrimSpace(r.URL.Query().Get("fileName"))
-	if fileName == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "required"}))
-		return
-	}
-	if err := storage.ValidateAssetFileName(storage.BucketInvoiceAttachments, fileName); err != nil {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "unsupported file type"}))
-		return
-	}
-	objectKey := storage.BuildObjectKey("invoices", id, fileName)
-	url, err := h.storage.PresignPut(r.Context(), storage.BucketInvoiceAttachments, objectKey, attachmentUploadExpiry)
-	if err != nil {
-		httperr.Render(w, httperr.Internal("presign failed"))
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"uploadUrl": url,
-		"objectKey": objectKey,
-		"expiresAt": time.Now().UTC().Add(attachmentUploadExpiry).Unix(),
-	})
-}
-
-// PresignAttachmentDownload handles GET /invoices/{id}/attachment/download-url
-func (h *Handler) PresignAttachmentDownload(w http.ResponseWriter, r *http.Request) {
-	if h.storage == nil {
-		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
-		return
-	}
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
-	if err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid id"))
-		return
-	}
-	inv, err := h.repo.GetByID(r.Context(), id)
-	if errors.Is(err, ErrNotFound) {
-		httperr.Render(w, httperr.NotFound("invoice not found"))
-		return
-	}
-	if err != nil {
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	if inv.AttachmentObjectKey == nil || *inv.AttachmentObjectKey == "" {
-		httperr.Render(w, httperr.NotFound("no attachment"))
-		return
-	}
-	url, err := h.storage.PresignGet(r.Context(), storage.BucketInvoiceAttachments, *inv.AttachmentObjectKey, attachmentDownloadExpiry)
-	if err != nil {
-		httperr.Render(w, httperr.Internal("presign failed"))
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"downloadUrl": url,
-		"expiresAt":   time.Now().UTC().Add(attachmentDownloadExpiry).Unix(),
-	})
-}
-
-// UpdateAttachment handles PATCH /invoices/{id}/attachment with body {objectKey}.
-func (h *Handler) UpdateAttachment(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
-	if err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid id"))
-		return
-	}
-	var req UpdateAttachmentRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
-		return
-	}
-	if strings.TrimSpace(req.ObjectKey) == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"objectKey": "required"}))
-		return
-	}
-	actor := deps.CurrentUserID(r.Context())
-	if err := h.repo.UpdateAttachment(r.Context(), id, req.ObjectKey, actor); err != nil {
-		if errors.Is(err, ErrNotFound) {
-			httperr.Render(w, httperr.NotFound("invoice not found"))
-			return
-		}
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
 }
