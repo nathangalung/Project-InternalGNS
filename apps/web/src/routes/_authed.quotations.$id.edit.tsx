@@ -12,8 +12,11 @@ function QuotationEditRoute() {
   const navigate = useNavigate()
   const { logout } = useAuth()
 
+  // Keyed so switching quotations remounts the wizard with fresh state, while a
+  // background refetch of the same quotation keeps entered steps.
   return (
     <QuotationEdit
+      key={id}
       quotationId={id}
       onNavigate={makePageNavigate(navigate, id)}
       onLogout={() => {

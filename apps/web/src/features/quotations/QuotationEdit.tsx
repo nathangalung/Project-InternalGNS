@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Sidebar from "@/components/shared/Sidebar"
 import ClientAdd from "@/features/clients/ClientAdd"
 import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
@@ -153,8 +153,14 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
   const canSave =
     products.length > 0 && products.every((p) => unitIdByCode.has(p.satuan.toUpperCase()))
 
+  // Wizard state is seeded once, after both the quotation and the units it
+  // needs to resolve unit codes have arrived. Any later refetch of the same
+  // quotation leaves entered steps alone; the route keys this component by id,
+  // so a different quotation remounts and seeds again.
+  const hydrated = useRef(false)
   useEffect(() => {
-    if (!detail) return
+    if (hydrated.current || !detail || !unitsData) return
+    hydrated.current = true
     setSelectedClient(String(detail.companyClientId))
     if (detail.contactId) setSelectedContactId(detail.contactId)
     setDiscountPct(Number(detail.discountPct) || 0)
@@ -190,7 +196,7 @@ export default function QuotationEdit({ quotationId, onNavigate, onLogout }: Quo
     if (detail.validityDays) setBerlakuSampai(String(detail.validityDays))
     const termDays = Number.parseInt(detail.paymentTerms ?? "", 10)
     if (Number.isFinite(termDays) && termDays > 0) setJatuhTempo(String(termDays))
-  }, [detail, unitNameById])
+  }, [detail, unitsData, unitNameById])
 
   // Summary computation.
   const summaryTotalProdukQty = products.reduce((sum, p) => sum + p.jumlah, 0)

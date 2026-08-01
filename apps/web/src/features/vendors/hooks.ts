@@ -63,8 +63,9 @@ export function useUploadVendorLogo() {
       await vendorsApi.updateLogo(id, presign.objectKey)
     },
     onSuccess: (_, { id }) => {
+      // Detail carries the new object key that the logo URL query depends on.
+      // Lists do not render logos, so the broad prefix is not needed.
       qc.invalidateQueries({ queryKey: queryKeys.vendors.detail(id) })
-      qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah logo vendor.")),
   })

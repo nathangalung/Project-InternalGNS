@@ -110,25 +110,16 @@ export default function ProductDetail({
     uploadImage.mutate({ id: product.id, file })
   }
 
+  // Every field but the unit hydrates once from the state initializers above.
+  // The unit code resolves only after the units list arrives, so seed it once
+  // on arrival and never again; later refetches leave the form untouched.
+  const unitHydrated = useRef(false)
   useEffect(() => {
-    setName(product.name)
-    setImpa(product.impaCode ?? "")
-    const code =
-      product.defaultUnitId !== undefined
-        ? (units?.find((u) => u.id === product.defaultUnitId)?.code ?? "")
-        : ""
-    setUnitCode(code)
-    setUnitQuery(code)
-    setDescription(product.description ?? "")
-    setIsActive(product.isActive)
-  }, [
-    product.name,
-    product.impaCode,
-    product.defaultUnitId,
-    product.description,
-    product.isActive,
-    units,
-  ])
+    if (unitHydrated.current || !units) return
+    unitHydrated.current = true
+    setUnitCode(initialUnitCode)
+    setUnitQuery(initialUnitCode)
+  }, [units, initialUnitCode])
 
   const dirty =
     name !== product.name ||

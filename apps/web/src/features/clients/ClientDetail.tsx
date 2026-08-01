@@ -126,25 +126,9 @@ export default function ClientDetail({ client, onNavigate, onBack, onLogout }: C
     }
   }, [logoDownload?.downloadUrl, client.logoObjectKey])
 
-  useEffect(() => {
-    setName(client.name)
-    setTkuId(client.tkuId ?? "")
-    setCountryCode(client.countryCode)
-    setPhone(client.contactPhone ?? "")
-    setEmail(client.email ?? "")
-    setNpwp(client.npwp ?? "")
-    setAddress(client.address ?? "")
-    setIsActive(client.isActive)
-  }, [
-    client.name,
-    client.tkuId,
-    client.countryCode,
-    client.contactPhone,
-    client.email,
-    client.npwp,
-    client.address,
-    client.isActive,
-  ])
+  // Form state hydrates once from the state initializers above. The route
+  // remounts on a different client, so a background refetch of the same client
+  // never overwrites in-progress edits.
 
   const dirty =
     name !== client.name ||

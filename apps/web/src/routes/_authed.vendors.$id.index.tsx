@@ -23,8 +23,11 @@ function VendorDetailRoute() {
     )
   }
 
+  // Keyed so a different vendor remounts with fresh form state, while a
+  // background refetch of the same vendor keeps in-progress edits.
   return (
     <VendorDetail
+      key={data.id}
       vendor={data}
       onNavigate={makePageNavigate(navigate)}
       onBack={() => void navigate({ to: "/vendors" })}

@@ -85,7 +85,9 @@ export function useUpdateContact() {
     }) => clientsApi.updateContact(companyId, contactId, input),
     onSuccess: (_, { companyId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) })
-      void qc.invalidateQueries({ queryKey: queryKeys.clients.all })
+      // List rows embed contact fields. Detail is left alone so an open detail
+      // form is never refetched out from under in-progress edits.
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.lists() })
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui kontak.")),
   })
@@ -103,8 +105,9 @@ export function useCreateContact() {
     }) => clientsApi.createContact(companyId, input),
     onSuccess: (_, { companyId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) })
-      // List rows embed contact fields, so refresh them too.
-      void qc.invalidateQueries({ queryKey: queryKeys.clients.all })
+      // List rows embed contact fields, so refresh them too. Detail stays put
+      // to protect an open detail form.
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.lists() })
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan kontak.")),
   })
@@ -117,7 +120,7 @@ export function useDeleteContact() {
       clientsApi.deleteContact(companyId, contactId),
     onSuccess: (_, { companyId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) })
-      void qc.invalidateQueries({ queryKey: queryKeys.clients.all })
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.lists() })
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal menghapus kontak.")),
   })
@@ -133,8 +136,9 @@ export function useUploadClientLogo() {
       await clientsApi.updateLogo(id, presign.objectKey)
     },
     onSuccess: (_, { id }) => {
+      // Detail carries the new object key that the logo URL query depends on.
+      // Lists do not render logos, so the broad prefix is not needed.
       qc.invalidateQueries({ queryKey: queryKeys.clients.detail(id) })
-      qc.invalidateQueries({ queryKey: queryKeys.clients.all })
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah logo.")),
   })

@@ -23,8 +23,11 @@ function ProductDetailRoute() {
     )
   }
 
+  // Keyed so a different product remounts with fresh form state, while a
+  // background refetch of the same product keeps in-progress edits.
   return (
     <ProductDetail
+      key={data.id}
       product={data}
       onNavigate={makePageNavigate(navigate)}
       onBack={() => void navigate({ to: "/products" })}

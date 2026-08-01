@@ -90,13 +90,9 @@ export default function VendorDetail({ vendor, onNavigate, onBack, onLogout }: V
     }
   }, [logoDownload?.downloadUrl, vendor.logoObjectKey])
 
-  useEffect(() => {
-    setName(vendor.name)
-    setPhone(getContactField(vendor.contactInfo, "phone"))
-    setEmail(getContactField(vendor.contactInfo, "email"))
-    setAddress(vendor.location ?? "")
-    setIsActive(vendor.isActive)
-  }, [vendor.name, vendor.contactInfo, vendor.location, vendor.isActive])
+  // Form state hydrates once from the state initializers above. The route
+  // remounts on a different vendor, so a background refetch of the same vendor
+  // never overwrites in-progress edits.
 
   const dirty =
     name !== vendor.name ||

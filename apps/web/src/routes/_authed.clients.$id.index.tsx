@@ -23,8 +23,11 @@ function ClientDetailRoute() {
     )
   }
 
+  // Keyed so a different client remounts with fresh form state, while a
+  // background refetch of the same client keeps in-progress edits.
   return (
     <ClientDetail
+      key={data.id}
       client={data}
       onNavigate={makePageNavigate(navigate)}
       onBack={() => void navigate({ to: "/clients" })}
