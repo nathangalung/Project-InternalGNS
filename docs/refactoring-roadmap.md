@@ -25,6 +25,13 @@ These change a user-visible or filed value. Ordered by the audit's severity
 (tax/legal → data loss → security). **Do not start any of these without the
 answer to its question.** Numbers are audit finding IDs.
 
+### Phase 1 progress (owner answered Q2/Q3/DJP/Q7)
+- **DONE #3 timezone** — pool session zone pinned to WIB, assertion, tz package wired (`965ad61`).
+- **DONE per-line PPN rounding** — ppn from the rounded DPP base (`0250a0a`, forward-only).
+- **DONE #2 invoice discount** — gross line + stored discount, `TotalProduk − Diskon = DPP` by construction (`aed27b0`).
+- **Historical backfill: intentionally NOT done.** Restating per-line PPN / header DPP on already-filed invoices would make the DB disagree with what was filed with DJP — worse than leaving it. Forward fixes are the correct scope; filed history stays as-filed.
+- **Remaining:** #6 PO shipping_days (data loss), #7 overdue boundary + consolidation. Low-priority: rewrite the manual `db/checks/01_verify_advanced.sql` B.3 (asserts the pre-00039 header formula, misleads).
+
 ### Phase 1 — tax & legal correctness (highest stakes)
 - **#1 (CRITICAL)** exports silently truncate at 200 rows, incl. the DJP
   coretax bulk workbook. Fix bundles with the coretax N+1 and a per-route
