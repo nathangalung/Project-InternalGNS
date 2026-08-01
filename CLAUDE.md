@@ -104,8 +104,9 @@ Feature-based with file-based routing:
 src/
   routes/            TanStack Router, auto-generated route tree
   features/          One folder per feature: api.ts, hooks.ts, components
-  components/shared/ Sidebar, tables, pagination, shared UI
-  lib/               api-client, rbac, format, status, chart helpers, ui (tailwind primitives)
+  components/shared/ Sidebar, tables, pagination, Modal, TableStates
+  lib/               api-client, rbac, format, status, chart helpers,
+                     ui (tailwind class primitives), useListScreen
   styles/            tailwind.css (entry), design-tokens.css, layout.css
   types/             Hand-maintained API types
 ```
@@ -113,6 +114,14 @@ src/
 Server state is TanStack Query; `lib/api-client.ts` attaches the JWT and maps
 errors. `types/api.ts` is the effective API contract, since `openapi.yaml` only
 documents part of the surface.
+
+List screens share one state machine, `lib/useListScreen.ts`: search with
+debounce, filters, page, per-page, and the reset-to-page-1 invariant. Note which
+mutator resets the page — `setSearch`, `applyFilters` and `setItemsPerPage` do,
+`clearSearch` and `patchFilters` do not, because removing a filter chip must
+keep the reader in place. Each screen still owns its own filter defaults and
+query call. Table loading and empty rows come from `components/shared/
+TableStates`, and repeated class strings live in `lib/ui.ts`.
 
 ## Testing
 
