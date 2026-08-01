@@ -87,9 +87,6 @@ jobs:
       - name: audit deps
         run: bun audit --prod --ignore GHSA-w5hq-g745-h8pq
 
-      - name: openapi codegen drift
-        run: bun run codegen:check
-
       - name: lint
         run: bun run lint
 

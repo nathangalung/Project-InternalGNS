@@ -39,9 +39,7 @@ export function useAuth() {
     if (getRefreshToken()) {
       void auth.logout().catch(() => {})
     }
-    sessionStorage.removeItem(AUTH_KEY)
-    clearTokens()
-    window.dispatchEvent(new Event(EVENT_NAME))
+    clearAuthState()
   }, [])
 
   return { isAuthenticated, login, logout }

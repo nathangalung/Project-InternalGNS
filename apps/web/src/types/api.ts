@@ -76,7 +76,7 @@ export type ClientSearchHit = {
   contactPhone?: string
   contactTitle?: string
   score: number
-  matchTier: string
+  matchTier: "AUTO_MATCH" | "SUGGESTED" | "FUZZY"
 }
 
 // Master tables consumed by dropdowns.
@@ -225,6 +225,7 @@ export type VendorItemRow = {
   vendorSku?: string
   costPrice?: string
   lastQuotedAt?: string
+  productUrl?: string
 }
 
 // Quotation list, detail, and writes.
@@ -527,10 +528,16 @@ export type InvoiceItemRow = {
   offeredItemId?: number
   unitId?: number
   unitCode?: string
+  unitCoretaxCode?: string
   qty: string
   unitPrice: string
   costPrice?: string
+  dpp?: string
+  dppNilaiLain?: string
+  ppnRate?: string
+  ppnAmount?: string
   shipDestination?: string
+  goodsOrService?: string
 }
 
 export type InvoiceSummary = {

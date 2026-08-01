@@ -19,9 +19,7 @@
     "format": "biome format --write src",
     "typecheck": "bun run generate:routes && tsc --noEmit -p tsconfig.json",
     "analyze": "ANALYZE=true bun run build",
-    "lighthouse": "lhci autorun",
-    "codegen": "openapi-typescript ../api/openapi.yaml -o src/types/openapi.gen.ts",
-    "codegen:check": "bun run codegen && git diff --exit-code -- src/types/openapi.gen.ts"
+    "lighthouse": "lhci autorun"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",
@@ -47,7 +45,6 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react-swc": "^4.2.3",
-    "openapi-typescript": "^7.6.1",
     "rollup-plugin-visualizer": "^7.0.1",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.9.3",

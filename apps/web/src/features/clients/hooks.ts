@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  skipToken,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import * as clientsApi from "@/features/clients/api"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
@@ -24,8 +30,7 @@ export function useClientSummary() {
 export function useClient(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.clients.detail(id) : queryKeys.clients.all,
-    queryFn: () => clientsApi.get(id as number),
-    enabled: id !== undefined && id > 0,
+    queryFn: id !== undefined && id > 0 ? () => clientsApi.get(id) : skipToken,
   })
 }
 
@@ -59,8 +64,10 @@ export function useUpdateClient() {
 export function useClientContacts(companyId: number | undefined) {
   return useQuery({
     queryKey: companyId ? queryKeys.clients.contacts(companyId) : queryKeys.clients.all,
-    queryFn: () => clientsApi.listContacts(companyId as number),
-    enabled: companyId !== undefined && companyId > 0,
+    queryFn:
+      companyId !== undefined && companyId > 0
+        ? () => clientsApi.listContacts(companyId)
+        : skipToken,
   })
 }
 
@@ -136,8 +143,10 @@ export function useUploadClientLogo() {
 export function useClientLogoDownloadUrl(id: number | undefined, objectKey?: string) {
   return useQuery({
     queryKey: id ? [...queryKeys.clients.detail(id), "logo-url", objectKey] : queryKeys.clients.all,
-    queryFn: () => clientsApi.presignLogoDownload(id as number),
-    enabled: id !== undefined && id > 0 && Boolean(objectKey),
+    queryFn:
+      id !== undefined && id > 0 && objectKey
+        ? () => clientsApi.presignLogoDownload(id)
+        : skipToken,
     staleTime: 4 * 60 * 1000,
   })
 }

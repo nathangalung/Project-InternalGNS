@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  skipToken,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import * as itemsApi from "@/features/items/api"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
@@ -17,8 +23,7 @@ export function useItems(params: itemsApi.ItemListParams = {}) {
 export function useItem(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.items.detail(id) : queryKeys.items.all,
-    queryFn: () => itemsApi.get(id as number),
-    enabled: id !== undefined && id > 0,
+    queryFn: id !== undefined && id > 0 ? () => itemsApi.get(id) : skipToken,
   })
 }
 
@@ -40,16 +45,17 @@ export function useItemSearchAdvanced(
 export function useItemVendors(itemId: number | undefined) {
   return useQuery({
     queryKey: itemId ? queryKeys.items.vendors(itemId) : queryKeys.items.all,
-    queryFn: () => itemsApi.listVendors(itemId as number),
-    enabled: itemId !== undefined && itemId > 0,
+    queryFn: itemId !== undefined && itemId > 0 ? () => itemsApi.listVendors(itemId) : skipToken,
   })
 }
 
 export function useItemPriceHistory(itemId: number | undefined, limit?: number) {
   return useQuery({
     queryKey: itemId ? queryKeys.items.priceHistory(itemId, limit) : queryKeys.items.all,
-    queryFn: () => itemsApi.priceHistory(itemId as number, { limit }),
-    enabled: itemId !== undefined && itemId > 0,
+    queryFn:
+      itemId !== undefined && itemId > 0
+        ? () => itemsApi.priceHistory(itemId, { limit })
+        : skipToken,
   })
 }
 
@@ -101,8 +107,8 @@ export function useUploadItemImage() {
 export function useItemImageDownloadUrl(id: number | undefined, objectKey?: string) {
   return useQuery({
     queryKey: id ? [...queryKeys.items.detail(id), "image-url", objectKey] : queryKeys.items.all,
-    queryFn: () => itemsApi.presignImageDownload(id as number),
-    enabled: id !== undefined && id > 0 && Boolean(objectKey),
+    queryFn:
+      id !== undefined && id > 0 && objectKey ? () => itemsApi.presignImageDownload(id) : skipToken,
     staleTime: 4 * 60 * 1000,
   })
 }

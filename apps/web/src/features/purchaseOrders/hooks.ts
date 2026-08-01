@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  skipToken,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import * as poApi from "@/features/purchaseOrders/api"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
@@ -18,16 +24,14 @@ export function usePurchaseOrders(params: poApi.ListParams = {}) {
 export function usePurchaseOrder(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.purchaseOrders.detail(id) : queryKeys.purchaseOrders.all,
-    queryFn: () => poApi.get(id as number),
-    enabled: id !== undefined && id > 0,
+    queryFn: id !== undefined && id > 0 ? () => poApi.get(id) : skipToken,
   })
 }
 
 export function usePoItems(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.purchaseOrders.items(id) : queryKeys.purchaseOrders.all,
-    queryFn: () => poApi.listItems(id as number),
-    enabled: id !== undefined && id > 0,
+    queryFn: id !== undefined && id > 0 ? () => poApi.listItems(id) : skipToken,
   })
 }
 
@@ -36,8 +40,10 @@ export function usePurchaseOrderByQuotation(quotationId: number | undefined) {
     queryKey: quotationId
       ? queryKeys.purchaseOrders.byQuotation(quotationId)
       : queryKeys.purchaseOrders.all,
-    queryFn: () => poApi.getByQuotation(quotationId as number),
-    enabled: quotationId !== undefined && quotationId > 0,
+    queryFn:
+      quotationId !== undefined && quotationId > 0
+        ? () => poApi.getByQuotation(quotationId)
+        : skipToken,
   })
 }
 
@@ -49,6 +55,7 @@ export function useChangePoStatus() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
       qc.invalidateQueries({ queryKey: queryKeys.invoices.all })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal mengubah status PO.")),
   })
@@ -99,6 +106,7 @@ export function useUpdatePoItems() {
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.detail(id) })
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.items(id) })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui item PO.")),
   })

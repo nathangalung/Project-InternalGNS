@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  skipToken,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import * as usersApi from "@/features/users/api"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
@@ -24,8 +30,7 @@ export function useCreateUser() {
 export function useUser(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.users.detail(id) : queryKeys.users.all,
-    queryFn: () => usersApi.get(id as number),
-    enabled: id !== undefined && id > 0,
+    queryFn: id !== undefined && id > 0 ? () => usersApi.get(id) : skipToken,
   })
 }
 

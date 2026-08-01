@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router"
 import { useState } from "react"
 import { useMe } from "@/features/auth/hooks"
 import type { Page } from "@/lib/page"
@@ -12,21 +13,37 @@ const ROLE_LABEL: Record<Role, string> = {
 
 const logoImg = "/logo.png"
 
-const navItems: { label: string; icon: string; page?: Page }[] = [
-  { label: "Dashboard", icon: "grid", page: "dashboard" },
-  { label: "Dashboard Financial", icon: "bar-chart", page: "dashboard-financial" },
-  { label: "Dashboard Operasional", icon: "activity", page: "dashboard-operational" },
-  { label: "Quotation", icon: "file-text", page: "quotation" },
-  { label: "Purchase Order", icon: "shopping-cart", page: "purchase-orders" },
-  { label: "Invoices", icon: "file", page: "invoices" },
-  { label: "Katalog Produk", icon: "package", page: "products" },
-  { label: "Daftar Vendor", icon: "truck", page: "vendors" },
-  { label: "Daftar Klien", icon: "users", page: "clients" },
-  { label: "Manajemen Pengguna", icon: "settings", page: "users" },
-]
+const navItems = [
+  { label: "Dashboard", icon: "grid", page: "dashboard", to: "/" },
+  {
+    label: "Dashboard Financial",
+    icon: "bar-chart",
+    page: "dashboard-financial",
+    to: "/dashboard-financial",
+  },
+  {
+    label: "Dashboard Operasional",
+    icon: "activity",
+    page: "dashboard-operational",
+    to: "/dashboard-operational",
+  },
+  { label: "Quotation", icon: "file-text", page: "quotation", to: "/quotations" },
+  {
+    label: "Purchase Order",
+    icon: "shopping-cart",
+    page: "purchase-orders",
+    to: "/purchase-orders",
+  },
+  { label: "Invoices", icon: "file", page: "invoices", to: "/invoices" },
+  { label: "Katalog Produk", icon: "package", page: "products", to: "/products" },
+  { label: "Daftar Vendor", icon: "truck", page: "vendors", to: "/vendors" },
+  { label: "Daftar Klien", icon: "users", page: "clients", to: "/clients" },
+  { label: "Manajemen Pengguna", icon: "settings", page: "users", to: "/users" },
+] as const satisfies readonly { label: string; icon: string; page: Section; to: string }[]
 
 interface SidebarProps {
   activePage: Page
+  // Kept for existing callers.
   onNavigate: (page: Page) => void
   onLogout: () => void
 }
@@ -114,18 +131,11 @@ function NavIcon({ name }: { name: string }) {
 const iconBtn =
   "flex items-center justify-center [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-linecap:round]"
 
-export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarProps) {
+export default function Sidebar({ activePage, onLogout }: SidebarProps) {
   const { data: me } = useMe()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  const visibleItems = navItems.filter(
-    (item) => !item.page || roleCanAccess(me?.role, item.page as Section),
-  )
-
-  const handleNavigate = (page: Page) => {
-    setDrawerOpen(false)
-    onNavigate(page)
-  }
+  const visibleItems = navItems.filter((item) => roleCanAccess(me?.role, item.page))
 
   return (
     <>
@@ -186,18 +196,19 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
           {visibleItems.map((item) => {
             const active = item.page === activePage
             return (
-              <button
+              <Link
                 key={item.label}
-                className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md py-2 pl-3 text-left text-sm font-medium transition-colors ${
+                to={item.to}
+                className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md py-2 pl-3 text-left text-sm font-medium no-underline transition-colors ${
                   active
                     ? "rounded-r-none border-r-[3px] border-primary-400 bg-primary-600/15 pr-[calc(0.75rem-3px)] text-primary-400 hover:bg-primary-600/20 hover:text-primary-300"
                     : "pr-3 text-dark-400 hover:bg-dark-800 hover:text-dark-200"
                 }`}
-                onClick={() => item.page && handleNavigate(item.page)}
+                onClick={() => setDrawerOpen(false)}
               >
                 <NavIcon name={item.icon} />
                 {item.label}
-              </button>
+              </Link>
             )
           })}
         </nav>

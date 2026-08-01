@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  skipToken,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import * as invApi from "@/features/invoices/api"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
@@ -25,16 +31,17 @@ export function useInvoiceSummary() {
 export function useInvoiceItems(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.invoices.items(id) : queryKeys.invoices.all,
-    queryFn: () => invApi.listItems(id as number),
-    enabled: id !== undefined && id > 0,
+    queryFn: id !== undefined && id > 0 ? () => invApi.listItems(id) : skipToken,
   })
 }
 
 export function useInvoiceByQuotation(quotationId: number | undefined) {
   return useQuery({
     queryKey: quotationId ? queryKeys.invoices.byQuotation(quotationId) : queryKeys.invoices.all,
-    queryFn: () => invApi.getByQuotation(quotationId as number),
-    enabled: quotationId !== undefined && quotationId > 0,
+    queryFn:
+      quotationId !== undefined && quotationId > 0
+        ? () => invApi.getByQuotation(quotationId)
+        : skipToken,
   })
 }
 
@@ -43,7 +50,10 @@ export function useChangeInvoiceStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: number; status: InvoiceBackendStatus }) =>
       invApi.changeStatus(id, status),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.invoices.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.invoices.all })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+    },
     onError: (err) => toast.error(errorMessage(err, "Gagal mengubah status invoice.")),
   })
 }
@@ -67,8 +77,10 @@ export function useInvoiceAttachmentDownloadUrl(id: number | undefined, objectKe
     queryKey: id
       ? [...queryKeys.invoices.detail(id), "attachment-url", objectKey]
       : queryKeys.invoices.all,
-    queryFn: () => invApi.presignAttachmentDownload(id as number),
-    enabled: id !== undefined && id > 0 && Boolean(objectKey),
+    queryFn:
+      id !== undefined && id > 0 && objectKey
+        ? () => invApi.presignAttachmentDownload(id)
+        : skipToken,
     staleTime: 4 * 60 * 1000,
   })
 }
