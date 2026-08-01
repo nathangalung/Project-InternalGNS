@@ -31,5 +31,6 @@ export function poItemsToShipping(items: PurchaseOrderItemRow[] | undefined): Sh
     deadline: "",
     hargaSatuan: toNum(ship.sellingPrice) * toNum(ship.qty),
     alamat: ship.shipDestination ?? undefined,
+    hari: ship.shippingDays,
   }
 }

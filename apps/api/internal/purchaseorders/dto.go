@@ -54,6 +54,7 @@ type PurchaseOrderItem struct {
 	TotalSelling    string  `db:"total_selling"      json:"totalSelling"`
 	ProfitAmount    *string `db:"profit_amount"      json:"profitAmount,omitempty"`
 	ShipDestination *string `db:"ship_destination"   json:"shipDestination,omitempty"`
+	ShippingDays    *int    `db:"shipping_days"      json:"shippingDays,omitempty"`
 	IsAvailable     bool    `db:"is_available"       json:"isAvailable"`
 }
 

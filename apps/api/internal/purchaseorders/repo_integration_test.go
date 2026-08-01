@@ -314,5 +314,82 @@ func TestRepo_UpdateItems_VersionedNotFound(t *testing.T) {
 	assert.ErrorIs(t, err, purchaseorders.ErrNotFound)
 }
 
+// Shipping days survive create then update.
+func TestRepo_ShippingDays_RoundTrip(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	poID := acceptedQuotationWithShipping(t, tx, 7)
+
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	created, err := repo.ListItems(ctx, poID)
+	require.NoError(t, err)
+	createdShip := shippingLine(t, created)
+	require.NotNil(t, createdShip.ShippingDays)
+	assert.Equal(t, 7, *createdShip.ShippingDays)
+
+	addr := "Jakarta Pusat"
+	cost := "50000"
+	days := 12
+	_, err = repo.UpdateItems(ctx, poID, purchaseorders.UpdateItemsRequest{
+		DiscountPct:     "0",
+		ShippingAddress: &addr,
+		ShippingDays:    &days,
+		ShippingCost:    &cost,
+		Items: []purchaseorders.UpdateItemsLine{{
+			ItemName:     "Edited Item",
+			Qty:          "3",
+			UnitID:       int16Ptr(seedUnitID),
+			SellingPrice: "200000",
+		}},
+	}, seedUserID, nil)
+	require.NoError(t, err)
+
+	updated, err := repo.ListItems(ctx, poID)
+	require.NoError(t, err)
+	updatedShip := shippingLine(t, updated)
+	require.NotNil(t, updatedShip.ShippingDays)
+	assert.Equal(t, 12, *updatedShip.ShippingDays)
+}
+
+// Accept quotation carrying shipping, return PO.
+func acceptedQuotationWithShipping(t *testing.T, tx pgx.Tx, days int) int64 {
+	t.Helper()
+	ctx := context.Background()
+	qrepo := quotations.NewRepo(tx, testutil.Store(t))
+	addr := "Tanjung Priok"
+	cost := "75000"
+	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		CompanyClientID: seedCompanyID,
+		DiscountPct:     "0",
+		ShippingAddress: &addr,
+		ShippingDays:    &days,
+		ShippingCost:    &cost,
+		Items: []quotations.CreateItem{{
+			RequestedName: "Test Product",
+			Qty:           "2",
+			UnitID:        seedUnitID,
+			SellingPrice:  "100000",
+		}},
+	}, seedUserID)
+	require.NoError(t, err)
+	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "sent", nil, seedUserID))
+	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "accepted", nil, seedUserID))
+
+	porepo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	po, err := porepo.GetByQuotation(ctx, qid)
+	require.NoError(t, err)
+	return po.ID
+}
+
+func shippingLine(t *testing.T, items []purchaseorders.PurchaseOrderItem) purchaseorders.PurchaseOrderItem {
+	t.Helper()
+	for _, it := range items {
+		if it.ItemType == "shipping" {
+			return it
+		}
+	}
+	t.Fatal("no shipping line")
+	return purchaseorders.PurchaseOrderItem{}
+}
+
 func int16Ptr(v int16) *int16 { return &v }
 func strPtr(v string) *string { return &v }

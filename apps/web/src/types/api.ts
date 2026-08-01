@@ -488,6 +488,7 @@ export type PurchaseOrderItemRow = {
   totalSelling: string
   profitAmount?: string
   shipDestination?: string
+  shippingDays?: number
   isAvailable: boolean
 }
 

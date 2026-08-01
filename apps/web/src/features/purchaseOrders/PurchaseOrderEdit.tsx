@@ -169,6 +169,7 @@ export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: Purcha
     const ship = poItems.find((it) => it.itemType === "shipping")
     if (ship) {
       setShippingAddress(ship.shipDestination ?? "")
+      if (ship.shippingDays) setShippingTime(String(ship.shippingDays))
       const cost = Number(ship.sellingPrice)
       setShippingCost(Number.isFinite(cost) ? String(cost) : "")
     }

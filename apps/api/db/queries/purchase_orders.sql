@@ -131,6 +131,7 @@ SELECT poi.id,
        poi.total_selling::text AS total_selling,
        poi.profit_amount::text AS profit_amount,
        poi.ship_destination,
+       poi.shipping_days,
        poi.is_available
 FROM purchase_order_items poi
 LEFT JOIN items i ON i.id = poi.offered_item_id
