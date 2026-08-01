@@ -123,6 +123,18 @@ browser QA, not because they change behavior.
   (six duplicated list screens); `deriveInvoiceStatus` single source (#127,
   tie in with #7). (M each)
 
+## Follow-up found while fixing acceptance-suite cleanup
+
+The quotations, purchaseorders and invoices suites do not accumulate rows, but
+only because each scenario starts with `TRUNCATE ... RESTART IDENTITY CASCADE`
+over the domain tables. That means **running the test suite destroys whatever
+quotations, purchase orders and invoices a developer had in their dev
+database**. It is why those tables read as empty during this session's work.
+Fixing it means reworking the `Given the ... domain is empty` steps to scope
+themselves to the rows the scenario owns, the same way the id-tracking cleanup
+now works for clients, vendors, items and users. Worth doing before anyone
+relies on dev data surviving a test run.
+
 ## Known behavior facts from this round (not bugs, but finance/ops should know)
 
 - **Re-downloading a historical invoice PDF that has a shipping line now prints
