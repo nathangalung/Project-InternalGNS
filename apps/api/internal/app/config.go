@@ -85,8 +85,10 @@ func (c Config) validate() error {
 			}
 		}
 		// Fail closed on shipped placeholder / vendor-default credentials.
+		// Empty is left alone: it is the deliberate "storage disabled" signal
+		// (server.go boots with a nil storage client), not a weak secret.
 		if isWeakCred(c.MinioAccessKey) || isWeakCred(c.MinioSecretKey) {
-			return errors.New("MINIO_ACCESS_KEY/MINIO_SECRET_KEY must not be empty or a placeholder in production")
+			return errors.New("MINIO_ACCESS_KEY/MINIO_SECRET_KEY must not be a placeholder or vendor default in production")
 		}
 		if strings.Contains(strings.ToLower(c.DatabaseURL), "change_me") {
 			return errors.New("DATABASE_URL still contains a placeholder password in production")
@@ -95,10 +97,11 @@ func (c Config) validate() error {
 	return nil
 }
 
-// isWeakCred flags empty, vendor-default, or unreplaced-placeholder secrets.
+// isWeakCred flags vendor-default or unreplaced-placeholder secrets. Empty is
+// NOT weak — it is the supported "storage disabled" signal.
 func isWeakCred(v string) bool {
 	switch strings.ToLower(strings.TrimSpace(v)) {
-	case "", "minioadmin", "change_me", "changeme", "change_me_strong_password":
+	case "minioadmin", "change_me", "changeme", "change_me_strong_password":
 		return true
 	}
 	return false

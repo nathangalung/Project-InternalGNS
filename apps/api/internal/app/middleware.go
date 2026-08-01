@@ -51,6 +51,8 @@ func accessLogMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(ww, r)
 		elapsed := time.Since(start)
 		status := ww.Status()
+		// request_id is stamped by the slog handler (logging.go) from the same
+		// context, so it must not be added here or the line carries it twice.
 		attrs := []slog.Attr{
 			slog.String("method", r.Method),
 			slog.String("path", r.URL.Path),
@@ -58,10 +60,13 @@ func accessLogMiddleware(next http.Handler) http.Handler {
 			slog.Int("bytes", ww.BytesWritten()),
 			slog.Duration("duration", elapsed),
 			slog.String("remote", r.RemoteAddr),
-			slog.String("request_id", middleware.GetReqID(r.Context())),
 		}
 		level := slog.LevelInfo
 		switch {
+		case status == http.StatusServiceUnavailable:
+			// Backpressure (timeout, storage disabled) is not a crash; keep it
+			// off the Error stream so 5xx alerts do not page on load.
+			level = slog.LevelWarn
 		case status >= 500:
 			level = slog.LevelError
 		case status >= 400:

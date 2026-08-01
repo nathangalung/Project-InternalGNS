@@ -98,13 +98,14 @@ func TestLoadConfig_ProductionRejectsWeakDefaults(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("empty minio credentials", func(t *testing.T) {
+	t.Run("empty minio credentials allowed (storage disabled)", func(t *testing.T) {
 		base()
 		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
 		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		t.Setenv("MINIO_ACCESS_KEY", "")
 		t.Setenv("MINIO_SECRET_KEY", "")
 		_, err := LoadConfig()
-		require.Error(t, err)
+		require.NoError(t, err)
 	})
 
 	t.Run("placeholder database password", func(t *testing.T) {
