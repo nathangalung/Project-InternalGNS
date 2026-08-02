@@ -12,7 +12,11 @@ ENV VITE_API_URL=${VITE_API_URL}
 RUN bun run build
 
 # Serve stage uses nginx.
-FROM nginx:1.27-alpine AS runtime
+FROM nginx:1.31-alpine AS runtime
+
+# Base ships vulnerable libexpat; tags not rebuilt yet.
+RUN apk upgrade --no-cache libexpat
+
 WORKDIR /usr/share/nginx/html
 
 COPY --from=build /src/dist ./

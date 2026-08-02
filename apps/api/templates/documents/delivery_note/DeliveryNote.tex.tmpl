@@ -12,6 +12,7 @@
 ]
 
 \usepackage[a4paper, top=1.8cm, bottom=2.0cm, left=1.8cm, right=1.8cm]{geometry}
+\usepackage{graphicx}
 \usepackage{longtable}
 \usepackage{array}
 \usepackage{colortbl}
@@ -26,6 +27,8 @@
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{2pt}
+\hfuzz=2pt
+\hbadness=2000
 
 \newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\footnotesize}p{#1}}
 \newcolumntype{C}[1]{>{\centering\arraybackslash\footnotesize}p{#1}}
@@ -50,24 +53,33 @@
 \thispagestyle{firstpage}
 
 \noindent
-\begin{minipage}[t]{0.42\textwidth}
-  {\fontsize{8}{10}\selectfont
-  \textbf{PT. GLOBAL NIAGA SAKTI}\\
+\begin{minipage}[t]{0.28\textwidth}
+  {\fontsize{7.5}{9.5}\selectfont
   Gedung Wirausaha Lt 1, Unit 104\\
   Jl. HR. Rasuna Said Kav. C5\\
-  Kuningan, Setiabudi, Jakarta Selatan 12920\\
-  Telp. 021-5099 6969 (ext. 1249)
+  Kuningan, Setiabudi\\
+  Jakarta Selatan 12920
   }
 \end{minipage}%
 \hfill
-\begin{minipage}[t]{0.55\textwidth}
+\begin{minipage}[t]{0.40\textwidth}
+  \centering
+  % Wide lockup carries company name.
+  \includegraphics[width=5.6cm]{Logo_Vertical.png}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.28\textwidth}
   \raggedleft
-  {\fontsize{18}{22}\selectfont\bfseries SURAT JALAN}\\[2pt]
-  {\footnotesize DELIVERY NOTE}
+  {\fontsize{7.5}{9.5}\selectfont
+  Telp. 021-5099 6969 (ext. 1249)\\
+  WA. 0811-980-982/0811-999-0991\\
+  Email: sales@globalsakti.com\\
+  Website: www.globalsakti.com
+  }
 \end{minipage}
 
 \vspace{0.3cm}
-\noindent\rule{\textwidth}{0.6pt}
+\noindent\rule{\textwidth}{0.8pt}
 \vspace{0.2cm}
 
 \noindent
@@ -93,13 +105,18 @@
   }
 \end{minipage}
 
-\vspace{0.5cm}
+\vspace{0.4cm}
+\begin{center}
+  {\large\bfseries\underline{SURAT JALAN}}
+\end{center}
+\vspace{0.15cm}
+
 \noindent\textbf{Mohon diterima barang-barang berikut\,:}
 \vspace{0.2cm}
 
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{3pt}
 
-\begin{longtable}{|C{0.8cm}|C{1.4cm}|C{1.2cm}|L{9.5cm}|L{4.5cm}|}
+\begin{longtable}{|C{0.8cm}|C{1.3cm}|C{1.2cm}|L{8.7cm}|L{4.1cm}|}
 \hline
 \multicolumn{1}{|c|}{\footnotesize\bfseries No.} &
 \multicolumn{1}{c|}{\footnotesize\bfseries Qty} &

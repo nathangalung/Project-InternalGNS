@@ -60,6 +60,8 @@ const STATUS_LABEL: Record<QuotationMatchStatus, string> = {
   unavailable: "Tidak Tersedia",
 }
 
+const draftInput = "rounded-[4px] border border-[#E5E7EB] p-1.5 text-xs"
+
 const STATUS_COLOR: Record<QuotationMatchStatus, { bg: string; fg: string }> = {
   pending: { bg: "rgba(245, 158, 11, 0.1)", fg: "#B45309" },
   matched: { bg: "rgba(16, 185, 129, 0.1)", fg: "#059669" },
@@ -168,51 +170,24 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
   }
 
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div className="mb-4">
       <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "12px 20px",
-          background: "#FFFFFF",
-          border: "1px solid rgba(204,195,216,0.2)",
-          borderRadius: expanded ? "12px 12px 0 0" : "12px",
-          borderBottom: expanded
-            ? "1px solid rgba(204,195,216,0.15)"
-            : "1px solid rgba(204,195,216,0.2)",
-        }}
+        className={`flex items-center justify-between border border-[rgba(204,195,216,0.2)] bg-white px-5 py-3 ${
+          expanded ? "rounded-t-lg border-b-[rgba(204,195,216,0.15)]" : "rounded-lg"
+        }`}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              letterSpacing: "0.4px",
-              textTransform: "uppercase",
-              color: "#4A4455",
-            }}
-          >
+        <div className="flex items-center gap-3">
+          <span className="text-[13px] font-bold uppercase tracking-[0.4px] text-[#4A4455]">
             Permintaan Klien Awal
           </span>
-          <span style={{ fontSize: 12, color: "#6B7280" }}>({rows.length} permintaan)</span>
+          <span className="text-xs text-[#6B7280]">({rows.length} permintaan)</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div className="flex items-center gap-3">
           {expanded && (
             <button
               type="button"
               onClick={startCreate}
-              style={{
-                padding: "6px 12px",
-                borderRadius: 6,
-                border: "1px solid #630ED4",
-                background: "#fff",
-                color: "#630ED4",
-                cursor: "pointer",
-                fontSize: 12,
-                fontWeight: 600,
-                fontFamily: "'Inter', sans-serif",
-              }}
+              className="rounded-sm border border-primary-700 bg-white px-3 py-1.5 text-xs font-semibold text-primary-700"
             >
               + Tambah Permintaan
             </button>
@@ -220,20 +195,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
           <button
             type="button"
             onClick={() => setExpanded((e) => !e)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              background: "none",
-              border: "1px solid rgba(204,195,216,0.5)",
-              borderRadius: 6,
-              padding: "5px 10px",
-              cursor: "pointer",
-              fontSize: 12,
-              color: "#6B7280",
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 500,
-            }}
+            className="flex items-center gap-[5px] rounded-sm border border-[rgba(204,195,216,0.5)] px-2.5 py-[5px] text-xs font-medium text-[#6B7280]"
           >
             {expanded ? "Sembunyikan" : "Tampilkan"}
             <svg
@@ -241,7 +203,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
               height="6"
               viewBox="0 0 10 6"
               fill="none"
-              style={{ transform: expanded ? "rotate(0deg)" : "rotate(180deg)" }}
+              className={expanded ? "" : "rotate-180"}
             >
               <path
                 d="M1 5L5 1L9 5"
@@ -256,81 +218,52 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
       </div>
 
       {expanded && (
-        <div
-          style={{
-            background: "#FFFFFF",
-            border: "1px solid rgba(204,195,216,0.2)",
-            borderTop: "none",
-            borderRadius: "0 0 12px 12px",
-            padding: 16,
-          }}
-        >
+        <div className="rounded-b-lg border border-t-0 border-[rgba(204,195,216,0.2)] bg-white p-4">
           {errMsg && (
-            <div
-              style={{
-                padding: "8px 12px",
-                marginBottom: 10,
-                borderRadius: 6,
-                background: "rgba(239,68,68,0.08)",
-                color: "#DC2626",
-                fontSize: 12,
-                border: "1px solid rgba(239,68,68,0.2)",
-              }}
-            >
+            <div className="mb-2.5 rounded-sm border border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.08)] px-3 py-2 text-xs text-[#DC2626]">
               {errMsg}
             </div>
           )}
 
           {requestsQuery.isLoading && (
-            <div style={{ padding: 16, color: "#9CA3AF", fontSize: 13, textAlign: "center" }}>
-              Memuat permintaan…
-            </div>
+            <div className="p-4 text-center text-[13px] text-[#9CA3AF]">Memuat permintaan…</div>
           )}
 
           {!requestsQuery.isLoading && rows.length === 0 && draft === null && (
-            <div style={{ padding: 16, color: "#9CA3AF", fontSize: 13, textAlign: "center" }}>
+            <div className="p-4 text-center text-[13px] text-[#9CA3AF]">
               Belum ada permintaan klien. Klik "+ Tambah Permintaan" untuk mulai.
             </div>
           )}
 
           {rows.length > 0 && (
-            <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
+            <table className="w-full border-collapse text-xs">
               <thead>
-                <tr
-                  style={{ textAlign: "left", color: "#6B7280", borderBottom: "1px solid #E5E7EB" }}
-                >
-                  <th style={{ padding: 8 }}>#</th>
-                  <th style={{ padding: 8 }}>Deskripsi</th>
-                  <th style={{ padding: 8 }}>IMPA</th>
-                  <th style={{ padding: 8 }}>Qty</th>
-                  <th style={{ padding: 8 }}>UOM</th>
-                  <th style={{ padding: 8 }}>Status</th>
-                  <th style={{ padding: 8, textAlign: "right" }}>Aksi</th>
+                <tr className="border-b border-[#E5E7EB] text-left text-[#6B7280]">
+                  <th className="p-2">#</th>
+                  <th className="p-2">Deskripsi</th>
+                  <th className="p-2">IMPA</th>
+                  <th className="p-2">Qty</th>
+                  <th className="p-2">UOM</th>
+                  <th className="p-2">Status</th>
+                  <th className="p-2 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r) => {
                   const color = STATUS_COLOR[r.matchStatus]
                   return (
-                    <tr key={r.id} style={{ borderBottom: "1px solid #F3F4F6" }}>
-                      <td style={{ padding: 8, fontWeight: 600 }}>{r.lineNo}</td>
-                      <td style={{ padding: 8 }}>{r.requestText}</td>
-                      <td style={{ padding: 8, color: "#6B7280" }}>{r.requestImpa ?? "-"}</td>
-                      <td style={{ padding: 8 }}>{r.requestedQty ?? "-"}</td>
-                      <td style={{ padding: 8, color: "#6B7280" }}>{r.requestedUom ?? "-"}</td>
-                      <td style={{ padding: 8 }}>
+                    <tr key={r.id} className="border-b border-[#F3F4F6]">
+                      <td className="p-2 font-semibold">{r.lineNo}</td>
+                      <td className="p-2">{r.requestText}</td>
+                      <td className="p-2 text-[#6B7280]">{r.requestImpa ?? "-"}</td>
+                      <td className="p-2">{r.requestedQty ?? "-"}</td>
+                      <td className="p-2 text-[#6B7280]">{r.requestedUom ?? "-"}</td>
+                      <td className="p-2">
                         <select
                           value={r.matchStatus}
                           onChange={(e) => changeStatus(r, e.target.value as QuotationMatchStatus)}
-                          style={{
-                            padding: "4px 8px",
-                            border: "1px solid #E5E7EB",
-                            borderRadius: 4,
-                            background: color.bg,
-                            color: color.fg,
-                            fontWeight: 600,
-                            fontSize: 11,
-                          }}
+                          className="rounded-[4px] border border-[#E5E7EB] px-2 py-1 text-[11px] font-semibold"
+                          style={{ background: color.bg, color: color.fg }}
                         >
                           {(Object.keys(STATUS_LABEL) as QuotationMatchStatus[]).map((s) => (
                             <option key={s} value={s}>
@@ -339,31 +272,18 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                           ))}
                         </select>
                       </td>
-                      <td style={{ padding: 8, textAlign: "right" }}>
+                      <td className="p-2 text-right">
                         <button
                           type="button"
                           onClick={() => startEdit(r)}
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "#630ED4",
-                            cursor: "pointer",
-                            marginRight: 8,
-                            fontSize: 12,
-                          }}
+                          className="mr-2 text-xs text-primary-700"
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => deleteRow(r.id)}
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "#EF4444",
-                            cursor: "pointer",
-                            fontSize: 12,
-                          }}
+                          className="text-xs text-error"
                         >
                           Hapus
                         </button>
@@ -376,93 +296,48 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
           )}
 
           {draft && (
-            <div
-              style={{
-                marginTop: 12,
-                padding: 12,
-                background: "#F9FAFB",
-                border: "1px solid #E5E7EB",
-                borderRadius: 8,
-              }}
-            >
-              <div style={{ display: "grid", gridTemplateColumns: "60px 1fr 1fr", gap: 8 }}>
+            <div className="mt-3 rounded-md border border-[#E5E7EB] bg-[#F9FAFB] p-3">
+              <div className="grid grid-cols-[60px_1fr_1fr] gap-2">
                 <input
                   type="number"
                   min={1}
                   value={draft.lineNo}
                   onChange={(e) => setDraft({ ...draft, lineNo: Number(e.target.value) || 1 })}
                   placeholder="#"
-                  style={{
-                    padding: 6,
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 4,
-                    fontSize: 12,
-                  }}
+                  className={draftInput}
                 />
                 <input
                   value={draft.requestText}
                   onChange={(e) => setDraft({ ...draft, requestText: e.target.value })}
                   placeholder="Deskripsi (wajib)"
-                  style={{
-                    padding: 6,
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 4,
-                    fontSize: 12,
-                  }}
+                  className={draftInput}
                 />
                 <input
                   value={draft.requestImpa}
                   onChange={(e) => setDraft({ ...draft, requestImpa: e.target.value })}
                   placeholder="IMPA"
-                  style={{
-                    padding: 6,
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 4,
-                    fontSize: 12,
-                  }}
+                  className={draftInput}
                 />
               </div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr 1fr",
-                  gap: 8,
-                  marginTop: 8,
-                }}
-              >
+              <div className="mt-2 grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-2">
                 <input
                   value={draft.requestedQty}
                   onChange={(e) => setDraft({ ...draft, requestedQty: e.target.value })}
                   placeholder="Qty"
-                  style={{
-                    padding: 6,
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 4,
-                    fontSize: 12,
-                  }}
+                  className={draftInput}
                 />
                 <input
                   value={draft.requestedUom}
                   onChange={(e) => setDraft({ ...draft, requestedUom: e.target.value })}
                   placeholder="UOM"
-                  style={{
-                    padding: 6,
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 4,
-                    fontSize: 12,
-                  }}
+                  className={draftInput}
                 />
                 <select
                   value={draft.matchStatus}
                   onChange={(e) =>
                     setDraft({ ...draft, matchStatus: e.target.value as QuotationMatchStatus })
                   }
-                  style={{
-                    padding: 6,
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 4,
-                    fontSize: 12,
-                  }}
+                  className={draftInput}
                 >
                   {(Object.keys(STATUS_LABEL) as QuotationMatchStatus[]).map((s) => (
                     <option key={s} value={s}>
@@ -475,29 +350,13 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                 value={draft.notes}
                 onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
                 placeholder="Catatan (opsional)"
-                style={{
-                  marginTop: 8,
-                  width: "100%",
-                  padding: 6,
-                  border: "1px solid #E5E7EB",
-                  borderRadius: 4,
-                  fontSize: 12,
-                  boxSizing: "border-box",
-                }}
+                className={`${draftInput} mt-2 box-border w-full`}
               />
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 10 }}>
+              <div className="mt-2.5 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setDraft(null)}
-                  style={{
-                    padding: "6px 12px",
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 6,
-                    background: "#fff",
-                    color: "#4A4455",
-                    cursor: "pointer",
-                    fontSize: 12,
-                  }}
+                  className="rounded-sm border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs text-[#4A4455]"
                 >
                   Batal
                 </button>
@@ -505,17 +364,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                   type="button"
                   onClick={submitDraft}
                   disabled={upsert.isPending}
-                  style={{
-                    padding: "6px 12px",
-                    border: "none",
-                    borderRadius: 6,
-                    background: "#630ED4",
-                    color: "#fff",
-                    cursor: upsert.isPending ? "wait" : "pointer",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    opacity: upsert.isPending ? 0.7 : 1,
-                  }}
+                  className="rounded-sm bg-primary-700 px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-wait disabled:opacity-70"
                 >
                   {upsert.isPending ? "Menyimpan…" : "Simpan"}
                 </button>

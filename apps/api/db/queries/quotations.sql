@@ -22,7 +22,7 @@ SELECT id, quotation_id, line_number, item_type,
        selling_price::text, cost_price::text,
        discount_pct::text, total_selling::text,
        discount_amount::text, subtotal::text,
-       is_available, ship_destination
+       is_available, ship_destination, shipping_days
 FROM quotation_items
 WHERE quotation_id = $1
 ORDER BY line_number;
@@ -169,3 +169,28 @@ RETURNING id, quotation_id, line_no, request_text, request_impa,
 DELETE FROM quotation_item_requests
 WHERE id = $1
 RETURNING id;
+
+
+-- name: quotations.update_contact
+WITH q AS (
+    SELECT id, company_client_id FROM quotations WHERE id = $1
+),
+upd AS (
+    UPDATE quotations
+       SET contact_id   = cc.id,
+           contact_name = cc.name,
+           updated_by   = $3,
+           updated_at   = NOW()
+      FROM q
+      JOIN company_contacts cc ON cc.id = $2
+                                AND cc.company_id = q.company_client_id
+                                AND cc.is_active = TRUE
+     WHERE quotations.id = q.id
+    RETURNING quotations.id
+)
+SELECT
+    CASE
+        WHEN NOT EXISTS(SELECT 1 FROM q)   THEN 'not_found'
+        WHEN NOT EXISTS(SELECT 1 FROM upd) THEN 'contact_invalid'
+        ELSE 'ok'
+    END AS result;

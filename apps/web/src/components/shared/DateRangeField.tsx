@@ -1,8 +1,9 @@
 import type { CSSProperties } from "react"
 
-export type DatePreset = "hari-ini" | "7-hari" | "30-hari" | "kustom"
+export type DatePreset = "semua" | "hari-ini" | "7-hari" | "30-hari" | "kustom"
 
 export const DATE_PRESETS: { key: DatePreset; label: string }[] = [
+  { key: "semua", label: "Semua" },
   { key: "hari-ini", label: "Hari Ini" },
   { key: "7-hari", label: "7 Hari Terakhir" },
   { key: "30-hari", label: "30 Hari Terakhir" },
@@ -18,6 +19,7 @@ function toIsoDate(d: Date): string {
 }
 
 export function presetToIsoRange(preset: DatePreset): { start: string; end: string } {
+  if (preset === "semua") return { start: "", end: "" }
   const today = new Date()
   const end = toIsoDate(today)
   if (preset === "hari-ini") return { start: end, end }
@@ -79,10 +81,8 @@ const iconStyle: CSSProperties = {
 // Date input with calendar icon.
 export function DateInput({ value, onChange, label }: DateInputProps) {
   return (
-    <div className="ca-field">
-      <label className="ca-label" style={labelStyle}>
-        {label}
-      </label>
+    <div className="flex flex-col gap-2">
+      <label style={labelStyle}>{label}</label>
       <div style={inputWrapStyle}>
         <span style={iconStyle}>
           <svg

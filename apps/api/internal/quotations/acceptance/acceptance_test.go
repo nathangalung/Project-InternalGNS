@@ -101,6 +101,15 @@ func (s *scenarioState) createWithoutItems() error {
 	return s.sendRequest(http.MethodPost, "/quotations/", s.buildCreate("0", 0))
 }
 
+func (s *scenarioState) createUnpricedQuotation() error {
+	req := s.buildCreate("0", 1)
+	req.Items[0].SellingPrice = "0"
+	if err := s.sendRequest(http.MethodPost, "/quotations/", req); err != nil {
+		return err
+	}
+	return s.responseHasID()
+}
+
 func (s *scenarioState) statusEquals(want int) error {
 	if s.last.StatusCode != want {
 		return fmt.Errorf("want %d got %d body=%s", want, s.last.StatusCode, string(s.body))
@@ -201,6 +210,7 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 			return state.createQuotation(d, lines)
 		})
 		sc.Step(`^the user creates a quotation with no items$`, state.createWithoutItems)
+		sc.Step(`^the user creates a quotation with an unpriced product line$`, state.createUnpricedQuotation)
 		sc.Step(`^the response status is (\d+)$`, state.statusEquals)
 		sc.Step(`^the response contains a quotation id$`, state.responseHasID)
 		sc.Step(`^an existing draft quotation$`, state.seedDraft)
@@ -221,6 +231,7 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 }
 
 func TestQuotationFeatures(t *testing.T) {
+	testutil.RequireDB(t)
 	suite := godog.TestSuite{
 		ScenarioInitializer: initScenario(t),
 		Options: &godog.Options{

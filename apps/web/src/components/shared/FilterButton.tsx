@@ -1,3 +1,5 @@
+import { ui } from "@/lib/ui"
+
 interface FilterButtonProps {
   onClick: () => void
   label?: string
@@ -5,7 +7,7 @@ interface FilterButtonProps {
 
 export default function FilterButton({ onClick, label = "Filter" }: FilterButtonProps) {
   return (
-    <button className="btn-admin-filter" onClick={onClick} type="button">
+    <button className={ui.btnPrimary} onClick={onClick} type="button">
       <svg
         viewBox="0 0 24 24"
         width="16"

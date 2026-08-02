@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -22,6 +23,10 @@ var (
 
 // 32 bytes of CSPRNG output, base64url-encoded (43 chars, no padding).
 const refreshTokenBytes = 32
+
+// Window in which a redeemed-then-reused token is treated as a benign race
+// (concurrent tabs, retried request) rather than a replay attack.
+const refreshReuseGrace = 10 * time.Second
 
 type RefreshRepo struct {
 	db    db.Executor
@@ -71,6 +76,7 @@ type lookupState struct {
 	userID    int64
 	expiresAt time.Time
 	revoked   bool
+	revokedAt time.Time
 	found     bool
 }
 
@@ -88,6 +94,9 @@ func (r *RefreshRepo) lookup(ctx context.Context, hash []byte) (lookupState, err
 	}
 	st.found = true
 	st.revoked = revokedAt != nil
+	if revokedAt != nil {
+		st.revokedAt = *revokedAt
+	}
 	return st, nil
 }
 
@@ -99,4 +108,15 @@ func (r *RefreshRepo) revokeToken(ctx context.Context, hash []byte) error {
 func (r *RefreshRepo) revokeAllForUser(ctx context.Context, userID int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("auth.refresh_revoke_user"), userID)
 	return err
+}
+
+// PurgeExpired drops tokens past the retention window, returning rows deleted.
+// Called by the background sweep in internal/app; without it revoked and
+// expired rows accumulate forever.
+func (r *RefreshRepo) PurgeExpired(ctx context.Context) (int64, error) {
+	tag, err := r.db.Exec(ctx, r.store.Get("auth.refresh_purge_expired"))
+	if err != nil {
+		return 0, fmt.Errorf("purge expired refresh tokens: %w", err)
+	}
+	return tag.RowsAffected(), nil
 }

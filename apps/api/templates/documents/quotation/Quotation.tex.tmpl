@@ -2,7 +2,7 @@
 % Compile: xelatex Quotation.tex
 % Requires Plus Jakarta Sans installed system-wide.
 
-\documentclass[9pt,a4paper,landscape]{article}
+[[if .UseA4]]\documentclass[a4paper,landscape]{article}[[else]]\documentclass[a5paper,landscape]{article}[[end]]
 
 \usepackage{fontspec}
 \setmainfont{Plus Jakarta Sans}[
@@ -11,7 +11,8 @@
   BoldItalicFont = Plus Jakarta Sans Bold Italic,
 ]
 
-\usepackage[a4paper, landscape, top=1.5cm, bottom=1.8cm, left=1.5cm, right=1.5cm]{geometry}
+[[if .UseA4]]\usepackage[a4paper, landscape, top=1.5cm, bottom=1.8cm, left=1.5cm, right=1.5cm]{geometry}[[else]]\usepackage[a5paper, landscape, top=1.0cm, bottom=1.2cm, left=1.0cm, right=1.0cm]{geometry}[[end]]
+\usepackage{graphicx}
 \usepackage{longtable}
 \usepackage{array}
 \usepackage{colortbl}
@@ -29,6 +30,9 @@
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{2pt}
+\setlength{\emergencystretch}{2em}
+\hfuzz=2pt
+\hbadness=2000
 
 \newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\footnotesize}p{#1}}
 \newcolumntype{C}[1]{>{\centering\arraybackslash\footnotesize}p{#1}}
@@ -65,7 +69,8 @@
 \hfill
 \begin{minipage}[t]{0.40\textwidth}
   \centering
-  {\fontsize{22}{26}\selectfont\bfseries PT. GLOBAL NIAGA SAKTI}
+  % Wide lockup carries company name.
+  \includegraphics[width=5.6cm]{Logo_Vertical.png}
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.28\textwidth}
@@ -78,9 +83,9 @@
   }
 \end{minipage}
 
-\vspace{0.4cm}
-\noindent\rule{\textwidth}{0.8pt}
 \vspace{0.3cm}
+\noindent\rule{\textwidth}{0.8pt}
+\vspace{0.2cm}
 
 \noindent
 \begin{minipage}[t]{0.52\textwidth}
@@ -115,9 +120,25 @@
 \noindent\textbf{We are pleased to quote as follow\,:}
 \vspace{0.3cm}
 
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{2pt}
 
-\begin{longtable}{|C{0.6cm}|C{0.6cm}|C{0.8cm}|L{8.0cm}|L{9.5cm}|R{2.5cm}|R{2.5cm}|}
+[[if .UseA4]]
+\newlength{\QNcol}\setlength{\QNcol}{0.6cm}
+\newlength{\QQcol}\setlength{\QQcol}{0.6cm}
+\newlength{\QUcol}\setlength{\QUcol}{0.8cm}
+\newlength{\QLcol}\setlength{\QLcol}{8.0cm}
+\newlength{\QDcol}\setlength{\QDcol}{9.5cm}
+\newlength{\QMcol}\setlength{\QMcol}{2.5cm}
+[[else]]
+\newlength{\QNcol}\setlength{\QNcol}{0.4cm}
+\newlength{\QQcol}\setlength{\QQcol}{0.4cm}
+\newlength{\QUcol}\setlength{\QUcol}{0.8cm}
+\newlength{\QLcol}\setlength{\QLcol}{4.8cm}
+\newlength{\QDcol}\setlength{\QDcol}{6.2cm}
+\newlength{\QMcol}\setlength{\QMcol}{2.3cm}
+[[end]]
+
+\begin{longtable}{|C{\QNcol}|C{\QQcol}|C{\QUcol}|L{\QLcol}|L{\QDcol}|R{\QMcol}|R{\QMcol}|}
 \hline
 \multicolumn{1}{|c|}{\footnotesize\bfseries No.} &
 \multicolumn{1}{c|}{\footnotesize\bfseries Qty} &
@@ -187,7 +208,9 @@
 \begin{minipage}[t]{0.40\textwidth}
   \raggedleft
   \small
-  [[.DateLine]]\\[2cm]
+  [[.DateLine]]\\[6pt]
+  % Signed digitally on quotations only.
+  \includegraphics[height=2.0cm]{Signature.jpg}\\[2pt]
   \textbf{[[.SignerName]]}
 \end{minipage}
 

@@ -20,6 +20,6 @@ func TestRepo_ErrorPaths(t *testing.T) {
 
 	from := time.Now().AddDate(0, -3, 0)
 	to := time.Now()
-	_, err = r.Timeseries(ctx, "quotation", from, to)
+	_, err = r.Timeseries(ctx, "quotation", from, to, "month")
 	assert.ErrorIs(t, err, testutil.ErrFake)
 }

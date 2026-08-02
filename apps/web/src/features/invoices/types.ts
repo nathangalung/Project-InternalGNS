@@ -1,4 +1,6 @@
-export type InvoiceStatus = "DRAF" | "DIKIRIM" | "DIBAYAR" | "TERLAMBAT"
+import type { InvoiceStatus } from "@/lib/status"
+
+export type { InvoiceStatus }
 
 export interface InvoiceRow {
   id: number

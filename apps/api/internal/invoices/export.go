@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -16,6 +15,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
 
 // ExportHandler renders an invoice PDF.
@@ -52,6 +52,7 @@ type exportItem struct {
 type exportData struct {
 	InvoiceNo       string
 	PONo            string
+	PODate          string
 	CompanyName     string
 	CompanyNPWP     string
 	CompanyAddress  string
@@ -59,6 +60,8 @@ type exportData struct {
 	InvoiceDate     string
 	DueDate         string
 	Items           []exportItem
+	TotalProduk     string
+	Diskon          string
 	DPP             string
 	DPPNilaiLain    string
 	PPN             string
@@ -69,6 +72,7 @@ type exportData struct {
 	BankAccountName string
 	DateLine        string
 	SignerName      string
+	UseA4           bool
 }
 
 func (h *ExportHandler) ExportPDF(w http.ResponseWriter, r *http.Request) {
@@ -117,20 +121,45 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 		}
 	}
 
+	// Discount comes from the invoice snapshot, not the quotation: it is the
+	// realised per-line discount, so TotalProduk - Diskon = DPP by construction.
+	diskon := ""
+	if inv.TotalDiscount != nil {
+		if v, _ := strconv.ParseFloat(*inv.TotalDiscount, 64); v != 0 {
+			diskon = *inv.TotalDiscount
+		}
+	}
+
 	poNo := ""
+	poDate := ""
 	if inv.PoID != nil {
 		if po, err := h.pos.GetByID(ctx, *inv.PoID); err == nil {
 			poNo = po.PoNumber
+			poDate = po.PoDate.Format("2 January 2006")
 		}
 	}
 
 	expItems := make([]exportItem, 0, len(items))
+	totalProdukStr := "0"
+	productCount := 0
 	for i, it := range items {
 		unit := ""
 		if it.UnitCode != nil {
 			unit = *it.UnitCode
 		}
-		amt := pdfgen.BigMul(it.Qty, it.UnitPrice)
+		// Print the gross price; the discount is a separate row. Historical
+		// rows predate the snapshot and fall back to the net unit price.
+		gross := it.UnitPrice
+		if it.GrossUnitPrice != nil {
+			gross = *it.GrossUnitPrice
+		}
+		amt := pdfgen.BigMul(it.Qty, gross)
+		// HARGA TOTAL spans every line, shipping included, so that
+		// TotalProduk - Diskon lands exactly on DPP.
+		totalProdukStr = pdfgen.BigAdd(totalProdukStr, amt)
+		if it.LineType == "product" {
+			productCount++
+		}
 		desc := ""
 		if it.ShipDestination != nil {
 			desc = *it.ShipDestination
@@ -141,7 +170,7 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 			Unit:        pdfgen.LatexEscape(unit),
 			Name:        pdfgen.LatexEscape(it.ItemName),
 			Description: pdfgen.LatexEscape(desc),
-			UnitPrice:   pdfgen.FormatIDR(it.UnitPrice),
+			UnitPrice:   pdfgen.FormatIDR(gross),
 			Amount:      pdfgen.FormatIDR(amt),
 		})
 	}
@@ -152,15 +181,23 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 	}
 
 	return exportData{
-		InvoiceNo:       pdfgen.LatexEscape(inv.InvoiceNo),
-		PONo:            pdfgen.LatexEscape(poNo),
-		CompanyName:     pdfgen.LatexEscape(inv.CompanyName),
-		CompanyNPWP:     pdfgen.LatexEscape(pdfgen.StrDeref(client.NPWP)),
-		CompanyAddress:  pdfgen.LatexEscape(pdfgen.StrDeref(client.Address)),
-		VesselName:      pdfgen.LatexEscape(vessel),
-		InvoiceDate:     inv.InvoiceDate.Format("2 January 2006"),
-		DueDate:         dueDate,
-		Items:           expItems,
+		InvoiceNo:      pdfgen.LatexEscape(inv.InvoiceNo),
+		PONo:           pdfgen.LatexEscape(poNo),
+		PODate:         poDate,
+		CompanyName:    pdfgen.LatexEscape(inv.CompanyName),
+		CompanyNPWP:    pdfgen.LatexEscape(pdfgen.StrDeref(client.NPWP)),
+		CompanyAddress: pdfgen.LatexEscape(pdfgen.StrDeref(client.Address)),
+		VesselName:     pdfgen.LatexEscape(vessel),
+		InvoiceDate:    inv.InvoiceDate.Format("2 January 2006"),
+		DueDate:        dueDate,
+		Items:          expItems,
+		TotalProduk:    pdfgen.FormatIDR(totalProdukStr),
+		Diskon: func() string {
+			if diskon == "" {
+				return ""
+			}
+			return pdfgen.FormatIDR(diskon)
+		}(),
 		DPP:             pdfgen.FormatIDR(pdfgen.StrDeref(inv.Dpp)),
 		DPPNilaiLain:    pdfgen.FormatIDR(pdfgen.StrDeref(inv.DppNilaiLain)),
 		PPN:             pdfgen.FormatIDR(pdfgen.StrDeref(inv.PpnAmount)),
@@ -169,7 +206,8 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 		BankName:        pdfgen.LatexEscape(h.settings.BankName),
 		BankAccountNo:   pdfgen.LatexEscape(h.settings.BankAccountNo),
 		BankAccountName: pdfgen.LatexEscape(h.settings.BankAccountNm),
-		DateLine:        pdfgen.JakartaDateLine(inv.InvoiceDate.In(time.Local)),
+		DateLine:        pdfgen.JakartaDateLine(inv.InvoiceDate.In(tz.Jakarta())),
 		SignerName:      pdfgen.LatexEscape(h.settings.SignerName),
+		UseA4:           productCount > 5,
 	}
 }

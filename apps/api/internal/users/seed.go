@@ -32,14 +32,20 @@ func SeedSuperadmin(ctx context.Context, pool *pgxpool.Pool, cfg SeedConfig) err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
+	// Store the address in the same canonical form Repo writes, and infer
+	// users_email_lower_idx (00045) rather than users_email_key: a mixed-case
+	// SUPERADMIN_EMAIL whose row was since case-folded conflicts only on the
+	// expression index, and an uninferred conflict there aborts the boot seed.
+	// Targeting an index rather than bare DO NOTHING keeps an unrelated
+	// conflict, such as a stale users_id_seq hitting the primary key, loud.
 	const insertQ = `
 		INSERT INTO users (email, name, password_hash, role, is_active, created_by, updated_by)
 		VALUES ($1, $2, $3, 'superadmin', TRUE, NULL, NULL)
-		ON CONFLICT (email) DO NOTHING
+		ON CONFLICT (LOWER(email)) DO NOTHING
 		RETURNING id`
 
 	var newID int64
-	scanErr := tx.QueryRow(ctx, insertQ, cfg.Email, cfg.Name, string(hash)).Scan(&newID)
+	scanErr := tx.QueryRow(ctx, insertQ, normalizeEmail(cfg.Email), cfg.Name, string(hash)).Scan(&newID)
 	switch {
 	case scanErr == nil:
 		const fixFK = `UPDATE users SET created_by = $1, updated_by = $1 WHERE id = $1`

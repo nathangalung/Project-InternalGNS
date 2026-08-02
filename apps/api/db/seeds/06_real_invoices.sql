@@ -10,7 +10,8 @@
 --      because items mirror purchase_order_items (snapshot rebuilt by 05).
 --
 -- Status heuristic: invoice with due_date <= 2026-05-09 -> 'paid', else 'sent'.
--- Coverage: 56/57 POs matched to invoice files.
+-- Coverage: 56/57 POs matched to invoice files. qid 549 (Q-2640061) has a real
+-- PO but no invoice file yet, so it stays accepted with a PO and no invoice.
 
 BEGIN;
 
@@ -48,7 +49,6 @@ BEGIN
         (543::bigint),
         (544::bigint),
         (548::bigint),
-        (549::bigint),
         (552::bigint),
         (555::bigint),
         (556::bigint),
@@ -192,7 +192,6 @@ BEGIN
         (543::bigint),
         (544::bigint),
         (548::bigint),
-        (549::bigint),
         (552::bigint),
         (555::bigint),
         (556::bigint),
@@ -229,5 +228,18 @@ BEGIN
     RAISE EXCEPTION 'Invoice item count mismatch on % real-PO invoices', n_mismatch;
   END IF;
 END $$;
+
+-- 4. An invoice existing means the goods were delivered. Advance every PO
+--    that has an invoice to DELIVERED and stamp its delivery note number,
+--    matching fn_change_po_status. Direct UPDATE is the seed-time exception:
+--    fn_change_po_status would re-run the invoice draft.
+UPDATE purchase_orders po
+   SET status               = 'DELIVERED',
+       delivery_note_number = COALESCE(
+         po.delivery_note_number,
+         fn_next_doc_no('DN', po.company_client_id)
+       )
+ WHERE po.status <> 'DELIVERED'
+   AND EXISTS (SELECT 1 FROM invoices i WHERE i.po_id = po.id);
 
 COMMIT;

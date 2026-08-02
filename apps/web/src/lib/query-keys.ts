@@ -5,6 +5,8 @@ export const queryKeys = {
   },
   clients: {
     all: ["clients"] as const,
+    // Prefix matching every list param variant, without touching detail.
+    lists: () => ["clients", "list"] as const,
     list: (params: { limit?: number; offset?: number } = {}) =>
       ["clients", "list", params] as const,
     summary: () => ["clients", "summary"] as const,
@@ -71,7 +73,7 @@ export const queryKeys = {
   dashboard: {
     all: ["dashboard"] as const,
     summary: () => ["dashboard", "summary"] as const,
-    timeseries: (metric: string, from?: string, to?: string) =>
-      ["dashboard", "timeseries", metric, from ?? null, to ?? null] as const,
+    timeseries: (metric: string, from?: string, to?: string, interval?: string) =>
+      ["dashboard", "timeseries", metric, from ?? null, to ?? null, interval ?? null] as const,
   },
 } as const

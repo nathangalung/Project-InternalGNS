@@ -13,6 +13,7 @@ func Routes(d deps.Deps) chi.Router {
 
 	r.Get("/summary", h.Summary)
 	r.Get("/timeseries", h.Timeseries)
+	r.Get("/export.xlsx", h.Export)
 
 	return r
 }

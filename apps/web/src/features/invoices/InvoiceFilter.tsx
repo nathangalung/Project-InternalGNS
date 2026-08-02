@@ -7,6 +7,8 @@ import {
   presetToIsoRange,
 } from "@/components/shared/DateRangeField"
 import { chipStyle, presetChipStyle } from "@/components/shared/filter-styles"
+import Modal from "@/components/shared/Modal"
+import { ui } from "@/lib/ui"
 import type { InvoiceStatus } from "./types"
 import { INVOICE_LABEL } from "./types"
 
@@ -32,15 +34,15 @@ interface InvoiceFilterProps {
 
 const seed = presetToIsoRange("30-hari")
 const DEFAULTS: InvoiceFilterValues = {
-  createdPreset: "30-hari",
+  createdPreset: "semua",
   createdStart: seed.start,
   createdEnd: seed.end,
-  duePreset: "30-hari",
+  duePreset: "semua",
   dueStart: seed.start,
   dueEnd: seed.end,
   statuses: [],
-  minHarga: "0",
-  maxHarga: "500.000.000",
+  minHarga: "",
+  maxHarga: "",
 }
 
 const STATUS_OPTIONS: InvoiceStatus[] = ["DRAF", "DIKIRIM", "DIBAYAR", "TERLAMBAT"]
@@ -64,10 +66,10 @@ function DateRangeBlock({ heading, preset, startDate, endDate, onChange }: DateR
   }
 
   return (
-    <div className="ca-section">
-      <div className="ca-section-heading">{heading}</div>
-      <div className="ca-field">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+    <div className={ui.modalSection}>
+      <div className={ui.modalSectionHeading}>{heading}</div>
+      <div className={ui.field}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-2">
           {DATE_PRESETS.map(({ key, label }) => {
             const isActive = preset === key
             return (
@@ -79,7 +81,7 @@ function DateRangeBlock({ heading, preset, startDate, endDate, onChange }: DateR
               >
                 {label}
                 {key === "kustom" ? (
-                  <span style={{ color: isActive ? "#630ED4" : "#9CA3AF" }}>
+                  <span className={isActive ? "text-primary-700" : "text-[#9CA3AF]"}>
                     <IconCalendar />
                   </span>
                 ) : isActive ? (
@@ -99,7 +101,7 @@ function DateRangeBlock({ heading, preset, startDate, endDate, onChange }: DateR
         </div>
       </div>
 
-      <div className="ca-row-2">
+      <div className={ui.row2}>
         <DateInput
           label="Tanggal Mulai"
           value={startDate}
@@ -178,142 +180,114 @@ export default function InvoiceFilter({ onClose, onApply, initialValues }: Invoi
   }
 
   return (
-    <div className="ca-overlay" onClick={onClose}>
-      <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="ca-header">
-          <h2 className="ca-title">Filter Invoice</h2>
-          <button className="ca-close-btn" onClick={onClose} title="Tutup">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <line x1="1" y1="1" x2="13" y2="13" />
-              <line x1="13" y1="1" x2="1" y2="13" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="ca-body">
-          <DateRangeBlock
-            heading="Rentang Tanggal Pembuatan"
-            preset={createdPreset}
-            startDate={createdStart}
-            endDate={createdEnd}
-            onChange={({ preset, startDate, endDate }) => {
-              setCreatedPreset(preset)
-              setCreatedStart(startDate)
-              setCreatedEnd(endDate)
-            }}
-          />
-          <DateRangeBlock
-            heading="Rentang Tanggal Jatuh Tempo"
-            preset={duePreset}
-            startDate={dueStart}
-            endDate={dueEnd}
-            onChange={({ preset, startDate, endDate }) => {
-              setDuePreset(preset)
-              setDueStart(startDate)
-              setDueEnd(endDate)
-            }}
-          />
-
-          <div className="ca-section">
-            <div className="ca-section-heading">Rentang Harga</div>
-            <div className="ca-row-2">
-              {[
-                { label: "Min Harga", value: minHarga, set: setMinHarga },
-                { label: "Max Harga", value: maxHarga, set: setMaxHarga },
-              ].map(({ label, value, set }) => (
-                <div className="ca-field" key={label}>
-                  <label className="ca-label">{label}</label>
-                  <div className="ca-phone-wrapper">
-                    <span className="ca-phone-prefix">IDR</span>
-                    <input
-                      className="ca-phone-input"
-                      type="text"
-                      value={value}
-                      onChange={(e) => set(e.target.value)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="ca-section">
-            <div className="ca-section-heading">Status Invoice</div>
-            <div className="ca-field">
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                <button
-                  type="button"
-                  onClick={() => setActiveStatuses([])}
-                  style={chipStyle(activeStatuses.length === 0)}
-                >
-                  Semua
-                </button>
-                {STATUS_OPTIONS.map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => toggleStatus(value)}
-                    style={chipStyle(activeStatuses.includes(value))}
-                  >
-                    {INVOICE_LABEL[value]}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div
-          className="ca-footer"
-          style={{ justifyContent: "space-between", padding: "16px 24px" }}
-        >
+    <Modal
+      title="Filter Invoice"
+      onClose={onClose}
+      footer={
+        <div className="flex w-full items-center justify-between">
           <button
             type="button"
             onClick={handleReset}
             disabled={!dirty}
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: dirty ? "pointer" : "default",
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 500,
-              fontSize: "13px",
-              color: dirty ? "#630ED4" : "#CBD5E1",
-              padding: 0,
-              textDecoration: dirty ? "underline" : "none",
-              textUnderlineOffset: "3px",
-            }}
+            className={`bg-transparent p-0 text-[13px] font-medium underline-offset-[3px] ${
+              dirty
+                ? "cursor-pointer text-primary-700 underline"
+                : "cursor-default text-dark-300 no-underline"
+            }`}
           >
             Hapus Filter
           </button>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="flex gap-2">
             <button
               type="button"
-              className="ca-btn-cancel"
+              className="inline-flex items-center justify-center rounded-md px-[18px] py-2 text-[13px] font-bold text-dark-600 transition hover:bg-dark-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
               onClick={onClose}
-              style={{ padding: "8px 18px", fontSize: "13px" }}
             >
               Batal
             </button>
             <button
               type="button"
-              className="ca-btn-submit"
+              className="inline-flex items-center justify-center rounded-md bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)] px-[22px] py-2 text-[13px] font-bold text-white shadow-sm transition hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
               onClick={handleApply}
-              style={{ padding: "8px 22px", fontSize: "13px" }}
             >
               Terapkan
             </button>
           </div>
         </div>
+      }
+    >
+      <DateRangeBlock
+        heading="Rentang Tanggal Pembuatan"
+        preset={createdPreset}
+        startDate={createdStart}
+        endDate={createdEnd}
+        onChange={({ preset, startDate, endDate }) => {
+          setCreatedPreset(preset)
+          setCreatedStart(startDate)
+          setCreatedEnd(endDate)
+        }}
+      />
+      <DateRangeBlock
+        heading="Rentang Tanggal Jatuh Tempo"
+        preset={duePreset}
+        startDate={dueStart}
+        endDate={dueEnd}
+        onChange={({ preset, startDate, endDate }) => {
+          setDuePreset(preset)
+          setDueStart(startDate)
+          setDueEnd(endDate)
+        }}
+      />
+
+      <div className={ui.modalSection}>
+        <div className={ui.modalSectionHeading}>Rentang Total Tagihan</div>
+        <div className={ui.row2}>
+          {[
+            { label: "Min Total", value: minHarga, set: setMinHarga },
+            { label: "Max Total", value: maxHarga, set: setMaxHarga },
+          ].map(({ label, value, set }) => (
+            <div className={ui.field} key={label}>
+              <label className={ui.fieldLabel}>{label}</label>
+              <div className="flex h-11 overflow-hidden rounded-md border-[1.5px] border-transparent bg-dark-200 transition focus-within:border-primary-600 focus-within:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]">
+                <span className="flex items-center whitespace-nowrap border-r border-dark-300 px-3 text-sm font-medium text-dark-600">
+                  IDR
+                </span>
+                <input
+                  className="flex-1 border-none bg-transparent px-3 text-sm text-dark-900 outline-none placeholder:text-dark-500"
+                  type="text"
+                  value={value}
+                  onChange={(e) => set(e.target.value)}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+
+      <div className={ui.modalSection}>
+        <div className={ui.modalSectionHeading}>Status Invoice</div>
+        <div className={ui.field}>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveStatuses([])}
+              style={chipStyle(activeStatuses.length === 0)}
+            >
+              Semua
+            </button>
+            {STATUS_OPTIONS.map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => toggleStatus(value)}
+                style={chipStyle(activeStatuses.includes(value))}
+              >
+                {INVOICE_LABEL[value]}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Modal>
   )
 }

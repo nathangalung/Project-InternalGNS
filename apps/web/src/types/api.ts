@@ -76,7 +76,7 @@ export type ClientSearchHit = {
   contactPhone?: string
   contactTitle?: string
   score: number
-  matchTier: string
+  matchTier: "AUTO_MATCH" | "SUGGESTED" | "FUZZY"
 }
 
 // Master tables consumed by dropdowns.
@@ -119,6 +119,7 @@ export type AdvancedSearchHit = {
   name: string
   impaCode?: string
   defaultUnitId?: number
+  isActive: boolean
   score: number
   tier: AdvancedSearchTier
   tiers: AdvancedSearchTier[]
@@ -225,6 +226,7 @@ export type VendorItemRow = {
   vendorSku?: string
   costPrice?: string
   lastQuotedAt?: string
+  productUrl?: string
 }
 
 // Quotation list, detail, and writes.
@@ -266,6 +268,7 @@ export type QuotationItemRow = {
   subtotal: string
   isAvailable: boolean
   shipDestination?: string
+  shippingDays?: number
 }
 
 export type QuotationStatusEvent = {
@@ -354,6 +357,9 @@ export type QuotationUpdateInput = Omit<
   "companyClientId" | "contactId" | "status"
 >
 
+// Sort keys accepted by the API.
+export type QuotationSortKey = "quotationNo" | "version" | "createdAt" | "grandTotal"
+
 export type QuotationListParams = {
   q?: string
   statuses?: CanonicalStatus[]
@@ -361,7 +367,7 @@ export type QuotationListParams = {
   dateTo?: string
   minTotal?: string
   maxTotal?: string
-  sortBy?: string
+  sortBy?: QuotationSortKey
   sortDir?: "asc" | "desc"
   limit?: number
   offset?: number
@@ -486,6 +492,7 @@ export type PurchaseOrderItemRow = {
   totalSelling: string
   profitAmount?: string
   shipDestination?: string
+  shippingDays?: number
   isAvailable: boolean
 }
 
@@ -503,6 +510,7 @@ export type InvoiceBackendRow = {
   invoiceDate: string
   dueDate?: string
   subtotal?: string
+  totalDiscount?: string
   dpp?: string
   dppNilaiLain?: string
   ppnAmount?: string
@@ -526,10 +534,17 @@ export type InvoiceItemRow = {
   offeredItemId?: number
   unitId?: number
   unitCode?: string
+  unitCoretaxCode?: string
   qty: string
   unitPrice: string
+  grossUnitPrice?: string
   costPrice?: string
+  dpp?: string
+  dppNilaiLain?: string
+  ppnRate?: string
+  ppnAmount?: string
   shipDestination?: string
+  goodsOrService?: string
 }
 
 export type InvoiceSummary = {

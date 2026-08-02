@@ -44,6 +44,15 @@ export type UpdateUserInput = {
   password?: string
 }
 
+// Profile saved but the password PATCH failed.
+export class PartialUserUpdateError extends Error {
+  readonly profileSaved = true
+  constructor(cause: unknown) {
+    super(cause instanceof Error ? cause.message : "Kata sandi gagal diperbarui")
+    this.name = "PartialUserUpdateError"
+  }
+}
+
 export async function update(id: number, input: UpdateUserInput): Promise<UserRow> {
   const { password, ...rest } = input
   const updated = await apiRequest<UserRow>({
@@ -52,11 +61,15 @@ export async function update(id: number, input: UpdateUserInput): Promise<UserRo
     body: rest,
   })
   if (password) {
-    await apiRequest<void>({
-      path: `/users/${id}/password`,
-      method: "PATCH",
-      body: { password },
-    })
+    try {
+      await apiRequest<void>({
+        path: `/users/${id}/password`,
+        method: "PATCH",
+        body: { password },
+      })
+    } catch (err) {
+      throw new PartialUserUpdateError(err)
+    }
   }
   return updated
 }

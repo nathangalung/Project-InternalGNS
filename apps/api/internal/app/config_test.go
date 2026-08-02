@@ -2,6 +2,7 @@ package app
 
 import (
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -9,9 +10,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// A 40-byte placeholder that satisfies the length guard; not a real key.
+var testSecret = strings.Repeat("x", 40)
+
 func TestLoadConfig_HappyPath(t *testing.T) {
 	t.Setenv("DATABASE_URL", "postgres://test:test@localhost:5432/test?sslmode=disable")
-	t.Setenv("JWT_SECRET", "topsecret")
+	t.Setenv("JWT_SECRET", testSecret)
 	t.Setenv("JWT_EXPIRY", "12h")
 	t.Setenv("HTTP_ADDR", ":9999")
 	t.Setenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
@@ -20,14 +24,14 @@ func TestLoadConfig_HappyPath(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, ":9999", c.HTTPAddr)
-	assert.Equal(t, "topsecret", c.JWTSecret)
+	assert.Equal(t, testSecret, c.JWTSecret)
 	assert.Equal(t, 12*time.Hour, c.JWTExpiry)
 	assert.Equal(t, []string{"http://localhost:3000", "http://localhost:5173"}, c.CORSAllowedOrigins)
 }
 
 func TestLoadConfig_DefaultValues(t *testing.T) {
 	t.Setenv("DATABASE_URL", "postgres://test:test@localhost:5432/test?sslmode=disable")
-	t.Setenv("JWT_SECRET", "topsecret")
+	t.Setenv("JWT_SECRET", testSecret)
 
 	c, err := LoadConfig()
 	require.NoError(t, err)
@@ -47,8 +51,117 @@ func TestLoadConfig_MissingRequired(t *testing.T) {
 
 func TestLoadConfig_BadJWTExpiry(t *testing.T) {
 	t.Setenv("DATABASE_URL", "postgres://x")
-	t.Setenv("JWT_SECRET", "x")
+	t.Setenv("JWT_SECRET", testSecret)
 	t.Setenv("JWT_EXPIRY", "not-a-duration")
 	_, err := LoadConfig()
 	require.Error(t, err)
+}
+
+func TestLoadConfig_ShortJWTSecretRejected(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("JWT_SECRET", "too-short")
+	_, err := LoadConfig()
+	require.Error(t, err)
+}
+
+func TestLoadConfig_ProductionRejectsWeakDefaults(t *testing.T) {
+	base := func() {
+		t.Setenv("DATABASE_URL", "postgres://x")
+		t.Setenv("JWT_SECRET", testSecret)
+		t.Setenv("ENV", "production")
+		t.Setenv("MINIO_ACCESS_KEY", "real-access-key")
+		t.Setenv("MINIO_SECRET_KEY", "real-secret-key")
+		t.Setenv("PDF_BANK_ACCOUNT_NO", "1234567890")
+		t.Setenv("PDF_SIGNER_NAME", "Nathan Galung")
+	}
+
+	t.Run("empty superadmin password", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("wildcard CORS", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "*")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("vendor-default minio credentials", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		t.Setenv("MINIO_ACCESS_KEY", "minioadmin")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("empty minio credentials allowed (storage disabled)", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		t.Setenv("MINIO_ACCESS_KEY", "")
+		t.Setenv("MINIO_SECRET_KEY", "")
+		_, err := LoadConfig()
+		require.NoError(t, err)
+	})
+
+	t.Run("placeholder database password", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		t.Setenv("DATABASE_URL", "postgres://user:change_me@db:5432/gns")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	// The shipped JWT_SECRET is 33 chars, so it clears the length check while
+	// being published in the repo. Anyone could forge a superadmin token.
+	t.Run("shipped placeholder jwt secret", func(t *testing.T) {
+		base()
+		t.Setenv("JWT_SECRET", "generate_with_openssl_rand_hex_32")
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("shipped placeholder superadmin password", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "CHANGE_ME_before_deploy")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	// A client would be asked to transfer money into a dash.
+	t.Run("default bank account number", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		t.Setenv("PDF_BANK_ACCOUNT_NO", "-")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("placeholder bank account number", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		t.Setenv("PDF_BANK_ACCOUNT_NO", "CHANGE_ME")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("valid production config", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		_, err := LoadConfig()
+		require.NoError(t, err)
+	})
 }

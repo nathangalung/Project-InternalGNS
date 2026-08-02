@@ -6,41 +6,33 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
-	"github.com/nathangalung/internalgns/apps/api/internal/storage"
-)
-
-const (
-	attachmentUploadExpiry   = 15 * time.Minute
-	attachmentDownloadExpiry = 1 * time.Hour
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
 
 type Handler struct {
-	repo    *Repo
-	storage *storage.Client
+	repo *Repo
 }
 
 func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
 
-func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+// parseListFilter reads the shared invoice list filters (no pagination).
+func parseListFilter(r *http.Request) ListFilter {
 	q := r.URL.Query()
-	limit, offset := paginate.Parse(r)
-
 	f := ListFilter{
 		Q:       strings.TrimSpace(q.Get("q")),
 		SortBy:  q.Get("sortBy"),
 		SortDir: q.Get("sortDir"),
-		Limit:   limit,
-		Offset:  offset,
 	}
 	if s := strings.TrimSpace(q.Get("status")); s != "" {
 		for _, raw := range strings.Split(s, ",") {
@@ -56,16 +48,22 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	f.DateFrom = parseDateParam(q.Get("dateFrom"))
-	f.DateTo = parseDateParam(q.Get("dateTo"))
-	f.DueFrom = parseDateParam(q.Get("dueFrom"))
-	f.DueTo = parseDateParam(q.Get("dueTo"))
+	f.DateFrom = httpx.ParseDateParam(q.Get("dateFrom"))
+	f.DateTo = httpx.ParseDateParam(q.Get("dateTo"))
+	f.DueFrom = httpx.ParseDateParam(q.Get("dueFrom"))
+	f.DueTo = httpx.ParseDateParam(q.Get("dueTo"))
 	if s := strings.TrimSpace(q.Get("minTotal")); s != "" {
 		f.MinTotal = &s
 	}
 	if s := strings.TrimSpace(q.Get("maxTotal")); s != "" {
 		f.MaxTotal = &s
 	}
+	return f
+}
+
+func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	f := parseListFilter(r)
+	f.Limit, f.Offset = paginate.Parse(r)
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
@@ -76,19 +74,44 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
 }
 
-// Accepts YYYY-MM-DD or RFC3339; nil on empty/invalid.
-func parseDateParam(s string) *time.Time {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return nil
+// Export streams the filtered invoice list as an XLSX table.
+func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
+	f := parseListFilter(r)
+	f.Limit, f.Offset = listq.Unbounded, 0
+
+	res, err := h.repo.List(r.Context(), f)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
 	}
-	if t, err := time.Parse("2006-01-02", s); err == nil {
-		return &t
+	httpx.WarnIfTruncated(r.Context(), "invoices.export", res.Total, len(res.Rows))
+	headers := []string{"No. Invoice", "No. Quotation", "Tanggal", "Jatuh Tempo", "Klien", "Status", "Total"}
+	rows := make([][]string, 0, len(res.Rows))
+	for _, inv := range res.Rows {
+		due := ""
+		if inv.DueDate != nil {
+			due = inv.DueDate.In(tz.Jakarta()).Format("2006-01-02")
+		}
+		total := ""
+		if inv.Total != nil {
+			total = *inv.Total
+		}
+		rows = append(rows, []string{
+			inv.InvoiceNo,
+			inv.QuotationNo,
+			inv.InvoiceDate.In(tz.Jakarta()).Format("2006-01-02"),
+			due,
+			inv.CompanyName,
+			string(inv.Status),
+			total,
+		})
 	}
-	if t, err := time.Parse(time.RFC3339, s); err == nil {
-		return &t
+	data, err := sheet.Write("Invoice", headers, rows)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
 	}
-	return nil
+	httpx.WriteXLSX(w, "invoice-export", data)
 }
 
 func (h *Handler) Summary(w http.ResponseWriter, r *http.Request) {
@@ -188,7 +211,7 @@ func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
-	ifMatch, err := parseIfMatch(r.Header.Get("If-Match"))
+	ifMatch, err := httpx.ParseIfMatch(r.Header.Get("If-Match"))
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest("invalid If-Match header"))
 		return
@@ -214,128 +237,10 @@ func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]int32{"rowVersion": newVersion})
 }
 
-// parseIfMatch reads optimistic-lock header. Required when present-but-empty rejected.
-func parseIfMatch(raw string) (*int32, error) {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return nil, nil
-	}
-	n, err := strconv.ParseInt(raw, 10, 32)
-	if err != nil {
-		return nil, err
-	}
-	v := int32(n)
-	return &v, nil
-}
-
 func isValidStatus(s Status) bool {
 	switch s {
 	case StatusDraft, StatusSent, StatusPaid, StatusOverdue, StatusCancelled:
 		return true
 	}
 	return false
-}
-
-// PresignAttachmentUpload handles GET /invoices/{id}/attachment/upload-url?fileName=...
-func (h *Handler) PresignAttachmentUpload(w http.ResponseWriter, r *http.Request) {
-	if h.storage == nil {
-		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
-		return
-	}
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
-	if err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid id"))
-		return
-	}
-	if _, err := h.repo.GetByID(r.Context(), id); err != nil {
-		if errors.Is(err, ErrNotFound) {
-			httperr.Render(w, httperr.NotFound("invoice not found"))
-			return
-		}
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	fileName := strings.TrimSpace(r.URL.Query().Get("fileName"))
-	if fileName == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "required"}))
-		return
-	}
-	if err := storage.ValidateAssetFileName(storage.BucketInvoiceAttachments, fileName); err != nil {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "unsupported file type"}))
-		return
-	}
-	objectKey := storage.BuildObjectKey("invoices", id, fileName)
-	url, err := h.storage.PresignPut(r.Context(), storage.BucketInvoiceAttachments, objectKey, attachmentUploadExpiry)
-	if err != nil {
-		httperr.Render(w, httperr.Internal("presign failed"))
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"uploadUrl": url,
-		"objectKey": objectKey,
-		"expiresAt": time.Now().UTC().Add(attachmentUploadExpiry).Unix(),
-	})
-}
-
-// PresignAttachmentDownload handles GET /invoices/{id}/attachment/download-url
-func (h *Handler) PresignAttachmentDownload(w http.ResponseWriter, r *http.Request) {
-	if h.storage == nil {
-		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
-		return
-	}
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
-	if err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid id"))
-		return
-	}
-	inv, err := h.repo.GetByID(r.Context(), id)
-	if errors.Is(err, ErrNotFound) {
-		httperr.Render(w, httperr.NotFound("invoice not found"))
-		return
-	}
-	if err != nil {
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	if inv.AttachmentObjectKey == nil || *inv.AttachmentObjectKey == "" {
-		httperr.Render(w, httperr.NotFound("no attachment"))
-		return
-	}
-	url, err := h.storage.PresignGet(r.Context(), storage.BucketInvoiceAttachments, *inv.AttachmentObjectKey, attachmentDownloadExpiry)
-	if err != nil {
-		httperr.Render(w, httperr.Internal("presign failed"))
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"downloadUrl": url,
-		"expiresAt":   time.Now().UTC().Add(attachmentDownloadExpiry).Unix(),
-	})
-}
-
-// UpdateAttachment handles PATCH /invoices/{id}/attachment with body {objectKey}.
-func (h *Handler) UpdateAttachment(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
-	if err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid id"))
-		return
-	}
-	var req UpdateAttachmentRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
-		return
-	}
-	if strings.TrimSpace(req.ObjectKey) == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"objectKey": "required"}))
-		return
-	}
-	actor := deps.CurrentUserID(r.Context())
-	if err := h.repo.UpdateAttachment(r.Context(), id, req.ObjectKey, actor); err != nil {
-		if errors.Is(err, ErrNotFound) {
-			httperr.Render(w, httperr.NotFound("invoice not found"))
-			return
-		}
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
 }

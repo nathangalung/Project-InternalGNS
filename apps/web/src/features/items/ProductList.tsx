@@ -3,20 +3,18 @@ import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
-import Sidebar from "@/components/shared/Sidebar"
 import StatusBadge from "@/components/shared/StatusBadge"
+import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useItemSearchAdvanced, useItems } from "@/features/items/hooks"
 import ProductCreateModal from "@/features/items/ProductCreateModal"
 import ProductFilter, { type ProductFilterValues } from "@/features/items/ProductFilter"
 import { useUnits } from "@/features/units/hooks"
-import { useDebouncedValue } from "@/hooks/useDebouncedValue"
-import type { Page } from "@/lib/page"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
+import { ui } from "@/lib/ui"
+import { useListScreen } from "@/lib/useListScreen"
 import type { AdvancedSearchHit, AdvancedSearchTier, ItemRow } from "@/types/api"
 
 interface ProductListProps {
-  onNavigate: (page: Page) => void
-  onLogout: () => void
   onViewDetail?: (id: number) => void
 }
 
@@ -30,17 +28,14 @@ const TIER_BADGE: Record<AdvancedSearchTier, { label: string; bg: string; color:
   ITEM_FUZZY: { label: "FUZZY", bg: "#F3F4F6", color: "#4B5563" },
 }
 
-export default function ProductList({ onNavigate, onLogout, onViewDetail }: ProductListProps) {
+export default function ProductList({ onViewDetail }: ProductListProps) {
   const { data: unitsData } = useUnits()
 
-  const [search, setSearch] = useState("")
   const [showAdd, setShowAdd] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
-  const [filters, setFilters] = useState<ProductFilterValues>({ status: "all", unitCode: "" })
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [currentPage, setCurrentPage] = useState(1)
 
-  const debouncedSearch = useDebouncedValue(search.trim(), 250)
+  const list = useListScreen<ProductFilterValues>({ status: "all", unitCode: "" })
+  const { debouncedSearch, filters, itemsPerPage, startIndex } = list
   const isSearchActive = debouncedSearch.length > 0
 
   const unitIdByCode = useMemo(() => {
@@ -52,7 +47,7 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
   const listParams = useMemo(() => {
     const out: Parameters<typeof useItems>[0] = {
       limit: itemsPerPage,
-      offset: (currentPage - 1) * itemsPerPage,
+      offset: startIndex,
     }
     if (filters.status === "active") out.isActive = true
     if (filters.status === "inactive") out.isActive = false
@@ -61,13 +56,16 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
       if (id !== undefined) out.unitId = id
     }
     return out
-  }, [filters, itemsPerPage, currentPage, unitIdByCode])
+  }, [filters, itemsPerPage, startIndex, unitIdByCode])
 
   const filterActive = filters.status === "active"
   const filterInactive = filters.status === "inactive"
   const filterIsActive = filterActive ? true : filterInactive ? false : undefined
 
-  const { data: listData, isLoading: itemsLoading } = useItems(listParams)
+  // Skipped while searching: the search layer supplies the rows instead.
+  const { data: listData, isLoading: itemsLoading } = useItems(listParams, {
+    enabled: !isSearchActive,
+  })
   const { data: searchData, isFetching: searchLoading } = useItemSearchAdvanced(debouncedSearch, {
     minScore: 0.3,
     limit: 100,
@@ -89,14 +87,13 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
 
   const searchRows: ItemRow[] = useMemo(() => {
     if (!isSearchActive) return []
-    const rowIsActive = !filterInactive
     let rows: ItemRow[] = searchHits.map((h) => ({
       id: h.id,
       name: h.name,
       impaCode: h.impaCode,
       defaultUnitId: h.defaultUnitId,
       description: undefined,
-      isActive: rowIsActive,
+      isActive: h.isActive,
       createdAt: "",
       updatedAt: "",
     }))
@@ -105,223 +102,164 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
       if (targetId !== undefined) rows = rows.filter((it) => it.defaultUnitId === targetId)
     }
     return rows
-  }, [isSearchActive, searchHits, filterInactive, filters.unitCode, unitIdByCode])
+  }, [isSearchActive, searchHits, filters.unitCode, unitIdByCode])
 
   const serverRows = listData?.rows ?? []
   const totalItems = isSearchActive ? searchRows.length : (listData?.total ?? 0)
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
-  const startIndex = (currentPage - 1) * itemsPerPage
+  const totalPages = list.totalPagesOf(totalItems)
   const currentRows = isSearchActive
     ? searchRows.slice(startIndex, startIndex + itemsPerPage)
     : serverRows
 
   return (
-    <div className="admin-shell">
-      <Sidebar activePage={"products" as Page} onNavigate={onNavigate} onLogout={onLogout} />
-
-      <div className="admin-main">
-        <div className="page-content" style={{ gap: "29px" }}>
-          <div className="page-header">
-            <h1 className="page-title">Katalog Produk</h1>
-            <div className="page-actions">
-              <button
-                className="btn-admin-primary"
-                style={{ width: "200px", justifyContent: "center" }}
-                onClick={() => setShowAdd(true)}
+    <>
+      <div className="page-content" style={{ gap: "29px" }}>
+        <div className="page-header">
+          <h1 className="page-title">Katalog Produk</h1>
+          <div className="page-actions">
+            <button
+              className={`${ui.btnPrimary} w-[200px]`}
+              type="button"
+              onClick={() => setShowAdd(true)}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
               >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#fff"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                >
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Tambah Produk
-              </button>
-            </div>
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Tambah Produk
+            </button>
           </div>
+        </div>
 
-          <div className="search-row">
-            <SearchInput
-              value={search}
-              onChange={(v) => {
-                setSearch(v)
-                setCurrentPage(1)
-              }}
-              placeholder="Cari kode IMPA, nama, kategori produk..."
-            />
-            <FilterButton onClick={() => setShowFilter(true)} />
+        <div className="flex items-center gap-4 pt-2">
+          <SearchInput
+            value={list.search}
+            onChange={list.setSearch}
+            placeholder="Cari kode IMPA, nama, kategori produk..."
+          />
+          <FilterButton onClick={() => setShowFilter(true)} />
+        </div>
+
+        {isSearchActive && searchData && (
+          <div className="-mb-3 flex flex-wrap gap-2">
+            {(
+              [
+                "ITEM_AUTO",
+                "VENDOR_OFFER",
+                "ITEM_SUGGESTED",
+                "REQUEST_HISTORY",
+                "ITEM_FUZZY",
+              ] as AdvancedSearchTier[]
+            )
+              .filter((t) => (searchData.counts[t] ?? 0) > 0)
+              .map((t) => {
+                const b = TIER_BADGE[t]
+                return (
+                  <span
+                    key={t}
+                    className="rounded-[4px] px-2 py-0.5 text-[11px] font-bold"
+                    style={{ background: b.bg, color: b.color }}
+                  >
+                    {searchData.counts[t]} {b.label}
+                  </span>
+                )
+              })}
           </div>
+        )}
 
-          {isSearchActive && searchData && (
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: -12 }}>
-              {(
-                [
-                  "ITEM_AUTO",
-                  "VENDOR_OFFER",
-                  "ITEM_SUGGESTED",
-                  "REQUEST_HISTORY",
-                  "ITEM_FUZZY",
-                ] as AdvancedSearchTier[]
-              )
-                .filter((t) => (searchData.counts[t] ?? 0) > 0)
-                .map((t) => {
-                  const b = TIER_BADGE[t]
+        <div className={ui.tableWrap}>
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className={ui.theadRow}>
+                <th className={ui.thCenter} style={{ width: 110 }}>
+                  Kode IMPA
+                </th>
+                <th className={ui.thCenter} style={{ width: "auto" }}>
+                  Nama Produk
+                </th>
+                <th className={ui.thCenter} style={{ width: 140 }}>
+                  Unit
+                </th>
+                <th className={ui.thCenter} style={{ width: 160 }}>
+                  Status
+                </th>
+                <th className={ui.thCenter} style={{ width: 80 }}>
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading && <TableLoadingRow colSpan={5} />}
+              {!isLoading && currentRows.length === 0 && (
+                <TableEmptyRow colSpan={5}>
+                  {isSearchActive
+                    ? `Tidak ada hasil untuk "${debouncedSearch}".`
+                    : "Tidak ada produk."}
+                </TableEmptyRow>
+              )}
+              {!isLoading &&
+                currentRows.map((it: ItemRow) => {
+                  const status = it.isActive ? BADGE_AKTIF : BADGE_NONAKTIF
+                  const tier = isSearchActive ? tierById.get(it.id) : undefined
+                  const tierBadge = tier ? TIER_BADGE[tier] : undefined
                   return (
-                    <span
-                      key={t}
-                      style={{
-                        padding: "2px 8px",
-                        borderRadius: 4,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        background: b.bg,
-                        color: b.color,
-                      }}
-                    >
-                      {searchData.counts[t]} {b.label}
-                    </span>
+                    <tr key={it.id} className={ui.tr}>
+                      <td className={`${ui.tdCenter} font-bold text-primary-700`}>
+                        {it.impaCode ?? "-"}
+                      </td>
+                      <td
+                        className={`${ui.tdCenter} break-words font-bold leading-5 text-dark-900`}
+                      >
+                        {it.name}
+                        {tierBadge && (
+                          <span
+                            className="ml-1.5 inline-block rounded-[4px] px-1.5 py-px align-middle text-[10px] font-bold tracking-[0.3px]"
+                            style={{ background: tierBadge.bg, color: tierBadge.color }}
+                          >
+                            {tierBadge.label}
+                          </span>
+                        )}
+                      </td>
+                      <td className={`${ui.tdCenter} font-medium`}>{unitOf(it.defaultUnitId)}</td>
+                      <td className={ui.tdCenter}>
+                        <StatusBadge bg={status.bg} color={status.color} minWidth={84}>
+                          {status.label}
+                        </StatusBadge>
+                      </td>
+                      <td className={ui.tdCenter}>
+                        <button
+                          type="button"
+                          className={ui.iconAction}
+                          title="Lihat detail"
+                          onClick={() => onViewDetail?.(it.id)}
+                        >
+                          <EyeIcon />
+                        </button>
+                      </td>
+                    </tr>
                   )
                 })}
-            </div>
-          )}
+            </tbody>
+          </table>
 
-          <div className="tbl-container">
-            <table className="tbl">
-              <thead>
-                <tr className="tbl-header-row">
-                  <th className="tbl-th tbl-th--center" style={{ width: 110 }}>
-                    Kode IMPA
-                  </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: "auto" }}>
-                    Nama Produk
-                  </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
-                    Unit
-                  </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
-                    Status
-                  </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 80 }}>
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading && (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
-                      Memuat data…
-                    </td>
-                  </tr>
-                )}
-                {!isLoading && currentRows.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
-                      {isSearchActive
-                        ? `Tidak ada hasil untuk "${debouncedSearch}".`
-                        : "Tidak ada produk."}
-                    </td>
-                  </tr>
-                )}
-                {!isLoading &&
-                  currentRows.map((it: ItemRow) => {
-                    const status = it.isActive ? BADGE_AKTIF : BADGE_NONAKTIF
-                    const tier = isSearchActive ? tierById.get(it.id) : undefined
-                    const tierBadge = tier ? TIER_BADGE[tier] : undefined
-                    return (
-                      <tr key={it.id} className="tbl-row">
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ fontWeight: 700, color: "#630ED4" }}
-                        >
-                          {it.impaCode ?? "-"}
-                        </td>
-                        <td
-                          className="tbl-td tbl-td--client tbl-td--center"
-                          style={{
-                            fontWeight: 700,
-                            whiteSpace: "normal",
-                            overflow: "visible",
-                            textOverflow: "clip",
-                            wordBreak: "break-word",
-                            lineHeight: "20px",
-                          }}
-                        >
-                          {it.name}
-                          {tierBadge && (
-                            <span
-                              style={{
-                                display: "inline-block",
-                                marginLeft: 6,
-                                padding: "1px 6px",
-                                borderRadius: 4,
-                                fontSize: 10,
-                                fontWeight: 700,
-                                letterSpacing: 0.3,
-                                background: tierBadge.bg,
-                                color: tierBadge.color,
-                                verticalAlign: "middle",
-                              }}
-                            >
-                              {tierBadge.label}
-                            </span>
-                          )}
-                        </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ color: "#4A4455", fontWeight: 500 }}
-                        >
-                          {unitOf(it.defaultUnitId)}
-                        </td>
-                        <td className="tbl-td tbl-td--center">
-                          <StatusBadge bg={status.bg} color={status.color} minWidth={84}>
-                            {status.label}
-                          </StatusBadge>
-                        </td>
-                        <td className="tbl-td tbl-td--center">
-                          <button
-                            className="action-btn"
-                            title="Lihat detail"
-                            style={{ color: "#7C3AED" }}
-                            onClick={() => onViewDetail?.(it.id)}
-                          >
-                            <EyeIcon />
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-              </tbody>
-            </table>
-
-            <Pagination
-              totalItems={totalItems}
-              startIndex={startIndex}
-              itemsPerPage={itemsPerPage}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              resourceLabel="Produk"
-              onItemsPerPage={(n) => {
-                setItemsPerPage(n)
-                setCurrentPage(1)
-              }}
-              onPage={setCurrentPage}
-            />
-          </div>
+          <Pagination
+            totalItems={totalItems}
+            startIndex={startIndex}
+            itemsPerPage={itemsPerPage}
+            currentPage={list.currentPage}
+            totalPages={totalPages}
+            resourceLabel="Produk"
+            onItemsPerPage={list.setItemsPerPage}
+            onPage={list.setCurrentPage}
+          />
         </div>
       </div>
 
@@ -331,12 +269,9 @@ export default function ProductList({ onNavigate, onLogout, onViewDetail }: Prod
         <ProductFilter
           onClose={() => setShowFilter(false)}
           initialValues={filters}
-          onApply={(f) => {
-            setFilters(f)
-            setCurrentPage(1)
-          }}
+          onApply={list.applyFilters}
         />
       )}
-    </div>
+    </>
   )
 }

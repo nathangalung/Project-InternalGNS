@@ -1,5 +1,5 @@
+import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
-import Sidebar from "@/components/shared/Sidebar"
 import ClientAdd from "@/features/clients/ClientAdd"
 import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
 import { useClientSearch, useClients } from "@/features/clients/hooks"
@@ -13,14 +13,12 @@ import Step4Summary from "@/features/quotations/Step4Summary"
 import { useUnits } from "@/features/units/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
-import type { Page } from "@/lib/page"
 import { disabledStyle } from "@/lib/styles"
+import { ui } from "@/lib/ui"
 import type { PoItemInput, PoUpdateItemsInput } from "@/types/api"
 
 interface PurchaseOrderEditProps {
   poId: string
-  onNavigate: (page: Page) => void
-  onLogout: () => void
 }
 
 const steps = [
@@ -47,7 +45,8 @@ export interface ProductItem {
   hargaJual: number
 }
 
-export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: PurchaseOrderEditProps) {
+export default function PurchaseOrderEdit({ poId }: PurchaseOrderEditProps) {
+  const navigate = useNavigate()
   const [step, setStep] = useState(1)
 
   const [selectedClient, setSelectedClient] = useState("")
@@ -168,6 +167,7 @@ export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: Purcha
     const ship = poItems.find((it) => it.itemType === "shipping")
     if (ship) {
       setShippingAddress(ship.shipDestination ?? "")
+      if (ship.shippingDays) setShippingTime(String(ship.shippingDays))
       const cost = Number(ship.sellingPrice)
       setShippingCost(Number.isFinite(cost) ? String(cost) : "")
     }
@@ -187,233 +187,218 @@ export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: Purcha
   } = computeTaxBreakdown({
     subtotal: summarySubTotal,
     shipping: summaryShippingCost,
-    hasProducts,
   })
   const summaryProfit = hasProducts ? summarySubTotal - summaryTotalHargaBeli : 0
 
   return (
-    <div className="admin-shell">
-      <Sidebar activePage="purchase-orders" onNavigate={onNavigate} onLogout={onLogout} />
-
-      <div className="admin-main">
-        <div className="page-content">
-          <div
-            className="qe-header-section"
-            style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
-          >
-            <div className="qe-header-left">
-              <nav className="qd-breadcrumb">
-                <button
-                  className="qd-breadcrumb-link"
-                  onClick={() => onNavigate("purchase-orders")}
-                >
-                  Daftar Purchase Order
-                </button>
-                <span className="qd-breadcrumb-sep">&rsaquo;</span>
-                <span className="qd-breadcrumb-current">Edit Purchase Order</span>
-              </nav>
-              <div className="qe-title-row">
-                <h1 className="qe-title">Edit Purchase Order</h1>
-              </div>
-            </div>
-
-            <div
-              className="qe-header-actions"
-              style={{ display: "flex", gap: "16px", alignItems: "center" }}
-            >
-              {step > 1 && (
-                <button
-                  className="btn-admin-outline"
-                  onClick={() => setStep(step - 1)}
-                  style={{ width: "148px", justifyContent: "center" }}
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M19 12H5M12 5l-7 7 7 7" />
-                  </svg>{" "}
-                  Kembali
-                </button>
-              )}
-              {step < steps.length && (
-                <button
-                  className="btn-admin-primary"
-                  onClick={() => setStep(step + 1)}
-                  disabled={isNextDisabled}
-                  style={{
-                    width: "148px",
-                    justifyContent: "center",
-                    opacity: isNextDisabled ? 0.5 : 1,
-                    cursor: isNextDisabled ? "not-allowed" : "pointer",
-                    transition: "opacity 0.2s",
-                  }}
-                >
-                  Lanjut{" "}
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{ transform: "scaleX(-1)" }}
-                  >
-                    <path d="M19 12H5M12 5l-7 7 7 7" />
-                  </svg>
-                </button>
-              )}
-              {step === steps.length && (
-                <button
-                  className="btn-admin-primary"
-                  disabled={!isTenggatWaktuFilled || !hasContent || updateMutation.isPending}
-                  style={{
-                    width: "148px",
-                    justifyContent: "center",
-                    background: "#630ED4",
-                    opacity:
-                      !isTenggatWaktuFilled || !hasContent || updateMutation.isPending ? 0.5 : 1,
-                    cursor:
-                      !isTenggatWaktuFilled || !hasContent || updateMutation.isPending
-                        ? "not-allowed"
-                        : "pointer",
-                    transition: "opacity 0.2s",
-                  }}
-                  onClick={() => {
-                    if (!hasNumericPoId || !poDetail) return
-                    const items: PoItemInput[] = products.map((p) => ({
-                      quotationItemId: p.quotationItemId,
-                      offeredItemId: p.itemId,
-                      itemName: p.requestedNama || p.nama,
-                      itemCode: p.requestedKodeImpa || p.kodeImpa || undefined,
-                      qty: String(p.jumlah),
-                      unitId: unitIdByCode.get(p.satuan.toUpperCase()),
-                      sellingPrice: String(p.hargaJual),
-                      costPrice: String(p.hargaBeli),
-                    }))
-                    const shipDays = Number(shippingTime)
-                    const input: PoUpdateItemsInput = {
-                      discountPct: String(discountPct),
-                      shippingAddress: shippingAddress || undefined,
-                      shippingDays:
-                        Number.isFinite(shipDays) && shipDays > 0 ? shipDays : undefined,
-                      shippingCost: shippingCost || undefined,
-                      items,
-                    }
-                    updateMutation.mutate(
-                      { id: numericPoId, input, rowVersion: poDetail.rowVersion },
-                      { onSuccess: () => onNavigate("purchase-order-detail") },
-                    )
-                  }}
-                >
-                  {updateMutation.isPending ? "Menyimpan..." : "Simpan"}
-                </button>
-              )}
+    <>
+      <div className="page-content">
+        <div className="flex w-full items-center justify-between">
+          <div className="flex flex-col gap-3">
+            <nav className={ui.breadcrumb}>
+              <button
+                className={ui.breadcrumbLink}
+                onClick={() => void navigate({ to: "/purchase-orders" })}
+              >
+                Daftar Purchase Order
+              </button>
+              <span className={ui.breadcrumbSep}>&rsaquo;</span>
+              <span className={ui.breadcrumbCurrent}>Edit Purchase Order</span>
+            </nav>
+            <div className="flex items-center gap-5">
+              <h1 className="text-2xl font-bold leading-8 tracking-tight text-dark-900">
+                Edit Purchase Order
+              </h1>
             </div>
           </div>
 
-          <div className="qe-stepper">
-            {steps.map((s, i) => (
-              <div key={s.n} style={{ display: "contents" }}>
-                <div className="qe-step-slot">
-                  <div className={`qe-step-pill${i === step - 1 ? " qe-step-pill--active" : ""}`}>
-                    <span className={`qe-step-num${i === step - 1 ? " qe-step-num--active" : ""}`}>
+          <div className="flex items-center gap-4">
+            {step > 1 && (
+              <button className={`${ui.btnOutline} w-[148px]`} onClick={() => setStep(step - 1)}>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M19 12H5M12 5l-7 7 7 7" />
+                </svg>{" "}
+                Kembali
+              </button>
+            )}
+            {step < steps.length && (
+              <button
+                className={`${ui.btnPrimary} w-[148px]`}
+                onClick={() => setStep(step + 1)}
+                disabled={isNextDisabled}
+              >
+                Lanjut{" "}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ transform: "scaleX(-1)" }}
+                >
+                  <path d="M19 12H5M12 5l-7 7 7 7" />
+                </svg>
+              </button>
+            )}
+            {step === steps.length && (
+              <button
+                className={`${ui.btnPrimary} w-[148px]`}
+                disabled={!isTenggatWaktuFilled || !hasContent || updateMutation.isPending}
+                onClick={() => {
+                  if (!hasNumericPoId || !poDetail) return
+                  const items: PoItemInput[] = products.map((p) => ({
+                    quotationItemId: p.quotationItemId,
+                    offeredItemId: p.itemId,
+                    itemName: p.requestedNama || p.nama,
+                    itemCode: p.requestedKodeImpa || p.kodeImpa || undefined,
+                    qty: String(p.jumlah),
+                    unitId: unitIdByCode.get(p.satuan.toUpperCase()),
+                    sellingPrice: String(p.hargaJual),
+                    costPrice: String(p.hargaBeli),
+                  }))
+                  const shipDays = Number(shippingTime)
+                  const input: PoUpdateItemsInput = {
+                    discountPct: String(discountPct),
+                    shippingAddress: shippingAddress || undefined,
+                    shippingDays: Number.isFinite(shipDays) && shipDays > 0 ? shipDays : undefined,
+                    shippingCost: shippingCost || undefined,
+                    items,
+                  }
+                  updateMutation.mutate(
+                    { id: numericPoId, input, rowVersion: poDetail.rowVersion },
+                    {
+                      onSuccess: () =>
+                        void navigate({ to: "/purchase-orders/$id", params: { id: poId } }),
+                    },
+                  )
+                }}
+              >
+                {updateMutation.isPending ? "Menyimpan..." : "Simpan"}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex w-full items-start">
+          {steps.map((s, i) => {
+            const isActive = i === step - 1
+            return (
+              <div key={s.n} className="contents">
+                <div className="flex flex-col items-center gap-2">
+                  <div
+                    className={`flex h-10 w-[162px] items-center justify-center rounded-lg transition-all duration-300 ease-[ease] ${
+                      isActive
+                        ? "bg-primary-700 opacity-100 shadow-[0px_10px_15px_-3px_rgba(109,40,217,0.2),0px_4px_6px_-4px_rgba(109,40,217,0.2)]"
+                        : "bg-dark-200 opacity-50"
+                    }`}
+                  >
+                    <span
+                      className={`text-sm font-bold ${isActive ? "text-white" : "text-dark-600"}`}
+                    >
                       {s.n}
                     </span>
                   </div>
                   <span
-                    className={`qe-step-label${i === step - 1 ? " qe-step-label--active" : ""}`}
+                    className={`text-caption uppercase tracking-[1px] ${
+                      isActive ? "font-bold text-primary-700" : "font-normal text-dark-600"
+                    }`}
                   >
                     {s.label}
                   </span>
                 </div>
-                {i < steps.length - 1 && <div key={`line-${i}`} className="qe-step-connector" />}
+                {i < steps.length - 1 && (
+                  <div key={`line-${i}`} className="mt-5 h-0.5 flex-1 bg-[rgba(203,213,225,0.3)]" />
+                )}
               </div>
-            ))}
-          </div>
-
-          {step === 1 && (
-            <Step1Client
-              search={search}
-              setSearch={setSearch}
-              filteredClients={filteredClients}
-              selectedClient={selectedClient}
-              setSelectedClient={setSelectedClient}
-              setShowClientAdd={setShowClientAdd}
-            />
-          )}
-          {step === 2 && (
-            <Step2Product
-              products={products}
-              deleteProduct={deleteProduct}
-              setEditingProduct={setEditingProduct}
-              setShowProductAdd={setShowProductAdd}
-              prodPageSize={prodPageSize}
-              setProdPageSize={setProdPageSize}
-              prodPage={prodPage}
-              setProdPage={setProdPage}
-              isRowDropdownOpen={isRowDropdownOpen}
-              setIsRowDropdownOpen={setIsRowDropdownOpen}
-              setShowDiscountModal={setShowDiscountModal}
-              discountPct={discountPct}
-              formatRp={formatRp}
-              summaryTotalHargaBeli={summaryTotalHargaBeli}
-              summaryTotalHargaJual={summaryTotalHargaJual}
-              nominalDiskon={nominalDiskon}
-              summarySubTotal={summarySubTotal}
-              summaryDpp={summaryDpp}
-              summaryPpn={summaryPpn}
-              onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
-            />
-          )}
-          {step === 3 && (
-            <Step3Shipping
-              shippingAddress={shippingAddress}
-              setShippingAddress={setShippingAddress}
-              shippingTime={shippingTime}
-              setShippingTime={setShippingTime}
-              shippingCost={shippingCost}
-              setShippingCost={setShippingCost}
-              isAlamatFilled={isAlamatFilled}
-              isWaktuFilled={isWaktuFilled}
-              disabledStyle={disabledStyle}
-              formatRp={formatRp}
-            />
-          )}
-          {step === 4 && (
-            <Step4Summary
-              jatuhTempo={jatuhTempo}
-              setJatuhTempo={setJatuhTempo}
-              berlakuSampai={berlakuSampai}
-              setBerlakuSampai={setBerlakuSampai}
-              currentClient={currentClient}
-              shippingAddress={shippingAddress}
-              shippingTime={shippingTime}
-              shippingCost={shippingCost}
-              products={products}
-              discountPct={discountPct}
-              formatRp={formatRp}
-              summaryTotalProdukQty={summaryTotalProdukQty}
-              summaryTotalHargaBeli={summaryTotalHargaBeli}
-              summaryTotalHargaJual={summaryTotalHargaJual}
-              nominalDiskon={nominalDiskon}
-              summarySubTotal={summarySubTotal}
-              summaryDpp={summaryDpp}
-              summaryPpn={summaryPpn}
-              summaryShippingCost={summaryShippingCost}
-              summaryProfit={summaryProfit}
-              summaryGrandTotal={summaryGrandTotal}
-            />
-          )}
+            )
+          })}
         </div>
+
+        {step === 1 && (
+          <Step1Client
+            search={search}
+            setSearch={setSearch}
+            filteredClients={filteredClients}
+            selectedClient={selectedClient}
+            setSelectedClient={setSelectedClient}
+            setShowClientAdd={setShowClientAdd}
+          />
+        )}
+        {step === 2 && (
+          <Step2Product
+            products={products}
+            deleteProduct={deleteProduct}
+            setEditingProduct={setEditingProduct}
+            setShowProductAdd={setShowProductAdd}
+            prodPageSize={prodPageSize}
+            setProdPageSize={setProdPageSize}
+            prodPage={prodPage}
+            setProdPage={setProdPage}
+            isRowDropdownOpen={isRowDropdownOpen}
+            setIsRowDropdownOpen={setIsRowDropdownOpen}
+            setShowDiscountModal={setShowDiscountModal}
+            discountPct={discountPct}
+            formatRp={formatRp}
+            summaryTotalHargaBeli={summaryTotalHargaBeli}
+            summaryTotalHargaJual={summaryTotalHargaJual}
+            nominalDiskon={nominalDiskon}
+            summarySubTotal={summarySubTotal}
+            summaryDpp={summaryDpp}
+            summaryPpn={summaryPpn}
+            onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
+          />
+        )}
+        {step === 3 && (
+          <Step3Shipping
+            shippingAddress={shippingAddress}
+            setShippingAddress={setShippingAddress}
+            shippingTime={shippingTime}
+            setShippingTime={setShippingTime}
+            shippingCost={shippingCost}
+            setShippingCost={setShippingCost}
+            isAlamatFilled={isAlamatFilled}
+            isWaktuFilled={isWaktuFilled}
+            disabledStyle={disabledStyle}
+            formatRp={formatRp}
+          />
+        )}
+        {step === 4 && (
+          <Step4Summary
+            jatuhTempo={jatuhTempo}
+            setJatuhTempo={setJatuhTempo}
+            berlakuSampai={berlakuSampai}
+            setBerlakuSampai={setBerlakuSampai}
+            currentClient={currentClient}
+            shippingAddress={shippingAddress}
+            shippingTime={shippingTime}
+            shippingCost={shippingCost}
+            products={products}
+            discountPct={discountPct}
+            formatRp={formatRp}
+            summaryTotalProdukQty={summaryTotalProdukQty}
+            summaryTotalHargaBeli={summaryTotalHargaBeli}
+            summaryTotalHargaJual={summaryTotalHargaJual}
+            nominalDiskon={nominalDiskon}
+            summarySubTotal={summarySubTotal}
+            summaryDpp={summaryDpp}
+            summaryPpn={summaryPpn}
+            summaryShippingCost={summaryShippingCost}
+            summaryProfit={summaryProfit}
+            summaryGrandTotal={summaryGrandTotal}
+          />
+        )}
       </div>
 
       <DiscountModal
@@ -503,6 +488,6 @@ export default function PurchaseOrderEdit({ poId, onNavigate, onLogout }: Purcha
           setEditingProduct(null)
         }}
       />
-    </div>
+    </>
   )
 }

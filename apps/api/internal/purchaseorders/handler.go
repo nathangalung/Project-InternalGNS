@@ -13,34 +13,27 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
-	"github.com/nathangalung/internalgns/apps/api/internal/storage"
-)
-
-const (
-	uploadURLExpiry   = 15 * time.Minute
-	downloadURLExpiry = 1 * time.Hour
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
 
 type Handler struct {
-	repo    *Repo
-	storage *storage.Client
+	repo *Repo
 }
 
 func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
 
-func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+// parseListFilter reads the shared PO list filters (no pagination).
+func parseListFilter(r *http.Request) ListFilter {
 	q := r.URL.Query()
-	limit, offset := paginate.Parse(r)
-
 	f := ListFilter{
 		Q:       strings.TrimSpace(q.Get("q")),
 		SortBy:  q.Get("sortBy"),
 		SortDir: q.Get("sortDir"),
-		Limit:   limit,
-		Offset:  offset,
 	}
 	if s := strings.TrimSpace(q.Get("status")); s != "" {
 		for _, raw := range strings.Split(s, ",") {
@@ -49,14 +42,20 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	f.DateFrom = parseDateParam(q.Get("dateFrom"))
-	f.DateTo = parseDateParam(q.Get("dateTo"))
+	f.DateFrom = httpx.ParseDateParam(q.Get("dateFrom"))
+	f.DateTo = httpx.ParseDateParam(q.Get("dateTo"))
 	if s := strings.TrimSpace(q.Get("minTotal")); s != "" {
 		f.MinTotal = &s
 	}
 	if s := strings.TrimSpace(q.Get("maxTotal")); s != "" {
 		f.MaxTotal = &s
 	}
+	return f
+}
+
+func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	f := parseListFilter(r)
+	f.Limit, f.Offset = paginate.Parse(r)
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
@@ -67,19 +66,36 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
 }
 
-// Accepts YYYY-MM-DD or RFC3339; nil on empty/invalid.
-func parseDateParam(s string) *time.Time {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return nil
+// Export streams the filtered PO list (with delivery-note numbers) as XLSX.
+func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
+	f := parseListFilter(r)
+	f.Limit, f.Offset = listq.Unbounded, 0
+
+	res, err := h.repo.List(r.Context(), f)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
 	}
-	if t, err := time.Parse("2006-01-02", s); err == nil {
-		return &t
+	httpx.WarnIfTruncated(r.Context(), "purchaseorders.export", res.Total, len(res.Rows))
+	headers := []string{"No. Delivery Note", "No. PO", "No. Quotation", "Tanggal", "Klien", "Status", "Total"}
+	rows := make([][]string, 0, len(res.Rows))
+	for _, po := range res.Rows {
+		rows = append(rows, []string{
+			deliveryNoteNumber(po.QuotationNo, po.PoNumber),
+			po.PoNumber,
+			po.QuotationNo,
+			po.PoDate.In(tz.Jakarta()).Format("2006-01-02"),
+			po.CompanyName,
+			string(po.Status),
+			po.PoTotalProduk,
+		})
 	}
-	if t, err := time.Parse(time.RFC3339, s); err == nil {
-		return &t
+	data, err := sheet.Write("Delivery Note", headers, rows)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
 	}
-	return nil
+	httpx.WriteXLSX(w, "delivery-note-export", data)
 }
 
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
@@ -187,6 +203,41 @@ func (h *Handler) UpdateNotes(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	var req UpdateDetailsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	if strings.TrimSpace(req.PoNumber) == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"poNumber": "required"}))
+		return
+	}
+	poDate, err := time.Parse("2006-01-02", strings.TrimSpace(req.PoDate))
+	if err != nil {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"poDate": "must be YYYY-MM-DD"}))
+		return
+	}
+	actor := deps.CurrentUserID(r.Context())
+	if err := h.repo.UpdateDetails(r.Context(), id, strings.TrimSpace(req.PoNumber), poDate, actor); err != nil {
+		switch {
+		case errors.Is(err, ErrNotFound):
+			httperr.Render(w, httperr.NotFound("purchase order not found"))
+		case errors.Is(err, ErrDuplicatePoNumber):
+			httperr.Render(w, httperr.Unprocessable(map[string]string{"poNumber": "already used by another PO"}))
+		default:
+			httperr.RenderDBErr(w, err)
+		}
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
@@ -209,6 +260,10 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 		case errors.Is(err, ErrInvalidTransition):
 			httperr.Render(w, httperr.Unprocessable(map[string]string{"status": err.Error()}))
+		// 409, unlike the 422 UpdateItems returns for the same sentinel: here
+		// the PO itself is valid and a dependent invoice blocks the change.
+		case errors.Is(err, ErrLocked):
+			httperr.Render(w, httperr.Conflict(err.Error()))
 		default:
 			httperr.RenderDBErr(w, err)
 		}
@@ -223,7 +278,7 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid id"))
 		return
 	}
-	ifMatch, err := parseIfMatch(r.Header.Get("If-Match"))
+	ifMatch, err := httpx.ParseIfMatch(r.Header.Get("If-Match"))
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest(err.Error()))
 		return
@@ -263,99 +318,10 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func parseIfMatch(raw string) (*int32, error) {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return nil, nil
-	}
-	raw = strings.Trim(raw, `"`)
-	v, err := strconv.ParseInt(raw, 10, 32)
-	if err != nil {
-		return nil, errors.New("invalid If-Match")
-	}
-	r32 := int32(v)
-	return &r32, nil
-}
-
 func isValidStatus(s Status) bool {
 	switch s {
 	case StatusPending, StatusUploaded, StatusOnProgress, StatusDelivered:
 		return true
 	}
 	return false
-}
-
-func (h *Handler) PresignUpload(w http.ResponseWriter, r *http.Request) {
-	if h.storage == nil {
-		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
-		return
-	}
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
-	if err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid id"))
-		return
-	}
-	if _, err := h.repo.GetByID(r.Context(), id); err != nil {
-		if errors.Is(err, ErrNotFound) {
-			httperr.Render(w, httperr.NotFound("purchase order not found"))
-			return
-		}
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	fileName := strings.TrimSpace(r.URL.Query().Get("fileName"))
-	if fileName == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "required"}))
-		return
-	}
-	if err := storage.ValidateAssetFileName(storage.BucketPODocs, fileName); err != nil {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "unsupported file type"}))
-		return
-	}
-	objectKey := storage.BuildObjectKey("po", id, fileName)
-	url, err := h.storage.PresignPut(r.Context(), storage.BucketPODocs, objectKey, uploadURLExpiry)
-	if err != nil {
-		httperr.Render(w, httperr.Internal("presign failed"))
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"uploadUrl": url,
-		"objectKey": objectKey,
-		"expiresAt": time.Now().UTC().Add(uploadURLExpiry).Unix(),
-	})
-}
-
-func (h *Handler) PresignDownload(w http.ResponseWriter, r *http.Request) {
-	if h.storage == nil {
-		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
-		return
-	}
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
-	if err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid id"))
-		return
-	}
-	po, err := h.repo.GetByID(r.Context(), id)
-	if errors.Is(err, ErrNotFound) {
-		httperr.Render(w, httperr.NotFound("purchase order not found"))
-		return
-	}
-	if err != nil {
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	if po.FileURL == nil || *po.FileURL == "" {
-		httperr.Render(w, httperr.NotFound("no file attached"))
-		return
-	}
-	url, err := h.storage.PresignGet(r.Context(), storage.BucketPODocs, *po.FileURL, downloadURLExpiry)
-	if err != nil {
-		httperr.Render(w, httperr.Internal("presign failed"))
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"downloadUrl": url,
-		"fileName":    po.FileName,
-		"expiresAt":   time.Now().UTC().Add(downloadURLExpiry).Unix(),
-	})
 }

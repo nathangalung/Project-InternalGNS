@@ -9,15 +9,19 @@ export function invoiceItemsToProducts(items: InvoiceItemRow[] | undefined): Pro
     .filter((it) => it.lineType === "product")
     .map((it) => {
       const qty = toNum(it.qty)
-      const price = toNum(it.unitPrice)
+      // unitPrice is net of the line discount; show gross and let the
+      // discount row carry it. Historical rows have no gross snapshot.
+      const net = toNum(it.unitPrice)
+      const gross = toNum(it.grossUnitPrice) || net
       const cost = toNum(it.costPrice)
       return {
         kode: it.itemCode ?? "",
         nama: it.itemName,
         qty,
         satuan: it.unitCode ?? "",
-        hargaSatuan: price,
-        profitSatuan: price - cost,
+        hargaSatuan: gross,
+        // Profit is realised on what is actually billed, i.e. the net price.
+        profitSatuan: net - cost,
       }
     })
 }

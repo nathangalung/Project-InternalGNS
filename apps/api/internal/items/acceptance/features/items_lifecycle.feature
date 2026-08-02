@@ -50,3 +50,8 @@ Feature: Item lifecycle
     When the user lists vendors for the item
     Then the response status is 200
     And the vendor list contains at least 1 row
+
+  Scenario: Import auto-creates a product for an unmatched row
+    When the user imports an unknown product row with auto-create
+    Then the response status is 200
+    And the imported row is a newly created product with empty price

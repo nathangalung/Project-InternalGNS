@@ -80,6 +80,7 @@ type CreateItemRequest struct {
 	IMPACode      *string `json:"impaCode"`
 	DefaultUnitID *int16  `json:"defaultUnitId"`
 	Description   *string `json:"description"`
+	IsActive      *bool   `json:"isActive"` // nil defaults to true
 }
 
 type UpdateItemRequest struct {
@@ -134,8 +135,9 @@ type MatchRowResult struct {
 }
 
 type MatchRowsRequest struct {
-	Rows     []MatchRowInput `json:"rows"`
-	MinScore float32         `json:"minScore"` // default 0.5
+	Rows       []MatchRowInput `json:"rows"`
+	MinScore   float32         `json:"minScore"`   // default 0.5
+	AutoCreate bool            `json:"autoCreate"` // create catalog item for no-match rows
 }
 
 type MatchRowsResponse struct {
@@ -165,6 +167,7 @@ type AdvancedSearchHit struct {
 	Name          string   `json:"name"`
 	IMPACode      *string  `json:"impaCode,omitempty"`
 	DefaultUnitID *int16   `json:"defaultUnitId,omitempty"`
+	IsActive      bool     `json:"isActive"` // real catalog flag, not derived from the filter
 	Score         float32  `json:"score"`
 	Tier          string   `json:"tier"`  // ITEM_AUTO | VENDOR_OFFER | ITEM_SUGGESTED | REQUEST_HISTORY | ITEM_FUZZY
 	Tiers         []string `json:"tiers"` // all tiers that contributed to this hit

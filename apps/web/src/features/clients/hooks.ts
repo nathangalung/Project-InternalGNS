@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  skipToken,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import * as clientsApi from "@/features/clients/api"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
@@ -24,8 +30,7 @@ export function useClientSummary() {
 export function useClient(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.clients.detail(id) : queryKeys.clients.all,
-    queryFn: () => clientsApi.get(id as number),
-    enabled: id !== undefined && id > 0,
+    queryFn: id !== undefined && id > 0 ? () => clientsApi.get(id) : skipToken,
   })
 }
 
@@ -56,6 +61,38 @@ export function useUpdateClient() {
   })
 }
 
+export function useClientContacts(companyId: number | undefined) {
+  return useQuery({
+    queryKey: companyId ? queryKeys.clients.contacts(companyId) : queryKeys.clients.all,
+    queryFn:
+      companyId !== undefined && companyId > 0
+        ? () => clientsApi.listContacts(companyId)
+        : skipToken,
+  })
+}
+
+export function useUpdateContact() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      companyId,
+      contactId,
+      input,
+    }: {
+      companyId: number
+      contactId: number
+      input: Parameters<typeof clientsApi.updateContact>[2]
+    }) => clientsApi.updateContact(companyId, contactId, input),
+    onSuccess: (_, { companyId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) })
+      // List rows embed contact fields. Detail is left alone so an open detail
+      // form is never refetched out from under in-progress edits.
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.lists() })
+    },
+    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui kontak.")),
+  })
+}
+
 export function useCreateContact() {
   const qc = useQueryClient()
   return useMutation({
@@ -66,9 +103,26 @@ export function useCreateContact() {
       companyId: number
       input: Parameters<typeof clientsApi.createContact>[1]
     }) => clientsApi.createContact(companyId, input),
-    onSuccess: (_, { companyId }) =>
-      qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) }),
+    onSuccess: (_, { companyId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) })
+      // List rows embed contact fields, so refresh them too. Detail stays put
+      // to protect an open detail form.
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.lists() })
+    },
     onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan kontak.")),
+  })
+}
+
+export function useDeleteContact() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ companyId, contactId }: { companyId: number; contactId: number }) =>
+      clientsApi.deleteContact(companyId, contactId),
+    onSuccess: (_, { companyId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) })
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.lists() })
+    },
+    onError: (err) => toast.error(errorMessage(err, "Gagal menghapus kontak.")),
   })
 }
 
@@ -82,8 +136,9 @@ export function useUploadClientLogo() {
       await clientsApi.updateLogo(id, presign.objectKey)
     },
     onSuccess: (_, { id }) => {
+      // Detail carries the new object key that the logo URL query depends on.
+      // Lists do not render logos, so the broad prefix is not needed.
       qc.invalidateQueries({ queryKey: queryKeys.clients.detail(id) })
-      qc.invalidateQueries({ queryKey: queryKeys.clients.all })
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah logo.")),
   })
@@ -92,8 +147,10 @@ export function useUploadClientLogo() {
 export function useClientLogoDownloadUrl(id: number | undefined, objectKey?: string) {
   return useQuery({
     queryKey: id ? [...queryKeys.clients.detail(id), "logo-url", objectKey] : queryKeys.clients.all,
-    queryFn: () => clientsApi.presignLogoDownload(id as number),
-    enabled: id !== undefined && id > 0 && Boolean(objectKey),
+    queryFn:
+      id !== undefined && id > 0 && objectKey
+        ? () => clientsApi.presignLogoDownload(id)
+        : skipToken,
     staleTime: 4 * 60 * 1000,
   })
 }

@@ -1,7 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useAuth } from "@/features/auth/hooks"
+import { createFileRoute } from "@tanstack/react-router"
 import QuotationEdit from "@/features/quotations/QuotationEdit"
-import { makePageNavigate } from "@/lib/page-nav"
 
 export const Route = createFileRoute("/_authed/quotations/$id/edit")({
   component: QuotationEditRoute,
@@ -9,17 +7,8 @@ export const Route = createFileRoute("/_authed/quotations/$id/edit")({
 
 function QuotationEditRoute() {
   const { id } = Route.useParams()
-  const navigate = useNavigate()
-  const { logout } = useAuth()
 
-  return (
-    <QuotationEdit
-      quotationId={id}
-      onNavigate={makePageNavigate(navigate, id)}
-      onLogout={() => {
-        logout()
-        void navigate({ to: "/login" })
-      }}
-    />
-  )
+  // Keyed so switching quotations remounts the wizard with fresh state, while a
+  // background refetch of the same quotation keeps entered steps.
+  return <QuotationEdit key={id} quotationId={id} />
 }

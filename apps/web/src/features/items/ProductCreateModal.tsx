@@ -5,8 +5,10 @@ import {
   dropdownLabelStyle,
   dropdownPanelStyle,
 } from "@/components/shared/filter-styles"
+import Modal from "@/components/shared/Modal"
 import { useCreateItem } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
+import { ui } from "@/lib/ui"
 
 interface ProductCreateModalData {
   nama: string
@@ -57,6 +59,7 @@ export default function ProductCreateModal({
         name: nama.trim(),
         impaCode: kode.trim() || undefined,
         defaultUnitId: unit?.id,
+        isActive: aktif,
       })
       onSuccess?.({ nama: nama.trim(), kode: kode.trim(), satuan, aktif })
       reset()
@@ -82,243 +85,163 @@ export default function ProductCreateModal({
   }
 
   return (
-    <div className="ca-overlay" onClick={handleCancel}>
-      <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div className="ca-header">
-          <h2 className="ca-title">Tambah Produk Baru</h2>
-          <button className="ca-close-btn" onClick={handleCancel} title="Tutup">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <line x1="1" y1="1" x2="13" y2="13" />
-              <line x1="13" y1="1" x2="1" y2="13" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="ca-body">
-          <div className="ca-section">
-            {/* Nama Produk */}
-            <div className="ca-field">
-              <label className="ca-label">
-                Nama Produk <span className="ca-required">*</span>
-              </label>
-              <input
-                className="ca-input"
-                type="text"
-                placeholder="Masukkan nama produk..."
-                value={nama}
-                onChange={(e) => setNama(e.target.value)}
-              />
-            </div>
-
-            {/* Kode IMPA */}
-            <div className="ca-field">
-              <label className="ca-label">Kode IMPA</label>
-              <input
-                className="ca-input"
-                type="text"
-                inputMode="numeric"
-                placeholder="Contoh: 330212"
-                value={kode}
-                onChange={(e) => setKode(e.target.value.replace(/\D/g, ""))}
-              />
-            </div>
-
-            {/* Satuan Default — typeahead */}
-            <div className="ca-field">
-              <label className="ca-label">Satuan Default</label>
-              <div style={{ position: "relative" }}>
-                <input
-                  className="ca-input"
-                  type="text"
-                  placeholder="Ketik nama satuan..."
-                  value={satuanQuery}
-                  onChange={(e) => {
-                    setSatuanQuery(e.target.value)
-                    setShowSatuanSuggestions(true)
-                    if (satuan) setSatuan("")
-                  }}
-                  onFocus={() => {
-                    if (satuanQuery.length > 0 && !satuan) setShowSatuanSuggestions(true)
-                  }}
-                  style={{ paddingRight: satuanQuery ? "36px" : undefined }}
-                />
-                {satuanQuery && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSatuanQuery("")
-                      setSatuan("")
-                      setShowSatuanSuggestions(false)
-                    }}
-                    title="Bersihkan"
-                    style={{
-                      position: "absolute",
-                      right: "10px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "4px",
-                      display: "flex",
-                      alignItems: "center",
-                      color: "#94A3B8",
-                    }}
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 14 14"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    >
-                      <line x1="1" y1="1" x2="13" y2="13" />
-                      <line x1="13" y1="1" x2="1" y2="13" />
-                    </svg>
-                  </button>
-                )}
-                {showSatuanSuggestions && satuanQuery.length > 0 && (
-                  <div style={dropdownPanelStyle}>
-                    {filteredUnits.length === 0 ? (
-                      <div
-                        style={{
-                          padding: "12px 20px",
-                          fontSize: "13px",
-                          color: "#94A3B8",
-                          fontFamily: "'Inter', sans-serif",
-                          textAlign: "center",
-                        }}
-                      >
-                        Tidak ada hasil
-                      </div>
-                    ) : (
-                      filteredUnits.map((u) => {
-                        const active = satuan === u.code
-                        const label = u.name ? `${u.code} — ${u.name}` : u.code
-                        return (
-                          <button
-                            key={u.id}
-                            type="button"
-                            style={dropdownItemStyle}
-                            onClick={() => {
-                              setSatuan(u.code)
-                              setSatuanQuery(u.code)
-                              setShowSatuanSuggestions(false)
-                            }}
-                          >
-                            <span style={dropdownLabelStyle(active)}>{label}</span>
-                            {active && <CheckIcon />}
-                          </button>
-                        )
-                      })
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Status Produk */}
-            <div
-              className="ca-field"
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <label className="ca-label" style={{ margin: 0 }}>
-                Status Produk
-              </label>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "12px",
-                    color: aktif ? "#630ED4" : "#9CA3AF",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  {aktif ? "AKTIF" : "NONAKTIF"}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setAktif((a) => !a)}
-                  role="switch"
-                  aria-checked={aktif}
-                  style={{
-                    width: "40px",
-                    height: "22px",
-                    borderRadius: "11px",
-                    border: "none",
-                    background: aktif ? "#630ED4" : "#D1D5DB",
-                    cursor: "pointer",
-                    position: "relative",
-                    transition: "background 0.2s",
-                    flexShrink: 0,
-                  }}
-                >
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: "3px",
-                      left: aktif ? "21px" : "3px",
-                      width: "16px",
-                      height: "16px",
-                      borderRadius: "50%",
-                      background: "#FFFFFF",
-                      transition: "left 0.2s",
-                    }}
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="ca-footer" style={{ padding: "16px 24px" }}>
-          {submitError && (
-            <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>{submitError}</span>
-          )}
+    <Modal
+      title="Tambah Produk Baru"
+      onClose={handleCancel}
+      footer={
+        <>
+          {submitError && <span className="flex-1 text-[12px] text-error">{submitError}</span>}
           <button
             type="button"
-            className="ca-btn-cancel"
+            className={ui.modalCancel}
             onClick={handleCancel}
             disabled={createItem.isPending}
-            style={{ padding: "8px 18px", fontSize: "13px" }}
           >
             Batal
           </button>
           <button
             type="button"
-            className="ca-btn-submit"
+            className={ui.modalSubmit}
             onClick={handleSubmit}
             disabled={!isValid || createItem.isPending}
-            style={{
-              padding: "8px 22px",
-              fontSize: "13px",
-              opacity: !isValid || createItem.isPending ? 0.5 : 1,
-              cursor: !isValid || createItem.isPending ? "not-allowed" : "pointer",
-            }}
           >
             {createItem.isPending ? "Menyimpan..." : "Tambahkan"}
           </button>
+        </>
+      }
+    >
+      <div className={ui.modalSection}>
+        {/* Nama Produk */}
+        <div className={ui.field}>
+          <label className={ui.fieldLabel}>
+            Nama Produk <span className="text-primary-700">*</span>
+          </label>
+          <input
+            className={`${ui.fieldInput} font-sans`}
+            type="text"
+            placeholder="Masukkan nama produk..."
+            value={nama}
+            onChange={(e) => setNama(e.target.value)}
+          />
+        </div>
+
+        {/* Kode IMPA */}
+        <div className={ui.field}>
+          <label className={ui.fieldLabel}>Kode IMPA</label>
+          <input
+            className={`${ui.fieldInput} font-sans`}
+            type="text"
+            inputMode="numeric"
+            placeholder="Contoh: 330212"
+            value={kode}
+            onChange={(e) => setKode(e.target.value.replace(/\D/g, ""))}
+          />
+        </div>
+
+        {/* Satuan Default — typeahead */}
+        <div className={ui.field}>
+          <label className={ui.fieldLabel}>Satuan Default</label>
+          <div className="relative">
+            <input
+              className={`${ui.fieldInput} font-sans ${satuanQuery ? "pr-9" : ""}`}
+              type="text"
+              placeholder="Ketik nama satuan..."
+              value={satuanQuery}
+              onChange={(e) => {
+                setSatuanQuery(e.target.value)
+                setShowSatuanSuggestions(true)
+                if (satuan) setSatuan("")
+              }}
+              onFocus={() => {
+                if (satuanQuery.length > 0 && !satuan) setShowSatuanSuggestions(true)
+              }}
+            />
+            {satuanQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSatuanQuery("")
+                  setSatuan("")
+                  setShowSatuanSuggestions(false)
+                }}
+                title="Bersihkan"
+                className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-[#94A3B8]"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <line x1="1" y1="1" x2="13" y2="13" />
+                  <line x1="13" y1="1" x2="1" y2="13" />
+                </svg>
+              </button>
+            )}
+            {showSatuanSuggestions && satuanQuery.length > 0 && (
+              <div style={dropdownPanelStyle}>
+                {filteredUnits.length === 0 ? (
+                  <div className="px-5 py-3 text-center text-[13px] text-[#94A3B8]">
+                    Tidak ada hasil
+                  </div>
+                ) : (
+                  filteredUnits.map((u) => {
+                    const active = satuan === u.code
+                    const label = u.name ? `${u.code} — ${u.name}` : u.code
+                    return (
+                      <button
+                        key={u.id}
+                        type="button"
+                        style={dropdownItemStyle}
+                        onClick={() => {
+                          setSatuan(u.code)
+                          setSatuanQuery(u.code)
+                          setShowSatuanSuggestions(false)
+                        }}
+                      >
+                        <span style={dropdownLabelStyle(active)}>{label}</span>
+                        {active && <CheckIcon />}
+                      </button>
+                    )
+                  })
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Status Produk */}
+        <div className="flex flex-row items-center justify-between gap-2">
+          <label className={ui.fieldLabel}>Status Produk</label>
+          <div className="flex items-center gap-2.5">
+            <span
+              className={`text-[12px] font-bold uppercase tracking-[0.04em] ${
+                aktif ? "text-primary-700" : "text-[#9CA3AF]"
+              }`}
+            >
+              {aktif ? "AKTIF" : "NONAKTIF"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setAktif((a) => !a)}
+              role="switch"
+              aria-checked={aktif}
+              className={`relative h-[22px] w-10 flex-shrink-0 rounded-[11px] transition-colors duration-200 ${
+                aktif ? "bg-primary-700" : "bg-[#D1D5DB]"
+              }`}
+            >
+              <span
+                className={`absolute top-[3px] h-4 w-4 rounded-full bg-white transition-[left] duration-200 ${
+                  aktif ? "left-[21px]" : "left-[3px]"
+                }`}
+              />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }

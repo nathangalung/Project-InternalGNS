@@ -1,3 +1,5 @@
+import { ui } from "@/lib/ui"
+
 interface FileCardProps {
   fileName?: string
   fileSize?: number
@@ -36,31 +38,14 @@ export default function FileCard({
 
   return (
     <div>
-      <h2 className="qe-section-title" style={{ marginBottom: "12px" }}>
+      <h2 className="mb-3 text-base font-bold leading-6 tracking-tight text-dark-900">
         Berkas Purchase Order
       </h2>
-      <div
-        style={{
-          background: "#FFFFFF",
-          border: "1px solid rgba(204,195,216,0.2)",
-          borderRadius: "12px",
-          padding: "20px 24px",
-          display: "flex",
-          alignItems: "center",
-          gap: "16px",
-        }}
-      >
+      <div className="flex items-center gap-4 rounded-lg border border-[rgba(204,195,216,0.2)] bg-white px-6 py-5">
         <div
-          style={{
-            width: "48px",
-            height: "48px",
-            borderRadius: "12px",
-            background: hasFile ? "rgba(99,14,212,0.12)" : "#F1F5F9",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${
+            hasFile ? "bg-[rgba(99,14,212,0.12)]" : "bg-dark-100"
+          }`}
         >
           <svg
             width="22"
@@ -78,34 +63,23 @@ export default function FileCard({
             <line x1="16" y1="17" x2="8" y2="17" />
           </svg>
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="min-w-0 flex-1">
           <div
-            style={{
-              fontSize: "14px",
-              fontWeight: 700,
-              color: hasFile ? "#111827" : "#94A3B8",
-              fontStyle: hasFile ? "normal" : "italic",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
+            className={`overflow-hidden text-ellipsis whitespace-nowrap text-sm font-bold ${
+              hasFile ? "not-italic text-[#111827]" : "italic text-dark-400"
+            }`}
           >
             {hasFile ? fileName : "Belum ada berkas PO yang diunggah"}
           </div>
           {hasFile && (
-            <div style={{ marginTop: "4px", fontSize: "12px", color: "#6B7280" }}>
+            <div className="mt-1 text-xs text-[#6B7280]">
               {formatSize(fileSize)}
               {uploadedAt && <> &middot; Diunggah {formatUploadedAt(uploadedAt)}</>}
             </div>
           )}
         </div>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            type="button"
-            onClick={onUpload}
-            className="btn-admin-outline"
-            style={{ minWidth: "120px", justifyContent: "center" }}
-          >
+        <div className="flex gap-2.5">
+          <button type="button" onClick={onUpload} className={`${ui.btnOutline} min-w-[120px]`}>
             <svg
               width="14"
               height="14"
@@ -123,12 +97,7 @@ export default function FileCard({
             {hasFile ? "Ganti Berkas" : "Unggah Berkas"}
           </button>
           {hasFile && (
-            <button
-              type="button"
-              onClick={onDownload}
-              className="btn-admin-primary"
-              style={{ minWidth: "120px", justifyContent: "center" }}
-            >
+            <button type="button" onClick={onDownload} className={`${ui.btnPrimary} min-w-[120px]`}>
               <svg
                 width="14"
                 height="14"

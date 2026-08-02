@@ -1,16 +1,18 @@
-import type { Page } from "@/lib/page"
+import { useNavigate } from "@tanstack/react-router"
+import { ui } from "@/lib/ui"
 
 interface PageHeaderProps {
-  onNavigate: (page: Page) => void
+  onExport: () => void
 }
 
 // Title bar plus three actions.
-export default function PageHeader({ onNavigate }: PageHeaderProps) {
+export default function PageHeader({ onExport }: PageHeaderProps) {
+  const navigate = useNavigate()
   return (
     <div className="page-header">
       <h1 className="page-title">Daftar Quotation</h1>
       <div className="page-actions">
-        <button className="btn-admin-outline" style={{ width: "160px", justifyContent: "center" }}>
+        <button type="button" className={`${ui.btnOutline} w-[160px]`} onClick={onExport}>
           <svg
             width="14"
             height="14"
@@ -25,12 +27,12 @@ export default function PageHeader({ onNavigate }: PageHeaderProps) {
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          Ekspor PDF
+          Ekspor Excel
         </button>
         <button
-          className="btn-admin-primary"
-          onClick={() => onNavigate("quotation-add" as Page)}
-          style={{ width: "180px", justifyContent: "center" }}
+          type="button"
+          className={`${ui.btnPrimary} w-[180px]`}
+          onClick={() => void navigate({ to: "/quotations/add" })}
         >
           <svg
             width="14"

@@ -1,12 +1,9 @@
 /* PT Global Niaga Sakti design tokens. */
 
-/* Google Fonts import. */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* ── CSS Custom Properties ── */
+/* CSS Custom Properties */
 :root {
 
-  /* ─── Colors ─── */
+  /* Colors */
 
   /* Primary — Purple */
   --color-primary-50:  #F5F3FF;
@@ -15,8 +12,8 @@
   --color-primary-300: #C4B5FD;
   --color-primary-400: #A78BFA;
   --color-primary-500: #8B5CF6;
-  --color-primary-600: #7C3AED;   /* ← main */
-  --color-primary-700: #6D28D9;
+  --color-primary-600: #7C3AED;   /* main */
+  --color-primary-700: #630ED4;   /* brand emphasis (matches inline accents) */
   --color-primary-800: #5B21B6;
   --color-primary-900: #4C1D95;
 
@@ -30,7 +27,7 @@
   --color-dark-600: #475569;
   --color-dark-700: #334155;
   --color-dark-800: #1E293B;
-  --color-dark-900: #0F172A;      /* ← main */
+  --color-dark-900: #0F172A;      /* main */
 
   /* Accent — Gold */
   --color-accent-50:  #FFFBEB;
@@ -38,14 +35,14 @@
   --color-accent-200: #FDE68A;
   --color-accent-300: #FCD34D;
   --color-accent-400: #FBBF24;
-  --color-accent-500: #FFD700;    /* ← main */
+  --color-accent-500: #FFD700;    /* main */
   --color-accent-600: #D97706;
   --color-accent-700: #B45309;
   --color-accent-800: #92400E;
   --color-accent-900: #78350F;
 
   /* Light — Snow */
-  --color-light:      #F8FAFC;    /* ← main */
+  --color-light:      #F8FAFC;    /* main */
 
   /* Neutral / UI */
   --color-bg:         #FFFFFF;
@@ -71,12 +68,12 @@
   --status-ditolak-color:   #B91C1C;
 
 
-  /* ─── Typography — Font Family ─── */
+  /* Typography — Font Family */
 
   --font-family:      'Inter', system-ui, -apple-system, sans-serif;
 
 
-  /* ─── Typography — Font Weights ─── */
+  /* Typography — Font Weights */
 
   --font-regular:     400;
   --font-medium:      500;
@@ -84,10 +81,9 @@
   --font-bold:        700;
 
 
-  /* ─── Typography — Font Sizes & Line Heights ─── */
+  /* Typography — Font Sizes & Line Heights */
 
-  /*  Name              Size     Line-Height  Weight         Use-case
-      ─────────────────────────────────────────────────────────────────── */
+  /*  Name              Size     Line-Height  Weight         Use-case */
   /* Display            36px     40px         Bold           Hero / splash       */
   --text-display:       2.25rem;
   --leading-display:    2.5rem;
@@ -125,7 +121,7 @@
   --leading-overline:   1rem;
 
 
-  /* ─── Spacing (base 4px) ─── */
+  /* Spacing (base 4px) */
 
   --space-1:  0.25rem;   /*  4px */
   --space-2:  0.5rem;    /*  8px */
@@ -139,7 +135,7 @@
   --space-16: 4rem;      /* 64px */
 
 
-  /* ─── Border Radius ─── */
+  /* Border Radius */
 
   --radius-sm:   0.375rem;  /*  6px */
   --radius-md:   0.5rem;    /*  8px */
@@ -148,7 +144,7 @@
   --radius-full: 9999px;
 
 
-  /* ─── Shadows ─── */
+  /* Shadows */
 
   --shadow-sm:    0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md:    0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -158,7 +154,7 @@
   --shadow-focus-primary: 0 0 0 3px rgba(124, 58, 237, 0.12);
 
 
-  /* ─── Transitions ─── */
+  /* Transitions */
 
   --transition-fast:   150ms ease;
   --transition-base:   200ms ease;
@@ -166,7 +162,7 @@
 }
 
 
-/* ── Base Reset & Defaults ── */
+/* Base Reset & Defaults */
 
 *,
 *::before,
@@ -198,11 +194,11 @@ body {
   line-height: var(--leading-body-lg);
   color: var(--color-text);
   background-color: var(--color-bg);
-  min-width: 960px;
+  min-width: 320px;
 }
 
 
-/* ── Typography Utility Classes ── */
+/* Typography Utility Classes */
 
 .text-display {
   font-size: var(--text-display);
@@ -263,7 +259,7 @@ body {
 }
 
 
-/* ── Buttons ── */
+/* Buttons */
 
 .btn {
   display: inline-flex;
@@ -317,7 +313,7 @@ body {
 }
 
 
-/* ── Inputs ── */
+/* Inputs */
 
 .form-input {
   width: 100%;
@@ -347,7 +343,7 @@ body {
 }
 
 
-/* ── Labels ── */
+/* Labels */
 
 .form-label {
   display: block;
@@ -361,7 +357,7 @@ body {
 }
 
 
-/* ── Input Icon ── */
+/* Input Icon */
 
 .input-icon {
   position: absolute;

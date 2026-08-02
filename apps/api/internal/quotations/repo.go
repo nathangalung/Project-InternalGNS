@@ -3,14 +3,13 @@ package quotations
 import (
 	"context"
 	"errors"
-	"strconv"
-	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	dbpkg "github.com/nathangalung/internalgns/apps/api/internal/shared/db"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 )
 
 // Executor aliased for backwards compat.
@@ -26,8 +25,10 @@ func NewRepo(db Executor, store queries.Store) *Repo {
 }
 
 var (
-	ErrNotFound        = errors.New("not found")
-	ErrVersionMismatch = errors.New("quotation version mismatch")
+	ErrNotFound          = errors.New("not found")
+	ErrVersionMismatch   = errors.New("quotation version mismatch")
+	ErrUnpricedProducts  = errors.New("product lines without a selling price")
+	ErrContactNotAllowed = errors.New("contact not allowed")
 )
 
 // Filter and sort params.
@@ -44,75 +45,63 @@ type ListFilter struct {
 	Offset   int
 }
 
+// sortable is the closed set of quotation sort keys.
+var sortable = listq.Whitelist{
+	Default: "created_at",
+	Columns: map[string]listq.Column{
+		"createdAt":    {Expr: "q.created_at", Dir: listq.Desc},
+		"created_at":   {Expr: "q.created_at", Dir: listq.Desc},
+		"grandTotal":   {Expr: "q.grand_total", Dir: listq.Desc},
+		"grand_total":  {Expr: "q.grand_total", Dir: listq.Desc},
+		"total":        {Expr: "q.grand_total", Dir: listq.Desc},
+		"quotationNo":  {Expr: "q.quotation_no", Dir: listq.Desc},
+		"quotation_no": {Expr: "q.quotation_no", Dir: listq.Desc},
+		"version":      {Expr: "q.version", Dir: listq.Desc},
+	},
+}
+
+// tiebreak keeps paging stable when the sort key ties.
+var tiebreak = listq.Column{Expr: "q.id", Dir: listq.Desc}
+
 // List rows with cost total + matching count.
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
-	sortBy := "q.created_at"
-	switch f.SortBy {
-	case "grand_total", "total":
-		sortBy = "q.grand_total"
-	case "quotation_no":
-		sortBy = "q.quotation_no"
-	case "version":
-		sortBy = "q.version"
-	}
-	sortDir := "DESC"
-	if strings.EqualFold(f.SortDir, "asc") {
-		sortDir = "ASC"
-	}
-
-	args := []any{}
-	addArg := func(v any) string {
-		args = append(args, v)
-		return "$" + strconv.Itoa(len(args))
-	}
-	where := strings.Builder{}
+	c := listq.New()
 	if f.Q != "" {
-		p := addArg("%" + f.Q + "%")
-		where.WriteString(" AND (q.quotation_no ILIKE " + p + " OR q.company_client_name ILIKE " + p + ")")
+		p := c.Arg("%" + f.Q + "%")
+		c.And("(q.quotation_no ILIKE " + p + " OR q.company_client_name ILIKE " + p + ")")
 	}
 	if len(f.Statuses) > 0 {
-		p := addArg(f.Statuses)
-		where.WriteString(" AND q.status = ANY(" + p + ")")
+		p := c.Arg(f.Statuses)
+		c.And("q.status = ANY(" + p + ")")
 	}
 	if f.DateFrom != nil {
-		p := addArg(*f.DateFrom)
-		where.WriteString(" AND q.created_at >= " + p + "::date")
+		p := c.Arg(*f.DateFrom)
+		c.And("q.created_at >= " + p + "::date")
 	}
 	if f.DateTo != nil {
-		p := addArg(*f.DateTo)
-		where.WriteString(" AND q.created_at < (" + p + "::date + INTERVAL '1 day')")
+		p := c.Arg(*f.DateTo)
+		c.And("q.created_at < (" + p + "::date + INTERVAL '1 day')")
 	}
 	if f.MinTotal != nil {
-		p := addArg(*f.MinTotal)
-		where.WriteString(" AND q.grand_total >= " + p + "::numeric")
+		p := c.Arg(*f.MinTotal)
+		c.And("q.grand_total >= " + p + "::numeric")
 	}
 	if f.MaxTotal != nil {
-		p := addArg(*f.MaxTotal)
-		where.WriteString(" AND q.grand_total <= " + p + "::numeric")
+		p := c.Arg(*f.MaxTotal)
+		c.And("q.grand_total <= " + p + "::numeric")
 	}
 
 	var out ListResult
-	countSQL := r.store.Get("quotations.list_count_base") + where.String()
-	if err := r.db.QueryRow(ctx, countSQL, args...).Scan(&out.Total); err != nil {
+	countSQL, countArgs := c.Count(r.store.Get("quotations.list_count_base"))
+	if err := r.db.QueryRow(ctx, countSQL, countArgs...).Scan(&out.Total); err != nil {
 		return out, err
 	}
 
-	dataArgs := append([]any{}, args...)
-	dataAdd := func(v any) string {
-		dataArgs = append(dataArgs, v)
-		return "$" + strconv.Itoa(len(dataArgs))
-	}
-	limit := f.Limit
-	if limit <= 0 {
-		limit = 50
-	}
-	if limit > 200 {
-		limit = 200
-	}
-	dataSQL := r.store.Get("quotations.list_base") + where.String() +
-		" ORDER BY " + sortBy + " " + sortDir +
-		" LIMIT " + dataAdd(limit) +
-		" OFFSET " + dataAdd(f.Offset)
+	dataSQL, dataArgs := c.Data(
+		r.store.Get("quotations.list_base"),
+		listq.OrderBy(sortable, f.SortBy, f.SortDir, tiebreak),
+		listq.Page(f.Limit, f.Offset),
+	)
 
 	rows, err := r.db.Query(ctx, dataSQL, dataArgs...)
 	if err != nil {
@@ -245,12 +234,36 @@ func (r *Repo) Update(
 	return newVersion, nil
 }
 
-// ChangeStatus calls fn_change_quotation_status atomically.
+// ChangeStatus calls fn_change_quotation_status atomically. Finalizing
+// (sent/accepted) requires every product priced; that guard runs inside the
+// function under its row lock and surfaces as SQLSTATE P0100.
 func (r *Repo) ChangeStatus(ctx context.Context, id int64, status string, note *string, userID int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("quotations.fn_change_status"),
 		id, status, userID, note,
 	)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "P0100" {
+			return ErrUnpricedProducts
+		}
+	}
 	return err
+}
+
+// UpdateContact updates contact snapshot.
+func (r *Repo) UpdateContact(ctx context.Context, id, contactID, userID int64) error {
+	var result string
+	err := r.db.QueryRow(ctx, r.store.Get("quotations.update_contact"), id, contactID, userID).Scan(&result)
+	if err != nil {
+		return err
+	}
+	switch result {
+	case "not_found":
+		return ErrNotFound
+	case "contact_invalid":
+		return ErrContactNotAllowed
+	}
+	return nil
 }
 
 // ListRevisions returns the full parent/child chain ordered by version.

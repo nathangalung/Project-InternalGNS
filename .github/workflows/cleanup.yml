@@ -36,12 +36,23 @@ jobs:
       MINIO_USE_SSL: ${{ secrets.PROD_MINIO_USE_SSL }}
       PURGE: ${{ github.event.inputs.purge }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: apps/api/go.mod
           cache-dependency-path: apps/api/go.sum
+      - name: check credentials
+        id: creds
+        run: |
+          if [ -z "$DATABASE_URL" ] || [ -z "$JWT_SECRET" ] || [ -z "$MINIO_ENDPOINT" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::PROD_DATABASE_URL, PROD_JWT_SECRET or PROD_MINIO_ENDPOINT is unset, skipping the sweep. See docs/deploy_vps.md."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: sweep
+        if: steps.creds.outputs.configured == 'true'
         run: |
           if [ "$PURGE" = "true" ] && [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             go run ./cmd/orphan-blobs --dry-run=false

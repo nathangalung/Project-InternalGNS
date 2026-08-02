@@ -2,13 +2,17 @@ package items_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -131,6 +135,48 @@ func TestHandler_SearchAdvanced(t *testing.T) {
 		prev, curr := body.Hits[i-1], body.Hits[i]
 		assert.True(t, tierGE(prev.Tier, curr.Tier),
 			"tier order broken: %s before %s", prev.Tier, curr.Tier)
+	}
+}
+
+// isActive on a search hit must be the catalog value, so it has to agree with
+// what GET /items/{id} reports for the same item.
+func TestHandler_SearchAdvanced_IsActiveMatchesCatalog(t *testing.T) {
+	srv := newSrv(t)
+	pool := testutil.Pool(t)
+	ctx := context.Background()
+
+	// Create the item the search must find. Relying on seed data made this pass
+	// on a developer machine and fail on a freshly migrated CI database.
+	name := fmt.Sprintf("Kiraflux Bearing %d", time.Now().UnixNano())
+	t.Cleanup(func() {
+		_, _ = pool.Exec(ctx, `DELETE FROM items WHERE name = $1`, name)
+	})
+	created := doJSON(t, srv, http.MethodPost, "/items", map[string]any{"name": name})
+	require.Equal(t, http.StatusCreated, created.StatusCode)
+	created.Body.Close()
+
+	res := doJSON(t, srv, http.MethodGet, "/items/search-advanced?q="+url.QueryEscape(name)+"&limit=5", nil)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+
+	// Decode raw so a missing isActive key is caught, not defaulted to false.
+	var body struct {
+		Hits []map[string]any `json:"hits"`
+	}
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&body))
+	require.NotEmpty(t, body.Hits, "the item created above must be found")
+
+	for _, hit := range body.Hits {
+		require.Contains(t, hit, "isActive", "hit must expose isActive")
+		id := int64(hit["id"].(float64))
+
+		one := doJSON(t, srv, http.MethodGet, "/items/"+strconv.FormatInt(id, 10), nil)
+		var item items.Item
+		require.NoError(t, json.NewDecoder(one.Body).Decode(&item))
+		one.Body.Close()
+
+		assert.Equal(t, item.IsActive, hit["isActive"],
+			"item %d: search says isActive=%v, catalog says %v", id, hit["isActive"], item.IsActive)
 	}
 }
 
@@ -334,6 +380,17 @@ func TestHandler_MatchRows_Empty(t *testing.T) {
 	assert.Empty(t, out.Rows)
 }
 
+func TestHandler_MatchRows_TooManyRows(t *testing.T) {
+	srv := newSrv(t)
+	rows := make([]items.MatchRowInput, 501)
+	for i := range rows {
+		rows[i] = items.MatchRowInput{Name: "x"}
+	}
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", items.MatchRowsRequest{Rows: rows})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+}
+
 func TestHandler_MatchRows_IMPAExact(t *testing.T) {
 	srv := newSrv(t)
 	body := items.MatchRowsRequest{
@@ -433,4 +490,119 @@ func TestHandler_UpdateImage_NotFound(t *testing.T) {
 		items.UpdateImageRequest{ObjectKey: "items/1/x.png"})
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+}
+
+// Import auto-create: unmatched rows become new catalog products, empty price.
+func TestHandler_MatchRows_AutoCreate_CreatesProduct(t *testing.T) {
+	srv := newSrv(t)
+	name := fmt.Sprintf("AutoCreate New Product %d", time.Now().UnixNano())
+	body := items.MatchRowsRequest{
+		AutoCreate: true,
+		MinScore:   0.99, // isolate the no-match -> create path
+		Rows: []items.MatchRowInput{
+			{IMPACode: "", Name: name, Qty: 2, Unit: "PCS"},
+		},
+	}
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", body)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var out items.MatchRowsResponse
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&out))
+	require.Len(t, out.Rows, 1)
+	require.NotNil(t, out.Rows[0].Matched, "unmatched row should be auto-created")
+	assert.Equal(t, "CREATED", out.Rows[0].Source)
+	assert.Greater(t, out.Rows[0].Matched.ItemID, int64(0))
+	assert.Nil(t, out.Rows[0].Matched.CostPrice, "new product has empty price")
+}
+
+func TestHandler_MatchRows_AutoCreate_DedupsSameName(t *testing.T) {
+	srv := newSrv(t)
+	base := fmt.Sprintf("Duplicate Import Item %d", time.Now().UnixNano())
+	body := items.MatchRowsRequest{
+		AutoCreate: true,
+		MinScore:   0.99, // first row creates; second dedups within the batch
+		Rows: []items.MatchRowInput{
+			{Name: base, Qty: 1, Unit: "PCS"},
+			{Name: strings.ToLower(base) + " ", Qty: 3, Unit: "PCS"},
+		},
+	}
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", body)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var out items.MatchRowsResponse
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&out))
+	require.Len(t, out.Rows, 2)
+	require.NotNil(t, out.Rows[0].Matched)
+	require.NotNil(t, out.Rows[1].Matched)
+	assert.Equal(t, out.Rows[0].Matched.ItemID, out.Rows[1].Matched.ItemID,
+		"same normalized name should map to one product")
+}
+
+func TestHandler_MatchRows_NoAutoCreate_LeavesNil(t *testing.T) {
+	srv := newSrv(t)
+	body := items.MatchRowsRequest{
+		Rows: []items.MatchRowInput{
+			{Name: "Totally Unknown Item QQQ-0000-NoCreate", Qty: 1, Unit: "PCS"},
+		},
+	}
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", body)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var out items.MatchRowsResponse
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&out))
+	require.Len(t, out.Rows, 1)
+	assert.Nil(t, out.Rows[0].Matched, "without autoCreate, unmatched stays nil")
+	assert.Equal(t, "NONE", out.Rows[0].Source)
+}
+
+// A batch that fails mid-loop must persist nothing, so retrying the same import
+// cannot duplicate the rows created before the failure. The oversized name
+// overflows items.name (VARCHAR(500)) and fails the third insert.
+func TestHandler_MatchRows_FailedBatchRollsBack(t *testing.T) {
+	srv := newSrv(t)
+	pool := testutil.Pool(t)
+	ctx := context.Background()
+
+	stamp := time.Now().UnixNano()
+	first := fmt.Sprintf("Atomic Import One %d", stamp)
+	second := fmt.Sprintf("Atomic Import Two %d", stamp)
+	t.Cleanup(func() {
+		_, _ = pool.Exec(ctx, `DELETE FROM items WHERE name IN ($1, $2)`, first, second)
+	})
+
+	countCreated := func() int {
+		var n int
+		require.NoError(t, pool.QueryRow(ctx,
+			`SELECT count(*) FROM items WHERE name IN ($1, $2)`, first, second).Scan(&n))
+		return n
+	}
+
+	failing := items.MatchRowsRequest{
+		AutoCreate: true,
+		MinScore:   0.99, // isolate the no-match -> create path
+		Rows: []items.MatchRowInput{
+			{Name: first, Qty: 1, Unit: "PCS"},
+			{Name: second, Qty: 1, Unit: "PCS"},
+			{Name: strings.Repeat("X", 600), Qty: 1, Unit: "PCS"},
+		},
+	}
+
+	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", failing)
+	res.Body.Close()
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode, "oversized row must fail the batch")
+	require.Equal(t, 0, countCreated(), "a failed batch must not leave earlier rows behind")
+
+	// Retrying the same broken batch stays at zero, never doubling.
+	res = doJSON(t, srv, http.MethodPost, "/items/match-rows", failing)
+	res.Body.Close()
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode)
+	require.Equal(t, 0, countCreated(), "retry of a failed batch must not duplicate")
+
+	// Retry without the bad row creates each product exactly once.
+	fixed := failing
+	fixed.Rows = failing.Rows[:2]
+	res = doJSON(t, srv, http.MethodPost, "/items/match-rows", fixed)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, 2, countCreated(), "clean retry creates each product once")
 }

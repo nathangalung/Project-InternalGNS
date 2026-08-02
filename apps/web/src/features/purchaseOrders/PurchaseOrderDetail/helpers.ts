@@ -19,9 +19,17 @@ export const PO_STATUS_CONFIG: Record<PoStatus, { bg: string; color: string }> =
 
 export const PO_STATUS_ORDER: PoStatus[] = ["PENDING", "UPLOADED", "ON_PROGRESS", "DELIVERED"]
 
+// Allowed manual transitions; DELIVERED is terminal.
+export const PO_TRANSITIONS: Record<PoStatus, PoStatus[]> = {
+  PENDING: ["UPLOADED"],
+  UPLOADED: ["ON_PROGRESS", "PENDING"],
+  ON_PROGRESS: ["DELIVERED", "UPLOADED"],
+  DELIVERED: [],
+}
+
 export function poNumberFromQuotationNo(no: string): string {
   if (no.startsWith("Q-")) return `PO-${no.slice(2)}`
-  if (no.startsWith("Q")) return `PO${no.slice(1)}`
+  if (no.startsWith("Q")) return `PO-${no.slice(1)}`
   return `PO-${no}`
 }
 

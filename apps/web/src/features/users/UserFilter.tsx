@@ -1,5 +1,7 @@
 import { useState } from "react"
 import { chipStyle, type StatusFilterValue } from "@/components/shared/filter-styles"
+import Modal from "@/components/shared/Modal"
+import { ui } from "@/lib/ui"
 import type { Role } from "@/types/api"
 
 export type RoleFilter = "all" | Role
@@ -31,68 +33,11 @@ export default function UserFilter({ onClose, onApply, initialValues }: UserFilt
   const dirty = role !== "all" || status !== "all"
 
   return (
-    <div className="ca-overlay" onClick={onClose}>
-      <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="ca-header">
-          <h2 className="ca-title">Filter Pengguna</h2>
-          <button className="ca-close-btn" onClick={onClose} title="Tutup">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <line x1="1" y1="1" x2="13" y2="13" />
-              <line x1="13" y1="1" x2="1" y2="13" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="ca-body">
-          <div className="ca-section">
-            <div className="ca-section-heading">Peran</div>
-            <div className="ca-field">
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {ROLE_OPTIONS.map((o) => (
-                  <button
-                    key={o.value}
-                    type="button"
-                    onClick={() => setRole(o.value)}
-                    style={chipStyle(role === o.value)}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="ca-section">
-            <div className="ca-section-heading">Status</div>
-            <div className="ca-field">
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {STATUS_OPTIONS.map((o) => (
-                  <button
-                    key={o.value}
-                    type="button"
-                    onClick={() => setStatus(o.value)}
-                    style={chipStyle(status === o.value)}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div
-          className="ca-footer"
-          style={{ justifyContent: "space-between", padding: "16px 24px" }}
-        >
+    <Modal
+      title="Filter Pengguna"
+      onClose={onClose}
+      footer={
+        <>
           <button
             type="button"
             onClick={() => {
@@ -100,44 +45,65 @@ export default function UserFilter({ onClose, onApply, initialValues }: UserFilt
               setStatus("all")
             }}
             disabled={!dirty}
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: dirty ? "pointer" : "default",
-              fontFamily: "'Inter', sans-serif",
-              fontWeight: 500,
-              fontSize: "13px",
-              color: dirty ? "#630ED4" : "#CBD5E1",
-              padding: 0,
-              textDecoration: dirty ? "underline" : "none",
-              textUnderlineOffset: "3px",
-            }}
+            className={`mr-auto p-0 text-[13px] font-medium underline-offset-[3px] ${
+              dirty
+                ? "cursor-pointer text-primary-700 underline"
+                : "cursor-default text-dark-300 no-underline"
+            }`}
           >
             Hapus Filter
           </button>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button
-              type="button"
-              className="ca-btn-cancel"
-              onClick={onClose}
-              style={{ padding: "8px 18px", fontSize: "13px" }}
-            >
-              Batal
-            </button>
-            <button
-              type="button"
-              className="ca-btn-submit"
-              onClick={() => {
-                onApply({ role, status })
-                onClose()
-              }}
-              style={{ padding: "8px 22px", fontSize: "13px" }}
-            >
-              Terapkan
-            </button>
+          <button type="button" className={ui.modalCancel} onClick={onClose}>
+            Batal
+          </button>
+          <button
+            type="button"
+            className={ui.modalSubmit}
+            onClick={() => {
+              onApply({ role, status })
+              onClose()
+            }}
+          >
+            Terapkan
+          </button>
+        </>
+      }
+    >
+      <div className={ui.modalSection}>
+        <div className={ui.modalSectionHeading}>Peran</div>
+        <div className={ui.field}>
+          <div className="flex flex-wrap gap-2">
+            {ROLE_OPTIONS.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => setRole(o.value)}
+                style={chipStyle(role === o.value)}
+              >
+                {o.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
-    </div>
+
+      <div className={ui.modalSection}>
+        <div className={ui.modalSectionHeading}>Status</div>
+        <div className={ui.field}>
+          <div className="flex flex-wrap gap-2">
+            {STATUS_OPTIONS.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => setStatus(o.value)}
+                style={chipStyle(status === o.value)}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Modal>
   )
 }

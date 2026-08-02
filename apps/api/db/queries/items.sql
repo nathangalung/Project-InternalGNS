@@ -16,8 +16,8 @@ FROM items
 WHERE id = $1;
 
 -- name: items.create
-INSERT INTO items (name, impa_code, default_unit_id, description, created_by, updated_by)
-VALUES ($1, $2, $3, $4, $5, $5)
+INSERT INTO items (name, impa_code, default_unit_id, description, is_active, created_by, updated_by)
+VALUES ($1, $2, $3, $4, COALESCE($5, TRUE), $6, $6)
 RETURNING id, name, impa_code, default_unit_id, description,
           is_active, created_at, updated_at, image_object_key;
 
@@ -70,6 +70,16 @@ JOIN vendors v ON v.id = ins.vendor_id;
 
 -- name: items.search
 SELECT * FROM fn_search_items($1, $2, $3);
+
+-- name: items.active_flags_by_ids
+-- Advanced-search enrichment: real is_active plus catalog identity per merged
+-- hit. fn_search_items only returns active items, but the vendor-offer and
+-- request-history layers can surface a deactivated item (and carry no name),
+-- so we backfill name/impa/unit for hits those layers produced.
+-- $1=item ids
+SELECT id, is_active, name, impa_code, default_unit_id
+FROM items
+WHERE id = ANY($1);
 
 -- name: items.match_request
 SELECT * FROM fn_match_request($1, $2);
@@ -151,7 +161,10 @@ WITH q AS (
     CROSS JOIN q
     WHERE vp.is_active = TRUE
       AND (
-        COALESCE(lower(vp.vendor_sku),'') LIKE '%'||q.nq||'%'
+        -- Bare lower(vendor_sku) so idx_vendor_products_sku_trgm stays
+        -- reachable; COALESCE would hide the indexed expression. NULL LIKE
+        -- yields NULL, which WHERE treats as no match, same as '' did.
+        lower(vp.vendor_sku) LIKE '%'||q.nq||'%'
         OR lower(v.name) LIKE '%'||q.nq||'%'
         OR similarity(COALESCE(vp.vendor_sku,''), q.nq) > 0.30
         OR word_similarity(q.nq, lower(v.name))         > 0.40

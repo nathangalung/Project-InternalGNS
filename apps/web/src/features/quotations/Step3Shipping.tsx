@@ -1,4 +1,5 @@
-import type React from "react"
+import type { CSSProperties } from "react"
+import { qe, qep } from "./wizard-styles"
 
 interface Step3ShippingProps {
   shippingAddress: string
@@ -9,9 +10,14 @@ interface Step3ShippingProps {
   setShippingCost: (s: string) => void
   isAlamatFilled: boolean
   isWaktuFilled: boolean
-  disabledStyle: React.CSSProperties
+  // Accepted for legacy callers; the disabled look now comes from utilities.
+  disabledStyle?: CSSProperties
   formatRp: (n: number) => string
 }
+
+const fieldLabel = "mb-2 block text-[11px] font-bold uppercase tracking-[0.5px] text-[#4B5563]"
+const fieldInput =
+  "box-border w-full rounded-md bg-dark-200 p-4 text-sm text-[#111827] outline-none disabled:cursor-not-allowed disabled:bg-[#F7F7F8] disabled:opacity-60"
 
 export default function Step3Shipping({
   shippingAddress,
@@ -22,7 +28,6 @@ export default function Step3Shipping({
   setShippingCost,
   isAlamatFilled,
   isWaktuFilled,
-  disabledStyle,
   formatRp,
 }: Step3ShippingProps) {
   const addressError =
@@ -32,70 +37,31 @@ export default function Step3Shipping({
       : null
 
   return (
-    <div className="qe-step-content">
-      <div className="qe-section-header">
+    <div className={qe.stepContent}>
+      <div className={qe.sectionHeader}>
         <div>
-          <h2 className="qe-section-title">Detail Pengiriman</h2>
-          <p className="qe-section-desc">Isi informasi pengiriman barang ke klien.</p>
+          <h2 className={qe.sectionTitle}>Detail Pengiriman</h2>
+          <p className={qe.sectionDesc}>Isi informasi pengiriman barang ke klien.</p>
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div className="flex flex-col gap-6">
         <div>
-          <label
-            style={{
-              display: "block",
-              fontSize: "11px",
-              fontWeight: 700,
-              color: "#4B5563",
-              letterSpacing: "0.5px",
-              marginBottom: "8px",
-              textTransform: "uppercase",
-            }}
-          >
-            Alamat Lengkap <span style={{ color: "#EF4444" }}>*</span>
+          <label className={fieldLabel}>
+            Alamat Lengkap <span className="text-error">*</span>
           </label>
           <textarea
             placeholder="Masukkan alamat pengiriman secara detail (min. 20 karakter)..."
             value={shippingAddress}
             onChange={(e) => setShippingAddress(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "16px",
-              background: "#E2E8F0",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "14px",
-              color: "#111827",
-              fontFamily: "'Inter', sans-serif",
-              outline: "none",
-              resize: "vertical",
-              minHeight: "100px",
-              boxSizing: "border-box",
-            }}
+            className={`${fieldInput} min-h-[100px] resize-y`}
           />
-          {addressError && (
-            <span
-              style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}
-            >
-              {addressError}
-            </span>
-          )}
+          {addressError && <span className="mt-1 block text-xs text-error">{addressError}</span>}
         </div>
 
-        <div style={{ opacity: !isAlamatFilled ? 0.6 : 1, transition: "opacity 0.2s ease" }}>
-          <label
-            style={{
-              display: "block",
-              fontSize: "11px",
-              fontWeight: 700,
-              color: "#4B5563",
-              letterSpacing: "0.5px",
-              marginBottom: "8px",
-              textTransform: "uppercase",
-            }}
-          >
-            Waktu Pengiriman (Hari) <span style={{ color: "#EF4444" }}>*</span>
+        <div className={`transition-opacity duration-200 ${isAlamatFilled ? "" : "opacity-60"}`}>
+          <label className={fieldLabel}>
+            Waktu Pengiriman (Hari) <span className="text-error">*</span>
           </label>
           <input
             type="number"
@@ -104,35 +70,13 @@ export default function Step3Shipping({
             value={shippingTime}
             onChange={(e) => setShippingTime(e.target.value)}
             disabled={!isAlamatFilled}
-            style={{
-              width: "100%",
-              padding: "16px",
-              background: "#E2E8F0",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "14px",
-              color: "#111827",
-              fontFamily: "'Inter', sans-serif",
-              outline: "none",
-              boxSizing: "border-box",
-              ...(!isAlamatFilled ? disabledStyle : {}),
-            }}
+            className={fieldInput}
           />
         </div>
 
-        <div style={{ opacity: !isWaktuFilled ? 0.6 : 1, transition: "opacity 0.2s ease" }}>
-          <label
-            style={{
-              display: "block",
-              fontSize: "11px",
-              fontWeight: 700,
-              color: "#4B5563",
-              letterSpacing: "0.5px",
-              marginBottom: "8px",
-              textTransform: "uppercase",
-            }}
-          >
-            Biaya Pengiriman <span style={{ color: "#EF4444" }}>*</span>
+        <div className={`transition-opacity duration-200 ${isWaktuFilled ? "" : "opacity-60"}`}>
+          <label className={fieldLabel}>
+            Biaya Pengiriman <span className="text-error">*</span>
           </label>
           <input
             type="number"
@@ -140,38 +84,24 @@ export default function Step3Shipping({
             value={shippingCost}
             onChange={(e) => setShippingCost(e.target.value)}
             disabled={!isWaktuFilled}
-            style={{
-              width: "100%",
-              padding: "16px",
-              background: "#E2E8F0",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "14px",
-              color: "#111827",
-              fontFamily: "'Inter', sans-serif",
-              outline: "none",
-              boxSizing: "border-box",
-              ...(!isWaktuFilled ? disabledStyle : {}),
-            }}
+            className={fieldInput}
           />
         </div>
       </div>
 
-      <div className="qep-summary-card">
-        <h3 className="qep-summary-title">Ringkasan Pengiriman</h3>
-        <div className="qep-summary-row">
-          <span className="qep-summary-label" style={{ textTransform: "none", fontWeight: 500 }}>
+      <div className={qep.summaryCard}>
+        <h3 className={qep.summaryTitle}>Ringkasan Pengiriman</h3>
+        <div className={qep.summaryRow}>
+          <span className="text-[0.6875rem] font-medium tracking-[0.06em] text-dark-500">
             Biaya Pengiriman
           </span>
-          <span className="qep-summary-value" style={{ fontWeight: 700, color: "#111827" }}>
+          <span className="text-base font-bold leading-6 tracking-tight text-[#111827]">
             Rp {formatRp(Number(shippingCost) || 0)}
           </span>
         </div>
-        <div className="qep-summary-row">
-          <span className="qep-summary-label">TOTAL PENGIRIMAN</span>
-          <span className="qep-summary-value qep-summary-value--grand">
-            Rp {formatRp(Number(shippingCost) || 0)}
-          </span>
+        <div className={qep.summaryRow}>
+          <span className={qep.summaryLabel}>TOTAL PENGIRIMAN</span>
+          <span className={qep.summaryValueGrand}>Rp {formatRp(Number(shippingCost) || 0)}</span>
         </div>
       </div>
     </div>

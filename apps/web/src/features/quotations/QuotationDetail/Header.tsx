@@ -1,6 +1,7 @@
+import { useNavigate } from "@tanstack/react-router"
 import StatusBadge from "@/components/shared/StatusBadge"
 import type { Status } from "@/features/quotations/types"
-import type { Page } from "@/lib/page"
+import { ui } from "@/lib/ui"
 import { statusConfig } from "./helpers"
 
 interface HeaderProps {
@@ -8,7 +9,7 @@ interface HeaderProps {
   createdAt: string
   version: number | string
   status: Status
-  onNavigate: (page: Page) => void
+  onEdit: () => void
   onDownload?: () => void
 }
 
@@ -18,41 +19,42 @@ export default function Header({
   createdAt,
   version,
   status,
-  onNavigate,
+  onEdit,
   onDownload,
 }: HeaderProps) {
+  const navigate = useNavigate()
   const badge = statusConfig[status]
   return (
     <>
-      <nav className="qd-breadcrumb">
-        <button className="qd-breadcrumb-link" onClick={() => onNavigate("quotation")}>
+      <nav className={ui.breadcrumb}>
+        <button
+          type="button"
+          className={ui.breadcrumbLink}
+          onClick={() => void navigate({ to: "/quotations" })}
+        >
           Daftar Quotation
         </button>
-        <span className="qd-breadcrumb-sep">&rsaquo;</span>
-        <span className="qd-breadcrumb-current">Detail {quotationId}</span>
+        <span className={ui.breadcrumbSep}>&rsaquo;</span>
+        <span className={ui.breadcrumbCurrent}>Detail {quotationId}</span>
       </nav>
 
-      <div className="qd-header">
-        <div className="qd-header-left">
+      <div className={ui.detailHeader}>
+        <div className={ui.detailHeaderLeft}>
           <div>
-            <h1 className="qd-title">Quotation {quotationId}</h1>
-            <div className="qd-meta-row">
-              <span className="qd-meta-text">Dibuat pada: {createdAt}</span>
-              <span className="qd-meta-sep">|</span>
-              <span className="qd-meta-text">Versi {version}</span>
-              <span className="qd-meta-sep">|</span>
+            <h1 className={ui.detailTitle}>Quotation {quotationId}</h1>
+            <div className={ui.metaRow}>
+              <span className={ui.metaText}>Dibuat pada: {createdAt}</span>
+              <span className={ui.metaSep}>|</span>
+              <span className={ui.metaText}>Versi {version}</span>
+              <span className={ui.metaSep}>|</span>
               <StatusBadge bg={badge.bg} color={badge.color}>
                 {status}
               </StatusBadge>
             </div>
           </div>
         </div>
-        <div className="qd-header-actions">
-          <button
-            className="btn-admin-outline"
-            onClick={() => onNavigate("quotation-edit")}
-            style={{ minWidth: "130px", justifyContent: "center" }}
-          >
+        <div className={ui.detailActions}>
+          <button type="button" className={`${ui.btnOutline} min-w-[130px]`} onClick={onEdit}>
             <svg
               width="14"
               height="14"
@@ -69,8 +71,8 @@ export default function Header({
             Ubah
           </button>
           <button
-            className="btn-admin-primary"
-            style={{ minWidth: "130px", justifyContent: "center" }}
+            type="button"
+            className={`${ui.btnPrimary} min-w-[130px]`}
             onClick={onDownload}
             disabled={!onDownload}
           >

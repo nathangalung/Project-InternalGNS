@@ -8,11 +8,39 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"text/template"
 	"time"
 )
+
+// Bound concurrent xelatex processes so a burst of exports cannot exhaust the
+// host. Sized to half the CPU budget, clamped to [2, 8]. Shared across
+// renderers. PDF_RENDER_CONCURRENCY overrides the computed value.
+var renderSem = make(chan struct{}, renderConcurrency())
+
+// renderConcurrency sizes the xelatex semaphore.
+//
+// GOMAXPROCS, not NumCPU: since Go 1.25 it accounts for the cgroup CPU limit,
+// so inside a container with a limit set this is the container's budget.
+// NumCPU still reports every core on the host, which on a shared VPS would let
+// one export burst spawn enough xelatex processes to OOM the box.
+func renderConcurrency() int {
+	if v := os.Getenv("PDF_RENDER_CONCURRENCY"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return n
+		}
+	}
+	switch n := runtime.GOMAXPROCS(0) / 2; {
+	case n < 2:
+		return 2
+	case n > 8:
+		return 8
+	default:
+		return n
+	}
+}
 
 // Renderer compiles LaTeX templates to PDF bytes via xelatex.
 type Renderer struct {
@@ -32,6 +60,11 @@ func NewRenderer(templatesRoot string) *Renderer {
 
 // Render fills the named template and runs xelatex twice for accurate page refs.
 func (r *Renderer) Render(ctx context.Context, name string, data any) ([]byte, error) {
+	// Bound each render by the renderer's own timeout, independent of the
+	// request deadline, and wire it (previously the field was unused).
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
 	path := filepath.Join(r.templatesRoot, name)
 	tmpl, err := template.New(filepath.Base(path)).
 		Delims("[[", "]]").
@@ -52,9 +85,21 @@ func (r *Renderer) Render(ctx context.Context, name string, data any) ([]byte, e
 	}
 	defer os.RemoveAll(dir)
 
+	if err := r.copyAssets(dir); err != nil {
+		return nil, err
+	}
+
 	texPath := filepath.Join(dir, "doc.tex")
 	if err := os.WriteFile(texPath, rendered.Bytes(), 0o644); err != nil {
 		return nil, err
+	}
+
+	// Acquire a render slot, or fail if the deadline passes while waiting.
+	select {
+	case renderSem <- struct{}{}:
+		defer func() { <-renderSem }()
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
 
 	for i := 0; i < 2; i++ {
@@ -70,6 +115,31 @@ func (r *Renderer) Render(ctx context.Context, name string, data any) ([]byte, e
 	return pdf, nil
 }
 
+// copyAssets stages shared images beside doc.tex.
+func (r *Renderer) copyAssets(dir string) error {
+	assets := filepath.Join(r.templatesRoot, "..", "assets")
+	entries, err := os.ReadDir(assets)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		b, err := os.ReadFile(filepath.Join(assets, e.Name()))
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(filepath.Join(dir, e.Name()), b, 0o644); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (r *Renderer) runLatex(ctx context.Context, dir, texPath string) error {
 	cmd := exec.CommandContext(ctx, r.xelatexBinary,
 		"-interaction=nonstopmode",
@@ -82,6 +152,9 @@ func (r *Renderer) runLatex(ctx context.Context, dir, texPath string) error {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stdout
 	if err := cmd.Run(); err != nil {
+		if ctx.Err() != nil {
+			return fmt.Errorf("xelatex: %w", ctx.Err())
+		}
 		return errors.New("xelatex failed: " + truncate(stdout.String(), 4000))
 	}
 	return nil

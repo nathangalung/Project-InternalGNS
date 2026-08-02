@@ -50,7 +50,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
-	pool, err := db.NewPool(ctx, cfg.DatabaseURL)
+	pool, err := db.NewPool(ctx, cfg.DatabaseURL, cfg.TZ)
 	if err != nil {
 		logger.Error("db pool", "err", err)
 		os.Exit(1)

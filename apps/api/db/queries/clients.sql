@@ -60,6 +60,34 @@ LEFT JOIN LATERAL (
 ) co ON TRUE
 WHERE cc.id = $1;
 
+-- name: clients.get_by_ids
+-- Same projection as clients.get_by_id, for many clients in one round-trip.
+-- Ids with no row are simply absent; $1=client ids.
+SELECT cc.id, cc.number, cc.name, cc.npwp, cc.address, cc.email, cc.country_code,
+       cc.tku_id, cc.is_active, cc.created_at, cc.updated_at,
+       co.id    AS contact_id,
+       co.name  AS contact_name,
+       co.email AS contact_email,
+       co.phone AS contact_phone,
+       COALESCE((SELECT SUM(q.grand_total)::TEXT
+                 FROM quotations q
+                 WHERE q.company_client_id = cc.id
+                   AND q.status = 'accepted'), '0') AS total_purchase,
+       COALESCE((SELECT COUNT(*)
+                 FROM quotations q
+                 WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count,
+       cc.logo_object_key
+FROM company_client cc
+LEFT JOIN LATERAL (
+    SELECT id, name, email, phone
+    FROM company_contacts
+    WHERE company_id = cc.id AND is_active = TRUE
+    ORDER BY id ASC
+    LIMIT 1
+) co ON TRUE
+WHERE cc.id = ANY($1::bigint[])
+ORDER BY cc.id;
+
 -- name: clients.create
 WITH ins AS (
     INSERT INTO company_client
@@ -132,6 +160,23 @@ VALUES
     ($1, $2, $3, $4, $5, COALESCE(NULLIF($6, ''), 'IDN'), $7, $7)
 RETURNING id, company_id, name, email, phone, title, country_code,
           is_active, created_at, updated_at;
+
+-- name: clients.update_contact
+UPDATE company_contacts
+   SET name = $3,
+       email = COALESCE($4, email),
+       phone = $5,
+       title = COALESCE($6, title),
+       country_code = COALESCE(NULLIF($7, ''), country_code),
+       updated_by = $8
+ WHERE id = $2 AND company_id = $1
+RETURNING id, company_id, name, email, phone, title, country_code,
+          is_active, created_at, updated_at;
+
+-- name: clients.deactivate_contact
+UPDATE company_contacts
+   SET is_active = FALSE, updated_by = $3
+ WHERE id = $2 AND company_id = $1 AND is_active = TRUE;
 
 
 -- name: clients.summary

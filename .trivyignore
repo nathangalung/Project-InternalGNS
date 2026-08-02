@@ -1,0 +1,5 @@
+# Accepted, non-exploitable findings. Review when base images update.
+#
+# Empty on purpose. CVE-2026-45186 (libexpat) was suppressed here until Alpine
+# published the fix; the current web base image no longer reports it. Add an
+# entry only with the reason it is not reachable and what would let it go.

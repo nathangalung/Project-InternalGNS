@@ -131,6 +131,7 @@ SELECT poi.id,
        poi.total_selling::text AS total_selling,
        poi.profit_amount::text AS profit_amount,
        poi.ship_destination,
+       poi.shipping_days,
        poi.is_available
 FROM purchase_order_items poi
 LEFT JOIN items i ON i.id = poi.offered_item_id
@@ -153,6 +154,14 @@ RETURNING id;
 UPDATE purchase_orders
 SET notes      = $2,
     updated_by = $3
+WHERE id = $1
+RETURNING id;
+
+-- name: purchase_orders.update_details
+UPDATE purchase_orders
+SET po_number  = $2,
+    po_date    = $3,
+    updated_by = $4
 WHERE id = $1
 RETURNING id;
 

@@ -12,61 +12,30 @@ export default function PasswordChecklist({ value, alwaysShow = false }: Passwor
   const passedCount = PASSWORD_RULES.filter((r) => r.test(value)).length
 
   return (
-    <div style={{ marginTop: "10px", fontFamily: "'Inter', sans-serif" }}>
-      <div
-        style={{
-          display: "flex",
-          gap: "4px",
-          marginBottom: "10px",
-        }}
-      >
+    <div className="mt-2.5">
+      <div className="mb-2.5 flex gap-1">
         {PASSWORD_RULES.map((_, i) => (
           <div
             key={i}
-            style={{
-              flex: 1,
-              height: "3px",
-              borderRadius: "999px",
-              background: i < passedCount ? "#10B981" : "#E2E8F0",
-              transition: "background 0.2s",
-            }}
+            className={`h-[3px] flex-1 rounded-full transition-colors duration-200 ${
+              i < passedCount ? "bg-[#10B981]" : "bg-dark-200"
+            }`}
           />
         ))}
       </div>
 
-      <ul
-        style={{
-          listStyle: "none",
-          padding: 0,
-          margin: 0,
-          display: "flex",
-          flexDirection: "column",
-          gap: "6px",
-        }}
-      >
+      <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
         {PASSWORD_RULES.map((rule) => {
           const ok = rule.test(value)
           return (
             <li
               key={rule.key}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontSize: "12px",
-                fontWeight: 500,
-                color: ok ? "#047857" : "#94A3B8",
-                transition: "color 0.15s",
-              }}
+              className={`flex items-center gap-2 text-[12px] font-medium transition-colors duration-150 ${
+                ok ? "text-[#047857]" : "text-dark-400"
+              }`}
             >
               {ok ? (
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 14 11"
-                  fill="none"
-                  style={{ flexShrink: 0 }}
-                >
+                <svg width="12" height="12" viewBox="0 0 14 11" fill="none" className="shrink-0">
                   <path
                     d="M1 5.5L4.5 9L13 1"
                     stroke="#10B981"
@@ -76,13 +45,7 @@ export default function PasswordChecklist({ value, alwaysShow = false }: Passwor
                   />
                 </svg>
               ) : (
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  style={{ flexShrink: 0 }}
-                >
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="shrink-0">
                   <line
                     x1="3"
                     y1="7"

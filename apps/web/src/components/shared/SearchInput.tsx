@@ -1,3 +1,5 @@
+import { ui } from "@/lib/ui"
+
 interface SearchInputProps {
   value: string
   onChange: (next: string) => void
@@ -6,9 +8,9 @@ interface SearchInputProps {
 
 export default function SearchInput({ value, onChange, placeholder }: SearchInputProps) {
   return (
-    <div className="search-wrapper">
+    <div className="relative flex-1">
       <svg
-        className="search-icon"
+        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2"
         width="16"
         height="16"
         viewBox="0 0 24 24"
@@ -23,7 +25,7 @@ export default function SearchInput({ value, onChange, placeholder }: SearchInpu
       </svg>
       <input
         type="text"
-        className="search-input"
+        className={ui.searchInput}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}

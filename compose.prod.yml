@@ -1,0 +1,171 @@
+name: internalgns
+
+# Cap container logs. json-file grows without bound under restart:
+# unless-stopped, and Postgres and MinIO write their volumes to the same
+# filesystem, so a full disk stops database and object writes.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  gns-postgres:
+    image: postgres:18.3-alpine
+    logging: *default-logging
+    # Reserve memory for the database and cap the rest. Without limits every
+    # service sees the whole host, and the API sizes its xelatex pool from the
+    # host CPU count. Tune to the VPS; these suit a 4 CPU / 4 GB box.
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1536M
+        reservations:
+          memory: 512M
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+      TZ: Asia/Jakarta
+      PGTZ: Asia/Jakarta
+    volumes:
+      - internalgns_pgdata:/var/lib/postgresql
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.track=all
+      - -c
+      - max_connections=200
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    networks: [internal]
+
+  gns-minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+      # Browser PUTs presigned URLs cross-origin; allow the web app origin.
+      MINIO_API_CORS_ALLOW_ORIGIN: ${WEB_ORIGIN}
+    command: server /data --console-address ":9001"
+    volumes:
+      - internalgns_minio:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    # No Traefik router: MinIO stays on the internal network only. The browser
+    # never reaches it directly; asset bytes are proxied through the API.
+    networks: [internal]
+
+  api:
+    image: ghcr.io/${GH_OWNER}/internalgns-api:${TAG:-latest}
+    logging: *default-logging
+    # Memory has to cover the xelatex processes, not just the Go heap. With
+    # this CPU limit GOMAXPROCS reports 1, so the render pool sits at its floor
+    # of 2; each xelatex run can reach a few hundred MB.
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1024M
+    environment:
+      ENV: production
+      HTTP_ADDR: :8080
+      TZ: Asia/Jakarta
+      # Overrides the pool sized from GOMAXPROCS. Leave unset unless a render
+      # burst proves the default wrong.
+      PDF_RENDER_CONCURRENCY: ${PDF_RENDER_CONCURRENCY:-}
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@gns-postgres:5432/${DB_NAME}?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET}
+      # Short access-token window; refresh rotation auto-renews transparently and
+      # logout/password-change now revoke refresh tokens, so a leaked JWT is
+      # useful for minutes, not a day.
+      JWT_EXPIRY: 15m
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      SUPERADMIN_EMAIL: ${SUPERADMIN_EMAIL}
+      SUPERADMIN_NAME: ${SUPERADMIN_NAME}
+      SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD}
+      SUPERADMIN2_EMAIL: ${SUPERADMIN2_EMAIL:-}
+      SUPERADMIN2_NAME: ${SUPERADMIN2_NAME:-}
+      SUPERADMIN2_PASSWORD: ${SUPERADMIN2_PASSWORD:-}
+      MINIO_ENDPOINT: gns-minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_USER}
+      MINIO_SECRET_KEY: ${MINIO_PASSWORD}
+      CORETAX_SELLER_TIN: ${CORETAX_SELLER_TIN}
+      CORETAX_SELLER_IDTKU: ${CORETAX_SELLER_IDTKU}
+      # Printed on invoices and quotations that go to clients. Without these the
+      # binary's own defaults ship, so the bank account renders as a dash.
+      PDF_SIGNER_NAME: ${PDF_SIGNER_NAME}
+      PDF_BANK_NAME: ${PDF_BANK_NAME}
+      PDF_BANK_ACCOUNT_NO: ${PDF_BANK_ACCOUNT_NO}
+      PDF_BANK_ACCOUNT_NM: ${PDF_BANK_ACCOUNT_NM}
+      PDF_PAYMENT_TERMS: ${PDF_PAYMENT_TERMS}
+    depends_on:
+      gns-postgres: { condition: service_healthy }
+      gns-minio:    { condition: service_healthy }
+    # Graceful-shutdown budget: grace (80s) > server drain (70s) > longest
+    # handler timeout (60s, the export and PDF routes; 30s elsewhere). Without
+    # this, Docker's 10s default SIGKILLs in-flight requests before drain
+    # finishes on every redeploy.
+    stop_grace_period: 80s
+    healthcheck:
+      test: ["CMD", "/app/api", "--healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+      - "traefik.http.routers.internalgns-api.rule=Host(`${API_HOST}`)"
+      - "traefik.http.routers.internalgns-api.entrypoints=websecure"
+      - "traefik.http.routers.internalgns-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.internalgns-api.loadbalancer.server.port=8080"
+    restart: unless-stopped
+    networks: [internal, dokploy-network]
+
+  frontend:
+    image: ghcr.io/${GH_OWNER}/internalgns-web:${TAG:-latest}
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+    # Uses the HEALTHCHECK the web Dockerfile defines. Disabling it here left a
+    # wedged nginx invisible to the platform.
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.internalgns-web.rule=Host(`${WEB_HOST}`)"
+      - "traefik.http.routers.internalgns-web.entrypoints=websecure"
+      - "traefik.http.routers.internalgns-web.tls.certresolver=letsencrypt"
+      - "traefik.http.services.internalgns-web.loadbalancer.server.port=80"
+    restart: unless-stopped
+    networks: [dokploy-network]
+
+volumes:
+  internalgns_pgdata:
+  internalgns_minio:
+
+networks:
+  internal:
+    internal: true
+  dokploy-network:
+    external: true

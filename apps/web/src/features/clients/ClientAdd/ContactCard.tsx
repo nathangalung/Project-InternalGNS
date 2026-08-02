@@ -1,4 +1,5 @@
-import { type ClientAddFormData, disabledStyle } from "./helpers"
+import { ui } from "@/lib/ui"
+import { type ClientAddFormData, fieldErrorCls, inputCls, optionalCls } from "./helpers"
 
 interface ContactCardProps {
   form: ClientAddFormData
@@ -20,69 +21,55 @@ export default function ContactCard({
 }: ContactCardProps) {
   return (
     <div
-      className="ca-section"
-      style={{ opacity: !isAlamatFilled ? 0.6 : 1, transition: "opacity 0.2s ease" }}
+      className={`${ui.modalSection} transition-opacity duration-200 ease-[ease] ${
+        !isAlamatFilled ? "opacity-60" : "opacity-100"
+      }`}
     >
-      <div className="ca-section-heading">Kontak &amp; Teknis</div>
-      <div className="ca-field">
-        <label className="ca-label">
-          Nama Narahubung <span className="ca-required">*</span>
+      <div className={ui.modalSectionHeading}>Kontak &amp; Teknis</div>
+      <div className={ui.field}>
+        <label className={ui.fieldLabel}>
+          Nama Narahubung <span className="text-primary-700">*</span>
         </label>
         <input
-          className="ca-input"
+          className={inputCls}
           type="text"
           placeholder="Nama lengkap kontak"
           value={form.namaKontak}
           onChange={(e) => onChange("namaKontak", e.target.value)}
           disabled={!isAlamatFilled}
-          style={!isAlamatFilled ? disabledStyle : undefined}
         />
       </div>
-      <div className="ca-row-2">
-        <div className="ca-field">
-          <label className="ca-label">
-            Nomor Telepon <span className="ca-optional">(Opsional)</span>
+      <div className={ui.row2}>
+        <div className={ui.field}>
+          <label className={ui.fieldLabel}>
+            Nomor Telepon <span className={optionalCls}>(Opsional)</span>
           </label>
-          <div className="ca-phone-wrapper">
-            <span className="ca-phone-prefix">+62</span>
+          <div className={ui.prefixWrap}>
+            <span className={ui.prefixLabel}>+62</span>
             <input
-              className="ca-phone-input"
+              className={ui.prefixInput}
               type="tel"
               placeholder="812xxxx"
               value={form.nomorTelepon}
               onChange={(e) => onChange("nomorTelepon", e.target.value)}
               disabled={!isNamaKontakFilled}
-              style={!isNamaKontakFilled ? disabledStyle : undefined}
             />
           </div>
-          {phoneError && (
-            <span
-              style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}
-            >
-              {phoneError}
-            </span>
-          )}
+          {phoneError && <span className={fieldErrorCls}>{phoneError}</span>}
         </div>
-        <div className="ca-field">
-          <label className="ca-label">
-            Email <span className="ca-optional">(Opsional)</span>
+        <div className={ui.field}>
+          <label className={ui.fieldLabel}>
+            Email <span className={optionalCls}>(Opsional)</span>
           </label>
           <input
-            className="ca-input"
+            className={inputCls}
             type="text"
             placeholder="klien@perusahaan.com"
             value={form.email}
             onChange={(e) => onChange("email", e.target.value)}
             disabled={!isNamaKontakFilled}
-            style={!isNamaKontakFilled ? disabledStyle : undefined}
           />
-          {emailError && (
-            <span
-              style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}
-            >
-              {emailError}
-            </span>
-          )}
+          {emailError && <span className={fieldErrorCls}>{emailError}</span>}
         </div>
       </div>
     </div>

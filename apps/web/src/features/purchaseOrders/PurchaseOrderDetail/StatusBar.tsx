@@ -1,50 +1,70 @@
+import { ui } from "@/lib/ui"
 import type { PoStatus } from "../types"
-import { PO_LABEL, PO_STATUS_CONFIG, PO_STATUS_ORDER } from "./helpers"
+import { PO_LABEL, PO_STATUS_CONFIG } from "./helpers"
 
 interface StatusBarProps {
   status: PoStatus
+  allowedStatuses: PoStatus[]
   isOpen: boolean
   onToggle: () => void
   onChange: (s: PoStatus) => void
   onSave: () => void
 }
 
-export default function StatusBar({ status, isOpen, onToggle, onChange, onSave }: StatusBarProps) {
+export default function StatusBar({
+  status,
+  allowedStatuses,
+  isOpen,
+  onToggle,
+  onChange,
+  onSave,
+}: StatusBarProps) {
   const badge = PO_STATUS_CONFIG[status]
+  // Terminal status, no transitions.
+  const locked = allowedStatuses.length === 0
   return (
-    <div className="qd-status-bar">
+    <div className={ui.statusBar}>
       <div>
-        <div className="qd-status-bar-title">Status Purchase Order</div>
-        <div className="qd-status-bar-desc">Ubah status PO sesuai dengan kondisi aktual.</div>
+        <div className="text-sm font-bold text-dark-900">Status Purchase Order</div>
+        <div className="mt-0.5 text-caption text-[#4A4455]">
+          Ubah status PO sesuai dengan kondisi aktual.
+        </div>
       </div>
-      <div className="qd-status-bar-actions">
-        <div style={{ position: "relative" }}>
+      <div className="flex items-center gap-3">
+        <div className="relative">
           <button
-            className="qd-status-trigger"
+            className={`${ui.statusTrigger} whitespace-nowrap${locked ? " cursor-default" : ""}`}
             style={{ background: badge.bg, color: badge.color }}
-            onClick={onToggle}
+            onClick={locked ? undefined : onToggle}
+            disabled={locked}
           >
             {PO_LABEL[status]}
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            {!locked && (
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            )}
           </button>
-          {isOpen && (
-            <div className="qd-status-dropdown">
-              {PO_STATUS_ORDER.map((s) => {
+          {isOpen && !locked && (
+            <div className={`${ui.statusDropdown} z-[100]`}>
+              {allowedStatuses.map((s) => {
                 const isActive = s === status
                 return (
-                  <button key={s} className="qd-status-option" onClick={() => onChange(s)}>
+                  <button key={s} className={ui.statusOption} onClick={() => onChange(s)}>
                     <span
-                      className={isActive ? "qd-status-option--active" : "qd-status-option--label"}
+                      className={
+                        isActive
+                          ? "text-caption font-semibold text-primary-700"
+                          : "text-caption font-normal text-[#4A4455]"
+                      }
                     >
                       {PO_LABEL[s]}
                     </span>
@@ -65,7 +85,7 @@ export default function StatusBar({ status, isOpen, onToggle, onChange, onSave }
             </div>
           )}
         </div>
-        <button className="btn-admin-primary" onClick={onSave}>
+        <button className={ui.btnPrimary} onClick={onSave}>
           Simpan Data
         </button>
       </div>

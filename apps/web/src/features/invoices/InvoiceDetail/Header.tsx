@@ -1,5 +1,6 @@
+import { useNavigate } from "@tanstack/react-router"
 import StatusBadge from "@/components/shared/StatusBadge"
-import type { Page } from "@/lib/page"
+import { ui } from "@/lib/ui"
 import type { InvoiceStatus } from "../types"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "../types"
 
@@ -8,8 +9,9 @@ interface HeaderProps {
   quotationNo: string
   createdAt: string
   status: InvoiceStatus
-  onNavigate: (page: Page) => void
   onDownload?: () => void
+  poNumber?: string
+  poDate?: string
 }
 
 export default function Header({
@@ -17,39 +19,53 @@ export default function Header({
   quotationNo,
   createdAt,
   status,
-  onNavigate,
   onDownload,
+  poNumber,
+  poDate,
 }: HeaderProps) {
+  const navigate = useNavigate()
   const badge = INVOICE_STATUS_STYLE[status]
   return (
     <>
-      <nav className="qd-breadcrumb">
-        <button className="qd-breadcrumb-link" onClick={() => onNavigate("invoices")}>
+      <nav className={ui.breadcrumb}>
+        <button className={ui.breadcrumbLink} onClick={() => void navigate({ to: "/invoices" })}>
           Daftar Invoice
         </button>
-        <span className="qd-breadcrumb-sep">&rsaquo;</span>
-        <span className="qd-breadcrumb-current">Detail {invoiceNo}</span>
+        <span className={ui.breadcrumbSep}>&rsaquo;</span>
+        <span className={ui.breadcrumbCurrent}>Detail {invoiceNo}</span>
       </nav>
 
-      <div className="qd-header">
-        <div className="qd-header-left">
+      <div className={ui.detailHeader}>
+        <div className={ui.detailHeaderLeft}>
           <div>
-            <h1 className="qd-title">Invoice {invoiceNo}</h1>
-            <div className="qd-meta-row">
-              <span className="qd-meta-text">Dibuat pada: {createdAt}</span>
-              <span className="qd-meta-sep">|</span>
-              <span className="qd-meta-text">Dari Quotation {quotationNo}</span>
-              <span className="qd-meta-sep">|</span>
+            <h1 className={ui.detailTitle}>Invoice {invoiceNo}</h1>
+            <div className={ui.metaRow}>
+              <span className={ui.metaText}>Dibuat pada: {createdAt}</span>
+              <span className={ui.metaSep}>|</span>
+              <span className={ui.metaText}>Dari Quotation {quotationNo}</span>
+              {poNumber && (
+                <>
+                  <span className={ui.metaSep}>|</span>
+                  <span className={ui.metaText}>No. PO: {poNumber}</span>
+                </>
+              )}
+              {poDate && (
+                <>
+                  <span className={ui.metaSep}>|</span>
+                  <span className={ui.metaText}>Tanggal PO: {poDate.slice(0, 10)}</span>
+                </>
+              )}
+              <span className={ui.metaSep}>|</span>
               <StatusBadge bg={badge.bg} color={badge.color}>
                 {INVOICE_LABEL[status]}
               </StatusBadge>
             </div>
           </div>
         </div>
-        <div className="qd-header-actions">
+        <div className={ui.detailActions}>
           <button
-            className="btn-admin-primary"
-            style={{ minWidth: "130px", justifyContent: "center" }}
+            type="button"
+            className={`${ui.btnPrimary} min-w-[130px]`}
             onClick={onDownload}
             disabled={!onDownload}
           >

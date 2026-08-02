@@ -1,5 +1,6 @@
 import { useQuotationRevisions } from "@/features/quotations/hooks"
 import { formatNumber as formatRp } from "@/lib/format"
+import { qd, qe, timelineAction, timelineDate, timelineDot } from "../wizard-styles"
 
 interface RevisionHistoryCardProps {
   quotationId: number
@@ -12,22 +13,18 @@ export default function RevisionHistoryCard({ quotationId }: RevisionHistoryCard
 
   return (
     <div>
-      <h2 className="qe-section-title" style={{ marginBottom: "12px" }}>
-        Riwayat Revisi
-      </h2>
-      <div className="qd-history-card">
-        <div className="qd-timeline">
+      <h2 className={`${qe.sectionTitle} mb-3`}>Riwayat Revisi</h2>
+      <div className={qd.historyCard}>
+        <div className={qd.timeline}>
           {data.map((rev) => {
             const isCurrent = rev.id === quotationId
             return (
-              <div key={rev.id} className="qd-timeline-item">
-                <div className={`qd-timeline-dot${isCurrent ? " qd-timeline-dot--active" : ""}`} />
-                <span className={`qd-timeline-date${isCurrent ? " qd-timeline-date--active" : ""}`}>
+              <div key={rev.id} className={qd.timelineItem}>
+                <div className={timelineDot(isCurrent)} />
+                <span className={timelineDate(isCurrent)}>
                   v{rev.version} · {rev.quotationNo}
                 </span>
-                <span
-                  className={`qd-timeline-action${isCurrent ? " qd-timeline-action--bold" : ""}`}
-                >
+                <span className={timelineAction(isCurrent)}>
                   {rev.status} · Rp {formatRp(Number(rev.grandTotal))}
                 </span>
               </div>

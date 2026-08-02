@@ -85,3 +85,8 @@ func BigMulDiv(a, num, den string) string {
 	}
 	return bigToStr(new(big.Float).Quo(prod, d))
 }
+
+// BigAdd adds two numeric strings using big.Float.
+func BigAdd(a, b string) string {
+	return bigToStr(new(big.Float).Add(bigFromStr(a), bigFromStr(b)))
+}

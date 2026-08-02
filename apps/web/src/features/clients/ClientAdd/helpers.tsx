@@ -1,10 +1,18 @@
+import { ui } from "@/lib/ui"
+
 export { CheckIcon as CheckmarkIcon } from "@/components/document/icons"
 export {
   dropdownItemStyle,
   dropdownLabelStyle,
   dropdownPanelStyle,
 } from "@/components/shared/filter-styles"
-export { disabledStyle } from "@/lib/styles"
+
+// Field class strings, ported from ca-*.
+export const optionalCls = "text-overline font-normal italic text-dark-600"
+
+export const fieldErrorCls = "mt-1 block text-xs text-[#EF4444]"
+
+export const inputCls = `${ui.fieldInput} font-sans placeholder:text-dark-500 ${ui.disabledField}`
 
 export interface ClientAddFormData {
   namaPerusahaan: string

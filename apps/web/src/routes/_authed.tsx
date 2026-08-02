@@ -1,14 +1,17 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
 import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
+import Sidebar from "@/components/shared/Sidebar"
 import * as authApi from "@/features/auth/api"
 import { clearAuthState, isAuthenticatedSync } from "@/features/auth/hooks"
 import { queryKeys } from "@/lib/query-keys"
+import { roleCanAccess, sectionFromPathname } from "@/lib/rbac"
 
 export const Route = createFileRoute("/_authed")({
-  beforeLoad: async ({ context }) => {
+  beforeLoad: async ({ context, location }) => {
     if (!isAuthenticatedSync()) throw redirect({ to: "/login" })
+    let me: Awaited<ReturnType<typeof authApi.me>>
     try {
-      await context.queryClient.fetchQuery({
+      me = await context.queryClient.fetchQuery({
         queryKey: queryKeys.auth.me(),
         queryFn: authApi.me,
         staleTime: 5 * 60 * 1000,
@@ -17,11 +20,23 @@ export const Route = createFileRoute("/_authed")({
       clearAuthState()
       throw redirect({ to: "/login" })
     }
+    // Typed URLs respect the role matrix.
+    if (!roleCanAccess(me.role, sectionFromPathname(location.pathname))) {
+      throw redirect({ to: "/" })
+    }
   },
   component: AuthedLayout,
   errorComponent: ({ error, reset }) => <RouteErrorFallback error={error} reset={reset} />,
 })
 
+// App shell for every authenticated route.
 function AuthedLayout() {
-  return <Outlet />
+  return (
+    <div className="admin-shell">
+      <Sidebar />
+      <div className="admin-main">
+        <Outlet />
+      </div>
+    </div>
+  )
 }

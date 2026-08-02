@@ -3,13 +3,12 @@ package items
 import (
 	"context"
 	"errors"
-	"strconv"
-	"strings"
 
 	"github.com/jackc/pgx/v5"
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 )
 
 type Repo struct {
@@ -21,62 +20,54 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 	return &Repo{db: exec, store: store}
 }
 
+// WithExec rebinds the repo to another executor, e.g. a pgx.Tx.
+func (r *Repo) WithExec(exec db.Executor) *Repo {
+	return &Repo{db: exec, store: r.store}
+}
+
 var ErrNotFound = errors.New("not found")
 
+// sortable is the closed set of item sort keys.
+var sortable = listq.Whitelist{
+	Default: "name",
+	Columns: map[string]listq.Column{
+		"name":       {Expr: "name", Dir: listq.Asc},
+		"createdAt":  {Expr: "created_at", Dir: listq.Desc},
+		"created_at": {Expr: "created_at", Dir: listq.Desc},
+		"impaCode":   {Expr: "impa_code", Dir: listq.Asc},
+		"impa_code":  {Expr: "impa_code", Dir: listq.Asc},
+	},
+}
+
+// tiebreak keeps paging stable when the sort key ties.
+var tiebreak = listq.Column{Expr: "id", Dir: listq.Desc}
+
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
-	args := []any{}
-	addArg := func(v any) string {
-		args = append(args, v)
-		return "$" + strconv.Itoa(len(args))
-	}
-	where := strings.Builder{}
+	c := listq.New()
 	if f.Q != "" {
-		p := addArg("%" + f.Q + "%")
-		where.WriteString(" AND (name ILIKE " + p + " OR impa_code ILIKE " + p + ")")
+		p := c.Arg("%" + f.Q + "%")
+		c.And("(name ILIKE " + p + " OR impa_code ILIKE " + p + ")")
 	}
 	if f.IsActive != nil {
-		p := addArg(*f.IsActive)
-		where.WriteString(" AND is_active = " + p)
+		p := c.Arg(*f.IsActive)
+		c.And("is_active = " + p)
 	}
 	if f.UnitID != nil {
-		p := addArg(*f.UnitID)
-		where.WriteString(" AND default_unit_id = " + p)
+		p := c.Arg(*f.UnitID)
+		c.And("default_unit_id = " + p)
 	}
 
 	var out ListResult
-	countSQL := r.store.Get("items.list_count_base") + where.String()
-	if err := r.db.QueryRow(ctx, countSQL, args...).Scan(&out.Total); err != nil {
+	countSQL, countArgs := c.Count(r.store.Get("items.list_count_base"))
+	if err := r.db.QueryRow(ctx, countSQL, countArgs...).Scan(&out.Total); err != nil {
 		return out, err
 	}
 
-	sortBy := "name"
-	switch f.SortBy {
-	case "createdAt", "created_at":
-		sortBy = "created_at"
-	case "impaCode", "impa_code":
-		sortBy = "impa_code"
-	}
-	sortDir := "ASC"
-	if strings.EqualFold(f.SortDir, "desc") {
-		sortDir = "DESC"
-	}
-
-	dataArgs := append([]any{}, args...)
-	dataAdd := func(v any) string {
-		dataArgs = append(dataArgs, v)
-		return "$" + strconv.Itoa(len(dataArgs))
-	}
-	limit := f.Limit
-	if limit <= 0 {
-		limit = 50
-	}
-	if limit > 200 {
-		limit = 200
-	}
-	dataSQL := r.store.Get("items.list_base") +
-		where.String() +
-		" ORDER BY " + sortBy + " " + sortDir +
-		" LIMIT " + dataAdd(limit) + " OFFSET " + dataAdd(f.Offset)
+	dataSQL, dataArgs := c.Data(
+		r.store.Get("items.list_base"),
+		listq.OrderBy(sortable, f.SortBy, f.SortDir, tiebreak),
+		listq.Page(f.Limit, f.Offset),
+	)
 
 	rows, err := r.db.Query(ctx, dataSQL, dataArgs...)
 	if err != nil {
@@ -103,7 +94,7 @@ func (r *Repo) GetByID(ctx context.Context, id int64) (Item, error) {
 
 func (r *Repo) Create(ctx context.Context, req CreateItemRequest, userID int64) (Item, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("items.create"),
-		req.Name, req.IMPACode, req.DefaultUnitID, req.Description, userID,
+		req.Name, req.IMPACode, req.DefaultUnitID, req.Description, req.IsActive, userID,
 	)
 	if err != nil {
 		return Item{}, err
@@ -162,6 +153,39 @@ func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int
 		return nil, err
 	}
 	return pgx.CollectRows(rows, pgx.RowToStructByName[SearchResult])
+}
+
+// ItemMeta is the real catalog identity for a merged search hit, used to set
+// the true is_active flag and to backfill name/impa/unit for hits that came
+// only from the vendor-offer or request-history layers.
+type ItemMeta struct {
+	Active        bool
+	Name          string
+	IMPACode      *string
+	DefaultUnitID *int16
+}
+
+// ItemMetaByIDs maps item id to its catalog identity. Ids with no row are
+// absent from the map (treated as inactive by the caller).
+func (r *Repo) ItemMetaByIDs(ctx context.Context, ids []int64) (map[int64]ItemMeta, error) {
+	out := map[int64]ItemMeta{}
+	if len(ids) == 0 {
+		return out, nil
+	}
+	rows, err := r.db.Query(ctx, r.store.Get("items.active_flags_by_ids"), ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int64
+		var m ItemMeta
+		if err := rows.Scan(&id, &m.Active, &m.Name, &m.IMPACode, &m.DefaultUnitID); err != nil {
+			return nil, err
+		}
+		out[id] = m
+	}
+	return out, rows.Err()
 }
 
 func (r *Repo) MatchRequest(ctx context.Context, reqText string, limit int) ([]MatchResult, error) {

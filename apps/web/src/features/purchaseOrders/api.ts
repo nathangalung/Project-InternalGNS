@@ -1,4 +1,11 @@
-import { apiList, apiRequest, buildQuery, nullOn404, type PaginatedList } from "@/lib/api-client"
+import {
+  apiList,
+  apiRequest,
+  buildQuery,
+  downloadXlsx,
+  nullOn404,
+  type PaginatedList,
+} from "@/lib/api-client"
 import type {
   PoBackendStatus,
   PoUpdateItemsInput,
@@ -26,6 +33,15 @@ export type ListParams = {
 export async function list(params: ListParams = {}): Promise<PaginatedList<PurchaseOrderRow>> {
   const qs = buildQuery(params)
   return apiList<PurchaseOrderRow>({ path: `/purchase-orders${qs ? `?${qs}` : ""}` })
+}
+
+// Download the filtered list (delivery notes) as XLSX.
+export function exportXlsx(params: ListParams = {}): Promise<void> {
+  const qs = buildQuery(params)
+  return downloadXlsx(
+    `/purchase-orders/export.xlsx${qs ? `?${qs}` : ""}`,
+    "delivery-note-export.xlsx",
+  )
 }
 
 export async function get(id: number): Promise<PurchaseOrderRow> {
@@ -71,6 +87,17 @@ export async function presignUpload(id: number, fileName: string): Promise<Presi
 export async function presignDownload(id: number): Promise<PresignDownload> {
   return apiRequest<PresignDownload>({
     path: `/purchase-orders/${id}/download-url`,
+  })
+}
+
+export async function updateDetails(
+  id: number,
+  payload: { poNumber: string; poDate: string },
+): Promise<void> {
+  await apiRequest<void>({
+    path: `/purchase-orders/${id}/details`,
+    method: "PATCH",
+    body: payload,
   })
 }
 

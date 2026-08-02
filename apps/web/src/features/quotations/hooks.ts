@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  skipToken,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import * as quotationsApi from "@/features/quotations/api"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
@@ -21,8 +27,7 @@ export function useQuotations(params: QuotationListParams = {}) {
 export function useQuotation(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.quotations.detail(id) : queryKeys.quotations.all,
-    queryFn: () => quotationsApi.get(id as number),
-    enabled: id !== undefined && id > 0,
+    queryFn: id !== undefined && id > 0 ? () => quotationsApi.get(id) : skipToken,
   })
 }
 
@@ -37,7 +42,10 @@ export function useCreateQuotation() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: quotationsApi.create,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.quotations.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.quotations.all })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+    },
     onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan quotation.")),
   })
 }
@@ -57,6 +65,7 @@ export function useUpdateQuotation() {
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) })
       qc.invalidateQueries({ queryKey: queryKeys.quotations.all })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui quotation.")),
   })
@@ -73,24 +82,38 @@ export function useChangeQuotationStatus() {
       qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) })
       qc.invalidateQueries({ queryKey: queryKeys.quotations.all })
       qc.invalidateQueries({ queryKey: queryKeys.quotations.stats() })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal mengubah status quotation.")),
+  })
+}
+
+export function useUpdateQuotationContact() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, contactId }: { id: number; contactId: number }) =>
+      quotationsApi.updateQuotationContact(id, contactId),
+    onSuccess: (_, { id }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) })
+    },
+    onError: (err) => toast.error(errorMessage(err, "Gagal mengubah narahubung quotation.")),
   })
 }
 
 export function useQuotationRevisions(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.quotations.revisions(id) : queryKeys.quotations.all,
-    queryFn: () => quotationsApi.listRevisions(id as number),
-    enabled: id !== undefined && id > 0,
+    queryFn: id !== undefined && id > 0 ? () => quotationsApi.listRevisions(id) : skipToken,
   })
 }
 
 export function useQuotationRequests(quotationId: number | undefined) {
   return useQuery({
     queryKey: quotationId ? queryKeys.quotations.requests(quotationId) : queryKeys.quotations.all,
-    queryFn: () => quotationsApi.listRequests(quotationId as number),
-    enabled: quotationId !== undefined && quotationId > 0,
+    queryFn:
+      quotationId !== undefined && quotationId > 0
+        ? () => quotationsApi.listRequests(quotationId)
+        : skipToken,
   })
 }
 

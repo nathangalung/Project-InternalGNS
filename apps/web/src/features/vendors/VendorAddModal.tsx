@@ -1,8 +1,25 @@
 import { useState } from "react"
+import Modal from "@/components/shared/Modal"
 import { useCreateVendor } from "@/features/vendors/hooks"
 import { ApiError } from "@/lib/api-client"
-import { disabledStyle } from "@/lib/styles"
+import { ui } from "@/lib/ui"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
+
+// Visual disabled treatment, matching lib/styles disabledStyle.
+const disabledCls = "disabled:cursor-not-allowed disabled:bg-[#F7F7F8] disabled:opacity-60"
+
+const fieldErrorCls = "mt-1 block text-xs text-[#EF4444]"
+
+const optionalCls = "text-overline font-normal italic text-dark-600"
+
+const inputCls = `${ui.fieldInput} placeholder:text-dark-500 ${disabledCls}`
+
+// Faithful port of the legacy phone-input group.
+const phoneWrapCls =
+  "flex h-11 overflow-hidden rounded-md border-[1.5px] border-transparent bg-dark-200 transition focus-within:border-primary-600 focus-within:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
+const phonePrefixCls =
+  "flex items-center whitespace-nowrap border-r border-dark-300 px-3 text-sm font-medium text-dark-600"
+const phoneInputCls = `min-w-0 flex-1 border-0 bg-transparent px-3 text-sm text-dark-900 outline-none placeholder:text-dark-500 ${disabledCls}`
 
 interface VendorAddModalProps {
   open: boolean
@@ -96,6 +113,7 @@ export default function VendorAddModal({
         name: name.trim(),
         location: address.trim() || undefined,
         contactInfo: Object.keys(contactInfo).length > 0 ? contactInfo : undefined,
+        isActive,
       })
       onSuccess?.(created)
       reset()
@@ -110,253 +128,154 @@ export default function VendorAddModal({
   }
 
   return (
+    // When nested, neutralise the shared overlay dimming on Modal's root element.
     <div
-      className="ca-overlay"
-      onClick={handleCancel}
-      style={nested ? { background: "transparent", backdropFilter: "none" } : undefined}
+      className={
+        nested ? "contents [&>div]:bg-transparent [&>div]:[backdrop-filter:none]" : "contents"
+      }
     >
-      <div className="ca-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="ca-header">
-          <h2 className="ca-title">Tambah Vendor Baru</h2>
-          <button className="ca-close-btn" onClick={handleCancel} title="Tutup">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
+      <Modal
+        title="Tambah Vendor Baru"
+        onClose={handleCancel}
+        footer={
+          <>
+            {submitError && <span className="flex-1 text-xs text-[#EF4444]">{submitError}</span>}
+            {!submitError && isAddressFilled && !isContactValid && (
+              <span className="flex-1 text-xs text-[#EF4444]">
+                Isi minimal email atau nomor telepon.
+              </span>
+            )}
+            <button
+              type="button"
+              className={ui.modalCancel}
+              onClick={handleCancel}
+              disabled={isSaving}
             >
-              <line x1="1" y1="1" x2="13" y2="13" />
-              <line x1="13" y1="1" x2="1" y2="13" />
-            </svg>
-          </button>
+              Batal
+            </button>
+            <button
+              type="button"
+              className={ui.modalSubmit}
+              onClick={handleSubmit}
+              disabled={!canSubmit || isSaving}
+            >
+              {isSaving ? "Menyimpan..." : "Simpan Vendor"}
+            </button>
+          </>
+        }
+      >
+        <div className={ui.modalSection}>
+          <div className={ui.field}>
+            <label className={ui.fieldLabel}>
+              Nama Vendor <span className="text-primary-700">*</span>
+            </label>
+            <input
+              className={inputCls}
+              type="text"
+              placeholder="Masukkan nama resmi perusahaan"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div className={ui.field}>
+            <label className={ui.fieldLabel}>
+              Alamat <span className="text-primary-700">*</span>
+            </label>
+            <textarea
+              className={`${inputCls} resize-none leading-5`}
+              placeholder="Alamat lengkap kantor pusat atau operasional (min. 20 karakter)"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              rows={3}
+              disabled={!isNameFilled}
+            />
+            {addressError && <span className={fieldErrorCls}>{addressError}</span>}
+          </div>
+          <div className={ui.field}>
+            <label className={ui.fieldLabel}>
+              SKU Vendor <span className={optionalCls}>(Opsional)</span>
+            </label>
+            <input
+              className={inputCls}
+              type="text"
+              placeholder="Masukkan SKU khusus vendor"
+              value={sku}
+              onChange={(e) => setSku(e.target.value)}
+              disabled={!isNameFilled}
+            />
+          </div>
         </div>
 
-        <div className="ca-body">
-          <div className="ca-section">
-            <div className="ca-field">
-              <label className="ca-label">
-                Nama Vendor <span className="ca-required">*</span>
+        <div
+          className={`${ui.modalSection} transition-opacity duration-200 ease-[ease] ${
+            !isAddressFilled ? "opacity-60" : "opacity-100"
+          }`}
+        >
+          <div className={ui.modalSectionHeading}>Informasi Kontak</div>
+          <div className={ui.row2}>
+            <div className={ui.field}>
+              <label className={ui.fieldLabel}>
+                Email <span className={optionalCls}>(Opsional)</span>
               </label>
               <input
-                className="ca-input"
+                className={inputCls}
                 type="text"
-                placeholder="Masukkan nama resmi perusahaan"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                placeholder="example@vendor.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={!isAddressFilled}
               />
+              {emailError && <span className={fieldErrorCls}>{emailError}</span>}
             </div>
-            <div className="ca-field">
-              <label className="ca-label">
-                Alamat <span className="ca-required">*</span>
+            <div className={ui.field}>
+              <label className={ui.fieldLabel}>
+                Nomor Telepon <span className={optionalCls}>(Opsional)</span>
               </label>
-              <textarea
-                className="ca-textarea"
-                placeholder="Alamat lengkap kantor pusat atau operasional (min. 20 karakter)"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                rows={3}
-                disabled={!isNameFilled}
-                style={!isNameFilled ? disabledStyle : undefined}
-              />
-              {addressError && (
-                <span
-                  style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}
-                >
-                  {addressError}
-                </span>
-              )}
-            </div>
-            <div className="ca-field">
-              <label className="ca-label">
-                SKU Vendor <span className="ca-optional">(Opsional)</span>
-              </label>
-              <input
-                className="ca-input"
-                type="text"
-                placeholder="Masukkan SKU khusus vendor"
-                value={sku}
-                onChange={(e) => setSku(e.target.value)}
-                disabled={!isNameFilled}
-                style={!isNameFilled ? disabledStyle : undefined}
-              />
-            </div>
-          </div>
-
-          <div
-            className="ca-section"
-            style={{ opacity: !isAddressFilled ? 0.6 : 1, transition: "opacity 0.2s ease" }}
-          >
-            <div className="ca-section-heading">Informasi Kontak</div>
-            <div className="ca-row-2">
-              <div className="ca-field">
-                <label className="ca-label">
-                  Email <span className="ca-optional">(Opsional)</span>
-                </label>
+              <div className={phoneWrapCls}>
+                <span className={phonePrefixCls}>+62</span>
                 <input
-                  className="ca-input"
-                  type="text"
-                  placeholder="example@vendor.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  className={phoneInputCls}
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="812xxxx"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
                   disabled={!isAddressFilled}
-                  style={!isAddressFilled ? disabledStyle : undefined}
                 />
-                {emailError && (
-                  <span
-                    style={{
-                      fontSize: "12px",
-                      color: "#EF4444",
-                      marginTop: "4px",
-                      display: "block",
-                    }}
-                  >
-                    {emailError}
-                  </span>
-                )}
               </div>
-              <div className="ca-field">
-                <label className="ca-label">
-                  Nomor Telepon <span className="ca-optional">(Opsional)</span>
-                </label>
-                <div className="ca-phone-wrapper">
-                  <span className="ca-phone-prefix">+62</span>
-                  <input
-                    className="ca-phone-input"
-                    type="tel"
-                    inputMode="numeric"
-                    placeholder="812xxxx"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                    disabled={!isAddressFilled}
-                    style={!isAddressFilled ? disabledStyle : undefined}
-                  />
-                </div>
-                {phoneError && (
-                  <span
-                    style={{
-                      fontSize: "12px",
-                      color: "#EF4444",
-                      marginTop: "4px",
-                      display: "block",
-                    }}
-                  >
-                    {phoneError}
-                  </span>
-                )}
-              </div>
+              {phoneError && <span className={fieldErrorCls}>{phoneError}</span>}
             </div>
           </div>
+        </div>
 
-          <div className="ca-section">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "12px",
-                padding: "10px 14px",
-                background: "#F2F4F6",
-                border: "1px solid rgba(204, 195, 216, 0.1)",
-                borderRadius: "8px",
-              }}
+        <div className={ui.modalSection}>
+          <div className="flex items-center justify-between gap-3 rounded-md border border-[rgba(204,195,216,0.1)] bg-[#F2F4F6] px-3.5 py-2.5">
+            <div className="flex-1">
+              <div className="text-[13px] font-bold leading-[18px] text-[#191C1E]">
+                Status Aktif
+              </div>
+              <div className="mt-0.5 text-xs font-normal leading-4 text-[#4A4455]">
+                Vendor dapat langsung digunakan dalam transaksi procurement.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsActive((a) => !a)}
+              role="switch"
+              aria-checked={isActive}
+              className={`relative h-[22px] w-10 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] ${
+                isActive ? "bg-primary-700" : "bg-[#CBD5E1]"
+              }`}
             >
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "13px",
-                    lineHeight: "18px",
-                    color: "#191C1E",
-                  }}
-                >
-                  Status Aktif
-                </div>
-                <div
-                  style={{
-                    marginTop: "2px",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 400,
-                    fontSize: "12px",
-                    lineHeight: "16px",
-                    color: "#4A4455",
-                  }}
-                >
-                  Vendor dapat langsung digunakan dalam transaksi procurement.
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsActive((a) => !a)}
-                role="switch"
-                aria-checked={isActive}
-                style={{
-                  width: "40px",
-                  height: "22px",
-                  borderRadius: "999px",
-                  border: "none",
-                  background: isActive ? "#630ED4" : "#CBD5E1",
-                  cursor: "pointer",
-                  position: "relative",
-                  transition: "background 0.2s",
-                  flexShrink: 0,
-                }}
-              >
-                <span
-                  style={{
-                    position: "absolute",
-                    top: "2px",
-                    left: isActive ? "20px" : "2px",
-                    width: "18px",
-                    height: "18px",
-                    borderRadius: "50%",
-                    background: "#FFFFFF",
-                    transition: "left 0.2s",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                  }}
-                />
-              </button>
-            </div>
+              <span
+                className={`absolute top-0.5 h-[18px] w-[18px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ease-[ease] ${
+                  isActive ? "left-5" : "left-0.5"
+                }`}
+              />
+            </button>
           </div>
         </div>
-
-        <div className="ca-footer" style={{ padding: "16px 24px" }}>
-          {submitError && (
-            <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>{submitError}</span>
-          )}
-          {!submitError && isAddressFilled && !isContactValid && (
-            <span style={{ fontSize: "12px", color: "#EF4444", flex: 1 }}>
-              Isi minimal email atau nomor telepon.
-            </span>
-          )}
-          <button
-            type="button"
-            className="ca-btn-cancel"
-            onClick={handleCancel}
-            disabled={isSaving}
-            style={{ padding: "8px 18px", fontSize: "13px" }}
-          >
-            Batal
-          </button>
-          <button
-            type="button"
-            className="ca-btn-submit"
-            onClick={handleSubmit}
-            disabled={!canSubmit || isSaving}
-            style={{
-              padding: "8px 22px",
-              fontSize: "13px",
-              opacity: !canSubmit || isSaving ? 0.5 : 1,
-              cursor: !canSubmit || isSaving ? "not-allowed" : "pointer",
-            }}
-          >
-            {isSaving ? "Menyimpan..." : "Simpan Vendor"}
-          </button>
-        </div>
-      </div>
+      </Modal>
     </div>
   )
 }

@@ -362,6 +362,18 @@ func TestRepo_List_FiltersAndSort(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, resVerSort.Rows)
 
+	resNoCamel, err := repo.List(ctx, quotations.ListFilter{SortBy: "quotationNo", SortDir: "asc", Limit: 100})
+	require.NoError(t, err)
+	assert.Equal(t, resAsc.Rows, resNoCamel.Rows)
+
+	resTotalCamel, err := repo.List(ctx, quotations.ListFilter{SortBy: "grandTotal", SortDir: "asc", Limit: 100})
+	require.NoError(t, err)
+	assert.Equal(t, resTotalSort.Rows, resTotalCamel.Rows)
+
+	resCreatedCamel, err := repo.List(ctx, quotations.ListFilter{SortBy: "createdAt", SortDir: "asc", Limit: 100})
+	require.NoError(t, err)
+	assert.NotEmpty(t, resCreatedCamel.Rows)
+
 	resBadSort, err := repo.List(ctx, quotations.ListFilter{SortBy: "; DROP TABLE--", Limit: 100})
 	require.NoError(t, err)
 	assert.NotEmpty(t, resBadSort.Rows)
@@ -468,4 +480,99 @@ func TestRepo_ListRevisions_NotFound(t *testing.T) {
 	assert.Empty(t, revs)
 }
 
+func TestRepo_UpdateContact_HappyPath(t *testing.T) {
+	ctx, repo, tx := newRepo(t)
+	id, err := repo.Create(ctx, sampleCreate(), seedUserID)
+	require.NoError(t, err)
+
+	// Sibling contact, same company.
+	var altContactID int64
+	require.NoError(t, tx.QueryRow(ctx, `
+		INSERT INTO company_contacts (company_id, name, country_code, created_by, updated_by)
+		VALUES ($1, 'Alt Contact', 'IDN', $2, $2)
+		RETURNING id`, seedCompanyID, seedUserID).Scan(&altContactID))
+	require.NoError(t, repo.UpdateContact(ctx, id, altContactID, seedUserID))
+
+	d, err := repo.GetDetail(ctx, id)
+	require.NoError(t, err)
+	require.NotNil(t, d.ContactID)
+	assert.Equal(t, altContactID, *d.ContactID)
+	assert.NotNil(t, d.ContactName)
+}
+
+func TestRepo_UpdateContact_WrongCompany(t *testing.T) {
+	ctx, repo, tx := newRepo(t)
+	id, err := repo.Create(ctx, sampleCreate(), seedUserID)
+	require.NoError(t, err)
+
+	// Insert a contact for company 2 inside the tx.
+	var wrongContactID int64
+	require.NoError(t, tx.QueryRow(ctx, `
+		INSERT INTO company_contacts (company_id, name, country_code, created_by, updated_by)
+		VALUES (2, 'Wrong Contact', 'IDN', $1, $1)
+		RETURNING id`, seedUserID).Scan(&wrongContactID))
+
+	err = repo.UpdateContact(ctx, id, wrongContactID, seedUserID)
+	assert.ErrorIs(t, err, quotations.ErrContactNotAllowed)
+}
+
+func TestRepo_UpdateContact_NotFound(t *testing.T) {
+	ctx, repo, _ := newRepo(t)
+	err := repo.UpdateContact(ctx, 9_999_999, seedContactID, seedUserID)
+	assert.ErrorIs(t, err, quotations.ErrNotFound)
+}
+
 func int64Ptr(v int64) *int64 { return &v }
+
+// Count and data queries must agree under the same filter.
+func TestRepo_List_CountAgreesWithData(t *testing.T) {
+	ctx, repo, _ := newRepo(t)
+
+	for range 3 {
+		_, err := repo.Create(ctx, sampleCreate(), seedUserID)
+		require.NoError(t, err)
+	}
+
+	from := "2000-01-01"
+	f := quotations.ListFilter{
+		Statuses: []string{"draft", "sent"},
+		DateFrom: &from,
+		MinTotal: ptrStr("0"),
+		Limit:    200,
+	}
+	res, err := repo.List(ctx, f)
+	require.NoError(t, err)
+	require.Positive(t, res.Total, "filter matched nothing, test proves nothing")
+	require.Less(t, res.Total, int64(200), "seed too large for a single page")
+	assert.Equal(t, res.Total, int64(len(res.Rows)),
+		"count query and data query disagree under the same filter")
+}
+
+// Paging must not repeat or drop a row when the sort key ties.
+func TestRepo_List_PagingIsStableOnTiedSortKey(t *testing.T) {
+	ctx, repo, _ := newRepo(t)
+
+	// Rows created inside one transaction share created_at, the default
+	// sort key, so only the id tiebreaker makes paging deterministic.
+	const created = 6
+	for range created {
+		_, err := repo.Create(ctx, sampleCreate(), seedUserID)
+		require.NoError(t, err)
+	}
+	all, err := repo.List(ctx, quotations.ListFilter{Limit: 200})
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(all.Rows), created)
+
+	seen := map[int64]bool{}
+	for offset := 0; offset < len(all.Rows); offset += 2 {
+		page, err := repo.List(ctx, quotations.ListFilter{Limit: 2, Offset: offset})
+		require.NoError(t, err)
+		for _, row := range page.Rows {
+			require.False(t, seen[row.ID], "quotation %d repeated across pages", row.ID)
+			seen[row.ID] = true
+		}
+	}
+	assert.Len(t, seen, len(all.Rows), "paging dropped rows")
+}
+
+func ptrStr(s string) *string { return &s }

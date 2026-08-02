@@ -1,12 +1,15 @@
 import { useMemo, useRef, useState } from "react"
 import { useCountries } from "@/features/countries/hooks"
+import { ui } from "@/lib/ui"
 import {
   CheckmarkIcon,
   type ClientAddFormData,
-  disabledStyle,
   dropdownItemStyle,
   dropdownLabelStyle,
   dropdownPanelStyle,
+  fieldErrorCls,
+  inputCls,
+  optionalCls,
 } from "./helpers"
 
 interface CompanyCardProps {
@@ -53,35 +56,37 @@ export default function CompanyCard({
     }
     reader.readAsDataURL(file)
   }
+
+  const logoActionCls = isNamaPerusahaanFilled ? "cursor-pointer" : "cursor-not-allowed opacity-60"
+
   return (
-    <div className="ca-section">
-      <div className="ca-section-heading">Identitas Perusahaan</div>
-      <div className="ca-row-2">
-        <div className="ca-field">
-          <label className="ca-label">
-            Nama Perusahaan <span className="ca-required">*</span>
+    <div className={ui.modalSection}>
+      <div className={ui.modalSectionHeading}>Identitas Perusahaan</div>
+      <div className={ui.row2}>
+        <div className={ui.field}>
+          <label className={ui.fieldLabel}>
+            Nama Perusahaan <span className="text-primary-700">*</span>
           </label>
           <input
-            className="ca-input"
+            className={inputCls}
             type="text"
             placeholder="Masukkan nama lengkap klien"
             value={form.namaPerusahaan}
             onChange={(e) => onChange("namaPerusahaan", e.target.value)}
           />
         </div>
-        <div className="ca-field">
-          <label className="ca-label">
-            Kode Negara <span className="ca-required">*</span>
+        <div className={ui.field}>
+          <label className={ui.fieldLabel}>
+            Kode Negara <span className="text-primary-700">*</span>
           </label>
-          <div className="ca-select-wrapper">
+          <div className="relative">
             <button
               type="button"
-              className="ca-select-btn"
+              className={ui.selectBtn}
               onClick={() => {
                 if (isNamaPerusahaanFilled) setNegaraOpen((o) => !o)
               }}
               disabled={!isNamaPerusahaanFilled}
-              style={!isNamaPerusahaanFilled ? disabledStyle : undefined}
             >
               <span>{selectedNegara?.label ?? "Pilih Negara"}</span>
               <svg
@@ -98,35 +103,17 @@ export default function CompanyCard({
             </button>
             {negaraOpen && isNamaPerusahaanFilled && (
               <div style={dropdownPanelStyle}>
-                <div style={{ padding: "0 12px 8px" }}>
+                <div className="px-3 pb-2">
                   <input
                     type="text"
                     placeholder="Cari negara..."
                     value={negaraQuery}
                     onChange={(e) => setNegaraQuery(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      fontSize: "13px",
-                      fontFamily: "'Inter', sans-serif",
-                      color: "#191C1E",
-                      background: "#F7F7F8",
-                      border: "1px solid rgba(204, 195, 216, 0.4)",
-                      borderRadius: "6px",
-                      outline: "none",
-                    }}
+                    className="w-full rounded-sm border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-3 py-2 font-sans text-[13px] text-[#191C1E] outline-none"
                   />
                 </div>
                 {filteredNegaraOptions.length === 0 && (
-                  <div
-                    style={{
-                      padding: "12px 20px",
-                      fontSize: "13px",
-                      color: "#94A3B8",
-                      fontFamily: "'Inter', sans-serif",
-                      textAlign: "center",
-                    }}
-                  >
+                  <div className="px-5 py-3 text-center font-sans text-[13px] text-[#94A3B8]">
                     Tidak ada hasil
                   </div>
                 )}
@@ -153,88 +140,47 @@ export default function CompanyCard({
           </div>
         </div>
       </div>
-      <div className="ca-field">
-        <label className="ca-label">
-          Alamat <span className="ca-required">*</span>
+      <div className={ui.field}>
+        <label className={ui.fieldLabel}>
+          Alamat <span className="text-primary-700">*</span>
         </label>
         <textarea
-          className="ca-textarea"
+          className={`${inputCls} resize-none leading-5`}
           placeholder="Alamat lengkap operasional (min. 20 karakter)"
           value={form.alamat}
           onChange={(e) => onChange("alamat", e.target.value)}
           rows={3}
           disabled={!isNamaPerusahaanFilled}
-          style={!isNamaPerusahaanFilled ? disabledStyle : undefined}
         />
-        {alamatError && (
-          <span style={{ fontSize: "12px", color: "#EF4444", marginTop: "4px", display: "block" }}>
-            {alamatError}
-          </span>
-        )}
+        {alamatError && <span className={fieldErrorCls}>{alamatError}</span>}
       </div>
-      <div className="ca-field">
-        <label className="ca-label">
-          Logo <span className="ca-optional">(Opsional)</span>
+      <div className={ui.field}>
+        <label className={ui.fieldLabel}>
+          Logo <span className={optionalCls}>(Opsional)</span>
         </label>
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
-          style={{ display: "none" }}
+          className="hidden"
           onChange={(e) => {
             handleLogoSelect(e.target.files?.[0])
             e.target.value = ""
           }}
         />
         {form.logo ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "16px",
-              padding: "12px",
-              background: "#F2F4F6",
-              borderRadius: "8px",
-            }}
-          >
+          <div className="flex items-center gap-4 rounded-md bg-[#F2F4F6] p-3">
             <img
               src={form.logo}
               alt="Logo klien"
-              style={{
-                width: "64px",
-                height: "64px",
-                objectFit: "cover",
-                borderRadius: "8px",
-                background: "#FFFFFF",
-                flexShrink: 0,
-              }}
+              className="h-16 w-16 flex-shrink-0 rounded-md bg-white object-cover"
             />
-            <div
-              style={{
-                flex: 1,
-                fontFamily: "'Inter', sans-serif",
-                fontSize: "13px",
-                color: "#4A4455",
-              }}
-            >
-              Logo terpilih
-            </div>
+            <div className="flex-1 font-sans text-[13px] text-[#4A4455]">Logo terpilih</div>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={!isNamaPerusahaanFilled}
-              style={{
-                padding: "8px 14px",
-                borderRadius: "8px",
-                border: "1px solid rgba(204, 195, 216, 0.4)",
-                background: "#FFFFFF",
-                color: "#4A4455",
-                fontFamily: "'Inter', sans-serif",
-                fontSize: "12px",
-                fontWeight: 600,
-                cursor: isNamaPerusahaanFilled ? "pointer" : "not-allowed",
-                opacity: isNamaPerusahaanFilled ? 1 : 0.6,
-              }}
+              className={`rounded-md border border-[rgba(204,195,216,0.4)] bg-white px-3.5 py-2 font-sans text-xs font-semibold text-[#4A4455] ${logoActionCls}`}
             >
               Ganti
             </button>
@@ -242,18 +188,7 @@ export default function CompanyCard({
               type="button"
               onClick={() => onChange("logo", "")}
               disabled={!isNamaPerusahaanFilled}
-              style={{
-                padding: "8px 14px",
-                borderRadius: "8px",
-                border: "none",
-                background: "transparent",
-                color: "#DC2626",
-                fontFamily: "'Inter', sans-serif",
-                fontSize: "12px",
-                fontWeight: 600,
-                cursor: isNamaPerusahaanFilled ? "pointer" : "not-allowed",
-                opacity: isNamaPerusahaanFilled ? 1 : 0.6,
-              }}
+              className={`rounded-md bg-transparent px-3.5 py-2 font-sans text-xs font-semibold text-[#DC2626] ${logoActionCls}`}
             >
               Hapus
             </button>
@@ -263,22 +198,7 @@ export default function CompanyCard({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={!isNamaPerusahaanFilled}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
-              width: "100%",
-              padding: "20px",
-              background: "#F7F7F8",
-              border: "1.5px dashed rgba(204, 195, 216, 0.6)",
-              borderRadius: "8px",
-              cursor: isNamaPerusahaanFilled ? "pointer" : "not-allowed",
-              opacity: isNamaPerusahaanFilled ? 1 : 0.6,
-              fontFamily: "'Inter', sans-serif",
-              transition: "all 0.15s",
-            }}
+            className={`flex w-full flex-col items-center justify-center gap-1.5 rounded-md border-[1.5px] border-dashed border-[rgba(204,195,216,0.6)] bg-[#F7F7F8] p-5 font-sans transition-all duration-150 ${logoActionCls}`}
           >
             <svg
               width="22"
@@ -294,12 +214,8 @@ export default function CompanyCard({
               <circle cx="9" cy="9" r="2" />
               <path d="M21 15l-5-5L5 21" />
             </svg>
-            <span style={{ fontSize: "13px", fontWeight: 600, color: "#4A4455" }}>
-              Unggah logo perusahaan
-            </span>
-            <span style={{ fontSize: "11px", color: "#94A3B8" }}>
-              PNG, JPG, atau SVG · maks 2MB
-            </span>
+            <span className="text-[13px] font-semibold text-[#4A4455]">Unggah logo perusahaan</span>
+            <span className="text-[11px] text-[#94A3B8]">PNG, JPG, atau SVG · maks 2MB</span>
           </button>
         )}
       </div>

@@ -1,6 +1,6 @@
 import { useQueries } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
-import Sidebar from "@/components/shared/Sidebar"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import { useClient } from "@/features/clients/hooks"
 import * as itemsApi from "@/features/items/api"
@@ -13,9 +13,8 @@ import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
 import * as vendorsApi from "@/features/vendors/api"
-import { downloadPdf, saveBlob } from "@/lib/api-client"
-import { toNum } from "@/lib/format"
-import type { Page } from "@/lib/page"
+import { downloadFile, downloadPdf } from "@/lib/api-client"
+import { computeTaxBreakdown, toNum } from "@/lib/format"
 import { queryKeys } from "@/lib/query-keys"
 import { poItemsToProducts, poItemsToShipping } from "../adapters"
 import * as poApi from "../api"
@@ -23,6 +22,7 @@ import {
   useChangePoStatus,
   usePoItems,
   usePurchaseOrderByQuotation,
+  useUpdatePoDetails,
   useUploadPoFile,
 } from "../hooks"
 import type { PoRow, PoStatus } from "../types"
@@ -33,6 +33,7 @@ import Header from "./Header"
 import {
   type CompletenessIssue,
   PO_LABEL,
+  PO_TRANSITIONS,
   poNumberFromQuotationNo,
   validateClientCompleteness,
   validateVendorCompleteness,
@@ -48,8 +49,7 @@ interface PurchaseOrderDetailProps {
   quotationId: number
   quotationNo: string
   quotation?: QuotationData
-  onNavigate: (page: Page) => void
-  onLogout: () => void
+  onEdit: () => void
   onNavigateEntity?: (scope: "Klien" | "Vendor", id: number) => void
 }
 
@@ -57,14 +57,15 @@ export default function PurchaseOrderDetail({
   quotationId,
   quotationNo,
   quotation,
-  onNavigate,
-  onLogout,
+  onEdit,
   onNavigateEntity,
 }: PurchaseOrderDetailProps) {
+  const navigate = useNavigate()
   const { data: po, isLoading } = usePurchaseOrderByQuotation(quotationId)
   const { data: poItems } = usePoItems(po?.id)
   const changeStatus = useChangePoStatus()
   const uploadFile = useUploadPoFile()
+  const updateDetails = useUpdatePoDetails()
 
   const initialStatus: PoStatus = po?.status ?? "PENDING"
   const [status, setStatus] = useState<PoStatus>(initialStatus)
@@ -129,6 +130,8 @@ export default function PurchaseOrderDetail({
   }, [po])
 
   const products = useMemo(() => poItemsToProducts(poItems), [poItems])
+  // Profit needs real cost data.
+  const hasCost = useMemo(() => (poItems ?? []).some((it) => toNum(it.costPrice) > 0), [poItems])
   const shipping = useMemo(() => poItemsToShipping(poItems), [poItems])
 
   const history: HistoryEntry[] = useMemo(() => {
@@ -154,17 +157,8 @@ export default function PurchaseOrderDetail({
 
   if (!quotation || (isLoading && !po) || !po) {
     return (
-      <div className="admin-shell">
-        <Sidebar
-          activePage={"purchase-orders" as Page}
-          onNavigate={onNavigate}
-          onLogout={onLogout}
-        />
-        <div className="admin-main">
-          <div className="page-content">
-            <p>{isLoading ? "Memuat data Purchase Order…" : "Purchase Order tidak ditemukan."}</p>
-          </div>
-        </div>
+      <div className="page-content">
+        <p>{isLoading ? "Memuat data Purchase Order…" : "Purchase Order tidak ditemukan."}</p>
       </div>
     )
   }
@@ -177,10 +171,11 @@ export default function PurchaseOrderDetail({
   const discountPct = quotation.discountPct ?? 0
   const nominalDiskon = (totalProduk * discountPct) / 100
   const subTotal = totalProduk - nominalDiskon
-  const dppBase = hasProducts ? subTotal : totalShip
-  const dppNilaiLain = Math.round((dppBase * 11) / 12)
-  const ppn12 = Math.round(dppNilaiLain * 0.12)
-  const grandTotal = hasProducts ? subTotal + ppn12 + totalShip : totalShip + ppn12
+  const {
+    dppNilaiLain,
+    ppnAmount: ppn12,
+    grandTotal,
+  } = computeTaxBreakdown({ subtotal: subTotal, shipping: totalShip })
   const clientInitials = getCompanyInitials(quotation.client)
   const poNumber = po.poNumber || poNumberFromQuotationNo(quotationNo)
 
@@ -192,7 +187,7 @@ export default function PurchaseOrderDetail({
   function handleSave() {
     if (!po) return
     if (status === po.status) {
-      onNavigate("purchase-orders")
+      void navigate({ to: "/purchase-orders" })
       return
     }
 
@@ -231,34 +226,49 @@ export default function PurchaseOrderDetail({
             ...prev,
             { date: nowLabel(), action: `Status diubah menjadi ${PO_LABEL[status]}` },
           ])
-          onNavigate("purchase-orders")
+          void navigate({ to: "/purchase-orders" })
         },
       },
     )
   }
 
-  function handleUploadSubmit(file: File) {
+  function handleUploadSubmit(file: File | null, details: { poNumber: string; poDate: string }) {
     if (!po) return
-    uploadFile.mutate({ id: po.id, file }, { onSuccess: () => setShowUpload(false) })
+    // Edit details only when no new file.
+    if (!file) {
+      updateDetails.mutate({ id: po.id, ...details }, { onSuccess: () => setShowUpload(false) })
+      return
+    }
+    uploadFile.mutate(
+      { id: po.id, file },
+      {
+        onSuccess: () => {
+          updateDetails.mutate({ id: po.id, ...details }, { onSuccess: () => setShowUpload(false) })
+        },
+      },
+    )
   }
 
   async function handleDownload() {
     if (!po?.objectKey || !po?.fileName) return
     const { downloadUrl } = await poApi.presignDownload(po.id)
-    const blob = await (await fetch(downloadUrl)).blob()
-    await saveBlob(blob, po.fileName)
+    await downloadFile(downloadUrl, po.fileName)
   }
 
   async function handleDownloadDeliveryNote() {
     if (!po) return
-    const safe = poNumber.replace(/[^A-Za-z0-9._-]/g, "_")
+    // Match the in-document DN number.
+    const base = quotationNo.replace(/^Q-/, "") || poNumber
+    const safe = base.replace(/[^A-Za-z0-9._-]/g, "_")
     await downloadPdf(`/purchase-orders/${po.id}/delivery-note.pdf`, `DN-${safe}.pdf`)
   }
 
   const uploadRow: PoRow = {
+    id: po.id,
     quotationId,
     quotationNo,
     poNumber,
+    poDate: po.poDate.slice(0, 10),
     client: quotation.client,
     date: quotation.createdAt,
     total: String(grandTotal),
@@ -268,59 +278,63 @@ export default function PurchaseOrderDetail({
   }
 
   return (
-    <div className="admin-shell">
-      <Sidebar activePage={"purchase-orders" as Page} onNavigate={onNavigate} onLogout={onLogout} />
-      <div className="admin-main">
-        <div className="page-content">
-          <Header
-            poNumber={poNumber}
-            quotationNo={quotationNo}
-            createdAt={quotation.createdAt}
-            status={status}
-            onNavigate={onNavigate}
-            onDownloadDeliveryNote={handleDownloadDeliveryNote}
-          />
-          <StatusBar
-            status={status}
-            isOpen={isStatusOpen}
-            onToggle={() => setIsStatusOpen((o) => !o)}
-            onChange={handleStatusChange}
-            onSave={handleSave}
-          />
-          <FileCard
-            fileName={po.fileName}
-            fileSize={po.fileSize}
-            uploadedAt={po.uploadedAt}
-            onUpload={() => setShowUpload(true)}
-            onDownload={handleDownload}
-          />
-          <ClientSummaryCard
-            clientName={quotation.client}
-            clientInitials={clientInitials}
-            clientInfo={quotation.clientInfo}
-            shippingAlamat={shipping.alamat}
-          />
-          {totalShip > 0 && <ShippingTable shipping={shipping} />}
-          <ProductTable products={products} />
-          <CostBreakdown
-            hasProducts={hasProducts}
-            totalProduk={totalProduk}
-            discountPct={discountPct}
-            nominalDiskon={nominalDiskon}
-            subTotal={subTotal}
-            dppNilaiLain={dppNilaiLain}
-            ppn12={ppn12}
-            totalShip={totalShip}
-            totalProfit={totalProfit}
-            grandTotal={grandTotal}
-          />
-          <HistoryTimeline history={history} />
-        </div>
+    <>
+      <div className="page-content">
+        <Header
+          poNumber={poNumber}
+          quotationNo={quotationNo}
+          createdAt={quotation.createdAt}
+          status={status}
+          onEdit={onEdit}
+          onDownloadDeliveryNote={
+            status === "ON_PROGRESS" || status === "DELIVERED"
+              ? handleDownloadDeliveryNote
+              : undefined
+          }
+        />
+        <StatusBar
+          status={status}
+          allowedStatuses={PO_TRANSITIONS[po.status]}
+          isOpen={isStatusOpen}
+          onToggle={() => setIsStatusOpen((o) => !o)}
+          onChange={handleStatusChange}
+          onSave={handleSave}
+        />
+        <FileCard
+          fileName={po.fileName}
+          fileSize={po.fileSize}
+          uploadedAt={po.uploadedAt}
+          onUpload={() => setShowUpload(true)}
+          onDownload={handleDownload}
+        />
+        <ClientSummaryCard
+          clientName={quotation.client}
+          clientInitials={clientInitials}
+          clientInfo={quotation.clientInfo}
+          shippingAlamat={shipping.alamat}
+        />
+        {totalShip > 0 && <ShippingTable shipping={shipping} />}
+        <ProductTable products={products} showProfit={hasCost} />
+        <CostBreakdown
+          hasProducts={hasProducts}
+          totalProduk={totalProduk}
+          discountPct={discountPct}
+          nominalDiskon={nominalDiskon}
+          subTotal={subTotal}
+          dppNilaiLain={dppNilaiLain}
+          ppn12={ppn12}
+          totalShip={totalShip}
+          totalProfit={totalProfit}
+          showProfit={hasCost}
+          grandTotal={grandTotal}
+        />
+        <HistoryTimeline history={history} />
       </div>
 
       {showUpload && (
         <UploadPoModal
           row={uploadRow}
+          hasExistingFile={Boolean(po?.objectKey && po?.fileName)}
           onClose={() => setShowUpload(false)}
           onSubmit={handleUploadSubmit}
         />
@@ -340,6 +354,6 @@ export default function PurchaseOrderDetail({
           }
         />
       )}
-    </div>
+    </>
   )
 }

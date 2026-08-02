@@ -40,7 +40,7 @@ jobs:
           - service: web
             context: ./apps/web
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
@@ -107,6 +107,7 @@ jobs:
           ignore-unfixed: true
           vuln-type: os,library
           severity: CRITICAL,HIGH
+          trivyignores: .trivyignore
 
       - name: build and push
         uses: docker/build-push-action@v6

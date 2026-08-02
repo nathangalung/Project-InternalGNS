@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react"
 import type { Status } from "@/features/quotations/types"
 import { quotationStatusConfig } from "@/lib/status"
 
@@ -19,20 +18,4 @@ export function nowLabel(): string {
     })
     .replace(/\./g, " ")
     .replace(",", ",")
-}
-
-// Shared field label style.
-export const fieldLabel: CSSProperties = {
-  fontSize: "11px",
-  color: "#6B7280",
-  fontWeight: 600,
-  textTransform: "uppercase",
-  marginBottom: "4px",
-}
-
-// Shared field value style.
-export const fieldValue: CSSProperties = {
-  fontSize: "14px",
-  fontWeight: 500,
-  color: "#111827",
 }

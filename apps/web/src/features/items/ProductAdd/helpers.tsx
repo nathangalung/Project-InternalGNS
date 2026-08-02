@@ -1,5 +1,3 @@
-import type { CSSProperties } from "react"
-
 export { CheckIcon as CheckmarkIcon } from "@/components/document/icons"
 export {
   dropdownItemStyle,
@@ -86,63 +84,23 @@ export function parseRp(v: string): number {
 
 export { formatNumber as formatRp } from "@/lib/format"
 
-export const confirmOverlayStyle: CSSProperties = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  background: "rgba(0, 0, 0, 0.4)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 9999,
-}
+// Confirm dialog shell (width comes from the caller).
+export const confirmOverlayCls =
+  "fixed inset-0 z-[9999] flex items-center justify-center bg-[rgba(0,0,0,0.4)]"
 
-export const confirmModalStyle: CSSProperties = {
-  background: "#FFFFFF",
-  borderRadius: "12px",
-  padding: "24px",
-  width: "100%",
-  maxWidth: "400px",
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
-  fontFamily: "'Inter', sans-serif",
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px",
-}
+export const confirmModalCls =
+  "flex w-full flex-col gap-4 rounded-lg bg-white p-6 font-sans shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
 
 export { disabledStyle } from "@/lib/styles"
 
 export function AddNewButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
-    <div
-      style={{
-        borderTop: "1px solid rgba(204, 195, 216, 0.2)",
-        marginTop: 4,
-        paddingTop: 4,
-        display: "flex",
-        justifyContent: "flex-end",
-      }}
-    >
+    <div className="mt-1 flex justify-end border-t border-[rgba(204,195,216,0.2)] pt-1">
       <button
         type="button"
         onMouseDown={(e) => e.preventDefault()}
         onClick={onClick}
-        style={{
-          padding: "4px 20px",
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 4,
-          background: "transparent",
-          border: "none",
-          cursor: "pointer",
-          fontFamily: "'Inter', sans-serif",
-          fontWeight: 700,
-          fontSize: "12px",
-          lineHeight: "16px",
-          color: "#630ED4",
-        }}
+        className="inline-flex items-center gap-1 px-5 py-1 text-caption font-bold text-primary-700"
       >
         <svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
           <line

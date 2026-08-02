@@ -23,6 +23,7 @@ type Invoice struct {
 	InvoiceDate         time.Time  `db:"invoice_date"          json:"invoiceDate"`
 	DueDate             *time.Time `db:"due_date"              json:"dueDate,omitempty"`
 	Subtotal            *string    `db:"subtotal"              json:"subtotal,omitempty"`
+	TotalDiscount       *string    `db:"total_discount"        json:"totalDiscount,omitempty"`
 	Dpp                 *string    `db:"dpp"                   json:"dpp,omitempty"`
 	DppNilaiLain        *string    `db:"dpp_nilai_lain"        json:"dppNilaiLain,omitempty"`
 	PpnAmount           *string    `db:"ppn_amount"            json:"ppnAmount,omitempty"`
@@ -56,6 +57,7 @@ type InvoiceItem struct {
 	UnitCoretaxCode *string `db:"unit_coretax_code"  json:"unitCoretaxCode,omitempty"`
 	Qty             string  `db:"qty"                json:"qty"`
 	UnitPrice       string  `db:"unit_price"         json:"unitPrice"`
+	GrossUnitPrice  *string `db:"gross_unit_price"   json:"grossUnitPrice,omitempty"`
 	CostPrice       *string `db:"cost_price"         json:"costPrice,omitempty"`
 	Dpp             *string `db:"dpp"                json:"dpp,omitempty"`
 	DppNilaiLain    *string `db:"dpp_nilai_lain"     json:"dppNilaiLain,omitempty"`

@@ -15,6 +15,18 @@ type Summary struct {
 	InvoicesOverdue         int64  `db:"invoices_overdue"          json:"invoicesOverdue"`
 }
 
+// Zero finance-only figures.
+func (s *Summary) StripFinancial() {
+	s.TotalRevenue = "0"
+	s.TotalExpenses = "0"
+	s.TotalProfit = "0"
+	s.TotalPpn = "0"
+	s.TotalInvoices = 0
+	s.TotalInvoicesPaid = 0
+	s.InvoicesDueSoon = 0
+	s.InvoicesOverdue = 0
+}
+
 // TimeseriesPoint is one bucket.
 type TimeseriesPoint struct {
 	Month string `db:"month" json:"month"`

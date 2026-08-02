@@ -56,7 +56,10 @@ services:
       HTTP_ADDR: ":8080"
       TZ: Asia/Jakarta
       DATABASE_URL: postgres://gns_app:gns_app@postgres:5432/gns_quotation?sslmode=disable
-      JWT_SECRET: dev_jwt_secret_change_me_with_openssl_rand_hex_32
+      # Fixed local-only value. Deliberately contains no placeholder wording:
+      # config rejects unreplaced template secrets in every environment, since a
+      # deploy that forgets ENV=production would otherwise skip every guard.
+      JWT_SECRET: local_dev_only_jwt_signing_key_0123456789abcdef
       JWT_EXPIRY: 24h
       CORS_ALLOWED_ORIGINS: "*"
       SUPERADMIN_EMAIL: admin@globalsakti.com

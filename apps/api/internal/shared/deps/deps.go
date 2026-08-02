@@ -26,7 +26,9 @@ type CoretaxSettings struct {
 
 // Deps holds shared application dependencies.
 type Deps struct {
+	// Pool serves reads; Tx opens a transaction for multi-write handlers.
 	Pool          db.Executor
+	Tx            db.TxBeginner
 	Queries       queries.Store
 	TemplatesRoot string
 	Pdf           PdfSettings
@@ -51,4 +53,19 @@ func CurrentUserID(ctx context.Context) int64 {
 		return v
 	}
 	return 0
+}
+
+const userRoleKey ctxKey = iota + 100
+
+// WithUserRole stores user role.
+func WithUserRole(ctx context.Context, role string) context.Context {
+	return context.WithValue(ctx, userRoleKey, role)
+}
+
+// CurrentUserRole reads user role.
+func CurrentUserRole(ctx context.Context) string {
+	if v, ok := ctx.Value(userRoleKey).(string); ok {
+		return v
+	}
+	return ""
 }

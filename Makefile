@@ -2,11 +2,11 @@
         db-up db-down db-logs db-shell \
         stack-up stack-down stack-logs ps reset \
         migrate migrate-up migrate-status migrate-down migrate-new \
-        seed seed-dev check-reconcile schema-dump db-erd \
+        seed seed-dev db-clean-testdata check-reconcile schema-dump db-erd db-functions-dump \
         api web dev \
         tidy sqlc \
         build build-api build-web \
-        test test-api test-web \
+        test test-api test-api-ci test-web \
         lint lint-fix fmt types \
         hooks-install hooks-run \
         docker-build docker-build-api docker-build-web \
@@ -16,13 +16,18 @@
 SHELL        := /bin/bash
 DATABASE_URL ?= postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable
 COMPOSE_DEV  := docker compose -f compose.dev.yml
-COMPOSE_PROD := docker compose -f infra/dokploy/docker-compose.yml --env-file infra/dokploy/.env
+COMPOSE_PROD := docker compose -f compose.prod.yml --env-file .env.prod
+
+# Throwaway database so tests never read the dev seed volume.
+CI_TEST_DB   := gns_citest
+CI_TEST_DSN  := postgres://gns_app:gns_app@localhost:5432/$(CI_TEST_DB)?sslmode=disable
 
 API_DIR      := apps/api
 WEB_DIR      := apps/web
 MIG_DIR      := $(API_DIR)/db/migrations
 SEED_DIR     := $(API_DIR)/db/seeds
 CHECK_DIR    := $(API_DIR)/db/checks
+MAINT_DIR    := $(API_DIR)/db/maintenance
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -113,11 +118,31 @@ seed-dev: migrate ## Migrate + load master + dev sample data (DEV ONLY)
 	  PGCLIENTENCODING=UTF8 psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 < $$f; \
 	done
 
+# One-time backlog purge. Acceptance suites clean up after themselves now
+# (internal/testutil/cleanup.go); this only clears rows left by older runs.
+# Guarded to local hosts so it can never touch staging or production.
+db-clean-testdata: ## Purge leftover ATDD/BDD acceptance rows (DEV ONLY)
+	@host=$$(echo "$(DATABASE_URL)" \
+	  | sed -e 's#^.*://##' -e 's#^[^@/]*@##' -e 's#[/?].*$$##' \
+	        -e 's#:[0-9]*$$##' -e 's#^\[##' -e 's#\]$$##'); \
+	case "$$host" in \
+	  localhost|127.0.0.1|::1|postgres) ;; \
+	  *) echo "refusing: DATABASE_URL host '$$host' is not a local dev database"; exit 1 ;; \
+	esac
+	@echo ">> $(MAINT_DIR)/clean_test_data.sql"
+	@PGCLIENTENCODING=UTF8 psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 < $(MAINT_DIR)/clean_test_data.sql
+
 check-reconcile: ## Run reconciliation / verification queries
 	psql "$(DATABASE_URL)" -f $(CHECK_DIR)/01_verify_advanced.sql
 
 schema-dump: ## Dump current schema to docs/schema_current.sql
 	pg_dump --schema-only --no-owner "$(DATABASE_URL)" > docs/schema_current.sql
+
+# Canonical plpgsql bodies. The drift test is the enforcement; this only
+# refreshes the files after a migration changes a function.
+db-functions-dump: db-up ## Regenerate db/functions from the live DB
+	cd $(API_DIR) && DATABASE_URL="$(DATABASE_URL)" GNS_UPDATE_FUNCTIONS=1 \
+	  go test ./db/functions -run TestFunctionBodiesMatchDatabase -count=1
 
 db-erd: db-up ## Regenerate docs/erd from the live dev DB (requires tbls)
 	@command -v tbls >/dev/null 2>&1 || { \
@@ -160,6 +185,13 @@ test: test-api test-web ## Run all tests
 
 test-api: ## Run Go unit tests (serialized to avoid godog/integration interference)
 	cd $(API_DIR) && go test ./... -race -count=1 -p=1
+
+test-api-ci: ## Run Go tests against a throwaway DB, like CI
+	@$(COMPOSE_DEV) exec -T postgres psql -U gns_app -d postgres \
+	  -c "DROP DATABASE IF EXISTS $(CI_TEST_DB) WITH (FORCE);" \
+	  -c "CREATE DATABASE $(CI_TEST_DB) OWNER gns_app;" >/dev/null
+	cd $(API_DIR) && TEST_DATABASE_URL=$(CI_TEST_DSN) DATABASE_URL=$(CI_TEST_DSN) \
+	  go test ./... -race -count=1 -p=1
 
 test-web: ## Typecheck FE
 	cd $(WEB_DIR) && bun run typecheck

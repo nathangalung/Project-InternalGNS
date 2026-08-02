@@ -1,87 +1,62 @@
-import { type CSSProperties, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
+import ActiveFilters from "@/components/shared/ActiveFilters"
 import FilterButton from "@/components/shared/FilterButton"
-import Sidebar from "@/components/shared/Sidebar"
+import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
+import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { toTableRow } from "@/features/quotations/adapters"
 import { useQuotations } from "@/features/quotations/hooks"
 import { statusConfig } from "@/features/quotations/QuotationList/helpers"
-import { buildSeries } from "@/lib/chart"
+import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
 import { formatNumber as formatId } from "@/lib/format"
-import type { Page } from "@/lib/page"
-import DashboardFinancialFilter, { type DashboardFilterValues } from "./DashboardFinancialFilter"
-import TrendChart from "./TrendChart"
+import { pill, ui } from "@/lib/ui"
+import DashboardFinancialFilter, {
+  type DashboardFilterValues,
+  MONTH_LABELS,
+} from "./DashboardFinancialFilter"
+import TrendChart, { CHART_MONTHS } from "./TrendChart"
 
-const chartTabs = [
-  { label: "Quotation", metric: "quotation" as const },
-  { label: "Purchase Order", metric: "invoice" as const }, // PO ≈ delivered invoices proxy
-  { label: "Invoice", metric: "invoice" as const },
-]
+const chartTabs = [{ label: "Quotation", metric: "quotation" as const }]
 
 interface DashboardOperationalProps {
-  onLogout: () => void
-  onNavigate: (page: Page) => void
   onViewQuotation?: (quotationId: number) => void
   onViewAllQuotations?: () => void
-  onViewAllInvoices?: () => void
-}
-
-const exportBtnStyle: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "8px",
-  padding: "8px 20px",
-  border: "1px solid rgba(99, 14, 212, 0.2)",
-  borderRadius: "8px",
-  background: "#FFFFFF",
-  cursor: "pointer",
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: 600,
-  fontSize: "14px",
-  lineHeight: 1.25,
-  color: "#630ED4",
 }
 
 export default function DashboardOperational({
-  onLogout,
-  onNavigate,
   onViewQuotation,
   onViewAllQuotations,
-  onViewAllInvoices,
 }: DashboardOperationalProps) {
   const [activeTab, setActiveTab] = useState("Quotation")
   const [showFilter, setShowFilter] = useState(false)
   const [filters, setFilters] = useState<DashboardFilterValues | null>(null)
 
   const { data: summary } = useDashboardSummary()
-  const { data: rawQuotations } = useQuotations({ limit: 5 })
+  const { data: rawQuotations, isPending: quotationsPending } = useQuotations({ limit: 5 })
 
   const baseYear = filters?.year ?? new Date().getFullYear()
-  const fromDate = `${baseYear}-01-01`
-  const toDate = `${baseYear}-12-31`
-  const selectedMonths = filters?.months ?? null
+  const selectedMonth = filters?.month ?? null // null = whole year
+  const interval: "month" | "day" = selectedMonth === null ? "month" : "day"
+  const { from, to } =
+    selectedMonth === null ? yearRange(baseYear) : monthRange(baseYear, selectedMonth)
+  const chartLabels = selectedMonth === null ? CHART_MONTHS : dayLabels(baseYear, selectedMonth)
 
-  const tsQuotation = useDashboardTimeseries("quotation", fromDate, toDate)
-  const tsInvoice = useDashboardTimeseries("invoice", fromDate, toDate)
+  const tsQuotation = useDashboardTimeseries("quotation", from, to, interval)
 
   const series = useMemo<Record<string, number[]>>(() => {
-    const quotation = buildSeries(tsQuotation.data, baseYear)
-    const invoice = buildSeries(tsInvoice.data, baseYear)
-    const maskMonths = (arr: number[]): number[] =>
-      selectedMonths === null ? arr : arr.map((v, i) => (selectedMonths.includes(i) ? v : 0))
+    const quotation =
+      selectedMonth === null
+        ? buildSeries(tsQuotation.data, baseYear)
+        : buildDailySeries(tsQuotation.data, baseYear, selectedMonth)
     return {
-      Quotation: maskMonths(quotation),
-      "Purchase Order": maskMonths(invoice),
-      Invoice: maskMonths(invoice),
+      Quotation: quotation,
     }
-  }, [tsQuotation.data, tsInvoice.data, baseYear, selectedMonths])
+  }, [tsQuotation.data, baseYear, selectedMonth])
 
   const totalQuotation = summary?.totalQuotations ?? 0
   const totalRejected = summary?.totalQuotationsRejected ?? 0
   const totalPo = summary?.totalPo ?? 0
-  const totalPaid = summary?.totalInvoicesPaid ?? 0
-  const dueSoon = summary?.invoicesDueSoon ?? 0
-  const overdue = summary?.invoicesOverdue ?? 0
 
   const recentQuotations = useMemo(() => {
     return (rawQuotations?.rows ?? []).slice(0, 5).map((q) => {
@@ -94,220 +69,116 @@ export default function DashboardOperational({
   }, [rawQuotations])
 
   return (
-    <div className="admin-shell">
-      <Sidebar
-        activePage={"dashboard-operational" as Page}
-        onNavigate={onNavigate}
-        onLogout={onLogout}
-      />
+    <>
+      <div className="page-content" style={{ gap: "29px" }}>
+        <div className="page-header">
+          <h1 className="page-title">Dashboard Operasional</h1>
+          <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
+            <FilterButton onClick={() => setShowFilter(true)} />
+          </div>
+        </div>
 
-      <div className="admin-main">
-        <div className="page-content" style={{ gap: "29px" }}>
-          <div className="page-header">
-            <h1 className="page-title">Dashboard Operasional</h1>
-            <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
-              <button type="button" style={exportBtnStyle}>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#630ED4"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+        {filters && (
+          <ActiveFilters
+            chips={[
+              { key: "year", label: `Tahun ${filters.year}` },
+              ...(selectedMonth !== null
+                ? [{ key: "month", label: MONTH_LABELS[selectedMonth] }]
+                : []),
+            ]}
+            onClearAll={() => setFilters(null)}
+          />
+        )}
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <StatCard label="Total Quotation" value={formatId(totalQuotation)} />
+          <StatCard label="Total Quotation Ditolak" value={formatId(totalRejected)} />
+          <StatCard label="Total Purchase Order" value={formatId(totalPo)} />
+        </div>
+
+        <div className={ui.panel}>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h3 className={ui.sectionTitle}>Tren Performa Operasional</h3>
+            <div className="flex flex-wrap gap-2">
+              {chartTabs.map((tab) => (
+                <button
+                  key={tab.label}
+                  className={pill(activeTab === tab.label)}
+                  onClick={() => setActiveTab(tab.label)}
                 >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Ekspor Excel
-              </button>
-              <FilterButton onClick={() => setShowFilter(true)} />
+                  {tab.label}
+                </button>
+              ))}
             </div>
           </div>
+          <TrendChart series={series} activeKey={activeTab} monthLabels={chartLabels} />
+        </div>
 
-          <div className="stats-grid-4">
-            <div className="stat-card">
-              <div className="stat-label">Total Quotation</div>
-              <div className="stat-value">{formatId(totalQuotation)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Total Quotation Ditolak</div>
-              <div className="stat-value">{formatId(totalRejected)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Total Purchase Order</div>
-              <div className="stat-value">{formatId(totalPo)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Total Invoice Dibayar</div>
-              <div className="stat-value">{formatId(totalPaid)}</div>
-            </div>
+        <div className="tbl-container">
+          <div className="flex items-center justify-between border-b border-[#F1F5F9] bg-[rgba(242,244,246,0.3)] px-8 py-5">
+            <h3 className="text-lg font-bold leading-7 tracking-[-0.45px] text-[#191C1E]">
+              Quotation Terkini
+            </h3>
+            <button type="button" className={ui.btnPrimary} onClick={onViewAllQuotations}>
+              Lihat Semua
+            </button>
           </div>
 
-          <div className="chart-section">
-            <div className="chart-header">
-              <h3 className="chart-title">Tren Performa Operasional</h3>
-              <div className="chart-tabs">
-                {chartTabs.map((tab) => (
-                  <button
-                    key={tab.label}
-                    className={`chart-tab${activeTab === tab.label ? " chart-tab--active" : ""}`}
-                    onClick={() => setActiveTab(tab.label)}
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className={ui.theadRow}>
+                <th className={ui.thCenter} style={{ width: 150 }}>
+                  Nomor Quotation
+                </th>
+                <th className={ui.thCenter} style={{ width: 80 }}>
+                  Versi
+                </th>
+                <th className={ui.thCenter} style={{ width: 200 }}>
+                  Nama Klien
+                </th>
+                <th className={ui.thCenter} style={{ width: 140 }}>
+                  Tanggal
+                </th>
+                <th className={ui.thCenter} style={{ width: 130 }}>
+                  Jumlah Produk
+                </th>
+                <th className={ui.thCenter} style={{ width: 160 }}>
+                  Total Penawaran
+                </th>
+                <th className={ui.thCenter} style={{ width: 130 }}>
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {quotationsPending && <TableLoadingRow colSpan={7} />}
+              {!quotationsPending && recentQuotations.length === 0 && (
+                <TableEmptyRow colSpan={7}>Belum ada Quotation.</TableEmptyRow>
+              )}
+              {recentQuotations.map((row) => {
+                const style = statusConfig[row.status]
+                return (
+                  <tr
+                    key={row.id}
+                    className={`${ui.tr} ${onViewQuotation ? "cursor-pointer" : "cursor-default"}`}
+                    onClick={() => onViewQuotation?.(Number(row.id))}
                   >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <TrendChart series={series} activeKey={activeTab} />
-          </div>
-
-          <div className="alert-row">
-            <div className="alert-card alert--warning">
-              <div
-                className="card-overlay"
-                style={{
-                  background:
-                    "linear-gradient(82.48deg, rgba(217,119,6,.5) 6.42%, rgba(245,158,11,.1) 93.58%)",
-                  opacity: 0.5,
-                }}
-              />
-              <div className="alert-content">
-                <h3>{formatId(dueSoon)} Invoice</h3>
-                <p>Invoice akan segera jatuh tempo</p>
-              </div>
-              <button className="alert-btn" onClick={onViewAllInvoices}>
-                Tinjau
-              </button>
-            </div>
-            <div className="alert-card alert--danger">
-              <div className="card-glow" style={{ background: "rgba(239,94,94,.3)" }} />
-              <div className="alert-content">
-                <h3>{formatId(overdue)} Invoice</h3>
-                <p>Invoice telah jatuh tempo</p>
-              </div>
-              <button className="alert-btn" onClick={onViewAllInvoices}>
-                Tinjau
-              </button>
-            </div>
-          </div>
-
-          <div className="tbl-container">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "20px 32px",
-                borderBottom: "1px solid #F1F5F9",
-                background: "rgba(242, 244, 246, 0.3)",
-              }}
-            >
-              <h3
-                style={{
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 700,
-                  fontSize: "18px",
-                  lineHeight: "28px",
-                  letterSpacing: "-0.45px",
-                  color: "#191C1E",
-                  margin: 0,
-                }}
-              >
-                Quotation Terkini
-              </h3>
-              <button className="btn-admin-filter" onClick={onViewAllQuotations}>
-                Lihat Semua
-              </button>
-            </div>
-
-            <table className="tbl">
-              <thead>
-                <tr className="tbl-header-row">
-                  <th className="tbl-th tbl-th--center" style={{ width: 150 }}>
-                    Nomor Quotation
-                  </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 80 }}>
-                    Versi
-                  </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 200 }}>
-                    Nama Klien
-                  </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 140 }}>
-                    Tanggal
-                  </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 130 }}>
-                    Jumlah Produk
-                  </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 160 }}>
-                    Total Penawaran
-                  </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 130 }}>
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentQuotations.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
-                      Belum ada Quotation.
+                    <td className={`${ui.tdCenter} font-bold text-primary-700`}>{row.displayNo}</td>
+                    <td className={ui.tdCenter}>{row.version}</td>
+                    <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>{row.client}</td>
+                    <td className={ui.tdCenter}>{row.date}</td>
+                    <td className={ui.tdCenter}>{row.productCount || "-"}</td>
+                    <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>Rp{row.total}</td>
+                    <td className={ui.tdCenter}>
+                      <StatusBadge bg={style.bg} color={style.color}>
+                        {row.status}
+                      </StatusBadge>
                     </td>
                   </tr>
-                )}
-                {recentQuotations.map((row) => {
-                  const style = statusConfig[row.status]
-                  return (
-                    <tr
-                      key={row.id}
-                      className="tbl-row"
-                      style={{ cursor: onViewQuotation ? "pointer" : "default" }}
-                      onClick={() => onViewQuotation?.(Number(row.id))}
-                    >
-                      <td
-                        className="tbl-td tbl-td--center"
-                        style={{ fontWeight: 700, color: "#630ED4" }}
-                      >
-                        {row.displayNo}
-                      </td>
-                      <td className="tbl-td tbl-td--center" style={{ color: "#4A4455" }}>
-                        {row.version}
-                      </td>
-                      <td
-                        className="tbl-td tbl-td--center"
-                        style={{ color: "#191C1E", fontWeight: 500 }}
-                      >
-                        {row.client}
-                      </td>
-                      <td className="tbl-td tbl-td--center" style={{ color: "#4A4455" }}>
-                        {row.date}
-                      </td>
-                      <td className="tbl-td tbl-td--center" style={{ color: "#4A4455" }}>
-                        {row.productCount || "-"}
-                      </td>
-                      <td
-                        className="tbl-td tbl-td--center"
-                        style={{ fontWeight: 700, color: "#191C1E" }}
-                      >
-                        Rp{row.total}
-                      </td>
-                      <td className="tbl-td tbl-td--center">
-                        <StatusBadge bg={style.bg} color={style.color}>
-                          {row.status}
-                        </StatusBadge>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -319,6 +190,6 @@ export default function DashboardOperational({
           onApply={(f) => setFilters(f)}
         />
       )}
-    </div>
+    </>
   )
 }

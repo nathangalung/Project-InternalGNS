@@ -1,27 +1,22 @@
-import { type CSSProperties, useMemo, useState } from "react"
-import Sidebar from "@/components/shared/Sidebar"
+import { useNavigate } from "@tanstack/react-router"
+import { useMemo, useState } from "react"
+import ActiveFilters from "@/components/shared/ActiveFilters"
+import StatCard from "@/components/shared/StatCard"
+import { useMe } from "@/features/auth/hooks"
+import * as dashboardApi from "@/features/dashboard/api"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
-import { buildSeries } from "@/lib/chart"
-import { formatNumber as formatId, formatRupiah as formatRp, toNum } from "@/lib/format"
-import type { Page } from "@/lib/page"
+import { buildSeries, yearRange } from "@/lib/chart"
+import {
+  formatNumber as formatId,
+  formatRupiah as formatRp,
+  formatRupiahAxis as formatRpAxis,
+  toNum,
+} from "@/lib/format"
+import { roleCanAccess } from "@/lib/rbac"
+import { pill, ui } from "@/lib/ui"
 import type { DashboardMetric } from "@/types/api"
+import { YEAR_OPTIONS } from "./DashboardFinancialFilter"
 import TrendChart from "./TrendChart"
-
-const exportBtnStyle: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "8px",
-  padding: "8px 20px",
-  border: "1px solid rgba(99, 14, 212, 0.2)",
-  borderRadius: "8px",
-  background: "#FFFFFF",
-  cursor: "pointer",
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: 600,
-  fontSize: "14px",
-  lineHeight: 1.25,
-  color: "#630ED4",
-}
 
 const chartTabs: { label: string; metric: DashboardMetric }[] = [
   { label: "Quotation", metric: "quotation" },
@@ -33,31 +28,25 @@ const chartTabs: { label: string; metric: DashboardMetric }[] = [
 
 const RP_METRICS: ReadonlyArray<string> = ["Pendapatan", "Laba Bersih", "PPN"]
 
-function formatRpAxis(v: number): string {
-  if (v >= 1_000_000_000) return `Rp ${(v / 1_000_000_000).toFixed(0)}M`
-  if (v >= 1_000_000) return `Rp ${(v / 1_000_000).toFixed(0)}M`
-  if (v >= 1_000) return `Rp ${(v / 1_000).toFixed(0)}K`
-  return `Rp ${v}`
-}
-
-interface DashboardProps {
-  onLogout: () => void
-  onNavigate: (page: Page) => void
-}
-
-export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
+export default function Dashboard() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState("Quotation")
+  const { data: me } = useMe()
+  const canFinance = roleCanAccess(me?.role, "invoices")
+  const visibleTabs = canFinance ? chartTabs : chartTabs.filter((tab) => tab.metric === "quotation")
   const { data: summary } = useDashboardSummary()
 
-  const baseYear = new Date().getFullYear()
-  const fromDate = `${baseYear}-01-01`
-  const toDate = `${baseYear}-12-31`
+  const thisYear = new Date().getFullYear()
+  const [baseYear, setBaseYear] = useState(thisYear)
+  const [showYearMenu, setShowYearMenu] = useState(false)
+  const yearOptions = YEAR_OPTIONS
+  const { from, to } = yearRange(baseYear)
 
-  const tsQuotation = useDashboardTimeseries("quotation", fromDate, toDate)
-  const tsInvoice = useDashboardTimeseries("invoice", fromDate, toDate)
-  const tsRevenue = useDashboardTimeseries("revenue", fromDate, toDate)
-  const tsProfit = useDashboardTimeseries("profit", fromDate, toDate)
-  const tsPpn = useDashboardTimeseries("ppn", fromDate, toDate)
+  const tsQuotation = useDashboardTimeseries("quotation", from, to)
+  const tsInvoice = useDashboardTimeseries("invoice", from, to, "month", canFinance)
+  const tsRevenue = useDashboardTimeseries("revenue", from, to, "month", canFinance)
+  const tsProfit = useDashboardTimeseries("profit", from, to, "month", canFinance)
+  const tsPpn = useDashboardTimeseries("ppn", from, to, "month", canFinance)
 
   const series = useMemo<Record<string, number[]>>(
     () => ({
@@ -83,167 +72,214 @@ export default function Dashboard({ onLogout, onNavigate }: DashboardProps) {
   const overdue = summary?.invoicesOverdue ?? 0
 
   return (
-    <div className="admin-shell">
-      <Sidebar activePage="dashboard" onNavigate={onNavigate} onLogout={onLogout} />
-
-      <div className="admin-main">
-        <div className="page-content" style={{ gap: "29px" }}>
-          <div className="page-header">
-            <h1 className="page-title">Dashboard Utama</h1>
-            <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
-              <button type="button" style={exportBtnStyle}>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#630ED4"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Ekspor Excel
-              </button>
-              <button className="btn-admin-filter">
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="4" y1="6" x2="20" y2="6" />
-                  <line x1="7" y1="12" x2="17" y2="12" />
-                  <line x1="10" y1="18" x2="14" y2="18" />
-                </svg>
-                Filter
-              </button>
-            </div>
-          </div>
-          {/* Row 1 */}
-          <div className="stats-grid-3">
-            <div className="stat-card">
-              <div className="stat-label">Total Pendapatan</div>
-              <div className="stat-value">{formatRp(totalRevenue)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Total Pengeluaran</div>
-              <div className="stat-value">{formatRp(totalExpenses)}</div>
-            </div>
-            <div className="stat-card stat-card--accent">
-              <div className="stat-label">Total Purchase Order</div>
-              <div className="stat-value">{formatId(totalPo)}</div>
-            </div>
-          </div>
-
-          {/* Row 2 */}
-          <div className="stats-grid-3">
-            <div className="stat-card">
-              <div className="stat-label">Total Laba Bersih</div>
-              <div className="stat-value">{formatRp(totalProfit)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Total PPN</div>
-              <div className="stat-value">{formatRp(totalPpn)}</div>
-            </div>
-            <div className="stat-card stat-card--accent-light">
-              <div
-                className="card-overlay"
-                style={{
-                  background: "linear-gradient(82.48deg, rgba(63,86,255,.5) 6.42%, #DBEAFE 93.58%)",
-                  opacity: 0.5,
-                }}
-              />
-              <div className="stat-label">Total Invoice</div>
-              <div className="stat-value">{formatId(totalInvoice)}</div>
-            </div>
-          </div>
-
-          {/* Row 3 */}
-          <div className="stats-grid-4">
-            <div className="stat-card">
-              <div className="stat-label">Total Quotation</div>
-              <div className="stat-value">{formatId(totalQuotation)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Total Quotation Ditolak</div>
-              <div className="stat-value">{formatId(totalRejected)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Total Purchase Order</div>
-              <div className="stat-value">{formatId(totalPo)}</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Total Invoice Dibayar</div>
-              <div className="stat-value">{formatId(totalPaid)}</div>
-            </div>
-          </div>
-
-          {/* Chart */}
-          <div className="chart-section">
-            <div className="chart-header">
-              <h3 className="chart-title">Tren Performa</h3>
-              <div className="chart-tabs">
-                {chartTabs.map((tab) => (
+    <div className="page-content" style={{ gap: "29px" }}>
+      <div className="page-header">
+        <h1 className="page-title">Dashboard Utama</h1>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {canFinance && (
+            <button
+              type="button"
+              className={ui.btnOutline}
+              onClick={() => dashboardApi.exportXlsx(baseYear)}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Ekspor Excel
+            </button>
+          )}
+          <div className="relative">
+            <button
+              type="button"
+              className={ui.btnPrimary}
+              onClick={() => setShowYearMenu((v) => !v)}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="4" y1="6" x2="20" y2="6" />
+                <line x1="7" y1="12" x2="17" y2="12" />
+                <line x1="10" y1="18" x2="14" y2="18" />
+              </svg>
+              Grafik: {baseYear}
+            </button>
+            {showYearMenu && (
+              <div className="absolute right-0 top-[calc(100%+4px)] z-20 min-w-[130px] overflow-hidden rounded-lg border border-dark-200 bg-white shadow-lg">
+                {yearOptions.map((y) => (
                   <button
-                    key={tab.label}
-                    className={`chart-tab${activeTab === tab.label ? " chart-tab--active" : ""}`}
-                    onClick={() => setActiveTab(tab.label)}
+                    key={y}
+                    type="button"
+                    onClick={() => {
+                      setBaseYear(y)
+                      setShowYearMenu(false)
+                    }}
+                    className={`block w-full px-3.5 py-2 text-left text-[13px] transition hover:bg-dark-100 ${
+                      y === baseYear
+                        ? "bg-primary-50 font-semibold text-primary-700"
+                        : "font-medium text-dark-600"
+                    }`}
                   >
-                    {tab.label}
+                    Tahun {y}
                   </button>
                 ))}
               </div>
-            </div>
-            <TrendChart
-              series={series}
-              activeKey={activeTab}
-              formatValue={(v) =>
-                RP_METRICS.includes(activeTab)
-                  ? `Rp${v.toLocaleString("id-ID")}`
-                  : v.toLocaleString("id-ID")
-              }
-              formatAxisTick={(v) =>
-                RP_METRICS.includes(activeTab) ? formatRpAxis(v) : v.toLocaleString("id-ID")
-              }
-            />
-          </div>
-
-          {/* Alerts */}
-          <div className="alert-row">
-            <div className="alert-card alert--warning">
-              <div
-                className="card-overlay"
-                style={{
-                  background:
-                    "linear-gradient(82.48deg, rgba(217,119,6,.5) 6.42%, rgba(245,158,11,.1) 93.58%)",
-                  opacity: 0.5,
-                }}
-              />
-              <div className="alert-content">
-                <h3>{formatId(dueSoon)} Invoice</h3>
-                <p>Invoice akan segera jatuh tempo</p>
-              </div>
-              <button className="alert-btn">Tinjau</button>
-            </div>
-            <div className="alert-card alert--danger">
-              <div className="card-glow" style={{ background: "rgba(239,94,94,.3)" }} />
-              <div className="alert-content">
-                <h3>{formatId(overdue)} Invoice</h3>
-                <p>Invoice telah jatuh tempo</p>
-              </div>
-              <button className="alert-btn">Tinjau</button>
-            </div>
+            )}
           </div>
         </div>
       </div>
+      {canFinance && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <StatCard
+            label="Total Pendapatan"
+            value={formatRp(totalRevenue)}
+            onClick={() => void navigate({ to: "/invoices" })}
+          />
+          <StatCard
+            label="Total Pengeluaran"
+            value={formatRp(totalExpenses)}
+            onClick={() => void navigate({ to: "/purchase-orders" })}
+          />
+        </div>
+      )}
+
+      {canFinance && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <StatCard
+            label="Total Laba Bersih"
+            value={formatRp(totalProfit)}
+            onClick={() => void navigate({ to: "/invoices" })}
+          />
+          <StatCard
+            label="Total PPN"
+            value={formatRp(totalPpn)}
+            onClick={() => void navigate({ to: "/invoices" })}
+          />
+          <StatCard
+            label="Total Invoice"
+            value={formatId(totalInvoice)}
+            onClick={() => void navigate({ to: "/invoices" })}
+          />
+        </div>
+      )}
+
+      <div
+        className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${canFinance ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}
+      >
+        <StatCard
+          label="Total Quotation"
+          value={formatId(totalQuotation)}
+          onClick={() => void navigate({ to: "/quotations" })}
+        />
+        <StatCard
+          label="Total Quotation Ditolak"
+          value={formatId(totalRejected)}
+          onClick={() => void navigate({ to: "/quotations" })}
+        />
+        <StatCard
+          label="Total Purchase Order"
+          value={formatId(totalPo)}
+          onClick={() => void navigate({ to: "/purchase-orders" })}
+        />
+        {canFinance && (
+          <StatCard
+            label="Total Invoice Dibayar"
+            value={formatId(totalPaid)}
+            onClick={() => void navigate({ to: "/invoices" })}
+          />
+        )}
+      </div>
+
+      {/* Chart */}
+      <ActiveFilters
+        chips={[
+          {
+            key: "year",
+            label: `Grafik: Tahun ${baseYear}`,
+            onRemove: baseYear !== thisYear ? () => setBaseYear(thisYear) : undefined,
+          },
+        ]}
+      />
+      <div className={ui.panel}>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h3 className={ui.sectionTitle}>Tren Performa</h3>
+          <div className="flex flex-wrap gap-2">
+            {visibleTabs.map((tab) => (
+              <button
+                key={tab.label}
+                className={pill(activeTab === tab.label)}
+                onClick={() => setActiveTab(tab.label)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <TrendChart
+          series={series}
+          activeKey={activeTab}
+          formatValue={(v) =>
+            RP_METRICS.includes(activeTab)
+              ? `Rp${v.toLocaleString("id-ID")}`
+              : v.toLocaleString("id-ID")
+          }
+          formatAxisTick={(v) =>
+            RP_METRICS.includes(activeTab) ? formatRpAxis(v) : v.toLocaleString("id-ID")
+          }
+        />
+      </div>
+
+      {canFinance && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-warning/30 bg-warning/10 px-6 py-6">
+            <div>
+              <h3 className="text-xl font-bold text-accent-900">{formatId(dueSoon)} Invoice</h3>
+              <p className="mt-1 text-overline font-semibold uppercase tracking-[0.05em] text-accent-800/70">
+                Invoice akan segera jatuh tempo
+              </p>
+            </div>
+            <button
+              type="button"
+              className={ui.btnPrimary}
+              onClick={() => void navigate({ to: "/invoices" })}
+            >
+              Tinjau
+            </button>
+          </div>
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-error/30 bg-error/10 px-6 py-6">
+            <div>
+              <h3 className="text-xl font-bold text-red-800">{formatId(overdue)} Invoice</h3>
+              <p className="mt-1 text-overline font-semibold uppercase tracking-[0.05em] text-red-700/70">
+                Invoice telah jatuh tempo
+              </p>
+            </div>
+            <button
+              type="button"
+              className={ui.btnPrimary}
+              onClick={() => void navigate({ to: "/invoices" })}
+            >
+              Tinjau
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -93,6 +93,10 @@ type CreateContactInput = {
   countryCode?: string
 }
 
+export async function listContacts(companyId: number): Promise<ContactRow[]> {
+  return apiRequest<ContactRow[]>({ path: `/clients/${companyId}/contacts` })
+}
+
 export async function createContact(
   companyId: number,
   input: CreateContactInput,
@@ -101,6 +105,25 @@ export async function createContact(
     path: `/clients/${companyId}/contacts`,
     method: "POST",
     body: input,
+  })
+}
+
+export async function updateContact(
+  companyId: number,
+  contactId: number,
+  input: CreateContactInput,
+): Promise<ContactRow> {
+  return apiRequest<ContactRow>({
+    path: `/clients/${companyId}/contacts/${contactId}`,
+    method: "PATCH",
+    body: input,
+  })
+}
+
+export async function deleteContact(companyId: number, contactId: number): Promise<void> {
+  await apiRequest<void>({
+    path: `/clients/${companyId}/contacts/${contactId}`,
+    method: "DELETE",
   })
 }
 

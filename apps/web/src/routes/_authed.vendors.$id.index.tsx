@@ -1,8 +1,6 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
-import { useAuth } from "@/features/auth/hooks"
 import { useVendor } from "@/features/vendors/hooks"
 import VendorDetail from "@/features/vendors/VendorDetail"
-import { makePageNavigate } from "@/lib/page-nav"
 
 export const Route = createFileRoute("/_authed/vendors/$id/")({
   component: VendorDetailRoute,
@@ -10,7 +8,6 @@ export const Route = createFileRoute("/_authed/vendors/$id/")({
 
 function VendorDetailRoute() {
   const navigate = useNavigate()
-  const { logout } = useAuth()
   const { id } = useParams({ from: "/_authed/vendors/$id/" })
   const numericId = Number(id)
   const { data, isLoading } = useVendor(numericId)
@@ -23,15 +20,9 @@ function VendorDetailRoute() {
     )
   }
 
+  // Keyed so a different vendor remounts with fresh form state, while a
+  // background refetch of the same vendor keeps in-progress edits.
   return (
-    <VendorDetail
-      vendor={data}
-      onNavigate={makePageNavigate(navigate)}
-      onBack={() => void navigate({ to: "/vendors" })}
-      onLogout={() => {
-        logout()
-        void navigate({ to: "/login" })
-      }}
-    />
+    <VendorDetail key={data.id} vendor={data} onBack={() => void navigate({ to: "/vendors" })} />
   )
 }

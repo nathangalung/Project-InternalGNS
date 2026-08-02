@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  keepPreviousData,
+  skipToken,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import * as vendorsApi from "@/features/vendors/api"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
@@ -17,16 +23,15 @@ export function useVendors(params: vendorsApi.VendorListParams = {}) {
 export function useVendor(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.vendors.detail(id) : queryKeys.vendors.all,
-    queryFn: () => vendorsApi.get(id as number),
-    enabled: id !== undefined && id > 0,
+    queryFn: id !== undefined && id > 0 ? () => vendorsApi.get(id) : skipToken,
   })
 }
 
 export function useVendorItems(vendorId: number | undefined) {
   return useQuery({
     queryKey: vendorId ? queryKeys.vendors.items(vendorId) : queryKeys.vendors.all,
-    queryFn: () => vendorsApi.listItems(vendorId as number),
-    enabled: vendorId !== undefined && vendorId > 0,
+    queryFn:
+      vendorId !== undefined && vendorId > 0 ? () => vendorsApi.listItems(vendorId) : skipToken,
   })
 }
 
@@ -58,8 +63,9 @@ export function useUploadVendorLogo() {
       await vendorsApi.updateLogo(id, presign.objectKey)
     },
     onSuccess: (_, { id }) => {
+      // Detail carries the new object key that the logo URL query depends on.
+      // Lists do not render logos, so the broad prefix is not needed.
       qc.invalidateQueries({ queryKey: queryKeys.vendors.detail(id) })
-      qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah logo vendor.")),
   })
@@ -68,8 +74,10 @@ export function useUploadVendorLogo() {
 export function useVendorLogoDownloadUrl(id: number | undefined, objectKey?: string) {
   return useQuery({
     queryKey: id ? [...queryKeys.vendors.detail(id), "logo-url", objectKey] : queryKeys.vendors.all,
-    queryFn: () => vendorsApi.presignLogoDownload(id as number),
-    enabled: id !== undefined && id > 0 && Boolean(objectKey),
+    queryFn:
+      id !== undefined && id > 0 && objectKey
+        ? () => vendorsApi.presignLogoDownload(id)
+        : skipToken,
     staleTime: 4 * 60 * 1000,
   })
 }

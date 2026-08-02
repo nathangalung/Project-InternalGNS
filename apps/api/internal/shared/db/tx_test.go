@@ -31,20 +31,20 @@ func TestWithTx_RollsBackOnError(t *testing.T) {
 }
 
 func TestNewPool_BadDSN(t *testing.T) {
-	_, err := db.NewPool(context.Background(), "not-a-real-dsn::::")
+	_, err := db.NewPool(context.Background(), "not-a-real-dsn::::", "Asia/Jakarta")
 	assert.Error(t, err)
 }
 
 func TestNewPool_BadHost(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	_, err := db.NewPool(ctx, "postgres://nobody@127.0.0.1:1/nope?sslmode=disable")
+	_, err := db.NewPool(ctx, "postgres://nobody@127.0.0.1:1/nope?sslmode=disable", "Asia/Jakarta")
 	assert.Error(t, err)
 }
 
 func TestNewPool_HappyPath(t *testing.T) {
 	_ = testutil.Pool(t)
-	pool, err := db.NewPool(context.Background(), testutil.DSN())
+	pool, err := db.NewPool(context.Background(), testutil.DSN(), "Asia/Jakarta")
 	require.NoError(t, err)
 	defer pool.Close()
 	require.NoError(t, pool.Ping(context.Background()))

@@ -54,6 +54,7 @@ type QuotationItem struct {
 	Subtotal        string  `db:"subtotal"            json:"subtotal"`
 	IsAvailable     bool    `db:"is_available"        json:"isAvailable"`
 	ShipDestination *string `db:"ship_destination"    json:"shipDestination,omitempty"`
+	ShippingDays    *int    `db:"shipping_days"       json:"shippingDays,omitempty"`
 }
 
 // StatusHistoryEntry mirrors quotation_status_history.
@@ -163,6 +164,11 @@ type UpdateRequest struct {
 type ChangeStatusRequest struct {
 	Status string  `json:"status"` // draft | sent | accepted | rejected | revision | expired
 	Note   *string `json:"note,omitempty"`
+}
+
+// Change contact body.
+type ChangeContactRequest struct {
+	ContactID int64 `json:"contactId"`
 }
 
 // dbItem mirrors fn_create_quotation keys.

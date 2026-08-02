@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/money"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
 )
 
@@ -64,6 +64,7 @@ type exportData struct {
 	Payment       string
 	Validity      string
 	SignerName    string
+	UseA4         bool
 }
 
 // ExportPDF returns the quotation as a PDF stream.
@@ -110,6 +111,13 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 	client, _ := h.clients.GetByID(ctx, d.CompanyClientID)
 
 	contactEmail, contactPhone := h.contactComm(ctx, d, client)
+
+	productCount := 0
+	for _, it := range d.Items {
+		if it.ItemType == "product" {
+			productCount++
+		}
+	}
 
 	items := make([]exportItem, 0, len(d.Items))
 	for i, it := range d.Items {
@@ -164,7 +172,7 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 		AttnName:      pdfgen.LatexEscape(attn),
 		AttnEmail:     pdfgen.LatexEscape(contactEmail),
 		AttnPhone:     pdfgen.LatexEscape(contactPhone),
-		DateLine:      pdfgen.JakartaDateLine(d.CreatedAt.In(time.Local)),
+		DateLine:      pdfgen.JakartaDateLine(d.CreatedAt.In(tz.Jakarta())),
 		Items:         items,
 		TotalProduk:   pdfgen.FormatIDR(d.TotalProduk),
 		DiscountPct:   d.DiscountPct,
@@ -178,6 +186,7 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 		Payment:       pdfgen.LatexEscape(payment),
 		Validity:      pdfgen.LatexEscape(validity),
 		SignerName:    pdfgen.LatexEscape(h.settings.SignerName),
+		UseA4:         productCount > 5,
 	}, nil
 }
 

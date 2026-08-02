@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -29,10 +30,10 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(requestIDResponseMiddleware)
-	r.Use(middleware.RealIP)
+	r.Use(trustedProxyIP)
 	r.Use(accessLogMiddleware)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(30 * time.Second))
+	r.Use(requestTimeout(defaultRequestTimeout, renderRequestTimeout))
 	r.Use(securityHeadersMiddleware)
 	r.Use(bodyLimitMiddleware(2 * 1024 * 1024))
 
@@ -50,8 +51,23 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
 
+	// Readiness pings the database so an orchestrator stops routing to an
+	// instance whose Postgres is unreachable.
+	r.Get("/readyz", func(w http.ResponseWriter, req *http.Request) {
+		ctx, cancel := context.WithTimeout(req.Context(), 2*time.Second)
+		defer cancel()
+		if pool == nil || pool.Ping(ctx) != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = w.Write([]byte(`{"status":"unavailable"}`))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"ready"}`))
+	})
+
 	d := deps.Deps{
 		Pool:          pool,
+		Tx:            pool,
 		Queries:       store,
 		TemplatesRoot: cfg.TemplatesRoot,
 		Pdf: deps.PdfSettings{
@@ -84,11 +100,22 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 			r.Mount("/clients", clients.Routes(d))
 			r.Mount("/items", items.Routes(d))
 			r.Mount("/vendors", vendors.Routes(d))
-			r.Mount("/quotations", quotations.Routes(d))
-			r.Mount("/purchase-orders", purchaseorders.Routes(d))
-			r.Mount("/invoices", invoices.Routes(d))
-			r.Mount("/users", users.Routes(d))
+			r.With(requireRole("superadmin", "operational")).
+				Mount("/quotations", quotations.Routes(d))
+			r.With(requireRole("superadmin", "operational")).
+				Mount("/purchase-orders", purchaseorders.Routes(d))
+			r.With(requireRole("superadmin", "finance")).
+				Mount("/invoices", invoices.Routes(d))
+			r.With(requireRole("superadmin")).
+				Mount("/users", users.Routes(d))
 			r.Mount("/dashboard", dashboard.Routes(d))
+
+			// Proxy asset bytes through the authenticated API (MinIO stays internal).
+			if storageClient != nil {
+				storageH := storage.NewHandler(storageClient)
+				r.With(authorizeBucket).Put("/storage/object", storageH.Put)
+				r.With(authorizeBucket).Get("/storage/object", storageH.Get)
+			}
 		})
 	})
 

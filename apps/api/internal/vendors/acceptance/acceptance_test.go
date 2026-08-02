@@ -23,6 +23,7 @@ const defaultUserID int64 = 1
 
 type scenarioState struct {
 	t        *testing.T
+	cleaner  *testutil.Cleaner
 	srv      *httptest.Server
 	last     *http.Response
 	body     []byte
@@ -98,6 +99,7 @@ func (s *scenarioState) captureID() error {
 		return fmt.Errorf("missing id body=%s", s.body)
 	}
 	s.vendorID = resp.ID
+	s.cleaner.Vendor(resp.ID)
 	return nil
 }
 
@@ -173,9 +175,9 @@ func (s *scenarioState) itemsListAtLeast(min int) error {
 	return nil
 }
 
-func initScenario(t *testing.T) func(*godog.ScenarioContext) {
+func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
-		state := &scenarioState{t: t}
+		state := &scenarioState{t: t, cleaner: cleaner}
 		sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 			state.last = nil
 			state.body = nil
@@ -202,8 +204,10 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 }
 
 func TestVendorsFeatures(t *testing.T) {
+	testutil.RequireDB(t)
+	cleaner := testutil.NewCleaner(t)
 	suite := godog.TestSuite{
-		ScenarioInitializer: initScenario(t),
+		ScenarioInitializer: initScenario(t, cleaner),
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"features"},

@@ -1,5 +1,7 @@
-import { useMe } from "@/features/auth/hooks"
-import type { Page } from "@/lib/page"
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router"
+import { useState } from "react"
+import { useAuth, useMe } from "@/features/auth/hooks"
+import { roleCanAccess, type Section, sectionFromPathname } from "@/lib/rbac"
 import type { Role } from "@/types/api"
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -10,24 +12,36 @@ const ROLE_LABEL: Record<Role, string> = {
 
 const logoImg = "/logo.png"
 
-const navItems: { label: string; icon: string; page?: Page }[] = [
-  { label: "Dashboard", icon: "grid", page: "dashboard" },
-  { label: "Dashboard Financial", icon: "bar-chart", page: "dashboard-financial" },
-  { label: "Dashboard Operasional", icon: "activity", page: "dashboard-operational" },
-  { label: "Quotation", icon: "file-text", page: "quotation" },
-  { label: "Purchase Order", icon: "shopping-cart", page: "purchase-orders" },
-  { label: "Invoices", icon: "file", page: "invoices" },
-  { label: "Katalog Produk", icon: "package", page: "products" },
-  { label: "Daftar Vendor", icon: "truck", page: "vendors" },
-  { label: "Daftar Klien", icon: "users", page: "clients" },
-  { label: "Manajemen Pengguna", icon: "settings", page: "users" },
-]
+const navItems = [
+  { label: "Dashboard", icon: "grid", page: "dashboard", to: "/" },
+  {
+    label: "Dashboard Financial",
+    icon: "bar-chart",
+    page: "dashboard-financial",
+    to: "/dashboard-financial",
+  },
+  {
+    label: "Dashboard Operasional",
+    icon: "activity",
+    page: "dashboard-operational",
+    to: "/dashboard-operational",
+  },
+  { label: "Quotation", icon: "file-text", page: "quotation", to: "/quotations" },
+  {
+    label: "Purchase Order",
+    icon: "shopping-cart",
+    page: "purchase-orders",
+    to: "/purchase-orders",
+  },
+  { label: "Invoices", icon: "file", page: "invoices", to: "/invoices" },
+  { label: "Katalog Produk", icon: "package", page: "products", to: "/products" },
+  { label: "Daftar Vendor", icon: "truck", page: "vendors", to: "/vendors" },
+  { label: "Daftar Klien", icon: "users", page: "clients", to: "/clients" },
+  { label: "Manajemen Pengguna", icon: "settings", page: "users", to: "/users" },
+] as const satisfies readonly { label: string; icon: string; page: Section; to: string }[]
 
-interface SidebarProps {
-  activePage: Page
-  onNavigate: (page: Page) => void
-  onLogout: () => void
-}
+const iconWrap =
+  "h-4 w-4 flex-shrink-0 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-width:1.8] [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]"
 
 function NavIcon({ name }: { name: string }) {
   const icons: Record<string, React.ReactElement> = {
@@ -103,56 +117,130 @@ function NavIcon({ name }: { name: string }) {
       </svg>
     ),
   }
-  return <span className="nav-icon">{icons[name]}</span>
+  return <span className={iconWrap}>{icons[name]}</span>
 }
 
-export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarProps) {
+const iconBtn =
+  "flex items-center justify-center [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-linecap:round]"
+
+export default function Sidebar() {
   const { data: me } = useMe()
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  // Highlight follows the router, detail routes included.
+  const activeSection = useRouterState({
+    select: (state) => sectionFromPathname(state.location.pathname),
+  })
+
+  const visibleItems = navItems.filter((item) => roleCanAccess(me?.role, item.page))
+
+  function handleLogout() {
+    logout()
+    void navigate({ to: "/login" })
+  }
+
   return (
-    <aside className="admin-sidebar">
-      <div className="sidebar-brand">
-        <img src={logoImg} className="sidebar-logo" alt="GNS" />
-        <div className="sidebar-brand-text">
-          <h2>PT Global Niaga Sakti</h2>
-          <span>Admin Panel</span>
-        </div>
-      </div>
-
-      <nav className="sidebar-nav">
-        {navItems.map((item) => (
-          <button
-            key={item.label}
-            className={`nav-item${item.page === activePage ? " nav-item--active" : ""}`}
-            onClick={() => item.page && onNavigate(item.page)}
-          >
-            <NavIcon name={item.icon} />
-            {item.label}
-          </button>
-        ))}
-      </nav>
-
-      <div className="sidebar-footer">
-        <div className="sidebar-user-info">
-          <div className="sidebar-user-name">{me?.name ?? ""}</div>
-          <div className="sidebar-user-role">{me?.role ? ROLE_LABEL[me.role] : ""}</div>
-        </div>
-        <button className="logout-btn" onClick={onLogout} title="Keluar">
-          <svg
-            viewBox="0 0 24 24"
-            width="16"
-            height="16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
+    <>
+      {/* Mobile top bar */}
+      <header className="fixed inset-x-0 top-0 z-[90] flex h-14 items-center gap-3 bg-dark-900 px-4 lg:hidden">
+        <button
+          type="button"
+          className={`${iconBtn} text-dark-200`}
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Buka menu"
+          aria-expanded={drawerOpen}
+        >
+          <svg viewBox="0 0 24 24" width="22" height="22" strokeWidth="2">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
-      </div>
-    </aside>
+        <img src={logoImg} className="h-6 w-6 object-contain" alt="GNS" />
+        <span className="text-sm font-semibold text-white">PT Global Niaga Sakti</span>
+      </header>
+
+      {/* Drawer scrim */}
+      {drawerOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 z-[100] cursor-pointer bg-dark-900/50 lg:hidden"
+          aria-label="Tutup menu"
+          onClick={() => setDrawerOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`fixed left-0 top-0 z-[100] flex h-screen w-[220px] flex-shrink-0 flex-col overflow-y-auto bg-dark-900 py-5 transition-transform lg:translate-x-0 ${
+          drawerOpen ? "translate-x-0 shadow-lg" : "-translate-x-full lg:shadow-none"
+        }`}
+      >
+        <div className="mb-6 flex items-center gap-2 px-4">
+          <img src={logoImg} className="h-7 w-7 object-contain" alt="GNS" />
+          <div className="flex flex-col gap-0.5">
+            <h2 className="text-sm font-bold leading-tight text-white">PT Global Niaga Sakti</h2>
+            <span className="text-caption leading-tight text-dark-400">Admin Panel</span>
+          </div>
+          <button
+            type="button"
+            className={`${iconBtn} ml-auto h-8 w-8 rounded-sm bg-white/[0.06] text-dark-300 lg:hidden`}
+            onClick={() => setDrawerOpen(false)}
+            aria-label="Tutup menu"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <nav className="flex flex-1 flex-col gap-1 px-3">
+          {visibleItems.map((item) => {
+            const active = item.page === activeSection
+            return (
+              <Link
+                key={item.label}
+                to={item.to}
+                // Root must match exactly so aria-current tracks the highlight.
+                activeOptions={{ exact: item.to === "/" }}
+                className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md py-2 pl-3 text-left text-sm font-medium no-underline transition-colors ${
+                  active
+                    ? "rounded-r-none border-r-[3px] border-primary-400 bg-primary-600/15 pr-[calc(0.75rem-3px)] text-primary-400 hover:bg-primary-600/20 hover:text-primary-300"
+                    : "pr-3 text-dark-400 hover:bg-dark-800 hover:text-dark-200"
+                }`}
+                onClick={() => setDrawerOpen(false)}
+              >
+                <NavIcon name={item.icon} />
+                {item.label}
+              </Link>
+            )
+          })}
+        </nav>
+
+        <div className="group mx-3 mb-3 mt-auto flex items-center gap-2.5 rounded-md border border-primary-600/25 bg-dark-900/85 px-3 py-2.5 transition-colors hover:border-primary-600/45 hover:bg-dark-900">
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <div className="truncate text-caption font-semibold leading-tight text-white">
+              {me?.name ?? ""}
+            </div>
+            <div className="text-[10px] font-semibold uppercase leading-tight tracking-wide text-dark-400">
+              {me?.role ? ROLE_LABEL[me.role] : ""}
+            </div>
+          </div>
+          <button
+            className={`${iconBtn} h-[30px] w-[30px] flex-shrink-0 rounded-md border border-white/[0.06] bg-white/[0.04] text-dark-400 transition-colors hover:border-red-600/40 hover:bg-red-600/20 hover:text-red-300`}
+            onClick={handleLogout}
+            title="Keluar"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" strokeWidth="2" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
+        </div>
+      </aside>
+    </>
   )
 }

@@ -1,11 +1,9 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 import { useMemo } from "react"
-import { useAuth } from "@/features/auth/hooks"
 import InvoiceDetail from "@/features/invoices/InvoiceDetail"
 import { toQuotationData } from "@/features/quotations/adapters"
 import { useQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
-import { makePageNavigate } from "@/lib/page-nav"
 
 export const Route = createFileRoute("/_authed/invoices/$id/")({
   component: InvoiceDetailRoute,
@@ -13,8 +11,6 @@ export const Route = createFileRoute("/_authed/invoices/$id/")({
 
 function InvoiceDetailRoute() {
   const { id } = Route.useParams()
-  const navigate = useNavigate()
-  const { logout } = useAuth()
 
   const numericId = Number(id)
   const hasNumericId = Number.isFinite(numericId) && numericId > 0
@@ -34,11 +30,6 @@ function InvoiceDetailRoute() {
       quotationId={numericId}
       quotationNo={detail?.quotationNo ?? id}
       quotation={quotation}
-      onNavigate={makePageNavigate(navigate, id)}
-      onLogout={() => {
-        logout()
-        void navigate({ to: "/login" })
-      }}
     />
   )
 }

@@ -13,6 +13,10 @@ interface PaginationProps {
   onPage: (n: number) => void
 }
 
+const pageBtnBase = "flex h-8 w-8 items-center justify-center rounded-sm text-sm transition"
+const navBtn =
+  "flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100"
+
 // Pagination footer with page picker.
 export default function Pagination({
   totalItems,
@@ -28,28 +32,13 @@ export default function Pagination({
   const [open, setOpen] = useState(false)
 
   return (
-    <div
-      className="pagination"
-      style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-        <div style={{ position: "relative", display: "inline-block" }}>
+    <div className="flex flex-col items-center gap-4 border-t border-dark-200 p-6 sm:flex-row sm:justify-between sm:gap-0">
+      <div className="flex items-center gap-3">
+        <div className="relative inline-block">
           <button
+            type="button"
             onClick={() => setOpen((o) => !o)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "8px",
-              padding: "6px 12px",
-              borderRadius: "6px",
-              border: "1px solid #E2E8F0",
-              background: "#fff",
-              cursor: "pointer",
-              fontSize: "14px",
-              color: "#4A4455",
-              fontFamily: "'Inter', sans-serif",
-            }}
+            className="flex items-center justify-between gap-2 rounded-sm border border-dark-200 bg-white px-3 py-1.5 text-sm leading-6 text-[#4A4455]"
           >
             {itemsPerPage} Baris
             <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
@@ -63,57 +52,25 @@ export default function Pagination({
             </svg>
           </button>
           {open && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: "calc(100% + 8px)",
-                left: 0,
-                background: "#FFFFFF",
-                border: "1px solid rgba(204, 195, 216, 0.2)",
-                boxShadow: "0px 0px 0px 1px rgba(0, 0, 0, 0.05)",
-                borderRadius: "8px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                padding: "8px 0",
-                width: "162px",
-                zIndex: 50,
-                boxSizing: "border-box",
-              }}
-            >
+            <div className="absolute bottom-[calc(100%_+_8px)] left-0 z-50 flex w-[162px] flex-col items-start rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-2 shadow-[0px_0px_0px_1px_rgba(0,0,0,0.05)]">
               {rowsPerPageOptions.map((val) => {
                 const isActive = itemsPerPage === val
                 return (
                   <button
                     key={val}
+                    type="button"
                     onClick={() => {
                       onItemsPerPage(val)
                       setOpen(false)
                     }}
-                    style={{
-                      display: "flex",
-                      flexDirection: "row",
-                      justifyContent: isActive ? "space-between" : "flex-start",
-                      alignItems: "center",
-                      padding: "4px 20px",
-                      width: "100%",
-                      height: "32px",
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      boxSizing: "border-box",
-                    }}
+                    className={`flex h-8 w-full flex-row items-center px-5 py-1 ${
+                      isActive ? "justify-between" : "justify-start"
+                    }`}
                   >
                     <span
-                      style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: isActive ? 600 : 400,
-                        fontSize: "12px",
-                        lineHeight: "24px",
-                        color: isActive ? "#630ED4" : "#4A4455",
-                        display: "flex",
-                        alignItems: "center",
-                      }}
+                      className={`flex items-center text-[12px] leading-6 ${
+                        isActive ? "font-semibold text-primary-700" : "font-normal text-[#4A4455]"
+                      }`}
                     >
                       {val} Baris
                     </span>
@@ -134,15 +91,16 @@ export default function Pagination({
             </div>
           )}
         </div>
-        <span className="pagination-info">
+        <span className="text-sm text-[#4A4455]">
           Menampilkan {totalItems === 0 ? 0 : startIndex + 1}-
           {Math.min(startIndex + itemsPerPage, totalItems)} dari {totalItems} {resourceLabel}
         </span>
       </div>
 
-      <div className="page-buttons">
+      <div className="flex flex-wrap items-center justify-center gap-1 sm:flex-nowrap sm:justify-start">
         <button
-          className="page-btn-nav"
+          type="button"
+          className={navBtn}
           onClick={() => onPage(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
         >
@@ -160,28 +118,28 @@ export default function Pagination({
           n === null ? (
             <span
               key={`e${i}`}
-              style={{
-                padding: "0 2px",
-                color: "#9CA3AF",
-                fontSize: "13px",
-                alignSelf: "center",
-                userSelect: "none",
-              }}
+              className="select-none self-center px-[2px] text-[13px] text-[#9CA3AF]"
             >
               …
             </span>
           ) : (
             <button
               key={n}
+              type="button"
               onClick={() => onPage(n)}
-              className={`page-btn${n === currentPage ? " page-btn--active" : ""}`}
+              className={`${pageBtnBase} ${
+                n === currentPage
+                  ? "bg-primary-700 font-bold text-white"
+                  : "font-medium text-[#4A4455] hover:bg-dark-100"
+              }`}
             >
               {n}
             </button>
           ),
         )}
         <button
-          className="page-btn-nav"
+          type="button"
+          className={navBtn}
           onClick={() => onPage(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages || totalPages === 0}
         >

@@ -27,12 +27,13 @@ const (
 )
 
 type scenarioState struct {
-	t      *testing.T
-	srv    *httptest.Server
-	last   *http.Response
-	body   []byte
-	itemID int64
-	name   string
+	t       *testing.T
+	cleaner *testutil.Cleaner
+	srv     *httptest.Server
+	last    *http.Response
+	body    []byte
+	itemID  int64
+	name    string
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
@@ -103,6 +104,7 @@ func (s *scenarioState) captureID() error {
 		return fmt.Errorf("missing id body=%s", s.body)
 	}
 	s.itemID = resp.ID
+	s.cleaner.Item(resp.ID)
 	return nil
 }
 
@@ -207,9 +209,56 @@ func (s *scenarioState) vendorListAtLeast(min int) error {
 	return nil
 }
 
-func initScenario(t *testing.T) func(*godog.ScenarioContext) {
+func (s *scenarioState) importUnknownAutoCreate() error {
+	body := items.MatchRowsRequest{
+		AutoCreate: true,
+		MinScore:   0.99, // isolate the no-match -> create path
+		Rows:       []items.MatchRowInput{{Name: s.uniqueName("BDD AutoCreate Unknown"), Qty: 1, Unit: "PCS"}},
+	}
+	if err := s.sendRequest(http.MethodPost, "/items/match-rows", body); err != nil {
+		return err
+	}
+	s.trackAutoCreated()
+	return nil
+}
+
+// Track auto-created rows before asserting.
+func (s *scenarioState) trackAutoCreated() {
+	var out items.MatchRowsResponse
+	if err := json.Unmarshal(s.body, &out); err != nil {
+		return
+	}
+	for _, r := range out.Rows {
+		if r.Source == "CREATED" && r.Matched != nil {
+			s.cleaner.Item(r.Matched.ItemID)
+		}
+	}
+}
+
+func (s *scenarioState) rowCreatedWithEmptyPrice() error {
+	var out items.MatchRowsResponse
+	if err := json.Unmarshal(s.body, &out); err != nil {
+		return err
+	}
+	if len(out.Rows) != 1 {
+		return fmt.Errorf("want 1 row got %d", len(out.Rows))
+	}
+	r := out.Rows[0]
+	if r.Source != "CREATED" {
+		return fmt.Errorf("want source CREATED got %q body=%s", r.Source, s.body)
+	}
+	if r.Matched == nil || r.Matched.ItemID == 0 {
+		return fmt.Errorf("expected created item with id body=%s", s.body)
+	}
+	if r.Matched.CostPrice != nil {
+		return fmt.Errorf("expected empty price got %q", *r.Matched.CostPrice)
+	}
+	return nil
+}
+
+func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
-		state := &scenarioState{t: t}
+		state := &scenarioState{t: t, cleaner: cleaner}
 		sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 			state.last = nil
 			state.body = nil
@@ -236,12 +285,16 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the user links vendor (\d+) to the item$`, state.linkVendor)
 		sc.Step(`^the user lists vendors for the item$`, state.listVendorsForItem)
 		sc.Step(`^the vendor list contains at least (\d+) row(?:s)?$`, state.vendorListAtLeast)
+		sc.Step(`^the user imports an unknown product row with auto-create$`, state.importUnknownAutoCreate)
+		sc.Step(`^the imported row is a newly created product with empty price$`, state.rowCreatedWithEmptyPrice)
 	}
 }
 
 func TestItemsFeatures(t *testing.T) {
+	testutil.RequireDB(t)
+	cleaner := testutil.NewCleaner(t)
 	suite := godog.TestSuite{
-		ScenarioInitializer: initScenario(t),
+		ScenarioInitializer: initScenario(t, cleaner),
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"features"},

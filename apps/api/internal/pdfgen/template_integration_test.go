@@ -40,15 +40,18 @@ func TestRealTemplate_Invoice(t *testing.T) {
 		UnitPrice, Amount            string
 	}
 	data := struct {
-		InvoiceNo, PONo, CompanyName, CompanyNPWP, CompanyAddress, VesselName string
-		InvoiceDate, DueDate                                                  string
-		Items                                                                 []item
-		DPP, DPPNilaiLain, PPN, Total                                         string
-		PaymentTerms, BankName, BankAccountNo, BankAccountName                string
-		DateLine, SignerName                                                  string
+		InvoiceNo, PONo, PODate, CompanyName, CompanyNPWP, CompanyAddress, VesselName string
+		InvoiceDate, DueDate                                                          string
+		Items                                                                         []item
+		TotalProduk, Diskon, DiscountPct                                              string
+		DPP, DPPNilaiLain, PPN, Total                                                 string
+		PaymentTerms, BankName, BankAccountNo, BankAccountName                        string
+		DateLine, SignerName                                                          string
+		UseA4                                                                         bool
 	}{
 		InvoiceNo:       "INV-2026-0001",
 		PONo:            "PO-2026-0001",
+		PODate:          "1 January 2026",
 		CompanyName:     "PT Sample",
 		CompanyNPWP:     "01.234.567.8-901.000",
 		CompanyAddress:  "Jl. Test",
@@ -56,6 +59,9 @@ func TestRealTemplate_Invoice(t *testing.T) {
 		InvoiceDate:     "1 January 2026",
 		DueDate:         "31 January 2026",
 		Items:           []item{{No: 1, Qty: "1", Unit: "PCS", Name: "X", Description: "Y", UnitPrice: "Rp~100", Amount: "Rp~100"}},
+		TotalProduk:     "Rp~100",
+		Diskon:          "",
+		DiscountPct:     "0",
 		DPP:             "Rp~100",
 		DPPNilaiLain:    "Rp~91",
 		PPN:             "Rp~12",
@@ -66,6 +72,7 @@ func TestRealTemplate_Invoice(t *testing.T) {
 		BankAccountName: "PT GNS",
 		DateLine:        "Jakarta, 1 January 2026",
 		SignerName:      "Direktur",
+		UseA4:           true,
 	}
 	out := execTemplate(t, "invoice/Invoice.tex.tmpl", data)
 	if !strings.Contains(out, `\documentclass`) {
@@ -90,6 +97,7 @@ func TestRealTemplate_Quotation(t *testing.T) {
 		TotalProduk, DiscountPct, TotalDiscount, Subtotal          string
 		DPP, PPN, GrandTotal                                       string
 		DeliveryPlace, DeliveryTime, Payment, Validity, SignerName string
+		UseA4                                                      bool
 	}{
 		QuotationNo:   "Q-2026-0001",
 		ClientRefNo:   "REF-1",
@@ -111,6 +119,7 @@ func TestRealTemplate_Quotation(t *testing.T) {
 		Payment:       "NET 30",
 		Validity:      "30 days",
 		SignerName:    "Direktur",
+		UseA4:         true,
 	}
 	out := execTemplate(t, "quotation/Quotation.tex.tmpl", data)
 	if !strings.Contains(out, `\documentclass`) {

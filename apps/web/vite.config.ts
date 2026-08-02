@@ -43,6 +43,7 @@ export default defineConfig({
           "tanstack-vendor": [
             "react",
             "react-dom",
+            "react-dom/client",
             "@tanstack/react-query",
             "@tanstack/react-router",
           ],

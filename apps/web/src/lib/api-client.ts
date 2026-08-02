@@ -81,6 +81,13 @@ function tryRefresh(): Promise<boolean> {
   return refreshInFlight
 }
 
+// Notifies the auth layer once refresh definitively fails.
+let onAuthExpired: (() => void) | null = null
+
+export function setOnAuthExpired(fn: () => void): void {
+  onAuthExpired = fn
+}
+
 // fetchAuthed: hits the API with the JWT, and on 401 transparently refreshes
 // + retries the original request once. The refresh path itself bypasses this
 // to avoid recursion.
@@ -97,7 +104,9 @@ async function fetchAuthed(
   const refreshed = await tryRefresh()
   if (!refreshed) {
     clearTokens()
-    return res
+    onAuthExpired?.()
+    // The drained body cannot be re-read, so surface a typed error.
+    throw new ApiError(401, null, "Sesi berakhir, silakan masuk kembali.")
   }
   return rawFetch(path, init)
 }
@@ -179,12 +188,18 @@ export async function apiList<T>(input: RequestInput): Promise<PaginatedList<T>>
   return { rows, total: Number.isFinite(total) ? total : rows.length }
 }
 
-function extractErrorMessage(parsed: unknown, fallback: string): string {
+// Pick the most human message an RFC 7807 body offers. `detail` is prose meant
+// for the user, so it always wins. `fields` is keyed by API field name, which
+// is an identifier and not Indonesian, so only its values are shown -- never
+// `key: value`, which reads as debug output in a toast.
+export function extractErrorMessage(parsed: unknown, fallback: string): string {
   if (!parsed || typeof parsed !== "object") return fallback
   const body = parsed as { detail?: unknown; fields?: Record<string, unknown>; title?: unknown }
   if (typeof body.detail === "string" && body.detail.length > 0) return body.detail
   if (body.fields && typeof body.fields === "object") {
-    const parts = Object.entries(body.fields).map(([k, v]) => `${k}: ${String(v)}`)
+    const parts = Object.values(body.fields)
+      .map((v) => String(v).trim())
+      .filter((v) => v.length > 0)
     if (parts.length > 0) return parts.join("; ")
   }
   if (typeof body.title === "string" && body.title.length > 0) return body.title
@@ -195,6 +210,22 @@ type PickerType = { description: string; accept: Record<string, string[]> }
 
 const PICKER_PDF: PickerType = { description: "PDF", accept: { "application/pdf": [".pdf"] } }
 const PICKER_XML: PickerType = { description: "XML", accept: { "application/xml": [".xml"] } }
+const PICKER_XLSX: PickerType = {
+  description: "Excel",
+  accept: {
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+  },
+}
+const PICKER_ANY: PickerType = { description: "Berkas", accept: { "*/*": [] } }
+
+// Pick the save dialog filter from a filename's extension.
+function pickerForFilename(filename: string): PickerType {
+  const ext = filename.split(".").pop()?.toLowerCase()
+  if (ext === "pdf") return PICKER_PDF
+  if (ext === "xlsx") return PICKER_XLSX
+  if (ext === "xml") return PICKER_XML
+  return PICKER_ANY
+}
 
 // Fetch binary endpoint as blob; let user pick dir + edit filename when supported.
 async function downloadBinary(
@@ -215,6 +246,35 @@ export const downloadPdf = (path: string, filename: string) =>
   downloadBinary(path, filename, PICKER_PDF)
 export const downloadXml = (path: string, filename: string) =>
   downloadBinary(path, filename, PICKER_XML)
+export const downloadXlsx = (path: string, filename: string) =>
+  downloadBinary(path, filename, PICKER_XLSX)
+
+// Authed download; picker inferred from extension.
+export const downloadFile = (path: string, filename: string) =>
+  downloadBinary(path, filename, pickerForFilename(filename))
+
+// Authed PUT of a file to an API asset path (proxy upload to MinIO).
+export async function uploadAsset(path: string, file: File): Promise<void> {
+  const res = await fetchAuthed(path, {
+    method: "PUT",
+    body: file,
+    headers: { "Content-Type": file.type || "application/octet-stream" },
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => "")
+    throw new ApiError(res.status, text, `Upload failed: ${res.statusText}`)
+  }
+}
+
+// Authed GET of an asset as a blob object URL (for <img src>). Caller revokes.
+export async function fetchObjectUrl(path: string): Promise<string> {
+  const res = await fetchAuthed(path, { method: "GET" })
+  if (!res.ok) {
+    throw new ApiError(res.status, null, `Fetch failed: ${res.statusText}`)
+  }
+  const blob = await res.blob()
+  return URL.createObjectURL(blob)
+}
 
 // File System Access API where supported; else anchor fallback.
 export async function saveBlob(

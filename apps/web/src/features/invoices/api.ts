@@ -1,4 +1,11 @@
-import { apiList, apiRequest, buildQuery, nullOn404, type PaginatedList } from "@/lib/api-client"
+import {
+  apiList,
+  apiRequest,
+  buildQuery,
+  downloadXlsx,
+  nullOn404,
+  type PaginatedList,
+} from "@/lib/api-client"
 import type {
   InvoiceBackendRow,
   InvoiceBackendStatus,
@@ -30,6 +37,18 @@ export type ListParams = {
 export async function list(params: ListParams = {}): Promise<PaginatedList<InvoiceBackendRow>> {
   const qs = buildQuery(params)
   return apiList<InvoiceBackendRow>({ path: `/invoices${qs ? `?${qs}` : ""}` })
+}
+
+// Download the filtered list as XLSX.
+export function exportXlsx(params: ListParams = {}): Promise<void> {
+  const qs = buildQuery(params)
+  return downloadXlsx(`/invoices/export.xlsx${qs ? `?${qs}` : ""}`, "invoice-export.xlsx")
+}
+
+// Download the filtered list as the DJP Coretax bulk-import workbook.
+export function exportCoretaxXlsx(params: ListParams = {}): Promise<void> {
+  const qs = buildQuery(params)
+  return downloadXlsx(`/invoices/coretax.xlsx${qs ? `?${qs}` : ""}`, "coretax-export.xlsx")
 }
 
 export async function summary(): Promise<InvoiceSummary> {

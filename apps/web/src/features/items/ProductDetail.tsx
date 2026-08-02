@@ -1,11 +1,11 @@
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
 import {
   dropdownItemStyle,
   dropdownLabelStyle,
   dropdownPanelStyleCompact as dropdownPanelStyle,
 } from "@/components/shared/filter-styles"
-import Sidebar from "@/components/shared/Sidebar"
+import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import AddVendorToItemModal from "@/features/items/AddVendorToItemModal"
 import {
   useItemImageDownloadUrl,
@@ -14,17 +14,15 @@ import {
   useUploadItemImage,
 } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
-import { ApiError } from "@/lib/api-client"
+import { ApiError, fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
 import { formatRupiah } from "@/lib/format"
-import type { Page } from "@/lib/page"
+import { ui } from "@/lib/ui"
 import type { ItemRow } from "@/types/api"
 
 interface ProductDetailProps {
   product: ItemRow
-  onNavigate: (page: Page) => void
   onBack: () => void
-  onLogout: () => void
 }
 
 function productInitials(name: string): string {
@@ -34,39 +32,16 @@ function productInitials(name: string): string {
   return (parts[0][0] + parts[1][0]).toUpperCase()
 }
 
-const labelStyle: CSSProperties = {
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: 700,
-  fontSize: "10px",
-  lineHeight: "15px",
-  letterSpacing: "1px",
-  textTransform: "uppercase",
-  color: "#4A4455",
-  display: "block",
-  marginBottom: "8px",
-}
+const labelCls =
+  "mb-2 block text-[10px] font-bold uppercase leading-[15px] tracking-[1px] text-[#4A4455]"
 
-const inputStyle: CSSProperties = {
-  width: "100%",
-  height: "44px",
-  padding: "12px 16px",
-  background: "#F2F4F6",
-  borderRadius: "8px",
-  border: "1.5px solid transparent",
-  fontFamily: "'Inter', sans-serif",
-  fontSize: "14px",
-  fontWeight: 500,
-  color: "#191C1E",
-  outline: "none",
-  transition: "border-color 0.15s",
-}
+const inputBase =
+  "h-11 w-full rounded-md border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150"
 
-export default function ProductDetail({
-  product,
-  onNavigate,
-  onBack,
-  onLogout,
-}: ProductDetailProps) {
+const textareaCls =
+  "min-h-24 w-full resize-y rounded-md border-[1.5px] border-transparent bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150"
+
+export default function ProductDetail({ product, onBack }: ProductDetailProps) {
   const { data: units } = useUnits()
 
   const initialUnitCode = useMemo(() => {
@@ -93,8 +68,27 @@ export default function ProductDetail({
   const { data: itemVendors, isLoading: vendorsLoading } = useItemVendors(product.id)
 
   useEffect(() => {
-    if (imageDownload?.downloadUrl) setImageDataUrl(imageDownload.downloadUrl)
-    else if (!product.imageObjectKey) setImageDataUrl("")
+    const path = imageDownload?.downloadUrl
+    if (!path) {
+      if (!product.imageObjectKey) setImageDataUrl("")
+      return
+    }
+    let active = true
+    let objectUrl = ""
+    fetchObjectUrl(path)
+      .then((u) => {
+        if (active) {
+          objectUrl = u
+          setImageDataUrl(u)
+        } else {
+          URL.revokeObjectURL(u)
+        }
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
   }, [imageDownload?.downloadUrl, product.imageObjectKey])
 
   function handleImageSelect(file: File | undefined) {
@@ -108,25 +102,16 @@ export default function ProductDetail({
     uploadImage.mutate({ id: product.id, file })
   }
 
+  // Every field but the unit hydrates once from the state initializers above.
+  // The unit code resolves only after the units list arrives, so seed it once
+  // on arrival and never again; later refetches leave the form untouched.
+  const unitHydrated = useRef(false)
   useEffect(() => {
-    setName(product.name)
-    setImpa(product.impaCode ?? "")
-    const code =
-      product.defaultUnitId !== undefined
-        ? (units?.find((u) => u.id === product.defaultUnitId)?.code ?? "")
-        : ""
-    setUnitCode(code)
-    setUnitQuery(code)
-    setDescription(product.description ?? "")
-    setIsActive(product.isActive)
-  }, [
-    product.name,
-    product.impaCode,
-    product.defaultUnitId,
-    product.description,
-    product.isActive,
-    units,
-  ])
+    if (unitHydrated.current || !units) return
+    unitHydrated.current = true
+    setUnitCode(initialUnitCode)
+    setUnitQuery(initialUnitCode)
+  }, [units, initialUnitCode])
 
   const dirty =
     name !== product.name ||
@@ -187,706 +172,383 @@ export default function ProductDetail({
   }
 
   return (
-    <div className="admin-shell">
-      <Sidebar activePage={"products" as Page} onNavigate={onNavigate} onLogout={onLogout} />
+    <>
+      <div className="page-content" style={{ gap: "29px" }}>
+        <div className="flex flex-col gap-3">
+          <nav className={ui.breadcrumb}>
+            <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
+              Katalog Produk
+            </button>
+            <span className={ui.breadcrumbSep}>&rsaquo;</span>
+            <span className={ui.breadcrumbCurrent}>Detail Produk</span>
+          </nav>
 
-      <div className="admin-main">
-        <div className="page-content" style={{ gap: "29px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <nav className="qd-breadcrumb">
-              <button className="qd-breadcrumb-link" onClick={onBack}>
-                Katalog Produk
-              </button>
-              <span className="qd-breadcrumb-sep">&rsaquo;</span>
-              <span className="qd-breadcrumb-current">Detail Produk</span>
-            </nav>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-              <button
-                type="button"
-                onClick={onBack}
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  background: "#FFFFFF",
-                  boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)",
-                  borderRadius: "8px",
-                  border: "none",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
+          <div className="flex items-center gap-5">
+            <button
+              type="button"
+              onClick={onBack}
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-white shadow-sm"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#4A4455"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#4A4455"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="19" y1="12" x2="5" y2="12" />
-                  <polyline points="12 19 5 12 12 5" />
-                </svg>
-              </button>
-              <h1 className="page-title" style={{ margin: 0 }}>
-                Detail Produk
-              </h1>
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+            </button>
+            <h1 className="page-title">Detail Produk</h1>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center gap-5 rounded-lg bg-white px-6 py-5">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                handleImageSelect(e.target.files?.[0])
+                e.target.value = ""
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              title="Klik untuk ganti gambar produk"
+              className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg p-0 text-xl font-extrabold tracking-[0.5px] text-white"
+              style={{ background: imageDataUrl ? "#FFFFFF" : logoBg }}
+            >
+              {imageDataUrl ? (
+                <img
+                  src={imageDataUrl}
+                  alt="Gambar produk"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                productInitials(product.name)
+              )}
+            </button>
+            <div className="min-w-0 flex-1">
+              <h2 className="break-words text-lg font-bold leading-6 tracking-[-0.4px] text-[#191C1E]">
+                {product.name}
+              </h2>
+              <span className="text-[13px] font-bold leading-[18px] tracking-[0.3px] text-primary-700">
+                {product.impaCode ? `IMPA ${product.impaCode}` : "Produk"}
+              </span>
+            </div>
+            <div
+              className={`flex flex-shrink-0 flex-col gap-0.5 rounded-[10px] border px-4 py-2.5 ${
+                product.isActive ? "border-[#BBF7D0] bg-[#F0FDF4]" : "border-[#FECACA] bg-[#FEF2F2]"
+              }`}
+            >
+              <span className="text-[9px] font-semibold uppercase leading-[11px] tracking-[1.4px] text-dark-500">
+                Status
+              </span>
+              <span
+                className={`text-[13px] font-extrabold leading-4 tracking-[0.2px] ${
+                  product.isActive ? "text-[#065F46]" : "text-[#991B1B]"
+                }`}
+              >
+                {product.isActive ? "Aktif" : "Nonaktif"}
+              </span>
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <div
-              style={{
-                background: "#FFFFFF",
-                borderRadius: "12px",
-                padding: "20px 24px",
-                display: "flex",
-                alignItems: "center",
-                gap: "20px",
-              }}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                style={{ display: "none" }}
-                onChange={(e) => {
-                  handleImageSelect(e.target.files?.[0])
-                  e.target.value = ""
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                title="Klik untuk ganti gambar produk"
-                style={{
-                  width: "64px",
-                  height: "64px",
-                  borderRadius: "12px",
-                  background: imageDataUrl ? "#FFFFFF" : logoBg,
-                  color: "#FFFFFF",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 800,
-                  fontSize: "20px",
-                  letterSpacing: "0.5px",
-                  border: "none",
-                  cursor: "pointer",
-                  overflow: "hidden",
-                  padding: 0,
-                  flexShrink: 0,
-                }}
-              >
-                {imageDataUrl ? (
-                  <img
-                    src={imageDataUrl}
-                    alt="Gambar produk"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                ) : (
-                  productInitials(product.name)
-                )}
-              </button>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h2
-                  style={{
-                    margin: 0,
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "18px",
-                    lineHeight: "24px",
-                    letterSpacing: "-0.4px",
-                    color: "#191C1E",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {product.name}
-                </h2>
-                <span
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "13px",
-                    lineHeight: "18px",
-                    color: "#630ED4",
-                    letterSpacing: "0.3px",
-                  }}
-                >
-                  {product.impaCode ? `IMPA ${product.impaCode}` : "Produk"}
-                </span>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
-                  padding: "10px 16px",
-                  background: product.isActive ? "#F0FDF4" : "#FEF2F2",
-                  border: `1px solid ${product.isActive ? "#BBF7D0" : "#FECACA"}`,
-                  borderRadius: "10px",
-                  flexShrink: 0,
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 600,
-                    fontSize: "9px",
-                    letterSpacing: "1.4px",
-                    textTransform: "uppercase",
-                    color: "#64748B",
-                    lineHeight: "11px",
-                  }}
-                >
-                  Status
-                </span>
-                <span
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 800,
-                    fontSize: "13px",
-                    letterSpacing: "0.2px",
-                    color: product.isActive ? "#065F46" : "#991B1B",
-                    lineHeight: "16px",
-                  }}
-                >
-                  {product.isActive ? "Aktif" : "Nonaktif"}
-                </span>
-              </div>
+          <div className="flex flex-col gap-8 rounded-lg bg-white p-8">
+            <div>
+              <h3 className="text-xl font-bold leading-7 tracking-[-0.5px] text-[#191C1E]">
+                Informasi Utama Produk
+              </h3>
+              <p className="mt-1 text-sm font-normal leading-5 text-[#4A4455]">
+                Kelola informasi produk.
+              </p>
             </div>
 
-            <div
-              style={{
-                background: "#FFFFFF",
-                borderRadius: "12px",
-                padding: "32px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "32px",
-              }}
-            >
+            <div className="flex flex-col gap-6">
               <div>
-                <h3
-                  style={{
-                    margin: 0,
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "20px",
-                    lineHeight: "28px",
-                    letterSpacing: "-0.5px",
-                    color: "#191C1E",
+                <label className={labelCls}>
+                  Nama Produk <span className="text-[#DC2626]">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value)
+                    setFieldErrors((p) => ({ ...p, name: "" }))
                   }}
-                >
-                  Informasi Utama Produk
-                </h3>
-                <p
-                  style={{
-                    margin: "4px 0 0 0",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 400,
-                    fontSize: "14px",
-                    lineHeight: "20px",
-                    color: "#4A4455",
-                  }}
-                >
-                  Kelola informasi produk.
-                </p>
+                  className={`${inputBase} ${
+                    fieldErrors.name ? "border-[#DC2626]" : "border-transparent"
+                  }`}
+                />
+                {fieldErrors.name && (
+                  <div className="mt-1.5 text-[12px] text-[#DC2626]">{fieldErrors.name}</div>
+                )}
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-                <div>
-                  <label style={labelStyle}>
-                    Nama Produk <span style={{ color: "#DC2626" }}>*</span>
-                  </label>
+              <div>
+                <label className={labelCls}>Kode IMPA</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={impa}
+                  placeholder="Contoh: 330212"
+                  onChange={(e) => setImpa(e.target.value.replace(/\D/g, ""))}
+                  className={`${inputBase} border-transparent`}
+                />
+              </div>
+
+              <div>
+                <label className={labelCls}>Satuan Default</label>
+                <div className="relative">
                   <input
                     type="text"
-                    value={name}
+                    placeholder="Ketik nama satuan..."
+                    value={unitQuery}
                     onChange={(e) => {
-                      setName(e.target.value)
-                      setFieldErrors((p) => ({ ...p, name: "" }))
+                      setUnitQuery(e.target.value)
+                      setShowUnitSuggestions(true)
+                      if (unitCode) setUnitCode("")
                     }}
-                    style={{
-                      ...inputStyle,
-                      borderColor: fieldErrors.name ? "#DC2626" : "transparent",
+                    onFocus={() => {
+                      if (unitQuery.length > 0 && !unitCode) setShowUnitSuggestions(true)
                     }}
+                    className={`${inputBase} border-transparent ${unitQuery ? "pr-9" : ""}`}
                   />
-                  {fieldErrors.name && (
-                    <div
-                      style={{
-                        marginTop: "6px",
-                        fontSize: "12px",
-                        color: "#DC2626",
-                        fontFamily: "'Inter', sans-serif",
+                  {unitQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUnitQuery("")
+                        setUnitCode("")
+                        setShowUnitSuggestions(false)
                       }}
+                      title="Bersihkan"
+                      className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-[#94A3B8]"
                     >
-                      {fieldErrors.name}
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      >
+                        <line x1="1" y1="1" x2="13" y2="13" />
+                        <line x1="13" y1="1" x2="1" y2="13" />
+                      </svg>
+                    </button>
+                  )}
+                  {showUnitSuggestions && unitQuery.length > 0 && (
+                    <div style={dropdownPanelStyle}>
+                      {filteredUnits.length === 0 ? (
+                        <div className="px-5 py-3 text-center text-[13px] text-[#94A3B8]">
+                          Tidak ada hasil
+                        </div>
+                      ) : (
+                        filteredUnits.map((u) => {
+                          const active = unitCode === u.code
+                          const label = u.name ? `${u.code} — ${u.name}` : u.code
+                          return (
+                            <button
+                              key={u.id}
+                              type="button"
+                              style={dropdownItemStyle}
+                              onClick={() => {
+                                setUnitCode(u.code)
+                                setUnitQuery(u.code)
+                                setShowUnitSuggestions(false)
+                              }}
+                            >
+                              <span style={dropdownLabelStyle(active)}>{label}</span>
+                              {active && <CheckIcon />}
+                            </button>
+                          )
+                        })
+                      )}
                     </div>
                   )}
                 </div>
-
-                <div>
-                  <label style={labelStyle}>Kode IMPA</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={impa}
-                    placeholder="Contoh: 330212"
-                    onChange={(e) => setImpa(e.target.value.replace(/\D/g, ""))}
-                    style={inputStyle}
-                  />
-                </div>
-
-                <div>
-                  <label style={labelStyle}>Satuan Default</label>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type="text"
-                      placeholder="Ketik nama satuan..."
-                      value={unitQuery}
-                      onChange={(e) => {
-                        setUnitQuery(e.target.value)
-                        setShowUnitSuggestions(true)
-                        if (unitCode) setUnitCode("")
-                      }}
-                      onFocus={() => {
-                        if (unitQuery.length > 0 && !unitCode) setShowUnitSuggestions(true)
-                      }}
-                      style={{ ...inputStyle, paddingRight: unitQuery ? "36px" : undefined }}
-                    />
-                    {unitQuery && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUnitQuery("")
-                          setUnitCode("")
-                          setShowUnitSuggestions(false)
-                        }}
-                        title="Bersihkan"
-                        style={{
-                          position: "absolute",
-                          right: "10px",
-                          top: "50%",
-                          transform: "translateY(-50%)",
-                          background: "transparent",
-                          border: "none",
-                          cursor: "pointer",
-                          padding: "4px",
-                          display: "flex",
-                          alignItems: "center",
-                          color: "#94A3B8",
-                        }}
-                      >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 14 14"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        >
-                          <line x1="1" y1="1" x2="13" y2="13" />
-                          <line x1="13" y1="1" x2="1" y2="13" />
-                        </svg>
-                      </button>
-                    )}
-                    {showUnitSuggestions && unitQuery.length > 0 && (
-                      <div style={dropdownPanelStyle}>
-                        {filteredUnits.length === 0 ? (
-                          <div
-                            style={{
-                              padding: "12px 20px",
-                              fontSize: "13px",
-                              color: "#94A3B8",
-                              fontFamily: "'Inter', sans-serif",
-                              textAlign: "center",
-                            }}
-                          >
-                            Tidak ada hasil
-                          </div>
-                        ) : (
-                          filteredUnits.map((u) => {
-                            const active = unitCode === u.code
-                            const label = u.name ? `${u.code} — ${u.name}` : u.code
-                            return (
-                              <button
-                                key={u.id}
-                                type="button"
-                                style={dropdownItemStyle}
-                                onClick={() => {
-                                  setUnitCode(u.code)
-                                  setUnitQuery(u.code)
-                                  setShowUnitSuggestions(false)
-                                }}
-                              >
-                                <span style={dropdownLabelStyle(active)}>{label}</span>
-                                {active && <CheckIcon />}
-                              </button>
-                            )
-                          })
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label style={labelStyle}>Deskripsi</label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                    placeholder="Deskripsi tambahan produk (opsional)"
-                    style={{
-                      ...inputStyle,
-                      height: "auto",
-                      minHeight: "96px",
-                      padding: "12px 16px",
-                      resize: "vertical",
-                      fontFamily: "'Inter', sans-serif",
-                    }}
-                  />
-                </div>
               </div>
 
-              <div style={{ borderTop: "1px solid #ECEEF0", paddingTop: "24px" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "24px",
-                    padding: "20px 24px",
-                    background: "#F2F4F6",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 700,
-                        fontSize: "14px",
-                        lineHeight: "20px",
-                        color: "#191C1E",
-                      }}
-                    >
-                      Status Produk
-                    </div>
-                    <div
-                      style={{
-                        marginTop: "4px",
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 400,
-                        fontSize: "12px",
-                        lineHeight: "16px",
-                        color: "#4A4455",
-                      }}
-                    >
-                      Menonaktifkan produk akan menyembunyikan dari katalog dan mencegah penggunaan
-                      dalam quotation baru.
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsActive((a) => !a)}
-                    role="switch"
-                    aria-checked={isActive}
-                    style={{
-                      width: "56px",
-                      height: "32px",
-                      borderRadius: "999px",
-                      border: "none",
-                      background: isActive ? "#630ED4" : "#CBD5E1",
-                      cursor: "pointer",
-                      position: "relative",
-                      transition: "background 0.2s",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <span
-                      style={{
-                        position: "absolute",
-                        top: "4px",
-                        left: isActive ? "28px" : "4px",
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "50%",
-                        background: "#FFFFFF",
-                        transition: "left 0.2s",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-                      }}
-                    />
-                  </button>
-                </div>
+              <div>
+                <label className={labelCls}>Deskripsi</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  placeholder="Deskripsi tambahan produk (opsional)"
+                  className={textareaCls}
+                />
               </div>
-
-              {submitError && (
-                <div
-                  style={{
-                    padding: "12px 16px",
-                    background: "#FEF2F2",
-                    borderLeft: "4px solid #DC2626",
-                    borderRadius: "8px",
-                    fontFamily: "'Inter', sans-serif",
-                    fontSize: "13px",
-                    color: "#7F1D1D",
-                  }}
-                >
-                  {submitError}
-                </div>
-              )}
             </div>
-          </div>
 
-          <div
-            style={{ display: "flex", justifyContent: "flex-end", gap: "16px", marginTop: "8px" }}
-          >
-            <button
-              type="button"
-              onClick={handleCancel}
-              disabled={!dirty || updateItem.isPending}
-              style={{
-                padding: "12px 28px",
-                borderRadius: "12px",
-                border: "none",
-                background: "transparent",
-                color: dirty && !updateItem.isPending ? "#630ED4" : "#CBD5E1",
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 700,
-                fontSize: "14px",
-                cursor: dirty && !updateItem.isPending ? "pointer" : "default",
-              }}
-            >
-              Batal
-            </button>
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={!dirty || updateItem.isPending}
-              style={{
-                padding: "12px 32px",
-                borderRadius: "12px",
-                border: "none",
-                background: dirty ? "linear-gradient(135deg, #630ED4 0%, #7C3AED 100%)" : "#CBD5E1",
-                boxShadow: dirty
-                  ? "0px 10px 15px -3px rgba(99, 14, 212, 0.2), 0px 4px 6px -4px rgba(99, 14, 212, 0.2)"
-                  : "none",
-                color: "#FFFFFF",
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 700,
-                fontSize: "14px",
-                cursor: dirty && !updateItem.isPending ? "pointer" : "default",
-                opacity: updateItem.isPending ? 0.7 : 1,
-              }}
-            >
-              {updateItem.isPending ? "Menyimpan…" : "Simpan Perubahan"}
-            </button>
-          </div>
-
-          <div
-            style={{
-              background: "#FFFFFF",
-              borderRadius: "12px",
-              padding: "32px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "24px",
-              marginTop: "8px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "16px",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <h3
-                  style={{
-                    margin: 0,
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 800,
-                    fontSize: "20px",
-                    lineHeight: "28px",
-                    letterSpacing: "-0.5px",
-                    color: "#191C1E",
-                  }}
+            <div className="border-t border-[#ECEEF0] pt-6">
+              <div className="flex items-center justify-between gap-6 rounded-md bg-[#F2F4F6] px-6 py-5">
+                <div className="flex-1">
+                  <div className="text-sm font-bold leading-5 text-[#191C1E]">Status Produk</div>
+                  <div className="mt-1 text-caption font-normal text-[#4A4455]">
+                    Menonaktifkan produk akan menyembunyikan dari katalog dan mencegah penggunaan
+                    dalam quotation baru.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsActive((a) => !a)}
+                  role="switch"
+                  aria-checked={isActive}
+                  className={`relative h-8 w-14 flex-shrink-0 rounded-full transition-colors duration-200 ${
+                    isActive ? "bg-primary-700" : "bg-dark-300"
+                  }`}
                 >
-                  Daftar Vendor Terkait
-                </h3>
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    padding: "3px 10px",
-                    borderRadius: 999,
-                    background: "rgba(99, 14, 212, 0.08)",
-                    color: "#630ED4",
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 700,
-                    fontSize: "11px",
-                    letterSpacing: "0.2px",
-                  }}
-                >
-                  {(itemVendors ?? []).length}
-                </span>
+                  <span
+                    className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ${
+                      isActive ? "left-7" : "left-1"
+                    }`}
+                  />
+                </button>
               </div>
-              <button
-                type="button"
-                className="btn-admin-primary"
-                onClick={() => setShowAddVendor(true)}
-                style={{ width: "200px", justifyContent: "center" }}
+            </div>
+
+            {submitError && (
+              <div className="rounded-md border-l-4 border-[#DC2626] bg-[#FEF2F2] px-4 py-3 text-[13px] text-[#7F1D1D]">
+                {submitError}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-2 flex justify-end gap-4">
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={!dirty || updateItem.isPending}
+            className={`rounded-lg px-7 py-3 text-sm font-bold ${
+              dirty && !updateItem.isPending
+                ? "cursor-pointer text-primary-700"
+                : "cursor-default text-[#CBD5E1]"
+            }`}
+          >
+            Batal
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!dirty || updateItem.isPending}
+            className={`rounded-lg px-8 py-3 text-sm font-bold text-white ${
+              dirty
+                ? "bg-[linear-gradient(135deg,#630ED4_0%,#7C3AED_100%)] shadow-[0px_10px_15px_-3px_rgba(99,14,212,0.2),0px_4px_6px_-4px_rgba(99,14,212,0.2)]"
+                : "bg-[#CBD5E1]"
+            } ${dirty && !updateItem.isPending ? "cursor-pointer" : "cursor-default"} ${
+              updateItem.isPending ? "opacity-70" : "opacity-100"
+            }`}
+          >
+            {updateItem.isPending ? "Menyimpan…" : "Simpan Perubahan"}
+          </button>
+        </div>
+
+        <div className="mt-2 flex flex-col gap-6 rounded-lg bg-white p-8">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <h3 className="text-xl font-extrabold leading-7 tracking-[-0.5px] text-[#191C1E]">
+                Daftar Vendor Terkait
+              </h3>
+              <span className="inline-flex items-center rounded-full bg-[rgba(99,14,212,0.08)] px-2.5 py-[3px] text-[11px] font-bold tracking-[0.2px] text-primary-700">
+                {(itemVendors ?? []).length}
+              </span>
+            </div>
+            <button
+              type="button"
+              className={`${ui.btnPrimary} w-[200px]`}
+              onClick={() => setShowAddVendor(true)}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
               >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="#fff"
-                  stroke="#fff"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                >
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Tambah Vendor
-              </button>
-            </div>
-
-            <table className="tbl">
-              <thead>
-                <tr className="tbl-header-row">
-                  <th className="tbl-th tbl-th--center" style={{ width: 280 }}>
-                    Nama Vendor
-                  </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 200 }}>
-                    SKU Vendor
-                  </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 180 }}>
-                    Harga Beli
-                  </th>
-                  <th className="tbl-th tbl-th--center" style={{ width: 200 }}>
-                    Penawaran Terakhir
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {vendorsLoading && (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
-                      Memuat data…
-                    </td>
-                  </tr>
-                )}
-                {!vendorsLoading && (itemVendors ?? []).length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="tbl-td tbl-td--center"
-                      style={{ padding: "40px 0", color: "#64748B" }}
-                    >
-                      Belum ada vendor terkait. Klik "Tambah Vendor" untuk menambah.
-                    </td>
-                  </tr>
-                )}
-                {!vendorsLoading &&
-                  (itemVendors ?? []).map((v) => {
-                    const initials = v.vendorName
-                      .replace(/^PT\.?\s+/i, "")
-                      .trim()
-                      .split(/\s+/)
-                      .filter(Boolean)
-                      .slice(0, 2)
-                      .map((p) => p[0])
-                      .join("")
-                      .toUpperCase()
-                    const formattedPrice = formatRupiah(v.costPrice, "-")
-                    const formattedDate = v.lastQuotedAt
-                      ? new Date(v.lastQuotedAt).toLocaleDateString("id-ID", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })
-                      : "-"
-                    return (
-                      <tr key={v.vendorProductId} className="tbl-row">
-                        <td className="tbl-td">
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "12px",
-                              paddingLeft: "16px",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "32px",
-                                height: "32px",
-                                borderRadius: "8px",
-                                background: "#F1F5F9",
-                                color: "#630ED4",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontFamily: "'Inter', sans-serif",
-                                fontWeight: 700,
-                                fontSize: "13px",
-                                flexShrink: 0,
-                              }}
-                            >
-                              {initials || "?"}
-                            </div>
-                            <span
-                              style={{
-                                fontFamily: "'Inter', sans-serif",
-                                fontWeight: 500,
-                                fontSize: "14px",
-                                color: "#191C1E",
-                              }}
-                            >
-                              {v.vendorName}
-                            </span>
-                          </div>
-                        </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ color: "#4A4455", fontWeight: 500 }}
-                        >
-                          {v.vendorSku ?? "-"}
-                        </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ fontWeight: 700, color: "#191C1E" }}
-                        >
-                          {formattedPrice}
-                        </td>
-                        <td
-                          className="tbl-td tbl-td--center"
-                          style={{ color: "#4A4455", fontWeight: 500 }}
-                        >
-                          {formattedDate}
-                        </td>
-                      </tr>
-                    )
-                  })}
-              </tbody>
-            </table>
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Tambah Vendor
+            </button>
           </div>
+
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className={ui.theadRow}>
+                <th className={ui.thCenter} style={{ width: 280 }}>
+                  Nama Vendor
+                </th>
+                <th className={ui.thCenter} style={{ width: 200 }}>
+                  SKU Vendor
+                </th>
+                <th className={ui.thCenter} style={{ width: 180 }}>
+                  Harga Beli
+                </th>
+                <th className={ui.thCenter} style={{ width: 200 }}>
+                  Penawaran Terakhir
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {vendorsLoading && <TableLoadingRow colSpan={4} />}
+              {!vendorsLoading && (itemVendors ?? []).length === 0 && (
+                <TableEmptyRow colSpan={4}>
+                  Belum ada vendor terkait. Klik "Tambah Vendor" untuk menambah.
+                </TableEmptyRow>
+              )}
+              {!vendorsLoading &&
+                (itemVendors ?? []).map((v) => {
+                  const initials = v.vendorName
+                    .replace(/^PT\.?\s+/i, "")
+                    .trim()
+                    .split(/\s+/)
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map((p) => p[0])
+                    .join("")
+                    .toUpperCase()
+                  const formattedPrice = formatRupiah(v.costPrice, "-")
+                  const formattedDate = v.lastQuotedAt
+                    ? new Date(v.lastQuotedAt).toLocaleDateString("id-ID", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "-"
+                  return (
+                    <tr key={v.vendorProductId} className={ui.tr}>
+                      <td className={ui.td}>
+                        <div className="flex items-center gap-3 pl-4">
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-dark-100 text-[13px] font-bold text-primary-700">
+                            {initials || "?"}
+                          </div>
+                          <span className="text-sm font-medium text-[#191C1E]">{v.vendorName}</span>
+                        </div>
+                      </td>
+                      <td className={`${ui.tdCenter} font-medium`}>{v.vendorSku ?? "-"}</td>
+                      <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
+                        {formattedPrice}
+                      </td>
+                      <td className={`${ui.tdCenter} font-medium`}>{formattedDate}</td>
+                    </tr>
+                  )
+                })}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -895,6 +557,6 @@ export default function ProductDetail({
         itemId={product.id}
         onOpenChange={setShowAddVendor}
       />
-    </div>
+    </>
   )
 }

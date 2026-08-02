@@ -1,5 +1,6 @@
+import { useNavigate } from "@tanstack/react-router"
 import StatusBadge from "@/components/shared/StatusBadge"
-import type { Page } from "@/lib/page"
+import { ui } from "@/lib/ui"
 import type { PoStatus } from "../types"
 import { PO_LABEL, PO_STATUS_CONFIG } from "./helpers"
 
@@ -8,7 +9,7 @@ interface HeaderProps {
   quotationNo: string
   createdAt: string
   status: PoStatus
-  onNavigate: (page: Page) => void
+  onEdit: () => void
   onDownloadDeliveryNote?: () => void
 }
 
@@ -17,41 +18,41 @@ export default function Header({
   quotationNo,
   createdAt,
   status,
-  onNavigate,
+  onEdit,
   onDownloadDeliveryNote,
 }: HeaderProps) {
+  const navigate = useNavigate()
   const badge = PO_STATUS_CONFIG[status]
   return (
     <>
-      <nav className="qd-breadcrumb">
-        <button className="qd-breadcrumb-link" onClick={() => onNavigate("purchase-orders")}>
+      <nav className={ui.breadcrumb}>
+        <button
+          className={ui.breadcrumbLink}
+          onClick={() => void navigate({ to: "/purchase-orders" })}
+        >
           Daftar Purchase Order
         </button>
-        <span className="qd-breadcrumb-sep">&rsaquo;</span>
-        <span className="qd-breadcrumb-current">Detail {poNumber}</span>
+        <span className={ui.breadcrumbSep}>&rsaquo;</span>
+        <span className={ui.breadcrumbCurrent}>Detail {poNumber}</span>
       </nav>
 
-      <div className="qd-header">
-        <div className="qd-header-left">
+      <div className={ui.detailHeader}>
+        <div className={ui.detailHeaderLeft}>
           <div>
-            <h1 className="qd-title">Purchase Order {poNumber}</h1>
-            <div className="qd-meta-row">
-              <span className="qd-meta-text">Dibuat pada: {createdAt}</span>
-              <span className="qd-meta-sep">|</span>
-              <span className="qd-meta-text">Dari Quotation {quotationNo}</span>
-              <span className="qd-meta-sep">|</span>
+            <h1 className={ui.detailTitle}>Purchase Order {poNumber}</h1>
+            <div className={ui.metaRow}>
+              <span className={ui.metaText}>Dibuat pada: {createdAt}</span>
+              <span className={ui.metaSep}>|</span>
+              <span className={ui.metaText}>Dari Quotation {quotationNo}</span>
+              <span className={ui.metaSep}>|</span>
               <StatusBadge bg={badge.bg} color={badge.color}>
                 {PO_LABEL[status]}
               </StatusBadge>
             </div>
           </div>
         </div>
-        <div className="qd-header-actions">
-          <button
-            className="btn-admin-outline"
-            onClick={() => onNavigate("purchase-order-edit")}
-            style={{ minWidth: "130px", justifyContent: "center" }}
-          >
+        <div className={ui.detailActions}>
+          <button className={`${ui.btnOutline} min-w-[130px]`} onClick={onEdit}>
             <svg
               width="14"
               height="14"
@@ -69,8 +70,7 @@ export default function Header({
           </button>
           <button
             type="button"
-            className="btn-admin-primary"
-            style={{ minWidth: "130px", justifyContent: "center" }}
+            className={`${ui.btnPrimary} min-w-[130px]`}
             onClick={onDownloadDeliveryNote}
             disabled={!onDownloadDeliveryNote}
           >
