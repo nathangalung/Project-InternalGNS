@@ -31,8 +31,6 @@ func TestRenderDeliveryNoteWithAssets(t *testing.T) {
 		"VesselName":     "MV Test",
 		"DateLine":       "Jakarta, 8 July 2026",
 		"Items":          []smokeItem{{1, "2", "PCS", "Life jacket", "Tg. Priok"}},
-		"PreparedBy":     "Direktur",
-		"SenderName":     "Direktur",
 	}
 	pdf, err := r.Render(context.Background(), "delivery_note/DeliveryNote.tex.tmpl", data)
 	if err != nil {

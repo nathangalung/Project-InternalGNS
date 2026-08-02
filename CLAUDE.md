@@ -170,7 +170,15 @@ TableStates`, and repeated class strings live in `lib/ui.ts`.
    dates, and document-number periods are business-zone. Go-side date
    formatting goes through `shared/tz`, never `time.Local`. Do not remove the
    pin or the startup timezone assertion.
-8. Invoice tax figures are rounded per line, then summed to the header (matching
+8. All three PDF templates share one letterhead block and one running header;
+   only the title differs. Quotations and invoices are landscape and switch
+   between A5 and A4 on `productCount > 5`. The delivery note is A4 portrait
+   only: it carries two signature blocks the others do not, and A5 cannot hold
+   the letterhead, the table and those blocks at any item count. Geometry uses
+   `includehead` so the running header prints on the sheet instead of off its
+   top edge. `TestLatexExports_Clean` and `_MultiPage` fail on any overfull or
+   underfull box, which is what keeps text from being cut.
+9. Invoice tax figures are rounded per line, then summed to the header (matching
    DJP e-faktur), and `ppn_amount` is computed from the already-rounded DPP
    base. Invoices snapshot `gross_unit_price` and `total_discount`, so the PDF
    prints a gross line plus a real discount row (`TotalProduk − Diskon = DPP`)
