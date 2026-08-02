@@ -89,6 +89,16 @@ linters:
         text: "G101"
         linters:
           - gosec
+      # Validation messages keyed by field name, not credentials.
+      - path: internal/auth/handler\.go
+        text: "G101"
+        linters:
+          - gosec
+      # Healthcheck probes localhost on the operator-set HTTP_ADDR.
+      - path: cmd/api/main\.go
+        text: "G704"
+        linters:
+          - gosec
 
 issues:
   max-same-issues: 0
