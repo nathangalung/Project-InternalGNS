@@ -123,6 +123,49 @@ browser QA, not because they change behavior.
   (six duplicated list screens); `deriveInvoiceStatus` single source (#127,
   tie in with #7). (M each)
 
+## Second-pass audit (after the first 45 commits)
+
+A fresh audit of the refactored code found nine real defects, three of them
+caused by this session's own changes. All are fixed:
+
+| Defect | Why it mattered |
+|---|---|
+| Placeholder `JWT_SECRET` cleared the length check (33 bytes) | The template value is public, so a verbatim copy let anyone forge a superadmin token |
+| `SUPERADMIN_PASSWORD` placeholder only checked for empty | Seeded a superadmin with a repo-published password |
+| No `PDF_*` variables reached the container | Client invoices printed `-` as the bank account and "Director" as signer |
+| Client decided overdue in UTC, server in WIB | For 17 hours a day the list badged rows "Terlambat" that its own "Dikirim" filter returned |
+| Login lockout never self-cleared | Four unauthenticated requests an hour held any account out permanently |
+| Quotation sort keys never matched the whitelist | Every sortable header silently ordered by `created_at` |
+| `formatRpAxis` used "M" for both millions and billions | Chart labels appeared to shrink as values grew |
+| Escape listener on `document` with no topmost check | One keypress closed both stacked modals, losing the outer form |
+| `Unprocessable` never set `Detail` | Toasts showed `db: ...` and `field: invalid value` in an Indonesian UI |
+
+Two things the audit closed rather than deferred, both disproven with EXPLAIN:
+trigram indexes on `po_number`/`invoice_no` (a BitmapOr cannot span three
+tables, so they would never be chosen) and removing the PO count LATERAL
+(Postgres already eliminates it).
+
+### Decisions still yours
+
+- **Sub-dashboards.** Role-gated `Dashboard.tsx` renders a strict superset of
+  `DashboardFinancial` and `DashboardOperational`. Keep three screens and pay
+  the duplication, or delete two and keep the gated one?
+- **Backups.** Nothing backs up either volume today, and `internalgns_minio`
+  holds the documents behind the coretax export. Dokploy's scheduler may not
+  reach a service on an `internal: true` network, and would not cover MinIO
+  either way. The alternative is host cron `pg_dump` plus `mc mirror` to
+  off-box storage. Nothing has ever been restored as a rehearsal.
+- **Limit clamp.** `?limit=500` currently returns 50 because `paginate` rejects
+  and defaults before `listq` would clamp to 200. Pick one owner; the SPA never
+  asks for more than 100 today.
+- **Dead endpoints.** `/items/search`, `/vendors/search`,
+  `/items/match-request` and `/invoices/{id}/dates` have no client. Delete them,
+  or keep maintaining the unused optimistic-lock path on the last one?
+- **Import batch size.** `/items/match-rows` advertises 500 rows but the
+  matcher needs roughly 50s for that against a 30s deadline, then rolls the
+  whole batch back. Lower the cap to something honest, or invest in the
+  set-based rewrite?
+
 ## Follow-up found while fixing acceptance-suite cleanup
 
 The quotations, purchaseorders and invoices suites do not accumulate rows, but
