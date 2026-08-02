@@ -62,21 +62,39 @@ describe("deriveInvoiceStatus", () => {
   })
 })
 
-// Due dates parse as UTC midnight; strictly-after is overdue.
+// Overdue the day after the due date, in Jakarta, matching the server's
+// due_date < CURRENT_DATE on a WIB-pinned session.
 describe("deriveInvoiceStatus overdue boundary", () => {
   afterEach(() => {
     vi.useRealTimers()
   })
 
-  it("is not overdue exactly at the due instant", () => {
+  it("is not overdue at the start of the due date in Jakarta", () => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date("2026-06-15T00:00:00.000Z"))
+    // 2026-06-14T17:00Z is 2026-06-15 00:00 WIB.
+    vi.setSystemTime(new Date("2026-06-14T17:00:00.000Z"))
     expect(deriveInvoiceStatus(row("sent", "2026-06-15"))).toBe("DIKIRIM")
   })
 
-  it("is overdue one millisecond after the due instant", () => {
+  it("is not overdue past UTC midnight while still the due date in Jakarta", () => {
     vi.useFakeTimers()
+    // 07:00 WIB on the due date. The old UTC comparison flipped here, which
+    // made the badge contradict the server's own sent filter for 17 hours.
     vi.setSystemTime(new Date("2026-06-15T00:00:00.001Z"))
+    expect(deriveInvoiceStatus(row("sent", "2026-06-15"))).toBe("DIKIRIM")
+  })
+
+  it("is not overdue at the last moment of the due date in Jakarta", () => {
+    vi.useFakeTimers()
+    // 2026-06-15T16:59:59Z is 23:59:59 WIB on the due date.
+    vi.setSystemTime(new Date("2026-06-15T16:59:59.000Z"))
+    expect(deriveInvoiceStatus(row("sent", "2026-06-15"))).toBe("DIKIRIM")
+  })
+
+  it("is overdue once Jakarta reaches the next day", () => {
+    vi.useFakeTimers()
+    // 2026-06-15T17:00Z is 2026-06-16 00:00 WIB.
+    vi.setSystemTime(new Date("2026-06-15T17:00:00.000Z"))
     expect(deriveInvoiceStatus(row("sent", "2026-06-15"))).toBe("TERLAMBAT")
   })
 })

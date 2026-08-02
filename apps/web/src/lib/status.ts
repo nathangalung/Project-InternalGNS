@@ -2,6 +2,9 @@ import type { CanonicalStatus, InvoiceBackendRow } from "@/types/api"
 
 export type StatusLabel = "Disetujui" | "Dikirim" | "Draf" | "Revisi" | "Ditolak" | "Kadaluarsa"
 
+// Business timezone, matching the pinned DB session.
+const JAKARTA_TZ = "Asia/Jakarta"
+
 const labelByCanonical: Record<CanonicalStatus, StatusLabel> = {
   accepted: "Disetujui",
   sent: "Dikirim",
@@ -77,9 +80,24 @@ export function deriveInvoiceStatus(
   if (inv.status === "paid") return "DIBAYAR"
   if (inv.status === "overdue") return "TERLAMBAT"
   const base: InvoiceStatus = inv.status === "sent" ? "DIKIRIM" : "DRAF"
-  if (inv.dueDate) {
-    const due = new Date(inv.dueDate)
-    if (!Number.isNaN(due.getTime()) && new Date() > due) return "TERLAMBAT"
-  }
+  if (inv.dueDate && isPastDueInJakarta(inv.dueDate)) return "TERLAMBAT"
   return base
+}
+
+// Today in Jakarta, as YYYY-MM-DD.
+function todayInJakarta(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: JAKARTA_TZ }).format(new Date())
+}
+
+// Overdue the day after the due date.
+//
+// The server decides this with due_date < CURRENT_DATE on a session pinned to
+// WIB. Comparing Date objects instead would parse the date-only string as UTC
+// midnight, which is 07:00 WIB, so from 07:00 until midnight the client would
+// call an invoice overdue while the server still reports it as sent. Comparing
+// YYYY-MM-DD strings in Jakarta reproduces the server rule exactly.
+function isPastDueInJakarta(dueDate: string): boolean {
+  const due = dueDate.slice(0, 10)
+  if (due.length !== 10) return false
+  return due < todayInJakarta()
 }
