@@ -1,11 +1,13 @@
 package auth_test
 
 import (
+	"context"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -104,6 +106,105 @@ func TestService_Login_LocksAfterFiveFailures_RealDB(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, st.LockedUntil)
 	assert.True(t, st.LockedUntil.After(time.Now()))
+}
+
+// An elapsed lockout must start a fresh window instead of re-locking on the
+// first later miss, otherwise one wrong password every 15 minutes holds the
+// account out forever.
+func TestService_Login_ExpiredLockout_StartsFreshWindow_RealDB(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := users.NewRepo(tx, testutil.Store(t))
+	email := uniqueEmail(t)
+	_, err := repo.Create(ctx, users.CreateUserRequest{
+		Email: email, Name: "x", Password: "right-pw", Role: users.RoleOperational,
+	}, 1)
+	require.NoError(t, err)
+
+	svc := auth.NewService(repo, "test-secret-please-change", time.Minute)
+
+	for i := 0; i < 5; i++ {
+		_, _ = svc.Login(ctx, email, "wrong-pw")
+	}
+	expireLockout(ctx, t, tx, email)
+
+	// One more miss inside the elapsed window: counts as the first of a new
+	// window, so it must not lock again.
+	_, err = svc.Login(ctx, email, "wrong-pw")
+	assert.ErrorIs(t, err, auth.ErrInvalidCredentials)
+
+	st, err := repo.LockStatus(ctx, email)
+	require.NoError(t, err)
+	assert.Equal(t, 1, st.FailedLoginAttempts)
+	assert.Nil(t, st.LockedUntil)
+}
+
+// The fresh window must still lock once it reaches five misses of its own.
+func TestService_Login_FreshWindowAfterExpiry_LocksAgain_RealDB(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := users.NewRepo(tx, testutil.Store(t))
+	email := uniqueEmail(t)
+	_, err := repo.Create(ctx, users.CreateUserRequest{
+		Email: email, Name: "x", Password: "right-pw", Role: users.RoleOperational,
+	}, 1)
+	require.NoError(t, err)
+
+	svc := auth.NewService(repo, "test-secret-please-change", time.Minute)
+
+	for i := 0; i < 5; i++ {
+		_, _ = svc.Login(ctx, email, "wrong-pw")
+	}
+	expireLockout(ctx, t, tx, email)
+
+	for i := 0; i < 5; i++ {
+		_, _ = svc.Login(ctx, email, "wrong-pw")
+	}
+
+	st, err := repo.LockStatus(ctx, email)
+	require.NoError(t, err)
+	assert.Equal(t, 5, st.FailedLoginAttempts)
+	require.NotNil(t, st.LockedUntil)
+	assert.True(t, st.LockedUntil.After(time.Now()))
+
+	_, err = svc.Login(ctx, email, "right-pw")
+	assert.ErrorIs(t, err, auth.ErrAccountLocked)
+}
+
+// After the lockout elapses the right password must work again and wipe the
+// counter, even once a miss has opened a new window.
+func TestService_Login_SuccessAfterExpiredLockout_ClearsCounter_RealDB(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := users.NewRepo(tx, testutil.Store(t))
+	email := uniqueEmail(t)
+	_, err := repo.Create(ctx, users.CreateUserRequest{
+		Email: email, Name: "x", Password: "right-pw", Role: users.RoleOperational,
+	}, 1)
+	require.NoError(t, err)
+
+	svc := auth.NewService(repo, "test-secret-please-change", time.Minute)
+
+	for i := 0; i < 5; i++ {
+		_, _ = svc.Login(ctx, email, "wrong-pw")
+	}
+	expireLockout(ctx, t, tx, email)
+	_, _ = svc.Login(ctx, email, "wrong-pw")
+
+	_, err = svc.Login(ctx, email, "right-pw")
+	require.NoError(t, err)
+
+	st, err := repo.LockStatus(ctx, email)
+	require.NoError(t, err)
+	assert.Equal(t, 0, st.FailedLoginAttempts)
+	assert.Nil(t, st.LockedUntil)
+}
+
+// Backdates an active lockout so the window reads as elapsed. Wall-clock
+// waiting is not an option and now() is frozen per transaction.
+func expireLockout(ctx context.Context, t *testing.T, tx pgx.Tx, email string) {
+	t.Helper()
+	_, err := tx.Exec(ctx,
+		`UPDATE users SET locked_until = now() - interval '1 hour'
+		  WHERE LOWER(email) = LOWER($1)`, email)
+	require.NoError(t, err)
 }
 
 func TestService_Login_SuccessResetsAttempts_RealDB(t *testing.T) {

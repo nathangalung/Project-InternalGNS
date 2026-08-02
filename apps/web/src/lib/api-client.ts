@@ -188,12 +188,18 @@ export async function apiList<T>(input: RequestInput): Promise<PaginatedList<T>>
   return { rows, total: Number.isFinite(total) ? total : rows.length }
 }
 
-function extractErrorMessage(parsed: unknown, fallback: string): string {
+// Pick the most human message an RFC 7807 body offers. `detail` is prose meant
+// for the user, so it always wins. `fields` is keyed by API field name, which
+// is an identifier and not Indonesian, so only its values are shown -- never
+// `key: value`, which reads as debug output in a toast.
+export function extractErrorMessage(parsed: unknown, fallback: string): string {
   if (!parsed || typeof parsed !== "object") return fallback
   const body = parsed as { detail?: unknown; fields?: Record<string, unknown>; title?: unknown }
   if (typeof body.detail === "string" && body.detail.length > 0) return body.detail
   if (body.fields && typeof body.fields === "object") {
-    const parts = Object.entries(body.fields).map(([k, v]) => `${k}: ${String(v)}`)
+    const parts = Object.values(body.fields)
+      .map((v) => String(v).trim())
+      .filter((v) => v.length > 0)
     if (parts.length > 0) return parts.join("; ")
   }
   if (typeof body.title === "string" && body.title.length > 0) return body.title

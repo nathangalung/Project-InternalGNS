@@ -16,9 +16,18 @@ FROM users
 WHERE LOWER(email) = LOWER($1) AND is_active = TRUE;
 
 -- name: users.record_failed_login
+-- An elapsed lockout opens a new window: the miss counts as the first of a
+-- fresh five rather than re-locking off the old, never-reset counter. Kept in
+-- one UPDATE so concurrent misses cannot both read the same count.
 UPDATE users
-   SET failed_login_attempts = failed_login_attempts + 1,
+   SET failed_login_attempts = CASE
+         WHEN locked_until IS NOT NULL AND locked_until <= now()
+         THEN 1
+         ELSE failed_login_attempts + 1
+       END,
        locked_until = CASE
+         WHEN locked_until IS NOT NULL AND locked_until <= now()
+         THEN NULL
          WHEN failed_login_attempts + 1 >= 5
          THEN now() + interval '15 minutes'
          ELSE locked_until

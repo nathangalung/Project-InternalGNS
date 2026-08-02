@@ -26,12 +26,13 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Field messages reach the user verbatim, so they read as sentences.
 	missing := map[string]string{}
 	if req.Email == "" {
-		missing["email"] = "required"
+		missing["email"] = "Email wajib diisi."
 	}
 	if req.Password == "" {
-		missing["password"] = "required"
+		missing["password"] = "Kata sandi wajib diisi."
 	}
 	if len(missing) > 0 {
 		httperr.Render(w, httperr.Unprocessable(missing))
@@ -77,7 +78,7 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.RefreshToken == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"refreshToken": "required"}))
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"refreshToken": "Token penyegar wajib diisi."}))
 		return
 	}
 

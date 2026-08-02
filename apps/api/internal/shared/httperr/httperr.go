@@ -6,6 +6,8 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"sort"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -44,8 +46,47 @@ func NotFound(detail string) Error {
 func Conflict(detail string) Error {
 	return Error{Type: "about:blank", Title: "Conflict", Status: http.StatusConflict, Detail: detail}
 }
+
+// Shown when no field carries a message.
+const genericInvalidPayload = "Data yang dikirim tidak valid. Periksa kembali isian Anda."
+
+// UnprocessableDetail carries prose plus fields.
+func UnprocessableDetail(detail string, fields map[string]string) Error {
+	return Error{
+		Type:   "about:blank",
+		Title:  "Unprocessable Entity",
+		Status: http.StatusUnprocessableEntity,
+		Detail: detail,
+		Fields: fields,
+	}
+}
+
+// Unprocessable pairs field errors with prose. Detail is what the toast reads
+// and Fields stays per-field so forms can mark the offending inputs. The two
+// must agree, so Detail is built from the field messages rather than a fixed
+// sentence that would erase which input failed.
 func Unprocessable(fields map[string]string) Error {
-	return Error{Type: "about:blank", Title: "Unprocessable Entity", Status: http.StatusUnprocessableEntity, Fields: fields}
+	return UnprocessableDetail(fieldsDetail(fields), fields)
+}
+
+// Joins field messages, never their keys.
+func fieldsDetail(fields map[string]string) string {
+	keys := make([]string, 0, len(fields))
+	for k, v := range fields {
+		if strings.TrimSpace(v) != "" {
+			keys = append(keys, k)
+		}
+	}
+	if len(keys) == 0 {
+		return genericInvalidPayload
+	}
+	// Map order is randomised, so sort to keep the message reproducible.
+	sort.Strings(keys)
+	msgs := make([]string, 0, len(keys))
+	for _, k := range keys {
+		msgs = append(msgs, strings.TrimSpace(fields[k]))
+	}
+	return strings.Join(msgs, "; ")
 }
 func TooManyRequests(detail string) Error {
 	return Error{Type: "about:blank", Title: "Too Many Requests", Status: http.StatusTooManyRequests, Detail: detail}
@@ -65,8 +106,9 @@ func FromDBErr(err error) Error {
 		case "P0001", "P0012", "P0014":
 			// Business-rule message raised intentionally by plpgsql; safe to
 			// surface. P0012 invalid transition and P0014 validation are the
-			// typed successors assigned by migration 00046.
-			return Unprocessable(map[string]string{"db": pgErr.Message})
+			// typed successors assigned by migration 00046. It is prose, not a
+			// field error, so it belongs in Detail like P0011 and P0013.
+			return UnprocessableDetail(pgErr.Message, nil)
 		case "P0011":
 			return NotFound(pgErr.Message)
 		case "P0013":
@@ -76,8 +118,16 @@ func FromDBErr(err error) Error {
 			return NotFound("referenced record does not exist")
 		case "23505":
 			return Conflict("a record with these values already exists")
-		case "23502", "23514", "22P02", "22003":
-			return Unprocessable(map[string]string{"field": "invalid value"})
+		// The constraint names the column, not the form input, so name the
+		// remedy instead of echoing an untranslatable identifier.
+		case "23502":
+			return UnprocessableDetail("Ada isian wajib yang masih kosong. Lengkapi data lalu simpan kembali.", nil)
+		case "23514":
+			return UnprocessableDetail("Ada isian yang melanggar aturan validasi. Periksa nilai yang dimasukkan.", nil)
+		case "22P02":
+			return UnprocessableDetail("Format salah satu isian tidak sesuai. Periksa tanggal, angka, dan pilihan yang dipilih.", nil)
+		case "22003":
+			return UnprocessableDetail("Nilai angka di luar batas yang diizinkan. Masukkan angka yang lebih kecil.", nil)
 		}
 	}
 	// Never surface raw internal error text to the client; RenderDBErr logs it.
