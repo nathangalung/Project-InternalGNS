@@ -110,6 +110,13 @@ services:
       MINIO_SECRET_KEY: ${MINIO_PASSWORD}
       CORETAX_SELLER_TIN: ${CORETAX_SELLER_TIN}
       CORETAX_SELLER_IDTKU: ${CORETAX_SELLER_IDTKU}
+      # Printed on invoices and quotations that go to clients. Without these the
+      # binary's own defaults ship, so the bank account renders as a dash.
+      PDF_SIGNER_NAME: ${PDF_SIGNER_NAME}
+      PDF_BANK_NAME: ${PDF_BANK_NAME}
+      PDF_BANK_ACCOUNT_NO: ${PDF_BANK_ACCOUNT_NO}
+      PDF_BANK_ACCOUNT_NM: ${PDF_BANK_ACCOUNT_NM}
+      PDF_PAYMENT_TERMS: ${PDF_PAYMENT_TERMS}
     depends_on:
       gns-postgres: { condition: service_healthy }
       gns-minio:    { condition: service_healthy }

@@ -104,6 +104,15 @@ func (c Config) validate() error {
 		if isPlaceholder(c.DatabaseURL) {
 			return errors.New("DATABASE_URL still contains a placeholder password in production")
 		}
+		// These print on invoices and quotations sent to clients. The account
+		// number is where a client transfers money, so shipping the "-" default
+		// or an unreplaced placeholder is worse than refusing to start.
+		if c.PdfBankAccountNo == "-" || isPlaceholder(c.PdfBankAccountNo) {
+			return errors.New("PDF_BANK_ACCOUNT_NO must be a real account number in production")
+		}
+		if isPlaceholder(c.PdfSignerName) {
+			return errors.New("PDF_SIGNER_NAME is still a placeholder in production")
+		}
 	}
 	return nil
 }

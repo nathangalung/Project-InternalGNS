@@ -71,6 +71,8 @@ func TestLoadConfig_ProductionRejectsWeakDefaults(t *testing.T) {
 		t.Setenv("ENV", "production")
 		t.Setenv("MINIO_ACCESS_KEY", "real-access-key")
 		t.Setenv("MINIO_SECRET_KEY", "real-secret-key")
+		t.Setenv("PDF_BANK_ACCOUNT_NO", "1234567890")
+		t.Setenv("PDF_SIGNER_NAME", "Nathan Galung")
 	}
 
 	t.Run("empty superadmin password", func(t *testing.T) {
@@ -132,6 +134,25 @@ func TestLoadConfig_ProductionRejectsWeakDefaults(t *testing.T) {
 		base()
 		t.Setenv("SUPERADMIN_PASSWORD", "CHANGE_ME_before_deploy")
 		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	// A client would be asked to transfer money into a dash.
+	t.Run("default bank account number", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		t.Setenv("PDF_BANK_ACCOUNT_NO", "-")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("placeholder bank account number", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		t.Setenv("PDF_BANK_ACCOUNT_NO", "CHANGE_ME")
 		_, err := LoadConfig()
 		require.Error(t, err)
 	})
