@@ -16,11 +16,23 @@ import (
 )
 
 // Bound concurrent xelatex processes so a burst of exports cannot exhaust the
-// host. Sized to half the CPUs, clamped to [2, 8]. Shared across renderers.
+// host. Sized to half the CPU budget, clamped to [2, 8]. Shared across
+// renderers. PDF_RENDER_CONCURRENCY overrides the computed value.
 var renderSem = make(chan struct{}, renderConcurrency())
 
+// renderConcurrency sizes the xelatex semaphore.
+//
+// GOMAXPROCS, not NumCPU: since Go 1.25 it accounts for the cgroup CPU limit,
+// so inside a container with a limit set this is the container's budget.
+// NumCPU still reports every core on the host, which on a shared VPS would let
+// one export burst spawn enough xelatex processes to OOM the box.
 func renderConcurrency() int {
-	switch n := runtime.NumCPU() / 2; {
+	if v := os.Getenv("PDF_RENDER_CONCURRENCY"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return n
+		}
+	}
+	switch n := runtime.GOMAXPROCS(0) / 2; {
 	case n < 2:
 		return 2
 	case n > 8:
