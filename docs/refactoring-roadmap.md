@@ -178,6 +178,21 @@ themselves to the rows the scenario owns, the same way the id-tracking cleanup
 now works for clients, vendors, items and users. Worth doing before anyone
 relies on dev data surviving a test run.
 
+## Follow-up found while fixing the CI-only test failures
+
+Two integration tests asserted on how much seed data happened to be in the
+database. They passed locally, where the dev volume holds rows that acceptance
+runs committed, and failed on CI, which starts from migrations plus
+`SeedMasterIfMissing`. Both now create what they assert on, and `make
+test-api-ci` runs the suite against a database dropped and recreated first.
+
+One assertion of the same shape is left deliberately:
+`clients/repo_integration_test.go` still requires the filtered client count to
+stay under 200 so that the count query and the data query can be compared on a
+single page. It is a tripwire with a clear message rather than a silent wrong
+result, but it will trip once enough active IDN clients match "PT". Widen the
+page or narrow the filter when that happens.
+
 ## Known behavior facts from this round (not bugs, but finance/ops should know)
 
 - **Re-downloading a historical invoice PDF that has a shipping line now prints
