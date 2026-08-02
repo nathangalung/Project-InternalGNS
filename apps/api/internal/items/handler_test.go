@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"strings"
 	"testing"
@@ -141,7 +142,20 @@ func TestHandler_SearchAdvanced(t *testing.T) {
 // what GET /items/{id} reports for the same item.
 func TestHandler_SearchAdvanced_IsActiveMatchesCatalog(t *testing.T) {
 	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodGet, "/items/search-advanced?q=bearing&limit=5", nil)
+	pool := testutil.Pool(t)
+	ctx := context.Background()
+
+	// Create the item the search must find. Relying on seed data made this pass
+	// on a developer machine and fail on a freshly migrated CI database.
+	name := fmt.Sprintf("Kiraflux Bearing %d", time.Now().UnixNano())
+	t.Cleanup(func() {
+		_, _ = pool.Exec(ctx, `DELETE FROM items WHERE name = $1`, name)
+	})
+	created := doJSON(t, srv, http.MethodPost, "/items", map[string]any{"name": name})
+	require.Equal(t, http.StatusCreated, created.StatusCode)
+	created.Body.Close()
+
+	res := doJSON(t, srv, http.MethodGet, "/items/search-advanced?q="+url.QueryEscape(name)+"&limit=5", nil)
 	defer res.Body.Close()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
@@ -150,7 +164,7 @@ func TestHandler_SearchAdvanced_IsActiveMatchesCatalog(t *testing.T) {
 		Hits []map[string]any `json:"hits"`
 	}
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&body))
-	require.NotEmpty(t, body.Hits, "seed data must produce at least one hit")
+	require.NotEmpty(t, body.Hits, "the item created above must be found")
 
 	for _, hit := range body.Hits {
 		require.Contains(t, hit, "isActive", "hit must expose isActive")
