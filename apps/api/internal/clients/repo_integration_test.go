@@ -1,6 +1,7 @@
 package clients_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -279,15 +280,23 @@ func TestRepo_List_PagingIsStableOnTiedSortKey(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := clients.NewRepo(tx, testutil.Store(t))
 
-	// Nearly every seeded client has zero quotations, so this sort key ties
-	// across the whole table and only the id tiebreaker orders it.
+	// Rows created here have zero quotations, so the sort key ties across them
+	// and only the id tiebreaker orders the page.
 	const pageSize = 5
 	const pages = 8
+
+	for i := range pageSize * pages {
+		_, err := tx.Exec(ctx,
+			`INSERT INTO company_client (name, country_code, created_by, updated_by)
+			 VALUES ($1, 'IDN', $2, $2)`,
+			fmt.Sprintf("PT. Paging Tie %02d", i), seedUserID)
+		require.NoError(t, err)
+	}
 
 	f := clients.ListFilter{SortBy: "quotationCount", Limit: 1}
 	head, err := repo.List(ctx, f)
 	require.NoError(t, err)
-	require.Greater(t, head.Total, int64(pageSize*pages), "seed too small for this test")
+	require.GreaterOrEqual(t, head.Total, int64(pageSize*pages), "seed too small for this test")
 
 	seen := map[int64]bool{}
 	for page := range pages {

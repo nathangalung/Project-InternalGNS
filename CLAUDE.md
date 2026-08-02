@@ -53,6 +53,7 @@ make stack-down     # Stop the Docker stack
 make seed-dev       # Migrate, then load master and dev sample data (dev only)
 make db-ui          # pgweb database browser (:8081)
 make test           # Go tests plus web typecheck and lint
+make test-api-ci    # Go tests on a throwaway database, as CI runs them
 make lint           # golangci-lint when installed, and Biome
 make fmt            # gofmt and Biome format
 ```
@@ -142,6 +143,13 @@ TableStates`, and repeated class strings live in `lib/ui.ts`.
 - Integration tests and the godog acceptance suites (`internal/*/acceptance`)
   need PostgreSQL and skip cleanly when it is unreachable. Start one with
   `make db-up` to run them.
+- A test must create the rows it asserts on. `testutil.Pool` only migrates and
+  applies `SeedMasterIfMissing`, so anything beyond that handful of master rows
+  exists locally by accident: acceptance runs commit, and the dev volume keeps
+  what `make seed-dev` loaded. Asserting on ambient volume passes locally and
+  fails on CI. `make test-api-ci` drops and recreates a throwaway database and
+  runs the suite the way CI does; use it before pushing anything that touches
+  integration tests.
 - Web tests are Vitest, pure logic only, in a node environment with no DOM.
 
 ## Conventions

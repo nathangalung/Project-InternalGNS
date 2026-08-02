@@ -6,7 +6,7 @@
         api web dev \
         tidy sqlc \
         build build-api build-web \
-        test test-api test-web \
+        test test-api test-api-ci test-web \
         lint lint-fix fmt types \
         hooks-install hooks-run \
         docker-build docker-build-api docker-build-web \
@@ -17,6 +17,10 @@ SHELL        := /bin/bash
 DATABASE_URL ?= postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable
 COMPOSE_DEV  := docker compose -f compose.dev.yml
 COMPOSE_PROD := docker compose -f compose.prod.yml --env-file .env.prod
+
+# Throwaway database so tests never read the dev seed volume.
+CI_TEST_DB   := gns_citest
+CI_TEST_DSN  := postgres://gns_app:gns_app@localhost:5432/$(CI_TEST_DB)?sslmode=disable
 
 API_DIR      := apps/api
 WEB_DIR      := apps/web
@@ -181,6 +185,13 @@ test: test-api test-web ## Run all tests
 
 test-api: ## Run Go unit tests (serialized to avoid godog/integration interference)
 	cd $(API_DIR) && go test ./... -race -count=1 -p=1
+
+test-api-ci: ## Run Go tests against a throwaway DB, like CI
+	@$(COMPOSE_DEV) exec -T postgres psql -U gns_app -d postgres \
+	  -c "DROP DATABASE IF EXISTS $(CI_TEST_DB) WITH (FORCE);" \
+	  -c "CREATE DATABASE $(CI_TEST_DB) OWNER gns_app;" >/dev/null
+	cd $(API_DIR) && TEST_DATABASE_URL=$(CI_TEST_DSN) DATABASE_URL=$(CI_TEST_DSN) \
+	  go test ./... -race -count=1 -p=1
 
 test-web: ## Typecheck FE
 	cd $(WEB_DIR) && bun run typecheck

@@ -41,13 +41,13 @@ func TestRealTemplate_Invoice(t *testing.T) {
 	}
 	data := struct {
 		InvoiceNo, PONo, PODate, CompanyName, CompanyNPWP, CompanyAddress, VesselName string
-		InvoiceDate, DueDate                                                           string
-		Items                                                                          []item
-		TotalProduk, Diskon, DiscountPct                                               string
-		DPP, DPPNilaiLain, PPN, Total                                                  string
-		PaymentTerms, BankName, BankAccountNo, BankAccountName                         string
-		DateLine, SignerName                                                           string
-		UseA4                                                                          bool
+		InvoiceDate, DueDate                                                          string
+		Items                                                                         []item
+		TotalProduk, Diskon, DiscountPct                                              string
+		DPP, DPPNilaiLain, PPN, Total                                                 string
+		PaymentTerms, BankName, BankAccountNo, BankAccountName                        string
+		DateLine, SignerName                                                          string
+		UseA4                                                                         bool
 	}{
 		InvoiceNo:       "INV-2026-0001",
 		PONo:            "PO-2026-0001",
