@@ -193,6 +193,26 @@ single page. It is a tripwire with a clear message rather than a silent wrong
 result, but it will trip once enough active IDN clients match "PT". Widen the
 page or narrow the filter when that happens.
 
+## The orphan blob sweep has never run, in either place
+
+`cleanup.yml` has failed every Sunday since at least 19 July. The `PROD_*`
+secrets are not set in the repository, so `DATABASE_URL` reached pgx empty and
+it tried a local unix socket. The job now checks for the secrets and skips with
+a notice instead of reporting a red run every week.
+
+Setting the secrets would not fix it. GitHub-hosted runners cannot reach the
+VPS Postgres or MinIO, and exposing either to the internet to satisfy a weekly
+sweep is a worse trade than not running it from CI.
+
+The documented VPS command was also wrong: `docs/deploy_vps.md` said
+`./api orphan-blobs`, but the image only shipped the `api` binary and `api` has
+no such subcommand. The image now builds `cmd/orphan-blobs` as well, so
+`/app/orphan-blobs --dry-run` works inside the running container.
+
+**Decision needed:** whether to add a cron on the VPS that runs the sweep, or
+to leave it manual. Manual is defensible while MinIO has room; the sweep only
+matters once orphaned uploads consume real disk.
+
 ## Known behavior facts from this round (not bugs, but finance/ops should know)
 
 - **Re-downloading a historical invoice PDF that has a shipping line now prints

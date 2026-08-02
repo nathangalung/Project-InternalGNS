@@ -16,7 +16,8 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     go build \
         -ldflags "-s -w -X main.version=${VERSION}" \
-        -o /out/api ./cmd/api
+        -o /out/api ./cmd/api && \
+    go build -ldflags "-s -w" -o /out/orphan-blobs ./cmd/orphan-blobs
 
 # Runtime needs a XeLaTeX engine for PDF export, so distroless is not viable.
 # debian-slim + minimal TeX Live covers the templates' packages and fontspec.
@@ -40,6 +41,7 @@ COPY --from=build /src/templates/fonts/PlusJakartaSans/*.ttf \
 RUN fc-cache -f
 
 COPY --from=build /out/api /app/api
+COPY --from=build /out/orphan-blobs /app/orphan-blobs
 COPY --from=build /src/templates /app/templates
 
 # Drop privileges; /tmp stays writable for the LaTeX scratch dir.

@@ -248,7 +248,7 @@ docker compose -p internalgns exec minio sh -c \
 | DB backup        | Dokploy → Databases → add Postgres connection → schedule S3 / local backups        |
 | DB shell         | `docker compose -p internalgns exec postgres psql -U $DB_USER $DB_NAME`            |
 | MinIO console    | not exposed; use `mc` from inside the container as above                           |
-| Orphan blob sweep| `docker compose -p internalgns exec api ./api orphan-blobs --dry-run=false`        |
+| Orphan blob sweep| `docker compose -p internalgns exec api /app/orphan-blobs --dry-run` (add `=false` to delete) |
 | Restart service  | Dokploy UI → Restart, or `docker compose -p internalgns restart api`               |
 
 ## 11. Auto-redeploy on new tag (optional)
