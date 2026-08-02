@@ -117,6 +117,25 @@ func TestLoadConfig_ProductionRejectsWeakDefaults(t *testing.T) {
 		require.Error(t, err)
 	})
 
+	// The shipped JWT_SECRET is 33 chars, so it clears the length check while
+	// being published in the repo. Anyone could forge a superadmin token.
+	t.Run("shipped placeholder jwt secret", func(t *testing.T) {
+		base()
+		t.Setenv("JWT_SECRET", "generate_with_openssl_rand_hex_32")
+		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("shipped placeholder superadmin password", func(t *testing.T) {
+		base()
+		t.Setenv("SUPERADMIN_PASSWORD", "CHANGE_ME_before_deploy")
+		t.Setenv("CORS_ALLOWED_ORIGINS", "https://app.example.com")
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
 	t.Run("valid production config", func(t *testing.T) {
 		base()
 		t.Setenv("SUPERADMIN_PASSWORD", "a-real-password")

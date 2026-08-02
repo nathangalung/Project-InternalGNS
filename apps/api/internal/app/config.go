@@ -75,9 +75,20 @@ func (c Config) validate() error {
 	if len(c.JWTSecret) < 32 {
 		return errors.New("JWT_SECRET must be at least 32 bytes")
 	}
+	// Length alone does not make a secret. The value shipped in
+	// .env.prod.example is 33 characters, so it clears the check above while
+	// being published in the repository: anyone could sign a token for any user
+	// and role. Reject it everywhere, not just in production, because a staging
+	// box reachable from the internet is just as forgeable.
+	if isPlaceholder(c.JWTSecret) {
+		return errors.New("JWT_SECRET is still the placeholder from .env.prod.example; generate one with openssl rand -hex 32")
+	}
 	if c.Env == "production" {
 		if c.SuperadminPassword == "" {
 			return errors.New("SUPERADMIN_PASSWORD is required in production")
+		}
+		if isPlaceholder(c.SuperadminPassword) || isPlaceholder(c.Superadmin2Password) {
+			return errors.New("SUPERADMIN_PASSWORD/SUPERADMIN2_PASSWORD is still a placeholder in production")
 		}
 		for _, o := range c.CORSAllowedOrigins {
 			if o == "*" {
@@ -90,7 +101,7 @@ func (c Config) validate() error {
 		if isWeakCred(c.MinioAccessKey) || isWeakCred(c.MinioSecretKey) {
 			return errors.New("MINIO_ACCESS_KEY/MINIO_SECRET_KEY must not be a placeholder or vendor default in production")
 		}
-		if strings.Contains(strings.ToLower(c.DatabaseURL), "change_me") {
+		if isPlaceholder(c.DatabaseURL) {
 			return errors.New("DATABASE_URL still contains a placeholder password in production")
 		}
 	}
@@ -100,9 +111,31 @@ func (c Config) validate() error {
 // isWeakCred flags vendor-default or unreplaced-placeholder secrets. Empty is
 // NOT weak — it is the supported "storage disabled" signal.
 func isWeakCred(v string) bool {
-	switch strings.ToLower(strings.TrimSpace(v)) {
-	case "minioadmin", "change_me", "changeme", "change_me_strong_password":
+	if strings.EqualFold(strings.TrimSpace(v), "minioadmin") {
 		return true
+	}
+	return isPlaceholder(v)
+}
+
+// Markers that only ever appear in template values.
+var placeholderMarkers = []string{
+	"change_me", "changeme", "generate_with", "placeholder",
+	"before_deploy", "yourdomain", "your-domain", "replace_me",
+}
+
+// isPlaceholder reports an unreplaced template value. Matching on markers
+// rather than a fixed list keeps it working when the template text changes; a
+// real random secret contains none of them. Empty is not a placeholder, since
+// some settings treat it as a deliberate "disabled" signal.
+func isPlaceholder(v string) bool {
+	s := strings.ToLower(strings.TrimSpace(v))
+	if s == "" {
+		return false
+	}
+	for _, m := range placeholderMarkers {
+		if strings.Contains(s, m) {
+			return true
+		}
 	}
 	return false
 }
