@@ -8,7 +8,7 @@ tax document export.
 
 - **Frontend** — React 19 + TypeScript + Vite + Tailwind v4 + shadcn/ui,
   TanStack Router (file-based), TanStack Query, TanStack Table.
-- **Backend** — Go 1.25 modular monolith: chi v5, pgx/v5, goose v3 (embedded),
+- **Backend** — Go 1.26 modular monolith: chi v5, pgx/v5, goose v3 (embedded),
   JWT (HS256), bcrypt, godotenv.
 - **Database** — PostgreSQL 18-alpine with `pg_trgm`, GENERATED STORED columns,
   row-version triggers for optimistic locking, PL/pgSQL business functions.
@@ -54,7 +54,7 @@ required up front. `psql` IS required because seeds run as raw SQL files.
 Verify:
 
 ```bash
-go version       # go1.25+
+go version       # go1.26+
 bun --version    # 1.3+
 docker --version
 make --version

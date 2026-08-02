@@ -8,7 +8,7 @@ InternalGNS is the internal quotation to purchase-order to invoice system for
 PT Global Niaga Sakti. It is a Go REST API and a React single-page app in a
 Bun-managed monorepo.
 
-- Backend (`apps/api`): Go 1.25, Chi v5 router, pgx v5 against PostgreSQL,
+- Backend (`apps/api`): Go 1.26, Chi v5 router, pgx v5 against PostgreSQL,
   Goose migrations, JWT auth with role-based access, slog logging. SQL is
   hand-written in `.sql` files that are embedded and parsed at startup
   (`apps/api/db/queries`); there is no ORM or code generator.
