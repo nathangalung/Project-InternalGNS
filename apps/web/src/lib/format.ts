@@ -20,6 +20,14 @@ export function formatNumber(value: number | string | null | undefined, fallback
   return n.toLocaleString("id-ID")
 }
 
+// Compact rupiah axis ticks.
+export function formatRupiahAxis(v: number): string {
+  if (v >= 1_000_000_000) return `Rp ${(v / 1_000_000_000).toFixed(0)}M`
+  if (v >= 1_000_000) return `Rp ${(v / 1_000_000).toFixed(0)}Jt`
+  if (v >= 1_000) return `Rp ${(v / 1_000).toFixed(0)}K`
+  return `Rp ${v}`
+}
+
 // Indonesian short date display.
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return ""

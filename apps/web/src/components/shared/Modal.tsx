@@ -1,4 +1,5 @@
-import { type ReactNode, useEffect } from "react"
+import { type ReactNode, useEffect, useRef } from "react"
+import { isTopModal, popModal, pushModal } from "./modalStack"
 
 interface ModalProps {
   title: ReactNode
@@ -12,14 +13,26 @@ interface ModalProps {
 // Shared modal shell — faithful port of the legacy ca-overlay/ca-modal/ca-header/
 // ca-body/ca-footer system. Body content uses ui.modalSection / ui.field etc.
 export default function Modal({ title, onClose, children, footer, className = "" }: ModalProps) {
-  // Close on Escape.
+  // Latest onClose without re-registering.
+  const onCloseRef = useRef(onClose)
   useEffect(() => {
+    onCloseRef.current = onClose
+  })
+
+  // Close on Escape, topmost only.
+  useEffect(() => {
+    const token = pushModal()
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
+      if (e.key !== "Escape") return
+      if (!isTopModal(token)) return
+      onCloseRef.current()
     }
     document.addEventListener("keydown", onKey)
-    return () => document.removeEventListener("keydown", onKey)
-  }, [onClose])
+    return () => {
+      document.removeEventListener("keydown", onKey)
+      popModal(token)
+    }
+  }, [])
 
   return (
     <div

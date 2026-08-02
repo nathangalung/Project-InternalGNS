@@ -6,7 +6,12 @@ import { useMe } from "@/features/auth/hooks"
 import * as dashboardApi from "@/features/dashboard/api"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { buildSeries, yearRange } from "@/lib/chart"
-import { formatNumber as formatId, formatRupiah as formatRp, toNum } from "@/lib/format"
+import {
+  formatNumber as formatId,
+  formatRupiah as formatRp,
+  formatRupiahAxis as formatRpAxis,
+  toNum,
+} from "@/lib/format"
 import { roleCanAccess } from "@/lib/rbac"
 import { pill, ui } from "@/lib/ui"
 import type { DashboardMetric } from "@/types/api"
@@ -22,13 +27,6 @@ const chartTabs: { label: string; metric: DashboardMetric }[] = [
 ]
 
 const RP_METRICS: ReadonlyArray<string> = ["Pendapatan", "Laba Bersih", "PPN"]
-
-function formatRpAxis(v: number): string {
-  if (v >= 1_000_000_000) return `Rp ${(v / 1_000_000_000).toFixed(0)}M`
-  if (v >= 1_000_000) return `Rp ${(v / 1_000_000).toFixed(0)}M`
-  if (v >= 1_000) return `Rp ${(v / 1_000).toFixed(0)}K`
-  return `Rp ${v}`
-}
 
 export default function Dashboard() {
   const navigate = useNavigate()

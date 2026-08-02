@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { ui } from "@/lib/ui"
 import type { PoRow } from "./types"
@@ -21,14 +21,6 @@ export default function UploadPoModal({
   const [poNumber, setPoNumber] = useState(row.poNumber)
   const [poDate, setPoDate] = useState(row.poDate.slice(0, 10))
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    function onEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose()
-    }
-    window.addEventListener("keydown", onEsc)
-    return () => window.removeEventListener("keydown", onEsc)
-  }, [onClose])
 
   const formattedSize = file
     ? file.size > 1024 * 1024

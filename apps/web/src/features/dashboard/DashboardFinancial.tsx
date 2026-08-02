@@ -9,7 +9,13 @@ import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboar
 import { useInvoices } from "@/features/invoices/hooks"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "@/features/invoices/types"
 import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
-import { formatDate, formatNumber as formatId, formatRupiah as formatRp, toNum } from "@/lib/format"
+import {
+  formatDate,
+  formatNumber as formatId,
+  formatRupiah as formatRp,
+  formatRupiahAxis as formatRpAxis,
+  toNum,
+} from "@/lib/format"
 import { deriveInvoiceStatus } from "@/lib/status"
 import { pill, ui } from "@/lib/ui"
 import type { DashboardMetric } from "@/types/api"
@@ -31,13 +37,6 @@ function computeRpMax(values: number[]): number {
   if (m <= 50_000_000) return 50_000_000
   const step = 10 ** Math.floor(Math.log10(m))
   return Math.ceil(m / step) * step
-}
-
-function formatRpAxis(v: number): string {
-  if (v >= 1_000_000_000) return `Rp ${(v / 1_000_000_000).toFixed(0)}M`
-  if (v >= 1_000_000) return `Rp ${(v / 1_000_000).toFixed(0)}M`
-  if (v >= 1_000) return `Rp ${(v / 1_000).toFixed(0)}K`
-  return `Rp ${v}`
 }
 
 interface DashboardFinancialProps {
