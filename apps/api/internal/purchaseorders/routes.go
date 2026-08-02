@@ -45,7 +45,6 @@ func Routes(d deps.Deps) chi.Router {
 			clients.NewRepo(d.Pool, d.Queries),
 			quotations.NewRepo(d.Pool, d.Queries),
 			pdfgen.NewRenderer(d.TemplatesRoot),
-			d.Pdf,
 		)
 		r.Get("/{id}/delivery-note.pdf", dn.ExportPDF)
 	}

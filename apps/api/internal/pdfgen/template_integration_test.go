@@ -139,7 +139,6 @@ func TestRealTemplate_DeliveryNote(t *testing.T) {
 		DeliveryNoteNo, PONo, CompanyName, CompanyAddress, AttnName, VesselName string
 		DateLine                                                                string
 		Items                                                                   []item
-		PreparedBy, SenderName                                                  string
 	}{
 		DeliveryNoteNo: "DN-PO-001",
 		PONo:           "PO-001",
@@ -149,8 +148,6 @@ func TestRealTemplate_DeliveryNote(t *testing.T) {
 		VesselName:     "MV Test",
 		DateLine:       "Jakarta, 1 January 2026",
 		Items:          []item{{No: 1, Qty: "1", Unit: "PCS", Name: "Spare", ShipDestination: "Tg. Priok"}},
-		PreparedBy:     "Direktur",
-		SenderName:     "Direktur",
 	}
 	out := execTemplate(t, "delivery_note/DeliveryNote.tex.tmpl", data)
 	if !strings.Contains(out, `\documentclass`) {

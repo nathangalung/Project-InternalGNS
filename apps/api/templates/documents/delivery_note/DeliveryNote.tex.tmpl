@@ -11,7 +11,7 @@
   BoldItalicFont = Plus Jakarta Sans Bold Italic,
 ]
 
-\usepackage[a4paper, top=1.8cm, bottom=2.0cm, left=1.8cm, right=1.8cm]{geometry}
+\usepackage[a4paper, includehead, top=1.5cm, bottom=1.8cm, left=1.8cm, right=1.8cm]{geometry}
 \usepackage{graphicx}
 \usepackage{longtable}
 \usepackage{array}
@@ -27,12 +27,13 @@
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{2pt}
+\setlength{\emergencystretch}{2em}
 \hfuzz=2pt
 \hbadness=2000
 
 \newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\footnotesize}p{#1}}
 \newcolumntype{C}[1]{>{\centering\arraybackslash\footnotesize}p{#1}}
-\renewcommand{\arraystretch}{1.25}
+\renewcommand{\arraystretch}{1.2}
 
 \fancypagestyle{firstpage}{%
   \fancyhf{}
@@ -83,40 +84,46 @@
 \vspace{0.2cm}
 
 \noindent
-\begin{minipage}[t]{0.55\textwidth}
+\begin{minipage}[t]{0.52\textwidth}
   {\small
   \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
-    Kepada     & : & [[.CompanyName]] \\[1pt]
-    Alamat     & : & [[if .CompanyAddress]][[.CompanyAddress]][[else]]-[[end]] \\[1pt]
-    Attn       & : & [[if .AttnName]][[.AttnName]][[else]]-[[end]] \\[1pt]
-    Vessel     & : & [[if .VesselName]][[.VesselName]][[else]]-[[end]] \\
+    To      & : & [[.CompanyName]] \\[1pt]
+    Address & : & [[if .CompanyAddress]][[.CompanyAddress]][[else]]-[[end]] \\[1pt]
+    Attn    & : & [[if .AttnName]][[.AttnName]][[else]]-[[end]] \\[1pt]
+    Vessel  & : & [[if .VesselName]][[.VesselName]][[else]]-[[end]] \\
   \end{tabular}
   }
 \end{minipage}%
 \hfill
-\begin{minipage}[t]{0.40\textwidth}
+\begin{minipage}[t]{0.44\textwidth}
   \raggedleft
   {\small
   \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
-    No. SJ     & : & [[.DeliveryNoteNo]] \\[1pt]
-    PO No.     & : & [[.PONo]] \\[1pt]
-    Tanggal    & : & [[.DateLine]] \\
+    Delivery Note No & : & [[.DeliveryNoteNo]] \\[1pt]
+    PO No            & : & [[.PONo]] \\[1pt]
+    Date             & : & [[.DateLine]] \\
   \end{tabular}
   }
 \end{minipage}
 
-\vspace{0.4cm}
+\vspace{0.5cm}
 \begin{center}
-  {\large\bfseries\underline{SURAT JALAN}}
+  {\Large\bfseries\underline{DELIVERY NOTE}}
 \end{center}
-\vspace{0.15cm}
+\vspace{0.1cm}
 
 \noindent\textbf{Mohon diterima barang-barang berikut\,:}
 \vspace{0.2cm}
 
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{2pt}
 
-\begin{longtable}{|C{0.8cm}|C{1.3cm}|C{1.2cm}|L{8.7cm}|L{4.1cm}|}
+\newlength{\DNcol}\setlength{\DNcol}{0.8cm}
+\newlength{\DQcol}\setlength{\DQcol}{1.2cm}
+\newlength{\DUcol}\setlength{\DUcol}{1.2cm}
+\newlength{\DIcol}\setlength{\DIcol}{8.3cm}
+\newlength{\DScol}\setlength{\DScol}{4.8cm}
+
+\begin{longtable}{|C{\DNcol}|C{\DQcol}|C{\DUcol}|L{\DIcol}|L{\DScol}|}
 \hline
 \multicolumn{1}{|c|}{\footnotesize\bfseries No.} &
 \multicolumn{1}{c|}{\footnotesize\bfseries Qty} &
@@ -148,30 +155,25 @@
 
 \end{longtable}
 
+% Single box so the two acknowledgements never split across a page.
 \vspace{1.0cm}
 \noindent
-\begin{minipage}[t]{0.32\textwidth}
-  \centering
-  \small
-  Disiapkan oleh,\\[2cm]
-  \rule{4cm}{0.4pt}\\
-  \textbf{[[.PreparedBy]]}
-\end{minipage}%
-\hfill
-\begin{minipage}[t]{0.32\textwidth}
-  \centering
-  \small
-  Pengirim,\\[2cm]
-  \rule{4cm}{0.4pt}\\
-  \textbf{[[.SenderName]]}
-\end{minipage}%
-\hfill
-\begin{minipage}[t]{0.32\textwidth}
-  \centering
-  \small
-  Penerima,\\[2cm]
-  \rule{4cm}{0.4pt}\\
-  (\,Nama \& Tanda Tangan\,)
+\begin{minipage}[t]{\textwidth}
+  \noindent
+  \begin{minipage}[t]{0.48\textwidth}
+    \small
+    Seen \& checked the above mentioned articles\\
+    in good order \& condition\\[2.2cm]
+    \rule{6cm}{0.4pt}
+  \end{minipage}%
+  \hfill
+  \begin{minipage}[t]{0.48\textwidth}
+    \raggedleft
+    \small
+    Received the above mentioned articles\\
+    in good order \& condition\\[2.2cm]
+    \rule{6cm}{0.4pt}
+  \end{minipage}
 \end{minipage}
 
 \end{document}

@@ -62,7 +62,6 @@ func TestDeliveryNote_NewHandler(t *testing.T) {
 		clients.NewRepo(pool, store),
 		quotations.NewRepo(pool, store),
 		pdfgen.NewRenderer(t.TempDir()),
-		deps.PdfSettings{},
 	)
 	require.NotNil(t, h)
 }
