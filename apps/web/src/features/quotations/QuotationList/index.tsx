@@ -9,9 +9,9 @@ import { resolveRange } from "@/lib/date-range"
 import { labelToStatus } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen } from "@/lib/useListScreen"
-import type { CanonicalStatus } from "@/types/api"
+import type { CanonicalStatus, QuotationSortKey } from "@/types/api"
 import QuotationFilter, { type DatePreset, type StatusFilter } from "../QuotationFilter"
-import type { QuotationRow } from "./helpers"
+import type { QuotationRow, SortableRowKey } from "./helpers"
 import PageHeader from "./PageHeader"
 import QuotationTable from "./QuotationTable"
 import SearchBar from "./SearchBar"
@@ -30,11 +30,19 @@ interface ActiveFilters {
   maxHarga: string
 }
 
+// Table column to API sort key.
+const sortKeyToApi: Record<SortableRowKey, QuotationSortKey> = {
+  displayNo: "quotationNo",
+  version: "version",
+  date: "createdAt",
+  total: "grandTotal",
+}
+
 // Quotation list orchestrator.
 export default function QuotationList({ onViewDetail }: QuotationListProps) {
   const [showFilter, setShowFilter] = useState(false)
   const [sortConfig, setSortConfig] = useState<{
-    key: keyof QuotationRow
+    key: SortableRowKey
     direction: "asc" | "desc"
   } | null>(null)
 
@@ -42,12 +50,13 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
   const { debouncedSearch, filters: activeFilters, itemsPerPage, startIndex } = list
   const { clearSearch, patchFilters } = list
 
-  function requestSort(key: keyof QuotationRow) {
+  function requestSort(key: SortableRowKey) {
     let direction: "asc" | "desc" = "asc"
     if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
       direction = "desc"
     }
     setSortConfig({ key, direction })
+    list.setCurrentPage(1)
   }
 
   const queryParams = useMemo(() => {
@@ -57,10 +66,7 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
       offset: startIndex,
     }
     if (sortConfig) {
-      if (sortConfig.key === "total") out.sortBy = "grandTotal"
-      else if (sortConfig.key === "date") out.sortBy = "quotationDate"
-      else if (sortConfig.key === "client") out.sortBy = "client"
-      else if (sortConfig.key === "displayNo") out.sortBy = "quotationNo"
+      out.sortBy = sortKeyToApi[sortConfig.key]
       out.sortDir = sortConfig.direction
     }
     if (!activeFilters) return out
@@ -77,7 +83,7 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
     return out
   }, [debouncedSearch, activeFilters, itemsPerPage, startIndex, sortConfig])
 
-  const { data } = useQuotations(queryParams)
+  const { data, isLoading } = useQuotations(queryParams)
   const currentData: QuotationRow[] = useMemo(() => (data?.rows ?? []).map(toTableRow), [data])
 
   const totalItems = data?.total ?? 0
@@ -141,6 +147,7 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
         <div className={ui.tableWrap}>
           <QuotationTable
             rows={currentData}
+            isLoading={isLoading}
             sortKey={sortConfig?.key ?? null}
             sortDir={sortConfig?.direction ?? null}
             onSort={requestSort}

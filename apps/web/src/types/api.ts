@@ -357,6 +357,9 @@ export type QuotationUpdateInput = Omit<
   "companyClientId" | "contactId" | "status"
 >
 
+// Sort keys accepted by the API.
+export type QuotationSortKey = "quotationNo" | "version" | "createdAt" | "grandTotal"
+
 export type QuotationListParams = {
   q?: string
   statuses?: CanonicalStatus[]
@@ -364,7 +367,7 @@ export type QuotationListParams = {
   dateTo?: string
   minTotal?: string
   maxTotal?: string
-  sortBy?: string
+  sortBy?: QuotationSortKey
   sortDir?: "asc" | "desc"
   limit?: number
   offset?: number

@@ -49,9 +49,12 @@ type ListFilter struct {
 var sortable = listq.Whitelist{
 	Default: "created_at",
 	Columns: map[string]listq.Column{
+		"createdAt":    {Expr: "q.created_at", Dir: listq.Desc},
 		"created_at":   {Expr: "q.created_at", Dir: listq.Desc},
+		"grandTotal":   {Expr: "q.grand_total", Dir: listq.Desc},
 		"grand_total":  {Expr: "q.grand_total", Dir: listq.Desc},
 		"total":        {Expr: "q.grand_total", Dir: listq.Desc},
+		"quotationNo":  {Expr: "q.quotation_no", Dir: listq.Desc},
 		"quotation_no": {Expr: "q.quotation_no", Dir: listq.Desc},
 		"version":      {Expr: "q.version", Dir: listq.Desc},
 	},

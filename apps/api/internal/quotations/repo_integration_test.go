@@ -362,6 +362,18 @@ func TestRepo_List_FiltersAndSort(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, resVerSort.Rows)
 
+	resNoCamel, err := repo.List(ctx, quotations.ListFilter{SortBy: "quotationNo", SortDir: "asc", Limit: 100})
+	require.NoError(t, err)
+	assert.Equal(t, resAsc.Rows, resNoCamel.Rows)
+
+	resTotalCamel, err := repo.List(ctx, quotations.ListFilter{SortBy: "grandTotal", SortDir: "asc", Limit: 100})
+	require.NoError(t, err)
+	assert.Equal(t, resTotalSort.Rows, resTotalCamel.Rows)
+
+	resCreatedCamel, err := repo.List(ctx, quotations.ListFilter{SortBy: "createdAt", SortDir: "asc", Limit: 100})
+	require.NoError(t, err)
+	assert.NotEmpty(t, resCreatedCamel.Rows)
+
 	resBadSort, err := repo.List(ctx, quotations.ListFilter{SortBy: "; DROP TABLE--", Limit: 100})
 	require.NoError(t, err)
 	assert.NotEmpty(t, resBadSort.Rows)
