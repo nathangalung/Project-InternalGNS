@@ -26,13 +26,13 @@ jobs:
       postgres:
         image: postgres:18.3-alpine
         env:
-          POSTGRES_DB: gns_quotation
+          POSTGRES_DB: gns_citest
           POSTGRES_USER: gns_app
           POSTGRES_PASSWORD: gns_app
           TZ: Asia/Jakarta
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U gns_app -d gns_quotation"
+          --health-cmd "pg_isready -U gns_app -d gns_citest"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 20
@@ -54,9 +54,11 @@ jobs:
           working-directory: apps/api
           args: --timeout=5m
 
+      # TEST_DATABASE_URL only: the suites truncate, so they never get a DSN
+      # that could point at a real database.
       - name: go test
         env:
-          DATABASE_URL: postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable
+          TEST_DATABASE_URL: postgres://gns_app:gns_app@localhost:5432/gns_citest?sslmode=disable
         run: go test ./... -race -count=1 -p=1
 
       - name: govulncheck
@@ -110,18 +112,18 @@ jobs:
       postgres:
         image: postgres:18.3-alpine
         env:
-          POSTGRES_DB: gns_quotation
+          POSTGRES_DB: gns_citest
           POSTGRES_USER: gns_app
           POSTGRES_PASSWORD: gns_app
           TZ: Asia/Jakarta
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U gns_app -d gns_quotation"
+          --health-cmd "pg_isready -U gns_app -d gns_citest"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 20
     env:
-      DATABASE_URL: postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable
+      DATABASE_URL: postgres://gns_app:gns_app@localhost:5432/gns_citest?sslmode=disable
       HTTP_ADDR: ":8080"
       JWT_SECRET: ci_lighthouse_secret_do_not_use_in_prod
       JWT_EXPIRY: 1h

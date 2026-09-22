@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 
@@ -14,33 +15,46 @@ import (
 	dbmig "github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 )
 
-const defaultDSN = "postgres://gns_app:gns_app@localhost:5432/gns_quotation?sslmode=disable"
+// Suffix every resettable database carries.
+const testDBSuffix = "test"
+
+const missingDSNHint = "TEST_DATABASE_URL is not set; run `make test-api-ci` for a throwaway database"
 
 var (
-	poolOnce   sync.Once
-	poolErr    error
-	sharedPool *pgxpool.Pool
+	poolOnce     sync.Once
+	poolSkipErr  error
+	poolFatalErr error
+	sharedPool   *pgxpool.Pool
 )
 
 // DSN returns the test DSN.
+//
+// Only TEST_DATABASE_URL is read. DATABASE_URL points at the dev or
+// production database, and the suites truncate, so a fallback would let a
+// plain `go test` wipe live data.
 func DSN() string {
-	if v := os.Getenv("TEST_DATABASE_URL"); v != "" {
-		return v
-	}
-	if v := os.Getenv("DATABASE_URL"); v != "" {
-		return v
-	}
-	return defaultDSN
+	return os.Getenv("TEST_DATABASE_URL")
+}
+
+// Accept only test database names.
+func isTestDatabaseName(name string) bool {
+	return strings.HasSuffix(name, testDBSuffix)
 }
 
 // Pool builds a singleton pool.
+//
+// An unreachable postgres skips, because not every machine runs one. A bad
+// DSN, a failed migration or a failed seed is a real defect and fails.
 func Pool(t testing.TB) *pgxpool.Pool {
 	t.Helper()
+	if DSN() == "" {
+		t.Skip(missingDSNHint)
+	}
 	poolOnce.Do(func() {
 		ctx := context.Background()
 		cfg, err := pgxpool.ParseConfig(DSN())
 		if err != nil {
-			poolErr = err
+			poolFatalErr = err
 			return
 		}
 		// Match the app pool: pin the business zone so date-derived assertions
@@ -49,25 +63,28 @@ func Pool(t testing.TB) *pgxpool.Pool {
 		cfg.MaxConns = 8
 		p, err := pgxpool.NewWithConfig(ctx, cfg)
 		if err != nil {
-			poolErr = err
+			poolSkipErr = err
 			return
 		}
 		if err := p.Ping(ctx); err != nil {
-			poolErr = err
+			poolSkipErr = err
 			return
 		}
 		if err := dbmig.RunMigrations(ctx, p); err != nil {
-			poolErr = err
+			poolFatalErr = err
 			return
 		}
 		if err := SeedMasterIfMissing(ctx, p); err != nil {
-			poolErr = err
+			poolFatalErr = err
 			return
 		}
 		sharedPool = p
 	})
-	if poolErr != nil {
-		t.Skipf("test postgres unavailable: %v", poolErr)
+	if poolFatalErr != nil {
+		t.Fatalf("test database setup: %v", poolFatalErr)
+	}
+	if poolSkipErr != nil {
+		t.Skipf("test postgres unavailable: %v", poolSkipErr)
 	}
 	return sharedPool
 }

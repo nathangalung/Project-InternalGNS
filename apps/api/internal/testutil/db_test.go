@@ -2,30 +2,50 @@ package testutil
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDSN_TestDatabaseURL(t *testing.T) {
-	t.Setenv("TEST_DATABASE_URL", "postgres://test/db")
-	t.Setenv("DATABASE_URL", "postgres://other/db")
-	assert.Equal(t, "postgres://test/db", DSN())
+// DSN reads TEST_DATABASE_URL alone.
+func TestDSN_IgnoresDatabaseURL(t *testing.T) {
+	cases := []struct {
+		name    string
+		testURL string
+		dbURL   string
+		want    string
+	}{
+		{"test url wins", "postgres://test/db", "postgres://other/db", "postgres://test/db"},
+		{"database url ignored", "", "postgres://only-db/db", ""},
+		{"both unset", "", "", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("TEST_DATABASE_URL", tc.testURL)
+			t.Setenv("DATABASE_URL", tc.dbURL)
+			assert.Equal(t, tc.want, DSN())
+		})
+	}
 }
 
-func TestDSN_FallbackToDatabaseURL(t *testing.T) {
-	require := assert.New(t)
-	require.NoError(os.Unsetenv("TEST_DATABASE_URL"))
-	t.Setenv("DATABASE_URL", "postgres://only-db/db")
-	require.Equal("postgres://only-db/db", DSN())
-}
-
-func TestDSN_FallbackToDefault(t *testing.T) {
-	require := assert.New(t)
-	require.NoError(os.Unsetenv("TEST_DATABASE_URL"))
-	require.NoError(os.Unsetenv("DATABASE_URL"))
-	require.Equal(defaultDSN, DSN())
+// Only test database names are resettable.
+func TestIsTestDatabaseName(t *testing.T) {
+	cases := []struct {
+		name string
+		db   string
+		want bool
+	}{
+		{"dev database rejected", "gns_quotation", false},
+		{"ci database accepted", "gns_citest", true},
+		{"suffixed dev name accepted", "gns_quotation_test", true},
+		{"production rejected", "postgres", false},
+		{"empty rejected", "", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, isTestDatabaseName(tc.db))
+		})
+	}
 }
 
 func TestPool_ReturnsSharedInstance(t *testing.T) {

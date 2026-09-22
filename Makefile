@@ -6,7 +6,7 @@
         api web dev \
         tidy sqlc \
         build build-api build-web \
-        test test-api test-api-ci test-web \
+        test test-db-reset test-api test-api-ci test-web \
         lint lint-fix fmt types \
         hooks-install hooks-run \
         docker-build docker-build-api docker-build-web \
@@ -139,9 +139,11 @@ schema-dump: ## Dump current schema to docs/schema_current.sql
 	pg_dump --schema-only --no-owner "$(DATABASE_URL)" > docs/schema_current.sql
 
 # Canonical plpgsql bodies. The drift test is the enforcement; this only
-# refreshes the files after a migration changes a function.
+# refreshes the files after a migration changes a function. It reads the dev
+# DB on purpose and only reads; the reset helpers refuse any database whose
+# name does not end in "test", so nothing here can truncate it.
 db-functions-dump: db-up ## Regenerate db/functions from the live DB
-	cd $(API_DIR) && DATABASE_URL="$(DATABASE_URL)" GNS_UPDATE_FUNCTIONS=1 \
+	cd $(API_DIR) && TEST_DATABASE_URL="$(DATABASE_URL)" GNS_UPDATE_FUNCTIONS=1 \
 	  go test ./db/functions -run TestFunctionBodiesMatchDatabase -count=1
 
 db-erd: db-up ## Regenerate docs/erd from the live dev DB (requires tbls)
@@ -183,15 +185,17 @@ build-web: ## Build FE bundle
 # Tests and checks.
 test: test-api test-web ## Run all tests
 
-test-api: ## Run Go unit tests (serialized to avoid godog/integration interference)
-	cd $(API_DIR) && go test ./... -race -count=1 -p=1
-
-test-api-ci: ## Run Go tests against a throwaway DB, like CI
+# The suites TRUNCATE, so they only ever get a database built here.
+test-db-reset: db-up ## Recreate the throwaway test database
 	@$(COMPOSE_DEV) exec -T postgres psql -U gns_app -d postgres \
 	  -c "DROP DATABASE IF EXISTS $(CI_TEST_DB) WITH (FORCE);" \
 	  -c "CREATE DATABASE $(CI_TEST_DB) OWNER gns_app;" >/dev/null
+
+test-api: test-db-reset ## Run Go tests against a throwaway DB (serialized)
 	cd $(API_DIR) && TEST_DATABASE_URL=$(CI_TEST_DSN) DATABASE_URL=$(CI_TEST_DSN) \
 	  go test ./... -race -count=1 -p=1
+
+test-api-ci: test-api ## Run Go tests the way CI does
 
 test-web: ## Typecheck FE
 	cd $(WEB_DIR) && bun run typecheck

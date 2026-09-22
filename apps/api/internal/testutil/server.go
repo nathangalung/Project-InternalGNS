@@ -2,6 +2,8 @@ package testutil
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -238,8 +240,29 @@ func FaultyServer(t testing.TB, userID int64, mount func(chi.Router, deps.Deps))
 	return srv
 }
 
+// ErrNotTestDatabase blocks a destructive reset.
+var ErrNotTestDatabase = errors.New("refusing to truncate a non-test database")
+
+// Refuse a reset outside a test database.
+//
+// The pool DSN is not enough: a stray TEST_DATABASE_URL can still point at
+// the dev database, so ask the connection which database it is on.
+func requireTestDatabase(ctx context.Context, exec quotations.Executor) error {
+	var name string
+	if err := exec.QueryRow(ctx, `SELECT current_database()`).Scan(&name); err != nil {
+		return fmt.Errorf("current database: %w", err)
+	}
+	if !isTestDatabaseName(name) {
+		return fmt.Errorf("%w: %q", ErrNotTestDatabase, name)
+	}
+	return nil
+}
+
 // ResetQuotationDomain truncates quotation* rows.
 func ResetQuotationDomain(ctx context.Context, exec quotations.Executor) error {
+	if err := requireTestDatabase(ctx, exec); err != nil {
+		return err
+	}
 	stmts := []string{
 		`TRUNCATE TABLE quotation_status_history RESTART IDENTITY CASCADE`,
 		`TRUNCATE TABLE quotation_items RESTART IDENTITY CASCADE`,
@@ -255,6 +278,9 @@ func ResetQuotationDomain(ctx context.Context, exec quotations.Executor) error {
 
 // ResetCommercialDomain truncates quotation/PO/invoice rows.
 func ResetCommercialDomain(ctx context.Context, exec quotations.Executor) error {
+	if err := requireTestDatabase(ctx, exec); err != nil {
+		return err
+	}
 	stmts := []string{
 		`TRUNCATE TABLE invoice_items RESTART IDENTITY CASCADE`,
 		`TRUNCATE TABLE invoices RESTART IDENTITY CASCADE`,
