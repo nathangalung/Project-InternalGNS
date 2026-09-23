@@ -144,7 +144,7 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
           <div className={ui.pageActionsTight}>
             <button
               type="button"
-              className={`${ui.btnOutline} w-[160px]`}
+              className={`${ui.btnOutline} min-w-[160px] whitespace-nowrap`}
               onClick={() => void handleExport()}
             >
               <svg

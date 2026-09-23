@@ -2,6 +2,7 @@ import {
   keepPreviousData,
   skipToken,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
@@ -70,13 +71,16 @@ export function usePoHistory(id: number | undefined) {
 
 // User names for the timeline.
 //
-// Only superadmin may list users; everyone else sees the id.
-export function useActorNames(enabled: boolean) {
-  const params = { limit: 200 }
-  return useQuery({
-    queryKey: queryKeys.users.list(params),
-    queryFn: enabled ? () => usersApi.list(params) : skipToken,
-    select: (data) => new Map(data.rows.map((u) => [u.id, u.name])),
+// One lookup per distinct actor, usually one or two. Only superadmin may
+// read users; everyone else sees the id.
+export function useActorNames(ids: number[], enabled: boolean): Map<number, string> {
+  return useQueries({
+    queries: [...new Set(ids)].map((id) => ({
+      queryKey: queryKeys.users.detail(id),
+      queryFn: enabled ? () => usersApi.get(id) : skipToken,
+    })),
+    combine: (results) =>
+      new Map(results.flatMap((r) => (r.data ? [[r.data.id, r.data.name] as const] : []))),
   })
 }
 

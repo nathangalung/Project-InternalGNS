@@ -54,7 +54,10 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
   const { data: me } = useMe()
   const { data: poItems } = usePoItems(po.id)
   const { data: events, isLoading: historyLoading } = usePoHistory(po.id)
-  const { data: actorNames } = useActorNames(me?.role === "superadmin")
+  const actorNames = useActorNames(
+    (events ?? []).map((ev) => ev.changedBy),
+    me?.role === "superadmin",
+  )
   // Operational cannot read invoices and relies on the server 409.
   const { data: invoiceFiled = false } = useInvoiceFiled(
     po.quotationId,
@@ -80,7 +83,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
   // Profit needs real cost data.
   const hasCost = useMemo(() => (poItems ?? []).some((it) => toNum(it.costPrice) > 0), [poItems])
   const history = useMemo(
-    () => (events ?? []).map((ev) => poHistoryEntry(ev, actorNames?.get(ev.changedBy))),
+    () => (events ?? []).map((ev) => poHistoryEntry(ev, actorNames.get(ev.changedBy))),
     [events, actorNames],
   )
 
