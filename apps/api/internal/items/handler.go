@@ -31,6 +31,10 @@ func NewHandler(repo *Repo, tx db.TxBeginner) *Handler {
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	limit, offset := paginate.Parse(r)
 	q := r.URL.Query()
+	if key := badQueryParam(q); key != "" {
+		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
+		return
+	}
 
 	f := ListFilter{
 		Q:       strings.TrimSpace(q.Get("q")),
@@ -45,10 +49,13 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if s := q.Get("unitId"); s != "" {
-		if v, err := strconv.ParseInt(s, 10, 16); err == nil {
-			u := int16(v)
-			f.UnitID = &u
+		v, err := strconv.ParseInt(s, 10, 16)
+		if err != nil {
+			httperr.Render(w, httperr.BadRequest("invalid unitId"))
+			return
 		}
+		u := int16(v)
+		f.UnitID = &u
 	}
 
 	res, err := h.repo.List(r.Context(), f)
@@ -84,6 +91,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
+	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
@@ -110,6 +118,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
+	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
@@ -155,6 +164,10 @@ func (h *Handler) AddVendor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
+	if key := badQueryParam(r.URL.Query()); key != "" {
+		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
+		return
+	}
 	q := r.URL.Query().Get("q")
 	if q == "" {
 		httperr.Render(w, httperr.BadRequest("q is required"))
@@ -180,6 +193,10 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 // SearchAdvanced merges item-name, vendor-offer and request-history layers.
 // Tier weight: ITEM_AUTO > VENDOR_OFFER > ITEM_SUGGESTED > REQUEST_HISTORY > ITEM_FUZZY.
 func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
+	if key := badQueryParam(r.URL.Query()); key != "" {
+		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
+		return
+	}
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	if q == "" {
 		httperr.Render(w, httperr.BadRequest("q is required"))
@@ -389,6 +406,10 @@ func (h *Handler) ListVendorsForItem(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid id"))
 		return
 	}
+	if err := h.requireItem(r.Context(), id); err != nil {
+		renderItemErr(w, err)
+		return
+	}
 	vendors, err := h.repo.ListVendorsForItem(r.Context(), id)
 	if err != nil {
 		httperr.RenderDBErr(w, err)
@@ -405,10 +426,32 @@ func (h *Handler) PriceHistory(w http.ResponseWriter, r *http.Request) {
 	}
 	limit := paginate.ParseLimit(r, 5)
 
+	if err := h.requireItem(r.Context(), id); err != nil {
+		renderItemErr(w, err)
+		return
+	}
 	history, err := h.repo.SuggestSellingPrices(r.Context(), id, limit)
 	if err != nil {
 		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, history)
+}
+
+// requireItem reports a missing parent before a sub-collection read.
+func (h *Handler) requireItem(ctx context.Context, id int64) error {
+	_, err := h.repo.GetByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("load item %d: %w", id, err)
+	}
+	return nil
+}
+
+// renderItemErr maps the package sentinel onto a problem response.
+func renderItemErr(w http.ResponseWriter, err error) {
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("item not found"))
+		return
+	}
+	httperr.RenderDBErr(w, err)
 }

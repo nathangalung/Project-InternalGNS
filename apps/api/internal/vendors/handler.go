@@ -3,8 +3,10 @@ package vendors
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 
@@ -24,6 +26,10 @@ func NewHandler(repo *Repo) *Handler {
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
+	if key := badQueryParam(q); key != "" {
+		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
+		return
+	}
 	limit, offset := paginate.Parse(r)
 
 	f := ListFilter{
@@ -81,6 +87,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
+	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
@@ -107,6 +114,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
+	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
@@ -126,6 +134,10 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
+	if key := badQueryParam(r.URL.Query()); key != "" {
+		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
+		return
+	}
 	q := r.URL.Query().Get("q")
 	if q == "" {
 		httperr.Render(w, httperr.BadRequest("q is required"))
@@ -156,6 +168,14 @@ func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 	}
 	limit := paginate.ParseLimit(r, 50)
 
+	if _, err := h.repo.GetByID(r.Context(), id); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			httperr.Render(w, httperr.NotFound("vendor not found"))
+			return
+		}
+		httperr.RenderDBErr(w, fmt.Errorf("load vendor %d: %w", id, err))
+		return
+	}
 	items, err := h.repo.ListItems(r.Context(), id, limit)
 	if err != nil {
 		httperr.RenderDBErr(w, err)

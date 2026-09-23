@@ -1,10 +1,13 @@
 package clients
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 
@@ -25,6 +28,10 @@ func NewHandler(repo *Repo) *Handler {
 // List handles GET /clients with filters, sort, pagination.
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
+	if key := badQueryParam(q); key != "" {
+		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
+		return
+	}
 	limit, offset := paginate.Parse(r)
 
 	f := ListFilter{
@@ -85,6 +92,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
+	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
@@ -112,6 +120,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
+	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
@@ -142,6 +151,10 @@ func (h *Handler) Summary(w http.ResponseWriter, r *http.Request) {
 
 // Search handles GET /clients/search?q=&minScore=&limit=
 func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
+	if key := badQueryParam(r.URL.Query()); key != "" {
+		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
+		return
+	}
 	q := r.URL.Query().Get("q")
 	if q == "" {
 		httperr.Render(w, httperr.BadRequest("q is required"))
@@ -173,6 +186,10 @@ func (h *Handler) ListContacts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := h.requireClient(r.Context(), id); err != nil {
+		renderClientErr(w, err)
+		return
+	}
 	contacts, err := h.repo.ListContacts(r.Context(), id)
 	if err != nil {
 		httperr.RenderDBErr(w, err)
@@ -194,6 +211,7 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
+	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
@@ -226,6 +244,7 @@ func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
+	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
@@ -265,4 +284,22 @@ func (h *Handler) DeleteContact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// requireClient reports a missing parent before a sub-collection read.
+func (h *Handler) requireClient(ctx context.Context, id int64) error {
+	_, err := h.repo.GetByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("load client %d: %w", id, err)
+	}
+	return nil
+}
+
+// renderClientErr maps the package sentinel onto a problem response.
+func renderClientErr(w http.ResponseWriter, err error) {
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("client not found"))
+		return
+	}
+	httperr.RenderDBErr(w, err)
 }
