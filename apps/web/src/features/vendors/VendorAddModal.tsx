@@ -204,7 +204,7 @@ export default function VendorAddModal({
         </div>
 
         <div
-          className={`${ui.modalSection} transition-opacity duration-200 ease-[ease] ${
+          className={`${ui.modalSection} transition-opacity duration-200 ease-[ease] motion-reduce:transition-none ${
             !isAddressFilled ? "opacity-60" : "opacity-100"
           }`}
         >
@@ -266,12 +266,12 @@ export default function VendorAddModal({
               role="switch"
               aria-checked={isActive}
               aria-labelledby={`${fid}-status`}
-              className={`relative h-[22px] w-10 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] ${ui.focusRing} ${
+              className={`relative h-[22px] w-10 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] motion-reduce:transition-none ${ui.focusRing} ${
                 isActive ? "bg-primary-700" : "bg-dark-300"
               }`}
             >
               <span
-                className={`absolute top-0.5 h-[18px] w-[18px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ease-[ease] ${
+                className={`absolute top-0.5 h-[18px] w-[18px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ease-[ease] motion-reduce:transition-none ${
                   isActive ? "left-5" : "left-0.5"
                 }`}
               />

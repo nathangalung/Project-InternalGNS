@@ -24,7 +24,7 @@ type VendorListProps = {
 
 type SortKey = "totalPembelian" | "productCount"
 
-const sortBtnCls = `inline-flex items-center rounded-sm uppercase ${ui.focusRing}`
+const sortBtnCls = `inline-flex w-full items-center justify-center rounded-sm uppercase ${ui.focusRing}`
 
 export default function VendorList({ onViewDetail }: VendorListProps) {
   const [showAdd, setShowAdd] = useState(false)

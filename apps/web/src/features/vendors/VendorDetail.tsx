@@ -443,12 +443,12 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                 aria-labelledby={statusLabelId}
                 aria-describedby={statusHintId}
                 disabled={!canWrite}
-                className={`relative h-8 w-14 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] disabled:cursor-not-allowed disabled:opacity-60 ${ui.focusRing} ${
+                className={`relative h-8 w-14 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 ${ui.focusRing} ${
                   isActive ? "bg-primary-700" : "bg-dark-300"
                 }`}
               >
                 <span
-                  className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ease-[ease] ${
+                  className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ease-[ease] motion-reduce:transition-none ${
                     isActive ? "left-7" : "left-1"
                   }`}
                 />
