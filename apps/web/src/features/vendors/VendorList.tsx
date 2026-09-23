@@ -12,11 +12,11 @@ import { useVendors } from "@/features/vendors/hooks"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
 import VendorFilter, { type VendorFilterValues } from "@/features/vendors/VendorFilter"
 import { formatRupiah } from "@/lib/format"
+import { canWriteCatalog } from "@/lib/rbac"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen } from "@/lib/useListScreen"
 import type { VendorRow } from "@/types/api"
-import { canWriteVendors } from "./helpers"
 
 type VendorListProps = {
   onViewDetail?: (id: number) => void
@@ -32,7 +32,7 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
   const { data: me } = useMe()
-  const canWrite = canWriteVendors(me?.role)
+  const canWrite = canWriteCatalog(me?.role)
 
   const list = useListScreen<VendorFilterValues>({
     status: "all",

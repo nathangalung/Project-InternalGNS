@@ -1,13 +1,3 @@
-import type { Role } from "@/types/api"
-
-// Finance is read-only here.
-//
-// Mirrors the API's readOnlyFor("finance") on /vendors. An unknown role
-// fails closed, so write actions never flash in before /auth/me loads.
-export function canWriteVendors(role: Role | undefined): boolean {
-  return role === "superadmin" || role === "operational"
-}
-
 export type VendorItemsSummary = {
   // Heading count, "200+" when capped
   count: string

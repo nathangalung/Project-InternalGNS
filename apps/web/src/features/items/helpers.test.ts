@@ -4,7 +4,6 @@ import type { AdvancedSearchHit } from "@/types/api"
 import {
   addVendorError,
   apiFieldError,
-  canWriteCatalog,
   findVendorByName,
   isSearchCapped,
   KATALOG_SEARCH_LIMIT,
@@ -26,17 +25,6 @@ function hit(id: number, defaultUnitId?: number): AdvancedSearchHit {
     tiers: ["ITEM_AUTO"],
   }
 }
-
-describe("canWriteCatalog", () => {
-  it.each([
-    ["superadmin", true],
-    ["operational", true],
-    ["finance", false],
-    [undefined, false],
-  ] as const)("%s -> %s", (role, want) => {
-    expect(canWriteCatalog(role)).toBe(want)
-  })
-})
 
 describe("isSearchCapped", () => {
   it.each([

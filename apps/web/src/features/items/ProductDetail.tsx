@@ -4,12 +4,7 @@ import EntityLink from "@/components/shared/EntityLink"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
 import AddVendorToItemModal from "@/features/items/AddVendorToItemModal"
-import {
-  apiFieldError,
-  canWriteCatalog,
-  productInitials,
-  vendorInitials,
-} from "@/features/items/helpers"
+import { apiFieldError, productInitials, vendorInitials } from "@/features/items/helpers"
 import {
   useItemImageDownloadUrl,
   useItemVendors,
@@ -21,6 +16,7 @@ import { fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
 import { errorMessage } from "@/lib/errors"
 import { formatRupiah } from "@/lib/format"
+import { canWriteCatalog } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { dropdownLabel, ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"

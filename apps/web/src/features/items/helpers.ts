@@ -1,13 +1,5 @@
 import { ApiError } from "@/lib/api-client"
-import type { AdvancedSearchHit, ItemRow, Role } from "@/types/api"
-
-// Catalog write access.
-//
-// The API refuses every item write from finance with 403, so finance gets a
-// read-only catalog. An unknown role is read-only too.
-export function canWriteCatalog(role: Role | undefined): boolean {
-  return role === "superadmin" || role === "operational"
-}
+import type { AdvancedSearchHit, ItemRow } from "@/types/api"
 
 // Katalog search page size.
 //

@@ -35,6 +35,15 @@ export function roleCanAccess(role: Role | undefined, section: Section): boolean
   return EXTRA[role]?.includes(section) ?? false
 }
 
+// Catalog write access.
+//
+// Mirrors the API's readOnlyFor("finance") on /items and /vendors. An
+// unknown role fails closed, so write actions never flash in before
+// /auth/me loads.
+export function canWriteCatalog(role: Role | undefined): boolean {
+  return role === "superadmin" || role === "operational"
+}
+
 // Maps a pathname to its section.
 export function sectionFromPathname(pathname: string): Section {
   const first = pathname.split("/").filter(Boolean)[0] ?? ""

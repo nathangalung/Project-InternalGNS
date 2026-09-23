@@ -1,20 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { Role } from "@/types/api"
-import { canWriteVendors, vendorItemsSummary } from "./helpers"
-
-describe("canWriteVendors", () => {
-  const cases: { role: Role | undefined; want: boolean }[] = [
-    { role: "superadmin", want: true },
-    { role: "operational", want: true },
-    { role: "finance", want: false },
-    { role: undefined, want: false },
-  ]
-  for (const c of cases) {
-    it(`${c.role ?? "unknown"} -> ${c.want}`, () => {
-      expect(canWriteVendors(c.role)).toBe(c.want)
-    })
-  }
-})
+import { vendorItemsSummary } from "./helpers"
 
 describe("vendorItemsSummary", () => {
   const cases = [

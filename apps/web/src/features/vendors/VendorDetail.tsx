@@ -13,12 +13,13 @@ import { ApiError, fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
 import { errorMessage } from "@/lib/errors"
 import { formatRupiah } from "@/lib/format"
+import { canWriteCatalog } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
 import { buildContactInfo } from "./contact-info"
-import { canWriteVendors, vendorItemsSummary } from "./helpers"
+import { vendorItemsSummary } from "./helpers"
 
 type VendorDetailProps = {
   vendor: VendorRow
@@ -77,7 +78,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   const statusHintId = useId()
 
   const { data: me } = useMe()
-  const canWrite = canWriteVendors(me?.role)
+  const canWrite = canWriteCatalog(me?.role)
 
   const updateVendor = useUpdateVendor()
   const uploadLogo = useUploadVendorLogo()

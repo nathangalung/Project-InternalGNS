@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { roleCanAccess, type Section, sectionFromPathname } from "./rbac"
+import { canWriteCatalog, roleCanAccess, type Section, sectionFromPathname } from "./rbac"
 
 const ALL: Section[] = [
   "dashboard",
@@ -58,5 +58,16 @@ describe("sectionFromPathname", () => {
     expect(sectionFromPathname("/invoices")).toBe("invoices")
     expect(sectionFromPathname("/users/5")).toBe("users")
     expect(sectionFromPathname("/")).toBe("dashboard")
+  })
+})
+
+describe("canWriteCatalog", () => {
+  it.each([
+    ["superadmin", true],
+    ["operational", true],
+    ["finance", false],
+    [undefined, false],
+  ] as const)("%s -> %s", (role, want) => {
+    expect(canWriteCatalog(role)).toBe(want)
   })
 })
