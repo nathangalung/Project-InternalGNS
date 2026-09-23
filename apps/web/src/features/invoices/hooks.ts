@@ -9,7 +9,7 @@ import * as invApi from "@/features/invoices/api"
 import { ApiError } from "@/lib/api-client"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
-import { uploadToPresignedUrl } from "@/lib/storage-upload"
+import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
 import { failureMessage } from "./download"
@@ -65,22 +65,10 @@ function useInvalidateInvoices() {
     ])
 }
 
-// Upload once, retry a key clash.
-//
-// The proxy refuses a PUT to an existing key with 409; a fresh presign
-// carries a new timestamped key.
+// Validated proof upload.
 async function uploadPaymentProof(id: number, file: File): Promise<string> {
   validateAsset("invoiceAttachment", file)
-  for (let attempt = 0; ; attempt++) {
-    const presign = await invApi.presignPaymentProofUpload(id, file.name)
-    try {
-      await uploadToPresignedUrl(presign.uploadUrl, file)
-      return presign.objectKey
-    } catch (err) {
-      if (attempt === 0 && err instanceof ApiError && err.status === 409) continue
-      throw err
-    }
-  }
+  return uploadWithFreshKey(() => invApi.presignPaymentProofUpload(id, file.name), file)
 }
 
 // Draft to sent.
@@ -186,9 +174,11 @@ export function useUploadInvoiceAttachment() {
   return useMutation({
     mutationFn: async ({ id, file }: { id: number; file: File }) => {
       validateAsset("invoiceAttachment", file)
-      const presign = await invApi.presignAttachmentUpload(id, file.name)
-      await uploadToPresignedUrl(presign.uploadUrl, file)
-      await invApi.updateAttachment(id, presign.objectKey)
+      const objectKey = await uploadWithFreshKey(
+        () => invApi.presignAttachmentUpload(id, file.name),
+        file,
+      )
+      await invApi.updateAttachment(id, objectKey)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.invoices.all }),
     onError: (err) => toast.error(failureMessage(err, "Gagal mengunggah lampiran.")),

@@ -1,5 +1,12 @@
-import { describe, expect, it } from "vitest"
-import { extractErrorMessage } from "./api-client"
+import { afterEach, describe, expect, it, vi } from "vitest"
+import {
+  ApiError,
+  apiRequest,
+  extractErrorMessage,
+  parseProblem,
+  transferFailureMessage,
+  uploadAsset,
+} from "./api-client"
 
 describe("extractErrorMessage", () => {
   it("prefers detail over every other source", () => {
@@ -54,5 +61,91 @@ describe("extractErrorMessage", () => {
   it("falls back to the status text for a non-object body", () => {
     expect(extractErrorMessage(null, "Bad Gateway")).toBe("Bad Gateway")
     expect(extractErrorMessage("boom", "Bad Gateway")).toBe("Bad Gateway")
+  })
+})
+
+describe("parseProblem", () => {
+  it.each<[string, string, unknown]>([
+    ["problem JSON", '{"detail":"Tidak ada."}', { detail: "Tidak ada." }],
+    ["empty body", "", null],
+    ["proxy HTML page", "<html>502</html>", null],
+  ])("%s", (_name, text, want) => {
+    expect(parseProblem(text)).toEqual(want)
+  })
+})
+
+describe("transferFailureMessage", () => {
+  const detail = (d: string) => ({ detail: d })
+
+  it.each<[string, "upload" | "download", number, unknown, string]>([
+    [
+      "upload key clash",
+      "upload",
+      409,
+      detail("object already exists"),
+      "Berkas dengan nama yang sama baru saja diunggah. Coba lagi.",
+    ],
+    [
+      "upload refused type",
+      "upload",
+      400,
+      detail("file type not allowed"),
+      "Jenis berkas tidak diizinkan.",
+    ],
+    ["upload store down", "upload", 502, detail("upload failed"), "Gagal mengunggah berkas."],
+    [
+      "download 409 is written for the user",
+      "download",
+      409,
+      detail("Surat jalan baru terbit setelah pekerjaan PO dimulai (ON_PROGRESS)."),
+      "Surat jalan baru terbit setelah pekerjaan PO dimulai (ON_PROGRESS).",
+    ],
+    ["download 422 fields", "download", 422, { fields: { npwp: "NPWP kosong." } }, "NPWP kosong."],
+    ["download English 404", "download", 404, detail("not found"), "Gagal mengunduh berkas."],
+    ["download 409 without body", "download", 409, null, "Gagal mengunduh berkas."],
+  ])("%s", (_name, kind, status, problem, want) => {
+    expect(transferFailureMessage(kind, status, problem)).toBe(want)
+  })
+})
+
+describe("failed responses", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  function respond(status: number, body: string) {
+    const fetchMock = vi.fn(async () => new Response(body, { status }))
+    vi.stubGlobal("fetch", fetchMock)
+    return fetchMock
+  }
+
+  it("keeps a credential 401 as the server's answer, without a refresh", async () => {
+    const fetchMock = respond(401, JSON.stringify({ detail: "Email atau kata sandi salah." }))
+    const err = await apiRequest({ path: "/auth/login", method: "POST", authed: false }).catch(
+      (e: unknown) => e,
+    )
+    expect(err).toBeInstanceOf(ApiError)
+    expect((err as ApiError).message).toBe("Email atau kata sandi salah.")
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("turns a non-JSON error page into a typed error", async () => {
+    respond(502, "<html>Bad Gateway</html>")
+    const err = await apiRequest({ path: "/x", authed: false }).catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(ApiError)
+    expect((err as ApiError).status).toBe(502)
+    expect((err as ApiError).message).toBe("Permintaan gagal (502).")
+  })
+
+  it("never shows the proxy's English upload detail", async () => {
+    vi.stubGlobal("sessionStorage", { getItem: () => null })
+    respond(409, JSON.stringify({ title: "Conflict", detail: "object already exists" }))
+    const file = new File(["x"], "a.pdf", { type: "application/pdf" })
+    const err = await uploadAsset("/storage/po-docs/po/1/a.pdf", file).catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(ApiError)
+    expect((err as ApiError).status).toBe(409)
+    expect((err as ApiError).message).toBe(
+      "Berkas dengan nama yang sama baru saja diunggah. Coba lagi.",
+    )
   })
 })

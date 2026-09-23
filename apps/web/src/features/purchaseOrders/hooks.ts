@@ -12,7 +12,7 @@ import * as usersApi from "@/features/users/api"
 import { ApiError } from "@/lib/api-client"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
-import { uploadToPresignedUrl } from "@/lib/storage-upload"
+import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
 import type { PoBackendStatus, PoUpdateItemsInput } from "@/types/api"
@@ -154,13 +154,8 @@ export function useUploadPoFile() {
   return useMutation({
     mutationFn: async ({ id, file }: { id: number; file: File }) => {
       validateAsset("poDoc", file)
-      const presign = await poApi.presignUpload(id, file.name)
-      await uploadToPresignedUrl(presign.uploadUrl, file)
-      await poApi.updateFile(id, {
-        fileName: file.name,
-        fileSize: file.size,
-        objectKey: presign.objectKey,
-      })
+      const objectKey = await uploadWithFreshKey(() => poApi.presignUpload(id, file.name), file)
+      await poApi.updateFile(id, { fileName: file.name, fileSize: file.size, objectKey })
     },
     // Attaching moves PENDING to UPLOADED.
     onSuccess: () => {

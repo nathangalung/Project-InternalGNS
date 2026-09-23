@@ -9,7 +9,7 @@ import * as itemsApi from "@/features/items/api"
 import * as vendorsApi from "@/features/vendors/api"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
-import { uploadToPresignedUrl } from "@/lib/storage-upload"
+import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
 
@@ -120,9 +120,11 @@ export function useUploadItemImage() {
   return useMutation({
     mutationFn: async ({ id, file }: { id: number; file: File }) => {
       validateAsset("itemImage", file)
-      const presign = await itemsApi.presignImageUpload(id, file.name)
-      await uploadToPresignedUrl(presign.uploadUrl, file)
-      await itemsApi.updateImage(id, presign.objectKey)
+      const objectKey = await uploadWithFreshKey(
+        () => itemsApi.presignImageUpload(id, file.name),
+        file,
+      )
+      await itemsApi.updateImage(id, objectKey)
     },
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.items.detail(id) })

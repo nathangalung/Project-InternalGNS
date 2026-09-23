@@ -21,6 +21,8 @@ type RequestInput = {
   body?: unknown
   signal?: AbortSignal
   headers?: Record<string, string>
+  // False for credential calls: a 401 is an answer, not an expired session
+  authed?: boolean
 }
 
 type TokenPair = { token: string; refreshToken?: string }
@@ -117,10 +119,12 @@ async function doFetch({
   body,
   signal,
   headers,
+  authed,
 }: RequestInput): Promise<Response> {
   return fetchAuthed(path, {
     method,
     signal,
+    authed,
     headers: { "content-type": "application/json", ...headers },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
@@ -132,14 +136,31 @@ async function parseResponse(res: Response): Promise<unknown> {
   return text ? JSON.parse(text) : null
 }
 
+// Problem body, or null.
+//
+// Error bodies are read leniently: a proxy's HTML error page or an empty body
+// becomes null instead of a SyntaxError reaching the toast.
+export function parseProblem(text: string): unknown {
+  if (!text) return null
+  try {
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
+// Typed error from a failed response.
+async function failure(res: Response): Promise<ApiError> {
+  const problem = parseProblem(await res.text().catch(() => ""))
+  const fallback = `Permintaan gagal (${res.status}).`
+  return new ApiError(res.status, problem, extractErrorMessage(problem, fallback))
+}
+
 export async function apiRequest<T>(input: RequestInput): Promise<T> {
   const res = await doFetch(input)
+  if (!res.ok) throw await failure(res)
   if (res.status === 204) return undefined as T
-  const parsed = await parseResponse(res)
-  if (!res.ok) {
-    throw new ApiError(res.status, parsed, extractErrorMessage(parsed, res.statusText))
-  }
-  return parsed as T
+  return (await parseResponse(res)) as T
 }
 
 // Resolves to null on 404, rethrows otherwise.
@@ -178,10 +199,8 @@ export function buildQuery(params: Record<string, QueryValue>): string {
 // Returns rows + total from X-Total-Count. Falls back to rows.length if absent.
 export async function apiList<T>(input: RequestInput): Promise<PaginatedList<T>> {
   const res = await doFetch(input)
+  if (!res.ok) throw await failure(res)
   const parsed = await parseResponse(res)
-  if (!res.ok) {
-    throw new ApiError(res.status, parsed, extractErrorMessage(parsed, res.statusText))
-  }
   const rows = (parsed ?? []) as T[]
   const header = res.headers.get("X-Total-Count")
   const total = header ? Number.parseInt(header, 10) : rows.length
@@ -204,6 +223,39 @@ export function extractErrorMessage(parsed: unknown, fallback: string): string {
   }
   if (typeof body.title === "string" && body.title.length > 0) return body.title
   return fallback
+}
+
+export type TransferKind = "upload" | "download"
+
+const TRANSFER_FALLBACK: Record<TransferKind, string> = {
+  upload: "Gagal mengunggah berkas.",
+  download: "Gagal mengunduh berkas.",
+}
+
+// Indonesian text for a failed transfer.
+//
+// The storage proxy writes English details, so only the document routes'
+// 409 and 422, which are written for the user, pass through. An upload 409
+// is a key clash, and a 400 is usually a refused file type.
+export function transferFailureMessage(
+  kind: TransferKind,
+  status: number,
+  problem: unknown,
+): string {
+  const fallback = TRANSFER_FALLBACK[kind]
+  if (kind === "upload") {
+    if (status === 409) return "Berkas dengan nama yang sama baru saja diunggah. Coba lagi."
+    if (status === 400) return "Jenis berkas tidak diizinkan."
+    return fallback
+  }
+  if (status === 409 || status === 422) return extractErrorMessage(problem, fallback)
+  return fallback
+}
+
+// Typed error from a failed transfer.
+async function transferFailure(res: Response, kind: TransferKind): Promise<ApiError> {
+  const problem = parseProblem(await res.text().catch(() => ""))
+  return new ApiError(res.status, problem, transferFailureMessage(kind, res.status, problem))
 }
 
 type PickerType = { description: string; accept: Record<string, string[]> }
@@ -234,10 +286,7 @@ async function downloadBinary(
   pickerType: PickerType,
 ): Promise<void> {
   const res = await fetchAuthed(path, { method: "GET" })
-  if (!res.ok) {
-    const text = await res.text().catch(() => "")
-    throw new ApiError(res.status, text, `Download failed: ${res.statusText}`)
-  }
+  if (!res.ok) throw await transferFailure(res, "download")
   const blob = await res.blob()
   await saveBlob(blob, filename, pickerType)
 }
@@ -260,18 +309,13 @@ export async function uploadAsset(path: string, file: File): Promise<void> {
     body: file,
     headers: { "Content-Type": file.type || "application/octet-stream" },
   })
-  if (!res.ok) {
-    const text = await res.text().catch(() => "")
-    throw new ApiError(res.status, text, `Upload failed: ${res.statusText}`)
-  }
+  if (!res.ok) throw await transferFailure(res, "upload")
 }
 
 // Authed GET of an asset as a blob object URL (for <img src>). Caller revokes.
 export async function fetchObjectUrl(path: string): Promise<string> {
   const res = await fetchAuthed(path, { method: "GET" })
-  if (!res.ok) {
-    throw new ApiError(res.status, null, `Fetch failed: ${res.statusText}`)
-  }
+  if (!res.ok) throw await transferFailure(res, "download")
   const blob = await res.blob()
   return URL.createObjectURL(blob)
 }

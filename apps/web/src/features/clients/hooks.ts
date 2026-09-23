@@ -8,7 +8,7 @@ import {
 import * as clientsApi from "@/features/clients/api"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
-import { uploadToPresignedUrl } from "@/lib/storage-upload"
+import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
 
@@ -142,9 +142,11 @@ export function useUploadClientLogo() {
   return useMutation({
     mutationFn: async ({ id, file }: { id: number; file: File }) => {
       validateAsset("clientLogo", file)
-      const presign = await clientsApi.presignLogoUpload(id, file.name)
-      await uploadToPresignedUrl(presign.uploadUrl, file)
-      await clientsApi.updateLogo(id, presign.objectKey)
+      const objectKey = await uploadWithFreshKey(
+        () => clientsApi.presignLogoUpload(id, file.name),
+        file,
+      )
+      await clientsApi.updateLogo(id, objectKey)
     },
     onSuccess: (_, { id }) => {
       // Detail carries the new object key that the logo URL query depends on.

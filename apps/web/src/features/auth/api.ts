@@ -6,6 +6,8 @@ export async function login(email: string, password: string): Promise<LoginRespo
     path: "/auth/login",
     method: "POST",
     body: { email, password },
+    // A 401 here means wrong credentials, not an expired session
+    authed: false,
   })
 }
 
