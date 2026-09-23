@@ -40,9 +40,13 @@ UPDATE users
  WHERE LOWER(email) = LOWER($1) AND is_active = TRUE;
 
 -- name: users.reset_login_attempts
+-- Clears the counter after a verified password and row-locks the account
+-- until the login's transaction ends. Matching the hash that was verified
+-- makes it 0 rows when a password change landed in between, and the row
+-- lock makes a later change wait until this login's session exists.
 UPDATE users
    SET failed_login_attempts = 0, locked_until = NULL
- WHERE LOWER(email) = LOWER($1) AND is_active = TRUE;
+ WHERE id = $1 AND is_active = TRUE AND password_hash = $2;
 
 -- name: users.create
 INSERT INTO users (email, name, password_hash, role, is_active, created_by, updated_by)

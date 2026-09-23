@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
@@ -165,13 +167,32 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 		}
 		return LoginResponse{}, ErrInvalidCredentials
 	}
-	if err := s.users.ResetLoginAttempts(ctx, email); err != nil {
+	// Claim and issue in one transaction. The claim row-locks the account,
+	// so a concurrent password change either lands first and fails the
+	// claim, or waits and then revokes the session issued here.
+	var resp LoginResponse
+	err = s.users.InTx(ctx, func(q *users.Repo, tx db.Executor) error {
+		if err := q.ClaimLogin(ctx, u.ID, u.PasswordHash); err != nil {
+			return err
+		}
+		var err error
+		resp, err = s.issue(ctx, s.refresh.on(tx), u)
+		return err
+	})
+	if errors.Is(err, users.ErrNotFound) {
+		return LoginResponse{}, ErrInvalidCredentials
+	}
+	if err != nil {
 		return LoginResponse{}, err
 	}
+	return resp, nil
+}
 
+// issue signs an access token and, when refresh is wired, stores a
+// refresh token through rr.
+func (s *Service) issue(ctx context.Context, rr *RefreshRepo, u users.User) (LoginResponse, error) {
 	now := time.Now()
 	expiresAt := now.Add(s.expiry)
-
 	claims := Claims{
 		Role: u.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -182,10 +203,9 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 		},
 	}
-
 	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(s.secret)
 	if err != nil {
-		return LoginResponse{}, err
+		return LoginResponse{}, fmt.Errorf("sign access token: %w", err)
 	}
 
 	resp := LoginResponse{
@@ -193,18 +213,19 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 		ExpiresAt: expiresAt.Unix(),
 		User:      toMeUser(u),
 	}
-	if s.refresh != nil {
-		raw, hash, err := generateRefreshToken()
-		if err != nil {
-			return LoginResponse{}, err
-		}
-		refreshExpiresAt := now.Add(s.refreshExpiry)
-		if err := s.refresh.insert(ctx, u.ID, hash, refreshExpiresAt); err != nil {
-			return LoginResponse{}, err
-		}
-		resp.RefreshToken = raw
-		resp.RefreshExpiresAt = refreshExpiresAt.Unix()
+	if rr == nil {
+		return resp, nil
 	}
+	raw, hash, err := generateRefreshToken()
+	if err != nil {
+		return LoginResponse{}, fmt.Errorf("generate refresh token: %w", err)
+	}
+	refreshExpiresAt := now.Add(s.refreshExpiry)
+	if err := rr.insert(ctx, u.ID, hash, refreshExpiresAt); err != nil {
+		return LoginResponse{}, fmt.Errorf("store refresh token: %w", err)
+	}
+	resp.RefreshToken = raw
+	resp.RefreshExpiresAt = refreshExpiresAt.Unix()
 	return resp, nil
 }
 
@@ -212,85 +233,80 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 // JWT + a fresh refresh token. Reuse of an already-redeemed token triggers
 // revocation of every active refresh token for that user.
 func (s *Service) Refresh(ctx context.Context, raw string) (LoginResponse, error) {
-	if s.refresh == nil {
-		return LoginResponse{}, ErrInvalidRefresh
-	}
-	if raw == "" {
+	if s.refresh == nil || raw == "" {
 		return LoginResponse{}, ErrInvalidRefresh
 	}
 	hash := hashRefreshToken(raw)
 
-	_, userID, err := s.refresh.redeem(ctx, hash)
+	// One transaction with the owner's row share-locked first: a password
+	// change or deactivation either commits before, leaving this token
+	// revoked, or waits and then revokes the successor issued here. The
+	// verdict is returned after commit so a reuse blast still lands.
+	var (
+		resp    LoginResponse
+		verdict error
+	)
+	err := s.users.InTx(ctx, func(q *users.Repo, tx db.Executor) error {
+		rr := s.refresh.on(tx)
+		if err := rr.lockOwner(ctx, hash); err != nil {
+			return err
+		}
+		_, userID, err := rr.redeem(ctx, hash)
+		if errors.Is(err, pgx.ErrNoRows) {
+			verdict, err = s.refusal(ctx, rr, hash)
+			return err
+		}
+		if err != nil {
+			return fmt.Errorf("redeem refresh token: %w", err)
+		}
+		u, err := q.GetByID(ctx, userID)
+		if errors.Is(err, users.ErrNotFound) {
+			verdict = ErrInvalidRefresh
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("read refresh owner: %w", err)
+		}
+		resp, err = s.issue(ctx, rr, u)
+		return err
+	})
 	if err != nil {
-		st, lookupErr := s.refresh.lookup(ctx, hash)
-		if lookupErr != nil {
-			return LoginResponse{}, lookupErr
-		}
-		if !st.found {
-			return LoginResponse{}, ErrInvalidRefresh
-		}
-		// Only rotation hands out a successor, so only a rotated token coming
-		// back is a replay. One ended on purpose is just a dead session.
-		if st.revoked && !revokedByRotation(st.reason) {
-			return LoginResponse{}, ErrRevokedRefresh
-		}
-		if st.revoked {
-			// A concurrent or retried redeem (a duplicate tab, a network retry)
-			// revokes the token moments before the loser looks it up. Only a
-			// token revoked longer ago than the grace window is treated as a
-			// genuine replay worth revoking every session; a very recent
-			// revocation is a benign race, so the other sessions survive.
-			if time.Since(st.revokedAt) > refreshReuseGrace {
-				if err := s.refresh.revokeAllForUser(ctx, st.userID); err != nil {
-					return LoginResponse{}, err
-				}
+		return LoginResponse{}, err
+	}
+	if verdict != nil {
+		return LoginResponse{}, verdict
+	}
+	return resp, nil
+}
+
+// refusal explains a token that could not be redeemed.
+func (s *Service) refusal(ctx context.Context, rr *RefreshRepo, hash []byte) (error, error) {
+	st, err := rr.lookup(ctx, hash)
+	if err != nil {
+		return nil, fmt.Errorf("look up refresh token: %w", err)
+	}
+	if !st.found {
+		return ErrInvalidRefresh, nil
+	}
+	// Only rotation hands out a successor, so only a rotated token coming
+	// back is a replay. One ended on purpose is just a dead session.
+	if st.revoked && !revokedByRotation(st.reason) {
+		return ErrRevokedRefresh, nil
+	}
+	if st.revoked {
+		// A concurrent or retried redeem (a duplicate tab, a network retry)
+		// revokes the token moments before the loser looks it up. Only a
+		// token revoked longer ago than the grace window is treated as a
+		// genuine replay worth revoking every session; a very recent
+		// revocation is a benign race, so the other sessions survive.
+		if time.Since(st.revokedAt) > refreshReuseGrace {
+			if err := rr.revokeAllForUser(ctx, st.userID); err != nil {
+				return nil, err
 			}
-			return LoginResponse{}, ErrReusedRefresh
 		}
-		return LoginResponse{}, ErrExpiredRefresh
+		return ErrReusedRefresh, nil
 	}
-
-	u, err := s.users.GetByID(ctx, userID)
-	if errors.Is(err, users.ErrNotFound) {
-		return LoginResponse{}, ErrInvalidRefresh
-	}
-	if err != nil {
-		return LoginResponse{}, err
-	}
-
-	now := time.Now()
-	expiresAt := now.Add(s.expiry)
-	claims := Claims{
-		Role: u.Role,
-		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    s.issuer,
-			Subject:   fmt.Sprintf("%d", u.ID),
-			IssuedAt:  jwt.NewNumericDate(now),
-			NotBefore: jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(expiresAt),
-		},
-	}
-	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(s.secret)
-	if err != nil {
-		return LoginResponse{}, err
-	}
-
-	rawNext, hashNext, err := generateRefreshToken()
-	if err != nil {
-		return LoginResponse{}, err
-	}
-	refreshExpiresAt := now.Add(s.refreshExpiry)
-	if err := s.refresh.insert(ctx, u.ID, hashNext, refreshExpiresAt); err != nil {
-		return LoginResponse{}, err
-	}
-
-	return LoginResponse{
-		Token:            signed,
-		ExpiresAt:        expiresAt.Unix(),
-		RefreshToken:     rawNext,
-		RefreshExpiresAt: refreshExpiresAt.Unix(),
-		User:             toMeUser(u),
-	}, nil
+	return ErrExpiredRefresh, nil
 }
 
 // RevokeRefresh marks a specific refresh token revoked. Silent no-op when

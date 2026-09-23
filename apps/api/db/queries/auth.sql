@@ -39,3 +39,14 @@ WHERE user_id = $1 AND revoked_at IS NULL;
 -- name: auth.refresh_purge_expired
 DELETE FROM refresh_tokens
 WHERE expires_at < now() - INTERVAL '7 days';
+
+-- name: auth.refresh_lock_owner
+-- Share-locks the token owner's users row for the refresh transaction. A
+-- password change or deactivation writes that row, so it either commits
+-- first (and the redeem then finds the token revoked) or waits until the
+-- successor token exists, and revokes it too.
+SELECT u.id
+FROM refresh_tokens t
+JOIN users u ON u.id = t.user_id
+WHERE t.token_hash = $1
+FOR SHARE OF u;

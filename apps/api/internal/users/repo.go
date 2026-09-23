@@ -91,10 +91,18 @@ func (r *Repo) RecordFailedLogin(ctx context.Context, email string) error {
 	return err
 }
 
-// ResetLoginAttempts clears the counter after a successful login.
-func (r *Repo) ResetLoginAttempts(ctx context.Context, email string) error {
-	_, err := r.db.Exec(ctx, r.store.Get("users.reset_login_attempts"), email)
-	return err
+// ClaimLogin clears the attempt counter for a verified password and holds
+// the account row until the caller's transaction ends. ErrNotFound means
+// the password changed or the account was deactivated since hash was read.
+func (r *Repo) ClaimLogin(ctx context.Context, id int64, hash string) error {
+	tag, err := r.db.Exec(ctx, r.store.Get("users.reset_login_attempts"), id, hash)
+	if err != nil {
+		return fmt.Errorf("claim login: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 // AuthContext is the live account state behind an access token.
@@ -255,6 +263,12 @@ func (r *Repo) inTx(ctx context.Context, fn func(q *Repo) error) error {
 		return fmt.Errorf("commit user tx: %w", err)
 	}
 	return nil
+}
+
+// InTx runs fn inside one transaction. fn gets this repo bound to it and
+// the transaction itself, so the caller can bind its own repos alongside.
+func (r *Repo) InTx(ctx context.Context, fn func(q *Repo, tx db.Executor) error) error {
+	return r.inTx(ctx, func(q *Repo) error { return fn(q, q.db) })
 }
 
 // Update runs the email check, the last-superadmin guard, the write and the

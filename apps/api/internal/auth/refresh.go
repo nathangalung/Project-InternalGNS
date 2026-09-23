@@ -108,6 +108,24 @@ func (r *RefreshRepo) lookup(ctx context.Context, hash []byte) (lookupState, err
 	return st, nil
 }
 
+// on binds the repo to a caller's transaction; nil stays nil, so an
+// unwired refresh store keeps issuing access tokens only.
+func (r *RefreshRepo) on(exec db.Executor) *RefreshRepo {
+	if r == nil {
+		return nil
+	}
+	return &RefreshRepo{db: exec, store: r.store}
+}
+
+// lockOwner share-locks the token owner's users row. An unknown token
+// locks nothing; the redeem that follows reports it.
+func (r *RefreshRepo) lockOwner(ctx context.Context, hash []byte) error {
+	if _, err := r.db.Exec(ctx, r.store.Get("auth.refresh_lock_owner"), hash); err != nil {
+		return fmt.Errorf("lock refresh owner: %w", err)
+	}
+	return nil
+}
+
 // revokedByRotation reports a token retired by a successful refresh. A NULL
 // reason predates the column and is read as rotation, the cautious side.
 func revokedByRotation(reason string) bool {
