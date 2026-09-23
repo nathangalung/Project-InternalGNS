@@ -15,6 +15,22 @@ Feature: Quotation lifecycle
     When the user creates a quotation with no items
     Then the response status is 422
 
+  Scenario Outline: Create is refused a status other than draft
+    When the user creates a quotation with status "<status>"
+    Then the response status is 422
+    And no quotation was stored
+
+    Examples:
+      | status   |
+      | sent     |
+      | accepted |
+      | rejected |
+
+  Scenario: Create with a zero quantity line is refused
+    When the user creates a quotation with a zero quantity product line
+    Then the response status is 422
+    And no quotation was stored
+
   Scenario: Reject create with invalid discount
     When the user creates a quotation with discount 200 percent and 1 product line
     Then the response status is 422

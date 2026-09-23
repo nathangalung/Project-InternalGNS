@@ -140,6 +140,33 @@ func (h *Handler) Revisions(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, revs)
 }
 
+// validateCreateStatus keeps create on the draft entry point.
+//
+// Every later state is reached through fn_change_quotation_status, which owns
+// the transition table, the unpriced guard and PO creation. Returns nil when
+// the payload is acceptable.
+func validateCreateStatus(status *string) map[string]string {
+	if status == nil || strings.TrimSpace(*status) == "" || strings.TrimSpace(*status) == "draft" {
+		return nil
+	}
+	return map[string]string{
+		"status": "quotation baru selalu berstatus draf; ubah status lewat endpoint status",
+	}
+}
+
+// validateItemQty refuses lines that carry no quantity.
+func validateItemQty(items []CreateItem) map[string]string {
+	for i, it := range items {
+		qty, err := strconv.ParseFloat(strings.TrimSpace(it.Qty), 64)
+		if err != nil || qty <= 0 {
+			return map[string]string{
+				"items[" + strconv.Itoa(i) + "].qty": "jumlah harus lebih besar dari 0",
+			}
+		}
+	}
+	return nil
+}
+
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -153,6 +180,14 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(req.Items) == 0 {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"items": "at least 1 required"}))
+		return
+	}
+	if fields := validateCreateStatus(req.Status); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
+	if fields := validateItemQty(req.Items); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
 
@@ -189,6 +224,10 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(req.Items) == 0 {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"items": "at least 1 required"}))
+		return
+	}
+	if fields := validateItemQty(req.Items); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
 

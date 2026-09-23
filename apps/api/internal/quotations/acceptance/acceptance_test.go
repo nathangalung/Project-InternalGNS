@@ -101,6 +101,30 @@ func (s *scenarioState) createWithoutItems() error {
 	return s.sendRequest(http.MethodPost, "/quotations/", s.buildCreate("0", 0))
 }
 
+func (s *scenarioState) createWithStatus(status string) error {
+	req := s.buildCreate("0", 1)
+	req.Status = &status
+	return s.sendRequest(http.MethodPost, "/quotations/", req)
+}
+
+func (s *scenarioState) createZeroQtyQuotation() error {
+	req := s.buildCreate("0", 1)
+	req.Items[0].Qty = "0"
+	return s.sendRequest(http.MethodPost, "/quotations/", req)
+}
+
+func (s *scenarioState) noQuotationStored() error {
+	var n int64
+	err := testutil.Pool(s.t).QueryRow(context.Background(), "SELECT COUNT(*) FROM quotations").Scan(&n)
+	if err != nil {
+		return err
+	}
+	if n != 0 {
+		return fmt.Errorf("want 0 quotations stored, got %d", n)
+	}
+	return nil
+}
+
 func (s *scenarioState) createUnpricedQuotation() error {
 	req := s.buildCreate("0", 1)
 	req.Items[0].SellingPrice = "0"
@@ -211,6 +235,9 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		})
 		sc.Step(`^the user creates a quotation with no items$`, state.createWithoutItems)
 		sc.Step(`^the user creates a quotation with an unpriced product line$`, state.createUnpricedQuotation)
+		sc.Step(`^the user creates a quotation with status "([^"]+)"$`, state.createWithStatus)
+		sc.Step(`^the user creates a quotation with a zero quantity product line$`, state.createZeroQtyQuotation)
+		sc.Step(`^no quotation was stored$`, state.noQuotationStored)
 		sc.Step(`^the response status is (\d+)$`, state.statusEquals)
 		sc.Step(`^the response contains a quotation id$`, state.responseHasID)
 		sc.Step(`^an existing draft quotation$`, state.seedDraft)

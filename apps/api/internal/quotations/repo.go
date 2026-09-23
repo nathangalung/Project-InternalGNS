@@ -170,10 +170,9 @@ func (r *Repo) Create(ctx context.Context, req CreateRequest, userID int64) (int
 		return 0, err
 	}
 
-	status := "draft"
-	if req.Status != nil && *req.Status != "" {
-		status = *req.Status
-	}
+	// Create only ever writes a draft. req.Status is validated at the handler
+	// and never forwarded, so no caller can skip the state machine.
+	const status = "draft"
 
 	var id int64
 	err = r.db.QueryRow(ctx, r.store.Get("quotations.fn_create"),
