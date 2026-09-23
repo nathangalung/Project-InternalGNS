@@ -221,3 +221,43 @@ func TestConfig_DevelopmentAcceptsCommittedDevSecrets(t *testing.T) {
 	}
 	assert.NoError(t, c.validate())
 }
+
+// Every production check keys on ENV == "production", so a near miss such
+// as "prod" or "Production" used to boot with all of them skipped: the dev
+// secrets, a wildcard CORS origin and a "-" bank account all passed. An
+// unrecognised ENV now refuses to boot instead of failing open.
+func TestConfig_UnknownEnvFailsClosed(t *testing.T) {
+	cases := []struct {
+		env     string
+		wantErr bool
+	}{
+		{"development", false},
+		{"test", false},
+		{"production", false},
+		{"prod", true},
+		{"Production", true},
+		{"production ", true},
+		{"staging", true},
+		{"", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.env, func(t *testing.T) {
+			c := Config{
+				Env:                tc.env,
+				JWTSecret:          testSecret,
+				DatabaseURL:        "postgres://u:p@db:5432/gns",
+				CORSAllowedOrigins: []string{"https://app.example"},
+				SuperadminPassword: "a-real-generated-password",
+				PdfBankAccountNo:   "1234567890",
+				PdfSignerName:      "Budi",
+			}
+			err := c.validate()
+			if tc.wantErr {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "ENV")
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}

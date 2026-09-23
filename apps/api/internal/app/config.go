@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"strings"
@@ -71,6 +72,13 @@ func LoadConfig() (Config, error) {
 
 // validate rejects fail-open configuration.
 func (c Config) validate() error {
+	// Every production check below keys on this value, so a near miss
+	// ("prod", "Production") would skip them all. Refuse it instead.
+	switch c.Env {
+	case "development", "test", "production":
+	default:
+		return fmt.Errorf("ENV is %q; it must be development, test or production", c.Env)
+	}
 	// A short HMAC key is trivially brute-forced; reject empty or weak keys.
 	if len(c.JWTSecret) < 32 {
 		return errors.New("JWT_SECRET must be at least 32 bytes")
