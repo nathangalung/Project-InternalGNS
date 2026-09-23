@@ -7,7 +7,7 @@ type SummaryCardProps = {
   value: ReactNode
 }
 
-// Tinted list KPI card, now StatCard.
+// Tinted StatCard alias.
 export default function SummaryCard({ variant, label, value }: SummaryCardProps) {
   return <StatCard tone={variant} label={label} value={value} />
 }

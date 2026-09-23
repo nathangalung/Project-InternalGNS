@@ -13,7 +13,7 @@ const resetCls = `mr-auto rounded-sm p-0 text-[13px] font-medium underline-offse
 
 // Filter modal footer, shared buttons.
 //
-// Batal and Terapkan share one fixed height. Below 640px the reset link takes
+// Batal and Terapkan share one height. Below 640px the reset link takes
 // its own row and the two buttons split the width, so nothing is clipped at
 // 320px.
 export default function FilterFooter({

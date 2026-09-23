@@ -12,7 +12,7 @@ type PaginationProps = {
   rowsPerPageOptions?: number[]
   onItemsPerPage: (n: number) => void
   onPage: (n: number) => void
-  // Hides the range until data lands.
+  // Hides range while loading
   isLoading?: boolean
 }
 

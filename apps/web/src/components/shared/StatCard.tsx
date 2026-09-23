@@ -10,7 +10,7 @@ type StatCardProps = {
   onClick?: () => void
 }
 
-// Surface, accent and text per tone.
+// Colours per tone.
 //
 // Tinted labels sit at 85% of the value colour, enough for 4.5:1 at 12px.
 // Tinted cards have no border, so 25px padding matches the neutral card
@@ -56,7 +56,7 @@ const tones: Record<
   },
 }
 
-// One KPI card for every screen.
+// Shared KPI card.
 //
 // Dashboards and list pages share the same scale: 24px padding, a 12px
 // uppercase label and a 20px value. Tone only changes the surface colour.

@@ -12,11 +12,11 @@ const gradientPrimary =
 const focusRing =
   "focus-visible:outline-none focus-visible:transition-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
 
-// Focus ring inside menus and lists.
+// Focus ring, menu rows.
 const focusRingInset =
   "focus-visible:outline-none focus-visible:transition-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-600"
 
-// Focus ring on the dark sidebar.
+// Focus ring, dark sidebar.
 //
 // primary-400 is 6.6:1 against dark-900, where primary-600 is only 3.1:1.
 const focusRingDark =
@@ -71,9 +71,9 @@ export const ui = {
   // Table row icon button, from the list screens
   iconAction: `inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] ${focusRing}`,
 
-  // Link to an entity's detail page
+  // Entity detail link
   entityLink: `rounded-sm text-primary-700 underline decoration-primary-700/30 underline-offset-2 transition-colors hover:text-primary-800 hover:decoration-primary-800 ${focusRing}`,
-  // Name link that inherits its colour
+  // Entity name link
   entityLinkMuted: `rounded-sm text-inherit no-underline underline-offset-2 transition-colors hover:text-primary-700 hover:underline ${focusRing}`,
 
   // Form controls

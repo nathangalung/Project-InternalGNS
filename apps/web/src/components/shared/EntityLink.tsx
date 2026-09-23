@@ -9,18 +9,18 @@ type QuotationKeyedKind = "purchaseOrder" | "invoice"
 
 type Target =
   | { kind: Exclude<EntityKind, QuotationKeyedKind>; id: number | null | undefined }
-  // The PO and invoice routes take the quotation id.
+  // Quotation id, not row id
   | { kind: QuotationKeyedKind; quotationId: number | null | undefined }
 
 type EntityLinkProps = Target & {
   children: ReactNode
-  // doc: document numbers; name: inherited colour.
+  // doc number or plain name
   tone?: "doc" | "name"
   className?: string
   title?: string
 }
 
-// Keeps clickable rows from also firing.
+// Shield clickable parent rows.
 function stopClick(e: MouseEvent) {
   e.stopPropagation()
 }

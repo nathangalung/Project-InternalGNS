@@ -5,7 +5,7 @@ export type ErrorCopy = { message: string; detail: string | null }
 const GENERIC = "Halaman tidak dapat dimuat. Coba muat ulang atau hubungi administrator."
 const SERVER = "Server sedang mengalami gangguan. Coba lagi dalam beberapa saat."
 
-// User-facing copy for a render error.
+// Copy for render errors.
 //
 // Server faults (5xx) and unexpected exceptions never show their raw text,
 // since that is English, internal, and useless to the reader. A 4xx detail is

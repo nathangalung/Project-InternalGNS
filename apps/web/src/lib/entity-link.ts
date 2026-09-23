@@ -25,7 +25,7 @@ export type EntityRoute = (typeof ENTITY_ROUTES)[EntityKind]["to"]
 
 export type EntityTarget = { to: EntityRoute; params: { id: string } }
 
-// Link target, or null for plain text.
+// Link target or null.
 //
 // The id is whatever the route's $id expects. For purchaseOrder and invoice
 // that is the quotation id, not the PO or invoice row id.

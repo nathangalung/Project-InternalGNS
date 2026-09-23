@@ -7,7 +7,7 @@ type RouteErrorFallbackProps = {
   reset?: () => void
 }
 
-// Route error, no raw 5xx text.
+// Route error fallback.
 export default function RouteErrorFallback({ error, reset }: RouteErrorFallbackProps) {
   const { message, detail } = errorCopy(error, import.meta.env.DEV)
   return (

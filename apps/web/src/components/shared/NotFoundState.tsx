@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router"
 import { ui } from "@/lib/ui"
 import StateMessage from "./StateMessage"
 
-// List pages a not-found can return to.
+// Back link targets.
 export type BackPath =
   | "/"
   | "/clients"
