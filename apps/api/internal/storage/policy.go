@@ -85,18 +85,6 @@ func ValidateOwnedKey(bucket, prefix string, id int64, key string) error {
 	return ValidateAssetFileName(bucket, key)
 }
 
-// ValidateAssetSize guards the byte cap per bucket. Pass 0 to skip.
-func ValidateAssetSize(bucket string, size int64) error {
-	cap, ok := bucketMaxBytes[bucket]
-	if !ok {
-		return fmt.Errorf("storage: unknown bucket %q", bucket)
-	}
-	if size > 0 && size > cap {
-		return fmt.Errorf("size %d exceeds %d for %s", size, cap, bucket)
-	}
-	return nil
-}
-
 // MaxBytes returns the policy cap for a bucket.
 func MaxBytes(bucket string) int64 {
 	return bucketMaxBytes[bucket]

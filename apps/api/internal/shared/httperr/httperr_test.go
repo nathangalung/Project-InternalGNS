@@ -11,6 +11,8 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgconn"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -214,6 +216,57 @@ func TestRenderDBErrCtx_LogsWithRequestContext(t *testing.T) {
 			require.Len(t, cap.seen, 1, "expected exactly one log record")
 			assert.Equal(t, "req-1", cap.seen[0].Value(ctxProbeKey{}),
 				"log record must carry the request context so request_id is stamped")
+		})
+	}
+}
+
+// Every SQLSTATE httperr maps is named once, in shared/db, so a migration's
+// ERRCODE and the status it renders as are tied to one constant.
+func TestFromDBErr_NamedSQLStates(t *testing.T) {
+	cases := []struct {
+		name   string
+		code   string
+		status int
+	}{
+		{"raise exception", db.SQLStateRaiseException, http.StatusUnprocessableEntity},
+		{"not found", db.SQLStateNotFound, http.StatusNotFound},
+		{"invalid transition", db.SQLStateInvalidTransition, http.StatusUnprocessableEntity},
+		{"blocked by related", db.SQLStateBlockedByRelated, http.StatusConflict},
+		{"validation", db.SQLStateValidation, http.StatusUnprocessableEntity},
+		{"unique violation", db.SQLStateUniqueViolation, http.StatusConflict},
+		{"foreign key violation", db.SQLStateForeignKeyViolation, http.StatusNotFound},
+		{"not null violation", db.SQLStateNotNullViolation, http.StatusUnprocessableEntity},
+		{"check violation", db.SQLStateCheckViolation, http.StatusUnprocessableEntity},
+		{"invalid text representation", db.SQLStateInvalidTextRepresentation, http.StatusUnprocessableEntity},
+		{"numeric out of range", db.SQLStateNumericOutOfRange, http.StatusUnprocessableEntity},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := FromDBErr(&pgconn.PgError{Code: tc.code, Message: "x"})
+			assert.Equal(t, tc.status, got.Status)
+		})
+	}
+}
+
+// The slice-translated codes pin their literal values.
+// Repos turn these into sentinel errors before httperr sees them, so the
+// constant's value is the contract with the plpgsql ERRCODE.
+func TestSQLStateValues(t *testing.T) {
+	cases := []struct {
+		name string
+		got  string
+		want string
+	}{
+		{"version mismatch", db.SQLStateVersionMismatch, "P0010"},
+		{"not found", db.SQLStateNotFound, "P0011"},
+		{"invalid transition", db.SQLStateInvalidTransition, "P0012"},
+		{"blocked by related", db.SQLStateBlockedByRelated, "P0013"},
+		{"validation", db.SQLStateValidation, "P0014"},
+		{"unpriced line", db.SQLStateUnpricedLine, "P0100"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, tc.got)
 		})
 	}
 }

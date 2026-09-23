@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 )
 
 // Wire-shape error response.
@@ -103,30 +105,30 @@ func FromDBErr(err error) Error {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		switch pgErr.Code {
-		case "P0001", "P0012", "P0014":
+		case db.SQLStateRaiseException, db.SQLStateInvalidTransition, db.SQLStateValidation:
 			// Business-rule message raised intentionally by plpgsql; safe to
 			// surface. P0012 invalid transition and P0014 validation are the
 			// typed successors assigned by migration 00046. It is prose, not a
 			// field error, so it belongs in Detail like P0011 and P0013.
 			return UnprocessableDetail(pgErr.Message, nil)
-		case "P0011":
+		case db.SQLStateNotFound:
 			return NotFound(pgErr.Message)
-		case "P0013":
+		case db.SQLStateBlockedByRelated:
 			// Blocked by the state of a related record.
 			return Conflict(pgErr.Message)
-		case "23503":
+		case db.SQLStateForeignKeyViolation:
 			return NotFound("referenced record does not exist")
-		case "23505":
+		case db.SQLStateUniqueViolation:
 			return Conflict("a record with these values already exists")
 		// The constraint names the column, not the form input, so name the
 		// remedy instead of echoing an untranslatable identifier.
-		case "23502":
+		case db.SQLStateNotNullViolation:
 			return UnprocessableDetail("Ada isian wajib yang masih kosong. Lengkapi data lalu simpan kembali.", nil)
-		case "23514":
+		case db.SQLStateCheckViolation:
 			return UnprocessableDetail("Ada isian yang melanggar aturan validasi. Periksa nilai yang dimasukkan.", nil)
-		case "22P02":
+		case db.SQLStateInvalidTextRepresentation:
 			return UnprocessableDetail("Format salah satu isian tidak sesuai. Periksa tanggal, angka, dan pilihan yang dipilih.", nil)
-		case "22003":
+		case db.SQLStateNumericOutOfRange:
 			return UnprocessableDetail("Nilai angka di luar batas yang diizinkan. Masukkan angka yang lebih kecil.", nil)
 		}
 	}
