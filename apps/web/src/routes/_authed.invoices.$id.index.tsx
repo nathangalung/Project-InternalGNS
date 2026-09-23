@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router"
 import LoadingState from "@/components/shared/LoadingState"
 import NotFoundState from "@/components/shared/NotFoundState"
+import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
 import { useInvoice, useInvoiceByQuotation } from "@/features/invoices/hooks"
 import InvoiceDetail from "@/features/invoices/InvoiceDetail"
+import { isMissing } from "@/lib/errors"
 
 // Positive integer or nothing.
 function positiveInt(v: unknown): number | undefined {
@@ -36,6 +38,10 @@ function InvoiceDetailRoute() {
   const query = invoiceId ? exact : newest
 
   if (quotationId && query.isPending) return <LoadingState label="Memuat data invoice…" />
+
+  if (query.error && !isMissing(query.error)) {
+    return <RouteErrorFallback error={query.error} reset={() => void query.refetch()} />
+  }
 
   const inv = query.data
   if (!inv || inv.quotationId !== quotationId) {

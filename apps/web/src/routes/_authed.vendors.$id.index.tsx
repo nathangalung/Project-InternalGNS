@@ -4,7 +4,7 @@ import NotFoundState from "@/components/shared/NotFoundState"
 import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
 import { useVendor } from "@/features/vendors/hooks"
 import VendorDetail from "@/features/vendors/VendorDetail"
-import { ApiError } from "@/lib/api-client"
+import { isMissing } from "@/lib/errors"
 
 export const Route = createFileRoute("/_authed/vendors/$id/")({
   component: VendorDetailRoute,
@@ -19,7 +19,7 @@ function VendorDetailRoute() {
   if (!data) {
     if (isLoading) return <LoadingState label="Memuat data vendor…" />
     // A bad or unknown id is missing; the rest can retry.
-    if (error && !(error instanceof ApiError && (error.status === 400 || error.status === 404))) {
+    if (error && !isMissing(error)) {
       return <RouteErrorFallback error={error} reset={() => void refetch()} />
     }
     return (

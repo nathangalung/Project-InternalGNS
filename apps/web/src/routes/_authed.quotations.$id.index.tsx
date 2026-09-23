@@ -2,10 +2,12 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useMemo } from "react"
 import LoadingState from "@/components/shared/LoadingState"
 import NotFoundState from "@/components/shared/NotFoundState"
+import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
 import { toQuotationData } from "@/features/quotations/adapters"
 import { useQuotation } from "@/features/quotations/hooks"
 import QuotationDetail from "@/features/quotations/QuotationDetail"
 import { useUnits } from "@/features/units/hooks"
+import { isMissing } from "@/lib/errors"
 
 export const Route = createFileRoute("/_authed/quotations/$id/")({
   component: QuotationDetailRoute,
@@ -17,7 +19,12 @@ function QuotationDetailRoute() {
 
   const numericId = Number(id)
   const hasNumericId = Number.isInteger(numericId) && numericId > 0
-  const { data: detail, isPending } = useQuotation(hasNumericId ? numericId : undefined)
+  const {
+    data: detail,
+    isPending,
+    error,
+    refetch,
+  } = useQuotation(hasNumericId ? numericId : undefined)
   const { data: units } = useUnits()
 
   const unitOf = useMemo(() => {
@@ -32,6 +39,9 @@ function QuotationDetailRoute() {
   )
 
   if (hasNumericId && isPending) return <LoadingState label="Memuat quotation…" />
+  if (error && !isMissing(error)) {
+    return <RouteErrorFallback error={error} reset={() => void refetch()} />
+  }
   if (!detail || !quotation) {
     return (
       <NotFoundState

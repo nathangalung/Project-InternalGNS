@@ -5,7 +5,7 @@ import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
 import { usePurchaseOrderByQuotation } from "@/features/purchaseOrders/hooks"
 import { isPoLocked } from "@/features/purchaseOrders/PurchaseOrderDetail/helpers"
 import PurchaseOrderEdit from "@/features/purchaseOrders/PurchaseOrderEdit"
-import { ApiError } from "@/lib/api-client"
+import { isMissing } from "@/lib/errors"
 
 export const Route = createFileRoute("/_authed/purchase-orders/$id/edit")({
   component: PurchaseOrderEditRoute,
@@ -20,7 +20,7 @@ function PurchaseOrderEditRoute() {
 
   if (!po) {
     if (isLoading) return <LoadingState label="Memuat data Purchase Order…" />
-    if (error && !(error instanceof ApiError && (error.status === 400 || error.status === 404))) {
+    if (error && !isMissing(error)) {
       return <RouteErrorFallback error={error} reset={() => void refetch()} />
     }
     return (

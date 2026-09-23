@@ -8,7 +8,7 @@ import PurchaseOrderDetail from "@/features/purchaseOrders/PurchaseOrderDetail"
 import { toQuotationData } from "@/features/quotations/adapters"
 import { useQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
-import { ApiError } from "@/lib/api-client"
+import { isMissing } from "@/lib/errors"
 
 export const Route = createFileRoute("/_authed/purchase-orders/$id/")({
   component: PurchaseOrderDetailRoute,
@@ -35,7 +35,7 @@ function PurchaseOrderDetailRoute() {
   if (!po) {
     if (isLoading) return <LoadingState label="Memuat data Purchase Order…" />
     // A bad id is missing; the rest can retry.
-    if (error && !(error instanceof ApiError && (error.status === 400 || error.status === 404))) {
+    if (error && !isMissing(error)) {
       return <RouteErrorFallback error={error} reset={() => void refetch()} />
     }
     return (
