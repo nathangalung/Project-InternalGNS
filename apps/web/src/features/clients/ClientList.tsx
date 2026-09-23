@@ -80,7 +80,7 @@ export default function ClientList({ onViewDetail }: ClientListProps) {
 
   return (
     <>
-      <div className="page-content" style={{ gap: "29px" }}>
+      <div className="page-content gap-[29px]">
         <div className="page-header">
           <h1 className="page-title">Daftar Klien</h1>
           <div className="page-actions">
@@ -130,24 +130,12 @@ export default function ClientList({ onViewDetail }: ClientListProps) {
           <table className="w-full border-collapse">
             <thead>
               <tr className={ui.theadRow}>
-                <th className={ui.thCenter} style={{ width: 240 }}>
-                  Nama Klien
-                </th>
-                <th className={ui.thCenter} style={{ width: 160 }}>
-                  Negara
-                </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Status
-                </th>
-                <th className={ui.thCenter} style={{ width: 180 }}>
-                  Total Pembelian
-                </th>
-                <th className={ui.thCenter} style={{ width: 160 }}>
-                  Jumlah Pembelian
-                </th>
-                <th className={ui.thCenter} style={{ width: 80 }}>
-                  Aksi
-                </th>
+                <th className={`${ui.thCenter} w-[240px]`}>Nama Klien</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Negara</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Status</th>
+                <th className={`${ui.thCenter} w-[180px]`}>Total Pembelian</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Jumlah Pembelian</th>
+                <th className={`${ui.thCenter} w-[80px]`}>Aksi</th>
               </tr>
             </thead>
             <tbody>

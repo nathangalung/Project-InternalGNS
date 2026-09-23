@@ -235,7 +235,7 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
   }
 
   return (
-    <div className="page-content" style={{ gap: "29px" }}>
+    <div className="page-content gap-[29px]">
       <div className="flex flex-col gap-3">
         <nav className={ui.breadcrumb}>
           <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
