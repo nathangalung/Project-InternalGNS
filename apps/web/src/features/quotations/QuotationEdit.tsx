@@ -1,8 +1,10 @@
-import { useNavigate } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useRef, useState } from "react"
-import ClientAdd from "@/features/clients/ClientAdd"
-import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
-import { useClientContacts, useClientSearch, useClients } from "@/features/clients/hooks"
+import LoadingState from "@/components/shared/LoadingState"
+import NotFoundState from "@/components/shared/NotFoundState"
+import StateMessage from "@/components/shared/StateMessage"
+import { getCompanyInitials } from "@/features/clients/helpers"
+import { useClientContacts } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
 import {
   useQuotation,
@@ -10,24 +12,21 @@ import {
   useUpdateQuotationContact,
 } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
-import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
 import { ui } from "@/lib/ui"
-import type { QuotationCreateInput, QuotationItemInput } from "@/types/api"
+import type { QuotationItemInput, QuotationUpdateInput } from "@/types/api"
 import DiscountModal from "./DiscountModal"
+import { countInvalidQty, parseQty, qtyErrorIndexes, qtyErrorsById } from "./lines"
 import Step1Client, { type Client } from "./Step1Client"
 import Step2Product from "./Step2Product"
 import Step3Shipping from "./Step3Shipping"
 import Step4Summary from "./Step4Summary"
+import { isEditable, quotationStatusLabel } from "./status"
 import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
 
-interface QuotationEditProps {
+type QuotationEditProps = {
   quotationId: string
 }
-
-// Flat brand submit (legacy used a solid #630ED4, not the primary gradient).
-const flatSubmit =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-primary-700 px-6 py-2 text-sm font-bold text-white shadow-sm transition hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
 
 const steps = [
   { n: 1, label: "KLIEN" },
@@ -36,7 +35,7 @@ const steps = [
   { n: 4, label: "RINGKASAN" },
 ]
 
-export interface ProductItem {
+export type ProductItem = {
   id: number
   itemId?: number
   requestedItemId?: number
@@ -58,8 +57,6 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   const [step, setStep] = useState(1)
 
   const [selectedClient, setSelectedClient] = useState("")
-  const [search, setSearch] = useState("")
-  const [showClientAdd, setShowClientAdd] = useState(false)
   const [selectedContactId, setSelectedContactId] = useState<number | undefined>(undefined)
 
   const [showProductAdd, setShowProductAdd] = useState(false)
@@ -104,36 +101,41 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   }
 
   const numericQuotationId = Number(quotationId)
-  const hasNumericQuotationId = Number.isFinite(numericQuotationId) && numericQuotationId > 0
-  const { data: detail } = useQuotation(hasNumericQuotationId ? numericQuotationId : undefined)
+  const hasNumericQuotationId = Number.isInteger(numericQuotationId) && numericQuotationId > 0
+  const { data: detail, isPending: isDetailPending } = useQuotation(
+    hasNumericQuotationId ? numericQuotationId : undefined,
+  )
+  const [qtyFail, setQtyFail] = useState<{
+    lines: ProductItem[]
+    byId: Record<number, string>
+  } | null>(null)
   const updateMutation = useUpdateQuotation()
   const updateContactMutation = useUpdateQuotationContact()
   // Fetch contacts by quotation's own company, not selected client.
   const { data: contacts = [] } = useClientContacts(detail?.companyClientId)
 
-  const trimmedSearch = search.trim()
-  const debouncedSearch = useDebouncedValue(trimmedSearch, 250)
-  const { data: clientsData } = useClients({ limit: 50 })
-  const { data: searchHits } = useClientSearch(debouncedSearch, { limit: 30 })
   const { data: unitsData } = useUnits()
 
-  const remoteClients: Array<Client & { contactId?: number }> = useMemo(() => {
-    if (debouncedSearch.length > 0) {
-      return dedupeByCompany(searchHits ?? []).map(fromClientHit)
-    }
-    return (clientsData?.rows ?? []).map(fromClientRow)
-  }, [debouncedSearch, searchHits, clientsData])
-
-  // Sorted once per client set. The old search-filter branch was dead: it only
-  // ran when remoteClients was empty, so it always produced [] — identical to
-  // slicing an empty array.
-  const sortedClients = useMemo(
-    () => [...remoteClients].sort((a, b) => a.name.localeCompare(b.name, "id")),
-    [remoteClients],
+  // The client is fixed on edit.
+  //
+  // PUT /quotations/{id} has no client field, so a different pick would be
+  // dropped silently. Step 1 shows the quotation's own client only.
+  const lockedClient: Client | undefined = useMemo(
+    () =>
+      detail
+        ? {
+            id: String(detail.companyClientId),
+            name: detail.companyClientName,
+            narahubung: detail.contactName ?? "",
+            country: "",
+            initials: getCompanyInitials(detail.companyClientName),
+            referenceNumber: detail.clientRefNo,
+          }
+        : undefined,
+    [detail],
   )
-  const filteredClients = sortedClients.slice(0, 10)
-
-  const currentClient = remoteClients.find((c) => c.id === selectedClient)
+  const clientOptions = lockedClient ? [lockedClient] : []
+  const currentClient = lockedClient?.id === selectedClient ? lockedClient : undefined
 
   const unitNameById = useMemo(() => {
     const m = new Map<number, string>()
@@ -147,9 +149,15 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     return m
   }, [unitsData])
 
-  // Blocks save on unresolved units.
+  // Blocks save on units and qty.
+  const invalidQty = countInvalidQty(products)
   const canSave =
-    products.length > 0 && products.every((p) => unitIdByCode.has(p.satuan.toUpperCase()))
+    products.length > 0 &&
+    invalidQty === 0 &&
+    products.every((p) => unitIdByCode.has(p.satuan.toUpperCase()))
+
+  // Server errors apply to the lines they were raised for.
+  const qtyErrors = qtyFail?.lines === products ? qtyFail.byId : {}
 
   // Wizard state is seeded once, after both the quotation and the units it
   // needs to resolve unit codes have arrived. Any later refetch of the same
@@ -177,7 +185,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
           requestedNama: it.requestedName,
           requestedKodeImpa: it.requestedImpa ?? "",
           vendor: "",
-          jumlah: Number(it.qty) || 0,
+          jumlah: parseQty(it.qty),
           satuan: it.unitId !== undefined ? (unitNameById.get(it.unitId) ?? "") : "",
           hargaBeli: Number.isFinite(cost) ? cost : 0,
           hargaJual: Number.isFinite(sell) ? sell : 0,
@@ -213,6 +221,87 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     shipping: summaryShippingCost,
   })
   const summaryProfit = hasProducts ? summarySubTotal - summaryTotalHargaBeli : 0
+
+  function goToDetail() {
+    void navigate({ to: "/quotations/$id", params: { id: quotationId } })
+  }
+
+  function handleSave() {
+    if (!hasNumericQuotationId || !detail || !canSave) return
+    const items: QuotationItemInput[] = products.map((p) => ({
+      requestedItemId: p.requestedItemId,
+      requestedImpa: p.requestedKodeImpa || p.kodeImpa || undefined,
+      requestedName: p.requestedNama || p.nama,
+      offeredItemId: p.itemId,
+      vendorProductId: p.vendorProductId,
+      qty: String(p.jumlah),
+      unitId: unitIdByCode.get(p.satuan.toUpperCase()) ?? 0,
+      sellingPrice: String(p.hargaJual),
+      costPrice: String(p.hargaBeli),
+    }))
+    const shipDays = Number(shippingTime)
+    // PUT replaces the row, so fields the wizard does not edit are sent back.
+    const input: QuotationUpdateInput = {
+      clientRefNo: detail.clientRefNo ?? undefined,
+      vesselName: detail.vesselName ?? undefined,
+      notes: detail.notes ?? undefined,
+      paymentTerms: jatuhTempo.trim() ? `${jatuhTempo.trim()} days` : undefined,
+      validityDays: Number(berlakuSampai) > 0 ? Number(berlakuSampai) : undefined,
+      discountPct: String(discountPct),
+      shippingAddress: shippingAddress || undefined,
+      shippingDays: Number.isFinite(shipDays) && shipDays > 0 ? shipDays : undefined,
+      shippingCost: shippingCost || undefined,
+      items,
+    }
+    updateMutation.mutate(
+      { id: numericQuotationId, input, rowVersion: detail.rowVersion },
+      {
+        onSuccess: () => {
+          // Chain contact update when selection changed.
+          if (selectedContactId !== undefined && selectedContactId !== detail.contactId) {
+            updateContactMutation.mutate(
+              { id: numericQuotationId, contactId: selectedContactId },
+              { onSuccess: goToDetail },
+            )
+          } else {
+            goToDetail()
+          }
+        },
+        onError: (err) =>
+          setQtyFail({ lines: products, byId: qtyErrorsById(products, qtyErrorIndexes(err)) }),
+      },
+    )
+  }
+
+  if (!hasNumericQuotationId || (!detail && !isDetailPending)) {
+    return (
+      <NotFoundState
+        title="Quotation tidak ditemukan"
+        backTo={{ to: "/quotations", label: "Kembali ke Daftar Quotation" }}
+      />
+    )
+  }
+  if (!detail) return <LoadingState label="Memuat quotation…" />
+  if (!isEditable(detail.status)) {
+    return (
+      <StateMessage
+        title="Quotation tidak dapat diubah"
+        action={
+          <Link
+            to="/quotations/$id"
+            params={{ id: quotationId }}
+            className={`${ui.btnPrimary} no-underline`}
+          >
+            Kembali ke Detail Quotation
+          </Link>
+        }
+      >
+        Hanya quotation berstatus Draf yang dapat diubah. Status saat ini{" "}
+        {quotationStatusLabel(detail.status)}.
+        {detail.canRevise && " Gunakan Buat Revisi di halaman detail untuk membuat draf baru."}
+      </StateMessage>
+    )
+  }
 
   return (
     <>
@@ -284,7 +373,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             {step === steps.length && (
               <button
                 type="button"
-                className={`${flatSubmit} w-[148px]`}
+                className={`${qe.submit} w-[148px]`}
                 disabled={
                   !isTenggatWaktuFilled ||
                   !hasContent ||
@@ -292,60 +381,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
                   updateMutation.isPending ||
                   updateContactMutation.isPending
                 }
-                onClick={() => {
-                  if (!hasNumericQuotationId || !detail || !canSave) return
-                  const items: QuotationItemInput[] = products.map((p) => ({
-                    requestedItemId: p.requestedItemId,
-                    requestedImpa: p.requestedKodeImpa || p.kodeImpa || undefined,
-                    requestedName: p.requestedNama || p.nama,
-                    offeredItemId: p.itemId,
-                    vendorProductId: p.vendorProductId,
-                    qty: String(p.jumlah),
-                    unitId: unitIdByCode.get(p.satuan.toUpperCase()) ?? 0,
-                    sellingPrice: String(p.hargaJual),
-                    costPrice: String(p.hargaBeli),
-                  }))
-                  const shipDays = Number(shippingTime)
-                  const input: Omit<
-                    QuotationCreateInput,
-                    "companyClientId" | "contactId" | "status"
-                  > = {
-                    clientRefNo: detail.clientRefNo ?? undefined,
-                    paymentTerms: jatuhTempo.trim() ? `${jatuhTempo.trim()} days` : undefined,
-                    validityDays: Number(berlakuSampai) > 0 ? Number(berlakuSampai) : undefined,
-                    discountPct: String(discountPct),
-                    shippingAddress: shippingAddress || undefined,
-                    shippingDays: Number.isFinite(shipDays) && shipDays > 0 ? shipDays : undefined,
-                    shippingCost: shippingCost || undefined,
-                    items,
-                  }
-                  if (!detail) return
-                  updateMutation.mutate(
-                    { id: numericQuotationId, input, rowVersion: detail.rowVersion },
-                    {
-                      onSuccess: () => {
-                        // Chain contact update when selection changed.
-                        if (
-                          selectedContactId !== undefined &&
-                          selectedContactId !== detail.contactId
-                        ) {
-                          updateContactMutation.mutate(
-                            { id: numericQuotationId, contactId: selectedContactId },
-                            {
-                              onSuccess: () =>
-                                void navigate({
-                                  to: "/quotations/$id",
-                                  params: { id: quotationId },
-                                }),
-                            },
-                          )
-                        } else {
-                          void navigate({ to: "/quotations/$id", params: { id: quotationId } })
-                        }
-                      },
-                    },
-                  )
-                }}
+                onClick={handleSave}
               >
                 {updateMutation.isPending || updateContactMutation.isPending
                   ? "Menyimpan..."
@@ -372,15 +408,16 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         {/* Render Step Components */}
         {step === 1 && (
           <Step1Client
-            search={search}
-            setSearch={setSearch}
-            filteredClients={filteredClients}
+            search=""
+            setSearch={() => undefined}
+            filteredClients={clientOptions}
             selectedClient={selectedClient}
             setSelectedClient={setSelectedClient}
-            setShowClientAdd={setShowClientAdd}
+            setShowClientAdd={() => undefined}
             contacts={contacts}
             selectedContactId={selectedContactId}
             setSelectedContactId={setSelectedContactId}
+            lockClient
           />
         )}
         {step === 2 && (
@@ -406,6 +443,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             summaryPpn={summaryPpn}
             onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
             quotationId={numericQuotationId}
+            qtyErrors={qtyErrors}
           />
         )}
         {step === 3 && (
@@ -444,6 +482,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             summaryShippingCost={summaryShippingCost}
             summaryProfit={summaryProfit}
             summaryGrandTotal={summaryGrandTotal}
+            invalidQtyCount={invalidQty}
           />
         )}
       </div>
@@ -456,14 +495,6 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         onSuccess={(val) => {
           setDiscountPct(val)
           setShowDiscountModal(false)
-        }}
-      />
-      <ClientAdd
-        open={showClientAdd}
-        onOpenChange={setShowClientAdd}
-        onSuccess={() => {
-          setShowClientAdd(false)
-          setStep(2)
         }}
       />
       <ProductAdd
@@ -505,7 +536,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
                       requestedNama,
                       requestedKodeImpa,
                       vendor: data.namaVendor,
-                      jumlah: Number(data.jumlahProduk) || 1,
+                      jumlah: parseQty(data.jumlahProduk),
                       satuan: data.satuan,
                       hargaBeli: Number(data.hargaBeli) || 0,
                       hargaJual: Number(data.hargaJual) || 0,
@@ -528,7 +559,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
                 requestedNama,
                 requestedKodeImpa,
                 vendor: data.namaVendor,
-                jumlah: Number(data.jumlahProduk) || 1,
+                jumlah: parseQty(data.jumlahProduk),
                 satuan: data.satuan,
                 hargaBeli: Number(data.hargaBeli) || 0,
                 hargaJual: Number(data.hargaJual) || 0,

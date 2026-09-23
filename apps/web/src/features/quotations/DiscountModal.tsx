@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react"
+import { useEffect, useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { ui } from "@/lib/ui"
 
-interface DiscountModalProps {
+type DiscountModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   initialDiscount: number
@@ -15,6 +15,7 @@ export default function DiscountModal({
   initialDiscount,
   onSuccess,
 }: DiscountModalProps) {
+  const inputId = useId()
   const [tempDiscount, setTempDiscount] = useState<string>("")
 
   // Sync input on open.
@@ -28,7 +29,8 @@ export default function DiscountModal({
 
   function handleSaveDiscount() {
     const val = parseFloat(tempDiscount)
-    onSuccess(Number.isNaN(val) || val < 0 ? 0 : val)
+    // Server accepts 0 to 100.
+    onSuccess(Number.isNaN(val) ? 0 : Math.min(100, Math.max(0, val)))
   }
 
   return (
@@ -50,10 +52,11 @@ export default function DiscountModal({
       <div className={ui.modalSection}>
         <div className={ui.modalSectionHeading}>DISKON</div>
         <div className={ui.field}>
-          <label className={ui.fieldLabel}>
+          <label htmlFor={inputId} className={ui.fieldLabel}>
             Persentase Diskon <span className="text-primary-700">*</span>
           </label>
           <input
+            id={inputId}
             type="number"
             min="0"
             max="100"

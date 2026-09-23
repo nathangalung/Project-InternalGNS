@@ -262,6 +262,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                         <select
                           value={r.matchStatus}
                           onChange={(e) => changeStatus(r, e.target.value as QuotationMatchStatus)}
+                          aria-label={`Status baris ${r.lineNo}`}
                           className="rounded-[4px] border border-[#E5E7EB] px-2 py-1 text-[11px] font-semibold"
                           style={{ background: color.bg, color: color.fg }}
                         >
@@ -304,18 +305,21 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                   value={draft.lineNo}
                   onChange={(e) => setDraft({ ...draft, lineNo: Number(e.target.value) || 1 })}
                   placeholder="#"
+                  aria-label="Nomor baris"
                   className={draftInput}
                 />
                 <input
                   value={draft.requestText}
                   onChange={(e) => setDraft({ ...draft, requestText: e.target.value })}
                   placeholder="Deskripsi (wajib)"
+                  aria-label="Deskripsi permintaan"
                   className={draftInput}
                 />
                 <input
                   value={draft.requestImpa}
                   onChange={(e) => setDraft({ ...draft, requestImpa: e.target.value })}
                   placeholder="IMPA"
+                  aria-label="Kode IMPA"
                   className={draftInput}
                 />
               </div>
@@ -324,12 +328,14 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                   value={draft.requestedQty}
                   onChange={(e) => setDraft({ ...draft, requestedQty: e.target.value })}
                   placeholder="Qty"
+                  aria-label="Jumlah diminta"
                   className={draftInput}
                 />
                 <input
                   value={draft.requestedUom}
                   onChange={(e) => setDraft({ ...draft, requestedUom: e.target.value })}
                   placeholder="UOM"
+                  aria-label="Satuan diminta"
                   className={draftInput}
                 />
                 <select
@@ -337,6 +343,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                   onChange={(e) =>
                     setDraft({ ...draft, matchStatus: e.target.value as QuotationMatchStatus })
                   }
+                  aria-label="Status kecocokan"
                   className={draftInput}
                 >
                   {(Object.keys(STATUS_LABEL) as QuotationMatchStatus[]).map((s) => (
@@ -350,6 +357,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                 value={draft.notes}
                 onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
                 placeholder="Catatan (opsional)"
+                aria-label="Catatan"
                 className={`${draftInput} mt-2 box-border w-full`}
               />
               <div className="mt-2.5 flex justify-end gap-2">

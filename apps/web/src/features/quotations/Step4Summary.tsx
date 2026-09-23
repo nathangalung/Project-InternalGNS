@@ -1,10 +1,11 @@
-import { useState } from "react"
+import { useId, useState } from "react"
 import { getPageNumbers } from "@/lib/pagination"
+import { ui } from "@/lib/ui"
 import type { ProductItem } from "./QuotationEdit"
 import type { Client } from "./Step1Client"
 import { qe, qep } from "./wizard-styles"
 
-interface Step4SummaryProps {
+type Step4SummaryProps = {
   jatuhTempo: string
   setJatuhTempo: (s: string) => void
   berlakuSampai: string
@@ -26,6 +27,8 @@ interface Step4SummaryProps {
   summaryShippingCost: number
   summaryProfit: number
   summaryGrandTotal: number
+  // Lines with qty not above zero
+  invalidQtyCount?: number
 }
 
 const PAGE_SIZE = 5
@@ -39,15 +42,13 @@ const fieldValueSemibold = "text-sm font-semibold text-[#111827]"
 const fieldValueBold = "text-sm font-bold text-[#111827]"
 const emptyValue = "text-sm font-medium italic text-[#9CA3AF]"
 const formLabel = "mb-2 block text-[11px] font-bold uppercase tracking-[0.5px] text-[#6B7280]"
-const formInput =
-  "box-border w-full rounded-md border border-[rgba(204,195,216,0.2)] bg-dark-50 px-4 py-3 text-sm text-[#111827] outline-none"
+const formInput = `box-border w-full rounded-md border border-[rgba(204,195,216,0.2)] bg-dark-50 px-4 py-3 text-sm text-[#111827] outline-none ${ui.fieldFocus}`
 const alertBox =
   "rounded-md border border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.06)] px-3.5 py-2.5 text-xs font-medium text-[#DC2626]"
-const pageBtn = "flex h-8 w-8 items-center justify-center rounded-sm text-sm transition"
+const pageBtn = `flex h-8 w-8 items-center justify-center rounded-sm text-sm transition ${ui.focusRing}`
 const pageBtnIdle = "font-medium text-[#4A4455] hover:bg-dark-100"
 const pageBtnActive = "bg-primary-700 font-bold text-white"
-const pageBtnNav =
-  "flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100"
+const pageBtnNav = `flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100 disabled:cursor-not-allowed disabled:opacity-40 ${ui.focusRing}`
 const costRow = "flex justify-between text-xs text-[#4B5563]"
 const costValue = "font-semibold text-[#111827]"
 
@@ -73,7 +74,9 @@ export default function Step4Summary({
   summaryShippingCost,
   summaryProfit,
   summaryGrandTotal,
+  invalidQtyCount = 0,
 }: Step4SummaryProps) {
+  const id = useId()
   const [prodPage, setProdPage] = useState(1)
   const [prodExpanded, setProdExpanded] = useState(true)
 
@@ -91,10 +94,11 @@ export default function Step4Summary({
         <h2 className={`${qe.sectionTitle} mb-3`}>Tenggat Waktu Penawaran</h2>
         <div className={`${card} ${grid2} gap-6`}>
           <div>
-            <label className={formLabel}>
+            <label htmlFor={`${id}-tempo`} className={formLabel}>
               JATUH TEMPO PEMBAYARAN (HARI) <span className="text-error">*</span>
             </label>
             <input
+              id={`${id}-tempo`}
               type="number"
               min="1"
               placeholder="Masukkan hari sampai jatuh tempo"
@@ -104,10 +108,11 @@ export default function Step4Summary({
             />
           </div>
           <div>
-            <label className={formLabel}>
+            <label htmlFor={`${id}-berlaku`} className={formLabel}>
               BERLAKU SAMPAI (HARI) <span className="text-error">*</span>
             </label>
             <input
+              id={`${id}-berlaku`}
               type="number"
               min="1"
               placeholder="Masukkan jumlah hari"
@@ -117,6 +122,12 @@ export default function Step4Summary({
             />
           </div>
         </div>
+        {invalidQtyCount > 0 && (
+          <div role="alert" className={`${alertBox} mt-2.5`}>
+            {invalidQtyCount} produk memiliki jumlah 0 atau kurang. Perbaiki di langkah Produk
+            sebelum menyimpan.
+          </div>
+        )}
         {!isTenggatWaktuFilled && (
           <div className={`${alertBox} mt-2.5`}>
             Jatuh tempo pembayaran dan berlaku sampai wajib diisi sebelum menyimpan.
@@ -243,7 +254,7 @@ export default function Step4Summary({
           <div className="mb-6">
             {/* Header row */}
             <div
-              className={`flex items-center justify-between border border-[rgba(204,195,216,0.2)] bg-white px-5 py-3.5 ${
+              className={`flex flex-wrap items-center justify-between gap-3 border border-[rgba(204,195,216,0.2)] bg-white px-5 py-3.5 ${
                 prodExpanded ? "rounded-t-lg border-b-[rgba(204,195,216,0.15)]" : "rounded-lg"
               }`}
             >
@@ -259,6 +270,7 @@ export default function Step4Summary({
                   <button
                     type="button"
                     className={pageBtnNav}
+                    aria-label="Halaman sebelumnya"
                     disabled={prodPage === 1}
                     onClick={() => setProdPage((p) => Math.max(1, p - 1))}
                   >
@@ -285,6 +297,7 @@ export default function Step4Summary({
                         key={n}
                         type="button"
                         onClick={() => setProdPage(n)}
+                        aria-current={n === prodPage ? "page" : undefined}
                         className={`${pageBtn} ${n === prodPage ? pageBtnActive : pageBtnIdle}`}
                       >
                         {n}
@@ -294,6 +307,7 @@ export default function Step4Summary({
                   <button
                     type="button"
                     className={pageBtnNav}
+                    aria-label="Halaman berikutnya"
                     disabled={prodPage === totalPages}
                     onClick={() => setProdPage((p) => Math.min(totalPages, p + 1))}
                   >
@@ -312,7 +326,8 @@ export default function Step4Summary({
                 <button
                   type="button"
                   onClick={() => setProdExpanded((e) => !e)}
-                  className="flex items-center gap-[5px] rounded-sm border border-[rgba(204,195,216,0.5)] px-2.5 py-[5px] text-xs font-medium text-[#6B7280]"
+                  aria-expanded={prodExpanded}
+                  className={`flex items-center gap-[5px] rounded-sm border border-[rgba(204,195,216,0.5)] px-2.5 py-[5px] text-xs font-medium text-[#6B7280] ${ui.focusRing}`}
                 >
                   {prodExpanded ? "Sembunyikan" : "Tampilkan"}
                   <svg
@@ -378,7 +393,7 @@ export default function Step4Summary({
                               </span>
                             )}
                           </div>
-                          <div className="flex gap-6 text-[13px] text-[#374151]">
+                          <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-[#374151]">
                             <div>
                               <span className="mr-1.5 text-[#9CA3AF]">Kode IMPA:</span>
                               <span className="font-semibold">{requestKode || "-"}</span>

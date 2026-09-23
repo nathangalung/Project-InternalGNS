@@ -2,20 +2,22 @@ import type React from "react"
 import { useRef, useState } from "react"
 import { matchRows } from "@/features/items/api"
 import { getPageNumbers } from "@/lib/pagination"
+import { ui } from "@/lib/ui"
+import { isValidQty, QTY_ERROR } from "./lines"
 import type { ProductItem } from "./QuotationEdit"
 import QuotationReviewCard from "./QuotationReviewCard"
 import { parseProductFile } from "./uploadParser"
 import { qe, qep } from "./wizard-styles"
 
-const pageBtn = "flex h-8 w-8 items-center justify-center rounded-sm text-sm transition"
+const pageBtn = `flex h-8 w-8 items-center justify-center rounded-sm text-sm transition ${ui.focusRing}`
 const pageBtnIdle = "font-medium text-[#4A4455] hover:bg-dark-100"
 const pageBtnActive = "bg-primary-700 font-bold text-white"
-const pageBtnNav =
-  "flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100"
+const pageBtnNav = `flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100 disabled:cursor-not-allowed disabled:opacity-40 ${ui.focusRing}`
 const costRow = "flex justify-between text-xs text-[#4B5563]"
 const costValue = "font-semibold text-[#111827]"
+const cardIconBtn = `rounded-sm p-0.5 ${ui.focusRing}`
 
-interface Step2ProductProps {
+type Step2ProductProps = {
   products: ProductItem[]
   deleteProduct: (id: number) => void
   setEditingProduct: (p: ProductItem | null) => void
@@ -37,6 +39,8 @@ interface Step2ProductProps {
   summaryPpn: number
   onImportProducts: (products: ProductItem[]) => void
   quotationId?: number
+  // Server qty errors by card id
+  qtyErrors?: Record<number, string>
 }
 
 export default function Step2Product({
@@ -61,6 +65,7 @@ export default function Step2Product({
   summaryPpn,
   onImportProducts,
   quotationId,
+  qtyErrors = {},
 }: Step2ProductProps) {
   const importFileRef = useRef<HTMLInputElement>(null)
   const [importMsg, setImportMsg] = useState<{ text: string; ok: boolean } | null>(null)
@@ -147,7 +152,7 @@ export default function Step2Product({
           <h2 className={qe.sectionTitle}>Pilih Produk &amp; Harga</h2>
           <p className={qe.sectionDesc}>Tentukan produk dan harga penawaran.</p>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className={qe.sectionActions}>
           <input
             ref={importFileRef}
             type="file"
@@ -237,16 +242,18 @@ export default function Step2Product({
       <div>
         {/* Toolbar */}
         <div
-          className={`flex items-center justify-between border border-[rgba(204,195,216,0.2)] bg-white px-5 py-3 ${
+          className={`flex flex-wrap items-center justify-between gap-3 border border-[rgba(204,195,216,0.2)] bg-white px-5 py-3 ${
             prodExpanded ? "rounded-t-lg border-b-[rgba(204,195,216,0.15)]" : "rounded-lg"
           }`}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="relative inline-block">
               <button
                 type="button"
                 onClick={() => setIsRowDropdownOpen(!isRowDropdownOpen)}
-                className="flex items-center gap-2 rounded-sm border border-dark-200 bg-white px-2.5 py-[5px] text-[13px] text-[#4A4455]"
+                aria-haspopup="listbox"
+                aria-expanded={isRowDropdownOpen}
+                className={`flex items-center gap-2 rounded-sm border border-dark-200 bg-white px-2.5 py-[5px] text-[13px] text-[#4A4455] ${ui.focusRing}`}
               >
                 {prodPageSize} Baris
                 <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
@@ -272,7 +279,7 @@ export default function Step2Product({
                           setProdPage(1)
                           setIsRowDropdownOpen(false)
                         }}
-                        className={`flex h-8 w-full items-center px-4 py-1 ${
+                        className={`flex h-8 w-full items-center px-4 py-1 ${ui.focusRingInset} ${
                           isActive ? "justify-between" : "justify-start"
                         }`}
                       >
@@ -312,6 +319,7 @@ export default function Step2Product({
               <button
                 type="button"
                 className={pageBtnNav}
+                aria-label="Halaman sebelumnya"
                 disabled={prodPage === 1}
                 onClick={() => setProdPage((p) => Math.max(1, p - 1))}
               >
@@ -338,6 +346,7 @@ export default function Step2Product({
                     key={n}
                     type="button"
                     onClick={() => setProdPage(n)}
+                    aria-current={n === prodPage ? "page" : undefined}
                     className={`${pageBtn} ${n === prodPage ? pageBtnActive : pageBtnIdle}`}
                   >
                     {n}
@@ -347,6 +356,7 @@ export default function Step2Product({
               <button
                 type="button"
                 className={pageBtnNav}
+                aria-label="Halaman berikutnya"
                 disabled={prodPage === totalPages}
                 onClick={() => setProdPage((p) => Math.min(totalPages, p + 1))}
               >
@@ -364,7 +374,8 @@ export default function Step2Product({
             <button
               type="button"
               onClick={() => setProdExpanded((e) => !e)}
-              className="flex items-center gap-[5px] rounded-sm border border-[rgba(204,195,216,0.5)] px-2.5 py-[5px] text-xs font-medium text-[#6B7280]"
+              aria-expanded={prodExpanded}
+              className={`flex items-center gap-[5px] rounded-sm border border-[rgba(204,195,216,0.5)] px-2.5 py-[5px] text-xs font-medium text-[#6B7280] ${ui.focusRing}`}
             >
               {prodExpanded ? "Sembunyikan" : "Tampilkan"}
               <svg
@@ -402,6 +413,7 @@ export default function Step2Product({
                 const requestNama = p.requestedNama || p.nama
                 const requestKode = p.requestedKodeImpa || p.kodeImpa
                 const isDifferent = requestNama !== p.nama || requestKode !== p.kodeImpa
+                const qtyError = qtyErrors[p.id] ?? (isValidQty(p.jumlah) ? undefined : QTY_ERROR)
                 return (
                   <div key={p.id} className={`${qep.card} mb-0`}>
                     <div className={qep.cardHeader}>
@@ -419,8 +431,9 @@ export default function Step2Product({
                             setEditingProduct(p)
                             setShowProductAdd(true)
                           }}
-                          className="text-primary-700"
+                          className={`${cardIconBtn} text-primary-700`}
                           title="Edit Produk"
+                          aria-label={`Edit produk ${globalIndex}`}
                         >
                           <svg
                             width="18"
@@ -439,8 +452,9 @@ export default function Step2Product({
                         <button
                           type="button"
                           onClick={() => deleteProduct(p.id)}
-                          className="text-error"
+                          className={`${cardIconBtn} text-error`}
                           title="Hapus Produk"
+                          aria-label={`Hapus produk ${globalIndex}`}
                         >
                           <svg
                             width="18"
@@ -476,7 +490,7 @@ export default function Step2Product({
                           </span>
                         )}
                       </div>
-                      <div className="flex gap-6 text-[13px] text-[#374151]">
+                      <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-[#374151]">
                         <div>
                           <span className="mr-1.5 text-[#9CA3AF]">Kode IMPA:</span>
                           <span className="font-semibold">{requestKode || "-"}</span>
@@ -495,7 +509,16 @@ export default function Step2Product({
                         </div>
                         <div className={qep.field}>
                           <span className={qep.fieldLabel}>JUMLAH</span>
-                          <div className={qep.fieldInput}>{p.jumlah}</div>
+                          <div
+                            className={`${qep.fieldInput}${qtyError ? " ring-1 ring-[#DC2626]" : ""}`}
+                          >
+                            {p.jumlah}
+                          </div>
+                          {qtyError && (
+                            <span role="alert" className="text-xs text-[#DC2626]">
+                              {qtyError} Ubah produk ini sebelum menyimpan.
+                            </span>
+                          )}
                         </div>
                         <div className={qep.field}>
                           <span className={qep.fieldLabel}>SATUAN</span>

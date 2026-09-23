@@ -70,7 +70,7 @@ export default function ReviseModal({ quotationId, version, onClose }: ReviseMod
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Contoh: klien meminta perubahan harga"
-            className={`${ui.fieldInput} min-h-[96px] resize-y`}
+            className={`${ui.fieldInput} min-h-[96px] resize-y font-sans`}
           />
         </div>
       </div>

@@ -89,7 +89,7 @@ export default function TransitionModal({
             placeholder={
               transition.requiresNote ? "Tuliskan alasan perubahan status" : "Tambahkan catatan"
             }
-            className={`${ui.fieldInput} min-h-[96px] resize-y`}
+            className={`${ui.fieldInput} min-h-[96px] resize-y font-sans`}
           />
           {noteErr && (
             <p id={errorId} className="text-xs text-[#DC2626]">

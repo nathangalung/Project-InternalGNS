@@ -11,16 +11,13 @@ import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
 import { ui } from "@/lib/ui"
 import type { QuotationCreateInput, QuotationItemInput } from "@/types/api"
 import DiscountModal from "./DiscountModal"
+import { countInvalidQty, parseQty, qtyErrorIndexes, qtyErrorsById } from "./lines"
 import type { ProductItem } from "./QuotationEdit"
 import Step1Client, { type Client } from "./Step1Client"
 import Step2Product from "./Step2Product"
 import Step3Shipping from "./Step3Shipping"
 import Step4Summary from "./Step4Summary"
 import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
-
-// Flat brand submit (legacy used a solid #630ED4, not the primary gradient).
-const flatSubmit =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-primary-700 px-6 py-2 text-sm font-bold text-white shadow-sm transition hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
 
 const steps = [
   { n: 1, label: "KLIEN" },
@@ -103,18 +100,11 @@ export default function QuotationAdd() {
     return (clientsData?.rows ?? []).map(fromClientRow)
   }, [debouncedSearch, searchHits, clientsData])
 
-  const baseClients: Client[] = remoteClients
-  const sortedClients = [...baseClients].sort((a, b) => a.name.localeCompare(b.name, "id"))
-  const filteredClients =
-    trimmedSearch && remoteClients.length === 0
-      ? sortedClients.filter(
-          (c) =>
-            c.name.toLowerCase().includes(trimmedSearch.toLowerCase()) ||
-            c.narahubung.toLowerCase().includes(trimmedSearch.toLowerCase()),
-        )
-      : sortedClients.slice(0, 10)
+  // The server already filtered by the search.
+  const sortedClients = [...remoteClients].sort((a, b) => a.name.localeCompare(b.name, "id"))
+  const filteredClients = sortedClients.slice(0, 10)
 
-  const currentClient = baseClients.find((c) => c.id === selectedClient)
+  const currentClient = remoteClients.find((c) => c.id === selectedClient)
 
   // Auto-select contact when client or contacts list changes.
   useEffect(() => {
@@ -140,10 +130,19 @@ export default function QuotationAdd() {
     return m
   }, [unitsData])
 
+  const [qtyFail, setQtyFail] = useState<{
+    lines: ProductItem[]
+    byId: Record<number, string>
+  } | null>(null)
+  // Server errors apply to the lines they were raised for.
+  const qtyErrors = qtyFail?.lines === products ? qtyFail.byId : {}
+
+  const invalidQty = countInvalidQty(products)
   const canSubmit =
     Number.isFinite(numericClientId) &&
     numericClientId > 0 &&
     products.length > 0 &&
+    invalidQty === 0 &&
     products.every((p) => unitIdByCode.has(p.satuan.toUpperCase())) &&
     isTenggatWaktuFilled &&
     hasContent
@@ -181,6 +180,8 @@ export default function QuotationAdd() {
     }
     createQuotation.mutate(input, {
       onSuccess: () => void navigate({ to: "/quotations" }),
+      onError: (err) =>
+        setQtyFail({ lines: products, byId: qtyErrorsById(products, qtyErrorIndexes(err)) }),
     })
   }
 
@@ -272,7 +273,7 @@ export default function QuotationAdd() {
             {step === steps.length && (
               <button
                 type="button"
-                className={`${flatSubmit} w-[180px]`}
+                className={`${qe.submit} w-[180px]`}
                 onClick={handleSubmit}
                 disabled={!canSubmit || createQuotation.isPending}
               >
@@ -332,6 +333,7 @@ export default function QuotationAdd() {
             summaryDpp={summaryDpp}
             summaryPpn={summaryPpn}
             onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
+            qtyErrors={qtyErrors}
           />
         )}
         {step === 3 && (
@@ -370,6 +372,7 @@ export default function QuotationAdd() {
             summaryShippingCost={summaryShippingCost}
             summaryProfit={summaryProfit}
             summaryGrandTotal={summaryGrandTotal}
+            invalidQtyCount={invalidQty}
           />
         )}
       </div>
@@ -387,7 +390,9 @@ export default function QuotationAdd() {
       <ClientAdd
         open={showClientAdd}
         onOpenChange={setShowClientAdd}
-        onSuccess={() => {
+        onSuccess={(_, created) => {
+          // Select the new client, not just close.
+          setSelectedClient(String(created.id))
           setShowClientAdd(false)
           setStep(2)
         }}
@@ -431,7 +436,7 @@ export default function QuotationAdd() {
                       requestedNama,
                       requestedKodeImpa,
                       vendor: data.namaVendor,
-                      jumlah: Number(data.jumlahProduk) || 1,
+                      jumlah: parseQty(data.jumlahProduk),
                       satuan: data.satuan,
                       hargaBeli: Number(data.hargaBeli) || 0,
                       hargaJual: Number(data.hargaJual) || 0,
@@ -454,7 +459,7 @@ export default function QuotationAdd() {
                 requestedNama,
                 requestedKodeImpa,
                 vendor: data.namaVendor,
-                jumlah: Number(data.jumlahProduk) || 1,
+                jumlah: parseQty(data.jumlahProduk),
                 satuan: data.satuan,
                 hargaBeli: Number(data.hargaBeli) || 0,
                 hargaJual: Number(data.hargaJual) || 0,
