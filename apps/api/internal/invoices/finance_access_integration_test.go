@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -86,7 +87,8 @@ func TestRouter_FinanceWorksTheInvoicePage(t *testing.T) {
 	srv := httptest.NewServer(router)
 	t.Cleanup(srv.Close)
 
-	call := func(role users.Role, method, path string, body any, headers map[string]string) *http.Response {
+	// call returns the status and body, closing the response itself.
+	call := func(role users.Role, method, path string, body any, headers map[string]string) (int, []byte) {
 		t.Helper()
 		var buf bytes.Buffer
 		if body != nil {
@@ -101,15 +103,17 @@ func TestRouter_FinanceWorksTheInvoicePage(t *testing.T) {
 		}
 		res, err := srv.Client().Do(req)
 		require.NoError(t, err)
-		t.Cleanup(func() { _ = res.Body.Close() })
-		return res
+		defer res.Body.Close()
+		raw, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		return res.StatusCode, raw
 	}
 
 	inv := "/invoices/" + strconv.FormatInt(invID, 10)
-	res := call(users.RoleFinance, http.MethodGet, "/invoices/by-quotation/"+strconv.FormatInt(qid, 10), nil, nil)
-	require.Equal(t, http.StatusOK, res.StatusCode)
+	code, raw := call(users.RoleFinance, http.MethodGet, "/invoices/by-quotation/"+strconv.FormatInt(qid, 10), nil, nil)
+	require.Equal(t, http.StatusOK, code, string(raw))
 	var det invoices.InvoiceDetail
-	require.NoError(t, json.NewDecoder(res.Body).Decode(&det))
+	require.NoError(t, json.Unmarshal(raw, &det))
 	require.NotNil(t, det.PoNumber, "finance gets the PO header from the invoice")
 
 	steps := []struct {
@@ -130,10 +134,10 @@ func TestRouter_FinanceWorksTheInvoicePage(t *testing.T) {
 		{name: "mark paid", method: http.MethodPatch, path: inv + "/status", body: map[string]string{"status": "paid"}, want: http.StatusNoContent},
 	}
 	for _, st := range steps {
-		res := call(users.RoleFinance, st.method, st.path, st.body, st.headers)
-		assert.Equal(t, st.want, res.StatusCode, "finance %s", st.name)
+		code, raw := call(users.RoleFinance, st.method, st.path, st.body, st.headers)
+		assert.Equal(t, st.want, code, "finance %s: %s", st.name, raw)
 	}
 
-	res = call(users.RoleOperational, http.MethodGet, "/invoices/by-quotation/"+strconv.FormatInt(qid, 10), nil, nil)
-	assert.Equal(t, http.StatusForbidden, res.StatusCode, "operational stays out of invoices")
+	code, _ = call(users.RoleOperational, http.MethodGet, "/invoices/by-quotation/"+strconv.FormatInt(qid, 10), nil, nil)
+	assert.Equal(t, http.StatusForbidden, code, "operational stays out of invoices")
 }
