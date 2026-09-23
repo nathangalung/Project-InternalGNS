@@ -1,64 +1,16 @@
 import { ApiError } from "@/lib/api-client"
+import { QUOTATION_STATUSES, type QuotationStatusLabel, quotationStatusLabel } from "@/lib/status"
 import type { QuotationStatus, QuotationStatusCount, QuotationTransition } from "@/types/api"
 
-// Quotation status labels.
-//
-// Mirrors quotations.Statuses on the server, in its canonical order. The
-// server also sends labels on stats and transitions; this map covers the
-// fields that carry only the status key.
-export const QUOTATION_STATUSES = [
-  "draft",
-  "sent",
-  "revision",
-  "accepted",
-  "rejected",
-  "cancelled",
-  "expired",
-] as const satisfies readonly QuotationStatus[]
-
-const LABEL = {
-  draft: "Draf",
-  sent: "Dikirim",
-  revision: "Revisi",
-  accepted: "Disetujui",
-  rejected: "Ditolak",
-  cancelled: "Dibatalkan",
-  expired: "Kedaluwarsa",
-} as const satisfies Record<QuotationStatus, string>
-
-export type QuotationStatusLabel = (typeof LABEL)[QuotationStatus]
-
-const STATUS_BY_LABEL = Object.fromEntries(QUOTATION_STATUSES.map((s) => [LABEL[s], s])) as Record<
-  QuotationStatusLabel,
-  QuotationStatus
->
-
-// Every label, canonical order.
-export const QUOTATION_STATUS_LABELS: QuotationStatusLabel[] = QUOTATION_STATUSES.map(
-  (s) => LABEL[s],
-)
-
-export function quotationStatusLabel(s: QuotationStatus): QuotationStatusLabel {
-  return LABEL[s]
-}
-
-export function quotationStatusFromLabel(label: QuotationStatusLabel): QuotationStatus {
-  return STATUS_BY_LABEL[label]
-}
-
-// Badge colours per label.
-//
-// Badge text is 11px bold, so every text colour clears 4.5:1 on its fill.
-// Dibatalkan uses gray-700 on gray-100 (9.2:1).
-export const quotationBadge: Record<QuotationStatusLabel, { bg: string; color: string }> = {
-  Draf: { bg: "var(--status-draf-bg)", color: "#92400E" },
-  Dikirim: { bg: "var(--status-dikirim-bg)", color: "var(--status-dikirim-color)" },
-  Revisi: { bg: "var(--status-revisi-bg)", color: "#6B21A8" },
-  Disetujui: { bg: "var(--status-disetujui-bg)", color: "var(--status-disetujui-color)" },
-  Ditolak: { bg: "var(--status-ditolak-bg)", color: "var(--status-ditolak-color)" },
-  Dibatalkan: { bg: "#F3F4F6", color: "#374151" },
-  Kedaluwarsa: { bg: "#F1F5F9", color: "#475569" },
-}
+// Labels and badges live in lib/status.ts, shared with the dashboard.
+export {
+  QUOTATION_STATUS_LABELS,
+  QUOTATION_STATUSES,
+  type QuotationStatusLabel,
+  quotationBadge,
+  quotationStatusFromLabel,
+  quotationStatusLabel,
+} from "@/lib/status"
 
 // Status menu and cancel action.
 //
@@ -151,6 +103,10 @@ export function statTiles(rows: QuotationStatusCount[] | undefined): {
   const tiles =
     rows && rows.length > 0
       ? rows
-      : QUOTATION_STATUSES.map((status) => ({ status, label: LABEL[status], count: 0 }))
+      : QUOTATION_STATUSES.map((status) => ({
+          status,
+          label: quotationStatusLabel(status),
+          count: 0,
+        }))
   return { total: tiles.reduce((s, r) => s + r.count, 0), tiles }
 }

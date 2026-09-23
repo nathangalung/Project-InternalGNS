@@ -1,7 +1,5 @@
 export type Role = "superadmin" | "operational" | "finance"
 
-export type CanonicalStatus = "draft" | "sent" | "accepted" | "rejected" | "revision" | "expired"
-
 export type MeUser = {
   id: number
   email: string
@@ -230,9 +228,6 @@ export type VendorItemRow = {
 }
 
 // Quotation list, detail, and writes.
-//
-// QuotationStatus is the full server set. CanonicalStatus predates
-// cancelled and stays only for the legacy map in lib/status.ts.
 export type QuotationStatus =
   | "draft"
   | "sent"
@@ -254,9 +249,7 @@ export type QuotationListRow = {
   quotationNo: string
   version: number
   companyName: string
-  // Narrow until lib/status.ts, which dashboard/helpers.ts reads it through,
-  // knows cancelled. The server can send it; toTableRow maps it.
-  status: CanonicalStatus
+  status: QuotationStatus
   grandTotal: string
   subtotal: string
   totalDiscount: string

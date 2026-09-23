@@ -3,9 +3,9 @@ import { roleCanAccess, type Section } from "@/lib/rbac"
 import {
   deriveInvoiceStatus,
   type InvoiceStatus,
-  quotationStatusConfig,
-  type StatusLabel,
-  statusToLabel,
+  type QuotationStatusLabel,
+  quotationBadge,
+  quotationStatusLabel,
 } from "@/lib/status"
 import type { DashboardStatusCount, InvoiceBackendRow, QuotationListRow, Role } from "@/types/api"
 
@@ -71,14 +71,14 @@ export type RecentQuotation = {
 // Recent quotation table row.
 //
 // The label comes from the summary's status list when present, so the table
-// and the tiles on one screen agree. A status the web does not know yet, such
-// as cancelled, falls back to that label or the raw value and a neutral badge
+// and the tiles on one screen agree. A status the web does not know yet
+// falls back to that label or the raw value and a neutral badge
 // instead of crashing the row.
 export function toRecentQuotation(
   q: QuotationListRow,
   labels: DashboardStatusCount[] = [],
 ): RecentQuotation {
-  const known: StatusLabel | undefined = statusToLabel(q.status)
+  const known: QuotationStatusLabel | undefined = quotationStatusLabel(q.status)
   const apiLabel = labels.find((s) => s.status === q.status)?.label
   return {
     id: q.id,
@@ -88,7 +88,7 @@ export function toRecentQuotation(
     date: formatDate(q.createdAt),
     total: `Rp${formatNumber(q.grandTotal)}`,
     label: apiLabel ?? known ?? q.status,
-    badge: (known && quotationStatusConfig[known]) || NEUTRAL_BADGE,
+    badge: (known && quotationBadge[known]) || NEUTRAL_BADGE,
   }
 }
 

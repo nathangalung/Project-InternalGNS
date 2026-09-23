@@ -1,25 +1,36 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { InvoiceBackendRow, InvoiceBackendStatus } from "@/types/api"
-import { deriveInvoiceStatus, labelToStatus, QUOTATION_TRANSITIONS, statusToLabel } from "./status"
+import {
+  deriveInvoiceStatus,
+  QUOTATION_STATUS_LABELS,
+  QUOTATION_STATUSES,
+  quotationBadge,
+  quotationStatusFromLabel,
+  quotationStatusLabel,
+} from "./status"
 
-describe("expired status", () => {
-  it("renders as its own Kadaluarsa label, not Ditolak", () => {
-    expect(statusToLabel("expired")).toBe("Kadaluarsa")
-    expect(labelToStatus("Kadaluarsa")).toBe("expired")
+describe("quotation status labels", () => {
+  it("round-trips every status", () => {
+    for (const s of QUOTATION_STATUSES) {
+      expect(quotationStatusFromLabel(quotationStatusLabel(s))).toBe(s)
+    }
   })
-})
 
-describe("QUOTATION_TRANSITIONS", () => {
-  it("mirrors the backend state machine", () => {
-    expect(QUOTATION_TRANSITIONS.Draf).toEqual(["Dikirim"])
-    expect(QUOTATION_TRANSITIONS.Dikirim).toEqual(["Disetujui", "Ditolak", "Revisi"])
-    expect(QUOTATION_TRANSITIONS.Revisi).toEqual(["Dikirim", "Ditolak"])
-  })
+  const cases = [
+    { status: "expired", want: "Kedaluwarsa" },
+    { status: "cancelled", want: "Dibatalkan" },
+    { status: "rejected", want: "Ditolak" },
+  ] as const
+  for (const c of cases) {
+    it(`labels ${c.status} as ${c.want}`, () => {
+      expect(quotationStatusLabel(c.status)).toBe(c.want)
+    })
+  }
 
-  it("treats accepted, rejected and expired as terminal", () => {
-    expect(QUOTATION_TRANSITIONS.Disetujui).toEqual([])
-    expect(QUOTATION_TRANSITIONS.Ditolak).toEqual([])
-    expect(QUOTATION_TRANSITIONS.Kadaluarsa).toEqual([])
+  it("has a badge for every label", () => {
+    for (const label of QUOTATION_STATUS_LABELS) {
+      expect(quotationBadge[label]).toBeDefined()
+    }
   })
 })
 

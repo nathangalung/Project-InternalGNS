@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { quotationStatusConfig } from "@/lib/status"
+import { quotationBadge } from "@/lib/status"
 import type { DashboardStatusCount, InvoiceBackendRow, QuotationListRow, Role } from "@/types/api"
 import {
   type CardKey,
@@ -118,7 +118,7 @@ describe("toRecentQuotation", () => {
       client: "PT Laut",
       total: "Rp1.500.000",
       label: "Dikirim",
-      badge: quotationStatusConfig.Dikirim,
+      badge: quotationBadge.Dikirim,
     })
   })
 
@@ -135,9 +135,7 @@ describe("toRecentQuotation", () => {
   }
 
   it("known status badge is its own", () => {
-    expect(toRecentQuotation(quotation("rejected"), labels).badge).toEqual(
-      quotationStatusConfig.Ditolak,
-    )
+    expect(toRecentQuotation(quotation("rejected"), labels).badge).toEqual(quotationBadge.Ditolak)
   })
 
   it("unknown status gets a neutral badge, not a crash", () => {
