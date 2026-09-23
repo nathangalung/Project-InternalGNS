@@ -348,7 +348,7 @@ func (s *Service) Authenticate(ctx context.Context, tokenStr string) (Identity, 
 	}
 	// iat carries milliseconds (see init), so only a token minted before the
 	// change is refused, not one minted moments after it.
-	if claims.IssuedAt == nil || claims.IssuedAt.Time.Before(live.SessionsValidFrom) {
+	if claims.IssuedAt == nil || claims.IssuedAt.Before(live.SessionsValidFrom) {
 		return Identity{}, ErrSessionRevoked
 	}
 	return Identity{UserID: id, Role: live.Role}, nil
