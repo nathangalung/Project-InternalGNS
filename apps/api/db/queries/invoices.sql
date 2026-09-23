@@ -95,16 +95,19 @@ LIMIT 1;
 SELECT fn_change_invoice_status($1::bigint, $2::text, $3::bigint);
 
 -- name: invoices.update_dates
+-- A paid or cancelled invoice is filed: moving its dates would move booked
+-- revenue and the date already reported to Coretax.
 UPDATE invoices
 SET invoice_date = COALESCE($2, invoice_date),
     due_date     = COALESCE($3, due_date),
     updated_by   = $4
 WHERE id = $1
+  AND status NOT IN ('paid', 'cancelled')
   AND ($5::int IS NULL OR row_version = $5::int)
 RETURNING row_version;
 
--- name: invoices.row_version
-SELECT row_version FROM invoices WHERE id = $1;
+-- name: invoices.status_and_version
+SELECT status, row_version FROM invoices WHERE id = $1;
 
 -- name: invoices.update_attachment
 UPDATE invoices

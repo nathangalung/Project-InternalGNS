@@ -226,6 +226,9 @@ func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("invoice not found"))
+		case errors.Is(err, ErrDatesLocked):
+			httperr.Render(w, httperr.UnprocessableDetail(
+				"Invoice yang sudah dibayar atau dibatalkan tidak dapat diubah tanggalnya.", nil))
 		case errors.Is(err, ErrVersionMismatch):
 			// Use 409 per round3_plan optimistic-lock contract (not RFC 7232 412).
 			httperr.Render(w, httperr.Conflict("invoice row_version mismatch"))

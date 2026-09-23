@@ -16,6 +16,7 @@ import (
 var (
 	ErrNotFound        = errors.New("invoice not found")
 	ErrVersionMismatch = errors.New("invoice version mismatch")
+	ErrDatesLocked     = errors.New("invoice dates locked")
 )
 
 type Repo struct {
@@ -221,7 +222,8 @@ func (r *Repo) UpdateAttachment(ctx context.Context, id int64, objectKey string,
 }
 
 // UpdateDates writes dates with optimistic-lock guard via row_version.
-// Returns new row_version on success; ErrVersionMismatch when ifMatch stale; ErrNotFound when row gone.
+// Returns new row_version on success; ErrDatesLocked when the invoice is filed;
+// ErrVersionMismatch when ifMatch stale; ErrNotFound when row gone.
 func (r *Repo) UpdateDates(ctx context.Context, id int64, req UpdateDatesRequest, actorID int64, ifMatch *int32) (int32, error) {
 	var newVersion int32
 	err := r.db.QueryRow(ctx, r.store.Get("invoices.update_dates"),
@@ -233,14 +235,25 @@ func (r *Repo) UpdateDates(ctx context.Context, id int64, req UpdateDatesRequest
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return 0, err
 	}
-	// Disambiguate 404 vs 409.
-	var existing int32
-	probeErr := r.db.QueryRow(ctx, r.store.Get("invoices.row_version"), id).Scan(&existing)
+	// Disambiguate 404 vs 422 vs 409.
+	var (
+		status   Status
+		existing int32
+	)
+	probeErr := r.db.QueryRow(ctx, r.store.Get("invoices.status_and_version"), id).Scan(&status, &existing)
 	if errors.Is(probeErr, pgx.ErrNoRows) {
 		return 0, ErrNotFound
 	}
 	if probeErr != nil {
 		return 0, probeErr
 	}
+	if !isDateEditable(status) {
+		return 0, ErrDatesLocked
+	}
 	return 0, ErrVersionMismatch
+}
+
+// isDateEditable mirrors the guard in invoices.update_dates.
+func isDateEditable(s Status) bool {
+	return s != StatusPaid && s != StatusCancelled
 }

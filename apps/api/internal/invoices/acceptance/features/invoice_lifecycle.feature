@@ -40,6 +40,18 @@ Feature: Invoice lifecycle
     When the user updates invoice due date to "2026-12-31"
     Then the response status is 200
 
+  Scenario: Paid invoice keeps its dates
+    Given a delivered purchase order
+    When the user transitions the invoice through "sent,paid"
+    And the user updates invoice due date to "2026-12-31"
+    Then the response status is 422
+
+  Scenario: Cancelled invoice keeps its dates
+    Given a delivered purchase order
+    When the user transitions the invoice through "cancelled"
+    And the user updates invoice due date to "2026-12-31"
+    Then the response status is 422
+
   Scenario: Summary endpoint returns aggregates
     Given a delivered purchase order
     When the user reads the invoice summary
