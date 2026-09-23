@@ -5,13 +5,27 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
+import * as invoicesApi from "@/features/invoices/api"
 import * as poApi from "@/features/purchaseOrders/api"
+import * as usersApi from "@/features/users/api"
+import { ApiError } from "@/lib/api-client"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadToPresignedUrl } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
 import type { PoBackendStatus, PoUpdateItemsInput } from "@/types/api"
+import { detailsChanged } from "./adapters"
+import {
+  isInvoiceFiled,
+  isVersionConflict,
+  parseCompletenessIssues,
+  poErrorMessage,
+} from "./PurchaseOrderDetail/helpers"
+import type { PoRow } from "./types"
+
+// Under purchaseOrders.all, so one invalidation reaches it.
+const historyKey = (id: number) => [...queryKeys.purchaseOrders.all, "history", id] as const
 
 export function usePurchaseOrders(params: poApi.ListParams = {}) {
   return useQuery({
@@ -47,27 +61,86 @@ export function usePurchaseOrderByQuotation(quotationId: number | undefined) {
   })
 }
 
+export function usePoHistory(id: number | undefined) {
+  return useQuery({
+    queryKey: id ? historyKey(id) : queryKeys.purchaseOrders.all,
+    queryFn: id !== undefined && id > 0 ? () => poApi.listHistory(id) : skipToken,
+  })
+}
+
+// User names for the timeline.
+//
+// Only superadmin may list users; everyone else sees the id.
+export function useActorNames(enabled: boolean) {
+  const params = { limit: 200 }
+  return useQuery({
+    queryKey: queryKeys.users.list(params),
+    queryFn: enabled ? () => usersApi.list(params) : skipToken,
+    select: (data) => new Map(data.rows.map((u) => [u.id, u.name])),
+  })
+}
+
+// Filed invoice freezes number and date.
+//
+// Only roles that may read invoices ask; the rest rely on the server 409.
+export function useInvoiceFiled(quotationId: number, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.invoices.byQuotation(quotationId),
+    queryFn: enabled ? () => invoicesApi.getByQuotation(quotationId) : skipToken,
+    select: (inv) => isInvoiceFiled(inv?.status),
+  })
+}
+
+// The completeness 422 opens a modal instead of a toast.
 export function useChangePoStatus() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, status }: { id: number; status: PoBackendStatus }) =>
-      poApi.changeStatus(id, status),
+    mutationFn: ({ id, status, note }: { id: number; status: PoBackendStatus; note?: string }) =>
+      poApi.changeStatus(id, status, note),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
       qc.invalidateQueries({ queryKey: queryKeys.invoices.all })
       qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal mengubah status PO.")),
+    onError: (err) => {
+      if (err instanceof ApiError && parseCompletenessIssues(err.body)) return
+      toast.error(errorMessage(err, "Gagal mengubah status PO."))
+    },
   })
 }
 
+// Stale version refetches the PO.
 export function useUpdatePoDetails() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, poNumber, poDate }: { id: number; poNumber: string; poDate: string }) =>
-      poApi.updateDetails(id, { poNumber, poDate }),
+    mutationFn: ({
+      id,
+      poNumber,
+      poDate,
+      rowVersion,
+    }: {
+      id: number
+      poNumber: string
+      poDate: string
+      rowVersion: number
+    }) => poApi.updateDetails(id, { poNumber, poDate }, rowVersion),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all }),
-    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui detail PO.")),
+    onError: (err) => {
+      if (isVersionConflict(err)) qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
+      toast.error(poErrorMessage(err, "Gagal memperbarui detail PO."))
+    },
+  })
+}
+
+export function useRemovePoFile() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => poApi.removeFile(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+    },
+    onError: (err) => toast.error(errorMessage(err, "Gagal menghapus berkas PO.")),
   })
 }
 
@@ -85,8 +158,12 @@ export function useUploadPoFile() {
         objectKey: presign.objectKey,
       })
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all }),
-    onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah file PO.")),
+    // Attaching moves PENDING to UPLOADED.
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+    },
+    onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah berkas PO.")),
   })
 }
 
@@ -108,6 +185,37 @@ export function useUpdatePoItems() {
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.items(id) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui item PO.")),
+    onError: (err) => {
+      if (isVersionConflict(err)) qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
+      toast.error(poErrorMessage(err, "Gagal memperbarui item PO."))
+    },
   })
+}
+
+// Upload modal save: details, then file.
+//
+// Attaching a file bumps row_version, so the details write goes first while
+// the version the user loaded is still current. Both hooks toast their own
+// errors; the result only says whether to close the modal.
+export function useSavePoUpload() {
+  const uploadFile = useUploadPoFile()
+  const updateDetails = useUpdatePoDetails()
+
+  async function save(
+    row: PoRow,
+    file: File | null,
+    details: { poNumber: string; poDate: string },
+  ): Promise<boolean> {
+    try {
+      if (detailsChanged(row, details)) {
+        await updateDetails.mutateAsync({ id: row.id, ...details, rowVersion: row.rowVersion })
+      }
+      if (file) await uploadFile.mutateAsync({ id: row.id, file })
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  return { save, isPending: uploadFile.isPending || updateDetails.isPending }
 }

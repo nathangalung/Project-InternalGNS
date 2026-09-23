@@ -1,12 +1,17 @@
 import { ui } from "@/lib/ui"
 
-interface FileCardProps {
+type FileCardProps = {
   fileName?: string
   fileSize?: number
   uploadedAt?: string
   onUpload: () => void
   onDownload: () => void
+  // Only while PENDING or UPLOADED
+  onRemove?: () => void
 }
+
+// Ghost button, destructive tone.
+const removeBtn = `inline-flex items-center justify-center gap-2 rounded-md border border-transparent px-3 py-2 text-sm font-medium text-[#B91C1C] transition hover:bg-[#FEE2E2] ${ui.focusRing}`
 
 function formatSize(bytes?: number): string {
   if (!bytes) return ""
@@ -33,6 +38,7 @@ export default function FileCard({
   uploadedAt,
   onUpload,
   onDownload,
+  onRemove,
 }: FileCardProps) {
   const hasFile = Boolean(fileName)
 
@@ -41,7 +47,7 @@ export default function FileCard({
       <h2 className="mb-3 text-base font-bold leading-6 tracking-tight text-dark-900">
         Berkas Purchase Order
       </h2>
-      <div className="flex items-center gap-4 rounded-lg border border-[rgba(204,195,216,0.2)] bg-white px-6 py-5">
+      <div className="flex flex-wrap items-center gap-4 rounded-lg border border-[rgba(204,195,216,0.2)] bg-white px-6 py-5 max-sm:px-4">
         <div
           className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${
             hasFile ? "bg-[rgba(99,14,212,0.12)]" : "bg-dark-100"
@@ -56,6 +62,7 @@ export default function FileCard({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
             <polyline points="14 2 14 8 20 8" />
@@ -78,7 +85,7 @@ export default function FileCard({
             </div>
           )}
         </div>
-        <div className="flex gap-2.5">
+        <div className="flex flex-wrap gap-2.5 max-sm:w-full max-sm:*:flex-1">
           <button type="button" onClick={onUpload} className={`${ui.btnOutline} min-w-[120px]`}>
             <svg
               width="14"
@@ -89,6 +96,7 @@ export default function FileCard({
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="17 8 12 3 7 8" />
@@ -96,6 +104,11 @@ export default function FileCard({
             </svg>
             {hasFile ? "Ganti Berkas" : "Unggah Berkas"}
           </button>
+          {hasFile && onRemove && (
+            <button type="button" onClick={onRemove} className={removeBtn}>
+              Hapus Berkas
+            </button>
+          )}
           {hasFile && (
             <button type="button" onClick={onDownload} className={`${ui.btnPrimary} min-w-[120px]`}>
               <svg
@@ -107,6 +120,7 @@ export default function FileCard({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                aria-hidden="true"
               >
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="7 10 12 15 17 10" />

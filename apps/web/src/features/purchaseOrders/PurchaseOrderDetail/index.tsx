@@ -1,304 +1,186 @@
-import { useQueries } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
+import Modal from "@/components/shared/Modal"
+import { useMe } from "@/features/auth/hooks"
 import { getCompanyInitials } from "@/features/clients/helpers"
-import { useClient } from "@/features/clients/hooks"
-import * as itemsApi from "@/features/items/api"
-import { useQuotation } from "@/features/quotations/hooks"
 import ClientSummaryCard from "@/features/quotations/QuotationDetail/ClientSummaryCard"
 import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
-import HistoryTimeline from "@/features/quotations/QuotationDetail/HistoryTimeline"
-import { nowLabel } from "@/features/quotations/QuotationDetail/helpers"
 import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
-import * as vendorsApi from "@/features/vendors/api"
-import { downloadFile, downloadPdf } from "@/lib/api-client"
-import { computeTaxBreakdown, toNum } from "@/lib/format"
-import { queryKeys } from "@/lib/query-keys"
+import { ApiError, downloadFile, downloadPdf } from "@/lib/api-client"
+import { formatDate, toNum } from "@/lib/format"
+import { roleCanAccess } from "@/lib/rbac"
+import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
-import { poItemsToProducts, poItemsToShipping } from "../adapters"
+import type { PoTransition, PurchaseOrderRow } from "@/types/api"
+import { poHistoryEntry, poItemsToProducts, poItemsToShipping, poRowFromBackend } from "../adapters"
 import * as poApi from "../api"
 import {
+  useActorNames,
   useChangePoStatus,
+  useInvoiceFiled,
+  usePoHistory,
   usePoItems,
-  usePurchaseOrderByQuotation,
-  useUpdatePoDetails,
-  useUploadPoFile,
+  useRemovePoFile,
+  useSavePoUpload,
 } from "../hooks"
-import type { PoRow, PoStatus } from "../types"
+import type { PoStatus } from "../types"
 import UploadPoModal from "../UploadPoModal"
 import CompletenessModal from "./CompletenessModal"
 import FileCard from "./FileCard"
 import Header from "./Header"
+import HistoryCard from "./HistoryCard"
 import {
   type CompletenessIssue,
-  PO_LABEL,
-  PO_TRANSITIONS,
-  poNumberFromQuotationNo,
-  validateClientCompleteness,
-  validateVendorCompleteness,
+  canDownloadDeliveryNote,
+  deliveryNoteFileName,
+  isPoLocked,
+  parseCompletenessIssues,
+  poBreakdown,
 } from "./helpers"
+import ReasonModal from "./ReasonModal"
 import StatusBar from "./StatusBar"
 
-interface HistoryEntry {
-  date: string
-  action: string
-}
-
-interface PurchaseOrderDetailProps {
-  quotationId: number
-  quotationNo: string
+type PurchaseOrderDetailProps = {
+  po: PurchaseOrderRow
+  // Client card data; the PO has its own figures
   quotation?: QuotationData
   onEdit: () => void
-  onNavigateEntity?: (scope: "Klien" | "Vendor", id: number) => void
 }
 
-export default function PurchaseOrderDetail({
-  quotationId,
-  quotationNo,
-  quotation,
-  onEdit,
-  onNavigateEntity,
-}: PurchaseOrderDetailProps) {
+export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseOrderDetailProps) {
   const navigate = useNavigate()
-  const { data: po, isLoading } = usePurchaseOrderByQuotation(quotationId)
-  const { data: poItems } = usePoItems(po?.id)
+  const { data: me } = useMe()
+  const { data: poItems } = usePoItems(po.id)
+  const { data: events, isLoading: historyLoading } = usePoHistory(po.id)
+  const { data: actorNames } = useActorNames(me?.role === "superadmin")
+  // Operational cannot read invoices and relies on the server 409.
+  const { data: invoiceFiled = false } = useInvoiceFiled(
+    po.quotationId,
+    po.status === "DELIVERED" && roleCanAccess(me?.role, "invoices"),
+  )
   const changeStatus = useChangePoStatus()
-  const uploadFile = useUploadPoFile()
-  const updateDetails = useUpdatePoDetails()
+  const uploadSave = useSavePoUpload()
+  const removeFile = useRemovePoFile()
 
-  const initialStatus: PoStatus = po?.status ?? "PENDING"
-  const [status, setStatus] = useState<PoStatus>(initialStatus)
+  // Pending choice, tied to the status it was made from
+  const [choice, setChoice] = useState<{ from: PoStatus; t: PoTransition } | null>(null)
   const [isStatusOpen, setIsStatusOpen] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
-  const [extraHistory, setExtraHistory] = useState<HistoryEntry[]>([])
-  const [completenessIssues, setCompletenessIssues] = useState<CompletenessIssue[] | null>(null)
+  const [showReason, setShowReason] = useState(false)
+  const [confirmRemove, setConfirmRemove] = useState(false)
+  const [issues, setIssues] = useState<CompletenessIssue[] | null>(null)
 
-  // Resolve client + vendors used by this PO so we can validate before promoting to ON_PROGRESS.
-  const { data: quotationApi } = useQuotation(quotationId > 0 ? quotationId : undefined)
-  const { data: clientRow } = useClient(quotationApi?.companyClientId)
-
-  const uniqueItemIds = useMemo(() => {
-    const ids = new Set<number>()
-    quotationApi?.items
-      .filter((it) => it.itemType === "product")
-      .forEach((it) => {
-        const id = it.offeredItemId ?? it.requestedItemId
-        if (id !== undefined) ids.add(id)
-      })
-    return [...ids]
-  }, [quotationApi])
-
-  const itemVendorsQueries = useQueries({
-    queries: uniqueItemIds.map((itemId) => ({
-      queryKey: queryKeys.purchaseOrders.itemVendors(itemId),
-      queryFn: () => itemsApi.listVendors(itemId),
-    })),
-  })
-
-  const vendorIds = useMemo(() => {
-    const ids = new Set<number>()
-    if (!quotationApi) return [] as number[]
-    const itemVendorMap = new Map<number, Awaited<ReturnType<typeof itemsApi.listVendors>>>()
-    uniqueItemIds.forEach((id, idx) => {
-      const data = itemVendorsQueries[idx]?.data
-      if (data) itemVendorMap.set(id, data)
-    })
-    quotationApi.items
-      .filter((it) => it.itemType === "product" && it.vendorProductId !== undefined)
-      .forEach((it) => {
-        const itemId = it.offeredItemId ?? it.requestedItemId
-        if (itemId === undefined) return
-        const vendors = itemVendorMap.get(itemId)
-        if (!vendors) return
-        const matched = vendors.find((v) => v.vendorProductId === it.vendorProductId)
-        if (matched) ids.add(matched.vendorId)
-      })
-    return [...ids]
-  }, [quotationApi, uniqueItemIds, itemVendorsQueries])
-
-  const vendorQueries = useQueries({
-    queries: vendorIds.map((vid) => ({
-      queryKey: queryKeys.purchaseOrders.vendorDetail(vid),
-      queryFn: () => vendorsApi.get(vid),
-    })),
-  })
-
-  // Sync local status from backend.
-  useEffect(() => {
-    if (po) setStatus(po.status)
-  }, [po])
+  // A saved move drops a stale choice.
+  const selected = choice?.from === po.status ? choice.t : null
 
   const products = useMemo(() => poItemsToProducts(poItems), [poItems])
+  const shipping = useMemo(() => poItemsToShipping(poItems), [poItems])
   // Profit needs real cost data.
   const hasCost = useMemo(() => (poItems ?? []).some((it) => toNum(it.costPrice) > 0), [poItems])
-  const shipping = useMemo(() => poItemsToShipping(poItems), [poItems])
+  const history = useMemo(
+    () => (events ?? []).map((ev) => poHistoryEntry(ev, actorNames?.get(ev.changedBy))),
+    [events, actorNames],
+  )
 
-  const history: HistoryEntry[] = useMemo(() => {
-    if (!quotation || !po) return []
-    const items: HistoryEntry[] = [
-      { date: quotation.createdAt, action: `Purchase Order dibuat dari Quotation ${quotationNo}` },
-    ]
-    if (po.uploadedAt && po.fileName) {
-      const d = new Date(po.uploadedAt)
-      const label = Number.isNaN(d.getTime())
-        ? po.uploadedAt
-        : d.toLocaleString("id-ID", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-      items.push({ date: label, action: `Berkas PO diunggah: ${po.fileName}` })
-    }
-    return [...items, ...extraHistory]
-  }, [quotation, po, quotationNo, extraHistory])
-
-  if (!quotation || (isLoading && !po) || !po) {
-    return (
-      <div className={ui.pageContent}>
-        <p>{isLoading ? "Memuat data Purchase Order…" : "Purchase Order tidak ditemukan."}</p>
-      </div>
-    )
-  }
-
-  // BE-persisted totals from PO snapshot.
-  const totalProduk = toNum(po.poTotalProduk)
-  const totalProfit = toNum(po.poTotalProfit)
+  const figures = poBreakdown(po)
   const totalShip = shipping.hargaSatuan
-  const hasProducts = products.length > 0
-  const discountPct = quotation.discountPct ?? 0
-  const nominalDiskon = (totalProduk * discountPct) / 100
-  const subTotal = totalProduk - nominalDiskon
-  const {
-    dppNilaiLain,
-    ppnAmount: ppn12,
-    grandTotal,
-  } = computeTaxBreakdown({ subtotal: subTotal, shipping: totalShip })
-  const clientInitials = getCompanyInitials(quotation.client)
-  const poNumber = po.poNumber || poNumberFromQuotationNo(quotationNo)
+  const clientName = quotation?.client ?? po.companyName
+  const row = poRowFromBackend(po)
+  const dnReady = canDownloadDeliveryNote(po)
+  const fileRemovable = po.status === "PENDING" || po.status === "UPLOADED"
 
-  function handleStatusChange(s: PoStatus) {
-    setStatus(s)
-    setIsStatusOpen(false)
+  async function applyStatus(t: PoTransition, note?: string) {
+    try {
+      await changeStatus.mutateAsync({ id: po.id, status: t.to, note })
+      setShowReason(false)
+      toast.success(`Status PO diubah menjadi ${t.label}.`)
+      void navigate({ to: "/purchase-orders" })
+    } catch (err) {
+      // The hook toasts everything but the completeness gate.
+      const found = err instanceof ApiError ? parseCompletenessIssues(err.body) : null
+      if (found) {
+        setShowReason(false)
+        setIssues(found)
+      }
+    }
   }
 
   function handleSave() {
-    if (!po) return
-    if (status === po.status) {
+    if (!selected) {
       void navigate({ to: "/purchase-orders" })
       return
     }
-
-    // Block promotion to ON_PROGRESS until client + vendor data is complete.
-    if (status === "ON_PROGRESS" && po.status !== "ON_PROGRESS") {
-      const issues: CompletenessIssue[] = []
-      if (clientRow) {
-        const clientMissing = validateClientCompleteness(clientRow)
-        if (clientMissing.length > 0) {
-          issues.push({
-            scope: "Klien",
-            id: clientRow.id,
-            name: clientRow.name,
-            missing: clientMissing,
-          })
-        }
-      }
-      vendorQueries.forEach((q) => {
-        if (!q.data) return
-        const missing = validateVendorCompleteness(q.data)
-        if (missing.length > 0) {
-          issues.push({ scope: "Vendor", id: q.data.id, name: q.data.name, missing })
-        }
-      })
-      if (issues.length > 0) {
-        setCompletenessIssues(issues)
-        return
-      }
-    }
-
-    changeStatus.mutate(
-      { id: po.id, status },
-      {
-        onSuccess: () => {
-          setExtraHistory((prev) => [
-            ...prev,
-            { date: nowLabel(), action: `Status diubah menjadi ${PO_LABEL[status]}` },
-          ])
-          void navigate({ to: "/purchase-orders" })
-        },
-      },
-    )
-  }
-
-  function handleUploadSubmit(file: File | null, details: { poNumber: string; poDate: string }) {
-    if (!po) return
-    // Edit details only when no new file.
-    if (!file) {
-      updateDetails.mutate({ id: po.id, ...details }, { onSuccess: () => setShowUpload(false) })
+    if (selected.requiresNote) {
+      setShowReason(true)
       return
     }
-    uploadFile.mutate(
-      { id: po.id, file },
-      {
-        onSuccess: () => {
-          updateDetails.mutate({ id: po.id, ...details }, { onSuccess: () => setShowUpload(false) })
-        },
-      },
-    )
+    void applyStatus(selected)
+  }
+
+  async function handleUploadSubmit(
+    file: File | null,
+    details: { poNumber: string; poDate: string },
+  ) {
+    if (await uploadSave.save(row, file, details)) setShowUpload(false)
+  }
+
+  async function handleRemoveFile() {
+    try {
+      await removeFile.mutateAsync(po.id)
+      setConfirmRemove(false)
+    } catch {
+      // Hook toasts the error.
+    }
   }
 
   async function handleDownload() {
-    if (!po?.objectKey || !po?.fileName) return
-    const { downloadUrl } = await poApi.presignDownload(po.id)
-    await downloadFile(downloadUrl, po.fileName)
+    if (!po.objectKey || !po.fileName) return
+    try {
+      const { downloadUrl } = await poApi.presignDownload(po.id)
+      await downloadFile(downloadUrl, po.fileName)
+    } catch {
+      toast.error("Gagal mengunduh berkas PO.")
+    }
   }
 
   async function handleDownloadDeliveryNote() {
-    if (!po) return
-    // Match the in-document DN number.
-    const base = quotationNo.replace(/^Q-/, "") || poNumber
-    const safe = base.replace(/[^A-Za-z0-9._-]/g, "_")
-    await downloadPdf(`/purchase-orders/${po.id}/delivery-note.pdf`, `DN-${safe}.pdf`)
-  }
-
-  const uploadRow: PoRow = {
-    id: po.id,
-    quotationId,
-    quotationNo,
-    poNumber,
-    poDate: po.poDate.slice(0, 10),
-    client: quotation.client,
-    date: quotation.createdAt,
-    total: String(grandTotal),
-    status,
-    fileName: po.fileName,
-    objectKey: po.objectKey,
+    if (!po.deliveryNoteNumber) return
+    try {
+      await downloadPdf(
+        `/purchase-orders/${po.id}/delivery-note.pdf`,
+        deliveryNoteFileName(po.deliveryNoteNumber),
+      )
+    } catch {
+      toast.error("Gagal mengunduh Surat Jalan.")
+    }
   }
 
   return (
     <>
       <div className={ui.pageContent}>
         <Header
-          poNumber={poNumber}
-          quotationNo={quotationNo}
-          createdAt={quotation.createdAt}
-          status={status}
-          onEdit={onEdit}
-          onDownloadDeliveryNote={
-            status === "ON_PROGRESS" || status === "DELIVERED"
-              ? handleDownloadDeliveryNote
-              : undefined
-          }
+          poNumber={po.poNumber}
+          quotationId={po.quotationId}
+          quotationNo={po.quotationNo}
+          createdAt={formatDate(po.createdAt)}
+          status={po.status}
+          deliveryNoteNumber={po.deliveryNoteNumber}
+          onEdit={isPoLocked(po.status) ? undefined : onEdit}
+          onDownloadDeliveryNote={dnReady ? () => void handleDownloadDeliveryNote() : undefined}
         />
         <StatusBar
-          status={status}
-          allowedStatuses={PO_TRANSITIONS[po.status]}
+          status={po.status}
+          selected={selected}
+          transitions={po.allowedTransitions}
           isOpen={isStatusOpen}
+          saving={changeStatus.isPending}
           onToggle={() => setIsStatusOpen((o) => !o)}
-          onChange={handleStatusChange}
+          onSelect={(t) => {
+            setChoice(t ? { from: po.status, t } : null)
+            setIsStatusOpen(false)
+          }}
           onSave={handleSave}
         />
         <FileCard
@@ -306,55 +188,90 @@ export default function PurchaseOrderDetail({
           fileSize={po.fileSize}
           uploadedAt={po.uploadedAt}
           onUpload={() => setShowUpload(true)}
-          onDownload={handleDownload}
+          onDownload={() => void handleDownload()}
+          onRemove={fileRemovable ? () => setConfirmRemove(true) : undefined}
         />
         <ClientSummaryCard
-          clientName={quotation.client}
-          clientInitials={clientInitials}
-          clientInfo={quotation.clientInfo}
+          clientName={clientName}
+          clientInitials={getCompanyInitials(clientName)}
+          clientInfo={quotation?.clientInfo}
           shippingAlamat={shipping.alamat}
         />
-        {totalShip > 0 && <ShippingTable shipping={shipping} />}
-        <ProductTable products={products} showProfit={hasCost} />
+        {totalShip > 0 && (
+          <div className="min-w-0 overflow-x-auto">
+            <ShippingTable shipping={shipping} />
+          </div>
+        )}
+        <div className="min-w-0 overflow-x-auto">
+          <ProductTable products={products} showProfit={hasCost} />
+        </div>
         <CostBreakdown
-          hasProducts={hasProducts}
-          totalProduk={totalProduk}
-          discountPct={discountPct}
-          nominalDiskon={nominalDiskon}
-          subTotal={subTotal}
-          dppNilaiLain={dppNilaiLain}
-          ppn12={ppn12}
+          hasProducts={products.length > 0}
+          totalProduk={figures.totalProduk}
+          discountPct={figures.discountPct}
+          nominalDiskon={figures.nominalDiskon}
+          subTotal={figures.subTotal}
+          dppNilaiLain={figures.dppNilaiLain}
+          ppn12={figures.ppn12}
           totalShip={totalShip}
-          totalProfit={totalProfit}
+          totalProfit={figures.totalProfit}
           showProfit={hasCost}
-          grandTotal={grandTotal}
+          grandTotal={figures.grandTotal}
         />
-        <HistoryTimeline history={history} />
+        <HistoryCard entries={history} isLoading={historyLoading} />
       </div>
 
       {showUpload && (
         <UploadPoModal
-          row={uploadRow}
-          hasExistingFile={Boolean(po?.objectKey && po?.fileName)}
+          row={row}
+          hasExistingFile={Boolean(po.objectKey && po.fileName)}
+          submitting={uploadSave.isPending}
+          detailsLocked={invoiceFiled}
           onClose={() => setShowUpload(false)}
-          onSubmit={handleUploadSubmit}
+          onSubmit={(file, details) => void handleUploadSubmit(file, details)}
         />
       )}
 
-      {completenessIssues && (
-        <CompletenessModal
-          issues={completenessIssues}
-          onClose={() => setCompletenessIssues(null)}
-          onNavigateEntity={
-            onNavigateEntity
-              ? (scope, id) => {
-                  setCompletenessIssues(null)
-                  onNavigateEntity(scope, id)
-                }
-              : undefined
-          }
+      {showReason && selected && (
+        <ReasonModal
+          statusLabel={selected.label}
+          submitting={changeStatus.isPending}
+          onClose={() => setShowReason(false)}
+          onSubmit={(note) => void applyStatus(selected, note)}
         />
       )}
+
+      {confirmRemove && (
+        <Modal
+          title="Hapus berkas PO?"
+          onClose={() => setConfirmRemove(false)}
+          footer={
+            <>
+              <button
+                type="button"
+                className={ui.modalCancel}
+                onClick={() => setConfirmRemove(false)}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                className={ui.modalSubmit}
+                disabled={removeFile.isPending}
+                onClick={() => void handleRemoveFile()}
+              >
+                {removeFile.isPending ? "Menghapus..." : "Hapus Berkas"}
+              </button>
+            </>
+          }
+        >
+          <p className="m-0 pb-4 text-sm text-[#4A4455]">
+            Berkas {po.fileName} akan dilepas dari PO ini dan status kembali menjadi Pending.
+          </p>
+        </Modal>
+      )}
+
+      {issues && <CompletenessModal issues={issues} onClose={() => setIssues(null)} />}
     </>
   )
 }

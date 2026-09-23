@@ -3,9 +3,13 @@ import Modal from "@/components/shared/Modal"
 import { ui } from "@/lib/ui"
 import type { PoRow } from "./types"
 
-interface UploadPoModalProps {
+type UploadPoModalProps = {
   row: PoRow
   hasExistingFile?: boolean
+  // Saving; blocks a double submit
+  submitting?: boolean
+  // Filed invoice freezes number and date
+  detailsLocked?: boolean
   onClose: () => void
   onSubmit: (file: File | null, details: { poNumber: string; poDate: string }) => void
 }
@@ -13,6 +17,8 @@ interface UploadPoModalProps {
 export default function UploadPoModal({
   row,
   hasExistingFile = false,
+  submitting = false,
+  detailsLocked = false,
   onClose,
   onSubmit,
 }: UploadPoModalProps) {
@@ -43,7 +49,8 @@ export default function UploadPoModal({
     setFile(f)
   }
 
-  const canSubmit = (hasExistingFile || file !== null) && poNumber.trim() !== "" && poDate !== ""
+  const canSubmit =
+    !submitting && (hasExistingFile || file !== null) && poNumber.trim() !== "" && poDate !== ""
 
   function handleSubmit() {
     if (!hasExistingFile && !file) {
@@ -85,7 +92,7 @@ export default function UploadPoModal({
             onClick={handleSubmit}
             disabled={!canSubmit}
           >
-            {hasExistingFile ? "Simpan" : "Upload"}
+            {submitting ? "Menyimpan..." : hasExistingFile ? "Simpan" : "Upload"}
           </button>
         </>
       }
@@ -100,7 +107,9 @@ export default function UploadPoModal({
             type="text"
             value={poNumber}
             onChange={(e) => setPoNumber(e.target.value)}
-            className={ui.fieldInput}
+            disabled={detailsLocked}
+            aria-describedby={detailsLocked ? "po-details-locked" : undefined}
+            className={`${ui.fieldInput} ${ui.disabledField}`}
           />
         </div>
         <div className={ui.field}>
@@ -112,9 +121,16 @@ export default function UploadPoModal({
             type="date"
             value={poDate}
             onChange={(e) => setPoDate(e.target.value)}
-            className={ui.fieldInput}
+            disabled={detailsLocked}
+            aria-describedby={detailsLocked ? "po-details-locked" : undefined}
+            className={`${ui.fieldInput} ${ui.disabledField}`}
           />
         </div>
+        {detailsLocked && (
+          <p id="po-details-locked" className="text-xs text-[#4A4455]">
+            Nomor dan tanggal PO tidak dapat diubah karena invoice sudah dikirim.
+          </p>
+        )}
       </div>
 
       <div>
@@ -131,7 +147,7 @@ export default function UploadPoModal({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex w-full flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-[#D1D5DB] bg-[#F9FAFB] px-4 py-8"
+          className={`${ui.focusRing} flex w-full flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-[#D1D5DB] bg-[#F9FAFB] px-4 py-8`}
         >
           <svg
             width="40"
@@ -180,8 +196,8 @@ export default function UploadPoModal({
             <button
               type="button"
               onClick={() => setFile(null)}
-              aria-label="Hapus berkas"
-              className="p-1 text-[#047857]"
+              aria-label="Batalkan pilihan berkas"
+              className={`rounded-sm p-1 text-[#047857] ${ui.focusRing}`}
             >
               <svg
                 width="14"

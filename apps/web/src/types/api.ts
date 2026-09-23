@@ -451,7 +451,14 @@ export type QuotationItemRequestUpdateInput = {
 }
 
 // Purchase orders.
-export type PoBackendStatus = "PENDING" | "UPLOADED" | "ON_PROGRESS" | "DELIVERED"
+export type PoBackendStatus = "PENDING" | "UPLOADED" | "ON_PROGRESS" | "DELIVERED" | "CANCELLED"
+
+// Manual move the server allows.
+export type PoTransition = {
+  to: PoBackendStatus
+  label: string
+  requiresNote: boolean
+}
 
 export type PurchaseOrderRow = {
   id: number
@@ -469,12 +476,32 @@ export type PurchaseOrderRow = {
   objectKey?: string
   quotationTotal?: string
   quotationSubtotal?: string
+  discountPct: string
+  // PO money from v_po_totals, rounded per line like the invoice
   poSubtotal: string
   poTotalProduk: string
   poTotalProfit: string
+  poTotalDiscount: string
+  poDppNilaiLain: string
+  poPpnAmount: string
+  poGrandTotal: string
+  // Issued at ON_PROGRESS
+  deliveryNoteNumber?: string
+  // Empty for a terminal status
+  allowedTransitions: PoTransition[]
   rowVersion: number
   createdAt: string
   updatedAt: string
+}
+
+export type PoStatusEvent = {
+  id: number
+  // Absent on the creation row
+  fromStatus?: PoBackendStatus
+  toStatus: PoBackendStatus
+  note?: string
+  changedBy: number
+  changedAt: string
 }
 
 export type PoItemInput = {
@@ -519,6 +546,9 @@ export type PurchaseOrderItemRow = {
   shipDestination?: string
   shippingDays?: number
   isAvailable: boolean
+  // Supplying vendor, from the quotation line
+  vendorId?: number
+  vendorName?: string
 }
 
 // Invoices.

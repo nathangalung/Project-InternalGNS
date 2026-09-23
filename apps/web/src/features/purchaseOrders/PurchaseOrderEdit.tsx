@@ -1,62 +1,78 @@
-import { useNavigate } from "@tanstack/react-router"
-import { useEffect, useMemo, useState } from "react"
-import ClientAdd from "@/features/clients/ClientAdd"
-import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
-import { useClientSearch, useClients } from "@/features/clients/hooks"
+import { Link, useNavigate } from "@tanstack/react-router"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { fromClientRow } from "@/features/clients/helpers"
+import { useClient } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
-import { usePoItems, usePurchaseOrder, useUpdatePoItems } from "@/features/purchaseOrders/hooks"
 import DiscountModal from "@/features/quotations/DiscountModal"
-import Step1Client, { type Client } from "@/features/quotations/Step1Client"
 import Step2Product from "@/features/quotations/Step2Product"
 import Step3Shipping from "@/features/quotations/Step3Shipping"
 import Step4Summary from "@/features/quotations/Step4Summary"
 import { useUnits } from "@/features/units/hooks"
-import { useDebouncedValue } from "@/hooks/useDebouncedValue"
-import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
+import { computeTaxBreakdown, formatNumber as formatRp, toNum } from "@/lib/format"
+import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
-import type { PoItemInput, PoUpdateItemsInput } from "@/types/api"
+import type { PoUpdateItemsInput, PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
+import { linesMissingUnit, lineToInput, type PoEditLine, poLinesToEdit } from "./adapters"
+import { usePoItems, usePurchaseOrderByQuotation, useUpdatePoItems } from "./hooks"
+import { isVersionConflict } from "./PurchaseOrderDetail/helpers"
 
-interface PurchaseOrderEditProps {
-  poId: string
+type PurchaseOrderEditProps = {
+  // Resolved from the route's quotation id
+  po: PurchaseOrderRow
 }
 
+// The client is fixed on a PO, so there is no client step.
 const steps = [
-  { n: 1, label: "KLIEN" },
-  { n: 2, label: "PRODUK" },
-  { n: 3, label: "PENGIRIMAN" },
-  { n: 4, label: "RINGKASAN" },
+  { n: 1, label: "PRODUK" },
+  { n: 2, label: "PENGIRIMAN" },
+  { n: 3, label: "RINGKASAN" },
 ]
 
-export interface ProductItem {
-  id: number
-  quotationItemId?: number
-  itemId?: number
-  vendorId?: number
-  vendorProductId?: number
-  nama: string
-  kodeImpa: string
-  requestedNama: string
-  requestedKodeImpa: string
-  vendor: string
-  jumlah: number
-  satuan: string
-  hargaBeli: number
-  hargaJual: number
+function isAddressValid(v: string): boolean {
+  return v.trim().length >= 20 && /[a-zA-Z]/.test(v)
 }
 
-export default function PurchaseOrderEdit({ poId }: PurchaseOrderEditProps) {
+// Split "123456 - Name" into parts.
+function splitOffer(s: string): { kode: string; nama: string } {
+  const trimmed = s.trim()
+  if (!trimmed) return { kode: "", nama: "" }
+  const [first, ...rest] = trimmed.split(/\s*-\s*/)
+  if (rest.length > 0 && /^\d+$/.test(first)) return { kode: first, nama: rest.join(" - ") }
+  return { kode: "", nama: trimmed }
+}
+
+const arrowIcon = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M19 12H5M12 5l-7 7 7 7" />
+  </svg>
+)
+
+export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
 
-  const [selectedClient, setSelectedClient] = useState("")
-  const [search, setSearch] = useState("")
-  const [showClientAdd, setShowClientAdd] = useState(false)
+  const { refetch: refetchPo } = usePurchaseOrderByQuotation(po.quotationId)
+  const { data: poItems, refetch: refetchItems } = usePoItems(po.id)
+  const { data: unitsData } = useUnits()
+  const { data: clientRow } = useClient(po.companyClientId)
+  const updateMutation = useUpdatePoItems()
 
+  const [hydrated, setHydrated] = useState(false)
   const [showProductAdd, setShowProductAdd] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
   const [showDiscountModal, setShowDiscountModal] = useState(false)
-  const [discountPct, setDiscountPct] = useState<number>(0)
-  const [products, setProducts] = useState<ProductItem[]>([])
+  const [discountPct, setDiscountPct] = useState(0)
+  const [products, setProducts] = useState<PoEditLine[]>([])
   const [prodPageSize, setProdPageSize] = useState(5)
   const [prodPage, setProdPage] = useState(1)
   const [isRowDropdownOpen, setIsRowDropdownOpen] = useState(false)
@@ -65,63 +81,9 @@ export default function PurchaseOrderEdit({ poId }: PurchaseOrderEditProps) {
   const [shippingTime, setShippingTime] = useState("")
   const [shippingCost, setShippingCost] = useState("")
 
+  // Shown by the summary step, never saved on a PO.
   const [jatuhTempo, setJatuhTempo] = useState("")
   const [berlakuSampai, setBerlakuSampai] = useState("")
-
-  const isAlamatFilled = shippingAddress.trim().length >= 20 && /[a-zA-Z]/.test(shippingAddress)
-  const isWaktuFilled = isAlamatFilled && shippingTime.trim().length > 0
-  const isTenggatWaktuFilled = jatuhTempo.trim().length > 0 && berlakuSampai.trim().length > 0
-  const hasContent = products.length > 0 || isAlamatFilled
-
-  useEffect(() => {
-    if (!isAlamatFilled) {
-      setShippingTime("")
-      setShippingCost("")
-    }
-  }, [isAlamatFilled])
-
-  useEffect(() => {
-    if (!isWaktuFilled) setShippingCost("")
-  }, [isWaktuFilled])
-
-  let isNextDisabled = false
-  if (step === 1) isNextDisabled = selectedClient === ""
-
-  function deleteProduct(id: number) {
-    setProducts((prev) => prev.filter((p) => p.id !== id))
-  }
-
-  const numericPoId = Number(poId)
-  const hasNumericPoId = Number.isFinite(numericPoId) && numericPoId > 0
-  const { data: poDetail } = usePurchaseOrder(hasNumericPoId ? numericPoId : undefined)
-  const { data: poItems } = usePoItems(hasNumericPoId ? numericPoId : undefined)
-  const updateMutation = useUpdatePoItems()
-
-  const trimmedSearch = search.trim()
-  const debouncedSearch = useDebouncedValue(trimmedSearch, 250)
-  const { data: clientsData } = useClients({ limit: 50 })
-  const { data: searchHits } = useClientSearch(debouncedSearch, { limit: 30 })
-  const { data: unitsData } = useUnits()
-
-  const remoteClients: Array<Client & { contactId?: number }> = useMemo(() => {
-    if (debouncedSearch.length > 0) {
-      return dedupeByCompany(searchHits ?? []).map(fromClientHit)
-    }
-    return (clientsData?.rows ?? []).map(fromClientRow)
-  }, [debouncedSearch, searchHits, clientsData])
-
-  const baseClients: Client[] = remoteClients
-  const sortedClients = [...baseClients].sort((a, b) => a.name.localeCompare(b.name, "id"))
-  const filteredClients =
-    trimmedSearch && remoteClients.length === 0
-      ? sortedClients.filter(
-          (c) =>
-            c.name.toLowerCase().includes(trimmedSearch.toLowerCase()) ||
-            c.narahubung.toLowerCase().includes(trimmedSearch.toLowerCase()),
-        )
-      : sortedClients.slice(0, 10)
-
-  const currentClient = baseClients.find((c) => c.id === selectedClient)
 
   const unitNameById = useMemo(() => {
     const m = new Map<number, string>()
@@ -135,42 +97,51 @@ export default function PurchaseOrderEdit({ poId }: PurchaseOrderEditProps) {
     return m
   }, [unitsData])
 
-  useEffect(() => {
-    if (!poDetail) return
-    setSelectedClient(String(poDetail.companyClientId))
-  }, [poDetail])
+  // Form state from the stored PO.
+  const hydrate = useCallback(
+    (source: PurchaseOrderRow, items: PurchaseOrderItemRow[]) => {
+      setProducts(
+        poLinesToEdit(items, (id) => (id !== undefined ? (unitNameById.get(id) ?? "") : "")),
+      )
+      setDiscountPct(toNum(source.discountPct))
+      const ship = items.find((it) => it.itemType === "shipping")
+      setShippingAddress(ship?.shipDestination ?? "")
+      setShippingTime(ship?.shippingDays ? String(ship.shippingDays) : "")
+      setShippingCost(ship ? String(toNum(ship.sellingPrice)) : "")
+      setHydrated(true)
+    },
+    [unitNameById],
+  )
 
+  // Once, when the PO, lines and units are all in.
   useEffect(() => {
-    if (!poItems) return
-    const productItems: ProductItem[] = poItems
-      .filter((it) => it.itemType === "product")
-      .map((it, i) => {
-        const sell = Number(it.sellingPrice)
-        const cost = it.costPrice !== undefined ? Number(it.costPrice) : 0
-        return {
-          id: it.id ?? i + 1,
-          quotationItemId: it.quotationItemId,
-          itemId: it.offeredItemId,
-          nama: it.itemName,
-          kodeImpa: it.itemCode ?? "",
-          requestedNama: it.itemName,
-          requestedKodeImpa: it.itemCode ?? "",
-          vendor: "",
-          jumlah: Number(it.qty) || 0,
-          satuan: it.unitId !== undefined ? (unitNameById.get(it.unitId) ?? "") : "",
-          hargaBeli: Number.isFinite(cost) ? cost : 0,
-          hargaJual: Number.isFinite(sell) ? sell : 0,
-        }
-      })
-    setProducts(productItems)
-    const ship = poItems.find((it) => it.itemType === "shipping")
-    if (ship) {
-      setShippingAddress(ship.shipDestination ?? "")
-      if (ship.shippingDays) setShippingTime(String(ship.shippingDays))
-      const cost = Number(ship.sellingPrice)
-      setShippingCost(Number.isFinite(cost) ? String(cost) : "")
+    if (hydrated || !poItems || !unitsData) return
+    hydrate(po, poItems)
+  }, [hydrated, po, poItems, unitsData, hydrate])
+
+  // Clearing follows user edits only.
+  //
+  // A stored short address must not wipe the stored days and cost on load,
+  // so the dependent fields are cleared here rather than in an effect.
+  function changeAddress(v: string) {
+    setShippingAddress(v)
+    if (!isAddressValid(v)) {
+      setShippingTime("")
+      setShippingCost("")
     }
-  }, [poItems, unitNameById])
+  }
+
+  function changeTime(v: string) {
+    setShippingTime(v)
+    if (v.trim() === "") setShippingCost("")
+  }
+
+  const isAlamatFilled = isAddressValid(shippingAddress)
+  const isWaktuFilled = isAlamatFilled && shippingTime.trim().length > 0
+  const hasContent = products.length > 0 || isAlamatFilled
+
+  const currentClient = clientRow ? fromClientRow(clientRow) : undefined
+  const editingProduct = products.find((p) => p.id === editingId) ?? null
 
   const summaryTotalProdukQty = products.reduce((sum, p) => sum + p.jumlah, 0)
   const summaryTotalHargaBeli = products.reduce((sum, p) => sum + p.hargaBeli * p.jumlah, 0)
@@ -179,6 +150,7 @@ export default function PurchaseOrderEdit({ poId }: PurchaseOrderEditProps) {
   const summarySubTotal = summaryTotalHargaJual - nominalDiskon
   const summaryShippingCost = Number(shippingCost) || 0
   const hasProducts = products.length > 0
+  // Preview only; the saved PO totals come from the server.
   const {
     dppNilaiLain: summaryDpp,
     ppnAmount: summaryPpn,
@@ -189,100 +161,83 @@ export default function PurchaseOrderEdit({ poId }: PurchaseOrderEditProps) {
   })
   const summaryProfit = hasProducts ? summarySubTotal - summaryTotalHargaBeli : 0
 
+  async function handleSave() {
+    const missing = linesMissingUnit(products, unitIdByCode)
+    if (missing.length > 0) {
+      toast.error(`Satuan belum dikenali untuk: ${missing.join(", ")}.`)
+      return
+    }
+    const shipDays = Number(shippingTime)
+    const input: PoUpdateItemsInput = {
+      discountPct: String(discountPct),
+      // The server overwrites notes, so the stored ones go back
+      notes: po.notes,
+      shippingAddress: shippingAddress.trim() || undefined,
+      shippingDays: Number.isFinite(shipDays) && shipDays > 0 ? shipDays : undefined,
+      shippingCost: shippingCost || undefined,
+      items: products.map((p) => lineToInput(p, unitIdByCode)),
+    }
+    try {
+      await updateMutation.mutateAsync({ id: po.id, input, rowVersion: po.rowVersion })
+      void navigate({ to: "/purchase-orders/$id", params: { id: String(po.quotationId) } })
+    } catch (err) {
+      // Someone saved first: reload their version.
+      if (!isVersionConflict(err)) return
+      const [fresh, items] = await Promise.all([refetchPo(), refetchItems()])
+      if (fresh.data && items.data) {
+        hydrate(fresh.data, items.data)
+        setStep(1)
+      }
+    }
+  }
+
   return (
     <>
       <div className={ui.pageContent}>
-        <div className="flex w-full items-center justify-between">
-          <div className="flex flex-col gap-3">
-            <nav className={ui.breadcrumb}>
-              <button
-                className={ui.breadcrumbLink}
-                onClick={() => void navigate({ to: "/purchase-orders" })}
-              >
+        <div className="flex w-full items-center justify-between gap-4 max-sm:flex-col max-sm:items-stretch">
+          <div className="flex min-w-0 flex-col gap-3">
+            <nav className={ui.breadcrumb} aria-label="Breadcrumb">
+              <Link to="/purchase-orders" className={`${ui.breadcrumbLink} no-underline`}>
                 Daftar Purchase Order
-              </button>
-              <span className={ui.breadcrumbSep}>&rsaquo;</span>
-              <span className={ui.breadcrumbCurrent}>Edit Purchase Order</span>
-            </nav>
-            <div className="flex items-center gap-5">
-              <h1 className="text-2xl font-bold leading-8 tracking-tight text-dark-900">
+              </Link>
+              <span className={ui.breadcrumbSep} aria-hidden="true">
+                &rsaquo;
+              </span>
+              <span className={ui.breadcrumbCurrent} aria-current="page">
                 Edit Purchase Order
-              </h1>
-            </div>
+              </span>
+            </nav>
+            <h1 className="text-2xl font-bold leading-8 tracking-tight text-dark-900 [overflow-wrap:anywhere]">
+              Edit Purchase Order
+            </h1>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 max-sm:*:flex-1">
             {step > 1 && (
-              <button className={`${ui.btnOutline} w-[148px]`} onClick={() => setStep(step - 1)}>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M19 12H5M12 5l-7 7 7 7" />
-                </svg>{" "}
-                Kembali
+              <button
+                type="button"
+                className={`${ui.btnOutline} w-[148px] max-sm:w-auto`}
+                onClick={() => setStep(step - 1)}
+              >
+                {arrowIcon} Kembali
               </button>
             )}
             {step < steps.length && (
               <button
-                className={`${ui.btnPrimary} w-[148px]`}
+                type="button"
+                className={`${ui.btnPrimary} w-[148px] max-sm:w-auto`}
                 onClick={() => setStep(step + 1)}
-                disabled={isNextDisabled}
+                disabled={!hydrated}
               >
-                Lanjut{" "}
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="-scale-x-100"
-                >
-                  <path d="M19 12H5M12 5l-7 7 7 7" />
-                </svg>
+                Lanjut <span className="inline-flex -scale-x-100">{arrowIcon}</span>
               </button>
             )}
             {step === steps.length && (
               <button
-                className={`${ui.btnPrimary} w-[148px]`}
-                disabled={!isTenggatWaktuFilled || !hasContent || updateMutation.isPending}
-                onClick={() => {
-                  if (!hasNumericPoId || !poDetail) return
-                  const items: PoItemInput[] = products.map((p) => ({
-                    quotationItemId: p.quotationItemId,
-                    offeredItemId: p.itemId,
-                    itemName: p.requestedNama || p.nama,
-                    itemCode: p.requestedKodeImpa || p.kodeImpa || undefined,
-                    qty: String(p.jumlah),
-                    unitId: unitIdByCode.get(p.satuan.toUpperCase()),
-                    sellingPrice: String(p.hargaJual),
-                    costPrice: String(p.hargaBeli),
-                  }))
-                  const shipDays = Number(shippingTime)
-                  const input: PoUpdateItemsInput = {
-                    discountPct: String(discountPct),
-                    shippingAddress: shippingAddress || undefined,
-                    shippingDays: Number.isFinite(shipDays) && shipDays > 0 ? shipDays : undefined,
-                    shippingCost: shippingCost || undefined,
-                    items,
-                  }
-                  updateMutation.mutate(
-                    { id: numericPoId, input, rowVersion: poDetail.rowVersion },
-                    {
-                      onSuccess: () =>
-                        void navigate({ to: "/purchase-orders/$id", params: { id: poId } }),
-                    },
-                  )
-                }}
+                type="button"
+                className={`${ui.btnPrimary} w-[148px] max-sm:w-auto`}
+                disabled={!hydrated || !hasContent || updateMutation.isPending}
+                onClick={() => void handleSave()}
               >
                 {updateMutation.isPending ? "Menyimpan..." : "Simpan"}
               </button>
@@ -290,14 +245,17 @@ export default function PurchaseOrderEdit({ poId }: PurchaseOrderEditProps) {
           </div>
         </div>
 
-        <div className="flex w-full items-start">
+        <ol className="m-0 flex w-full list-none items-start p-0">
           {steps.map((s, i) => {
             const isActive = i === step - 1
             return (
-              <div key={s.n} className="contents">
-                <div className="flex flex-col items-center gap-2">
+              <li key={s.n} className="contents">
+                <div
+                  className="flex flex-col items-center gap-2"
+                  aria-current={isActive ? "step" : undefined}
+                >
                   <div
-                    className={`flex h-10 w-[162px] items-center justify-center rounded-lg transition-all duration-300 ease-[ease] ${
+                    className={`flex h-10 w-[162px] items-center justify-center rounded-lg transition-all duration-300 ease-[ease] motion-reduce:transition-none max-sm:w-12 ${
                       isActive
                         ? "bg-primary-700 opacity-100 shadow-[0px_10px_15px_-3px_rgba(109,40,217,0.2),0px_4px_6px_-4px_rgba(109,40,217,0.2)]"
                         : "bg-dark-200 opacity-50"
@@ -318,28 +276,21 @@ export default function PurchaseOrderEdit({ poId }: PurchaseOrderEditProps) {
                   </span>
                 </div>
                 {i < steps.length - 1 && (
-                  <div key={`line-${i}`} className="mt-5 h-0.5 flex-1 bg-[rgba(203,213,225,0.3)]" />
+                  <div
+                    aria-hidden="true"
+                    className="mt-5 h-0.5 min-w-2 flex-1 bg-[rgba(203,213,225,0.3)]"
+                  />
                 )}
-              </div>
+              </li>
             )
           })}
-        </div>
+        </ol>
 
         {step === 1 && (
-          <Step1Client
-            search={search}
-            setSearch={setSearch}
-            filteredClients={filteredClients}
-            selectedClient={selectedClient}
-            setSelectedClient={setSelectedClient}
-            setShowClientAdd={setShowClientAdd}
-          />
-        )}
-        {step === 2 && (
           <Step2Product
             products={products}
-            deleteProduct={deleteProduct}
-            setEditingProduct={setEditingProduct}
+            deleteProduct={(id) => setProducts((prev) => prev.filter((p) => p.id !== id))}
+            setEditingProduct={(p) => setEditingId(p?.id ?? null)}
             setShowProductAdd={setShowProductAdd}
             prodPageSize={prodPageSize}
             setProdPageSize={setProdPageSize}
@@ -359,12 +310,12 @@ export default function PurchaseOrderEdit({ poId }: PurchaseOrderEditProps) {
             onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
           />
         )}
-        {step === 3 && (
+        {step === 2 && (
           <Step3Shipping
             shippingAddress={shippingAddress}
-            setShippingAddress={setShippingAddress}
+            setShippingAddress={changeAddress}
             shippingTime={shippingTime}
-            setShippingTime={setShippingTime}
+            setShippingTime={changeTime}
             shippingCost={shippingCost}
             setShippingCost={setShippingCost}
             isAlamatFilled={isAlamatFilled}
@@ -372,7 +323,7 @@ export default function PurchaseOrderEdit({ poId }: PurchaseOrderEditProps) {
             formatRp={formatRp}
           />
         )}
-        {step === 4 && (
+        {step === 3 && (
           <Step4Summary
             jatuhTempo={jatuhTempo}
             setJatuhTempo={setJatuhTempo}
@@ -408,82 +359,44 @@ export default function PurchaseOrderEdit({ poId }: PurchaseOrderEditProps) {
           setShowDiscountModal(false)
         }}
       />
-      <ClientAdd
-        open={showClientAdd}
-        onOpenChange={setShowClientAdd}
-        onSuccess={() => {
-          setShowClientAdd(false)
-          setStep(2)
-        }}
-      />
       <ProductAdd
         open={showProductAdd}
         initialData={editingProduct}
         onOpenChange={(open) => {
           setShowProductAdd(open)
-          if (!open) setEditingProduct(null)
+          if (!open) setEditingId(null)
         }}
         onSuccess={(data) => {
-          const splitOffer = (s: string): { kode: string; nama: string } => {
-            const trimmed = s.trim()
-            if (!trimmed) return { kode: "", nama: "" }
-            const [first, ...rest] = trimmed.split(/\s*-\s*/)
-            if (rest.length > 0 && /^\d+$/.test(first)) {
-              return { kode: first, nama: rest.join(" - ") }
-            }
-            return { kode: "", nama: trimmed }
-          }
           const offer = splitOffer(data.kodeImpaNama)
-          const nama = offer.nama
-          const kodeImpa = offer.kode
-          const reqSplit = splitOffer(data.requestedKodeImpaNama)
-          const requestedNama = reqSplit.nama || nama
-          const requestedKodeImpa = reqSplit.kode
-
+          const req = splitOffer(data.requestedKodeImpaNama)
+          const fields = {
+            itemId: data.itemId,
+            vendorId: data.vendorId,
+            vendorProductId: data.vendorProductId,
+            nama: offer.nama,
+            kodeImpa: offer.kode,
+            requestedNama: req.nama || offer.nama,
+            requestedKodeImpa: req.kode,
+            vendor: data.namaVendor,
+            jumlah: Number(data.jumlahProduk) || 1,
+            satuan: data.satuan,
+            hargaBeli: Number(data.hargaBeli) || 0,
+            hargaJual: Number(data.hargaJual) || 0,
+          }
           if (editingProduct) {
+            // Stored fields ride along on the touched line.
             setProducts((prev) =>
               prev.map((p) =>
-                p.id === editingProduct.id
-                  ? {
-                      ...p,
-                      itemId: data.itemId,
-                      vendorId: data.vendorId,
-                      vendorProductId: data.vendorProductId,
-                      nama,
-                      kodeImpa,
-                      requestedNama,
-                      requestedKodeImpa,
-                      vendor: data.namaVendor,
-                      jumlah: Number(data.jumlahProduk) || 1,
-                      satuan: data.satuan,
-                      hargaBeli: Number(data.hargaBeli) || 0,
-                      hargaJual: Number(data.hargaJual) || 0,
-                    }
-                  : p,
+                p.id === editingProduct.id ? { ...p, ...fields, touched: true } : p,
               ),
             )
           } else {
-            const nextId = products.reduce((m, p) => Math.max(m, p.id), 0) + 1
             setProducts((prev) => [
               ...prev,
-              {
-                id: nextId,
-                itemId: data.itemId,
-                vendorId: data.vendorId,
-                vendorProductId: data.vendorProductId,
-                nama,
-                kodeImpa,
-                requestedNama,
-                requestedKodeImpa,
-                vendor: data.namaVendor,
-                jumlah: Number(data.jumlahProduk) || 1,
-                satuan: data.satuan,
-                hargaBeli: Number(data.hargaBeli) || 0,
-                hargaJual: Number(data.hargaJual) || 0,
-              },
+              { id: prev.reduce((m, p) => Math.max(m, p.id), 0) + 1, ...fields },
             ])
           }
-          setEditingProduct(null)
+          setEditingId(null)
         }}
       />
     </>

@@ -8,6 +8,7 @@ import {
 } from "@/lib/api-client"
 import type {
   PoBackendStatus,
+  PoStatusEvent,
   PoUpdateItemsInput,
   PresignDownload,
   PresignUpload,
@@ -58,12 +59,27 @@ export async function getByQuotation(quotationId: number): Promise<PurchaseOrder
   )
 }
 
-export async function changeStatus(id: number, status: PoBackendStatus): Promise<void> {
+// Note is required for CANCELLED.
+export async function changeStatus(
+  id: number,
+  status: PoBackendStatus,
+  note?: string,
+): Promise<void> {
   await apiRequest<void>({
     path: `/purchase-orders/${id}/status`,
     method: "PATCH",
-    body: { status },
+    body: note ? { status, note } : { status },
   })
+}
+
+// Status timeline, oldest first.
+export async function listHistory(id: number): Promise<PoStatusEvent[]> {
+  return apiRequest<PoStatusEvent[]>({ path: `/purchase-orders/${id}/history` })
+}
+
+// Detach the file; UPLOADED returns to PENDING.
+export async function removeFile(id: number): Promise<void> {
+  await apiRequest<void>({ path: `/purchase-orders/${id}/file`, method: "DELETE" })
 }
 
 export async function updateFile(
@@ -93,11 +109,13 @@ export async function presignDownload(id: number): Promise<PresignDownload> {
 export async function updateDetails(
   id: number,
   payload: { poNumber: string; poDate: string },
+  rowVersion: number,
 ): Promise<void> {
   await apiRequest<void>({
     path: `/purchase-orders/${id}/details`,
     method: "PATCH",
     body: payload,
+    headers: { "If-Match": String(rowVersion) },
   })
 }
 
