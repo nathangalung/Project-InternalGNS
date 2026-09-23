@@ -128,8 +128,7 @@ export default function UserList({ onViewDetail }: UserListProps) {
             <thead>
               <tr className={ui.theadRow}>
                 <th
-                  className={`${ui.thCenter} cursor-pointer`}
-                  style={{ width: 200 }}
+                  className={`${ui.thCenter} w-[200px] cursor-pointer`}
                   onClick={() => toggleSort("name")}
                 >
                   <div className="flex items-center justify-center gap-1.5">
@@ -137,18 +136,11 @@ export default function UserList({ onViewDetail }: UserListProps) {
                     <SortIcon direction={sortKey === "name" ? sortDir : null} />
                   </div>
                 </th>
-                <th className={ui.thCenter} style={{ width: 220 }}>
-                  Email
-                </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Peran
-                </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Status
-                </th>
+                <th className={`${ui.thCenter} w-[220px]`}>Email</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Peran</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Status</th>
                 <th
-                  className={`${ui.thCenter} cursor-pointer`}
-                  style={{ width: 160 }}
+                  className={`${ui.thCenter} w-[160px] cursor-pointer`}
                   onClick={() => toggleSort("createdAt")}
                 >
                   <div className="flex items-center justify-center gap-1.5">
@@ -156,9 +148,7 @@ export default function UserList({ onViewDetail }: UserListProps) {
                     <SortIcon direction={sortKey === "createdAt" ? sortDir : null} />
                   </div>
                 </th>
-                <th className={ui.thCenter} style={{ width: 80 }}>
-                  Aksi
-                </th>
+                <th className={`${ui.thCenter} w-[80px]`}>Aksi</th>
               </tr>
             </thead>
             <tbody>
