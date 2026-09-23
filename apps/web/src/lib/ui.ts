@@ -36,7 +36,7 @@ const pageActionsBase = "flex items-center max-sm:w-full max-sm:flex-wrap"
 
 // Shared button shell.
 //
-// Every variant carries a 1px border so primary, outline and ghost buttons
+// Every variant carries a 1px border so primary and outline buttons
 // share one height when they sit side by side in a header.
 const btnBase = `inline-flex items-center justify-center gap-2 rounded-md border py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`
 
@@ -55,8 +55,6 @@ export const ui = {
 
   // Layout; one page gap
   pageContent: pageContentBase,
-  // Deprecated alias, same 24px gap.
-  pageContentLoose: pageContentBase,
   pageHeader: "flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-3",
   pageActions: `${pageActionsBase} gap-3`,
   pageActionsTight: `${pageActionsBase} gap-2.5`,
@@ -67,7 +65,6 @@ export const ui = {
   // Buttons
   btnPrimary: `${btnBase} border-transparent bg-origin-border ${gradientPrimary} px-6 font-bold text-white shadow-sm hover:opacity-90 motion-safe:active:scale-[0.98]`,
   btnOutline: `${btnBase} border-primary-700/20 bg-white px-6 font-bold text-primary-700 hover:bg-primary-50`,
-  btnGhost: `${btnBase} border-transparent px-3 font-medium text-dark-500 hover:bg-dark-100`,
   // Table row icon button, from the list screens
   iconAction: `inline-flex items-center rounded-sm p-1 text-primary-600 transition hover:bg-primary-700/[0.08] ${focusRing}`,
 
@@ -77,9 +74,6 @@ export const ui = {
   entityLinkMuted: `rounded-sm text-inherit no-underline underline-offset-2 transition-colors hover:text-primary-700 hover:underline ${focusRing}`,
 
   // Form controls
-  input: `w-full rounded-lg border-[1.5px] border-transparent bg-dark-100 px-4 py-2.5 text-sm text-dark-900 outline-none transition placeholder:text-dark-400 ${fieldFocus}`,
-  label: "mb-2 block text-overline font-semibold uppercase tracking-[0.06em] text-dark-600",
-
   // Select trigger, faithful to ca-select-btn
   selectBtn: `flex w-full items-center justify-between rounded-md border-[1.5px] border-transparent bg-dark-200 px-4 py-3 font-sans text-sm font-normal text-dark-900 outline-none transition-[border-color] duration-200 ${fieldFocus} ${disabledField}`,
 
@@ -93,7 +87,6 @@ export const ui = {
   // Table (values kept faithful to the legacy .tbl-* classes)
   tableWrap: "overflow-x-auto rounded-md bg-white",
   theadRow: "bg-dark-100",
-  th: "px-5 py-4 text-left align-middle text-overline font-bold uppercase tracking-[0.05em] whitespace-nowrap text-[#4A4455]",
   thCenter:
     "px-5 py-4 text-center align-middle text-overline font-bold uppercase tracking-[0.05em] whitespace-nowrap text-[#4A4455]",
   tr: "border-t border-dark-200 transition hover:bg-primary-50",
