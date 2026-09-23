@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"strings"
 	"time"
 
@@ -232,12 +231,55 @@ type updatePrecheck struct {
 	OtherActiveSuperadmin bool `db:"other_active_superadmin"`
 }
 
-func (r *Repo) Update(ctx context.Context, id int64, req UpdateUserRequest, actorID int64) (User, error) {
-	email := normalizeEmail(req.Email)
+// ErrNoTx marks an executor that cannot open a transaction, so the guard
+// could not be serialised.
+var ErrNoTx = errors.New("users: executor cannot begin a transaction")
 
+// inTx runs fn on a repo bound to one transaction. Under a pool that is a
+// real transaction; under a caller's pgx.Tx it is a savepoint, so a failure
+// here leaves the caller's transaction usable.
+func (r *Repo) inTx(ctx context.Context, fn func(q *Repo) error) error {
+	b, ok := r.db.(db.TxBeginner)
+	if !ok {
+		return ErrNoTx
+	}
+	tx, err := b.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin user tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
+	if err := fn(&Repo{db: tx, store: r.store}); err != nil {
+		return err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit user tx: %w", err)
+	}
+	return nil
+}
+
+// Update runs the email check, the last-superadmin guard, the write and the
+// session revocation as one unit behind the guard lock. Stays READ
+// COMMITTED on purpose: each statement after the lock sees the state the
+// previous holder committed, which a REPEATABLE READ snapshot would not.
+func (r *Repo) Update(ctx context.Context, id int64, req UpdateUserRequest, actorID int64) (User, error) {
+	var out User
+	err := r.inTx(ctx, func(q *Repo) error {
+		u, err := q.update(ctx, id, req, actorID)
+		out = u
+		return err
+	})
+	return out, err
+}
+
+func (r *Repo) update(ctx context.Context, id int64, req UpdateUserRequest, actorID int64) (User, error) {
+	if _, err := r.db.Exec(ctx, r.store.Get("users.superadmin_guard_lock")); err != nil {
+		return User{}, fmt.Errorf("take superadmin guard: %w", err)
+	}
+
+	email := normalizeEmail(req.Email)
 	var count int64
 	if err := r.db.QueryRow(ctx, r.store.Get("users.exists_email_other"), email, id).Scan(&count); err != nil {
-		return User{}, err
+		return User{}, fmt.Errorf("check email: %w", err)
 	}
 	if count > 0 {
 		return User{}, ErrEmailTaken
@@ -247,12 +289,6 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateUserRequest, acto
 	if err != nil {
 		return User{}, err
 	}
-	// Enforced here rather than in a trigger: the one migration this change
-	// ships is NO TRANSACTION (CONCURRENTLY), so adding DDL to it risks
-	// partial state, and a trigger's SQLSTATE would need a new mapping in
-	// shared/httperr to reach the client as RFC 7807. Residual race: two
-	// concurrent demotes can both read other_active_superadmin = false and
-	// pass. Closing that needs the caller-owned transaction seam (audit #17).
 	losingLastSuperadmin := prior.Role == RoleSuperadmin && prior.IsActive &&
 		!prior.OtherActiveSuperadmin &&
 		(req.Role != RoleSuperadmin || !req.IsActive)
@@ -264,25 +300,27 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateUserRequest, acto
 		id, strings.TrimSpace(req.Name), email, req.Role, req.IsActive, actorID,
 	)
 	if err != nil {
-		return User{}, err
+		return User{}, fmt.Errorf("update user: %w", err)
 	}
 	u, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[User])
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, ErrNotFound
 	}
+	// The email check cannot see a concurrent insert; the index can.
+	if isUniqueViolation(err) {
+		return User{}, ErrEmailTaken
+	}
 	if err != nil {
-		return User{}, err
+		return User{}, fmt.Errorf("update user: %w", err)
 	}
 
 	// A role change or a deactivation must not leave live sessions behind; a
-	// plain rename is not security-relevant, so it keeps them.
+	// plain rename is not security-relevant, so it keeps them. Inside the
+	// transaction, so a failed revoke undoes the change and a retry redoes
+	// both.
 	if prior.Role != u.Role || (prior.IsActive && !u.IsActive) {
 		if err := r.revokeRefreshTokens(ctx, id); err != nil {
-			// The update already committed. A 500 here would send the admin
-			// into a retry whose precheck sees no change and so revokes
-			// nothing; report success and log the sessions left standing.
-			slog.ErrorContext(ctx, "revoke refresh tokens after user update",
-				"error", err, "user_id", id)
+			return User{}, err
 		}
 	}
 	return u, nil
@@ -293,21 +331,21 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateUserRequest, acto
 func (r *Repo) precheck(ctx context.Context, id int64) (updatePrecheck, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("users.update_precheck"), id)
 	if err != nil {
-		return updatePrecheck{}, err
+		return updatePrecheck{}, fmt.Errorf("read user precheck: %w", err)
 	}
 	p, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[updatePrecheck])
 	if errors.Is(err, pgx.ErrNoRows) {
 		return updatePrecheck{}, ErrNotFound
 	}
-	return p, err
+	if err != nil {
+		return updatePrecheck{}, fmt.Errorf("read user precheck: %w", err)
+	}
+	return p, nil
 }
 
 // revokeRefreshTokens ends every live session for a user after a
-// security-relevant credential change; without it a stolen refresh token
-// keeps rotating for the full refresh window after a password reset.
-// Runs after the write rather than inside it: sharing the caller's
-// transaction needs the DI seam from audit #17. The auth query is reached
-// through the store because auth already imports users.
+// security-relevant credential change. The auth query is reached through
+// the store because auth already imports users.
 func (r *Repo) revokeRefreshTokens(ctx context.Context, id int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("auth.refresh_revoke_user"), id, "admin")
 	if err != nil {
@@ -316,23 +354,21 @@ func (r *Repo) revokeRefreshTokens(ctx context.Context, id int64) error {
 	return nil
 }
 
+// UpdatePassword swaps the hash and ends every session in one transaction:
+// a reset that kept a stolen refresh token alive would be worse than none.
 func (r *Repo) UpdatePassword(ctx context.Context, id int64, newPassword string, actorID int64) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return fmt.Errorf("hash password: %w", err)
 	}
-
-	tag, err := r.db.Exec(ctx, r.store.Get("users.update_password"),
-		string(hash), actorID, id,
-	)
-	if err != nil {
-		return err
-	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
-	}
-	// Surfaced, not logged: a swallowed failure leaves the attacker's stolen
-	// token alive behind a password the admin believes is now safe. The retry
-	// is harmless (re-hash, re-revoke).
-	return r.revokeRefreshTokens(ctx, id)
+	return r.inTx(ctx, func(q *Repo) error {
+		tag, err := q.db.Exec(ctx, q.store.Get("users.update_password"), string(hash), actorID, id)
+		if err != nil {
+			return fmt.Errorf("update password: %w", err)
+		}
+		if tag.RowsAffected() == 0 {
+			return ErrNotFound
+		}
+		return q.revokeRefreshTokens(ctx, id)
+	})
 }

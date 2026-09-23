@@ -27,7 +27,7 @@ func TestRepo_ErrorPaths(t *testing.T) {
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
 	err = r.UpdatePassword(ctx, 1, "newpass", 1)
-	assert.ErrorIs(t, err, testutil.ErrFake)
+	assert.ErrorIs(t, err, users.ErrNoTx)
 }
 
 // bcrypt rejects >72 bytes.

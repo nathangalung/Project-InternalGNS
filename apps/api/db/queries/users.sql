@@ -99,3 +99,9 @@ WHERE id = $1;
 SELECT COUNT(*)
 FROM users
 WHERE LOWER(email) = LOWER($1) AND id <> $2;
+
+-- name: users.superadmin_guard_lock
+-- Serialises every user update behind one transaction-scoped lock, so the
+-- last-superadmin precheck and the write it guards cannot interleave with a
+-- concurrent demotion or deactivation. Released on commit or rollback.
+SELECT pg_advisory_xact_lock(hashtext('users_superadmin_guard')::bigint);
