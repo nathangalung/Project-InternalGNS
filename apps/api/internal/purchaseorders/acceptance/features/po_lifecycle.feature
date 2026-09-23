@@ -50,6 +50,22 @@ Feature: Purchase order lifecycle
     When the user uploads a PO file with empty filename
     Then the response status is 422
 
+  Scenario: Reject a file key that escapes the PO folder
+    Given an accepted quotation
+    When the user attaches the object key "../../etc/x"
+    Then the response status is 422
+    And the error rejects the object key
+    When the user reads the PO by quotation
+    Then the PO has no attached file
+
+  Scenario: Reject a file uploaded for another PO
+    Given an accepted quotation
+    When the user attaches the file uploaded for another PO
+    Then the response status is 422
+    And the error rejects the object key
+    When the user reads the PO by quotation
+    Then the PO has no attached file
+
   Scenario: Delivered PO auto-creates draft invoice
     Given an accepted quotation
     When the user transitions the PO through "UPLOADED,ON_PROGRESS,DELIVERED"

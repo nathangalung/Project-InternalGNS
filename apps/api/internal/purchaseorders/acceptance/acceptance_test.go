@@ -326,9 +326,53 @@ func (s *scenarioState) lastTransitionSucceeds() error {
 	return nil
 }
 
+// Key shaped like storage.BuildObjectKey output.
 func (s *scenarioState) uploadPOFile(name string) error {
-	body := purchaseorders.UpdateFileRequest{FileName: name, FileSize: 1024, ObjectKey: "data:application/pdf;base64,"}
+	return s.attachObjectKey(fmt.Sprintf("po/%d/1-%s", s.poID, name))
+}
+
+func (s *scenarioState) attachObjectKey(key string) error {
+	body := purchaseorders.UpdateFileRequest{FileName: "po.pdf", FileSize: 1024, ObjectKey: key}
 	return s.sendRequest(http.MethodPatch, "/purchase-orders/"+strconv.FormatInt(s.poID, 10)+"/file", body)
+}
+
+// Upload made for a second PO.
+func (s *scenarioState) attachOtherPOKey() error {
+	poID, quotationID := s.poID, s.quotationID
+	if err := s.acceptedQuotation(); err != nil {
+		return err
+	}
+	otherID := s.poID
+	s.poID, s.quotationID = poID, quotationID
+	if otherID == poID {
+		return fmt.Errorf("second quotation reused PO %d", poID)
+	}
+	return s.attachObjectKey(fmt.Sprintf("po/%d/1-po.pdf", otherID))
+}
+
+func (s *scenarioState) objectKeyRejected() error {
+	var problem struct {
+		Fields map[string]string `json:"fields"`
+	}
+	if err := json.Unmarshal(s.body, &problem); err != nil {
+		return err
+	}
+	const want = "Berkas tidak dikenali. Unggah ulang berkasnya lalu simpan kembali."
+	if got := problem.Fields["objectKey"]; got != want {
+		return fmt.Errorf("want objectKey %q got %q body=%s", want, got, s.body)
+	}
+	return nil
+}
+
+func (s *scenarioState) poHasNoFile() error {
+	var po purchaseorders.PurchaseOrder
+	if err := json.Unmarshal(s.body, &po); err != nil {
+		return err
+	}
+	if po.FileURL != nil || po.FileName != nil {
+		return fmt.Errorf("want no file got %s", s.body)
+	}
+	return nil
 }
 
 func (s *scenarioState) uploadPOFileEmptyName() error {
@@ -518,6 +562,10 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the user tries to transition the PO to "([^"]+)"$`, state.tryPOTransition)
 		sc.Step(`^the user uploads a PO file named "([^"]+)"$`, state.uploadPOFile)
 		sc.Step(`^the user uploads a PO file with empty filename$`, state.uploadPOFileEmptyName)
+		sc.Step(`^the user attaches the object key "([^"]+)"$`, state.attachObjectKey)
+		sc.Step(`^the user attaches the file uploaded for another PO$`, state.attachOtherPOKey)
+		sc.Step(`^the error rejects the object key$`, state.objectKeyRejected)
+		sc.Step(`^the PO has no attached file$`, state.poHasNoFile)
 		sc.Step(`^the invoice status is "([^"]+)"$`, state.invoiceStatusEquals)
 		sc.Step(`^the user edits PO items with discount "([^"]*)" and selling price "([^"]*)"$`, state.editPOItems)
 		sc.Step(`^the user lists invoice items by quotation$`, state.listInvoiceItems)

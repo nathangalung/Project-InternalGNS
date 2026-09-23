@@ -17,6 +17,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
+	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
 type Handler struct {
@@ -168,8 +169,26 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "required"}))
 		return
 	}
-	if strings.TrimSpace(req.ObjectKey) == "" {
+	req.ObjectKey = strings.TrimSpace(req.ObjectKey)
+	if req.ObjectKey == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"objectKey": "required"}))
+		return
+	}
+	// Owner first, so a missing PO reads as 404.
+	if _, err := h.repo.GetByID(r.Context(), id); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			httperr.Render(w, httperr.NotFound("purchase order not found"))
+			return
+		}
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	// The key comes from the client, so it must address an upload made for
+	// this PO rather than any object in the bucket or a traversal path.
+	if err := storage.ValidateOwnedKey(storage.BucketPODocs, "po", id, req.ObjectKey); err != nil {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{
+			"objectKey": "Berkas tidak dikenali. Unggah ulang berkasnya lalu simpan kembali.",
+		}))
 		return
 	}
 
