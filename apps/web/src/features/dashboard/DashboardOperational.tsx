@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router"
 import { useMemo, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
 import EntityLink from "@/components/shared/EntityLink"
@@ -6,9 +7,7 @@ import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
-import { toTableRow } from "@/features/quotations/adapters"
 import { useQuotations } from "@/features/quotations/hooks"
-import { statusConfig } from "@/features/quotations/QuotationList/helpers"
 import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
 import { formatNumber as formatId } from "@/lib/format"
 import { pill, ui } from "@/lib/ui"
@@ -16,15 +15,13 @@ import DashboardFinancialFilter, {
   type DashboardFilterValues,
   MONTH_LABELS,
 } from "./DashboardFinancialFilter"
+import { toRecentQuotation } from "./helpers"
+import StatusTiles from "./StatusTiles"
 import TrendChart, { CHART_MONTHS } from "./TrendChart"
 
 const chartTabs = [{ label: "Quotation", metric: "quotation" as const }]
 
-type DashboardOperationalProps = {
-  onViewAllQuotations?: () => void
-}
-
-export default function DashboardOperational({ onViewAllQuotations }: DashboardOperationalProps) {
+export default function DashboardOperational() {
   const [activeTab, setActiveTab] = useState("Quotation")
   const [showFilter, setShowFilter] = useState(false)
   const [filters, setFilters] = useState<DashboardFilterValues | null>(null)
@@ -52,20 +49,15 @@ export default function DashboardOperational({ onViewAllQuotations }: DashboardO
   }, [tsQuotation.data, baseYear, selectedMonth])
 
   const totalQuotation = summary?.totalQuotations ?? 0
-  const totalRejected = summary?.totalQuotationsRejected ?? 0
   const totalPo = summary?.totalPo ?? 0
   // Dash until the summary arrives
   const fig = (text: string) => (summary ? text : "–")
 
-  const recentQuotations = useMemo(() => {
-    return (rawQuotations?.rows ?? []).slice(0, 5).map((q) => {
-      const row = toTableRow(q)
-      return {
-        ...row,
-        productCount: 0, // Not in list payload; left blank to avoid extra fetch.
-      }
-    })
-  }, [rawQuotations])
+  const statusLabels = summary?.quotationStatuses
+  const recentQuotations = useMemo(
+    () => (rawQuotations?.rows ?? []).slice(0, 5).map((q) => toRecentQuotation(q, statusLabels)),
+    [rawQuotations, statusLabels],
+  )
 
   return (
     <>
@@ -89,11 +81,13 @@ export default function DashboardOperational({ onViewAllQuotations }: DashboardO
           />
         )}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <StatCard label="Total Quotation" value={fig(formatId(totalQuotation))} />
-          <StatCard label="Total Quotation Ditolak" value={fig(formatId(totalRejected))} />
-          <StatCard label="Total Purchase Order" value={fig(formatId(totalPo))} />
+          <StatCard label="Total Purchase Order Aktif" value={fig(formatId(totalPo))} />
         </div>
+
+        <StatusTiles title="Status Quotation" items={summary?.quotationStatuses} />
+        <StatusTiles title="Status Purchase Order" items={summary?.poStatuses} />
 
         <div className={ui.panel}>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -120,9 +114,9 @@ export default function DashboardOperational({ onViewAllQuotations }: DashboardO
             <h3 className="text-lg font-bold leading-7 tracking-[-0.45px] text-[#191C1E]">
               Quotation Terkini
             </h3>
-            <button type="button" className={ui.btnPrimary} onClick={onViewAllQuotations}>
+            <Link to="/quotations" className={`${ui.btnPrimary} no-underline`}>
               Lihat Semua
-            </button>
+            </Link>
           </div>
 
           <table className="w-full border-collapse">
@@ -142,28 +136,27 @@ export default function DashboardOperational({ onViewAllQuotations }: DashboardO
               {!quotationsPending && recentQuotations.length === 0 && (
                 <TableEmptyRow colSpan={7}>Belum ada Quotation.</TableEmptyRow>
               )}
-              {recentQuotations.map((row) => {
-                const style = statusConfig[row.status]
-                return (
-                  <tr key={row.id} className={ui.tr}>
-                    <td className={`${ui.tdCenter} font-bold text-primary-700`}>
-                      <EntityLink kind="quotation" id={Number(row.id)}>
-                        {row.displayNo}
-                      </EntityLink>
-                    </td>
-                    <td className={ui.tdCenter}>{row.version}</td>
-                    <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>{row.client}</td>
-                    <td className={ui.tdCenter}>{row.date}</td>
-                    <td className={ui.tdCenter}>{row.productCount || "-"}</td>
-                    <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>Rp{row.total}</td>
-                    <td className={ui.tdCenter}>
-                      <StatusBadge bg={style.bg} color={style.color}>
-                        {row.status}
-                      </StatusBadge>
-                    </td>
-                  </tr>
-                )
-              })}
+              {recentQuotations.map((row) => (
+                <tr key={row.id} className={ui.tr}>
+                  <td className={`${ui.tdCenter} font-bold text-primary-700`}>
+                    <EntityLink kind="quotation" id={row.id}>
+                      {row.quotationNo}
+                    </EntityLink>
+                  </td>
+                  <td className={ui.tdCenter}>{row.version}</td>
+                  {/* List payload has no client id */}
+                  <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>{row.client}</td>
+                  <td className={ui.tdCenter}>{row.date}</td>
+                  {/* Not in list payload */}
+                  <td className={ui.tdCenter}>-</td>
+                  <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>{row.total}</td>
+                  <td className={ui.tdCenter}>
+                    <StatusBadge bg={row.badge.bg} color={row.badge.color}>
+                      {row.label}
+                    </StatusBadge>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

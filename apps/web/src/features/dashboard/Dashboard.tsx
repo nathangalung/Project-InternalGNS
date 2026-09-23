@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { type FocusEvent, useMemo, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
 import StatCard from "@/components/shared/StatCard"
@@ -15,10 +15,11 @@ import {
   formatRupiahAxis as formatRpAxis,
   toNum,
 } from "@/lib/format"
-import { roleCanAccess, type Section } from "@/lib/rbac"
+import { roleCanAccess } from "@/lib/rbac"
 import { pill, ui } from "@/lib/ui"
 import type { DashboardMetric } from "@/types/api"
 import { YEAR_OPTIONS } from "./DashboardFinancialFilter"
+import { type CardKey, cardRoute, statusCount } from "./helpers"
 import TrendChart from "./TrendChart"
 
 const chartTabs: { label: string; metric: DashboardMetric }[] = [
@@ -31,13 +32,6 @@ const chartTabs: { label: string; metric: DashboardMetric }[] = [
 
 const RP_METRICS: ReadonlyArray<string> = ["Pendapatan", "Laba Bersih", "PPN"]
 
-// Card targets and their sections.
-const CARD_TARGETS = {
-  invoices: { to: "/invoices", section: "invoices" },
-  quotations: { to: "/quotations", section: "quotation" },
-  purchaseOrders: { to: "/purchase-orders", section: "purchase-orders" },
-} as const satisfies Record<string, { to: string; section: Section }>
-
 export default function Dashboard() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState("Quotation")
@@ -47,14 +41,10 @@ export default function Dashboard() {
   const { data: summary } = useDashboardSummary()
   const { exporting, exportXlsx } = useDashboardExport()
 
-  // Click handler only when reachable.
-  //
-  // A card whose list the role cannot open stays a plain figure instead of
-  // bouncing back to "/" (DASH-5).
-  const cardLink = (key: keyof typeof CARD_TARGETS) => {
-    const target = CARD_TARGETS[key]
-    if (!roleCanAccess(me?.role, target.section)) return undefined
-    return () => void navigate({ to: target.to })
+  // Click handler only when reachable
+  const cardLink = (key: CardKey) => {
+    const to = cardRoute(key, me?.role)
+    return to ? () => void navigate({ to }) : undefined
   }
 
   const thisYear = new Date().getFullYear()
@@ -94,7 +84,8 @@ export default function Dashboard() {
   const totalInvoice = summary?.totalInvoices ?? 0
   const totalPaid = summary?.totalInvoicesPaid ?? 0
   const dueSoon = summary?.invoicesDueSoon ?? 0
-  const overdue = summary?.invoicesOverdue ?? 0
+  // Tile count, one Terlambat source
+  const overdue = statusCount(summary?.invoiceStatuses, "overdue") ?? summary?.invoicesOverdue ?? 0
   // Dash until the summary arrives
   const fig = (text: string) => (summary ? text : "–")
 
@@ -186,7 +177,7 @@ export default function Dashboard() {
       {canFinance && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <StatCard
-            label="Total Pendapatan"
+            label="Total Pendapatan (DPP)"
             value={fig(formatRp(totalRevenue))}
             onClick={cardLink("invoices")}
           />
@@ -232,7 +223,7 @@ export default function Dashboard() {
           onClick={cardLink("quotations")}
         />
         <StatCard
-          label="Total Purchase Order"
+          label="Total Purchase Order Aktif"
           value={fig(formatId(totalPo))}
           onClick={cardLink("purchaseOrders")}
         />
@@ -294,31 +285,23 @@ export default function Dashboard() {
                 {fig(formatId(dueSoon))} Invoice
               </h3>
               <p className="mt-1 text-overline font-semibold uppercase tracking-[0.05em] text-accent-800/70">
-                Invoice akan segera jatuh tempo
+                Invoice segera jatuh tempo
               </p>
             </div>
-            <button
-              type="button"
-              className={ui.btnPrimary}
-              onClick={() => void navigate({ to: "/invoices" })}
-            >
+            <Link to="/invoices" className={`${ui.btnPrimary} no-underline`}>
               Tinjau
-            </button>
+            </Link>
           </div>
           <div className="flex items-center justify-between gap-4 rounded-xl border border-error/30 bg-error/10 px-6 py-6">
             <div>
               <h3 className="text-xl font-bold text-red-800">{fig(formatId(overdue))} Invoice</h3>
               <p className="mt-1 text-overline font-semibold uppercase tracking-[0.05em] text-red-700/70">
-                Invoice telah jatuh tempo
+                Invoice terlambat
               </p>
             </div>
-            <button
-              type="button"
-              className={ui.btnPrimary}
-              onClick={() => void navigate({ to: "/invoices" })}
-            >
+            <Link to="/invoices" className={`${ui.btnPrimary} no-underline`}>
               Tinjau
-            </button>
+            </Link>
           </div>
         </div>
       )}

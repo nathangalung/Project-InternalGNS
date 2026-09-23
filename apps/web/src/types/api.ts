@@ -568,6 +568,17 @@ export type DashboardSummary = {
   totalInvoicesPaid: number
   invoicesDueSoon: number
   invoicesOverdue: number
+  // One tile per status, in display order, zero-filled.
+  quotationStatuses: DashboardStatusCount[]
+  poStatuses: DashboardStatusCount[]
+  // Empty for operational
+  invoiceStatuses: DashboardStatusCount[]
+}
+
+export type DashboardStatusCount = {
+  status: string
+  label: string
+  count: number
 }
 
 export type DashboardMetric = "quotation" | "invoice" | "revenue" | "profit" | "ppn"
