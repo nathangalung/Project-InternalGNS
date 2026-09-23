@@ -143,19 +143,12 @@ WHERE id = $1
 RETURNING id;
 
 -- name: purchase_orders.update_notes
-UPDATE purchase_orders
-SET notes      = $2,
-    updated_by = $3
-WHERE id = $1
-RETURNING id;
+-- $2 is the If-Match row_version, NULL to skip the optimistic-lock guard.
+SELECT fn_update_po_notes($1::bigint, $2::int, $3::text, $4::bigint);
 
 -- name: purchase_orders.update_details
-UPDATE purchase_orders
-SET po_number  = $2,
-    po_date    = $3,
-    updated_by = $4
-WHERE id = $1
-RETURNING id;
+-- $2 is the If-Match row_version, NULL to skip the optimistic-lock guard.
+SELECT fn_update_po_details($1::bigint, $2::int, $3::text, $4::date, $5::bigint);
 
 -- name: purchase_orders.change_status
 SELECT fn_change_po_status($1::bigint, $2::text, $3::bigint);

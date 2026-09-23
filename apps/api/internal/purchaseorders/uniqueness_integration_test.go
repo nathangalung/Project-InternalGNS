@@ -70,12 +70,12 @@ func TestPurchaseOrders_ClientPoNumberScopedToClient(t *testing.T) {
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
 	const shared = "PO/CLIENT/0001"
-	require.NoError(t, repo.UpdateDetails(ctx, poID, shared, poDateFixture(), seedUserID))
+	require.NoError(t, repo.UpdateDetails(ctx, poID, shared, poDateFixture(), seedUserID, nil))
 
 	otherPoID := acceptedQuotationForCompany(t, tx, secondCompanyID)
-	require.NoError(t, repo.UpdateDetails(ctx, otherPoID, shared, poDateFixture(), seedUserID))
+	require.NoError(t, repo.UpdateDetails(ctx, otherPoID, shared, poDateFixture(), seedUserID, nil))
 
 	_, samePoID := acceptedQuotationWithPO(t, tx)
-	err := repo.UpdateDetails(ctx, samePoID, shared, poDateFixture(), seedUserID)
+	err := repo.UpdateDetails(ctx, samePoID, shared, poDateFixture(), seedUserID, nil)
 	assert.ErrorIs(t, err, purchaseorders.ErrDuplicatePoNumber)
 }

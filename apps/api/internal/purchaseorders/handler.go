@@ -186,18 +186,26 @@ func (h *Handler) UpdateNotes(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid id"))
 		return
 	}
+	ifMatch, err := httpx.ParseIfMatch(r.Header.Get("If-Match"))
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest(err.Error()))
+		return
+	}
 	var req UpdateNotesRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())
-	if err := h.repo.UpdateNotes(r.Context(), id, req.Notes, actor); err != nil {
-		if errors.Is(err, ErrNotFound) {
+	if err := h.repo.UpdateNotes(r.Context(), id, req.Notes, actor, ifMatch); err != nil {
+		switch {
+		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
-			return
+		case errors.Is(err, ErrVersionMismatch):
+			httperr.Render(w, httperr.Conflict("purchase order row_version mismatch"))
+		default:
+			httperr.RenderDBErr(w, err)
 		}
-		httperr.RenderDBErr(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -207,6 +215,11 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	ifMatch, err := httpx.ParseIfMatch(r.Header.Get("If-Match"))
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest(err.Error()))
 		return
 	}
 	var req UpdateDetailsRequest
@@ -224,12 +237,20 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())
-	if err := h.repo.UpdateDetails(r.Context(), id, strings.TrimSpace(req.PoNumber), poDate, actor); err != nil {
+	if err := h.repo.UpdateDetails(r.Context(), id, strings.TrimSpace(req.PoNumber), poDate, actor, ifMatch); err != nil {
 		switch {
 		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 		case errors.Is(err, ErrDuplicatePoNumber):
-			httperr.Render(w, httperr.Unprocessable(map[string]string{"poNumber": "already used by another PO"}))
+			httperr.Render(w, httperr.Unprocessable(map[string]string{
+				"poNumber": "sudah dipakai PO lain untuk klien ini",
+			}))
+		case errors.Is(err, ErrVersionMismatch):
+			httperr.Render(w, httperr.Conflict("purchase order row_version mismatch"))
+		// A filed invoice prints po_number and po_date, so both are read-only.
+		case errors.Is(err, ErrLocked):
+			httperr.Render(w, httperr.Conflict(
+				"Nomor dan tanggal PO tidak dapat diubah setelah invoice dikirim."))
 		default:
 			httperr.RenderDBErr(w, err)
 		}

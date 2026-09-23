@@ -48,7 +48,100 @@ CREATE UNIQUE INDEX uq_purchase_orders_quotation_id
 
 DROP INDEX idx_po_quotation;
 
+-- 4. Details and notes move behind functions so both carry an optimistic lock
+--    (P0010) and details refuse the edit once the invoice has left draft
+--    (P0013). po_number and po_date print on the invoice, so editing them
+--    after it is filed would rewrite a document already sent to the client.
+--    A cancelled invoice is void, so it does not hold the PO.
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION fn_update_po_details(
+  p_po_id     BIGINT,
+  p_if_match  INT,
+  p_po_number TEXT,
+  p_po_date   DATE,
+  p_user_id   BIGINT
+) RETURNS INT AS $$
+DECLARE
+  v_current INT;
+  v_new     INT;
+BEGIN
+  SELECT row_version INTO v_current
+  FROM purchase_orders
+  WHERE id = p_po_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Purchase order % not found', p_po_id
+      USING ERRCODE = 'P0011';
+  END IF;
+
+  IF p_if_match IS NOT NULL AND v_current <> p_if_match THEN
+    RAISE EXCEPTION 'row_version mismatch (expected %, got %)', v_current, p_if_match
+      USING ERRCODE = 'P0010';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM invoices
+    WHERE po_id = p_po_id AND status IN ('sent', 'paid', 'overdue')
+  ) THEN
+    RAISE EXCEPTION 'PO % has a filed invoice; po_number and po_date are read-only', p_po_id
+      USING ERRCODE = 'P0013';
+  END IF;
+
+  UPDATE purchase_orders
+  SET po_number  = p_po_number,
+      po_date    = p_po_date,
+      updated_by = p_user_id
+  WHERE id = p_po_id
+  RETURNING row_version INTO v_new;
+
+  RETURN v_new;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION fn_update_po_notes(
+  p_po_id    BIGINT,
+  p_if_match INT,
+  p_notes    TEXT,
+  p_user_id  BIGINT
+) RETURNS INT AS $$
+DECLARE
+  v_current INT;
+  v_new     INT;
+BEGIN
+  SELECT row_version INTO v_current
+  FROM purchase_orders
+  WHERE id = p_po_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Purchase order % not found', p_po_id
+      USING ERRCODE = 'P0011';
+  END IF;
+
+  IF p_if_match IS NOT NULL AND v_current <> p_if_match THEN
+    RAISE EXCEPTION 'row_version mismatch (expected %, got %)', v_current, p_if_match
+      USING ERRCODE = 'P0010';
+  END IF;
+
+  UPDATE purchase_orders
+  SET notes      = p_notes,
+      updated_by = p_user_id
+  WHERE id = p_po_id
+  RETURNING row_version INTO v_new;
+
+  RETURN v_new;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
+
 -- +goose Down
+
+DROP FUNCTION IF EXISTS fn_update_po_notes(BIGINT, INT, TEXT, BIGINT);
+DROP FUNCTION IF EXISTS fn_update_po_details(BIGINT, INT, TEXT, DATE, BIGINT);
 
 CREATE INDEX idx_po_quotation ON purchase_orders (quotation_id);
 DROP INDEX uq_purchase_orders_quotation_id;

@@ -346,6 +346,55 @@ func (s *scenarioState) editPOItems(discountPct, sellingPrice string) error {
 
 func int16PtrAcc(v int16) *int16 { return &v }
 
+func (s *scenarioState) editPODetails(poNumber string) error {
+	body := purchaseorders.UpdateDetailsRequest{PoNumber: poNumber, PoDate: "2026-01-15"}
+	return s.sendRequest(
+		http.MethodPatch,
+		"/purchase-orders/"+strconv.FormatInt(s.poID, 10)+"/details",
+		body,
+	)
+}
+
+// Stale If-Match must lose the race, not overwrite silently.
+func (s *scenarioState) editPODetailsStaleVersion() error {
+	body := purchaseorders.UpdateDetailsRequest{PoNumber: "PO/STALE", PoDate: "2026-01-15"}
+	return s.sendRequestWithHeaders(
+		http.MethodPatch,
+		"/purchase-orders/"+strconv.FormatInt(s.poID, 10)+"/details",
+		body,
+		map[string]string{"If-Match": "999"},
+	)
+}
+
+func (s *scenarioState) editPONotesStaleVersion() error {
+	body := purchaseorders.UpdateNotesRequest{Notes: "stale"}
+	return s.sendRequestWithHeaders(
+		http.MethodPatch,
+		"/purchase-orders/"+strconv.FormatInt(s.poID, 10)+"/notes",
+		body,
+		map[string]string{"If-Match": "999"},
+	)
+}
+
+// Move the PO's invoice to sent, which files it with the client.
+func (s *scenarioState) sendInvoice() error {
+	if err := s.readInvoiceByQuotation(); err != nil {
+		return err
+	}
+	if s.last.StatusCode != http.StatusOK {
+		return fmt.Errorf("invoice fetch want 200 got %d body=%s", s.last.StatusCode, s.body)
+	}
+	var inv invoices.Invoice
+	if err := json.Unmarshal(s.body, &inv); err != nil {
+		return err
+	}
+	return s.sendRequest(
+		http.MethodPatch,
+		"/invoices/"+strconv.FormatInt(inv.ID, 10)+"/status",
+		invoices.ChangeStatusRequest{Status: invoices.StatusSent},
+	)
+}
+
 func (s *scenarioState) invoiceStatusEquals(want string) error {
 	var inv invoices.Invoice
 	if err := json.Unmarshal(s.body, &inv); err != nil {
@@ -433,6 +482,10 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the invoice status is "([^"]+)"$`, state.invoiceStatusEquals)
 		sc.Step(`^the user edits PO items with discount "([^"]*)" and selling price "([^"]*)"$`, state.editPOItems)
 		sc.Step(`^the user lists invoice items by quotation$`, state.listInvoiceItems)
+		sc.Step(`^the user edits PO details with number "([^"]+)"$`, state.editPODetails)
+		sc.Step(`^the user edits PO details with a stale If-Match$`, state.editPODetailsStaleVersion)
+		sc.Step(`^the user edits PO notes with a stale If-Match$`, state.editPONotesStaleVersion)
+		sc.Step(`^the user sends the invoice$`, state.sendInvoice)
 		sc.Step(`^an invoice product line has unit price "([^"]+)"$`, state.invoiceProductLineUnitPriceEquals)
 	}
 }

@@ -136,30 +136,28 @@ func (r *Repo) UpdateFile(ctx context.Context, id int64, req UpdateFileRequest, 
 	return nil
 }
 
-func (r *Repo) UpdateNotes(ctx context.Context, id int64, notes string, actorID int64) error {
-	tag, err := r.db.Exec(ctx, r.store.Get("purchase_orders.update_notes"),
-		id, notes, actorID)
-	if err != nil {
-		return err
-	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
-	}
-	return nil
+// UpdateNotes rewrites the internal note.
+// ifMatch nil skips the optimistic-lock guard.
+func (r *Repo) UpdateNotes(ctx context.Context, id int64, notes string, actorID int64, ifMatch *int32) error {
+	_, err := r.db.Exec(ctx, r.store.Get("purchase_orders.update_notes"),
+		id, ifMatch, notes, actorID)
+	return classifyPgErr(err)
 }
 
-func (r *Repo) UpdateDetails(ctx context.Context, id int64, poNumber string, poDate time.Time, actorID int64) error {
-	tag, err := r.db.Exec(ctx, r.store.Get("purchase_orders.update_details"),
-		id, poNumber, poDate, actorID)
+// UpdateDetails rewrites the client PO number and date.
+// ifMatch nil skips the optimistic-lock guard; a filed invoice locks both
+// fields, which the function reports as ErrLocked.
+func (r *Repo) UpdateDetails(
+	ctx context.Context, id int64, poNumber string, poDate time.Time, actorID int64, ifMatch *int32,
+) error {
+	_, err := r.db.Exec(ctx, r.store.Get("purchase_orders.update_details"),
+		id, ifMatch, poNumber, poDate, actorID)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			return ErrDuplicatePoNumber
 		}
-		return err
-	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
+		return classifyPgErr(err)
 	}
 	return nil
 }

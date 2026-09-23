@@ -104,3 +104,24 @@ Feature: Purchase order lifecycle
     Then the response status is 200
     And the PO discount is "7.00"
     And the PO totals equal the invoice totals
+
+  Scenario: PO details are locked once the invoice is sent
+    Given an accepted quotation
+    When the user edits PO details with number "PO/KLIEN/001"
+    Then the response status is 204
+    When the user transitions the PO through "UPLOADED,ON_PROGRESS,DELIVERED"
+    Then every PO transition succeeds
+    When the user sends the invoice
+    Then the response status is 204
+    When the user edits PO details with number "PO/KLIEN/002"
+    Then the response status is 409
+
+  Scenario: A stale If-Match on PO details returns 409
+    Given an accepted quotation
+    When the user edits PO details with a stale If-Match
+    Then the response status is 409
+
+  Scenario: A stale If-Match on PO notes returns 409
+    Given an accepted quotation
+    When the user edits PO notes with a stale If-Match
+    Then the response status is 409

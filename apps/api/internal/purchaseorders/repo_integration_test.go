@@ -251,7 +251,7 @@ func TestRepo_UpdateNotes(t *testing.T) {
 	_, poID := acceptedQuotationWithPO(t, tx)
 
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
-	require.NoError(t, repo.UpdateNotes(ctx, poID, "added by test", seedUserID))
+	require.NoError(t, repo.UpdateNotes(ctx, poID, "added by test", seedUserID, nil))
 
 	po, err := repo.GetByID(ctx, poID)
 	require.NoError(t, err)
