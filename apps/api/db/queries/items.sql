@@ -89,6 +89,15 @@ WHERE id = ANY($1);
 -- name: items.match_request
 SELECT * FROM fn_match_request($1, $2);
 
+-- name: items.match_request_batch
+-- Best match per import row in one statement. Called row by row the import
+-- spent about 110 ms per line; laterally over an array the planner answers
+-- each call from bitmap scans on the trigram indexes (see migration 00055).
+-- idx is the 1-based position in $1.
+SELECT b.ord AS idx, m.item_id, m.confidence, m.source
+FROM unnest($1::text[]) WITH ORDINALITY AS b(req_text, ord)
+CROSS JOIN LATERAL fn_match_request(b.req_text, 1) m;
+
 -- name: items.list_vendors_for_item
 SELECT
     vp.id              AS vendor_product_id,

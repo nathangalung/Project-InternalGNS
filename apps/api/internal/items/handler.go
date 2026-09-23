@@ -12,7 +12,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
@@ -21,11 +20,10 @@ import (
 
 type Handler struct {
 	repo *Repo
-	tx   db.TxBeginner
 }
 
-func NewHandler(repo *Repo, tx db.TxBeginner) *Handler {
-	return &Handler{repo: repo, tx: tx}
+func NewHandler(repo *Repo) *Handler {
+	return &Handler{repo: repo}
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
@@ -303,8 +301,8 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteJSON(w, http.StatusOK, MatchRowsResponse{Rows: []MatchRowResult{}})
 		return
 	}
-	// Bound the batch: each row runs 1-3 sequential queries on one connection,
-	// so an unbounded batch holds a pool connection open indefinitely.
+	// Bound the batch: the whole import holds one transaction and one pool
+	// connection, so an unbounded batch would hold them indefinitely.
 	const maxMatchRows = 500
 	if len(req.Rows) > maxMatchRows {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{
@@ -318,96 +316,12 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	userID := deps.CurrentUserID(ctx)
-
-	// Auto-create writes one catalog row per unmatched import row, so the whole
-	// batch runs in one transaction: any row error rolls back every earlier
-	// create, leaving a retry of the same batch free of duplicates.
-	tx, err := h.tx.Begin(ctx)
+	out, err := h.repo.MatchRows(ctx, req, minScore, deps.CurrentUserID(ctx))
 	if err != nil {
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-
-	out, err := matchRows(ctx, h.repo.WithExec(tx), req, minScore, userID)
-	if err != nil {
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	if err := tx.Commit(ctx); err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(ctx, w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, MatchRowsResponse{Rows: out})
-}
-
-// matchRows resolves every import row on one executor.
-func matchRows(ctx context.Context, repo *Repo, req MatchRowsRequest, minScore float32, userID int64) ([]MatchRowResult, error) {
-	// Dedup auto-created rows within this batch by impa-or-normalized-name.
-	created := map[string]int64{}
-	out := make([]MatchRowResult, 0, len(req.Rows))
-	for i, row := range req.Rows {
-		res := MatchRowResult{Index: i, Requested: row, Source: "NONE"}
-		var itemID int64
-		var confidence float32
-		var source string
-
-		impa := strings.ToUpper(strings.TrimSpace(row.IMPACode))
-		if impa != "" {
-			id, err := repo.FindByIMPA(ctx, impa)
-			if err == nil {
-				itemID, confidence, source = id, 1.0, "IMPA_EXACT"
-			} else if !errors.Is(err, ErrNotFound) {
-				return nil, err
-			}
-		}
-
-		if itemID == 0 && strings.TrimSpace(row.Name) != "" {
-			matches, err := repo.MatchRequest(ctx, row.Name, 1)
-			if err != nil {
-				return nil, err
-			}
-			if len(matches) > 0 && matches[0].Confidence >= minScore {
-				itemID, confidence, source = matches[0].ItemID, matches[0].Confidence, matches[0].Source
-			}
-		}
-
-		// No catalog match: create a new product (empty price) when asked.
-		if itemID == 0 && req.AutoCreate {
-			name := strings.TrimSpace(row.Name)
-			if name != "" {
-				key := autoCreateKey(impa, name)
-				if existing, ok := created[key]; ok {
-					itemID, confidence, source = existing, 1.0, "CREATED"
-				} else {
-					var impaPtr *string
-					if impa != "" {
-						impaPtr = &impa
-					}
-					it, err := repo.Create(ctx, CreateItemRequest{Name: name, IMPACode: impaPtr}, userID)
-					if err != nil {
-						return nil, err
-					}
-					created[key] = it.ID
-					itemID, confidence, source = it.ID, 1.0, "CREATED"
-				}
-			}
-		}
-
-		if itemID > 0 {
-			m, err := repo.MatchWithVendorByID(ctx, itemID)
-			if err == nil {
-				res.Matched = &m
-				res.Confidence = confidence
-				res.Source = source
-			} else if !errors.Is(err, ErrNotFound) {
-				return nil, err
-			}
-		}
-		out = append(out, res)
-	}
-	return out, nil
 }
 
 func (h *Handler) ListVendorsForItem(w http.ResponseWriter, r *http.Request) {
