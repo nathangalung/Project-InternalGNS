@@ -350,6 +350,27 @@ func TestRevise_ClonesSentIntoDraft(t *testing.T) {
 	require.NoError(t, repo.ChangeStatus(ctx, orig, quotations.StatusCancelled, &note, seedUserID))
 }
 
+// What the client received stays frozen.
+func TestRevise_OriginalIsFrozen(t *testing.T) {
+	ctx, repo, _ := newRepo(t)
+	orig, err := repo.Create(ctx, sampleCreate(), seedUserID)
+	require.NoError(t, err)
+	require.NoError(t, repo.ChangeStatus(ctx, orig, quotations.StatusSent, nil, seedUserID))
+	_, err = repo.Revise(ctx, orig, nil, seedUserID)
+	require.NoError(t, err)
+	o, err := repo.GetDetail(ctx, orig)
+	require.NoError(t, err)
+
+	_, err = repo.Update(ctx, orig, quotations.UpdateRequest{
+		DiscountPct: "5",
+		Items: []quotations.CreateItem{{
+			RequestedName: "BOLT M8", Qty: "10", UnitID: seedUnitID, SellingPrice: "20000",
+		}},
+	}, seedUserID, &o.RowVersion)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "Only draft can be edited")
+}
+
 func TestRevise_NumbersFollowTheChain(t *testing.T) {
 	ctx, repo, _ := newRepo(t)
 	orig, err := repo.Create(ctx, sampleCreate(), seedUserID)
