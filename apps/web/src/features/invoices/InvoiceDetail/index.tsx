@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router"
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import ClientSummaryCard from "@/features/quotations/QuotationDetail/ClientSummaryCard"
 import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
@@ -75,6 +75,11 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
   // Profit needs real cost data.
   const hasCost = useMemo(() => (invItems ?? []).some((it) => toNum(it.costPrice) > 0), [invItems])
   const shipping = useMemo(() => invoiceItemsToShipping(invItems), [invItems])
+  // A refetch can withdraw the open step, e.g. a cancel whose Pengganti failed.
+  const offered = modal === "replace" ? inv.canReplace : actions.some((a) => a.kind === modal)
+  useEffect(() => {
+    if (modal && !offered) setModal(null)
+  }, [modal, offered])
   const busy =
     sendInvoice.isPending ||
     markPaid.isPending ||
@@ -194,7 +199,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
       />
       <HistoryCard items={history} onDownloadProof={() => void handleProofDownload()} />
 
-      {modal && (
+      {modal && offered && (
         <ActionModal
           kind={modal}
           invoiceNo={inv.invoiceNo}
