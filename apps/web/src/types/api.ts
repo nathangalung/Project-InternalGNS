@@ -230,11 +230,32 @@ export type VendorItemRow = {
 }
 
 // Quotation list, detail, and writes.
+//
+// QuotationStatus is the full server set. CanonicalStatus predates
+// cancelled and stays only for the legacy map in lib/status.ts.
+export type QuotationStatus =
+  | "draft"
+  | "sent"
+  | "revision"
+  | "accepted"
+  | "rejected"
+  | "cancelled"
+  | "expired"
+
+// Manual move the server allows.
+export type QuotationTransition = {
+  to: QuotationStatus
+  label: string
+  requiresNote: boolean
+}
+
 export type QuotationListRow = {
   id: number
   quotationNo: string
   version: number
   companyName: string
+  // Narrow until lib/status.ts, which dashboard/helpers.ts reads it through,
+  // knows cancelled. The server can send it; toTableRow maps it.
   status: CanonicalStatus
   grandTotal: string
   subtotal: string
@@ -244,7 +265,8 @@ export type QuotationListRow = {
 }
 
 export type QuotationStatusCount = {
-  status: CanonicalStatus
+  status: QuotationStatus
+  label: string
   count: number
 }
 
@@ -257,6 +279,9 @@ export type QuotationItemRow = {
   requestedImpa?: string
   requestedName: string
   offeredItemId?: number
+  // Live catalog name and IMPA
+  offeredName?: string
+  offeredImpa?: string
   vendorProductId?: number
   qty: string
   unitId?: number
@@ -273,10 +298,11 @@ export type QuotationItemRow = {
 
 export type QuotationStatusEvent = {
   id: number
-  fromStatus?: CanonicalStatus
-  toStatus: CanonicalStatus
+  fromStatus?: QuotationStatus
+  toStatus: QuotationStatus
   note?: string
-  changedBy: number
+  // Null for the expiry job
+  changedBy: number | null
   changedAt: string
 }
 
@@ -290,7 +316,7 @@ export type QuotationDetail = {
   contactName?: string
   clientRefNo?: string
   vesselName?: string
-  status: CanonicalStatus
+  status: QuotationStatus
   paymentTerms?: string
   validityDays?: number
   discountPct: string
@@ -307,6 +333,9 @@ export type QuotationDetail = {
   updatedAt: string
   items: QuotationItemRow[]
   history: QuotationStatusEvent[]
+  // Empty for a terminal status
+  allowedTransitions: QuotationTransition[]
+  canRevise: boolean
 }
 
 export type QuotationRevisionRow = {
@@ -314,7 +343,7 @@ export type QuotationRevisionRow = {
   parentId?: number
   quotationNo: string
   version: number
-  status: CanonicalStatus
+  status: QuotationStatus
   grandTotal: string
   totalProduk: string
   createdAt: string
@@ -349,20 +378,16 @@ export type QuotationCreateInput = {
   shippingCost?: string
   items: QuotationItemInput[]
   notes?: string
-  status?: CanonicalStatus
 }
 
-export type QuotationUpdateInput = Omit<
-  QuotationCreateInput,
-  "companyClientId" | "contactId" | "status"
->
+export type QuotationUpdateInput = Omit<QuotationCreateInput, "companyClientId" | "contactId">
 
 // Sort keys accepted by the API.
 export type QuotationSortKey = "quotationNo" | "version" | "createdAt" | "grandTotal"
 
 export type QuotationListParams = {
   q?: string
-  statuses?: CanonicalStatus[]
+  statuses?: QuotationStatus[]
   dateFrom?: string
   dateTo?: string
   minTotal?: string

@@ -1,6 +1,12 @@
-import { apiList, apiRequest, buildQuery, downloadXlsx, type PaginatedList } from "@/lib/api-client"
+import {
+  apiList,
+  apiRequest,
+  buildQuery,
+  downloadPdf,
+  downloadXlsx,
+  type PaginatedList,
+} from "@/lib/api-client"
 import type {
-  CanonicalStatus,
   QuotationCreateInput,
   QuotationDetail,
   QuotationItemRequestCreateInput,
@@ -9,6 +15,7 @@ import type {
   QuotationListParams,
   QuotationListRow,
   QuotationRevisionRow,
+  QuotationStatus,
   QuotationStatusCount,
   QuotationUpdateInput,
 } from "@/types/api"
@@ -31,6 +38,12 @@ export async function list(
 export function exportXlsx(params: QuotationListParams = {}): Promise<void> {
   const qs = buildListQuery(params)
   return downloadXlsx(`/quotations/export.xlsx${qs ? `?${qs}` : ""}`, "quotation-export.xlsx")
+}
+
+// Quotation PDF, safe filename.
+export function downloadPdfFile(id: number, quotationNo: string): Promise<void> {
+  const safe = quotationNo.replace(/[^A-Za-z0-9._-]/g, "_")
+  return downloadPdf(`/quotations/${id}/pdf`, `${safe}.pdf`)
 }
 
 export async function stats(): Promise<QuotationStatusCount[]> {
@@ -64,7 +77,7 @@ export async function update(
 
 export async function changeStatus(
   id: number,
-  status: CanonicalStatus,
+  status: QuotationStatus,
   note?: string,
 ): Promise<void> {
   await apiRequest<void>({
@@ -79,6 +92,17 @@ export async function send(id: number, note?: string): Promise<void> {
     path: `/quotations/${id}/send`,
     method: "POST",
     body: note ? { note } : undefined,
+  })
+}
+
+// Clone a sent quotation as a new draft.
+//
+// The original moves to Revisi and is frozen; the reply carries the new id.
+export async function revise(id: number, note?: string): Promise<{ id: number }> {
+  return apiRequest<{ id: number }>({
+    path: `/quotations/${id}/revise`,
+    method: "POST",
+    body: note ? { note } : {},
   })
 }
 

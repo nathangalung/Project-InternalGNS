@@ -1,8 +1,11 @@
+import EntityLink from "@/components/shared/EntityLink"
 import type { ClientInfo } from "@/features/quotations/types"
 import { qe } from "../wizard-styles"
 
-interface ClientSummaryCardProps {
+type ClientSummaryCardProps = {
   clientName: string
+  // Links the name when set
+  clientId?: number
   clientInitials: string
   clientInfo?: ClientInfo
   shippingAlamat?: string
@@ -16,6 +19,7 @@ const emptyValue = "text-sm font-medium italic text-[#9CA3AF]"
 // Client header card.
 export default function ClientSummaryCard({
   clientName,
+  clientId,
   clientInitials,
   clientInfo,
   shippingAlamat,
@@ -32,7 +36,11 @@ export default function ClientSummaryCard({
             </span>
           </div>
           <div>
-            <div className="mb-1 text-base font-bold text-[#111827]">{clientName}</div>
+            <div className="mb-1 text-base font-bold text-[#111827]">
+              <EntityLink kind="client" id={clientId} tone="name">
+                {clientName}
+              </EntityLink>
+            </div>
             <span className="text-xs font-medium text-[#6B7280]">Indonesia</span>
           </div>
         </div>

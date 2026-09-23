@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useMemo } from "react"
+import LoadingState from "@/components/shared/LoadingState"
+import NotFoundState from "@/components/shared/NotFoundState"
 import { toQuotationData } from "@/features/quotations/adapters"
-import { useChangeQuotationStatus, useQuotation } from "@/features/quotations/hooks"
+import { useQuotation } from "@/features/quotations/hooks"
 import QuotationDetail from "@/features/quotations/QuotationDetail"
-import type { Status } from "@/features/quotations/types"
 import { useUnits } from "@/features/units/hooks"
-import { labelToStatus } from "@/lib/status"
 
 export const Route = createFileRoute("/_authed/quotations/$id/")({
   component: QuotationDetailRoute,
@@ -16,10 +16,9 @@ function QuotationDetailRoute() {
   const navigate = useNavigate()
 
   const numericId = Number(id)
-  const hasNumericId = Number.isFinite(numericId) && numericId > 0
-  const { data: detail } = useQuotation(hasNumericId ? numericId : undefined)
+  const hasNumericId = Number.isInteger(numericId) && numericId > 0
+  const { data: detail, isPending } = useQuotation(hasNumericId ? numericId : undefined)
   const { data: units } = useUnits()
-  const changeStatus = useChangeQuotationStatus()
 
   const unitOf = useMemo(() => {
     const map = new Map<number, string>()
@@ -27,18 +26,28 @@ function QuotationDetailRoute() {
     return (unitId?: number) => (unitId !== undefined ? (map.get(unitId) ?? "") : "")
   }, [units])
 
-  const quotation = detail ? toQuotationData(detail, unitOf) : undefined
+  const quotation = useMemo(
+    () => (detail ? toQuotationData(detail, unitOf) : undefined),
+    [detail, unitOf],
+  )
 
-  function handleSaveStatus(next: Status) {
-    if (!detail) return
-    changeStatus.mutate({ id: detail.id, status: labelToStatus(next) })
+  if (hasNumericId && isPending) return <LoadingState label="Memuat quotation…" />
+  if (!detail || !quotation) {
+    return (
+      <NotFoundState
+        title="Quotation tidak ditemukan"
+        backTo={{ to: "/quotations", label: "Kembali ke Daftar Quotation" }}
+      />
+    )
   }
 
   return (
     <QuotationDetail
-      quotationId={detail?.quotationNo ?? id}
+      key={detail.id}
+      quotationNo={detail.quotationNo}
       quotation={quotation}
-      onSaveStatus={detail ? handleSaveStatus : undefined}
+      transitions={detail.allowedTransitions ?? []}
+      canRevise={detail.canRevise === true}
       onEdit={() => void navigate({ to: "/quotations/$id/edit", params: { id } })}
     />
   )

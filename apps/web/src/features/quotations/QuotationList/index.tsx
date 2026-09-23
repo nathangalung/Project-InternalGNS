@@ -2,26 +2,28 @@ import { useMemo, useState } from "react"
 import ActiveFiltersBar, { type FilterChip } from "@/components/shared/ActiveFilters"
 import Pagination from "@/components/shared/Pagination"
 import { toTableRow } from "@/features/quotations/adapters"
-import * as quotationsApi from "@/features/quotations/api"
-import { useQuotations } from "@/features/quotations/hooks"
-import { downloadPdf } from "@/lib/api-client"
+import {
+  downloadQuotationPdf,
+  exportQuotationsXlsx,
+  useQuotations,
+} from "@/features/quotations/hooks"
 import { resolveRange } from "@/lib/date-range"
-import { labelToStatus } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen } from "@/lib/useListScreen"
-import type { CanonicalStatus, QuotationSortKey } from "@/types/api"
+import type { QuotationSortKey } from "@/types/api"
 import QuotationFilter, { type DatePreset, type StatusFilter } from "../QuotationFilter"
+import { quotationStatusFromLabel } from "../status"
 import type { QuotationRow, SortableRowKey } from "./helpers"
 import PageHeader from "./PageHeader"
 import QuotationTable from "./QuotationTable"
 import SearchBar from "./SearchBar"
 import SummaryCards from "./SummaryCards"
 
-interface QuotationListProps {
+type QuotationListProps = {
   onViewDetail?: (id: string) => void
 }
 
-interface ActiveFilters {
+type ActiveFilters = {
   preset: DatePreset
   startDate: string
   endDate: string
@@ -71,7 +73,7 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
     }
     if (!activeFilters) return out
     if (activeFilters.statuses.length > 0) {
-      out.statuses = activeFilters.statuses.map<CanonicalStatus>(labelToStatus)
+      out.statuses = activeFilters.statuses.map(quotationStatusFromLabel)
     }
     const range = resolveRange(activeFilters.preset, activeFilters.startDate, activeFilters.endDate)
     if (range.start) out.dateFrom = range.start
@@ -108,12 +110,14 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
         out.push({
           key: "date",
           label: `Tanggal: ${activeFilters.startDate} s/d ${activeFilters.endDate}`,
+          onRemove: () => patchFilters((p) => (p ? { ...p, preset: "semua" } : p)),
         })
       }
       if (activeFilters.minHarga !== "" || activeFilters.maxHarga !== "") {
         out.push({
           key: "harga",
           label: `Harga: ${activeFilters.minHarga || "0"} - ${activeFilters.maxHarga || "tanpa batas"}`,
+          onRemove: () => patchFilters((p) => (p ? { ...p, minHarga: "", maxHarga: "" } : p)),
         })
       }
     }
@@ -127,14 +131,13 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
 
   // Download the quotation PDF.
   const handleDownload = (row: QuotationRow) => {
-    const safe = row.displayNo.replace(/[\\/]/g, "-")
-    void downloadPdf(`/quotations/${row.id}/pdf`, `${safe}.pdf`)
+    void downloadQuotationPdf(Number(row.id), row.displayNo)
   }
 
   return (
     <>
       <div className={ui.pageContent}>
-        <PageHeader onExport={() => quotationsApi.exportXlsx(queryParams)} />
+        <PageHeader onExport={() => exportQuotationsXlsx(queryParams)} />
         <SummaryCards />
         <SearchBar
           search={list.search}

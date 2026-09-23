@@ -1,12 +1,13 @@
 import type { Status } from "@/features/quotations/types"
-import { quotationStatusConfig } from "@/lib/status"
+import { quotationBadge } from "../status"
 
-export const statusConfig: Record<Status, { bg: string; color: string }> = quotationStatusConfig
+// Badge colours, dashboard reuses.
+export const statusConfig: Record<Status, { bg: string; color: string }> = quotationBadge
 
 // Columns the table header can sort.
 export type SortableRowKey = "displayNo" | "version" | "date" | "total"
 
-export interface QuotationRow {
+export type QuotationRow = {
   id: string
   displayNo: string
   version: number

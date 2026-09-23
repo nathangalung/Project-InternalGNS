@@ -1,6 +1,5 @@
 import type { ProductRow, QuotationData, ShippingRow } from "@/features/quotations/types"
 import { formatDate, formatDateTime, formatNumber } from "@/lib/format"
-import { statusToLabel } from "@/lib/status"
 import type {
   QuotationDetail as ApiQuotationDetail,
   QuotationItemRow as ApiQuotationItem,
@@ -8,18 +7,35 @@ import type {
   QuotationStatusEvent as ApiStatusEvent,
 } from "@/types/api"
 import type { QuotationRow } from "./QuotationList/helpers"
+import { quotationStatusLabel } from "./status"
 
-function actionFromEvent(ev: ApiStatusEvent): string {
-  const label = statusToLabel(ev.toStatus)
-  return ev.note ? `Status diubah menjadi ${label}: ${ev.note}` : `Status diubah menjadi ${label}`
+// Status history entry text.
+//
+// Creation carries a fixed server note, so only the status is shown.
+export function historyAction(ev: ApiStatusEvent): string {
+  const to = quotationStatusLabel(ev.toStatus)
+  if (!ev.fromStatus) return `Dibuat sebagai ${to}`
+  const move = `${quotationStatusLabel(ev.fromStatus)} → ${to}`
+  return ev.note ? `${move}: ${ev.note}` : move
+}
+
+// History date, system moves marked.
+//
+// The expiry job writes changedBy null.
+export function historyDate(ev: ApiStatusEvent): string {
+  const date = formatDateTime(ev.changedAt)
+  return ev.changedBy === null ? `${date} · Sistem` : date
 }
 
 function toProductRow(it: ApiQuotationItem, unitName: string): ProductRow {
   const sell = Number(it.sellingPrice)
   const cost = it.costPrice !== undefined ? Number(it.costPrice) : 0
   return {
-    kode: it.requestedImpa ?? "",
-    nama: it.requestedName,
+    itemId: it.offeredItemId ?? it.requestedItemId,
+    lineId: it.id,
+    // Offered item, else the request
+    kode: it.offeredImpa ?? it.requestedImpa ?? "",
+    nama: it.offeredName ?? it.requestedName,
     requestedKode: it.requestedImpa ?? "",
     requestedNama: it.requestedName,
     qty: Number(it.qty),
@@ -57,11 +73,12 @@ export function toQuotationData(
   const ppn = Number(api.ppnAmount)
   const totalDiscount = Number(api.totalDiscount)
   const discount = Number(api.discountPct)
-  const status = statusToLabel(api.status)
+  const status = quotationStatusLabel(api.status)
   return {
     id: String(api.id),
     version: api.version,
     client: api.companyClientName,
+    clientId: api.companyClientId,
     clientInfo: {
       narahubung: api.contactName,
       referenceNumber: api.clientRefNo,
@@ -77,8 +94,8 @@ export function toQuotationData(
     products,
     shipping,
     history: api.history.map((ev) => ({
-      date: formatDateTime(ev.changedAt),
-      action: actionFromEvent(ev),
+      date: historyDate(ev),
+      action: historyAction(ev),
     })),
   }
 }
@@ -95,6 +112,6 @@ export function toTableRow(api: ApiQuotationRow): QuotationRow {
     date: formatDate(api.createdAt),
     hargaBeli: Number.isFinite(hargaBeli) ? formatNumber(hargaBeli) : api.totalHargaBeli,
     total: Number.isFinite(grand) ? formatNumber(grand) : api.grandTotal,
-    status: statusToLabel(api.status),
+    status: quotationStatusLabel(api.status),
   }
 }

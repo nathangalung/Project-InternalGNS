@@ -1,12 +1,17 @@
+import EntityLink from "@/components/shared/EntityLink"
 import { useQuotationRevisions } from "@/features/quotations/hooks"
 import { formatNumber as formatRp } from "@/lib/format"
+import { quotationStatusLabel } from "../status"
 import { qd, qe, timelineAction, timelineDate, timelineDot } from "../wizard-styles"
 
-interface RevisionHistoryCardProps {
+type RevisionHistoryCardProps = {
   quotationId: number
 }
 
-// Walks the parent_id chain and lists every sibling revision.
+// Revision chain, other versions linked.
+//
+// The server walks the parent_id chain; the open version is marked and
+// stays plain text.
 export default function RevisionHistoryCard({ quotationId }: RevisionHistoryCardProps) {
   const { data } = useQuotationRevisions(quotationId)
   if (!data || data.length <= 1) return null
@@ -22,10 +27,17 @@ export default function RevisionHistoryCard({ quotationId }: RevisionHistoryCard
               <div key={rev.id} className={qd.timelineItem}>
                 <div className={timelineDot(isCurrent)} />
                 <span className={timelineDate(isCurrent)}>
-                  v{rev.version} · {rev.quotationNo}
+                  Versi {rev.version} ·{" "}
+                  {isCurrent ? (
+                    `${rev.quotationNo} (versi ini)`
+                  ) : (
+                    <EntityLink kind="quotation" id={rev.id}>
+                      {rev.quotationNo}
+                    </EntityLink>
+                  )}
                 </span>
                 <span className={timelineAction(isCurrent)}>
-                  {rev.status} · Rp {formatRp(Number(rev.grandTotal))}
+                  {quotationStatusLabel(rev.status)} · Rp {formatRp(Number(rev.grandTotal))}
                 </span>
               </div>
             )

@@ -1,19 +1,23 @@
 import { qd, qe, timelineAction, timelineDate, timelineDot } from "../wizard-styles"
 
-interface HistoryEntry {
+type HistoryEntry = {
   date: string
   action: string
 }
 
-interface HistoryTimelineProps {
+type HistoryTimelineProps = {
   history: HistoryEntry[]
+  title?: string
 }
 
 // Status change timeline view.
-export default function HistoryTimeline({ history }: HistoryTimelineProps) {
+export default function HistoryTimeline({
+  history,
+  title = "Riwayat Penawaran",
+}: HistoryTimelineProps) {
   return (
     <div>
-      <h2 className={`${qe.sectionTitle} mb-3`}>Riwayat Penawaran</h2>
+      <h2 className={`${qe.sectionTitle} mb-3`}>{title}</h2>
       <div className={qd.historyCard}>
         <div className={qd.timeline}>
           {history.map((item, i) => {
