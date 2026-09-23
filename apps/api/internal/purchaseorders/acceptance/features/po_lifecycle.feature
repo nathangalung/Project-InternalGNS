@@ -125,3 +125,11 @@ Feature: Purchase order lifecycle
     Given an accepted quotation
     When the user edits PO notes with a stale If-Match
     Then the response status is 409
+
+  Scenario: Work cannot start while the client master data is incomplete
+    Given an accepted quotation for a client with missing data
+    When the user transitions the PO through "UPLOADED"
+    Then every PO transition succeeds
+    When the user tries to transition the PO to "ON_PROGRESS"
+    Then the response status is 422
+    And the error names the incomplete client

@@ -274,6 +274,9 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "invalid status"}))
 		return
 	}
+	if !h.allowOnProgress(w, r, id, req.Status) {
+		return
+	}
 	actor := deps.CurrentUserID(r.Context())
 	if err := h.repo.ChangeStatus(r.Context(), id, req.Status, actor); err != nil {
 		switch {
@@ -337,6 +340,37 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		"id":         id,
 		"rowVersion": newVersion,
 	})
+}
+
+// allowOnProgress gates work on complete client and vendor master data.
+// It reports whether the caller may continue; it has already written the
+// response when it returns false.
+func (h *Handler) allowOnProgress(w http.ResponseWriter, r *http.Request, id int64, target Status) bool {
+	if target != StatusOnProgress {
+		return true
+	}
+	po, err := h.repo.GetByID(r.Context(), id)
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("purchase order not found"))
+		return false
+	}
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return false
+	}
+	if po.Status == StatusOnProgress {
+		return true
+	}
+	issues, err := h.repo.Completeness(r.Context(), id)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return false
+	}
+	if len(issues) == 0 {
+		return true
+	}
+	httperr.Render(w, httperr.Unprocessable(completenessFields(issues)))
+	return false
 }
 
 func isValidStatus(s Status) bool {

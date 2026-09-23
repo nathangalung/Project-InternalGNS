@@ -124,12 +124,53 @@ SELECT poi.id,
        poi.profit_amount::text AS profit_amount,
        poi.ship_destination,
        poi.shipping_days,
-       poi.is_available
+       poi.is_available,
+       v.id   AS vendor_id,
+       v.name AS vendor_name
 FROM purchase_order_items poi
 LEFT JOIN items i ON i.id = poi.offered_item_id
 LEFT JOIN units u ON u.id = poi.unit_id
+LEFT JOIN quotation_items qi ON qi.id = poi.quotation_item_id
+LEFT JOIN vendor_products vp ON vp.id = qi.vendor_product_id
+LEFT JOIN vendors v ON v.id = vp.vendor_id
 WHERE poi.po_id = $1
 ORDER BY poi.line_number;
+
+-- name: purchase_orders.completeness_client
+-- Client master data the PO's documents need; $1=po id.
+SELECT cc.id,
+       cc.name,
+       cc.number,
+       cc.npwp,
+       cc.address,
+       co.name  AS contact_name,
+       co.email AS contact_email,
+       co.phone AS contact_phone
+FROM purchase_orders po
+JOIN company_client cc ON cc.id = po.company_client_id
+LEFT JOIN LATERAL (
+    SELECT name, email, phone
+    FROM company_contacts
+    WHERE company_id = cc.id AND is_active = TRUE
+    ORDER BY id ASC
+    LIMIT 1
+) co ON TRUE
+WHERE po.id = $1;
+
+-- name: purchase_orders.completeness_vendors
+-- Vendors supplying the PO's lines, one row each; $1=po id.
+SELECT DISTINCT
+       v.id,
+       v.name,
+       v.location,
+       v.contact_info->>'email' AS contact_email,
+       v.contact_info->>'phone' AS contact_phone
+FROM purchase_order_items poi
+JOIN quotation_items qi ON qi.id = poi.quotation_item_id
+JOIN vendor_products vp ON vp.id = qi.vendor_product_id
+JOIN vendors v ON v.id = vp.vendor_id
+WHERE poi.po_id = $1
+ORDER BY v.id;
 
 -- name: purchase_orders.update_file
 UPDATE purchase_orders

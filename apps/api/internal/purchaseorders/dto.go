@@ -63,6 +63,10 @@ type PurchaseOrderItem struct {
 	ShipDestination *string `db:"ship_destination"   json:"shipDestination,omitempty"`
 	ShippingDays    *int    `db:"shipping_days"      json:"shippingDays,omitempty"`
 	IsAvailable     bool    `db:"is_available"       json:"isAvailable"`
+	// Supplying vendor, resolved through the quotation line it came from, so
+	// the detail screen does not fetch one vendor per item.
+	VendorID   *int64  `db:"vendor_id"   json:"vendorId,omitempty"`
+	VendorName *string `db:"vendor_name" json:"vendorName,omitempty"`
 }
 
 type ChangeStatusRequest struct {

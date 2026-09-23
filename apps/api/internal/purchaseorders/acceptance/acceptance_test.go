@@ -21,9 +21,10 @@ import (
 )
 
 const (
-	defaultUserID  int64 = 1
-	defaultCompany int64 = 1
-	defaultUnit    int16 = 19
+	defaultUserID     int64 = 1
+	defaultCompany    int64 = 1
+	incompleteCompany int64 = 2
+	defaultUnit       int16 = 19
 )
 
 type scenarioState struct {
@@ -90,8 +91,17 @@ func (s *scenarioState) emptyDomain() error { return s.reset() }
 
 // Drive quotation to accepted, PO auto-created.
 func (s *scenarioState) acceptedQuotation() error {
+	return s.acceptedQuotationForCompany(defaultCompany)
+}
+
+// Company 2 in the master seed has no NPWP, address or contact.
+func (s *scenarioState) acceptedQuotationIncompleteClient() error {
+	return s.acceptedQuotationForCompany(incompleteCompany)
+}
+
+func (s *scenarioState) acceptedQuotationForCompany(companyID int64) error {
 	create := quotations.CreateRequest{
-		CompanyClientID: defaultCompany,
+		CompanyClientID: companyID,
 		DiscountPct:     "0",
 		Items: []quotations.CreateItem{{
 			RequestedName: "Test Product",
@@ -346,6 +356,25 @@ func (s *scenarioState) editPOItems(discountPct, sellingPrice string) error {
 
 func int16PtrAcc(v int16) *int16 { return &v }
 
+// The 422 must say which record blocks the promotion.
+func (s *scenarioState) errorNamesIncompleteClient() error {
+	var problem struct {
+		Detail string            `json:"detail"`
+		Fields map[string]string `json:"fields"`
+	}
+	if err := json.Unmarshal(s.body, &problem); err != nil {
+		return err
+	}
+	key := "klien:" + strconv.FormatInt(incompleteCompany, 10)
+	if _, ok := problem.Fields[key]; !ok {
+		return fmt.Errorf("want field %s, got %+v", key, problem.Fields)
+	}
+	if !strings.Contains(problem.Detail, "belum lengkap") {
+		return fmt.Errorf("detail does not explain the gap: %s", problem.Detail)
+	}
+	return nil
+}
+
 func (s *scenarioState) editPODetails(poNumber string) error {
 	body := purchaseorders.UpdateDetailsRequest{PoNumber: poNumber, PoDate: "2026-01-15"}
 	return s.sendRequest(
@@ -462,6 +491,8 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
 		sc.Step(`^the commercial domain is empty$`, state.emptyDomain)
 		sc.Step(`^an accepted quotation$`, state.acceptedQuotation)
+		sc.Step(`^an accepted quotation for a client with missing data$`, state.acceptedQuotationIncompleteClient)
+		sc.Step(`^the error names the incomplete client$`, state.errorNamesIncompleteClient)
 		sc.Step(`^the user reads the PO by quotation$`, state.readPOByQuotation)
 		sc.Step(`^the user reads the invoice by quotation$`, state.readInvoiceByQuotation)
 		sc.Step(`^the user lists PO items$`, state.listPOItems)

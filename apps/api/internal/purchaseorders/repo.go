@@ -170,6 +170,46 @@ func (r *Repo) ListItems(ctx context.Context, poID int64) ([]PurchaseOrderItem, 
 	return pgx.CollectRows(rows, pgx.RowToStructByName[PurchaseOrderItem])
 }
 
+// Completeness lists the client and vendor gaps blocking ON_PROGRESS.
+// An empty slice means the PO may be worked on.
+func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssue, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("purchase_orders.completeness_client"), poID)
+	if err != nil {
+		return nil, fmt.Errorf("query client completeness: %w", err)
+	}
+	client, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[ClientCompleteness])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("scan client completeness: %w", err)
+	}
+
+	vendorRows, err := r.db.Query(ctx, r.store.Get("purchase_orders.completeness_vendors"), poID)
+	if err != nil {
+		return nil, fmt.Errorf("query vendor completeness: %w", err)
+	}
+	vendors, err := pgx.CollectRows(vendorRows, pgx.RowToStructByName[VendorCompleteness])
+	if err != nil {
+		return nil, fmt.Errorf("scan vendor completeness: %w", err)
+	}
+
+	var issues []CompletenessIssue
+	if missing := missingClientFields(client); len(missing) > 0 {
+		issues = append(issues, CompletenessIssue{
+			Scope: scopeClient, ID: client.ID, Name: client.Name, Missing: missing,
+		})
+	}
+	for _, v := range vendors {
+		if missing := missingVendorFields(v); len(missing) > 0 {
+			issues = append(issues, CompletenessIssue{
+				Scope: scopeVendor, ID: v.ID, Name: v.Name, Missing: missing,
+			})
+		}
+	}
+	return issues, nil
+}
+
 func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, actorID int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("purchase_orders.change_status"), id, string(status), actorID)
 	return classifyPgErr(err)
