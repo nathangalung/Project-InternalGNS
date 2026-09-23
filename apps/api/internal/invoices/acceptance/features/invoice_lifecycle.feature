@@ -43,6 +43,20 @@ Feature: Invoice lifecycle
     And the user tries to transition the invoice to "draft"
     Then the response status is 204
 
+  Scenario: A past-due draft saved as Terlambat stays a draft
+    Given a delivered purchase order
+    When the user updates invoice due date to "2020-01-01"
+    And the user tries to transition the invoice to "overdue"
+    Then the response status is 204
+    When the user reads the invoice by quotation
+    Then the invoice status is "draft"
+
+  Scenario: Terlambat cannot be chosen by hand before the due date
+    Given a delivered purchase order
+    When the user transitions the invoice through "sent"
+    And the user tries to transition the invoice to "overdue"
+    Then the response status is 422
+
   Scenario: Reject unknown status value
     Given a delivered purchase order
     When the user tries to transition the invoice to "garbage"

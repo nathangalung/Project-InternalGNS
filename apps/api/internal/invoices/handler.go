@@ -194,6 +194,11 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 			httperr.Render(w, httperr.NotFound("invoice not found"))
 			return
 		}
+		if errors.Is(err, ErrOverdueDerived) {
+			httperr.Render(w, httperr.UnprocessableDetail(
+				"Status Terlambat ditentukan otomatis dari tanggal jatuh tempo.", nil))
+			return
+		}
 		httperr.RenderDBErr(w, err)
 		return
 	}

@@ -125,8 +125,8 @@ func TestAllowedTransitions_AreAcceptedByTheDatabase(t *testing.T) {
 	}
 }
 
-// Terlambat is derived from the due date, so it is never offered even though
-// the database still accepts it.
+// Terlambat is derived from the due date, so it is never offered and a
+// sent invoice that is not yet due cannot be marked overdue by hand.
 func TestAllowedTransitions_OmitOverdue(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
@@ -134,5 +134,5 @@ func TestAllowedTransitions_OmitOverdue(t *testing.T) {
 
 	require.NoError(t, repo.ChangeStatus(ctx, invID, invoices.StatusSent, seedUserID))
 	assert.NotContains(t, invoices.AllowedTransitions(invoices.StatusSent), invoices.StatusOverdue)
-	assert.NoError(t, repo.ChangeStatus(ctx, invID, invoices.StatusOverdue, seedUserID))
+	assert.ErrorIs(t, repo.ChangeStatus(ctx, invID, invoices.StatusOverdue, seedUserID), invoices.ErrOverdueDerived)
 }

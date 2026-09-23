@@ -208,6 +208,14 @@ RETURNING row_version;
 -- name: invoices.status_and_version
 SELECT status, row_version FROM invoices WHERE id = $1;
 
+-- name: invoices.is_overdue
+-- Terlambat is derived from the due date, with the same predicate as
+-- invoices.summary, so a stored draft or sent can already be overdue.
+SELECT status = 'overdue'
+       OR (status IN ('draft', 'sent') AND due_date IS NOT NULL AND due_date < CURRENT_DATE)
+FROM invoices
+WHERE id = $1;
+
 -- name: invoices.update_attachment
 UPDATE invoices
    SET attachment_object_key = $2,

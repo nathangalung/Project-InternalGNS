@@ -3,6 +3,7 @@ package invoices
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -17,6 +18,7 @@ var (
 	ErrNotFound        = errors.New("invoice not found")
 	ErrVersionMismatch = errors.New("invoice version mismatch")
 	ErrDatesLocked     = errors.New("invoice dates locked")
+	ErrOverdueDerived  = errors.New("invoice overdue is derived from the due date")
 )
 
 type Repo struct {
@@ -205,9 +207,31 @@ func (r *Repo) ListItemsBulk(ctx context.Context, ids []int64) (map[int64][]Invo
 	return out, nil
 }
 
+// ChangeStatus applies a legal transition.
 func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, actorID int64) error {
+	// Overdue is never stored by hand: it only confirms what the due date
+	// already says, so a past-due request is a no-op and an early one fails.
+	if status == StatusOverdue {
+		return r.confirmOverdue(ctx, id)
+	}
 	_, err := r.db.Exec(ctx, r.store.Get("invoices.change_status"), id, string(status), actorID)
 	return classifyPgErr(err)
+}
+
+// confirmOverdue checks the due date.
+func (r *Repo) confirmOverdue(ctx context.Context, id int64) error {
+	var overdue bool
+	err := r.db.QueryRow(ctx, r.store.Get("invoices.is_overdue"), id).Scan(&overdue)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ErrNotFound
+	}
+	if err != nil {
+		return fmt.Errorf("invoice overdue probe: %w", err)
+	}
+	if !overdue {
+		return ErrOverdueDerived
+	}
+	return nil
 }
 
 // Single ERRCODE to domain error table for this slice.
