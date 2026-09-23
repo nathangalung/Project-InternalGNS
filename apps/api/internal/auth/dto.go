@@ -33,3 +33,8 @@ type MeUser struct {
 func toMeUser(u users.User) MeUser {
 	return MeUser{ID: u.ID, Email: u.Email, Name: u.Name, Role: u.Role}
 }
+
+type ChangeOwnPasswordRequest struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword     string `json:"newPassword"`
+}

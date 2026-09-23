@@ -156,7 +156,7 @@ func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
-	if msg := validatePassword(req.Password); msg != "" {
+	if msg := ValidatePassword(req.Password); msg != "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"password": msg}))
 		return
 	}

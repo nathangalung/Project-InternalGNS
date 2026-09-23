@@ -14,9 +14,10 @@ const (
 	passwordMaxBytes = 72
 )
 
+// ValidatePassword returns the policy message, or "" when pw passes.
 // Mirrors apps/web/src/features/users/password.ts so the form and the server
 // accept exactly the same passwords.
-func validatePassword(pw string) string {
+func ValidatePassword(pw string) string {
 	var missing []string
 	if len([]rune(pw)) < passwordMinRunes {
 		missing = append(missing, fmt.Sprintf("minimal %d karakter", passwordMinRunes))
@@ -93,7 +94,7 @@ func validateCreate(req CreateUserRequest) map[string]string {
 	errs := map[string]string{}
 	put(errs, "email", validateEmail(req.Email))
 	put(errs, "name", validateName(req.Name))
-	put(errs, "password", validatePassword(req.Password))
+	put(errs, "password", ValidatePassword(req.Password))
 	put(errs, "role", validateRole(req.Role))
 	if len(errs) == 0 {
 		return nil

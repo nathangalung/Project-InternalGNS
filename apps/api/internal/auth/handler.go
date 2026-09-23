@@ -111,3 +111,47 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 	}
 	httpx.WriteJSON(w, http.StatusOK, toMeUser(u))
 }
+
+// ChangeOwnPassword lets any role replace its own password.
+func (h *Handler) ChangeOwnPassword(w http.ResponseWriter, r *http.Request) {
+	id := deps.CurrentUserID(r.Context())
+	if id == 0 {
+		httperr.Render(w, httperr.Unauthorized("not authenticated"))
+		return
+	}
+
+	var req ChangeOwnPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	fields := map[string]string{}
+	if req.CurrentPassword == "" {
+		fields["currentPassword"] = "Kata sandi saat ini wajib diisi."
+	}
+	if msg := users.ValidatePassword(req.NewPassword); msg != "" {
+		fields["newPassword"] = msg
+	}
+	if len(fields) > 0 {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
+
+	err := h.svc.ChangeOwnPassword(r.Context(), id, req.CurrentPassword, req.NewPassword)
+	switch {
+	// 422, not 401: the SPA reads any 401 as an expired session.
+	case errors.Is(err, ErrWrongCurrentPassword):
+		httperr.Render(w, httperr.Unprocessable(map[string]string{
+			"currentPassword": "Kata sandi saat ini salah.",
+		}))
+		return
+	case errors.Is(err, ErrSessionRevoked):
+		httperr.Render(w, httperr.Unauthorized("session is no longer valid"))
+		return
+	case err != nil:
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	// Every session ended, this one too; the client signs in again.
+	w.WriteHeader(http.StatusNoContent)
+}

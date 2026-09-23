@@ -18,6 +18,7 @@ func Routes(h *Handler, requireAuth func(http.Handler) http.Handler) chi.Router 
 	r.Group(func(r chi.Router) {
 		r.Use(requireAuth)
 		r.Get("/me", h.Me)
+		r.With(httprate.LimitByIP(5, time.Minute)).Patch("/me/password", h.ChangeOwnPassword)
 	})
 	return r
 }
