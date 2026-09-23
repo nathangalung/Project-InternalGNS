@@ -11,7 +11,7 @@ RETURNING id;
 -- statement time) so a long-running tx cannot resurrect a token that
 -- expired mid-transaction.
 UPDATE refresh_tokens
-SET revoked_at = clock_timestamp()
+SET revoked_at = clock_timestamp(), revoked_reason = 'rotated'
 WHERE token_hash = $1
   AND revoked_at IS NULL
   AND expires_at > clock_timestamp()
@@ -20,20 +20,20 @@ RETURNING id, user_id;
 -- name: auth.refresh_lookup
 -- Used after refresh_redeem reports 0 rows: tells reuse (revoked_at IS NOT NULL)
 -- apart from expired/unknown.
-SELECT user_id, expires_at, revoked_at
+SELECT user_id, expires_at, revoked_at, revoked_reason
 FROM refresh_tokens
 WHERE token_hash = $1;
 
 -- name: auth.refresh_revoke_token
 UPDATE refresh_tokens
-SET revoked_at = now()
+SET revoked_at = now(), revoked_reason = 'logout'
 WHERE token_hash = $1 AND revoked_at IS NULL;
 
 -- name: auth.refresh_revoke_user
 -- Defensive blast on suspected reuse: revoke every still-active token for
 -- the affected user, forcing all sessions to re-login.
 UPDATE refresh_tokens
-SET revoked_at = now()
+SET revoked_at = now(), revoked_reason = $2
 WHERE user_id = $1 AND revoked_at IS NULL;
 
 -- name: auth.refresh_purge_expired

@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"strings"
 	"time"
@@ -79,6 +80,45 @@ func (r *Repo) RecordFailedLogin(ctx context.Context, email string) error {
 func (r *Repo) ResetLoginAttempts(ctx context.Context, email string) error {
 	_, err := r.db.Exec(ctx, r.store.Get("users.reset_login_attempts"), email)
 	return err
+}
+
+// AuthContext is the live account state behind an access token.
+type AuthContext struct {
+	Role              Role      `db:"role"`
+	IsActive          bool      `db:"is_active"`
+	SessionsValidFrom time.Time `db:"sessions_valid_from"`
+}
+
+// AuthContext reads the state the auth middleware checks per request.
+func (r *Repo) AuthContext(ctx context.Context, id int64) (AuthContext, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("users.auth_context"), id)
+	if err != nil {
+		return AuthContext{}, fmt.Errorf("read auth context: %w", err)
+	}
+	a, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[AuthContext])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return AuthContext{}, ErrNotFound
+	}
+	if err != nil {
+		return AuthContext{}, fmt.Errorf("read auth context: %w", err)
+	}
+	return a, nil
+}
+
+// GetByIDAdmin reads any account, active or not, for the admin detail page.
+func (r *Repo) GetByIDAdmin(ctx context.Context, id int64) (User, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("users.get_by_id_admin"), id)
+	if err != nil {
+		return User{}, fmt.Errorf("read user: %w", err)
+	}
+	u, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[User])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return User{}, ErrNotFound
+	}
+	if err != nil {
+		return User{}, fmt.Errorf("read user: %w", err)
+	}
+	return u, nil
 }
 
 func (r *Repo) GetByID(ctx context.Context, id int64) (User, error) {
@@ -244,8 +284,11 @@ func (r *Repo) precheck(ctx context.Context, id int64) (updatePrecheck, error) {
 // transaction needs the DI seam from audit #17. The auth query is reached
 // through the store because auth already imports users.
 func (r *Repo) revokeRefreshTokens(ctx context.Context, id int64) error {
-	_, err := r.db.Exec(ctx, r.store.Get("auth.refresh_revoke_user"), id)
-	return err
+	_, err := r.db.Exec(ctx, r.store.Get("auth.refresh_revoke_user"), id, "admin")
+	if err != nil {
+		return fmt.Errorf("revoke refresh tokens: %w", err)
+	}
+	return nil
 }
 
 func (r *Repo) UpdatePassword(ctx context.Context, id int64, newPassword string, actorID int64) error {

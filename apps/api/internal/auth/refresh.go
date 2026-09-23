@@ -77,6 +77,7 @@ type lookupState struct {
 	expiresAt time.Time
 	revoked   bool
 	revokedAt time.Time
+	reason    string
 	found     bool
 }
 
@@ -85,8 +86,9 @@ func (r *RefreshRepo) lookup(ctx context.Context, hash []byte) (lookupState, err
 	var (
 		st        lookupState
 		revokedAt *time.Time
+		reason    *string
 	)
-	if err := row.Scan(&st.userID, &st.expiresAt, &revokedAt); err != nil {
+	if err := row.Scan(&st.userID, &st.expiresAt, &revokedAt, &reason); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return lookupState{}, nil
 		}
@@ -97,6 +99,9 @@ func (r *RefreshRepo) lookup(ctx context.Context, hash []byte) (lookupState, err
 	if revokedAt != nil {
 		st.revokedAt = *revokedAt
 	}
+	if reason != nil {
+		st.reason = *reason
+	}
 	return st, nil
 }
 
@@ -106,8 +111,11 @@ func (r *RefreshRepo) revokeToken(ctx context.Context, hash []byte) error {
 }
 
 func (r *RefreshRepo) revokeAllForUser(ctx context.Context, userID int64) error {
-	_, err := r.db.Exec(ctx, r.store.Get("auth.refresh_revoke_user"), userID)
-	return err
+	_, err := r.db.Exec(ctx, r.store.Get("auth.refresh_revoke_user"), userID, "reuse")
+	if err != nil {
+		return fmt.Errorf("revoke all refresh tokens: %w", err)
+	}
+	return nil
 }
 
 // PurgeExpired drops tokens past the retention window, returning rows deleted.

@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -87,16 +88,30 @@ const (
 	// 45s for xelatex, which the 30s default silently cut short, and the
 	// coretax export is unbounded in row count.
 	renderRequestTimeout = 60 * time.Second
+	// Asset uploads stream up to 25 MB through the proxy. Finishing 20 MB in
+	// the 30s default needs 5.6 Mbit/s of sustained upstream, which office
+	// links do not hold, so a real upload was cut mid-body.
+	uploadRequestTimeout = 60 * time.Second
 )
 
 // requestTimeout applies a per-request deadline, longer for export and render
 // routes. Nesting a second chi Timeout inside a subtree cannot do this: nested
 // contexts take the minimum, so the choice has to be made once, up front.
-func requestTimeout(def, render time.Duration) func(http.Handler) http.Handler {
+func requestTimeout(def, render, upload time.Duration) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			d := def
-			if isRenderRoute(r.URL.Path) {
+			switch {
+			case isStorageRoute(r.URL.Path):
+				d = upload
+				// Server.ReadTimeout (30s) covers reading the request body,
+				// so it fires before any handler budget and severs a slow
+				// upload. Push this one connection's read deadline out to the
+				// same budget; every other route keeps ReadTimeout.
+				if err := http.NewResponseController(w).SetReadDeadline(time.Now().Add(d)); err != nil {
+					slog.WarnContext(r.Context(), "upload read deadline not settable", "error", err.Error())
+				}
+			case isRenderRoute(r.URL.Path):
 				d = render
 			}
 			ctx, cancel := context.WithTimeout(r.Context(), d)
@@ -104,6 +119,13 @@ func requestTimeout(def, render time.Duration) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+// isStorageRoute reports whether a path is the asset byte proxy.
+// It carries the upload budget and is the only route whose connection read
+// deadline is extended.
+func isStorageRoute(path string) bool {
+	return strings.HasPrefix(path, "/api/v1/storage/")
 }
 
 // isRenderRoute reports whether a path is one of the workbook or PDF routes.
@@ -169,20 +191,25 @@ func authMiddleware(svc *auth.Service) func(http.Handler) http.Handler {
 				return
 			}
 
-			claims, err := svc.Verify(token)
-			if err != nil {
+			// Authenticate re-reads the account per request, so deactivation,
+			// a role change and a password reset all take effect now rather
+			// than when the 24h token happens to expire.
+			ident, err := svc.Authenticate(r.Context(), token)
+			switch {
+			case errors.Is(err, auth.ErrSessionRevoked):
+				httperr.Render(w, httperr.Unauthorized("session is no longer valid"))
+				return
+			case errors.Is(err, auth.ErrInvalidToken):
 				httperr.Render(w, httperr.Unauthorized("invalid or expired token"))
 				return
-			}
-
-			userID, err := claims.UserID()
-			if err != nil {
-				httperr.Render(w, httperr.Unauthorized("malformed token subject"))
+			case err != nil:
+				// A database outage is not a credential verdict.
+				httperr.RenderDBErr(w, err)
 				return
 			}
 
-			ctx := deps.WithUserID(r.Context(), userID)
-			ctx = deps.WithUserRole(ctx, string(claims.Role))
+			ctx := deps.WithUserID(r.Context(), ident.UserID)
+			ctx = deps.WithUserRole(ctx, string(ident.Role))
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

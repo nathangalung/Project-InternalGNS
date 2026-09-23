@@ -17,6 +17,9 @@ var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrInvalidToken       = errors.New("invalid token")
 	ErrAccountLocked      = errors.New("account temporarily locked")
+	// ErrSessionRevoked marks a structurally valid token whose account no
+	// longer backs it: deactivated, or issued before a password reset.
+	ErrSessionRevoked = errors.New("session revoked")
 )
 
 // Compared against when the email is unknown so an unregistered address costs
@@ -267,6 +270,41 @@ func (s *Service) Verify(tokenStr string) (Claims, error) {
 		return Claims{}, ErrInvalidToken
 	}
 	return claims, nil
+}
+
+// Identity is the live account state behind an access token.
+type Identity struct {
+	UserID int64
+	Role   users.Role
+}
+
+// Authenticate resolves a bearer token to the caller's live identity.
+func (s *Service) Authenticate(ctx context.Context, tokenStr string) (Identity, error) {
+	claims, err := s.Verify(tokenStr)
+	if err != nil {
+		return Identity{}, err
+	}
+	id, err := claims.UserID()
+	if err != nil {
+		return Identity{}, err
+	}
+	live, err := s.users.AuthContext(ctx, id)
+	if errors.Is(err, users.ErrNotFound) {
+		return Identity{}, ErrSessionRevoked
+	}
+	if err != nil {
+		return Identity{}, fmt.Errorf("authenticate: %w", err)
+	}
+	if !live.IsActive {
+		return Identity{}, ErrSessionRevoked
+	}
+	// The iat claim is second-granular, so a token minted in the same second
+	// as the reset is refused too. Erring that way costs one re-login and
+	// never leaves a reset session alive.
+	if claims.IssuedAt == nil || claims.IssuedAt.Time.Before(live.SessionsValidFrom) {
+		return Identity{}, ErrSessionRevoked
+	}
+	return Identity{UserID: id, Role: live.Role}, nil
 }
 
 func (s *Service) Me(ctx context.Context, id int64) (users.User, error) {
