@@ -108,7 +108,7 @@ func (s *scenarioState) deliveredPurchaseOrder() error {
 	})
 }
 
-// Deliver a line offering a catalog item.
+// Deliver an offered catalog item.
 func (s *scenarioState) deliveredOfferedPurchaseOrder() error {
 	err := testutil.Pool(s.t).QueryRow(context.Background(),
 		`INSERT INTO items (name, impa_code, default_unit_id, created_by, updated_by)
@@ -129,7 +129,7 @@ func (s *scenarioState) deliveredOfferedPurchaseOrder() error {
 	})
 }
 
-// Deliver one line to an invoice.
+// Deliver one line.
 func (s *scenarioState) deliverLine(line quotations.CreateItem) error {
 	create := quotations.CreateRequest{
 		CompanyClientID: defaultCompany,

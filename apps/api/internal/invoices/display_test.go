@@ -2,7 +2,7 @@ package invoices
 
 import "testing"
 
-// Coretax files the stored line snapshot.
+// Coretax files the snapshot.
 func TestBuildGoodService_PrintsSnapshot(t *testing.T) {
 	t.Parallel()
 	ptr := func(s string) *string { return &s }

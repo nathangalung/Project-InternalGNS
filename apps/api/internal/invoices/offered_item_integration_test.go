@@ -28,7 +28,7 @@ const (
 	offeredUnitID = seedUnitID
 )
 
-// Catalog item the customer did not name.
+// Offered catalog item.
 func createOfferedItem(t *testing.T, tx pgx.Tx) int64 {
 	t.Helper()
 	var id int64
@@ -41,7 +41,7 @@ func createOfferedItem(t *testing.T, tx pgx.Tx) int64 {
 	return id
 }
 
-// Invoice whose line offers another item.
+// Invoice offering a catalog item.
 func offeredItemPOWithInvoice(t *testing.T, tx pgx.Tx, offered int64) int64 {
 	t.Helper()
 	ctx := context.Background()
@@ -75,7 +75,7 @@ func offeredItemPOWithInvoice(t *testing.T, tx pgx.Tx, offered int64) int64 {
 	return inv.ID
 }
 
-// newExportHandler wires the PDF builder against the test transaction.
+// PDF builder on the tx.
 func newExportHandler(t *testing.T, tx pgx.Tx) *invoices.ExportHandler {
 	t.Helper()
 	store := testutil.Store(t)
@@ -94,7 +94,7 @@ type coretaxGood struct {
 	Name string `xml:"Name"`
 }
 
-// Coretax goods rows for one invoice.
+// Coretax goods rows.
 func coretaxGoods(t *testing.T, tx pgx.Tx, invID int64) []coretaxGood {
 	t.Helper()
 	rec := exportCoretaxXML(t, tx, invID)
@@ -106,7 +106,7 @@ func coretaxGoods(t *testing.T, tx pgx.Tx, invID int64) []coretaxGood {
 	return doc.Goods
 }
 
-// PDF line names for one invoice.
+// PDF line names.
 func pdfLineNames(t *testing.T, tx pgx.Tx, invID int64) []string {
 	t.Helper()
 	ctx := context.Background()
@@ -130,7 +130,7 @@ func TestInvoice_SnapshotsOfferedItem(t *testing.T) {
 	assert.Equal(t, offeredCode, *items[0].ItemCode)
 }
 
-// A filed invoice never restates its goods.
+// Filed invoices never restate.
 func TestInvoice_CatalogRenameLeavesIssuedInvoice(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	itemID := createOfferedItem(t, tx)
