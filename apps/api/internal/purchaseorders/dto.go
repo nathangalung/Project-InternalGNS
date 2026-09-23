@@ -25,14 +25,21 @@ type PurchaseOrder struct {
 	UploadedAt        *time.Time `db:"uploaded_at"         json:"uploadedAt,omitempty"`
 	Notes             *string    `db:"notes"               json:"notes,omitempty"`
 	FileURL           *string    `db:"file_url"            json:"objectKey,omitempty"`
+	DiscountPct       string     `db:"discount_pct"        json:"discountPct"`
 	QuotationTotal    *string    `db:"quotation_total"     json:"quotationTotal,omitempty"`
 	QuotationSubtotal *string    `db:"quotation_subtotal"  json:"quotationSubtotal,omitempty"`
-	PoSubtotal        string     `db:"po_subtotal"         json:"poSubtotal"`
-	PoTotalProduk     string     `db:"po_total_produk"     json:"poTotalProduk"`
-	PoTotalProfit     string     `db:"po_total_profit"     json:"poTotalProfit"`
-	RowVersion        int32      `db:"row_version"         json:"rowVersion"`
-	CreatedAt         time.Time  `db:"created_at"          json:"createdAt"`
-	UpdatedAt         time.Time  `db:"updated_at"          json:"updatedAt"`
+	// Money figures come from v_po_totals, which mirrors fn_create_invoice:
+	// PoSubtotal is the invoice DPP and the tax figures round per line.
+	PoSubtotal      string    `db:"po_subtotal"         json:"poSubtotal"`
+	PoTotalProduk   string    `db:"po_total_produk"     json:"poTotalProduk"`
+	PoTotalProfit   string    `db:"po_total_profit"     json:"poTotalProfit"`
+	PoDppNilaiLain  string    `db:"po_dpp_nilai_lain"   json:"poDppNilaiLain"`
+	PoPpnAmount     string    `db:"po_ppn_amount"       json:"poPpnAmount"`
+	PoGrandTotal    string    `db:"po_grand_total"      json:"poGrandTotal"`
+	PoTotalDiscount string    `db:"po_total_discount"   json:"poTotalDiscount"`
+	RowVersion      int32     `db:"row_version"         json:"rowVersion"`
+	CreatedAt       time.Time `db:"created_at"          json:"createdAt"`
+	UpdatedAt       time.Time `db:"updated_at"          json:"updatedAt"`
 }
 
 // PO line snapshot row.

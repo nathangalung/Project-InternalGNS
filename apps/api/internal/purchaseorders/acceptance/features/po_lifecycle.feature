@@ -93,3 +93,14 @@ Feature: Purchase order lifecycle
     When the user lists invoice items by quotation
     Then the response status is 200
     And an invoice product line has unit price "150000"
+
+  Scenario: PO totals equal the invoice created from the PO
+    Given an accepted quotation
+    When the user edits PO items with discount "7" and selling price "333333.33"
+    Then the response status is 200
+    When the user transitions the PO through "UPLOADED,ON_PROGRESS,DELIVERED"
+    Then every PO transition succeeds
+    When the user reads the PO by quotation
+    Then the response status is 200
+    And the PO discount is "7.00"
+    And the PO totals equal the invoice totals

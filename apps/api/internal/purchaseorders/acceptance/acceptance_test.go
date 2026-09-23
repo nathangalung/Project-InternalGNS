@@ -184,6 +184,55 @@ func (s *scenarioState) poNumberSet() error {
 	return nil
 }
 
+func (s *scenarioState) poDiscountEquals(want string) error {
+	var po purchaseorders.PurchaseOrder
+	if err := json.Unmarshal(s.body, &po); err != nil {
+		return err
+	}
+	if !numericEquals(po.DiscountPct, want) {
+		return fmt.Errorf("want discount %s got %s", want, po.DiscountPct)
+	}
+	return nil
+}
+
+// PO-05: the PO read model must agree with the invoice it produced.
+func (s *scenarioState) poTotalsEqualInvoice() error {
+	var po purchaseorders.PurchaseOrder
+	if err := json.Unmarshal(s.body, &po); err != nil {
+		return err
+	}
+	if err := s.readInvoiceByQuotation(); err != nil {
+		return err
+	}
+	if s.last.StatusCode != http.StatusOK {
+		return fmt.Errorf("invoice fetch want 200 got %d body=%s", s.last.StatusCode, s.body)
+	}
+	var inv invoices.Invoice
+	if err := json.Unmarshal(s.body, &inv); err != nil {
+		return err
+	}
+	pairs := []struct {
+		name    string
+		po      string
+		invoice *string
+	}{
+		{"dpp", po.PoSubtotal, inv.Dpp},
+		{"dppNilaiLain", po.PoDppNilaiLain, inv.DppNilaiLain},
+		{"ppnAmount", po.PoPpnAmount, inv.PpnAmount},
+		{"total", po.PoGrandTotal, inv.Total},
+		{"totalDiscount", po.PoTotalDiscount, inv.TotalDiscount},
+	}
+	for _, p := range pairs {
+		if p.invoice == nil {
+			return fmt.Errorf("invoice %s is null", p.name)
+		}
+		if !numericEquals(p.po, *p.invoice) {
+			return fmt.Errorf("%s: PO %s invoice %s", p.name, p.po, *p.invoice)
+		}
+	}
+	return nil
+}
+
 func (s *scenarioState) poFileNameEquals(want string) error {
 	var po purchaseorders.PurchaseOrder
 	if err := json.Unmarshal(s.body, &po); err != nil {
@@ -372,6 +421,8 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the PO status is "([^"]+)"$`, state.poDetailStatusEquals)
 		sc.Step(`^the PO number is set$`, state.poNumberSet)
 		sc.Step(`^the PO file name is "([^"]+)"$`, state.poFileNameEquals)
+		sc.Step(`^the PO discount is "([^"]+)"$`, state.poDiscountEquals)
+		sc.Step(`^the PO totals equal the invoice totals$`, state.poTotalsEqualInvoice)
 		sc.Step(`^the items contain at least (\d+) product line(?:s)?$`, state.poItemsAtLeastProducts)
 		sc.Step(`^the PO list contains at least (\d+) row(?:s)?$`, state.poListAtLeast)
 		sc.Step(`^the user transitions the PO through "([^"]*)"$`, state.walkPOPath)
