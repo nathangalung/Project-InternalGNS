@@ -6,8 +6,8 @@ import (
 )
 
 // MaxLimit is the upper bound applied to any limit parsed from the
-// request. Values above this are rejected and fall back to the caller-
-// supplied default.
+// request. Values above it are clamped down to it, matching listq.Page, so
+// the two agree on what "too large" means.
 const MaxLimit = 200
 
 // Parse reads ?limit & ?offset.
@@ -22,12 +22,16 @@ func Parse(r *http.Request) (limit, offset int) {
 	return
 }
 
-// ParseLimit reads ?limit, falling back to def when missing, invalid,
-// non-positive, or greater than MaxLimit.
+// ParseLimit reads ?limit, falling back to def when missing, invalid or
+// non-positive, and clamping anything above MaxLimit down to it.
+//
+// Clamping rather than falling back: ?limit=500 used to yield the caller's
+// default, so asking for more rows silently returned fewer than ?limit=200
+// did, and a caller could not tell a clamp from a rejected value.
 func ParseLimit(r *http.Request, def int) int {
 	if s := r.URL.Query().Get("limit"); s != "" {
-		if v, err := strconv.Atoi(s); err == nil && v > 0 && v <= MaxLimit {
-			return v
+		if v, err := strconv.Atoi(s); err == nil && v > 0 {
+			return min(v, MaxLimit)
 		}
 	}
 	return def
