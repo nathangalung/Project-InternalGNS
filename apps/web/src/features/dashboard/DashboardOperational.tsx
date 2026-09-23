@@ -70,10 +70,10 @@ export default function DashboardOperational({
 
   return (
     <>
-      <div className="page-content" style={{ gap: "29px" }}>
+      <div className="page-content gap-[29px]">
         <div className="page-header">
           <h1 className="page-title">Dashboard Operasional</h1>
-          <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
+          <div className="page-actions flex gap-2.5">
             <FilterButton onClick={() => setShowFilter(true)} />
           </div>
         </div>
@@ -127,27 +127,13 @@ export default function DashboardOperational({
           <table className="w-full border-collapse">
             <thead>
               <tr className={ui.theadRow}>
-                <th className={ui.thCenter} style={{ width: 150 }}>
-                  Nomor Quotation
-                </th>
-                <th className={ui.thCenter} style={{ width: 80 }}>
-                  Versi
-                </th>
-                <th className={ui.thCenter} style={{ width: 200 }}>
-                  Nama Klien
-                </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Tanggal
-                </th>
-                <th className={ui.thCenter} style={{ width: 130 }}>
-                  Jumlah Produk
-                </th>
-                <th className={ui.thCenter} style={{ width: 160 }}>
-                  Total Penawaran
-                </th>
-                <th className={ui.thCenter} style={{ width: 130 }}>
-                  Status
-                </th>
+                <th className={`${ui.thCenter} w-[150px]`}>Nomor Quotation</th>
+                <th className={`${ui.thCenter} w-[80px]`}>Versi</th>
+                <th className={`${ui.thCenter} w-[200px]`}>Nama Klien</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Tanggal</th>
+                <th className={`${ui.thCenter} w-[130px]`}>Jumlah Produk</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Total Penawaran</th>
+                <th className={`${ui.thCenter} w-[130px]`}>Status</th>
               </tr>
             </thead>
             <tbody>
