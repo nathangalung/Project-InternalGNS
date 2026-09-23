@@ -165,3 +165,59 @@ func TestLoadConfig_ProductionRejectsWeakDefaults(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
+// compose.dev.yml is committed, so the secrets it sets are public. A
+// production boot must refuse them however well-formed they look.
+func TestConfig_ProductionRejectsCommittedDevSecrets(t *testing.T) {
+	const devJWT = "local_dev_only_jwt_signing_key_0123456789abcdef"
+	const devPassword = "AdminGNS123!"
+
+	prod := func() Config {
+		return Config{
+			Env:                 "production",
+			JWTSecret:           testSecret,
+			DatabaseURL:         "postgres://u:p@db:5432/gns",
+			CORSAllowedOrigins:  []string{"https://app.example"},
+			SuperadminPassword:  "a-real-generated-password",
+			Superadmin2Password: "",
+			PdfBankAccountNo:    "1234567890",
+			PdfSignerName:       "Budi",
+		}
+	}
+
+	cases := []struct {
+		name    string
+		mutate  func(*Config)
+		wantErr bool
+	}{
+		{"baseline is accepted", func(*Config) {}, false},
+		{"dev jwt secret", func(c *Config) { c.JWTSecret = devJWT }, true},
+		{"dev superadmin password", func(c *Config) { c.SuperadminPassword = devPassword }, true},
+		{"dev second superadmin password", func(c *Config) { c.Superadmin2Password = devPassword }, true},
+		{"dev jwt secret with surrounding space", func(c *Config) { c.JWTSecret = " " + devJWT + " " }, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := prod()
+			tc.mutate(&c)
+			err := c.validate()
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}
+
+// The same values must keep working outside production: compose.dev.yml sets
+// them, so rejecting them everywhere would stop `make dev` booting.
+func TestConfig_DevelopmentAcceptsCommittedDevSecrets(t *testing.T) {
+	c := Config{
+		Env:                "development",
+		JWTSecret:          "local_dev_only_jwt_signing_key_0123456789abcdef",
+		DatabaseURL:        "postgres://gns_app:gns_app@postgres:5432/gns_quotation",
+		SuperadminPassword: "AdminGNS123!",
+	}
+	assert.NoError(t, c.validate())
+}

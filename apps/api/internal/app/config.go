@@ -84,11 +84,21 @@ func (c Config) validate() error {
 		return errors.New("JWT_SECRET is still the placeholder from .env.prod.example; generate one with openssl rand -hex 32")
 	}
 	if c.Env == "production" {
+		// compose.dev.yml is committed, so every secret it sets is public.
+		// They are well-formed and clear every check above, which is exactly
+		// why they have to be named: a production box running one of them is
+		// forgeable by anyone with the repository.
+		if isCommittedDevSecret(c.JWTSecret) {
+			return errors.New("JWT_SECRET is the dev value published in compose.dev.yml; generate one with openssl rand -hex 32")
+		}
 		if c.SuperadminPassword == "" {
 			return errors.New("SUPERADMIN_PASSWORD is required in production")
 		}
 		if isPlaceholder(c.SuperadminPassword) || isPlaceholder(c.Superadmin2Password) {
 			return errors.New("SUPERADMIN_PASSWORD/SUPERADMIN2_PASSWORD is still a placeholder in production")
+		}
+		if isCommittedDevSecret(c.SuperadminPassword) || isCommittedDevSecret(c.Superadmin2Password) {
+			return errors.New("SUPERADMIN_PASSWORD/SUPERADMIN2_PASSWORD is the dev value published in compose.dev.yml")
 		}
 		for _, o := range c.CORSAllowedOrigins {
 			if o == "*" {
@@ -124,6 +134,28 @@ func isWeakCred(v string) bool {
 		return true
 	}
 	return isPlaceholder(v)
+}
+
+// Secrets committed to the repository for local work.
+// Kept working outside production, where compose.dev.yml needs them to boot.
+var committedDevSecrets = []string{
+	"local_dev_only_jwt_signing_key_0123456789abcdef",
+	"AdminGNS123!",
+}
+
+// isCommittedDevSecret reports a value published in the repository. Empty is
+// not one: an empty optional secret is the "disabled" signal, as elsewhere.
+func isCommittedDevSecret(v string) bool {
+	s := strings.TrimSpace(v)
+	if s == "" {
+		return false
+	}
+	for _, known := range committedDevSecrets {
+		if s == known {
+			return true
+		}
+	}
+	return false
 }
 
 // Markers that only ever appear in template values.
