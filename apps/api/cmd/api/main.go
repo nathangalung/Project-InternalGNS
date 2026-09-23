@@ -28,7 +28,7 @@ func main() {
 
 	cfg, err := app.LoadConfig()
 	if err != nil {
-		logger.Error("load config", "err", err)
+		logger.Error("load config", "error", err)
 		os.Exit(1)
 	}
 
@@ -41,7 +41,7 @@ func main() {
 
 	srv, err := app.NewServer(ctx, cfg)
 	if err != nil {
-		logger.Error("build server", "err", err)
+		logger.Error("build server", "error", err)
 		os.Exit(1)
 	}
 	// Released after Shutdown returns, so draining handlers keep their
@@ -57,7 +57,7 @@ func main() {
 	go func() {
 		logger.Info("listening", "addr", cfg.HTTPAddr)
 		if err := srv.HTTP.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Error("serve", "err", err)
+			logger.Error("serve", "error", err)
 			stop()
 		}
 	}()
@@ -70,7 +70,7 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 70*time.Second)
 	defer cancel()
 	if err := srv.HTTP.Shutdown(shutdownCtx); err != nil {
-		logger.Error("shutdown", "err", err)
+		logger.Error("shutdown", "error", err)
 	}
 }
 
