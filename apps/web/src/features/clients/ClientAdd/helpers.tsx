@@ -9,17 +9,17 @@ export const fieldErrorCls = "mt-1 block text-xs text-[#EF4444]"
 
 export const inputCls = `${ui.fieldInput} font-sans placeholder:text-dark-500 ${ui.disabledField}`
 
-export interface ClientAddFormData {
+export type ClientAddFormData = {
   namaPerusahaan: string
   kodeNegara: string
   alamat: string
-  logo: string // data URL for preview only (not yet persisted)
+  // Preview data URL; the file uploads after save.
+  logo: string
   namaKontak: string
   nomorTelepon: string
   email: string
   npwp: string
   tku: string
-  referenceNumber: string
 }
 
 export const INITIAL_FORM: ClientAddFormData = {
@@ -32,7 +32,6 @@ export const INITIAL_FORM: ClientAddFormData = {
   email: "",
   npwp: "",
   tku: "",
-  referenceNumber: "",
 }
 
 export function isValidAddress(s: string): boolean {
