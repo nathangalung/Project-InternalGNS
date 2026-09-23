@@ -201,11 +201,11 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           shippingAlamat={shipping.alamat}
         />
         {totalShip > 0 && (
-          <div className="min-w-0 overflow-x-auto">
+          <div className="min-w-0 overflow-x-auto max-sm:*:min-w-max">
             <ShippingTable shipping={shipping} />
           </div>
         )}
-        <div className="min-w-0 overflow-x-auto">
+        <div className="min-w-0 overflow-x-auto max-sm:*:min-w-max">
           <ProductTable products={products} showProfit={hasCost} />
         </div>
         <CostBreakdown
