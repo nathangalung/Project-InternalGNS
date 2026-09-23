@@ -62,3 +62,24 @@ func TestParseLimit(t *testing.T) {
 		})
 	}
 }
+
+// Body-carried limits (match-request) clamp by the same rule as ?limit.
+func TestClamp(t *testing.T) {
+	cases := []struct {
+		name string
+		v    int
+		def  int
+		want int
+	}{
+		{"zero falls back", 0, 5, 5},
+		{"negative falls back", -3, 5, 5},
+		{"in range kept", 30, 5, 30},
+		{"at max kept", MaxLimit, 5, MaxLimit},
+		{"over max clamped", 100000, 5, MaxLimit},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, Clamp(tc.v, tc.def))
+		})
+	}
+}

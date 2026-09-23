@@ -30,9 +30,18 @@ func Parse(r *http.Request) (limit, offset int) {
 // did, and a caller could not tell a clamp from a rejected value.
 func ParseLimit(r *http.Request, def int) int {
 	if s := r.URL.Query().Get("limit"); s != "" {
-		if v, err := strconv.Atoi(s); err == nil && v > 0 {
-			return min(v, MaxLimit)
+		if v, err := strconv.Atoi(s); err == nil {
+			return Clamp(v, def)
 		}
 	}
 	return def
+}
+
+// Clamp bounds a limit to (0, MaxLimit].
+// Non-positive falls back to def; for limits carried in a request body.
+func Clamp(v, def int) int {
+	if v <= 0 {
+		return def
+	}
+	return min(v, MaxLimit)
 }
