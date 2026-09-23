@@ -1,11 +1,15 @@
--- Canonical current body of fn_search_vendors (deployed by migration 00008).
+-- Canonical current body of fn_search_vendors (deployed by migration 00050).
 CREATE OR REPLACE FUNCTION public.fn_search_vendors(p_q text, p_min_score real DEFAULT 0.3, p_limit integer DEFAULT 10)
  RETURNS TABLE(vendor_id bigint, vendor_name character varying, location character varying, contact_info jsonb, score real, match_tier text)
  LANGUAGE sql
  STABLE
 AS $function$
   WITH normalized AS (
-    SELECT UPPER(REGEXP_REPLACE(TRIM(p_q), '\s+', ' ', 'g')) AS nq
+    SELECT
+      UPPER(REGEXP_REPLACE(TRIM(p_q), '\s+', ' ', 'g')) AS nq,
+      '%' || REPLACE(REPLACE(REPLACE(
+        UPPER(REGEXP_REPLACE(TRIM(p_q), '\s+', ' ', 'g')),
+        '\', '\\'), '%', '\%'), '_', '\_') || '%' AS pat
   ),
   candidates AS (
     SELECT
@@ -15,18 +19,18 @@ AS $function$
       v.contact_info,
       GREATEST(
         -- Name signals (highest)
-        CASE WHEN UPPER(v.name) ILIKE '%'||n.nq||'%' THEN 0.95::REAL ELSE 0::REAL END,
-        word_similarity(n.nq, UPPER(v.name)),
+        CASE WHEN v.name ILIKE n.pat THEN 0.95::REAL ELSE 0::REAL END,
+        word_similarity(n.nq, v.name),
         -- Location signals (lower weight)
-        CASE WHEN UPPER(COALESCE(v.location,'')) ILIKE '%'||n.nq||'%' THEN 0.70::REAL ELSE 0::REAL END,
-        (word_similarity(n.nq, UPPER(COALESCE(v.location,''))) * 0.70)::REAL
+        CASE WHEN v.location ILIKE n.pat THEN 0.70::REAL ELSE 0::REAL END,
+        (word_similarity(n.nq, COALESCE(v.location,'')) * 0.70)::REAL
       ) AS combined_score
     FROM vendors v, normalized n
     WHERE v.is_active = TRUE
       AND (
-        UPPER(v.name) ILIKE '%'||n.nq||'%'
-        OR n.nq <% UPPER(v.name)
-        OR UPPER(COALESCE(v.location,'')) ILIKE '%'||n.nq||'%'
+        v.name ILIKE n.pat
+        OR n.nq <% v.name
+        OR v.location ILIKE n.pat
       )
   )
   SELECT

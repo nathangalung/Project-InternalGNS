@@ -216,6 +216,8 @@ UPDATE invoices
 RETURNING id;
 
 -- name: invoices.list_items
+-- The snapshot carries the customer's request text, so the offered catalog
+-- item is joined in: documents must describe what is actually supplied.
 SELECT ii.id,
        ii.invoice_id,
        ii.line_number,
@@ -223,6 +225,8 @@ SELECT ii.id,
        ii.item_code,
        ii.item_name,
        ii.offered_item_id,
+       oi.name      AS offered_item_name,
+       oi.impa_code AS offered_item_code,
        ii.unit_id,
        COALESCE(ii.unit_code, u.code) AS unit_code,
        u.coretax_code                 AS unit_coretax_code,
@@ -238,6 +242,7 @@ SELECT ii.id,
        ii.goods_or_service
 FROM invoice_items ii
 LEFT JOIN units u ON u.id = ii.unit_id
+LEFT JOIN items oi ON oi.id = ii.offered_item_id
 WHERE ii.invoice_id = $1
 ORDER BY COALESCE(ii.line_number, 0), ii.id;
 
@@ -252,6 +257,8 @@ SELECT ii.id,
        ii.item_code,
        ii.item_name,
        ii.offered_item_id,
+       oi.name      AS offered_item_name,
+       oi.impa_code AS offered_item_code,
        ii.unit_id,
        COALESCE(ii.unit_code, u.code) AS unit_code,
        u.coretax_code                 AS unit_coretax_code,
@@ -267,6 +274,7 @@ SELECT ii.id,
        ii.goods_or_service
 FROM invoice_items ii
 LEFT JOIN units u ON u.id = ii.unit_id
+LEFT JOIN items oi ON oi.id = ii.offered_item_id
 WHERE ii.invoice_id = ANY($1::bigint[])
 ORDER BY ii.invoice_id, COALESCE(ii.line_number, 0), ii.id;
 

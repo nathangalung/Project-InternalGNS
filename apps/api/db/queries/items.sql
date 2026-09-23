@@ -142,7 +142,11 @@ FROM fn_suggest_selling_prices($1, $2);
 -- Returns matched item id w/ score 0..1. Powers "find product by vendor offer".
 -- $1=query, $2=limit
 WITH q AS (
-    SELECT lower(trim($1::text)) AS nq
+    SELECT
+        lower(trim($1::text)) AS nq,
+        '%' || replace(replace(replace(
+            lower(trim($1::text)),
+            '\', '\\'), '%', '\%'), '_', '\_') || '%' AS pat
 ), hits AS (
     SELECT
         vp.item_id,
@@ -150,9 +154,9 @@ WITH q AS (
         v.name AS vendor_name,
         vp.vendor_sku,
         GREATEST(
-            CASE WHEN COALESCE(vp.vendor_sku,'') = q.nq           THEN 1.00 ELSE 0 END,
-            CASE WHEN COALESCE(lower(vp.vendor_sku),'') LIKE '%'||q.nq||'%' THEN 0.92 ELSE 0 END,
-            CASE WHEN lower(v.name) LIKE '%'||q.nq||'%'           THEN 0.70 ELSE 0 END,
+            CASE WHEN COALESCE(vp.vendor_sku,'') = q.nq THEN 1.00 ELSE 0 END,
+            CASE WHEN lower(vp.vendor_sku) LIKE q.pat   THEN 0.92 ELSE 0 END,
+            CASE WHEN lower(v.name) LIKE q.pat          THEN 0.70 ELSE 0 END,
             similarity(COALESCE(vp.vendor_sku,''), q.nq) * 0.85,
             word_similarity(q.nq, lower(v.name)) * 0.65
         ) AS score
@@ -164,8 +168,8 @@ WITH q AS (
         -- Bare lower(vendor_sku) so idx_vendor_products_sku_trgm stays
         -- reachable; COALESCE would hide the indexed expression. NULL LIKE
         -- yields NULL, which WHERE treats as no match, same as '' did.
-        lower(vp.vendor_sku) LIKE '%'||q.nq||'%'
-        OR lower(v.name) LIKE '%'||q.nq||'%'
+        lower(vp.vendor_sku) LIKE q.pat
+        OR lower(v.name) LIKE q.pat
         OR similarity(COALESCE(vp.vendor_sku,''), q.nq) > 0.30
         OR word_similarity(q.nq, lower(v.name))         > 0.40
       )
@@ -186,23 +190,29 @@ LIMIT $2;
 -- Returns matched item_id from cached confirmed matches.
 -- $1=query, $2=limit
 WITH q AS (
-    SELECT lower(trim($1::text)) AS nq
+    SELECT
+        lower(trim($1::text)) AS nq,
+        '%' || replace(replace(replace(
+            lower(trim($1::text)),
+            '\', '\\'), '%', '\%'), '_', '\_') || '%' AS pat
 )
 SELECT
     irm.matched_item_id AS item_id,
     irm.request_text,
     irm.match_count,
     GREATEST(
-        CASE WHEN lower(irm.request_text) = q.nq                       THEN 1.00 ELSE 0 END,
-        CASE WHEN lower(irm.request_text) LIKE '%'||q.nq||'%'          THEN 0.88 ELSE 0 END,
-        word_similarity(q.nq, lower(irm.request_text))
+        CASE WHEN lower(irm.request_text) = q.nq  THEN 1.00 ELSE 0 END,
+        CASE WHEN irm.request_text ILIKE q.pat    THEN 0.88 ELSE 0 END,
+        word_similarity(q.nq, irm.request_text)
     )::real AS score
 FROM item_request_matches irm
 CROSS JOIN q
 WHERE irm.matched_item_id IS NOT NULL
   AND (
-    lower(irm.request_text) LIKE '%'||q.nq||'%'
-    OR word_similarity(q.nq, lower(irm.request_text)) > 0.30
+    -- Bare request_text keeps idx_item_request_matches_trgm reachable;
+    -- ILIKE and word_similarity are both case-insensitive.
+    irm.request_text ILIKE q.pat
+    OR word_similarity(q.nq, irm.request_text) > 0.30
   )
 ORDER BY score DESC, irm.match_count DESC
 LIMIT $2;

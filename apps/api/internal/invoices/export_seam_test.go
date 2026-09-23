@@ -9,6 +9,7 @@ type PDFTotalsForTest struct {
 	TotalProduk    string
 	Diskon         string
 	DPP            string
+	LineNames      []string
 	LineUnitPrices []string
 	LineAmounts    []string
 }
@@ -20,6 +21,7 @@ func (h *ExportHandler) PDFTotalsForTest(
 	d := h.buildData(ctx, inv, items)
 	out := PDFTotalsForTest{TotalProduk: d.TotalProduk, Diskon: d.Diskon, DPP: d.DPP}
 	for _, it := range d.Items {
+		out.LineNames = append(out.LineNames, it.Name)
 		out.LineUnitPrices = append(out.LineUnitPrices, it.UnitPrice)
 		out.LineAmounts = append(out.LineAmounts, it.Amount)
 	}
