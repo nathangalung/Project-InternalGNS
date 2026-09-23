@@ -271,6 +271,13 @@ func (s *scenarioState) otherClientReusesEmail() error {
 		map[string]any{"name": "Pemilik Baru", "email": email})
 }
 
+// attachForeignLogo points at another client's upload.
+func (s *scenarioState) attachForeignLogo() error {
+	key := "clients/" + strconv.FormatInt(s.clientID+1, 10) + "/logo.png"
+	return s.sendRequest(http.MethodPatch, "/clients/"+strconv.FormatInt(s.clientID, 10)+"/logo",
+		clients.UpdateLogoRequest{ObjectKey: key})
+}
+
 func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
 		state := &scenarioState{t: t, cleaner: cleaner}
@@ -307,6 +314,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the user deletes the contact$`, state.deleteContact)
 		sc.Step(`^the user renames the contact$`, state.renameContact)
 		sc.Step(`^another client adds a contact with the same email$`, state.otherClientReusesEmail)
+		sc.Step(`^the user attaches a logo stored under another client$`, state.attachForeignLogo)
 	}
 }
 

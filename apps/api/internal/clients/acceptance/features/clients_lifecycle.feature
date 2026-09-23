@@ -74,3 +74,8 @@ Feature: Client lifecycle
     When the user deletes the contact
     And another client adds a contact with the same email
     Then the response status is 201
+
+  Scenario: Logo PATCH rejects a key outside the entity prefix
+    Given an existing client
+    When the user attaches a logo stored under another client
+    Then the response status is 422
