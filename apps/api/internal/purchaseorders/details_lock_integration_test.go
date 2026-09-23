@@ -18,7 +18,7 @@ func deliveredPO(t *testing.T, tx pgx.Tx) (int64, int64) {
 	ctx := context.Background()
 	qID, poID := acceptedQuotationWithPO(t, tx)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
 	return qID, poID

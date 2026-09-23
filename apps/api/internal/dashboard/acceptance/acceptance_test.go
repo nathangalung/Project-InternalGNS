@@ -118,8 +118,15 @@ func (s *scenarioState) invoiceFor(qty, price, cost string) error {
 	if err := json.Unmarshal(s.body, &po); err != nil {
 		return err
 	}
-	for _, target := range []purchaseorders.Status{purchaseorders.StatusUploaded, purchaseorders.StatusOnProgress, purchaseorders.StatusDelivered} {
-		if err := s.expect(http.StatusNoContent, http.MethodPatch, "/purchase-orders/"+strconv.FormatInt(po.ID, 10)+"/status",
+	// UPLOADED follows the PO file.
+	poPath := "/purchase-orders/" + strconv.FormatInt(po.ID, 10)
+	if err := s.expect(http.StatusNoContent, http.MethodPatch, poPath+"/file", purchaseorders.UpdateFileRequest{
+		FileName: "po.pdf", FileSize: 1024, ObjectKey: "po/" + strconv.FormatInt(po.ID, 10) + "/1-po.pdf",
+	}); err != nil {
+		return err
+	}
+	for _, target := range []purchaseorders.Status{purchaseorders.StatusOnProgress, purchaseorders.StatusDelivered} {
+		if err := s.expect(http.StatusNoContent, http.MethodPatch, poPath+"/status",
 			purchaseorders.ChangeStatusRequest{Status: target}); err != nil {
 			return err
 		}

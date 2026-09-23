@@ -91,7 +91,7 @@ func TestDeliveryNote_HappyPath(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	po, err := repo.GetByID(ctx, poID)
 	require.NoError(t, err)

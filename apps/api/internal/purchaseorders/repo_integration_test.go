@@ -22,6 +22,11 @@ const (
 	seedUnitID    int16 = 19
 )
 
+// testPOFile stands in for an uploaded PO document.
+var testPOFile = purchaseorders.UpdateFileRequest{
+	FileName: "po.pdf", FileSize: 1024, ObjectKey: "po/test/1-po.pdf",
+}
+
 // Accept quotation, return PO.
 func acceptedQuotationWithPO(t *testing.T, tx pgx.Tx) (int64, int64) {
 	t.Helper()
@@ -94,7 +99,7 @@ func TestRepo_ChangeStatus_FullLifecycle(t *testing.T) {
 
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -108,7 +113,7 @@ func TestRepo_ChangeStatus_DeliveredStampsDeliveryNote(t *testing.T) {
 	_, poID := acceptedQuotationWithPO(t, tx)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -123,23 +128,21 @@ func TestRepo_ChangeStatus_DeliveredStampsDeliveryNote(t *testing.T) {
 	require.Error(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 }
 
-// Migration 00046: the invoice guard raises P0013, so the caller learns the
-// real reason instead of the generic invalid-transition error 00035 collapsed
-// into. The raise aborts the transaction, so it is the last DB action here.
-func TestRepo_ChangeStatus_RevertBlockedByInvoiceReportsReason(t *testing.T) {
+// Migration 00061 makes DELIVERED terminal, so the refusal is an invalid
+// transition carrying Indonesian prose. The raise aborts the transaction.
+func TestRepo_ChangeStatus_DeliveredIsTerminal(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
 
 	err := repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, purchaseorders.ErrLocked)
-	assert.NotErrorIs(t, err, purchaseorders.ErrInvalidTransition)
-	assert.Contains(t, err.Error(), "has an invoice; cannot revert from DELIVERED")
+	assert.ErrorIs(t, err, purchaseorders.ErrInvalidTransition)
+	assert.Equal(t, "PO yang sudah dikirim atau dibatalkan tidak dapat diubah statusnya.", err.Error())
 }
 
 // The DELIVERED edit lock shares P0013 with the invoice guard but keeps its
@@ -149,7 +152,7 @@ func TestRepo_UpdateItems_DeliveredIsLocked(t *testing.T) {
 	_, poID := acceptedQuotationWithPO(t, tx)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -163,7 +166,7 @@ func TestRepo_UpdateItems_DeliveredIsLocked(t *testing.T) {
 	}, seedUserID, &rowVersion)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, purchaseorders.ErrLocked)
-	assert.Contains(t, err.Error(), "Cannot edit PO in DELIVERED state")
+	assert.Equal(t, "PO yang sudah dikirim atau dibatalkan tidak dapat diubah.", err.Error())
 }
 
 // Migration 00046: fn_update_po_items validation now raises the typed P0014
@@ -203,7 +206,7 @@ func TestRepo_ChangeStatus_DeliveredSnapshotsGoodsOrService(t *testing.T) {
 	qID, poID := acceptedQuotationWithPO(t, tx)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -242,7 +245,7 @@ func TestRepo_ChangeStatus_NotFound(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
-	err := repo.ChangeStatus(ctx, 99999999, purchaseorders.StatusUploaded, seedUserID)
+	err := repo.ChangeStatus(ctx, 99999999, purchaseorders.StatusOnProgress, seedUserID)
 	assert.ErrorIs(t, err, purchaseorders.ErrNotFound)
 }
 
@@ -335,7 +338,7 @@ func TestRepo_UpdateItems_LockedWhenDelivered(t *testing.T) {
 	_, poID := acceptedQuotationWithPO(t, tx)
 
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -486,7 +489,10 @@ func TestRepo_ChangeStatus_OnProgressIssuesDeliveryNote(t *testing.T) {
 		return po.DeliveryNoteNumber
 	}
 
-	assert.Nil(t, dnAfter(purchaseorders.StatusUploaded))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
+	po, err := repo.GetByID(ctx, poID)
+	require.NoError(t, err)
+	assert.Nil(t, po.DeliveryNoteNumber)
 	issued := dnAfter(purchaseorders.StatusOnProgress)
 	require.NotNil(t, issued)
 	assert.Contains(t, *issued, "DN-")

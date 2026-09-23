@@ -92,7 +92,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 			po.QuotationNo,
 			po.PoDate.In(tz.Jakarta()).Format("2006-01-02"),
 			po.CompanyName,
-			string(po.Status),
+			StatusLabel(po.Status),
 			po.PoTotalProduk,
 		})
 	}
@@ -295,23 +295,25 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !isValidStatus(req.Status) {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "invalid status"}))
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "Status PO tidak dikenal."}))
+		return
+	}
+	req.Note = strings.TrimSpace(req.Note)
+	if requiresNote(req.Status) && req.Note == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"note": "Alasan pembatalan wajib diisi."}))
 		return
 	}
 	if !h.allowOnProgress(w, r, id, req.Status) {
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())
-	if err := h.repo.ChangeStatus(r.Context(), id, req.Status, actor); err != nil {
+	if err := h.repo.Transition(r.Context(), id, req.Status, req.Note, actor); err != nil {
 		switch {
 		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
+		// The DB prose says why, e.g. the status follows the file.
 		case errors.Is(err, ErrInvalidTransition):
 			httperr.Render(w, httperr.Unprocessable(map[string]string{"status": err.Error()}))
-		// 409, unlike the 422 UpdateItems returns for the same sentinel: here
-		// the PO itself is valid and a dependent invoice blocks the change.
-		case errors.Is(err, ErrLocked):
-			httperr.Render(w, httperr.Conflict(err.Error()))
 		default:
 			httperr.RenderDBErr(w, err)
 		}
@@ -354,7 +356,7 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 		case errors.Is(err, ErrLocked):
-			httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "PO locked in DELIVERED state"}))
+			httperr.Render(w, httperr.Unprocessable(map[string]string{"status": err.Error()}))
 		default:
 			httperr.RenderDBErr(w, err)
 		}
@@ -382,7 +384,8 @@ func (h *Handler) allowOnProgress(w http.ResponseWriter, r *http.Request, id int
 		httperr.RenderDBErr(w, err)
 		return false
 	}
-	if po.Status == StatusOnProgress {
+	// Only the promotion from UPLOADED is gated; the DB refuses the rest.
+	if po.Status != StatusUploaded {
 		return true
 	}
 	issues, err := h.repo.Completeness(r.Context(), id)
@@ -397,10 +400,43 @@ func (h *Handler) allowOnProgress(w http.ResponseWriter, r *http.Request, id int
 	return false
 }
 
-func isValidStatus(s Status) bool {
-	switch s {
-	case StatusPending, StatusUploaded, StatusOnProgress, StatusDelivered:
-		return true
+// RemoveFile detaches the PO document.
+func (h *Handler) RemoveFile(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
 	}
-	return false
+	actor := deps.CurrentUserID(r.Context())
+	if err := h.repo.RemoveFile(r.Context(), id, actor); err != nil {
+		switch {
+		case errors.Is(err, ErrNotFound):
+			httperr.Render(w, httperr.NotFound("purchase order not found"))
+		case errors.Is(err, ErrLocked):
+			httperr.Render(w, httperr.Conflict(err.Error()))
+		default:
+			httperr.RenderDBErr(w, err)
+		}
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// History returns the PO status timeline.
+func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	rows, err := h.repo.History(r.Context(), id)
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("purchase order not found"))
+		return
+	}
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, rows)
 }

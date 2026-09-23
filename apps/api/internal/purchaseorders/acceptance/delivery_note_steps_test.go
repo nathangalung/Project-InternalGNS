@@ -118,6 +118,26 @@ func (s *scenarioState) exportListsDeliveryNoteNumber() error {
 	return fmt.Errorf("export does not list %s: %v", s.dnNumber, rows)
 }
 
+// Status column shows the label.
+func (s *scenarioState) exportShowsStatusLabel(want string) error {
+	f, err := excelize.OpenReader(bytes.NewReader(s.body))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	rows, err := f.GetRows(f.GetSheetName(0))
+	if err != nil {
+		return err
+	}
+	const statusCol = 5
+	for _, row := range rows[1:] {
+		if len(row) > statusCol && row[statusCol] == want {
+			return nil
+		}
+	}
+	return fmt.Errorf("export has no status %q: %v", want, rows)
+}
+
 func (s *scenarioState) acceptedQuotationOffering(itemID int64, requested string) error {
 	impa := "999999"
 	return s.acceptedQuotationWith(defaultCompany, quotations.CreateItem{

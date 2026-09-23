@@ -41,7 +41,7 @@ func TestRepo_PoTotals_MatchCreatedInvoice(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "7.00", po.DiscountPct)
 
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
 

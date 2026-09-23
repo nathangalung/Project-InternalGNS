@@ -97,6 +97,9 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	if out.Rows == nil {
 		out.Rows = []PurchaseOrder{}
 	}
+	for i := range out.Rows {
+		out.Rows[i].withTransitions()
+	}
 	return out, err
 }
 
@@ -109,6 +112,7 @@ func (r *Repo) GetByID(ctx context.Context, id int64) (PurchaseOrder, error) {
 	if errors.Is(err, pgx.ErrNoRows) {
 		return PurchaseOrder{}, ErrNotFound
 	}
+	po.withTransitions()
 	return po, err
 }
 
@@ -121,19 +125,39 @@ func (r *Repo) GetByQuotation(ctx context.Context, quotationID int64) (PurchaseO
 	if errors.Is(err, pgx.ErrNoRows) {
 		return PurchaseOrder{}, ErrNotFound
 	}
+	po.withTransitions()
 	return po, err
 }
 
+// UpdateFile attaches the PO document; a PENDING PO becomes UPLOADED.
 func (r *Repo) UpdateFile(ctx context.Context, id int64, req UpdateFileRequest, actorID int64) error {
-	tag, err := r.db.Exec(ctx, r.store.Get("purchase_orders.update_file"),
+	_, err := r.db.Exec(ctx, r.store.Get("purchase_orders.update_file"),
 		id, req.FileName, req.FileSize, req.ObjectKey, actorID)
+	return classifyPgErr(err)
+}
+
+// RemoveFile detaches the PO document; an UPLOADED PO returns to PENDING.
+// Once work has started the file stays, reported as ErrLocked.
+func (r *Repo) RemoveFile(ctx context.Context, id, actorID int64) error {
+	_, err := r.db.Exec(ctx, r.store.Get("purchase_orders.remove_file"), id, actorID)
+	return classifyPgErr(err)
+}
+
+// History returns the status timeline, oldest first. Every PO has its
+// creation entry, so an empty timeline means the PO does not exist.
+func (r *Repo) History(ctx context.Context, id int64) ([]StatusHistoryEntry, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("purchase_orders.status_history"), id)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("query po history: %w", err)
 	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
+	out, err := pgx.CollectRows(rows, pgx.RowToStructByName[StatusHistoryEntry])
+	if err != nil {
+		return nil, fmt.Errorf("scan po history: %w", err)
 	}
-	return nil
+	if len(out) == 0 {
+		return nil, ErrNotFound
+	}
+	return out, nil
 }
 
 // UpdateNotes rewrites the internal note.
@@ -210,10 +234,28 @@ func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssu
 	return issues, nil
 }
 
+// ChangeStatus is Transition without a note.
 func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, actorID int64) error {
-	_, err := r.db.Exec(ctx, r.store.Get("purchase_orders.change_status"), id, string(status), actorID)
+	return r.Transition(ctx, id, status, "", actorID)
+}
+
+// Transition moves the PO and records note in its history.
+// CANCELLED requires a non-blank note.
+func (r *Repo) Transition(ctx context.Context, id int64, status Status, note string, actorID int64) error {
+	_, err := r.db.Exec(ctx, r.store.Get("purchase_orders.change_status"),
+		id, string(status), actorID, note)
 	return classifyPgErr(err)
 }
+
+// ruleError carries the raise message, which is
+// user-facing, under a domain sentinel.
+type ruleError struct {
+	kind error
+	msg  string
+}
+
+func (e *ruleError) Error() string { return e.msg }
+func (e *ruleError) Unwrap() error { return e.kind }
 
 // Single ERRCODE to domain error table for this slice.
 // Codes are assigned by migration 00046; P0014 validation raises pass
@@ -231,12 +273,11 @@ func classifyPgErr(err error) error {
 		return ErrVersionMismatch
 	case "P0011":
 		return ErrNotFound
+	// The raise message is the reason, which differs per guard.
 	case "P0012":
-		return ErrInvalidTransition
+		return &ruleError{kind: ErrInvalidTransition, msg: pgErr.Message}
 	case "P0013":
-		// Wrapped so the caller can surface the real reason, which differs
-		// per guard (DELIVERED edit lock vs. existing invoice).
-		return fmt.Errorf("%w: %s", ErrLocked, pgErr.Message)
+		return &ruleError{kind: ErrLocked, msg: pgErr.Message}
 	}
 	return err
 }

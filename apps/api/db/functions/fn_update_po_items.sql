@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_po_items (deployed by migration 00046).
+-- Canonical current body of fn_update_po_items (deployed by migration 00061).
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -18,8 +18,8 @@ BEGIN
       USING ERRCODE = 'P0011';
   END IF;
 
-  IF v_status = 'DELIVERED' THEN
-    RAISE EXCEPTION 'Cannot edit PO in DELIVERED state'
+  IF v_status IN ('DELIVERED', 'CANCELLED') THEN
+    RAISE EXCEPTION 'PO yang sudah dikirim atau dibatalkan tidak dapat diubah.'
       USING ERRCODE = 'P0013';
   END IF;
 

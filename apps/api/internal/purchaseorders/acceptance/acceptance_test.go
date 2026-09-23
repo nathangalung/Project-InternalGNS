@@ -38,6 +38,11 @@ type scenarioState struct {
 	// Delivery note routes need templates, which FullServer omits.
 	dnSrv    *httptest.Server
 	dnNumber string
+	// Role scenarios run on the production router.
+	appSrv    *httptest.Server
+	cleaner   *testutil.Cleaner
+	roleToken string
+	roleUsed  bool
 }
 
 func (s *scenarioState) reset() error {
@@ -530,7 +535,7 @@ func trimNumeric(v string) string {
 
 func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
-		state := &scenarioState{t: t, userID: defaultUserID}
+		state := &scenarioState{t: t, userID: defaultUserID, cleaner: testutil.NewCleaner(t)}
 		sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 			state.last = nil
 			state.body = nil
@@ -539,6 +544,10 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 			state.dnNumber = ""
 			return ctx, nil
 		})
+		sc.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
+			return ctx, state.releaseRoleUsers()
+		})
+		registerStatusSteps(sc, state)
 
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
 		sc.Step(`^the commercial domain is empty$`, state.emptyDomain)
@@ -579,6 +588,7 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the delivery note number is unchanged$`, state.deliveryNoteNumberUnchanged)
 		sc.Step(`^the user exports the PO list$`, state.exportPOList)
 		sc.Step(`^the export lists the stored delivery note number$`, state.exportListsDeliveryNoteNumber)
+		sc.Step(`^the export shows the status "([^"]+)"$`, state.exportShowsStatusLabel)
 		sc.Step(`^an accepted quotation offering catalog item (\d+) for "([^"]+)"$`, state.acceptedQuotationOffering)
 		sc.Step(`^the first PO line is named after catalog item (\d+)$`, state.firstLineNamedAfterItem)
 		sc.Step(`^catalog item (\d+) has no IMPA code$`, state.catalogItemHasNoCode)

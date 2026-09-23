@@ -9,6 +9,7 @@ const (
 	StatusUploaded   Status = "UPLOADED"
 	StatusOnProgress Status = "ON_PROGRESS"
 	StatusDelivered  Status = "DELIVERED"
+	StatusCancelled  Status = "CANCELLED"
 )
 
 type PurchaseOrder struct {
@@ -43,6 +44,9 @@ type PurchaseOrder struct {
 
 	// Issued when work starts (ON_PROGRESS); nil until then.
 	DeliveryNoteNumber *string `db:"delivery_note_number" json:"deliveryNoteNumber,omitempty"`
+
+	// Moves the caller may offer from Status.
+	AllowedTransitions []Transition `db:"-" json:"allowedTransitions"`
 }
 
 // PO line snapshot row.
@@ -74,6 +78,18 @@ type PurchaseOrderItem struct {
 
 type ChangeStatusRequest struct {
 	Status Status `json:"status"`
+	// Required for CANCELLED; kept in the history otherwise.
+	Note string `json:"note,omitempty"`
+}
+
+// StatusHistoryEntry mirrors po_status_history.
+type StatusHistoryEntry struct {
+	ID         int64     `db:"id"          json:"id"`
+	FromStatus *Status   `db:"from_status" json:"fromStatus,omitempty"`
+	ToStatus   Status    `db:"to_status"   json:"toStatus"`
+	Note       *string   `db:"note"        json:"note,omitempty"`
+	ChangedBy  int64     `db:"changed_by"  json:"changedBy"`
+	ChangedAt  time.Time `db:"changed_at"  json:"changedAt"`
 }
 
 type UpdateFileRequest struct {

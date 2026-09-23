@@ -176,15 +176,18 @@ WHERE poi.po_id = $1
 ORDER BY v.id;
 
 -- name: purchase_orders.update_file
-UPDATE purchase_orders
-SET file_name   = $2,
-    file_size   = $3,
-    file_url    = $4,
-    uploaded_at = NOW(),
-    updated_by  = $5,
-    status      = CASE WHEN status = 'PENDING' THEN 'UPLOADED' ELSE status END
-WHERE id = $1
-RETURNING id;
+-- Attaching the file moves PENDING to UPLOADED.
+SELECT fn_attach_po_file($1::bigint, $2::text, $3::bigint, $4::text, $5::bigint);
+
+-- name: purchase_orders.remove_file
+-- Detaching the file moves UPLOADED back to PENDING.
+SELECT fn_detach_po_file($1::bigint, $2::bigint);
+
+-- name: purchase_orders.status_history
+SELECT id, from_status, to_status, note, changed_by, changed_at
+FROM po_status_history
+WHERE po_id = $1
+ORDER BY changed_at, id;
 
 -- name: purchase_orders.update_notes
 -- $2 is the If-Match row_version, NULL to skip the optimistic-lock guard.
@@ -195,7 +198,8 @@ SELECT fn_update_po_notes($1::bigint, $2::int, $3::text, $4::bigint);
 SELECT fn_update_po_details($1::bigint, $2::int, $3::text, $4::date, $5::bigint);
 
 -- name: purchase_orders.change_status
-SELECT fn_change_po_status($1::bigint, $2::text, $3::bigint);
+-- $4 is the note; CANCELLED requires one.
+SELECT fn_change_po_status($1::bigint, $2::text, $3::bigint, $4::text);
 
 -- name: purchase_orders.update_items
 SELECT fn_update_po_items($1::bigint, $2::bigint, $3::numeric, $4::text, $5::text, $6::int, $7::numeric, $8::jsonb);
