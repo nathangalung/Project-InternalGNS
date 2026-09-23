@@ -37,6 +37,25 @@ type Invoice struct {
 	AttachmentObjectKey *string    `db:"attachment_object_key"   json:"attachmentObjectKey,omitempty"`
 }
 
+// InvoiceDetail is the read model behind the invoice screen. It carries the
+// client, quotation and PO header fields the page prints, so finance never
+// has to call the quotation or purchase-order endpoints its role forbids.
+type InvoiceDetail struct {
+	Invoice
+	VesselName         *string    `db:"vessel_name"          json:"vesselName,omitempty"`
+	PoNumber           *string    `db:"po_number"            json:"poNumber,omitempty"`
+	PoDate             *time.Time `db:"po_date"              json:"poDate,omitempty"`
+	CompanyNpwp        *string    `db:"company_npwp"         json:"companyNpwp,omitempty"`
+	CompanyAddress     *string    `db:"company_address"      json:"companyAddress,omitempty"`
+	CompanyEmail       *string    `db:"company_email"        json:"companyEmail,omitempty"`
+	CompanyCountryCode string     `db:"company_country_code" json:"companyCountryCode"`
+	CompanyTkuID       *string    `db:"company_tku_id"       json:"companyTkuId,omitempty"`
+	ContactName        *string    `db:"contact_name"         json:"contactName,omitempty"`
+	ContactEmail       *string    `db:"contact_email"        json:"contactEmail,omitempty"`
+	ContactPhone       *string    `db:"contact_phone"        json:"contactPhone,omitempty"`
+	AllowedStatuses    []Status   `db:"-"                    json:"allowedStatuses"`
+}
+
 // UpdateAttachmentRequest persists the MinIO object key for an invoice
 // payment receipt or similar attachment.
 type UpdateAttachmentRequest struct {

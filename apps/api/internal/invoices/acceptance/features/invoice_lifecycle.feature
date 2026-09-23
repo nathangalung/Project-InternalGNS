@@ -14,6 +14,13 @@ Feature: Invoice lifecycle
     And the invoice number is set
     And the invoice has positive total
 
+  Scenario: Invoice detail carries the client and PO header
+    Given a delivered purchase order
+    When the user reads the invoice by quotation
+    Then the response status is 200
+    And the invoice detail carries the client and purchase order header
+    And the invoice detail offers the transitions the database allows
+
   Scenario: Read invoice snapshot items
     Given a delivered purchase order
     When the user lists invoice items
@@ -29,6 +36,12 @@ Feature: Invoice lifecycle
       | path        |
       | sent        |
       | sent,paid   |
+
+  Scenario: Saving an unchanged past-due draft is accepted
+    Given a delivered purchase order
+    When the user updates invoice due date to "2020-01-01"
+    And the user tries to transition the invoice to "draft"
+    Then the response status is 204
 
   Scenario: Reject unknown status value
     Given a delivered purchase order

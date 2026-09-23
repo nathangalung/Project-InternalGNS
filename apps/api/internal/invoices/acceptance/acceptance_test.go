@@ -193,6 +193,58 @@ func (s *scenarioState) invoiceStatusEquals(want string) error {
 	return nil
 }
 
+// The invoice screen runs on finance credentials, which cannot read
+// quotations or purchase orders, so the header must arrive from here.
+func (s *scenarioState) invoiceDetailCarriesHeader() error {
+	var det invoices.InvoiceDetail
+	if err := json.Unmarshal(s.body, &det); err != nil {
+		return err
+	}
+	missing := []string{}
+	if strings.TrimSpace(det.QuotationNo) == "" {
+		missing = append(missing, "quotationNo")
+	}
+	if strings.TrimSpace(det.CompanyName) == "" {
+		missing = append(missing, "companyName")
+	}
+	if det.CompanyNpwp == nil || strings.TrimSpace(*det.CompanyNpwp) == "" {
+		missing = append(missing, "companyNpwp")
+	}
+	if det.CompanyAddress == nil || strings.TrimSpace(*det.CompanyAddress) == "" {
+		missing = append(missing, "companyAddress")
+	}
+	if det.ContactName == nil || strings.TrimSpace(*det.ContactName) == "" {
+		missing = append(missing, "contactName")
+	}
+	if det.PoNumber == nil || strings.TrimSpace(*det.PoNumber) == "" {
+		missing = append(missing, "poNumber")
+	}
+	if det.PoDate == nil {
+		missing = append(missing, "poDate")
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("invoice detail missing %s", strings.Join(missing, ", "))
+	}
+	return nil
+}
+
+func (s *scenarioState) invoiceDetailOffersTransitions() error {
+	var det invoices.InvoiceDetail
+	if err := json.Unmarshal(s.body, &det); err != nil {
+		return err
+	}
+	want := invoices.AllowedTransitions(det.Status)
+	if len(want) != len(det.AllowedStatuses) {
+		return fmt.Errorf("want %v got %v", want, det.AllowedStatuses)
+	}
+	for i, st := range want {
+		if det.AllowedStatuses[i] != st {
+			return fmt.Errorf("want %v got %v", want, det.AllowedStatuses)
+		}
+	}
+	return nil
+}
+
 func (s *scenarioState) invoiceNumberSet() error {
 	var inv invoices.Invoice
 	if err := json.Unmarshal(s.body, &inv); err != nil {
@@ -344,6 +396,8 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the response status is (\d+)$`, state.statusEquals)
 		sc.Step(`^the invoice status is "([^"]+)"$`, state.invoiceStatusEquals)
 		sc.Step(`^the invoice number is set$`, state.invoiceNumberSet)
+		sc.Step(`^the invoice detail carries the client and purchase order header$`, state.invoiceDetailCarriesHeader)
+		sc.Step(`^the invoice detail offers the transitions the database allows$`, state.invoiceDetailOffersTransitions)
 		sc.Step(`^the invoice has positive total$`, state.invoicePositiveTotal)
 		sc.Step(`^the invoice items contain at least (\d+) product line(?:s)?$`, state.invoiceItemsAtLeastProducts)
 		sc.Step(`^the invoice list contains at least (\d+) row(?:s)?$`, state.invoiceListAtLeast)

@@ -91,6 +91,105 @@ WHERE inv.quotation_id = $1
 ORDER BY inv.id DESC
 LIMIT 1;
 
+-- name: invoices.get_detail_by_id
+-- Detail read model: carries the client, quotation and PO header fields the
+-- invoice screen prints. Finance cannot call the quotation or purchase-order
+-- endpoints, so the page must never need them.
+SELECT inv.id,
+       inv.invoice_no,
+       inv.quotation_id,
+       q.quotation_no,
+       q.vessel_name,
+       inv.po_id,
+       po.po_number,
+       po.po_date,
+       inv.company_client_id,
+       cc.name AS company_name,
+       cc.npwp AS company_npwp,
+       cc.address AS company_address,
+       cc.email AS company_email,
+       cc.country_code AS company_country_code,
+       cc.tku_id AS company_tku_id,
+       ct.name AS contact_name,
+       ct.email AS contact_email,
+       ct.phone AS contact_phone,
+       inv.invoice_date,
+       inv.due_date,
+       inv.subtotal,
+       inv.total_discount,
+       inv.dpp,
+       inv.dpp_nilai_lain,
+       inv.ppn_amount,
+       inv.total,
+       inv.status,
+       inv.tax_transaction_code,
+       inv.faktur_type,
+       inv.row_version,
+       inv.created_at,
+       inv.updated_at,
+       inv.attachment_object_key
+FROM invoices inv
+JOIN quotations q ON q.id = inv.quotation_id
+JOIN company_client cc ON cc.id = inv.company_client_id
+LEFT JOIN purchase_orders po ON po.id = inv.po_id
+LEFT JOIN LATERAL (
+    SELECT co.name, co.email, co.phone
+    FROM company_contacts co
+    WHERE co.company_id = cc.id AND co.is_active = TRUE
+    ORDER BY COALESCE(co.id = q.contact_id, FALSE) DESC, co.id ASC
+    LIMIT 1
+) ct ON TRUE
+WHERE inv.id = $1;
+
+-- name: invoices.get_detail_by_quotation
+SELECT inv.id,
+       inv.invoice_no,
+       inv.quotation_id,
+       q.quotation_no,
+       q.vessel_name,
+       inv.po_id,
+       po.po_number,
+       po.po_date,
+       inv.company_client_id,
+       cc.name AS company_name,
+       cc.npwp AS company_npwp,
+       cc.address AS company_address,
+       cc.email AS company_email,
+       cc.country_code AS company_country_code,
+       cc.tku_id AS company_tku_id,
+       ct.name AS contact_name,
+       ct.email AS contact_email,
+       ct.phone AS contact_phone,
+       inv.invoice_date,
+       inv.due_date,
+       inv.subtotal,
+       inv.total_discount,
+       inv.dpp,
+       inv.dpp_nilai_lain,
+       inv.ppn_amount,
+       inv.total,
+       inv.status,
+       inv.tax_transaction_code,
+       inv.faktur_type,
+       inv.row_version,
+       inv.created_at,
+       inv.updated_at,
+       inv.attachment_object_key
+FROM invoices inv
+JOIN quotations q ON q.id = inv.quotation_id
+JOIN company_client cc ON cc.id = inv.company_client_id
+LEFT JOIN purchase_orders po ON po.id = inv.po_id
+LEFT JOIN LATERAL (
+    SELECT co.name, co.email, co.phone
+    FROM company_contacts co
+    WHERE co.company_id = cc.id AND co.is_active = TRUE
+    ORDER BY COALESCE(co.id = q.contact_id, FALSE) DESC, co.id ASC
+    LIMIT 1
+) ct ON TRUE
+WHERE inv.quotation_id = $1
+ORDER BY inv.id DESC
+LIMIT 1;
+
 -- name: invoices.change_status
 SELECT fn_change_invoice_status($1::bigint, $2::text, $3::bigint);
 

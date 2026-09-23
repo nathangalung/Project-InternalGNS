@@ -149,6 +149,32 @@ func (r *Repo) GetByQuotation(ctx context.Context, quotationID int64) (Invoice, 
 	return inv, err
 }
 
+// GetDetail returns the invoice with its client, quotation and PO header.
+func (r *Repo) GetDetail(ctx context.Context, id int64) (InvoiceDetail, error) {
+	return r.detail(ctx, "invoices.get_detail_by_id", id)
+}
+
+// GetDetailByQuotation is GetDetail keyed by the quotation the screen routes on.
+func (r *Repo) GetDetailByQuotation(ctx context.Context, quotationID int64) (InvoiceDetail, error) {
+	return r.detail(ctx, "invoices.get_detail_by_quotation", quotationID)
+}
+
+func (r *Repo) detail(ctx context.Context, query string, id int64) (InvoiceDetail, error) {
+	rows, err := r.db.Query(ctx, r.store.Get(query), id)
+	if err != nil {
+		return InvoiceDetail{}, err
+	}
+	det, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[InvoiceDetail])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return InvoiceDetail{}, ErrNotFound
+	}
+	if err != nil {
+		return InvoiceDetail{}, err
+	}
+	det.AllowedStatuses = AllowedTransitions(det.Status)
+	return det, nil
+}
+
 func (r *Repo) ListItems(ctx context.Context, invoiceID int64) ([]InvoiceItem, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("invoices.list_items"), invoiceID)
 	if err != nil {

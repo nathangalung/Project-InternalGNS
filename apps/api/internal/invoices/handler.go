@@ -129,7 +129,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid id"))
 		return
 	}
-	inv, err := h.repo.GetByID(r.Context(), id)
+	inv, err := h.repo.GetDetail(r.Context(), id)
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("invoice not found"))
 		return
@@ -147,7 +147,7 @@ func (h *Handler) GetByQuotation(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid quotation id"))
 		return
 	}
-	inv, err := h.repo.GetByQuotation(r.Context(), id)
+	inv, err := h.repo.GetDetailByQuotation(r.Context(), id)
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("invoice not found"))
 		return
