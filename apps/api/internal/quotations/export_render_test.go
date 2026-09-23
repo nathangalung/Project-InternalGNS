@@ -111,11 +111,29 @@ func sampleExport(productLines int) exportData {
 	return buildExportData(d, qUnits, "riza@example.com", "0811-000-000", "Director")
 }
 
-// The printed quotation carries the stored figures and reconciles.
-func TestQuotationPDF_PrintsStoredTotals(t *testing.T) {
-	text, pages, _ := renderQuotation(t, sampleExport(1))
+// badBoxes lists overfull, underfull and warning lines.
+func badBoxes(log string) []string {
+	var out []string
+	for _, ln := range strings.Split(log, "\n") {
+		if strings.HasPrefix(ln, "Overfull \\") || strings.HasPrefix(ln, "Underfull \\") ||
+			strings.Contains(ln, "Warning") {
+			out = append(out, ln)
+		}
+	}
+	return out
+}
 
-	flat := strings.Join(strings.Fields(text), " ")
+// Both paper sizes print the stored figures cleanly.
+func TestQuotationPDF_PrintsStoredTotals(t *testing.T) {
+	cases := []struct {
+		name    string
+		lines   int
+		wantA4  bool
+		onePage bool
+	}{
+		{"A5", 1, false, true},
+		{"A4", 8, true, false},
+	}
 	wants := []struct{ label, amount string }{
 		{"Total Produk", "Rp 2.001,00"},
 		{"Diskon 10.00%", "-Rp 200,10"},
@@ -125,16 +143,30 @@ func TestQuotationPDF_PrintsStoredTotals(t *testing.T) {
 		{"PPN 12%", "Rp 214,63"},
 		{"Grand Total", "Rp 2.165,78"},
 	}
-	for _, w := range wants {
-		if !strings.Contains(flat, w.label+" "+w.amount) {
-			t.Errorf("printed PDF misses %q followed by %q", w.label, w.amount)
-		}
-	}
-	if !strings.Contains(flat, "TEKIRO PUNCHING TOOL SET") || !strings.Contains(flat, "(613802)") {
-		t.Error("the offer column must name the catalog item that is supplied")
-	}
-	if pages != 1 {
-		t.Errorf("pages = %d, want 1", pages)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			data := sampleExport(tc.lines)
+			if data.UseA4 != tc.wantA4 {
+				t.Fatalf("UseA4 = %v, want %v", data.UseA4, tc.wantA4)
+			}
+			text, pages, log := renderQuotation(t, data)
+
+			flat := strings.Join(strings.Fields(text), " ")
+			for _, w := range wants {
+				if !strings.Contains(flat, w.label+" "+w.amount) {
+					t.Errorf("printed PDF misses %q followed by %q", w.label, w.amount)
+				}
+			}
+			if !strings.Contains(flat, "TEKIRO PUNCHING TOOL SET") || !strings.Contains(flat, "(613802)") {
+				t.Error("the offer column must name the catalog item that is supplied")
+			}
+			if tc.onePage && pages != 1 {
+				t.Errorf("pages = %d, want 1", pages)
+			}
+			for _, ln := range badBoxes(log) {
+				t.Errorf("latex: %s", ln)
+			}
+		})
 	}
 }
 
@@ -174,11 +206,8 @@ func TestQuotationPDF_A5FitsFiveLines(t *testing.T) {
 			if !strings.Contains(text, "Director") {
 				t.Error("the signature block must print on the sheet")
 			}
-			for _, ln := range strings.Split(log, "\n") {
-				if strings.HasPrefix(ln, "Overfull \\") || strings.HasPrefix(ln, "Underfull \\") ||
-					strings.Contains(ln, "Warning") {
-					t.Errorf("latex: %s", ln)
-				}
+			for _, ln := range badBoxes(log) {
+				t.Errorf("latex: %s", ln)
 			}
 		})
 	}
