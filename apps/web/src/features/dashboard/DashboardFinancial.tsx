@@ -29,6 +29,7 @@ import DashboardFinancialFilter, {
 } from "./DashboardFinancialFilter"
 import { computeRpMax, expenseSeries, statusCount, toRecentInvoices } from "./helpers"
 import StatusTiles from "./StatusTiles"
+import SummaryError from "./SummaryError"
 import TrendChart, { CHART_MONTHS } from "./TrendChart"
 
 const chartTabs: { label: string; metric: DashboardMetric }[] = [
@@ -48,9 +49,13 @@ export default function DashboardFinancial() {
   const [activeTab, setActiveTab] = useState("Pendapatan")
   const [showFilter, setShowFilter] = useState(false)
   const [filters, setFilters] = useState<DashboardFilterValues | null>(null)
-  const { data: summary } = useDashboardSummary()
+  const { data: summary, isError: summaryError } = useDashboardSummary()
   const { exporting, exportXlsx } = useDashboardExport()
-  const { data: rawInvoices, isPending: invoicesPending } = useInvoices(RECENT_INVOICE_PARAMS)
+  const {
+    data: rawInvoices,
+    isPending: invoicesPending,
+    isError: invoicesError,
+  } = useInvoices(RECENT_INVOICE_PARAMS)
 
   const baseYear = filters?.year ?? new Date().getFullYear()
   const selectedMonth = filters?.month ?? null // null = whole year
@@ -125,6 +130,8 @@ export default function DashboardFinancial() {
             <FilterButton onClick={() => setShowFilter(true)} />
           </div>
         </div>
+
+        <SummaryError show={summaryError} />
 
         {filters && (
           <ActiveFilters
@@ -234,7 +241,10 @@ export default function DashboardFinancial() {
             </thead>
             <tbody>
               {invoicesPending && <TableLoadingRow colSpan={6} />}
-              {!invoicesPending && recentInvoices.length === 0 && (
+              {invoicesError && (
+                <TableEmptyRow colSpan={6}>Gagal memuat Invoice terkini.</TableEmptyRow>
+              )}
+              {!invoicesPending && !invoicesError && recentInvoices.length === 0 && (
                 <TableEmptyRow colSpan={6}>Belum ada Invoice.</TableEmptyRow>
               )}
               {recentInvoices.map((row) => {

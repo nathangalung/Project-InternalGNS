@@ -1,4 +1,4 @@
-import { useId, useState } from "react"
+import { type FocusEvent, useId, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
 import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
@@ -63,6 +63,10 @@ export default function DashboardFinancialFilter({
   const [month, setMonth] = useState<number | null>(initialValues?.month ?? DEFAULTS.month)
   const [yearOpen, setYearOpen] = useState(false)
   const yearHeadingId = useId()
+  // Close when focus leaves
+  const closeYearOnBlur = (e: FocusEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) setYearOpen(false)
+  }
 
   const dirty = year !== DEFAULTS.year || month !== DEFAULTS.month
 
@@ -103,14 +107,22 @@ export default function DashboardFinancialFilter({
           Pilih Tahun
         </div>
         <div className={ui.field}>
-          <div className="relative">
+          <div
+            className="relative"
+            onBlur={closeYearOnBlur}
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && yearOpen) {
+                e.stopPropagation()
+                setYearOpen(false)
+              }
+            }}
+          >
             <button
               type="button"
               className={ui.selectBtn}
               aria-labelledby={`${yearHeadingId} ${yearHeadingId}-value`}
               aria-expanded={yearOpen}
               onClick={() => setYearOpen((o) => !o)}
-              onBlur={() => setTimeout(() => setYearOpen(false), 150)}
             >
               <span id={`${yearHeadingId}-value`}>{year}</span>
               <svg

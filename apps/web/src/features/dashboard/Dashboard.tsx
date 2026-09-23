@@ -20,6 +20,7 @@ import { pill, ui } from "@/lib/ui"
 import type { DashboardMetric } from "@/types/api"
 import { YEAR_OPTIONS } from "./DashboardFinancialFilter"
 import { type CardKey, cardRoute, statusCount } from "./helpers"
+import SummaryError from "./SummaryError"
 import TrendChart from "./TrendChart"
 
 const chartTabs: { label: string; metric: DashboardMetric }[] = [
@@ -38,7 +39,7 @@ export default function Dashboard() {
   const { data: me } = useMe()
   const canFinance = roleCanAccess(me?.role, "invoices")
   const visibleTabs = canFinance ? chartTabs : chartTabs.filter((tab) => tab.metric === "quotation")
-  const { data: summary } = useDashboardSummary()
+  const { data: summary, isError: summaryError } = useDashboardSummary()
   const { exporting, exportXlsx } = useDashboardExport()
 
   // Click handler only when reachable
@@ -174,6 +175,8 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <SummaryError show={summaryError} />
+
       {canFinance && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <StatCard

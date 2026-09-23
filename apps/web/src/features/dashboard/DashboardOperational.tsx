@@ -17,6 +17,7 @@ import DashboardFinancialFilter, {
 } from "./DashboardFinancialFilter"
 import { toRecentQuotation } from "./helpers"
 import StatusTiles from "./StatusTiles"
+import SummaryError from "./SummaryError"
 import TrendChart, { CHART_MONTHS } from "./TrendChart"
 
 const chartTabs = [{ label: "Quotation", metric: "quotation" as const }]
@@ -26,8 +27,12 @@ export default function DashboardOperational() {
   const [showFilter, setShowFilter] = useState(false)
   const [filters, setFilters] = useState<DashboardFilterValues | null>(null)
 
-  const { data: summary } = useDashboardSummary()
-  const { data: rawQuotations, isPending: quotationsPending } = useQuotations({ limit: 5 })
+  const { data: summary, isError: summaryError } = useDashboardSummary()
+  const {
+    data: rawQuotations,
+    isPending: quotationsPending,
+    isError: quotationsError,
+  } = useQuotations({ limit: 5 })
 
   const baseYear = filters?.year ?? new Date().getFullYear()
   const selectedMonth = filters?.month ?? null // null = whole year
@@ -68,6 +73,8 @@ export default function DashboardOperational() {
             <FilterButton onClick={() => setShowFilter(true)} />
           </div>
         </div>
+
+        <SummaryError show={summaryError} />
 
         {filters && (
           <ActiveFilters
@@ -133,7 +140,10 @@ export default function DashboardOperational() {
             </thead>
             <tbody>
               {quotationsPending && <TableLoadingRow colSpan={7} />}
-              {!quotationsPending && recentQuotations.length === 0 && (
+              {quotationsError && (
+                <TableEmptyRow colSpan={7}>Gagal memuat Quotation terkini.</TableEmptyRow>
+              )}
+              {!quotationsPending && !quotationsError && recentQuotations.length === 0 && (
                 <TableEmptyRow colSpan={7}>Belum ada Quotation.</TableEmptyRow>
               )}
               {recentQuotations.map((row) => (
