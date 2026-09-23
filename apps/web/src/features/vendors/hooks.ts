@@ -48,7 +48,15 @@ export function useUpdateVendor() {
   return useMutation({
     mutationFn: ({ id, input }: { id: number; input: vendorsApi.UpdateVendorInput }) =>
       vendorsApi.update(id, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.vendors.all }),
+    onSuccess: (_, { id }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
+      // Other features cache vendor name and status.
+      qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.vendorDetail(id) })
+      qc.invalidateQueries({ queryKey: ["purchase-orders", "item-vendors"] })
+      qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === "items" && q.queryKey[2] === "vendors",
+      })
+    },
     onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui vendor.")),
   })
 }
