@@ -1,8 +1,12 @@
 package app
 
 import (
+	"context"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -20,8 +24,49 @@ const middlewareSecret = "middleware-test-secret"
 
 func mkSvc(t *testing.T) *auth.Service {
 	t.Helper()
-	_, tx := testutil.BeginTx(t)
-	return auth.NewService(users.NewRepo(tx, testutil.Store(t)), middlewareSecret, time.Hour)
+	svc, _, _ := mkSvcWithRepo(t)
+	return svc
+}
+
+// mkSvcWithRepo exposes the repo so a test can create the account its token
+// names; the middleware now reads live account state per request.
+func mkSvcWithRepo(t *testing.T) (*auth.Service, *users.Repo, context.Context) {
+	t.Helper()
+	ctx, tx := testutil.BeginTx(t)
+	repo := users.NewRepo(tx, testutil.Store(t))
+	return auth.NewService(repo, middlewareSecret, time.Hour), repo, ctx
+}
+
+// mkMiddlewareUser creates an account for a middleware test.
+func mkMiddlewareUser(t *testing.T, ctx context.Context, repo *users.Repo, role users.Role) users.User {
+	t.Helper()
+	u, err := repo.Create(ctx, users.CreateUserRequest{
+		Email:    fmt.Sprintf("mw-%s-%d@test", t.Name(), time.Now().UnixNano()),
+		Name:     "Middleware",
+		Password: "Middle-pw1!",
+		Role:     role,
+	}, 1)
+	require.NoError(t, err)
+	return u
+}
+
+// mkToken signs a token for a subject.
+func mkToken(t *testing.T, subject string) string {
+	t.Helper()
+	now := time.Now()
+	claims := auth.Claims{
+		Role: users.RoleSuperadmin,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "internalgns-api",
+			Subject:   subject,
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour)),
+		},
+	}
+	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(middlewareSecret))
+	require.NoError(t, err)
+	return signed
 }
 
 func protectedHandler(t *testing.T, svc *auth.Service) http.Handler {
@@ -98,20 +143,9 @@ func TestAuthMiddleware_BadSubject(t *testing.T) {
 }
 
 func TestAuthMiddleware_HappyPath(t *testing.T) {
-	svc := mkSvc(t)
-	now := time.Now()
-	claims := auth.Claims{
-		Role: users.RoleSuperadmin,
-		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "internalgns-api",
-			Subject:   "42",
-			IssuedAt:  jwt.NewNumericDate(now),
-			NotBefore: jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour)),
-		},
-	}
-	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(middlewareSecret))
-	require.NoError(t, err)
+	svc, repo, ctx := mkSvcWithRepo(t)
+	u := mkMiddlewareUser(t, ctx, repo, users.RoleSuperadmin)
+	signed := mkToken(t, strconv.FormatInt(u.ID, 10))
 
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 	r.Header.Set("Authorization", "Bearer "+signed)
@@ -121,9 +155,75 @@ func TestAuthMiddleware_HappyPath(t *testing.T) {
 	mw := authMiddleware(svc)
 	mw(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		called = true
-		assert.Equal(t, int64(42), deps.CurrentUserID(r.Context()))
+		assert.Equal(t, u.ID, deps.CurrentUserID(r.Context()))
 	})).ServeHTTP(w, r)
 	assert.True(t, called)
+}
+
+// A structurally valid token must not outlive the account state behind it.
+func TestAuthMiddleware_LiveAccountState(t *testing.T) {
+	tests := []struct {
+		name     string
+		mutate   func(t *testing.T, ctx context.Context, repo *users.Repo, u users.User)
+		wantCode int
+		wantRole string
+	}{
+		{
+			name:     "active user passes with its stored role",
+			mutate:   func(*testing.T, context.Context, *users.Repo, users.User) {},
+			wantCode: http.StatusOK,
+			wantRole: string(users.RoleOperational),
+		},
+		{
+			name: "deactivated user is refused at once",
+			mutate: func(t *testing.T, ctx context.Context, repo *users.Repo, u users.User) {
+				_, err := repo.Update(ctx, u.ID, users.UpdateUserRequest{
+					Email: u.Email, Name: u.Name, Role: u.Role, IsActive: false,
+				}, 1)
+				require.NoError(t, err)
+			},
+			wantCode: http.StatusUnauthorized,
+		},
+		{
+			name: "role change reaches the live token",
+			mutate: func(t *testing.T, ctx context.Context, repo *users.Repo, u users.User) {
+				_, err := repo.Update(ctx, u.ID, users.UpdateUserRequest{
+					Email: u.Email, Name: u.Name, Role: users.RoleFinance, IsActive: true,
+				}, 1)
+				require.NoError(t, err)
+			},
+			wantCode: http.StatusOK,
+			wantRole: string(users.RoleFinance),
+		},
+		{
+			name: "password reset ends the token",
+			mutate: func(t *testing.T, ctx context.Context, repo *users.Repo, u users.User) {
+				require.NoError(t, repo.UpdatePassword(ctx, u.ID, "Another-pw1!", 1))
+			},
+			wantCode: http.StatusUnauthorized,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			svc, repo, ctx := mkSvcWithRepo(t)
+			u := mkMiddlewareUser(t, ctx, repo, users.RoleOperational)
+			signed := mkToken(t, strconv.FormatInt(u.ID, 10))
+			tc.mutate(t, ctx, repo, u)
+
+			r := httptest.NewRequest(http.MethodGet, "/", nil)
+			r.Header.Set("Authorization", "Bearer "+signed)
+			w := httptest.NewRecorder()
+			gotRole := ""
+			authMiddleware(svc)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				gotRole = deps.CurrentUserRole(r.Context())
+				w.WriteHeader(http.StatusOK)
+			})).ServeHTTP(w, r)
+
+			assert.Equal(t, tc.wantCode, w.Code)
+			assert.Equal(t, tc.wantRole, gotRole)
+		})
+	}
 }
 
 func TestAuthMiddleware_ExpiredToken(t *testing.T) {
@@ -151,20 +251,9 @@ func TestAuthMiddleware_ExpiredToken(t *testing.T) {
 }
 
 func TestAuthMiddleware_PreservesProtectedHandler(t *testing.T) {
-	svc := mkSvc(t)
-	now := time.Now()
-	claims := auth.Claims{
-		Role: users.RoleSuperadmin,
-		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "internalgns-api",
-			Subject:   "7",
-			IssuedAt:  jwt.NewNumericDate(now),
-			NotBefore: jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour)),
-		},
-	}
-	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(middlewareSecret))
-	require.NoError(t, err)
+	svc, repo, ctx := mkSvcWithRepo(t)
+	u := mkMiddlewareUser(t, ctx, repo, users.RoleSuperadmin)
+	signed := mkToken(t, strconv.FormatInt(u.ID, 10))
 
 	srv := httptest.NewServer(protectedHandler(t, svc))
 	defer srv.Close()
@@ -231,11 +320,12 @@ func TestRequestTimeout_BudgetPerPath(t *testing.T) {
 		{"coretax export", "/api/v1/invoices/coretax.xlsx", true},
 		{"invoice pdf", "/api/v1/invoices/1/pdf", true},
 		{"delivery note", "/api/v1/purchase-orders/1/delivery-note.pdf", true},
+		{"storage object", "/api/v1/storage/object", true},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var budget time.Duration
-			h := requestTimeout(short, long)(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+			h := requestTimeout(short, long, long)(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 				deadline, ok := r.Context().Deadline()
 				require.True(t, ok)
 				budget = time.Until(deadline)
@@ -247,6 +337,63 @@ func TestRequestTimeout_BudgetPerPath(t *testing.T) {
 			} else {
 				assert.LessOrEqual(t, budget, short)
 			}
+		})
+	}
+}
+
+// A slow asset upload must outlive the server ReadTimeout that guards every
+// other route. The handler context budget alone cannot do this: ReadTimeout
+// covers reading the body, so it fires first and severs the connection.
+func TestRequestTimeout_StorageRouteExtendsReadDeadline(t *testing.T) {
+	const readTimeout = 300 * time.Millisecond
+	const stall = 900 * time.Millisecond
+
+	tests := []struct {
+		name    string
+		path    string
+		wantErr bool
+	}{
+		{"storage upload survives", "/api/v1/storage/object", false},
+		{"other route keeps ReadTimeout", "/api/v1/clients/1/logo", true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			h := requestTimeout(time.Minute, time.Minute, time.Minute)(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if _, err := io.ReadAll(r.Body); err != nil {
+						http.Error(w, err.Error(), http.StatusRequestTimeout)
+						return
+					}
+					w.WriteHeader(http.StatusNoContent)
+				}))
+			// accessLogMiddleware wraps the writer, so the controller has to
+			// unwrap past it to reach the connection.
+			srv := httptest.NewUnstartedServer(accessLogMiddleware(h))
+			srv.Config.ReadTimeout = readTimeout
+			srv.Start()
+			t.Cleanup(srv.Close)
+
+			pr, pw := io.Pipe()
+			go func() {
+				_, _ = pw.Write([]byte("first"))
+				time.Sleep(stall)
+				_, _ = pw.Write([]byte("second"))
+				_ = pw.Close()
+			}()
+
+			req, err := http.NewRequest(http.MethodPut, srv.URL+tc.path, pr)
+			require.NoError(t, err)
+			res, err := srv.Client().Do(req)
+			if tc.wantErr {
+				if err == nil {
+					defer res.Body.Close()
+					assert.NotEqual(t, http.StatusNoContent, res.StatusCode)
+				}
+				return
+			}
+			require.NoError(t, err)
+			defer res.Body.Close()
+			assert.Equal(t, http.StatusNoContent, res.StatusCode)
 		})
 	}
 }

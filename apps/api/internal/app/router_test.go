@@ -195,9 +195,6 @@ func TestRouter_NotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
-
-
-
 func TestNewServer_HappyPath(t *testing.T) {
 	_ = testutil.Pool(t)
 	cfg := Config{
@@ -232,9 +229,13 @@ func TestNewServer_CloseReleasesPool(t *testing.T) {
 		SuperadminName:     "Close Pool Admin",
 		SuperadminPassword: "secret-pass",
 	}
-	srv, err := NewServer(context.Background(), cfg)
+	// Cancelled after the build so the refresh-purge loop stops with it,
+	// as SIGTERM does in production.
+	ctx, cancel := context.WithCancel(context.Background())
+	srv, err := NewServer(ctx, cfg)
 	require.NoError(t, err)
 	require.NoError(t, srv.pool.Ping(context.Background()))
+	cancel()
 
 	srv.Close()
 	assert.Error(t, srv.pool.Ping(context.Background()), "pool must be closed")
