@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
 import { useUser } from "@/features/users/hooks"
 import UserDetail from "@/features/users/UserDetail"
+import { routeFallbackCls } from "./-fallback"
 
 export const Route = createFileRoute("/_authed/users/$id/")({
   component: UserDetailRoute,
@@ -14,7 +15,7 @@ function UserDetailRoute() {
 
   if (!data) {
     return (
-      <div style={{ padding: "48px", fontFamily: "'Inter', sans-serif", color: "#64748B" }}>
+      <div className={routeFallbackCls}>
         {isLoading ? "Memuat data pengguna…" : "Pengguna tidak ditemukan."}
       </div>
     )

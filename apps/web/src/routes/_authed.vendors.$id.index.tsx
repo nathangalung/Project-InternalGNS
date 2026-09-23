@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
 import { useVendor } from "@/features/vendors/hooks"
 import VendorDetail from "@/features/vendors/VendorDetail"
+import { routeFallbackCls } from "./-fallback"
 
 export const Route = createFileRoute("/_authed/vendors/$id/")({
   component: VendorDetailRoute,
@@ -14,7 +15,7 @@ function VendorDetailRoute() {
 
   if (!data) {
     return (
-      <div style={{ padding: "48px", fontFamily: "'Inter', sans-serif", color: "#64748B" }}>
+      <div className={routeFallbackCls}>
         {isLoading ? "Memuat data vendor…" : "Vendor tidak ditemukan."}
       </div>
     )

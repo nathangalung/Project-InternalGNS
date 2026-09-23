@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
 import ClientDetail from "@/features/clients/ClientDetail"
 import { useClient } from "@/features/clients/hooks"
+import { routeFallbackCls } from "./-fallback"
 
 export const Route = createFileRoute("/_authed/clients/$id/")({
   component: ClientDetailRoute,
@@ -14,7 +15,7 @@ function ClientDetailRoute() {
 
   if (!data) {
     return (
-      <div style={{ padding: "48px", fontFamily: "'Inter', sans-serif", color: "#64748B" }}>
+      <div className={routeFallbackCls}>
         {isLoading ? "Memuat data klien…" : "Klien tidak ditemukan."}
       </div>
     )
