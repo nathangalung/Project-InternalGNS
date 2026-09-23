@@ -70,9 +70,12 @@ func TestRouter_FinanceWorksTheInvoicePage(t *testing.T) {
 		cleaner.User(u.ID)
 		ids[role] = u.ID
 	}
-	// Runs before the user cleanup: the invoice now names finance as its editor.
+	// Runs before the user cleanup: the invoice and its
+	// timeline now name finance as the editor.
 	t.Cleanup(func() {
 		_, err := pool.Exec(ctx, `UPDATE invoices SET updated_by = $1 WHERE id = $2`, seedUserID, invID)
+		assert.NoError(t, err)
+		_, err = pool.Exec(ctx, `UPDATE invoice_status_history SET changed_by = $1 WHERE invoice_id = $2`, seedUserID, invID)
 		assert.NoError(t, err)
 	})
 

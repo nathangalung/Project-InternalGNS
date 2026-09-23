@@ -20,7 +20,9 @@ SELECT inv.id,
        inv.row_version,
        inv.created_at,
        inv.updated_at,
-       inv.attachment_object_key
+       inv.attachment_object_key,
+       inv.paid_at,
+       inv.payment_proof_key
 FROM invoices inv
 JOIN quotations q ON q.id = inv.quotation_id
 JOIN company_client cc ON cc.id = inv.company_client_id
@@ -55,7 +57,9 @@ SELECT inv.id,
        inv.row_version,
        inv.created_at,
        inv.updated_at,
-       inv.attachment_object_key
+       inv.attachment_object_key,
+       inv.paid_at,
+       inv.payment_proof_key
 FROM invoices inv
 JOIN quotations q ON q.id = inv.quotation_id
 JOIN company_client cc ON cc.id = inv.company_client_id
@@ -83,7 +87,9 @@ SELECT inv.id,
        inv.row_version,
        inv.created_at,
        inv.updated_at,
-       inv.attachment_object_key
+       inv.attachment_object_key,
+       inv.paid_at,
+       inv.payment_proof_key
 FROM invoices inv
 JOIN quotations q ON q.id = inv.quotation_id
 JOIN company_client cc ON cc.id = inv.company_client_id
@@ -128,6 +134,8 @@ SELECT inv.id,
        inv.created_at,
        inv.updated_at,
        inv.attachment_object_key,
+       inv.paid_at,
+       inv.payment_proof_key,
        inv.replaces_invoice_id,
        rp.invoice_no AS replaces_invoice_no,
        rb.id AS replaced_by_invoice_id
@@ -180,6 +188,8 @@ SELECT inv.id,
        inv.created_at,
        inv.updated_at,
        inv.attachment_object_key,
+       inv.paid_at,
+       inv.payment_proof_key,
        inv.replaces_invoice_id,
        rp.invoice_no AS replaces_invoice_no,
        rb.id AS replaced_by_invoice_id
@@ -201,7 +211,14 @@ ORDER BY inv.id DESC
 LIMIT 1;
 
 -- name: invoices.change_status
-SELECT fn_change_invoice_status($1::bigint, $2::text, $3::bigint);
+SELECT fn_change_invoice_status($1::bigint, $2::text, $3::bigint, $4::text, $5::text);
+
+-- name: invoices.history
+-- Status timeline, oldest first; $1=invoice id.
+SELECT id, from_status, to_status, note, payment_proof_key, changed_by, changed_at
+FROM invoice_status_history
+WHERE invoice_id = $1
+ORDER BY changed_at, id;
 
 -- name: invoices.replace
 -- Creates the Pengganti invoice for a cancelled one; returns its id.

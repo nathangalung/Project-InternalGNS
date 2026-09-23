@@ -13,6 +13,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/invoices"
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
+	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -46,7 +47,7 @@ func deliveredPOWithInvoice(t *testing.T, tx pgx.Tx) (int64, int64, int64) {
 	porepo := purchaseorders.NewRepo(tx, store)
 	po, err := porepo.GetByQuotation(ctx, qid)
 	require.NoError(t, err)
-	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusUploaded, seedUserID))
+	attachPOFile(ctx, t, porepo, po.ID)
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -160,7 +161,7 @@ func TestRepo_InvoiceHeaderEqualsLineSums(t *testing.T) {
 	porepo := purchaseorders.NewRepo(tx, store)
 	po, err := porepo.GetByQuotation(ctx, qid)
 	require.NoError(t, err)
-	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusUploaded, seedUserID))
+	attachPOFile(ctx, t, porepo, po.ID)
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -188,8 +189,8 @@ func TestRepo_ChangeStatus_Lifecycle(t *testing.T) {
 	_, _, invID := deliveredPOWithInvoice(t, tx)
 
 	repo := invoices.NewRepo(tx, testutil.Store(t))
-	require.NoError(t, repo.ChangeStatus(ctx, invID, invoices.StatusSent, seedUserID))
-	require.NoError(t, repo.ChangeStatus(ctx, invID, invoices.StatusPaid, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusSent), seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusPaid), seedUserID))
 
 	inv, err := repo.GetByID(ctx, invID)
 	require.NoError(t, err)
@@ -199,7 +200,7 @@ func TestRepo_ChangeStatus_Lifecycle(t *testing.T) {
 func TestRepo_ChangeStatus_NotFound(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := invoices.NewRepo(tx, testutil.Store(t))
-	err := repo.ChangeStatus(ctx, 99999999, invoices.StatusSent, seedUserID)
+	err := repo.ChangeStatus(ctx, 99999999, move(invoices.StatusSent), seedUserID)
 	assert.ErrorIs(t, err, invoices.ErrNotFound)
 }
 
@@ -331,4 +332,15 @@ func TestRepo_Summary(t *testing.T) {
 	assert.GreaterOrEqual(t, s.Paid, int64(0))
 	assert.GreaterOrEqual(t, s.Overdue, int64(0))
 	assert.Equal(t, s.Total, s.Draft+s.Sent+s.Paid+s.Overdue)
+}
+
+// attachPOFile uploads the client PO.
+// It moves PENDING to UPLOADED.
+func attachPOFile(ctx context.Context, t *testing.T, porepo *purchaseorders.Repo, poID int64) {
+	t.Helper()
+	require.NoError(t, porepo.UpdateFile(ctx, poID, purchaseorders.UpdateFileRequest{
+		FileName:  "po.pdf",
+		FileSize:  1024,
+		ObjectKey: storage.BuildObjectKey("po", poID, "po.pdf"),
+	}, seedUserID))
 }

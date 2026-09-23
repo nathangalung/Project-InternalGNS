@@ -43,7 +43,7 @@ func deliveredPOWithVessel(t *testing.T, tx pgx.Tx) (int64, int64) {
 	porepo := purchaseorders.NewRepo(tx, store)
 	po, err := porepo.GetByQuotation(ctx, qid)
 	require.NoError(t, err)
-	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusUploaded, seedUserID))
+	attachPOFile(ctx, t, porepo, po.ID)
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusDelivered, seedUserID))
 	return qid, po.ID
@@ -80,7 +80,7 @@ func TestRepo_GetDetailByQuotation_CarriesClientAndPoHeader(t *testing.T) {
 	assert.NotEmpty(t, *det.PoNumber)
 	require.NotNil(t, det.PoDate)
 
-	assert.Equal(t, invoices.AllowedTransitions(invoices.StatusDraft), det.AllowedStatuses)
+	assert.Equal(t, invoices.AllowedTransitions(invoices.StatusDraft, true), det.AllowedTransitions)
 }
 
 func TestRepo_GetDetail_MatchesGetDetailByQuotation(t *testing.T) {
@@ -103,28 +103,6 @@ func TestRepo_GetDetail_NotFound(t *testing.T) {
 	assert.ErrorIs(t, err, invoices.ErrNotFound)
 }
 
-// Every exposed transition is one fn_change_invoice_status accepts.
-func TestAllowedTransitions_AreAcceptedByTheDatabase(t *testing.T) {
-	for _, from := range []invoices.Status{invoices.StatusDraft, invoices.StatusSent} {
-		for _, target := range invoices.AllowedTransitions(from) {
-			t.Run(string(from)+"-"+string(target), func(t *testing.T) {
-				ctx, tx := testutil.BeginTx(t)
-				_, _, invID := deliveredPOWithInvoice(t, tx)
-				repo := invoices.NewRepo(tx, testutil.Store(t))
-
-				if from != invoices.StatusDraft {
-					require.NoError(t, repo.ChangeStatus(ctx, invID, from, seedUserID))
-				}
-				require.NoError(t, repo.ChangeStatus(ctx, invID, target, seedUserID))
-
-				inv, err := repo.GetByID(ctx, invID)
-				require.NoError(t, err)
-				assert.Equal(t, target, inv.Status)
-			})
-		}
-	}
-}
-
 // Terlambat is derived from the due date, so it is never offered and a
 // sent invoice that is not yet due cannot be marked overdue by hand.
 func TestAllowedTransitions_OmitOverdue(t *testing.T) {
@@ -132,7 +110,7 @@ func TestAllowedTransitions_OmitOverdue(t *testing.T) {
 	_, _, invID := deliveredPOWithInvoice(t, tx)
 	repo := invoices.NewRepo(tx, testutil.Store(t))
 
-	require.NoError(t, repo.ChangeStatus(ctx, invID, invoices.StatusSent, seedUserID))
-	assert.NotContains(t, invoices.AllowedTransitions(invoices.StatusSent), invoices.StatusOverdue)
-	assert.ErrorIs(t, repo.ChangeStatus(ctx, invID, invoices.StatusOverdue, seedUserID), invoices.ErrOverdueDerived)
+	require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusSent), seedUserID))
+	assert.False(t, offers(invoices.StatusSent, invoices.StatusOverdue))
+	assert.ErrorIs(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusOverdue), seedUserID), invoices.ErrOverdueDerived)
 }

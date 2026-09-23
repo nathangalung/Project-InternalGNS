@@ -124,3 +124,79 @@ Feature: Invoice lifecycle
     Then the response status is 200
     And the invoice items name the offered item as issued
     And the Coretax export names the offered item as issued
+
+  Scenario Outline: The detail offers exactly the moves the database allows
+    Given a delivered purchase order
+    When the user transitions the invoice through "<path>"
+    Then the invoice detail offers "<offers>"
+
+    Examples:
+      | path           | offers                                   |
+      | draft          | sent:Dikirim,cancelled:Dibatalkan*       |
+      | sent           | paid:Dibayar,cancelled:Dibatalkan*       |
+      | sent,paid      |                                          |
+      | cancelled      |                                          |
+
+  Scenario Outline: Moves the database refuses
+    Given a delivered purchase order
+    When the user transitions the invoice through "<path>"
+    And the user tries to transition the invoice to "<target>"
+    Then the response status is 422
+    And the problem detail is "Perubahan status invoice ini tidak diizinkan."
+
+    Examples:
+      | path           | target    |
+      | draft          | paid      |
+      | sent           | draft     |
+      | sent,paid      | cancelled |
+      | sent,paid      | sent      |
+      | cancelled      | sent      |
+      | cancelled      | draft     |
+
+  Scenario: Marking an invoice paid records the payment and its proof
+    Given a delivered purchase order
+    When the user transitions the invoice through "sent"
+    And the user marks the invoice paid with a payment proof
+    Then the response status is 204
+    And the invoice records its payment date with a proof
+    And the invoice history is "draft>sent,sent>paid"
+
+  Scenario: The payment proof is optional
+    Given a delivered purchase order
+    When the user transitions the invoice through "sent,paid"
+    Then the invoice records its payment date without a proof
+
+  Scenario: A cancel without a reason is refused
+    Given a delivered purchase order
+    When the user cancels the invoice without a reason
+    Then the response status is 422
+    And the problem detail is "Alasan pembatalan invoice wajib diisi."
+    And the invoice history is ""
+
+  Scenario: A cancel keeps its reason and offers the replacement
+    Given a delivered purchase order
+    When the user transitions the invoice through "sent"
+    And the user cancels the invoice with reason "Salah alamat penagihan"
+    Then the response status is 204
+    And the invoice history is "draft>sent,sent>cancelled"
+    And the last history entry carries the reason "Salah alamat penagihan"
+    And the invoice offers a replacement
+
+  Scenario: A replaced invoice offers no second replacement
+    Given a delivered purchase order
+    When the user transitions the invoice through "cancelled"
+    And the user replaces the invoice
+    Then the invoice withholds a replacement
+
+  Scenario: Finance marks an invoice paid through the real router
+    Given a delivered purchase order
+    When the user acts as finance
+    And the user transitions the invoice through "sent,paid"
+    Then every invoice transition succeeds
+    And the invoice records its payment date without a proof
+
+  Scenario: Operational cannot change an invoice status
+    Given a delivered purchase order
+    When the user acts as operational
+    And the user tries to transition the invoice to "sent"
+    Then the response status is 403

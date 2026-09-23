@@ -32,7 +32,7 @@ func TestRepo_UpdateDates_RejectsFiledInvoice(t *testing.T) {
 			repo := invoices.NewRepo(tx, testutil.Store(t))
 
 			for _, target := range tc.path {
-				require.NoError(t, repo.ChangeStatus(ctx, invID, target, seedUserID))
+				require.NoError(t, repo.ChangeStatus(ctx, invID, move(target), seedUserID))
 			}
 
 			before, err := repo.GetByID(ctx, invID)

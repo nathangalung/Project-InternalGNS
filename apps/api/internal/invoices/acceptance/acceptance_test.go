@@ -21,7 +21,9 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
+	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
+	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
 const (
@@ -46,6 +48,10 @@ type scenarioState struct {
 	invoiceID   int64
 	cleaner     *testutil.Cleaner
 	itemID      int64
+	roles       *roleUsers
+	prefix      string
+	bearer      string
+	actedAs     bool
 }
 
 func (s *scenarioState) reset() error {
@@ -66,12 +72,15 @@ func (s *scenarioState) sendRequestWithHeaders(method, path string, body any, he
 		}
 		rdr = bytes.NewReader(raw)
 	}
-	req, err := http.NewRequest(method, s.srv.URL+path, rdr)
+	req, err := http.NewRequest(method, s.srv.URL+s.prefix+path, rdr)
 	if err != nil {
 		return err
 	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
+	}
+	if s.bearer != "" {
+		req.Header.Set("Authorization", s.bearer)
 	}
 	for k, v := range headers {
 		req.Header.Set(k, v)
@@ -173,7 +182,10 @@ func (s *scenarioState) deliverLine(line quotations.CreateItem) error {
 	}
 	s.poID = po.ID
 
-	for _, target := range []purchaseorders.Status{purchaseorders.StatusUploaded, purchaseorders.StatusOnProgress, purchaseorders.StatusDelivered} {
+	if err := s.attachPOFile(); err != nil {
+		return err
+	}
+	for _, target := range []purchaseorders.Status{purchaseorders.StatusOnProgress, purchaseorders.StatusDelivered} {
 		if err := s.sendRequest(http.MethodPatch, "/purchase-orders/"+strconv.FormatInt(s.poID, 10)+"/status", purchaseorders.ChangeStatusRequest{Status: target}); err != nil {
 			return err
 		}
@@ -270,15 +282,172 @@ func (s *scenarioState) invoiceDetailOffersTransitions() error {
 	if err := json.Unmarshal(s.body, &det); err != nil {
 		return err
 	}
-	want := invoices.AllowedTransitions(det.Status)
-	if len(want) != len(det.AllowedStatuses) {
-		return fmt.Errorf("want %v got %v", want, det.AllowedStatuses)
+	want := invoices.AllowedTransitions(det.Status, det.PoID != nil)
+	if len(want) != len(det.AllowedTransitions) {
+		return fmt.Errorf("want %v got %v", want, det.AllowedTransitions)
 	}
-	for i, st := range want {
-		if det.AllowedStatuses[i] != st {
-			return fmt.Errorf("want %v got %v", want, det.AllowedStatuses)
+	for i, tr := range want {
+		if det.AllowedTransitions[i] != tr {
+			return fmt.Errorf("want %v got %v", want, det.AllowedTransitions)
 		}
 	}
+	return nil
+}
+
+// invoiceDetailOffers checks offered moves.
+// Pairs read to:Label; a trailing * requires a note.
+func (s *scenarioState) invoiceDetailOffers(list string) error {
+	if err := s.readInvoiceByID(); err != nil {
+		return err
+	}
+	var det invoices.InvoiceDetail
+	if err := json.Unmarshal(s.body, &det); err != nil {
+		return err
+	}
+	got := make([]string, 0, len(det.AllowedTransitions))
+	for _, tr := range det.AllowedTransitions {
+		entry := string(tr.To) + ":" + tr.Label
+		if tr.RequiresNote {
+			entry += "*"
+		}
+		got = append(got, entry)
+	}
+	if strings.Join(got, ",") != list {
+		return fmt.Errorf("want offers %q got %q", list, strings.Join(got, ","))
+	}
+	return nil
+}
+
+func (s *scenarioState) readInvoiceByID() error {
+	return s.sendRequest(http.MethodGet, "/invoices/"+strconv.FormatInt(s.invoiceID, 10), nil)
+}
+
+// attachPOFile uploads the client PO.
+// It moves PENDING to UPLOADED.
+func (s *scenarioState) attachPOFile() error {
+	body := purchaseorders.UpdateFileRequest{
+		FileName:  "po.pdf",
+		FileSize:  1024,
+		ObjectKey: storage.BuildObjectKey("po", s.poID, "po.pdf"),
+	}
+	if err := s.sendRequest(http.MethodPatch, "/purchase-orders/"+strconv.FormatInt(s.poID, 10)+"/file", body); err != nil {
+		return err
+	}
+	if s.last.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("po file want 204 got %d body=%s", s.last.StatusCode, s.body)
+	}
+	return nil
+}
+
+func (s *scenarioState) cancelWithReason(reason string) error {
+	body := invoices.ChangeStatusRequest{Status: invoices.StatusCancelled}
+	if reason != "" {
+		body.Note = &reason
+	}
+	return s.sendRequest(http.MethodPatch, "/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/status", body)
+}
+
+func (s *scenarioState) markPaidWithProof() error {
+	proof := "invoices/" + strconv.FormatInt(s.invoiceID, 10) + "/1700000000-bukti-transfer.pdf"
+	body := invoices.ChangeStatusRequest{Status: invoices.StatusPaid, PaymentProofKey: &proof}
+	return s.sendRequest(http.MethodPatch, "/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/status", body)
+}
+
+func (s *scenarioState) problemDetailIs(want string) error {
+	var problem struct {
+		Detail string `json:"detail"`
+	}
+	if err := json.Unmarshal(s.body, &problem); err != nil {
+		return err
+	}
+	if problem.Detail != want {
+		return fmt.Errorf("want detail %q got %q", want, problem.Detail)
+	}
+	return nil
+}
+
+// invoicePaymentRecorded checks the payment.
+func (s *scenarioState) invoicePaymentRecorded(withProof string) error {
+	if err := s.readInvoiceByID(); err != nil {
+		return err
+	}
+	var det invoices.InvoiceDetail
+	if err := json.Unmarshal(s.body, &det); err != nil {
+		return err
+	}
+	if det.PaidAt == nil {
+		return fmt.Errorf("paidAt missing body=%s", s.body)
+	}
+	hasProof := det.PaymentProofKey != nil && *det.PaymentProofKey != ""
+	if hasProof != (withProof == "with") {
+		return fmt.Errorf("want proof %s got %v", withProof, det.PaymentProofKey)
+	}
+	return nil
+}
+
+// invoiceHistoryIs compares the timeline.
+// Steps read from>to, in order.
+func (s *scenarioState) invoiceHistoryIs(list string) error {
+	if err := s.readInvoiceByID(); err != nil {
+		return err
+	}
+	var det invoices.InvoiceDetail
+	if err := json.Unmarshal(s.body, &det); err != nil {
+		return err
+	}
+	got := make([]string, 0, len(det.History))
+	for _, h := range det.History {
+		got = append(got, string(h.FromStatus)+">"+string(h.ToStatus))
+	}
+	if strings.Join(got, ",") != list {
+		return fmt.Errorf("want history %q got %q", list, strings.Join(got, ","))
+	}
+	return nil
+}
+
+func (s *scenarioState) invoiceHistoryEndsWithReason(reason string) error {
+	if err := s.readInvoiceByID(); err != nil {
+		return err
+	}
+	var det invoices.InvoiceDetail
+	if err := json.Unmarshal(s.body, &det); err != nil {
+		return err
+	}
+	if len(det.History) == 0 {
+		return fmt.Errorf("history empty")
+	}
+	last := det.History[len(det.History)-1]
+	if last.Note == nil || *last.Note != reason {
+		return fmt.Errorf("want reason %q got %v", reason, last.Note)
+	}
+	return nil
+}
+
+func (s *scenarioState) invoiceReplaceable(want string) error {
+	if err := s.readInvoiceByID(); err != nil {
+		return err
+	}
+	var det invoices.InvoiceDetail
+	if err := json.Unmarshal(s.body, &det); err != nil {
+		return err
+	}
+	if det.CanReplace != (want == "offers") {
+		return fmt.Errorf("want replacement %s got canReplace=%v", want, det.CanReplace)
+	}
+	return nil
+}
+
+// actAs switches to a role.
+// Later calls go through the real router.
+func (s *scenarioState) actAs(role string) error {
+	id, err := s.roles.id(role)
+	if err != nil {
+		return err
+	}
+	s.srv = s.roles.server()
+	s.prefix = "/api/v1"
+	s.bearer = bearerFor(s.t, id, users.Role(role))
+	s.actedAs = true
 	return nil
 }
 
@@ -373,8 +542,13 @@ func (s *scenarioState) walkInvoicePath(path string) error {
 	return nil
 }
 
+// transitionInvoiceTo supplies cancel reasons.
 func (s *scenarioState) transitionInvoiceTo(target string) error {
 	body := invoices.ChangeStatusRequest{Status: invoices.Status(target)}
+	if body.Status == invoices.StatusCancelled {
+		reason := cancelReason
+		body.Note = &reason
+	}
 	return s.sendRequest(http.MethodPatch, "/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/status", body)
 }
 
@@ -500,9 +674,9 @@ func (s *scenarioState) coretaxNamesIssuedItem() error {
 	return nil
 }
 
-func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
+func initScenario(t *testing.T, cleaner *testutil.Cleaner, roles *roleUsers) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
-		state := &scenarioState{t: t, userID: defaultUserID, cleaner: cleaner}
+		state := &scenarioState{t: t, userID: defaultUserID, cleaner: cleaner, roles: roles}
 		sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 			state.last = nil
 			state.body = nil
@@ -510,15 +684,18 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 			state.poID = 0
 			state.invoiceID = 0
 			state.itemID = 0
+			state.prefix = ""
+			state.bearer = ""
+			state.actedAs = false
 			return ctx, nil
 		})
-		// Free the item for the cleaner.
+		// Free rows for the cleaner.
 		sc.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
-			if state.itemID == 0 {
+			if state.itemID == 0 && !state.actedAs {
 				return ctx, nil
 			}
 			if err := state.reset(); err != nil {
-				return ctx, fmt.Errorf("free offered item: %w", err)
+				return ctx, fmt.Errorf("free cleaner rows: %w", err)
 			}
 			return ctx, nil
 		})
@@ -550,6 +727,16 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the invoice list contains at least (\d+) row(?:s)?$`, state.invoiceListAtLeast)
 		sc.Step(`^the invoice summary total is at least (\d+)$`, state.summaryTotalAtLeast)
 		sc.Step(`^the invoice summary buckets sum to total$`, state.summaryBucketsConsistent)
+		sc.Step(`^the invoice detail offers "([^"]*)"$`, state.invoiceDetailOffers)
+		sc.Step(`^the user cancels the invoice with reason "([^"]*)"$`, state.cancelWithReason)
+		sc.Step(`^the user cancels the invoice without a reason$`, func() error { return state.cancelWithReason("") })
+		sc.Step(`^the user marks the invoice paid with a payment proof$`, state.markPaidWithProof)
+		sc.Step(`^the problem detail is "([^"]+)"$`, state.problemDetailIs)
+		sc.Step(`^the invoice records its payment date (with|without) a proof$`, state.invoicePaymentRecorded)
+		sc.Step(`^the invoice history is "([^"]*)"$`, state.invoiceHistoryIs)
+		sc.Step(`^the last history entry carries the reason "([^"]+)"$`, state.invoiceHistoryEndsWithReason)
+		sc.Step(`^the invoice (offers|withholds) a replacement$`, state.invoiceReplaceable)
+		sc.Step(`^the user acts as (finance|operational|superadmin)$`, state.actAs)
 	}
 }
 
@@ -557,7 +744,7 @@ func TestInvoiceFeatures(t *testing.T) {
 	testutil.RequireDB(t)
 	cleaner := testutil.NewCleaner(t)
 	suite := godog.TestSuite{
-		ScenarioInitializer: initScenario(t, cleaner),
+		ScenarioInitializer: initScenario(t, cleaner, newRoleUsers(t, cleaner)),
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"features"},

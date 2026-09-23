@@ -40,6 +40,7 @@ var RequiredKeys = []string{
 	"invoices.get_by_quotation",
 	"invoices.get_detail_by_id",
 	"invoices.get_detail_by_quotation",
+	"invoices.history",
 	"invoices.is_overdue",
 	"invoices.list_base",
 	"invoices.list_count_base",

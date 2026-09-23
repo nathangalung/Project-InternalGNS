@@ -19,6 +19,9 @@ import (
 const (
 	attachmentUploadExpiry   = 15 * time.Minute
 	attachmentDownloadExpiry = 1 * time.Hour
+
+	// Proofs share the attachment layout.
+	proofKeyPrefix = "invoices"
 )
 
 func Routes(d deps.Deps) chi.Router {
@@ -41,6 +44,11 @@ func Routes(d deps.Deps) chi.Router {
 	r.Get("/{id}/attachment/upload-url", assetproxy.Upload(attachment))
 	r.Get("/{id}/attachment/download-url", assetproxy.Download(attachment))
 	r.Patch("/{id}/attachment", assetproxy.UpdateKey(attachment))
+
+	// Paid status saves the key.
+	proof := paymentProofAsset(d.Storage, repo)
+	r.Get("/{id}/payment-proof/upload-url", assetproxy.Upload(proof))
+	r.Get("/{id}/payment-proof/download-url", assetproxy.Download(proof))
 
 	coretax := NewCoretaxHandler(repo, clientsRepo, d.Coretax, d.TemplatesRoot)
 	r.Get("/coretax.xlsx", coretax.ExportBulkXLSX)
@@ -66,7 +74,7 @@ func attachmentAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
 	return assetproxy.Descriptor{
 		Storage:     sc,
 		Bucket:      storage.BucketInvoiceAttachments,
-		KeyPrefix:   "invoices",
+		KeyPrefix:   proofKeyPrefix,
 		NotFoundMsg: "invoice not found",
 		NoAssetMsg:  "no attachment",
 		UploadTTL:   attachmentUploadExpiry,
@@ -90,6 +98,26 @@ func attachmentAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
 			return assetErr(repo.UpdateAttachment(ctx, id, key, actor))
 		},
 	}
+}
+
+// paymentProofAsset describes proof routes.
+func paymentProofAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
+	d := attachmentAsset(sc, repo)
+	d.KeyPrefix = proofKeyPrefix
+	d.NoAssetMsg = "no payment proof"
+	d.CurrentAsset = func(ctx context.Context, id int64) (assetproxy.Asset, error) {
+		inv, err := repo.GetByID(ctx, id)
+		if err != nil {
+			return assetproxy.Asset{}, assetErr(err)
+		}
+		var key string
+		if inv.PaymentProofKey != nil {
+			key = *inv.PaymentProofKey
+		}
+		return assetproxy.Asset{Key: key}, nil
+	}
+	d.SetKey = nil
+	return d
 }
 
 // assetErr maps the package sentinel onto the shared one.

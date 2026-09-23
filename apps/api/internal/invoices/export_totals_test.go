@@ -46,7 +46,7 @@ func discountedPOWithInvoice(t *testing.T, tx pgx.Tx) int64 {
 	porepo := purchaseorders.NewRepo(tx, store)
 	po, err := porepo.GetByQuotation(ctx, qid)
 	require.NoError(t, err)
-	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusUploaded, seedUserID))
+	attachPOFile(ctx, t, porepo, po.ID)
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusDelivered, seedUserID))
 

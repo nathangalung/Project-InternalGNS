@@ -24,7 +24,7 @@ func TestCoretaxExport_RefusesCancelledInvoice(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
 	repo := invoices.NewRepo(tx, testutil.Store(t))
-	require.NoError(t, repo.ChangeStatus(ctx, invID, invoices.StatusCancelled, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusCancelled), seedUserID))
 
 	rec := exportCoretaxXML(t, tx, invID)
 	assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
@@ -48,7 +48,7 @@ func TestCoretaxBulkExport_SkipsCancelledInvoice(t *testing.T) {
 			store := testutil.Store(t)
 			repo := invoices.NewRepo(tx, store)
 			if tc.cancel {
-				require.NoError(t, repo.ChangeStatus(ctx, invID, invoices.StatusCancelled, seedUserID))
+				require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusCancelled), seedUserID))
 			}
 			inv, err := repo.GetByID(ctx, invID)
 			require.NoError(t, err)

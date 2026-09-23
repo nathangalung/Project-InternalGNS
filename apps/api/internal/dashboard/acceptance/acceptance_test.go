@@ -134,10 +134,16 @@ func (s *scenarioState) invoiceFor(qty, price, cost string) error {
 	return nil
 }
 
+// invoiceTo supplies cancel reasons.
 func (s *scenarioState) invoiceTo(path ...invoices.Status) error {
 	for _, target := range path {
+		req := invoices.ChangeStatusRequest{Status: target}
+		if target == invoices.StatusCancelled {
+			reason := "Salah alamat penagihan"
+			req.Note = &reason
+		}
 		if err := s.expect(http.StatusNoContent, http.MethodPatch, "/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/status",
-			invoices.ChangeStatusRequest{Status: target}); err != nil {
+			req); err != nil {
 			return err
 		}
 	}

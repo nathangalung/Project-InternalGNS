@@ -38,10 +38,10 @@ func TestRepo_ChangeStatus_OverdueIsDerived(t *testing.T) {
 				require.NoError(t, err)
 			}
 			for _, target := range tc.path {
-				require.NoError(t, repo.ChangeStatus(ctx, invID, target, seedUserID))
+				require.NoError(t, repo.ChangeStatus(ctx, invID, move(target), seedUserID))
 			}
 
-			err := repo.ChangeStatus(ctx, invID, invoices.StatusOverdue, seedUserID)
+			err := repo.ChangeStatus(ctx, invID, move(invoices.StatusOverdue), seedUserID)
 			if tc.want == nil {
 				require.NoError(t, err)
 			} else {

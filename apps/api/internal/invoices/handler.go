@@ -16,6 +16,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
+	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
 type Handler struct {
@@ -185,11 +186,15 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !isValidStatus(req.Status) {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "invalid status"}))
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "Status invoice tidak dikenal."}))
+		return
+	}
+	if msg := proofKeyProblem(id, req); msg != "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"paymentProofKey": msg}))
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())
-	if err := h.repo.ChangeStatus(r.Context(), id, req.Status, actor); err != nil {
+	if err := h.repo.ChangeStatus(r.Context(), id, req, actor); err != nil {
 		if errors.Is(err, ErrNotFound) {
 			httperr.Render(w, httperr.NotFound("invoice not found"))
 			return
@@ -263,6 +268,23 @@ func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]int32{"rowVersion": newVersion})
+}
+
+// proofKeyProblem vets the proof key.
+// The key must address an upload made for this invoice, never any object in
+// the bucket or a traversal path, and it only accompanies a payment.
+func proofKeyProblem(id int64, req ChangeStatusRequest) string {
+	if req.PaymentProofKey == nil || strings.TrimSpace(*req.PaymentProofKey) == "" {
+		return ""
+	}
+	if req.Status != StatusPaid {
+		return "Bukti pembayaran hanya dapat dilampirkan saat invoice ditandai Dibayar."
+	}
+	key := strings.TrimSpace(*req.PaymentProofKey)
+	if err := storage.ValidateOwnedKey(storage.BucketInvoiceAttachments, proofKeyPrefix, id, key); err != nil {
+		return "Berkas bukti pembayaran tidak dikenali. Unggah ulang berkasnya lalu simpan kembali."
+	}
+	return ""
 }
 
 func isValidStatus(s Status) bool {

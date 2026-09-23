@@ -173,8 +173,30 @@ func (r *Repo) detail(ctx context.Context, query string, id int64) (InvoiceDetai
 	if err != nil {
 		return InvoiceDetail{}, err
 	}
-	det.AllowedStatuses = AllowedTransitions(det.Status)
+	det.AllowedTransitions = AllowedTransitions(det.Status, det.PoID != nil)
+	det.CanReplace = det.Status == StatusCancelled && det.PoID != nil && det.ReplacedByInvoiceID == nil
+	det.History, err = r.History(ctx, det.ID)
+	if err != nil {
+		return InvoiceDetail{}, err
+	}
 	return det, nil
+}
+
+// History returns the timeline.
+// Oldest entry first.
+func (r *Repo) History(ctx context.Context, invoiceID int64) ([]StatusHistoryEntry, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("invoices.history"), invoiceID)
+	if err != nil {
+		return nil, fmt.Errorf("invoice history: %w", err)
+	}
+	out, err := pgx.CollectRows(rows, pgx.RowToStructByName[StatusHistoryEntry])
+	if err != nil {
+		return nil, fmt.Errorf("invoice history: %w", err)
+	}
+	if out == nil {
+		out = []StatusHistoryEntry{}
+	}
+	return out, nil
 }
 
 func (r *Repo) ListItems(ctx context.Context, invoiceID int64) ([]InvoiceItem, error) {
@@ -208,13 +230,15 @@ func (r *Repo) ListItemsBulk(ctx context.Context, ids []int64) (map[int64][]Invo
 }
 
 // ChangeStatus applies a legal transition.
-func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, actorID int64) error {
+// The reason and the proof key ride along.
+func (r *Repo) ChangeStatus(ctx context.Context, id int64, req ChangeStatusRequest, actorID int64) error {
 	// Overdue is never stored by hand: it only confirms what the due date
 	// already says, so a past-due request is a no-op and an early one fails.
-	if status == StatusOverdue {
+	if req.Status == StatusOverdue {
 		return r.confirmOverdue(ctx, id)
 	}
-	_, err := r.db.Exec(ctx, r.store.Get("invoices.change_status"), id, string(status), actorID)
+	_, err := r.db.Exec(ctx, r.store.Get("invoices.change_status"),
+		id, string(req.Status), actorID, req.Note, req.PaymentProofKey)
 	return classifyPgErr(err)
 }
 

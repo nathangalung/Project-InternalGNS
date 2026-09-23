@@ -35,6 +35,8 @@ type Invoice struct {
 	CreatedAt           time.Time  `db:"created_at"              json:"createdAt"`
 	UpdatedAt           time.Time  `db:"updated_at"              json:"updatedAt"`
 	AttachmentObjectKey *string    `db:"attachment_object_key"   json:"attachmentObjectKey,omitempty"`
+	PaidAt              *time.Time `db:"paid_at"                 json:"paidAt,omitempty"`
+	PaymentProofKey     *string    `db:"payment_proof_key"       json:"paymentProofKey,omitempty"`
 }
 
 // InvoiceDetail is the read model behind the invoice screen. It carries the
@@ -56,7 +58,11 @@ type InvoiceDetail struct {
 	ReplacesInvoiceID   *int64     `db:"replaces_invoice_id"    json:"replacesInvoiceId,omitempty"`
 	ReplacesInvoiceNo   *string    `db:"replaces_invoice_no"    json:"replacesInvoiceNo,omitempty"`
 	ReplacedByInvoiceID *int64     `db:"replaced_by_invoice_id" json:"replacedByInvoiceId,omitempty"`
-	AllowedStatuses     []Status   `db:"-"                    json:"allowedStatuses"`
+
+	// Moves, Pengganti and timeline.
+	AllowedTransitions []Transition         `db:"-" json:"allowedTransitions"`
+	CanReplace         bool                 `db:"-" json:"canReplace"`
+	History            []StatusHistoryEntry `db:"-" json:"history"`
 }
 
 // UpdateAttachmentRequest persists the MinIO object key for an invoice
@@ -98,8 +104,23 @@ type Summary struct {
 	Overdue int64 `db:"overdue" json:"overdue"`
 }
 
+// ChangeStatusRequest moves an invoice.
+// A cancel needs Note.
 type ChangeStatusRequest struct {
-	Status Status `json:"status"`
+	Status          Status  `json:"status"`
+	Note            *string `json:"note,omitempty"`
+	PaymentProofKey *string `json:"paymentProofKey,omitempty"`
+}
+
+// StatusHistoryEntry mirrors invoice_status_history.
+type StatusHistoryEntry struct {
+	ID              int64     `db:"id"                json:"id"`
+	FromStatus      Status    `db:"from_status"       json:"fromStatus"`
+	ToStatus        Status    `db:"to_status"         json:"toStatus"`
+	Note            *string   `db:"note"              json:"note,omitempty"`
+	PaymentProofKey *string   `db:"payment_proof_key" json:"paymentProofKey,omitempty"`
+	ChangedBy       int64     `db:"changed_by"        json:"changedBy"`
+	ChangedAt       time.Time `db:"changed_at"        json:"changedAt"`
 }
 
 type UpdateDatesRequest struct {

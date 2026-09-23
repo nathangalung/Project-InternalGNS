@@ -66,7 +66,7 @@ func offeredItemPOWithInvoice(t *testing.T, tx pgx.Tx, offered int64) int64 {
 	porepo := purchaseorders.NewRepo(tx, store)
 	po, err := porepo.GetByQuotation(ctx, qid)
 	require.NoError(t, err)
-	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusUploaded, seedUserID))
+	attachPOFile(ctx, t, porepo, po.ID)
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -136,7 +136,7 @@ func TestInvoice_CatalogRenameLeavesIssuedInvoice(t *testing.T) {
 	itemID := createOfferedItem(t, tx)
 	invID := offeredItemPOWithInvoice(t, tx, itemID)
 	repo := invoices.NewRepo(tx, testutil.Store(t))
-	require.NoError(t, repo.ChangeStatus(ctx, invID, invoices.StatusSent, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusSent), seedUserID))
 
 	pdfBefore := pdfLineNames(t, tx, invID)
 	goodsBefore := coretaxGoods(t, tx, invID)

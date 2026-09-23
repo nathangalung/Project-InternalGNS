@@ -19,8 +19,8 @@ func TestRepo_Replace_CancelledInvoice(t *testing.T) {
 	qid, poID, oldID := deliveredPOWithInvoice(t, tx)
 	repo := invoices.NewRepo(tx, testutil.Store(t))
 
-	require.NoError(t, repo.ChangeStatus(ctx, oldID, invoices.StatusSent, seedUserID))
-	require.NoError(t, repo.ChangeStatus(ctx, oldID, invoices.StatusCancelled, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, oldID, move(invoices.StatusSent), seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, oldID, move(invoices.StatusCancelled), seedUserID))
 	old, err := repo.GetDetail(ctx, oldID)
 	require.NoError(t, err)
 
@@ -76,7 +76,7 @@ func TestRepo_Replace_Refusals(t *testing.T) {
 			repo := invoices.NewRepo(tx, testutil.Store(t))
 
 			for _, target := range tc.path {
-				require.NoError(t, repo.ChangeStatus(ctx, invID, target, seedUserID))
+				require.NoError(t, repo.ChangeStatus(ctx, invID, move(target), seedUserID))
 			}
 			if tc.replaced {
 				_, err := repo.Replace(ctx, invID, seedUserID)
