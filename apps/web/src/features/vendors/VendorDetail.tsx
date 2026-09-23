@@ -11,6 +11,7 @@ import { logoBackground } from "@/lib/avatar"
 import { formatRupiah } from "@/lib/format"
 import { ui } from "@/lib/ui"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
+import { buildContactInfo } from "./contact-info"
 
 interface VendorDetailProps {
   vendor: VendorRow
@@ -129,16 +130,13 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
       setFieldErrors(errs)
       return
     }
-    const contactInfo: VendorContactInfo = { ...vendor.contactInfo }
-    if (email.trim()) contactInfo.email = email.trim()
-    if (phone.trim()) contactInfo.phone = phone.trim()
     try {
       await updateVendor.mutateAsync({
         id: vendor.id,
         input: {
           name: name.trim(),
           location: address.trim() || undefined,
-          contactInfo: Object.keys(contactInfo).length > 0 ? contactInfo : undefined,
+          contactInfo: buildContactInfo(vendor.contactInfo, email, phone),
           isActive,
         },
       })
