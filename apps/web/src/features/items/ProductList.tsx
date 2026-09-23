@@ -6,6 +6,14 @@ import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
+import { useMe } from "@/features/auth/hooks"
+import {
+  canWriteCatalog,
+  isSearchCapped,
+  KATALOG_SEARCH_LIMIT,
+  type KatalogRow,
+  katalogRowsFromHits,
+} from "@/features/items/helpers"
 import { useItemSearchAdvanced, useItems } from "@/features/items/hooks"
 import ProductCreateModal from "@/features/items/ProductCreateModal"
 import ProductFilter, { type ProductFilterValues } from "@/features/items/ProductFilter"
@@ -13,7 +21,7 @@ import { useUnits } from "@/features/units/hooks"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen } from "@/lib/useListScreen"
-import type { AdvancedSearchHit, AdvancedSearchTier, ItemRow } from "@/types/api"
+import type { AdvancedSearchHit, AdvancedSearchTier } from "@/types/api"
 
 type ProductListProps = {
   onViewDetail?: (id: number) => void
@@ -31,6 +39,8 @@ const TIER_BADGE: Record<AdvancedSearchTier, { label: string; cls: string }> = {
 
 export default function ProductList({ onViewDetail }: ProductListProps) {
   const { data: unitsData } = useUnits()
+  const { data: me } = useMe()
+  const canWrite = canWriteCatalog(me?.role)
 
   const [showAdd, setShowAdd] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
@@ -69,7 +79,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
   })
   const { data: searchData, isFetching: searchLoading } = useItemSearchAdvanced(debouncedSearch, {
     minScore: 0.3,
-    limit: 100,
+    limit: KATALOG_SEARCH_LIMIT,
     isActive: filterIsActive,
   })
   const searchHits: AdvancedSearchHit[] = searchData?.hits ?? []
@@ -86,26 +96,15 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
     return (id?: number) => (id !== undefined ? (map.get(id) ?? "-") : "-")
   }, [unitsData])
 
-  const searchRows: ItemRow[] = useMemo(() => {
+  const searchRows: KatalogRow[] = useMemo(() => {
     if (!isSearchActive) return []
-    let rows: ItemRow[] = searchHits.map((h) => ({
-      id: h.id,
-      name: h.name,
-      impaCode: h.impaCode,
-      defaultUnitId: h.defaultUnitId,
-      description: undefined,
-      isActive: h.isActive,
-      createdAt: "",
-      updatedAt: "",
-    }))
-    if (filters.unitCode) {
-      const targetId = unitIdByCode.get(filters.unitCode)
-      if (targetId !== undefined) rows = rows.filter((it) => it.defaultUnitId === targetId)
-    }
-    return rows
+    const unitId = filters.unitCode ? unitIdByCode.get(filters.unitCode) : undefined
+    return katalogRowsFromHits(searchHits, unitId)
   }, [isSearchActive, searchHits, filters.unitCode, unitIdByCode])
+  // No offset on search; say so.
+  const searchCapped = isSearchActive && isSearchCapped(searchHits.length, KATALOG_SEARCH_LIMIT)
 
-  const serverRows = listData?.rows ?? []
+  const serverRows: KatalogRow[] = listData?.rows ?? []
   const totalItems = isSearchActive ? searchRows.length : (listData?.total ?? 0)
   const totalPages = list.totalPagesOf(totalItems)
   const currentRows = isSearchActive
@@ -117,27 +116,30 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
       <div className={ui.pageContent}>
         <div className={ui.pageHeader}>
           <h1 className={ui.pageTitle}>Katalog Produk</h1>
-          <div className={ui.pageActions}>
-            <button
-              className={`${ui.btnPrimary} w-[200px]`}
-              type="button"
-              onClick={() => setShowAdd(true)}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
+          {canWrite && (
+            <div className={ui.pageActions}>
+              <button
+                className={`${ui.btnPrimary} w-[200px]`}
+                type="button"
+                onClick={() => setShowAdd(true)}
               >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              Tambah Produk
-            </button>
-          </div>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Tambah Produk
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-4 pt-2">
@@ -150,7 +152,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
         </div>
 
         {isSearchActive && searchData && (
-          <div className="-mb-3 flex flex-wrap gap-2">
+          <div className="-mb-3 flex flex-wrap items-center gap-2">
             {(
               [
                 "ITEM_AUTO",
@@ -172,6 +174,12 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
                   </span>
                 )
               })}
+            {searchCapped && (
+              <span className="text-caption text-dark-500">
+                Menampilkan {KATALOG_SEARCH_LIMIT} hasil teratas. Perjelas kata kunci untuk
+                mempersempit hasil.
+              </span>
+            )}
           </div>
         )}
 
@@ -196,7 +204,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
                 </TableEmptyRow>
               )}
               {!isLoading &&
-                currentRows.map((it: ItemRow) => {
+                currentRows.map((it) => {
                   const status = it.isActive ? BADGE_AKTIF : BADGE_NONAKTIF
                   const tier = isSearchActive ? tierById.get(it.id) : undefined
                   const tierBadge = tier ? TIER_BADGE[tier] : undefined

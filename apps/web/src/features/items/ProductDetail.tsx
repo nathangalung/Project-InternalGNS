@@ -1,7 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
+import EntityLink from "@/components/shared/EntityLink"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
+import { useMe } from "@/features/auth/hooks"
 import AddVendorToItemModal from "@/features/items/AddVendorToItemModal"
+import {
+  apiFieldError,
+  canWriteCatalog,
+  productInitials,
+  vendorInitials,
+} from "@/features/items/helpers"
 import {
   useItemImageDownloadUrl,
   useItemVendors,
@@ -9,35 +17,41 @@ import {
   useUploadItemImage,
 } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
-import { ApiError, fetchObjectUrl } from "@/lib/api-client"
+import { fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
+import { errorMessage } from "@/lib/errors"
 import { formatRupiah } from "@/lib/format"
+import { toast } from "@/lib/toast"
 import { dropdownLabel, ui } from "@/lib/ui"
+import { validateAsset } from "@/lib/upload-validation"
 import type { ItemRow } from "@/types/api"
 
-interface ProductDetailProps {
+type ProductDetailProps = {
   product: ItemRow
   onBack: () => void
-}
-
-function productInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return "?"
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return (parts[0][0] + parts[1][0]).toUpperCase()
 }
 
 const labelCls =
   "mb-2 block text-[10px] font-bold uppercase leading-[15px] tracking-[1px] text-[#4A4455]"
 
-const inputBase =
-  "h-11 w-full rounded-md border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150"
+const inputBase = `h-11 w-full rounded-md border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150 read-only:cursor-default ${ui.fieldFocus}`
 
-const textareaCls =
-  "min-h-24 w-full resize-y rounded-md border-[1.5px] border-transparent bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150"
+const textareaCls = `min-h-24 w-full resize-y rounded-md border-[1.5px] border-transparent bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150 read-only:resize-none read-only:cursor-default ${ui.fieldFocus}`
+
+// Accepted image extensions.
+const IMAGE_ACCEPT = ".png,.jpg,.jpeg,.webp,.gif"
 
 export default function ProductDetail({ product, onBack }: ProductDetailProps) {
   const { data: units } = useUnits()
+  const { data: me } = useMe()
+  const canWrite = canWriteCatalog(me?.role)
+  const nameId = useId()
+  const nameErrorId = useId()
+  const impaId = useId()
+  const unitId = useId()
+  const descriptionId = useId()
+  const statusLabelId = useId()
+  const statusHintId = useId()
 
   const initialUnitCode = useMemo(() => {
     if (product.defaultUnitId === undefined) return ""
@@ -86,15 +100,31 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
     }
   }, [imageDownload?.downloadUrl, product.imageObjectKey])
 
+  // Preview only a valid file, revert on failure.
   function handleImageSelect(file: File | undefined) {
     if (!file) return
-    if (!file.type.startsWith("image/")) return
+    try {
+      validateAsset("itemImage", file)
+    } catch (err) {
+      toast.error(errorMessage(err, "Gambar produk tidak valid."))
+      return
+    }
+    const previous = imageDataUrl
+    let failed = false
     const reader = new FileReader()
     reader.onload = () => {
-      if (typeof reader.result === "string") setImageDataUrl(reader.result)
+      if (!failed && typeof reader.result === "string") setImageDataUrl(reader.result)
     }
     reader.readAsDataURL(file)
-    uploadImage.mutate({ id: product.id, file })
+    uploadImage.mutate(
+      { id: product.id, file },
+      {
+        onError: () => {
+          failed = true
+          setImageDataUrl(previous)
+        },
+      },
+    )
   }
 
   // Every field but the unit hydrates once from the state initializers above.
@@ -139,7 +169,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
   const handleSubmit = async () => {
     setSubmitError(null)
     const errs: Record<string, string> = {}
-    if (!name.trim()) errs.name = "Wajib diisi"
+    if (!name.trim()) errs.name = "Nama produk wajib diisi."
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs)
       return
@@ -158,19 +188,17 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
       })
       setFieldErrors({})
     } catch (err) {
-      const msg =
-        err instanceof ApiError
-          ? err.message || "Gagal menyimpan perubahan"
-          : "Gagal menyimpan perubahan"
-      setSubmitError(msg)
+      const nameError = apiFieldError(err, "name")
+      if (nameError) setFieldErrors((p) => ({ ...p, name: nameError }))
+      setSubmitError(errorMessage(err, "Gagal menyimpan perubahan."))
     }
   }
 
   return (
     <>
-      <div className={ui.pageContentLoose}>
+      <div className={ui.pageContent}>
         <div className="flex flex-col gap-3">
-          <nav className={ui.breadcrumb}>
+          <nav className={ui.breadcrumb} aria-label="Breadcrumb">
             <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
               Katalog Produk
             </button>
@@ -182,7 +210,8 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
             <button
               type="button"
               onClick={onBack}
-              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-white shadow-sm"
+              aria-label="Kembali ke Katalog Produk"
+              className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-white shadow-sm ${ui.focusRing}`}
             >
               <svg
                 width="16"
@@ -193,6 +222,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                 strokeWidth="2.2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                aria-hidden="true"
               >
                 <line x1="19" y1="12" x2="5" y2="12" />
                 <polyline points="12 19 5 12 12 5" />
@@ -203,35 +233,52 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
         </div>
 
         <div className="flex flex-col gap-5">
-          <div className="flex items-center gap-5 rounded-lg bg-white px-6 py-5">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                handleImageSelect(e.target.files?.[0])
-                e.target.value = ""
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              title="Klik untuk ganti gambar produk"
-              className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg p-0 text-xl font-extrabold tracking-[0.5px] text-white"
-              style={{ background: imageDataUrl ? "#FFFFFF" : logoBg }}
-            >
-              {imageDataUrl ? (
-                <img
-                  src={imageDataUrl}
-                  alt="Gambar produk"
-                  className="h-full w-full object-cover"
+          <div className="flex items-center gap-5 rounded-lg bg-white px-6 py-5 max-sm:flex-wrap max-sm:gap-4 max-sm:px-5">
+            {canWrite ? (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={IMAGE_ACCEPT}
+                  className="hidden"
+                  onChange={(e) => {
+                    handleImageSelect(e.target.files?.[0])
+                    e.target.value = ""
+                  }}
                 />
-              ) : (
-                productInitials(product.name)
-              )}
-            </button>
-            <div className="min-w-0 flex-1">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadImage.isPending}
+                  title="Klik untuk ganti gambar produk"
+                  aria-label="Ganti gambar produk"
+                  className={`flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg p-0 text-xl font-extrabold tracking-[0.5px] text-white disabled:cursor-wait disabled:opacity-70 ${ui.focusRing}`}
+                  style={{ background: imageDataUrl ? "#FFFFFF" : logoBg }}
+                >
+                  {imageDataUrl ? (
+                    <img src={imageDataUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    productInitials(product.name)
+                  )}
+                </button>
+              </>
+            ) : (
+              <div
+                className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg text-xl font-extrabold tracking-[0.5px] text-white"
+                style={{ background: imageDataUrl ? "#FFFFFF" : logoBg }}
+              >
+                {imageDataUrl ? (
+                  <img
+                    src={imageDataUrl}
+                    alt="Gambar produk"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span aria-hidden="true">{productInitials(product.name)}</span>
+                )}
+              </div>
+            )}
+            <div className="min-w-0 flex-1 max-sm:basis-[160px]">
               <h2 className="break-words text-lg font-bold leading-6 tracking-[-0.4px] text-[#191C1E]">
                 {product.name}
               </h2>
@@ -257,23 +304,29 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-8 rounded-lg bg-white p-8">
+          <div className="flex flex-col gap-8 rounded-lg bg-white p-8 max-sm:p-5">
             <div>
               <h3 className="text-xl font-bold leading-7 tracking-[-0.5px] text-[#191C1E]">
                 Informasi Utama Produk
               </h3>
               <p className="mt-1 text-sm font-normal leading-5 text-[#4A4455]">
-                Kelola informasi produk.
+                {canWrite
+                  ? "Kelola informasi produk."
+                  : "Peran Keuangan hanya dapat melihat data produk."}
               </p>
             </div>
 
             <div className="flex flex-col gap-6">
               <div>
-                <label className={labelCls}>
-                  Nama Produk <span className="text-[#DC2626]">*</span>
+                <label htmlFor={nameId} className={labelCls}>
+                  Nama Produk {canWrite && <span className="text-[#DC2626]">*</span>}
                 </label>
                 <input
+                  id={nameId}
                   type="text"
+                  readOnly={!canWrite}
+                  aria-invalid={fieldErrors.name ? true : undefined}
+                  aria-describedby={fieldErrors.name ? nameErrorId : undefined}
                   value={name}
                   onChange={(e) => {
                     setName(e.target.value)
@@ -284,14 +337,20 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                   }`}
                 />
                 {fieldErrors.name && (
-                  <div className="mt-1.5 text-[12px] text-[#DC2626]">{fieldErrors.name}</div>
+                  <div id={nameErrorId} className="mt-1.5 text-[12px] text-[#DC2626]">
+                    {fieldErrors.name}
+                  </div>
                 )}
               </div>
 
               <div>
-                <label className={labelCls}>Kode IMPA</label>
+                <label htmlFor={impaId} className={labelCls}>
+                  Kode IMPA
+                </label>
                 <input
+                  id={impaId}
                   type="text"
+                  readOnly={!canWrite}
                   inputMode="numeric"
                   value={impa}
                   placeholder="Contoh: 330212"
@@ -301,11 +360,16 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
               </div>
 
               <div>
-                <label className={labelCls}>Satuan Default</label>
+                <label htmlFor={unitId} className={labelCls}>
+                  Satuan Default
+                </label>
                 <div className="relative">
                   <input
+                    id={unitId}
                     type="text"
-                    placeholder="Ketik nama satuan..."
+                    readOnly={!canWrite}
+                    autoComplete="off"
+                    placeholder={canWrite ? "Ketik nama satuan..." : ""}
                     value={unitQuery}
                     onChange={(e) => {
                       setUnitQuery(e.target.value)
@@ -313,11 +377,13 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                       if (unitCode) setUnitCode("")
                     }}
                     onFocus={() => {
-                      if (unitQuery.length > 0 && !unitCode) setShowUnitSuggestions(true)
+                      if (canWrite && unitQuery.length > 0 && !unitCode) {
+                        setShowUnitSuggestions(true)
+                      }
                     }}
                     className={`${inputBase} border-transparent ${unitQuery ? "pr-9" : ""}`}
                   />
-                  {unitQuery && (
+                  {canWrite && unitQuery && (
                     <button
                       type="button"
                       onClick={() => {
@@ -326,7 +392,8 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                         setShowUnitSuggestions(false)
                       }}
                       title="Bersihkan"
-                      className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-[#94A3B8]"
+                      aria-label="Bersihkan satuan"
+                      className={`absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center rounded-sm p-1 text-[#94A3B8] ${ui.focusRing}`}
                     >
                       <svg
                         width="14"
@@ -336,6 +403,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                         stroke="currentColor"
                         strokeWidth="2"
                         strokeLinecap="round"
+                        aria-hidden="true"
                       >
                         <line x1="1" y1="1" x2="13" y2="13" />
                         <line x1="13" y1="1" x2="1" y2="13" />
@@ -375,37 +443,46 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
               </div>
 
               <div>
-                <label className={labelCls}>Deskripsi</label>
+                <label htmlFor={descriptionId} className={labelCls}>
+                  Deskripsi
+                </label>
                 <textarea
+                  id={descriptionId}
+                  readOnly={!canWrite}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  placeholder="Deskripsi tambahan produk (opsional)"
+                  placeholder={canWrite ? "Deskripsi tambahan produk (opsional)" : ""}
                   className={textareaCls}
                 />
               </div>
             </div>
 
             <div className="border-t border-[#ECEEF0] pt-6">
-              <div className="flex items-center justify-between gap-6 rounded-md bg-[#F2F4F6] px-6 py-5">
-                <div className="flex-1">
-                  <div className="text-sm font-bold leading-5 text-[#191C1E]">Status Produk</div>
-                  <div className="mt-1 text-caption font-normal text-[#4A4455]">
-                    Menonaktifkan produk akan menyembunyikan dari katalog dan mencegah penggunaan
-                    dalam quotation baru.
+              <div className="flex items-center justify-between gap-6 rounded-md bg-[#F2F4F6] px-6 py-5 max-sm:gap-4 max-sm:px-4">
+                <div className="min-w-0 flex-1">
+                  <div id={statusLabelId} className="text-sm font-bold leading-5 text-[#191C1E]">
+                    Status Produk
+                  </div>
+                  <div id={statusHintId} className="mt-1 text-caption font-normal text-[#4A4455]">
+                    Produk nonaktif tidak muncul di pencarian produk saat menyusun quotation baru.
+                    Produk tetap tercantum di Katalog Produk dan pada quotation yang sudah ada.
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsActive((a) => !a)}
+                  disabled={!canWrite}
                   role="switch"
                   aria-checked={isActive}
-                  className={`relative h-8 w-14 flex-shrink-0 rounded-full transition-colors duration-200 ${
+                  aria-labelledby={statusLabelId}
+                  aria-describedby={statusHintId}
+                  className={`relative h-8 w-14 flex-shrink-0 rounded-full transition-colors duration-200 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 ${ui.focusRing} ${
                     isActive ? "bg-primary-700" : "bg-dark-300"
                   }`}
                 >
                   <span
-                    className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ${
+                    className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 motion-reduce:transition-none ${
                       isActive ? "left-7" : "left-1"
                     }`}
                   />
@@ -414,44 +491,49 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
             </div>
 
             {submitError && (
-              <div className="rounded-md border-l-4 border-[#DC2626] bg-[#FEF2F2] px-4 py-3 text-[13px] text-[#7F1D1D]">
+              <div
+                role="alert"
+                className="rounded-md border-l-4 border-[#DC2626] bg-[#FEF2F2] px-4 py-3 text-[13px] text-[#7F1D1D]"
+              >
                 {submitError}
               </div>
             )}
           </div>
         </div>
 
-        <div className="mt-2 flex justify-end gap-4">
-          <button
-            type="button"
-            onClick={handleCancel}
-            disabled={!dirty || updateItem.isPending}
-            className={`rounded-lg px-7 py-3 text-sm font-bold ${
-              dirty && !updateItem.isPending
-                ? "cursor-pointer text-primary-700"
-                : "cursor-default text-[#CBD5E1]"
-            }`}
-          >
-            Batal
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!dirty || updateItem.isPending}
-            className={`rounded-lg px-8 py-3 text-sm font-bold text-white ${
-              dirty
-                ? "bg-[linear-gradient(135deg,#630ED4_0%,#7C3AED_100%)] shadow-[0px_10px_15px_-3px_rgba(99,14,212,0.2),0px_4px_6px_-4px_rgba(99,14,212,0.2)]"
-                : "bg-[#CBD5E1]"
-            } ${dirty && !updateItem.isPending ? "cursor-pointer" : "cursor-default"} ${
-              updateItem.isPending ? "opacity-70" : "opacity-100"
-            }`}
-          >
-            {updateItem.isPending ? "Menyimpan…" : "Simpan Perubahan"}
-          </button>
-        </div>
+        {canWrite && (
+          <div className="mt-2 flex justify-end gap-4 max-sm:flex-col-reverse max-sm:gap-2">
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={!dirty || updateItem.isPending}
+              className={`rounded-lg px-7 py-3 text-sm font-bold ${ui.focusRing} ${
+                dirty && !updateItem.isPending
+                  ? "cursor-pointer text-primary-700"
+                  : "cursor-default text-[#CBD5E1]"
+              }`}
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!dirty || updateItem.isPending}
+              className={`rounded-lg px-8 py-3 text-sm font-bold text-white ${ui.focusRing} ${
+                dirty
+                  ? "bg-[linear-gradient(135deg,#630ED4_0%,#7C3AED_100%)] shadow-[0px_10px_15px_-3px_rgba(99,14,212,0.2),0px_4px_6px_-4px_rgba(99,14,212,0.2)]"
+                  : "bg-[#CBD5E1]"
+              } ${dirty && !updateItem.isPending ? "cursor-pointer" : "cursor-default"} ${
+                updateItem.isPending ? "opacity-70" : "opacity-100"
+              }`}
+            >
+              {updateItem.isPending ? "Menyimpan…" : "Simpan Perubahan"}
+            </button>
+          </div>
+        )}
 
-        <div className="mt-2 flex flex-col gap-6 rounded-lg bg-white p-8">
-          <div className="flex items-center justify-between gap-4">
+        <div className="mt-2 flex flex-col gap-6 rounded-lg bg-white p-8 max-sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <h3 className="text-xl font-extrabold leading-7 tracking-[-0.5px] text-[#191C1E]">
                 Daftar Vendor Terkait
@@ -460,87 +542,96 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                 {(itemVendors ?? []).length}
               </span>
             </div>
-            <button
-              type="button"
-              className={`${ui.btnPrimary} w-[200px]`}
-              onClick={() => setShowAddVendor(true)}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
+            {canWrite && (
+              <button
+                type="button"
+                className={`${ui.btnPrimary} w-[200px] max-sm:w-full`}
+                onClick={() => setShowAddVendor(true)}
               >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              Tambah Vendor
-            </button>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Tambah Vendor
+              </button>
+            )}
           </div>
 
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className={ui.theadRow}>
-                <th className={`${ui.thCenter} w-[280px]`}>Nama Vendor</th>
-                <th className={`${ui.thCenter} w-[200px]`}>SKU Vendor</th>
-                <th className={`${ui.thCenter} w-[180px]`}>Harga Beli</th>
-                <th className={`${ui.thCenter} w-[200px]`}>Penawaran Terakhir</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vendorsLoading && <TableLoadingRow colSpan={4} />}
-              {!vendorsLoading && (itemVendors ?? []).length === 0 && (
-                <TableEmptyRow colSpan={4}>
-                  Belum ada vendor terkait. Klik "Tambah Vendor" untuk menambah.
-                </TableEmptyRow>
-              )}
-              {!vendorsLoading &&
-                (itemVendors ?? []).map((v) => {
-                  const initials = v.vendorName
-                    .replace(/^PT\.?\s+/i, "")
-                    .trim()
-                    .split(/\s+/)
-                    .filter(Boolean)
-                    .slice(0, 2)
-                    .map((p) => p[0])
-                    .join("")
-                    .toUpperCase()
-                  const formattedPrice = formatRupiah(v.costPrice, "-")
-                  const formattedDate = v.lastQuotedAt
-                    ? new Date(v.lastQuotedAt).toLocaleDateString("id-ID", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })
-                    : "-"
-                  return (
-                    <tr key={v.vendorProductId} className={ui.tr}>
-                      <td className={ui.td}>
-                        <div className="flex items-center gap-3 pl-4">
-                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-dark-100 text-[13px] font-bold text-primary-700">
-                            {initials || "?"}
+          <div className={ui.tableWrap}>
+            <table className="w-full min-w-[640px] border-collapse">
+              <thead>
+                <tr className={ui.theadRow}>
+                  <th className={`${ui.thCenter} w-[280px]`}>Nama Vendor</th>
+                  <th className={`${ui.thCenter} w-[200px]`}>SKU Vendor</th>
+                  <th className={`${ui.thCenter} w-[180px]`}>Harga Beli</th>
+                  <th className={`${ui.thCenter} w-[200px]`}>Penawaran Terakhir</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vendorsLoading && <TableLoadingRow colSpan={4} />}
+                {!vendorsLoading && (itemVendors ?? []).length === 0 && (
+                  <TableEmptyRow colSpan={4}>
+                    {canWrite
+                      ? 'Belum ada vendor terkait. Klik "Tambah Vendor" untuk menambah.'
+                      : "Belum ada vendor terkait."}
+                  </TableEmptyRow>
+                )}
+                {!vendorsLoading &&
+                  (itemVendors ?? []).map((v) => {
+                    const initials = vendorInitials(v.vendorName)
+                    const formattedPrice = formatRupiah(v.costPrice, "-")
+                    const formattedDate = v.lastQuotedAt
+                      ? new Date(v.lastQuotedAt).toLocaleDateString("id-ID", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : "-"
+                    return (
+                      <tr key={v.vendorProductId} className={ui.tr}>
+                        <td className={ui.td}>
+                          <div className="flex items-center gap-3 pl-4">
+                            <div
+                              aria-hidden="true"
+                              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-dark-100 text-[13px] font-bold text-primary-700"
+                            >
+                              {initials}
+                            </div>
+                            <EntityLink
+                              kind="vendor"
+                              id={v.vendorId}
+                              tone="name"
+                              className="text-sm font-medium text-[#191C1E]"
+                            >
+                              {v.vendorName}
+                            </EntityLink>
                           </div>
-                          <span className="text-sm font-medium text-[#191C1E]">{v.vendorName}</span>
-                        </div>
-                      </td>
-                      <td className={`${ui.tdCenter} font-medium`}>{v.vendorSku ?? "-"}</td>
-                      <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
-                        {formattedPrice}
-                      </td>
-                      <td className={`${ui.tdCenter} font-medium`}>{formattedDate}</td>
-                    </tr>
-                  )
-                })}
-            </tbody>
-          </table>
+                        </td>
+                        <td className={`${ui.tdCenter} font-medium`}>{v.vendorSku ?? "-"}</td>
+                        <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>
+                          {formattedPrice}
+                        </td>
+                        <td className={`${ui.tdCenter} font-medium`}>{formattedDate}</td>
+                      </tr>
+                    )
+                  })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <AddVendorToItemModal
-        open={showAddVendor}
+        open={canWrite && showAddVendor}
         itemId={product.id}
         onOpenChange={setShowAddVendor}
       />
