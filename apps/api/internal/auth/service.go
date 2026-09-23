@@ -21,6 +21,14 @@ var (
 	ErrSessionRevoked = errors.New("session revoked")
 )
 
+// Millisecond iat. The session epoch a password change sets is sub-second,
+// so a second-granular iat refused the very login the change forces when
+// both fell in the same second. golang-jwt reads this one package-level
+// setting on both signing and parsing, and only this package uses it.
+func init() {
+	jwt.TimePrecision = time.Millisecond
+}
+
 // Compared against when the email is unknown so an unregistered address costs
 // the same bcrypt work as a real one. Built at init with the same cost
 // Repo.Create uses, so the two never drift apart.
@@ -338,9 +346,8 @@ func (s *Service) Authenticate(ctx context.Context, tokenStr string) (Identity, 
 	if !live.IsActive {
 		return Identity{}, ErrSessionRevoked
 	}
-	// The iat claim is second-granular, so a token minted in the same second
-	// as the reset is refused too. Erring that way costs one re-login and
-	// never leaves a reset session alive.
+	// iat carries milliseconds (see init), so only a token minted before the
+	// change is refused, not one minted moments after it.
 	if claims.IssuedAt == nil || claims.IssuedAt.Time.Before(live.SessionsValidFrom) {
 		return Identity{}, ErrSessionRevoked
 	}

@@ -85,14 +85,16 @@ func TestService_Authenticate_PasswordResetRevokesToken(t *testing.T) {
 	assert.ErrorIs(t, err, auth.ErrSessionRevoked)
 }
 
-// A token issued after the reset must keep working.
+// A token issued after the reset must keep working, even inside the same
+// second: the re-login a reset forces would otherwise bounce straight back
+// to the login screen.
 func TestService_Authenticate_TokenIssuedAfterResetStillValid(t *testing.T) {
 	ctx, _, repo, svc, u, _ := mkLoggedIn(t, users.RoleOperational)
 
-	require.NoError(t, repo.UpdatePassword(ctx, u.ID, "Another-pw1!", 1))
-	// iat is second-granular, so cross the next second boundary before the
-	// new login: a token minted in the same second as the reset is refused.
+	// Start just past a second boundary so the reset and the login below
+	// share one second deterministically.
 	waitForNextSecond()
+	require.NoError(t, repo.UpdatePassword(ctx, u.ID, "Another-pw1!", 1))
 
 	resp, err := svc.Login(ctx, u.Email, "Another-pw1!")
 	require.NoError(t, err)
