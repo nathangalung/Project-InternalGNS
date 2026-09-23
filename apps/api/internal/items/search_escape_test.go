@@ -24,6 +24,10 @@ func TestRepo_List_EscapesLikeWildcards(t *testing.T) {
 	require.NoError(t, err)
 	_, err = repo.Create(ctx, items.CreateItemRequest{Name: "UNDXTWO " + nonce}, seedUserID)
 	require.NoError(t, err)
+	slash, err := repo.Create(ctx, items.CreateItemRequest{Name: `BS\ONE ` + nonce}, seedUserID)
+	require.NoError(t, err)
+	_, err = repo.Create(ctx, items.CreateItemRequest{Name: "BSONE " + nonce}, seedUserID)
+	require.NoError(t, err)
 
 	tests := []struct {
 		name  string
@@ -32,6 +36,7 @@ func TestRepo_List_EscapesLikeWildcards(t *testing.T) {
 	}{
 		{"percent is literal", "PCT%ONE " + nonce, literal.ID},
 		{"underscore is literal", "UND_TWO " + nonce, under.ID},
+		{"backslash is literal", `BS\ONE ` + nonce, slash.ID},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
