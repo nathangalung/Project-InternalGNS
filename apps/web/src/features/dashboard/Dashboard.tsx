@@ -58,7 +58,7 @@ export default function Dashboard() {
   const closeYearMenuOnBlur = (e: FocusEvent<HTMLButtonElement>) => {
     if (!yearMenuRef.current?.contains(e.relatedTarget)) setShowYearMenu(false)
   }
-  // Escape returns to the trigger.
+  // Escape refocuses the trigger.
   const yearMenuKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
     if (e.key !== "Escape" || !showYearMenu) return
     setShowYearMenu(false)

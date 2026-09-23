@@ -1,5 +1,20 @@
 import { describe, expect, it } from "vitest"
-import { computeTaxBreakdown, formatRupiahAxis } from "./format"
+import { computeTaxBreakdown, formatRupiah, formatRupiahAxis } from "./format"
+
+describe("formatRupiah", () => {
+  it.each<[string, string | number | null, string]>([
+    ["whole amount", 1_500_000, "Rp1.500.000"],
+    ["numeric string", "1500000.00", "Rp1.500.000"],
+    ["one sen digit pads to two", "16155994.5", "Rp16.155.994,50"],
+    ["two sen digits", "11425333.34", "Rp11.425.333,34"],
+    ["third digit rounds", 10.005, "Rp10,01"],
+    ["rounds to whole", 99.999, "Rp100"],
+    ["zero uses the fallback", 0, "Rp0"],
+    ["null uses the fallback", null, "Rp0"],
+  ])("%s", (_name, value, want) => {
+    expect(formatRupiah(value)).toBe(want)
+  })
+})
 
 describe("formatRupiahAxis", () => {
   it("returns the raw value below one thousand", () => {

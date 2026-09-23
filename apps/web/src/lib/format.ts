@@ -5,12 +5,16 @@ export function toNum(v: string | number | null | undefined): number {
   return Number.isFinite(n) ? n : 0
 }
 
-// Currency + number formatters.
+// Rupiah, sen only when present.
+//
+// Tax figures such as DPP can carry sen. Those always print two digits
+// ("Rp16.155.994,50"), never one or three; whole amounts print none.
 export function formatRupiah(value: string | number | null | undefined, fallback = "Rp0"): string {
   if (value === null || value === undefined || value === "") return fallback
   const n = typeof value === "number" ? value : Number(value)
   if (!Number.isFinite(n) || n === 0) return fallback
-  return `Rp${n.toLocaleString("id-ID")}`
+  const sen = Math.round(n * 100) % 100 !== 0 ? 2 : 0
+  return `Rp${n.toLocaleString("id-ID", { minimumFractionDigits: sen, maximumFractionDigits: sen })}`
 }
 
 export function formatNumber(value: number | string | null | undefined, fallback = "0"): string {

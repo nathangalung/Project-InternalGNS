@@ -336,7 +336,7 @@ export default function Step4Summary({
                     height="6"
                     viewBox="0 0 10 6"
                     fill="none"
-                    className={`transition-transform duration-200 ${
+                    className={`motion-safe:transition-transform motion-safe:duration-200 ${
                       prodExpanded ? "" : "rotate-180"
                     }`}
                   >

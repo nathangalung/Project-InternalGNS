@@ -69,7 +69,9 @@ export default function DashboardFinancialFilter({
   const closeYearOnBlur = (e: FocusEvent<HTMLButtonElement>) => {
     if (!yearRef.current?.contains(e.relatedTarget)) setYearOpen(false)
   }
-  // Escape closes the list, not the modal.
+  // Escape closes list only.
+  //
+  // Stopping the event keeps the surrounding modal open.
   const yearKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
     if (e.key !== "Escape" || !yearOpen) return
     e.stopPropagation()

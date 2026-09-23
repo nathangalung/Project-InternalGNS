@@ -95,7 +95,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
   const updateContact = useUpdateContact()
   const deleteContact = useDeleteContact()
 
-  // Soft delete; the row is deactivated.
+  // Deactivate, not delete.
   function confirmRemoveContact() {
     if (pendingDeleteId === null) return
     deleteContact.mutate(
@@ -230,7 +230,9 @@ export default function ClientDetail({ client }: ClientDetailProps) {
 
   const logoBg = logoBackground(client.name)
 
-  // Preview only a valid file, and roll it back when the upload fails.
+  // Preview, revert on failure.
+  //
+  // Only a valid file reaches the preview.
   function handleLogoSelect(file: File | undefined) {
     if (!file) return
     try {
@@ -743,7 +745,8 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                   key={c.id}
                   className="flex flex-wrap items-center justify-between gap-4 rounded-md bg-[#F2F4F6] px-4 py-3"
                 >
-                  <div className="min-w-0 flex-1">
+                  {/* Own row on phones, actions below */}
+                  <div className="min-w-0 flex-1 max-sm:basis-full">
                     <div className="break-words text-sm font-semibold text-[#191C1E]">
                       {c.name}
                       {c.title && (

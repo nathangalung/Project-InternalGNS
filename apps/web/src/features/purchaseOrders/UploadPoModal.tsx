@@ -106,6 +106,7 @@ export default function UploadPoModal({
             id="po-number"
             type="text"
             value={poNumber}
+            maxLength={50}
             onChange={(e) => setPoNumber(e.target.value)}
             disabled={detailsLocked}
             aria-describedby={detailsLocked ? "po-details-locked" : undefined}

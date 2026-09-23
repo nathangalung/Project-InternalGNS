@@ -24,6 +24,8 @@ export async function logout(): Promise<void> {
   })
 }
 
+// Self-service password change.
+//
 // Any role; a 204 ends every session.
 export async function changeOwnPassword(input: ChangeOwnPasswordInput): Promise<void> {
   await apiRequest<void>({

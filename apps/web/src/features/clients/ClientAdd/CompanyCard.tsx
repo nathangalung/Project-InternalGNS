@@ -50,7 +50,7 @@ export default function CompanyCard({
   const [logoError, setLogoError] = useState<string | null>(null)
   const id = useId()
 
-  // Rejected files never reach the preview.
+  // Validate before previewing.
   function handleLogoSelect(file: File | undefined) {
     if (!file) return
     try {

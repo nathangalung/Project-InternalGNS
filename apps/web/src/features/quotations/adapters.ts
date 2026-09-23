@@ -9,14 +9,22 @@ import type {
 import type { QuotationRow } from "./QuotationList/helpers"
 import { quotationStatusLabel } from "./status"
 
+// Expiry job note prefix.
+const EXPIRY_PREFIX = "Kedaluwarsa otomatis: "
+
 // Status history entry text.
 //
-// Creation carries a fixed server note, so only the status is shown.
+// Creation carries a fixed server note, so only the status is shown. The
+// expiry job's note repeats the target label, so its prefix is dropped.
 export function historyAction(ev: ApiStatusEvent): string {
   const to = quotationStatusLabel(ev.toStatus)
   if (!ev.fromStatus) return `Dibuat sebagai ${to}`
   const move = `${quotationStatusLabel(ev.fromStatus)} → ${to}`
-  return ev.note ? `${move}: ${ev.note}` : move
+  const note =
+    ev.toStatus === "expired" && ev.note?.startsWith(EXPIRY_PREFIX)
+      ? ev.note.slice(EXPIRY_PREFIX.length)
+      : ev.note
+  return note ? `${move}: ${note}` : move
 }
 
 // History date, system moves marked.

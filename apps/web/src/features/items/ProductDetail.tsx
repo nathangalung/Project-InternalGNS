@@ -96,7 +96,9 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
     }
   }, [imageDownload?.downloadUrl, product.imageObjectKey])
 
-  // Preview only a valid file, revert on failure.
+  // Preview, revert on failure.
+  //
+  // Only a valid file reaches the preview.
   function handleImageSelect(file: File | undefined) {
     if (!file) return
     try {
@@ -606,7 +608,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                               kind="vendor"
                               id={v.vendorId}
                               tone="name"
-                              className="text-sm font-medium text-[#191C1E]"
+                              className="text-sm font-medium"
                             >
                               {v.vendorName}
                             </EntityLink>

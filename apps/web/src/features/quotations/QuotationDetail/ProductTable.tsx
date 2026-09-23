@@ -184,7 +184,7 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
               height="6"
               viewBox="0 0 10 6"
               fill="none"
-              className={`transition-transform duration-200 ${expanded ? "" : "rotate-180"}`}
+              className={`motion-safe:transition-transform motion-safe:duration-200 ${expanded ? "" : "rotate-180"}`}
             >
               <path
                 d="M1 5L5 1L9 5"

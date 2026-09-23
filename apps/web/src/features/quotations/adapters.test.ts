@@ -92,6 +92,13 @@ describe("historyAction wording", () => {
   it("omits an empty note", () => {
     expect(historyAction(event({ fromStatus: "draft", toStatus: "sent" }))).toBe("Draf → Dikirim")
   })
+
+  it("does not repeat Kedaluwarsa for the expiry job", () => {
+    const note = "Kedaluwarsa otomatis: masa berlaku 7 hari sejak 01-03-2026 telah lewat."
+    expect(historyAction(event({ fromStatus: "sent", toStatus: "expired", note }))).toBe(
+      "Dikirim → Kedaluwarsa: masa berlaku 7 hari sejak 01-03-2026 telah lewat.",
+    )
+  })
 })
 
 describe("toQuotationData offered item", () => {

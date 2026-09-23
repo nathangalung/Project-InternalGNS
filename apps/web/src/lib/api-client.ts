@@ -149,7 +149,7 @@ export function parseProblem(text: string): unknown {
   }
 }
 
-// Typed error from a failed response.
+// Error from a failed response.
 async function failure(res: Response): Promise<ApiError> {
   const problem = parseProblem(await res.text().catch(() => ""))
   const fallback = `Permintaan gagal (${res.status}).`
@@ -232,7 +232,7 @@ const TRANSFER_FALLBACK: Record<TransferKind, string> = {
   download: "Gagal mengunduh berkas.",
 }
 
-// Indonesian text for a failed transfer.
+// Failed transfer, in Indonesian.
 //
 // The storage proxy writes English details, so only the document routes'
 // 409 and 422, which are written for the user, pass through. An upload 409
@@ -252,7 +252,7 @@ export function transferFailureMessage(
   return fallback
 }
 
-// Typed error from a failed transfer.
+// Error from a failed transfer.
 async function transferFailure(res: Response, kind: TransferKind): Promise<ApiError> {
   const problem = parseProblem(await res.text().catch(() => ""))
   return new ApiError(res.status, problem, transferFailureMessage(kind, res.status, problem))

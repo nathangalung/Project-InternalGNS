@@ -66,7 +66,7 @@ export default function TrendChart({
     data.map((v, i) => `${i === 0 ? "M" : "L"} ${gx(i).toFixed(1)} ${gy(v).toFixed(1)}`).join(" ")
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => maxVal * f)
 
-  // Hovered month, from the plot area.
+  // Hovered month from pointer.
   function handleMouseMove(e: ReactMouseEvent<SVGSVGElement>) {
     const box = e.currentTarget.getBoundingClientRect()
     const x = ((e.clientX - box.left) / box.width) * W

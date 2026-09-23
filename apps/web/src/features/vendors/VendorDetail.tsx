@@ -428,7 +428,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
             <div className="flex items-center justify-between gap-6 rounded-md bg-[#F2F4F6] px-6 py-5">
               <div className="flex-1">
                 <div id={statusLabelId} className="text-sm font-bold leading-5 text-[#191C1E]">
-                  Status Akun
+                  Status Vendor
                 </div>
                 <div
                   id={statusHintId}
@@ -504,7 +504,8 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
         <h3 className="m-0 text-[20px] font-extrabold leading-7 tracking-[-0.5px] text-[#191C1E]">
           Daftar Produk Vendor
           {!itemsLoading && !itemsError && (
-            <span className="ml-2 text-base font-semibold text-dark-500">
+            <span className="ml-1 text-base font-semibold text-dark-500">
+              {" "}
               ({itemsSummary.count})
             </span>
           )}

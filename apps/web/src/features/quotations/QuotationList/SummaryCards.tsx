@@ -11,7 +11,7 @@ const TONE: Record<string, StatTone> = {
   rejected: "red",
 }
 
-// Total plus one tile per status.
+// Total and status tiles.
 //
 // Tiles follow the server's stats array: its order, its labels, zero
 // counts included, so a new status shows up without a code change.

@@ -95,9 +95,9 @@ export async function send(id: number, note?: string): Promise<void> {
   })
 }
 
-// Clone a sent quotation as a new draft.
+// Clone as a new draft.
 //
-// The original moves to Revisi and is frozen; the reply carries the new id.
+// Only a sent quotation can be revised. The original moves to Revisi and is frozen; the reply carries the new id.
 export async function revise(id: number, note?: string): Promise<{ id: number }> {
   return apiRequest<{ id: number }>({
     path: `/quotations/${id}/revise`,

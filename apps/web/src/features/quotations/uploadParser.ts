@@ -20,7 +20,7 @@ type HeaderIdx = {
 function findIdx(headers: string[], keys: string[]): number {
   const norm = headers.map((h) => (h ?? "").toString().trim().toLowerCase())
   for (const k of keys) {
-    const exact = norm.findIndex((h) => h === k)
+    const exact = norm.indexOf(k)
     if (exact !== -1) return exact
   }
   for (const k of keys) {
