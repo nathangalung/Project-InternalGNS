@@ -163,7 +163,7 @@ export default function CompanyCard({
         </label>
         <textarea
           id={`${id}-address`}
-          className={`${inputCls} resize-none leading-5`}
+          className={`${inputCls} resize-none font-sans leading-5`}
           placeholder="Alamat lengkap operasional (min. 20 karakter)"
           value={form.alamat}
           onChange={(e) => onChange("alamat", e.target.value)}

@@ -177,7 +177,7 @@ export default function VendorAddModal({
               Alamat <span className="text-primary-700">*</span>
             </label>
             <textarea
-              className={`${inputCls} resize-none leading-5`}
+              className={`${inputCls} resize-none font-sans leading-5`}
               id={`${fid}-address`}
               placeholder="Alamat lengkap kantor pusat atau operasional (min. 20 karakter)"
               value={address}

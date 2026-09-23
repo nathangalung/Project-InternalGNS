@@ -55,7 +55,7 @@ export default function ReasonModal({
             required
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className={`${ui.fieldInput} resize-y`}
+            className={`${ui.fieldInput} resize-y font-sans`}
           />
         </div>
       </div>

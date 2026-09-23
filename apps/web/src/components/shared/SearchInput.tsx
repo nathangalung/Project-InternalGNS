@@ -1,6 +1,6 @@
 import { ui } from "@/lib/ui"
 
-interface SearchInputProps {
+type SearchInputProps = {
   value: string
   onChange: (next: string) => void
   placeholder: string
@@ -28,6 +28,7 @@ export default function SearchInput({ value, onChange, placeholder }: SearchInpu
         type="text"
         className={ui.searchInput}
         placeholder={placeholder}
+        aria-label={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />

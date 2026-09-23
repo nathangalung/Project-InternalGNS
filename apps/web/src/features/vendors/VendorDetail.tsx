@@ -419,7 +419,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                 rows={3}
                 readOnly={!canWrite}
                 placeholder={canWrite ? "Alamat lengkap kantor pusat atau operasional" : "-"}
-                className={`${inputBase} h-auto min-h-24 resize-y rounded-md border-transparent`}
+                className={`${inputBase} h-auto min-h-24 resize-y rounded-md border-transparent font-sans`}
               />
             </div>
           </div>
