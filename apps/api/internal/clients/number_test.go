@@ -24,7 +24,7 @@ const numberInvalidMsg = "Nomor klien harus 4 digit dan belum dipakai."
 
 var fourDigits = regexp.MustCompile(`^[0-9]{4}$`)
 
-// takenNumber commits a client, returns its number.
+// takenNumber commits a numbered client.
 func takenNumber(t *testing.T, cleaner *testutil.Cleaner) string {
 	t.Helper()
 	pool := testutil.Pool(t)
@@ -38,7 +38,7 @@ func takenNumber(t *testing.T, cleaner *testutil.Cleaner) string {
 	return number
 }
 
-// Server assigns or validates the number.
+// Server assigns or validates numbers.
 func TestHandler_Create_ClientNumber(t *testing.T) {
 	cleaner := testutil.NewCleaner(t)
 	srv := newSrv(t)
@@ -89,7 +89,7 @@ func TestHandler_Create_ClientNumber(t *testing.T) {
 	}
 }
 
-// Two concurrent creates get distinct numbers.
+// Concurrent creates get distinct numbers.
 func TestRepo_Create_ConcurrentAssignsDistinctNumbers(t *testing.T) {
 	cleaner := testutil.NewCleaner(t)
 	pool := testutil.Pool(t)

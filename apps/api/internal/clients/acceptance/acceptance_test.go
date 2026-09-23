@@ -325,7 +325,7 @@ func (s *scenarioState) numberErrorReads(want string) error {
 	return nil
 }
 
-// quoteClient commits a quotation for the client.
+// quoteClient commits a quotation.
 func (s *scenarioState) quoteClient() error {
 	pool := testutil.Pool(s.t)
 	ctx := context.Background()
