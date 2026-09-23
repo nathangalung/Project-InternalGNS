@@ -168,7 +168,7 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 			No:          i + 1,
 			Qty:         pdfgen.FormatQty(it.Qty),
 			Unit:        pdfgen.LatexEscape(unit),
-			Name:        pdfgen.LatexEscape(it.DisplayName()),
+			Name:        pdfgen.LatexEscape(it.ItemName),
 			Description: pdfgen.LatexEscape(desc),
 			UnitPrice:   pdfgen.FormatIDR(gross),
 			Amount:      pdfgen.FormatIDR(amt),

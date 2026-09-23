@@ -1,9 +1,6 @@
 package invoices
 
-import (
-	"strings"
-	"time"
-)
+import "time"
 
 type Status string
 
@@ -77,8 +74,6 @@ type InvoiceItem struct {
 	ItemCode        *string `db:"item_code"          json:"itemCode,omitempty"`
 	ItemName        string  `db:"item_name"          json:"itemName"`
 	OfferedItemID   *int64  `db:"offered_item_id"    json:"offeredItemId,omitempty"`
-	OfferedItemName *string `db:"offered_item_name"  json:"offeredItemName,omitempty"`
-	OfferedItemCode *string `db:"offered_item_code"  json:"offeredItemCode,omitempty"`
 	UnitID          *int16  `db:"unit_id"            json:"unitId,omitempty"`
 	UnitCode        *string `db:"unit_code"          json:"unitCode,omitempty"`
 	UnitCoretaxCode *string `db:"unit_coretax_code"  json:"unitCoretaxCode,omitempty"`
@@ -92,26 +87,6 @@ type InvoiceItem struct {
 	PpnAmount       *string `db:"ppn_amount"         json:"ppnAmount,omitempty"`
 	ShipDestination *string `db:"ship_destination"   json:"shipDestination,omitempty"`
 	GoodsOrService  *string `db:"goods_or_service"   json:"goodsOrService,omitempty"`
-}
-
-// DisplayName is the goods description documents must print: the offered
-// catalog item, not the customer's request text it was matched from.
-func (it InvoiceItem) DisplayName() string {
-	if it.OfferedItemName != nil && strings.TrimSpace(*it.OfferedItemName) != "" {
-		return *it.OfferedItemName
-	}
-	return it.ItemName
-}
-
-// DisplayCode is DisplayName's counterpart for the item code.
-func (it InvoiceItem) DisplayCode() string {
-	if it.OfferedItemCode != nil && strings.TrimSpace(*it.OfferedItemCode) != "" {
-		return *it.OfferedItemCode
-	}
-	if it.ItemCode != nil {
-		return *it.ItemCode
-	}
-	return ""
 }
 
 // Invoice list KPI aggregates.

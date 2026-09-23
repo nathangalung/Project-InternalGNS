@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,10 +14,13 @@ import (
 	"testing"
 
 	"github.com/cucumber/godog"
+	"github.com/go-chi/chi/v5"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/invoices"
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -24,6 +28,11 @@ const (
 	defaultUserID  int64 = 1
 	defaultCompany int64 = 1
 	defaultUnit    int16 = 19
+
+	offeredName = "ACCEPTANCE VALVE SNAPSHOT"
+	offeredCode = "A58001"
+	renamedName = "ACCEPTANCE VALVE RENAMED"
+	renamedCode = "A58002"
 )
 
 type scenarioState struct {
@@ -35,6 +44,8 @@ type scenarioState struct {
 	quotationID int64
 	poID        int64
 	invoiceID   int64
+	cleaner     *testutil.Cleaner
+	itemID      int64
 }
 
 func (s *scenarioState) reset() error {
@@ -89,15 +100,41 @@ func (s *scenarioState) emptyDomain() error { return s.reset() }
 
 // Walk quotation to delivered PO, materialize invoice.
 func (s *scenarioState) deliveredPurchaseOrder() error {
+	return s.deliverLine(quotations.CreateItem{
+		RequestedName: "Test Product",
+		Qty:           "2",
+		UnitID:        defaultUnit,
+		SellingPrice:  "100000",
+	})
+}
+
+// Deliver a line offering a catalog item.
+func (s *scenarioState) deliveredOfferedPurchaseOrder() error {
+	err := testutil.Pool(s.t).QueryRow(context.Background(),
+		`INSERT INTO items (name, impa_code, default_unit_id, created_by, updated_by)
+		 VALUES ($1, $2, $3, $4, $4) RETURNING id`,
+		offeredName, offeredCode, defaultUnit, defaultUserID,
+	).Scan(&s.itemID)
+	if err != nil {
+		return fmt.Errorf("create offered item: %w", err)
+	}
+	s.cleaner.Item(s.itemID)
+	offered := s.itemID
+	return s.deliverLine(quotations.CreateItem{
+		RequestedName: "valve 2 inch pls check",
+		OfferedItemID: &offered,
+		Qty:           "1",
+		UnitID:        defaultUnit,
+		SellingPrice:  "100000",
+	})
+}
+
+// Deliver one line to an invoice.
+func (s *scenarioState) deliverLine(line quotations.CreateItem) error {
 	create := quotations.CreateRequest{
 		CompanyClientID: defaultCompany,
 		DiscountPct:     "0",
-		Items: []quotations.CreateItem{{
-			RequestedName: "Test Product",
-			Qty:           "2",
-			UnitID:        defaultUnit,
-			SellingPrice:  "100000",
-		}},
+		Items:           []quotations.CreateItem{line},
 	}
 	if err := s.sendRequest(http.MethodPost, "/quotations/", create); err != nil {
 		return err
@@ -392,21 +429,107 @@ func (s *scenarioState) summaryBucketsConsistent() error {
 	return nil
 }
 
-func initScenario(t *testing.T) func(*godog.ScenarioContext) {
+func (s *scenarioState) renameOfferedItem() error {
+	_, err := testutil.Pool(s.t).Exec(context.Background(),
+		`UPDATE items SET name = $2, impa_code = $3 WHERE id = $1`,
+		s.itemID, renamedName, renamedCode)
+	if err != nil {
+		return fmt.Errorf("rename offered item: %w", err)
+	}
+	return nil
+}
+
+func (s *scenarioState) invoiceItemsNameIssuedItem() error {
+	var rows []invoices.InvoiceItem
+	if err := json.Unmarshal(s.body, &rows); err != nil {
+		return err
+	}
+	if len(rows) == 0 {
+		return fmt.Errorf("no invoice items body=%s", s.body)
+	}
+	got := rows[0]
+	if got.ItemName != offeredName || got.ItemCode == nil || *got.ItemCode != offeredCode {
+		return fmt.Errorf("want %s/%s got %s/%v", offeredName, offeredCode, got.ItemName, got.ItemCode)
+	}
+	return nil
+}
+
+type coretaxGood struct {
+	Code string `xml:"Code"`
+	Name string `xml:"Name"`
+}
+
+// FullServer carries no seller identity.
+func (s *scenarioState) coretaxServer() *httptest.Server {
+	pool := testutil.Pool(s.t)
+	store := testutil.Store(s.t)
+	h := invoices.NewCoretaxHandler(
+		invoices.NewRepo(pool, store), clients.NewRepo(pool, store),
+		deps.CoretaxSettings{SellerTIN: "9999999999999999", SellerIDTKU: "9999999999999999000000"}, "")
+	r := chi.NewRouter()
+	r.Get("/invoices/{id}/coretax.xml", h.Export)
+	srv := httptest.NewServer(r)
+	s.t.Cleanup(srv.Close)
+	return srv
+}
+
+func (s *scenarioState) coretaxNamesIssuedItem() error {
+	srv := s.coretaxServer()
+	res, err := srv.Client().Get(srv.URL + "/invoices/" + strconv.FormatInt(s.invoiceID, 10) + "/coretax.xml")
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	raw, err := io.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("coretax want 200 got %d body=%s", res.StatusCode, raw)
+	}
+	var doc struct {
+		Goods []coretaxGood `xml:"ListOfTaxInvoice>TaxInvoice>ListOfGoodService>GoodService"`
+	}
+	if err := xml.Unmarshal(raw, &doc); err != nil {
+		return err
+	}
+	want := coretaxGood{Code: offeredCode, Name: offeredName}
+	if len(doc.Goods) != 1 || doc.Goods[0] != want {
+		return fmt.Errorf("want %+v got %+v", want, doc.Goods)
+	}
+	return nil
+}
+
+func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
-		state := &scenarioState{t: t, userID: defaultUserID}
+		state := &scenarioState{t: t, userID: defaultUserID, cleaner: cleaner}
 		sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 			state.last = nil
 			state.body = nil
 			state.quotationID = 0
 			state.poID = 0
 			state.invoiceID = 0
+			state.itemID = 0
+			return ctx, nil
+		})
+		// Free the item for the cleaner.
+		sc.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
+			if state.itemID == 0 {
+				return ctx, nil
+			}
+			if err := state.reset(); err != nil {
+				return ctx, fmt.Errorf("free offered item: %w", err)
+			}
 			return ctx, nil
 		})
 
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
 		sc.Step(`^the commercial domain is empty$`, state.emptyDomain)
 		sc.Step(`^a delivered purchase order$`, state.deliveredPurchaseOrder)
+		sc.Step(`^a delivered purchase order offering a catalog item$`, state.deliveredOfferedPurchaseOrder)
+		sc.Step(`^the offered catalog item is renamed$`, state.renameOfferedItem)
+		sc.Step(`^the invoice items name the offered item as issued$`, state.invoiceItemsNameIssuedItem)
+		sc.Step(`^the Coretax export names the offered item as issued$`, state.coretaxNamesIssuedItem)
 		sc.Step(`^the user reads the invoice by quotation$`, state.readInvoiceByQuotation)
 		sc.Step(`^the user lists invoice items$`, state.listInvoiceItems)
 		sc.Step(`^the user lists invoices filtered by status "([^"]+)"$`, state.listInvoicesByStatus)
@@ -432,8 +555,9 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 
 func TestInvoiceFeatures(t *testing.T) {
 	testutil.RequireDB(t)
+	cleaner := testutil.NewCleaner(t)
 	suite := godog.TestSuite{
-		ScenarioInitializer: initScenario(t),
+		ScenarioInitializer: initScenario(t, cleaner),
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"features"},

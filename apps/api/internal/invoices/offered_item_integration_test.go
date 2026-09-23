@@ -2,6 +2,8 @@ package invoices_test
 
 import (
 	"context"
+	"encoding/xml"
+	"net/http"
 	"testing"
 
 	"github.com/jackc/pgx/v5"
@@ -19,17 +21,31 @@ import (
 
 const (
 	requestText   = "valve 2 inch pls check"
-	seedOfferedID = int64(1)
+	offeredName   = "BALL VALVE 2IN SS316 SNAPSHOT"
+	offeredCode   = "T58001"
+	renamedName   = "BALL VALVE 2IN SS316 RENAMED"
+	renamedCode   = "T58002"
+	offeredUnitID = seedUnitID
 )
 
-// A quotation whose product line matches a catalog item the customer did not
-// name. The PO and invoice snapshot the request text, so the catalog name has
-// to come from the offered item.
-func offeredItemPOWithInvoice(t *testing.T, tx pgx.Tx) int64 {
+// Catalog item the customer did not name.
+func createOfferedItem(t *testing.T, tx pgx.Tx) int64 {
+	t.Helper()
+	var id int64
+	err := tx.QueryRow(context.Background(),
+		`INSERT INTO items (name, impa_code, default_unit_id, created_by, updated_by)
+		 VALUES ($1, $2, $3, $4, $4) RETURNING id`,
+		offeredName, offeredCode, offeredUnitID, seedUserID,
+	).Scan(&id)
+	require.NoError(t, err)
+	return id
+}
+
+// Invoice whose line offers another item.
+func offeredItemPOWithInvoice(t *testing.T, tx pgx.Tx, offered int64) int64 {
 	t.Helper()
 	ctx := context.Background()
 	store := testutil.Store(t)
-	offered := seedOfferedID
 
 	qrepo := quotations.NewRepo(tx, store)
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
@@ -59,28 +75,6 @@ func offeredItemPOWithInvoice(t *testing.T, tx pgx.Tx) int64 {
 	return inv.ID
 }
 
-func TestRepo_ListItems_CarriesOfferedItem(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
-	invID := offeredItemPOWithInvoice(t, tx)
-
-	repo := invoices.NewRepo(tx, testutil.Store(t))
-	items, err := repo.ListItems(ctx, invID)
-	require.NoError(t, err)
-	require.NotEmpty(t, items)
-
-	line := items[0]
-	require.NotNil(t, line.OfferedItemID)
-	require.NotNil(t, line.OfferedItemName)
-	assert.NotEqual(t, requestText, *line.OfferedItemName)
-	assert.Equal(t, *line.OfferedItemName, line.DisplayName())
-	require.NotNil(t, line.OfferedItemCode)
-	assert.Equal(t, *line.OfferedItemCode, line.DisplayCode())
-
-	bulk, err := repo.ListItemsBulk(ctx, []int64{invID})
-	require.NoError(t, err)
-	assert.Equal(t, items, bulk[invID])
-}
-
 // newExportHandler wires the PDF builder against the test transaction.
 func newExportHandler(t *testing.T, tx pgx.Tx) *invoices.ExportHandler {
 	t.Helper()
@@ -95,19 +89,71 @@ func newExportHandler(t *testing.T, tx pgx.Tx) *invoices.ExportHandler {
 	)
 }
 
-func TestExport_PDFPrintsOfferedItem(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
-	invID := offeredItemPOWithInvoice(t, tx)
+type coretaxGood struct {
+	Code string `xml:"Code"`
+	Name string `xml:"Name"`
+}
 
-	store := testutil.Store(t)
-	repo := invoices.NewRepo(tx, store)
+// Coretax goods rows for one invoice.
+func coretaxGoods(t *testing.T, tx pgx.Tx, invID int64) []coretaxGood {
+	t.Helper()
+	rec := exportCoretaxXML(t, tx, invID)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	var doc struct {
+		Goods []coretaxGood `xml:"ListOfTaxInvoice>TaxInvoice>ListOfGoodService>GoodService"`
+	}
+	require.NoError(t, xml.Unmarshal(rec.Body.Bytes(), &doc))
+	return doc.Goods
+}
+
+// PDF line names for one invoice.
+func pdfLineNames(t *testing.T, tx pgx.Tx, invID int64) []string {
+	t.Helper()
+	ctx := context.Background()
+	repo := invoices.NewRepo(tx, testutil.Store(t))
 	inv, err := repo.GetByID(ctx, invID)
 	require.NoError(t, err)
 	items, err := repo.ListItems(ctx, invID)
 	require.NoError(t, err)
+	return newExportHandler(t, tx).PDFTotalsForTest(ctx, inv, items).LineNames
+}
 
-	got := newExportHandler(t, tx).PDFTotalsForTest(ctx, inv, items)
-	require.NotEmpty(t, got.LineNames)
-	require.NotNil(t, items[0].OfferedItemName)
-	assert.Equal(t, pdfgen.LatexEscape(*items[0].OfferedItemName), got.LineNames[0])
+func TestInvoice_SnapshotsOfferedItem(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	invID := offeredItemPOWithInvoice(t, tx, createOfferedItem(t, tx))
+
+	items, err := invoices.NewRepo(tx, testutil.Store(t)).ListItems(ctx, invID)
+	require.NoError(t, err)
+	require.NotEmpty(t, items)
+	assert.Equal(t, offeredName, items[0].ItemName)
+	require.NotNil(t, items[0].ItemCode)
+	assert.Equal(t, offeredCode, *items[0].ItemCode)
+}
+
+// A filed invoice never restates its goods.
+func TestInvoice_CatalogRenameLeavesIssuedInvoice(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	itemID := createOfferedItem(t, tx)
+	invID := offeredItemPOWithInvoice(t, tx, itemID)
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+	require.NoError(t, repo.ChangeStatus(ctx, invID, invoices.StatusSent, seedUserID))
+
+	pdfBefore := pdfLineNames(t, tx, invID)
+	goodsBefore := coretaxGoods(t, tx, invID)
+	require.Equal(t, []string{offeredName}, pdfBefore)
+	require.Equal(t, []coretaxGood{{Code: offeredCode, Name: offeredName}}, goodsBefore)
+
+	_, err := tx.Exec(ctx,
+		`UPDATE items SET name = $2, impa_code = $3 WHERE id = $1`,
+		itemID, renamedName, renamedCode)
+	require.NoError(t, err)
+
+	assert.Equal(t, pdfBefore, pdfLineNames(t, tx, invID))
+	assert.Equal(t, goodsBefore, coretaxGoods(t, tx, invID))
+
+	items, err := repo.ListItems(ctx, invID)
+	require.NoError(t, err)
+	bulk, err := repo.ListItemsBulk(ctx, []int64{invID})
+	require.NoError(t, err)
+	assert.Equal(t, items, bulk[invID])
 }

@@ -218,8 +218,8 @@ func buildGoodService(it InvoiceItem) coretaxGoodService {
 	}
 	return coretaxGoodService{
 		Opt:           opt,
-		Code:          it.DisplayCode(),
-		Name:          it.DisplayName(),
+		Code:          strDeref(it.ItemCode),
+		Name:          it.ItemName,
 		Unit:          unit,
 		Price:         normalizeMoney(it.UnitPrice),
 		Qty:           normalizeMoney(it.Qty),

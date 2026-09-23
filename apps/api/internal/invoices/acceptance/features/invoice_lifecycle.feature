@@ -113,3 +113,14 @@ Feature: Invoice lifecycle
     And the user replaces the invoice
     And the user replaces the invoice
     Then the response status is 409
+
+  Scenario: A catalog rename leaves an issued invoice unchanged
+    Given a delivered purchase order offering a catalog item
+    When the user lists invoice items
+    Then the invoice items name the offered item as issued
+    When the user transitions the invoice through "sent"
+    And the offered catalog item is renamed
+    And the user lists invoice items
+    Then the response status is 200
+    And the invoice items name the offered item as issued
+    And the Coretax export names the offered item as issued
