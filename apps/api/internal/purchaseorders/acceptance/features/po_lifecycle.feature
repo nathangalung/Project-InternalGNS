@@ -162,3 +162,11 @@ Feature: Purchase order lifecycle
     When the user lists PO items
     Then the response status is 200
     And the first PO line is named after catalog item 1
+
+  Scenario: An offered item without a code does not borrow the requested code
+    Given catalog item 2 has no IMPA code
+    And an accepted quotation offering catalog item 2 for "cat biru untuk marking"
+    When the user lists PO items
+    Then the response status is 200
+    And the first PO line is named after catalog item 2
+    And the first PO line has no item code

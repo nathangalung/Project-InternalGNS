@@ -40,36 +40,67 @@ func acceptedQuotationWithOffer(t *testing.T, tx pgx.Tx, requested string, offer
 }
 
 // The PO and its delivery note describe what is supplied, not what was asked
-// for: documents naming the request text told nobody what was delivered.
-func TestPurchaseOrder_SnapshotsOfferedItem(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
+// for: documents naming the request text told nobody what was delivered. The
+// code travels with the name, so a catalog item without an IMPA code never
+// borrows the customer's requested code.
+func TestPurchaseOrder_SnapshotsLineIdentity(t *testing.T) {
+	cases := []struct {
+		name     string
+		offered  func(t *testing.T, tx pgx.Tx) *int64
+		wantName func(t *testing.T, tx pgx.Tx, id *int64) string
+		wantCode *string
+	}{
+		{
+			name:     "offered item with code",
+			offered:  func(*testing.T, pgx.Tx) *int64 { id := seedItemID; return &id },
+			wantName: catalogName,
+			wantCode: strPtr("613802"),
+		},
+		{
+			name:     "offered item without code",
+			offered:  insertUncodedItem,
+			wantName: catalogName,
+			wantCode: nil,
+		},
+		{
+			name:     "unmatched request",
+			offered:  func(*testing.T, pgx.Tx) *int64 { return nil },
+			wantName: func(*testing.T, pgx.Tx, *int64) string { return "tolong carikan punching tool" },
+			wantCode: strPtr("999999"),
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, tx := testutil.BeginTx(t)
+			offered := tc.offered(t, tx)
+			poID := acceptedQuotationWithOffer(t, tx, "tolong carikan punching tool", offered)
 
-	var wantName, wantCode string
-	require.NoError(t, tx.QueryRow(ctx,
-		`SELECT name, impa_code FROM items WHERE id = $1`, seedItemID).Scan(&wantName, &wantCode))
-
-	offered := seedItemID
-	poID := acceptedQuotationWithOffer(t, tx, "tolong carikan punching tool", &offered)
-
-	items, err := purchaseorders.NewRepo(tx, testutil.Store(t)).ListItems(ctx, poID)
-	require.NoError(t, err)
-	require.NotEmpty(t, items)
-	assert.Equal(t, wantName, items[0].ItemName)
-	require.NotNil(t, items[0].ItemCode)
-	assert.Equal(t, wantCode, *items[0].ItemCode)
+			items, err := purchaseorders.NewRepo(tx, testutil.Store(t)).ListItems(ctx, poID)
+			require.NoError(t, err)
+			require.NotEmpty(t, items)
+			assert.Equal(t, tc.wantName(t, tx, offered), items[0].ItemName)
+			assert.Equal(t, tc.wantCode, items[0].ItemCode)
+		})
+	}
 }
 
-// An unmatched line still carries the customer's own words.
-func TestPurchaseOrder_FallsBackToRequestedName(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
-	poID := acceptedQuotationWithOffer(t, tx, "barang tanpa padanan", nil)
+func catalogName(t *testing.T, tx pgx.Tx, id *int64) string {
+	t.Helper()
+	var name string
+	require.NoError(t, tx.QueryRow(context.Background(),
+		`SELECT name FROM items WHERE id = $1`, *id).Scan(&name))
+	return name
+}
 
-	items, err := purchaseorders.NewRepo(tx, testutil.Store(t)).ListItems(ctx, poID)
-	require.NoError(t, err)
-	require.NotEmpty(t, items)
-	assert.Equal(t, "barang tanpa padanan", items[0].ItemName)
-	require.NotNil(t, items[0].ItemCode)
-	assert.Equal(t, "999999", *items[0].ItemCode)
+// Catalog item with no IMPA code.
+func insertUncodedItem(t *testing.T, tx pgx.Tx) *int64 {
+	t.Helper()
+	var id int64
+	require.NoError(t, tx.QueryRow(context.Background(),
+		`INSERT INTO items (name, default_unit_id, created_by, updated_by)
+		 VALUES ('Barang katalog tanpa IMPA', $1, $2, $2) RETURNING id`,
+		seedUnitID, seedUserID).Scan(&id))
+	return &id
 }
 
 // A name typed in the edit wizard is not overwritten by the catalog.

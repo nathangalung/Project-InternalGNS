@@ -533,6 +533,8 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the export lists the stored delivery note number$`, state.exportListsDeliveryNoteNumber)
 		sc.Step(`^an accepted quotation offering catalog item (\d+) for "([^"]+)"$`, state.acceptedQuotationOffering)
 		sc.Step(`^the first PO line is named after catalog item (\d+)$`, state.firstLineNamedAfterItem)
+		sc.Step(`^catalog item (\d+) has no IMPA code$`, state.catalogItemHasNoCode)
+		sc.Step(`^the first PO line has no item code$`, state.firstLineHasNoCode)
 	}
 }
 

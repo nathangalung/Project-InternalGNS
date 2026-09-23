@@ -149,3 +149,31 @@ func (s *scenarioState) firstLineNamedAfterItem(itemID int64) error {
 	}
 	return nil
 }
+
+// Guards the fixture the next steps rely on.
+func (s *scenarioState) catalogItemHasNoCode(itemID int64) error {
+	var code *string
+	if err := testutil.Pool(s.t).QueryRow(context.Background(),
+		`SELECT NULLIF(impa_code, '') FROM items WHERE id = $1`, itemID).Scan(&code); err != nil {
+		return err
+	}
+	if code != nil {
+		return fmt.Errorf("catalog item %d has IMPA code %q", itemID, *code)
+	}
+	return nil
+}
+
+// A matched line never borrows the requested code.
+func (s *scenarioState) firstLineHasNoCode() error {
+	var rows []purchaseorders.PurchaseOrderItem
+	if err := json.Unmarshal(s.body, &rows); err != nil {
+		return err
+	}
+	if len(rows) == 0 {
+		return fmt.Errorf("PO has no lines")
+	}
+	if rows[0].ItemCode != nil {
+		return fmt.Errorf("want no item code got %q", *rows[0].ItemCode)
+	}
+	return nil
+}
