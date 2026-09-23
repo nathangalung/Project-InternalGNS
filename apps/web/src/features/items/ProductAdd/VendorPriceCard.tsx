@@ -1,3 +1,4 @@
+import { useId } from "react"
 import { dropdownLabel, ui } from "@/lib/ui"
 import {
   AddNewButton,
@@ -9,7 +10,7 @@ import {
   type VendorOption,
 } from "./helpers"
 
-interface VendorPriceCardProps {
+type VendorPriceCardProps = {
   form: ProductAddFormData
   onChange: (field: keyof ProductAddFormData, value: string) => void
   onPickVendor: (vendor: VendorOption) => void
@@ -49,6 +50,9 @@ export default function VendorPriceCard({
   profitPct,
   onAddVendorNew,
 }: VendorPriceCardProps) {
+  const vendorId = useId()
+  const buyId = useId()
+  const sellId = useId()
   return (
     <div
       className={`${ui.modalSection} transition-opacity duration-200 ease-[ease] ${
@@ -58,11 +62,13 @@ export default function VendorPriceCard({
       <div className={ui.modalSectionHeading}>Vendor dan Harga Beli</div>
 
       <div className={ui.field}>
-        <label className={ui.fieldLabel}>
+        <label htmlFor={vendorId} className={ui.fieldLabel}>
           Nama Vendor <span className="text-primary-700">*</span>
         </label>
         <div className="relative">
           <input
+            id={vendorId}
+            autoComplete="off"
             className={`${ui.fieldInput} font-sans ${ui.disabledField}`}
             type="text"
             placeholder="Ketik atau pilih vendor"
@@ -118,10 +124,11 @@ export default function VendorPriceCard({
 
       <div className={ui.row2}>
         <div className={ui.field}>
-          <label className={ui.fieldLabel}>
+          <label htmlFor={buyId} className={ui.fieldLabel}>
             Harga Beli Satuan <span className="text-primary-700">*</span>
           </label>
           <input
+            id={buyId}
             className={`${ui.fieldInput} font-sans ${ui.disabledField}`}
             type="number"
             min={0}
@@ -132,10 +139,11 @@ export default function VendorPriceCard({
           />
         </div>
         <div className={ui.field}>
-          <label className={ui.fieldLabel}>
+          <label htmlFor={sellId} className={ui.fieldLabel}>
             Harga Jual Satuan <span className="text-primary-700">*</span>
           </label>
           <input
+            id={sellId}
             className={`${ui.fieldInput} font-sans ${ui.disabledField}`}
             type="number"
             min={0}
@@ -156,7 +164,7 @@ export default function VendorPriceCard({
             if (isVendorFilled) toggleDropdown("historis")
           }}
           onBlur={() => setTimeout(() => closeIfMatch("historis"), 150)}
-          className={`flex w-full items-center justify-center rounded-md border px-6 py-[11px] text-sm font-bold ${
+          className={`flex w-full items-center justify-center rounded-md border px-6 py-[11px] text-sm font-bold ${ui.focusRing} ${
             isVendorFilled
               ? "cursor-pointer border-[rgba(99,14,212,0.2)] bg-transparent text-primary-700"
               : "cursor-not-allowed border-[rgba(99,14,212,0.1)] bg-[#F7F7F8] text-[#A386D6]"
@@ -210,7 +218,7 @@ export default function VendorPriceCard({
       </div>
 
       <div className={ui.field}>
-        <label className={ui.fieldLabel}>Profit</label>
+        <span className={ui.fieldLabel}>Profit</span>
         <div
           className={`${ui.fieldInput} flex cursor-default items-center ${
             profit === 0 ? "text-dark-500" : "text-dark-900"
