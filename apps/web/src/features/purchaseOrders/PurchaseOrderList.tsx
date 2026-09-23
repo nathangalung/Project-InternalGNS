@@ -177,7 +177,7 @@ export default function PurchaseOrderList({
 
   return (
     <>
-      <div className="page-content" style={{ gap: "29px" }}>
+      <div className="page-content gap-[29px]">
         <div className="page-header">
           <h1 className="page-title">Daftar Purchase Order</h1>
           <div className="page-actions flex gap-2.5">
@@ -220,27 +220,13 @@ export default function PurchaseOrderList({
           <table className="w-full border-collapse">
             <thead>
               <tr className={ui.theadRow}>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Nomor Quotation
-                </th>
-                <th className={ui.thCenter} style={{ width: 130 }}>
-                  Nomor PO
-                </th>
-                <th className={ui.thCenter} style={{ width: 200 }}>
-                  Nama Klien
-                </th>
-                <th className={ui.thCenter} style={{ width: 160 }}>
-                  Tanggal Pembuatan
-                </th>
-                <th className={ui.thCenter} style={{ width: 150 }}>
-                  Total PO
-                </th>
-                <th className={ui.thCenter} style={{ width: 150 }}>
-                  Status
-                </th>
-                <th className={ui.thCenter} style={{ width: 110 }}>
-                  Aksi
-                </th>
+                <th className={`${ui.thCenter} w-[140px]`}>Nomor Quotation</th>
+                <th className={`${ui.thCenter} w-[130px]`}>Nomor PO</th>
+                <th className={`${ui.thCenter} w-[200px]`}>Nama Klien</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Tanggal Pembuatan</th>
+                <th className={`${ui.thCenter} w-[150px]`}>Total PO</th>
+                <th className={`${ui.thCenter} w-[150px]`}>Status</th>
+                <th className={`${ui.thCenter} w-[110px]`}>Aksi</th>
               </tr>
             </thead>
             <tbody>

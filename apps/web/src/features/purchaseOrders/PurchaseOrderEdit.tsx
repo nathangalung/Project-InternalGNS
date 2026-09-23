@@ -245,7 +245,7 @@ export default function PurchaseOrderEdit({ poId }: PurchaseOrderEditProps) {
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  style={{ transform: "scaleX(-1)" }}
+                  className="-scale-x-100"
                 >
                   <path d="M19 12H5M12 5l-7 7 7 7" />
                 </svg>
