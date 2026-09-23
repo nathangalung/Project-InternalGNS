@@ -1,13 +1,13 @@
-import { useMemo, useState } from "react"
+import { useId, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
 import Modal from "@/components/shared/Modal"
-import { useAddVendorToItem } from "@/features/items/hooks"
-import { useVendors } from "@/features/vendors/hooks"
+import { addVendorError } from "@/features/items/helpers"
+import { useActiveVendorOptions, useAddVendorToItem } from "@/features/items/hooks"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
-import { ApiError } from "@/lib/api-client"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { dropdownLabel, ui } from "@/lib/ui"
 
-interface AddVendorToItemModalProps {
+type AddVendorToItemModalProps = {
   open: boolean
   itemId: number
   onOpenChange: (open: boolean) => void
@@ -24,20 +24,19 @@ export default function AddVendorToItemModal({
   const [costPrice, setCostPrice] = useState("")
   const [productUrl, setProductUrl] = useState("")
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [vendorError, setVendorError] = useState<string | null>(null)
   const [showCreateVendor, setShowCreateVendor] = useState(false)
+  const vendorInputId = useId()
+  const vendorErrorId = useId()
+  const priceInputId = useId()
+  const urlInputId = useId()
 
-  const { data: vendors } = useVendors({ limit: 200 })
+  // Server search reaches every active vendor.
+  const debouncedQuery = useDebouncedValue(vendorQuery.trim(), 250)
+  const vendorSearch = useActiveVendorOptions(debouncedQuery)
+  const vendorMatches = vendorSearch.data?.rows ?? []
+  const searching = vendorQuery.trim() !== debouncedQuery || vendorSearch.isFetching
   const addVendor = useAddVendorToItem()
-
-  const filteredVendors = useMemo(() => {
-    const q = vendorQuery.trim().toLowerCase()
-    if (!q) return []
-    return (vendors?.rows ?? [])
-      .filter(
-        (v) => v.name.toLowerCase().includes(q) || (v.location ?? "").toLowerCase().includes(q),
-      )
-      .slice(0, 5)
-  }, [vendors, vendorQuery])
 
   if (!open) return null
 
@@ -50,6 +49,7 @@ export default function AddVendorToItemModal({
     setCostPrice("")
     setProductUrl("")
     setSubmitError(null)
+    setVendorError(null)
   }
 
   const handleCancel = () => {
@@ -60,6 +60,7 @@ export default function AddVendorToItemModal({
 
   const handleSubmit = async () => {
     setSubmitError(null)
+    setVendorError(null)
     if (!isValid || vendorId === null) return
     const trimmedUrl = productUrl.trim()
     try {
@@ -74,9 +75,9 @@ export default function AddVendorToItemModal({
       reset()
       onOpenChange(false)
     } catch (err) {
-      const msg =
-        err instanceof ApiError ? err.message || "Gagal menambah vendor." : "Gagal menambah vendor."
-      setSubmitError(msg)
+      const placed = addVendorError(err)
+      setVendorError(placed.field ?? null)
+      setSubmitError(placed.form ?? null)
     }
   }
 
@@ -94,40 +95,53 @@ export default function AddVendorToItemModal({
         onClose={handleCancel}
         footer={
           <>
-            {submitError && <span className="flex-1 text-[12px] text-error">{submitError}</span>}
-            <button
-              type="button"
-              className={ui.modalCancel}
-              onClick={handleCancel}
-              disabled={addVendor.isPending}
-            >
-              Batal
-            </button>
-            <button
-              type="button"
-              className={ui.modalSubmit}
-              onClick={handleSubmit}
-              disabled={!isValid || addVendor.isPending}
-            >
-              {addVendor.isPending ? "Menyimpan..." : "Tambahkan"}
-            </button>
+            {submitError && (
+              <span role="alert" className="flex-1 text-[12px] text-error">
+                {submitError}
+              </span>
+            )}
+            <div className="flex gap-4 max-sm:w-full max-sm:*:flex-1 max-sm:*:px-4">
+              <button
+                type="button"
+                className={ui.modalCancel}
+                onClick={handleCancel}
+                disabled={addVendor.isPending}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                className={ui.modalSubmit}
+                onClick={handleSubmit}
+                disabled={!isValid || addVendor.isPending}
+              >
+                {addVendor.isPending ? "Menyimpan..." : "Tambahkan"}
+              </button>
+            </div>
           </>
         }
       >
         <div className={ui.modalSection}>
           <div className={ui.field}>
-            <label className={ui.fieldLabel}>
+            <label htmlFor={vendorInputId} className={ui.fieldLabel}>
               Nama Vendor <span className="text-primary-700">*</span>
             </label>
             <div className="relative">
               <input
-                className={`${ui.fieldInput} font-sans ${vendorQuery ? "pr-9" : ""}`}
+                id={vendorInputId}
+                className={`${ui.fieldInput} font-sans ${vendorQuery ? "pr-9" : ""} ${
+                  vendorError ? "border-error" : ""
+                }`}
                 type="text"
-                placeholder="Cari vendor..."
+                placeholder="Cari vendor aktif..."
+                autoComplete="off"
+                aria-invalid={vendorError ? true : undefined}
+                aria-describedby={vendorError ? vendorErrorId : undefined}
                 value={vendorQuery}
                 onChange={(e) => {
                   setVendorQuery(e.target.value)
                   setShowSuggestions(true)
+                  setVendorError(null)
                   if (vendorId) setVendorId(null)
                 }}
                 onFocus={() => {
@@ -143,7 +157,8 @@ export default function AddVendorToItemModal({
                     setShowSuggestions(false)
                   }}
                   title="Bersihkan"
-                  className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-[#94A3B8]"
+                  aria-label="Bersihkan vendor"
+                  className={`absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center rounded-sm p-1 text-[#94A3B8] ${ui.focusRing}`}
                 >
                   <svg
                     width="14"
@@ -153,6 +168,7 @@ export default function AddVendorToItemModal({
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
+                    aria-hidden="true"
                   >
                     <line x1="1" y1="1" x2="13" y2="13" />
                     <line x1="13" y1="1" x2="1" y2="13" />
@@ -161,7 +177,11 @@ export default function AddVendorToItemModal({
               )}
               {showSuggestions && vendorQuery.length > 0 && (
                 <div className={ui.dropdownPanelCompact}>
-                  {filteredVendors.length === 0 ? (
+                  {searching && vendorMatches.length === 0 ? (
+                    <div role="status" className="px-5 py-3 text-center text-[13px] text-dark-500">
+                      Mencari vendor…
+                    </div>
+                  ) : vendorMatches.length === 0 ? (
                     <div className="flex flex-col gap-2 p-3">
                       <div className="px-0 py-1 text-center text-[13px] text-[#94A3B8]">
                         Vendor "<strong className="text-[#4A4455]">{vendorQuery}</strong>" tidak
@@ -173,7 +193,7 @@ export default function AddVendorToItemModal({
                           setShowSuggestions(false)
                           setShowCreateVendor(true)
                         }}
-                        className="flex items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed border-[rgba(99,14,212,0.4)] bg-[rgba(99,14,212,0.04)] px-3.5 py-2.5 text-[13px] font-bold text-primary-700"
+                        className={`flex items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed border-[rgba(99,14,212,0.4)] bg-[rgba(99,14,212,0.04)] px-3.5 py-2.5 text-[13px] font-bold text-primary-700 ${ui.focusRing}`}
                       >
                         <svg
                           width="14"
@@ -191,7 +211,7 @@ export default function AddVendorToItemModal({
                       </button>
                     </div>
                   ) : (
-                    filteredVendors.map((v) => {
+                    vendorMatches.map((v) => {
                       const active = vendorId === v.id
                       return (
                         <button
@@ -202,9 +222,15 @@ export default function AddVendorToItemModal({
                             setVendorId(v.id)
                             setVendorQuery(v.name)
                             setShowSuggestions(false)
+                            setVendorError(null)
                           }}
                         >
-                          <span className={dropdownLabel(active)}>{v.name}</span>
+                          <span className="flex min-w-0 flex-col">
+                            <span className={dropdownLabel(active)}>{v.name}</span>
+                            {v.location && (
+                              <span className="text-[12px] text-dark-500">{v.location}</span>
+                            )}
+                          </span>
                           {active && <CheckIcon />}
                         </button>
                       )
@@ -213,12 +239,17 @@ export default function AddVendorToItemModal({
                 </div>
               )}
             </div>
+            {vendorError && (
+              <p id={vendorErrorId} className="text-[12px] text-error">
+                {vendorError}
+              </p>
+            )}
           </div>
         </div>
 
         <div className={ui.modalSection}>
           <div className={ui.field}>
-            <label className={ui.fieldLabel}>
+            <label htmlFor={priceInputId} className={ui.fieldLabel}>
               Harga Beli <span className="text-primary-700">*</span>
             </label>
             <div className={ui.prefixWrap}>
@@ -226,6 +257,7 @@ export default function AddVendorToItemModal({
                 IDR
               </span>
               <input
+                id={priceInputId}
                 className="flex-1 border-none bg-transparent px-3 py-0 font-sans text-sm text-dark-900 outline-none placeholder:text-dark-500"
                 type="text"
                 inputMode="numeric"
@@ -239,13 +271,14 @@ export default function AddVendorToItemModal({
 
         <div className={ui.modalSection}>
           <div className={ui.field}>
-            <label className={ui.fieldLabel}>
+            <label htmlFor={urlInputId} className={ui.fieldLabel}>
               Link Produk{" "}
               <span className="font-normal normal-case tracking-normal text-[#9CA3AF]">
                 (opsional)
               </span>
             </label>
             <input
+              id={urlInputId}
               className={`${ui.fieldInput} font-sans`}
               type="url"
               placeholder="https://vendor.com/produk/..."
@@ -264,6 +297,7 @@ export default function AddVendorToItemModal({
           setVendorId(v.id)
           setVendorQuery(v.name)
           setShowSuggestions(false)
+          setVendorError(null)
         }}
       />
     </>

@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import * as itemsApi from "@/features/items/api"
+import * as vendorsApi from "@/features/vendors/api"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadToPresignedUrl } from "@/lib/storage-upload"
@@ -50,6 +51,22 @@ export function useItemVendors(itemId: number | undefined) {
   return useQuery({
     queryKey: itemId ? queryKeys.items.vendors(itemId) : queryKeys.items.all,
     queryFn: itemId !== undefined && itemId > 0 ? () => itemsApi.listVendors(itemId) : skipToken,
+  })
+}
+
+// Active vendors matching q.
+//
+// Searches on the server so every vendor is reachable, not just the first
+// page. Inactive vendors are left out because the API refuses to link them.
+export function useActiveVendorOptions(q: string, limit = 10) {
+  const term = q.trim()
+  const params: vendorsApi.VendorListParams = { q: term, isActive: true, limit }
+  return useQuery({
+    queryKey: queryKeys.vendors.list(params),
+    queryFn: () => vendorsApi.list(params),
+    enabled: term.length > 0,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
   })
 }
 
