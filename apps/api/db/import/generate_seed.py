@@ -17,6 +17,9 @@ Decisions:
 - Duplicates by original Q-no become a date-ordered version chain
 - Status = 'draft' when every line has selling_price <= 0 (Excel pricing
   not yet entered), else 'sent'
+- Lines with selling_price <= 0 are dropped when the file has at least one
+  priced line (the Excel "No Offer" rows). A fully unpriced file keeps its
+  lines and stays a draft
 """
 from __future__ import annotations
 
@@ -336,6 +339,17 @@ def main():
                     "cost_price": cost,
                     "_is_substituted": is_substituted,
                 })
+
+            # Drop unpriced lines when priced
+            # A zero selling_price is the Excel "No Offer" marker: GNS could
+            # not source that item, so it never reached the customer. Keeping
+            # it makes fn_change_quotation_status raise P0100 on sent/accepted.
+            # A file where every line is unpriced is pricing-not-yet-entered,
+            # not No Offer, so it keeps its lines and stays a draft.
+            if any((li["selling_price"] or 0) > 0 for li in lines):
+                lines = [li for li in lines if (li["selling_price"] or 0) > 0]
+                for line_no, li in enumerate(lines, start=1):
+                    li["line_number"] = line_no
 
             if not lines:
                 continue

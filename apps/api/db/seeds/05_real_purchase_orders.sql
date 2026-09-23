@@ -3,7 +3,7 @@
 -- file confirmed a different PO number than the (often blurry) source scan.
 --
 -- Runs after 04_quotation_states.sql, which has already:
---   * Promoted these 57 quotations to 'accepted' (auto-creating each one's
+--   * Promoted these 55 quotations to 'accepted' (auto-creating each one's
 --     PO via fn_create_purchase_order, with a placeholder po_number from
 --     fn_next_doc_no and po_date = CURRENT_DATE).
 --   * Snapshotted quotation_items into purchase_order_items.
@@ -64,7 +64,7 @@ INSERT INTO _real_po VALUES
   -- Kasen Maritim Logistik (id=9)
   (660, 'JKT-PO/033.056/KML/V/26/FCKML',   '2026-05-04', 9),  -- Flow Meter / FCKML                          (file 057)
   -- Pelita Global Logistik (id=3)
-  (624, 'V-26-2403-039-D/05/01',           '2026-04-16', 3),  -- Binocular Nikon Oceanpro
+  -- Q-624 dropped: unpriced quotation, stays draft (see 04).
   (565, 'V-26-2403-040-D/01/01',           '2026-02-12', 3),  -- Cardboard
   (649, 'V-26-2402-274-D/05/02',           '2026-04-23', 3),  -- Obat
   (647, 'O-26-2402-041-D/01/01',           '2026-04-17', 3),  -- Service: Delivery + Boat Cilegon
@@ -80,7 +80,7 @@ INSERT INTO _real_po VALUES
   (509, 'V-26-2405-029-E/05/01',           '2026-01-12', 3),  -- Butterfly DIN PN10 400mm
   (512, 'V-25-2405-292-D/05/01',           '2026-01-08', 3),  -- Mini Roller / Demolition Hammer / etc
   (543, 'V-26-2405-085-E/07/01',           '2026-01-28', 3),  -- Check Valve DIN Bronze 125mm
-  (491, 'V-26-2405-005-E/02/01',           '2026-01-05', 3),  -- LED Floodlight 100W
+  -- Q-491 dropped: unpriced quotation, stays draft (see 04).
   (519, 'V-26-2405-062-E/01/01',           '2026-01-15', 3),  -- Impeller Emergency Fire Pump
   (524, 'V-26-2405-063-E/02/01',           '2026-01-20', 3),  -- Angle/Globe Valve Bronze
   (522, 'V-26-2405-051-E/01/01',           '2026-01-18', 3),  -- Butterfly Valve 8" Wafer
