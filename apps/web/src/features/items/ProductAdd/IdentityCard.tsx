@@ -127,6 +127,7 @@ export default function IdentityCard({
             aria-hidden
           >
             <svg
+              aria-hidden="true"
               width="14"
               height="14"
               viewBox="0 0 24 24"
@@ -157,6 +158,7 @@ export default function IdentityCard({
             }`}
           >
             <svg
+              aria-hidden="true"
               width="12"
               height="12"
               viewBox="0 0 24 24"
@@ -246,6 +248,7 @@ export default function IdentityCard({
               >
                 <span>{form.satuan || "Pilih satuan"}</span>
                 <svg
+                  aria-hidden="true"
                   width="12"
                   height="12"
                   viewBox="0 0 24 24"

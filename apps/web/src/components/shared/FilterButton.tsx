@@ -9,6 +9,7 @@ export default function FilterButton({ onClick, label = "Filter" }: FilterButton
   return (
     <button className={ui.btnPrimary} onClick={onClick} type="button">
       <svg
+        aria-hidden="true"
         viewBox="0 0 24 24"
         width="16"
         height="16"

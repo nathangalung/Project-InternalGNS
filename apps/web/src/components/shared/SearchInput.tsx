@@ -10,6 +10,7 @@ export default function SearchInput({ value, onChange, placeholder }: SearchInpu
   return (
     <div className="relative flex-1">
       <svg
+        aria-hidden="true"
         className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2"
         width="16"
         height="16"

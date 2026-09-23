@@ -93,6 +93,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
         <div className={ui.field}>
           <div className="relative">
             <svg
+              aria-hidden="true"
               width="14"
               height="14"
               viewBox="0 0 24 24"
@@ -134,6 +135,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
                 className={`absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center rounded-sm p-1 text-[#94A3B8] ${ui.focusRing}`}
               >
                 <svg
+                  aria-hidden="true"
                   width="14"
                   height="14"
                   viewBox="0 0 14 14"

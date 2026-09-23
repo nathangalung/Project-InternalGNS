@@ -278,6 +278,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                 >
                   <span className="flex h-full w-full items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)]">
                     <svg
+                      aria-hidden="true"
                       width="13"
                       height="13"
                       viewBox="0 0 24 24"

@@ -80,14 +80,18 @@ export default function Modal({ title, onClose, children, footer, className = ""
   }, [opener])
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-[4px]"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-[4px]">
+      {/* Backdrop click closes; keyboard users have Escape and Tutup */}
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="absolute inset-0 cursor-default"
+        onClick={onClose}
+      />
       <div
         ref={panelRef}
-        className={`flex max-h-[92vh] w-[672px] max-w-[92vw] flex-col overflow-hidden rounded-xl bg-white shadow-lg outline-none ${className}`}
-        onClick={(e) => e.stopPropagation()}
+        className={`relative flex max-h-[92vh] w-[672px] max-w-[92vw] flex-col overflow-hidden rounded-xl bg-white shadow-lg outline-none ${className}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

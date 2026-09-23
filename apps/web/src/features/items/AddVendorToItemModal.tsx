@@ -196,6 +196,7 @@ export default function AddVendorToItemModal({
                         className={`flex items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed border-[rgba(99,14,212,0.4)] bg-[rgba(99,14,212,0.04)] px-3.5 py-2.5 text-[13px] font-bold text-primary-700 ${ui.focusRing}`}
                       >
                         <svg
+                          aria-hidden="true"
                           width="14"
                           height="14"
                           viewBox="0 0 24 24"

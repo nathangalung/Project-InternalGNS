@@ -199,6 +199,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
           >
             {expanded ? "Sembunyikan" : "Tampilkan"}
             <svg
+              aria-hidden="true"
               width="10"
               height="6"
               viewBox="0 0 10 6"

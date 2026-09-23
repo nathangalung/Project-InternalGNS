@@ -60,7 +60,10 @@ export default function UserFilter({ onClose, onApply, initialValues }: UserFilt
           Peran
         </div>
         <div className={ui.field}>
-          <div role="group" aria-labelledby={roleHeadingId} className="flex flex-wrap gap-2">
+          <fieldset
+            aria-labelledby={roleHeadingId}
+            className="m-0 min-w-0 border-0 p-0 flex flex-wrap gap-2"
+          >
             {ROLE_OPTIONS.map((o) => (
               <button
                 key={o.value}
@@ -72,7 +75,7 @@ export default function UserFilter({ onClose, onApply, initialValues }: UserFilt
                 {o.label}
               </button>
             ))}
-          </div>
+          </fieldset>
         </div>
       </div>
 
@@ -81,7 +84,10 @@ export default function UserFilter({ onClose, onApply, initialValues }: UserFilt
           Status
         </div>
         <div className={ui.field}>
-          <div role="group" aria-labelledby={statusHeadingId} className="flex flex-wrap gap-2">
+          <fieldset
+            aria-labelledby={statusHeadingId}
+            className="m-0 min-w-0 border-0 p-0 flex flex-wrap gap-2"
+          >
             {STATUS_OPTIONS.map((o) => (
               <button
                 key={o.value}
@@ -93,7 +99,7 @@ export default function UserFilter({ onClose, onApply, initialValues }: UserFilt
                 {o.label}
               </button>
             ))}
-          </div>
+          </fieldset>
         </div>
       </div>
     </Modal>

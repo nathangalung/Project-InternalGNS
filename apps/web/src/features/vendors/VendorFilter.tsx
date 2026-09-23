@@ -76,7 +76,10 @@ export default function VendorFilter({ onClose, onApply, initialValues }: Vendor
           Status Vendor
         </div>
         <div className={ui.field}>
-          <div role="group" aria-labelledby={statusId} className="flex flex-wrap gap-2">
+          <fieldset
+            aria-labelledby={statusId}
+            className="m-0 min-w-0 border-0 p-0 flex flex-wrap gap-2"
+          >
             {STATUS_OPTIONS.map((o) => (
               <button
                 key={o.value}
@@ -88,7 +91,7 @@ export default function VendorFilter({ onClose, onApply, initialValues }: Vendor
                 {o.label}
               </button>
             ))}
-          </div>
+          </fieldset>
         </div>
       </div>
 

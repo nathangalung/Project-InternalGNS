@@ -29,7 +29,7 @@ function defaultComputeMax(values: number[]): number {
   return Math.ceil(m / step) * step
 }
 
-interface TrendChartProps {
+type TrendChartProps = {
   series: Record<string, number[]>
   activeKey: string
   comparisonKey?: string
@@ -66,9 +66,11 @@ export default function TrendChart({
     data.map((v, i) => `${i === 0 ? "M" : "L"} ${gx(i).toFixed(1)} ${gy(v).toFixed(1)}`).join(" ")
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => maxVal * f)
 
-  function handleMouseMove(e: ReactMouseEvent<SVGRectElement>) {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const fraction = (e.clientX - rect.left) / rect.width
+  // Hovered month, from the plot area.
+  function handleMouseMove(e: ReactMouseEvent<SVGSVGElement>) {
+    const box = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - box.left) / box.width) * W
+    const fraction = (x - PAD.left) / cW
     if (fraction < 0 || fraction > 1) {
       setHoverIdx(null)
       return
@@ -78,7 +80,14 @@ export default function TrendChart({
   }
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full">
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      className="block h-auto w-full"
+      role="img"
+      aria-label={`Grafik ${activeKey}${comparisonKey ? ` dibanding ${comparisonKey}` : ""} per periode`}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => setHoverIdx(null)}
+    >
       {yTicks.map((tick, i) => (
         <g key={i}>
           <line
@@ -143,15 +152,7 @@ export default function TrendChart({
         <circle key={i} cx={gx(i)} cy={gy(v)} r={4} fill={LINE_COLOR} />
       ))}
 
-      <rect
-        x={PAD.left}
-        y={PAD.top}
-        width={cW}
-        height={cH}
-        fill="transparent"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHoverIdx(null)}
-      />
+      <rect x={PAD.left} y={PAD.top} width={cW} height={cH} fill="transparent" />
 
       {hoverIdx !== null && activeData[hoverIdx] !== undefined && (
         <Tooltip

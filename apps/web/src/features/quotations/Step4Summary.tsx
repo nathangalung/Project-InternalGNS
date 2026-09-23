@@ -274,7 +274,7 @@ export default function Step4Summary({
                     disabled={prodPage === 1}
                     onClick={() => setProdPage((p) => Math.max(1, p - 1))}
                   >
-                    <svg width="5" height="8" viewBox="0 0 5 8" fill="none">
+                    <svg aria-hidden="true" width="5" height="8" viewBox="0 0 5 8" fill="none">
                       <path
                         d="M4 1L1 4L4 7"
                         stroke="#191C1E"
@@ -311,7 +311,7 @@ export default function Step4Summary({
                     disabled={prodPage === totalPages}
                     onClick={() => setProdPage((p) => Math.min(totalPages, p + 1))}
                   >
-                    <svg width="5" height="8" viewBox="0 0 5 8" fill="none">
+                    <svg aria-hidden="true" width="5" height="8" viewBox="0 0 5 8" fill="none">
                       <path
                         d="M1 1L4 4L1 7"
                         stroke="#191C1E"
@@ -331,6 +331,7 @@ export default function Step4Summary({
                 >
                   {prodExpanded ? "Sembunyikan" : "Tampilkan"}
                   <svg
+                    aria-hidden="true"
                     width="10"
                     height="6"
                     viewBox="0 0 10 6"

@@ -1,3 +1,4 @@
+import { useId } from "react"
 import { ui } from "@/lib/ui"
 
 export type DatePreset = "semua" | "hari-ini" | "7-hari" | "30-hari" | "kustom"
@@ -31,7 +32,7 @@ export function presetToIsoRange(preset: DatePreset): { start: string; end: stri
   return { start: toIsoDate(start), end }
 }
 
-interface DateInputProps {
+type DateInputProps = {
   value: string
   onChange: (next: string) => void
   label: string
@@ -51,9 +52,12 @@ const iconCls =
 
 // Date input with calendar icon.
 export function DateInput({ value, onChange, label }: DateInputProps) {
+  const id = useId()
   return (
     <div className="flex flex-col gap-2">
-      <label className={labelCls}>{label}</label>
+      <label htmlFor={id} className={labelCls}>
+        {label}
+      </label>
       <div className="relative">
         <span className={iconCls}>
           <svg
@@ -65,6 +69,7 @@ export function DateInput({ value, onChange, label }: DateInputProps) {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <rect x="3" y="4" width="18" height="18" rx="2" />
             <line x1="16" y1="2" x2="16" y2="6" />
@@ -73,6 +78,7 @@ export function DateInput({ value, onChange, label }: DateInputProps) {
           </svg>
         </span>
         <input
+          id={id}
           type="date"
           className={inputCls}
           value={value}

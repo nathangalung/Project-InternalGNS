@@ -96,7 +96,7 @@ export default function Login({ onLogin }: LoginProps) {
               </label>
               <div className="relative flex items-center">
                 <span className="pointer-events-none absolute left-4 flex h-[18px] w-[18px] items-center justify-center text-dark-400 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-width:1.8] [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]">
-                  <svg viewBox="0 0 24 24">
+                  <svg aria-hidden="true" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="4" />
                     <path d="M16 8v5a3 3 0 0 0 6 0V12a10 10 0 1 0-4 8" />
                   </svg>
@@ -123,7 +123,7 @@ export default function Login({ onLogin }: LoginProps) {
               </label>
               <div className="relative flex items-center">
                 <span className="pointer-events-none absolute left-4 flex h-[18px] w-[18px] items-center justify-center text-dark-400 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-width:1.8] [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]">
-                  <svg viewBox="0 0 24 24">
+                  <svg aria-hidden="true" viewBox="0 0 24 24">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
@@ -146,6 +146,7 @@ export default function Login({ onLogin }: LoginProps) {
                 >
                   {showPassword ? (
                     <svg
+                      aria-hidden="true"
                       width="18"
                       height="18"
                       viewBox="0 0 24 24"

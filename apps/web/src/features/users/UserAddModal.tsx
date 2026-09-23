@@ -228,10 +228,9 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
           Peran
         </div>
         <div className={ui.field}>
-          <div
-            role="group"
+          <fieldset
             aria-labelledby={roleHeadingId}
-            className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-3"
+            className="m-0 min-w-0 border-0 p-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-3"
           >
             {ROLE_CARDS.map((card) => {
               const selected = role === card.value
@@ -254,7 +253,7 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
                 </button>
               )
             })}
-          </div>
+          </fieldset>
           {serverErrors.role && <span className={errorText}>{serverErrors.role}</span>}
         </div>
       </div>

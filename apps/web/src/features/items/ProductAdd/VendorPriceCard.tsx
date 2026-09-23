@@ -172,6 +172,7 @@ export default function VendorPriceCard({
         >
           <span>Historis Harga Jual</span>
           <svg
+            aria-hidden="true"
             width="12"
             height="12"
             viewBox="0 0 24 24"

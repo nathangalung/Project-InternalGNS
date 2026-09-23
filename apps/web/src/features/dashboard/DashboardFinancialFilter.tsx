@@ -1,4 +1,4 @@
-import { type FocusEvent, useId, useState } from "react"
+import { type FocusEvent, type KeyboardEvent, useId, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
 import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
@@ -64,8 +64,17 @@ export default function DashboardFinancialFilter({
   const [yearOpen, setYearOpen] = useState(false)
   const yearHeadingId = useId()
   // Close when focus leaves
-  const closeYearOnBlur = (e: FocusEvent<HTMLDivElement>) => {
-    if (!e.currentTarget.contains(e.relatedTarget)) setYearOpen(false)
+  const yearRef = useRef<HTMLDivElement>(null)
+  const yearTriggerRef = useRef<HTMLButtonElement>(null)
+  const closeYearOnBlur = (e: FocusEvent<HTMLButtonElement>) => {
+    if (!yearRef.current?.contains(e.relatedTarget)) setYearOpen(false)
+  }
+  // Escape closes the list, not the modal.
+  const yearKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key !== "Escape" || !yearOpen) return
+    e.stopPropagation()
+    setYearOpen(false)
+    yearTriggerRef.current?.focus()
   }
 
   const dirty = year !== DEFAULTS.year || month !== DEFAULTS.month
@@ -107,25 +116,20 @@ export default function DashboardFinancialFilter({
           Pilih Tahun
         </div>
         <div className={ui.field}>
-          <div
-            className="relative"
-            onBlur={closeYearOnBlur}
-            onKeyDown={(e) => {
-              if (e.key === "Escape" && yearOpen) {
-                e.stopPropagation()
-                setYearOpen(false)
-              }
-            }}
-          >
+          <div ref={yearRef} className="relative">
             <button
+              ref={yearTriggerRef}
               type="button"
               className={ui.selectBtn}
+              onBlur={closeYearOnBlur}
+              onKeyDown={yearKeyDown}
               aria-labelledby={`${yearHeadingId} ${yearHeadingId}-value`}
               aria-expanded={yearOpen}
               onClick={() => setYearOpen((o) => !o)}
             >
               <span id={`${yearHeadingId}-value`}>{year}</span>
               <svg
+                aria-hidden="true"
                 width="12"
                 height="12"
                 viewBox="0 0 24 24"
@@ -151,6 +155,8 @@ export default function DashboardFinancialFilter({
                         setYear(y)
                         setYearOpen(false)
                       }}
+                      onBlur={closeYearOnBlur}
+                      onKeyDown={yearKeyDown}
                     >
                       <span className={dropdownLabel(isActive)}>{y}</span>
                       {isActive && <CheckIcon />}

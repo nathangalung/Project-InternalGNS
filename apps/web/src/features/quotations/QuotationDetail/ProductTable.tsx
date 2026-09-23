@@ -58,7 +58,7 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
               className={`flex items-center gap-1.5 rounded-sm border border-dark-200 bg-white px-2.5 py-[5px] text-xs text-[#4A4455] ${ui.focusRing}`}
             >
               {pageSize} Baris
-              <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+              <svg aria-hidden="true" width="10" height="6" viewBox="0 0 10 6" fill="none">
                 <path
                   d="M1 1L5 5L9 1"
                   stroke="#4A4455"
@@ -93,7 +93,13 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
                         {val} Baris
                       </span>
                       {isActive && (
-                        <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+                        <svg
+                          aria-hidden="true"
+                          width="14"
+                          height="11"
+                          viewBox="0 0 14 11"
+                          fill="none"
+                        >
                           <path
                             d="M1 5.5L4.5 9L13 1"
                             stroke="#630ED4"
@@ -117,7 +123,7 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
               disabled={page === 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
-              <svg width="5" height="8" viewBox="0 0 5 8" fill="none">
+              <svg aria-hidden="true" width="5" height="8" viewBox="0 0 5 8" fill="none">
                 <path
                   d="M4 1L1 4L4 7"
                   stroke="#191C1E"
@@ -154,7 +160,7 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
               disabled={page === totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             >
-              <svg width="5" height="8" viewBox="0 0 5 8" fill="none">
+              <svg aria-hidden="true" width="5" height="8" viewBox="0 0 5 8" fill="none">
                 <path
                   d="M1 1L4 4L1 7"
                   stroke="#191C1E"
@@ -173,6 +179,7 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
           >
             {expanded ? "Sembunyikan" : "Tampilkan"}
             <svg
+              aria-hidden="true"
               width="10"
               height="6"
               viewBox="0 0 10 6"

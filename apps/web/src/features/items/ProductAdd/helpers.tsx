@@ -90,7 +90,14 @@ export function AddNewButton({ label, onClick }: { label: string; onClick: () =>
         onClick={onClick}
         className={`inline-flex items-center gap-1 rounded-sm px-5 py-1 text-caption font-bold text-primary-700 ${ui.focusRing}`}
       >
-        <svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg
+          aria-hidden="true"
+          width="9"
+          height="9"
+          viewBox="0 0 9 9"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
           <line
             x1="4.5"
             y1="1"

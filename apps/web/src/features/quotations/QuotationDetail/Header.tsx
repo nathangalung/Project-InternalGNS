@@ -64,6 +64,7 @@ export default function Header({
           {onEdit && (
             <button type="button" className={`${ui.btnOutline} min-w-[130px]`} onClick={onEdit}>
               <svg
+                aria-hidden="true"
                 width="14"
                 height="14"
                 viewBox="0 0 24 24"
@@ -86,6 +87,7 @@ export default function Header({
             disabled={downloading}
           >
             <svg
+              aria-hidden="true"
               width="14"
               height="14"
               viewBox="0 0 24 24"

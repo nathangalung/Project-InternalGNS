@@ -333,6 +333,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
                 onClick={() => setStep(step - 1)}
               >
                 <svg
+                  aria-hidden="true"
                   width="16"
                   height="16"
                   viewBox="0 0 24 24"
@@ -356,6 +357,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
               >
                 Lanjut{" "}
                 <svg
+                  aria-hidden="true"
                   width="16"
                   height="16"
                   viewBox="0 0 24 24"

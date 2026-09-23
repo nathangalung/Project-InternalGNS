@@ -41,7 +41,14 @@ export default function PasswordChecklist({
               }`}
             >
               {ok ? (
-                <svg width="12" height="12" viewBox="0 0 14 11" fill="none" className="shrink-0">
+                <svg
+                  aria-hidden="true"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 14 11"
+                  fill="none"
+                  className="shrink-0"
+                >
                   <path
                     d="M1 5.5L4.5 9L13 1"
                     stroke="#10B981"
@@ -51,7 +58,14 @@ export default function PasswordChecklist({
                   />
                 </svg>
               ) : (
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="shrink-0">
+                <svg
+                  aria-hidden="true"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  className="shrink-0"
+                >
                   <line
                     x1="3"
                     y1="7"

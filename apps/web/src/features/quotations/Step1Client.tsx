@@ -73,6 +73,7 @@ export default function Step1Client({
             onClick={() => setShowClientAdd(true)}
           >
             <svg
+              aria-hidden="true"
               width="16"
               height="16"
               viewBox="0 0 24 24"
@@ -92,6 +93,7 @@ export default function Step1Client({
       {!lockClient && (
         <div className={searchWrapper}>
           <svg
+            aria-hidden="true"
             className={searchIcon}
             width="18"
             height="18"
@@ -136,7 +138,7 @@ export default function Step1Client({
                   {client.name} - {client.narahubung}
                 </span>
                 <span className="flex items-center gap-1 text-[0.6875rem] font-normal leading-4 text-dark-600">
-                  <svg width="9" height="12" viewBox="0 0 9 12" fill="none">
+                  <svg aria-hidden="true" width="9" height="12" viewBox="0 0 9 12" fill="none">
                     <path
                       d="M4.5 0C2.015 0 0 2.015 0 4.5C0 7.875 4.5 12 4.5 12C4.5 12 9 7.875 9 4.5C9 2.015 6.985 0 4.5 0ZM4.5 6C3.672 6 3 5.328 3 4.5C3 3.672 3.672 3 4.5 3C5.328 3 6 3.672 6 4.5C6 5.328 5.328 6 4.5 6Z"
                       fill="currentColor"

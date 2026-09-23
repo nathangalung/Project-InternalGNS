@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router"
-import { type FocusEvent, useMemo, useState } from "react"
+import { type FocusEvent, type KeyboardEvent, useMemo, useRef, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
 import StatCard from "@/components/shared/StatCard"
 import { useMe } from "@/features/auth/hooks"
@@ -52,8 +52,17 @@ export default function Dashboard() {
   const [baseYear, setBaseYear] = useState(thisYear)
   const [showYearMenu, setShowYearMenu] = useState(false)
   // Close when focus leaves
-  const closeYearMenuOnBlur = (e: FocusEvent<HTMLDivElement>) => {
-    if (!e.currentTarget.contains(e.relatedTarget)) setShowYearMenu(false)
+  const yearMenuRef = useRef<HTMLDivElement>(null)
+  const yearTriggerRef = useRef<HTMLButtonElement>(null)
+  // Close once focus leaves.
+  const closeYearMenuOnBlur = (e: FocusEvent<HTMLButtonElement>) => {
+    if (!yearMenuRef.current?.contains(e.relatedTarget)) setShowYearMenu(false)
+  }
+  // Escape returns to the trigger.
+  const yearMenuKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key !== "Escape" || !showYearMenu) return
+    setShowYearMenu(false)
+    yearTriggerRef.current?.focus()
   }
   const yearOptions = YEAR_OPTIONS
   const { from, to } = yearRange(baseYear)
@@ -120,18 +129,15 @@ export default function Dashboard() {
               Ekspor Excel
             </button>
           )}
-          <div
-            className="relative"
-            onBlur={closeYearMenuOnBlur}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setShowYearMenu(false)
-            }}
-          >
+          <div ref={yearMenuRef} className="relative">
             <button
+              ref={yearTriggerRef}
               type="button"
               className={ui.btnPrimary}
               aria-expanded={showYearMenu}
               onClick={() => setShowYearMenu((v) => !v)}
+              onBlur={closeYearMenuOnBlur}
+              onKeyDown={yearMenuKeyDown}
             >
               <svg
                 viewBox="0 0 24 24"
@@ -160,6 +166,10 @@ export default function Dashboard() {
                       setBaseYear(y)
                       setShowYearMenu(false)
                     }}
+                    // Keeps focus on the trigger, so Safari's blur never closes first
+                    onMouseDown={(e) => e.preventDefault()}
+                    onBlur={closeYearMenuOnBlur}
+                    onKeyDown={yearMenuKeyDown}
                     aria-current={y === baseYear ? "true" : undefined}
                     className={`block w-full px-3.5 py-2 text-left text-[13px] transition-colors hover:bg-dark-100 ${ui.focusRingInset} ${
                       y === baseYear

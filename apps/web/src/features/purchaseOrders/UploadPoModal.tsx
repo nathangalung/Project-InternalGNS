@@ -150,6 +150,7 @@ export default function UploadPoModal({
           className={`${ui.focusRing} flex w-full flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-[#D1D5DB] bg-[#F9FAFB] px-4 py-8`}
         >
           <svg
+            aria-hidden="true"
             width="40"
             height="40"
             viewBox="0 0 24 24"
@@ -175,6 +176,7 @@ export default function UploadPoModal({
         {file && (
           <div className="mt-4 flex items-center gap-3 rounded-[10px] border border-[#BBF7D0] bg-[#F0FDF4] px-4 py-3">
             <svg
+              aria-hidden="true"
               width="20"
               height="20"
               viewBox="0 0 24 24"
@@ -200,6 +202,7 @@ export default function UploadPoModal({
               className={`rounded-sm p-1 text-[#047857] ${ui.focusRing}`}
             >
               <svg
+                aria-hidden="true"
                 width="14"
                 height="14"
                 viewBox="0 0 24 24"

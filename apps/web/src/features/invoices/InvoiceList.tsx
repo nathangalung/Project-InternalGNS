@@ -182,6 +182,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
               }
             >
               <svg
+                aria-hidden="true"
                 width="14"
                 height="14"
                 viewBox="0 0 24 24"
@@ -208,6 +209,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
               }
             >
               <svg
+                aria-hidden="true"
                 width="14"
                 height="14"
                 viewBox="0 0 24 24"
@@ -314,6 +316,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
                             }
                           >
                             <svg
+                              aria-hidden="true"
                               width="18"
                               height="18"
                               viewBox="0 0 24 24"
@@ -344,6 +347,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
                             }
                           >
                             <svg
+                              aria-hidden="true"
                               width="18"
                               height="18"
                               viewBox="0 0 24 24"

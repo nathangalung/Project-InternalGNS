@@ -104,10 +104,9 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
         </div>
 
         <div className={ui.field}>
-          <div
-            role="group"
+          <fieldset
             aria-labelledby={dateHeadingId}
-            className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-2"
+            className="m-0 min-w-0 border-0 p-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-2"
           >
             {DATE_PRESETS.map(({ key, label }) => {
               const isActive = preset === key
@@ -125,7 +124,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                       <IconCalendar />
                     </span>
                   ) : isActive ? (
-                    <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+                    <svg aria-hidden="true" width="14" height="11" viewBox="0 0 14 11" fill="none">
                       <path
                         d="M1 5.5L4.5 9L13 1"
                         stroke="#630ED4"
@@ -138,7 +137,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                 </button>
               )
             })}
-          </div>
+          </fieldset>
         </div>
 
         <div className={ui.row2}>
@@ -167,7 +166,10 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
           Status Quotation
         </div>
         <div className={ui.field}>
-          <div role="group" aria-labelledby={statusHeadingId} className="flex flex-wrap gap-2">
+          <fieldset
+            aria-labelledby={statusHeadingId}
+            className="m-0 min-w-0 border-0 p-0 flex flex-wrap gap-2"
+          >
             {(() => {
               const allActive = activeStatuses.length === 0
               return (
@@ -195,7 +197,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                 </button>
               )
             })}
-          </div>
+          </fieldset>
         </div>
       </div>
 

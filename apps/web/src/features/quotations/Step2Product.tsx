@@ -167,6 +167,7 @@ export default function Step2Product({
             disabled={importing}
           >
             <svg
+              aria-hidden="true"
               width="16"
               height="16"
               viewBox="0 0 24 24"
@@ -188,6 +189,7 @@ export default function Step2Product({
             onClick={() => setShowDiscountModal(true)}
           >
             <svg
+              aria-hidden="true"
               width="16"
               height="16"
               viewBox="0 0 24 24"
@@ -210,6 +212,7 @@ export default function Step2Product({
             }}
           >
             <svg
+              aria-hidden="true"
               width="16"
               height="16"
               viewBox="0 0 24 24"
@@ -256,7 +259,7 @@ export default function Step2Product({
                 className={`flex items-center gap-2 rounded-sm border border-dark-200 bg-white px-2.5 py-[5px] text-[13px] text-[#4A4455] ${ui.focusRing}`}
               >
                 {prodPageSize} Baris
-                <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                <svg aria-hidden="true" width="10" height="6" viewBox="0 0 10 6" fill="none">
                   <path
                     d="M1 1L5 5L9 1"
                     stroke="#4A4455"
@@ -293,7 +296,13 @@ export default function Step2Product({
                           {val} Baris
                         </span>
                         {isActive && (
-                          <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+                          <svg
+                            aria-hidden="true"
+                            width="14"
+                            height="11"
+                            viewBox="0 0 14 11"
+                            fill="none"
+                          >
                             <path
                               d="M1 5.5L4.5 9L13 1"
                               stroke="#630ED4"
@@ -323,7 +332,7 @@ export default function Step2Product({
                 disabled={prodPage === 1}
                 onClick={() => setProdPage((p) => Math.max(1, p - 1))}
               >
-                <svg width="5" height="8" viewBox="0 0 5 8" fill="none">
+                <svg aria-hidden="true" width="5" height="8" viewBox="0 0 5 8" fill="none">
                   <path
                     d="M4 1L1 4L4 7"
                     stroke="#191C1E"
@@ -360,7 +369,7 @@ export default function Step2Product({
                 disabled={prodPage === totalPages}
                 onClick={() => setProdPage((p) => Math.min(totalPages, p + 1))}
               >
-                <svg width="5" height="8" viewBox="0 0 5 8" fill="none">
+                <svg aria-hidden="true" width="5" height="8" viewBox="0 0 5 8" fill="none">
                   <path
                     d="M1 1L4 4L1 7"
                     stroke="#191C1E"
@@ -379,6 +388,7 @@ export default function Step2Product({
             >
               {prodExpanded ? "Sembunyikan" : "Tampilkan"}
               <svg
+                aria-hidden="true"
                 width="10"
                 height="6"
                 viewBox="0 0 10 6"
@@ -436,6 +446,7 @@ export default function Step2Product({
                           aria-label={`Edit produk ${globalIndex}`}
                         >
                           <svg
+                            aria-hidden="true"
                             width="18"
                             height="18"
                             viewBox="0 0 24 24"
@@ -457,6 +468,7 @@ export default function Step2Product({
                           aria-label={`Hapus produk ${globalIndex}`}
                         >
                           <svg
+                            aria-hidden="true"
                             width="18"
                             height="18"
                             viewBox="0 0 24 24"
