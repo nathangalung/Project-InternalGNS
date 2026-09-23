@@ -127,11 +127,16 @@ SELECT inv.id,
        inv.row_version,
        inv.created_at,
        inv.updated_at,
-       inv.attachment_object_key
+       inv.attachment_object_key,
+       inv.replaces_invoice_id,
+       rp.invoice_no AS replaces_invoice_no,
+       rb.id AS replaced_by_invoice_id
 FROM invoices inv
 JOIN quotations q ON q.id = inv.quotation_id
 JOIN company_client cc ON cc.id = inv.company_client_id
 LEFT JOIN purchase_orders po ON po.id = inv.po_id
+LEFT JOIN invoices rp ON rp.id = inv.replaces_invoice_id
+LEFT JOIN invoices rb ON rb.replaces_invoice_id = inv.id
 LEFT JOIN LATERAL (
     SELECT co.name, co.email, co.phone
     FROM company_contacts co
@@ -174,11 +179,16 @@ SELECT inv.id,
        inv.row_version,
        inv.created_at,
        inv.updated_at,
-       inv.attachment_object_key
+       inv.attachment_object_key,
+       inv.replaces_invoice_id,
+       rp.invoice_no AS replaces_invoice_no,
+       rb.id AS replaced_by_invoice_id
 FROM invoices inv
 JOIN quotations q ON q.id = inv.quotation_id
 JOIN company_client cc ON cc.id = inv.company_client_id
 LEFT JOIN purchase_orders po ON po.id = inv.po_id
+LEFT JOIN invoices rp ON rp.id = inv.replaces_invoice_id
+LEFT JOIN invoices rb ON rb.replaces_invoice_id = inv.id
 LEFT JOIN LATERAL (
     SELECT co.name, co.email, co.phone
     FROM company_contacts co
@@ -192,6 +202,10 @@ LIMIT 1;
 
 -- name: invoices.change_status
 SELECT fn_change_invoice_status($1::bigint, $2::text, $3::bigint);
+
+-- name: invoices.replace
+-- Creates the Pengganti invoice for a cancelled one; returns its id.
+SELECT fn_replace_invoice($1::bigint, $2::bigint);
 
 -- name: invoices.update_dates
 -- A paid or cancelled invoice is filed: moving its dates would move booked

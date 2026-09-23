@@ -205,6 +205,26 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// Replace issues a Pengganti invoice.
+func (h *Handler) Replace(w http.ResponseWriter, r *http.Request) {
+	id, ok := httpx.PathID(w, r, "id", "invalid id")
+	if !ok {
+		return
+	}
+	actor := deps.CurrentUserID(r.Context())
+	det, err := h.repo.Replace(r.Context(), id, actor)
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("invoice not found"))
+		return
+	}
+	if err != nil {
+		// P0012 not cancelled: 422. P0013 already replaced or live: 409.
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusCreated, det)
+}
+
 func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {

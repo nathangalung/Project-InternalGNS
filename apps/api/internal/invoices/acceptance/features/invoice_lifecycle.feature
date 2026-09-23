@@ -91,3 +91,25 @@ Feature: Invoice lifecycle
     When the user lists invoices filtered by status "draft"
     Then the response status is 200
     And the invoice list contains at least 1 row
+
+  Scenario: A cancelled invoice is replaced by a Pengganti invoice
+    Given a delivered purchase order
+    When the user transitions the invoice through "sent,cancelled"
+    And the user replaces the invoice
+    Then the response status is 201
+    When the user reads the invoice by quotation
+    Then the invoice status is "draft"
+    And the invoice is the Pengganti of the cancelled invoice
+
+  Scenario: Only a cancelled invoice can be replaced
+    Given a delivered purchase order
+    When the user transitions the invoice through "sent"
+    And the user replaces the invoice
+    Then the response status is 422
+
+  Scenario: A cancelled invoice is replaced only once
+    Given a delivered purchase order
+    When the user transitions the invoice through "cancelled"
+    And the user replaces the invoice
+    And the user replaces the invoice
+    Then the response status is 409

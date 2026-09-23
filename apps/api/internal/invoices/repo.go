@@ -218,6 +218,16 @@ func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, actorI
 	return classifyPgErr(err)
 }
 
+// Replace issues a Pengganti invoice.
+func (r *Repo) Replace(ctx context.Context, cancelledID int64, actorID int64) (InvoiceDetail, error) {
+	var newID int64
+	err := r.db.QueryRow(ctx, r.store.Get("invoices.replace"), cancelledID, actorID).Scan(&newID)
+	if err != nil {
+		return InvoiceDetail{}, classifyPgErr(err)
+	}
+	return r.GetDetail(ctx, newID)
+}
+
 // confirmOverdue checks the due date.
 func (r *Repo) confirmOverdue(ctx context.Context, id int64) error {
 	var overdue bool

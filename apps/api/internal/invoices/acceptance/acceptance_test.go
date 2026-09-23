@@ -245,6 +245,28 @@ func (s *scenarioState) invoiceDetailOffersTransitions() error {
 	return nil
 }
 
+func (s *scenarioState) replaceInvoice() error {
+	return s.sendRequest(http.MethodPost, "/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/replacement", nil)
+}
+
+// The replacement is a new Pengganti invoice linked to the cancelled one.
+func (s *scenarioState) invoiceIsPengganti() error {
+	var det invoices.InvoiceDetail
+	if err := json.Unmarshal(s.body, &det); err != nil {
+		return err
+	}
+	if det.ID == s.invoiceID {
+		return fmt.Errorf("by-quotation still returns the cancelled invoice %d", det.ID)
+	}
+	if det.FakturType == nil || *det.FakturType != "Pengganti" {
+		return fmt.Errorf("want faktur type Pengganti got %v", det.FakturType)
+	}
+	if det.ReplacesInvoiceID == nil || *det.ReplacesInvoiceID != s.invoiceID {
+		return fmt.Errorf("want replacesInvoiceId %d got %v", s.invoiceID, det.ReplacesInvoiceID)
+	}
+	return nil
+}
+
 func (s *scenarioState) invoiceNumberSet() error {
 	var inv invoices.Invoice
 	if err := json.Unmarshal(s.body, &inv); err != nil {
@@ -399,6 +421,8 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the invoice detail carries the client and purchase order header$`, state.invoiceDetailCarriesHeader)
 		sc.Step(`^the invoice detail offers the transitions the database allows$`, state.invoiceDetailOffersTransitions)
 		sc.Step(`^the invoice has positive total$`, state.invoicePositiveTotal)
+		sc.Step(`^the user replaces the invoice$`, state.replaceInvoice)
+		sc.Step(`^the invoice is the Pengganti of the cancelled invoice$`, state.invoiceIsPengganti)
 		sc.Step(`^the invoice items contain at least (\d+) product line(?:s)?$`, state.invoiceItemsAtLeastProducts)
 		sc.Step(`^the invoice list contains at least (\d+) row(?:s)?$`, state.invoiceListAtLeast)
 		sc.Step(`^the invoice summary total is at least (\d+)$`, state.summaryTotalAtLeast)

@@ -34,6 +34,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.Get("/{id}", h.Get)
 	r.Get("/{id}/items", h.ListItems)
 	r.Patch("/{id}/status", h.ChangeStatus)
+	r.Post("/{id}/replacement", h.Replace)
 	r.Patch("/{id}/dates", h.UpdateDates)
 
 	attachment := attachmentAsset(d.Storage, repo)
