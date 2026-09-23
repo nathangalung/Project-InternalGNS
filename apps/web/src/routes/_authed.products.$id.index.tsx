@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
+import LoadingState from "@/components/shared/LoadingState"
+import NotFoundState from "@/components/shared/NotFoundState"
 import { useItem } from "@/features/items/hooks"
 import ProductDetail from "@/features/items/ProductDetail"
-import { routeFallbackCls } from "./-fallback"
 
 export const Route = createFileRoute("/_authed/products/$id/")({
   component: ProductDetailRoute,
@@ -14,10 +15,13 @@ function ProductDetailRoute() {
   const { data, isLoading } = useItem(numericId)
 
   if (!data) {
+    if (isLoading) return <LoadingState label="Memuat data produk…" />
     return (
-      <div className={routeFallbackCls}>
-        {isLoading ? "Memuat data produk…" : "Produk tidak ditemukan."}
-      </div>
+      <NotFoundState
+        title="Produk tidak ditemukan"
+        size="page"
+        backTo={{ to: "/products", label: "Kembali ke Katalog Produk" }}
+      />
     )
   }
 

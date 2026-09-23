@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import EntityLink from "@/components/shared/EntityLink"
 import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
 import Pagination from "@/components/shared/Pagination"
@@ -14,7 +15,7 @@ import { ui } from "@/lib/ui"
 import { useListScreen } from "@/lib/useListScreen"
 import type { AdvancedSearchHit, AdvancedSearchTier, ItemRow } from "@/types/api"
 
-interface ProductListProps {
+type ProductListProps = {
   onViewDetail?: (id: number) => void
 }
 
@@ -113,7 +114,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
 
   return (
     <>
-      <div className={ui.pageContentLoose}>
+      <div className={ui.pageContent}>
         <div className={ui.pageHeader}>
           <h1 className={ui.pageTitle}>Katalog Produk</h1>
           <div className={ui.pageActions}>
@@ -207,7 +208,9 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
                       <td
                         className={`${ui.tdCenter} break-words font-bold leading-5 text-dark-900`}
                       >
-                        {it.name}
+                        <EntityLink kind="product" id={it.id} tone="name">
+                          {it.name}
+                        </EntityLink>
                         {tierBadge && (
                           <span
                             className={`ml-1.5 inline-block rounded-[4px] px-1.5 py-px align-middle text-[10px] font-bold tracking-[0.3px] ${tierBadge.cls}`}
@@ -227,6 +230,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
                           type="button"
                           className={ui.iconAction}
                           title="Lihat detail"
+                          aria-label={`Lihat detail ${it.name}`}
                           onClick={() => onViewDetail?.(it.id)}
                         >
                           <EyeIcon />
@@ -247,6 +251,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
             resourceLabel="Produk"
             onItemsPerPage={list.setItemsPerPage}
             onPage={list.setCurrentPage}
+            isLoading={isLoading}
           />
         </div>
       </div>
