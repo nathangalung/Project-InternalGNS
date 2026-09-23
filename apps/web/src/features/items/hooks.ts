@@ -76,7 +76,11 @@ export function useUpdateItem() {
   return useMutation({
     mutationFn: ({ id, input }: { id: number; input: itemsApi.UpdateItemInput }) =>
       itemsApi.update(id, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.items.all }),
+    // Vendor product tabs show item names.
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.items.all })
+      qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
+    },
     onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui produk.")),
   })
 }
@@ -86,8 +90,11 @@ export function useAddVendorToItem() {
   return useMutation({
     mutationFn: ({ itemId, input }: { itemId: number; input: itemsApi.AddVendorToItemInput }) =>
       itemsApi.addVendor(itemId, input),
-    onSuccess: (_data, { itemId }) =>
-      qc.invalidateQueries({ queryKey: queryKeys.items.vendors(itemId) }),
+    // Vendor detail and counts change too.
+    onSuccess: (_data, { itemId }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.items.vendors(itemId) })
+      qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
+    },
   })
 }
 
