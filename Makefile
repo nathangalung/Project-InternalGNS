@@ -1,10 +1,10 @@
 .PHONY: help setup \
-        db-up db-down db-logs db-shell \
+        db-up db-down db-logs db-shell deps-up \
         stack-up stack-down stack-logs ps reset \
         migrate migrate-up migrate-status migrate-down migrate-new \
         seed seed-dev db-clean-testdata check-reconcile schema-dump db-erd db-functions-dump \
         api web dev \
-        tidy sqlc \
+        tidy \
         build build-api build-web \
         test test-db-reset test-api test-api-ci test-web \
         lint lint-fix fmt types \
@@ -36,14 +36,14 @@ help: ## Show available targets
 
 # Local toolchain prep.
 setup: ## Prep env, deps, tools
-	@command -v go     >/dev/null || { echo "missing: go (need 1.25+)"; exit 1; }
+	@command -v go     >/dev/null || { echo "missing: go (need 1.26+)"; exit 1; }
 	@command -v bun    >/dev/null || { echo "missing: bun (need 1.3+)"; exit 1; }
 	@command -v docker >/dev/null || { echo "missing: docker"; exit 1; }
 	@test -f $(API_DIR)/.env || cp $(API_DIR)/.env.example $(API_DIR)/.env
 	@test -f $(WEB_DIR)/.env || cp $(WEB_DIR)/.env.example $(WEB_DIR)/.env
 	@command -v goose >/dev/null 2>&1 || { \
 	  echo "installing goose..."; \
-	  go install github.com/pressly/goose/v3/cmd/goose@latest; \
+	  go install github.com/pressly/goose/v3/cmd/goose@v3.27.1; \
 	}
 	cd $(API_DIR) && go mod tidy
 	cd $(WEB_DIR) && bun install
@@ -52,6 +52,9 @@ setup: ## Prep env, deps, tools
 # Database container lifecycle.
 db-up: ## Start postgres only
 	$(COMPOSE_DEV) up -d --wait postgres
+
+deps-up: ## Start postgres and minio
+	$(COMPOSE_DEV) up -d --wait postgres minio
 
 db-down: ## Stop postgres
 	$(COMPOSE_DEV) stop postgres
@@ -70,7 +73,7 @@ db-ui-down: ## Stop pgweb
 	$(COMPOSE_DEV) stop pgweb
 
 # Full dev stack lifecycle.
-stack-up: ## Build and start postgres + api
+stack-up: ## Build and start postgres, minio, pgweb, api
 	$(COMPOSE_DEV) up -d --build --wait
 
 stack-down: ## Stop full dev stack
@@ -154,24 +157,21 @@ db-erd: db-up ## Regenerate docs/erd from the live dev DB (requires tbls)
 	tbls doc --force
 
 # Local dev servers.
-api: db-up ## Run API on host
+api: deps-up ## Run API on host
 	cd $(API_DIR) && go run ./cmd/api
 
 web: ## Run Vite dev server
 	cd $(WEB_DIR) && bun run dev
 
-dev: db-up ## Run api and web together
+dev: deps-up ## Run api and web together
 	@trap 'kill 0' INT TERM EXIT; \
 	$(MAKE) api & \
 	$(MAKE) web & \
 	wait
 
-# Code generation / dependency tidy.
+# Dependency tidy.
 tidy: ## go mod tidy
 	cd $(API_DIR) && go mod tidy
-
-sqlc: ## Generate sqlc code
-	cd $(API_DIR) && sqlc generate
 
 # Build artifacts.
 build: build-api build-web ## Build api binary and web bundle
@@ -197,8 +197,8 @@ test-api: test-db-reset ## Run Go tests against a throwaway DB (serialized)
 
 test-api-ci: test-api ## Run Go tests the way CI does
 
-test-web: ## Typecheck FE
-	cd $(WEB_DIR) && bun run typecheck
+test-web: ## Typecheck and unit-test FE
+	cd $(WEB_DIR) && bun run typecheck && bun run test
 
 lint: ## Lint api and web
 	cd $(API_DIR) && go vet ./...
