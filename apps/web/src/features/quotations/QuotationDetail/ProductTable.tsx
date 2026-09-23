@@ -189,29 +189,13 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
           <table className="w-full min-w-full table-auto border-collapse lg:table-fixed">
             <thead>
               <tr className={ui.theadRow}>
-                <th className={ui.thCenter} style={{ width: 110 }}>
-                  Kode IMPA
-                </th>
-                <th className={ui.thCenter} style={{ width: 220 }}>
-                  Nama Produk
-                </th>
-                <th className={ui.thCenter} style={{ width: 80 }}>
-                  Jumlah
-                </th>
-                <th className={ui.thCenter} style={{ width: 80 }}>
-                  Satuan
-                </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Harga Jual Satuan
-                </th>
-                {showProfit && (
-                  <th className={thProfit} style={{ width: 150 }}>
-                    Profit (Rp)
-                  </th>
-                )}
-                <th className={ui.thCenter} style={{ width: 150 }}>
-                  Total (Rp)
-                </th>
+                <th className={`${ui.thCenter} w-[110px]`}>Kode IMPA</th>
+                <th className={`${ui.thCenter} w-[220px]`}>Nama Produk</th>
+                <th className={`${ui.thCenter} w-[80px]`}>Jumlah</th>
+                <th className={`${ui.thCenter} w-[80px]`}>Satuan</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Harga Jual Satuan</th>
+                {showProfit && <th className={`${thProfit} w-[150px]`}>Profit (Rp)</th>}
+                <th className={`${ui.thCenter} w-[150px]`}>Total (Rp)</th>
               </tr>
             </thead>
             <tbody>

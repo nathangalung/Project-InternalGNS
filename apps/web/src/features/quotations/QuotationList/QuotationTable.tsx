@@ -33,8 +33,7 @@ export default function QuotationTable({
       <thead>
         <tr className={ui.theadRow}>
           <th
-            className={`${ui.thCenter} cursor-pointer`}
-            style={{ width: 160 }}
+            className={`${ui.thCenter} w-[160px] cursor-pointer`}
             onClick={() => onSort("displayNo")}
           >
             <div className={sortHead}>
@@ -43,8 +42,7 @@ export default function QuotationTable({
             </div>
           </th>
           <th
-            className={`${ui.thCenter} cursor-pointer`}
-            style={{ width: 70 }}
+            className={`${ui.thCenter} w-[70px] cursor-pointer`}
             onClick={() => onSort("version")}
           >
             <div className={sortHead}>
@@ -52,38 +50,22 @@ export default function QuotationTable({
               <SortIcon direction={dirOf("version")} />
             </div>
           </th>
-          <th className={ui.thCenter} style={{ width: 170 }}>
-            Nama Klien
-          </th>
-          <th
-            className={`${ui.thCenter} cursor-pointer`}
-            style={{ width: 120 }}
-            onClick={() => onSort("date")}
-          >
+          <th className={`${ui.thCenter} w-[170px]`}>Nama Klien</th>
+          <th className={`${ui.thCenter} w-[120px] cursor-pointer`} onClick={() => onSort("date")}>
             <div className={sortHead}>
               <span>Tanggal</span>
               <SortIcon direction={dirOf("date")} />
             </div>
           </th>
-          <th className={ui.thCenter} style={{ width: 160 }}>
-            Total Harga Beli
-          </th>
-          <th
-            className={`${ui.thCenter} cursor-pointer`}
-            style={{ width: 160 }}
-            onClick={() => onSort("total")}
-          >
+          <th className={`${ui.thCenter} w-[160px]`}>Total Harga Beli</th>
+          <th className={`${ui.thCenter} w-[160px] cursor-pointer`} onClick={() => onSort("total")}>
             <div className={sortHead}>
               <span>Total Penawaran</span>
               <SortIcon direction={dirOf("total")} />
             </div>
           </th>
-          <th className={ui.thCenter} style={{ width: 120 }}>
-            Status
-          </th>
-          <th className={ui.thCenter} style={{ width: 80 }}>
-            Aksi
-          </th>
+          <th className={`${ui.thCenter} w-[120px]`}>Status</th>
+          <th className={`${ui.thCenter} w-[80px]`}>Aksi</th>
         </tr>
       </thead>
       <tbody>
