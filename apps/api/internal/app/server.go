@@ -95,7 +95,7 @@ func buildServer(ctx context.Context, cfg Config, pool *pgxpool.Pool) (*http.Ser
 	})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotConfigured) {
-			slog.Warn("storage disabled (missing MINIO_ACCESS_KEY/SECRET_KEY)")
+			slog.WarnContext(ctx, "storage disabled (missing MINIO_ACCESS_KEY/SECRET_KEY)")
 			storageClient = nil
 		} else {
 			return nil, fmt.Errorf("init storage: %w", err)

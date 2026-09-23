@@ -33,9 +33,9 @@ func runRefreshPurgeLoop(ctx context.Context, repo refreshPurger, interval time.
 			if ctx.Err() != nil {
 				return
 			}
-			slog.Error("refresh token purge", "err", err)
+			slog.ErrorContext(ctx, "refresh token purge", "error", err.Error())
 		} else if n > 0 {
-			slog.Info("refresh token purge", "deleted", n)
+			slog.InfoContext(ctx, "refresh token purge", "deleted", n)
 		}
 		select {
 		case <-ctx.Done():

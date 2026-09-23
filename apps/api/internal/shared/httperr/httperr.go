@@ -96,6 +96,9 @@ func TooManyRequests(detail string) Error {
 func Internal(detail string) Error {
 	return Error{Type: "about:blank", Title: "Internal Server Error", Status: http.StatusInternalServerError, Detail: detail}
 }
+func BadGateway(detail string) Error {
+	return Error{Type: "about:blank", Title: "Bad Gateway", Status: http.StatusBadGateway, Detail: detail}
+}
 func ServiceUnavailable(detail string) Error {
 	return Error{Type: "about:blank", Title: "Service Unavailable", Status: http.StatusServiceUnavailable, Detail: detail}
 }

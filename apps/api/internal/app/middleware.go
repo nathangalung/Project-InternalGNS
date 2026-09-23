@@ -204,7 +204,7 @@ func authMiddleware(svc *auth.Service) func(http.Handler) http.Handler {
 				return
 			case err != nil:
 				// A database outage is not a credential verdict.
-				httperr.RenderDBErr(w, err)
+				httperr.RenderDBErrCtx(r.Context(), w, err)
 				return
 			}
 

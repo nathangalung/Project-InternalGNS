@@ -5,11 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"mime"
 	"net/http"
 	"path"
 	"strconv"
 	"strings"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 )
 
 // maxUploadBytes caps a single proxied asset upload.
@@ -70,17 +73,17 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 	bucket := r.URL.Query().Get("bucket")
 	key := r.URL.Query().Get("key")
 	if !allowedBucket(bucket) || !safeKey(key) {
-		http.Error(w, "invalid bucket or key", http.StatusBadRequest)
+		httperr.Render(w, httperr.BadRequest("invalid bucket or key"))
 		return
 	}
 	// Enforce the per-bucket extension allowlist so the proxy cannot be used
 	// to plant arbitrary content types (the presign path already does this).
 	if err := ValidateAssetFileName(bucket, key); err != nil {
-		http.Error(w, "file type not allowed", http.StatusBadRequest)
+		httperr.Render(w, httperr.BadRequest("file type not allowed"))
 		return
 	}
 	if h.store == nil {
-		http.Error(w, "storage not configured", http.StatusServiceUnavailable)
+		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
 		return
 	}
 	// The key comes from the client, so a PUT is a create, never a replace:
@@ -88,11 +91,11 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 	// stored document with its own bytes.
 	exists, err := h.store.ObjectExists(r.Context(), bucket, key)
 	if err != nil {
-		http.Error(w, "upload failed", http.StatusBadGateway)
+		renderStoreErr(r.Context(), w, "stat", bucket, key, err, "upload failed")
 		return
 	}
 	if exists {
-		http.Error(w, "object already exists", http.StatusConflict)
+		httperr.Render(w, httperr.Conflict("object already exists"))
 		return
 	}
 	limit := MaxBytes(bucket) // per-bucket policy cap (bucket already validated)
@@ -102,7 +105,7 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, limit)
 	defer r.Body.Close()
 	if err := h.store.PutObject(r.Context(), bucket, key, r.Body, r.ContentLength, r.Header.Get("Content-Type")); err != nil {
-		http.Error(w, "upload failed", http.StatusBadGateway)
+		renderStoreErr(r.Context(), w, "put", bucket, key, err, "upload failed")
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -113,20 +116,20 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	bucket := r.URL.Query().Get("bucket")
 	key := r.URL.Query().Get("key")
 	if !allowedBucket(bucket) || !safeKey(key) {
-		http.Error(w, "invalid bucket or key", http.StatusBadRequest)
+		httperr.Render(w, httperr.BadRequest("invalid bucket or key"))
 		return
 	}
 	if h.store == nil {
-		http.Error(w, "storage not configured", http.StatusServiceUnavailable)
+		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
 		return
 	}
 	rc, _, size, err := h.store.GetObject(r.Context(), bucket, key)
 	if errors.Is(err, ErrObjectNotFound) {
-		http.Error(w, "not found", http.StatusNotFound)
+		httperr.Render(w, httperr.NotFound("not found"))
 		return
 	}
 	if err != nil {
-		http.Error(w, "download failed", http.StatusBadGateway)
+		renderStoreErr(r.Context(), w, "get", bucket, key, err, "download failed")
 		return
 	}
 	defer rc.Close()
@@ -145,4 +148,14 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Cache-Control", "private, max-age=300")
 	_, _ = io.Copy(w, rc)
+}
+
+// Logs a store failure with its cause.
+// The body stays generic; the log line names the operation and object under
+// the request context, so request_id joins it to its access-log line.
+func renderStoreErr(ctx context.Context, w http.ResponseWriter, op, bucket, key string, err error, detail string) {
+	slog.ErrorContext(ctx, "object store failed",
+		"op", op, "bucket", bucket, "key", key,
+		"error", fmt.Errorf("storage: %s %s/%s: %w", op, bucket, key, err).Error())
+	httperr.Render(w, httperr.BadGateway(detail))
 }
