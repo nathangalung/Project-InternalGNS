@@ -85,6 +85,9 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 		if len(itemsByID[inv.ID]) == 0 {
 			continue // skip invoices with no lines
 		}
+		if inv.Status == StatusCancelled {
+			continue // void; its Pengganti is filed instead
+		}
 		if _, ok := seenClient[inv.CompanyClientID]; !ok {
 			seenClient[inv.CompanyClientID] = struct{}{}
 			clientIDs = append(clientIDs, inv.CompanyClientID)

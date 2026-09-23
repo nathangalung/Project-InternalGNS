@@ -103,6 +103,12 @@ func (h *CoretaxHandler) Export(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErr(w, err)
 		return
 	}
+	// A void invoice is never filed; its Pengganti is.
+	if inv.Status == StatusCancelled {
+		httperr.Render(w, httperr.UnprocessableDetail(
+			"Invoice yang dibatalkan tidak dapat diekspor ke Coretax.", nil))
+		return
+	}
 
 	items, err := h.repo.ListItems(r.Context(), id)
 	if err != nil {
