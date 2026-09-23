@@ -25,12 +25,8 @@ export default function StatusBar({ status, isOpen, onToggle, onChange, onSave }
       <div className="flex items-center gap-3">
         <div className="relative">
           <button
-            className={`${ui.statusTrigger} whitespace-nowrap`}
-            style={{
-              background: badge.bg,
-              color: badge.color,
-              cursor: locked ? "default" : undefined,
-            }}
+            className={`${ui.statusTrigger} whitespace-nowrap${locked ? " cursor-default" : ""}`}
+            style={{ background: badge.bg, color: badge.color }}
             onClick={locked ? undefined : onToggle}
             disabled={locked}
           >

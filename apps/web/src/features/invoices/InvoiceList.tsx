@@ -167,7 +167,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
 
   return (
     <>
-      <div className="page-content" style={{ gap: "29px" }}>
+      <div className="page-content gap-[29px]">
         <div className="page-header">
           <h1 className="page-title">Daftar Invoice</h1>
           <div className="flex items-center gap-2.5 max-sm:w-full max-sm:flex-wrap">
@@ -239,27 +239,13 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
           <table className="w-full border-collapse">
             <thead>
               <tr className={ui.theadRow}>
-                <th className={ui.thCenter} style={{ width: 150 }}>
-                  Nomor Invoice
-                </th>
-                <th className={ui.thCenter} style={{ width: 200 }}>
-                  Nama Klien
-                </th>
-                <th className={ui.thCenter} style={{ width: 160 }}>
-                  Tanggal Pembuatan
-                </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Jatuh Tempo
-                </th>
-                <th className={ui.thCenter} style={{ width: 160 }}>
-                  Total Tagihan
-                </th>
-                <th className={ui.thCenter} style={{ width: 130 }}>
-                  Status
-                </th>
-                <th className={ui.thCenter} style={{ width: 100 }}>
-                  Aksi
-                </th>
+                <th className={`${ui.thCenter} w-[150px]`}>Nomor Invoice</th>
+                <th className={`${ui.thCenter} w-[200px]`}>Nama Klien</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Tanggal Pembuatan</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Jatuh Tempo</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Total Tagihan</th>
+                <th className={`${ui.thCenter} w-[130px]`}>Status</th>
+                <th className={`${ui.thCenter} w-[100px]`}>Aksi</th>
               </tr>
             </thead>
             <tbody>
