@@ -1,8 +1,8 @@
-import { PASSWORD_RULES } from "./password"
+import { PASSWORD_RULES, PASSWORD_TOO_LONG_MESSAGE, passwordTooLong } from "./password"
 
-interface PasswordChecklistProps {
+type PasswordChecklistProps = {
   value: string
-  /** When true, render the checklist regardless of length. Default: only when value.length > 0. */
+  // Show even when empty.
   alwaysShow?: boolean
 }
 
@@ -62,6 +62,11 @@ export default function PasswordChecklist({ value, alwaysShow = false }: Passwor
           )
         })}
       </ul>
+      {passwordTooLong(value) && (
+        <p role="alert" className="mt-1.5 text-[12px] font-medium text-[#DC2626]">
+          {PASSWORD_TOO_LONG_MESSAGE}
+        </p>
+      )}
     </div>
   )
 }

@@ -7,9 +7,8 @@ import { ApiError } from "@/lib/api-client"
 import { ui } from "@/lib/ui"
 import type { Role, UserRow } from "@/types/api"
 
-interface UserDetailProps {
+type UserDetailProps = {
   user: UserRow
-  isLoading?: boolean
   onBack: () => void
 }
 

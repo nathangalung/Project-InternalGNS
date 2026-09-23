@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
+import LoadingState from "@/components/shared/LoadingState"
+import NotFoundState from "@/components/shared/NotFoundState"
 import { useUser } from "@/features/users/hooks"
 import UserDetail from "@/features/users/UserDetail"
-import { routeFallbackCls } from "./-fallback"
 
 export const Route = createFileRoute("/_authed/users/$id/")({
   component: UserDetailRoute,
@@ -14,14 +15,16 @@ function UserDetailRoute() {
   const { data, isLoading } = useUser(numericId)
 
   if (!data) {
+    if (isLoading) return <LoadingState label="Memuat data pengguna…" />
     return (
-      <div className={routeFallbackCls}>
-        {isLoading ? "Memuat data pengguna…" : "Pengguna tidak ditemukan."}
-      </div>
+      <NotFoundState
+        title="Pengguna tidak ditemukan"
+        size="page"
+        backTo={{ to: "/users", label: "Kembali ke Daftar Pengguna" }}
+      />
     )
   }
 
-  return (
-    <UserDetail user={data} isLoading={isLoading} onBack={() => void navigate({ to: "/users" })} />
-  )
+  // Keyed so another user remounts fresh.
+  return <UserDetail key={data.id} user={data} onBack={() => void navigate({ to: "/users" })} />
 }
