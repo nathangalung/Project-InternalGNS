@@ -48,25 +48,25 @@ func TestPurchaseOrder_SnapshotsLineIdentity(t *testing.T) {
 		name     string
 		offered  func(t *testing.T, tx pgx.Tx) *int64
 		wantName func(t *testing.T, tx pgx.Tx, id *int64) string
-		wantCode *string
+		wantCode func(t *testing.T, tx pgx.Tx, id *int64) *string
 	}{
 		{
 			name:     "offered item with code",
 			offered:  func(*testing.T, pgx.Tx) *int64 { id := seedItemID; return &id },
 			wantName: catalogName,
-			wantCode: strPtr("613802"),
+			wantCode: catalogCode,
 		},
 		{
 			name:     "offered item without code",
 			offered:  insertUncodedItem,
 			wantName: catalogName,
-			wantCode: nil,
+			wantCode: func(*testing.T, pgx.Tx, *int64) *string { return nil },
 		},
 		{
 			name:     "unmatched request",
 			offered:  func(*testing.T, pgx.Tx) *int64 { return nil },
 			wantName: func(*testing.T, pgx.Tx, *int64) string { return "tolong carikan punching tool" },
-			wantCode: strPtr("999999"),
+			wantCode: func(*testing.T, pgx.Tx, *int64) *string { return strPtr("999999") },
 		},
 	}
 	for _, tc := range cases {
@@ -79,7 +79,7 @@ func TestPurchaseOrder_SnapshotsLineIdentity(t *testing.T) {
 			require.NoError(t, err)
 			require.NotEmpty(t, items)
 			assert.Equal(t, tc.wantName(t, tx, offered), items[0].ItemName)
-			assert.Equal(t, tc.wantCode, items[0].ItemCode)
+			assert.Equal(t, tc.wantCode(t, tx, offered), items[0].ItemCode)
 		})
 	}
 }
@@ -90,6 +90,16 @@ func catalogName(t *testing.T, tx pgx.Tx, id *int64) string {
 	require.NoError(t, tx.QueryRow(context.Background(),
 		`SELECT name FROM items WHERE id = $1`, *id).Scan(&name))
 	return name
+}
+
+// Code of a catalog item that has one.
+func catalogCode(t *testing.T, tx pgx.Tx, id *int64) *string {
+	t.Helper()
+	var code *string
+	require.NoError(t, tx.QueryRow(context.Background(),
+		`SELECT NULLIF(impa_code, '') FROM items WHERE id = $1`, *id).Scan(&code))
+	require.NotNil(t, code, "fixture item %d has no IMPA code", *id)
+	return code
 }
 
 // Catalog item with no IMPA code.
