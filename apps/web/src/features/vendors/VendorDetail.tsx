@@ -1,5 +1,8 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
+import EntityLink from "@/components/shared/EntityLink"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
+import { useMe } from "@/features/auth/hooks"
+import { VENDOR_ITEMS_LIMIT } from "@/features/vendors/api"
 import {
   useUpdateVendor,
   useUploadVendorLogo,
@@ -8,12 +11,16 @@ import {
 } from "@/features/vendors/hooks"
 import { ApiError, fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
+import { errorMessage } from "@/lib/errors"
 import { formatRupiah } from "@/lib/format"
+import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
+import { validateAsset } from "@/lib/upload-validation"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
 import { buildContactInfo } from "./contact-info"
+import { canWriteVendors, vendorItemsSummary } from "./helpers"
 
-interface VendorDetailProps {
+type VendorDetailProps = {
   vendor: VendorRow
   onBack: () => void
 }
@@ -40,10 +47,12 @@ const labelCls =
   "mb-2 block text-[10px] font-bold uppercase leading-[15px] tracking-[1px] text-[#4A4455]"
 
 // Shared field shell; height and radius vary per use, so they stay out of here.
-const inputBase =
-  "w-full border-[1.5px] bg-[#F2F4F6] px-4 py-3 text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150"
+const inputBase = `w-full border-[1.5px] bg-[#F2F4F6] px-4 py-3 text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150 ${ui.fieldFocus}`
 
 const inputCls = `${inputBase} h-11 rounded-md border-transparent`
+
+const logoBoxCls =
+  "flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg p-0 text-[20px] font-extrabold tracking-[0.5px] text-white"
 
 export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   const initialEmail = getContactField(vendor.contactInfo, "email")
@@ -59,10 +68,27 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const nameId = useId()
+  const nameErrorId = useId()
+  const phoneId = useId()
+  const emailId = useId()
+  const addressId = useId()
+  const statusLabelId = useId()
+  const statusHintId = useId()
+
+  const { data: me } = useMe()
+  const canWrite = canWriteVendors(me?.role)
+
   const updateVendor = useUpdateVendor()
   const uploadLogo = useUploadVendorLogo()
   const { data: logoDownload } = useVendorLogoDownloadUrl(vendor.id, vendor.logoObjectKey)
-  const { data: vendorItems, isLoading: itemsLoading } = useVendorItems(vendor.id)
+  const {
+    data: vendorItems,
+    isLoading: itemsLoading,
+    isError: itemsError,
+  } = useVendorItems(vendor.id)
+  const items = vendorItems ?? []
+  const itemsSummary = vendorItemsSummary(items.length, VENDOR_ITEMS_LIMIT)
 
   useEffect(() => {
     const path = logoDownload?.downloadUrl
@@ -101,15 +127,31 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
 
   const logoBg = logoBackground(vendor.name)
 
+  // Validate first, revert on failure.
   function handleLogoSelect(file: File | undefined) {
     if (!file) return
-    if (!file.type.startsWith("image/")) return
+    try {
+      validateAsset("vendorLogo", file)
+    } catch (err) {
+      toast.error(errorMessage(err, "Berkas logo vendor tidak valid."))
+      return
+    }
+    const previous = logoDataUrl
+    let failed = false
     const reader = new FileReader()
     reader.onload = () => {
-      if (typeof reader.result === "string") setLogoDataUrl(reader.result)
+      if (!failed && typeof reader.result === "string") setLogoDataUrl(reader.result)
     }
     reader.readAsDataURL(file)
-    uploadLogo.mutate({ id: vendor.id, file })
+    uploadLogo.mutate(
+      { id: vendor.id, file },
+      {
+        onError: () => {
+          failed = true
+          setLogoDataUrl(previous)
+        },
+      },
+    )
   }
 
   const handleCancel = () => {
@@ -150,22 +192,33 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
     }
   }
 
+  const logoContent = logoDataUrl ? (
+    <img src={logoDataUrl} alt="Logo vendor" className="h-full w-full object-cover" />
+  ) : (
+    vendorInitials(vendor.name)
+  )
+
   return (
-    <div className={ui.pageContentLoose}>
+    <div className={ui.pageContent}>
       <div className="flex flex-col gap-3">
-        <nav className={ui.breadcrumb}>
+        <nav aria-label="Breadcrumb" className={ui.breadcrumb}>
           <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
             Daftar Vendor
           </button>
-          <span className={ui.breadcrumbSep}>&rsaquo;</span>
-          <span className={ui.breadcrumbCurrent}>Detail Vendor</span>
+          <span className={ui.breadcrumbSep} aria-hidden="true">
+            &rsaquo;
+          </span>
+          <span className={ui.breadcrumbCurrent} aria-current="page">
+            Detail Vendor
+          </span>
         </nav>
 
         <div className="flex items-center gap-5">
           <button
             type="button"
             onClick={onBack}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.05)]"
+            aria-label="Kembali ke Daftar Vendor"
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.05)] ${ui.focusRing}`}
           >
             <svg
               width="16"
@@ -176,6 +229,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
               strokeWidth="2.2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
@@ -187,54 +241,67 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
 
       <div className="flex flex-col gap-5">
         <div className="flex items-center gap-5 rounded-lg bg-white px-6 py-5">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              handleLogoSelect(e.target.files?.[0])
-              e.target.value = ""
-            }}
-          />
-          <div className="relative shrink-0">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              title="Klik untuk ganti logo"
-              className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg p-0 text-[20px] font-extrabold tracking-[0.5px] text-white"
+          {canWrite ? (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                tabIndex={-1}
+                aria-hidden="true"
+                onChange={(e) => {
+                  handleLogoSelect(e.target.files?.[0])
+                  e.target.value = ""
+                }}
+              />
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Klik untuk ganti logo"
+                  aria-label="Ganti logo vendor"
+                  className={`${logoBoxCls} ${ui.focusRing}`}
+                  // Runtime colour, hashed per name
+                  style={{ background: logoDataUrl ? "#FFFFFF" : logoBg }}
+                >
+                  {logoContent}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Ganti logo"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  className="absolute -bottom-1 -right-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 border-white bg-white p-0 shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
+                >
+                  <span className="flex h-full w-full items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)]">
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#FFFFFF"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                      <circle cx="12" cy="13" r="3.5" />
+                    </svg>
+                  </span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <div
+              className={`${logoBoxCls} shrink-0`}
+              // Runtime colour, hashed per name
               style={{ background: logoDataUrl ? "#FFFFFF" : logoBg }}
             >
-              {logoDataUrl ? (
-                <img src={logoDataUrl} alt="Logo vendor" className="h-full w-full object-cover" />
-              ) : (
-                vendorInitials(vendor.name)
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              title="Ganti logo"
-              aria-label="Ganti logo"
-              className="absolute -bottom-1 -right-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 border-white bg-white p-0 shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
-            >
-              <span className="flex h-full w-full items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)]">
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#FFFFFF"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                  <circle cx="12" cy="13" r="3.5" />
-                </svg>
-              </span>
-            </button>
-          </div>
+              {logoContent}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <h2 className="m-0 break-words text-[18px] font-bold leading-6 tracking-[-0.4px] text-[#191C1E]">
               {vendor.name}
@@ -265,18 +332,28 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
               Informasi Utama Vendor
             </h3>
             <p className="m-0 mt-1 text-sm font-normal leading-5 text-[#4A4455]">
-              Kelola informasi vendor.
+              {canWrite ? "Kelola informasi vendor." : "Informasi vendor, hanya dapat dilihat."}
             </p>
           </div>
 
           <div className="flex flex-col gap-6">
             <div>
-              <label className={labelCls}>
-                Nama Vendor <span className="text-[#DC2626]">*</span>
+              <label htmlFor={nameId} className={labelCls}>
+                Nama Vendor{" "}
+                {canWrite && (
+                  <span className="text-[#DC2626]" aria-hidden="true">
+                    *
+                  </span>
+                )}
               </label>
               <input
+                id={nameId}
                 type="text"
                 value={name}
+                required
+                readOnly={!canWrite}
+                aria-invalid={fieldErrors.name ? true : undefined}
+                aria-describedby={fieldErrors.name ? nameErrorId : undefined}
                 onChange={(e) => {
                   setName(e.target.value)
                   setFieldErrors((p) => ({ ...p, name: "" }))
@@ -286,33 +363,43 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                 }`}
               />
               {fieldErrors.name && (
-                <div className="mt-1.5 text-xs text-[#DC2626]">{fieldErrors.name}</div>
+                <div id={nameErrorId} className="mt-1.5 text-xs text-[#DC2626]">
+                  {fieldErrors.name}
+                </div>
               )}
             </div>
 
             <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-6">
               <div>
-                <label className={labelCls}>No HP</label>
+                <label htmlFor={phoneId} className={labelCls}>
+                  No HP
+                </label>
                 <div className="flex h-11 overflow-hidden rounded-md">
                   <span className="flex shrink-0 items-center whitespace-nowrap bg-[#E6E8EA] px-3 text-sm font-medium text-[#4A4455]">
                     +62
                   </span>
                   <input
+                    id={phoneId}
                     type="text"
                     inputMode="numeric"
                     value={phone}
                     placeholder="81234567890"
+                    readOnly={!canWrite}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
                     className={`${inputBase} h-full min-w-0 flex-1 rounded-none border-transparent`}
                   />
                 </div>
               </div>
               <div>
-                <label className={labelCls}>Email</label>
+                <label htmlFor={emailId} className={labelCls}>
+                  Email
+                </label>
                 <input
+                  id={emailId}
                   type="email"
                   value={email}
                   placeholder="contact@vendor.com"
+                  readOnly={!canWrite}
                   onChange={(e) => setEmail(e.target.value)}
                   className={inputCls}
                 />
@@ -320,11 +407,15 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
             </div>
 
             <div>
-              <label className={labelCls}>Alamat Rinci</label>
+              <label htmlFor={addressId} className={labelCls}>
+                Alamat Rinci
+              </label>
               <textarea
+                id={addressId}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 rows={3}
+                readOnly={!canWrite}
                 placeholder="Alamat lengkap kantor pusat atau operasional"
                 className={`${inputBase} h-auto min-h-24 resize-y rounded-md border-transparent`}
               />
@@ -334,8 +425,13 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
           <div className="border-t border-[#ECEEF0] pt-6">
             <div className="flex items-center justify-between gap-6 rounded-md bg-[#F2F4F6] px-6 py-5">
               <div className="flex-1">
-                <div className="text-sm font-bold leading-5 text-[#191C1E]">Status Akun</div>
-                <div className="mt-1 text-xs font-normal leading-4 text-[#4A4455]">
+                <div id={statusLabelId} className="text-sm font-bold leading-5 text-[#191C1E]">
+                  Status Akun
+                </div>
+                <div
+                  id={statusHintId}
+                  className="mt-1 text-xs font-normal leading-4 text-[#4A4455]"
+                >
                   Menonaktifkan vendor mencegah penggunaan dalam transaksi procurement berikutnya.
                 </div>
               </div>
@@ -344,7 +440,10 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                 onClick={() => setIsActive((a) => !a)}
                 role="switch"
                 aria-checked={isActive}
-                className={`relative h-8 w-14 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] ${
+                aria-labelledby={statusLabelId}
+                aria-describedby={statusHintId}
+                disabled={!canWrite}
+                className={`relative h-8 w-14 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] disabled:cursor-not-allowed disabled:opacity-60 ${ui.focusRing} ${
                   isActive ? "bg-primary-700" : "bg-dark-300"
                 }`}
               >
@@ -358,45 +457,55 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
           </div>
 
           {submitError && (
-            <div className="rounded-md border-l-4 border-[#DC2626] bg-[#FEF2F2] px-4 py-3 text-[13px] text-[#7F1D1D]">
+            <div
+              role="alert"
+              className="rounded-md border-l-4 border-[#DC2626] bg-[#FEF2F2] px-4 py-3 text-[13px] text-[#7F1D1D]"
+            >
               {submitError}
             </div>
           )}
         </div>
       </div>
 
-      <div className="mt-2 flex justify-end gap-4">
-        <button
-          type="button"
-          onClick={handleCancel}
-          disabled={!dirty || updateVendor.isPending}
-          className={`rounded-lg bg-transparent px-7 py-3 text-sm font-bold ${
-            dirty && !updateVendor.isPending
-              ? "cursor-pointer text-primary-700"
-              : "cursor-default text-dark-300"
-          }`}
-        >
-          Batal
-        </button>
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={!dirty || updateVendor.isPending}
-          className={`rounded-lg px-8 py-3 text-sm font-bold text-white ${
-            dirty
-              ? "bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)] shadow-[0px_10px_15px_-3px_rgba(99,14,212,0.2),0px_4px_6px_-4px_rgba(99,14,212,0.2)]"
-              : "bg-dark-300 shadow-none"
-          } ${
-            dirty && !updateVendor.isPending ? "cursor-pointer" : "cursor-default"
-          } ${updateVendor.isPending ? "opacity-70" : "opacity-100"}`}
-        >
-          {updateVendor.isPending ? "Menyimpan…" : "Simpan Perubahan"}
-        </button>
-      </div>
+      {canWrite && (
+        <div className="flex justify-end gap-4">
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={!dirty || updateVendor.isPending}
+            className={`rounded-lg bg-transparent px-7 py-3 text-sm font-bold ${ui.focusRing} ${
+              dirty && !updateVendor.isPending
+                ? "cursor-pointer text-primary-700"
+                : "cursor-default text-dark-300"
+            }`}
+          >
+            Batal
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!dirty || updateVendor.isPending}
+            className={`rounded-lg px-8 py-3 text-sm font-bold text-white ${ui.focusRing} ${
+              dirty
+                ? "bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)] shadow-[0px_10px_15px_-3px_rgba(99,14,212,0.2),0px_4px_6px_-4px_rgba(99,14,212,0.2)]"
+                : "bg-dark-300 shadow-none"
+            } ${
+              dirty && !updateVendor.isPending ? "cursor-pointer" : "cursor-default"
+            } ${updateVendor.isPending ? "opacity-70" : "opacity-100"}`}
+          >
+            {updateVendor.isPending ? "Menyimpan…" : "Simpan Perubahan"}
+          </button>
+        </div>
+      )}
 
-      <div className="mt-2 flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <h3 className="m-0 text-[20px] font-extrabold leading-7 tracking-[-0.5px] text-[#191C1E]">
           Daftar Produk Vendor
+          {!itemsLoading && !itemsError && (
+            <span className="ml-2 text-base font-semibold text-dark-500">
+              ({itemsSummary.count})
+            </span>
+          )}
         </h3>
 
         <div className={ui.tableWrap}>
@@ -411,13 +520,20 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
             </thead>
             <tbody>
               {itemsLoading && <TableLoadingRow colSpan={4} />}
-              {!itemsLoading && (vendorItems ?? []).length === 0 && (
+              {!itemsLoading && itemsError && (
+                <TableEmptyRow colSpan={4}>Gagal memuat produk vendor.</TableEmptyRow>
+              )}
+              {!itemsLoading && !itemsError && items.length === 0 && (
                 <TableEmptyRow colSpan={4}>Belum ada produk vendor.</TableEmptyRow>
               )}
               {!itemsLoading &&
-                (vendorItems ?? []).map((item) => (
+                items.map((item) => (
                   <tr key={item.itemId} className={ui.tr}>
-                    <td className={`${ui.tdCenter} font-medium text-dark-900`}>{item.itemName}</td>
+                    <td className={`${ui.tdCenter} font-medium text-dark-900`}>
+                      <EntityLink kind="product" id={item.itemId} tone="name">
+                        {item.itemName}
+                      </EntityLink>
+                    </td>
                     <td className={ui.tdCenter}>{item.impaCode ?? "-"}</td>
                     <td className={ui.tdCenter}>{item.vendorSku ?? "-"}</td>
                     <td className={`${ui.tdCenter} font-extrabold text-primary-700`}>
@@ -428,6 +544,9 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
             </tbody>
           </table>
         </div>
+        {!itemsLoading && itemsSummary.notice && (
+          <p className="m-0 text-xs text-dark-500">{itemsSummary.notice}</p>
+        )}
       </div>
     </div>
   )
