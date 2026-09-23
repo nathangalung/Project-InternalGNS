@@ -3,6 +3,7 @@ package invoices
 import (
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -115,6 +116,11 @@ func (h *CoretaxHandler) Export(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if verr := validateBuyerIdentity(client); verr != nil {
+		httperr.Render(w, httperr.UnprocessableDetail(buyerIdentityMessage([]string{client.Name}), nil))
+		return
+	}
+
 	bulk := h.buildBulk(inv, items, client)
 
 	body, err := xml.MarshalIndent(bulk, "", "  ")
@@ -153,7 +159,7 @@ func coretaxInvoiceFor(settings deps.CoretaxSettings, inv Invoice, items []Invoi
 	if client.CountryCode != "" {
 		buyerCountry = client.CountryCode
 	}
-	buyerTIN := strDeref(client.NPWP)
+	buyerTIN := buyerTin(client)
 	buyerIDTKU := strDeref(client.TkuID)
 	if buyerIDTKU == "" && buyerTIN != "" {
 		// DJP convention: headquarters branch suffix when no TKU recorded.
@@ -161,7 +167,9 @@ func coretaxInvoiceFor(settings deps.CoretaxSettings, inv Invoice, items []Invoi
 	}
 	buyerDoc := "TIN"
 	if buyerTIN == "" {
-		// DJP requires an alt-document identifier when buyer has no NPWP.
+		// A foreign buyer with no TIN is filed on an alt document. An
+		// Indonesian one never reaches here: validateBuyerIdentity refuses
+		// the export first.
 		buyerDoc = "Passport"
 	}
 
@@ -217,6 +225,63 @@ func buildGoodService(it InvoiceItem) coretaxGoodService {
 		STLGRate:      "0",
 		STLG:          "0",
 	}
+}
+
+// npwpDigits is the NPWP length Coretax accepts for an Indonesian buyer.
+const npwpDigits = 16
+
+// ErrBuyerIdentity marks a buyer Coretax would reject.
+var ErrBuyerIdentity = errors.New("coretax buyer identity invalid")
+
+// normalizeNPWP drops the separators DJP prints and reports whether what is
+// left is a full-length NPWP.
+func normalizeNPWP(raw string) (string, bool) {
+	var b strings.Builder
+	for _, r := range raw {
+		switch {
+		case r >= '0' && r <= '9':
+			b.WriteRune(r)
+		case r == '.' || r == '-' || r == ' ':
+		default:
+			return "", false
+		}
+	}
+	out := b.String()
+	return out, len(out) == npwpDigits
+}
+
+// isIndonesianBuyer treats a blank country as IDN, as the XML default does.
+func isIndonesianBuyer(c clients.Client) bool {
+	return c.CountryCode == "" || strings.EqualFold(c.CountryCode, "IDN")
+}
+
+// buyerTin emits an Indonesian NPWP as the digits Coretax validates and
+// leaves a foreign buyer's own tax id untouched.
+func buyerTin(c clients.Client) string {
+	raw := strings.TrimSpace(strDeref(c.NPWP))
+	if digits, ok := normalizeNPWP(raw); ok {
+		return digits
+	}
+	return raw
+}
+
+// validateBuyerIdentity refuses an Indonesian buyer without a valid NPWP.
+// Filing them as a passport holder with no document number produces a tax
+// invoice DJP cannot match to the buyer.
+func validateBuyerIdentity(c clients.Client) error {
+	if _, ok := normalizeNPWP(strings.TrimSpace(strDeref(c.NPWP))); ok {
+		return nil
+	}
+	if isIndonesianBuyer(c) {
+		return fmt.Errorf("client %d: %w", c.ID, ErrBuyerIdentity)
+	}
+	return nil
+}
+
+// buyerIdentityMessage is the toast shown when an export is refused.
+func buyerIdentityMessage(names []string) string {
+	return "Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia. " +
+		"Lengkapi NPWP klien: " + strings.Join(names, ", ") + "."
 }
 
 func strDeref(p *string) string {
