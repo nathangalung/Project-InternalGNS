@@ -50,13 +50,17 @@ export const BADGE_NONAKTIF = { label: "NONAKTIF", bg: "#FEE2E2", color: "#B91C1
 export type DisplayStatus = StatusLabel
 
 // Visual tokens per quotation status.
+//
+// Badge text is 11px bold, so every text colour clears 4.5:1 on its fill.
+// Draf, Revisi and Kadaluarsa were darkened from #DA6900 (2.71), #9333EA (3.28)
+// and #64748B (4.34) to 5.48, 5.31 and 6.92.
 export const quotationStatusConfig: Record<DisplayStatus, { bg: string; color: string }> = {
   Disetujui: { bg: "var(--status-disetujui-bg)", color: "var(--status-disetujui-color)" },
   Dikirim: { bg: "var(--status-dikirim-bg)", color: "var(--status-dikirim-color)" },
-  Draf: { bg: "var(--status-draf-bg)", color: "var(--status-draf-color)" },
-  Revisi: { bg: "var(--status-revisi-bg)", color: "var(--status-revisi-color)" },
+  Draf: { bg: "var(--status-draf-bg)", color: "#92400E" },
+  Revisi: { bg: "var(--status-revisi-bg)", color: "#6B21A8" },
   Ditolak: { bg: "var(--status-ditolak-bg)", color: "var(--status-ditolak-color)" },
-  Kadaluarsa: { bg: "#F1F5F9", color: "#64748B" },
+  Kadaluarsa: { bg: "#F1F5F9", color: "#475569" },
 }
 
 // Displayed invoice statuses.
