@@ -97,9 +97,18 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
 	}
+	number, ok := normalizeNumber(req.Number)
+	if !ok {
+		numberProblem(w, ErrNumberInvalid)
+		return
+	}
+	req.Number = number
 
 	userID := deps.CurrentUserID(r.Context())
 	c, err := h.repo.Create(r.Context(), req, userID)
+	if numberProblem(w, err) {
+		return
+	}
 	if err != nil {
 		httperr.RenderDBErr(w, err)
 		return
@@ -126,10 +135,20 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	number, ok := normalizeNumber(req.Number)
+	if !ok {
+		numberProblem(w, ErrNumberInvalid)
+		return
+	}
+	req.Number = number
+
 	userID := deps.CurrentUserID(r.Context())
 	c, err := h.repo.Update(r.Context(), id, req, userID)
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("client not found"))
+		return
+	}
+	if numberProblem(w, err) {
 		return
 	}
 	if err != nil {

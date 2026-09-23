@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strconv"
 	"testing"
 	"time"
@@ -30,6 +31,7 @@ type scenarioState struct {
 	clientID int64
 	name     string
 	contact  clients.Contact
+	number   string
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
@@ -77,6 +79,7 @@ func (s *scenarioState) createClient() error {
 	if err != nil {
 		return err
 	}
+	s.number = number
 	body := clients.CreateClientRequest{Name: s.name, Number: &number, CountryCode: "IDN"}
 	if err := s.sendRequest(http.MethodPost, "/clients/", body); err != nil {
 		return err
@@ -278,6 +281,83 @@ func (s *scenarioState) attachForeignLogo() error {
 		clients.UpdateLogoRequest{ObjectKey: key})
 }
 
+// Client number steps.
+func (s *scenarioState) createClientNumbered(number *string) error {
+	s.name = s.uniqueName("ATDD CLIENT NUMBER")
+	body := map[string]any{"name": s.name, "countryCode": "IDN"}
+	if number != nil {
+		body["number"] = *number
+	}
+	if err := s.sendRequest(http.MethodPost, "/clients/", body); err != nil {
+		return err
+	}
+	if s.last.StatusCode == http.StatusCreated {
+		return s.captureID()
+	}
+	return nil
+}
+
+func (s *scenarioState) createClientDuplicateNumber() error {
+	return s.createClientNumbered(&s.number)
+}
+
+func (s *scenarioState) assignedNumber() error {
+	var c clients.Client
+	if err := json.Unmarshal(s.body, &c); err != nil {
+		return err
+	}
+	if c.Number == nil || !fourDigits.MatchString(*c.Number) {
+		return fmt.Errorf("want a four digit number body=%s", s.body)
+	}
+	return nil
+}
+
+func (s *scenarioState) numberErrorReads(want string) error {
+	var problem struct {
+		Fields map[string]string `json:"fields"`
+	}
+	if err := json.Unmarshal(s.body, &problem); err != nil {
+		return err
+	}
+	if got := problem.Fields["number"]; got != want {
+		return fmt.Errorf("want fields.number %q got %q body=%s", want, got, s.body)
+	}
+	return nil
+}
+
+// quoteClient commits a quotation for the client.
+func (s *scenarioState) quoteClient() error {
+	pool := testutil.Pool(s.t)
+	ctx := context.Background()
+	var id int64
+	err := pool.QueryRow(ctx, `
+		INSERT INTO quotations (quotation_no, company_client_id, company_client_name,
+		                        discount_pct, total_produk, total, total_discount,
+		                        created_by, updated_by)
+		VALUES ($1, $2, $3, 0, 0, 0, 0, 1, 1) RETURNING id`,
+		s.uniqueName("Q-ATDD-NUM"), s.clientID, s.name).Scan(&id)
+	if err != nil {
+		return fmt.Errorf("insert quotation: %w", err)
+	}
+	// Runs before the Cleaner drops the client.
+	s.t.Cleanup(func() {
+		_, _ = pool.Exec(ctx, `DELETE FROM quotation_status_history WHERE quotation_id = $1`, id)
+		_, _ = pool.Exec(ctx, `DELETE FROM quotations WHERE id = $1`, id)
+	})
+	return nil
+}
+
+func (s *scenarioState) changeNumber() error {
+	number, err := s.freeNumber()
+	if err != nil {
+		return err
+	}
+	body := map[string]any{"name": s.name, "countryCode": "IDN", "isActive": true, "number": number}
+	return s.sendRequest(http.MethodPut, "/clients/"+strconv.FormatInt(s.clientID, 10), body)
+}
+
+var fourDigits = regexp.MustCompile(`^[0-9]{4}$`)
+
 func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
 		state := &scenarioState{t: t, cleaner: cleaner}
@@ -287,6 +367,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 			state.clientID = 0
 			state.name = ""
 			state.contact = clients.Contact{}
+			state.number = ""
 			return ctx, nil
 		})
 
@@ -315,6 +396,13 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the user renames the contact$`, state.renameContact)
 		sc.Step(`^another client adds a contact with the same email$`, state.otherClientReusesEmail)
 		sc.Step(`^the user attaches a logo stored under another client$`, state.attachForeignLogo)
+		sc.Step(`^the user creates a client without a number$`, func() error { return state.createClientNumbered(nil) })
+		sc.Step(`^the user creates a client with number "([^"]*)"$`, func(n string) error { return state.createClientNumbered(&n) })
+		sc.Step(`^the user creates a client with the existing client's number$`, state.createClientDuplicateNumber)
+		sc.Step(`^the response assigns a four digit client number$`, state.assignedNumber)
+		sc.Step(`^the client number error reads "([^"]+)"$`, state.numberErrorReads)
+		sc.Step(`^a quotation references the client$`, state.quoteClient)
+		sc.Step(`^the user changes the client number$`, state.changeNumber)
 	}
 }
 

@@ -79,3 +79,31 @@ Feature: Client lifecycle
     Given an existing client
     When the user attaches a logo stored under another client
     Then the response status is 422
+
+  Scenario: A client created without a number gets one assigned
+    When the user creates a client without a number
+    Then the response status is 201
+    And the response assigns a four digit client number
+
+  Scenario: A blank client number is assigned by the server
+    When the user creates a client with number ""
+    Then the response status is 201
+    And the response assigns a four digit client number
+
+  Scenario: A free text client number is rejected
+    When the user creates a client with number "REF-ABC"
+    Then the response status is 422
+    And the client number error reads "Nomor klien harus 4 digit dan belum dipakai."
+
+  Scenario: A client number already in use is rejected
+    Given an existing client
+    When the user creates a client with the existing client's number
+    Then the response status is 422
+    And the client number error reads "Nomor klien harus 4 digit dan belum dipakai."
+
+  Scenario: The client number is fixed once a quotation uses it
+    Given an existing client
+    And a quotation references the client
+    When the user changes the client number
+    Then the response status is 422
+    And the client number error reads "Nomor klien tidak dapat diubah karena sudah dipakai pada penawaran."

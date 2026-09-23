@@ -3,8 +3,10 @@ package clients
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
@@ -22,6 +24,12 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 
 // Missing client or contact.
 var ErrNotFound = errors.New("not found")
+
+// Number malformed or already taken.
+var ErrNumberInvalid = errors.New("client number invalid or taken")
+
+// Number fixed by a quotation.
+var ErrNumberLocked = errors.New("client number used by a quotation")
 
 // totalPurchaseExpr is the accepted-quotation sum per client.
 const totalPurchaseExpr = "COALESCE((SELECT SUM(q.grand_total) FROM quotations q" +
@@ -125,31 +133,49 @@ func (r *Repo) GetByIDs(ctx context.Context, ids []int64) (map[int64]Client, err
 }
 
 // Create inserts a new client.
+// A nil or blank number is assigned by the database.
 func (r *Repo) Create(ctx context.Context, req CreateClientRequest, userID int64) (Client, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("clients.create"),
 		req.Number, req.Name, req.NPWP, req.Address, req.Email,
 		req.CountryCode, req.TkuID, userID,
 	)
 	if err != nil {
-		return Client{}, err
+		return Client{}, numberErr(err)
 	}
-	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Client])
+	c, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Client])
+	return c, numberErr(err)
 }
 
 // Update edits a client row.
+// No row back means missing, or a number change on a quoted client.
 func (r *Repo) Update(ctx context.Context, id int64, req UpdateClientRequest, userID int64) (Client, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("clients.update"),
 		id, req.Name, req.NPWP, req.Address, req.Email,
-		req.CountryCode, req.TkuID, req.IsActive, userID,
+		req.CountryCode, req.TkuID, req.IsActive, userID, req.Number,
 	)
 	if err != nil {
-		return Client{}, err
+		return Client{}, numberErr(err)
 	}
 	c, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Client])
 	if errors.Is(err, pgx.ErrNoRows) {
-		return Client{}, ErrNotFound
+		if _, err := r.GetByID(ctx, id); err != nil {
+			return Client{}, fmt.Errorf("recheck client %d: %w", id, err)
+		}
+		return Client{}, ErrNumberLocked
 	}
-	return c, err
+	return c, numberErr(err)
+}
+
+// numberErr maps number constraint violations.
+func numberErr(err error) error {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		switch pgErr.ConstraintName {
+		case "uq_company_client_number", "company_client_number_format_check":
+			return fmt.Errorf("%w: %s", ErrNumberInvalid, pgErr.ConstraintName)
+		}
+	}
+	return err
 }
 
 // UpdateLogo writes the MinIO object key. Empty string is allowed and stored

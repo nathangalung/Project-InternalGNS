@@ -96,6 +96,7 @@ type CreateClientRequest struct {
 
 // Update client body.
 type UpdateClientRequest struct {
+	Number      *string `json:"number"` // omitted or blank keeps it
 	Name        string  `json:"name"`
 	NPWP        *string `json:"npwp"`
 	Address     *string `json:"address"`
