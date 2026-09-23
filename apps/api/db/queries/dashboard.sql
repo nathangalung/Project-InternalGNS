@@ -1,6 +1,8 @@
 -- name: dashboard.summary
+-- Revenue is the DPP base, never the PPN-inclusive total: PPN is collected
+-- for the state, so booking it as income would inflate revenue and profit.
 WITH paid_inv AS (
-  SELECT COALESCE(SUM(total), 0)        AS revenue,
+  SELECT COALESCE(SUM(dpp), 0)          AS revenue,
          COALESCE(SUM(ppn_amount), 0)   AS ppn,
          COUNT(*)                       AS paid_count
     FROM invoices
@@ -74,8 +76,9 @@ SELECT to_char(date_trunc($3::text, invoice_date), CASE $3::text WHEN 'day' THEN
  ORDER BY 1;
 
 -- name: dashboard.ts_revenue
+-- DPP base, matching dashboard.summary: PPN is not revenue.
 SELECT to_char(date_trunc($3::text, invoice_date), CASE $3::text WHEN 'day' THEN 'YYYY-MM-DD' ELSE 'YYYY-MM' END) AS month,
-       COALESCE(SUM(total), 0)::text                          AS value
+       COALESCE(SUM(dpp), 0)::text                            AS value
   FROM invoices
  WHERE status = 'paid'
    AND invoice_date >= $1::date AND invoice_date < $2::date
@@ -114,7 +117,7 @@ first_paid AS (
 ),
 rev AS (
   SELECT to_char(date_trunc($3::text, invoice_date), CASE $3::text WHEN 'day' THEN 'YYYY-MM-DD' ELSE 'YYYY-MM' END) AS month,
-         SUM(total)                                            AS revenue
+         SUM(dpp)                                              AS revenue
     FROM invoices
    WHERE status = 'paid'
      AND invoice_date >= $1::date AND invoice_date < $2::date
