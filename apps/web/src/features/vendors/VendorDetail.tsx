@@ -383,7 +383,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                     type="text"
                     inputMode="numeric"
                     value={phone}
-                    placeholder="81234567890"
+                    placeholder={canWrite ? "81234567890" : "-"}
                     readOnly={!canWrite}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
                     className={`${inputBase} h-full min-w-0 flex-1 rounded-none border-transparent`}
@@ -398,7 +398,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                   id={emailId}
                   type="email"
                   value={email}
-                  placeholder="contact@vendor.com"
+                  placeholder={canWrite ? "contact@vendor.com" : "-"}
                   readOnly={!canWrite}
                   onChange={(e) => setEmail(e.target.value)}
                   className={inputCls}
@@ -416,7 +416,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                 onChange={(e) => setAddress(e.target.value)}
                 rows={3}
                 readOnly={!canWrite}
-                placeholder="Alamat lengkap kantor pusat atau operasional"
+                placeholder={canWrite ? "Alamat lengkap kantor pusat atau operasional" : "-"}
                 className={`${inputBase} h-auto min-h-24 resize-y rounded-md border-transparent`}
               />
             </div>
