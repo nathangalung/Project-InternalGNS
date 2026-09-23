@@ -3,6 +3,7 @@ package dashboard
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -32,14 +33,49 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 	return &Repo{db: exec, store: store}
 }
 
-// Summary returns aggregate totals.
+// Summary returns totals and tiles.
 func (r *Repo) Summary(ctx context.Context) (Summary, error) {
-	var s Summary
 	rows, err := r.db.Query(ctx, r.store.Get("dashboard.summary"))
 	if err != nil {
-		return s, err
+		return Summary{}, fmt.Errorf("dashboard summary: %w", err)
 	}
-	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Summary])
+	s, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Summary])
+	if err != nil {
+		return Summary{}, fmt.Errorf("dashboard summary: %w", err)
+	}
+	counts, err := r.statusCounts(ctx)
+	if err != nil {
+		return Summary{}, err
+	}
+	s.QuotationStatuses = fold(quotationTiles, counts["quotation"])
+	s.PoStatuses = fold(poTiles, counts["purchase_order"])
+	s.InvoiceStatuses = fold(invoiceTiles(), counts["invoice"])
+	return s, nil
+}
+
+// statusCounts groups counts by entity.
+func (r *Repo) statusCounts(ctx context.Context) (map[string]map[string]int64, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("dashboard.status_counts"))
+	if err != nil {
+		return nil, fmt.Errorf("dashboard status counts: %w", err)
+	}
+	defer rows.Close()
+	out := map[string]map[string]int64{}
+	for rows.Next() {
+		var entity, status string
+		var n int64
+		if err := rows.Scan(&entity, &status, &n); err != nil {
+			return nil, fmt.Errorf("dashboard status counts: %w", err)
+		}
+		if out[entity] == nil {
+			out[entity] = map[string]int64{}
+		}
+		out[entity][status] += n
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("dashboard status counts: %w", err)
+	}
+	return out, nil
 }
 
 // Timeseries returns metric buckets by interval.

@@ -29,6 +29,7 @@ var RequiredKeys = []string{
 	"clients.update_contact",
 	"clients.update_logo",
 	"countries.list_all",
+	"dashboard.status_counts",
 	"dashboard.summary",
 	"dashboard.ts_invoice",
 	"dashboard.ts_ppn",

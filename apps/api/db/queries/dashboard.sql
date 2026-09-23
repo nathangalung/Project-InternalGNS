@@ -18,11 +18,12 @@ inv AS (
 ),
 qstat AS (
   SELECT COUNT(*)                                                          AS total_count,
-         COUNT(*) FILTER (WHERE status IN ('rejected','expired'))          AS rejected_count
+         COUNT(*) FILTER (WHERE status = 'rejected')                       AS rejected_count
     FROM quotations
 ),
+-- Cancelled POs are inactive.
 po AS (
-  SELECT COUNT(*) AS total_count FROM purchase_orders
+  SELECT COUNT(*) FILTER (WHERE status <> 'CANCELLED') AS total_count FROM purchase_orders
 ),
 -- Prefer PO actuals (re-edited cost after PO creation), fall back to quotation.
 po_cost AS (
@@ -57,6 +58,26 @@ SELECT paid_inv.revenue                  AS total_revenue,
        inv.due_soon                      AS invoices_due_soon,
        inv.overdue                       AS invoices_overdue
   FROM paid_inv, inv, qstat, po, exp;
+
+-- name: dashboard.status_counts
+-- One row per entity status.
+-- Terlambat is derived with the invoices.summary predicate, so a past-due
+-- draft or sent counts there.
+SELECT 'quotation' AS entity, status, COUNT(*)::bigint AS count
+  FROM quotations
+ GROUP BY status
+UNION ALL
+SELECT 'purchase_order', status, COUNT(*)::bigint
+  FROM purchase_orders
+ GROUP BY status
+UNION ALL
+SELECT 'invoice',
+       CASE WHEN status = 'overdue'
+              OR (status IN ('draft', 'sent') AND due_date IS NOT NULL AND due_date < CURRENT_DATE)
+            THEN 'overdue' ELSE status END,
+       COUNT(*)::bigint
+  FROM invoices
+ GROUP BY 2;
 
 -- name: dashboard.ts_quotation
 SELECT to_char(date_trunc($3::text, created_at),

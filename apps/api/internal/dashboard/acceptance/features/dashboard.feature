@@ -29,3 +29,27 @@ Feature: Dashboard financial figures
     When finance reads the dashboard summary
     Then the response status is 200
     And the dashboard counts 1 invoice
+    And the invoice tiles read "draft:1,sent:0,overdue:0,paid:0,cancelled:1"
+
+  Scenario: Ditolak counts only rejected quotations
+    Given a quotation in status "rejected"
+    And a quotation in status "expired"
+    When operational reads the dashboard summary
+    Then the response status is 200
+    And the quotation tiles read "draft:0,sent:0,revision:0,accepted:0,rejected:1,cancelled:0,expired:1"
+    And the dashboard counts 1 rejected quotation
+
+  Scenario: Operational sees operational tiles only
+    Given an invoice for 2 units at 100000 costing 40000 each
+    When operational reads the dashboard summary
+    Then the response status is 200
+    And the purchase order tiles read "PENDING:0,UPLOADED:0,ON_PROGRESS:0,DELIVERED:1,CANCELLED:0"
+    And the invoice tiles read ""
+
+  Scenario: A past-due sent invoice is Terlambat
+    Given an invoice for 2 units at 100000 costing 40000 each
+    And the invoice is sent
+    And the invoice is past its due date
+    When finance reads the dashboard summary
+    Then the response status is 200
+    And the invoice tiles read "draft:0,sent:0,overdue:1,paid:0,cancelled:0"

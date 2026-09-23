@@ -39,3 +39,18 @@ func TestSummary_StripFinancial(t *testing.T) {
 	assert.Equal(t, int64(3), s.TotalQuotationsRejected)
 	assert.Equal(t, int64(7), s.TotalPo)
 }
+
+// Operational keeps its tiles.
+// Invoice tiles are financial, so they go.
+func TestSummary_StripFinancial_StatusTiles(t *testing.T) {
+	s := dashboard.Summary{
+		QuotationStatuses: []dashboard.StatusCount{{Status: "rejected", Label: "Ditolak", Count: 2}},
+		PoStatuses:        []dashboard.StatusCount{{Status: "PENDING", Label: "Pending", Count: 1}},
+		InvoiceStatuses:   []dashboard.StatusCount{{Status: "paid", Label: "Dibayar", Count: 3}},
+	}
+	s.StripFinancial()
+
+	assert.Equal(t, []dashboard.StatusCount{}, s.InvoiceStatuses)
+	assert.Len(t, s.QuotationStatuses, 1)
+	assert.Len(t, s.PoStatuses, 1)
+}

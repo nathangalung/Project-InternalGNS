@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/cucumber/godog"
@@ -158,6 +159,55 @@ func (s *scenarioState) cancelAndReplace() error {
 	return s.expect(http.StatusCreated, http.MethodPost, "/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/replacement", nil)
 }
 
+// quotationIn inserts a quotation.
+// Kedaluwarsa has no API path, so the row is written directly.
+func (s *scenarioState) quotationIn(status string) error {
+	_, err := testutil.Pool(s.t).Exec(context.Background(), `
+		INSERT INTO quotations (quotation_no, company_client_id, company_client_name,
+		                        discount_pct, total_produk, total, total_discount,
+		                        status, created_by, updated_by)
+		VALUES ('SQ-DASH-' || upper($1), $2, 'PT. IMC Ship Management', 0, 10000, 10000, 0, $1, $3, $3)`,
+		status, defaultCompany, defaultUserID)
+	if err != nil {
+		return fmt.Errorf("insert %s quotation: %w", status, err)
+	}
+	return nil
+}
+
+func (s *scenarioState) invoicePastDue() error {
+	_, err := testutil.Pool(s.t).Exec(context.Background(),
+		`UPDATE invoices SET due_date = CURRENT_DATE - 1 WHERE id = $1`, s.invoiceID)
+	if err != nil {
+		return fmt.Errorf("move due date: %w", err)
+	}
+	return nil
+}
+
+// tilesRead compares tiles in order.
+// Each reads status:count.
+func (s *scenarioState) tilesRead(entity, want string) error {
+	tiles := map[string][]dashboard.StatusCount{
+		"quotation":      s.summary.QuotationStatuses,
+		"purchase order": s.summary.PoStatuses,
+		"invoice":        s.summary.InvoiceStatuses,
+	}[entity]
+	got := make([]string, 0, len(tiles))
+	for _, c := range tiles {
+		got = append(got, c.Status+":"+strconv.FormatInt(c.Count, 10))
+	}
+	if strings.Join(got, ",") != want {
+		return fmt.Errorf("%s tiles want %q got %q", entity, want, strings.Join(got, ","))
+	}
+	return nil
+}
+
+func (s *scenarioState) rejectedCountIs(want int64) error {
+	if s.summary.TotalQuotationsRejected != want {
+		return fmt.Errorf("rejected quotations want %d got %d", want, s.summary.TotalQuotationsRejected)
+	}
+	return nil
+}
+
 func (s *scenarioState) invoiceCountIs(want int64) error {
 	if s.summary.TotalInvoices != want {
 		return fmt.Errorf("total invoices want %d got %d", want, s.summary.TotalInvoices)
@@ -272,6 +322,11 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the invoice is cancelled and replaced$`, state.cancelAndReplace)
 		sc.Step(`^the dashboard counts (\d+) invoices?$`, state.invoiceCountIs)
 		sc.Step(`^finance reads the dashboard summary$`, func() error { return state.readSummaryAs("finance") })
+		sc.Step(`^operational reads the dashboard summary$`, func() error { return state.readSummaryAs("operational") })
+		sc.Step(`^a quotation in status "([a-z]+)"$`, state.quotationIn)
+		sc.Step(`^the invoice is past its due date$`, state.invoicePastDue)
+		sc.Step(`^the (quotation|purchase order|invoice) tiles read "([^"]*)"$`, state.tilesRead)
+		sc.Step(`^the dashboard counts (\d+) rejected quotations?$`, state.rejectedCountIs)
 		sc.Step(`^the response status is (\d+)$`, state.statusEquals)
 		sc.Step(`^revenue is ([\d.]+) and equals the paid DPP sum$`, state.revenueIs)
 		sc.Step(`^expenses are ([\d.]+) and equal the paid cost sum$`, state.expensesAre)
