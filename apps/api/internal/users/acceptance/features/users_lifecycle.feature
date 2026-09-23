@@ -97,3 +97,14 @@ Feature: User management lifecycle
     When the user creates a staff account with a padded name
     Then the response status is 201
     And the user name has no padding
+
+  Scenario Outline: The last active superadmin cannot be demoted or deactivated
+    Given the only active superadmin account
+    When the user sets that superadmin to role "<role>" and active <active>
+    Then the response status is 409
+    And the problem detail is "Superadmin aktif terakhir tidak dapat diturunkan atau dinonaktifkan."
+
+    Examples:
+      | role       | active |
+      | finance    | true   |
+      | superadmin | false  |

@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/cucumber/godog"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
@@ -33,6 +34,7 @@ type scenarioState struct {
 	name       string
 	firstEmail string
 	secondID   int64
+	parked     []int64
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
@@ -293,6 +295,67 @@ func (s *scenarioState) staffActiveIs(want bool) error {
 	return nil
 }
 
+// soleSuperadmin parks every active superadmin, then creates the only one.
+// restoreParked undoes the parking after the scenario.
+func (s *scenarioState) soleSuperadmin() error {
+	ctx := context.Background()
+	pool := testutil.Pool(s.t)
+	rows, err := pool.Query(ctx,
+		`UPDATE users SET is_active = FALSE
+		  WHERE role = 'superadmin' AND is_active = TRUE RETURNING id`)
+	if err != nil {
+		return fmt.Errorf("park superadmins: %w", err)
+	}
+	ids, err := pgx.CollectRows(rows, pgx.RowTo[int64])
+	if err != nil {
+		return fmt.Errorf("park superadmins: %w", err)
+	}
+	s.parked = ids
+
+	s.email = s.uniqueEmail()
+	s.name = "ATDD Sole Admin"
+	body := users.CreateUserRequest{
+		Email: s.email, Name: s.name, Password: "Secret123!", Role: users.RoleSuperadmin,
+	}
+	if err := s.sendRequest(http.MethodPost, "/users/", body); err != nil {
+		return err
+	}
+	if err := s.statusEquals(http.StatusCreated); err != nil {
+		return err
+	}
+	return s.captureID()
+}
+
+func (s *scenarioState) restoreParked() error {
+	if len(s.parked) == 0 {
+		return nil
+	}
+	_, err := testutil.Pool(s.t).Exec(context.Background(),
+		`UPDATE users SET is_active = TRUE WHERE id = ANY($1)`, s.parked)
+	s.parked = nil
+	return err
+}
+
+func (s *scenarioState) setSuperadmin(role string, active bool) error {
+	body := users.UpdateUserRequest{
+		Email: s.email, Name: s.name, Role: users.Role(role), IsActive: active,
+	}
+	return s.sendRequest(http.MethodPut, "/users/"+strconv.FormatInt(s.userID, 10), body)
+}
+
+func (s *scenarioState) problemDetail(want string) error {
+	var p struct {
+		Detail string `json:"detail"`
+	}
+	if err := json.Unmarshal(s.body, &p); err != nil {
+		return fmt.Errorf("decode problem: %w body=%s", err, s.body)
+	}
+	if p.Detail != want {
+		return fmt.Errorf("want detail %q got %q", want, p.Detail)
+	}
+	return nil
+}
+
 func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
 		state := &scenarioState{t: t, cleaner: cleaner}
@@ -305,6 +368,9 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 			state.firstEmail = ""
 			state.secondID = 0
 			return ctx, nil
+		})
+		sc.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
+			return ctx, state.restoreParked()
 		})
 
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
@@ -333,6 +399,11 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the user reactivates the staff account$`, func() error { return state.setStaffActive(true) })
 		sc.Step(`^the staff account is inactive$`, func() error { return state.staffActiveIs(false) })
 		sc.Step(`^the staff account is active$`, func() error { return state.staffActiveIs(true) })
+		sc.Step(`^the only active superadmin account$`, state.soleSuperadmin)
+		sc.Step(`^the user sets that superadmin to role "([^"]+)" and active (true|false)$`, func(role, active string) error {
+			return state.setSuperadmin(role, active == "true")
+		})
+		sc.Step(`^the problem detail is "([^"]+)"$`, state.problemDetail)
 	}
 }
 
