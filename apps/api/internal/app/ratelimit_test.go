@@ -57,7 +57,7 @@ func TestProblemJSON429(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
-			problemJSON429(http.HandlerFunc(tc.inner)).ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/auth/login", nil))
+			problemJSON429(tc.inner).ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/auth/login", nil))
 
 			assert.Equal(t, tc.wantStatus, rec.Code)
 			assert.Equal(t, tc.wantCT, rec.Header().Get("Content-Type"))
