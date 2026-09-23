@@ -98,8 +98,10 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 			r.Mount("/units", units.Routes(d))
 			r.Mount("/countries", countries.Routes(d))
 			r.Mount("/clients", clients.Routes(d))
-			r.Mount("/items", items.Routes(d))
-			r.Mount("/vendors", vendors.Routes(d))
+			// Finance keeps client writes for NPWP and TKU, but only reads the
+			// catalog and vendors.
+			r.With(readOnlyFor("finance")).Mount("/items", items.Routes(d))
+			r.With(readOnlyFor("finance")).Mount("/vendors", vendors.Routes(d))
 			r.With(requireRole("superadmin", "operational")).
 				Mount("/quotations", quotations.Routes(d))
 			r.With(requireRole("superadmin", "operational")).

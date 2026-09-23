@@ -231,3 +231,31 @@ func requireRole(roles ...string) func(http.Handler) http.Handler {
 		})
 	}
 }
+
+// readOnlyFor refuses writes by these roles.
+// Reads pass. An upload-url GET counts as a write: the URL it returns lets
+// the holder store a file for the record.
+func readOnlyFor(roles ...string) func(http.Handler) http.Handler {
+	denied := make(map[string]struct{}, len(roles))
+	for _, role := range roles {
+		denied[role] = struct{}{}
+	}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if _, ok := denied[deps.CurrentUserRole(r.Context())]; ok && isWrite(r) {
+				httperr.Render(w, httperr.Forbidden("insufficient role"))
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// isWrite reports a state-changing request.
+func isWrite(r *http.Request) bool {
+	switch r.Method {
+	case http.MethodGet, http.MethodHead, http.MethodOptions:
+		return strings.HasSuffix(r.URL.Path, "/upload-url")
+	}
+	return true
+}

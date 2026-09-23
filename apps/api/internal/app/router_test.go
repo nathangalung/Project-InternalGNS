@@ -47,20 +47,7 @@ func mintToken(t *testing.T, userID int64, role string) string {
 // role needs a real user of its own.
 func TestRouter_RBACPerMount(t *testing.T) {
 	r := mkRouter(t)
-	cleaner := testutil.NewCleaner(t)
-	repo := users.NewRepo(testutil.Pool(t), testutil.Store(t))
-	userIDs := map[string]int64{}
-	for _, role := range []users.Role{users.RoleSuperadmin, users.RoleFinance, users.RoleOperational} {
-		u, err := repo.Create(context.Background(), users.CreateUserRequest{
-			Email:    fmt.Sprintf("rbac-%s-%d@test.local", role, time.Now().UnixNano()),
-			Name:     "RBAC " + string(role),
-			Password: "Rbac-mount-pw1!",
-			Role:     role,
-		}, 1)
-		require.NoError(t, err)
-		cleaner.User(u.ID)
-		userIDs[string(role)] = u.ID
-	}
+	userIDs := rbacUsers(t)
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)
 
@@ -334,4 +321,88 @@ func TestRouter_RenderRoutesClassified(t *testing.T) {
 	}, long)
 	// Guard the other direction: a single-invoice XML render is not a bulk job.
 	assert.Contains(t, short, "/api/v1/invoices/{id}/coretax.xml")
+}
+
+// rbacUsers creates one real user per role.
+func rbacUsers(t *testing.T) map[string]int64 {
+	t.Helper()
+	cleaner := testutil.NewCleaner(t)
+	repo := users.NewRepo(testutil.Pool(t), testutil.Store(t))
+	userIDs := map[string]int64{}
+	for _, role := range []users.Role{users.RoleSuperadmin, users.RoleFinance, users.RoleOperational} {
+		u, err := repo.Create(context.Background(), users.CreateUserRequest{
+			Email:    fmt.Sprintf("rbac-%s-%d@test.local", role, time.Now().UnixNano()),
+			Name:     "RBAC " + string(role),
+			Password: "Rbac-mount-pw1!",
+			Role:     role,
+		}, 1)
+		require.NoError(t, err)
+		cleaner.User(u.ID)
+		userIDs[string(role)] = u.ID
+	}
+	return userIDs
+}
+
+// Finance reads items and vendors but writes neither.
+// Client writes stay open to finance for NPWP and TKU. Every write carries
+// an empty body, so an allowed request stops at validation and stores
+// nothing.
+func TestRouter_FinanceReadOnlyOnItemsAndVendors(t *testing.T) {
+	r := mkRouter(t)
+	userIDs := rbacUsers(t)
+	srv := httptest.NewServer(r)
+	t.Cleanup(srv.Close)
+
+	cases := []struct {
+		role   string
+		method string
+		path   string
+		denied bool
+	}{
+		{"finance", http.MethodPost, "/api/v1/items/", true},
+		{"finance", http.MethodPut, "/api/v1/items/1", true},
+		{"finance", http.MethodPost, "/api/v1/items/1/vendors", true},
+		{"finance", http.MethodPost, "/api/v1/items/match-rows", true},
+		{"finance", http.MethodPatch, "/api/v1/items/1/image", true},
+		{"finance", http.MethodGet, "/api/v1/items/1/image/upload-url?fileName=x.png", true},
+		{"finance", http.MethodPost, "/api/v1/vendors/", true},
+		{"finance", http.MethodPut, "/api/v1/vendors/1", true},
+		{"finance", http.MethodPatch, "/api/v1/vendors/1/logo", true},
+		{"finance", http.MethodGet, "/api/v1/vendors/1/logo/upload-url?fileName=x.png", true},
+		{"finance", http.MethodGet, "/api/v1/items/", false},
+		{"finance", http.MethodGet, "/api/v1/items/1", false},
+		{"finance", http.MethodGet, "/api/v1/items/search?q=bolt", false},
+		{"finance", http.MethodGet, "/api/v1/items/1/vendors", false},
+		{"finance", http.MethodGet, "/api/v1/vendors/", false},
+		{"finance", http.MethodGet, "/api/v1/vendors/1", false},
+		{"finance", http.MethodPut, "/api/v1/clients/1", false},
+		{"finance", http.MethodPost, "/api/v1/clients/", false},
+		{"operational", http.MethodPost, "/api/v1/items/", false},
+		{"operational", http.MethodPut, "/api/v1/vendors/1", false},
+		{"operational", http.MethodGet, "/api/v1/items/1/image/upload-url?fileName=x.png", false},
+		{"superadmin", http.MethodPost, "/api/v1/vendors/", false},
+	}
+	for _, c := range cases {
+		t.Run(c.role+" "+c.method+" "+c.path, func(t *testing.T) {
+			var body *strings.Reader
+			if c.method != http.MethodGet {
+				body = strings.NewReader("{}")
+			} else {
+				body = strings.NewReader("")
+			}
+			req, err := http.NewRequest(c.method, srv.URL+c.path, body)
+			require.NoError(t, err)
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+mintToken(t, userIDs[c.role], c.role))
+			res, err := srv.Client().Do(req)
+			require.NoError(t, err)
+			defer res.Body.Close()
+			if c.denied {
+				assert.Equal(t, http.StatusForbidden, res.StatusCode)
+				return
+			}
+			assert.NotEqual(t, http.StatusForbidden, res.StatusCode)
+			assert.NotEqual(t, http.StatusInternalServerError, res.StatusCode, "an allowed call must not break")
+		})
+	}
 }
