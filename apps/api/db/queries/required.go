@@ -9,6 +9,7 @@ import (
 // All query keys repos require.
 var RequiredKeys = []string{
 	"auth.refresh_insert",
+	"auth.refresh_lock_owner",
 	"auth.refresh_lookup",
 	"auth.refresh_purge_expired",
 	"auth.refresh_redeem",
@@ -112,6 +113,7 @@ var RequiredKeys = []string{
 	"users.list_count_base",
 	"users.update",
 	"users.update_password",
+	"users.superadmin_guard_lock",
 	"users.update_precheck",
 	"vendors.create",
 	"vendors.get_by_id",
