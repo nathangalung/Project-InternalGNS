@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router"
 import { useState } from "react"
 import { useAuth, useMe } from "@/features/auth/hooks"
 import { roleCanAccess, type Section, sectionFromPathname } from "@/lib/rbac"
+import { ui } from "@/lib/ui"
 import type { Role } from "@/types/api"
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -120,8 +121,7 @@ function NavIcon({ name }: { name: string }) {
   return <span className={iconWrap}>{icons[name]}</span>
 }
 
-const iconBtn =
-  "flex items-center justify-center [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-linecap:round]"
+const iconBtn = `flex items-center justify-center [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-linecap:round] ${ui.focusRingDark}`
 
 export default function Sidebar() {
   const { data: me } = useMe()
@@ -173,7 +173,7 @@ export default function Sidebar() {
       )}
 
       <aside
-        className={`fixed left-0 top-0 z-[100] flex h-screen w-[220px] flex-shrink-0 flex-col overflow-y-auto bg-dark-900 py-5 transition-transform lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-[100] flex h-screen w-[220px] flex-shrink-0 flex-col overflow-y-auto bg-dark-900 py-5 transition-transform motion-reduce:transition-none lg:translate-x-0 ${
           drawerOpen ? "translate-x-0 shadow-lg" : "-translate-x-full lg:shadow-none"
         }`}
       >
@@ -205,7 +205,7 @@ export default function Sidebar() {
                 to={item.to}
                 // Root must match exactly so aria-current tracks the highlight.
                 activeOptions={{ exact: item.to === "/" }}
-                className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md py-2 pl-3 text-left text-sm font-medium no-underline transition-colors ${
+                className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md py-2 pl-3 text-left text-sm font-medium no-underline transition-colors ${ui.focusRingDark} ${
                   active
                     ? "rounded-r-none border-r-[3px] border-primary-400 bg-primary-600/15 pr-[calc(0.75rem-3px)] text-primary-400 hover:bg-primary-600/20 hover:text-primary-300"
                     : "pr-3 text-dark-400 hover:bg-dark-800 hover:text-dark-200"
@@ -232,6 +232,7 @@ export default function Sidebar() {
             className={`${iconBtn} h-[30px] w-[30px] flex-shrink-0 rounded-md border border-white/[0.06] bg-white/[0.04] text-dark-400 transition-colors hover:border-red-600/40 hover:bg-red-600/20 hover:text-red-300`}
             onClick={handleLogout}
             title="Keluar"
+            aria-label="Keluar"
           >
             <svg viewBox="0 0 24 24" width="16" height="16" strokeWidth="2" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

@@ -1,6 +1,8 @@
+import { ui } from "@/lib/ui"
+
 export type FilterChip = { key: string; label: string; onRemove?: () => void }
 
-interface ActiveFiltersProps {
+type ActiveFiltersProps = {
   chips: FilterChip[]
   onClearAll?: () => void
 }
@@ -22,7 +24,7 @@ export default function ActiveFilters({ chips, onClearAll }: ActiveFiltersProps)
               type="button"
               onClick={c.onRemove}
               aria-label={`Hapus filter ${c.label}`}
-              className="p-0 text-[15px] leading-none text-primary-700"
+              className={`rounded-sm p-0 text-[15px] leading-none text-primary-700 ${ui.focusRing}`}
             >
               ×
             </button>
@@ -33,7 +35,7 @@ export default function ActiveFilters({ chips, onClearAll }: ActiveFiltersProps)
         <button
           type="button"
           onClick={onClearAll}
-          className="p-0 text-[12px] text-[#6B7280] underline underline-offset-2"
+          className={`rounded-sm p-0 text-[12px] text-[#6B7280] underline underline-offset-2 ${ui.focusRing}`}
         >
           Hapus semua
         </button>

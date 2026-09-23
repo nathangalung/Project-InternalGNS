@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { dismiss, subscribe, type ToastItem, type ToastVariant } from "@/lib/toast"
+import { ui } from "@/lib/ui"
 
 // Per-variant accent colors.
 const accent: Record<ToastVariant, string> = {
@@ -11,8 +12,7 @@ const accent: Record<ToastVariant, string> = {
 const toastCls =
   "pointer-events-auto flex max-w-[360px] min-w-[260px] items-start gap-2.5 rounded-md border-l-4 px-3.5 py-3 font-[Inter,sans-serif] text-[13px] leading-[18px] font-medium [box-shadow:0_8px_24px_rgba(0,0,0,0.12)]"
 
-const closeBtnCls =
-  "ml-auto flex cursor-pointer items-center border-none bg-transparent p-0.5 text-inherit opacity-60"
+const closeBtnCls = `ml-auto flex cursor-pointer items-center rounded-sm border-none bg-transparent p-0.5 text-inherit opacity-60 focus-visible:opacity-100 ${ui.focusRing}`
 
 // Renders active toast queue.
 export default function ToastViewport() {

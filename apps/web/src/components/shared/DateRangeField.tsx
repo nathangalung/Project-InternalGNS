@@ -1,3 +1,5 @@
+import { ui } from "@/lib/ui"
+
 export type DatePreset = "semua" | "hari-ini" | "7-hari" | "30-hari" | "kustom"
 
 export const DATE_PRESETS: { key: DatePreset; label: string }[] = [
@@ -42,7 +44,7 @@ const labelCls =
 const pickerCls =
   "[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:hidden"
 
-const inputCls = `box-border h-11 w-full cursor-pointer appearance-none rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] py-2.5 pr-3.5 pl-10 font-[Inter,sans-serif] text-[13px] font-medium text-[#191C1E] outline-none ${pickerCls}`
+const inputCls = `box-border h-11 w-full cursor-pointer appearance-none rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] py-2.5 pr-3.5 pl-10 font-[Inter,sans-serif] text-[13px] font-medium text-[#191C1E] outline-none ${ui.fieldFocus} ${pickerCls}`
 
 const iconCls =
   "pointer-events-none absolute top-1/2 left-3.5 [transform:translateY(-50%)] text-[#9CA3AF]"
