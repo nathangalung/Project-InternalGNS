@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -14,14 +15,30 @@ import (
 // maxUploadBytes caps a single proxied asset upload.
 const maxUploadBytes = 25 << 20 // 25 MB
 
+// objectStore is the slice of Client the byte proxy uses.
+// Named so the proxy's refusal rules can be tested without a live MinIO.
+type objectStore interface {
+	PutObject(ctx context.Context, bucket, objectKey string, r io.Reader, size int64, contentType string) error
+	GetObject(ctx context.Context, bucket, objectKey string) (io.ReadCloser, string, int64, error)
+	ObjectExists(ctx context.Context, bucket, objectKey string) (bool, error)
+}
+
 // Handler proxies asset bytes through the (authenticated) API so MinIO can
 // stay on the internal network with no public host.
 type Handler struct {
-	client *Client
+	store objectStore
 }
 
 func NewHandler(c *Client) *Handler {
-	return &Handler{client: c}
+	if c == nil {
+		return &Handler{}
+	}
+	return &Handler{store: c}
+}
+
+// newHandlerWithStore builds a handler on a fake store.
+func newHandlerWithStore(s objectStore) *Handler {
+	return &Handler{store: s}
 }
 
 func allowedBucket(b string) bool {
@@ -62,13 +79,29 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "file type not allowed", http.StatusBadRequest)
 		return
 	}
+	if h.store == nil {
+		http.Error(w, "storage not configured", http.StatusServiceUnavailable)
+		return
+	}
+	// The key comes from the client, so a PUT is a create, never a replace:
+	// otherwise any role holding the bucket could overwrite another record's
+	// stored document with its own bytes.
+	exists, err := h.store.ObjectExists(r.Context(), bucket, key)
+	if err != nil {
+		http.Error(w, "upload failed", http.StatusBadGateway)
+		return
+	}
+	if exists {
+		http.Error(w, "object already exists", http.StatusConflict)
+		return
+	}
 	limit := MaxBytes(bucket) // per-bucket policy cap (bucket already validated)
 	if limit <= 0 {
 		limit = maxUploadBytes
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, limit)
 	defer r.Body.Close()
-	if err := h.client.PutObject(r.Context(), bucket, key, r.Body, r.ContentLength, r.Header.Get("Content-Type")); err != nil {
+	if err := h.store.PutObject(r.Context(), bucket, key, r.Body, r.ContentLength, r.Header.Get("Content-Type")); err != nil {
 		http.Error(w, "upload failed", http.StatusBadGateway)
 		return
 	}
@@ -83,7 +116,11 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid bucket or key", http.StatusBadRequest)
 		return
 	}
-	rc, _, size, err := h.client.GetObject(r.Context(), bucket, key)
+	if h.store == nil {
+		http.Error(w, "storage not configured", http.StatusServiceUnavailable)
+		return
+	}
+	rc, _, size, err := h.store.GetObject(r.Context(), bucket, key)
 	if errors.Is(err, ErrObjectNotFound) {
 		http.Error(w, "not found", http.StatusNotFound)
 		return

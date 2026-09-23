@@ -236,12 +236,13 @@ func TestUpdateKey(t *testing.T) {
 	t.Run("owner missing", func(t *testing.T) {
 		d := base("")
 		d.SetKey = func(context.Context, int64, string, int64) error { return assetproxy.ErrNotFound }
-		rec := serve(t, http.MethodPatch, "/{id}", "/1", assetproxy.UpdateKey(d), `{"objectKey":"k"}`)
+		rec := serve(t, http.MethodPatch, "/{id}", "/1", assetproxy.UpdateKey(d), `{"objectKey":"items/1/1790-a.png"}`)
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 		assert.Equal(t, "item not found", decode(t, rec)["detail"])
 	})
-	// Validation trims, persistence does not.
-	t.Run("persists untrimmed key", func(t *testing.T) {
+	// The stored key must address a real object, so the trimmed value is what
+	// is persisted.
+	t.Run("persists the trimmed key", func(t *testing.T) {
 		var got string
 		var gotID, gotActor int64
 		d := base("")
@@ -249,10 +250,10 @@ func TestUpdateKey(t *testing.T) {
 			gotID, got, gotActor = id, key, actor
 			return nil
 		}
-		rec := serve(t, http.MethodPatch, "/{id}", "/7", assetproxy.UpdateKey(d), `{"objectKey":" items/1/a.png "}`)
+		rec := serve(t, http.MethodPatch, "/{id}", "/7", assetproxy.UpdateKey(d), `{"objectKey":" items/7/1790-a.png "}`)
 		assert.Equal(t, http.StatusNoContent, rec.Code)
 		assert.Empty(t, rec.Body.String())
-		assert.Equal(t, " items/1/a.png ", got)
+		assert.Equal(t, "items/7/1790-a.png", got)
 		assert.Equal(t, int64(7), gotID)
 		assert.Equal(t, int64(0), gotActor)
 	})
@@ -321,4 +322,46 @@ func TestAssetRoutes_ServerErrorLogsRequestContext(t *testing.T) {
 			assert.Equal(t, "req-9", capture.seen[0].Value(reqProbeKey{}))
 		})
 	}
+}
+
+// The attach endpoint takes the key from the request body, so it must refuse
+// any key that does not belong to the record being attached to. Client 42
+// carries logo_object_key='../../etc/x' because it did not.
+func TestUpdateKey_RejectsForeignKeys(t *testing.T) {
+	cases := []struct {
+		name string
+		key  string
+	}{
+		{"another record", "items/8/1790-a.png"},
+		{"prefix overlap", "items/70/1790-a.png"},
+		{"other namespace", "clients/7/1790-a.png"},
+		{"traversal", "../../etc/x"},
+		{"absolute", "/items/7/1790-a.png"},
+		{"disallowed extension", "items/7/1790-a.exe"},
+		{"bare prefix", "items/7/"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			var persisted bool
+			d := base("")
+			d.SetKey = func(context.Context, int64, string, int64) error {
+				persisted = true
+				return nil
+			}
+			rec := serve(t, http.MethodPatch, "/{id}", "/7", assetproxy.UpdateKey(d),
+				`{"objectKey":"`+c.key+`"}`)
+			assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
+			assert.False(t, persisted, "a foreign key must never reach the repo")
+		})
+	}
+}
+
+// A missing owner is reported as 404, not as a malformed key.
+func TestUpdateKey_OwnerMissingBeatsKeyCheck(t *testing.T) {
+	d := base("")
+	d.Exists = func(context.Context, int64) error { return assetproxy.ErrNotFound }
+	rec := serve(t, http.MethodPatch, "/{id}", "/99999999", assetproxy.UpdateKey(d),
+		`{"objectKey":"items/1/1790-a.png"}`)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Equal(t, "item not found", decode(t, rec)["detail"])
 }

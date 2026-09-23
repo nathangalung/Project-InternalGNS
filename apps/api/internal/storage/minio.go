@@ -88,6 +88,21 @@ func (c *Client) GetObject(ctx context.Context, bucket, objectKey string) (io.Re
 	return obj, info.ContentType, info.Size, nil
 }
 
+// ObjectExists reports whether a key is already stored.
+// The proxy PUT takes its key from the client, so it has to know whether a
+// write would replace an existing object rather than create one.
+func (c *Client) ObjectExists(ctx context.Context, bucket, objectKey string) (bool, error) {
+	_, err := c.mc.StatObject(ctx, bucket, objectKey, minio.StatObjectOptions{})
+	if err == nil {
+		return true, nil
+	}
+	switch minio.ToErrorResponse(err).Code {
+	case "NoSuchKey", "NoSuchBucket":
+		return false, nil
+	}
+	return false, fmt.Errorf("storage: stat %q/%q: %w", bucket, objectKey, err)
+}
+
 // objectPath builds the API-relative proxy path for an asset. Uploads and
 // downloads go through the authenticated API, so MinIO needs no public host.
 func objectPath(bucket, objectKey string) string {

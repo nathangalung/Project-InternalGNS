@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 	"path"
+	"strconv"
 	"strings"
 )
 
@@ -67,6 +68,21 @@ func ValidateAssetFileName(bucket, fileName string) error {
 		return fmt.Errorf("extension %q not allowed for %s", ext, bucket)
 	}
 	return nil
+}
+
+// ValidateOwnedKey binds an object key to one record.
+// Attach endpoints take the key from the request body, so without this a
+// caller could point a record at any object in the bucket, or at a traversal
+// path outside it. BuildObjectKey is what produces a conforming key.
+func ValidateOwnedKey(bucket, prefix string, id int64, key string) error {
+	if !safeKey(key) {
+		return fmt.Errorf("storage: unsafe object key %q", key)
+	}
+	want := path.Join(prefix, strconv.FormatInt(id, 10)) + "/"
+	if !strings.HasPrefix(key, want) || strings.TrimPrefix(key, want) == "" {
+		return fmt.Errorf("storage: object key %q is not under %q", key, want)
+	}
+	return ValidateAssetFileName(bucket, key)
 }
 
 // ValidateAssetSize guards the byte cap per bucket. Pass 0 to skip.

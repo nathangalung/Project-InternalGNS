@@ -137,12 +137,28 @@ func UpdateKey(d Descriptor) http.HandlerFunc {
 			httperr.Render(w, httperr.BadRequest("invalid json"))
 			return
 		}
-		if strings.TrimSpace(req.ObjectKey) == "" {
+		objectKey := strings.TrimSpace(req.ObjectKey)
+		if objectKey == "" {
 			httperr.Render(w, httperr.Unprocessable(map[string]string{"objectKey": "required"}))
 			return
 		}
+		// Owner first, so a key aimed at a record that does not exist still
+		// reads as 404 rather than as a malformed key.
+		if err := d.Exists(r.Context(), id); err != nil {
+			renderOwnerErr(r.Context(), w, err, d.NotFoundMsg)
+			return
+		}
+		// The key arrives from the client, so it has to prove it addresses an
+		// upload made for this record: otherwise a caller could attach any
+		// object in the bucket, or a traversal path outside it.
+		if err := storage.ValidateOwnedKey(d.Bucket, d.KeyPrefix, id, objectKey); err != nil {
+			httperr.Render(w, httperr.Unprocessable(map[string]string{
+				"objectKey": "Berkas tidak dikenali. Unggah ulang berkasnya lalu simpan kembali.",
+			}))
+			return
+		}
 		actor := deps.CurrentUserID(r.Context())
-		if err := d.SetKey(r.Context(), id, req.ObjectKey, actor); err != nil {
+		if err := d.SetKey(r.Context(), id, objectKey, actor); err != nil {
 			renderOwnerErr(r.Context(), w, err, d.NotFoundMsg)
 			return
 		}
