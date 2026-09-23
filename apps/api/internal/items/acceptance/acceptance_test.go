@@ -385,6 +385,55 @@ func (s *scenarioState) linkInactiveVendor() error {
 	return s.linkVendor(vendorID)
 }
 
+// Input validation steps for MD-10, MD-15, MD-17, MD-18, MD-19.
+func (s *scenarioState) createItemNamed(name string) error {
+	name = strings.ReplaceAll(name, `\t`, "\t")
+	if err := s.sendRequest(http.MethodPost, "/items/", items.CreateItemRequest{Name: name}); err != nil {
+		return err
+	}
+	if s.last.StatusCode == http.StatusCreated {
+		return s.captureID()
+	}
+	return nil
+}
+
+func (s *scenarioState) seedWildcardPair(wildcard string) error {
+	nonce := time.Now().UnixNano()
+	s.name = fmt.Sprintf("ATDD WILD%sCARD %d", wildcard, nonce)
+	decoy := fmt.Sprintf("ATDD WILDXCARD %d", nonce)
+	for _, name := range []string{decoy, s.name} {
+		if err := s.sendRequest(http.MethodPost, "/items/", items.CreateItemRequest{Name: name}); err != nil {
+			return err
+		}
+		if s.last.StatusCode != http.StatusCreated {
+			return fmt.Errorf("seed want 201 got %d body=%s", s.last.StatusCode, s.body)
+		}
+		if err := s.captureID(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *scenarioState) listByLiteralName() error {
+	return s.sendRequest(http.MethodGet, "/items/?q="+url.QueryEscape(s.name), nil)
+}
+
+func (s *scenarioState) listHoldsOnlySeeded() error {
+	var rows []items.Item
+	if err := json.Unmarshal(s.body, &rows); err != nil {
+		return err
+	}
+	if len(rows) != 1 || rows[0].ID != s.itemID {
+		return fmt.Errorf("want only item %d body=%s", s.itemID, s.body)
+	}
+	return nil
+}
+
+func (s *scenarioState) sendGet(path string) error {
+	return s.sendRequest(http.MethodGet, path, nil)
+}
+
 func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
 		state := &scenarioState{t: t, cleaner: cleaner}
@@ -426,6 +475,11 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the imported row matched the seeded item by IMPA code$`, state.rowMatchedByIMPA)
 		sc.Step(`^the user creates another item with the same IMPA code$`, state.createDuplicateIMPA)
 		sc.Step(`^the user links an inactive vendor to the item$`, state.linkInactiveVendor)
+		sc.Step(`^the user creates an item named "([^"]*)"$`, state.createItemNamed)
+		sc.Step(`^an item named with "([^"]+)" and a decoy without it$`, state.seedWildcardPair)
+		sc.Step(`^the user lists items searching for the literal name$`, state.listByLiteralName)
+		sc.Step(`^the list holds only the item with the wildcard$`, state.listHoldsOnlySeeded)
+		sc.Step(`^the user sends GET "([^"]+)"$`, state.sendGet)
 	}
 }
 

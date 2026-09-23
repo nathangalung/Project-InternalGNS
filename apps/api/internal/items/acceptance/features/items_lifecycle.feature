@@ -79,3 +79,40 @@ Feature: Item lifecycle
     Given an existing item
     When the user links an inactive vendor to the item
     Then the response status is 422
+
+  Scenario Outline: Whitespace-only names are rejected on create
+    When the user creates an item named "<name>"
+    Then the response status is 422
+
+    Examples:
+      | name |
+      |      |
+      | \t   |
+
+  Scenario Outline: A search with LIKE wildcards matches literally
+    Given an item named with "<wildcard>" and a decoy without it
+    When the user lists items searching for the literal name
+    Then the response status is 200
+    And the list holds only the item with the wildcard
+
+    Examples:
+      | wildcard |
+      | %        |
+      | _        |
+
+  Scenario: A search with a NUL byte returns 400
+    When the user sends GET "/items/?q=bolt%00nut"
+    Then the response status is 400
+
+  Scenario: An invalid unitId filter returns 400
+    When the user sends GET "/items/?unitId=pcs"
+    Then the response status is 400
+
+  Scenario Outline: A sub-collection of a missing item returns 404
+    When the user sends GET "/items/999999999/<collection>"
+    Then the response status is 404
+
+    Examples:
+      | collection    |
+      | vendors       |
+      | price-history |
