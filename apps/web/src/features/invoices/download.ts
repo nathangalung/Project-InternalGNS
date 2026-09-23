@@ -1,4 +1,5 @@
 import { ApiError } from "@/lib/api-client"
+import { errorMessage } from "@/lib/errors"
 import { toast } from "@/lib/toast"
 
 // Filesystem-safe invoice number.
@@ -39,6 +40,17 @@ export function transferErrorMessage(err: unknown, fallback: string): string {
     if (parts.length > 0) return parts.join("; ")
   }
   return fallback
+}
+
+// Toast text for any failure.
+//
+// A binary upload or download keeps the raw body and an English message, so
+// it goes through transferErrorMessage; JSON calls already carry the detail.
+export function failureMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiError && typeof err.body === "string") {
+    return transferErrorMessage(err, fallback)
+  }
+  return errorMessage(err, fallback)
 }
 
 // Run a download, toast failures.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api-client"
-import { safeFileName, transferErrorMessage } from "./download"
+import { failureMessage, safeFileName, transferErrorMessage } from "./download"
 
 describe("safeFileName", () => {
   it("replaces the slashes in invoice numbers", () => {
@@ -44,5 +44,30 @@ describe("transferErrorMessage", () => {
     ["network TypeError", new TypeError("Failed to fetch"), fallback],
   ])("%s", (_name, err, want) => {
     expect(transferErrorMessage(err, fallback)).toBe(want)
+  })
+})
+
+describe("failureMessage", () => {
+  const fallback = "Gagal mengunggah lampiran."
+
+  it.each<[string, unknown, string]>([
+    [
+      "binary 409 detail",
+      new ApiError(409, JSON.stringify({ detail: "Sudah ada." }), "x"),
+      "Sudah ada.",
+    ],
+    ["binary 502 English", new ApiError(502, "", "Upload failed: Bad Gateway"), fallback],
+    [
+      "JSON call keeps its detail",
+      new ApiError(422, { detail: "Tidak diizinkan." }, "Tidak diizinkan."),
+      "Tidak diizinkan.",
+    ],
+    [
+      "validation error text",
+      new Error("Ukuran lampiran invoice maksimal 20 MB."),
+      "Ukuran lampiran invoice maksimal 20 MB.",
+    ],
+  ])("%s", (_name, err, want) => {
+    expect(failureMessage(err, fallback)).toBe(want)
   })
 })

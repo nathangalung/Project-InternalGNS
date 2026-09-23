@@ -14,6 +14,7 @@ import type {
   PresignDownload,
   PresignUpload,
 } from "@/types/api"
+import type { ChangeInvoiceStatusInput, InvoiceDetail, UpdateInvoiceDatesInput } from "./types"
 
 export type PresignAttachmentUpload = PresignUpload
 export type PresignAttachmentDownload = PresignDownload
@@ -59,18 +60,55 @@ export async function listItems(id: number): Promise<InvoiceItemRow[]> {
   return apiRequest<InvoiceItemRow[]>({ path: `/invoices/${id}/items` })
 }
 
-export async function getByQuotation(quotationId: number): Promise<InvoiceBackendRow | null> {
+// Newest invoice, the Pengganti when one exists.
+export async function getByQuotation(quotationId: number): Promise<InvoiceDetail | null> {
   return nullOn404(() =>
-    apiRequest<InvoiceBackendRow>({ path: `/invoices/by-quotation/${quotationId}` }),
+    apiRequest<InvoiceDetail>({ path: `/invoices/by-quotation/${quotationId}` }),
   )
 }
 
-export async function changeStatus(id: number, status: InvoiceBackendStatus): Promise<void> {
+// One invoice by its own id.
+export async function getById(id: number): Promise<InvoiceDetail | null> {
+  return nullOn404(() => apiRequest<InvoiceDetail>({ path: `/invoices/${id}` }))
+}
+
+export async function changeStatus(id: number, input: ChangeInvoiceStatusInput): Promise<void> {
   await apiRequest<void>({
     path: `/invoices/${id}/status`,
     method: "PATCH",
-    body: { status },
+    body: input,
   })
+}
+
+// Issue the Pengganti for a cancelled invoice.
+export async function replace(id: number): Promise<InvoiceDetail> {
+  return apiRequest<InvoiceDetail>({ path: `/invoices/${id}/replacement`, method: "POST" })
+}
+
+// Returns the new row version.
+export async function updateDates(
+  id: number,
+  input: UpdateInvoiceDatesInput,
+  rowVersion: number,
+): Promise<{ rowVersion: number }> {
+  return apiRequest<{ rowVersion: number }>({
+    path: `/invoices/${id}/dates`,
+    method: "PATCH",
+    body: input,
+    headers: { "If-Match": String(rowVersion) },
+  })
+}
+
+export async function presignPaymentProofUpload(
+  id: number,
+  fileName: string,
+): Promise<PresignUpload> {
+  const qs = new URLSearchParams({ fileName }).toString()
+  return apiRequest<PresignUpload>({ path: `/invoices/${id}/payment-proof/upload-url?${qs}` })
+}
+
+export async function presignPaymentProofDownload(id: number): Promise<PresignDownload> {
+  return apiRequest<PresignDownload>({ path: `/invoices/${id}/payment-proof/download-url` })
 }
 
 export async function presignAttachmentUpload(

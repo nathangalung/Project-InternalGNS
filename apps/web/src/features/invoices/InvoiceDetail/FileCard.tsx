@@ -1,11 +1,14 @@
 import { ui } from "@/lib/ui"
 
-interface FileCardProps {
+type FileCardProps = {
   fileName?: string
   onUpload: () => void
   onDownload: () => void
 }
 
+// General invoice attachment.
+//
+// Payment proof is separate: it is stored with the Dibayar step.
 export default function FileCard({ fileName, onUpload, onDownload }: FileCardProps) {
   const hasFile = Boolean(fileName)
 
@@ -14,7 +17,7 @@ export default function FileCard({ fileName, onUpload, onDownload }: FileCardPro
       <h2 className="mb-3 text-base font-bold leading-6 tracking-[-0.025em] text-dark-900">
         Lampiran Invoice
       </h2>
-      <div className="flex items-center gap-4 rounded-lg border border-[rgba(204,195,216,0.2)] bg-white px-6 py-5">
+      <div className="flex items-center gap-4 rounded-lg border max-sm:flex-wrap border-[rgba(204,195,216,0.2)] bg-white px-6 py-5">
         <div
           className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${
             hasFile ? "bg-[rgba(99,14,212,0.12)]" : "bg-dark-100"
@@ -29,6 +32,7 @@ export default function FileCard({ fileName, onUpload, onDownload }: FileCardPro
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
             <polyline points="14 2 14 8 20 8" />
@@ -42,10 +46,10 @@ export default function FileCard({ fileName, onUpload, onDownload }: FileCardPro
               hasFile ? "text-[#111827]" : "italic text-dark-400"
             }`}
           >
-            {hasFile ? fileName : "Belum ada bukti pembayaran yang diunggah"}
+            {hasFile ? fileName : "Belum ada lampiran yang diunggah"}
           </div>
         </div>
-        <div className="flex gap-2.5">
+        <div className="flex gap-2.5 max-sm:w-full max-sm:flex-wrap max-sm:*:flex-1">
           <button type="button" onClick={onUpload} className={`${ui.btnOutline} min-w-[120px]`}>
             <svg
               width="14"
@@ -56,6 +60,7 @@ export default function FileCard({ fileName, onUpload, onDownload }: FileCardPro
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="17 8 12 3 7 8" />
@@ -74,6 +79,7 @@ export default function FileCard({ fileName, onUpload, onDownload }: FileCardPro
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                aria-hidden="true"
               >
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="7 10 12 15 17 10" />

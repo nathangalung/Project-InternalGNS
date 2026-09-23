@@ -6,12 +6,14 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import * as invApi from "@/features/invoices/api"
+import { ApiError } from "@/lib/api-client"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadToPresignedUrl } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
-import type { InvoiceBackendStatus } from "@/types/api"
+import { failureMessage } from "./download"
+import type { InvoiceDetail, UpdateInvoiceDatesInput } from "./types"
 
 export function useInvoices(params: invApi.ListParams = {}) {
   return useQuery({
@@ -45,16 +47,137 @@ export function useInvoiceByQuotation(quotationId: number | undefined) {
   })
 }
 
-export function useChangeInvoiceStatus() {
+// One invoice by its own id.
+export function useInvoice(id: number | undefined) {
+  return useQuery({
+    queryKey: id ? queryKeys.invoices.detail(id) : queryKeys.invoices.all,
+    queryFn: id !== undefined && id > 0 ? () => invApi.getById(id) : skipToken,
+  })
+}
+
+// Refresh every invoice view.
+function useInvalidateInvoices() {
   const qc = useQueryClient()
+  return () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: queryKeys.invoices.all }),
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.all }),
+    ])
+}
+
+// Upload once, retry a key clash.
+//
+// The proxy refuses a PUT to an existing key with 409; a fresh presign
+// carries a new timestamped key.
+async function uploadPaymentProof(id: number, file: File): Promise<string> {
+  validateAsset("invoiceAttachment", file)
+  for (let attempt = 0; ; attempt++) {
+    const presign = await invApi.presignPaymentProofUpload(id, file.name)
+    try {
+      await uploadToPresignedUrl(presign.uploadUrl, file)
+      return presign.objectKey
+    } catch (err) {
+      if (attempt === 0 && err instanceof ApiError && err.status === 409) continue
+      throw err
+    }
+  }
+}
+
+// Draft to sent.
+export function useSendInvoice() {
+  const invalidate = useInvalidateInvoices()
   return useMutation({
-    mutationFn: ({ id, status }: { id: number; status: InvoiceBackendStatus }) =>
-      invApi.changeStatus(id, status),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.invoices.all })
-      qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+    mutationFn: (id: number) => invApi.changeStatus(id, { status: "sent" }),
+    onSuccess: async () => {
+      await invalidate()
+      toast.success("Invoice ditandai Dikirim.")
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal mengubah status invoice.")),
+  })
+}
+
+// Sent or overdue to paid.
+export function useMarkInvoicePaid() {
+  const invalidate = useInvalidateInvoices()
+  return useMutation({
+    mutationFn: async ({ id, proof }: { id: number; proof?: File }) => {
+      const paymentProofKey = proof ? await uploadPaymentProof(id, proof) : undefined
+      await invApi.changeStatus(id, { status: "paid", paymentProofKey })
+    },
+    onSuccess: async () => {
+      await invalidate()
+      toast.success("Invoice ditandai Dibayar.")
+    },
+    onError: (err) => toast.error(failureMessage(err, "Gagal menandai invoice dibayar.")),
+  })
+}
+
+// Cancel, then issue the Pengganti.
+//
+// Two calls, not one transaction. When the second fails the invoice stays
+// cancelled with canReplace set, and the page offers Terbitkan Pengganti.
+export function useCancelAndReplaceInvoice() {
+  const qc = useQueryClient()
+  const invalidate = useInvalidateInvoices()
+  return useMutation({
+    mutationFn: async ({ id, note }: { id: number; note: string }): Promise<InvoiceDetail> => {
+      await invApi.changeStatus(id, { status: "cancelled", note })
+      return invApi.replace(id)
+    },
+    onSuccess: async (next) => {
+      qc.setQueryData(queryKeys.invoices.byQuotation(next.quotationId), next)
+      await invalidate()
+      toast.success(`Invoice pengganti ${next.invoiceNo} diterbitkan.`)
+    },
+    onError: async (err) => {
+      await invalidate()
+      toast.error(errorMessage(err, "Gagal membatalkan invoice."))
+    },
+  })
+}
+
+// Pengganti for an already cancelled invoice.
+export function useReplaceInvoice() {
+  const qc = useQueryClient()
+  const invalidate = useInvalidateInvoices()
+  return useMutation({
+    mutationFn: (id: number) => invApi.replace(id),
+    onSuccess: async (next) => {
+      qc.setQueryData(queryKeys.invoices.byQuotation(next.quotationId), next)
+      await invalidate()
+      toast.success(`Invoice pengganti ${next.invoiceNo} diterbitkan.`)
+    },
+    onError: (err) => toast.error(errorMessage(err, "Gagal menerbitkan invoice pengganti.")),
+  })
+}
+
+export function useUpdateInvoiceDates() {
+  const invalidate = useInvalidateInvoices()
+  return useMutation({
+    mutationFn: ({
+      id,
+      input,
+      rowVersion,
+    }: {
+      id: number
+      input: UpdateInvoiceDatesInput
+      rowVersion: number
+    }) => invApi.updateDates(id, input, rowVersion),
+    onSuccess: async () => {
+      await invalidate()
+      toast.success("Tanggal invoice disimpan.")
+    },
+    onError: async (err) => {
+      // The 409 detail is English; the page reloads the newer row.
+      if (err instanceof ApiError && err.status === 409) {
+        await invalidate()
+        toast.error(
+          "Invoice ini baru saja diubah di tempat lain. Periksa tanggalnya lalu simpan lagi.",
+        )
+        return
+      }
+      toast.error(errorMessage(err, "Gagal menyimpan tanggal invoice."))
+    },
   })
 }
 
@@ -68,7 +191,7 @@ export function useUploadInvoiceAttachment() {
       await invApi.updateAttachment(id, presign.objectKey)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.invoices.all }),
-    onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah lampiran.")),
+    onError: (err) => toast.error(failureMessage(err, "Gagal mengunggah lampiran.")),
   })
 }
 

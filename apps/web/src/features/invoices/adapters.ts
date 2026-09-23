@@ -15,6 +15,9 @@ export function invoiceItemsToProducts(items: InvoiceItemRow[] | undefined): Pro
       const gross = toNum(it.grossUnitPrice) || net
       const cost = toNum(it.costPrice)
       return {
+        // Catalog link; free text has none
+        itemId: it.offeredItemId,
+        lineId: it.id,
         kode: it.itemCode ?? "",
         nama: it.itemName,
         qty,
