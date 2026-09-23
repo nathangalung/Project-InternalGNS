@@ -19,6 +19,9 @@ var (
 	ErrInvalidRefresh = errors.New("invalid refresh token")
 	ErrExpiredRefresh = errors.New("refresh token expired")
 	ErrReusedRefresh  = errors.New("refresh token reused")
+	// ErrRevokedRefresh is a token ended on purpose (logout, admin change,
+	// an earlier reuse blast). Replaying it is not evidence of theft.
+	ErrRevokedRefresh = errors.New("refresh token revoked")
 )
 
 // 32 bytes of CSPRNG output, base64url-encoded (43 chars, no padding).
@@ -103,6 +106,12 @@ func (r *RefreshRepo) lookup(ctx context.Context, hash []byte) (lookupState, err
 		st.reason = *reason
 	}
 	return st, nil
+}
+
+// revokedByRotation reports a token retired by a successful refresh. A NULL
+// reason predates the column and is read as rotation, the cautious side.
+func revokedByRotation(reason string) bool {
+	return reason == "" || reason == "rotated"
 }
 
 func (r *RefreshRepo) revokeToken(ctx context.Context, hash []byte) error {

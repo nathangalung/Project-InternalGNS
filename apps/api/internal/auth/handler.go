@@ -82,7 +82,8 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case errors.Is(err, ErrInvalidRefresh),
 		errors.Is(err, ErrExpiredRefresh),
-		errors.Is(err, ErrReusedRefresh):
+		errors.Is(err, ErrReusedRefresh),
+		errors.Is(err, ErrRevokedRefresh):
 		httperr.Render(w, httperr.Unauthorized(err.Error()))
 		return
 	case err != nil:

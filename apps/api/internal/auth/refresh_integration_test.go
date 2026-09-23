@@ -103,7 +103,7 @@ func TestService_Refresh_OldReuseBlastsAllSessions(t *testing.T) {
 
 	// An old replay blasts every session, so the rotated token is revoked too.
 	_, err = svc.Refresh(ctx, rotated.RefreshToken)
-	assert.ErrorIs(t, err, auth.ErrReusedRefresh)
+	assert.ErrorIs(t, err, auth.ErrRevokedRefresh)
 }
 
 // Unknown token: never been issued.
@@ -132,8 +132,8 @@ func TestService_Refresh_ExpiredToken(t *testing.T) {
 	assert.ErrorIs(t, err, auth.ErrExpiredRefresh)
 }
 
-// RevokeRefresh (logout) marks the token revoked; subsequent refresh fails
-// as reuse (active-token-hash → revoked state).
+// RevokeRefresh (logout) marks the token revoked; a later refresh is told
+// the session ended, not that the token was replayed.
 func TestService_RevokeRefresh_OnLogout(t *testing.T) {
 	ctx, svc, u := newRefreshSvc(t, 24*time.Hour)
 
@@ -143,7 +143,7 @@ func TestService_RevokeRefresh_OnLogout(t *testing.T) {
 	require.NoError(t, svc.RevokeRefresh(ctx, resp.RefreshToken))
 
 	_, err = svc.Refresh(ctx, resp.RefreshToken)
-	assert.ErrorIs(t, err, auth.ErrReusedRefresh)
+	assert.ErrorIs(t, err, auth.ErrRevokedRefresh)
 }
 
 // RevokeRefresh is idempotent (already revoked is a silent no-op).
@@ -212,4 +212,71 @@ func TestRefreshRepo_PurgeExpired(t *testing.T) {
 func TestRefreshToken_HashShape(t *testing.T) {
 	sum := sha256.Sum256([]byte("anything"))
 	assert.Len(t, sum[:], 32)
+}
+
+// AU-13: a token an admin revoked is not evidence of theft. Replaying it
+// after the grace window must not blast the session the user opened since.
+func TestService_Refresh_AdminRevokedSparesNewSession(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	store := testutil.Store(t)
+	userRepo := users.NewRepo(tx, store)
+	u, err := userRepo.Create(ctx, users.CreateUserRequest{
+		Email: uniqueEmail(t), Name: "Admin Revoke IT",
+		Password: "Sup3rSecret!", Role: users.RoleOperational,
+	}, 1)
+	require.NoError(t, err)
+	svc := auth.NewService(userRepo, "test-secret-please-change", time.Hour).
+		WithRefresh(auth.NewRefreshRepo(tx, store), 24*time.Hour)
+
+	stale, err := svc.Login(ctx, u.Email, "Sup3rSecret!")
+	require.NoError(t, err)
+
+	// A role change revokes every session with reason "admin".
+	_, err = userRepo.Update(ctx, u.ID, users.UpdateUserRequest{
+		Email: u.Email, Name: u.Name, Role: users.RoleFinance, IsActive: true,
+	}, 1)
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx,
+		`UPDATE refresh_tokens SET revoked_at = now() - interval '30 seconds'
+		  WHERE user_id = $1 AND revoked_at IS NOT NULL`, u.ID)
+	require.NoError(t, err)
+
+	fresh, err := svc.Login(ctx, u.Email, "Sup3rSecret!")
+	require.NoError(t, err)
+
+	_, err = svc.Refresh(ctx, stale.RefreshToken)
+	assert.ErrorIs(t, err, auth.ErrRevokedRefresh)
+
+	_, err = svc.Refresh(ctx, fresh.RefreshToken)
+	require.NoError(t, err, "the session opened after the admin revoke must survive")
+}
+
+// A logged-out token replayed later likewise leaves other sessions alone.
+func TestService_Refresh_LoggedOutReplaySparesSiblings(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	store := testutil.Store(t)
+	userRepo := users.NewRepo(tx, store)
+	u, err := userRepo.Create(ctx, users.CreateUserRequest{
+		Email: uniqueEmail(t), Name: "Logout IT",
+		Password: "Sup3rSecret!", Role: users.RoleOperational,
+	}, 1)
+	require.NoError(t, err)
+	svc := auth.NewService(userRepo, "test-secret-please-change", time.Hour).
+		WithRefresh(auth.NewRefreshRepo(tx, store), 24*time.Hour)
+
+	a, err := svc.Login(ctx, u.Email, "Sup3rSecret!")
+	require.NoError(t, err)
+	b, err := svc.Login(ctx, u.Email, "Sup3rSecret!")
+	require.NoError(t, err)
+	require.NoError(t, svc.RevokeRefresh(ctx, a.RefreshToken))
+	_, err = tx.Exec(ctx,
+		`UPDATE refresh_tokens SET revoked_at = now() - interval '30 seconds'
+		  WHERE user_id = $1 AND revoked_at IS NOT NULL`, u.ID)
+	require.NoError(t, err)
+
+	_, err = svc.Refresh(ctx, a.RefreshToken)
+	assert.ErrorIs(t, err, auth.ErrRevokedRefresh)
+
+	_, err = svc.Refresh(ctx, b.RefreshToken)
+	require.NoError(t, err)
 }

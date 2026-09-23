@@ -221,6 +221,11 @@ func (s *Service) Refresh(ctx context.Context, raw string) (LoginResponse, error
 		if !st.found {
 			return LoginResponse{}, ErrInvalidRefresh
 		}
+		// Only rotation hands out a successor, so only a rotated token coming
+		// back is a replay. One ended on purpose is just a dead session.
+		if st.revoked && !revokedByRotation(st.reason) {
+			return LoginResponse{}, ErrRevokedRefresh
+		}
 		if st.revoked {
 			// A concurrent or retried redeem (a duplicate tab, a network retry)
 			// revokes the token moments before the loser looks it up. Only a
