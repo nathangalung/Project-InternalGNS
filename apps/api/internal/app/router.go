@@ -90,7 +90,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 	requireAuth := authMiddleware(authSvc)
 
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Mount("/auth", auth.Routes(authHandler, requireAuth))
+		r.With(problemJSON429).Mount("/auth", auth.Routes(authHandler, requireAuth))
 
 		r.Group(func(r chi.Router) {
 			r.Use(requireAuth)
