@@ -153,7 +153,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   }
 
   return (
-    <div className="page-content" style={{ gap: "29px" }}>
+    <div className="page-content gap-[29px]">
       <div className="flex flex-col gap-3">
         <nav className={ui.breadcrumb}>
           <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
@@ -220,7 +220,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
               aria-label="Ganti logo"
               className="absolute -bottom-1 -right-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 border-white bg-white p-0 shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
             >
-              <span className="flex h-full w-full items-center justify-center rounded-full bg-[linear-gradient(135deg,#630ED4_0%,#7C3AED_100%)]">
+              <span className="flex h-full w-full items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)]">
                 <svg
                   width="13"
                   height="13"
@@ -347,7 +347,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                 role="switch"
                 aria-checked={isActive}
                 className={`relative h-8 w-14 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] ${
-                  isActive ? "bg-primary-700" : "bg-[#CBD5E1]"
+                  isActive ? "bg-primary-700" : "bg-dark-300"
                 }`}
               >
                 <span
@@ -375,7 +375,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
           className={`rounded-lg bg-transparent px-7 py-3 text-sm font-bold ${
             dirty && !updateVendor.isPending
               ? "cursor-pointer text-primary-700"
-              : "cursor-default text-[#CBD5E1]"
+              : "cursor-default text-dark-300"
           }`}
         >
           Batal
@@ -386,8 +386,8 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
           disabled={!dirty || updateVendor.isPending}
           className={`rounded-lg px-8 py-3 text-sm font-bold text-white ${
             dirty
-              ? "bg-[linear-gradient(135deg,#630ED4_0%,#7C3AED_100%)] shadow-[0px_10px_15px_-3px_rgba(99,14,212,0.2),0px_4px_6px_-4px_rgba(99,14,212,0.2)]"
-              : "bg-[#CBD5E1] shadow-none"
+              ? "bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)] shadow-[0px_10px_15px_-3px_rgba(99,14,212,0.2),0px_4px_6px_-4px_rgba(99,14,212,0.2)]"
+              : "bg-dark-300 shadow-none"
           } ${
             dirty && !updateVendor.isPending ? "cursor-pointer" : "cursor-default"
           } ${updateVendor.isPending ? "opacity-70" : "opacity-100"}`}
@@ -405,18 +405,10 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
           <table className="w-full border-collapse">
             <thead>
               <tr className={ui.theadRow}>
-                <th className={ui.thCenter} style={{ width: 360 }}>
-                  Nama Produk
-                </th>
-                <th className={ui.thCenter} style={{ width: 200 }}>
-                  Kode IMPA
-                </th>
-                <th className={ui.thCenter} style={{ width: 200 }}>
-                  SKU Vendor
-                </th>
-                <th className={ui.thCenter} style={{ width: 200 }}>
-                  Harga Beli
-                </th>
+                <th className={`${ui.thCenter} w-[360px]`}>Nama Produk</th>
+                <th className={`${ui.thCenter} w-[200px]`}>Kode IMPA</th>
+                <th className={`${ui.thCenter} w-[200px]`}>SKU Vendor</th>
+                <th className={`${ui.thCenter} w-[200px]`}>Harga Beli</th>
               </tr>
             </thead>
             <tbody>

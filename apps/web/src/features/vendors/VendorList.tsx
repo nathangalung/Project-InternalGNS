@@ -69,7 +69,7 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
 
   return (
     <>
-      <div className="page-content" style={{ gap: "29px" }}>
+      <div className="page-content gap-[29px]">
         <div className="page-header">
           <h1 className="page-title">Daftar Vendor</h1>
           <div className="page-actions">
@@ -108,32 +108,22 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
           <table className="w-full border-collapse">
             <thead>
               <tr className={ui.theadRow}>
-                <th className={ui.thCenter} style={{ width: 240 }}>
-                  Nama Vendor
-                </th>
-                <th className={ui.thCenter} style={{ width: 160 }}>
-                  Negara
-                </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Status
-                </th>
+                <th className={`${ui.thCenter} w-[240px]`}>Nama Vendor</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Negara</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Status</th>
                 <th
-                  className={`${ui.thCenter} cursor-pointer`}
-                  style={{ width: 180 }}
+                  className={`${ui.thCenter} w-[180px] cursor-pointer`}
                   onClick={() => toggleSort("totalPembelian")}
                 >
                   Total Pembelian
                 </th>
                 <th
-                  className={`${ui.thCenter} cursor-pointer`}
-                  style={{ width: 160 }}
+                  className={`${ui.thCenter} w-[160px] cursor-pointer`}
                   onClick={() => toggleSort("productCount")}
                 >
                   Jumlah Produk
                 </th>
-                <th className={ui.thCenter} style={{ width: 80 }}>
-                  Aksi
-                </th>
+                <th className={`${ui.thCenter} w-[80px]`}>Aksi</th>
               </tr>
             </thead>
             <tbody>

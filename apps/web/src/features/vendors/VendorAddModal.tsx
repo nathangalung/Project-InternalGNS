@@ -5,21 +5,14 @@ import { ApiError } from "@/lib/api-client"
 import { ui } from "@/lib/ui"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
 
-// Same as ui.disabledField.
-const disabledCls = "disabled:cursor-not-allowed disabled:bg-[#F7F7F8] disabled:opacity-60"
-
-const fieldErrorCls = "mt-1 block text-xs text-[#EF4444]"
+const fieldErrorCls = "mt-1 block text-xs text-error"
 
 const optionalCls = "text-overline font-normal italic text-dark-600"
 
-const inputCls = `${ui.fieldInput} placeholder:text-dark-500 ${disabledCls}`
+const inputCls = `${ui.fieldInput} placeholder:text-dark-500 ${ui.disabledField}`
 
-// Faithful port of the legacy phone-input group.
-const phoneWrapCls =
-  "flex h-11 overflow-hidden rounded-md border-[1.5px] border-transparent bg-dark-200 transition focus-within:border-primary-600 focus-within:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
-const phonePrefixCls =
-  "flex items-center whitespace-nowrap border-r border-dark-300 px-3 text-sm font-medium text-dark-600"
-const phoneInputCls = `min-w-0 flex-1 border-0 bg-transparent px-3 text-sm text-dark-900 outline-none placeholder:text-dark-500 ${disabledCls}`
+// Keeps the UA input font.
+const phoneInputCls = `min-w-0 flex-1 border-0 bg-transparent px-3 text-sm text-dark-900 outline-none placeholder:text-dark-500 ${ui.disabledField}`
 
 interface VendorAddModalProps {
   open: boolean
@@ -139,9 +132,9 @@ export default function VendorAddModal({
         onClose={handleCancel}
         footer={
           <>
-            {submitError && <span className="flex-1 text-xs text-[#EF4444]">{submitError}</span>}
+            {submitError && <span className="flex-1 text-xs text-error">{submitError}</span>}
             {!submitError && isAddressFilled && !isContactValid && (
-              <span className="flex-1 text-xs text-[#EF4444]">
+              <span className="flex-1 text-xs text-error">
                 Isi minimal email atau nomor telepon.
               </span>
             )}
@@ -231,8 +224,8 @@ export default function VendorAddModal({
               <label className={ui.fieldLabel}>
                 Nomor Telepon <span className={optionalCls}>(Opsional)</span>
               </label>
-              <div className={phoneWrapCls}>
-                <span className={phonePrefixCls}>+62</span>
+              <div className={ui.prefixWrap}>
+                <span className={ui.prefixLabel}>+62</span>
                 <input
                   className={phoneInputCls}
                   type="tel"
@@ -264,7 +257,7 @@ export default function VendorAddModal({
               role="switch"
               aria-checked={isActive}
               className={`relative h-[22px] w-10 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] ${
-                isActive ? "bg-primary-700" : "bg-[#CBD5E1]"
+                isActive ? "bg-primary-700" : "bg-dark-300"
               }`}
             >
               <span

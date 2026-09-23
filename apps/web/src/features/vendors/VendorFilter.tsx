@@ -6,11 +6,7 @@ import {
 } from "@/lib/filter-options"
 import { chip, ui } from "@/lib/ui"
 
-// Faithful port of the legacy amount-input group.
-const amountWrapCls =
-  "flex h-11 overflow-hidden rounded-md border-[1.5px] border-transparent bg-dark-200 transition focus-within:border-primary-600 focus-within:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
-const amountPrefixCls =
-  "flex items-center whitespace-nowrap border-r border-dark-300 px-3 text-sm font-medium text-dark-600"
+// Keeps the UA input font.
 const amountInputCls =
   "min-w-0 flex-1 border-0 bg-transparent px-3 text-sm text-dark-900 outline-none placeholder:text-dark-500"
 
@@ -71,7 +67,7 @@ export default function VendorFilter({ onClose, onApply, initialValues }: Vendor
             className={`mr-auto border-0 bg-transparent p-0 text-[13px] font-medium underline-offset-[3px] ${
               dirty
                 ? "cursor-pointer text-primary-700 underline"
-                : "cursor-default text-[#CBD5E1] no-underline"
+                : "cursor-default text-dark-300 no-underline"
             }`}
           >
             Hapus Filter
@@ -119,8 +115,8 @@ export default function VendorFilter({ onClose, onApply, initialValues }: Vendor
       <div className={ui.modalSection}>
         <div className={ui.modalSectionHeading}>Min Total Pembelian</div>
         <div className={ui.field}>
-          <div className={amountWrapCls}>
-            <span className={amountPrefixCls}>IDR</span>
+          <div className={ui.prefixWrap}>
+            <span className={ui.prefixLabel}>IDR</span>
             <input
               className={amountInputCls}
               type="text"
