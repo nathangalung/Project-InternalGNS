@@ -3,6 +3,7 @@ package items
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 
@@ -26,6 +27,12 @@ func (r *Repo) WithExec(exec db.Executor) *Repo {
 }
 
 var ErrNotFound = errors.New("not found")
+
+// Vendor link failures.
+var (
+	ErrVendorNotFound = errors.New("items: vendor not found")
+	ErrVendorInactive = errors.New("items: vendor inactive")
+)
 
 // sortable is the closed set of item sort keys.
 var sortable = listq.Whitelist{
@@ -144,7 +151,25 @@ func (r *Repo) AddVendor(ctx context.Context, itemID int64, req AddVendorToItemR
 	if err != nil {
 		return VendorForItem{}, err
 	}
-	return pgx.CollectOneRow(rows, pgx.RowToStructByName[VendorForItem])
+	link, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[VendorForItem])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return VendorForItem{}, r.vendorLinkErr(ctx, req.VendorID)
+	}
+	return link, err
+}
+
+// vendorLinkErr explains a refused link.
+func (r *Repo) vendorLinkErr(ctx context.Context, vendorID int64) error {
+	var active bool
+	err := r.db.QueryRow(ctx, r.store.Get("items.vendor_active"), vendorID).Scan(&active)
+	switch {
+	case errors.Is(err, pgx.ErrNoRows):
+		return ErrVendorNotFound
+	case err != nil:
+		return fmt.Errorf("load vendor %d: %w", vendorID, err)
+	}
+	// Inactive, or reactivated since the insert refused it.
+	return ErrVendorInactive
 }
 
 func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int) ([]SearchResult, error) {

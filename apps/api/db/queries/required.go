@@ -65,6 +65,7 @@ var RequiredKeys = []string{
 	"items.suggest_selling_prices",
 	"items.update",
 	"items.update_image",
+	"items.vendor_active",
 	"purchase_orders.change_status",
 	"purchase_orders.completeness_client",
 	"purchase_orders.completeness_vendors",

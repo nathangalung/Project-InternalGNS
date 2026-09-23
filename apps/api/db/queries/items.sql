@@ -16,15 +16,17 @@ FROM items
 WHERE id = $1;
 
 -- name: items.create
+-- IMPA codes are stored trimmed and upper-cased, so the import lookup and
+-- the one-active-owner index agree on what counts as the same code.
 INSERT INTO items (name, impa_code, default_unit_id, description, is_active, created_by, updated_by)
-VALUES ($1, $2, $3, $4, COALESCE($5, TRUE), $6, $6)
+VALUES ($1, NULLIF(UPPER(BTRIM($2)), ''), $3, $4, COALESCE($5, TRUE), $6, $6)
 RETURNING id, name, impa_code, default_unit_id, description,
           is_active, created_at, updated_at, image_object_key;
 
 -- name: items.update
 UPDATE items
    SET name             = $2,
-       impa_code        = $3,
+       impa_code        = NULLIF(UPPER(BTRIM($3)), ''),
        default_unit_id  = $4,
        description      = $5,
        is_active        = $6,
@@ -43,11 +45,14 @@ UPDATE items
 RETURNING id;
 
 -- name: items.add_vendor
+-- Links only an active vendor: an inactive one is filtered out of every
+-- vendor list, so the link would be saved but never shown. No row back means
+-- the vendor is missing or inactive; items.vendor_active tells which.
 WITH ins AS (
     INSERT INTO vendor_products
         (vendor_id, item_id, vendor_sku, cost_price, product_url, last_quoted_at, created_by, updated_by)
-    VALUES
-        ($1, $2, $3, $4, $5, NOW(), $6, $6)
+    SELECT $1::bigint, $2::bigint, $3::varchar, $4::numeric, $5::text, NOW(), $6::bigint, $6::bigint
+    WHERE EXISTS (SELECT 1 FROM vendors WHERE id = $1::bigint AND is_active)
     ON CONFLICT (vendor_id, item_id) DO UPDATE
        SET vendor_sku     = EXCLUDED.vendor_sku,
            cost_price     = EXCLUDED.cost_price,
@@ -99,9 +104,16 @@ WHERE vp.item_id = $1 AND v.is_active = TRUE
 ORDER BY vp.cost_price ASC NULLS LAST;
 
 -- name: items.find_by_impa
+-- UPPER(impa_code) is the expression uq_items_impa_code_active indexes, so
+-- rows stored before normalisation still match. ORDER BY keeps the pick
+-- stable should an inactive duplicate ever be reactivated around the index.
 SELECT id FROM items
-WHERE impa_code = $1 AND is_active = TRUE
+WHERE UPPER(impa_code) = UPPER(BTRIM($1)) AND is_active = TRUE
+ORDER BY id
 LIMIT 1;
+
+-- name: items.vendor_active
+SELECT is_active FROM vendors WHERE id = $1;
 
 -- name: items.match_with_vendor_by_id
 SELECT
@@ -116,14 +128,18 @@ SELECT
     vp.cost_price::text AS cost_price
 FROM items i
 LEFT JOIN units u ON u.id = i.default_unit_id
+-- The vendor filter sits inside the LATERAL: filtering after LIMIT 1 would
+-- pick a deactivated vendor's cheaper price and then drop the vendor,
+-- leaving the row with no price at all.
 LEFT JOIN LATERAL (
     SELECT vp_inner.id, vp_inner.vendor_id, vp_inner.cost_price
     FROM vendor_products vp_inner
+    JOIN vendors v_inner ON v_inner.id = vp_inner.vendor_id AND v_inner.is_active = TRUE
     WHERE vp_inner.item_id = i.id AND vp_inner.is_active = TRUE
-    ORDER BY vp_inner.cost_price ASC NULLS LAST
+    ORDER BY vp_inner.cost_price ASC NULLS LAST, vp_inner.id ASC
     LIMIT 1
 ) vp ON TRUE
-LEFT JOIN vendors v ON v.id = vp.vendor_id AND v.is_active = TRUE
+LEFT JOIN vendors v ON v.id = vp.vendor_id
 WHERE i.id = $1 AND i.is_active = TRUE;
 
 -- name: items.suggest_selling_prices

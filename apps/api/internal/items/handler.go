@@ -157,6 +157,16 @@ func (h *Handler) AddVendor(w http.ResponseWriter, r *http.Request) {
 	userID := deps.CurrentUserID(r.Context())
 	row, err := h.repo.AddVendor(r.Context(), id, req, userID)
 	if err != nil {
+		switch {
+		case errors.Is(err, ErrVendorNotFound):
+			httperr.Render(w, httperr.NotFound("vendor not found"))
+			return
+		case errors.Is(err, ErrVendorInactive):
+			httperr.Render(w, httperr.Unprocessable(map[string]string{
+				"vendorId": "Vendor sudah nonaktif. Aktifkan vendor itu atau pilih vendor lain.",
+			}))
+			return
+		}
 		httperr.RenderDBErr(w, err)
 		return
 	}

@@ -55,3 +55,27 @@ Feature: Item lifecycle
     When the user imports an unknown product row with auto-create
     Then the response status is 200
     And the imported row is a newly created product with empty price
+
+  Scenario: Import match skips a deactivated vendor's cheaper price
+    Given an existing item with an IMPA code
+    And the item is offered at 100 by a vendor that is later deactivated
+    And the item is offered at 200 by an active vendor
+    When the user imports a row with the item's IMPA code
+    Then the response status is 200
+    And the imported row carries the active vendor's price of "200.00"
+
+  Scenario: A lowercase IMPA code matches on import
+    Given an existing item with an IMPA code
+    When the user imports a row with the item's IMPA code in lowercase and auto-create
+    Then the response status is 200
+    And the imported row matched the seeded item by IMPA code
+
+  Scenario: A duplicate active IMPA code returns 409
+    Given an existing item with an IMPA code
+    When the user creates another item with the same IMPA code
+    Then the response status is 409
+
+  Scenario: Linking an inactive vendor returns 422
+    Given an existing item
+    When the user links an inactive vendor to the item
+    Then the response status is 422

@@ -34,6 +34,7 @@ type scenarioState struct {
 	body    []byte
 	itemID  int64
 	name    string
+	impa    string
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
@@ -256,6 +257,134 @@ func (s *scenarioState) rowCreatedWithEmptyPrice() error {
 	return nil
 }
 
+// IMPA and vendor steps for MD-01, MD-03, MD-04, MD-11.
+func (s *scenarioState) seedItemWithIMPA() error {
+	s.impa = fmt.Sprintf("AT%d", time.Now().UnixNano()%1_000_000_000_000)
+	s.name = s.uniqueName("ATDD IMPA ITEM")
+	// Typed the way a user might: stored upper-cased and trimmed.
+	typed := " " + strings.ToLower(s.impa) + " "
+	body := items.CreateItemRequest{Name: s.name, IMPACode: &typed}
+	if err := s.sendRequest(http.MethodPost, "/items/", body); err != nil {
+		return err
+	}
+	if s.last.StatusCode != http.StatusCreated {
+		return fmt.Errorf("seed want 201 got %d body=%s", s.last.StatusCode, s.body)
+	}
+	return s.captureID()
+}
+
+// insertVendor adds a vendor the suite cleans up.
+func (s *scenarioState) insertVendor(active bool) (int64, error) {
+	var id int64
+	err := testutil.Pool(s.t).QueryRow(context.Background(), `
+		INSERT INTO vendors (name, is_active, created_by, updated_by)
+		VALUES ($1, $2, $3, $3) RETURNING id`,
+		s.uniqueName("ATDD VENDOR"), active, defaultUserID).Scan(&id)
+	if err != nil {
+		return 0, fmt.Errorf("insert vendor: %w", err)
+	}
+	s.cleaner.Vendor(id)
+	return id, nil
+}
+
+func (s *scenarioState) offerItem(cost string, laterDeactivated bool) error {
+	vendorID, err := s.insertVendor(true)
+	if err != nil {
+		return err
+	}
+	body := items.AddVendorToItemRequest{VendorID: vendorID, CostPrice: &cost}
+	if err := s.sendRequest(http.MethodPost, "/items/"+strconv.FormatInt(s.itemID, 10)+"/vendors", body); err != nil {
+		return err
+	}
+	if s.last.StatusCode != http.StatusCreated {
+		return fmt.Errorf("link want 201 got %d body=%s", s.last.StatusCode, s.body)
+	}
+	if !laterDeactivated {
+		return nil
+	}
+	_, err = testutil.Pool(s.t).Exec(context.Background(),
+		`UPDATE vendors SET is_active = FALSE WHERE id = $1`, vendorID)
+	return err
+}
+
+func (s *scenarioState) offerByDeactivatedVendor(cost string) error { return s.offerItem(cost, true) }
+
+func (s *scenarioState) offerByActiveVendor(cost string) error { return s.offerItem(cost, false) }
+
+func (s *scenarioState) importIMPARow(code string, autoCreate bool) error {
+	body := items.MatchRowsRequest{
+		AutoCreate: autoCreate,
+		Rows:       []items.MatchRowInput{{IMPACode: code, Name: s.uniqueName("ATDD IMPORT"), Qty: 1}},
+	}
+	if err := s.sendRequest(http.MethodPost, "/items/match-rows", body); err != nil {
+		return err
+	}
+	s.trackAutoCreated()
+	return nil
+}
+
+func (s *scenarioState) importByIMPA() error { return s.importIMPARow(s.impa, false) }
+
+func (s *scenarioState) importByLowercaseIMPA() error {
+	return s.importIMPARow(strings.ToLower(s.impa), true)
+}
+
+func (s *scenarioState) singleImportedRow() (items.MatchRowResult, error) {
+	var out items.MatchRowsResponse
+	if err := json.Unmarshal(s.body, &out); err != nil {
+		return items.MatchRowResult{}, err
+	}
+	if len(out.Rows) != 1 || out.Rows[0].Matched == nil {
+		return items.MatchRowResult{}, fmt.Errorf("want one matched row body=%s", s.body)
+	}
+	return out.Rows[0], nil
+}
+
+func (s *scenarioState) rowHasActivePrice(want string) error {
+	row, err := s.singleImportedRow()
+	if err != nil {
+		return err
+	}
+	if row.Matched.CostPrice == nil || *row.Matched.CostPrice != want {
+		return fmt.Errorf("want price %s body=%s", want, s.body)
+	}
+	return nil
+}
+
+func (s *scenarioState) rowMatchedByIMPA() error {
+	row, err := s.singleImportedRow()
+	if err != nil {
+		return err
+	}
+	if row.Source != "IMPA_EXACT" || row.Matched.ItemID != s.itemID {
+		return fmt.Errorf("want IMPA_EXACT on item %d body=%s", s.itemID, s.body)
+	}
+	return nil
+}
+
+func (s *scenarioState) createDuplicateIMPA() error {
+	body := items.CreateItemRequest{Name: s.uniqueName("ATDD DUP"), IMPACode: &s.impa}
+	if err := s.sendRequest(http.MethodPost, "/items/", body); err != nil {
+		return err
+	}
+	if s.last.StatusCode == http.StatusCreated {
+		prev := s.itemID
+		if err := s.captureID(); err != nil {
+			return err
+		}
+		s.itemID = prev
+	}
+	return nil
+}
+
+func (s *scenarioState) linkInactiveVendor() error {
+	vendorID, err := s.insertVendor(false)
+	if err != nil {
+		return err
+	}
+	return s.linkVendor(vendorID)
+}
+
 func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
 		state := &scenarioState{t: t, cleaner: cleaner}
@@ -264,6 +393,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 			state.body = nil
 			state.itemID = 0
 			state.name = ""
+			state.impa = ""
 			return ctx, nil
 		})
 
@@ -287,6 +417,15 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the vendor list contains at least (\d+) row(?:s)?$`, state.vendorListAtLeast)
 		sc.Step(`^the user imports an unknown product row with auto-create$`, state.importUnknownAutoCreate)
 		sc.Step(`^the imported row is a newly created product with empty price$`, state.rowCreatedWithEmptyPrice)
+		sc.Step(`^an existing item with an IMPA code$`, state.seedItemWithIMPA)
+		sc.Step(`^the item is offered at (\d+) by a vendor that is later deactivated$`, state.offerByDeactivatedVendor)
+		sc.Step(`^the item is offered at (\d+) by an active vendor$`, state.offerByActiveVendor)
+		sc.Step(`^the user imports a row with the item's IMPA code$`, state.importByIMPA)
+		sc.Step(`^the user imports a row with the item's IMPA code in lowercase and auto-create$`, state.importByLowercaseIMPA)
+		sc.Step(`^the imported row carries the active vendor's price of "([^"]+)"$`, state.rowHasActivePrice)
+		sc.Step(`^the imported row matched the seeded item by IMPA code$`, state.rowMatchedByIMPA)
+		sc.Step(`^the user creates another item with the same IMPA code$`, state.createDuplicateIMPA)
+		sc.Step(`^the user links an inactive vendor to the item$`, state.linkInactiveVendor)
 	}
 }
 
