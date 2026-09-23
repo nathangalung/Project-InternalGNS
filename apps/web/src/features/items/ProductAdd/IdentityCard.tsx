@@ -227,15 +227,12 @@ export default function IdentityCard({
             <div className="relative">
               <button
                 type="button"
-                className={`flex w-full items-center justify-between rounded-md border-[1.5px] border-transparent bg-dark-200 px-4 py-3 text-sm font-normal text-dark-900 outline-none transition focus:border-primary-600 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)] ${ui.disabledField}`}
+                className={`flex w-full items-center justify-between rounded-md border-[1.5px] border-transparent bg-dark-200 px-4 py-3 text-sm font-normal ${!form.satuan && isProductFilled ? "text-dark-500" : "text-dark-900"} outline-none transition focus:border-primary-600 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)] ${ui.disabledField}`}
                 onClick={() => {
                   if (isProductFilled) toggleDropdown("satuan")
                 }}
                 onBlur={() => setTimeout(() => closeIfMatch("satuan"), 150)}
                 disabled={!isProductFilled}
-                style={{
-                  color: !form.satuan && isProductFilled ? "var(--color-text-muted)" : undefined,
-                }}
               >
                 <span>{form.satuan || "Pilih satuan"}</span>
                 <svg

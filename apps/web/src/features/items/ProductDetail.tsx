@@ -168,7 +168,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
 
   return (
     <>
-      <div className="page-content" style={{ gap: "29px" }}>
+      <div className="page-content gap-[29px]">
         <div className="flex flex-col gap-3">
           <nav className={ui.breadcrumb}>
             <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
@@ -484,18 +484,10 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
           <table className="w-full border-collapse">
             <thead>
               <tr className={ui.theadRow}>
-                <th className={ui.thCenter} style={{ width: 280 }}>
-                  Nama Vendor
-                </th>
-                <th className={ui.thCenter} style={{ width: 200 }}>
-                  SKU Vendor
-                </th>
-                <th className={ui.thCenter} style={{ width: 180 }}>
-                  Harga Beli
-                </th>
-                <th className={ui.thCenter} style={{ width: 200 }}>
-                  Penawaran Terakhir
-                </th>
+                <th className={`${ui.thCenter} w-[280px]`}>Nama Vendor</th>
+                <th className={`${ui.thCenter} w-[200px]`}>SKU Vendor</th>
+                <th className={`${ui.thCenter} w-[180px]`}>Harga Beli</th>
+                <th className={`${ui.thCenter} w-[200px]`}>Penawaran Terakhir</th>
               </tr>
             </thead>
             <tbody>

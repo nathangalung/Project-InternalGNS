@@ -221,7 +221,7 @@ export default function AddVendorToItemModal({
             <label className={ui.fieldLabel}>
               Harga Beli <span className="text-primary-700">*</span>
             </label>
-            <div className="flex h-11 overflow-hidden rounded-md border-[1.5px] border-transparent bg-dark-200 transition focus-within:border-primary-600 focus-within:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]">
+            <div className={ui.prefixWrap}>
               <span className="flex items-center whitespace-nowrap border-r border-dark-300 px-3 text-sm font-medium text-dark-600">
                 IDR
               </span>

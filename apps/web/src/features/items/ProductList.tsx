@@ -20,12 +20,12 @@ interface ProductListProps {
 
 // Tier → small inline label shown next to product name.
 // Layout-neutral: same line, same height, only adds badge content.
-const TIER_BADGE: Record<AdvancedSearchTier, { label: string; bg: string; color: string }> = {
-  ITEM_AUTO: { label: "EXACT", bg: "#DCFCE7", color: "#15803D" },
-  VENDOR_OFFER: { label: "VENDOR", bg: "#EDE9FE", color: "#6D28D9" },
-  ITEM_SUGGESTED: { label: "MIRIP", bg: "#FEF3C7", color: "#B45309" },
-  REQUEST_HISTORY: { label: "RIWAYAT", bg: "#DBEAFE", color: "#1D4ED8" },
-  ITEM_FUZZY: { label: "FUZZY", bg: "#F3F4F6", color: "#4B5563" },
+const TIER_BADGE: Record<AdvancedSearchTier, { label: string; cls: string }> = {
+  ITEM_AUTO: { label: "EXACT", cls: "bg-[#DCFCE7] text-[#15803D]" },
+  VENDOR_OFFER: { label: "VENDOR", cls: "bg-primary-100 text-[#6D28D9]" },
+  ITEM_SUGGESTED: { label: "MIRIP", cls: "bg-accent-100 text-accent-700" },
+  REQUEST_HISTORY: { label: "RIWAYAT", cls: "bg-[#DBEAFE] text-[#1D4ED8]" },
+  ITEM_FUZZY: { label: "FUZZY", cls: "bg-[#F3F4F6] text-[#4B5563]" },
 }
 
 export default function ProductList({ onViewDetail }: ProductListProps) {
@@ -113,7 +113,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
 
   return (
     <>
-      <div className="page-content" style={{ gap: "29px" }}>
+      <div className="page-content gap-[29px]">
         <div className="page-header">
           <h1 className="page-title">Katalog Produk</h1>
           <div className="page-actions">
@@ -165,8 +165,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
                 return (
                   <span
                     key={t}
-                    className="rounded-[4px] px-2 py-0.5 text-[11px] font-bold"
-                    style={{ background: b.bg, color: b.color }}
+                    className={`rounded-[4px] px-2 py-0.5 text-[11px] font-bold ${b.cls}`}
                   >
                     {searchData.counts[t]} {b.label}
                   </span>
@@ -179,21 +178,11 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
           <table className="w-full border-collapse">
             <thead>
               <tr className={ui.theadRow}>
-                <th className={ui.thCenter} style={{ width: 110 }}>
-                  Kode IMPA
-                </th>
-                <th className={ui.thCenter} style={{ width: "auto" }}>
-                  Nama Produk
-                </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Unit
-                </th>
-                <th className={ui.thCenter} style={{ width: 160 }}>
-                  Status
-                </th>
-                <th className={ui.thCenter} style={{ width: 80 }}>
-                  Aksi
-                </th>
+                <th className={`${ui.thCenter} w-[110px]`}>Kode IMPA</th>
+                <th className={`${ui.thCenter} w-auto`}>Nama Produk</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Unit</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Status</th>
+                <th className={`${ui.thCenter} w-[80px]`}>Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -221,8 +210,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
                         {it.name}
                         {tierBadge && (
                           <span
-                            className="ml-1.5 inline-block rounded-[4px] px-1.5 py-px align-middle text-[10px] font-bold tracking-[0.3px]"
-                            style={{ background: tierBadge.bg, color: tierBadge.color }}
+                            className={`ml-1.5 inline-block rounded-[4px] px-1.5 py-px align-middle text-[10px] font-bold tracking-[0.3px] ${tierBadge.cls}`}
                           >
                             {tierBadge.label}
                           </span>
