@@ -1,13 +1,9 @@
-import { ui } from "@/lib/ui"
+import { dropdownLabel, ui } from "@/lib/ui"
 import {
   AddNewButton,
   type CatalogItem,
   CheckmarkIcon,
   type DropdownKey,
-  disabledStyle,
-  dropdownItemStyle,
-  dropdownLabelStyle,
-  dropdownPanelStyle,
   formatKodeNama,
   type ProductAddFormData,
 } from "./helpers"
@@ -79,9 +75,9 @@ export default function IdentityCard({
               onBlur={() => setTimeout(() => closeIfMatch("productRequest"), 150)}
             />
             {productRequestOpen && (
-              <div style={dropdownPanelStyle}>
+              <div className={ui.dropdownPanel}>
                 {requestMatches.length === 0 ? (
-                  <div className="px-5 py-2.5" style={dropdownLabelStyle(false)}>
+                  <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
                     Tidak ada rekomendasi — input akan disimpan apa adanya.
                   </div>
                 ) : (
@@ -96,7 +92,7 @@ export default function IdentityCard({
                         <button
                           key={p.id ?? label}
                           type="button"
-                          style={dropdownItemStyle}
+                          className={ui.dropdownItem}
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => {
                             onChange("requestedKodeImpaNama", label)
@@ -104,7 +100,7 @@ export default function IdentityCard({
                             setOpenDropdown(null)
                           }}
                         >
-                          <span style={dropdownLabelStyle(isActive)}>{label}</span>
+                          <span className={dropdownLabel(isActive)}>{label}</span>
                           {isActive && <CheckmarkIcon />}
                         </button>
                       )
@@ -192,11 +188,9 @@ export default function IdentityCard({
               onBlur={() => setTimeout(() => closeIfMatch("product"), 150)}
             />
             {productOpen && (
-              <div style={dropdownPanelStyle}>
+              <div className={ui.dropdownPanel}>
                 {productMatches.length === 0 ? (
-                  <div className="px-5 py-2.5" style={dropdownLabelStyle(false)}>
-                    Tidak ada hasil
-                  </div>
+                  <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>Tidak ada hasil</div>
                 ) : (
                   productMatches.map((p) => {
                     const label = formatKodeNama(p.kode, p.nama)
@@ -205,7 +199,7 @@ export default function IdentityCard({
                       <button
                         key={p.id ?? label}
                         type="button"
-                        style={dropdownItemStyle}
+                        className={ui.dropdownItem}
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
                           onChange("kodeImpaNama", label)
@@ -213,7 +207,7 @@ export default function IdentityCard({
                           setOpenDropdown(null)
                         }}
                       >
-                        <span style={dropdownLabelStyle(isActive)}>{label}</span>
+                        <span className={dropdownLabel(isActive)}>{label}</span>
                         {isActive && <CheckmarkIcon />}
                       </button>
                     )
@@ -233,14 +227,13 @@ export default function IdentityCard({
             <div className="relative">
               <button
                 type="button"
-                className="flex w-full items-center justify-between rounded-md border-[1.5px] border-transparent bg-dark-200 px-4 py-3 text-sm font-normal text-dark-900 outline-none transition focus:border-primary-600 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
+                className={`flex w-full items-center justify-between rounded-md border-[1.5px] border-transparent bg-dark-200 px-4 py-3 text-sm font-normal text-dark-900 outline-none transition focus:border-primary-600 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)] ${ui.disabledField}`}
                 onClick={() => {
                   if (isProductFilled) toggleDropdown("satuan")
                 }}
                 onBlur={() => setTimeout(() => closeIfMatch("satuan"), 150)}
                 disabled={!isProductFilled}
                 style={{
-                  ...(!isProductFilled ? disabledStyle : {}),
                   color: !form.satuan && isProductFilled ? "var(--color-text-muted)" : undefined,
                 }}
               >
@@ -258,20 +251,20 @@ export default function IdentityCard({
                 </svg>
               </button>
               {satuanOpen && isProductFilled && (
-                <div style={dropdownPanelStyle}>
+                <div className={ui.dropdownPanel}>
                   {satuanOptions.map((opt) => {
                     const isActive = form.satuan === opt
                     return (
                       <button
                         key={opt}
                         type="button"
-                        style={dropdownItemStyle}
+                        className={ui.dropdownItem}
                         onClick={() => {
                           onChange("satuan", opt)
                           setOpenDropdown(null)
                         }}
                       >
-                        <span style={dropdownLabelStyle(isActive)}>{opt}</span>
+                        <span className={dropdownLabel(isActive)}>{opt}</span>
                         {isActive && <CheckmarkIcon />}
                       </button>
                     )
@@ -285,14 +278,13 @@ export default function IdentityCard({
               Jumlah Produk <span className="text-primary-700">*</span>
             </label>
             <input
-              className={`${ui.fieldInput} font-sans`}
+              className={`${ui.fieldInput} font-sans ${ui.disabledField}`}
               type="number"
               min={1}
               placeholder="Masukkan jumlah produk"
               value={form.jumlahProduk}
               onChange={(e) => onChange("jumlahProduk", e.target.value)}
               disabled={!isSatuanFilled}
-              style={!isSatuanFilled ? disabledStyle : undefined}
             />
           </div>
         </div>

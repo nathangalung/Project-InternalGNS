@@ -1,16 +1,11 @@
 import { useMemo, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
-import {
-  dropdownItemStyle,
-  dropdownLabelStyle,
-  dropdownPanelStyleCompact as dropdownPanelStyle,
-} from "@/components/shared/filter-styles"
 import Modal from "@/components/shared/Modal"
 import { useAddVendorToItem } from "@/features/items/hooks"
 import { useVendors } from "@/features/vendors/hooks"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
 import { ApiError } from "@/lib/api-client"
-import { ui } from "@/lib/ui"
+import { dropdownLabel, ui } from "@/lib/ui"
 
 interface AddVendorToItemModalProps {
   open: boolean
@@ -165,7 +160,7 @@ export default function AddVendorToItemModal({
                 </button>
               )}
               {showSuggestions && vendorQuery.length > 0 && (
-                <div style={dropdownPanelStyle}>
+                <div className={ui.dropdownPanelCompact}>
                   {filteredVendors.length === 0 ? (
                     <div className="flex flex-col gap-2 p-3">
                       <div className="px-0 py-1 text-center text-[13px] text-[#94A3B8]">
@@ -202,14 +197,14 @@ export default function AddVendorToItemModal({
                         <button
                           key={v.id}
                           type="button"
-                          style={dropdownItemStyle}
+                          className={ui.dropdownItem}
                           onClick={() => {
                             setVendorId(v.id)
                             setVendorQuery(v.name)
                             setShowSuggestions(false)
                           }}
                         >
-                          <span style={dropdownLabelStyle(active)}>{v.name}</span>
+                          <span className={dropdownLabel(active)}>{v.name}</span>
                           {active && <CheckIcon />}
                         </button>
                       )

@@ -1,15 +1,12 @@
 import { useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
-import {
-  chipStyle,
-  dropdownItemStyle,
-  dropdownLabelStyle,
-  STATUS_FILTER_OPTIONS as STATUS_OPTIONS,
-  type StatusFilterValue,
-} from "@/components/shared/filter-styles"
 import Modal from "@/components/shared/Modal"
 import { useUnits } from "@/features/units/hooks"
-import { ui } from "@/lib/ui"
+import {
+  STATUS_FILTER_OPTIONS as STATUS_OPTIONS,
+  type StatusFilterValue,
+} from "@/lib/filter-options"
+import { chip, dropdownLabel, ui } from "@/lib/ui"
 
 export type ProductStatusFilter = StatusFilterValue
 
@@ -92,7 +89,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
                 key={o.value}
                 type="button"
                 onClick={() => setStatus(o.value)}
-                style={chipStyle(status === o.value)}
+                className={chip(status === o.value)}
               >
                 {o.label}
               </button>
@@ -172,14 +169,14 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
                       <button
                         key={u.id}
                         type="button"
-                        style={dropdownItemStyle}
+                        className={ui.dropdownItem}
                         onClick={() => {
                           setUnitCode(u.code)
                           setUnitQuery(u.code)
                           setShowUnitSuggestions(false)
                         }}
                       >
-                        <span style={dropdownLabelStyle(active)}>{label}</span>
+                        <span className={dropdownLabel(active)}>{label}</span>
                         {active && <CheckIcon />}
                       </button>
                     )

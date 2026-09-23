@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react"
 import { qe, qep } from "./wizard-styles"
 
 interface Step3ShippingProps {
@@ -10,8 +9,6 @@ interface Step3ShippingProps {
   setShippingCost: (s: string) => void
   isAlamatFilled: boolean
   isWaktuFilled: boolean
-  // Accepted for legacy callers; the disabled look now comes from utilities.
-  disabledStyle?: CSSProperties
   formatRp: (n: number) => string
 }
 

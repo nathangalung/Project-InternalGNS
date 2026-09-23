@@ -1,11 +1,6 @@
 import { ui } from "@/lib/ui"
 
 export { CheckIcon as CheckmarkIcon } from "@/components/document/icons"
-export {
-  dropdownItemStyle,
-  dropdownLabelStyle,
-  dropdownPanelStyle,
-} from "@/components/shared/filter-styles"
 
 // Field class strings, ported from ca-*.
 export const optionalCls = "text-overline font-normal italic text-dark-600"

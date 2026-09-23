@@ -1,7 +1,7 @@
 import { useState } from "react"
-import { chipStyle, type StatusFilterValue } from "@/components/shared/filter-styles"
 import Modal from "@/components/shared/Modal"
-import { ui } from "@/lib/ui"
+import type { StatusFilterValue } from "@/lib/filter-options"
+import { chip, ui } from "@/lib/ui"
 import type { Role } from "@/types/api"
 
 export type RoleFilter = "all" | Role
@@ -78,7 +78,7 @@ export default function UserFilter({ onClose, onApply, initialValues }: UserFilt
                 key={o.value}
                 type="button"
                 onClick={() => setRole(o.value)}
-                style={chipStyle(role === o.value)}
+                className={chip(role === o.value)}
               >
                 {o.label}
               </button>
@@ -96,7 +96,7 @@ export default function UserFilter({ onClose, onApply, initialValues }: UserFilt
                 key={o.value}
                 type="button"
                 onClick={() => setStatus(o.value)}
-                style={chipStyle(status === o.value)}
+                className={chip(status === o.value)}
               >
                 {o.label}
               </button>

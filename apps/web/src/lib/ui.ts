@@ -89,6 +89,14 @@ export const ui = {
     "absolute left-0 top-[calc(100%+8px)] w-[162px] rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-2 shadow-[0_0_0_1px_rgba(0,0,0,0.05)]",
   statusOption:
     "flex h-8 w-full items-center justify-between px-5 py-1 text-left transition hover:bg-dark-100",
+
+  // Dropdown panel and rows
+  dropdownPanel:
+    "absolute top-[calc(100%+4px)] right-0 left-0 z-50 flex flex-col rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-2 [box-shadow:0_4px_12px_rgba(0,0,0,0.08)]",
+  dropdownPanelCompact:
+    "absolute top-[calc(100%+4px)] right-0 left-0 z-50 flex flex-col rounded-md border border-[rgba(204,195,216,0.4)] bg-white py-1 [box-shadow:0_4px_12px_rgba(0,0,0,0.08)]",
+  dropdownItem:
+    "flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent px-5 py-2.5 text-left",
 }
 
 // Small pill toggle used for chart metric tabs and similar.
@@ -98,4 +106,30 @@ export function pill(active: boolean): string {
       ? "border-primary-600 bg-primary-600 text-white hover:bg-primary-700"
       : "border-dark-200 bg-dark-100 text-dark-500 hover:bg-dark-200"
   }`
+}
+
+// Dropdown row label text.
+export function dropdownLabel(active: boolean): string {
+  return `font-[Inter,sans-serif] text-sm leading-5 ${
+    active ? "font-bold text-primary-700" : "font-medium text-[#4A4455]"
+  }`
+}
+
+// Shared filter chip tone.
+function chipTone(active: boolean): string {
+  return `cursor-pointer font-[Inter,sans-serif] text-[13px] transition-all duration-150 ease-[ease] ${
+    active
+      ? "border-[1.5px] border-primary-700 bg-[rgba(99,14,212,0.06)] font-semibold text-primary-700"
+      : "border border-[#E5E7EB] bg-white font-medium text-[#4A4455]"
+  }`
+}
+
+// Rounded status filter chip.
+export function chip(active: boolean): string {
+  return `rounded-[999px] px-[18px] py-2 ${chipTone(active)}`
+}
+
+// Date preset option chip.
+export function presetChip(active: boolean): string {
+  return `flex items-center justify-between rounded-md px-3.5 py-2.5 ${chipTone(active)}`
 }

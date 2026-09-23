@@ -1,12 +1,8 @@
-import { ui } from "@/lib/ui"
+import { dropdownLabel, ui } from "@/lib/ui"
 import {
   AddNewButton,
   CheckmarkIcon,
   type DropdownKey,
-  disabledStyle,
-  dropdownItemStyle,
-  dropdownLabelStyle,
-  dropdownPanelStyle,
   formatRp,
   type HistorisOption,
   type ProductAddFormData,
@@ -67,12 +63,11 @@ export default function VendorPriceCard({
         </label>
         <div className="relative">
           <input
-            className={`${ui.fieldInput} font-sans`}
+            className={`${ui.fieldInput} font-sans ${ui.disabledField}`}
             type="text"
             placeholder="Ketik atau pilih vendor"
             value={form.namaVendor}
             disabled={!isJumlahFilled}
-            style={!isJumlahFilled ? disabledStyle : undefined}
             onChange={(e) => {
               onChange("namaVendor", e.target.value)
               setOpenDropdown("vendor")
@@ -83,9 +78,9 @@ export default function VendorPriceCard({
             onBlur={() => setTimeout(() => closeIfMatch("vendor"), 150)}
           />
           {vendorOpen && isJumlahFilled && (
-            <div style={dropdownPanelStyle}>
+            <div className={ui.dropdownPanel}>
               {vendorMatches.length === 0 ? (
-                <div className="px-5 py-2.5" style={dropdownLabelStyle(false)}>
+                <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
                   Tidak ada hasil. Silahkan tambahkan vendor baru.
                 </div>
               ) : (
@@ -95,11 +90,11 @@ export default function VendorPriceCard({
                     <button
                       key={v.nama}
                       type="button"
-                      style={dropdownItemStyle}
+                      className={ui.dropdownItem}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => onPickVendor(v)}
                     >
-                      <span style={dropdownLabelStyle(isActive)}>{v.nama}</span>
+                      <span className={dropdownLabel(isActive)}>{v.nama}</span>
                       {v.harga > 0 ? (
                         <span
                           className={`text-caption leading-6 ${
@@ -127,14 +122,13 @@ export default function VendorPriceCard({
             Harga Beli Satuan <span className="text-primary-700">*</span>
           </label>
           <input
-            className={`${ui.fieldInput} font-sans`}
+            className={`${ui.fieldInput} font-sans ${ui.disabledField}`}
             type="number"
             min={0}
             placeholder="Masukkan harga beli"
             value={form.hargaBeli}
             onChange={(e) => onChange("hargaBeli", e.target.value)}
             disabled={!isVendorFilled}
-            style={!isVendorFilled ? disabledStyle : undefined}
           />
         </div>
         <div className={ui.field}>
@@ -142,14 +136,13 @@ export default function VendorPriceCard({
             Harga Jual Satuan <span className="text-primary-700">*</span>
           </label>
           <input
-            className={`${ui.fieldInput} font-sans`}
+            className={`${ui.fieldInput} font-sans ${ui.disabledField}`}
             type="number"
             min={0}
             placeholder="Masukkan harga jual"
             value={form.hargaJual}
             onChange={(e) => onChange("hargaJual", e.target.value)}
             disabled={!isVendorFilled}
-            style={!isVendorFilled ? disabledStyle : undefined}
           />
         </div>
       </div>
@@ -185,11 +178,9 @@ export default function VendorPriceCard({
         </button>
 
         {historisOpen && isVendorFilled && (
-          <div style={{ ...dropdownPanelStyle, zIndex: 999 }}>
+          <div className={`${ui.dropdownPanel} z-[999]`}>
             {historisOptions.length === 0 ? (
-              <div className="px-5 py-2.5" style={dropdownLabelStyle(false)}>
-                Belum ada riwayat harga.
-              </div>
+              <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>Belum ada riwayat harga.</div>
             ) : null}
             {historisOptions.map((h, i) => {
               const isActive = form.hargaJual === String(h.harga)
@@ -197,13 +188,13 @@ export default function VendorPriceCard({
                 <button
                   key={i}
                   type="button"
-                  style={dropdownItemStyle}
+                  className={ui.dropdownItem}
                   onClick={(e) => {
                     e.preventDefault()
                     onPickHistoris(h.harga)
                   }}
                 >
-                  <span style={dropdownLabelStyle(isActive)}>{h.keterangan}</span>
+                  <span className={dropdownLabel(isActive)}>{h.keterangan}</span>
                   <span
                     className={`text-caption leading-6 ${
                       isActive ? "font-bold text-primary-700" : "font-normal text-[#4A4455]"

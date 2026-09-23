@@ -5,7 +5,7 @@ import { ApiError } from "@/lib/api-client"
 import { ui } from "@/lib/ui"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
 
-// Visual disabled treatment, matching lib/styles disabledStyle.
+// Same as ui.disabledField.
 const disabledCls = "disabled:cursor-not-allowed disabled:bg-[#F7F7F8] disabled:opacity-60"
 
 const fieldErrorCls = "mt-1 block text-xs text-[#EF4444]"

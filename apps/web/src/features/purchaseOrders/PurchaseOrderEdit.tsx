@@ -13,7 +13,6 @@ import Step4Summary from "@/features/quotations/Step4Summary"
 import { useUnits } from "@/features/units/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
-import { disabledStyle } from "@/lib/styles"
 import { ui } from "@/lib/ui"
 import type { PoItemInput, PoUpdateItemsInput } from "@/types/api"
 
@@ -370,7 +369,6 @@ export default function PurchaseOrderEdit({ poId }: PurchaseOrderEditProps) {
             setShippingCost={setShippingCost}
             isAlamatFilled={isAlamatFilled}
             isWaktuFilled={isWaktuFilled}
-            disabledStyle={disabledStyle}
             formatRp={formatRp}
           />
         )}

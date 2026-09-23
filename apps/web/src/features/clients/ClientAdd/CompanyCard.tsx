@@ -1,12 +1,9 @@
 import { useMemo, useRef, useState } from "react"
 import { useCountries } from "@/features/countries/hooks"
-import { ui } from "@/lib/ui"
+import { dropdownLabel, ui } from "@/lib/ui"
 import {
   CheckmarkIcon,
   type ClientAddFormData,
-  dropdownItemStyle,
-  dropdownLabelStyle,
-  dropdownPanelStyle,
   fieldErrorCls,
   inputCls,
   optionalCls,
@@ -102,7 +99,7 @@ export default function CompanyCard({
               </svg>
             </button>
             {negaraOpen && isNamaPerusahaanFilled && (
-              <div style={dropdownPanelStyle}>
+              <div className={ui.dropdownPanel}>
                 <div className="px-3 pb-2">
                   <input
                     type="text"
@@ -123,14 +120,14 @@ export default function CompanyCard({
                     <button
                       key={opt.value}
                       type="button"
-                      style={dropdownItemStyle}
+                      className={ui.dropdownItem}
                       onClick={() => {
                         onChange("kodeNegara", opt.value)
                         setNegaraQuery("")
                         closeNegara()
                       }}
                     >
-                      <span style={dropdownLabelStyle(isActive)}>{opt.label}</span>
+                      <span className={dropdownLabel(isActive)}>{opt.label}</span>
                       {isActive && <CheckmarkIcon />}
                     </button>
                   )

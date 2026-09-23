@@ -6,9 +6,8 @@ import {
   type DatePreset,
   presetToIsoRange,
 } from "@/components/shared/DateRangeField"
-import { chipStyle, presetChipStyle } from "@/components/shared/filter-styles"
 import Modal from "@/components/shared/Modal"
-import { ui } from "@/lib/ui"
+import { chip, presetChip, ui } from "@/lib/ui"
 import { PO_LABEL, PO_STATUS_ORDER } from "./PurchaseOrderDetail/helpers"
 import type { PoStatus } from "./types"
 
@@ -140,7 +139,7 @@ export default function PurchaseOrderFilter({
                   key={key}
                   type="button"
                   onClick={() => handlePresetClick(key)}
-                  style={presetChipStyle(isActive)}
+                  className={presetChip(isActive)}
                 >
                   {label}
                   {key === "kustom" ? (
@@ -177,7 +176,7 @@ export default function PurchaseOrderFilter({
             <button
               type="button"
               onClick={() => setActiveStatuses([])}
-              style={chipStyle(activeStatuses.length === 0)}
+              className={chip(activeStatuses.length === 0)}
             >
               Semua
             </button>
@@ -186,7 +185,7 @@ export default function PurchaseOrderFilter({
                 key={value}
                 type="button"
                 onClick={() => toggleStatus(value)}
-                style={chipStyle(activeStatuses.includes(value))}
+                className={chip(activeStatuses.includes(value))}
               >
                 {label}
               </button>

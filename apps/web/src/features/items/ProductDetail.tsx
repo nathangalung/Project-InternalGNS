@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
-import {
-  dropdownItemStyle,
-  dropdownLabelStyle,
-  dropdownPanelStyleCompact as dropdownPanelStyle,
-} from "@/components/shared/filter-styles"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import AddVendorToItemModal from "@/features/items/AddVendorToItemModal"
 import {
@@ -17,7 +12,7 @@ import { useUnits } from "@/features/units/hooks"
 import { ApiError, fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
 import { formatRupiah } from "@/lib/format"
-import { ui } from "@/lib/ui"
+import { dropdownLabel, ui } from "@/lib/ui"
 import type { ItemRow } from "@/types/api"
 
 interface ProductDetailProps {
@@ -348,7 +343,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                     </button>
                   )}
                   {showUnitSuggestions && unitQuery.length > 0 && (
-                    <div style={dropdownPanelStyle}>
+                    <div className={ui.dropdownPanelCompact}>
                       {filteredUnits.length === 0 ? (
                         <div className="px-5 py-3 text-center text-[13px] text-[#94A3B8]">
                           Tidak ada hasil
@@ -361,14 +356,14 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                             <button
                               key={u.id}
                               type="button"
-                              style={dropdownItemStyle}
+                              className={ui.dropdownItem}
                               onClick={() => {
                                 setUnitCode(u.code)
                                 setUnitQuery(u.code)
                                 setShowUnitSuggestions(false)
                               }}
                             >
-                              <span style={dropdownLabelStyle(active)}>{label}</span>
+                              <span className={dropdownLabel(active)}>{label}</span>
                               {active && <CheckIcon />}
                             </button>
                           )

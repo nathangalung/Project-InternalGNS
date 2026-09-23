@@ -1,14 +1,9 @@
 import { useMemo, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
-import {
-  dropdownItemStyle,
-  dropdownLabelStyle,
-  dropdownPanelStyle,
-} from "@/components/shared/filter-styles"
 import Modal from "@/components/shared/Modal"
 import { useCreateItem } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
-import { ui } from "@/lib/ui"
+import { dropdownLabel, ui } from "@/lib/ui"
 
 interface ProductCreateModalData {
   nama: string
@@ -182,7 +177,7 @@ export default function ProductCreateModal({
               </button>
             )}
             {showSatuanSuggestions && satuanQuery.length > 0 && (
-              <div style={dropdownPanelStyle}>
+              <div className={ui.dropdownPanel}>
                 {filteredUnits.length === 0 ? (
                   <div className="px-5 py-3 text-center text-[13px] text-[#94A3B8]">
                     Tidak ada hasil
@@ -195,14 +190,14 @@ export default function ProductCreateModal({
                       <button
                         key={u.id}
                         type="button"
-                        style={dropdownItemStyle}
+                        className={ui.dropdownItem}
                         onClick={() => {
                           setSatuan(u.code)
                           setSatuanQuery(u.code)
                           setShowSatuanSuggestions(false)
                         }}
                       >
-                        <span style={dropdownLabelStyle(active)}>{label}</span>
+                        <span className={dropdownLabel(active)}>{label}</span>
                         {active && <CheckIcon />}
                       </button>
                     )

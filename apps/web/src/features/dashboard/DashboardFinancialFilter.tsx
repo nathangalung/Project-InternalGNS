@@ -1,12 +1,7 @@
 import { useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
-import {
-  dropdownItemStyle,
-  dropdownLabelStyle,
-  dropdownPanelStyle,
-} from "@/components/shared/filter-styles"
 import Modal from "@/components/shared/Modal"
-import { ui } from "@/lib/ui"
+import { dropdownLabel, ui } from "@/lib/ui"
 
 export interface DashboardFilterValues {
   year: number
@@ -150,21 +145,21 @@ export default function DashboardFinancialFilter({
               </svg>
             </button>
             {yearOpen && (
-              <div style={dropdownPanelStyle}>
+              <div className={ui.dropdownPanel}>
                 {YEAR_OPTIONS.map((y) => {
                   const isActive = year === y
                   return (
                     <button
                       key={y}
                       type="button"
-                      style={dropdownItemStyle}
+                      className={ui.dropdownItem}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => {
                         setYear(y)
                         setYearOpen(false)
                       }}
                     >
-                      <span style={dropdownLabelStyle(isActive)}>{y}</span>
+                      <span className={dropdownLabel(isActive)}>{y}</span>
                       {isActive && <CheckIcon />}
                     </button>
                   )

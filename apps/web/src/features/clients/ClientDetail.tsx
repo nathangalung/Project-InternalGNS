@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
-import { dropdownItemStyle, dropdownLabelStyle } from "@/components/shared/filter-styles"
 import * as clientsApi from "@/features/clients/api"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import {
@@ -15,7 +14,7 @@ import {
 import { useCountries } from "@/features/countries/hooks"
 import { ApiError, fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
-import { ui } from "@/lib/ui"
+import { dropdownLabel, ui } from "@/lib/ui"
 import type { ClientRow } from "@/types/api"
 
 interface ClientDetailProps {
@@ -447,14 +446,14 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                             <button
                               key={c.code}
                               type="button"
-                              style={dropdownItemStyle}
+                              className={ui.dropdownItem}
                               onClick={() => {
                                 setCountryCode(c.code)
                                 setCountryQuery("")
                                 setCountryOpen(false)
                               }}
                             >
-                              <span style={dropdownLabelStyle(active)}>
+                              <span className={dropdownLabel(active)}>
                                 {c.code} - {c.name}
                               </span>
                               {active && <CheckIcon />}

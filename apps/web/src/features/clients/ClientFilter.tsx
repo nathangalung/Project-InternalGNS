@@ -1,15 +1,12 @@
 import { useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
-import {
-  chipStyle,
-  dropdownItemStyle,
-  dropdownLabelStyle,
-  STATUS_FILTER_OPTIONS as STATUS_OPTIONS,
-  type StatusFilterValue,
-} from "@/components/shared/filter-styles"
 import Modal from "@/components/shared/Modal"
 import { useCountries } from "@/features/countries/hooks"
-import { ui } from "@/lib/ui"
+import {
+  STATUS_FILTER_OPTIONS as STATUS_OPTIONS,
+  type StatusFilterValue,
+} from "@/lib/filter-options"
+import { chip, dropdownLabel, ui } from "@/lib/ui"
 
 export type ClientStatusFilter = StatusFilterValue
 
@@ -103,7 +100,7 @@ export default function ClientFilter({ onClose, onApply, initialValues }: Client
                 key={o.value}
                 type="button"
                 onClick={() => setStatus(o.value)}
-                style={chipStyle(status === o.value)}
+                className={chip(status === o.value)}
               >
                 {o.label}
               </button>
@@ -182,14 +179,14 @@ export default function ClientFilter({ onClose, onApply, initialValues }: Client
                       <button
                         key={c.code}
                         type="button"
-                        style={dropdownItemStyle}
+                        className={ui.dropdownItem}
                         onClick={() => {
                           setCountryCode(c.code)
                           setCountryQuery(c.name)
                           setShowCountrySuggestions(false)
                         }}
                       >
-                        <span style={dropdownLabelStyle(active)}>{c.name}</span>
+                        <span className={dropdownLabel(active)}>{c.name}</span>
                         {active && <CheckIcon />}
                       </button>
                     )

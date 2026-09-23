@@ -1,11 +1,10 @@
 import { useState } from "react"
+import Modal from "@/components/shared/Modal"
 import {
-  chipStyle,
   STATUS_FILTER_OPTIONS as STATUS_OPTIONS,
   type StatusFilterValue,
-} from "@/components/shared/filter-styles"
-import Modal from "@/components/shared/Modal"
-import { ui } from "@/lib/ui"
+} from "@/lib/filter-options"
+import { chip, ui } from "@/lib/ui"
 
 // Faithful port of the legacy amount-input group.
 const amountWrapCls =
@@ -95,7 +94,7 @@ export default function VendorFilter({ onClose, onApply, initialValues }: Vendor
                 key={o.value}
                 type="button"
                 onClick={() => setStatus(o.value)}
-                style={chipStyle(status === o.value)}
+                className={chip(status === o.value)}
               >
                 {o.label}
               </button>
