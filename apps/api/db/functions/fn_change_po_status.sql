@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_po_status (deployed by migration 00046).
+-- Canonical current body of fn_change_po_status (deployed by migration 00053).
 CREATE OR REPLACE FUNCTION public.fn_change_po_status(p_po_id bigint, p_new_status text, p_user_id bigint)
  RETURNS void
  LANGUAGE plpgsql
@@ -42,7 +42,7 @@ BEGIN
       USING ERRCODE = 'P0012';
   END IF;
 
-  IF p_new_status = 'DELIVERED' AND v_dn_current IS NULL THEN
+  IF p_new_status IN ('ON_PROGRESS', 'DELIVERED') AND v_dn_current IS NULL THEN
     v_dn := fn_next_doc_no('DN', v_company_id);
   END IF;
 

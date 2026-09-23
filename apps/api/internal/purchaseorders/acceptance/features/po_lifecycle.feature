@@ -133,3 +133,32 @@ Feature: Purchase order lifecycle
     When the user tries to transition the PO to "ON_PROGRESS"
     Then the response status is 422
     And the error names the incomplete client
+
+  Scenario: The delivery note is refused before work starts
+    Given an accepted quotation
+    When the user downloads the delivery note
+    Then the response status is 409
+    When the user transitions the PO through "UPLOADED"
+    Then every PO transition succeeds
+    When the user downloads the delivery note
+    Then the response status is 409
+
+  Scenario: The delivery note carries the number stored when work starts
+    Given an accepted quotation
+    When the user transitions the PO through "UPLOADED,ON_PROGRESS"
+    Then every PO transition succeeds
+    When the user reads the PO by quotation
+    Then the PO has a delivery note number
+    When the user transitions the PO through "UPLOADED,ON_PROGRESS"
+    Then every PO transition succeeds
+    When the user reads the PO by quotation
+    Then the delivery note number is unchanged
+    When the user exports the PO list
+    Then the response status is 200
+    And the export lists the stored delivery note number
+
+  Scenario: PO lines name the offered catalog item
+    Given an accepted quotation offering catalog item 1 for "tolong carikan punching tool"
+    When the user lists PO items
+    Then the response status is 200
+    And the first PO line is named after catalog item 1

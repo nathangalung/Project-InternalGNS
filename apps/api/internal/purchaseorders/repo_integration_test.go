@@ -471,3 +471,32 @@ func shippingLine(t *testing.T, items []purchaseorders.PurchaseOrderItem) purcha
 
 func int16Ptr(v int16) *int16 { return &v }
 func strPtr(v string) *string { return &v }
+
+// The note number is issued at ON_PROGRESS and never reissued.
+func TestRepo_ChangeStatus_OnProgressIssuesDeliveryNote(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, poID := acceptedQuotationWithPO(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+
+	dnAfter := func(target purchaseorders.Status) *string {
+		t.Helper()
+		require.NoError(t, repo.ChangeStatus(ctx, poID, target, seedUserID))
+		po, err := repo.GetByID(ctx, poID)
+		require.NoError(t, err)
+		return po.DeliveryNoteNumber
+	}
+
+	assert.Nil(t, dnAfter(purchaseorders.StatusUploaded))
+	issued := dnAfter(purchaseorders.StatusOnProgress)
+	require.NotNil(t, issued)
+	assert.Contains(t, *issued, "DN-")
+	for _, step := range []purchaseorders.Status{
+		purchaseorders.StatusUploaded,
+		purchaseorders.StatusOnProgress,
+		purchaseorders.StatusDelivered,
+	} {
+		got := dnAfter(step)
+		require.NotNil(t, got, step)
+		assert.Equal(t, *issued, *got, step)
+	}
+}

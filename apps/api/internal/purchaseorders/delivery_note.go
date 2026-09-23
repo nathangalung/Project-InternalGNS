@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
 
@@ -70,13 +69,20 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	dnNo, ok := issuedDeliveryNote(po)
+	if !ok {
+		httperr.Render(w, httperr.Conflict(
+			"Surat jalan baru terbit setelah pekerjaan PO dimulai (ON_PROGRESS)."))
+		return
+	}
+
 	items, err := h.repo.ListItems(r.Context(), id)
 	if err != nil {
 		httperr.RenderDBErr(w, err)
 		return
 	}
 
-	data, dnNo := h.buildData(r.Context(), po, items)
+	data := h.buildData(r.Context(), po, dnNo, items)
 
 	pdf, err := h.renderer.Render(r.Context(), "delivery_note/DeliveryNote.tex.tmpl", data)
 	if err != nil {
@@ -89,21 +95,23 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-// deliveryNoteNumber mirrors the quotation number with a DN- prefix
-// (e.g. DN-2640034/GNS/I/2026), matching invoice and quotation numbering.
-func deliveryNoteNumber(quotationNo, poNumber string) string {
-	if quotationNo != "" {
-		return "DN-" + strings.TrimPrefix(quotationNo, "Q-")
+// issuedDeliveryNote returns the stored number once work has started.
+// A PO reverted below ON_PROGRESS keeps its number but cannot print it.
+func issuedDeliveryNote(po PurchaseOrder) (string, bool) {
+	if po.Status != StatusOnProgress && po.Status != StatusDelivered {
+		return "", false
 	}
-	return "DN-" + poNumber
+	if po.DeliveryNoteNumber == nil || *po.DeliveryNoteNumber == "" {
+		return "", false
+	}
+	return *po.DeliveryNoteNumber, true
 }
 
-func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, items []PurchaseOrderItem) (dnData, string) {
+func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, dnNo string, items []PurchaseOrderItem) dnData {
 	client, _ := h.clients.GetByID(ctx, po.CompanyClientID)
 
-	attn, vessel, quotationNo := "", "", ""
+	attn, vessel := "", ""
 	if q, err := h.quotations.GetDetail(ctx, po.QuotationID); err == nil {
-		quotationNo = q.QuotationNo
 		if q.ContactName != nil {
 			attn = *q.ContactName
 		}
@@ -111,7 +119,6 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, i
 			vessel = *q.VesselName
 		}
 	}
-	dnNo := deliveryNoteNumber(quotationNo, po.PoNumber)
 
 	expItems := make([]dnItem, 0, len(items))
 	for i, it := range items {
@@ -141,5 +148,5 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, i
 		VesselName:     pdfgen.LatexEscape(vessel),
 		DateLine:       pdfgen.JakartaDateLine(po.PoDate.In(tz.Jakarta())),
 		Items:          expItems,
-	}, dnNo
+	}
 }

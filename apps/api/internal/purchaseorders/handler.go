@@ -80,8 +80,13 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	headers := []string{"No. Delivery Note", "No. PO", "No. Quotation", "Tanggal", "Klien", "Status", "Total"}
 	rows := make([][]string, 0, len(res.Rows))
 	for _, po := range res.Rows {
+		// Blank until the note is issued at ON_PROGRESS.
+		dn := ""
+		if po.DeliveryNoteNumber != nil {
+			dn = *po.DeliveryNoteNumber
+		}
 		rows = append(rows, []string{
-			deliveryNoteNumber(po.QuotationNo, po.PoNumber),
+			dn,
 			po.PoNumber,
 			po.QuotationNo,
 			po.PoDate.In(tz.Jakarta()).Format("2006-01-02"),

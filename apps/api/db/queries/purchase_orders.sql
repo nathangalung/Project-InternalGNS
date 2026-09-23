@@ -1,6 +1,7 @@
 -- name: purchase_orders.list_base
 SELECT po.id,
        po.po_number,
+       po.delivery_note_number,
        po.quotation_id,
        q.quotation_no,
        po.company_client_id,
@@ -42,6 +43,7 @@ WHERE 1=1;
 -- name: purchase_orders.get_by_id
 SELECT po.id,
        po.po_number,
+       po.delivery_note_number,
        po.quotation_id,
        q.quotation_no,
        po.company_client_id,
@@ -75,6 +77,7 @@ WHERE po.id = $1;
 -- name: purchase_orders.get_by_quotation
 SELECT po.id,
        po.po_number,
+       po.delivery_note_number,
        po.quotation_id,
        q.quotation_no,
        po.company_client_id,

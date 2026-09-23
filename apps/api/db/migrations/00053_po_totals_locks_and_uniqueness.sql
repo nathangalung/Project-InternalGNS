@@ -1,6 +1,6 @@
 -- +goose Up
 
--- PO read model, uniqueness and edit locks.
+-- PO read model, uniqueness, edit locks and document identity.
 --
 -- 1. v_po_totals gives every PO screen the same money figures the invoice is
 --    billed from: DPP is the sum of the per-line net subtotals, and the tax
@@ -138,7 +138,276 @@ END;
 $$ LANGUAGE plpgsql;
 -- +goose StatementEnd
 
+-- 5. A PO line snapshots the offered catalog item, falling back to the
+--    customer's request text for unmatched lines. The PO, the delivery note
+--    and the invoice built from it described goods by the request text, so
+--    no document said what was actually supplied. Existing lines keep their
+--    snapshot; a name edited later on the PO is left alone.
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION fn_create_purchase_order(
+  p_quotation_id BIGINT,
+  p_user_id      BIGINT
+) RETURNS BIGINT AS $$
+DECLARE
+  v_po_id        BIGINT;
+  v_po_no        TEXT;
+  v_company_id   BIGINT;
+  v_contact_id   BIGINT;
+BEGIN
+  SELECT id INTO v_po_id FROM purchase_orders WHERE quotation_id = p_quotation_id;
+  IF v_po_id IS NOT NULL THEN
+    RETURN v_po_id;
+  END IF;
+
+  SELECT company_client_id, contact_id
+  INTO v_company_id, v_contact_id
+  FROM quotations WHERE id = p_quotation_id;
+
+  IF v_company_id IS NULL THEN
+    RAISE EXCEPTION 'Quotation % not found', p_quotation_id;
+  END IF;
+
+  v_po_no := fn_next_doc_no('PO', v_company_id);
+
+  INSERT INTO purchase_orders (
+    po_number, quotation_id, company_client_id, contact_id,
+    po_date, status, created_by, updated_by
+  ) VALUES (
+    v_po_no, p_quotation_id, v_company_id, v_contact_id,
+    CURRENT_DATE, 'PENDING', p_user_id, p_user_id
+  ) RETURNING id INTO v_po_id;
+
+  INSERT INTO purchase_order_items (
+    po_id, quotation_item_id, line_number, item_type,
+    offered_item_id, qty, unit_id, selling_price, cost_price,
+    item_name, item_code, ship_destination, shipping_days,
+    is_available, created_by, updated_by
+  )
+  SELECT
+    v_po_id, qi.id, qi.line_number, qi.item_type,
+    qi.offered_item_id, qi.qty, qi.unit_id, qi.selling_price, qi.cost_price,
+    COALESCE(NULLIF(oi.name, ''), qi.requested_name, ''),
+    COALESCE(NULLIF(oi.impa_code, ''), qi.requested_impa),
+    qi.ship_destination, qi.shipping_days,
+    qi.is_available, p_user_id, p_user_id
+  FROM quotation_items qi
+  LEFT JOIN items oi ON oi.id = qi.offered_item_id
+  WHERE qi.quotation_id = p_quotation_id
+  ORDER BY qi.line_number;
+
+  RETURN v_po_id;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
+
+-- 6. The delivery note number is issued when work starts (ON_PROGRESS), the
+--    first point the note can be printed, instead of at DELIVERED. The PDF
+--    printed a number derived from the quotation while a different one was
+--    stored, so the printed and filed numbers never matched. A revert keeps
+--    the number already issued. POs already in progress get theirs now.
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION fn_change_po_status(
+  p_po_id      BIGINT,
+  p_new_status TEXT,
+  p_user_id    BIGINT
+) RETURNS VOID AS $$
+DECLARE
+  v_old        TEXT;
+  v_ok         BOOLEAN;
+  v_company_id BIGINT;
+  v_dn_current TEXT;
+  v_dn         TEXT;
+BEGIN
+  SELECT status, company_client_id, delivery_note_number
+    INTO v_old, v_company_id, v_dn_current
+    FROM purchase_orders WHERE id = p_po_id FOR UPDATE;
+
+  IF v_old IS NULL THEN
+    RAISE EXCEPTION 'Purchase order % not found', p_po_id
+      USING ERRCODE = 'P0011';
+  END IF;
+
+  IF v_old = p_new_status THEN
+    RETURN;
+  END IF;
+
+  IF v_old = 'DELIVERED' AND p_new_status = 'ON_PROGRESS'
+     AND EXISTS (SELECT 1 FROM invoices WHERE po_id = p_po_id) THEN
+    RAISE EXCEPTION 'PO % has an invoice; cannot revert from DELIVERED', p_po_id
+      USING ERRCODE = 'P0013';
+  END IF;
+
+  v_ok := CASE
+    WHEN v_old = 'PENDING'     AND p_new_status IN ('UPLOADED')                        THEN TRUE
+    WHEN v_old = 'UPLOADED'    AND p_new_status IN ('ON_PROGRESS','PENDING')           THEN TRUE
+    WHEN v_old = 'ON_PROGRESS' AND p_new_status IN ('DELIVERED','UPLOADED')            THEN TRUE
+    WHEN v_old = 'DELIVERED'   AND p_new_status IN ('ON_PROGRESS')                     THEN TRUE
+    ELSE FALSE
+  END;
+
+  IF NOT v_ok THEN
+    RAISE EXCEPTION 'Invalid PO status transition: % -> %', v_old, p_new_status
+      USING ERRCODE = 'P0012';
+  END IF;
+
+  IF p_new_status IN ('ON_PROGRESS', 'DELIVERED') AND v_dn_current IS NULL THEN
+    v_dn := fn_next_doc_no('DN', v_company_id);
+  END IF;
+
+  UPDATE purchase_orders
+  SET status               = p_new_status,
+      delivery_note_number = COALESCE(v_dn, delivery_note_number),
+      updated_by           = p_user_id
+  WHERE id = p_po_id;
+
+  IF p_new_status = 'DELIVERED' THEN
+    PERFORM fn_create_invoice(p_po_id, p_user_id);
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+DO $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN
+    SELECT id, company_client_id
+    FROM purchase_orders
+    WHERE status IN ('ON_PROGRESS', 'DELIVERED')
+      AND delivery_note_number IS NULL
+    ORDER BY id
+  LOOP
+    UPDATE purchase_orders
+    SET delivery_note_number = fn_next_doc_no('DN', r.company_client_id)
+    WHERE id = r.id;
+  END LOOP;
+END;
+$$;
+-- +goose StatementEnd
+
 -- +goose Down
+
+-- Restore the 00046 and 00043 bodies.
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION fn_change_po_status(
+  p_po_id      BIGINT,
+  p_new_status TEXT,
+  p_user_id    BIGINT
+) RETURNS VOID AS $$
+DECLARE
+  v_old        TEXT;
+  v_ok         BOOLEAN;
+  v_company_id BIGINT;
+  v_dn_current TEXT;
+  v_dn         TEXT;
+BEGIN
+  SELECT status, company_client_id, delivery_note_number
+    INTO v_old, v_company_id, v_dn_current
+    FROM purchase_orders WHERE id = p_po_id FOR UPDATE;
+
+  IF v_old IS NULL THEN
+    RAISE EXCEPTION 'Purchase order % not found', p_po_id
+      USING ERRCODE = 'P0011';
+  END IF;
+
+  IF v_old = p_new_status THEN
+    RETURN;
+  END IF;
+
+  IF v_old = 'DELIVERED' AND p_new_status = 'ON_PROGRESS'
+     AND EXISTS (SELECT 1 FROM invoices WHERE po_id = p_po_id) THEN
+    RAISE EXCEPTION 'PO % has an invoice; cannot revert from DELIVERED', p_po_id
+      USING ERRCODE = 'P0013';
+  END IF;
+
+  v_ok := CASE
+    WHEN v_old = 'PENDING'     AND p_new_status IN ('UPLOADED')                        THEN TRUE
+    WHEN v_old = 'UPLOADED'    AND p_new_status IN ('ON_PROGRESS','PENDING')           THEN TRUE
+    WHEN v_old = 'ON_PROGRESS' AND p_new_status IN ('DELIVERED','UPLOADED')            THEN TRUE
+    WHEN v_old = 'DELIVERED'   AND p_new_status IN ('ON_PROGRESS')                     THEN TRUE
+    ELSE FALSE
+  END;
+
+  IF NOT v_ok THEN
+    RAISE EXCEPTION 'Invalid PO status transition: % -> %', v_old, p_new_status
+      USING ERRCODE = 'P0012';
+  END IF;
+
+  IF p_new_status = 'DELIVERED' AND v_dn_current IS NULL THEN
+    v_dn := fn_next_doc_no('DN', v_company_id);
+  END IF;
+
+  UPDATE purchase_orders
+  SET status               = p_new_status,
+      delivery_note_number = COALESCE(v_dn, delivery_note_number),
+      updated_by           = p_user_id
+  WHERE id = p_po_id;
+
+  IF p_new_status = 'DELIVERED' THEN
+    PERFORM fn_create_invoice(p_po_id, p_user_id);
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION fn_create_purchase_order(
+  p_quotation_id BIGINT,
+  p_user_id      BIGINT
+) RETURNS BIGINT AS $$
+DECLARE
+  v_po_id        BIGINT;
+  v_po_no        TEXT;
+  v_company_id   BIGINT;
+  v_contact_id   BIGINT;
+BEGIN
+  SELECT id INTO v_po_id FROM purchase_orders WHERE quotation_id = p_quotation_id;
+  IF v_po_id IS NOT NULL THEN
+    RETURN v_po_id;
+  END IF;
+
+  SELECT company_client_id, contact_id
+  INTO v_company_id, v_contact_id
+  FROM quotations WHERE id = p_quotation_id;
+
+  IF v_company_id IS NULL THEN
+    RAISE EXCEPTION 'Quotation % not found', p_quotation_id;
+  END IF;
+
+  v_po_no := fn_next_doc_no('PO', v_company_id);
+
+  INSERT INTO purchase_orders (
+    po_number, quotation_id, company_client_id, contact_id,
+    po_date, status, created_by, updated_by
+  ) VALUES (
+    v_po_no, p_quotation_id, v_company_id, v_contact_id,
+    CURRENT_DATE, 'PENDING', p_user_id, p_user_id
+  ) RETURNING id INTO v_po_id;
+
+  INSERT INTO purchase_order_items (
+    po_id, quotation_item_id, line_number, item_type,
+    offered_item_id, qty, unit_id, selling_price, cost_price,
+    item_name, item_code, ship_destination, shipping_days,
+    is_available, created_by, updated_by
+  )
+  SELECT
+    v_po_id, qi.id, qi.line_number, qi.item_type,
+    qi.offered_item_id, qi.qty, qi.unit_id, qi.selling_price, qi.cost_price,
+    COALESCE(qi.requested_name, ''), qi.requested_impa, qi.ship_destination, qi.shipping_days,
+    qi.is_available, p_user_id, p_user_id
+  FROM quotation_items qi
+  WHERE qi.quotation_id = p_quotation_id
+  ORDER BY qi.line_number;
+
+  RETURN v_po_id;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 DROP FUNCTION IF EXISTS fn_update_po_notes(BIGINT, INT, TEXT, BIGINT);
 DROP FUNCTION IF EXISTS fn_update_po_details(BIGINT, INT, TEXT, DATE, BIGINT);

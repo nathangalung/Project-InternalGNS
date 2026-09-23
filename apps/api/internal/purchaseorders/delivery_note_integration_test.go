@@ -90,6 +90,12 @@ func TestDeliveryNote_HappyPath(t *testing.T) {
 
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
+	po, err := repo.GetByID(ctx, poID)
+	require.NoError(t, err)
+	require.NotNil(t, po.DeliveryNoteNumber)
 	require.NoError(t, tx.Commit(ctx))
 	t.Cleanup(func() {
 		_, _ = testutil.Pool(t).Exec(context.Background(),
@@ -102,5 +108,10 @@ func TestDeliveryNote_HappyPath(t *testing.T) {
 	res, err := srv.Client().Get(srv.URL + "/purchase-orders/" + strconv.FormatInt(poID, 10) + "/delivery-note.pdf")
 	require.NoError(t, err)
 	defer res.Body.Close()
-	assert.Contains(t, []int{http.StatusOK, http.StatusInternalServerError}, res.StatusCode)
+	require.Contains(t, []int{http.StatusOK, http.StatusInternalServerError}, res.StatusCode)
+	if res.StatusCode == http.StatusOK {
+		// The file is named after the stored number, not a derived one.
+		assert.Contains(t, res.Header.Get("Content-Disposition"),
+			pdfgen.SanitizeFilename(*po.DeliveryNoteNumber)+".pdf")
+	}
 }

@@ -35,6 +35,9 @@ type scenarioState struct {
 	userID      int64
 	quotationID int64
 	poID        int64
+	// Delivery note routes need templates, which FullServer omits.
+	dnSrv    *httptest.Server
+	dnNumber string
 }
 
 func (s *scenarioState) reset() error {
@@ -100,15 +103,19 @@ func (s *scenarioState) acceptedQuotationIncompleteClient() error {
 }
 
 func (s *scenarioState) acceptedQuotationForCompany(companyID int64) error {
+	return s.acceptedQuotationWith(companyID, quotations.CreateItem{
+		RequestedName: "Test Product",
+		Qty:           "2",
+		UnitID:        defaultUnit,
+		SellingPrice:  "100000",
+	})
+}
+
+func (s *scenarioState) acceptedQuotationWith(companyID int64, item quotations.CreateItem) error {
 	create := quotations.CreateRequest{
 		CompanyClientID: companyID,
 		DiscountPct:     "0",
-		Items: []quotations.CreateItem{{
-			RequestedName: "Test Product",
-			Qty:           "2",
-			UnitID:        defaultUnit,
-			SellingPrice:  "100000",
-		}},
+		Items:           []quotations.CreateItem{item},
 	}
 	if err := s.sendRequest(http.MethodPost, "/quotations/", create); err != nil {
 		return err
@@ -485,6 +492,7 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 			state.body = nil
 			state.quotationID = 0
 			state.poID = 0
+			state.dnNumber = ""
 			return ctx, nil
 		})
 
@@ -518,6 +526,13 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the user edits PO notes with a stale If-Match$`, state.editPONotesStaleVersion)
 		sc.Step(`^the user sends the invoice$`, state.sendInvoice)
 		sc.Step(`^an invoice product line has unit price "([^"]+)"$`, state.invoiceProductLineUnitPriceEquals)
+		sc.Step(`^the user downloads the delivery note$`, state.downloadDeliveryNote)
+		sc.Step(`^the PO has a delivery note number$`, state.poHasDeliveryNoteNumber)
+		sc.Step(`^the delivery note number is unchanged$`, state.deliveryNoteNumberUnchanged)
+		sc.Step(`^the user exports the PO list$`, state.exportPOList)
+		sc.Step(`^the export lists the stored delivery note number$`, state.exportListsDeliveryNoteNumber)
+		sc.Step(`^an accepted quotation offering catalog item (\d+) for "([^"]+)"$`, state.acceptedQuotationOffering)
+		sc.Step(`^the first PO line is named after catalog item (\d+)$`, state.firstLineNamedAfterItem)
 	}
 }
 

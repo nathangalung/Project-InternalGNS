@@ -40,6 +40,9 @@ type PurchaseOrder struct {
 	RowVersion      int32     `db:"row_version"         json:"rowVersion"`
 	CreatedAt       time.Time `db:"created_at"          json:"createdAt"`
 	UpdatedAt       time.Time `db:"updated_at"          json:"updatedAt"`
+
+	// Issued when work starts (ON_PROGRESS); nil until then.
+	DeliveryNoteNumber *string `db:"delivery_note_number" json:"deliveryNoteNumber,omitempty"`
 }
 
 // PO line snapshot row.
