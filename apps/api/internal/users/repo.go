@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
@@ -22,7 +23,22 @@ var (
 	// of user management for good: SeedSuperadmin is ON CONFLICT DO NOTHING,
 	// so a restart does not restore the account.
 	ErrLastSuperadmin = errors.New("cannot demote or deactivate the last active superadmin")
+	// ErrEmailTaken keeps a duplicate address a 409 with a sentence the user
+	// can act on, instead of the untyped error that rendered as a 500.
+	ErrEmailTaken = errors.New("email already used")
 )
+
+// Messages the handler renders for these sentinels.
+const (
+	emailTakenMessage     = "Email sudah digunakan pengguna lain."
+	lastSuperadminMessage = "Superadmin aktif terakhir tidak dapat diturunkan atau dinonaktifkan."
+)
+
+// isUniqueViolation reports a 23505 from the email index.
+func isUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23505"
+}
 
 // normalizeEmail keeps stored addresses case-folded, matching the
 // LOWER(email) lookups and the users_email_lower_idx unique index.
@@ -140,12 +156,21 @@ func (r *Repo) Create(ctx context.Context, req CreateUserRequest, actorID int64)
 	}
 
 	rows, err := r.db.Query(ctx, r.store.Get("users.create"),
-		normalizeEmail(req.Email), req.Name, string(hash), req.Role, req.IsActive, actorID,
+		normalizeEmail(req.Email), strings.TrimSpace(req.Name), string(hash), req.Role, req.IsActive, actorID,
 	)
 	if err != nil {
 		return User{}, err
 	}
-	return pgx.CollectOneRow(rows, pgx.RowToStructByName[User])
+	u, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[User])
+	// The unique index is the only thing that sees a concurrent insert, so
+	// the sentinel has to be recognised here too and not only on update.
+	if isUniqueViolation(err) {
+		return User{}, ErrEmailTaken
+	}
+	if err != nil {
+		return User{}, fmt.Errorf("create user: %w", err)
+	}
+	return u, nil
 }
 
 // sortable is the closed set of user sort keys.
@@ -215,7 +240,7 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateUserRequest, acto
 		return User{}, err
 	}
 	if count > 0 {
-		return User{}, errors.New("email already used")
+		return User{}, ErrEmailTaken
 	}
 
 	prior, err := r.precheck(ctx, id)
@@ -236,7 +261,7 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateUserRequest, acto
 	}
 
 	rows, err := r.db.Query(ctx, r.store.Get("users.update"),
-		id, req.Name, email, req.Role, req.IsActive, actorID,
+		id, strings.TrimSpace(req.Name), email, req.Role, req.IsActive, actorID,
 	)
 	if err != nil {
 		return User{}, err

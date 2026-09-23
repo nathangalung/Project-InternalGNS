@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -22,14 +23,16 @@ import (
 const defaultUserID int64 = 1
 
 type scenarioState struct {
-	t       *testing.T
-	cleaner *testutil.Cleaner
-	srv     *httptest.Server
-	last    *http.Response
-	body    []byte
-	userID  int64
-	email   string
-	name    string
+	t          *testing.T
+	cleaner    *testutil.Cleaner
+	srv        *httptest.Server
+	last       *http.Response
+	body       []byte
+	userID     int64
+	email      string
+	name       string
+	firstEmail string
+	secondID   int64
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
@@ -77,7 +80,7 @@ func (s *scenarioState) createStaff() error {
 	body := users.CreateUserRequest{
 		Email:    s.email,
 		Name:     s.name,
-		Password: "secret123",
+		Password: "Secret123!",
 		Role:     users.RoleOperational,
 	}
 	if err := s.sendRequest(http.MethodPost, "/users/", body); err != nil {
@@ -93,7 +96,7 @@ func (s *scenarioState) createStaffEmptyEmail() error {
 	body := users.CreateUserRequest{
 		Email:    "",
 		Name:     "no email",
-		Password: "secret123",
+		Password: "Secret123!",
 		Role:     users.RoleOperational,
 	}
 	return s.sendRequest(http.MethodPost, "/users/", body)
@@ -113,7 +116,7 @@ func (s *scenarioState) createStaffWithRole(role string) error {
 	body := users.CreateUserRequest{
 		Email:    s.uniqueEmail(),
 		Name:     "bad role",
-		Password: "secret123",
+		Password: "Secret123!",
 		Role:     users.Role(role),
 	}
 	return s.sendRequest(http.MethodPost, "/users/", body)
@@ -123,7 +126,7 @@ func (s *scenarioState) createStaffSeededEmail() error {
 	body := users.CreateUserRequest{
 		Email:    s.email,
 		Name:     "duplicate",
-		Password: "secret123",
+		Password: "Secret123!",
 		Role:     users.RoleOperational,
 	}
 	return s.sendRequest(http.MethodPost, "/users/", body)
@@ -220,6 +223,76 @@ func (s *scenarioState) staffListAtLeast(min int) error {
 	return nil
 }
 
+func (s *scenarioState) createStaffWithEmail(email string) error {
+	body := users.CreateUserRequest{
+		Email: email, Name: "bad email", Password: "Secret123!", Role: users.RoleOperational,
+	}
+	return s.sendRequest(http.MethodPost, "/users/", body)
+}
+
+func (s *scenarioState) createStaffOversizedPassword() error {
+	return s.createStaffWithPassword("A1!" + strings.Repeat("a", 70))
+}
+
+func (s *scenarioState) createStaffPaddedName() error {
+	body := users.CreateUserRequest{
+		Email: s.uniqueEmail(), Name: "  Nama Berspasi  ",
+		Password: "Secret123!", Role: users.RoleOperational,
+	}
+	if err := s.sendRequest(http.MethodPost, "/users/", body); err != nil {
+		return err
+	}
+	if s.last.StatusCode == http.StatusCreated {
+		return s.captureID()
+	}
+	return nil
+}
+
+func (s *scenarioState) nameHasNoPadding() error {
+	var u users.User
+	if err := json.Unmarshal(s.body, &u); err != nil {
+		return err
+	}
+	if u.Name != "Nama Berspasi" {
+		return fmt.Errorf("want trimmed name got %q", u.Name)
+	}
+	return nil
+}
+
+func (s *scenarioState) seedSecondStaff() error {
+	s.firstEmail = s.email
+	if err := s.seedStaff(); err != nil {
+		return err
+	}
+	s.secondID = s.userID
+	return nil
+}
+
+func (s *scenarioState) updateSecondToFirstEmail() error {
+	body := users.UpdateUserRequest{
+		Email: s.firstEmail, Name: "Bentrok", Role: users.RoleOperational, IsActive: true,
+	}
+	return s.sendRequest(http.MethodPut, "/users/"+strconv.FormatInt(s.secondID, 10), body)
+}
+
+func (s *scenarioState) setStaffActive(active bool) error {
+	body := users.UpdateUserRequest{
+		Email: s.email, Name: s.name, Role: users.RoleOperational, IsActive: active,
+	}
+	return s.sendRequest(http.MethodPut, "/users/"+strconv.FormatInt(s.userID, 10), body)
+}
+
+func (s *scenarioState) staffActiveIs(want bool) error {
+	var u users.User
+	if err := json.Unmarshal(s.body, &u); err != nil {
+		return err
+	}
+	if u.IsActive != want {
+		return fmt.Errorf("want isActive=%v got %v", want, u.IsActive)
+	}
+	return nil
+}
+
 func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
 		state := &scenarioState{t: t, cleaner: cleaner}
@@ -229,6 +302,8 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 			state.userID = 0
 			state.email = ""
 			state.name = ""
+			state.firstEmail = ""
+			state.secondID = 0
 			return ctx, nil
 		})
 
@@ -248,6 +323,16 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the user changes the password to "([^"]+)"$`, state.changePassword)
 		sc.Step(`^the user lists staff filtered by role "([^"]+)"$`, state.listByRole)
 		sc.Step(`^the staff list contains at least (\d+) row(?:s)?$`, state.staffListAtLeast)
+		sc.Step(`^the user creates a staff account with email "([^"]*)"$`, state.createStaffWithEmail)
+		sc.Step(`^the user creates a staff account with an oversized password$`, state.createStaffOversizedPassword)
+		sc.Step(`^the user creates a staff account with a padded name$`, state.createStaffPaddedName)
+		sc.Step(`^the user name has no padding$`, state.nameHasNoPadding)
+		sc.Step(`^a second staff account$`, state.seedSecondStaff)
+		sc.Step(`^the user updates the second account to the first email$`, state.updateSecondToFirstEmail)
+		sc.Step(`^the user deactivates the staff account$`, func() error { return state.setStaffActive(false) })
+		sc.Step(`^the user reactivates the staff account$`, func() error { return state.setStaffActive(true) })
+		sc.Step(`^the staff account is inactive$`, func() error { return state.staffActiveIs(false) })
+		sc.Step(`^the staff account is active$`, func() error { return state.staffActiveIs(true) })
 	}
 }
 

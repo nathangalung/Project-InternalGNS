@@ -128,7 +128,7 @@ func TestHandler_Create_DuplicateEmail(t *testing.T) {
 	srv := newUsersServer(t)
 	email := fmt.Sprintf("dup-%d@test.local", randSuffix())
 	body := map[string]any{
-		"email": email, "name": "Dup User", "password": "longenough", "role": "operational",
+		"email": email, "name": "Dup User", "password": "Longenough1!", "role": "operational",
 	}
 	r1 := doJSON(t, srv, http.MethodPost, "/users/", body)
 	r1.Body.Close()
@@ -177,7 +177,7 @@ func TestHandler_Update_OK(t *testing.T) {
 	srv := newUsersServer(t)
 	email := fmt.Sprintf("upd-%d@test.local", randSuffix())
 	create := map[string]any{
-		"email": email, "name": "Upd", "password": "longenough", "role": "operational",
+		"email": email, "name": "Upd", "password": "Longenough1!", "role": "operational",
 	}
 	cr := doJSON(t, srv, http.MethodPost, "/users/", create)
 	require.Equal(t, http.StatusCreated, cr.StatusCode)
@@ -194,7 +194,7 @@ func TestHandler_Update_OK(t *testing.T) {
 
 func TestHandler_ChangePassword_InvalidID(t *testing.T) {
 	srv := newUsersServer(t)
-	res := doJSON(t, srv, http.MethodPatch, "/users/abc/password", map[string]any{"password": "longenough"})
+	res := doJSON(t, srv, http.MethodPatch, "/users/abc/password", map[string]any{"password": "Longenough1!"})
 	defer res.Body.Close()
 	require.Equal(t, http.StatusBadRequest, res.StatusCode)
 }
@@ -215,7 +215,7 @@ func TestHandler_ChangePassword_TooShort(t *testing.T) {
 
 func TestHandler_ChangePassword_NotFound(t *testing.T) {
 	srv := newUsersServer(t)
-	res := doJSON(t, srv, http.MethodPatch, "/users/99999999/password", map[string]any{"password": "longenough"})
+	res := doJSON(t, srv, http.MethodPatch, "/users/99999999/password", map[string]any{"password": "Longenough1!"})
 	defer res.Body.Close()
 	require.Equal(t, http.StatusNotFound, res.StatusCode)
 }
@@ -224,7 +224,7 @@ func TestHandler_ChangePassword_OK(t *testing.T) {
 	srv := newUsersServer(t)
 	email := fmt.Sprintf("pwd-%d@test.local", randSuffix())
 	cr := doJSON(t, srv, http.MethodPost, "/users/", map[string]any{
-		"email": email, "name": "Pwd", "password": "originalpwd", "role": "operational",
+		"email": email, "name": "Pwd", "password": "Originalpwd1!", "role": "operational",
 	})
 	require.Equal(t, http.StatusCreated, cr.StatusCode)
 	var created users.User
@@ -232,7 +232,7 @@ func TestHandler_ChangePassword_OK(t *testing.T) {
 	cr.Body.Close()
 
 	res := doJSON(t, srv, http.MethodPatch, fmt.Sprintf("/users/%d/password", created.ID),
-		map[string]any{"password": "newpassword"})
+		map[string]any{"password": "Newpassword1!"})
 	defer res.Body.Close()
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 }
