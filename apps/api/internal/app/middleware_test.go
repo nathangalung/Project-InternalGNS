@@ -399,7 +399,8 @@ func TestRequestTimeout_StorageRouteExtendsReadDeadline(t *testing.T) {
 	}
 }
 
-// Every 401 detail reaches the toast, so it reads as Indonesian.
+// 401 details read as Indonesian.
+// Each one reaches the toast verbatim.
 func TestAuthMiddleware_UnauthorizedDetailIsIndonesian(t *testing.T) {
 	svc := mkSvc(t)
 	tests := []struct {

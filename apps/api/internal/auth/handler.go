@@ -11,14 +11,14 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
-// Indonesian 401 details the toast shows.
+// Indonesian 401 problem details.
 const (
 	DetailNotSignedIn    = "Anda belum masuk. Silakan masuk terlebih dahulu."
 	DetailSessionRevoked = "Sesi Anda tidak berlaku lagi. Silakan masuk kembali."
 	DetailInvalidToken   = "Token akses tidak valid atau sudah kedaluwarsa. Silakan masuk kembali."
 )
 
-// refreshDetails maps each refresh refusal to its detail.
+// Refresh refusal details.
 var refreshDetails = []struct {
 	err    error
 	detail string

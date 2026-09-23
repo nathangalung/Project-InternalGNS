@@ -125,7 +125,7 @@ func TestService_Login_CannotOutliveAConcurrentReset(t *testing.T) {
 	assert.Equal(t, 0, activeRefreshTokens(t, u.ID))
 }
 
-// waitBlockedOn returns once a backend waits on holder's lock.
+// Wait until holder blocks someone.
 func waitBlockedOn(t *testing.T, holder pgx.Tx, done <-chan struct{}) {
 	t.Helper()
 	ctx := context.Background()
@@ -150,8 +150,9 @@ func waitBlockedOn(t *testing.T, holder pgx.Tx, done <-chan struct{}) {
 	}
 }
 
-// A self-service change racing an admin reset must not replace the reset:
-// the hash it verified is gone, so it is refused and the reset stands.
+// A reset beats self-service change.
+// The change raced an admin reset and the hash it verified is gone, so it
+// is refused and the reset stands.
 func TestService_ChangeOwnPassword_CannotOverwriteAConcurrentReset(t *testing.T) {
 	svc, u := committedUser(t)
 

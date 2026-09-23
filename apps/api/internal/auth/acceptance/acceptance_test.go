@@ -328,8 +328,9 @@ func (s *scenarioState) changeOwnPassword(current, next string) error {
 		auth.ChangeOwnPasswordRequest{CurrentPassword: current, NewPassword: next})
 }
 
-// changeOwnPasswordDuringReset lands an admin reset while the change
-// waits on the account row, after it verified the old password.
+// Own change during admin reset.
+// The reset lands while the change waits on the account row, after it
+// verified the old password.
 func (s *scenarioState) changeOwnPasswordDuringReset(next, reset string) error {
 	ctx := context.Background()
 	pool := testutil.Pool(s.t)
@@ -361,7 +362,8 @@ func (s *scenarioState) changeOwnPasswordDuringReset(next, reset string) error {
 	return <-done
 }
 
-// waitBlockedOn polls until a backend waits on pid.
+// waitBlockedOn polls for a waiter.
+// It returns once some backend waits on pid.
 func (s *scenarioState) waitBlockedOn(ctx context.Context, pid int, done <-chan error) error {
 	deadline := time.After(5 * time.Second)
 	for {

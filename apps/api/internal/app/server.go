@@ -27,7 +27,7 @@ type Server struct {
 	purgeDone chan struct{}
 }
 
-// Close stops the purge, then releases the pool.
+// Close joins purge, releases pool.
 // The sweep is joined first: a sweep that started after pool.Close logged
 // "closed pool" on every bootstrap run. Safe to call more than once: cancel
 // is idempotent, a closed channel never blocks, and pgxpool.Close is guarded

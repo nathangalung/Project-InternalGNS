@@ -9,7 +9,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// errorRecorder keeps every ERROR record logged.
+// errorRecorder keeps ERROR records.
 type errorRecorder struct {
 	mu   sync.Mutex
 	msgs []string
@@ -42,6 +42,7 @@ func (h *errorRecorder) errors() []string {
 	return append([]string(nil), h.msgs...)
 }
 
+// Shutdown logs no purge error.
 // Bootstrap builds the server and closes it at once: the refresh purge
 // must stop before the pool closes, so no sweep hits a closed pool.
 func TestServer_CloseRightAfterBuildLogsNoError(t *testing.T) {

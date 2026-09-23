@@ -15,7 +15,7 @@ import (
 // ErrWrongCurrentPassword refuses a self-service change.
 var ErrWrongCurrentPassword = errors.New("current password is wrong")
 
-// ErrPasswordChanged means another change landed after verification.
+// A newer change overtook verification.
 var ErrPasswordChanged = errors.New("password changed since it was verified")
 
 // ChangeOwnPassword replaces the caller's password after re-checking the
@@ -66,7 +66,7 @@ func (s *Service) ChangeOwnPassword(ctx context.Context, userID int64, current, 
 	return nil
 }
 
-// claimFailure tells a changed password from a closed account.
+// Changed password or closed account.
 func (s *Service) claimFailure(ctx context.Context, userID int64) error {
 	_, err := s.users.GetByID(ctx, userID)
 	if errors.Is(err, users.ErrNotFound) {
