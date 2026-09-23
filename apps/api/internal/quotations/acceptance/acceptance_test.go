@@ -31,6 +31,7 @@ type scenarioState struct {
 	body   []byte
 	lastID int64
 	userID int64
+	docNos [2]string
 }
 
 func (s *scenarioState) reset() error {
@@ -132,6 +133,83 @@ func (s *scenarioState) createUnpricedQuotation() error {
 		return err
 	}
 	return s.responseHasID()
+}
+
+// Ids reserved for the document-number fixtures.
+const (
+	docNoClientA int64 = 9100001
+	docNoClientB int64 = 9100002
+)
+
+func (s *scenarioState) seedNumberedClient(id int64, number string, seq int) error {
+	pool := testutil.Pool(s.t)
+	ctx := context.Background()
+	if _, err := pool.Exec(ctx,
+		`INSERT INTO company_client (id, number, name, country_code, created_by, updated_by)
+		 VALUES ($1, $2, $3, 'IDN', 1, 1)`, id, number, "Fixture "+number); err != nil {
+		return err
+	}
+	if seq > 0 {
+		if _, err := pool.Exec(ctx,
+			`INSERT INTO doc_sequences (doc_type, company_id, year, last_seq, updated_at)
+			 VALUES ('Q', $1, EXTRACT(YEAR FROM NOW())::INT, $2, NOW())`, id, seq); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *scenarioState) dropNumberedClients() {
+	pool := testutil.Pool(s.t)
+	ctx := context.Background()
+	for _, id := range []int64{docNoClientA, docNoClientB} {
+		_, _ = pool.Exec(ctx, `DELETE FROM quotation_items WHERE quotation_id IN
+			(SELECT id FROM quotations WHERE company_client_id = $1)`, id)
+		_, _ = pool.Exec(ctx, `DELETE FROM quotation_status_history WHERE quotation_id IN
+			(SELECT id FROM quotations WHERE company_client_id = $1)`, id)
+		_, _ = pool.Exec(ctx, `DELETE FROM quotations WHERE company_client_id = $1`, id)
+		_, _ = pool.Exec(ctx, `DELETE FROM doc_sequences WHERE company_id = $1`, id)
+		_, _ = pool.Exec(ctx, `DELETE FROM company_client WHERE id = $1`, id)
+	}
+}
+
+func (s *scenarioState) quotationNoFor(client int64) (string, error) {
+	req := s.buildCreate("0", 1)
+	req.CompanyClientID = client
+	if err := s.sendRequest(http.MethodPost, "/quotations/", req); err != nil {
+		return "", err
+	}
+	if err := s.responseHasID(); err != nil {
+		return "", err
+	}
+	if err := s.readDetail(); err != nil {
+		return "", err
+	}
+	var d quotations.QuotationDetail
+	if err := json.Unmarshal(s.body, &d); err != nil {
+		return "", err
+	}
+	return d.QuotationNo, nil
+}
+
+func (s *scenarioState) createForBothClients() error {
+	a, err := s.quotationNoFor(docNoClientA)
+	if err != nil {
+		return err
+	}
+	b, err := s.quotationNoFor(docNoClientB)
+	if err != nil {
+		return err
+	}
+	s.docNos = [2]string{a, b}
+	return nil
+}
+
+func (s *scenarioState) docNosDiffer() error {
+	if s.docNos[0] == s.docNos[1] {
+		return fmt.Errorf("both clients got quotation number %s", s.docNos[0])
+	}
+	return nil
 }
 
 func (s *scenarioState) statusEquals(want int) error {
@@ -238,6 +316,15 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the user creates a quotation with status "([^"]+)"$`, state.createWithStatus)
 		sc.Step(`^the user creates a quotation with a zero quantity product line$`, state.createZeroQtyQuotation)
 		sc.Step(`^no quotation was stored$`, state.noQuotationStored)
+		sc.Step(`^a client numbered "([^"]+)" already on quotation sequence (\d+)$`, func(number string, seq int) error {
+			state.dropNumberedClients()
+			return state.seedNumberedClient(docNoClientA, number, seq)
+		})
+		sc.Step(`^a client numbered "([^"]+)"$`, func(number string) error {
+			return state.seedNumberedClient(docNoClientB, number, 0)
+		})
+		sc.Step(`^the user creates one quotation for each of those clients$`, state.createForBothClients)
+		sc.Step(`^the two quotation numbers differ$`, state.docNosDiffer)
 		sc.Step(`^the response status is (\d+)$`, state.statusEquals)
 		sc.Step(`^the response contains a quotation id$`, state.responseHasID)
 		sc.Step(`^an existing draft quotation$`, state.seedDraft)
