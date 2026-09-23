@@ -2,17 +2,23 @@ import { PASSWORD_RULES, PASSWORD_TOO_LONG_MESSAGE, passwordTooLong } from "./pa
 
 type PasswordChecklistProps = {
   value: string
+  // Target for aria-describedby.
+  id?: string
   // Show even when empty.
   alwaysShow?: boolean
 }
 
-export default function PasswordChecklist({ value, alwaysShow = false }: PasswordChecklistProps) {
+export default function PasswordChecklist({
+  value,
+  id,
+  alwaysShow = false,
+}: PasswordChecklistProps) {
   if (!alwaysShow && value.length === 0) return null
 
   const passedCount = PASSWORD_RULES.filter((r) => r.test(value)).length
 
   return (
-    <div className="mt-2.5">
+    <div id={id} className="mt-2.5">
       <div className="mb-2.5 flex gap-1">
         {PASSWORD_RULES.map((_, i) => (
           <div

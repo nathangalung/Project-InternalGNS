@@ -1,18 +1,19 @@
-import { useState } from "react"
+import { useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
+import { formErrors, isInlineFormError } from "@/features/users/form-errors"
 import { useCreateUser } from "@/features/users/hooks"
 import PasswordChecklist from "@/features/users/PasswordChecklist"
+import PasswordInput from "@/features/users/PasswordInput"
 import { passwordIsValid } from "@/features/users/password"
-import { ApiError } from "@/lib/api-client"
 import { ui } from "@/lib/ui"
 import type { Role } from "@/types/api"
 
-interface UserAddModalProps {
+type UserAddModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-interface RoleCard {
+type RoleCard = {
   value: Role
   label: string
 }
@@ -23,6 +24,15 @@ const ROLE_CARDS: RoleCard[] = [
   { value: "operational", label: "Operasional" },
 ]
 
+// Least privilege by default.
+const DEFAULT_ROLE: Role = "operational"
+
+const FIELDS = ["name", "email", "password", "role"] as const
+
+type Field = (typeof FIELDS)[number]
+
+const errorText = "text-[12px] text-[#B91C1C]"
+
 function isValidEmail(s: string): boolean {
   return s.includes("@") && s.split("@").length === 2 && s.split("@")[1].includes(".")
 }
@@ -31,10 +41,18 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [showPwd, setShowPwd] = useState(false)
-  const [role, setRole] = useState<Role>("superadmin")
+  const [role, setRole] = useState<Role>(DEFAULT_ROLE)
   const [isActive, setIsActive] = useState(true)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [serverErrors, setServerErrors] = useState<Partial<Record<Field, string>>>({})
+
+  const nameId = useId()
+  const emailId = useId()
+  const passwordId = useId()
+  const checklistId = useId()
+  const roleHeadingId = useId()
+  const statusId = useId()
+  const statusHintId = useId()
 
   const createUser = useCreateUser()
   const isSaving = createUser.isPending
@@ -45,17 +63,23 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
   const isEmailValid = email.trim().length > 0 && isValidEmail(email)
   const isPasswordValid = passwordIsValid(password)
   const emailError =
-    email.trim().length > 0 && !isValidEmail(email) ? "Format email tidak valid." : null
+    serverErrors.email ??
+    (email.trim().length > 0 && !isValidEmail(email) ? "Format email tidak valid." : undefined)
   const canSubmit = isNameFilled && isEmailValid && isPasswordValid
+
+  const clearServer = (field: Field) => {
+    setServerErrors((p) => ({ ...p, [field]: undefined }))
+    setSubmitError(null)
+  }
 
   const reset = () => {
     setName("")
     setEmail("")
     setPassword("")
-    setShowPwd(false)
-    setRole("superadmin")
+    setRole(DEFAULT_ROLE)
     setIsActive(true)
     setSubmitError(null)
+    setServerErrors({})
   }
 
   const handleCancel = () => {
@@ -78,11 +102,11 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
       reset()
       onOpenChange(false)
     } catch (err) {
-      const msg =
-        err instanceof ApiError
-          ? err.message || "Gagal menyimpan pengguna."
-          : "Gagal menyimpan pengguna."
-      setSubmitError(msg)
+      // Other failures are toasted by the hook.
+      if (!isInlineFormError(err)) return
+      const split = formErrors(err, FIELDS, "Gagal menyimpan pengguna.")
+      setServerErrors(split.fields)
+      setSubmitError(split.banner)
     }
   }
 
@@ -91,54 +115,83 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
       title="Tambah Pengguna"
       onClose={handleCancel}
       footer={
-        <>
-          {submitError && <span className="flex-1 text-[12px] text-error">{submitError}</span>}
-          <button
-            type="button"
-            className={ui.modalCancel}
-            onClick={handleCancel}
-            disabled={isSaving}
-          >
-            Batal
-          </button>
-          <button
-            type="button"
-            className={ui.modalSubmit}
-            onClick={handleSubmit}
-            disabled={!canSubmit || isSaving}
-          >
-            {isSaving ? "Menyimpan..." : "Simpan Akun"}
-          </button>
-        </>
+        <div className="flex w-full flex-wrap items-center justify-end gap-x-4 gap-y-3">
+          {submitError && (
+            <p role="alert" className={`mr-auto ${errorText}`}>
+              {submitError}
+            </p>
+          )}
+          <div className="flex gap-4 max-sm:w-full">
+            <button
+              type="button"
+              className={`${ui.modalCancel} whitespace-nowrap max-sm:flex-1 max-sm:px-4`}
+              onClick={handleCancel}
+              disabled={isSaving}
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              className={`${ui.modalSubmit} whitespace-nowrap max-sm:flex-1 max-sm:px-4`}
+              onClick={handleSubmit}
+              disabled={!canSubmit || isSaving}
+            >
+              {isSaving ? "Menyimpan..." : "Simpan Akun"}
+            </button>
+          </div>
+        </div>
       }
     >
       <div className={ui.modalSection}>
         <div className={ui.modalSectionHeading}>Identitas Pengguna</div>
         <div className={ui.row2}>
           <div className={ui.field}>
-            <label className={ui.fieldLabel}>
+            <label htmlFor={nameId} className={ui.fieldLabel}>
               Nama Lengkap <span className="text-primary-700">*</span>
             </label>
             <input
+              id={nameId}
               className={ui.fieldInput}
               type="text"
               placeholder="Contoh: Budi Santoso"
+              autoComplete="off"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              aria-invalid={!!serverErrors.name || undefined}
+              aria-describedby={serverErrors.name ? `${nameId}-err` : undefined}
+              onChange={(e) => {
+                setName(e.target.value)
+                clearServer("name")
+              }}
             />
+            {serverErrors.name && (
+              <span id={`${nameId}-err`} className={errorText}>
+                {serverErrors.name}
+              </span>
+            )}
           </div>
           <div className={ui.field}>
-            <label className={ui.fieldLabel}>
+            <label htmlFor={emailId} className={ui.fieldLabel}>
               Alamat Email <span className="text-primary-700">*</span>
             </label>
             <input
+              id={emailId}
               className={ui.fieldInput}
               type="email"
               placeholder="email@ptglobal.com"
+              autoComplete="off"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={!!emailError || undefined}
+              aria-describedby={emailError ? `${emailId}-err` : undefined}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                clearServer("email")
+              }}
             />
-            {emailError && <span className="mt-1 block text-[12px] text-error">{emailError}</span>}
+            {emailError && (
+              <span id={`${emailId}-err`} className={errorText}>
+                {emailError}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -146,73 +199,52 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
       <div className={ui.modalSection}>
         <div className={ui.modalSectionHeading}>Kata Sandi</div>
         <div className={ui.field}>
-          <label className={ui.fieldLabel}>
+          <label htmlFor={passwordId} className={ui.fieldLabel}>
             Kata Sandi <span className="text-primary-700">*</span>
           </label>
-          <div className="relative">
-            <input
-              className={`${ui.fieldInput} pr-11`}
-              type={showPwd ? "text" : "password"}
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPwd((s) => !s)}
-              className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center p-1 text-dark-400"
-              tabIndex={-1}
-              title={showPwd ? "Sembunyikan" : "Tampilkan"}
-            >
-              {showPwd ? (
-                <svg
-                  width="18"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                  <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
-                  <line x1="1" y1="1" x2="23" y2="23" />
-                </svg>
-              ) : (
-                <svg
-                  width="18"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              )}
-            </button>
-          </div>
-          <PasswordChecklist value={password} />
+          <PasswordInput
+            id={passwordId}
+            value={password}
+            onChange={(v) => {
+              setPassword(v)
+              clearServer("password")
+            }}
+            autoComplete="new-password"
+            className={ui.fieldInput}
+            invalid={!!serverErrors.password}
+            describedBy={serverErrors.password ? `${passwordId}-err ${checklistId}` : checklistId}
+          />
+          {serverErrors.password && (
+            <span id={`${passwordId}-err`} className={errorText}>
+              {serverErrors.password}
+            </span>
+          )}
+          <PasswordChecklist id={checklistId} value={password} />
         </div>
       </div>
 
       <div className={ui.modalSection}>
-        <div className={ui.modalSectionHeading}>Peran</div>
+        <div id={roleHeadingId} className={ui.modalSectionHeading}>
+          Peran
+        </div>
         <div className={ui.field}>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-3">
+          <div
+            role="group"
+            aria-labelledby={roleHeadingId}
+            className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-3"
+          >
             {ROLE_CARDS.map((card) => {
               const selected = role === card.value
               return (
                 <button
                   key={card.value}
                   type="button"
-                  onClick={() => setRole(card.value)}
-                  className={`flex items-center justify-center rounded-md px-3 py-[14px] text-[13px] tracking-[-0.2px] transition-all duration-150 ${
+                  aria-pressed={selected}
+                  onClick={() => {
+                    setRole(card.value)
+                    clearServer("role")
+                  }}
+                  className={`flex items-center justify-center rounded-md px-3 py-[14px] text-[13px] tracking-[-0.2px] transition-all duration-150 ${ui.focusRing} ${
                     selected
                       ? "bg-[#EADDFF] font-bold text-primary-800 shadow-[0_0_0_1.5px_rgba(99,14,212,0.4)]"
                       : "bg-[#F2F4F6] font-medium text-[#191C1E]"
@@ -223,14 +255,20 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
               )
             })}
           </div>
+          {serverErrors.role && <span className={errorText}>{serverErrors.role}</span>}
         </div>
       </div>
 
       <div className={ui.modalSection}>
         <div className="flex items-center justify-between gap-3 rounded-md border border-[rgba(204,195,216,0.1)] bg-[#F2F4F6] px-[14px] py-2.5">
           <div className="flex-1">
-            <div className="text-[13px] font-bold leading-[18px] text-[#191C1E]">Status Aktif</div>
-            <div className="mt-0.5 text-[12px] font-normal leading-4 text-[#4A4455]">
+            <div id={statusId} className="text-[13px] font-bold leading-[18px] text-[#191C1E]">
+              Status Aktif
+            </div>
+            <div
+              id={statusHintId}
+              className="mt-0.5 text-[12px] font-normal leading-4 text-[#4A4455]"
+            >
               Pengguna dapat langsung login dan mengakses sistem.
             </div>
           </div>
@@ -239,12 +277,14 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
             onClick={() => setIsActive((a) => !a)}
             role="switch"
             aria-checked={isActive}
-            className={`relative h-[22px] w-10 shrink-0 rounded-full transition-colors duration-200 ${
+            aria-labelledby={statusId}
+            aria-describedby={statusHintId}
+            className={`relative h-[22px] w-10 shrink-0 rounded-full transition-colors duration-200 motion-reduce:transition-none ${ui.focusRing} ${
               isActive ? "bg-primary-700" : "bg-dark-300"
             }`}
           >
             <span
-              className={`absolute top-0.5 h-[18px] w-[18px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ${
+              className={`absolute top-0.5 h-[18px] w-[18px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 motion-reduce:transition-none ${
                 isActive ? "left-5" : "left-0.5"
               }`}
             />

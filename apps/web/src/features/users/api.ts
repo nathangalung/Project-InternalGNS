@@ -47,8 +47,8 @@ export type UpdateUserInput = {
 // Profile saved but the password PATCH failed.
 export class PartialUserUpdateError extends Error {
   readonly profileSaved = true
-  constructor(cause: unknown) {
-    super(cause instanceof Error ? cause.message : "Kata sandi gagal diperbarui")
+  constructor(readonly passwordError: unknown) {
+    super(passwordError instanceof Error ? passwordError.message : "Kata sandi gagal diperbarui")
     this.name = "PartialUserUpdateError"
   }
 }
@@ -72,4 +72,19 @@ export async function update(id: number, input: UpdateUserInput): Promise<UserRo
     }
   }
   return updated
+}
+
+// Self-service password change body.
+export type ChangeOwnPasswordInput = {
+  currentPassword: string
+  newPassword: string
+}
+
+// Any role; a 204 ends every session.
+export async function changeOwnPassword(input: ChangeOwnPasswordInput): Promise<void> {
+  await apiRequest<void>({
+    path: "/auth/me/password",
+    method: "PATCH",
+    body: input,
+  })
 }

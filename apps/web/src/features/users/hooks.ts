@@ -6,7 +6,11 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
+import { useCallback } from "react"
+import { clearAuthState } from "@/features/auth/hooks"
 import * as usersApi from "@/features/users/api"
+import { isInlineFormError } from "@/features/users/form-errors"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
@@ -35,7 +39,10 @@ export function useCreateUser() {
   return useMutation({
     mutationFn: usersApi.create,
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.users.all }),
-    onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan pengguna.")),
+    // Field and conflict errors render inline.
+    onError: (err) => {
+      if (!isInlineFormError(err)) toast.error(errorMessage(err, "Gagal menyimpan pengguna."))
+    },
   })
 }
 
@@ -46,20 +53,52 @@ export function useUser(id: number | undefined) {
   })
 }
 
+type UpdateUserVars = {
+  id: number
+  input: usersApi.UpdateUserInput
+  // Caller's own role or access changes.
+  endsOwnSession?: boolean
+}
+
 export function useUpdateUser() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, input }: { id: number; input: usersApi.UpdateUserInput }) =>
-      usersApi.update(id, input),
-    onSuccess: () => refreshAfterUserEdit(qc),
+    mutationFn: ({ id, input }: UpdateUserVars) => usersApi.update(id, input),
+    // A self-edit that ends the session skips the refetch; the caller logs out.
+    onSuccess: (_user, { endsOwnSession }) =>
+      endsOwnSession ? undefined : refreshAfterUserEdit(qc),
     onError: (err) => {
       if (err instanceof usersApi.PartialUserUpdateError) {
         // Profile persisted, so refresh the cache anyway.
         void refreshAfterUserEdit(qc)
-        toast.error("Profil tersimpan, tetapi kata sandi gagal diperbarui.")
         return
       }
-      toast.error(errorMessage(err, "Gagal memperbarui pengguna."))
+      if (!isInlineFormError(err)) toast.error(errorMessage(err, "Gagal memperbarui pengguna."))
     },
   })
+}
+
+// Self-service password change.
+//
+// No cache work here: success ends the session, and the caller clears the
+// auth state, which also empties the query cache.
+export function useChangeOwnPassword() {
+  return useMutation({ mutationFn: usersApi.changeOwnPassword })
+}
+
+// Sign out with a notice.
+//
+// Clears tokens and the query cache locally without POSTing /auth/logout,
+// since the server has already revoked every session and the call would only
+// trip the refresh cycle.
+export function useEndOwnSession() {
+  const navigate = useNavigate()
+  return useCallback(
+    (message: string, tone: "success" | "info" | "error" = "info") => {
+      clearAuthState()
+      toast[tone](message)
+      void navigate({ to: "/login" })
+    },
+    [navigate],
+  )
 }
