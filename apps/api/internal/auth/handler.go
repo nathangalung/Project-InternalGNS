@@ -43,11 +43,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	// One neutral 401 for every credential failure: a distinct "email not
 	// registered" reply enumerated accounts for anyone who could POST.
 	if errors.Is(err, ErrInvalidCredentials) {
-		httperr.Render(w, httperr.Unauthorized("invalid email or password"))
-		return
-	}
-	if errors.Is(err, ErrAccountLocked) {
-		httperr.Render(w, httperr.TooManyRequests("account temporarily locked, try again later"))
+		httperr.Render(w, httperr.Unauthorized("Email atau kata sandi salah."))
 		return
 	}
 	if err != nil {

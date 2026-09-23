@@ -16,7 +16,6 @@ import (
 var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrInvalidToken       = errors.New("invalid token")
-	ErrAccountLocked      = errors.New("account temporarily locked")
 	// ErrSessionRevoked marks a structurally valid token whose account no
 	// longer backs it: deactivated, or issued before a password reset.
 	ErrSessionRevoked = errors.New("session revoked")
@@ -86,6 +85,43 @@ func parseInt64(s string) (int64, error) {
 	return n, nil
 }
 
+// Attempts below this cost nothing, so ordinary typos are not punished.
+const loginBackoffFree = 4
+
+// loginBackoff is the delay an attempt pays for the misses before it. A hard
+// lock was worse than useless: it refused the correct password, so anyone who
+// knew a superadmin address could lock that account out at will.
+func loginBackoff(attempts int) time.Duration {
+	const (
+		base = 250 * time.Millisecond
+		ceil = 4 * time.Second
+	)
+	if attempts <= loginBackoffFree {
+		return 0
+	}
+	shift := attempts - loginBackoffFree - 1
+	if shift > 8 {
+		return ceil
+	}
+	if d := base << uint(shift); d < ceil {
+		return d
+	}
+	return ceil
+}
+
+// throttle waits out the backoff or the caller's deadline, whichever first.
+func throttle(ctx context.Context, d time.Duration) {
+	if d <= 0 {
+		return
+	}
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+	case <-ctx.Done():
+	}
+}
+
 func (s *Service) Login(ctx context.Context, email, password string) (LoginResponse, error) {
 	u, err := s.users.GetByEmail(ctx, email)
 	if errors.Is(err, users.ErrNotFound) {
@@ -100,8 +136,9 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 		return LoginResponse{}, err
 	}
 
-	// Per-account lockout: reject before checking the password so a locked
-	// account cannot be probed, and count each miss toward the threshold.
+	// Guessing is throttled, never refused: the delay is paid before the
+	// password is checked, so parallel guesses pay it too, and a correct
+	// password still gets through.
 	lock, err := s.users.LockStatus(ctx, email)
 	if errors.Is(err, users.ErrNotFound) {
 		// Deactivated or removed between the two reads: same verdict.
@@ -110,9 +147,7 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 	if err != nil {
 		return LoginResponse{}, err
 	}
-	if lock.LockedUntil != nil && lock.LockedUntil.After(time.Now()) {
-		return LoginResponse{}, ErrAccountLocked
-	}
+	throttle(ctx, loginBackoff(lock.FailedLoginAttempts))
 
 	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)); err != nil {
 		// Bookkeeping must never overturn the verdict nor raise a 500 that

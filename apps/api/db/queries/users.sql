@@ -31,14 +31,13 @@ FROM users
 WHERE LOWER(email) = LOWER($1) AND is_active = TRUE;
 
 -- name: users.record_failed_login
--- Counts the miss and returns the new total, which sets the escalating
--- delay the next attempt pays. No hard lock: one that refuses the correct
--- password lets anyone lock a known address out on purpose.
+-- Counts the miss. The total sets the escalating delay the next attempt
+-- pays. No hard lock: one that refuses the correct password lets anyone lock
+-- a known address out on purpose.
 UPDATE users
    SET failed_login_attempts = failed_login_attempts + 1,
        locked_until = NULL
- WHERE LOWER(email) = LOWER($1) AND is_active = TRUE
-RETURNING failed_login_attempts;
+ WHERE LOWER(email) = LOWER($1) AND is_active = TRUE;
 
 -- name: users.reset_login_attempts
 UPDATE users
