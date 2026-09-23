@@ -81,6 +81,9 @@ func TestHandler_Create_HappyPath(t *testing.T) {
 	res := doJSON(t, srv, http.MethodPost, "/items/", body)
 	defer res.Body.Close()
 	require.Equal(t, http.StatusCreated, res.StatusCode)
+	var it items.Item
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&it))
+	testutil.NewCleaner(t).Item(it.ID)
 }
 
 func TestHandler_Create_BadJSON(t *testing.T) {
@@ -321,6 +324,7 @@ func TestHandler_Update_OK(t *testing.T) {
 	var it items.Item
 	require.NoError(t, json.NewDecoder(created.Body).Decode(&it))
 	created.Body.Close()
+	testutil.NewCleaner(t).Item(it.ID)
 
 	body := items.UpdateItemRequest{Name: "UPD ITEM RENAMED", IsActive: true}
 	res := doJSON(t, srv, http.MethodPut, "/items/"+itoa(it.ID), body)
@@ -511,6 +515,7 @@ func TestHandler_MatchRows_AutoCreate_CreatesProduct(t *testing.T) {
 	require.Len(t, out.Rows, 1)
 	require.NotNil(t, out.Rows[0].Matched, "unmatched row should be auto-created")
 	assert.Equal(t, "CREATED", out.Rows[0].Source)
+	testutil.NewCleaner(t).Item(out.Rows[0].Matched.ItemID)
 	assert.Greater(t, out.Rows[0].Matched.ItemID, int64(0))
 	assert.Nil(t, out.Rows[0].Matched.CostPrice, "new product has empty price")
 }
@@ -534,6 +539,7 @@ func TestHandler_MatchRows_AutoCreate_DedupsSameName(t *testing.T) {
 	require.Len(t, out.Rows, 2)
 	require.NotNil(t, out.Rows[0].Matched)
 	require.NotNil(t, out.Rows[1].Matched)
+	testutil.NewCleaner(t).Item(out.Rows[0].Matched.ItemID)
 	assert.Equal(t, out.Rows[0].Matched.ItemID, out.Rows[1].Matched.ItemID,
 		"same normalized name should map to one product")
 }

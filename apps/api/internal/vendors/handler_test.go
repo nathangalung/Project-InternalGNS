@@ -81,6 +81,7 @@ func TestHandler_Create_HappyPath(t *testing.T) {
 	require.Equal(t, http.StatusCreated, res.StatusCode)
 	var v vendors.Vendor
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&v))
+	testutil.NewCleaner(t).Vendor(v.ID)
 	assert.Equal(t, "Vendor Create Test", v.Name)
 }
 

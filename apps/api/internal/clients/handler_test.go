@@ -102,7 +102,7 @@ func TestHandler_Create_HappyPath(t *testing.T) {
 	srv := newSrv(t)
 	body := clients.CreateClientRequest{
 		Name:        "PT Handler Anyar",
-		Number:      ptr("X1"),
+		Number:      freeNumber(t, testutil.Pool(t)),
 		CountryCode: "IDN",
 	}
 	res := doJSON(t, srv, http.MethodPost, "/clients/", body)
@@ -110,6 +110,7 @@ func TestHandler_Create_HappyPath(t *testing.T) {
 	require.Equal(t, http.StatusCreated, res.StatusCode)
 	var c clients.Client
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&c))
+	testutil.NewCleaner(t).Client(c.ID)
 	assert.Equal(t, "PT Handler Anyar", c.Name)
 }
 
@@ -173,12 +174,13 @@ func TestHandler_ListContacts_BadID(t *testing.T) {
 
 func TestHandler_CreateContact(t *testing.T) {
 	srv := newSrv(t)
+	clientID := strconv.FormatInt(newClient(t), 10)
 	body := clients.CreateContactRequest{
 		Name:        "API Contact",
 		Phone:       ptr("081111222333"),
 		CountryCode: "IDN",
 	}
-	res := doJSON(t, srv, http.MethodPost, "/clients/1/contacts", body)
+	res := doJSON(t, srv, http.MethodPost, "/clients/"+clientID+"/contacts", body)
 	defer res.Body.Close()
 	require.Equal(t, http.StatusCreated, res.StatusCode)
 	var c clients.Contact
@@ -188,7 +190,8 @@ func TestHandler_CreateContact(t *testing.T) {
 
 func TestHandler_UpdateContact(t *testing.T) {
 	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodPost, "/clients/1/contacts", clients.CreateContactRequest{
+	clientID := strconv.FormatInt(newClient(t), 10)
+	res := doJSON(t, srv, http.MethodPost, "/clients/"+clientID+"/contacts", clients.CreateContactRequest{
 		Name: "Edit Me", Phone: ptr("081000000000"), CountryCode: "IDN",
 	})
 	require.Equal(t, http.StatusCreated, res.StatusCode)
@@ -197,7 +200,7 @@ func TestHandler_UpdateContact(t *testing.T) {
 	res.Body.Close()
 
 	upd := doJSON(t, srv, http.MethodPatch,
-		"/clients/1/contacts/"+strconv.FormatInt(created.ID, 10),
+		"/clients/"+clientID+"/contacts/"+strconv.FormatInt(created.ID, 10),
 		clients.CreateContactRequest{Name: "Edit Me", Phone: ptr("089999888777"), CountryCode: "IDN"})
 	defer upd.Body.Close()
 	require.Equal(t, http.StatusOK, upd.StatusCode)

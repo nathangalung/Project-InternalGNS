@@ -106,7 +106,7 @@ func TestRepo_Create(t *testing.T) {
 	repo := clients.NewRepo(tx, testutil.Store(t))
 
 	req := clients.CreateClientRequest{
-		Number:      ptr("9999"),
+		Number:      freeNumber(t, tx),
 		Name:        "PT Test Anyar",
 		NPWP:        ptr("0999999999999000"),
 		Address:     ptr("Jakarta Pusat"),
@@ -126,7 +126,7 @@ func TestRepo_Create_DefaultsCountryCode(t *testing.T) {
 	repo := clients.NewRepo(tx, testutil.Store(t))
 
 	req := clients.CreateClientRequest{
-		Number:      ptr("9998"),
+		Number:      freeNumber(t, tx),
 		Name:        "PT Default Country",
 		CountryCode: "",
 	}
@@ -285,11 +285,12 @@ func TestRepo_List_PagingIsStableOnTiedSortKey(t *testing.T) {
 	const pageSize = 5
 	const pages = 8
 
+	numbers := freeNumbers(t, tx, pageSize*pages)
 	for i := range pageSize * pages {
 		_, err := tx.Exec(ctx,
-			`INSERT INTO company_client (name, country_code, created_by, updated_by)
-			 VALUES ($1, 'IDN', $2, $2)`,
-			fmt.Sprintf("PT. Paging Tie %02d", i), seedUserID)
+			`INSERT INTO company_client (number, name, country_code, created_by, updated_by)
+			 VALUES ($1, $2, 'IDN', $3, $3)`,
+			numbers[i], fmt.Sprintf("PT. Paging Tie %02d", i), seedUserID)
 		require.NoError(t, err)
 	}
 

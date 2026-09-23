@@ -72,7 +72,11 @@ func (s *scenarioState) uniqueName(prefix string) string {
 
 func (s *scenarioState) createClient() error {
 	s.name = s.uniqueName("ATDD CLIENT")
-	body := clients.CreateClientRequest{Name: s.name, CountryCode: "IDN"}
+	number, err := s.freeNumber()
+	if err != nil {
+		return err
+	}
+	body := clients.CreateClientRequest{Name: s.name, Number: &number, CountryCode: "IDN"}
 	if err := s.sendRequest(http.MethodPost, "/clients/", body); err != nil {
 		return err
 	}
@@ -80,6 +84,20 @@ func (s *scenarioState) createClient() error {
 		return s.captureID()
 	}
 	return nil
+}
+
+// freeNumber picks an unused four digit client number.
+func (s *scenarioState) freeNumber() (string, error) {
+	var n string
+	err := testutil.Pool(s.t).QueryRow(context.Background(), `
+		SELECT LPAD(g::text, 4, '0') FROM generate_series(1, 9999) AS g
+		WHERE NOT EXISTS (
+		  SELECT 1 FROM company_client WHERE number = LPAD(g::text, 4, '0'))
+		ORDER BY random() LIMIT 1`).Scan(&n)
+	if err != nil {
+		return "", fmt.Errorf("pick client number: %w", err)
+	}
+	return n, nil
 }
 
 func (s *scenarioState) createClientEmptyName() error {
