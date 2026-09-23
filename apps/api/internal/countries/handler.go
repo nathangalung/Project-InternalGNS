@@ -22,5 +22,5 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, countries)
+	httpx.WriteList(w, int64(len(countries)), countries)
 }

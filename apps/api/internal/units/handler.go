@@ -1,10 +1,10 @@
 package units
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 )
 
 // HTTP handler.
@@ -24,7 +24,5 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(units)
+	httpx.WriteList(w, int64(len(units)), units)
 }

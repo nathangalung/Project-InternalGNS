@@ -3,16 +3,12 @@ package assetproxy
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
-
-	"github.com/go-chi/chi/v5"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
@@ -56,7 +52,7 @@ func Upload(d Descriptor) http.HandlerFunc {
 			httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
 			return
 		}
-		id, ok := parseID(w, r)
+		id, ok := httpx.PathID(w, r, "id", "invalid id")
 		if !ok {
 			return
 		}
@@ -94,7 +90,7 @@ func Download(d Descriptor) http.HandlerFunc {
 			httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
 			return
 		}
-		id, ok := parseID(w, r)
+		id, ok := httpx.PathID(w, r, "id", "invalid id")
 		if !ok {
 			return
 		}
@@ -126,15 +122,14 @@ func Download(d Descriptor) http.HandlerFunc {
 // UpdateKey persists the uploaded object key.
 func UpdateKey(d Descriptor) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, ok := parseID(w, r)
+		id, ok := httpx.PathID(w, r, "id", "invalid id")
 		if !ok {
 			return
 		}
 		var req struct {
 			ObjectKey string `json:"objectKey"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			httperr.Render(w, httperr.BadRequest("invalid json"))
+		if !httpx.DecodeJSON(w, r, &req) {
 			return
 		}
 		objectKey := strings.TrimSpace(req.ObjectKey)
@@ -164,15 +159,6 @@ func UpdateKey(d Descriptor) http.HandlerFunc {
 		}
 		w.WriteHeader(http.StatusNoContent)
 	}
-}
-
-func parseID(w http.ResponseWriter, r *http.Request) (int64, bool) {
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
-	if err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid id"))
-		return 0, false
-	}
-	return id, true
 }
 
 func renderOwnerErr(ctx context.Context, w http.ResponseWriter, err error, notFoundMsg string) {
