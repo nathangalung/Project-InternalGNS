@@ -56,6 +56,7 @@ Feature: Login, session refresh and session revocation
     And the revocations happened 30 seconds ago
     When the account replays the first refresh token
     Then the response status is 401
+    And the problem detail is "Token penyegar sudah pernah dipakai. Silakan masuk kembali."
     When the account refreshes its session
     Then the response status is 401
 
@@ -66,6 +67,7 @@ Feature: Login, session refresh and session revocation
     And the account logged in again
     When the account replays the first refresh token
     Then the response status is 401
+    And the problem detail is "Sesi Anda sudah diakhiri. Silakan masuk kembali."
     When the account refreshes its session
     Then the response status is 200
 
@@ -75,8 +77,14 @@ Feature: Login, session refresh and session revocation
     Then the response status is 200
     When the account calls "/api/v1/auth/me"
     Then the response status is 401
+    And the problem detail is "Sesi Anda tidak berlaku lagi. Silakan masuk kembali."
     When the account refreshes its session
     Then the response status is 401
+
+  Scenario: A request without an access token is told to sign in
+    When someone calls "/api/v1/auth/me" without a token
+    Then the response status is 401
+    And the problem detail is "Anda belum masuk. Silakan masuk terlebih dahulu."
 
   Scenario Outline: A role change reaches the existing access token
     Given the account is logged in

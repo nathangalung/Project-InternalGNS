@@ -187,7 +187,7 @@ func authMiddleware(svc *auth.Service) func(http.Handler) http.Handler {
 			raw := r.Header.Get("Authorization")
 			token, ok := strings.CutPrefix(raw, "Bearer ")
 			if !ok || token == "" {
-				httperr.Render(w, httperr.Unauthorized("missing bearer token"))
+				httperr.Render(w, httperr.Unauthorized(auth.DetailNotSignedIn))
 				return
 			}
 
@@ -197,10 +197,10 @@ func authMiddleware(svc *auth.Service) func(http.Handler) http.Handler {
 			ident, err := svc.Authenticate(r.Context(), token)
 			switch {
 			case errors.Is(err, auth.ErrSessionRevoked):
-				httperr.Render(w, httperr.Unauthorized("session is no longer valid"))
+				httperr.Render(w, httperr.Unauthorized(auth.DetailSessionRevoked))
 				return
 			case errors.Is(err, auth.ErrInvalidToken):
-				httperr.Render(w, httperr.Unauthorized("invalid or expired token"))
+				httperr.Render(w, httperr.Unauthorized(auth.DetailInvalidToken))
 				return
 			case err != nil:
 				// A database outage is not a credential verdict.

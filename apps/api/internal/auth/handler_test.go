@@ -178,6 +178,7 @@ func TestHandler_Refresh_Unknown(t *testing.T) {
 	require.NoError(t, err)
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+	assert.Equal(t, "Token penyegar tidak valid. Silakan masuk kembali.", problemDetail(t, res))
 }
 
 func TestHandler_Logout_WithRefreshToken(t *testing.T) {
@@ -234,6 +235,7 @@ func TestHandler_Me_NoUserID(t *testing.T) {
 	require.NoError(t, err)
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+	assert.Equal(t, "Anda belum masuk. Silakan masuk terlebih dahulu.", problemDetail(t, res))
 }
 
 func TestHandler_Login_DBError(t *testing.T) {
@@ -299,4 +301,15 @@ func TestHandler_Me_UserGone(t *testing.T) {
 	require.NoError(t, err)
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+	assert.Equal(t, "Sesi Anda tidak berlaku lagi. Silakan masuk kembali.", problemDetail(t, res))
+}
+
+// problemDetail decodes the problem+json detail.
+func problemDetail(t *testing.T, res *http.Response) string {
+	t.Helper()
+	var p struct {
+		Detail string `json:"detail"`
+	}
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&p))
+	return p.Detail
 }

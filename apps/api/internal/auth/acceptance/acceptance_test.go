@@ -436,6 +436,9 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the account is logged in$`, state.loggedIn)
 		sc.Step(`^the response carries an access and a refresh token$`, state.tokensIssued)
 		sc.Step(`^the account calls "([^"]+)"$`, state.calls)
+		sc.Step(`^someone calls "([^"]+)" without a token$`, func(path string) error {
+			return state.send(http.MethodGet, path, "", "", nil)
+		})
 		sc.Step(`^the account refreshes its session$`, state.refreshSession)
 		sc.Step(`^the account refreshed its session$`, state.refreshedSession)
 		sc.Step(`^the account replays the first refresh token$`, state.replayFirstRefresh)

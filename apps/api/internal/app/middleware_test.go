@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -394,6 +395,36 @@ func TestRequestTimeout_StorageRouteExtendsReadDeadline(t *testing.T) {
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.Equal(t, http.StatusNoContent, res.StatusCode)
+		})
+	}
+}
+
+// Every 401 detail reaches the toast, so it reads as Indonesian.
+func TestAuthMiddleware_UnauthorizedDetailIsIndonesian(t *testing.T) {
+	svc := mkSvc(t)
+	tests := []struct {
+		name   string
+		header string
+		want   string
+	}{
+		{"no header", "", "Anda belum masuk. Silakan masuk terlebih dahulu."},
+		{"not a jwt", "Bearer not-a-jwt", "Token akses tidak valid atau sudah kedaluwarsa. Silakan masuk kembali."},
+		{"account gone", "Bearer " + mkToken(t, "99999999"), "Sesi Anda tidak berlaku lagi. Silakan masuk kembali."},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			r := httptest.NewRequest(http.MethodGet, "/", nil)
+			if tc.header != "" {
+				r.Header.Set("Authorization", tc.header)
+			}
+			w := httptest.NewRecorder()
+			authMiddleware(svc)(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {})).ServeHTTP(w, r)
+			require.Equal(t, http.StatusUnauthorized, w.Code)
+			var p struct {
+				Detail string `json:"detail"`
+			}
+			require.NoError(t, json.NewDecoder(w.Body).Decode(&p))
+			assert.Equal(t, tc.want, p.Detail)
 		})
 	}
 }

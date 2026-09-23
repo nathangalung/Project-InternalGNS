@@ -11,6 +11,24 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
+// Indonesian 401 details the toast shows.
+const (
+	DetailNotSignedIn    = "Anda belum masuk. Silakan masuk terlebih dahulu."
+	DetailSessionRevoked = "Sesi Anda tidak berlaku lagi. Silakan masuk kembali."
+	DetailInvalidToken   = "Token akses tidak valid atau sudah kedaluwarsa. Silakan masuk kembali."
+)
+
+// refreshDetails maps each refresh refusal to its detail.
+var refreshDetails = []struct {
+	err    error
+	detail string
+}{
+	{ErrInvalidRefresh, "Token penyegar tidak valid. Silakan masuk kembali."},
+	{ErrExpiredRefresh, "Sesi Anda sudah berakhir. Silakan masuk kembali."},
+	{ErrReusedRefresh, "Token penyegar sudah pernah dipakai. Silakan masuk kembali."},
+	{ErrRevokedRefresh, "Sesi Anda sudah diakhiri. Silakan masuk kembali."},
+}
+
 type Handler struct {
 	svc *Service
 }
@@ -79,14 +97,13 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := h.svc.Refresh(r.Context(), req.RefreshToken)
-	switch {
-	case errors.Is(err, ErrInvalidRefresh),
-		errors.Is(err, ErrExpiredRefresh),
-		errors.Is(err, ErrReusedRefresh),
-		errors.Is(err, ErrRevokedRefresh):
-		httperr.Render(w, httperr.Unauthorized(err.Error()))
-		return
-	case err != nil:
+	for _, rd := range refreshDetails {
+		if errors.Is(err, rd.err) {
+			httperr.Render(w, httperr.Unauthorized(rd.detail))
+			return
+		}
+	}
+	if err != nil {
 		httperr.RenderDBErr(w, err)
 		return
 	}
@@ -96,13 +113,13 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 	id := deps.CurrentUserID(r.Context())
 	if id == 0 {
-		httperr.Render(w, httperr.Unauthorized("not authenticated"))
+		httperr.Render(w, httperr.Unauthorized(DetailNotSignedIn))
 		return
 	}
 
 	u, err := h.svc.Me(r.Context(), id)
 	if errors.Is(err, users.ErrNotFound) {
-		httperr.Render(w, httperr.Unauthorized("user no longer exists"))
+		httperr.Render(w, httperr.Unauthorized(DetailSessionRevoked))
 		return
 	}
 	if err != nil {
@@ -116,7 +133,7 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ChangeOwnPassword(w http.ResponseWriter, r *http.Request) {
 	id := deps.CurrentUserID(r.Context())
 	if id == 0 {
-		httperr.Render(w, httperr.Unauthorized("not authenticated"))
+		httperr.Render(w, httperr.Unauthorized(DetailNotSignedIn))
 		return
 	}
 
@@ -151,7 +168,7 @@ func (h *Handler) ChangeOwnPassword(w http.ResponseWriter, r *http.Request) {
 			"Kata sandi akun ini baru saja diubah di tempat lain. Masuk kembali dengan kata sandi terbaru."))
 		return
 	case errors.Is(err, ErrSessionRevoked):
-		httperr.Render(w, httperr.Unauthorized("session is no longer valid"))
+		httperr.Render(w, httperr.Unauthorized(DetailSessionRevoked))
 		return
 	case err != nil:
 		httperr.RenderDBErr(w, err)
