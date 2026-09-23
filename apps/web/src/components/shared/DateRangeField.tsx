@@ -1,5 +1,3 @@
-import type { CSSProperties } from "react"
-
 export type DatePreset = "semua" | "hari-ini" | "7-hari" | "30-hari" | "kustom"
 
 export const DATE_PRESETS: { key: DatePreset; label: string }[] = [
@@ -37,54 +35,25 @@ interface DateInputProps {
   label: string
 }
 
-const labelStyle: CSSProperties = {
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: 500,
-  fontSize: "11px",
-  color: "#9CA3AF",
-  display: "block",
-  marginBottom: "4px",
-  letterSpacing: "0.2px",
-}
+const labelCls =
+  "mb-1 block font-[Inter,sans-serif] text-[11px] font-medium tracking-[0.2px] text-[#9CA3AF]"
 
-const inputWrapStyle: CSSProperties = {
-  position: "relative",
-}
+// Native picker hidden, whole field clickable.
+const pickerCls =
+  "[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:hidden"
 
-const inputStyle: CSSProperties = {
-  width: "100%",
-  height: "44px",
-  padding: "10px 14px 10px 40px",
-  fontFamily: "'Inter', sans-serif",
-  fontSize: "13px",
-  fontWeight: 500,
-  color: "#191C1E",
-  background: "#F7F7F8",
-  border: "1px solid rgba(204, 195, 216, 0.4)",
-  borderRadius: "8px",
-  outline: "none",
-  cursor: "pointer",
-  boxSizing: "border-box",
-  appearance: "none",
-  WebkitAppearance: "none",
-}
+const inputCls = `box-border h-11 w-full cursor-pointer appearance-none rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] py-2.5 pr-3.5 pl-10 font-[Inter,sans-serif] text-[13px] font-medium text-[#191C1E] outline-none ${pickerCls}`
 
-const iconStyle: CSSProperties = {
-  position: "absolute",
-  left: "14px",
-  top: "50%",
-  transform: "translateY(-50%)",
-  color: "#9CA3AF",
-  pointerEvents: "none",
-}
+const iconCls =
+  "pointer-events-none absolute top-1/2 left-3.5 [transform:translateY(-50%)] text-[#9CA3AF]"
 
 // Date input with calendar icon.
 export function DateInput({ value, onChange, label }: DateInputProps) {
   return (
     <div className="flex flex-col gap-2">
-      <label style={labelStyle}>{label}</label>
-      <div style={inputWrapStyle}>
-        <span style={iconStyle}>
+      <label className={labelCls}>{label}</label>
+      <div className="relative">
+        <span className={iconCls}>
           <svg
             width="14"
             height="14"
@@ -103,10 +72,9 @@ export function DateInput({ value, onChange, label }: DateInputProps) {
         </span>
         <input
           type="date"
-          className="shared-date-input"
+          className={inputCls}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          style={inputStyle}
         />
       </div>
     </div>

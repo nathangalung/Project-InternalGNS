@@ -1,43 +1,16 @@
-import type { CSSProperties } from "react"
-
 interface RouteErrorFallbackProps {
   error: unknown
   reset?: () => void
 }
 
-const containerStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  minHeight: "60vh",
-  padding: "32px",
-  fontFamily: "'Inter', sans-serif",
-  color: "#4A4455",
-  textAlign: "center",
-  gap: "12px",
-}
+const containerCls =
+  "flex min-h-[60vh] flex-col items-center justify-center gap-3 p-8 text-center font-[Inter,sans-serif] text-[#4A4455]"
 
-const buttonStyle: CSSProperties = {
-  marginTop: "8px",
-  padding: "8px 22px",
-  borderRadius: "8px",
-  border: "1px solid #630ED4",
-  background: "#630ED4",
-  color: "#FFFFFF",
-  cursor: "pointer",
-  fontWeight: 600,
-  fontSize: "13px",
-}
+const buttonCls =
+  "mt-2 cursor-pointer rounded-md border border-primary-700 bg-primary-700 px-[22px] py-2 text-[13px] font-semibold text-white"
 
-const detailStyle: CSSProperties = {
-  marginTop: "8px",
-  maxWidth: "520px",
-  fontSize: "12px",
-  color: "#7B7287",
-  whiteSpace: "pre-wrap",
-  wordBreak: "break-word",
-}
+const detailCls =
+  "mt-2 max-w-[520px] text-[12px] whitespace-pre-wrap text-[#7B7287] [word-break:break-word]"
 
 function describe(err: unknown): string {
   if (err instanceof Error) return err.message
@@ -51,14 +24,14 @@ function describe(err: unknown): string {
 
 export default function RouteErrorFallback({ error, reset }: RouteErrorFallbackProps) {
   return (
-    <div style={containerStyle}>
-      <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 700 }}>Terjadi kesalahan</h2>
-      <p style={{ margin: 0, fontSize: "14px" }}>
+    <div className={containerCls}>
+      <h2 className="m-0 text-[18px] font-bold">Terjadi kesalahan</h2>
+      <p className="m-0 text-[14px]">
         Halaman tidak dapat dimuat. Coba muat ulang atau hubungi administrator.
       </p>
-      <pre style={detailStyle}>{describe(error)}</pre>
+      <pre className={detailCls}>{describe(error)}</pre>
       {reset && (
-        <button type="button" onClick={reset} style={buttonStyle}>
+        <button type="button" onClick={reset} className={buttonCls}>
           Coba Lagi
         </button>
       )}

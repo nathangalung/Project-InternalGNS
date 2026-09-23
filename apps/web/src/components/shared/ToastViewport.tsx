@@ -1,63 +1,18 @@
-import type { CSSProperties } from "react"
 import { useEffect, useState } from "react"
 import { dismiss, subscribe, type ToastItem, type ToastVariant } from "@/lib/toast"
 
-const containerStyle: CSSProperties = {
-  position: "fixed",
-  bottom: "24px",
-  right: "24px",
-  display: "flex",
-  flexDirection: "column",
-  gap: "10px",
-  zIndex: 10000,
-  pointerEvents: "none",
-}
-
 // Per-variant accent colors.
-function accentFor(variant: ToastVariant): { bg: string; bar: string; text: string } {
-  switch (variant) {
-    case "success":
-      return { bg: "#ECFDF5", bar: "#10B981", text: "#065F46" }
-    case "error":
-      return { bg: "#FEF2F2", bar: "#EF4444", text: "#7F1D1D" }
-    default:
-      return { bg: "#F3EEFB", bar: "#630ED4", text: "#3D1A78" }
-  }
+const accent: Record<ToastVariant, string> = {
+  success: "border-l-[#10B981] bg-[#ECFDF5] text-[#065F46]",
+  error: "border-l-error bg-[#FEF2F2] text-[#7F1D1D]",
+  info: "border-l-primary-700 bg-[#F3EEFB] text-[#3D1A78]",
 }
 
-function toastStyle(variant: ToastVariant): CSSProperties {
-  const c = accentFor(variant)
-  return {
-    pointerEvents: "auto",
-    minWidth: "260px",
-    maxWidth: "360px",
-    background: c.bg,
-    borderLeft: `4px solid ${c.bar}`,
-    color: c.text,
-    padding: "12px 14px",
-    borderRadius: "8px",
-    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
-    fontFamily: "'Inter', sans-serif",
-    fontSize: "13px",
-    fontWeight: 500,
-    lineHeight: "18px",
-    display: "flex",
-    alignItems: "flex-start",
-    gap: "10px",
-  }
-}
+const toastCls =
+  "pointer-events-auto flex max-w-[360px] min-w-[260px] items-start gap-2.5 rounded-md border-l-4 px-3.5 py-3 font-[Inter,sans-serif] text-[13px] leading-[18px] font-medium [box-shadow:0_8px_24px_rgba(0,0,0,0.12)]"
 
-const closeBtnStyle: CSSProperties = {
-  background: "transparent",
-  border: "none",
-  cursor: "pointer",
-  padding: "2px",
-  marginLeft: "auto",
-  color: "inherit",
-  opacity: 0.6,
-  display: "flex",
-  alignItems: "center",
-}
+const closeBtnCls =
+  "ml-auto flex cursor-pointer items-center border-none bg-transparent p-0.5 text-inherit opacity-60"
 
 // Renders active toast queue.
 export default function ToastViewport() {
@@ -67,18 +22,22 @@ export default function ToastViewport() {
   if (items.length === 0) return null
 
   return (
-    <div style={containerStyle} aria-live="polite" aria-atomic="false">
+    <div
+      className="pointer-events-none fixed right-6 bottom-6 z-[10000] flex flex-col gap-2.5"
+      aria-live="polite"
+      aria-atomic="false"
+    >
       {items.map((t) => (
         <div
           key={t.id}
-          style={toastStyle(t.variant)}
+          className={`${toastCls} ${accent[t.variant]}`}
           role={t.variant === "error" ? "alert" : "status"}
         >
-          <span style={{ flex: 1 }}>{t.message}</span>
+          <span className="flex-1">{t.message}</span>
           <button
             type="button"
             onClick={() => dismiss(t.id)}
-            style={closeBtnStyle}
+            className={closeBtnCls}
             title="Tutup"
             aria-label="Tutup notifikasi"
           >
