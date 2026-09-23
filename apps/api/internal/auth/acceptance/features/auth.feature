@@ -113,3 +113,13 @@ Feature: Login, session refresh and session revocation
     Then the response status is 422
     When the account calls "/api/v1/auth/me"
     Then the response status is 200
+
+  Scenario: A self-service change racing an admin reset is refused and the reset stands
+    Given the account is logged in
+    When the account changes its own password to "Sendiri-pw3#" while a superadmin resets it to "Baru-pw2@"
+    Then the response status is 409
+    And the problem detail is "Kata sandi akun ini baru saja diubah di tempat lain. Masuk kembali dengan kata sandi terbaru."
+    When the account logs in with the password "Sendiri-pw3#"
+    Then the response status is 401
+    When the account logs in with the password "Baru-pw2@"
+    Then the response status is 200

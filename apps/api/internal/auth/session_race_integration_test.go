@@ -124,3 +124,52 @@ func TestService_Login_CannotOutliveAConcurrentReset(t *testing.T) {
 	assert.ErrorIs(t, loginErr, auth.ErrInvalidCredentials)
 	assert.Equal(t, 0, activeRefreshTokens(t, u.ID))
 }
+
+// waitBlockedOn returns once a backend waits on holder's lock.
+func waitBlockedOn(t *testing.T, holder pgx.Tx, done <-chan struct{}) {
+	t.Helper()
+	ctx := context.Background()
+	var pid int
+	require.NoError(t, holder.QueryRow(ctx, `SELECT pg_backend_pid()`).Scan(&pid))
+	deadline := time.After(5 * time.Second)
+	for {
+		var waiting bool
+		require.NoError(t, testutil.Pool(t).QueryRow(ctx,
+			`SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE $1 = ANY(pg_blocking_pids(pid)))`,
+			pid).Scan(&waiting))
+		if waiting {
+			return
+		}
+		select {
+		case <-done:
+			t.Fatal("the call finished without waiting for the held account row")
+		case <-deadline:
+			t.Fatal("the call never blocked on the held account row")
+		case <-time.After(10 * time.Millisecond):
+		}
+	}
+}
+
+// A self-service change racing an admin reset must not replace the reset:
+// the hash it verified is gone, so it is refused and the reset stands.
+func TestService_ChangeOwnPassword_CannotOverwriteAConcurrentReset(t *testing.T) {
+	svc, u := committedUser(t)
+
+	holder := holdUserRow(t, u.ID)
+	done := make(chan struct{})
+	var changeErr error
+	go func() {
+		defer close(done)
+		changeErr = svc.ChangeOwnPassword(context.Background(), u.ID, racePassword, "Sendiri-pw3#")
+	}()
+
+	waitBlockedOn(t, holder, done)
+	finishReset(t, holder, u.ID)
+	<-done
+
+	assert.ErrorIs(t, changeErr, auth.ErrPasswordChanged)
+	_, err := svc.Login(context.Background(), u.Email, "Baru-pw2@")
+	require.NoError(t, err, "the admin reset must stand")
+	_, err = svc.Login(context.Background(), u.Email, "Sendiri-pw3#")
+	assert.ErrorIs(t, err, auth.ErrInvalidCredentials)
+}

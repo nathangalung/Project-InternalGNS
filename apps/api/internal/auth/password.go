@@ -8,11 +8,15 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
 // ErrWrongCurrentPassword refuses a self-service change.
 var ErrWrongCurrentPassword = errors.New("current password is wrong")
+
+// ErrPasswordChanged means another change landed after verification.
+var ErrPasswordChanged = errors.New("password changed since it was verified")
 
 // ChangeOwnPassword replaces the caller's password after re-checking the
 // current one, then ends every session, the caller's included. The check
@@ -43,9 +47,33 @@ func (s *Service) ChangeOwnPassword(ctx context.Context, userID int64, current, 
 		return ErrWrongCurrentPassword
 	}
 
-	// Clears the counter and bumps the session epoch in one transaction.
-	if err := s.users.UpdatePassword(ctx, userID, next, userID); err != nil {
+	// Claim the verified hash, then write, in one transaction. The claim
+	// row-locks the account, so a reset that landed first fails the claim and
+	// one that lands later waits and then replaces this change. The new hash
+	// is computed under that lock, which costs a reset one bcrypt of waiting.
+	err = s.users.InTx(ctx, func(q *users.Repo, _ db.Executor) error {
+		if err := q.ClaimLogin(ctx, u.ID, u.PasswordHash); err != nil {
+			return err
+		}
+		return q.UpdatePassword(ctx, userID, next, userID)
+	})
+	if errors.Is(err, users.ErrNotFound) {
+		return s.claimFailure(ctx, userID)
+	}
+	if err != nil {
 		return fmt.Errorf("change own password: %w", err)
 	}
 	return nil
+}
+
+// claimFailure tells a changed password from a closed account.
+func (s *Service) claimFailure(ctx context.Context, userID int64) error {
+	_, err := s.users.GetByID(ctx, userID)
+	if errors.Is(err, users.ErrNotFound) {
+		return ErrSessionRevoked
+	}
+	if err != nil {
+		return fmt.Errorf("change own password: %w", err)
+	}
+	return ErrPasswordChanged
 }

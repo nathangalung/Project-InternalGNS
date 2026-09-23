@@ -145,6 +145,11 @@ func (h *Handler) ChangeOwnPassword(w http.ResponseWriter, r *http.Request) {
 			"currentPassword": "Kata sandi saat ini salah.",
 		}))
 		return
+	// 409: the password is right, but a newer change already replaced it.
+	case errors.Is(err, ErrPasswordChanged):
+		httperr.Render(w, httperr.Conflict(
+			"Kata sandi akun ini baru saja diubah di tempat lain. Masuk kembali dengan kata sandi terbaru."))
+		return
 	case errors.Is(err, ErrSessionRevoked):
 		httperr.Render(w, httperr.Unauthorized("session is no longer valid"))
 		return

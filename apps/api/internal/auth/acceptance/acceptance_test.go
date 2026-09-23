@@ -328,6 +328,62 @@ func (s *scenarioState) changeOwnPassword(current, next string) error {
 		auth.ChangeOwnPasswordRequest{CurrentPassword: current, NewPassword: next})
 }
 
+// changeOwnPasswordDuringReset lands an admin reset while the change
+// waits on the account row, after it verified the old password.
+func (s *scenarioState) changeOwnPasswordDuringReset(next, reset string) error {
+	ctx := context.Background()
+	pool := testutil.Pool(s.t)
+	holder, err := pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = holder.Rollback(ctx) }()
+	if _, err := holder.Exec(ctx, `UPDATE users SET updated_at = updated_at WHERE id = $1`, s.account.ID); err != nil {
+		return err
+	}
+	var pid int
+	if err := holder.QueryRow(ctx, `SELECT pg_backend_pid()`).Scan(&pid); err != nil {
+		return err
+	}
+
+	done := make(chan error, 1)
+	go func() { done <- s.changeOwnPassword(s.password, next) }()
+	if err := s.waitBlockedOn(ctx, pid, done); err != nil {
+		return err
+	}
+
+	if err := users.NewRepo(holder, testutil.Store(s.t)).UpdatePassword(ctx, s.account.ID, reset, 1); err != nil {
+		return err
+	}
+	if err := holder.Commit(ctx); err != nil {
+		return err
+	}
+	return <-done
+}
+
+// waitBlockedOn polls until a backend waits on pid.
+func (s *scenarioState) waitBlockedOn(ctx context.Context, pid int, done <-chan error) error {
+	deadline := time.After(5 * time.Second)
+	for {
+		var waiting bool
+		if err := testutil.Pool(s.t).QueryRow(ctx,
+			`SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE $1 = ANY(pg_blocking_pids(pid)))`,
+			pid).Scan(&waiting); err != nil {
+			return err
+		}
+		if waiting {
+			return nil
+		}
+		select {
+		case err := <-done:
+			return fmt.Errorf("the change finished without waiting for the reset: %v", err)
+		case <-deadline:
+			return fmt.Errorf("the change never waited for the reset")
+		case <-time.After(10 * time.Millisecond):
+		}
+	}
+}
+
 func (s *scenarioState) statusEquals(want int) error {
 	if s.last.StatusCode != want {
 		return fmt.Errorf("want %d got %d body=%s", want, s.last.StatusCode, s.body)
@@ -396,6 +452,8 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the account changes its own password with a wrong current password$`, func() error {
 			return state.changeOwnPassword(wrongPassword, "Baru-pw2@")
 		})
+		sc.Step(`^the account changes its own password to "([^"]+)" while a superadmin resets it to "([^"]+)"$`,
+			state.changeOwnPasswordDuringReset)
 		sc.Step(`^the response status is (\d+)$`, state.statusEquals)
 		sc.Step(`^the problem detail is "([^"]+)"$`, state.problemDetail)
 		sc.Step(`^the response is problem\+json$`, state.isProblemJSON)
