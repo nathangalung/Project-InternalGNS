@@ -205,12 +205,12 @@ func (r *Repo) CreateContact(ctx context.Context, companyID int64, req CreateCon
 	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Contact])
 }
 
-// UpdateContact edits an existing company contact. ErrNotFound when the
-// contact does not belong to the company.
-func (r *Repo) UpdateContact(ctx context.Context, companyID, contactID int64, req CreateContactRequest, userID int64) (Contact, error) {
+// UpdateContact edits an active contact.
+// ErrNotFound when the contact belongs to another company or was deleted.
+func (r *Repo) UpdateContact(ctx context.Context, companyID, contactID int64, req UpdateContactRequest, userID int64) (Contact, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("clients.update_contact"),
-		companyID, contactID, req.Name, req.Email, req.Phone, req.Title,
-		req.CountryCode, userID,
+		companyID, contactID, req.Name, req.Email.Set, req.Email.Value, req.Phone,
+		req.Title.Set, req.Title.Value, req.CountryCode, userID,
 	)
 	if err != nil {
 		return Contact{}, err

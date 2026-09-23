@@ -29,6 +29,7 @@ type scenarioState struct {
 	body     []byte
 	clientID int64
 	name     string
+	contact  clients.Contact
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
@@ -217,6 +218,59 @@ func (s *scenarioState) summaryTotalAtLeast(min int64) error {
 	return nil
 }
 
+// Contact steps for MD-06, MD-07, MD-08.
+func (s *scenarioState) contactPath() string {
+	return "/clients/" + strconv.FormatInt(s.clientID, 10) + "/contacts/" + strconv.FormatInt(s.contact.ID, 10)
+}
+
+func (s *scenarioState) seedContactWithEmail() error {
+	body := map[string]any{
+		"name":  "Kontak ATDD",
+		"email": fmt.Sprintf("atdd.%d@uji.local", time.Now().UnixNano()),
+		"title": "Purchasing",
+	}
+	if err := s.sendRequest(http.MethodPost, "/clients/"+strconv.FormatInt(s.clientID, 10)+"/contacts", body); err != nil {
+		return err
+	}
+	if s.last.StatusCode != http.StatusCreated {
+		return fmt.Errorf("seed contact want 201 got %d body=%s", s.last.StatusCode, s.body)
+	}
+	return json.Unmarshal(s.body, &s.contact)
+}
+
+func (s *scenarioState) clearContactEmailAndTitle() error {
+	return s.sendRequest(http.MethodPatch, s.contactPath(),
+		map[string]any{"name": s.contact.Name, "email": "", "title": nil})
+}
+
+func (s *scenarioState) contactHasNoEmailOrTitle() error {
+	var c clients.Contact
+	if err := json.Unmarshal(s.body, &c); err != nil {
+		return err
+	}
+	if c.Email != nil || c.Title != nil {
+		return fmt.Errorf("want email and title cleared, got email=%v title=%v", c.Email, c.Title)
+	}
+	return nil
+}
+
+func (s *scenarioState) deleteContact() error {
+	return s.sendRequest(http.MethodDelete, s.contactPath(), nil)
+}
+
+func (s *scenarioState) renameContact() error {
+	return s.sendRequest(http.MethodPatch, s.contactPath(), map[string]any{"name": "Nama Baru"})
+}
+
+func (s *scenarioState) otherClientReusesEmail() error {
+	email := *s.contact.Email
+	if err := s.seedClient(); err != nil {
+		return err
+	}
+	return s.sendRequest(http.MethodPost, "/clients/"+strconv.FormatInt(s.clientID, 10)+"/contacts",
+		map[string]any{"name": "Pemilik Baru", "email": email})
+}
+
 func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
 		state := &scenarioState{t: t, cleaner: cleaner}
@@ -225,6 +279,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 			state.body = nil
 			state.clientID = 0
 			state.name = ""
+			state.contact = clients.Contact{}
 			return ctx, nil
 		})
 
@@ -246,6 +301,12 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the contact list contains at least (\d+) row(?:s)?$`, state.contactsAtLeast)
 		sc.Step(`^the user reads client summary$`, state.readSummary)
 		sc.Step(`^the client summary total is at least (\d+)$`, state.summaryTotalAtLeast)
+		sc.Step(`^the client has a contact with an email and a title$`, state.seedContactWithEmail)
+		sc.Step(`^the user clears the contact email and title$`, state.clearContactEmailAndTitle)
+		sc.Step(`^the contact has no email and no title$`, state.contactHasNoEmailOrTitle)
+		sc.Step(`^the user deletes the contact$`, state.deleteContact)
+		sc.Step(`^the user renames the contact$`, state.renameContact)
+		sc.Step(`^another client adds a contact with the same email$`, state.otherClientReusesEmail)
 	}
 }
 

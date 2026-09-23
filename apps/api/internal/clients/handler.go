@@ -239,7 +239,7 @@ func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req CreateContactRequest
+	var req UpdateContactRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return

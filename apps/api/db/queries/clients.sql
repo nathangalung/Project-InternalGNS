@@ -154,22 +154,27 @@ WHERE company_id = $1 AND is_active = TRUE
 ORDER BY name;
 
 -- name: clients.create_contact
+-- A blank email or title is stored as NULL: two blank emails would otherwise
+-- collide on the unique email index.
 INSERT INTO company_contacts
     (company_id, name, email, phone, title, country_code, created_by, updated_by)
 VALUES
-    ($1, $2, $3, $4, $5, COALESCE(NULLIF($6, ''), 'IDN'), $7, $7)
+    ($1, $2, NULLIF(BTRIM($3), ''), $4, NULLIF(BTRIM($5), ''),
+     COALESCE(NULLIF($6, ''), 'IDN'), $7, $7)
 RETURNING id, company_id, name, email, phone, title, country_code,
           is_active, created_at, updated_at;
 
 -- name: clients.update_contact
+-- PATCH: $4 and $7 say whether email and title were sent; a sent null or
+-- blank clears the column. A deleted contact is not editable.
 UPDATE company_contacts
    SET name = $3,
-       email = COALESCE($4, email),
-       phone = $5,
-       title = COALESCE($6, title),
-       country_code = COALESCE(NULLIF($7, ''), country_code),
-       updated_by = $8
- WHERE id = $2 AND company_id = $1
+       email = CASE WHEN $4::boolean THEN NULLIF(BTRIM($5::text), '') ELSE email END,
+       phone = $6,
+       title = CASE WHEN $7::boolean THEN NULLIF(BTRIM($8::text), '') ELSE title END,
+       country_code = COALESCE(NULLIF($9, ''), country_code),
+       updated_by = $10
+ WHERE id = $2 AND company_id = $1 AND is_active = TRUE
 RETURNING id, company_id, name, email, phone, title, country_code,
           is_active, created_at, updated_at;
 
