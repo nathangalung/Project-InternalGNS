@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -194,58 +195,8 @@ func TestRouter_NotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
-func TestNewServer_BadDSN(t *testing.T) {
-	cfg := Config{
-		Env:                "test",
-		HTTPAddr:           ":0",
-		DatabaseURL:        "not-a-real-dsn::::",
-		JWTSecret:          "x",
-		JWTExpiry:          time.Hour,
-		CORSAllowedOrigins: []string{"*"},
-		SuperadminEmail:    "a@a",
-		SuperadminPassword: "p",
-	}
-	_, err := NewServer(context.Background(), cfg)
-	assert.Error(t, err)
-}
 
-func TestNewServer_MigrationsFailOnCancelledCtx(t *testing.T) {
-	_ = testutil.Pool(t)
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	cfg := Config{
-		Env:                "test",
-		HTTPAddr:           ":0",
-		DatabaseURL:        testutil.DSN(),
-		JWTSecret:          "x",
-		JWTExpiry:          time.Hour,
-		CORSAllowedOrigins: []string{"*"},
-		SuperadminEmail:    "a@a",
-		SuperadminPassword: "p",
-	}
-	_, err := NewServer(ctx, cfg)
-	assert.Error(t, err)
-}
 
-func TestNewServer_SeedFailsOnLongPassword(t *testing.T) {
-	_ = testutil.Pool(t)
-	long := make([]byte, 80)
-	for i := range long {
-		long[i] = 'a'
-	}
-	cfg := Config{
-		Env:                "test",
-		HTTPAddr:           ":0",
-		DatabaseURL:        testutil.DSN(),
-		JWTSecret:          "x",
-		JWTExpiry:          time.Hour,
-		CORSAllowedOrigins: []string{"*"},
-		SuperadminEmail:    "long-pw-admin@local",
-		SuperadminPassword: string(long),
-	}
-	_, err := NewServer(context.Background(), cfg)
-	assert.Error(t, err)
-}
 
 func TestNewServer_HappyPath(t *testing.T) {
 	_ = testutil.Pool(t)
@@ -263,7 +214,68 @@ func TestNewServer_HappyPath(t *testing.T) {
 	srv, err := NewServer(context.Background(), cfg)
 	require.NoError(t, err)
 	require.NotNil(t, srv)
-	assert.Equal(t, ":0", srv.Addr)
+	t.Cleanup(srv.Close)
+	assert.Equal(t, ":0", srv.HTTP.Addr)
+}
+
+// Close must release the pool, or every boot leaks 20 connections.
+func TestNewServer_CloseReleasesPool(t *testing.T) {
+	_ = testutil.Pool(t)
+	cfg := Config{
+		Env:                "test",
+		HTTPAddr:           ":0",
+		DatabaseURL:        testutil.DSN(),
+		JWTSecret:          "close-pool-secret",
+		JWTExpiry:          time.Hour,
+		CORSAllowedOrigins: []string{"*"},
+		SuperadminEmail:    "closepool-admin@local",
+		SuperadminName:     "Close Pool Admin",
+		SuperadminPassword: "secret-pass",
+	}
+	srv, err := NewServer(context.Background(), cfg)
+	require.NoError(t, err)
+	require.NoError(t, srv.pool.Ping(context.Background()))
+
+	srv.Close()
+	assert.Error(t, srv.pool.Ping(context.Background()), "pool must be closed")
+	srv.Close() // idempotent: main defers it after Shutdown
+}
+
+// A failed boot returns no server, so no caller can leak a half-built one.
+func TestNewServer_FailedBootReturnsNoServer(t *testing.T) {
+	_ = testutil.Pool(t)
+	long := strings.Repeat("a", 80)
+	cases := []struct {
+		name string
+		dsn  string
+		pw   string
+		ctx  func() context.Context
+	}{
+		{"bad dsn", "not-a-real-dsn::::", "p", context.Background},
+		{"cancelled ctx", testutil.DSN(), "p", func() context.Context {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			return ctx
+		}},
+		{"seed rejects long password", testutil.DSN(), long, context.Background},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			cfg := Config{
+				Env:                "test",
+				HTTPAddr:           ":0",
+				DatabaseURL:        c.dsn,
+				JWTSecret:          "x",
+				JWTExpiry:          time.Hour,
+				CORSAllowedOrigins: []string{"*"},
+				SuperadminEmail:    "failed-boot@local",
+				SuperadminPassword: c.pw,
+			}
+			srv, err := NewServer(c.ctx(), cfg)
+			require.Error(t, err)
+			assert.Nil(t, srv)
+		})
+	}
 }
 
 // The long request budget covers exactly the workbook and PDF routes.

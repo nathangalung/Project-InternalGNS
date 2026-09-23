@@ -44,6 +44,10 @@ func main() {
 		logger.Error("build server", "err", err)
 		os.Exit(1)
 	}
+	// Released after Shutdown returns, so draining handlers keep their
+	// connections. RegisterOnShutdown would close it at the start of the
+	// drain instead, failing every in-flight request on each deploy.
+	defer srv.Close()
 
 	if *bootstrap {
 		logger.Info("bootstrap done")
@@ -52,7 +56,7 @@ func main() {
 
 	go func() {
 		logger.Info("listening", "addr", cfg.HTTPAddr)
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := srv.HTTP.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Error("serve", "err", err)
 			stop()
 		}
@@ -65,7 +69,7 @@ func main() {
 	// See compose.prod.yml api service and app/middleware.go.
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 70*time.Second)
 	defer cancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
+	if err := srv.HTTP.Shutdown(shutdownCtx); err != nil {
 		logger.Error("shutdown", "err", err)
 	}
 }
