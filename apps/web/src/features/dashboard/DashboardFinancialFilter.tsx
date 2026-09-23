@@ -1,14 +1,15 @@
-import { useState } from "react"
+import { useId, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
+import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
 import { dropdownLabel, ui } from "@/lib/ui"
 
-export interface DashboardFilterValues {
+export type DashboardFilterValues = {
   year: number
   month: number | null // 0-based index (Jan=0); null = whole year
 }
 
-interface DashboardFinancialFilterProps {
+type DashboardFinancialFilterProps = {
   onClose: () => void
   onApply: (filters: DashboardFilterValues) => void
   initialValues?: DashboardFilterValues
@@ -45,8 +46,10 @@ const DEFAULTS: DashboardFilterValues = {
   month: null,
 }
 
-// Month chip: solid fill when active, muted surface when idle.
-const monthChip = "rounded-md px-3.5 py-3 text-center text-[13px] transition-all duration-150"
+// Month chip, active or idle.
+//
+// Three columns and tight padding below 640px keep "September" whole at 320px.
+const monthChip = `rounded-md px-1 py-3 text-center sm:px-3.5 text-[13px] transition-colors duration-150 ${ui.focusRing}`
 const monthChipActive = "border-[1.5px] border-primary-700 bg-primary-700 font-semibold text-white"
 const monthChipIdle = "border border-[#E5E7EB] bg-[#F7F7F8] font-medium text-[#4A4455]"
 
@@ -59,6 +62,7 @@ export default function DashboardFinancialFilter({
   const [year, setYear] = useState<number>(initialValues?.year ?? DEFAULTS.year)
   const [month, setMonth] = useState<number | null>(initialValues?.month ?? DEFAULTS.month)
   const [yearOpen, setYearOpen] = useState(false)
+  const yearHeadingId = useId()
 
   const dirty = year !== DEFAULTS.year || month !== DEFAULTS.month
 
@@ -80,39 +84,12 @@ export default function DashboardFinancialFilter({
       title={title}
       onClose={onClose}
       footer={
-        <>
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={!dirty}
-            className={`mr-auto inline-flex items-center gap-1.5 border-0 bg-transparent p-0 text-[13px] font-medium underline-offset-[3px] ${
-              dirty
-                ? "cursor-pointer text-primary-700 underline"
-                : "cursor-default text-[#CBD5E1] no-underline"
-            }`}
-          >
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="1 4 1 10 7 10" />
-              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-            </svg>
-            Hapus Filter
-          </button>
-          <button type="button" className={ui.modalCancel} onClick={onClose}>
-            Batal
-          </button>
-          <button type="button" className={ui.modalSubmit} onClick={handleApply}>
-            Terapkan
-          </button>
-        </>
+        <FilterFooter
+          onReset={handleReset}
+          canReset={dirty}
+          onCancel={onClose}
+          onApply={handleApply}
+        />
       }
     >
       <p className="m-0 text-[12px] text-[#64748B]">
@@ -122,16 +99,20 @@ export default function DashboardFinancialFilter({
 
       {/* Pilih Tahun */}
       <div className={ui.modalSection}>
-        <div className={ui.modalSectionHeading}>Pilih Tahun</div>
+        <div id={yearHeadingId} className={ui.modalSectionHeading}>
+          Pilih Tahun
+        </div>
         <div className={ui.field}>
           <div className="relative">
             <button
               type="button"
               className={ui.selectBtn}
+              aria-labelledby={`${yearHeadingId} ${yearHeadingId}-value`}
+              aria-expanded={yearOpen}
               onClick={() => setYearOpen((o) => !o)}
               onBlur={() => setTimeout(() => setYearOpen(false), 150)}
             >
-              <span>{year}</span>
+              <span id={`${yearHeadingId}-value`}>{year}</span>
               <svg
                 width="12"
                 height="12"
@@ -176,16 +157,18 @@ export default function DashboardFinancialFilter({
         <div className={ui.field}>
           <button
             type="button"
+            aria-pressed={month === null}
             onClick={() => setMonth(null)}
             className={`${monthChip} mb-2 w-full ${month === null ? monthChipActive : monthChipIdle}`}
           >
             Semua Bulan
           </button>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {MONTH_LABELS.map((label, idx) => (
               <button
                 key={label}
                 type="button"
+                aria-pressed={month === idx}
                 onClick={() => pickMonth(idx)}
                 className={`${monthChip} ${month === idx ? monthChipActive : monthChipIdle}`}
               >

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
+import EntityLink from "@/components/shared/EntityLink"
 import FilterButton from "@/components/shared/FilterButton"
 import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
@@ -19,15 +20,11 @@ import TrendChart, { CHART_MONTHS } from "./TrendChart"
 
 const chartTabs = [{ label: "Quotation", metric: "quotation" as const }]
 
-interface DashboardOperationalProps {
-  onViewQuotation?: (quotationId: number) => void
+type DashboardOperationalProps = {
   onViewAllQuotations?: () => void
 }
 
-export default function DashboardOperational({
-  onViewQuotation,
-  onViewAllQuotations,
-}: DashboardOperationalProps) {
+export default function DashboardOperational({ onViewAllQuotations }: DashboardOperationalProps) {
   const [activeTab, setActiveTab] = useState("Quotation")
   const [showFilter, setShowFilter] = useState(false)
   const [filters, setFilters] = useState<DashboardFilterValues | null>(null)
@@ -57,6 +54,8 @@ export default function DashboardOperational({
   const totalQuotation = summary?.totalQuotations ?? 0
   const totalRejected = summary?.totalQuotationsRejected ?? 0
   const totalPo = summary?.totalPo ?? 0
+  // Dash until the summary arrives
+  const fig = (text: string) => (summary ? text : "–")
 
   const recentQuotations = useMemo(() => {
     return (rawQuotations?.rows ?? []).slice(0, 5).map((q) => {
@@ -70,7 +69,7 @@ export default function DashboardOperational({
 
   return (
     <>
-      <div className={ui.pageContentLoose}>
+      <div className={ui.pageContent}>
         <div className={ui.pageHeader}>
           <h1 className={ui.pageTitle}>Dashboard Operasional</h1>
           <div className={ui.pageActionsTight}>
@@ -91,9 +90,9 @@ export default function DashboardOperational({
         )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <StatCard label="Total Quotation" value={formatId(totalQuotation)} />
-          <StatCard label="Total Quotation Ditolak" value={formatId(totalRejected)} />
-          <StatCard label="Total Purchase Order" value={formatId(totalPo)} />
+          <StatCard label="Total Quotation" value={fig(formatId(totalQuotation))} />
+          <StatCard label="Total Quotation Ditolak" value={fig(formatId(totalRejected))} />
+          <StatCard label="Total Purchase Order" value={fig(formatId(totalPo))} />
         </div>
 
         <div className={ui.panel}>
@@ -103,6 +102,8 @@ export default function DashboardOperational({
               {chartTabs.map((tab) => (
                 <button
                   key={tab.label}
+                  type="button"
+                  aria-pressed={activeTab === tab.label}
                   className={pill(activeTab === tab.label)}
                   onClick={() => setActiveTab(tab.label)}
                 >
@@ -144,12 +145,12 @@ export default function DashboardOperational({
               {recentQuotations.map((row) => {
                 const style = statusConfig[row.status]
                 return (
-                  <tr
-                    key={row.id}
-                    className={`${ui.tr} ${onViewQuotation ? "cursor-pointer" : "cursor-default"}`}
-                    onClick={() => onViewQuotation?.(Number(row.id))}
-                  >
-                    <td className={`${ui.tdCenter} font-bold text-primary-700`}>{row.displayNo}</td>
+                  <tr key={row.id} className={ui.tr}>
+                    <td className={`${ui.tdCenter} font-bold text-primary-700`}>
+                      <EntityLink kind="quotation" id={Number(row.id)}>
+                        {row.displayNo}
+                      </EntityLink>
+                    </td>
                     <td className={ui.tdCenter}>{row.version}</td>
                     <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>{row.client}</td>
                     <td className={ui.tdCenter}>{row.date}</td>

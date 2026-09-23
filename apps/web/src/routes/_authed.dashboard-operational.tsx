@@ -8,12 +8,5 @@ export const Route = createFileRoute("/_authed/dashboard-operational")({
 function DashboardOperationalRoute() {
   const navigate = useNavigate()
 
-  return (
-    <DashboardOperational
-      onViewQuotation={(qid) =>
-        void navigate({ to: "/quotations/$id", params: { id: String(qid) } })
-      }
-      onViewAllQuotations={() => void navigate({ to: "/quotations" })}
-    />
-  )
+  return <DashboardOperational onViewAllQuotations={() => void navigate({ to: "/quotations" })} />
 }

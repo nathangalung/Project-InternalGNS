@@ -8,10 +8,5 @@ export const Route = createFileRoute("/_authed/dashboard-financial")({
 function DashboardFinancialRoute() {
   const navigate = useNavigate()
 
-  return (
-    <DashboardFinancial
-      onViewInvoice={(qid) => void navigate({ to: "/invoices/$id", params: { id: String(qid) } })}
-      onViewAllInvoices={() => void navigate({ to: "/invoices" })}
-    />
-  )
+  return <DashboardFinancial onViewAllInvoices={() => void navigate({ to: "/invoices" })} />
 }
