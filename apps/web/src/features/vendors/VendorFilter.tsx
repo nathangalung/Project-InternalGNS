@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useId, useState } from "react"
+import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
 import {
   STATUS_FILTER_OPTIONS as STATUS_OPTIONS,
@@ -12,13 +13,13 @@ const amountInputCls =
 
 export type VendorStatusFilter = StatusFilterValue
 
-export interface VendorFilterValues {
+export type VendorFilterValues = {
   status: VendorStatusFilter
   countryName: string // free-text location substring; "" means all
   minTotal: string // digits-only string; "" or "0" means no min
 }
 
-interface VendorFilterProps {
+type VendorFilterProps = {
   onClose: () => void
   onApply: (filters: VendorFilterValues) => void
   initialValues?: VendorFilterValues
@@ -30,6 +31,9 @@ export default function VendorFilter({ onClose, onApply, initialValues }: Vendor
   const [status, setStatus] = useState<VendorStatusFilter>(initialValues?.status ?? "all")
   const [location, setLocation] = useState<string>(initialValues?.countryName ?? "")
   const [minTotal, setMinTotal] = useState<string>(initialValues?.minTotal ?? "")
+  const statusId = useId()
+  const locationId = useId()
+  const minTotalId = useId()
 
   const dirty =
     status !== DEFAULTS.status ||
@@ -59,36 +63,25 @@ export default function VendorFilter({ onClose, onApply, initialValues }: Vendor
       title="Filter Vendor"
       onClose={onClose}
       footer={
-        <>
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={!dirty}
-            className={`mr-auto border-0 bg-transparent p-0 text-[13px] font-medium underline-offset-[3px] ${
-              dirty
-                ? "cursor-pointer text-primary-700 underline"
-                : "cursor-default text-dark-300 no-underline"
-            }`}
-          >
-            Hapus Filter
-          </button>
-          <button type="button" className={ui.modalCancel} onClick={onClose}>
-            Batal
-          </button>
-          <button type="button" className={ui.modalSubmit} onClick={handleApply}>
-            Terapkan
-          </button>
-        </>
+        <FilterFooter
+          onReset={handleReset}
+          canReset={dirty}
+          onCancel={onClose}
+          onApply={handleApply}
+        />
       }
     >
       <div className={ui.modalSection}>
-        <div className={ui.modalSectionHeading}>Status Vendor</div>
+        <div id={statusId} className={ui.modalSectionHeading}>
+          Status Vendor
+        </div>
         <div className={ui.field}>
-          <div className="flex flex-wrap gap-2">
+          <div role="group" aria-labelledby={statusId} className="flex flex-wrap gap-2">
             {STATUS_OPTIONS.map((o) => (
               <button
                 key={o.value}
                 type="button"
+                aria-pressed={status === o.value}
                 onClick={() => setStatus(o.value)}
                 className={chip(status === o.value)}
               >
@@ -100,24 +93,30 @@ export default function VendorFilter({ onClose, onApply, initialValues }: Vendor
       </div>
 
       <div className={ui.modalSection}>
-        <div className={ui.modalSectionHeading}>Lokasi</div>
+        <label htmlFor={locationId} className={`block ${ui.modalSectionHeading}`}>
+          Lokasi
+        </label>
         <div className={ui.field}>
           <input
+            id={locationId}
             type="text"
             placeholder="Ketik lokasi vendor..."
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="h-11 w-full rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-3.5 py-2.5 text-sm text-[#191C1E] outline-none"
+            className={`h-11 w-full rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-3.5 py-2.5 text-sm text-[#191C1E] outline-none transition ${ui.fieldFocus}`}
           />
         </div>
       </div>
 
       <div className={ui.modalSection}>
-        <div className={ui.modalSectionHeading}>Min Total Pembelian</div>
+        <label htmlFor={minTotalId} className={`block ${ui.modalSectionHeading}`}>
+          Min Total Pembelian
+        </label>
         <div className={ui.field}>
           <div className={ui.prefixWrap}>
             <span className={ui.prefixLabel}>IDR</span>
             <input
+              id={minTotalId}
               className={amountInputCls}
               type="text"
               inputMode="numeric"

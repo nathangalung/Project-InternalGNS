@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { useCreateVendor } from "@/features/vendors/hooks"
 import { ApiError } from "@/lib/api-client"
@@ -14,11 +14,11 @@ const inputCls = `${ui.fieldInput} placeholder:text-dark-500 ${ui.disabledField}
 // Keeps the UA input font.
 const phoneInputCls = `min-w-0 flex-1 border-0 bg-transparent px-3 text-sm text-dark-900 outline-none placeholder:text-dark-500 ${ui.disabledField}`
 
-interface VendorAddModalProps {
+type VendorAddModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: (vendor: VendorRow) => void
-  /** When true, the overlay won't darken the background (use when opened on top of another modal). */
+  // No dimming when stacked on another modal
   nested?: boolean
 }
 
@@ -49,6 +49,7 @@ export default function VendorAddModal({
   const [phone, setPhone] = useState("")
   const [isActive, setIsActive] = useState(true)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const fid = useId()
 
   const createVendor = useCreateVendor()
   const isSaving = createVendor.isPending
@@ -159,23 +160,25 @@ export default function VendorAddModal({
       >
         <div className={ui.modalSection}>
           <div className={ui.field}>
-            <label className={ui.fieldLabel}>
+            <label htmlFor={`${fid}-name`} className={ui.fieldLabel}>
               Nama Vendor <span className="text-primary-700">*</span>
             </label>
             <input
               className={inputCls}
               type="text"
+              id={`${fid}-name`}
               placeholder="Masukkan nama resmi perusahaan"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
           <div className={ui.field}>
-            <label className={ui.fieldLabel}>
+            <label htmlFor={`${fid}-address`} className={ui.fieldLabel}>
               Alamat <span className="text-primary-700">*</span>
             </label>
             <textarea
               className={`${inputCls} resize-none leading-5`}
+              id={`${fid}-address`}
               placeholder="Alamat lengkap kantor pusat atau operasional (min. 20 karakter)"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
@@ -185,12 +188,13 @@ export default function VendorAddModal({
             {addressError && <span className={fieldErrorCls}>{addressError}</span>}
           </div>
           <div className={ui.field}>
-            <label className={ui.fieldLabel}>
+            <label htmlFor={`${fid}-sku`} className={ui.fieldLabel}>
               SKU Vendor <span className={optionalCls}>(Opsional)</span>
             </label>
             <input
               className={inputCls}
               type="text"
+              id={`${fid}-sku`}
               placeholder="Masukkan SKU khusus vendor"
               value={sku}
               onChange={(e) => setSku(e.target.value)}
@@ -207,12 +211,13 @@ export default function VendorAddModal({
           <div className={ui.modalSectionHeading}>Informasi Kontak</div>
           <div className={ui.row2}>
             <div className={ui.field}>
-              <label className={ui.fieldLabel}>
+              <label htmlFor={`${fid}-email`} className={ui.fieldLabel}>
                 Email <span className={optionalCls}>(Opsional)</span>
               </label>
               <input
                 className={inputCls}
                 type="text"
+                id={`${fid}-email`}
                 placeholder="example@vendor.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -221,7 +226,7 @@ export default function VendorAddModal({
               {emailError && <span className={fieldErrorCls}>{emailError}</span>}
             </div>
             <div className={ui.field}>
-              <label className={ui.fieldLabel}>
+              <label htmlFor={`${fid}-phone`} className={ui.fieldLabel}>
                 Nomor Telepon <span className={optionalCls}>(Opsional)</span>
               </label>
               <div className={ui.prefixWrap}>
@@ -230,6 +235,7 @@ export default function VendorAddModal({
                   className={phoneInputCls}
                   type="tel"
                   inputMode="numeric"
+                  id={`${fid}-phone`}
                   placeholder="812xxxx"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
@@ -244,7 +250,10 @@ export default function VendorAddModal({
         <div className={ui.modalSection}>
           <div className="flex items-center justify-between gap-3 rounded-md border border-[rgba(204,195,216,0.1)] bg-[#F2F4F6] px-3.5 py-2.5">
             <div className="flex-1">
-              <div className="text-[13px] font-bold leading-[18px] text-[#191C1E]">
+              <div
+                id={`${fid}-status`}
+                className="text-[13px] font-bold leading-[18px] text-[#191C1E]"
+              >
                 Status Aktif
               </div>
               <div className="mt-0.5 text-xs font-normal leading-4 text-[#4A4455]">
@@ -256,7 +265,8 @@ export default function VendorAddModal({
               onClick={() => setIsActive((a) => !a)}
               role="switch"
               aria-checked={isActive}
-              className={`relative h-[22px] w-10 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] ${
+              aria-labelledby={`${fid}-status`}
+              className={`relative h-[22px] w-10 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] ${ui.focusRing} ${
                 isActive ? "bg-primary-700" : "bg-dark-300"
               }`}
             >
