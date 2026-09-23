@@ -11,13 +11,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
 const validPassword = "Rahasia1!"
 
 // newStaff creates an account through the API and returns it.
-func newStaff(t *testing.T, srv *httptest.Server, email string) users.User {
+func newStaff(t *testing.T, c *testutil.Cleaner, srv *httptest.Server, email string) users.User {
 	t.Helper()
 	res := doJSON(t, srv, http.MethodPost, "/users/", map[string]any{
 		"email": email, "name": "Staff", "password": validPassword, "role": "operational",
@@ -26,6 +27,7 @@ func newStaff(t *testing.T, srv *httptest.Server, email string) users.User {
 	require.Equal(t, http.StatusCreated, res.StatusCode)
 	var u users.User
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&u))
+	c.User(u.ID)
 	return u
 }
 
@@ -47,6 +49,7 @@ func TestHandler_Create_PasswordAndEmailPolicy(t *testing.T) {
 		{"malformed email", "SCOUT-not-an-email", validPassword, http.StatusUnprocessableEntity},
 		{"display name email", "Staff <staff@test.local>", validPassword, http.StatusUnprocessableEntity},
 	}
+	c := testutil.NewCleaner(t)
 	srv := newUsersServer(t)
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -59,14 +62,20 @@ func TestHandler_Create_PasswordAndEmailPolicy(t *testing.T) {
 			})
 			defer res.Body.Close()
 			assert.Equal(t, tc.want, res.StatusCode)
+			if res.StatusCode == http.StatusCreated {
+				var u users.User
+				require.NoError(t, json.NewDecoder(res.Body).Decode(&u))
+				c.User(u.ID)
+			}
 		})
 	}
 }
 
 // The reset endpoint shares the one policy.
 func TestHandler_ChangePassword_SharesPolicy(t *testing.T) {
+	c := testutil.NewCleaner(t)
 	srv := newUsersServer(t)
-	u := newStaff(t, srv, fmt.Sprintf("reset-%d@test.local", randSuffix()))
+	u := newStaff(t, c, srv, fmt.Sprintf("reset-%d@test.local", randSuffix()))
 
 	tests := []struct {
 		name     string
@@ -89,9 +98,10 @@ func TestHandler_ChangePassword_SharesPolicy(t *testing.T) {
 
 // AU-3: an email another user holds is a 409, not a 500.
 func TestHandler_Update_DuplicateEmailIsConflict(t *testing.T) {
+	c := testutil.NewCleaner(t)
 	srv := newUsersServer(t)
-	first := newStaff(t, srv, fmt.Sprintf("dup-a-%d@test.local", randSuffix()))
-	second := newStaff(t, srv, fmt.Sprintf("dup-b-%d@test.local", randSuffix()))
+	first := newStaff(t, c, srv, fmt.Sprintf("dup-a-%d@test.local", randSuffix()))
+	second := newStaff(t, c, srv, fmt.Sprintf("dup-b-%d@test.local", randSuffix()))
 
 	res := doJSON(t, srv, http.MethodPut, fmt.Sprintf("/users/%d", second.ID), map[string]any{
 		"email": first.Email, "name": "Dup", "role": "operational", "isActive": true,
@@ -108,8 +118,9 @@ func TestHandler_Update_DuplicateEmailIsConflict(t *testing.T) {
 
 // AU-12: the duplicate message on create reaches the UI in Indonesian.
 func TestHandler_Create_DuplicateEmailMessageIsIndonesian(t *testing.T) {
+	c := testutil.NewCleaner(t)
 	srv := newUsersServer(t)
-	u := newStaff(t, srv, fmt.Sprintf("dup-msg-%d@test.local", randSuffix()))
+	u := newStaff(t, c, srv, fmt.Sprintf("dup-msg-%d@test.local", randSuffix()))
 
 	res := doJSON(t, srv, http.MethodPost, "/users/", map[string]any{
 		"email": u.Email, "name": "Dup", "password": validPassword, "role": "operational",
@@ -126,8 +137,9 @@ func TestHandler_Create_DuplicateEmailMessageIsIndonesian(t *testing.T) {
 
 // AU-5: an inactive account must stay readable, or nobody can reactivate it.
 func TestHandler_Get_InactiveUserIsReadable(t *testing.T) {
+	c := testutil.NewCleaner(t)
 	srv := newUsersServer(t)
-	u := newStaff(t, srv, fmt.Sprintf("inactive-%d@test.local", randSuffix()))
+	u := newStaff(t, c, srv, fmt.Sprintf("inactive-%d@test.local", randSuffix()))
 
 	off := doJSON(t, srv, http.MethodPut, fmt.Sprintf("/users/%d", u.ID), map[string]any{
 		"email": u.Email, "name": u.Name, "role": "operational", "isActive": false,
@@ -145,6 +157,7 @@ func TestHandler_Get_InactiveUserIsReadable(t *testing.T) {
 
 // AU-13: a padded name must not be stored with its padding.
 func TestHandler_Create_TrimsName(t *testing.T) {
+	c := testutil.NewCleaner(t)
 	srv := newUsersServer(t)
 	res := doJSON(t, srv, http.MethodPost, "/users/", map[string]any{
 		"email":    fmt.Sprintf("trim-%d@test.local", randSuffix()),
@@ -156,5 +169,6 @@ func TestHandler_Create_TrimsName(t *testing.T) {
 	require.Equal(t, http.StatusCreated, res.StatusCode)
 	var u users.User
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&u))
+	c.User(u.ID)
 	assert.Equal(t, "Nama Berspasi", u.Name)
 }
