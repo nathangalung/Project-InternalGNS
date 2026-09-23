@@ -15,17 +15,20 @@ FROM quotations
 WHERE id = $1;
 
 -- name: quotations.get_items
-SELECT id, quotation_id, line_number, item_type,
-       requested_item_id, requested_impa, requested_name,
-       offered_item_id, vendor_product_id,
-       qty::text, unit_id,
-       selling_price::text, cost_price::text,
-       discount_pct::text, total_selling::text,
-       discount_amount::text, subtotal::text,
-       is_available, ship_destination, shipping_days
-FROM quotation_items
-WHERE quotation_id = $1
-ORDER BY line_number;
+SELECT qi.id, qi.quotation_id, qi.line_number, qi.item_type,
+       qi.requested_item_id, qi.requested_impa, qi.requested_name,
+       qi.offered_item_id, qi.vendor_product_id,
+       oi.name       AS offered_name,
+       oi.impa_code  AS offered_impa,
+       qi.qty::text, qi.unit_id,
+       qi.selling_price::text, qi.cost_price::text,
+       qi.discount_pct::text, qi.total_selling::text,
+       qi.discount_amount::text, qi.subtotal::text,
+       qi.is_available, qi.ship_destination, qi.shipping_days
+FROM quotation_items qi
+LEFT JOIN items oi ON oi.id = qi.offered_item_id
+WHERE qi.quotation_id = $1
+ORDER BY qi.line_number;
 
 -- name: quotations.get_history
 SELECT id, from_status, to_status, note, changed_by, changed_at

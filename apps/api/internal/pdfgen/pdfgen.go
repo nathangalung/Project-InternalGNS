@@ -219,6 +219,39 @@ func FormatIDR(numericStr string) string {
 	return prefix + b.String()
 }
 
+// FormatIDRCents keeps the cents.
+func FormatIDRCents(numericStr string) string {
+	// FormatIDR truncates, and filed invoices must not be restated.
+	s := strings.TrimSpace(numericStr)
+	if s == "" {
+		return "Rp~--"
+	}
+	prefix := "Rp~"
+	if strings.HasPrefix(s, "-") {
+		prefix = "-Rp~"
+		s = s[1:]
+	}
+	intPart, fracPart := s, "00"
+	if dot := strings.IndexByte(s, '.'); dot >= 0 {
+		intPart, fracPart = s[:dot], s[dot+1:]
+	}
+	if _, err := strconv.ParseInt(intPart, 10, 64); err != nil {
+		return "Rp~--"
+	}
+	fracPart = (fracPart + "00")[:2]
+	var b strings.Builder
+	b.WriteString(prefix)
+	for i, c := range intPart {
+		if i > 0 && (len(intPart)-i)%3 == 0 {
+			b.WriteByte('.')
+		}
+		b.WriteRune(c)
+	}
+	b.WriteByte(',')
+	b.WriteString(fracPart)
+	return b.String()
+}
+
 // FormatQty trims trailing zeros from a numeric string.
 // e.g. "5.00" -> "5", "1.500" -> "1.5", "" -> "0".
 func FormatQty(numericStr string) string {

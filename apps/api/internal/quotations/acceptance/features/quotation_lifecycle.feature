@@ -78,3 +78,9 @@ Feature: Quotation lifecycle
     When the user lists quotations filtered by status "draft"
     Then the response status is 200
     And the list contains at least 1 quotation
+
+  Scenario: The quotation PDF prints the stored totals on one A5 sheet
+    Given a draft quotation with a discount, shipping and an unpriced line
+    When the user downloads the quotation PDF
+    Then the PDF prints the stored totals, the offered item and No Offer
+    And the PDF has 1 page

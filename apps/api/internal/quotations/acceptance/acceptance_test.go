@@ -25,13 +25,14 @@ const (
 )
 
 type scenarioState struct {
-	t      *testing.T
-	srv    *httptest.Server
-	last   *http.Response
-	body   []byte
-	lastID int64
-	userID int64
-	docNos [2]string
+	t       *testing.T
+	srv     *httptest.Server
+	last    *http.Response
+	body    []byte
+	lastID  int64
+	userID  int64
+	docNos  [2]string
+	pdfPath string
 }
 
 func (s *scenarioState) reset() error {
@@ -340,6 +341,10 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		})
 		sc.Step(`^the user tries to transition the quotation to "([^"]+)"$`, state.tryTransition)
 		sc.Step(`^the user lists quotations filtered by status "([^"]+)"$`, state.listFilteredByStatus)
+		sc.Step(`^a draft quotation with a discount, shipping and an unpriced line$`, state.createPricedQuotation)
+		sc.Step(`^the user downloads the quotation PDF$`, state.downloadPDF)
+		sc.Step(`^the PDF prints the stored totals, the offered item and No Offer$`, state.pdfPrintsStoredTotals)
+		sc.Step(`^the PDF has (\d+) page$`, state.pdfPages)
 		sc.Step(`^the list contains at least (\d+) quotation(?:s)?$`, state.listAtLeast)
 	}
 }

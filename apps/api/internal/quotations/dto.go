@@ -43,6 +43,8 @@ type QuotationItem struct {
 	RequestedImpa   *string `db:"requested_impa"      json:"requestedImpa,omitempty"`
 	RequestedName   string  `db:"requested_name"      json:"requestedName"`
 	OfferedItemID   *int64  `db:"offered_item_id"     json:"offeredItemId,omitempty"`
+	OfferedName     *string `db:"offered_name"        json:"offeredName,omitempty"`
+	OfferedImpa     *string `db:"offered_impa"        json:"offeredImpa,omitempty"`
 	VendorProductID *int64  `db:"vendor_product_id"   json:"vendorProductId,omitempty"`
 	Qty             string  `db:"qty"                 json:"qty"`
 	UnitID          *int16  `db:"unit_id"             json:"unitId,omitempty"`

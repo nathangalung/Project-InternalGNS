@@ -95,7 +95,8 @@ func TestRealTemplate_Quotation(t *testing.T) {
 		AttnName, AttnEmail, AttnPhone, DateLine                   string
 		Items                                                      []item
 		TotalProduk, DiscountPct, TotalDiscount, Subtotal          string
-		DPP, PPN, GrandTotal                                       string
+		DPP, PPN, GrandTotal, Shipping                             string
+		HasShipping                                                bool
 		DeliveryPlace, DeliveryTime, Payment, Validity, SignerName string
 		UseA4                                                      bool
 	}{
