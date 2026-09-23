@@ -222,7 +222,6 @@ export default function UserDetail({ user, onBack }: UserDetailProps) {
             </h2>
             <span className="text-[13px] font-medium leading-[18px] text-[#4A4455]">
               {ROLE_LABEL[user.role]}
-              {isSelf && " · Akun Anda"}
             </span>
           </div>
           <div
@@ -312,9 +311,7 @@ export default function UserDetail({ user, onBack }: UserDetailProps) {
                 >
                   Ubah Kata Sandi
                 </button>
-                <p className="mt-1.5 text-[12px] text-[#4A4455]">
-                  Untuk akun Anda sendiri, kata sandi diubah dengan memasukkan kata sandi saat ini.
-                </p>
+                <p className="mt-1.5 text-[12px] text-[#4A4455]">Memerlukan kata sandi saat ini.</p>
               </div>
             ) : (
               <div>
@@ -345,7 +342,7 @@ export default function UserDetail({ user, onBack }: UserDetailProps) {
             )}
 
             <div>
-              <label htmlFor={roleId} className={labelClass}>
+              <label id={`${roleId}-label`} htmlFor={roleId} className={labelClass}>
                 Peran
               </label>
               <div ref={roleRef} className="relative">
@@ -354,10 +351,12 @@ export default function UserDetail({ user, onBack }: UserDetailProps) {
                   type="button"
                   className={ui.selectBtn}
                   aria-haspopup="true"
+                  // Label plus current value.
+                  aria-labelledby={`${roleId}-label ${roleId}-value`}
                   aria-expanded={roleOpen}
                   onClick={() => setRoleOpen((o) => !o)}
                 >
-                  <span>{ROLE_LABEL[role]}</span>
+                  <span id={`${roleId}-value`}>{ROLE_LABEL[role]}</span>
                   <svg
                     width="12"
                     height="12"

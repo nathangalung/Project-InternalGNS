@@ -136,7 +136,7 @@ export default function UserList() {
               <tr className={ui.theadRow}>
                 <th className={`${ui.thCenter} w-[200px]`} aria-sort={ariaSort("name")}>
                   <button type="button" className={sortBtn} onClick={() => toggleSort("name")}>
-                    <span>Nama</span>
+                    <span>Nama Pengguna</span>
                     <SortIcon direction={sortKey === "name" ? sortDir : null} />
                   </button>
                 </th>
