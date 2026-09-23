@@ -144,6 +144,21 @@ func (s *scenarioState) invoiceTo(path ...invoices.Status) error {
 	return nil
 }
 
+// cancelAndReplace voids the invoice and issues its Pengganti.
+func (s *scenarioState) cancelAndReplace() error {
+	if err := s.invoiceTo(invoices.StatusCancelled); err != nil {
+		return err
+	}
+	return s.expect(http.StatusCreated, http.MethodPost, "/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/replacement", nil)
+}
+
+func (s *scenarioState) invoiceCountIs(want int64) error {
+	if s.summary.TotalInvoices != want {
+		return fmt.Errorf("total invoices want %d got %d", want, s.summary.TotalInvoices)
+	}
+	return nil
+}
+
 func (s *scenarioState) readSummaryAs(role string) error {
 	if err := s.send(testutil.DashboardServerAs(s.t, role), http.MethodGet, "/dashboard/summary", nil); err != nil {
 		return err
@@ -248,6 +263,8 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^an invoice for (\d+) units at (\d+) costing (\d+) each$`, state.invoiceFor)
 		sc.Step(`^the invoice is paid$`, func() error { return state.invoiceTo(invoices.StatusSent, invoices.StatusPaid) })
 		sc.Step(`^the invoice is sent$`, func() error { return state.invoiceTo(invoices.StatusSent) })
+		sc.Step(`^the invoice is cancelled and replaced$`, state.cancelAndReplace)
+		sc.Step(`^the dashboard counts (\d+) invoices?$`, state.invoiceCountIs)
 		sc.Step(`^finance reads the dashboard summary$`, func() error { return state.readSummaryAs("finance") })
 		sc.Step(`^the response status is (\d+)$`, state.statusEquals)
 		sc.Step(`^revenue is ([\d.]+) and equals the paid DPP sum$`, state.revenueIs)

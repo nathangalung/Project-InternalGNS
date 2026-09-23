@@ -22,3 +22,10 @@ Feature: Dashboard financial figures
     Then the response status is 200
     And revenue is 0 and equals the paid DPP sum
     And net profit is 0
+
+  Scenario: A cancelled invoice and its Pengganti count as one invoice
+    Given an invoice for 2 units at 100000 costing 40000 each
+    And the invoice is cancelled and replaced
+    When finance reads the dashboard summary
+    Then the response status is 200
+    And the dashboard counts 1 invoice

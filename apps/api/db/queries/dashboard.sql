@@ -9,7 +9,7 @@ WITH paid_inv AS (
    WHERE status = 'paid'
 ),
 inv AS (
-  SELECT COUNT(*)                                                                            AS total_count,
+  SELECT COUNT(*) FILTER (WHERE status <> 'cancelled')                                    AS total_count,
          COUNT(*) FILTER (WHERE status NOT IN ('paid','cancelled') AND due_date IS NOT NULL
                            AND due_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '7 day') AS due_soon,
          COUNT(*) FILTER (WHERE status NOT IN ('paid','cancelled') AND due_date IS NOT NULL
@@ -68,10 +68,12 @@ SELECT to_char(date_trunc($3::text, created_at),
  ORDER BY 1;
 
 -- name: dashboard.ts_invoice
+-- A cancelled invoice is void; its Pengganti is the one counted.
 SELECT to_char(date_trunc($3::text, invoice_date), CASE $3::text WHEN 'day' THEN 'YYYY-MM-DD' ELSE 'YYYY-MM' END) AS month,
        COUNT(*)::text                                         AS value
   FROM invoices
- WHERE invoice_date >= $1::date AND invoice_date < $2::date
+ WHERE status <> 'cancelled'
+   AND invoice_date >= $1::date AND invoice_date < $2::date
  GROUP BY 1
  ORDER BY 1;
 
