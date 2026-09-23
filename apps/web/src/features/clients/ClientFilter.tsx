@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
+import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
 import { useCountries } from "@/features/countries/hooks"
 import {
@@ -69,26 +70,12 @@ export default function ClientFilter({ onClose, onApply, initialValues }: Client
       title="Filter Klien"
       onClose={onClose}
       footer={
-        <>
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={!dirty}
-            className={`mr-auto border-0 bg-transparent p-0 text-[13px] font-medium underline-offset-[3px] ${
-              dirty
-                ? "cursor-pointer text-primary-700 underline"
-                : "cursor-default text-[#CBD5E1] no-underline"
-            }`}
-          >
-            Hapus Filter
-          </button>
-          <button type="button" className={ui.modalCancel} onClick={onClose}>
-            Batal
-          </button>
-          <button type="button" className={ui.modalSubmit} onClick={handleApply}>
-            Terapkan
-          </button>
-        </>
+        <FilterFooter
+          onReset={handleReset}
+          canReset={dirty}
+          onCancel={onClose}
+          onApply={handleApply}
+        />
       }
     >
       <div className={ui.modalSection}>
@@ -100,6 +87,7 @@ export default function ClientFilter({ onClose, onApply, initialValues }: Client
                 key={o.value}
                 type="button"
                 onClick={() => setStatus(o.value)}
+                aria-pressed={status === o.value}
                 className={chip(status === o.value)}
               >
                 {o.label}
@@ -123,6 +111,7 @@ export default function ClientFilter({ onClose, onApply, initialValues }: Client
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -130,6 +119,7 @@ export default function ClientFilter({ onClose, onApply, initialValues }: Client
             <input
               type="text"
               placeholder="Ketik nama negara..."
+              aria-label="Negara asal"
               value={countryQuery}
               onChange={(e) => {
                 setCountryQuery(e.target.value)
@@ -139,7 +129,7 @@ export default function ClientFilter({ onClose, onApply, initialValues }: Client
               onFocus={() => {
                 if (countryQuery.length > 0 && !countryCode) setShowCountrySuggestions(true)
               }}
-              className="h-11 w-full rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-9 py-2.5 text-sm text-[#191C1E] outline-none"
+              className={`h-11 w-full rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-9 py-2.5 text-sm text-[#191C1E] outline-none transition ${ui.fieldFocus}`}
             />
             {countryQuery && (
               <button
@@ -150,7 +140,8 @@ export default function ClientFilter({ onClose, onApply, initialValues }: Client
                   setShowCountrySuggestions(false)
                 }}
                 title="Bersihkan"
-                className="absolute right-2.5 top-1/2 flex -translate-y-1/2 cursor-pointer items-center justify-center border-0 bg-transparent p-1 text-[#94A3B8]"
+                aria-label="Bersihkan negara"
+                className={`absolute right-2.5 top-1/2 flex -translate-y-1/2 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-1 text-[#94A3B8] ${ui.focusRing}`}
               >
                 <svg
                   width="14"
@@ -160,6 +151,7 @@ export default function ClientFilter({ onClose, onApply, initialValues }: Client
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
+                  aria-hidden="true"
                 >
                   <line x1="1" y1="1" x2="13" y2="13" />
                   <line x1="13" y1="1" x2="1" y2="13" />
@@ -208,6 +200,7 @@ export default function ClientFilter({ onClose, onApply, initialValues }: Client
               type="text"
               inputMode="numeric"
               placeholder="0"
+              aria-label="Min total pembelian"
               value={formatRupiah(minTotal)}
               onChange={(e) => setMinTotal(e.target.value.replace(/\D/g, ""))}
             />

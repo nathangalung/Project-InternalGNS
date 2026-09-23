@@ -50,7 +50,6 @@ export async function search(
 }
 
 type CreateClientInput = {
-  number?: string
   name: string
   npwp?: string
   address?: string
@@ -93,6 +92,15 @@ type CreateContactInput = {
   countryCode?: string
 }
 
+// Absent keeps, "" or null clears.
+export type UpdateContactInput = {
+  name: string
+  email?: string | null
+  phone?: string
+  title?: string | null
+  countryCode: string
+}
+
 export async function listContacts(companyId: number): Promise<ContactRow[]> {
   return apiRequest<ContactRow[]>({ path: `/clients/${companyId}/contacts` })
 }
@@ -111,7 +119,7 @@ export async function createContact(
 export async function updateContact(
   companyId: number,
   contactId: number,
-  input: CreateContactInput,
+  input: UpdateContactInput,
 ): Promise<ContactRow> {
   return apiRequest<ContactRow>({
     path: `/clients/${companyId}/contacts/${contactId}`,

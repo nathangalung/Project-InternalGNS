@@ -56,7 +56,18 @@ export function useUpdateClient() {
   return useMutation({
     mutationFn: ({ id, input }: { id: number; input: clientsApi.UpdateClientInput }) =>
       clientsApi.update(id, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clients.all }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.all })
+      // Document lists and dashboards print the client name.
+      for (const key of [
+        queryKeys.quotations.all,
+        queryKeys.purchaseOrders.all,
+        queryKeys.invoices.all,
+        queryKeys.dashboard.all,
+      ]) {
+        void qc.invalidateQueries({ queryKey: key })
+      }
+    },
     onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui klien.")),
   })
 }
