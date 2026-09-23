@@ -3,9 +3,11 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -21,15 +23,15 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
-// Mint a valid bearer token for a role.
-func mintToken(t *testing.T, role string) string {
+// Mint a valid bearer token for a user.
+func mintToken(t *testing.T, userID int64, role string) string {
 	t.Helper()
 	now := time.Now()
 	claims := auth.Claims{
 		Role: users.Role(role),
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "internalgns-api",
-			Subject:   "1",
+			Subject:   strconv.FormatInt(userID, 10),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour)),
@@ -41,8 +43,24 @@ func mintToken(t *testing.T, role string) string {
 }
 
 // Each role-gated mount enforces its policy at the router.
+// The middleware reads the role from the account, not the claim, so each
+// role needs a real user of its own.
 func TestRouter_RBACPerMount(t *testing.T) {
 	r := mkRouter(t)
+	cleaner := testutil.NewCleaner(t)
+	repo := users.NewRepo(testutil.Pool(t), testutil.Store(t))
+	userIDs := map[string]int64{}
+	for _, role := range []users.Role{users.RoleSuperadmin, users.RoleFinance, users.RoleOperational} {
+		u, err := repo.Create(context.Background(), users.CreateUserRequest{
+			Email:    fmt.Sprintf("rbac-%s-%d@test.local", role, time.Now().UnixNano()),
+			Name:     "RBAC " + string(role),
+			Password: "Rbac-mount-pw1!",
+			Role:     role,
+		}, 1)
+		require.NoError(t, err)
+		cleaner.User(u.ID)
+		userIDs[string(role)] = u.ID
+	}
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)
 
@@ -69,7 +87,7 @@ func TestRouter_RBACPerMount(t *testing.T) {
 		for _, role := range roles {
 			t.Run(st.path+"/"+role.name, func(t *testing.T) {
 				req, _ := http.NewRequest(http.MethodGet, srv.URL+st.path, nil)
-				req.Header.Set("Authorization", "Bearer "+mintToken(t, role.name))
+				req.Header.Set("Authorization", "Bearer "+mintToken(t, userIDs[role.name], role.name))
 				res, err := srv.Client().Do(req)
 				require.NoError(t, err)
 				defer res.Body.Close()
