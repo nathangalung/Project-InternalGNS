@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { getPageNumbers } from "@/lib/pagination"
+import { ui } from "@/lib/ui"
 
-interface PaginationProps {
+type PaginationProps = {
   totalItems: number
   startIndex: number
   itemsPerPage: number
@@ -11,11 +12,12 @@ interface PaginationProps {
   rowsPerPageOptions?: number[]
   onItemsPerPage: (n: number) => void
   onPage: (n: number) => void
+  // Hides the range until data lands.
+  isLoading?: boolean
 }
 
-const pageBtnBase = "flex h-8 w-8 items-center justify-center rounded-sm text-sm transition"
-const navBtn =
-  "flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100"
+const pageBtnBase = `flex h-8 w-8 items-center justify-center rounded-sm text-sm transition ${ui.focusRing}`
+const navBtn = `flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100 disabled:cursor-not-allowed ${ui.focusRing}`
 
 // Pagination footer with page picker.
 export default function Pagination({
@@ -28,6 +30,7 @@ export default function Pagination({
   rowsPerPageOptions = [5, 10, 15],
   onItemsPerPage,
   onPage,
+  isLoading = false,
 }: PaginationProps) {
   const [open, setOpen] = useState(false)
 
@@ -38,10 +41,11 @@ export default function Pagination({
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
-            className="flex items-center justify-between gap-2 rounded-sm border border-dark-200 bg-white px-3 py-1.5 text-sm leading-6 text-[#4A4455]"
+            aria-expanded={open}
+            className={`flex items-center justify-between gap-2 rounded-sm border border-dark-200 bg-white px-3 py-1.5 text-sm leading-6 text-[#4A4455] ${ui.focusRing}`}
           >
             {itemsPerPage} Baris
-            <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+            <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
               <path
                 d="M1 1L5 5L9 1"
                 stroke="#4A4455"
@@ -63,7 +67,8 @@ export default function Pagination({
                       onItemsPerPage(val)
                       setOpen(false)
                     }}
-                    className={`flex h-8 w-full flex-row items-center px-5 py-1 ${
+                    aria-pressed={isActive}
+                    className={`flex h-8 w-full flex-row items-center px-5 py-1 ${ui.focusRingInset} ${
                       isActive ? "justify-between" : "justify-start"
                     }`}
                   >
@@ -91,10 +96,17 @@ export default function Pagination({
             </div>
           )}
         </div>
-        <span className="text-sm text-[#4A4455]">
-          Menampilkan {totalItems === 0 ? 0 : startIndex + 1}-
-          {Math.min(startIndex + itemsPerPage, totalItems)} dari {totalItems} {resourceLabel}
-        </span>
+        {isLoading ? (
+          <span
+            aria-hidden="true"
+            className="h-4 w-40 rounded-sm bg-dark-100 motion-safe:animate-pulse"
+          />
+        ) : (
+          <span className="text-sm text-[#4A4455]">
+            Menampilkan {totalItems === 0 ? 0 : startIndex + 1}-
+            {Math.min(startIndex + itemsPerPage, totalItems)} dari {totalItems} {resourceLabel}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-1 sm:flex-nowrap sm:justify-start">
@@ -103,8 +115,9 @@ export default function Pagination({
           className={navBtn}
           onClick={() => onPage(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
+          aria-label="Halaman sebelumnya"
         >
-          <svg width="5" height="8" viewBox="0 0 5 8" fill="none">
+          <svg width="5" height="8" viewBox="0 0 5 8" fill="none" aria-hidden="true">
             <path
               d="M4 1L1 4L4 7"
               stroke="#191C1E"
@@ -127,6 +140,7 @@ export default function Pagination({
               key={n}
               type="button"
               onClick={() => onPage(n)}
+              aria-current={n === currentPage ? "page" : undefined}
               className={`${pageBtnBase} ${
                 n === currentPage
                   ? "bg-primary-700 font-bold text-white"
@@ -142,8 +156,9 @@ export default function Pagination({
           className={navBtn}
           onClick={() => onPage(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages || totalPages === 0}
+          aria-label="Halaman berikutnya"
         >
-          <svg width="5" height="8" viewBox="0 0 5 8" fill="none">
+          <svg width="5" height="8" viewBox="0 0 5 8" fill="none" aria-hidden="true">
             <path
               d="M1 1L4 4L1 7"
               stroke="#191C1E"
