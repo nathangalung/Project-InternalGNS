@@ -9,12 +9,13 @@ import {
 import type {
   InvoiceBackendRow,
   InvoiceBackendStatus,
+  InvoiceDetail,
   InvoiceItemRow,
   InvoiceSummary,
   PresignDownload,
   PresignUpload,
 } from "@/types/api"
-import type { ChangeInvoiceStatusInput, InvoiceDetail, UpdateInvoiceDatesInput } from "./types"
+import type { ChangeInvoiceStatusInput, UpdateInvoiceDatesInput } from "./types"
 
 export type PresignAttachmentUpload = PresignUpload
 export type PresignAttachmentDownload = PresignDownload

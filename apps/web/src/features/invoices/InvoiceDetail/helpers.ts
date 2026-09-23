@@ -1,7 +1,12 @@
 import type { ClientInfo } from "@/features/quotations/types"
 import { deriveInvoiceStatus } from "@/lib/status"
-import type { InvoiceBackendRow, InvoiceBackendStatus } from "@/types/api"
-import type { InvoiceDetail, InvoiceDisplayStatus, InvoiceTransition } from "../types"
+import type {
+  InvoiceBackendRow,
+  InvoiceBackendStatus,
+  InvoiceDetail,
+  InvoiceTransition,
+} from "@/types/api"
+import type { InvoiceDisplayStatus } from "../types"
 
 // Badge status, cancelled kept visible.
 export function invoiceDisplayStatus(inv: InvoiceBackendRow): InvoiceDisplayStatus {

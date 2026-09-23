@@ -9,6 +9,7 @@ import { downloadPdf, fetchObjectUrl } from "@/lib/api-client"
 import { computeTaxBreakdown, toNum } from "@/lib/format"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
+import type { InvoiceDetail as InvoiceDetailData } from "@/types/api"
 import { invoiceItemsToProducts, invoiceItemsToShipping } from "../adapters"
 import * as invApi from "../api"
 import { failureMessage, runDownload, safeFileName } from "../download"
@@ -22,7 +23,6 @@ import {
   useUpdateInvoiceDates,
   useUploadInvoiceAttachment,
 } from "../hooks"
-import type { InvoiceDetail as InvoiceDetailData } from "../types"
 import ActionModal, { type ActionModalKind } from "./ActionModal"
 import DatesCard from "./DatesCard"
 import FileCard from "./FileCard"

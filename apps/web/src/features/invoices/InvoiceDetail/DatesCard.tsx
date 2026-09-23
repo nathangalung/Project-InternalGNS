@@ -1,6 +1,7 @@
 import { useId, useState } from "react"
 import { ui } from "@/lib/ui"
-import type { InvoiceDetail } from "../types"
+import type { InvoiceDetail } from "@/types/api"
+
 import { datesLocked, datesPatch, datesProblem, toInputDate } from "./helpers"
 
 type DatesCardProps = {

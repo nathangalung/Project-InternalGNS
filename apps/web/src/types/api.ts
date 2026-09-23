@@ -576,6 +576,53 @@ export type InvoiceBackendRow = {
   createdAt: string
   updatedAt: string
   attachmentObjectKey?: string
+  // Set when marked paid
+  paidAt?: string
+  paymentProofKey?: string
+}
+
+// One offered invoice move.
+export type InvoiceTransition = {
+  to: InvoiceBackendStatus
+  label: string
+  requiresNote: boolean
+}
+
+// One stored invoice status change.
+export type InvoiceStatusEvent = {
+  id: number
+  fromStatus: InvoiceBackendStatus
+  toStatus: InvoiceBackendStatus
+  note?: string
+  paymentProofKey?: string
+  changedBy: number
+  changedAt: string
+}
+
+// GET /invoices/{id} and /by-quotation.
+//
+// Carries the header fields so finance never calls the quotation or PO
+// endpoints. by-quotation returns the newest invoice, the Pengganti when
+// one exists.
+export type InvoiceDetail = InvoiceBackendRow & {
+  vesselName?: string
+  poNumber?: string
+  poDate?: string
+  companyNpwp?: string
+  companyAddress?: string
+  companyEmail?: string
+  companyCountryCode: string
+  companyTkuId?: string
+  contactName?: string
+  contactEmail?: string
+  contactPhone?: string
+  replacesInvoiceId?: number
+  replacesInvoiceNo?: string
+  replacedByInvoiceId?: number
+  // Empty for a terminal status
+  allowedTransitions: InvoiceTransition[]
+  canReplace: boolean
+  history: InvoiceStatusEvent[]
 }
 
 export type InvoiceItemRow = {

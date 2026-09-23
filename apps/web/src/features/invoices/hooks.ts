@@ -12,8 +12,9 @@ import { queryKeys } from "@/lib/query-keys"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
+import type { InvoiceDetail } from "@/types/api"
 import { failureMessage } from "./download"
-import type { InvoiceDetail, UpdateInvoiceDatesInput } from "./types"
+import type { UpdateInvoiceDatesInput } from "./types"
 
 export function useInvoices(params: invApi.ListParams = {}) {
   return useQuery({

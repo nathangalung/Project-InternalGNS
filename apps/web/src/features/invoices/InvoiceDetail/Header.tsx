@@ -3,7 +3,8 @@ import EntityLink from "@/components/shared/EntityLink"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { formatDate } from "@/lib/format"
 import { ui } from "@/lib/ui"
-import type { InvoiceDetail, InvoiceDisplayStatus } from "../types"
+import type { InvoiceDetail } from "@/types/api"
+import type { InvoiceDisplayStatus } from "../types"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "../types"
 
 type HeaderProps = {

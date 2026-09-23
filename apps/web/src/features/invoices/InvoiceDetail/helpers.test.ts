@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
-import type { InvoiceBackendRow, InvoiceBackendStatus } from "@/types/api"
-import type { InvoiceDetail, InvoiceStatusEvent, InvoiceTransition } from "../types"
+import type {
+  InvoiceBackendRow,
+  InvoiceBackendStatus,
+  InvoiceDetail,
+  InvoiceStatusEvent,
+  InvoiceTransition,
+} from "@/types/api"
 import {
   cancelReason,
   clientInfoOf,
