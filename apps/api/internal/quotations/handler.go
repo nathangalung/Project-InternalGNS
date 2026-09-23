@@ -3,6 +3,7 @@ package quotations
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -264,8 +265,8 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
-	if req.Status == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "required"}))
+	if fields := validateChangeStatus(req); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
 
@@ -277,15 +278,52 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// validateChangeStatus checks the body shape.
+// The transition itself is judged by the database under its row lock.
+func validateChangeStatus(req ChangeStatusRequest) map[string]string {
+	if strings.TrimSpace(req.Status) == "" {
+		return map[string]string{"status": "Status wajib diisi."}
+	}
+	if noteRequired(req.Status) && (req.Note == nil || strings.TrimSpace(*req.Note) == "") {
+		return map[string]string{
+			"note": "Alasan wajib diisi untuk status " + StatusLabel(req.Status) + ".",
+		}
+	}
+	return nil
+}
+
 // renderStatusErr maps the unpriced-products guard to 422, else a DB error.
 func renderStatusErr(w http.ResponseWriter, err error) {
 	if errors.Is(err, ErrUnpricedProducts) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{
-			"items": "all product lines must have a selling price before sending",
+			"items": "Semua baris produk harus memiliki harga jual sebelum quotation dikirim atau disetujui.",
 		}))
 		return
 	}
 	httperr.RenderDBErr(w, err)
+}
+
+// Revise clones a sent quotation.
+// Answers 201 with the new draft id; the original moves to revision.
+func (h *Handler) Revise(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	var req ReviseRequest
+	// The note is optional, so an empty body is fine.
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil && !errors.Is(err, io.EOF) {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	userID := deps.CurrentUserID(r.Context())
+	newID, err := h.repo.Revise(r.Context(), id, req.Note, userID)
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusCreated, map[string]int64{"id": newID})
 }
 
 func (h *Handler) ChangeContact(w http.ResponseWriter, r *http.Request) {

@@ -33,6 +33,9 @@ type scenarioState struct {
 	userID  int64
 	docNos  [2]string
 	pdfPath string
+	// Revision fixtures.
+	origID int64
+	newID  int64
 }
 
 func (s *scenarioState) reset() error {
@@ -261,9 +264,30 @@ func (s *scenarioState) detailStatusEquals(want string) error {
 	return nil
 }
 
-func (s *scenarioState) walkPath(path string) error {
+func (s *scenarioState) walkPath(path string) error { return s.walk(path, nil) }
+
+// walkWithReason also supports none and revise.
+func (s *scenarioState) walkWithReason(path string) error {
+	reason := testReason
+	return s.walk(path, &reason)
+}
+
+func (s *scenarioState) walk(path string, note *string) error {
 	for _, step := range strings.Split(path, ",") {
-		if err := s.transitionTo(strings.TrimSpace(step)); err != nil {
+		step = strings.TrimSpace(step)
+		switch step {
+		case "none":
+			continue
+		case "revise":
+			if err := s.reviseQuotation(); err != nil {
+				return err
+			}
+			if s.last.StatusCode != http.StatusCreated {
+				return fmt.Errorf("revise wanted 201 got %d body=%s", s.last.StatusCode, s.body)
+			}
+			continue
+		}
+		if err := s.transitionWith(step, note); err != nil {
 			return err
 		}
 		if s.last.StatusCode != http.StatusNoContent {
@@ -273,8 +297,10 @@ func (s *scenarioState) walkPath(path string) error {
 	return nil
 }
 
-func (s *scenarioState) transitionTo(target string) error {
-	body := quotations.ChangeStatusRequest{Status: target}
+func (s *scenarioState) transitionTo(target string) error { return s.transitionWith(target, nil) }
+
+func (s *scenarioState) transitionWith(target string, note *string) error {
+	body := quotations.ChangeStatusRequest{Status: target, Note: note}
 	return s.sendRequest(http.MethodPatch, "/quotations/"+strconv.FormatInt(s.lastID, 10)+"/status", body)
 }
 
@@ -304,8 +330,11 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 			state.last = nil
 			state.body = nil
 			state.lastID = 0
+			state.origID = 0
+			state.newID = 0
 			return ctx, nil
 		})
+		registerStatusSteps(sc, state)
 
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
 		sc.Step(`^the quotation domain is empty$`, state.emptyDomain)
@@ -351,6 +380,7 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 
 func TestQuotationFeatures(t *testing.T) {
 	testutil.RequireDB(t)
+	roleTeardown(t)
 	suite := godog.TestSuite{
 		ScenarioInitializer: initScenario(t),
 		Options: &godog.Options{

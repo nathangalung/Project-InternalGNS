@@ -34,7 +34,7 @@ ORDER BY qi.line_number;
 SELECT id, from_status, to_status, note, changed_by, changed_at
 FROM quotation_status_history
 WHERE quotation_id = $1
-ORDER BY changed_at;
+ORDER BY changed_at, id;
 
 -- name: quotations.list_base
 SELECT
@@ -85,6 +85,12 @@ SELECT row_version FROM quotations WHERE id = $1;
 
 -- name: quotations.fn_change_status
 SELECT fn_change_quotation_status($1, $2, $3, $4);
+
+-- name: quotations.fn_revise
+SELECT fn_revise_quotation($1, $2, $3);
+
+-- name: quotations.expire_due
+SELECT fn_expire_quotations($1::date);
 
 -- name: quotations.list_revisions
 WITH RECURSIVE chain AS (

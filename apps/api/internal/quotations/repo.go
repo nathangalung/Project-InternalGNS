@@ -3,6 +3,8 @@ package quotations
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -10,6 +12,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	dbpkg "github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
 
 // Executor aliased for backwards compat.
@@ -114,13 +117,26 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	return out, err
 }
 
-// Counts grouped by status.
+// Stats returns one row per status.
+// Rows follow Statuses, zero counts included, so every tile has a source.
 func (r *Repo) Stats(ctx context.Context) ([]StatusCount, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("quotations.stats"))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("quotation stats: %w", err)
 	}
-	return pgx.CollectRows(rows, pgx.RowToStructByName[StatusCount])
+	counted, err := pgx.CollectRows(rows, pgx.RowToStructByName[StatusCount])
+	if err != nil {
+		return nil, fmt.Errorf("quotation stats: %w", err)
+	}
+	by := make(map[string]int64, len(counted))
+	for _, c := range counted {
+		by[c.Status] = c.Count
+	}
+	out := make([]StatusCount, 0, len(Statuses))
+	for _, s := range Statuses {
+		out = append(out, StatusCount{Status: s.Status, Label: s.Label, Count: by[s.Status]})
+	}
+	return out, nil
 }
 
 // GetDetail returns header, items, history.
@@ -159,6 +175,8 @@ func (r *Repo) GetDetail(ctx context.Context, id int64) (QuotationDetail, error)
 		return d, err
 	}
 	d.History = hist
+	d.AllowedTransitions = AllowedTransitions(q.Status)
+	d.CanRevise = CanRevise(q.Status)
 
 	return d, nil
 }
@@ -273,4 +291,27 @@ func (r *Repo) ListRevisions(ctx context.Context, id int64) ([]RevisionRow, erro
 		return nil, err
 	}
 	return pgx.CollectRows(rows, pgx.RowToStructByName[RevisionRow])
+}
+
+// Revise clones a sent quotation.
+// The copy is a new draft one version up; the original moves to revision in
+// the same transaction. Returns the new id.
+func (r *Repo) Revise(ctx context.Context, id int64, note *string, userID int64) (int64, error) {
+	var newID int64
+	if err := r.db.QueryRow(ctx, r.store.Get("quotations.fn_revise"), id, userID, note).Scan(&newID); err != nil {
+		return 0, fmt.Errorf("revise quotation %d: %w", id, err)
+	}
+	return newID, nil
+}
+
+// ExpireDue expires sent quotations past validity.
+// asOf is read on the WIB calendar. Returns 0 when another replica holds
+// the job lock.
+func (r *Repo) ExpireDue(ctx context.Context, asOf time.Time) (int64, error) {
+	today := asOf.In(tz.Jakarta()).Format(time.DateOnly)
+	var n int64
+	if err := r.db.QueryRow(ctx, r.store.Get("quotations.expire_due"), today).Scan(&n); err != nil {
+		return 0, fmt.Errorf("expire quotations: %w", err)
+	}
+	return n, nil
 }

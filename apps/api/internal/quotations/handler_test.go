@@ -453,8 +453,8 @@ func TestHandler_QIR_LockedParentConflicts(t *testing.T) {
 			decodeBody(t, res, &e)
 			assert.Equal(t, http.StatusConflict, res.StatusCode)
 			assert.Equal(t, http.StatusConflict, e.Status)
-			assert.Contains(t, e.Detail, `has status "sent"`)
-			assert.Contains(t, e.Detail, "Only draft/revision allow request edits")
+			assert.Contains(t, e.Detail, "status saat ini Dikirim")
+			assert.Contains(t, e.Detail, "hanya dapat diubah saat quotation berstatus Draf")
 		})
 	}
 }
@@ -470,5 +470,5 @@ func TestHandler_QIR_UnknownParentNotFound(t *testing.T) {
 	decodeBody(t, res, &e)
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	assert.Equal(t, http.StatusNotFound, e.Status)
-	assert.Contains(t, e.Detail, "Parent quotation 9999999 not found")
+	assert.Contains(t, e.Detail, "Quotation 9999999 tidak ditemukan.")
 }

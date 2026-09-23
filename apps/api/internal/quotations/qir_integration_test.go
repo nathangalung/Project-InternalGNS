@@ -80,7 +80,7 @@ func TestQIR_RejectsWhenParentSent(t *testing.T) {
 
 	_, err := repo.CreateItemRequest(ctx, qid, sampleItemRequest(), seedUserID)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "Only draft/revision")
+	assert.Contains(t, err.Error(), "hanya dapat diubah saat quotation berstatus Draf")
 }
 
 func TestQIR_UpdateSetsReviewedOnFirstNonPending(t *testing.T) {

@@ -65,15 +65,17 @@ type StatusHistoryEntry struct {
 	FromStatus *string   `db:"from_status"  json:"fromStatus,omitempty"`
 	ToStatus   string    `db:"to_status"    json:"toStatus"`
 	Note       *string   `db:"note"         json:"note,omitempty"`
-	ChangedBy  int64     `db:"changed_by"   json:"changedBy"`
+	ChangedBy  *int64    `db:"changed_by"   json:"changedBy"` // nil: expiry job
 	ChangedAt  time.Time `db:"changed_at"   json:"changedAt"`
 }
 
 // Quotation detail response.
 type QuotationDetail struct {
 	Quotation
-	Items   []QuotationItem      `json:"items"`
-	History []StatusHistoryEntry `json:"history"`
+	Items              []QuotationItem      `json:"items"`
+	History            []StatusHistoryEntry `json:"history"`
+	AllowedTransitions []Transition         `json:"allowedTransitions"`
+	CanRevise          bool                 `json:"canRevise"`
 }
 
 // Revision row in the parent/child chain.
@@ -112,6 +114,7 @@ type ListResult struct {
 // Stats counts per status.
 type StatusCount struct {
 	Status string `db:"status" json:"status"`
+	Label  string `db:"-"      json:"label"`
 	Count  int64  `db:"count"  json:"count"`
 }
 
@@ -164,8 +167,13 @@ type UpdateRequest struct {
 
 // Change status body.
 type ChangeStatusRequest struct {
-	Status string  `json:"status"` // draft | sent | accepted | rejected | revision | expired
+	Status string  `json:"status"` // a key of Transitions
 	Note   *string `json:"note,omitempty"`
+}
+
+// Revise body; the note is optional.
+type ReviseRequest struct {
+	Note *string `json:"note,omitempty"`
 }
 
 // Change contact body.

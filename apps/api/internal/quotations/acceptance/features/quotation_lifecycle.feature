@@ -1,6 +1,7 @@
 Feature: Quotation lifecycle
   Operations team must move a quotation through draft, sent,
-  accepted, rejected, revision and expired states under defined rules.
+  accepted, rejected, cancelled, revision and expired states under
+  defined rules.
 
   Background:
     Given an authenticated user with id 1
@@ -50,16 +51,17 @@ Feature: Quotation lifecycle
 
   Scenario Outline: Valid status transitions
     Given an existing draft quotation
-    When the user transitions the quotation through "<path>"
+    When the user transitions the quotation through "<path>" giving a reason
     Then every transition succeeds
 
     Examples:
-      | path                              |
-      | sent,accepted                     |
-      | sent,rejected                     |
-      | sent,revision,sent                |
-      | sent,revision,rejected            |
-      | expired                           |
+      | path                   |
+      | sent,accepted          |
+      | sent,rejected          |
+      | sent,cancelled         |
+      | cancelled              |
+      | sent,revise,rejected   |
+      | sent,revise,cancelled  |
 
   Scenario: Cannot exit accepted state
     Given an existing draft quotation
