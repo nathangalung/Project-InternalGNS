@@ -73,18 +73,3 @@ export async function update(id: number, input: UpdateUserInput): Promise<UserRo
   }
   return updated
 }
-
-// Self-service password change body.
-export type ChangeOwnPasswordInput = {
-  currentPassword: string
-  newPassword: string
-}
-
-// Any role; a 204 ends every session.
-export async function changeOwnPassword(input: ChangeOwnPasswordInput): Promise<void> {
-  await apiRequest<void>({
-    path: "/auth/me/password",
-    method: "PATCH",
-    body: input,
-  })
-}

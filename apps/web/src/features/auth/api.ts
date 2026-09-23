@@ -1,5 +1,5 @@
 import { apiRequest, getRefreshToken } from "@/lib/api-client"
-import type { LoginResponse, MeUser } from "@/types/api"
+import type { ChangeOwnPasswordInput, LoginResponse, MeUser } from "@/types/api"
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
   return apiRequest<LoginResponse>({
@@ -21,5 +21,14 @@ export async function logout(): Promise<void> {
     path: "/auth/logout",
     method: "POST",
     body: refreshToken ? { refreshToken } : undefined,
+  })
+}
+
+// Any role; a 204 ends every session.
+export async function changeOwnPassword(input: ChangeOwnPasswordInput): Promise<void> {
+  await apiRequest<void>({
+    path: "/auth/me/password",
+    method: "PATCH",
+    body: input,
   })
 }

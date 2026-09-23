@@ -17,6 +17,12 @@ export type LoginResponse = {
 
 export type RefreshResponse = LoginResponse
 
+// PATCH /auth/me/password body.
+export type ChangeOwnPasswordInput = {
+  currentPassword: string
+  newPassword: string
+}
+
 export type ClientRow = {
   id: number
   number?: string

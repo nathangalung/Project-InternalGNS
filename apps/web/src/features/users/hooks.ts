@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useCallback } from "react"
+import { changeOwnPassword } from "@/features/auth/api"
 import { clearAuthState } from "@/features/auth/hooks"
 import * as usersApi from "@/features/users/api"
 import { isInlineFormError } from "@/features/users/form-errors"
@@ -83,7 +84,7 @@ export function useUpdateUser() {
 // No cache work here: success ends the session, and the caller clears the
 // auth state, which also empties the query cache.
 export function useChangeOwnPassword() {
-  return useMutation({ mutationFn: usersApi.changeOwnPassword })
+  return useMutation({ mutationFn: changeOwnPassword })
 }
 
 // Sign out with a notice.

@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router"
 import { useState } from "react"
 import { useAuth, useMe } from "@/features/auth/hooks"
+import ChangeOwnPasswordModal from "@/features/users/ChangeOwnPasswordModal"
 import { roleCanAccess, type Section, sectionFromPathname } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
 import type { Role } from "@/types/api"
@@ -128,6 +129,7 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const { logout } = useAuth()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [changingPassword, setChangingPassword] = useState(false)
 
   // Highlight follows the router, detail routes included.
   const activeSection = useRouterState({
@@ -135,6 +137,11 @@ export default function Sidebar() {
   })
 
   const visibleItems = navItems.filter((item) => roleCanAccess(me?.role, item.page))
+
+  function openChangePassword() {
+    setDrawerOpen(false)
+    setChangingPassword(true)
+  }
 
   function handleLogout() {
     logout()
@@ -229,6 +236,27 @@ export default function Sidebar() {
             </div>
           </div>
           <button
+            type="button"
+            className={`${iconBtn} h-[30px] w-[30px] flex-shrink-0 rounded-md border border-white/[0.06] bg-white/[0.04] text-dark-400 transition-colors hover:border-primary-400/40 hover:bg-primary-600/20 hover:text-primary-300`}
+            onClick={openChangePassword}
+            title="Ubah Kata Sandi"
+            aria-label="Ubah Kata Sandi"
+            aria-haspopup="dialog"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              strokeWidth="2"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </button>
+          <button
+            type="button"
             className={`${iconBtn} h-[30px] w-[30px] flex-shrink-0 rounded-md border border-white/[0.06] bg-white/[0.04] text-dark-400 transition-colors hover:border-red-600/40 hover:bg-red-600/20 hover:text-red-300`}
             onClick={handleLogout}
             title="Keluar"
@@ -242,6 +270,9 @@ export default function Sidebar() {
           </button>
         </div>
       </aside>
+
+      {/* Outside the aside, whose transform would trap the fixed overlay */}
+      {changingPassword && <ChangeOwnPasswordModal onClose={() => setChangingPassword(false)} />}
     </>
   )
 }
