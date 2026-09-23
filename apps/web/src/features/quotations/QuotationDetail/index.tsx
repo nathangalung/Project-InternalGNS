@@ -4,6 +4,7 @@ import { getCompanyInitials } from "@/features/clients/helpers"
 import type { QuotationData, Status } from "@/features/quotations/types"
 import { downloadPdf } from "@/lib/api-client"
 import { QUOTATION_TRANSITIONS } from "@/lib/status"
+import { ui } from "@/lib/ui"
 import ClientSummaryCard from "./ClientSummaryCard"
 import CostBreakdown from "./CostBreakdown"
 import Header from "./Header"
@@ -44,7 +45,7 @@ export default function QuotationDetail({
 
   if (!q) {
     return (
-      <div className="page-content">
+      <div className={ui.pageContent}>
         <p>Quotation tidak ditemukan.</p>
       </div>
     )
@@ -87,7 +88,7 @@ export default function QuotationDetail({
   }
 
   return (
-    <div className="page-content">
+    <div className={ui.pageContent}>
       <Header
         quotationId={quotationId}
         createdAt={q.createdAt}

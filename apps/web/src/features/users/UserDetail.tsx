@@ -106,7 +106,7 @@ export default function UserDetail({ user, onBack }: UserDetailProps) {
   }
 
   return (
-    <div className="page-content gap-[29px]">
+    <div className={ui.pageContentLoose}>
       <div className="flex flex-col gap-3">
         <nav className={ui.breadcrumb}>
           <button className={ui.breadcrumbLink} onClick={onBack}>
@@ -136,7 +136,7 @@ export default function UserDetail({ user, onBack }: UserDetailProps) {
               <polyline points="12 19 5 12 12 5" />
             </svg>
           </button>
-          <h1 className="page-title m-0">Detail Pengguna</h1>
+          <h1 className={ui.pageTitle}>Detail Pengguna</h1>
         </div>
       </div>
 

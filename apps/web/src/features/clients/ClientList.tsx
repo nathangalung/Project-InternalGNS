@@ -80,10 +80,10 @@ export default function ClientList({ onViewDetail }: ClientListProps) {
 
   return (
     <>
-      <div className="page-content gap-[29px]">
-        <div className="page-header">
-          <h1 className="page-title">Daftar Klien</h1>
-          <div className="page-actions">
+      <div className={ui.pageContentLoose}>
+        <div className={ui.pageHeader}>
+          <h1 className={ui.pageTitle}>Daftar Klien</h1>
+          <div className={ui.pageActions}>
             <button
               className={`${ui.btnPrimary} w-[200px]`}
               type="button"

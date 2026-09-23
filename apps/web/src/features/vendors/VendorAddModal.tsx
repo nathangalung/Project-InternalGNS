@@ -7,7 +7,7 @@ import type { VendorContactInfo, VendorRow } from "@/types/api"
 
 const fieldErrorCls = "mt-1 block text-xs text-error"
 
-const optionalCls = "text-overline font-normal italic text-dark-600"
+const optionalCls = "text-overline font-normal uppercase italic text-dark-600"
 
 const inputCls = `${ui.fieldInput} placeholder:text-dark-500 ${ui.disabledField}`
 

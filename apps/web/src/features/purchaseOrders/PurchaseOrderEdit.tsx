@@ -191,7 +191,7 @@ export default function PurchaseOrderEdit({ poId }: PurchaseOrderEditProps) {
 
   return (
     <>
-      <div className="page-content">
+      <div className={ui.pageContent}>
         <div className="flex w-full items-center justify-between">
           <div className="flex flex-col gap-3">
             <nav className={ui.breadcrumb}>

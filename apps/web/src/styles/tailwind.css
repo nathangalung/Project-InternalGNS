@@ -1,23 +1,35 @@
-/*
- * Tailwind v4 entry. Preflight stays off (design-tokens.css already provides
- * the box-sizing/margin reset and the app never depended on preflight); the
- * base layer below re-adds the control reset. @theme below is the single source of truth for
- * the brand scale — utilities (bg-primary-600, text-dark-500, rounded-lg …)
- * and the emitted CSS variables both come from here.
- */
-@layer theme, base, layout, utilities;
+/* Tailwind entry, preflight off */
+@layer theme, base, utilities;
 
 @import "tailwindcss/theme.css" layer(theme);
-/* Tokens in base; the layout scaffold sits below utilities so utility-styled
-   components always win. admin.css is fully retired. */
-@import "./design-tokens.css" layer(base);
-@import "./layout.css" layer(layout);
 @import "tailwindcss/utilities.css" layer(utilities);
 
-/* Preflight is off; supply the minimal control reset it would provide, in the
-   base layer so migrated (utility-styled) controls get it while legacy admin.css
-   classes — in a higher layer — keep overriding where they set their own. */
+/* Minimal reset and document defaults */
 @layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    color: var(--color-dark-900);
+    background-color: var(--color-surface);
+    min-width: 320px;
+  }
+
   button {
     border: 0;
     background-color: transparent;
@@ -25,6 +37,26 @@
     font: inherit;
     color: inherit;
     line-height: inherit;
+    outline: none;
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  /* Status colors, read by lib/status.ts */
+  :root {
+    --status-disetujui-bg: #d1fae5;
+    --status-disetujui-color: #047857;
+    --status-dikirim-bg: #dbeafe;
+    --status-dikirim-color: #1d4ed8;
+    --status-draf-bg: #ffe16d;
+    --status-draf-color: #da6900;
+    --status-revisi-bg: #cec2ff;
+    --status-revisi-color: #9333ea;
+    --status-ditolak-bg: #fee2e2;
+    --status-ditolak-color: #b91c1c;
   }
 }
 
@@ -65,7 +97,7 @@
   --color-accent-800: #92400e;
   --color-accent-900: #78350f;
 
-  /* Semantic surfaces + status */
+  /* Surfaces and status */
   --color-surface: #ffffff;
   --color-surface-muted: #f1f5f9;
   --color-line: #e2e8f0;
@@ -76,19 +108,22 @@
   /* Fonts */
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
 
-  /* Type scale (Operate: fixed rem, tight ratio) */
+  /* Type scale */
   --text-caption: 0.75rem;
   --text-caption--line-height: 1rem;
+  --text-caption--font-weight: 500;
   --text-overline: 0.6875rem;
   --text-overline--line-height: 1rem;
+  --text-overline--font-weight: 600;
+  --text-overline--letter-spacing: 0.05em;
 
-  /* Radii — match the brand (lg = 12px, not tailwind's 8px default) */
+  /* Radii, brand lg is 12px */
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
 
-  /* Depth — offset + soft blur (no zero-offset halos) */
+  /* Depth */
   --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.05);
   --shadow-md: 0 2px 8px -2px rgb(15 23 42 / 0.08), 0 1px 3px -1px rgb(15 23 42 / 0.06);
   --shadow-lg: 0 12px 24px -8px rgb(15 23 42 / 0.12), 0 4px 8px -4px rgb(15 23 42 / 0.08);

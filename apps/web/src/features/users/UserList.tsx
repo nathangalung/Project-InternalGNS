@@ -88,10 +88,10 @@ export default function UserList({ onViewDetail }: UserListProps) {
 
   return (
     <>
-      <div className="page-content">
-        <div className="page-header">
-          <h1 className="page-title">Manajemen Pengguna</h1>
-          <div className="page-actions">
+      <div className={ui.pageContent}>
+        <div className={ui.pageHeader}>
+          <h1 className={ui.pageTitle}>Manajemen Pengguna</h1>
+          <div className={ui.pageActions}>
             <button
               className={`${ui.btnPrimary} w-[200px]`}
               type="button"

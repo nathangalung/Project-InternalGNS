@@ -167,9 +167,9 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
 
   return (
     <>
-      <div className="page-content gap-[29px]">
-        <div className="page-header">
-          <h1 className="page-title">Daftar Invoice</h1>
+      <div className={ui.pageContentLoose}>
+        <div className={ui.pageHeader}>
+          <h1 className={ui.pageTitle}>Daftar Invoice</h1>
           <div className="flex items-center gap-2.5 max-sm:w-full max-sm:flex-wrap">
             <button
               type="button"

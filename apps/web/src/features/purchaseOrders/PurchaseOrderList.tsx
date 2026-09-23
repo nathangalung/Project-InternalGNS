@@ -177,10 +177,10 @@ export default function PurchaseOrderList({
 
   return (
     <>
-      <div className="page-content gap-[29px]">
-        <div className="page-header">
-          <h1 className="page-title">Daftar Purchase Order</h1>
-          <div className="page-actions flex gap-2.5">
+      <div className={ui.pageContentLoose}>
+        <div className={ui.pageHeader}>
+          <h1 className={ui.pageTitle}>Daftar Purchase Order</h1>
+          <div className={ui.pageActionsTight}>
             <button
               type="button"
               className={`${ui.btnOutline} w-[160px]`}

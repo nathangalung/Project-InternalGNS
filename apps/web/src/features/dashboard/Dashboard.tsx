@@ -72,9 +72,9 @@ export default function Dashboard() {
   const overdue = summary?.invoicesOverdue ?? 0
 
   return (
-    <div className="page-content gap-[29px]">
-      <div className="page-header">
-        <h1 className="page-title">Dashboard Utama</h1>
+    <div className={ui.pageContentLoose}>
+      <div className={ui.pageHeader}>
+        <h1 className={ui.pageTitle}>Dashboard Utama</h1>
         <div className="flex flex-wrap items-center gap-2.5">
           {canFinance && (
             <button

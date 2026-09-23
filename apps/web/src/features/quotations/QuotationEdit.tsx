@@ -216,7 +216,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
 
   return (
     <>
-      <div className="page-content">
+      <div className={ui.pageContent}>
         {/* Header & Stepper */}
         <div className={qe.headerSection}>
           <div className={qe.headerLeft}>

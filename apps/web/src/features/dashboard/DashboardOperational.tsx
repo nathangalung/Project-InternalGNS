@@ -70,10 +70,10 @@ export default function DashboardOperational({
 
   return (
     <>
-      <div className="page-content gap-[29px]">
-        <div className="page-header">
-          <h1 className="page-title">Dashboard Operasional</h1>
-          <div className="page-actions flex gap-2.5">
+      <div className={ui.pageContentLoose}>
+        <div className={ui.pageHeader}>
+          <h1 className={ui.pageTitle}>Dashboard Operasional</h1>
+          <div className={ui.pageActionsTight}>
             <FilterButton onClick={() => setShowFilter(true)} />
           </div>
         </div>
@@ -114,7 +114,7 @@ export default function DashboardOperational({
           <TrendChart series={series} activeKey={activeTab} monthLabels={chartLabels} />
         </div>
 
-        <div className="tbl-container">
+        <div className={ui.tableWrap}>
           <div className="flex items-center justify-between border-b border-[#F1F5F9] bg-[rgba(242,244,246,0.3)] px-8 py-5">
             <h3 className="text-lg font-bold leading-7 tracking-[-0.45px] text-[#191C1E]">
               Quotation Terkini

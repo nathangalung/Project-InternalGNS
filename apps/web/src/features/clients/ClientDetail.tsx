@@ -235,7 +235,7 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
   }
 
   return (
-    <div className="page-content gap-[29px]">
+    <div className={ui.pageContentLoose}>
       <div className="flex flex-col gap-3">
         <nav className={ui.breadcrumb}>
           <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
@@ -265,7 +265,7 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
               <polyline points="12 19 5 12 12 5" />
             </svg>
           </button>
-          <h1 className="page-title m-0">Detail Klien</h1>
+          <h1 className={ui.pageTitle}>Detail Klien</h1>
         </div>
       </div>
 

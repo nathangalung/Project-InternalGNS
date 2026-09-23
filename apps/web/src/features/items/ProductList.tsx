@@ -113,10 +113,10 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
 
   return (
     <>
-      <div className="page-content gap-[29px]">
-        <div className="page-header">
-          <h1 className="page-title">Katalog Produk</h1>
-          <div className="page-actions">
+      <div className={ui.pageContentLoose}>
+        <div className={ui.pageHeader}>
+          <h1 className={ui.pageTitle}>Katalog Produk</h1>
+          <div className={ui.pageActions}>
             <button
               className={`${ui.btnPrimary} w-[200px]`}
               type="button"

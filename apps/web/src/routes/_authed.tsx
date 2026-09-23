@@ -32,11 +32,11 @@ export const Route = createFileRoute("/_authed")({
 // App shell for every authenticated route.
 function AuthedLayout() {
   return (
-    <div className="admin-shell">
+    <div className="flex h-dvh overflow-hidden bg-dark-50">
       <Sidebar />
-      <div className="admin-main">
+      <main className="ml-[220px] flex h-dvh min-w-0 flex-1 flex-col overflow-y-auto max-lg:ml-0 max-lg:pt-14">
         <Outlet />
-      </div>
+      </main>
     </div>
   )
 }

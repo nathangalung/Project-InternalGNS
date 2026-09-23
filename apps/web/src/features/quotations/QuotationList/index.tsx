@@ -133,7 +133,7 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
 
   return (
     <>
-      <div className="page-content">
+      <div className={ui.pageContent}>
         <PageHeader onExport={() => quotationsApi.exportXlsx(queryParams)} />
         <SummaryCards />
         <SearchBar

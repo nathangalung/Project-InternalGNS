@@ -15,9 +15,9 @@ Bun-managed monorepo.
 - Frontend (`apps/web`): React 19 with strict TypeScript, Vite 7, TanStack
   Router/Query/Table, Bun runtime, Biome for lint and format. Styling is
   Tailwind CSS v4: shared class-string primitives in `src/lib/ui.ts` and the
-  `Modal` shell in `src/components/shared`, with `src/styles/design-tokens.css`
-  (the brand scale) and a small `src/styles/layout.css` (app shell + page
-  scaffold) as the only stylesheets. Preflight is off. Responsive down to 320px.
+  `Modal` shell in `src/components/shared`. `src/styles/tailwind.css` is the only
+  stylesheet: the `@theme` brand scale plus a small base layer (reset, body,
+  button, status colors). Preflight is off. Responsive down to 320px.
 - Infra: PostgreSQL 18, MinIO for object storage, xelatex for PDF rendering,
   Dokploy with Traefik for deployment, Nginx to serve the built frontend.
   Two compose files sit at the repo root: `compose.dev.yml` for local work and
@@ -113,7 +113,7 @@ src/
   components/shared/ Sidebar, tables, pagination, Modal, TableStates
   lib/               api-client, rbac, format, status, chart helpers,
                      ui (tailwind class primitives), useListScreen
-  styles/            tailwind.css (entry), design-tokens.css, layout.css
+  styles/            tailwind.css (entry, @theme tokens, base layer)
   types/             Hand-maintained API types
 ```
 
@@ -122,7 +122,7 @@ errors. `types/api.ts` is the effective API contract, since `openapi.yaml` only
 documents part of the surface.
 
 The app shell lives in the layout route. `routes/_authed.tsx` renders
-`.admin-shell` with the `Sidebar` and `.admin-main` around the `Outlet`, so page
+the shell with the `Sidebar` and a scrolling `<main>` around the `Outlet`, so page
 components render only their own content and take no navigation props. `Sidebar`
 derives its active section from the router via `sectionFromPathname` (which
 covers detail and edit routes) and calls `logout` itself. Navigate with

@@ -1,6 +1,5 @@
 // Shared tailwind class strings for the app's primitives. One source keeps the
-// buttons, panels, and tables consistent across every screen during (and after)
-// the migration off admin.css.
+// buttons, panels, and tables consistent across every screen.
 
 const gradientPrimary =
   "bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)]"
@@ -8,11 +7,20 @@ const gradientPrimary =
 // Disabled treatment for form controls.
 const disabledField = "disabled:cursor-not-allowed disabled:bg-[#F7F7F8] disabled:opacity-60"
 
+// Page scaffold without gap
+const pageContentBase = "flex flex-1 flex-col p-[clamp(1rem,4vw,3rem)]"
+const pageActionsBase = "flex items-center max-sm:w-full max-sm:flex-wrap"
+
 export const ui = {
   // Disabled form control treatment
   disabledField,
 
-  // Layout
+  // Layout; page gaps unify later
+  pageContent: `${pageContentBase} gap-6`,
+  pageContentLoose: `${pageContentBase} gap-[29px]`,
+  pageHeader: "flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-3",
+  pageActions: `${pageActionsBase} gap-3`,
+  pageActionsTight: `${pageActionsBase} gap-2.5`,
   pageTitle: "text-3xl font-bold tracking-tight text-dark-900",
   panel: "rounded-lg border border-dark-200 bg-white p-6 shadow-sm",
   sectionTitle: "text-xl font-semibold text-dark-900",
@@ -71,7 +79,7 @@ export const ui = {
   breadcrumb: "flex items-center gap-2",
   breadcrumbLink:
     "cursor-pointer text-overline font-bold uppercase tracking-[0.12em] text-[#4A4455] transition hover:text-primary-700",
-  breadcrumbSep: "text-overline font-bold text-dark-300",
+  breadcrumbSep: "text-overline font-bold uppercase text-dark-300",
   breadcrumbCurrent: "text-overline font-bold uppercase tracking-[0.12em] text-primary-700",
   detailHeader: "flex items-start justify-between gap-4",
   detailHeaderLeft: "flex items-start gap-3",

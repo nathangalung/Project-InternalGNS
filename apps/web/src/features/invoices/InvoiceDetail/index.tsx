@@ -11,6 +11,7 @@ import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
 import { downloadPdf, fetchObjectUrl } from "@/lib/api-client"
 import { computeTaxBreakdown, toNum } from "@/lib/format"
+import { ui } from "@/lib/ui"
 import { invoiceItemsToProducts, invoiceItemsToShipping } from "../adapters"
 import {
   useChangeInvoiceStatus,
@@ -83,7 +84,7 @@ export default function InvoiceDetail({ quotationId, quotationNo, quotation }: I
 
   if (!quotation || (isLoading && !inv) || !inv) {
     return (
-      <div className="page-content">
+      <div className={ui.pageContent}>
         <p>{isLoading ? "Memuat data Invoice…" : "Invoice tidak ditemukan."}</p>
       </div>
     )
@@ -92,7 +93,7 @@ export default function InvoiceDetail({ quotationId, quotationNo, quotation }: I
   // Cancelled is terminal and read-only.
   if (inv.status === "cancelled") {
     return (
-      <div className="page-content">
+      <div className={ui.pageContent}>
         <p>Invoice {inv.invoiceNo} telah dibatalkan.</p>
       </div>
     )
@@ -161,7 +162,7 @@ export default function InvoiceDetail({ quotationId, quotationNo, quotation }: I
   }
 
   return (
-    <div className="page-content">
+    <div className={ui.pageContent}>
       <Header
         invoiceNo={invoiceNo}
         quotationNo={quotationNo}

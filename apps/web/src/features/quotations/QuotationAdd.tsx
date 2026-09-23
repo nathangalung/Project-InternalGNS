@@ -204,7 +204,7 @@ export default function QuotationAdd() {
 
   return (
     <>
-      <div className="page-content">
+      <div className={ui.pageContent}>
         {/* Header & Stepper */}
         <div className={qe.headerSection}>
           <div className={qe.headerLeft}>

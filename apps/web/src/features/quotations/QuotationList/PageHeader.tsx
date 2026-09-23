@@ -9,9 +9,9 @@ interface PageHeaderProps {
 export default function PageHeader({ onExport }: PageHeaderProps) {
   const navigate = useNavigate()
   return (
-    <div className="page-header">
-      <h1 className="page-title">Daftar Quotation</h1>
-      <div className="page-actions">
+    <div className={ui.pageHeader}>
+      <h1 className={ui.pageTitle}>Daftar Quotation</h1>
+      <div className={ui.pageActions}>
         <button type="button" className={`${ui.btnOutline} w-[160px]`} onClick={onExport}>
           <svg
             width="14"

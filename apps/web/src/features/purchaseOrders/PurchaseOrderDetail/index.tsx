@@ -16,6 +16,7 @@ import * as vendorsApi from "@/features/vendors/api"
 import { downloadFile, downloadPdf } from "@/lib/api-client"
 import { computeTaxBreakdown, toNum } from "@/lib/format"
 import { queryKeys } from "@/lib/query-keys"
+import { ui } from "@/lib/ui"
 import { poItemsToProducts, poItemsToShipping } from "../adapters"
 import * as poApi from "../api"
 import {
@@ -157,7 +158,7 @@ export default function PurchaseOrderDetail({
 
   if (!quotation || (isLoading && !po) || !po) {
     return (
-      <div className="page-content">
+      <div className={ui.pageContent}>
         <p>{isLoading ? "Memuat data Purchase Order…" : "Purchase Order tidak ditemukan."}</p>
       </div>
     )
@@ -279,7 +280,7 @@ export default function PurchaseOrderDetail({
 
   return (
     <>
-      <div className="page-content">
+      <div className={ui.pageContent}>
         <Header
           poNumber={poNumber}
           quotationNo={quotationNo}
