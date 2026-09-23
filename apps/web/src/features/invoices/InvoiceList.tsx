@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react"
 import ActiveFilters, { type FilterChip } from "@/components/shared/ActiveFilters"
+import EntityLink from "@/components/shared/EntityLink"
 import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
+import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
-import SummaryCard from "@/components/shared/SummaryCard"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { downloadPdf, downloadXml } from "@/lib/api-client"
 import { resolveRange } from "@/lib/date-range"
@@ -15,6 +16,7 @@ import { ui } from "@/lib/ui"
 import { useListScreen } from "@/lib/useListScreen"
 import type { InvoiceBackendRow } from "@/types/api"
 import * as invoicesApi from "./api"
+import { runDownload, safeFileName } from "./download"
 import { useInvoiceSummary, useInvoices } from "./hooks"
 import InvoiceFilter, { type InvoiceFilterValues } from "./InvoiceFilter"
 import type { InvoiceRow, InvoiceStatus } from "./types"
@@ -37,7 +39,7 @@ function rupiahToDigits(s: string): string {
   return s.replace(/\D/g, "")
 }
 
-interface InvoiceListProps {
+type InvoiceListProps = {
   onViewDetail?: (quotationId: number) => void
 }
 
@@ -52,6 +54,7 @@ function rowFromBackend(inv: InvoiceBackendRow): InvoiceRow {
   return {
     id: inv.id,
     quotationId: inv.quotationId,
+    companyClientId: inv.companyClientId,
     invoiceNo: inv.invoiceNo,
     client: inv.companyName,
     createdAt: inv.invoiceDate,
@@ -133,7 +136,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
       for (const s of activeFilters.statuses) {
         out.push({
           key: `status-${s}`,
-          label: `Status: ${s}`,
+          label: `Status: ${INVOICE_LABEL[s]}`,
           onRemove: () =>
             patchFilters((p) => (p ? { ...p, statuses: p.statuses.filter((x) => x !== s) } : p)),
         })
@@ -167,14 +170,16 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
 
   return (
     <>
-      <div className={ui.pageContentLoose}>
+      <div className={ui.pageContent}>
         <div className={ui.pageHeader}>
           <h1 className={ui.pageTitle}>Daftar Invoice</h1>
-          <div className="flex items-center gap-2.5 max-sm:w-full max-sm:flex-wrap">
+          <div className={ui.pageActionsTight}>
             <button
               type="button"
               className={`${ui.btnOutline} w-[160px]`}
-              onClick={() => invoicesApi.exportXlsx(queryParams)}
+              onClick={() =>
+                runDownload(() => invoicesApi.exportXlsx(queryParams), "Gagal mengekspor Excel.")
+              }
             >
               <svg
                 width="14"
@@ -195,7 +200,12 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
             <button
               type="button"
               className={`${ui.btnOutline} w-[180px]`}
-              onClick={() => invoicesApi.exportCoretaxXlsx(queryParams)}
+              onClick={() =>
+                runDownload(
+                  () => invoicesApi.exportCoretaxXlsx(queryParams),
+                  "Gagal mengekspor Coretax.",
+                )
+              }
             >
               <svg
                 width="14"
@@ -217,11 +227,11 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
         </div>
 
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
-          <SummaryCard variant="violet" label="Total Invoice" value={formatNumber(counts.total)} />
-          <SummaryCard variant="gold" label="Draf" value={formatNumber(counts.DRAF)} />
-          <SummaryCard variant="blue" label="Dikirim" value={formatNumber(counts.DIKIRIM)} />
-          <SummaryCard variant="green" label="Dibayar" value={formatNumber(counts.DIBAYAR)} />
-          <SummaryCard variant="red" label="Terlambat" value={formatNumber(counts.TERLAMBAT)} />
+          <StatCard tone="violet" label="Total Invoice" value={formatNumber(counts.total)} />
+          <StatCard tone="gold" label="Draf" value={formatNumber(counts.DRAF)} />
+          <StatCard tone="blue" label="Dikirim" value={formatNumber(counts.DIKIRIM)} />
+          <StatCard tone="green" label="Dibayar" value={formatNumber(counts.DIBAYAR)} />
+          <StatCard tone="red" label="Terlambat" value={formatNumber(counts.TERLAMBAT)} />
         </div>
 
         <div className="flex items-center gap-4 pt-2">
@@ -259,11 +269,17 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
                 currentRows.map((row) => {
                   const style = INVOICE_STATUS_STYLE[row.status]
                   return (
-                    <tr key={row.quotationId} className={ui.tr}>
+                    <tr key={row.id} className={ui.tr}>
                       <td className={`${ui.tdCenter} font-bold text-primary-700`}>
-                        {row.invoiceNo}
+                        <EntityLink kind="invoice" quotationId={row.quotationId}>
+                          {row.invoiceNo}
+                        </EntityLink>
                       </td>
-                      <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>{row.client}</td>
+                      <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>
+                        <EntityLink kind="client" id={row.companyClientId} tone="name">
+                          {row.client}
+                        </EntityLink>
+                      </td>
                       <td className={ui.tdCenter}>{formatDate(row.createdAt)}</td>
                       <td className={ui.tdCenter}>{formatDate(row.dueDate)}</td>
                       <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>{row.total}</td>
@@ -287,7 +303,14 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
                             title="Unduh invoice"
                             className={ui.iconAction}
                             onClick={() =>
-                              downloadPdf(`/invoices/${row.id}/pdf`, `${row.invoiceNo}.pdf`)
+                              runDownload(
+                                () =>
+                                  downloadPdf(
+                                    `/invoices/${row.id}/pdf`,
+                                    `${safeFileName(row.invoiceNo)}.pdf`,
+                                  ),
+                                "Gagal mengunduh PDF invoice.",
+                              )
                             }
                           >
                             <svg
@@ -310,9 +333,13 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
                             title="Unduh Coretax XML"
                             className={ui.iconAction}
                             onClick={() =>
-                              downloadXml(
-                                `/invoices/${row.id}/coretax.xml`,
-                                `${row.invoiceNo}.coretax.xml`,
+                              runDownload(
+                                () =>
+                                  downloadXml(
+                                    `/invoices/${row.id}/coretax.xml`,
+                                    `${safeFileName(row.invoiceNo)}.coretax.xml`,
+                                  ),
+                                "Gagal mengunduh XML Coretax.",
                               )
                             }
                           >
@@ -348,6 +375,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
             resourceLabel="Invoice"
             onItemsPerPage={list.setItemsPerPage}
             onPage={list.setCurrentPage}
+            isLoading={isLoading}
           />
         </div>
       </div>
