@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -59,7 +61,7 @@ func Upload(d Descriptor) http.HandlerFunc {
 			return
 		}
 		if err := d.Exists(r.Context(), id); err != nil {
-			renderOwnerErr(w, err, d.NotFoundMsg)
+			renderOwnerErr(r.Context(), w, err, d.NotFoundMsg)
 			return
 		}
 		fileName := strings.TrimSpace(r.URL.Query().Get("fileName"))
@@ -74,7 +76,7 @@ func Upload(d Descriptor) http.HandlerFunc {
 		objectKey := storage.BuildObjectKey(d.KeyPrefix, id, fileName)
 		url, err := d.Storage.PresignPut(r.Context(), d.Bucket, objectKey, d.UploadTTL)
 		if err != nil {
-			httperr.Render(w, httperr.Internal("presign failed"))
+			renderPresignErr(r.Context(), w, "put", d.Bucket, objectKey, err)
 			return
 		}
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{
@@ -98,7 +100,7 @@ func Download(d Descriptor) http.HandlerFunc {
 		}
 		asset, err := d.CurrentAsset(r.Context(), id)
 		if err != nil {
-			renderOwnerErr(w, err, d.NotFoundMsg)
+			renderOwnerErr(r.Context(), w, err, d.NotFoundMsg)
 			return
 		}
 		if asset.Key == "" {
@@ -107,7 +109,7 @@ func Download(d Descriptor) http.HandlerFunc {
 		}
 		url, err := d.Storage.PresignGet(r.Context(), d.Bucket, asset.Key, d.DownloadTTL)
 		if err != nil {
-			httperr.Render(w, httperr.Internal("presign failed"))
+			renderPresignErr(r.Context(), w, "get", d.Bucket, asset.Key, err)
 			return
 		}
 		out := map[string]any{
@@ -141,7 +143,7 @@ func UpdateKey(d Descriptor) http.HandlerFunc {
 		}
 		actor := deps.CurrentUserID(r.Context())
 		if err := d.SetKey(r.Context(), id, req.ObjectKey, actor); err != nil {
-			renderOwnerErr(w, err, d.NotFoundMsg)
+			renderOwnerErr(r.Context(), w, err, d.NotFoundMsg)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
@@ -157,10 +159,20 @@ func parseID(w http.ResponseWriter, r *http.Request) (int64, bool) {
 	return id, true
 }
 
-func renderOwnerErr(w http.ResponseWriter, err error, notFoundMsg string) {
+func renderOwnerErr(ctx context.Context, w http.ResponseWriter, err error, notFoundMsg string) {
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound(notFoundMsg))
 		return
 	}
-	httperr.RenderDBErr(w, err)
+	httperr.RenderDBErrCtx(ctx, w, err)
+}
+
+// Logs a presign failure with its cause.
+// The body stays generic; the wrapped error names the operation, bucket and
+// key so the 500 line is actionable instead of a bare "presign failed".
+func renderPresignErr(ctx context.Context, w http.ResponseWriter, op, bucket, key string, err error) {
+	slog.ErrorContext(ctx, "presign failed",
+		"op", op, "bucket", bucket, "key", key,
+		"error", fmt.Errorf("assetproxy: presign %s %s/%s: %w", op, bucket, key, err).Error())
+	httperr.Render(w, httperr.Internal("presign failed"))
 }

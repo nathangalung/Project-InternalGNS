@@ -1,8 +1,11 @@
 package httperr
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -168,4 +171,49 @@ func TestRenderDBErr(t *testing.T) {
 	res := rec.Result()
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusConflict, res.StatusCode)
+}
+
+// Records the context each log record was handled with.
+type ctxCapture struct {
+	slog.Handler
+	seen []context.Context
+}
+
+func (h *ctxCapture) Handle(ctx context.Context, r slog.Record) error {
+	h.seen = append(h.seen, ctx)
+	return nil
+}
+
+func (h *ctxCapture) Enabled(context.Context, slog.Level) bool { return true }
+
+type ctxProbeKey struct{}
+
+func TestRenderDBErrCtx_LogsWithRequestContext(t *testing.T) {
+	cases := []struct {
+		name       string
+		err        error
+		wantStatus int
+	}{
+		{"server error", errors.New("boom"), http.StatusInternalServerError},
+		{"deadline exceeded", context.DeadlineExceeded, http.StatusServiceUnavailable},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			cap := &ctxCapture{Handler: slog.NewJSONHandler(io.Discard, nil)}
+			prev := slog.Default()
+			slog.SetDefault(slog.New(cap))
+			t.Cleanup(func() { slog.SetDefault(prev) })
+
+			ctx := context.WithValue(context.Background(), ctxProbeKey{}, "req-1")
+			rec := httptest.NewRecorder()
+			RenderDBErrCtx(ctx, rec, c.err)
+
+			res := rec.Result()
+			defer res.Body.Close()
+			assert.Equal(t, c.wantStatus, res.StatusCode)
+			require.Len(t, cap.seen, 1, "expected exactly one log record")
+			assert.Equal(t, "req-1", cap.seen[0].Value(ctxProbeKey{}),
+				"log record must carry the request context so request_id is stamped")
+		})
+	}
 }

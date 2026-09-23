@@ -134,19 +134,29 @@ func FromDBErr(err error) Error {
 	return Internal("internal server error")
 }
 
-// RenderDBErr writes a pg-aware response and logs the real error on a 500.
+// RenderDBErr renders without request context.
+// Kept for call sites that have not been converted yet: its log line carries
+// no request_id, so it cannot be joined to its access-log line. Prefer
+// RenderDBErrCtx everywhere a request context is in hand.
 func RenderDBErr(w http.ResponseWriter, err error) {
+	RenderDBErrCtx(context.Background(), w, err)
+}
+
+// RenderDBErrCtx renders and logs with context.
+// The slog handler in app/logging.go stamps request_id from this context, so
+// passing the request context is what puts a 500 line next to its request.
+func RenderDBErrCtx(ctx context.Context, w http.ResponseWriter, err error) {
 	// A deadline is backpressure, not a crash: 503 + Retry-After is retryable
 	// and must not page a 5xx alert. Logged Warn, never Error.
 	if errors.Is(err, context.DeadlineExceeded) {
-		slog.Warn("request deadline exceeded", "error", err.Error())
+		slog.WarnContext(ctx, "request deadline exceeded", "error", err.Error())
 		w.Header().Set("Retry-After", "2")
 		Render(w, ServiceUnavailable("request timed out, please retry"))
 		return
 	}
 	e := FromDBErr(err)
 	if e.Status >= http.StatusInternalServerError {
-		slog.Error("unhandled server error", "error", err.Error())
+		slog.ErrorContext(ctx, "unhandled server error", "error", err.Error())
 	}
 	Render(w, e)
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -265,4 +267,58 @@ func keys(m map[string]any) []string {
 		out = append(out, k)
 	}
 	return out
+}
+
+// Captures the context each log record was handled with.
+type logCtxCapture struct {
+	slog.Handler
+	seen []context.Context
+}
+
+func (h *logCtxCapture) Handle(ctx context.Context, _ slog.Record) error {
+	h.seen = append(h.seen, ctx)
+	return nil
+}
+
+func (h *logCtxCapture) Enabled(context.Context, slog.Level) bool { return true }
+
+type reqProbeKey struct{}
+
+// A repo failure on any asset route must log with the request context, so the
+// slog handler can stamp request_id onto the 500 line.
+func TestAssetRoutes_ServerErrorLogsRequestContext(t *testing.T) {
+	cases := []struct {
+		name    string
+		method  string
+		pattern string
+		target  string
+		body    string
+		handler func(assetproxy.Descriptor) http.HandlerFunc
+	}{
+		{"download", http.MethodGet, "/{id}/image", "/7/image", "", assetproxy.Download},
+		{"update key", http.MethodPatch, "/{id}/image", "/7/image", `{"objectKey":"items/7/a.png"}`, assetproxy.UpdateKey},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			capture := &logCtxCapture{Handler: slog.NewJSONHandler(io.Discard, nil)}
+			prev := slog.Default()
+			slog.SetDefault(slog.New(capture))
+			t.Cleanup(func() { slog.SetDefault(prev) })
+
+			d := base("items/7/a.png")
+			d.CurrentAsset = func(context.Context, int64) (assetproxy.Asset, error) { return assetproxy.Asset{}, errDB }
+			d.SetKey = func(context.Context, int64, string, int64) error { return errDB }
+
+			r := chi.NewRouter()
+			r.Method(c.method, c.pattern, c.handler(d))
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(c.method, c.target, strings.NewReader(c.body))
+			req = req.WithContext(context.WithValue(req.Context(), reqProbeKey{}, "req-9"))
+			r.ServeHTTP(rec, req)
+
+			assert.Equal(t, http.StatusInternalServerError, rec.Code)
+			require.Len(t, capture.seen, 1, "expected exactly one log record")
+			assert.Equal(t, "req-9", capture.seen[0].Value(reqProbeKey{}))
+		})
+	}
 }

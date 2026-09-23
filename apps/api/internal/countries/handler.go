@@ -19,7 +19,7 @@ func NewHandler(repo *Repo) *Handler {
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	countries, err := h.repo.ListAll(r.Context())
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, countries)
