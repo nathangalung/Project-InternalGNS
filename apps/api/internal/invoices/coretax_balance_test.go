@@ -12,7 +12,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 )
 
-// Each Coretax line must balance (INV-11).
+// Coretax lines balance (INV-11).
 // DJP validates Price * Qty - TotalDiscount = TaxBase per line, so a line
 // filed with the net price and no discount is off by the rounding of that
 // net price.
@@ -91,7 +91,7 @@ func TestBuildGoodService_LineBalances(t *testing.T) {
 	}
 }
 
-// The bulk workbook files the same balanced line.
+// Bulk workbook lines balance too.
 func TestBuildCoretaxWorkbook_LineBalances(t *testing.T) {
 	t.Parallel()
 	ptr := func(s string) *string { return &s }

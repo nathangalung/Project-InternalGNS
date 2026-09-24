@@ -21,12 +21,12 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// listFixture is three invoices with distinct filter values.
+// listFixture holds three invoices.
 type listFixture struct {
 	pastDueDraft, sent, paid invoices.Invoice
 }
 
-// seedListFixture builds the fixture on an empty domain.
+// seedListFixture builds on empty domain.
 // The truncate runs inside tx, so the rollback restores every other row.
 func seedListFixture(t *testing.T, ctx context.Context, tx pgx.Tx) listFixture {
 	t.Helper()
@@ -66,7 +66,7 @@ func mustDate(t *testing.T, s string) time.Time {
 	return d
 }
 
-// The list applies every filter the screen sends.
+// List applies every screen filter.
 func TestHandler_List_Filters(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	fx := seedListFixture(t, ctx, tx)
@@ -118,7 +118,7 @@ func TestHandler_List_Filters(t *testing.T) {
 	}
 }
 
-// The XLSX export uses the list filter.
+// XLSX export uses list filter.
 func TestHandler_Export_AppliesFilter(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	fx := seedListFixture(t, ctx, tx)

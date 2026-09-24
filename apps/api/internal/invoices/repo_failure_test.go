@@ -13,7 +13,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Each read and write reports its failure instead of a zero value.
+// Repo failures surface as errors.
 // CountingExec lets the first calls through, so the failure lands on the
 // query named in the case.
 func TestRepo_FailuresSurface(t *testing.T) {
@@ -60,7 +60,7 @@ func TestRepo_FailuresSurface(t *testing.T) {
 	}
 }
 
-// Every lookup by an unknown id is ErrNotFound.
+// Unknown ids are ErrNotFound.
 func TestRepo_UnknownInvoice(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	r := invoices.NewRepo(tx, testutil.Store(t))
@@ -84,7 +84,7 @@ func TestRepo_UnknownInvoice(t *testing.T) {
 	}
 }
 
-// Delivering twice never issues a second live invoice.
+// One live invoice per PO.
 func TestCreateInvoice_OneLiveInvoicePerPO(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID, invID := deliveredPOWithInvoice(t, tx)
@@ -98,7 +98,7 @@ func TestCreateInvoice_OneLiveInvoicePerPO(t *testing.T) {
 	assert.Equal(t, 1, n)
 }
 
-// The handlers turn a failed read into a 500.
+// Failed reads are 500.
 func TestHandler_ReadFailures(t *testing.T) {
 	srv := faultySrv(t)
 	for _, path := range []string{"/invoices/export.xlsx", "/invoices/1/items"} {
@@ -111,7 +111,7 @@ func TestHandler_ReadFailures(t *testing.T) {
 	}
 }
 
-// Replacement refuses a bad or unknown id.
+// Replacement refuses bad ids.
 func TestHandler_Replace_BadTarget(t *testing.T) {
 	_, tx := testutil.BeginTx(t)
 	srv := assetServer(t, tx)

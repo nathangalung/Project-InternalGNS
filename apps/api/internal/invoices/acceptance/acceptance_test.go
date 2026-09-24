@@ -149,7 +149,7 @@ func (s *scenarioState) deliverLine(line quotations.CreateItem) error {
 	return s.deliverQuotation(create)
 }
 
-// deliverQuotation walks a quotation to its invoice.
+// deliverQuotation invoices a quotation.
 func (s *scenarioState) deliverQuotation(create quotations.CreateRequest) error {
 	if err := s.sendRequest(http.MethodPost, "/quotations/", create); err != nil {
 		return err

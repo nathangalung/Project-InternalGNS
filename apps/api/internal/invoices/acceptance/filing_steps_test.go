@@ -83,7 +83,7 @@ func (s *scenarioState) everyCoretaxLineBalances() error {
 	return nil
 }
 
-// coretaxLinesMatchInvoice reconciles the file with the invoice header.
+// coretaxLinesMatchInvoice reconciles the header.
 func (s *scenarioState) coretaxLinesMatchInvoice() error {
 	lines, err := s.coretaxLines()
 	if err != nil {
@@ -119,7 +119,7 @@ func dec(s string) decimal.Decimal {
 	return d
 }
 
-// callOnInvoice sends a request to an invoice path.
+// callOnInvoice requests an invoice path.
 // {id} stands for the scenario invoice.
 func (s *scenarioState) callOnInvoice(method, path string) error {
 	path = strings.ReplaceAll(path, "{id}", strconv.FormatInt(s.invoiceID, 10))
@@ -134,7 +134,7 @@ func (s *scenarioState) callOnInvoice(method, path string) error {
 	return s.sendRequest(method, path, body)
 }
 
-// listByEffectiveStatus filters like the Terlambat tile.
+// listByEffectiveStatus filters like tiles.
 func (s *scenarioState) listByEffectiveStatus(status string) error {
 	return s.sendRequest(http.MethodGet, "/invoices/?effectiveStatus="+status, nil)
 }
@@ -170,7 +170,7 @@ func (s *scenarioState) invoiceListIsEmpty() error {
 	return nil
 }
 
-// updateDueDateStale sends a row version already spent.
+// updateDueDateStale sends a spent version.
 func (s *scenarioState) updateDueDateStale(date string) error {
 	if err := s.readInvoiceByID(); err != nil {
 		return err

@@ -17,7 +17,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// financeRouter mounts the dashboard as finance.
+// financeRouter mounts dashboard as finance.
 func financeRouter(t *testing.T, exec db.Executor) http.Handler {
 	t.Helper()
 	r := chi.NewRouter()
@@ -30,7 +30,7 @@ func financeRouter(t *testing.T, exec db.Executor) http.Handler {
 	return r
 }
 
-// Each export failure has its own status.
+// Export failures map to statuses.
 func TestHandler_Export_Failures(t *testing.T) {
 	pool := testutil.Pool(t)
 	cases := []struct {
@@ -63,7 +63,7 @@ func TestHandler_Export_Failures(t *testing.T) {
 	}
 }
 
-// A failed tile read fails the whole summary.
+// Tile read failure fails summary.
 func TestSummary_TileReadFailure(t *testing.T) {
 	exec := &testutil.CountingExec{Inner: testutil.Pool(t), FailAfter: 1}
 

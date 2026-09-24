@@ -23,7 +23,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// assetServer mounts the invoice routes with storage.
+// assetServer mounts routes with storage.
 // A zero storage client presigns offline, so no MinIO is needed.
 func assetServer(t *testing.T, exec db.Executor) *httptest.Server {
 	t.Helper()
@@ -37,7 +37,7 @@ func assetServer(t *testing.T, exec db.Executor) *httptest.Server {
 	return srv
 }
 
-// call sends one request and decodes a JSON body.
+// call sends and decodes JSON.
 func call(t *testing.T, srv *httptest.Server, method, path string, body any) (int, map[string]any) {
 	t.Helper()
 	var rdr io.Reader
@@ -61,7 +61,7 @@ func call(t *testing.T, srv *httptest.Server, method, path string, body any) (in
 	return res.StatusCode, out
 }
 
-// An attachment is uploaded, saved and downloaded in the invoice folder.
+// Attachment upload, save, download.
 func TestAttachmentRoutes_Roundtrip(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
@@ -92,7 +92,7 @@ func TestAttachmentRoutes_Roundtrip(t *testing.T) {
 	assert.Contains(t, body["downloadUrl"], url.QueryEscape(key))
 }
 
-// The attachment routes refuse foreign keys and unknown invoices.
+// Attachment routes refuse strangers.
 func TestAttachmentRoutes_Refusals(t *testing.T) {
 	_, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
@@ -135,7 +135,7 @@ func TestAttachmentRoutes_Refusals(t *testing.T) {
 	}
 }
 
-// A paid invoice serves the proof it was paid with.
+// Paid invoice serves its proof.
 func TestPaymentProofRoutes_ServePaidProof(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
@@ -157,7 +157,7 @@ func TestPaymentProofRoutes_ServePaidProof(t *testing.T) {
 	assert.Contains(t, body["downloadUrl"], url.QueryEscape(key))
 }
 
-// A database failure behind the asset routes is a 500, not a 404.
+// Asset DB failures are 500.
 func TestAssetRoutes_DatabaseFailure(t *testing.T) {
 	srv := assetServer(t, testutil.FakeExec{})
 	for _, path := range []string{
@@ -172,7 +172,7 @@ func TestAssetRoutes_DatabaseFailure(t *testing.T) {
 	}
 }
 
-// UpdateAttachment reports a missing row and a failed write.
+// UpdateAttachment reports missing rows.
 func TestRepo_UpdateAttachment(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	store := testutil.Store(t)

@@ -62,7 +62,7 @@ func TestExport_PDF_NotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
-// The PDF renders with xelatex and fails cleanly without it.
+// PDF renders or fails cleanly.
 func TestExport_PDF_Renders(t *testing.T) {
 	_, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
@@ -84,7 +84,7 @@ func TestExport_PDF_Renders(t *testing.T) {
 	assert.True(t, bytes.HasPrefix(body, []byte("%PDF-")), "body is not a PDF")
 }
 
-// Each failure before the file is written is a 500.
+// Pre-write PDF failures are 500.
 func TestExport_PDF_Failures(t *testing.T) {
 	_, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
@@ -110,7 +110,7 @@ func TestExport_PDF_Failures(t *testing.T) {
 	}
 }
 
-// The header prints the vessel, PO and buyer.
+// PDF header prints vessel, PO.
 func TestExport_PDF_Header(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	vessel := "MV Sinar & Bahari"

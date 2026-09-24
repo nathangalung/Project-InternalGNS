@@ -12,7 +12,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 )
 
-// A template the builder cannot use is an error, never a partial file.
+// Corrupt template is an error.
 func TestBuildCoretaxWorkbook_RefusesBadTemplate(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
@@ -36,7 +36,7 @@ func TestBuildCoretaxWorkbook_RefusesBadTemplate(t *testing.T) {
 	}
 }
 
-// A template without the data sheets still yields both.
+// Missing data sheets are recreated.
 func TestBuildCoretaxWorkbook_RecreatesMissingSheets(t *testing.T) {
 	t.Parallel()
 	blank := excelize.NewFile()
@@ -65,7 +65,7 @@ func TestBuildCoretaxWorkbook_RecreatesMissingSheets(t *testing.T) {
 	}
 }
 
-// invalidBuyers names each rejected client once, in invoice order.
+// invalidBuyers names rejected clients once.
 func TestInvalidBuyers(t *testing.T) {
 	t.Parallel()
 	npwp := "0000000000000000"
@@ -97,7 +97,7 @@ func TestInvalidBuyers(t *testing.T) {
 	}
 }
 
-// num keeps a cell numeric when it can.
+// num keeps cells numeric.
 func TestNum(t *testing.T) {
 	t.Parallel()
 	cases := []struct {

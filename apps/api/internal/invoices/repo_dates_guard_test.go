@@ -55,7 +55,7 @@ func TestRepo_UpdateDates_RejectsFiledInvoice(t *testing.T) {
 	}
 }
 
-// The due date never precedes the invoice date (INV-9).
+// Due never precedes invoice (INV-9).
 // A refusal names the first reason in order: filed, misordered, stale.
 func TestRepo_UpdateDates_DateOrder(t *testing.T) {
 	stale := int32(999)

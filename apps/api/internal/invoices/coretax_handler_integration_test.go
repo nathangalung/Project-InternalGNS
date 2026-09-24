@@ -22,7 +22,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// coretaxRouter mounts the invoice routes for Coretax.
+// coretaxRouter mounts routes for Coretax.
 func coretaxRouter(t *testing.T, exec db.Executor, settings deps.CoretaxSettings, root string) http.Handler {
 	t.Helper()
 	r := chi.NewRouter()
@@ -33,7 +33,7 @@ func coretaxRouter(t *testing.T, exec db.Executor, settings deps.CoretaxSettings
 	return r
 }
 
-// serve runs one GET and returns the recorder.
+// serve runs one GET.
 func serve(h http.Handler, path string) *httptest.ResponseRecorder {
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
@@ -49,7 +49,7 @@ func problemDetail(t *testing.T, rec *httptest.ResponseRecorder) string {
 	return p.Detail
 }
 
-// The XML export answers each failure with its own status.
+// XML export failure statuses.
 func TestCoretaxXML_Refusals(t *testing.T) {
 	_, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
@@ -77,7 +77,7 @@ func TestCoretaxXML_Refusals(t *testing.T) {
 	}
 }
 
-// A good export is an attachment named for the invoice.
+// XML export names the file.
 func TestCoretaxXML_NamesTheFile(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
@@ -91,7 +91,7 @@ func TestCoretaxXML_NamesTheFile(t *testing.T) {
 	assert.Contains(t, rec.Body.String(), "<RefDesc>"+inv.InvoiceNo+"</RefDesc>")
 }
 
-// The bulk XLSX answers each failure with its own status.
+// Bulk XLSX failure statuses.
 func TestCoretaxXLSX_Refusals(t *testing.T) {
 	_, tx := testutil.BeginTx(t)
 	deliveredPOWithInvoice(t, tx)
@@ -125,7 +125,7 @@ func TestCoretaxXLSX_Refusals(t *testing.T) {
 	}
 }
 
-// One refusal names each invalid buyer once.
+// Refusal names each buyer once.
 func TestCoretaxXLSX_RefusesBuyerWithoutNPWPOnce(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	require.NoError(t, testutil.ResetCommercialDomain(ctx, tx))
@@ -142,7 +142,7 @@ func TestCoretaxXLSX_RefusesBuyerWithoutNPWPOnce(t *testing.T) {
 		problemDetail(t, rec))
 }
 
-// An invoice without lines is left out of the workbook.
+// Line-less invoices are skipped.
 func TestCoretaxXLSX_SkipsInvoiceWithoutLines(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	require.NoError(t, testutil.ResetCommercialDomain(ctx, tx))
@@ -170,7 +170,7 @@ func TestCoretaxXLSX_SkipsInvoiceWithoutLines(t *testing.T) {
 	assert.Equal(t, []string{inv.InvoiceNo}, refs, "only the invoice with lines is filed")
 }
 
-// The bulk export follows the list filter.
+// Bulk export follows list filter.
 func TestCoretaxXLSX_FollowsTheListFilter(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	fx := seedListFixture(t, ctx, tx)
