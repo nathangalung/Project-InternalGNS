@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test"
-import { pdfFile, rupiah, type SalesSeed, type SeedClient } from "./support/sales"
+import { api, pdfFile, rupiah, type SalesSeed, type SeedClient } from "./support/sales"
 import { expect, test } from "./support/seed"
 
 // Purchase order flows: the PO an accepted quotation creates, its file,
@@ -95,6 +95,33 @@ test.describe("purchase order detail", () => {
       })
       .toEqual([true, "5.00", "Kirim lewat pelabuhan Tanjung Priok"])
     expect((await seed.poByQuotation(q.id)).poGrandTotal).toBe(po.poGrandTotal)
+  })
+
+  test("a price changed in the PO editor reprices the PO", async ({ page, seed }) => {
+    const { q, po } = await acceptedPo(seed)
+    expect(po.poTotalProduk).toBe("300000.00")
+
+    await page.goto(`/purchase-orders/${q.id}/edit`)
+    await page.getByRole("button", { name: "Edit produk 1" }).click()
+    const modal = page.getByRole("dialog", { name: "Edit Produk Quotation" })
+    await expect(modal.getByLabel("Harga Jual Satuan *")).toHaveValue("100000")
+    await modal.getByLabel("Harga Jual Satuan *").fill("120000")
+    await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
+    const confirm = page.getByRole("dialog", { name: "Konfirmasi Perubahan Harga" })
+    await expect(confirm).toContainText("Rp100.000 menjadi Rp120.000")
+    await confirm.getByRole("button", { name: "Ya, Ubah" }).click()
+    await expect(modal).toBeHidden()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Simpan", exact: true }).click()
+
+    await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}$`))
+    await expect.poll(async () => (await seed.poByQuotation(q.id)).poTotalProduk).toBe("360000.00")
+    const saved = await seed.poByQuotation(q.id)
+    const breakdown = page.getByRole("heading", { name: "Rincian Biaya" }).locator("xpath=..")
+    await expect(
+      breakdown.getByText("Grand Total", { exact: true }).locator("xpath=following-sibling::*[1]"),
+    ).toHaveText(rupiah(Number(saved.poGrandTotal)))
   })
 })
 
@@ -243,6 +270,25 @@ test.describe("purchase order status", () => {
 
     await page.goto(`/purchase-orders/${q.id}/edit`)
     await expect(page.getByText("Purchase Order tidak dapat diubah")).toBeVisible()
+  })
+})
+
+test.describe("purchase order after invoicing", () => {
+  test("a sent invoice freezes the PO number and date", async ({ page, seed }) => {
+    const { q, po } = await acceptedPo(seed)
+    const invoice = await seed.deliver(po)
+    await page.goto(`/purchase-orders/${q.id}`)
+    // Delivered but still a draft invoice: number and date stay editable.
+    await expect(page.getByRole("button", { name: "Ubah Detail" })).toBeVisible()
+
+    await api("PATCH", `/invoices/${invoice.id}/status`, { status: "sent" })
+    await page.reload()
+    // PO-04: once filed, nothing on the PO file card can change it.
+    await expect(page.getByRole("heading", { name: `Purchase Order ${po.poNumber}` })).toBeVisible()
+    await expect(page.getByRole("button", { name: "Ubah Detail" })).toHaveCount(0)
+    await expect(page.getByRole("button", { name: "Unggah Berkas" })).toHaveCount(0)
+    await expect(page.getByRole("button", { name: "Ganti Berkas" })).toHaveCount(0)
+    await expect(page.getByRole("button", { name: "Unduh Berkas" })).toBeVisible()
   })
 })
 

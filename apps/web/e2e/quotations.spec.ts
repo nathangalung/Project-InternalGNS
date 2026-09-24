@@ -290,6 +290,32 @@ test.describe("quotation status", () => {
     await expect(page.getByText("Gunakan Buat Revisi di halaman detail")).toBeVisible()
   })
 
+  test("the editor switches a draft to another contact", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const second = `${seed.prefix} Narahubung Kedua`
+    const secondId = await seed.contact(client, second)
+    const q = await seed.quotation({ client, lines: [{ item, qty: 1, price: 25_000 }] })
+
+    await page.goto(`/quotations/${q.id}/edit`)
+    await expect(
+      page.getByText("Klien tidak dapat diganti setelah quotation dibuat."),
+    ).toBeVisible()
+    await page.getByRole("button", { name: new RegExp(second) }).click()
+    await expect(page.getByRole("button", { name: new RegExp(second) })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    )
+    for (let step = 0; step < 3; step++) {
+      await page.getByRole("button", { name: "Lanjut" }).click()
+    }
+    await page.getByRole("button", { name: "Simpan" }).click()
+    await expect(page).toHaveURL(new RegExp(`/quotations/${q.id}$`))
+    await expect.poll(async () => (await seed.getQuotation(q.id)).contactId).toBe(secondId)
+    const card = page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
+    await expect(card).toContainText(second)
+  })
+
   test("Ditolak waits for a reason and is final", async ({ page, seed }) => {
     const client = await seed.client()
     const item = await seed.item()

@@ -24,6 +24,7 @@ export type SeedQuotation = { id: number; quotationNo: string; version: number; 
 export type Transition = { to: string; label: string; requiresNote: boolean }
 
 export type QuotationDetail = SeedQuotation & {
+  contactId?: number
   companyClientId: number
   grandTotal: string
   notes?: string
@@ -42,6 +43,7 @@ export type PurchaseOrder = {
   fileName?: string
   notes?: string
   discountPct: string
+  poTotalProduk: string
   poGrandTotal: string
   deliveryNoteNumber?: string
   rowVersion: number
@@ -178,6 +180,17 @@ export class SalesSeed {
     return { id: created.id, name, impaCode, vendorProductId }
   }
 
+  // Another contact on a seeded client.
+  async contact(client: SeedClient, name: string): Promise<number> {
+    const created = await api<{ id: number }>("POST", `/clients/${client.id}/contacts`, {
+      name,
+      email: `${this.prefix.toLowerCase()}.k${++this.seq}@example.com`,
+      phone: "81355500011",
+      countryCode: "IDN",
+    })
+    return created.id
+  }
+
   // One more vendor offer for an item.
   async linkVendor(item: SeedItem, vendor: SeedVendor, cost: number): Promise<void> {
     await api("POST", `/items/${item.id}/vendors`, {
@@ -272,6 +285,14 @@ export class SalesSeed {
     })
   }
 
+  // File, work, delivery; the server files a draft invoice.
+  async deliver(po: PurchaseOrder): Promise<{ id: number; status: string }> {
+    await this.attachPoFile(po)
+    await this.setPoStatus(po.id, "ON_PROGRESS")
+    await this.setPoStatus(po.id, "DELIVERED")
+    return api("GET", `/invoices/by-quotation/${po.quotationId}`)
+  }
+
   async setPoNotes(poId: number, notes: string): Promise<void> {
     await api("PATCH", `/purchase-orders/${poId}/notes`, { notes })
   }
@@ -291,12 +312,12 @@ export class SalesSeed {
         if (po?.allowedTransitions.some((t) => t.to === "CANCELLED")) {
           await this.setPoStatus(po.id, "CANCELLED", note)
         } else if (po?.status === "DELIVERED") {
-          // Delivery filed a draft invoice; void it.
+          // Delivery filed an invoice; void it while it is open.
           const inv = await api<{ id: number; status: string }>(
             "GET",
             `/invoices/by-quotation/${id}`,
           ).catch(() => null)
-          if (inv?.status === "draft") {
+          if (inv && ["draft", "sent", "overdue"].includes(inv.status)) {
             await api("PATCH", `/invoices/${inv.id}/status`, { status: "cancelled", note })
           }
         }

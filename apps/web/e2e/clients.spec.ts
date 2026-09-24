@@ -124,3 +124,34 @@ test("the status filter separates active and inactive clients", async ({ page, s
   await expect(rows).toContainText("NONAKTIF")
   await expect(page.getByRole("link", { name: kept.name, exact: true })).toHaveCount(0)
 })
+
+// 1x1 transparent PNG.
+const tinyPng = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+  "base64",
+)
+
+test("a logo over 2 MB is refused and a small one is saved", async ({ page, seed }) => {
+  const client = await seed.client()
+  await page.goto(`/clients/${client.id}`)
+  const input = page.locator('input[type="file"][accept^="image/png"]')
+  const logo = page.getByRole("button", { name: "Ganti logo klien" })
+
+  await input.setInputFiles({
+    name: "logo-besar.png",
+    mimeType: "image/png",
+    buffer: Buffer.alloc(2 * 1024 * 1024 + 1, 1),
+  })
+  // MD-13: the rejected file never shows as if saved.
+  await expect(page.getByText("Ukuran logo klien melebihi 2 MB.")).toBeVisible()
+  await expect(logo.locator("img")).toHaveCount(0)
+
+  await input.setInputFiles({ name: "logo.png", mimeType: "image/png", buffer: tinyPng })
+  await expect(logo.locator("img")).toHaveCount(1)
+  await expect
+    .poll(
+      async () =>
+        (await api<{ logoObjectKey?: string }>("GET", `/clients/${client.id}`)).logoObjectKey,
+    )
+    .toMatch(new RegExp(`^clients/${client.id}/.*logo\\.png$`))
+})

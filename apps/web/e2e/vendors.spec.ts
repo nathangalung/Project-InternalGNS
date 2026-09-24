@@ -85,3 +85,17 @@ test.describe("as finance", () => {
     await expect(page.getByRole("button", { name: "Simpan Perubahan" })).toHaveCount(0)
   })
 })
+
+test("a vendor with many products pages its list", async ({ page, seed }) => {
+  const vendor = await seed.vendor()
+  for (let i = 0; i < 12; i++) await seed.item({ vendor, cost: 1_000 + i })
+  await page.goto(`/vendors/${vendor.id}`)
+  // MD-12: the heading counts every product, not the first page.
+  await expect(page.getByRole("heading", { name: "Daftar Produk Vendor (12)" })).toBeVisible()
+  const table = page.getByRole("heading", { name: "Daftar Produk Vendor (12)" }).locator("xpath=..")
+  await expect(page.getByText("Menampilkan 1-10 dari 12 Produk")).toBeVisible()
+  await expect(table.getByRole("row", { name: new RegExp(seed.prefix) })).toHaveCount(10)
+  await page.getByRole("button", { name: "Halaman berikutnya" }).last().click()
+  await expect(page.getByText("Menampilkan 11-12 dari 12 Produk")).toBeVisible()
+  await expect(table.getByRole("row", { name: new RegExp(seed.prefix) })).toHaveCount(2)
+})
