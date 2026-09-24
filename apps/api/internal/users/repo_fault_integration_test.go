@@ -41,6 +41,7 @@ var faultSQL = map[string]map[string]string{
 	},
 	execFault: {
 		"users.get_by_id_admin":      `SELECT 1 / 0 WHERE $1::bigint IS NOT NULL`,
+		"users.auth_context":         `SELECT (1 / 0)::text AS role, TRUE AS is_active, now() AS sessions_valid_from WHERE $1::bigint IS NOT NULL`,
 		"users.reset_login_attempts": `SELECT 1 / 0 WHERE $1::bigint IS NOT NULL AND $2::text IS NOT NULL`,
 		"users.create": `SELECT 1 / 0 WHERE $1::text IS NOT NULL AND $2::text IS NOT NULL AND $3::text IS NOT NULL
 			AND $4::text IS NOT NULL AND $5::boolean IS NULL AND $6::bigint IS NOT NULL`,
@@ -112,6 +113,10 @@ func TestRepo_StorageFailuresSurface(t *testing.T) {
 			return err
 		}, false},
 		{prepareFault, "users.auth_context", "read auth context", func(ctx context.Context, r *users.Repo, u users.User) error {
+			_, err := r.AuthContext(ctx, u.ID)
+			return err
+		}, false},
+		{execFault, "users.auth_context", "read auth context", func(ctx context.Context, r *users.Repo, u users.User) error {
 			_, err := r.AuthContext(ctx, u.ID)
 			return err
 		}, false},
@@ -191,6 +196,17 @@ func TestRepo_List_StorageFailures(t *testing.T) {
 			}
 		})
 	}
+}
+
+// A lost page read surfaces.
+// The count succeeds and the page read itself fails.
+func TestRepo_List_PageReadFailureSurfaces(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	store := testutil.Store(t)
+
+	_, err := users.NewRepo(&testutil.CountingExec{Inner: tx, FailAfter: 1}, store).
+		List(ctx, users.ListFilter{Limit: 10})
+	assert.ErrorIs(t, err, testutil.ErrFake)
 }
 
 // beginFails is an executor whose Begin fails.
