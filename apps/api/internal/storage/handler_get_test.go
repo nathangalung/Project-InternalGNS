@@ -26,7 +26,7 @@ func (o *objectFake) GetObject(context.Context, string, string) (io.ReadCloser, 
 	return &closeProbe{Reader: strings.NewReader(o.body), closed: &o.closed}, o.contentType, int64(len(o.body)), nil
 }
 
-// Records that the handler closed the object.
+// Records the object close.
 type closeProbe struct {
 	io.Reader
 	closed *bool
@@ -37,7 +37,7 @@ func (c *closeProbe) Close() error {
 	return nil
 }
 
-// A download is served as an attachment.
+// Downloads are typed attachments.
 // The type comes from the allow-listed extension, never from the type the
 // uploader stored, so a document cannot run as HTML on the API origin.
 func TestHandler_Get(t *testing.T) {
@@ -97,7 +97,7 @@ func TestHandler_Get(t *testing.T) {
 	}
 }
 
-// A download without storage is unavailable.
+// Download without storage fails.
 func TestHandler_Get_NoStorage(t *testing.T) {
 	rec := httptest.NewRecorder()
 	NewHandler(nil).Get(rec, httptest.NewRequest(http.MethodGet,

@@ -11,7 +11,7 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-// A refused store call is a fault, not an absence.
+// Denied calls are faults.
 // Every client call against a store that rejects the credentials must fail
 // with the step named, so the proxy answers 502 instead of treating the key
 // as free or the object as missing.

@@ -162,7 +162,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	_, _ = io.Copy(w, rc)
 }
 
-// Refuses a file past the cap.
+// Refuses an oversize file.
 func renderTooLarge(w http.ResponseWriter, limit int64) {
 	httperr.Render(w, httperr.PayloadTooLarge(
 		fmt.Sprintf("Ukuran berkas melebihi batas %d MB. Pilih berkas yang lebih kecil.", limit>>20)))

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// A capped export leaves a warning; a complete one stays quiet.
+// Capped exports leave warnings.
 func TestWarnIfTruncated(t *testing.T) {
 	cases := []struct {
 		name     string

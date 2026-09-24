@@ -58,7 +58,7 @@ func newSuite(t *testing.T) *suite {
 	return s
 }
 
-// userFor returns one account per role.
+// userFor returns role accounts.
 // The auth middleware reads the role from the live account, so each role
 // needs a real row, not just a claim.
 func (s *suite) userFor(role string) (int64, error) {
@@ -81,7 +81,7 @@ func (s *suite) userFor(role string) (int64, error) {
 	return u.ID, nil
 }
 
-// bearer mints an access token the router accepts.
+// bearer mints an access token.
 func bearer(userID int64, role string) (string, error) {
 	now := time.Now()
 	claims := auth.Claims{
@@ -146,7 +146,7 @@ func (sc *scenario) send(method, path string, body []byte) error {
 	return nil
 }
 
-// sendTo carries an empty JSON body on writes.
+// sendTo sends empty JSON writes.
 // A request that got past the gate stops at validation and stores nothing.
 func (sc *scenario) sendTo(method, path string) error {
 	var body []byte

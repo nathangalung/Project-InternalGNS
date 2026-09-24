@@ -112,7 +112,7 @@ func TestRouter_RateLimitedLoginIsProblemJSON(t *testing.T) {
 	assert.Equal(t, rateLimitDetail, body.Detail)
 }
 
-// The rewrite keeps the writer contract.
+// Rewrite keeps writer contract.
 // A body written without a status is a 200 that passes through, a second
 // status is ignored as net/http does, and the real writer stays reachable
 // for http.ResponseController.

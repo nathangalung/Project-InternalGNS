@@ -26,7 +26,7 @@ func TestCanAccessBucket(t *testing.T) {
 	}
 }
 
-// Each bucket takes only its own file types.
+// Buckets take their own types.
 // Logos and item images are pictures; PO documents and invoice attachments
 // also take PDFs and workbooks. The check ignores case.
 func TestValidateAssetFileName(t *testing.T) {
@@ -56,7 +56,7 @@ func TestValidateAssetFileName(t *testing.T) {
 	}
 }
 
-// Documents get a larger cap than pictures.
+// Documents get larger caps.
 func TestMaxBytes(t *testing.T) {
 	cases := []struct {
 		bucket string

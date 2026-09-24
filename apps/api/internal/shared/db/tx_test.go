@@ -76,7 +76,7 @@ func TestWithTx_BeginnerFailureIsWrapped(t *testing.T) {
 	assert.Contains(t, err.Error(), "begin tx")
 }
 
-// A failed commit is reported and nothing persists.
+// Failed commit is reported.
 // A deferred constraint only fires at COMMIT, after fn has returned nil, so
 // WithTx must still surface it (wrapped, with its SQLSTATE reachable) rather
 // than report success for rows that were rolled back.

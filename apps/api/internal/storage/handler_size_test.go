@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-// Reads the whole body, as MinIO does.
+// Reads bodies like MinIO.
 type drainingStore struct {
 	fakeStore
 	stored int64
@@ -27,7 +27,7 @@ func (d *drainingStore) PutObject(_ context.Context, _, _ string, r io.Reader, _
 	return nil
 }
 
-// An upload past the bucket cap is the caller's mistake.
+// Oversize upload is client error.
 // It must answer 413 as problem+json, reach no object, and log nothing at
 // ERROR: a 502 here told the user the store was down and paged the 5xx
 // alert for a file that was only too large.

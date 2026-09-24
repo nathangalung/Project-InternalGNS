@@ -45,7 +45,7 @@ type suite struct {
 
 type storedKey struct{ bucket, key string }
 
-// minioConfig reads the store the suite runs against.
+// minioConfig reads the store.
 func minioConfig(t *testing.T) storage.Config {
 	t.Helper()
 	endpoint := os.Getenv("MINIO_ENDPOINT")
@@ -101,7 +101,7 @@ func (s *suite) track(bucket, key string) {
 	s.keys = append(s.keys, storedKey{bucket, key})
 }
 
-// userFor returns one account per role.
+// userFor returns role accounts.
 func (s *suite) userFor(role string) (int64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -122,7 +122,7 @@ func (s *suite) userFor(role string) (int64, error) {
 	return u.ID, nil
 }
 
-// bearer mints an access token the router accepts.
+// bearer mints an access token.
 func bearer(userID int64, role string) (string, error) {
 	now := time.Now()
 	claims := auth.Claims{
@@ -199,7 +199,7 @@ func objectPath(bucket, key string) string {
 	return "/api/v1/storage/object?" + v.Encode()
 }
 
-// payloadOf builds distinct bytes per upload.
+// payloadOf builds distinct bytes.
 func (sc *scenario) payloadOf(size int) []byte {
 	n := sc.seq.Add(1)
 	stamp := []byte(fmt.Sprintf("atdd-%d-%d|", sc.run, n))

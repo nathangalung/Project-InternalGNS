@@ -8,7 +8,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Every stored query prepares against the schema.
+// Every query prepares cleanly.
 // The SQL is hand-written and parsed at startup, so a renamed column or a
 // dropped function surfaces only when a request first runs that query.
 // Preparing each block against the migrated test database moves that

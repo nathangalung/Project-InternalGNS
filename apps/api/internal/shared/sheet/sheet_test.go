@@ -10,7 +10,7 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-// A written workbook reads back as one sheet.
+// Workbook reads back intact.
 // The header row is bold, the records follow in order, and a blank name
 // falls back to Sheet1 instead of leaving an unnamed tab.
 func TestWrite(t *testing.T) {
@@ -73,7 +73,7 @@ func TestWrite_KeepsCellsAsText(t *testing.T) {
 	assert.Empty(t, formula, "a value must not become a formula")
 }
 
-// An invalid sheet name is an error, not a broken file.
+// Invalid sheet name errors.
 func TestWrite_InvalidSheetName(t *testing.T) {
 	_, err := Write(strings.Repeat("x", 32), []string{"a"}, nil)
 	require.Error(t, err)

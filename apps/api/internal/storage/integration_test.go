@@ -85,7 +85,7 @@ func TestNew_MissingCreds(t *testing.T) {
 	assert.ErrorIs(t, err, storage.ErrNotConfigured)
 }
 
-// An unreachable store fails the boot.
+// Unreachable store fails boot.
 // The first call New makes is the bucket check, so its error names that step.
 func TestNew_BadEndpoint(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -99,7 +99,7 @@ func TestNew_BadEndpoint(t *testing.T) {
 	assert.Contains(t, err.Error(), "storage: bucket exists check")
 }
 
-// A malformed endpoint fails before any network call.
+// Malformed endpoint fails early.
 func TestNew_MalformedEndpoint(t *testing.T) {
 	_, err := storage.New(context.Background(), storage.Config{
 		Endpoint:  "http://minio:9000/path",
@@ -110,7 +110,7 @@ func TestNew_MalformedEndpoint(t *testing.T) {
 	assert.Contains(t, err.Error(), "storage: new client")
 }
 
-// Wrong credentials fail the boot too.
+// Wrong credentials fail boot.
 func TestNew_WrongCredentials(t *testing.T) {
 	cfg := requireMinio(t)
 	cfg.SecretKey += "-wrong"
@@ -121,7 +121,7 @@ func TestNew_WrongCredentials(t *testing.T) {
 	assert.Contains(t, err.Error(), "storage: bucket exists check")
 }
 
-// Missing objects and buckets answer typed.
+// Missing objects answer typed.
 // A missing key is ErrObjectNotFound, which the proxy turns into 404, and
 // the existence probe reports false rather than failing the upload.
 func TestClient_MissingObjectsAndBuckets(t *testing.T) {
@@ -162,7 +162,7 @@ func TestClient_MissingObjectsAndBuckets(t *testing.T) {
 	assert.Contains(t, err.Error(), "storage: get object")
 }
 
-// An upload without a type is stored as octet-stream.
+// Untyped uploads default octet-stream.
 func TestClient_PutDefaultsContentType(t *testing.T) {
 	cfg := requireMinio(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
@@ -185,7 +185,7 @@ func TestClient_PutDefaultsContentType(t *testing.T) {
 	assert.True(t, exists)
 }
 
-// MinIO keeps the cap refusal typed.
+// MinIO keeps cap refusal typed.
 // The handler can only answer 413 if the SDK hands back the body reader's
 // error unchanged, and a refused upload must leave nothing behind, or the
 // retry with a smaller file would hit the overwrite guard.

@@ -18,7 +18,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// bootConfig is a config the seed accepts.
+// bootConfig is a seedable config.
 func bootConfig() Config {
 	return Config{
 		Env:                "test",
@@ -33,7 +33,7 @@ func bootConfig() Config {
 	}
 }
 
-// trackSeeded deletes a boot-seeded account after the test.
+// trackSeeded deletes seeded accounts.
 func trackSeeded(t *testing.T, cleaner *testutil.Cleaner, email string) {
 	t.Helper()
 	var id int64
@@ -44,7 +44,7 @@ func trackSeeded(t *testing.T, cleaner *testutil.Cleaner, email string) {
 	}
 }
 
-// openPool opens a pool in a given session zone.
+// openPool opens a zoned pool.
 func openPool(t *testing.T, zone string) *pgxpool.Pool {
 	t.Helper()
 	testutil.RequireDB(t)
@@ -54,7 +54,7 @@ func openPool(t *testing.T, zone string) *pgxpool.Pool {
 	return p
 }
 
-// The boot refuses a database in the wrong zone.
+// Boot refuses wrong session zone.
 // Invoice dates and document numbers read CURRENT_DATE, so a session left
 // in UTC would stamp yesterday's date for the first seven hours of a WIB day.
 func TestBuildServer_RefusesWrongSessionZone(t *testing.T) {
@@ -63,7 +63,7 @@ func TestBuildServer_RefusesWrongSessionZone(t *testing.T) {
 	require.ErrorContains(t, err, `db session timezone is "UTC", want "Asia/Jakarta"`)
 }
 
-// A database that goes away mid-boot fails the boot.
+// Lost database fails the boot.
 func TestBuildServer_UnreachableDatabase(t *testing.T) {
 	cases := []struct {
 		name string
@@ -85,7 +85,7 @@ func TestBuildServer_UnreachableDatabase(t *testing.T) {
 	}
 }
 
-// The optional second superadmin is seeded only when complete.
+// Second superadmin needs both fields.
 func TestBuildServer_SecondSuperadmin(t *testing.T) {
 	pool := openPool(t, "Asia/Jakarta")
 	cleaner := testutil.NewCleaner(t)
@@ -128,7 +128,7 @@ func TestBuildServer_SecondSuperadmin(t *testing.T) {
 	})
 }
 
-// Storage is optional but never silently broken.
+// Storage optional, never silently broken.
 // Missing keys boot without the asset routes; keys pointing at an
 // unreachable store fail the boot instead of serving 502s later.
 func TestBuildServer_Storage(t *testing.T) {
@@ -164,7 +164,7 @@ func TestBuildServer_Storage(t *testing.T) {
 	})
 }
 
-// Close tolerates a server that never built.
+// Close tolerates nil server.
 func TestServer_CloseNil(t *testing.T) {
 	var s *Server
 	assert.NotPanics(t, s.Close)

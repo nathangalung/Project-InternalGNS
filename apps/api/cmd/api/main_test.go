@@ -17,10 +17,10 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Marks the re-executed binary as the API.
+// Marks the child API process.
 const childEnv = "GNS_API_SMOKE_CHILD"
 
-// TestMain runs main in a child process.
+// TestMain runs main as child.
 // The smoke re-executes this test binary with childEnv set, so main runs
 // exactly as the container runs it: flags, config from the environment,
 // signals and exit codes.
@@ -32,7 +32,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// bootEnv is the environment the container passes.
+// bootEnv is the container environment.
 type bootEnv struct {
 	dsn   string
 	addr  string
@@ -58,7 +58,7 @@ func (e bootEnv) list() []string {
 	}
 }
 
-// child builds one run of the binary.
+// child builds one binary run.
 // It runs in an empty directory so a developer's .env cannot leak in.
 func child(t *testing.T, env bootEnv, out *bytes.Buffer, args ...string) *exec.Cmd {
 	t.Helper()
@@ -113,7 +113,7 @@ func freeAddr(t *testing.T) string {
 	return fmt.Sprintf(":%d", l.Addr().(*net.TCPAddr).Port)
 }
 
-// newEnv prepares a boot against the test database.
+// newEnv prepares a test boot.
 // The superadmin the boot seeds is deleted afterwards.
 func newEnv(t *testing.T) bootEnv {
 	t.Helper()
@@ -166,7 +166,7 @@ func TestBoot_Bootstrap(t *testing.T) {
 	}
 }
 
-// The server boots, reports ready, and drains on SIGTERM.
+// Server boots, serves, then drains.
 // The container healthcheck runs the same binary with -healthcheck, so it
 // has to agree with the server while it is up and after it is gone.
 func TestBoot_ServeAndShutdown(t *testing.T) {
@@ -228,7 +228,7 @@ func TestBoot_ServeAndShutdown(t *testing.T) {
 	}
 }
 
-// A boot that cannot start exits non-zero with the reason.
+// Failed boots exit with reason.
 func TestBoot_Refusals(t *testing.T) {
 	cases := []struct {
 		name   string

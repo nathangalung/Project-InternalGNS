@@ -13,7 +13,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Unstorable text is the caller's mistake.
+// Unstorable text is client error.
 // Postgres refuses a NUL byte and invalid UTF-8 in a text parameter with
 // SQLSTATE 22021. Only clients, vendors and items screen their query
 // strings, so on every other slice that refusal reached the caller as a 500

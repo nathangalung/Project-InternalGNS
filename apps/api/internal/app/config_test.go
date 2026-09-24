@@ -262,7 +262,7 @@ func TestConfig_UnknownEnvFailsClosed(t *testing.T) {
 	}
 }
 
-// A .env file fills gaps but never overrides.
+// .env fills gaps, never overrides.
 // Compose and the orchestrator set the real values in the environment; a
 // stray .env left in the working directory must not replace them, and one
 // that cannot be read is a boot error rather than silently skipped.
@@ -301,14 +301,14 @@ func TestLoadConfig_DotEnv(t *testing.T) {
 	})
 }
 
-// unsetForTest clears a variable and restores it.
+// unsetForTest clears one variable.
 func unsetForTest(t *testing.T, key string) {
 	t.Helper()
 	t.Setenv(key, "")
 	require.NoError(t, os.Unsetenv(key))
 }
 
-// A placeholder signer never prints on a client document.
+// Production refuses placeholder signer.
 func TestConfig_ProductionRefusesPlaceholderSigner(t *testing.T) {
 	c := Config{
 		Env:                "production",

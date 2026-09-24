@@ -22,7 +22,7 @@ func TestCurrentUserID_WrongType(t *testing.T) {
 	assert.Equal(t, int64(0), CurrentUserID(ctx))
 }
 
-// The role travels with the request.
+// Role travels with request.
 // Every role gate reads it, so a missing or foreign value must read as no
 // role, which no gate allows.
 func TestUserRole(t *testing.T) {

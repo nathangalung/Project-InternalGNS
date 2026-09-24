@@ -17,7 +17,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// The rate limiter keys on the last proxy hop.
+// Limiter keys on last hop.
 // Earlier X-Forwarded-For entries come from the client, so trusting them
 // would let anyone dodge the login limit by inventing an address.
 func TestTrustedProxyIP(t *testing.T) {
@@ -64,7 +64,7 @@ func (c *levelCapture) Handle(_ context.Context, r slog.Record) error {
 	return nil
 }
 
-// The access log level follows the status.
+// Access log level follows status.
 // Only a real server fault is an ERROR: a 503 is backpressure and a 4xx is
 // the caller's, so neither may page the 5xx alert.
 func TestAccessLog_LevelByStatus(t *testing.T) {
@@ -97,7 +97,7 @@ func TestAccessLog_LevelByStatus(t *testing.T) {
 	}
 }
 
-// JSON bodies are capped; asset uploads cap their own.
+// JSON bodies are capped.
 // Reads are never wrapped, since they carry no body worth limiting.
 func TestBodyLimit(t *testing.T) {
 	const limit = 16
@@ -139,7 +139,7 @@ func TestBodyLimit(t *testing.T) {
 	}
 }
 
-// Readiness fails without a reachable database.
+// Readiness needs the database.
 // An orchestrator stops routing to an instance whose Postgres is gone.
 func TestRouter_ReadyzWithoutDatabase(t *testing.T) {
 	r := NewRouter(Config{JWTSecret: "readyz-down-secret"}, nil, testutil.Store(t), nil)

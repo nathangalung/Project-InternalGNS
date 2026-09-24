@@ -149,7 +149,7 @@ func securityHeadersMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// Role refusal details, shown as toasts.
+// Role refusal toast details.
 const (
 	detailRoleRefused   = "Peran Anda tidak memiliki akses ke fitur ini."
 	detailBucketRefused = "Peran Anda tidak memiliki akses ke berkas ini."

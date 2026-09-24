@@ -57,7 +57,7 @@ func TestRequiredKeys_CoverAllStoreGetCallSites(t *testing.T) {
 	}
 }
 
-// Every block is registered, and every key is used.
+// Registry matches store and code.
 // A block missing from RequiredKeys escapes the boot check, and a key no
 // code reads is dead SQL that still has to keep preparing against the
 // schema. Both directions fail here rather than drifting silently.

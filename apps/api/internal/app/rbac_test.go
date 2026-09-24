@@ -71,7 +71,7 @@ func TestReadOnlyFor(t *testing.T) {
 	}
 }
 
-// Every role refusal reads in Indonesian.
+// Role refusals read Indonesian.
 // The SPA toasts the problem detail as is, and a menu can outlive a role
 // change by the length of the cached profile, so a refusal does reach a
 // user and must not read "insufficient role".

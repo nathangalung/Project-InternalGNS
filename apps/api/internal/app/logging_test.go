@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Decodes one JSON line per record.
+// Decodes JSON log lines.
 func logLines(t *testing.T, buf *bytes.Buffer) []map[string]any {
 	t.Helper()
 	var out []map[string]any
@@ -30,7 +30,7 @@ func logLines(t *testing.T, buf *bytes.Buffer) []map[string]any {
 	return out
 }
 
-// Every record carries the request id.
+// Records carry the request id.
 // A handler's error line joins its access-log line by request_id, and that
 // must survive a logger derived with attributes. A grouped logger still
 // writes, though its stamp nests inside the group; nothing groups today.
@@ -57,7 +57,7 @@ func TestNewLogger_StampsRequestID(t *testing.T) {
 	assert.NotContains(t, lines[3], "request_id", "no id, no stamp")
 }
 
-// The access log and the handler share one id.
+// Access and handler logs join.
 func TestNewLogger_JoinsAccessLog(t *testing.T) {
 	var buf bytes.Buffer
 	prev := slog.Default()

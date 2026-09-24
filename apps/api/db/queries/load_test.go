@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// A build without its SQL refuses to start.
+// Missing SQL fails the boot.
 // Load is the boot check: a missing block must fail it by name, not
 // panic in a handler on the first request that needs it.
 func TestLoad_MissingBlocksFailTheBoot(t *testing.T) {

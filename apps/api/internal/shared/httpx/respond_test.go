@@ -33,7 +33,7 @@ func TestWriteJSON_NilBody(t *testing.T) {
 	assert.Equal(t, "null\n", rec.Body.String())
 }
 
-// A workbook downloads under the given name.
+// Workbook downloads under name.
 func TestWriteXLSX(t *testing.T) {
 	rec := httptest.NewRecorder()
 	WriteXLSX(rec, "Faktur-2026-09", []byte("PK\x03\x04"))
