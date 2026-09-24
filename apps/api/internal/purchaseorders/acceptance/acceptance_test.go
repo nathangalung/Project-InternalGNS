@@ -642,6 +642,7 @@ func TestPurchaseOrderFeatures(t *testing.T) {
 			Format:   "pretty",
 			Paths:    []string{"features"},
 			TestingT: t,
+			Strict:   true,
 		},
 	}
 	if status := suite.Run(); status != 0 {
