@@ -7,6 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import * as quotationsApi from "@/features/quotations/api"
+import { statusChangeToast } from "@/features/quotations/status"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
@@ -87,7 +88,10 @@ export function useChangeQuotationStatus() {
       // Accepting creates a PO.
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal mengubah status quotation.")),
+    onError: (err) => {
+      const msg = statusChangeToast(err)
+      if (msg) toast.error(msg)
+    },
   })
 }
 

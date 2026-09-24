@@ -11,6 +11,7 @@ import {
   quotationStatusLabel,
   splitTransitions,
   statTiles,
+  statusChangeToast,
   statusHint,
   transitionCopy,
 } from "./status"
@@ -121,5 +122,20 @@ describe("fieldError lookup", () => {
     expect(fieldError(err, "status")).toBeUndefined()
     expect(fieldError(new ApiError(409, { fields: { note: "x" } }, "x"), "note")).toBeUndefined()
     expect(fieldError(new Error("x"), "note")).toBeUndefined()
+  })
+})
+
+describe("statusChangeToast", () => {
+  it("stays quiet for a note the modal shows inline", () => {
+    const err = new ApiError(422, { fields: { note: "Alasan wajib diisi." } }, "Validasi gagal.")
+    expect(statusChangeToast(err)).toBeUndefined()
+  })
+
+  it("toasts any other failure", () => {
+    const conflict = new ApiError(409, {}, "Status sudah berubah.")
+    expect(statusChangeToast(conflict)).toBe("Status sudah berubah.")
+    const other = new ApiError(422, { fields: { status: "x" } }, "Status tidak valid.")
+    expect(statusChangeToast(other)).toBe("Status tidak valid.")
+    expect(statusChangeToast(new ApiError(500, {}, ""))).toBe("Gagal mengubah status quotation.")
   })
 })

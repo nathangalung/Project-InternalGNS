@@ -1,4 +1,5 @@
 import { ApiError } from "@/lib/api-client"
+import { errorMessage } from "@/lib/errors"
 import { QUOTATION_STATUSES, type QuotationStatusLabel, quotationStatusLabel } from "@/lib/status"
 import type { QuotationStatus, QuotationStatusCount, QuotationTransition } from "@/types/api"
 
@@ -43,6 +44,15 @@ export function fieldError(err: unknown, key: string): string | undefined {
   if (!fields || typeof fields !== "object") return undefined
   const value = (fields as Record<string, unknown>)[key]
   return typeof value === "string" && value.trim() ? value : undefined
+}
+
+// Status change failure toast.
+//
+// A rejected note already shows under the modal's textarea, so it gets no
+// toast; undefined means stay quiet.
+export function statusChangeToast(err: unknown): string | undefined {
+  if (fieldError(err, "note")) return undefined
+  return errorMessage(err, "Gagal mengubah status quotation.")
 }
 
 // Status bar helper text.
