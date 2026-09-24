@@ -26,11 +26,7 @@ const (
 // Drive quotation to delivered PO.
 func deliveredPOWithInvoice(t *testing.T, tx pgx.Tx) (int64, int64, int64) {
 	t.Helper()
-	ctx := context.Background()
-	store := testutil.Store(t)
-
-	qrepo := quotations.NewRepo(tx, store)
-	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+	return deliverQuotation(t, tx, quotations.CreateRequest{
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		Items: []quotations.CreateItem{{
@@ -39,7 +35,18 @@ func deliveredPOWithInvoice(t *testing.T, tx pgx.Tx) (int64, int64, int64) {
 			UnitID:        seedUnitID,
 			SellingPrice:  "100000",
 		}},
-	}, seedUserID)
+	})
+}
+
+// deliverQuotation invoices any quotation.
+// It returns the quotation, PO and invoice ids.
+func deliverQuotation(t *testing.T, tx pgx.Tx, req quotations.CreateRequest) (int64, int64, int64) {
+	t.Helper()
+	ctx := context.Background()
+	store := testutil.Store(t)
+
+	qrepo := quotations.NewRepo(tx, store)
+	qid, err := qrepo.Create(ctx, req, seedUserID)
 	require.NoError(t, err)
 	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "sent", nil, seedUserID))
 	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "accepted", nil, seedUserID))
