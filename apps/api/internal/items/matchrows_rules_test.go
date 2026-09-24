@@ -13,7 +13,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// One chunk creates a repeated name once.
+// Repeated name creates once.
 func TestRepo_MatchRows_AutoCreateDedupsWithinChunk(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
@@ -36,7 +36,7 @@ func TestRepo_MatchRows_AutoCreateDedupsWithinChunk(t *testing.T) {
 	assert.Equal(t, int64(1), res.Total, "one catalog row for both lines")
 }
 
-// A nameless unmatched row stays empty.
+// Nameless rows stay unmatched.
 func TestRepo_MatchRows_NamelessRowIsNotCreated(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))

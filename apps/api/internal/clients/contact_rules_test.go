@@ -12,7 +12,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 )
 
-// A contact only answers its client.
+// Contacts stay with their client.
 func TestHandler_Contact_OtherClientCannotTouchIt(t *testing.T) {
 	srv := newSrv(t)
 	owner := newClient(t)
@@ -96,7 +96,7 @@ func TestHandler_Contact_RequestValidation(t *testing.T) {
 	assert.Equal(t, seeded.Name, got[0].Name)
 }
 
-// Adding to a missing client is 404.
+// Missing client refuses contacts.
 func TestHandler_CreateContact_MissingClient(t *testing.T) {
 	res := doJSON(t, newSrv(t), http.MethodPost, "/clients/999999999/contacts",
 		clients.CreateContactRequest{Name: "Yatim"})

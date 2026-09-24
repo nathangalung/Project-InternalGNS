@@ -9,7 +9,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// defaultUnitID is the seeded PCS unit.
+// defaultUnitID is the seeded SET unit.
 const defaultUnitID int16 = 19
 
 // uniqueItemName keeps concurrent runs from colliding.

@@ -14,7 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Batch lookup keeps only found ids.
+// Batch lookup skips missing ids.
 func TestRepo_GetByIDs(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := clients.NewRepo(tx, testutil.Store(t))
@@ -41,7 +41,7 @@ func TestRepo_GetByIDs_EmptySkipsQuery(t *testing.T) {
 	assert.NotNil(t, got)
 }
 
-// PUT to a taken number is 422.
+// Taken number is refused.
 func TestHandler_Update_TakenNumber(t *testing.T) {
 	pool := testutil.Pool(t)
 	owner := newClient(t)
@@ -59,7 +59,7 @@ func TestHandler_Update_TakenNumber(t *testing.T) {
 	assert.Equal(t, numberInvalidMsg, p.Fields["number"])
 }
 
-// A non-numeric minTotal is a 4xx.
+// Non-numeric minTotal is refused.
 func TestHandler_List_BadMinTotal(t *testing.T) {
 	res := doJSON(t, newSrv(t), http.MethodGet, "/clients/?minTotal=banyak", nil)
 	defer res.Body.Close()

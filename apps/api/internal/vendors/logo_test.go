@@ -16,7 +16,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/vendors"
 )
 
-// proxyKey reads bucket and key back.
+// proxyKey parses the proxy path.
 func proxyKey(t *testing.T, raw string) (bucket, key string) {
 	t.Helper()
 	u, err := url.Parse(raw)
@@ -70,7 +70,7 @@ func TestHandler_Logo_UploadAttachDownload(t *testing.T) {
 	assert.Equal(t, presign.ObjectKey, key)
 }
 
-// A missing vendor is 404 everywhere.
+// Missing vendor is 404.
 func TestHandler_Logo_MissingVendor(t *testing.T) {
 	srv := mountedSrv(t, testutil.Pool(t))
 	cases := []struct {

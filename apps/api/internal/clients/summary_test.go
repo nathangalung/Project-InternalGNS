@@ -69,7 +69,7 @@ func insertClientAt(t *testing.T, ctx context.Context, tx pgx.Tx, number string,
 	require.NoError(t, err)
 }
 
-// The endpoint serves the same aggregates.
+// Endpoint matches repo aggregates.
 func TestHandler_Summary_MatchesRepo(t *testing.T) {
 	res := doJSON(t, newSrv(t), http.MethodGet, "/clients/summary", nil)
 	defer res.Body.Close()

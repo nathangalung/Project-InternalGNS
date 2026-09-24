@@ -15,7 +15,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/vendors"
 )
 
-// Named blanks, since Gherkin cells trim.
+// Named whitespace-only names.
 var blanks = map[string]string{
 	"spaces":   "   ",
 	"a tab":    "\t",
@@ -35,7 +35,7 @@ func (s *scenarioState) renameVendorBlank(kind string) error {
 		vendors.UpdateVendorRequest{Name: blanks[kind], IsActive: true})
 }
 
-// The decoy only matches an unescaped wildcard.
+// Decoy matches unescaped wildcards.
 func (s *scenarioState) seedWildcardPair(wildcard string) error {
 	nonce := time.Now().UnixNano()
 	for _, name := range []string{
@@ -79,13 +79,13 @@ func (s *scenarioState) sendGet(path string) error {
 	return s.sendRequest(http.MethodGet, path, nil)
 }
 
-// attachForeignLogo points at another vendor's upload.
+// Logo key of another vendor.
 func (s *scenarioState) attachForeignLogo() error {
 	key := fmt.Sprintf("vendors/%d/logo.png", s.vendorID+1)
 	return s.sendRequest(http.MethodPatch, s.vendorPath("/logo"), vendors.UpdateLogoRequest{ObjectKey: key})
 }
 
-// seedVendorOffering links n fresh items in one statement.
+// seedVendorOffering links n items.
 func (s *scenarioState) seedVendorOffering(n int) error {
 	ctx := context.Background()
 	rows, err := testutil.Pool(s.t).Query(ctx, `

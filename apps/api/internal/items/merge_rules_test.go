@@ -44,7 +44,7 @@ func TestAutoCreateKey(t *testing.T) {
 	assert.Equal(t, autoCreateKey("", "BAUT  besi"), autoCreateKey("", "baut besi"))
 }
 
-// A weaker tier never demotes a hit.
+// Weaker tiers never demote.
 func TestMergeAdvanced_KeepsStrongestTier(t *testing.T) {
 	items := []SearchResult{{ID: 7, Name: "Baut", Score: 0.4, MatchTier: "FUZZY"}}
 	offers := []VendorOfferHit{{ItemID: 7, VendorID: 3, VendorName: "CV Baut", Score: 0.6}}
@@ -63,7 +63,7 @@ func TestMergeAdvanced_KeepsStrongestTier(t *testing.T) {
 	assert.Equal(t, map[string]int{"VENDOR_OFFER": 1}, resp.Counts)
 }
 
-// Two offers list their tier once.
+// Repeated tier listed once.
 func TestMergeAdvanced_RepeatedTierListedOnce(t *testing.T) {
 	offers := []VendorOfferHit{
 		{ItemID: 9, VendorID: 1, VendorName: "CV Satu", Score: 0.5},

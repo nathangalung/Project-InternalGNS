@@ -12,7 +12,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/vendors"
 )
 
-// Every write and read fails closed.
+// DB failures stay generic.
 func TestHandler_DBFailureIsGenericProblem(t *testing.T) {
 	srv := mountedSrv(t, testutil.FakeExec{})
 	cases := []struct {
@@ -35,7 +35,7 @@ func TestHandler_DBFailureIsGenericProblem(t *testing.T) {
 	}
 }
 
-// Later queries fail after earlier ones pass.
+// Later queries fail.
 func TestHandler_LaterQueryFailure(t *testing.T) {
 	vendorID, _ := seedVendorWithItems(t, 1)
 	cases := []struct {

@@ -54,7 +54,7 @@ func assertInternalProblem(t *testing.T, res *http.Response) {
 
 var errFlaky = errors.New("flaky tx failure")
 
-// flakyTx fails once its budget runs out.
+// flakyTx fails past its budget.
 //
 // Begin wraps the savepoint too, so a repo that opens its own transaction
 // keeps spending the same budget.

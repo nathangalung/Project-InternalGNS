@@ -12,7 +12,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Every write and read fails closed.
+// DB failures stay generic.
 func TestHandler_DBFailureIsGenericProblem(t *testing.T) {
 	srv := mountedSrv(t, testutil.FakeExec{})
 	cases := []struct {
@@ -39,7 +39,7 @@ func TestHandler_DBFailureIsGenericProblem(t *testing.T) {
 	}
 }
 
-// The parent check passes, then the read fails.
+// Read fails after parent.
 func TestHandler_SecondQueryFailure(t *testing.T) {
 	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("FAULT")})
 	id := itoa(it.ID)
@@ -65,7 +65,7 @@ func TestHandler_SecondQueryFailure(t *testing.T) {
 	}
 }
 
-// A failed recheck is not "inactive".
+// Recheck failure is not inactive.
 func TestRepo_AddVendor_RecheckFailureIsNotInactive(t *testing.T) {
 	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("RECHECK")})
 	vendorID := createVendor(t, false)
@@ -78,7 +78,7 @@ func TestRepo_AddVendor_RecheckFailureIsNotInactive(t *testing.T) {
 	assert.NotErrorIs(t, err, items.ErrVendorNotFound)
 }
 
-// Each import stage names its row.
+// Import errors name their stage.
 func TestRepo_MatchRows_FailureNamesStage(t *testing.T) {
 	cases := []struct {
 		budget int
@@ -145,7 +145,7 @@ func TestRepo_MoreErrorPaths(t *testing.T) {
 	}
 }
 
-// A missing item has no match.
+// Missing item has no match.
 func TestRepo_MatchWithVendorByID_Missing(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, err := items.NewRepo(tx, testutil.Store(t)).MatchWithVendorByID(ctx, 999999999)

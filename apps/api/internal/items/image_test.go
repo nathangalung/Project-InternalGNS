@@ -15,7 +15,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// proxyKey reads bucket and key back.
+// proxyKey parses the proxy path.
 func proxyKey(t *testing.T, raw string) (bucket, key string) {
 	t.Helper()
 	u, err := url.Parse(raw)
@@ -70,7 +70,7 @@ func TestHandler_Image_UploadAttachDownload(t *testing.T) {
 	assert.Equal(t, presign.ObjectKey, key)
 }
 
-// Wrong owner or type never attaches (MD-14).
+// Bad image input never attaches.
 func TestHandler_Image_RejectsBadInput(t *testing.T) {
 	srv := mountedSrv(t, testutil.Pool(t))
 	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("IMAGE BAD")})

@@ -13,7 +13,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 )
 
-// Named blanks, since Gherkin cells trim.
+// Named whitespace-only names.
 var blanks = map[string]string{
 	"spaces":   "   ",
 	"a tab":    "\t",
@@ -30,7 +30,7 @@ func (s *scenarioState) renameClientBlank(kind string) error {
 		clients.UpdateClientRequest{Name: blanks[kind], CountryCode: "IDN", IsActive: true})
 }
 
-// postClient creates a client, keeping s.clientID.
+// postClient keeps s.clientID.
 func (s *scenarioState) postClient(name string) (int64, error) {
 	number, err := s.freeNumber()
 	if err != nil {
@@ -51,7 +51,7 @@ func (s *scenarioState) postClient(name string) (int64, error) {
 	return c.ID, nil
 }
 
-// The decoy only matches an unescaped wildcard.
+// Decoy matches unescaped wildcards.
 func (s *scenarioState) seedWildcardPair(wildcard string) error {
 	nonce := time.Now().UnixNano()
 	if _, err := s.postClient(fmt.Sprintf("ATDD LIAR X %d", nonce)); err != nil {
@@ -86,7 +86,7 @@ func (s *scenarioState) sendMethod(method, path string) error {
 	return s.sendRequest(method, path, body)
 }
 
-// otherClientTouchesContact aims at another client's URL.
+// Contact via foreign client.
 func (s *scenarioState) otherClientTouchesContact(method string) error {
 	other, err := s.postClient(s.uniqueName("ATDD CLIENT ASING"))
 	if err != nil {
@@ -100,7 +100,7 @@ func (s *scenarioState) otherClientTouchesContact(method string) error {
 	return s.sendRequest(method, path, body)
 }
 
-// The owner still lists the seeded contact.
+// Owner still lists contact.
 func (s *scenarioState) contactListedUnchanged() error {
 	if err := s.listContacts(); err != nil {
 		return err

@@ -13,7 +13,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Every write and read fails closed.
+// DB failures stay generic.
 func TestHandler_DBFailureIsGenericProblem(t *testing.T) {
 	srv := mountedSrv(t, testutil.FakeExec{})
 	cases := []struct {
@@ -40,7 +40,7 @@ func TestHandler_DBFailureIsGenericProblem(t *testing.T) {
 	}
 }
 
-// The parent check passes, then the read fails.
+// Read fails after parent.
 func TestHandler_SecondQueryFailure(t *testing.T) {
 	id := strconv.FormatInt(newClient(t), 10)
 	cases := []struct {
@@ -64,7 +64,7 @@ func TestHandler_SecondQueryFailure(t *testing.T) {
 	}
 }
 
-// A failed recheck is not a lock.
+// Recheck failure is not locked.
 func TestRepo_Update_RecheckFailureIsNotNumberLocked(t *testing.T) {
 	exec := &testutil.CountingExec{Inner: testutil.Pool(t), FailAfter: 1}
 	repo := clients.NewRepo(exec, testutil.Store(t))

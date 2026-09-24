@@ -14,7 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
 )
 
-// Named blanks, since Gherkin cells trim.
+// Named whitespace-only names.
 var blanks = map[string]string{
 	"spaces":   "   ",
 	"a tab":    "\t",
@@ -26,7 +26,7 @@ func (s *scenarioState) renameItemBlank(kind string) error {
 		items.UpdateItemRequest{Name: blanks[kind], IsActive: true})
 }
 
-// attachForeignImage points at another item's upload.
+// Image key of another item.
 func (s *scenarioState) attachForeignImage() error {
 	key := fmt.Sprintf("items/%d/foto.jpg", s.itemID+1)
 	return s.sendRequest(http.MethodPatch, "/items/"+strconv.FormatInt(s.itemID, 10)+"/image",
@@ -63,7 +63,7 @@ func (k *katalog) search(s *scenarioState, query string) error {
 	return s.sendRequest(http.MethodGet, "/items/search-advanced?q="+url.QueryEscape(k.token)+"&"+query, nil)
 }
 
-// Page size and total, no repeats.
+// Page size, total, no repeats.
 func (k *katalog) pageHolds(s *scenarioState, hits, total int) error {
 	var resp items.AdvancedSearchResponse
 	if err := json.Unmarshal(s.body, &resp); err != nil {

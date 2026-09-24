@@ -16,7 +16,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// proxyKey reads bucket and key back.
+// proxyKey parses the proxy path.
 func proxyKey(t *testing.T, raw string) (bucket, key string) {
 	t.Helper()
 	u, err := url.Parse(raw)
@@ -87,7 +87,7 @@ func TestHandler_Logo_UploadRejectsBadName(t *testing.T) {
 	}
 }
 
-// A missing client is 404 everywhere.
+// Missing client is 404.
 func TestHandler_Logo_MissingClient(t *testing.T) {
 	srv := mountedSrv(t, testutil.Pool(t))
 	cases := []struct {

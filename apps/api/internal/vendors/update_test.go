@@ -12,7 +12,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/vendors"
 )
 
-// PUT replaces the whole record (MD-05, API side).
+// PUT replaces contactInfo (MD-05).
 //
 // The detail form clears email and phone by sending contactInfo without
 // them; the API must store exactly what it was sent, not merge.
@@ -44,7 +44,7 @@ func TestHandler_Update_ReplacesContactInfo(t *testing.T) {
 	}
 }
 
-// Deactivation shows on read and list.
+// Deactivation shows on read.
 func TestHandler_Update_Deactivates(t *testing.T) {
 	srv := newSrv(t)
 	id := insertVendor(t, "CV Tutup Buku", "Medan", true)
