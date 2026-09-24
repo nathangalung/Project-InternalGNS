@@ -140,17 +140,46 @@ TableStates`, and repeated class strings live in `lib/ui.ts`.
 ## Testing
 
 - Go unit tests are table-driven and run without a database.
-- Integration tests and the godog acceptance suites (`internal/*/acceptance`)
-  need PostgreSQL and skip cleanly when it is unreachable. Start one with
-  `make db-up` to run them.
+- Go integration tests and the godog acceptance suites (`internal/*/acceptance`)
+  read `TEST_DATABASE_URL` only, never `DATABASE_URL`, and skip when it is
+  unset. The reset helpers ask the connection for `current_database()` and
+  refuse any name that does not end in `test` (`gns_citest`, `gns_<task>_test`),
+  so a stray DSN cannot truncate `gns_quotation`. `make test-api` (alias
+  `make test-api-ci`) drops and recreates the throwaway `gns_citest` and runs
+  the suite the way CI does; `CI_TEST_DB=<name>_test` picks another database.
 - A test must create the rows it asserts on. `testutil.Pool` only migrates and
   applies `SeedMasterIfMissing`, so anything beyond that handful of master rows
   exists locally by accident: acceptance runs commit, and the dev volume keeps
   what `make seed-dev` loaded. Asserting on ambient volume passes locally and
-  fails on CI. `make test-api-ci` drops and recreates a throwaway database and
-  runs the suite the way CI does; use it before pushing anything that touches
+  fails on CI. Use `make test-api-ci` before pushing anything that touches
   integration tests.
-- Web tests are Vitest, pure logic only, in a node environment with no DOM.
+- Web logic tests are Vitest in node (`src/**/*.test.ts`). Hook tests are
+  `*.hook.test.ts(x)` in a happy-dom project and render through
+  `src/test/renderHook.tsx`. `bun run test` runs both projects.
+- Components and routes are covered by Playwright in `apps/web/e2e`: one
+  scenario per main or alternative flow, plus the role matrix. The setup
+  project signs each role in once through the API and `fixtures.ts` seeds the
+  tokens into sessionStorage (`test.use({ session: "finance" })`). It creates
+  or reactivates the `e2e.*@globalsakti.com` users and deactivates them
+  afterwards, since users cannot be deleted. `make e2e` runs against the dev
+  stack from `make dev`, with admin credentials from `apps/api/.env`;
+  `E2E_BASE_URL` and `E2E_API_URL` point it elsewhere. Login allows 5 attempts
+  per minute per IP, so a rerun inside a minute waits out the window.
+
+Coverage gates fail CI below their tier; `make cover` runs both locally.
+
+- Go: `make cover-api` runs the suite once with `-coverpkg=./...`, so a
+  statement counts when any package's tests run it, then `scripts/covercheck`
+  checks each package against `scripts/covercheck/thresholds.txt`. Business
+  packages need 98%, `app` and `shared/*` 95%, `storage` 90% (MinIO running).
+  `cmd/*`, `scripts`, `testutil`, acceptance suites, `db/functions` and
+  `db/migrations` are excluded; the CI e2e job boots `cmd/api` as its smoke. A
+  new package fails until it is tiered or excluded. The checker prints each
+  gap in points and statements. Raise a minimum once coverage passes it, and
+  never lower one.
+- Web: `bun run coverage` (`make cover-web`). Logic (`src/lib`,
+  `components/shared/*.ts`, every non-hook `.ts` under `features`) needs 98%
+  statements and 95% branches, hooks 90% statements. `.tsx` has no line gate.
 
 ## Conventions
 
