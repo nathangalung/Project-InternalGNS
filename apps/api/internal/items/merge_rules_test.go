@@ -62,3 +62,18 @@ func TestMergeAdvanced_KeepsStrongestTier(t *testing.T) {
 	}
 	assert.Equal(t, map[string]int{"VENDOR_OFFER": 1}, resp.Counts)
 }
+
+// Two offers list their tier once.
+func TestMergeAdvanced_RepeatedTierListedOnce(t *testing.T) {
+	offers := []VendorOfferHit{
+		{ItemID: 9, VendorID: 1, VendorName: "CV Satu", Score: 0.5},
+		{ItemID: 9, VendorID: 2, VendorName: "CV Dua", Score: 0.8},
+	}
+	resp := mergeAdvanced("baut", nil, offers, nil, map[int64]ItemMeta{9: {Active: true, Name: "Baut"}}, nil, 10, 0)
+	if assert.Len(t, resp.Hits, 1) {
+		h := resp.Hits[0]
+		assert.Equal(t, []string{"VENDOR_OFFER"}, h.Tiers)
+		assert.InDelta(t, 0.8, h.Score, 1e-6, "the better offer's score wins")
+		assert.Equal(t, "CV Satu", *h.VendorName, "the first offer names the vendor")
+	}
+}

@@ -91,8 +91,8 @@ func TestHandler_Update_RewritesItem(t *testing.T) {
 	assert.False(t, got.IsActive)
 }
 
-// minScore gates the item layer.
-func TestHandler_SearchAdvanced_MinScore(t *testing.T) {
+// Query knobs gate the hits.
+func TestHandler_SearchAdvanced_QueryKnobs(t *testing.T) {
 	name := uniqueItemName("AMBANG")
 	it := createItem(t, items.CreateItemRequest{Name: name})
 	cases := []struct {
@@ -102,6 +102,8 @@ func TestHandler_SearchAdvanced_MinScore(t *testing.T) {
 	}{
 		{"default threshold finds the exact name", "", true},
 		{"unreachable threshold hides it", "&minScore=1.5", false},
+		{"active filter keeps an active item", "&isActive=true", true},
+		{"inactive filter drops an active item", "&isActive=false", false},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
