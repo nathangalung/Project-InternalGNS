@@ -125,6 +125,8 @@ func buildExportData(
 	items := make([]exportItem, 0, len(d.Items))
 	productCount := 0
 	hasShipping := false
+	// fn_create_quotation writes at most one shipping line.
+	deliveryTime := ""
 
 	for i, it := range d.Items {
 		unitCode := ""
@@ -134,6 +136,9 @@ func buildExportData(
 		shipping := it.ItemType == "shipping"
 		if shipping {
 			hasShipping = true
+			if it.ShippingDays != nil {
+				deliveryTime = daysText(*it.ShippingDays)
+			}
 		} else {
 			productCount++
 		}
@@ -160,7 +165,7 @@ func buildExportData(
 	}
 	validity := ""
 	if d.ValidityDays != nil {
-		validity = strconv.Itoa(*d.ValidityDays) + " days"
+		validity = daysText(*d.ValidityDays)
 	}
 	attn := ""
 	if d.ContactName != nil {
@@ -186,7 +191,7 @@ func buildExportData(
 		PPN:           pdfgen.FormatIDRCents(d.PpnAmount),
 		GrandTotal:    pdfgen.FormatIDRCents(d.GrandTotal),
 		DeliveryPlace: pdfgen.LatexEscape(delivery),
-		DeliveryTime:  "",
+		DeliveryTime:  pdfgen.LatexEscape(deliveryTime),
 		Payment:       pdfgen.LatexEscape(payment),
 		Validity:      pdfgen.LatexEscape(validity),
 		SignerName:    pdfgen.LatexEscape(signerName),
@@ -243,4 +248,12 @@ func (h *ExportHandler) contactComm(ctx context.Context, d QuotationDetail, c cl
 func isPriced(price string) bool {
 	v, err := strconv.ParseFloat(price, 64)
 	return err == nil && v > 0
+}
+
+// daysText renders a day count.
+func daysText(n int) string {
+	if n == 1 {
+		return "1 day"
+	}
+	return strconv.Itoa(n) + " days"
 }

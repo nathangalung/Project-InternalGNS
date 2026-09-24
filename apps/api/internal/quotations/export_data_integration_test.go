@@ -99,3 +99,20 @@ func TestBuildExportData_ReconcilesWithStoredQuotation(t *testing.T) {
 		"offer %q must name the catalog item %q", got.Items[0].Offer, offeredName)
 	assert.Equal(t, "KABEL NYM 3x2.5", got.Items[2].Offer)
 }
+
+// Q-12: the stored shipping days print as DELIVERY TIME.
+func TestBuildExportData_DeliveryTimeFromStoredShipping(t *testing.T) {
+	ctx, repo, _ := newRepo(t)
+
+	req := sampleCreate()
+	days := 5
+	req.ShippingDays = &days
+	id, err := repo.Create(ctx, req, seedUserID)
+	require.NoError(t, err)
+	d, err := repo.GetDetail(ctx, id)
+	require.NoError(t, err)
+
+	got := quotations.BuildExportData(d, map[int16]string{}, "", "", "Director")
+	assert.Equal(t, "5 days", got.DeliveryTime)
+	assert.Equal(t, "MV TEST", got.DeliveryPlace)
+}

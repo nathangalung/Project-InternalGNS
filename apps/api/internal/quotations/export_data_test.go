@@ -191,3 +191,66 @@ func TestBuildExportData_PaperSize(t *testing.T) {
 		}
 	}
 }
+
+// The footer terms come from the header and the shipping line.
+func TestBuildExportData_FooterTerms(t *testing.T) {
+	withDays := func(days *int) QuotationItem {
+		s := shippingLine(2, "100.00")
+		s.ShippingDays = days
+		return s
+	}
+	one, three := 1, 3
+	product := productLine(1, "ITEM", "1.00", "1000.00", "1000.00")
+
+	cases := []struct {
+		name         string
+		vessel       *string
+		payment      *string
+		validity     *int
+		items        []QuotationItem
+		wantPlace    string
+		wantTime     string
+		wantPayment  string
+		wantValidity string
+	}{
+		{
+			name:   "every term set",
+			vessel: qStr("MV Global Star & Co"), payment: qStr("30 hari"), validity: &three,
+			items:     []QuotationItem{product, withDays(&three)},
+			wantPlace: `MV Global Star \& Co`, wantTime: "3 days", wantPayment: "30 hari", wantValidity: "3 days",
+		},
+		{
+			name:     "one day is singular",
+			validity: &one,
+			items:    []QuotationItem{product, withDays(&one)},
+			wantTime: "1 day", wantValidity: "1 day",
+		},
+		{
+			name:  "shipping line without days",
+			items: []QuotationItem{product, withDays(nil)},
+		},
+		{
+			name:  "no shipping line",
+			items: []QuotationItem{product},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			h := header("1000.00", "1100.00", "0.00", "1100.00", "1008.33", "121.00", "1221.00")
+			h.VesselName, h.PaymentTerms, h.ValidityDays = tc.vessel, tc.payment, tc.validity
+			got := buildExportData(QuotationDetail{Quotation: h, Items: tc.items}, qUnits, "", "", "Director")
+
+			checks := []struct{ field, got, want string }{
+				{"DeliveryPlace", got.DeliveryPlace, tc.wantPlace},
+				{"DeliveryTime", got.DeliveryTime, tc.wantTime},
+				{"Payment", got.Payment, tc.wantPayment},
+				{"Validity", got.Validity, tc.wantValidity},
+			}
+			for _, c := range checks {
+				if c.got != c.want {
+					t.Errorf("%s = %q, want %q", c.field, c.got, c.want)
+				}
+			}
+		})
+	}
+}
