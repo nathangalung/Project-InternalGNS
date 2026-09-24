@@ -170,7 +170,24 @@ func (s *scenarioState) invoiceListIsEmpty() error {
 	return nil
 }
 
+// updateDueDateStale sends a row version already spent.
+func (s *scenarioState) updateDueDateStale(date string) error {
+	if err := s.readInvoiceByID(); err != nil {
+		return err
+	}
+	var inv invoices.Invoice
+	if err := json.Unmarshal(s.body, &inv); err != nil {
+		return err
+	}
+	return s.sendRequestWithHeaders(http.MethodPatch,
+		"/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/dates",
+		map[string]string{"dueDate": date + "T00:00:00+07:00"},
+		map[string]string{"If-Match": strconv.FormatInt(int64(inv.RowVersion-1), 10)},
+	)
+}
+
 func (s *scenarioState) registerFilingSteps(sc *godog.ScenarioContext) {
+	sc.Step(`^the user updates invoice due date to "([^"]+)" with a stale version$`, s.updateDueDateStale)
 	sc.Step(`^a delivered purchase order of (\d+) units at ([\d.]+) with a (\d+) percent discount$`, s.deliveredDiscountedPurchaseOrder)
 	sc.Step(`^the user exports the invoice to Coretax$`, s.exportCoretax)
 	sc.Step(`^every Coretax line balances$`, s.everyCoretaxLineBalances)

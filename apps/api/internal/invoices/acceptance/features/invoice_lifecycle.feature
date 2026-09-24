@@ -84,6 +84,13 @@ Feature: Invoice lifecycle
     Then the response status is 422
     And the problem detail is "Invoice yang sudah dibayar atau dibatalkan tidak dapat diubah tanggalnya."
 
+  Scenario: A stale row version is a conflict and keeps the dates
+    Given a delivered purchase order
+    When the user updates the invoice dates to invoice "2031-01-10" due "2031-02-09"
+    And the user updates invoice due date to "2031-03-01" with a stale version
+    Then the response status is 409
+    And the invoice dates read invoice "2031-01-10" due "2031-02-09"
+
   Scenario Outline: A due date before the invoice date is refused
     Given a delivered purchase order
     When the user updates the invoice dates to invoice "2031-01-10" due "2031-02-09"
