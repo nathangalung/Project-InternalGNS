@@ -107,3 +107,67 @@ Feature: Client lifecycle
     When the user changes the client number
     Then the response status is 422
     And the client number error reads "Nomor klien tidak dapat diubah karena sudah dipakai pada penawaran."
+
+  Scenario Outline: Whitespace-only names are rejected on create and update
+    Given an existing client
+    When the user creates a client named with only <blank>
+    Then the response status is 422
+    When the user renames the client to only <blank>
+    Then the response status is 422
+    When the user reads the client
+    Then the client name matches the seeded value
+
+    Examples:
+      | blank    |
+      | spaces   |
+      | a tab    |
+      | newlines |
+
+  Scenario Outline: A search with LIKE wildcards matches literally
+    Given a client named with "<wildcard>" and a decoy without it
+    When the user lists clients searching for the literal name
+    Then the response status is 200
+    And the client list holds only the client with the wildcard
+
+    Examples:
+      | wildcard |
+      | %        |
+      | _        |
+
+  Scenario Outline: A search with a NUL byte returns 400
+    When the user sends GET "<path>"
+    Then the response status is 400
+
+    Examples:
+      | path                       |
+      | /clients/?q=pt%00maju      |
+      | /clients/search?q=pt%00    |
+      | /clients/?countryCode=%ff  |
+
+  Scenario Outline: Contacts of a missing client return 404
+    When the user sends <method> "/clients/999999999/contacts"
+    Then the response status is 404
+
+    Examples:
+      | method |
+      | GET    |
+      | POST   |
+
+  Scenario Outline: A contact cannot be changed through another client
+    Given an existing client
+    And the client has a contact with an email and a title
+    When another client <method>s the contact
+    Then the response status is 404
+    And the contact is still listed unchanged
+
+    Examples:
+      | method |
+      | PATCH  |
+      | DELETE |
+
+  Scenario: A new active client moves the summary
+    Given the client summary is noted
+    When the user creates a client
+    Then the response status is 201
+    When the user reads client summary
+    Then the summary grew by 1 active client this month

@@ -32,6 +32,7 @@ type scenarioState struct {
 	name     string
 	contact  clients.Contact
 	number   string
+	summary  clients.Summary
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
@@ -368,6 +369,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 			state.name = ""
 			state.contact = clients.Contact{}
 			state.number = ""
+			state.summary = clients.Summary{}
 			return ctx, nil
 		})
 
@@ -403,6 +405,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the client number error reads "([^"]+)"$`, state.numberErrorReads)
 		sc.Step(`^a quotation references the client$`, state.quoteClient)
 		sc.Step(`^the user changes the client number$`, state.changeNumber)
+		registerRuleSteps(sc, state)
 	}
 }
 
