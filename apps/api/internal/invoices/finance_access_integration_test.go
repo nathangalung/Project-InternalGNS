@@ -57,6 +57,7 @@ func TestRouter_FinanceWorksTheInvoicePage(t *testing.T) {
 	require.NoError(t, tx.Commit(ctx))
 
 	cleaner := testutil.NewCleaner(t)
+	cleaner.Quotation(qid)
 	userRepo := users.NewRepo(pool, store)
 	ids := map[users.Role]int64{}
 	for _, role := range []users.Role{users.RoleFinance, users.RoleOperational} {

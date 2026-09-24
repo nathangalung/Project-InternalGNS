@@ -1,9 +1,11 @@
 package invoices_test
 
 import (
-	"context"
+	"bytes"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -17,6 +19,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
@@ -44,7 +47,7 @@ func TestExport_NewExportHandler(t *testing.T) {
 }
 
 func TestExport_PDF_BadID(t *testing.T) {
-	srv := exportServer(t)
+	srv := exportServer(t, testutil.Pool(t), templatesRoot(t))
 	res, err := srv.Client().Get(srv.URL + "/invoices/abc/pdf")
 	require.NoError(t, err)
 	defer res.Body.Close()
@@ -52,42 +55,102 @@ func TestExport_PDF_BadID(t *testing.T) {
 }
 
 func TestExport_PDF_NotFound(t *testing.T) {
-	srv := exportServer(t)
+	srv := exportServer(t, testutil.Pool(t), templatesRoot(t))
 	res, err := srv.Client().Get(srv.URL + "/invoices/99999999/pdf")
 	require.NoError(t, err)
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
-func TestExport_PDF_HappyPath(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("requires xelatex stub")
-	}
-
-	ctx, tx := testutil.BeginTx(t)
+// The PDF renders with xelatex and fails cleanly without it.
+func TestExport_PDF_Renders(t *testing.T) {
+	_, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
-	require.NoError(t, tx.Commit(ctx))
-	t.Cleanup(func() {
-		_, _ = testutil.Pool(t).Exec(context.Background(),
-			"DELETE FROM invoice_items WHERE invoice_id=$1; DELETE FROM invoices WHERE id=$1", invID)
-	})
 
-	srv := exportServer(t)
+	srv := exportServer(t, tx, templatesRoot(t))
 	res, err := srv.Client().Get(srv.URL + "/invoices/" + itoaInv(invID) + "/pdf")
 	require.NoError(t, err)
 	defer res.Body.Close()
-	// Status may be 200 (xelatex available) or 500 (missing binary/template). Both exercise full handler path.
-	assert.Contains(t, []int{http.StatusOK, http.StatusInternalServerError}, res.StatusCode)
+	body, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+
+	if _, err := exec.LookPath("xelatex"); err != nil {
+		assert.Equal(t, http.StatusInternalServerError, res.StatusCode, "no xelatex: %s", body)
+		assert.Contains(t, res.Header.Get("Content-Type"), "application/problem+json")
+		return
+	}
+	require.Equal(t, http.StatusOK, res.StatusCode, string(body))
+	assert.Equal(t, "application/pdf", res.Header.Get("Content-Type"))
+	assert.True(t, bytes.HasPrefix(body, []byte("%PDF-")), "body is not a PDF")
 }
 
-func exportServer(t *testing.T) *httptest.Server {
-	t.Helper()
-	pool := testutil.Pool(t)
+// Each failure before the file is written is a 500.
+func TestExport_PDF_Failures(t *testing.T) {
+	_, tx := testutil.BeginTx(t)
+	_, _, invID := deliveredPOWithInvoice(t, tx)
+	path := "/invoices/" + itoaInv(invID) + "/pdf"
+
+	cases := []struct {
+		name string
+		exec db.Executor
+		root string
+	}{
+		{name: "invoice read fails", exec: testutil.FakeExec{}, root: templatesRoot(t)},
+		{name: "line read fails", exec: &testutil.CountingExec{Inner: tx, FailAfter: 1}, root: templatesRoot(t)},
+		{name: "template missing", exec: tx, root: t.TempDir()},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := exportServer(t, tc.exec, tc.root)
+			res, err := srv.Client().Get(srv.URL + path)
+			require.NoError(t, err)
+			defer res.Body.Close()
+			assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
+		})
+	}
+}
+
+// The header prints the vessel, PO and buyer.
+func TestExport_PDF_Header(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	vessel := "MV Sinar & Bahari"
+	_, poID, invID := deliverQuotation(t, tx, quotations.CreateRequest{
+		CompanyClientID: seedCompanyID,
+		DiscountPct:     "0",
+		VesselName:      &vessel,
+		Items: []quotations.CreateItem{{
+			RequestedName: "Header Product", Qty: "1", UnitID: seedUnitID, SellingPrice: "100000",
+		}},
+	})
 	store := testutil.Store(t)
+	po, err := purchaseorders.NewRepo(tx, store).GetByID(ctx, poID)
+	require.NoError(t, err)
+	client, err := clients.NewRepo(tx, store).GetByID(ctx, seedCompanyID)
+	require.NoError(t, err)
+	repo := invoices.NewRepo(tx, store)
+	inv, err := repo.GetByID(ctx, invID)
+	require.NoError(t, err)
+	items, err := repo.ListItems(ctx, invID)
+	require.NoError(t, err)
+
+	h := invoices.NewExportHandler(repo, clients.NewRepo(tx, store), quotations.NewRepo(tx, store),
+		purchaseorders.NewRepo(tx, store), pdfgen.NewRenderer(t.TempDir()), deps.PdfSettings{})
+	got := h.PDFHeaderForTest(ctx, inv, items)
+
+	assert.Equal(t, `MV Sinar \& Bahari`, got.VesselName, "escaped for LaTeX")
+	assert.Equal(t, pdfgen.LatexEscape(po.PoNumber), got.PONo)
+	assert.Equal(t, po.PoDate.Format("2 January 2006"), got.PODate)
+	assert.Equal(t, pdfgen.LatexEscape(pdfgen.StrDeref(client.NPWP)), got.CompanyNPWP)
+	assert.Equal(t, inv.InvoiceDate.Format("2 January 2006"), got.InvoiceDate)
+	assert.Equal(t, inv.DueDate.Format("2 January 2006"), got.DueDate)
+}
+
+func exportServer(t *testing.T, exec db.Executor, root string) *httptest.Server {
+	t.Helper()
 	d := deps.Deps{
-		Pool:          pool,
-		Queries:       store,
-		TemplatesRoot: templatesRoot(t),
+		Pool:          exec,
+		Queries:       testutil.Store(t),
+		TemplatesRoot: root,
 		Pdf: deps.PdfSettings{
 			PaymentTerms:  "Net 30",
 			BankName:      "BCA",

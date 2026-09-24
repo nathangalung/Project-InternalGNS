@@ -664,6 +664,12 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 
 func TestDashboardFeatures(t *testing.T) {
 	testutil.RequireDB(t)
+	// Leave no scenario rows behind.
+	t.Cleanup(func() {
+		if err := testutil.ResetCommercialDomain(context.Background(), testutil.Pool(t)); err != nil {
+			t.Errorf("reset after suite: %v", err)
+		}
+	})
 	suite := godog.TestSuite{
 		ScenarioInitializer: initScenario(t),
 		Options: &godog.Options{

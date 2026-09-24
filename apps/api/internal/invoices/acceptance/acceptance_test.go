@@ -146,6 +146,11 @@ func (s *scenarioState) deliverLine(line quotations.CreateItem) error {
 		DiscountPct:     "0",
 		Items:           []quotations.CreateItem{line},
 	}
+	return s.deliverQuotation(create)
+}
+
+// deliverQuotation walks a quotation to its invoice.
+func (s *scenarioState) deliverQuotation(create quotations.CreateRequest) error {
 	if err := s.sendRequest(http.MethodPost, "/quotations/", create); err != nil {
 		return err
 	}
@@ -810,12 +815,19 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner, roles *roleUsers) fun
 		sc.Step(`^the last history entry carries the reason "([^"]+)"$`, state.invoiceHistoryEndsWithReason)
 		sc.Step(`^the invoice (offers|withholds) a replacement$`, state.invoiceReplaceable)
 		sc.Step(`^the user acts as (finance|operational|superadmin)$`, state.actAs)
+		state.registerFilingSteps(sc)
 	}
 }
 
 func TestInvoiceFeatures(t *testing.T) {
 	testutil.RequireDB(t)
 	cleaner := testutil.NewCleaner(t)
+	// Runs before the cleaner: the last scenario's rows reference its users.
+	t.Cleanup(func() {
+		if err := testutil.ResetCommercialDomain(context.Background(), testutil.Pool(t)); err != nil {
+			t.Errorf("reset after suite: %v", err)
+		}
+	})
 	suite := godog.TestSuite{
 		ScenarioInitializer: initScenario(t, cleaner, newRoleUsers(t, cleaner)),
 		Options: &godog.Options{

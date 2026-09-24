@@ -241,3 +241,47 @@ Feature: Invoice lifecycle
     When the user acts as operational
     And the user tries to transition the invoice to "sent"
     Then the response status is 403
+
+  Scenario: Each Coretax line balances at the gross price
+    Given a delivered purchase order of 3 units at 26646.07 with a 10 percent discount
+    When the user exports the invoice to Coretax
+    Then the response status is 200
+    And every Coretax line balances
+    And the Coretax lines sum to the invoice DPP and discount
+
+  Scenario: A past-due sent invoice reads Terlambat and can still be paid
+    Given a delivered purchase order
+    When the user transitions the invoice through "sent"
+    And the user updates the invoice dates to invoice "2019-12-02" due "2020-01-01"
+    Then the response status is 200
+    When the user lists invoices with effective status "overdue"
+    Then the invoice list is exactly the invoice
+    When the user transitions the invoice through "paid"
+    Then the invoice history is "draft>sent,sent>paid"
+    When the user lists invoices with effective status "overdue"
+    Then the invoice list is empty
+
+  Scenario Outline: Operational is refused every invoice endpoint
+    Given a delivered purchase order
+    When the user acts as operational
+    And the user calls <method> "<path>"
+    Then the response status is 403
+    When the user acts as superadmin
+    And the user reads the invoice by quotation
+    Then the invoice status is "draft"
+    And the invoice history is ""
+
+    Examples:
+      | method | path                                  |
+      | GET    | /invoices/                            |
+      | GET    | /invoices/summary                     |
+      | GET    | /invoices/export.xlsx                 |
+      | GET    | /invoices/coretax.xlsx                |
+      | GET    | /invoices/{id}                        |
+      | GET    | /invoices/{id}/items                  |
+      | GET    | /invoices/{id}/coretax.xml            |
+      | GET    | /invoices/{id}/pdf                    |
+      | GET    | /invoices/{id}/attachment/upload-url  |
+      | PATCH  | /invoices/{id}/attachment             |
+      | PATCH  | /invoices/{id}/dates                  |
+      | POST   | /invoices/{id}/replacement            |

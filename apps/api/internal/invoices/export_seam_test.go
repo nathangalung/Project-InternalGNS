@@ -27,3 +27,17 @@ func (h *ExportHandler) PDFTotalsForTest(
 	}
 	return out
 }
+
+// PDFHeaderForTest is the printed header block.
+type PDFHeaderForTest struct {
+	VesselName, PONo, PODate, CompanyNPWP, InvoiceDate, DueDate string
+}
+
+// Header block as it will be printed.
+func (h *ExportHandler) PDFHeaderForTest(ctx context.Context, inv Invoice, items []InvoiceItem) PDFHeaderForTest {
+	d := h.buildData(ctx, inv, items)
+	return PDFHeaderForTest{
+		VesselName: d.VesselName, PONo: d.PONo, PODate: d.PODate,
+		CompanyNPWP: d.CompanyNPWP, InvoiceDate: d.InvoiceDate, DueDate: d.DueDate,
+	}
+}
