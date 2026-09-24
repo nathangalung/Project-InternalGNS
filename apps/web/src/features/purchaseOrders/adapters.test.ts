@@ -5,6 +5,7 @@ import {
   detailsChanged,
   linesMissingUnit,
   lineToInput,
+  loadFailureMessage,
   type PoEditLine,
   poHistoryEntry,
   poItemsToProducts,
@@ -237,5 +238,17 @@ describe("poHistoryEntry", () => {
   it("falls back to the user id", () => {
     expect(poHistoryEntry(ev).date).toMatch(/· Pengguna #3$/)
     expect(poHistoryEntry(ev, "Admin").date).toMatch(/· Admin$/)
+  })
+})
+
+describe("loadFailureMessage", () => {
+  it.each([
+    [true, false, "Daftar satuan gagal dimuat"],
+    [false, true, "Item PO gagal dimuat."],
+    [true, true, "Item PO dan daftar satuan gagal dimuat."],
+  ])("units=%s items=%s", (units, items, start) => {
+    const msg = loadFailureMessage(units, items)
+    expect(msg.startsWith(start)).toBe(true)
+    expect(msg.endsWith("Coba lagi dalam beberapa saat.")).toBe(true)
   })
 })

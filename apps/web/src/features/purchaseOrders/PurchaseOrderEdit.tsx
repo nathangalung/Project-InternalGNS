@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useMemo, useState } from "react"
+import StateMessage from "@/components/shared/StateMessage"
 import { fromClientRow } from "@/features/clients/helpers"
 import { useClient } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
@@ -12,7 +13,13 @@ import { computeTaxBreakdown, formatNumber as formatRp, toNum } from "@/lib/form
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import type { PoUpdateItemsInput, PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
-import { linesMissingUnit, lineToInput, type PoEditLine, poLinesToEdit } from "./adapters"
+import {
+  linesMissingUnit,
+  lineToInput,
+  loadFailureMessage,
+  type PoEditLine,
+  poLinesToEdit,
+} from "./adapters"
 import { usePoItems, usePurchaseOrderByQuotation, useUpdatePoItems } from "./hooks"
 import { isPoLockRefusal, isVersionConflict } from "./PurchaseOrderDetail/helpers"
 
@@ -62,8 +69,18 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
   const [step, setStep] = useState(1)
 
   const { refetch: refetchPo } = usePurchaseOrderByQuotation(po.quotationId)
-  const { data: poItems, refetch: refetchItems } = usePoItems(po.id)
-  const { data: unitsData } = useUnits()
+  const {
+    data: poItems,
+    refetch: refetchItems,
+    isError: itemsError,
+    isFetching: itemsFetching,
+  } = usePoItems(po.id)
+  const {
+    data: unitsData,
+    refetch: refetchUnits,
+    isError: unitsError,
+    isFetching: unitsFetching,
+  } = useUnits()
   const { data: clientRow } = useClient(po.companyClientId)
   const updateMutation = useUpdatePoItems()
 
@@ -112,6 +129,19 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
     },
     [unitNameById],
   )
+
+  // A failed load says so.
+  //
+  // The form waits for lines and units, so without this a 4xx on either
+  // left it empty with Lanjut disabled and no reason given.
+  const unitsFailed = unitsError && !unitsData
+  const itemsFailed = itemsError && !poItems
+  const loadFailed = !hydrated && (unitsFailed || itemsFailed)
+
+  function retryLoad() {
+    if (unitsFailed) void refetchUnits()
+    if (itemsFailed) void refetchItems()
+  }
 
   // Once, when the PO, lines and units are all in.
   useEffect(() => {
@@ -250,108 +280,128 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
           </div>
         </div>
 
-        <ol className="m-0 flex w-full list-none items-start p-0">
-          {steps.map((s, i) => {
-            const isActive = i === step - 1
-            return (
-              <li key={s.n} className="contents">
-                <div
-                  className="flex flex-col items-center gap-2"
-                  aria-current={isActive ? "step" : undefined}
-                >
-                  <div
-                    className={`flex h-10 w-[162px] items-center justify-center rounded-lg transition-all duration-300 ease-[ease] motion-reduce:transition-none max-sm:w-12 ${
-                      isActive
-                        ? "bg-primary-700 opacity-100 shadow-[0px_10px_15px_-3px_rgba(109,40,217,0.2),0px_4px_6px_-4px_rgba(109,40,217,0.2)]"
-                        : "bg-dark-200 opacity-50"
-                    }`}
-                  >
-                    <span
-                      className={`text-sm font-bold ${isActive ? "text-white" : "text-dark-600"}`}
+        {loadFailed ? (
+          <StateMessage
+            title="Form edit belum dapat dibuka"
+            action={
+              <button
+                type="button"
+                className={ui.btnPrimary}
+                disabled={unitsFetching || itemsFetching}
+                onClick={retryLoad}
+              >
+                {unitsFetching || itemsFetching ? "Memuat..." : "Coba Lagi"}
+              </button>
+            }
+          >
+            <p className="m-0">{loadFailureMessage(unitsFailed, itemsFailed)}</p>
+          </StateMessage>
+        ) : (
+          <>
+            <ol className="m-0 flex w-full list-none items-start p-0">
+              {steps.map((s, i) => {
+                const isActive = i === step - 1
+                return (
+                  <li key={s.n} className="contents">
+                    <div
+                      className="flex flex-col items-center gap-2"
+                      aria-current={isActive ? "step" : undefined}
                     >
-                      {s.n}
-                    </span>
-                  </div>
-                  <span
-                    className={`text-caption uppercase tracking-[1px] ${
-                      isActive ? "font-bold text-primary-700" : "font-normal text-dark-600"
-                    }`}
-                  >
-                    {s.label}
-                  </span>
-                </div>
-                {i < steps.length - 1 && (
-                  <div
-                    aria-hidden="true"
-                    className="mt-5 h-0.5 min-w-2 flex-1 bg-[rgba(203,213,225,0.3)]"
-                  />
-                )}
-              </li>
-            )
-          })}
-        </ol>
+                      <div
+                        className={`flex h-10 w-[162px] items-center justify-center rounded-lg transition-all duration-300 ease-[ease] motion-reduce:transition-none max-sm:w-12 ${
+                          isActive
+                            ? "bg-primary-700 opacity-100 shadow-[0px_10px_15px_-3px_rgba(109,40,217,0.2),0px_4px_6px_-4px_rgba(109,40,217,0.2)]"
+                            : "bg-dark-200 opacity-50"
+                        }`}
+                      >
+                        <span
+                          className={`text-sm font-bold ${isActive ? "text-white" : "text-dark-600"}`}
+                        >
+                          {s.n}
+                        </span>
+                      </div>
+                      <span
+                        className={`text-caption uppercase tracking-[1px] ${
+                          isActive ? "font-bold text-primary-700" : "font-normal text-dark-600"
+                        }`}
+                      >
+                        {s.label}
+                      </span>
+                    </div>
+                    {i < steps.length - 1 && (
+                      <div
+                        aria-hidden="true"
+                        className="mt-5 h-0.5 min-w-2 flex-1 bg-[rgba(203,213,225,0.3)]"
+                      />
+                    )}
+                  </li>
+                )
+              })}
+            </ol>
 
-        {step === 1 && (
-          <Step2Product
-            products={products}
-            deleteProduct={(id) => setProducts((prev) => prev.filter((p) => p.id !== id))}
-            setEditingProduct={(p) => setEditingId(p?.id ?? null)}
-            setShowProductAdd={setShowProductAdd}
-            prodPageSize={prodPageSize}
-            setProdPageSize={setProdPageSize}
-            prodPage={prodPage}
-            setProdPage={setProdPage}
-            isRowDropdownOpen={isRowDropdownOpen}
-            setIsRowDropdownOpen={setIsRowDropdownOpen}
-            setShowDiscountModal={setShowDiscountModal}
-            discountPct={discountPct}
-            formatRp={formatRp}
-            summaryTotalHargaBeli={summaryTotalHargaBeli}
-            summaryTotalHargaJual={summaryTotalHargaJual}
-            nominalDiskon={nominalDiskon}
-            summarySubTotal={summarySubTotal}
-            summaryDpp={summaryDpp}
-            summaryPpn={summaryPpn}
-            onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
-          />
-        )}
-        {step === 2 && (
-          <Step3Shipping
-            shippingAddress={shippingAddress}
-            setShippingAddress={changeAddress}
-            shippingTime={shippingTime}
-            setShippingTime={changeTime}
-            shippingCost={shippingCost}
-            setShippingCost={setShippingCost}
-            isAlamatFilled={isAlamatFilled}
-            isWaktuFilled={isWaktuFilled}
-            formatRp={formatRp}
-          />
-        )}
-        {step === 3 && (
-          <Step4Summary
-            jatuhTempo={jatuhTempo}
-            setJatuhTempo={setJatuhTempo}
-            berlakuSampai={berlakuSampai}
-            setBerlakuSampai={setBerlakuSampai}
-            currentClient={currentClient}
-            shippingAddress={shippingAddress}
-            shippingTime={shippingTime}
-            shippingCost={shippingCost}
-            products={products}
-            discountPct={discountPct}
-            formatRp={formatRp}
-            summaryTotalProdukQty={summaryTotalProdukQty}
-            summaryTotalHargaBeli={summaryTotalHargaBeli}
-            summaryTotalHargaJual={summaryTotalHargaJual}
-            nominalDiskon={nominalDiskon}
-            summarySubTotal={summarySubTotal}
-            summaryDpp={summaryDpp}
-            summaryPpn={summaryPpn}
-            summaryShippingCost={summaryShippingCost}
-            summaryProfit={summaryProfit}
-            summaryGrandTotal={summaryGrandTotal}
-          />
+            {step === 1 && (
+              <Step2Product
+                products={products}
+                deleteProduct={(id) => setProducts((prev) => prev.filter((p) => p.id !== id))}
+                setEditingProduct={(p) => setEditingId(p?.id ?? null)}
+                setShowProductAdd={setShowProductAdd}
+                prodPageSize={prodPageSize}
+                setProdPageSize={setProdPageSize}
+                prodPage={prodPage}
+                setProdPage={setProdPage}
+                isRowDropdownOpen={isRowDropdownOpen}
+                setIsRowDropdownOpen={setIsRowDropdownOpen}
+                setShowDiscountModal={setShowDiscountModal}
+                discountPct={discountPct}
+                formatRp={formatRp}
+                summaryTotalHargaBeli={summaryTotalHargaBeli}
+                summaryTotalHargaJual={summaryTotalHargaJual}
+                nominalDiskon={nominalDiskon}
+                summarySubTotal={summarySubTotal}
+                summaryDpp={summaryDpp}
+                summaryPpn={summaryPpn}
+                onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
+              />
+            )}
+            {step === 2 && (
+              <Step3Shipping
+                shippingAddress={shippingAddress}
+                setShippingAddress={changeAddress}
+                shippingTime={shippingTime}
+                setShippingTime={changeTime}
+                shippingCost={shippingCost}
+                setShippingCost={setShippingCost}
+                isAlamatFilled={isAlamatFilled}
+                isWaktuFilled={isWaktuFilled}
+                formatRp={formatRp}
+              />
+            )}
+            {step === 3 && (
+              <Step4Summary
+                jatuhTempo={jatuhTempo}
+                setJatuhTempo={setJatuhTempo}
+                berlakuSampai={berlakuSampai}
+                setBerlakuSampai={setBerlakuSampai}
+                currentClient={currentClient}
+                shippingAddress={shippingAddress}
+                shippingTime={shippingTime}
+                shippingCost={shippingCost}
+                products={products}
+                discountPct={discountPct}
+                formatRp={formatRp}
+                summaryTotalProdukQty={summaryTotalProdukQty}
+                summaryTotalHargaBeli={summaryTotalHargaBeli}
+                summaryTotalHargaJual={summaryTotalHargaJual}
+                nominalDiskon={nominalDiskon}
+                summarySubTotal={summarySubTotal}
+                summaryDpp={summaryDpp}
+                summaryPpn={summaryPpn}
+                summaryShippingCost={summaryShippingCost}
+                summaryProfit={summaryProfit}
+                summaryGrandTotal={summaryGrandTotal}
+              />
+            )}
+          </>
         )}
       </div>
 

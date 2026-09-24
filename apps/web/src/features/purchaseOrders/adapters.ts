@@ -208,3 +208,14 @@ export function poHistoryEntry(
   const who = actorName ?? `Pengguna #${ev.changedBy}`
   return { date: `${formatDateTime(ev.changedAt)} · ${who}`, action }
 }
+
+// Why the edit form waits.
+export function loadFailureMessage(unitsFailed: boolean, itemsFailed: boolean): string {
+  const what =
+    unitsFailed && itemsFailed
+      ? "Item PO dan daftar satuan gagal dimuat."
+      : unitsFailed
+        ? "Daftar satuan gagal dimuat, sehingga satuan tiap item belum dapat dicocokkan."
+        : "Item PO gagal dimuat."
+  return `${what} Coba lagi dalam beberapa saat.`
+}
