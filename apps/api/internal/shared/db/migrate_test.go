@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -45,4 +46,22 @@ func TestRunMigrations_UpFailureIsWrapped(t *testing.T) {
 	var pgErr *pgconn.PgError
 	require.ErrorAs(t, err, &pgErr)
 	assert.Equal(t, "42703", pgErr.Code, "undefined_column from the bogus table")
+}
+
+// Provider build failure is reported.
+// goose merges its process-global Go migration registry into the provider,
+// so a Go migration registered at a version the embedded SQL set already
+// uses makes goose.NewProvider refuse, before any SQL reaches the database.
+func TestRunMigrations_ProviderFailureIsWrapped(t *testing.T) {
+	pool := testutil.Pool(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	require.NoError(t, goose.SetGlobalMigrations(goose.NewGoMigration(1, nil, nil)))
+	t.Cleanup(goose.ResetGlobalMigrations)
+
+	err := db.RunMigrations(ctx, pool)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "migration provider")
+	assert.Contains(t, err.Error(), "duplicate migration version 1")
 }
