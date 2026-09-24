@@ -145,6 +145,7 @@ describe("status labels", () => {
       subtotal: "10",
       totalDiscount: "0",
       totalHargaBeli: "5",
+      productCount: 1,
       createdAt: "2026-09-01T00:00:00Z",
     })
     expect(row.status).toBe("Kedaluwarsa")

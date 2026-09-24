@@ -260,6 +260,7 @@ export type QuotationListRow = {
   subtotal: string
   totalDiscount: string
   totalHargaBeli: string
+  productCount: number
   createdAt: string
 }
 

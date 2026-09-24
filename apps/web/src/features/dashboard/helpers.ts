@@ -63,6 +63,7 @@ export type RecentQuotation = {
   version: number
   client: string
   date: string
+  productCount: number
   total: string
   label: string
   badge: Badge
@@ -86,6 +87,7 @@ export function toRecentQuotation(
     version: q.version,
     client: q.companyName,
     date: formatDate(q.createdAt),
+    productCount: q.productCount,
     total: `Rp${formatNumber(q.grandTotal)}`,
     label: apiLabel ?? known ?? q.status,
     badge: (known && quotationBadge[known]) || NEUTRAL_BADGE,

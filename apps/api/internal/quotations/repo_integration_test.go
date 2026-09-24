@@ -594,3 +594,37 @@ func TestRepo_List_PagingIsStableOnTiedSortKey(t *testing.T) {
 }
 
 func ptrStr(s string) *string { return &s }
+
+// The list counts product lines only.
+// Shipping is a line too, so the count must skip it.
+func TestRepo_List_ProductCount(t *testing.T) {
+	cases := []struct {
+		name     string
+		products int
+	}{
+		{"one product and shipping", 1},
+		{"three products and shipping", 3},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, repo, _ := newRepo(t)
+			req := sampleCreate()
+			for i := 1; i < tc.products; i++ {
+				req.Items = append(req.Items, req.Items[0])
+			}
+			id, err := repo.Create(ctx, req, seedUserID)
+			require.NoError(t, err)
+
+			res, err := repo.List(ctx, quotations.ListFilter{Limit: 200})
+			require.NoError(t, err)
+			var got *quotations.ListRow
+			for i := range res.Rows {
+				if res.Rows[i].ID == id {
+					got = &res.Rows[i]
+				}
+			}
+			require.NotNil(t, got, "created quotation missing from the list")
+			assert.Equal(t, int64(tc.products), got.ProductCount)
+		})
+	}
+}

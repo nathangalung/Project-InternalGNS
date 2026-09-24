@@ -47,10 +47,12 @@ SELECT
     q.subtotal::text          AS subtotal,
     q.total_discount::text    AS total_discount,
     COALESCE(c.total_harga_beli, '0') AS total_harga_beli,
+    c.product_count,
     q.created_at
 FROM quotations q
 LEFT JOIN LATERAL (
-    SELECT SUM(qi.qty * qi.cost_price)::text AS total_harga_beli
+    SELECT SUM(qi.qty * qi.cost_price)::text AS total_harga_beli,
+           COUNT(*)                          AS product_count
     FROM quotation_items qi
     WHERE qi.quotation_id = q.id AND qi.item_type = 'product'
 ) c ON TRUE

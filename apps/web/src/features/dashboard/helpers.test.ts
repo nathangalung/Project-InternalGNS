@@ -95,6 +95,7 @@ function quotation(status: string): QuotationListRow {
       subtotal: "1500000",
       totalDiscount: "0",
       totalHargaBeli: "900000",
+      productCount: 3,
       createdAt: "2026-09-01T03:00:00Z",
     }),
   )
@@ -116,6 +117,7 @@ describe("toRecentQuotation", () => {
       quotationNo: "Q-0007",
       version: 2,
       client: "PT Laut",
+      productCount: 3,
       total: "Rp1.500.000",
       label: "Dikirim",
       badge: quotationBadge.Dikirim,

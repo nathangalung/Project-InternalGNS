@@ -102,6 +102,7 @@ type ListRow struct {
 	Subtotal       string    `db:"subtotal"         json:"subtotal"`
 	TotalDiscount  string    `db:"total_discount"   json:"totalDiscount"`
 	TotalHargaBeli string    `db:"total_harga_beli" json:"totalHargaBeli"`
+	ProductCount   int64     `db:"product_count"    json:"productCount"`
 	CreatedAt      time.Time `db:"created_at"       json:"createdAt"`
 }
 

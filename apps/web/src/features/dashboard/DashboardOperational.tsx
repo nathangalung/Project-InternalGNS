@@ -157,8 +157,7 @@ export default function DashboardOperational() {
                   {/* List payload has no client id */}
                   <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>{row.client}</td>
                   <td className={ui.tdCenter}>{row.date}</td>
-                  {/* Not in list payload */}
-                  <td className={ui.tdCenter}>-</td>
+                  <td className={ui.tdCenter}>{row.productCount}</td>
                   <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>{row.total}</td>
                   <td className={ui.tdCenter}>
                     <StatusBadge bg={row.badge.bg} color={row.badge.color}>
