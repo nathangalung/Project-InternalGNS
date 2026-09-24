@@ -213,7 +213,9 @@ func TestNewServer_HappyPath(t *testing.T) {
 		SuperadminName:     "NewServer Admin",
 		SuperadminPassword: "secret-pass",
 	}
+	cleaner := testutil.NewCleaner(t)
 	srv, err := NewServer(context.Background(), cfg)
+	trackSeeded(t, cleaner, cfg.SuperadminEmail)
 	require.NoError(t, err)
 	require.NotNil(t, srv)
 	t.Cleanup(srv.Close)
@@ -236,8 +238,10 @@ func TestNewServer_CloseReleasesPool(t *testing.T) {
 	}
 	// Cancelled after the build so the refresh-purge loop stops with it,
 	// as SIGTERM does in production.
+	cleaner := testutil.NewCleaner(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	srv, err := NewServer(ctx, cfg)
+	trackSeeded(t, cleaner, cfg.SuperadminEmail)
 	require.NoError(t, err)
 	require.NoError(t, srv.pool.Ping(context.Background()))
 	cancel()

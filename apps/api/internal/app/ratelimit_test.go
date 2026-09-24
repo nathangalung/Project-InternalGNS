@@ -111,3 +111,40 @@ func TestRouter_RateLimitedLoginIsProblemJSON(t *testing.T) {
 	assert.Equal(t, http.StatusTooManyRequests, body.Status)
 	assert.Equal(t, rateLimitDetail, body.Detail)
 }
+
+// The rewrite keeps the writer contract.
+// A body written without a status is a 200 that passes through, a second
+// status is ignored as net/http does, and the real writer stays reachable
+// for http.ResponseController.
+func TestProblemJSON429_WriterContract(t *testing.T) {
+	t.Run("implicit 200 passes the body", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		problemJSON429(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			_, _ = w.Write([]byte(`{"token":"x"}`))
+		})).ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/auth/login", nil))
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, `{"token":"x"}`, rec.Body.String())
+	})
+
+	t.Run("second status ignored", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		problemJSON429(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusTooManyRequests)
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("Too Many Requests\n"))
+		})).ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/auth/login", nil))
+		assert.Equal(t, http.StatusTooManyRequests, rec.Code)
+		assert.NotContains(t, rec.Body.String(), "Too Many Requests\n", "the plain text is swallowed")
+		var p httperr.Error
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &p))
+		assert.Equal(t, rateLimitDetail, p.Detail)
+	})
+
+	t.Run("controller reaches the real writer", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		problemJSON429(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			require.NoError(t, http.NewResponseController(w).Flush())
+		})).ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/auth/login", nil))
+		assert.True(t, rec.Flushed, "Flush must reach the recorder through Unwrap")
+	})
+}

@@ -68,3 +68,31 @@ func TestRunRefreshPurgeLoop_CancelledContext(t *testing.T) {
 		t.Fatalf("purge calls = %d, want 0", got)
 	}
 }
+
+// The sweep repeats every interval.
+// A long-running instance must keep purging, not only at startup.
+func TestRunRefreshPurgeLoop_RepeatsEachInterval(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	repo := &fakePurger{}
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		runRefreshPurgeLoop(ctx, repo, 5*time.Millisecond)
+	}()
+
+	deadline := time.After(2 * time.Second)
+	for repo.calls.Load() < 3 {
+		select {
+		case <-deadline:
+			t.Fatalf("purge calls = %d, want at least 3", repo.calls.Load())
+		default:
+			time.Sleep(time.Millisecond)
+		}
+	}
+	cancel()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("loop did not stop on context cancel")
+	}
+}

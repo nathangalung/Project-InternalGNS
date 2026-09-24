@@ -261,3 +261,68 @@ func TestConfig_UnknownEnvFailsClosed(t *testing.T) {
 		})
 	}
 }
+
+// A .env file fills gaps but never overrides.
+// Compose and the orchestrator set the real values in the environment; a
+// stray .env left in the working directory must not replace them, and one
+// that cannot be read is a boot error rather than silently skipped.
+func TestLoadConfig_DotEnv(t *testing.T) {
+	t.Run("fills unset values and keeps set ones", func(t *testing.T) {
+		dir := t.TempDir()
+		require.NoError(t, os.WriteFile(dir+"/.env", []byte(
+			"DATABASE_URL=postgres://from-file\nJWT_SECRET="+testSecret+"\nHTTP_ADDR=:7777\n"), 0o600))
+		t.Chdir(dir)
+		t.Setenv("HTTP_ADDR", ":8888")
+		// Unset, so only the file can supply them.
+		unsetForTest(t, "DATABASE_URL")
+		unsetForTest(t, "JWT_SECRET")
+
+		c, err := LoadConfig()
+		require.NoError(t, err)
+		assert.Equal(t, "postgres://from-file", c.DatabaseURL)
+		assert.Equal(t, ":8888", c.HTTPAddr, "the environment wins over the file")
+	})
+
+	t.Run("an unreadable .env fails the boot", func(t *testing.T) {
+		dir := t.TempDir()
+		require.NoError(t, os.Mkdir(dir+"/.env", 0o700))
+		t.Chdir(dir)
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("a config the validator refuses fails the boot", func(t *testing.T) {
+		t.Chdir(t.TempDir())
+		t.Setenv("DATABASE_URL", "postgres://x")
+		t.Setenv("JWT_SECRET", testSecret)
+		t.Setenv("ENV", "prod")
+		_, err := LoadConfig()
+		require.ErrorContains(t, err, "ENV is \"prod\"")
+	})
+}
+
+// unsetForTest clears a variable and restores it.
+func unsetForTest(t *testing.T, key string) {
+	t.Helper()
+	t.Setenv(key, "")
+	require.NoError(t, os.Unsetenv(key))
+}
+
+// A placeholder signer never prints on a client document.
+func TestConfig_ProductionRefusesPlaceholderSigner(t *testing.T) {
+	c := Config{
+		Env:                "production",
+		JWTSecret:          testSecret,
+		DatabaseURL:        "postgres://u:p@db:5432/gns",
+		CORSAllowedOrigins: []string{"https://app.example"},
+		SuperadminPassword: "a-real-generated-password",
+		PdfBankAccountNo:   "1234567890",
+		PdfSignerName:      "Budi",
+	}
+	require.NoError(t, c.validate())
+	c.PdfSignerName = "CHANGE_ME Director"
+	require.ErrorContains(t, c.validate(), "PDF_SIGNER_NAME")
+	// Outside production the same value is tolerated.
+	c.Env = "development"
+	require.NoError(t, c.validate())
+}
