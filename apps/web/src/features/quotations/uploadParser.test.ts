@@ -119,6 +119,18 @@ describe("rowsFromAOA rows", () => {
     expect(rowsFromAOA(aoa)).toEqual([{ impaCode: "", name: "Kabel", qty: 7, unit: "" }])
   })
 
+  // Regression: a sparse header row, as a sheet starting past column A
+  // yields, threw a TypeError in the partial header match.
+  it("reads a sparse header row", () => {
+    const header: unknown[] = []
+    header[1] = "Nama"
+    header[2] = "Jumlah"
+    const data: unknown[] = []
+    data[1] = "Baut"
+    data[2] = "2"
+    expect(rowsFromAOA([header, data])).toEqual([{ impaCode: "", name: "Baut", qty: 2, unit: "" }])
+  })
+
   it("reads a non-finite numeric quantity as zero", () => {
     expect(parseQty(Number.POSITIVE_INFINITY)).toBe(0)
   })

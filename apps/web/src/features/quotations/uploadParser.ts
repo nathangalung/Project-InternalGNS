@@ -18,7 +18,7 @@ type HeaderIdx = {
 
 // Match a header column by key.
 function findIdx(headers: string[], keys: string[]): number {
-  const norm = headers.map((h) => (h ?? "").toString().trim().toLowerCase())
+  const norm = headers.map((h) => h.trim().toLowerCase())
   for (const k of keys) {
     const exact = norm.indexOf(k)
     if (exact !== -1) return exact
@@ -46,7 +46,8 @@ function findHeaderRow(aoa: unknown[][]): { row: number; idx: HeaderIdx } | null
   const scan = Math.min(aoa.length, 15)
   let best: { row: number; idx: HeaderIdx; score: number } | null = null
   for (let r = 0; r < scan; r++) {
-    const headers = (aoa[r] ?? []).map((c) => (c ?? "").toString())
+    // Array.from fills holes; map would keep them for the partial match.
+    const headers = Array.from(aoa[r] ?? [], (c) => (c ?? "").toString())
     const idx = detectHeaders(headers)
     if (!idx) continue
     const score = [idx.impa, idx.name, idx.qty, idx.unit].filter((x) => x >= 0).length
