@@ -54,8 +54,8 @@ func seedListFixture(t *testing.T, ctx context.Context, tx pgx.Tx) listFixture {
 	}
 	return listFixture{
 		pastDueDraft: invoiceOf("1", "2026-01-05", "2026-02-04"),
-		sent:         invoiceOf("2", "2031-03-01", "2031-03-31", invoices.StatusSent),
-		paid:         invoiceOf("3", "2031-06-01", "2031-07-01", invoices.StatusSent, invoices.StatusPaid),
+		sent:         invoiceOf("2", "2099-03-01", "2099-03-31", invoices.StatusSent),
+		paid:         invoiceOf("3", "2099-06-01", "2099-07-01", invoices.StatusSent, invoices.StatusPaid),
 	}
 }
 
@@ -85,9 +85,9 @@ func TestHandler_List_Filters(t *testing.T) {
 		{name: "effective Terlambat is the past-due draft", query: "effectiveStatus=%20overdue,%20", want: []int64{a}},
 		{name: "effective draft leaves out the past-due draft", query: "effectiveStatus=draft", want: []int64{}},
 		{name: "unknown effective values are ignored", query: "effectiveStatus=cancelled,bogus", want: []int64{c, b, a}},
-		{name: "invoice date from", query: "dateFrom=2031-01-01", want: []int64{c, b}},
+		{name: "invoice date from", query: "dateFrom=2099-01-01", want: []int64{c, b}},
 		{name: "invoice date to", query: "dateTo=2026-12-31", want: []int64{a}},
-		{name: "due date window", query: "dueFrom=2031-03-31&dueTo=2031-03-31", want: []int64{b}},
+		{name: "due date window", query: "dueFrom=2099-03-31&dueTo=2099-03-31", want: []int64{b}},
 		{name: "minimum total", query: "minTotal=200000", want: []int64{c, b}},
 		{name: "maximum total", query: "maxTotal=250000", want: []int64{b, a}},
 		{name: "total band", query: "minTotal=200000&maxTotal=250000", want: []int64{b}},
@@ -125,7 +125,7 @@ func TestHandler_Export_AppliesFilter(t *testing.T) {
 	h := invoices.NewHandler(invoices.NewRepo(tx, testutil.Store(t)), nil)
 
 	rec := httptest.NewRecorder()
-	h.Export(rec, httptest.NewRequest(http.MethodGet, "/invoices/export.xlsx?dateFrom=2031-01-01&sortBy=total&sortDir=asc", nil))
+	h.Export(rec, httptest.NewRequest(http.MethodGet, "/invoices/export.xlsx?dateFrom=2099-01-01&sortBy=total&sortDir=asc", nil))
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 
 	f, err := excelize.OpenReader(bytes.NewReader(rec.Body.Bytes()))
@@ -133,7 +133,7 @@ func TestHandler_Export_AppliesFilter(t *testing.T) {
 	defer func() { _ = f.Close() }()
 	rows, err := f.GetRows(f.GetSheetName(0))
 	require.NoError(t, err)
-	require.Len(t, rows, 3, "header plus the two 2031 invoices")
+	require.Len(t, rows, 3, "header plus the two 2099 invoices")
 
 	for i, inv := range []invoices.Invoice{fx.sent, fx.paid} {
 		row := rows[i+1]

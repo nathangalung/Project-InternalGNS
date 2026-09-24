@@ -75,3 +75,24 @@ func TestSummary_TileReadFailure(t *testing.T) {
 	financeRouter(t, exec).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/dashboard/summary", nil))
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }
+
+// Broken streams fail the summary.
+func TestSummary_BrokenStreams(t *testing.T) {
+	cases := []struct {
+		name       string
+		skip       int
+		rowsBefore int
+	}{
+		{name: "totals", skip: 0},
+		{name: "tile row", skip: 1, rowsBefore: 1},
+		{name: "tile stream end", skip: 1},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			exec := &testutil.BrokenStreamExec{Inner: testutil.Pool(t), Skip: tc.skip, RowsBefore: tc.rowsBefore}
+			s, err := dashboard.NewRepo(exec, testutil.Store(t)).Summary(context.Background())
+			assert.ErrorIs(t, err, testutil.ErrFake)
+			assert.Empty(t, s.QuotationStatuses, "no tiles from a broken read")
+		})
+	}
+}

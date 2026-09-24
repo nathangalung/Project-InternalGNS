@@ -131,3 +131,35 @@ func TestHandler_Replace_BadTarget(t *testing.T) {
 		})
 	}
 }
+
+// Broken streams surface as errors.
+// A result stream that fails after the query started, as a dropped
+// connection does, must reach the caller as an error.
+func TestRepo_BrokenStreams(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, _, invID := deliveredPOWithInvoice(t, tx)
+	store := testutil.Store(t)
+	broken := func(skip int) *invoices.Repo {
+		return invoices.NewRepo(&testutil.BrokenStreamExec{Inner: tx, Skip: skip}, store)
+	}
+
+	t.Run("list keeps an empty page", func(t *testing.T) {
+		res, err := broken(0).List(ctx, invoices.ListFilter{Limit: 10})
+		assert.ErrorIs(t, err, testutil.ErrFake)
+		assert.NotNil(t, res.Rows)
+		assert.Empty(t, res.Rows)
+	})
+	cases := []struct {
+		name string
+		run  func() error
+	}{
+		{"detail", func() error { _, err := broken(0).GetDetail(ctx, invID); return err }},
+		{"detail history", func() error { _, err := broken(1).GetDetail(ctx, invID); return err }},
+		{"bulk items", func() error { _, err := broken(0).ListItemsBulk(ctx, []int64{invID}); return err }},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.ErrorIs(t, tc.run(), testutil.ErrFake)
+		})
+	}
+}

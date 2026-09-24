@@ -93,7 +93,9 @@ func TestCoretaxXML_NamesTheFile(t *testing.T) {
 
 // Bulk XLSX failure statuses.
 func TestCoretaxXLSX_Refusals(t *testing.T) {
-	_, tx := testutil.BeginTx(t)
+	ctx, tx := testutil.BeginTx(t)
+	// No other buyer may trip the NPWP check first.
+	require.NoError(t, testutil.ResetCommercialDomain(ctx, tx))
 	deliveredPOWithInvoice(t, tx)
 	templates := templatesRoot(t)
 	corrupt := t.TempDir()
