@@ -112,6 +112,7 @@ export function useInvoiceFiled(quotationId: number | undefined, enabled: boolea
         ? () => invoicesApi.getByQuotation(quotationId)
         : skipToken,
     select: (inv) => isInvoiceFiled(inv?.status),
+    throwOnError: false, // Hint only; the server enforces the lock
   })
 }
 
