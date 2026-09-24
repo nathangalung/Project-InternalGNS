@@ -54,6 +54,7 @@ export default function DashboardOperational() {
   }, [tsQuotation.data, baseYear, selectedMonth])
 
   const totalQuotation = summary?.totalQuotations ?? 0
+  const totalRejected = summary?.totalQuotationsRejected ?? 0
   const totalPo = summary?.totalPo ?? 0
   // Dash until the summary arrives
   const fig = (text: string) => (summary ? text : "–")
@@ -88,8 +89,9 @@ export default function DashboardOperational() {
           />
         )}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <StatCard label="Total Quotation" value={fig(formatId(totalQuotation))} />
+          <StatCard label="Total Quotation Ditolak" value={fig(formatId(totalRejected))} />
           <StatCard label="Total Purchase Order Aktif" value={fig(formatId(totalPo))} />
         </div>
 
