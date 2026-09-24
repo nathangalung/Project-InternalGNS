@@ -170,6 +170,14 @@ test.describe("quotation status", () => {
     await page.goto(`/quotations/${q.id}`)
     await expectStatus(page, "Draf")
     await expect(page.getByText("Kirim quotation ke klien sebelum")).toBeVisible()
+    // PO-11 on the quotation: the card reads the client, not "Belum diisi".
+    const card = page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
+    await expect(card.getByRole("link", { name: client.name })).toHaveAttribute(
+      "href",
+      `/clients/${client.id}`,
+    )
+    await expect(card).toContainText("0123456789012345")
+    await expect(card).toContainText(client.contactEmail ?? "")
     await page.getByRole("button", { name: "Ubah", exact: true }).click()
     await expect(page).toHaveURL(new RegExp(`/quotations/${q.id}/edit$`))
     for (let step = 0; step < 3; step++) {

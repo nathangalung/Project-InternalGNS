@@ -3,6 +3,8 @@ import { useMemo } from "react"
 import LoadingState from "@/components/shared/LoadingState"
 import NotFoundState from "@/components/shared/NotFoundState"
 import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
+import { clientCardInfo } from "@/features/clients/clientCard"
+import { useClient, useClientContacts } from "@/features/clients/hooks"
 import { toQuotationData } from "@/features/quotations/adapters"
 import { useQuotation } from "@/features/quotations/hooks"
 import QuotationDetail from "@/features/quotations/QuotationDetail"
@@ -26,6 +28,8 @@ function QuotationDetailRoute() {
     refetch,
   } = useQuotation(hasNumericId ? numericId : undefined)
   const { data: units } = useUnits()
+  const { data: client } = useClient(detail?.companyClientId)
+  const { data: contacts } = useClientContacts(detail?.companyClientId)
 
   const unitOf = useMemo(() => {
     const map = new Map<number, string>()
@@ -33,10 +37,14 @@ function QuotationDetailRoute() {
     return (unitId?: number) => (unitId !== undefined ? (map.get(unitId) ?? "") : "")
   }, [units])
 
-  const quotation = useMemo(
-    () => (detail ? toQuotationData(detail, unitOf) : undefined),
-    [detail, unitOf],
-  )
+  const quotation = useMemo(() => {
+    if (!detail) return undefined
+    const q = toQuotationData(detail, unitOf)
+    return {
+      ...q,
+      clientInfo: clientCardInfo(q.clientInfo ?? {}, client, contacts, detail.contactId),
+    }
+  }, [detail, unitOf, client, contacts])
 
   if (hasNumericId && isPending) return <LoadingState label="Memuat quotation…" />
   if (error && !isMissing(error)) {

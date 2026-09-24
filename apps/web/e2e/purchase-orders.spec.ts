@@ -52,6 +52,17 @@ test.describe("purchase order detail", () => {
       `/quotations/${q.id}`,
     )
 
+    const card = page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
+    await expect(card.getByRole("link", { name: client.name })).toHaveAttribute(
+      "href",
+      `/clients/${client.id}`,
+    )
+    // PO-11: the card shows the client's own data, not "Belum diisi".
+    await expect(card).toContainText("0123456789012345")
+    await expect(card).toContainText("Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara")
+    await expect(card).toContainText(client.contactEmail ?? "")
+    await expect(card).toContainText("81234567890")
+
     // PO-05: the breakdown is the discounted PO the invoice will bill.
     const breakdown = page.getByRole("heading", { name: "Rincian Biaya" }).locator("xpath=..")
     await expect(breakdown).toContainText("Diskon (10%)")

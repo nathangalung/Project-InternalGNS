@@ -193,6 +193,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
         />
         <ClientSummaryCard
           clientName={clientName}
+          clientId={po.companyClientId}
           clientInitials={getCompanyInitials(clientName)}
           clientInfo={quotation?.clientInfo}
           shippingAlamat={shipping.alamat}
