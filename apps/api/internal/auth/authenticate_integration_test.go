@@ -57,8 +57,9 @@ func TestService_Authenticate_DeactivatedUserRejected(t *testing.T) {
 	assert.ErrorIs(t, err, auth.ErrSessionRevoked)
 }
 
-// AU-2: a role change must reach the existing access token, not wait for
-// exp. It ends that token, and the next login carries the new role.
+// AU-2: role changes end tokens.
+// A role change must reach the existing access token, not wait for exp.
+// It ends that token, and the next login carries the new role.
 func TestService_Authenticate_RoleChangeTakesEffect(t *testing.T) {
 	ctx, _, repo, svc, u, token := mkLoggedIn(t, users.RoleOperational)
 
@@ -87,8 +88,9 @@ func TestService_Authenticate_PasswordResetRevokesToken(t *testing.T) {
 	assert.ErrorIs(t, err, auth.ErrSessionRevoked)
 }
 
-// A token issued after the reset must keep working: the re-login a reset
-// forces would otherwise bounce straight back to the login screen.
+// Post-reset tokens stay valid.
+// The re-login a reset forces would otherwise bounce straight back to the
+// login screen.
 func TestService_Authenticate_TokenIssuedAfterResetStillValid(t *testing.T) {
 	ctx, _, repo, svc, u, _ := mkLoggedIn(t, users.RoleOperational)
 

@@ -69,7 +69,8 @@ type redeemed struct {
 	version int64
 }
 
-// redeem atomically marks an active token revoked and returns it with its
+// redeem rotates out a token.
+// It atomically marks an active token revoked and returns it with its
 // owner's session version. pgx.ErrNoRows means the token is not redeemable
 // right now — caller must disambiguate via lookup.
 func (r *RefreshRepo) redeem(ctx context.Context, hash []byte) (redeemed, error) {

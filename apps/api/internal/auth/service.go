@@ -185,8 +185,9 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 	return resp, nil
 }
 
-// issue signs an access token and, when refresh is wired, stores a
-// refresh token through rr, both bound to session version.
+// issue mints a bound session.
+// It signs an access token and, when refresh is wired, stores a refresh
+// token through rr, both bound to the session version.
 func (s *Service) issue(ctx context.Context, rr *RefreshRepo, u users.User, version int64) (LoginResponse, error) {
 	now := s.now()
 	expiresAt := now.Add(s.expiry)

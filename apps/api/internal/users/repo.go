@@ -91,7 +91,8 @@ func (r *Repo) RecordFailedLogin(ctx context.Context, email string) error {
 	return err
 }
 
-// ClaimLogin clears the attempt counter for a verified password and holds
+// ClaimLogin locks a verified login.
+// It clears the attempt counter for a verified password and holds
 // the account row until the caller's transaction ends. It returns the
 // session version read under that lock. ErrNotFound means the password
 // changed or the account was deactivated since hash was read.
