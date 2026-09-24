@@ -57,31 +57,37 @@ func hashRefreshToken(raw string) []byte {
 	return sum[:]
 }
 
-func (r *RefreshRepo) insert(ctx context.Context, userID int64, hash []byte, expiresAt time.Time) error {
-	_, err := r.db.Exec(ctx, r.store.Get("auth.refresh_insert"), userID, hash, expiresAt)
+// insert stores a bound token.
+func (r *RefreshRepo) insert(ctx context.Context, userID int64, hash []byte, expiresAt time.Time, version int64) error {
+	_, err := r.db.Exec(ctx, r.store.Get("auth.refresh_insert"), userID, hash, expiresAt, version)
 	return err
 }
 
-// redeem atomically marks an active token revoked and returns its (id, user_id).
-// pgx.ErrNoRows means the token is not active right now — caller must
-// disambiguate via lookup.
-func (r *RefreshRepo) redeem(ctx context.Context, hash []byte) (int64, int64, error) {
-	row := r.db.QueryRow(ctx, r.store.Get("auth.refresh_redeem"), hash)
-	var id, userID int64
-	if err := row.Scan(&id, &userID); err != nil {
-		return 0, 0, err
-	}
-	return id, userID, nil
+// redeemed is a rotated token.
+type redeemed struct {
+	userID  int64
+	version int64
+}
+
+// redeem atomically marks an active token revoked and returns it with its
+// owner's session version. pgx.ErrNoRows means the token is not redeemable
+// right now — caller must disambiguate via lookup.
+func (r *RefreshRepo) redeem(ctx context.Context, hash []byte) (redeemed, error) {
+	var out redeemed
+	err := r.db.QueryRow(ctx, r.store.Get("auth.refresh_redeem"), hash).
+		Scan(&out.userID, &out.version)
+	return out, err
 }
 
 // lookupState reports the state of a token whose redeem failed.
 type lookupState struct {
 	userID    int64
-	expiresAt time.Time
 	revoked   bool
 	revokedAt time.Time
 	reason    string
-	found     bool
+	// stale marks a token minted before a session version bump.
+	stale bool
+	found bool
 }
 
 func (r *RefreshRepo) lookup(ctx context.Context, hash []byte) (lookupState, error) {
@@ -91,7 +97,7 @@ func (r *RefreshRepo) lookup(ctx context.Context, hash []byte) (lookupState, err
 		revokedAt *time.Time
 		reason    *string
 	)
-	if err := row.Scan(&st.userID, &st.expiresAt, &revokedAt, &reason); err != nil {
+	if err := row.Scan(&st.userID, &revokedAt, &reason, &st.stale); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return lookupState{}, nil
 		}

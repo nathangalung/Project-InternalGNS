@@ -81,7 +81,8 @@ func bearerFor(t *testing.T, userID int64, role users.Role) string {
 	t.Helper()
 	now := time.Now()
 	claims := auth.Claims{
-		Role: role,
+		Role:           role,
+		SessionVersion: 1,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "internalgns-api",
 			Subject:   strconv.FormatInt(userID, 10),

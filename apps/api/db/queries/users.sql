@@ -13,7 +13,7 @@ WHERE id = $1 AND is_active = TRUE;
 -- name: users.auth_context
 -- Live account state behind an access token. No is_active filter: a
 -- deactivated account must be told apart from an unknown id.
-SELECT role, is_active, sessions_valid_from
+SELECT role, is_active, session_version
 FROM users
 WHERE id = $1;
 
@@ -43,10 +43,13 @@ UPDATE users
 -- Clears the counter after a verified password and row-locks the account
 -- until the login's transaction ends. Matching the hash that was verified
 -- makes it 0 rows when a password change landed in between, and the row
--- lock makes a later change wait until this login's session exists.
+-- lock makes a later change wait until this login's session exists. The
+-- version it returns is read under that lock, so the session minted from it
+-- is the one a later bump ends.
 UPDATE users
    SET failed_login_attempts = 0, locked_until = NULL
- WHERE id = $1 AND is_active = TRUE AND password_hash = $2;
+ WHERE id = $1 AND is_active = TRUE AND password_hash = $2
+RETURNING session_version;
 
 -- name: users.create
 INSERT INTO users (email, name, password_hash, role, is_active, created_by, updated_by)
@@ -56,14 +59,14 @@ RETURNING id, email, name, password_hash, role,
 
 -- name: users.update_password
 -- One statement, three effects: the new hash, a cleared lockout counter so a
--- reset unsticks a throttled account, and a session epoch that refuses every
--- access token issued before this instant.
+-- reset unsticks a throttled account, and a bumped session version that
+-- refuses every token minted before it.
 UPDATE users
 SET password_hash = $1,
     updated_by = $2,
     failed_login_attempts = 0,
     locked_until = NULL,
-    sessions_valid_from = clock_timestamp()
+    session_version = session_version + 1
 WHERE id = $3;
 
 -- name: users.list_count_base
@@ -109,3 +112,10 @@ WHERE LOWER(email) = LOWER($1) AND id <> $2;
 -- last-superadmin precheck and the write it guards cannot interleave with a
 -- concurrent demotion or deactivation. Released on commit or rollback.
 SELECT pg_advisory_xact_lock(hashtext('users_superadmin_guard')::bigint);
+
+-- name: users.bump_session_version
+-- Ends every session: access and refresh tokens minted under the old
+-- version are refused from now on.
+UPDATE users
+   SET session_version = session_version + 1
+ WHERE id = $1;

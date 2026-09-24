@@ -52,7 +52,7 @@ func (s *Service) ChangeOwnPassword(ctx context.Context, userID int64, current, 
 	// one that lands later waits and then replaces this change. The new hash
 	// is computed under that lock, which costs a reset one bcrypt of waiting.
 	err = s.users.InTx(ctx, func(q *users.Repo, _ db.Executor) error {
-		if err := q.ClaimLogin(ctx, u.ID, u.PasswordHash); err != nil {
+		if _, err := q.ClaimLogin(ctx, u.ID, u.PasswordHash); err != nil {
 			return err
 		}
 		return q.UpdatePassword(ctx, userID, next, userID)

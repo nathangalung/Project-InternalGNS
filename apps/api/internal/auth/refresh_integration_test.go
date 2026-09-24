@@ -174,7 +174,7 @@ func TestRefreshRepo_PurgeExpired(t *testing.T) {
 	// Isolate the assertion from seeded rows: only these three are counted.
 	seed := func(label string, expiresAt time.Time) {
 		hash := sha256.Sum256([]byte(t.Name() + label))
-		_, err := tx.Exec(ctx, store.Get("auth.refresh_insert"), u.ID, hash[:], expiresAt)
+		_, err := tx.Exec(ctx, store.Get("auth.refresh_insert"), u.ID, hash[:], expiresAt, 1)
 		require.NoError(t, err)
 	}
 	// Seeds bracket the 7-day retention boundary in auth.refresh_purge_expired.
@@ -279,4 +279,34 @@ func TestService_Refresh_LoggedOutReplaySparesSiblings(t *testing.T) {
 
 	_, err = svc.Refresh(ctx, b.RefreshToken)
 	require.NoError(t, err)
+}
+
+// Refresh tokens follow the version.
+// Every production bump also revokes the refresh tokens, so the bump alone
+// is written here to prove the binding holds without that revocation.
+func TestService_Refresh_BoundToSessionVersion(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	store := testutil.Store(t)
+	repo := users.NewRepo(tx, store)
+	u, err := repo.Create(ctx, users.CreateUserRequest{
+		Email: uniqueEmail(t), Name: "Version IT", Password: "Sup3rSecret!", Role: users.RoleOperational,
+	}, 1)
+	require.NoError(t, err)
+	svc := auth.NewService(repo, "test-secret-please-change", time.Hour).
+		WithRefresh(auth.NewRefreshRepo(tx, store), 24*time.Hour)
+
+	stale, err := svc.Login(ctx, u.Email, "Sup3rSecret!")
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx, store.Get("users.bump_session_version"), u.ID)
+	require.NoError(t, err)
+
+	_, err = svc.Refresh(ctx, stale.RefreshToken)
+	assert.ErrorIs(t, err, auth.ErrRevokedRefresh, "a token minted before the bump is ended, not expired or reused")
+
+	fresh, err := svc.Login(ctx, u.Email, "Sup3rSecret!")
+	require.NoError(t, err)
+	rotated, err := svc.Refresh(ctx, fresh.RefreshToken)
+	require.NoError(t, err, "the stale refusal must not blast the newer session")
+	_, err = svc.Authenticate(ctx, rotated.Token)
+	require.NoError(t, err, "a refreshed access token carries the live version")
 }

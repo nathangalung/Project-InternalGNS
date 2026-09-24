@@ -2,7 +2,9 @@ package users_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
@@ -40,8 +42,8 @@ func activeTokens(t *testing.T, ctx context.Context, tx pgx.Tx, userID int64) in
 func addToken(t *testing.T, ctx context.Context, tx pgx.Tx, userID int64, hash string) {
 	t.Helper()
 	_, err := tx.Exec(ctx,
-		`INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
-		 VALUES ($1, $2, now() + interval '1 hour')`, userID, []byte(hash))
+		`INSERT INTO refresh_tokens (user_id, token_hash, expires_at, session_version)
+		 SELECT $1, $2, now() + interval '1 hour', session_version FROM users WHERE id = $1`, userID, []byte(hash))
 	require.NoError(t, err)
 }
 
@@ -193,4 +195,60 @@ func TestRepo_Create_RejectsCaseDuplicateEmail(t *testing.T) {
 		 VALUES ('DUP-CASE@Example.Local', 'Dup', 'x', 'operational', TRUE, $1, $1)`, seedUserID)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "users_email_lower_idx")
+}
+
+// Which changes bump the version.
+// Only security-relevant changes end sessions; a rename or a reactivation
+// must leave the version where it is.
+func TestRepo_SessionVersionBumps(t *testing.T) {
+	tests := []struct {
+		name   string
+		active bool
+		change func(ctx context.Context, repo *users.Repo, u users.User) error
+		bumps  int64
+	}{
+		{"role change", true,
+			func(ctx context.Context, repo *users.Repo, u users.User) error {
+				_, err := repo.Update(ctx, u.ID, users.UpdateUserRequest{Email: u.Email, Name: u.Name, Role: users.RoleFinance, IsActive: true}, seedUserID)
+				return err
+			}, 1},
+		{"deactivation", true,
+			func(ctx context.Context, repo *users.Repo, u users.User) error {
+				_, err := repo.Update(ctx, u.ID, users.UpdateUserRequest{Email: u.Email, Name: u.Name, Role: u.Role, IsActive: false}, seedUserID)
+				return err
+			}, 1},
+		{"password reset", true,
+			func(ctx context.Context, repo *users.Repo, u users.User) error {
+				return repo.UpdatePassword(ctx, u.ID, "Another-pw1!", seedUserID)
+			}, 1},
+		{"rename", true,
+			func(ctx context.Context, repo *users.Repo, u users.User) error {
+				_, err := repo.Update(ctx, u.ID, users.UpdateUserRequest{Email: u.Email, Name: "Renamed", Role: u.Role, IsActive: true}, seedUserID)
+				return err
+			}, 0},
+		{"reactivation", false,
+			func(ctx context.Context, repo *users.Repo, u users.User) error {
+				_, err := repo.Update(ctx, u.ID, users.UpdateUserRequest{Email: u.Email, Name: u.Name, Role: u.Role, IsActive: true}, seedUserID)
+				return err
+			}, 0},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, tx := testutil.BeginTx(t)
+			repo := users.NewRepo(tx, testutil.Store(t))
+			u, err := repo.Create(ctx, users.CreateUserRequest{
+				Email: fmt.Sprintf("version-%d@example.local", time.Now().UnixNano()), Name: "Version",
+				Password: "Version-pw1!", Role: users.RoleOperational, IsActive: &tc.active,
+			}, seedUserID)
+			require.NoError(t, err)
+			before, err := repo.AuthContext(ctx, u.ID)
+			require.NoError(t, err)
+
+			require.NoError(t, tc.change(ctx, repo, u))
+
+			after, err := repo.AuthContext(ctx, u.ID)
+			require.NoError(t, err)
+			assert.Equal(t, before.SessionVersion+tc.bumps, after.SessionVersion)
+		})
+	}
 }

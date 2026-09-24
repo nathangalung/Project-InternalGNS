@@ -108,6 +108,7 @@ var RequiredKeys = []string{
 	"quotations.update_contact",
 	"units.list_all",
 	"users.auth_context",
+	"users.bump_session_version",
 	"users.create",
 	"users.exists_email_other",
 	"users.get_by_email",

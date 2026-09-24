@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -26,21 +25,21 @@ const middlewareSecret = "middleware-test-secret"
 
 func mkSvc(t *testing.T) *auth.Service {
 	t.Helper()
-	svc, _, _, _ := mkSvcWithRepo(t)
+	svc, _, _ := mkSvcWithRepo(t)
 	return svc
 }
 
 // mkSvcWithRepo exposes the repo so a test can create the account its token
 // names; the middleware now reads live account state per request.
-func mkSvcWithRepo(t *testing.T) (*auth.Service, *users.Repo, context.Context, pgx.Tx) {
+func mkSvcWithRepo(t *testing.T) (*auth.Service, *users.Repo, context.Context) {
 	t.Helper()
 	ctx, tx := testutil.BeginTx(t)
 	repo := users.NewRepo(tx, testutil.Store(t))
-	return auth.NewService(repo, middlewareSecret, time.Hour), repo, ctx, tx
+	return auth.NewService(repo, middlewareSecret, time.Hour), repo, ctx
 }
 
 // mkMiddlewareUser creates an account for a middleware test.
-func mkMiddlewareUser(t *testing.T, ctx context.Context, tx pgx.Tx, repo *users.Repo, role users.Role) users.User {
+func mkMiddlewareUser(t *testing.T, ctx context.Context, repo *users.Repo, role users.Role) users.User {
 	t.Helper()
 	u, err := repo.Create(ctx, users.CreateUserRequest{
 		Email:    fmt.Sprintf("mw-%s-%d@test", t.Name(), time.Now().UnixNano()),
@@ -49,9 +48,6 @@ func mkMiddlewareUser(t *testing.T, ctx context.Context, tx pgx.Tx, repo *users.
 		Role:     role,
 	}, 1)
 	require.NoError(t, err)
-	// Predated so a wall-clock step cannot refuse the token minted next; the
-	// password-reset case still moves the epoch forward.
-	require.NoError(t, testutil.PredateSessions(ctx, tx, u.ID))
 	return u
 }
 
@@ -60,7 +56,8 @@ func mkToken(t *testing.T, subject string) string {
 	t.Helper()
 	now := time.Now()
 	claims := auth.Claims{
-		Role: users.RoleSuperadmin,
+		Role:           users.RoleSuperadmin,
+		SessionVersion: 1,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "internalgns-api",
 			Subject:   subject,
@@ -127,7 +124,8 @@ func TestAuthMiddleware_BadSubject(t *testing.T) {
 	svc := mkSvc(t)
 	now := time.Now()
 	claims := auth.Claims{
-		Role: users.RoleSuperadmin,
+		Role:           users.RoleSuperadmin,
+		SessionVersion: 1,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "internalgns-api",
 			Subject:   "not-a-number",
@@ -148,8 +146,8 @@ func TestAuthMiddleware_BadSubject(t *testing.T) {
 }
 
 func TestAuthMiddleware_HappyPath(t *testing.T) {
-	svc, repo, ctx, tx := mkSvcWithRepo(t)
-	u := mkMiddlewareUser(t, ctx, tx, repo, users.RoleSuperadmin)
+	svc, repo, ctx := mkSvcWithRepo(t)
+	u := mkMiddlewareUser(t, ctx, repo, users.RoleSuperadmin)
 	signed := mkToken(t, strconv.FormatInt(u.ID, 10))
 
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -190,15 +188,37 @@ func TestAuthMiddleware_LiveAccountState(t *testing.T) {
 			wantCode: http.StatusUnauthorized,
 		},
 		{
-			name: "role change reaches the live token",
+			name: "role change ends the token",
 			mutate: func(t *testing.T, ctx context.Context, repo *users.Repo, u users.User) {
 				_, err := repo.Update(ctx, u.ID, users.UpdateUserRequest{
 					Email: u.Email, Name: u.Name, Role: users.RoleFinance, IsActive: true,
 				}, 1)
 				require.NoError(t, err)
 			},
+			wantCode: http.StatusUnauthorized,
+		},
+		{
+			name: "rename keeps the token",
+			mutate: func(t *testing.T, ctx context.Context, repo *users.Repo, u users.User) {
+				_, err := repo.Update(ctx, u.ID, users.UpdateUserRequest{
+					Email: u.Email, Name: "Renamed", Role: u.Role, IsActive: true,
+				}, 1)
+				require.NoError(t, err)
+			},
 			wantCode: http.StatusOK,
-			wantRole: string(users.RoleFinance),
+			wantRole: string(users.RoleOperational),
+		},
+		{
+			name: "reactivation does not revive the token",
+			mutate: func(t *testing.T, ctx context.Context, repo *users.Repo, u users.User) {
+				for _, active := range []bool{false, true} {
+					_, err := repo.Update(ctx, u.ID, users.UpdateUserRequest{
+						Email: u.Email, Name: u.Name, Role: u.Role, IsActive: active,
+					}, 1)
+					require.NoError(t, err)
+				}
+			},
+			wantCode: http.StatusUnauthorized,
 		},
 		{
 			name: "password reset ends the token",
@@ -211,8 +231,8 @@ func TestAuthMiddleware_LiveAccountState(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			svc, repo, ctx, tx := mkSvcWithRepo(t)
-			u := mkMiddlewareUser(t, ctx, tx, repo, users.RoleOperational)
+			svc, repo, ctx := mkSvcWithRepo(t)
+			u := mkMiddlewareUser(t, ctx, repo, users.RoleOperational)
 			signed := mkToken(t, strconv.FormatInt(u.ID, 10))
 			tc.mutate(t, ctx, repo, u)
 
@@ -235,7 +255,8 @@ func TestAuthMiddleware_ExpiredToken(t *testing.T) {
 	svc := mkSvc(t)
 	past := time.Now().Add(-2 * time.Hour)
 	claims := auth.Claims{
-		Role: users.RoleSuperadmin,
+		Role:           users.RoleSuperadmin,
+		SessionVersion: 1,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "internalgns-api",
 			Subject:   "1",
@@ -256,8 +277,8 @@ func TestAuthMiddleware_ExpiredToken(t *testing.T) {
 }
 
 func TestAuthMiddleware_PreservesProtectedHandler(t *testing.T) {
-	svc, repo, ctx, tx := mkSvcWithRepo(t)
-	u := mkMiddlewareUser(t, ctx, tx, repo, users.RoleSuperadmin)
+	svc, repo, ctx := mkSvcWithRepo(t)
+	u := mkMiddlewareUser(t, ctx, repo, users.RoleSuperadmin)
 	signed := mkToken(t, strconv.FormatInt(u.ID, 10))
 
 	srv := httptest.NewServer(protectedHandler(t, svc))

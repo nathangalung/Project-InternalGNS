@@ -191,12 +191,14 @@ test("deactivating ends the live session, and the inactive user can be reactivat
   })
 })
 
-test("a role change reaches the open session on its next load (AU-2)", async ({ page, signIn }) => {
+test("a role change ends the open session and the next sign-in carries it (AU-2)", async ({
+  page,
+  signIn,
+}) => {
   const victim = await signIn("operational")
   const nav = victim.page.getByRole("navigation")
   await victim.page.goto("/")
   await expect(nav.getByRole("link", { name: "Quotation", exact: true })).toBeVisible()
-  const refreshToken = await victim.page.evaluate(() => sessionStorage.getItem("gns_refresh_token"))
 
   await openUser(page, victim.user.id)
   await page.getByRole("button", { name: /^Peran/ }).click()
@@ -204,19 +206,13 @@ test("a role change reaches the open session on its next load (AU-2)", async ({ 
   await save(page)
   await expect(page.getByRole("button", { name: /^Peran/ })).toContainText("Finance")
 
-  // The API reads the role per request, so the same token now acts as finance.
-  await victim.page.reload()
+  // The change bumps the session version, so the open access token and its
+  // refresh token both stop working at once.
+  await expectSignedOut(victim.page)
+  const relogin = await submitLogin(victim.page, victim.user.email, victim.user.password)
+  expect(relogin.status()).toBe(200)
   await expect(nav.getByRole("link", { name: "Invoices", exact: true })).toBeVisible()
   await expect(nav.getByRole("link", { name: "Quotation", exact: true })).toHaveCount(0)
-  await victim.page.goto("/quotations")
-  await expect(victim.page).toHaveURL(/\/$/)
-  // The session cannot outlive its access token: refresh was revoked.
-  const res = await call("/auth/refresh", {
-    method: "POST",
-    ip: ownIp(),
-    body: JSON.stringify({ refreshToken }),
-  })
-  expect(res.status).toBe(401)
 })
 
 test("an admin password reset ends the user's session (AU-11)", async ({ page, signIn }) => {

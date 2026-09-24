@@ -28,7 +28,8 @@ func mintToken(t *testing.T, userID int64, role string) string {
 	t.Helper()
 	now := time.Now()
 	claims := auth.Claims{
-		Role: users.Role(role),
+		Role:           users.Role(role),
+		SessionVersion: 1,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "internalgns-api",
 			Subject:   strconv.FormatInt(userID, 10),

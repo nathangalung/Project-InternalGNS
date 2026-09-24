@@ -92,24 +92,26 @@ func (r *Repo) RecordFailedLogin(ctx context.Context, email string) error {
 }
 
 // ClaimLogin clears the attempt counter for a verified password and holds
-// the account row until the caller's transaction ends. ErrNotFound means
-// the password changed or the account was deactivated since hash was read.
-func (r *Repo) ClaimLogin(ctx context.Context, id int64, hash string) error {
-	tag, err := r.db.Exec(ctx, r.store.Get("users.reset_login_attempts"), id, hash)
+// the account row until the caller's transaction ends. It returns the
+// session version read under that lock. ErrNotFound means the password
+// changed or the account was deactivated since hash was read.
+func (r *Repo) ClaimLogin(ctx context.Context, id int64, hash string) (int64, error) {
+	var version int64
+	err := r.db.QueryRow(ctx, r.store.Get("users.reset_login_attempts"), id, hash).Scan(&version)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, ErrNotFound
+	}
 	if err != nil {
-		return fmt.Errorf("claim login: %w", err)
+		return 0, fmt.Errorf("claim login: %w", err)
 	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
-	}
-	return nil
+	return version, nil
 }
 
 // AuthContext is the live account state behind an access token.
 type AuthContext struct {
-	Role              Role      `db:"role"`
-	IsActive          bool      `db:"is_active"`
-	SessionsValidFrom time.Time `db:"sessions_valid_from"`
+	Role           Role  `db:"role"`
+	IsActive       bool  `db:"is_active"`
+	SessionVersion int64 `db:"session_version"`
 }
 
 // AuthContext reads the state the auth middleware checks per request.
@@ -330,9 +332,12 @@ func (r *Repo) update(ctx context.Context, id int64, req UpdateUserRequest, acto
 
 	// A role change or a deactivation must not leave live sessions behind; a
 	// plain rename is not security-relevant, so it keeps them. Inside the
-	// transaction, so a failed revoke undoes the change and a retry redoes
-	// both.
+	// transaction, so a failed bump or revoke undoes the change and a retry
+	// redoes all three.
 	if prior.Role != u.Role || (prior.IsActive && !u.IsActive) {
+		if err := r.bumpSessionVersion(ctx, id); err != nil {
+			return User{}, err
+		}
 		if err := r.revokeRefreshTokens(ctx, id); err != nil {
 			return User{}, err
 		}
@@ -355,6 +360,14 @@ func (r *Repo) precheck(ctx context.Context, id int64) (updatePrecheck, error) {
 		return updatePrecheck{}, fmt.Errorf("read user precheck: %w", err)
 	}
 	return p, nil
+}
+
+// bumpSessionVersion refuses every existing token.
+func (r *Repo) bumpSessionVersion(ctx context.Context, id int64) error {
+	if _, err := r.db.Exec(ctx, r.store.Get("users.bump_session_version"), id); err != nil {
+		return fmt.Errorf("bump session version: %w", err)
+	}
+	return nil
 }
 
 // revokeRefreshTokens ends every live session for a user after a

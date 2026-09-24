@@ -19,17 +19,9 @@ var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrInvalidToken       = errors.New("invalid token")
 	// ErrSessionRevoked marks a structurally valid token whose account no
-	// longer backs it: deactivated, or issued before a password reset.
+	// longer backs it: deactivated, or minted under an older session version.
 	ErrSessionRevoked = errors.New("session revoked")
 )
-
-// Millisecond iat. The session epoch a password change sets is sub-second,
-// so a second-granular iat refused the very login the change forces when
-// both fell in the same second. golang-jwt reads this one package-level
-// setting on both signing and parsing, and only this package uses it.
-func init() {
-	jwt.TimePrecision = time.Millisecond
-}
 
 // Compared against when the email is unknown so an unregistered address costs
 // the same bcrypt work as a real one. Built at init with the same cost
@@ -51,6 +43,7 @@ type Service struct {
 	expiry        time.Duration
 	refreshExpiry time.Duration
 	issuer        string
+	now           func() time.Time
 }
 
 func NewService(repo *users.Repo, secret string, expiry time.Duration) *Service {
@@ -60,6 +53,7 @@ func NewService(repo *users.Repo, secret string, expiry time.Duration) *Service 
 		expiry:        expiry,
 		refreshExpiry: 0,
 		issuer:        "internalgns-api",
+		now:           time.Now,
 	}
 }
 
@@ -74,6 +68,9 @@ func (s *Service) WithRefresh(repo *RefreshRepo, expiry time.Duration) *Service 
 
 type Claims struct {
 	Role users.Role `json:"role"`
+	// SessionVersion is the account's users.session_version at mint time. A
+	// token without it decodes to 0, which no account ever has.
+	SessionVersion int64 `json:"sv"`
 	jwt.RegisteredClaims
 }
 
@@ -172,11 +169,11 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 	// claim, or waits and then revokes the session issued here.
 	var resp LoginResponse
 	err = s.users.InTx(ctx, func(q *users.Repo, tx db.Executor) error {
-		if err := q.ClaimLogin(ctx, u.ID, u.PasswordHash); err != nil {
+		version, err := q.ClaimLogin(ctx, u.ID, u.PasswordHash)
+		if err != nil {
 			return err
 		}
-		var err error
-		resp, err = s.issue(ctx, s.refresh.on(tx), u)
+		resp, err = s.issue(ctx, s.refresh.on(tx), u, version)
 		return err
 	})
 	if errors.Is(err, users.ErrNotFound) {
@@ -189,12 +186,13 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 }
 
 // issue signs an access token and, when refresh is wired, stores a
-// refresh token through rr.
-func (s *Service) issue(ctx context.Context, rr *RefreshRepo, u users.User) (LoginResponse, error) {
-	now := time.Now()
+// refresh token through rr, both bound to session version.
+func (s *Service) issue(ctx context.Context, rr *RefreshRepo, u users.User, version int64) (LoginResponse, error) {
+	now := s.now()
 	expiresAt := now.Add(s.expiry)
 	claims := Claims{
-		Role: u.Role,
+		Role:           u.Role,
+		SessionVersion: version,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    s.issuer,
 			Subject:   fmt.Sprintf("%d", u.ID),
@@ -221,7 +219,7 @@ func (s *Service) issue(ctx context.Context, rr *RefreshRepo, u users.User) (Log
 		return LoginResponse{}, fmt.Errorf("generate refresh token: %w", err)
 	}
 	refreshExpiresAt := now.Add(s.refreshExpiry)
-	if err := rr.insert(ctx, u.ID, hash, refreshExpiresAt); err != nil {
+	if err := rr.insert(ctx, u.ID, hash, refreshExpiresAt, version); err != nil {
 		return LoginResponse{}, fmt.Errorf("store refresh token: %w", err)
 	}
 	resp.RefreshToken = raw
@@ -251,7 +249,7 @@ func (s *Service) Refresh(ctx context.Context, raw string) (LoginResponse, error
 		if err := rr.lockOwner(ctx, hash); err != nil {
 			return err
 		}
-		_, userID, err := rr.redeem(ctx, hash)
+		red, err := rr.redeem(ctx, hash)
 		if errors.Is(err, pgx.ErrNoRows) {
 			verdict, err = s.refusal(ctx, rr, hash)
 			return err
@@ -259,7 +257,7 @@ func (s *Service) Refresh(ctx context.Context, raw string) (LoginResponse, error
 		if err != nil {
 			return fmt.Errorf("redeem refresh token: %w", err)
 		}
-		u, err := q.GetByID(ctx, userID)
+		u, err := q.GetByID(ctx, red.userID)
 		if errors.Is(err, users.ErrNotFound) {
 			verdict = ErrInvalidRefresh
 			return nil
@@ -267,7 +265,7 @@ func (s *Service) Refresh(ctx context.Context, raw string) (LoginResponse, error
 		if err != nil {
 			return fmt.Errorf("read refresh owner: %w", err)
 		}
-		resp, err = s.issue(ctx, rr, u)
+		resp, err = s.issue(ctx, rr, u, red.version)
 		return err
 	})
 	if err != nil {
@@ -305,6 +303,10 @@ func (s *Service) refusal(ctx context.Context, rr *RefreshRepo, hash []byte) (er
 			}
 		}
 		return ErrReusedRefresh, nil
+	}
+	// Minted before a session version bump: ended on purpose, not expired.
+	if st.stale {
+		return ErrRevokedRefresh, nil
 	}
 	return ErrExpiredRefresh, nil
 }
@@ -362,9 +364,9 @@ func (s *Service) Authenticate(ctx context.Context, tokenStr string) (Identity, 
 	if !live.IsActive {
 		return Identity{}, ErrSessionRevoked
 	}
-	// iat carries milliseconds (see init), so only a token minted before the
-	// change is refused, not one minted moments after it.
-	if claims.IssuedAt == nil || claims.IssuedAt.Before(live.SessionsValidFrom) {
+	// A version, not a timestamp: the API and Postgres clocks never meet, so
+	// a wall-clock step cannot refuse a token minted after the bump.
+	if claims.SessionVersion != live.SessionVersion {
 		return Identity{}, ErrSessionRevoked
 	}
 	return Identity{UserID: id, Role: live.Role}, nil

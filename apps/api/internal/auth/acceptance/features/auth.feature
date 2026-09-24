@@ -86,9 +86,19 @@ Feature: Login, session refresh and session revocation
     Then the response status is 401
     And the problem detail is "Anda belum masuk. Silakan masuk terlebih dahulu."
 
-  Scenario Outline: A role change reaches the existing access token
+  Scenario: A role change ends the existing access token
+    Given the account is logged in
+    When a superadmin changes the account role to "finance"
+    And the account calls "/api/v1/auth/me"
+    Then the response status is 401
+    And the problem detail is "Sesi Anda tidak berlaku lagi. Silakan masuk kembali."
+    When the account refreshes its session
+    Then the response status is 401
+
+  Scenario Outline: The next login carries the new role
     Given the account is logged in
     When a superadmin changes the account role to "<role>"
+    And the account logged in again
     And the account calls "<path>"
     Then the response status is <status>
 
@@ -97,6 +107,12 @@ Feature: Login, session refresh and session revocation
       | finance     | /api/v1/quotations/       | 403    |
       | finance     | /api/v1/invoices/         | 200    |
       | operational | /api/v1/quotations/       | 200    |
+
+  Scenario: Keeping the same role keeps the session
+    Given the account is logged in
+    When a superadmin changes the account role to "operational"
+    And the account calls "/api/v1/auth/me"
+    Then the response status is 200
 
   Scenario: An admin password reset ends the existing access token
     Given the account is logged in

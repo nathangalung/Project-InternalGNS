@@ -41,7 +41,7 @@ var faultSQL = map[string]map[string]string{
 	},
 	execFault: {
 		"users.get_by_id_admin":      `SELECT 1 / 0 WHERE $1::bigint IS NOT NULL`,
-		"users.auth_context":         `SELECT (1 / 0)::text AS role, TRUE AS is_active, now() AS sessions_valid_from WHERE $1::bigint IS NOT NULL`,
+		"users.auth_context":         `SELECT (1 / 0)::text AS role, TRUE AS is_active, 1 AS session_version WHERE $1::bigint IS NOT NULL`,
 		"users.reset_login_attempts": `SELECT 1 / 0 WHERE $1::bigint IS NOT NULL AND $2::text IS NOT NULL`,
 		"users.create": `SELECT 1 / 0 WHERE $1::text IS NOT NULL AND $2::text IS NOT NULL AND $3::text IS NOT NULL
 			AND $4::text IS NOT NULL AND $5::boolean IS NULL AND $6::bigint IS NOT NULL`,
@@ -125,7 +125,8 @@ func TestRepo_StorageFailuresSurface(t *testing.T) {
 			return err
 		}, false},
 		{execFault, "users.reset_login_attempts", "claim login", func(ctx context.Context, r *users.Repo, u users.User) error {
-			return r.ClaimLogin(ctx, u.ID, u.PasswordHash)
+			_, err := r.ClaimLogin(ctx, u.ID, u.PasswordHash)
+			return err
 		}, false},
 		{execFault, "users.create", "create user", func(ctx context.Context, r *users.Repo, _ users.User) error {
 			_, err := r.Create(ctx, users.CreateUserRequest{

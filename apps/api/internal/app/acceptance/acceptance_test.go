@@ -77,11 +77,6 @@ func (s *suite) userFor(role string) (int64, error) {
 		return 0, fmt.Errorf("create %s user: %w", role, err)
 	}
 	s.cleaner.User(u.ID)
-	// Each scenario mints a fresh token from the host clock; a backward
-	// wall-clock step must not make it older than this account.
-	if err := testutil.PredateSessions(context.Background(), testutil.Pool(s.t), u.ID); err != nil {
-		return 0, err
-	}
 	s.users[role] = u.ID
 	return u.ID, nil
 }
@@ -90,7 +85,8 @@ func (s *suite) userFor(role string) (int64, error) {
 func bearer(userID int64, role string) (string, error) {
 	now := time.Now()
 	claims := auth.Claims{
-		Role: users.Role(role),
+		Role:           users.Role(role),
+		SessionVersion: 1,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "internalgns-api",
 			Subject:   strconv.FormatInt(userID, 10),
