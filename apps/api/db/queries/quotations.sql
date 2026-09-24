@@ -169,7 +169,7 @@ UPDATE quotation_item_requests SET
     END,
     updated_by      = $12,
     row_version     = row_version + 1
-WHERE id = $1
+WHERE id = $1 AND quotation_id = $13
 RETURNING id, quotation_id, line_no, request_text, request_impa,
           requested_qty::text, requested_uom,
           matched_item_id, match_status, source_type, source_ref, notes,
@@ -178,7 +178,7 @@ RETURNING id, quotation_id, line_no, request_text, request_impa,
 
 -- name: quotations.qir_delete
 DELETE FROM quotation_item_requests
-WHERE id = $1
+WHERE id = $1 AND quotation_id = $2
 RETURNING id;
 
 

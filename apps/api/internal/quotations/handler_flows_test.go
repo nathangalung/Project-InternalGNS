@@ -174,11 +174,13 @@ func TestHandler_ItemRequests_Errors(t *testing.T) {
 		{"create bad json", http.MethodPost, base, `{`, http.StatusBadRequest, nil},
 		{"create blank", http.MethodPost, base, `{"lineNo":0,"requestText":""}`,
 			http.StatusUnprocessableEntity, []string{"lineNo", "requestText"}},
+		{"update bad id", http.MethodPut, "/quotations/abc/requests/1", validUpdate, http.StatusBadRequest, nil},
 		{"update bad rid", http.MethodPut, base + "/abc", validUpdate, http.StatusBadRequest, nil},
 		{"update bad json", http.MethodPut, base + "/1", `{`, http.StatusBadRequest, nil},
 		{"update blank", http.MethodPut, base + "/1", `{"lineNo":0}`,
 			http.StatusUnprocessableEntity, []string{"lineNo", "requestText", "matchStatus", "sourceType"}},
 		{"update unknown", http.MethodPut, base + "/9999999", validUpdate, http.StatusNotFound, nil},
+		{"delete bad id", http.MethodDelete, "/quotations/abc/requests/1", "", http.StatusBadRequest, nil},
 		{"delete bad rid", http.MethodDelete, base + "/abc", "", http.StatusBadRequest, nil},
 		{"delete unknown", http.MethodDelete, base + "/9999999", "", http.StatusNotFound, nil},
 	}

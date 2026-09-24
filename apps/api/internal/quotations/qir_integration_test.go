@@ -98,7 +98,7 @@ func TestQIR_UpdateSetsReviewedOnFirstNonPending(t *testing.T) {
 		MatchStatus:   "matched",
 		SourceType:    created.SourceType,
 	}
-	updated, err := repo.UpdateItemRequest(ctx, created.ID, upd, seedUserID)
+	updated, err := repo.UpdateItemRequest(ctx, qid, created.ID, upd, seedUserID)
 	require.NoError(t, err)
 	assert.Equal(t, "matched", updated.MatchStatus)
 	require.NotNil(t, updated.ReviewedBy)
@@ -119,11 +119,11 @@ func TestQIR_UpdateRowVersionIncrements(t *testing.T) {
 		MatchStatus: created.MatchStatus,
 		SourceType:  created.SourceType,
 	}
-	u1, err := repo.UpdateItemRequest(ctx, created.ID, upd, seedUserID)
+	u1, err := repo.UpdateItemRequest(ctx, qid, created.ID, upd, seedUserID)
 	require.NoError(t, err)
 	assert.Equal(t, int32(1), u1.RowVersion)
 
-	u2, err := repo.UpdateItemRequest(ctx, created.ID, upd, seedUserID)
+	u2, err := repo.UpdateItemRequest(ctx, qid, created.ID, upd, seedUserID)
 	require.NoError(t, err)
 	assert.Equal(t, int32(2), u2.RowVersion)
 }
@@ -136,7 +136,7 @@ func TestQIR_UpdateNotFound(t *testing.T) {
 		MatchStatus: "pending",
 		SourceType:  "manual",
 	}
-	_, err := repo.UpdateItemRequest(ctx, 9999999, upd, seedUserID)
+	_, err := repo.UpdateItemRequest(ctx, 1, 9999999, upd, seedUserID)
 	assert.ErrorIs(t, err, quotations.ErrNotFound)
 }
 
@@ -145,14 +145,14 @@ func TestQIR_DeleteRemovesRow(t *testing.T) {
 	created, err := repo.CreateItemRequest(ctx, qid, sampleItemRequest(), seedUserID)
 	require.NoError(t, err)
 
-	require.NoError(t, repo.DeleteItemRequest(ctx, created.ID))
+	require.NoError(t, repo.DeleteItemRequest(ctx, qid, created.ID))
 	_, err = repo.GetItemRequest(ctx, created.ID)
 	assert.ErrorIs(t, err, quotations.ErrNotFound)
 }
 
 func TestQIR_DeleteNotFound(t *testing.T) {
 	ctx, repo, _ := newRepo(t)
-	err := repo.DeleteItemRequest(ctx, 9999999)
+	err := repo.DeleteItemRequest(ctx, 1, 9999999)
 	assert.ErrorIs(t, err, quotations.ErrNotFound)
 }
 
