@@ -51,6 +51,9 @@ func TestFactories(t *testing.T) {
 		{"Conflict", Conflict("e"), http.StatusConflict, "Conflict"},
 		{"Internal", Internal("f"), http.StatusInternalServerError, "Internal Server Error"},
 		{"PayloadTooLarge", PayloadTooLarge("g"), http.StatusRequestEntityTooLarge, "Payload Too Large"},
+		{"TooManyRequests", TooManyRequests("h"), http.StatusTooManyRequests, "Too Many Requests"},
+		{"BadGateway", BadGateway("i"), http.StatusBadGateway, "Bad Gateway"},
+		{"ServiceUnavailable", ServiceUnavailable("j"), http.StatusServiceUnavailable, "Service Unavailable"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

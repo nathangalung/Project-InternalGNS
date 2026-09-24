@@ -196,6 +196,20 @@ func TestDownload(t *testing.T) {
 		assert.ElementsMatch(t, []string{"downloadUrl", "expiresAt"}, keys(body))
 		assert.Contains(t, body["downloadUrl"], "key=items%2F1%2Fa.png")
 	})
+	t.Run("bad id", func(t *testing.T) {
+		rec := serve(t, http.MethodGet, "/{id}/download-url", "/x/download-url", assetproxy.Download(base("items/1/a.png")), "")
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Equal(t, "invalid id", decode(t, rec)["detail"])
+	})
+	t.Run("owner lookup fails", func(t *testing.T) {
+		d := base("")
+		d.CurrentAsset = func(context.Context, int64) (assetproxy.Asset, error) {
+			return assetproxy.Asset{}, errors.New("connection reset")
+		}
+		rec := serve(t, http.MethodGet, "/{id}/download-url", "/1/download-url", assetproxy.Download(d), "")
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+		assert.NotContains(t, rec.Body.String(), "connection reset", "the cause stays in the log")
+	})
 }
 
 // Purchase orders return the original file name alongside the URL.

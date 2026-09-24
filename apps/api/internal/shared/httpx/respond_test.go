@@ -32,3 +32,14 @@ func TestWriteJSON_NilBody(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Equal(t, "null\n", rec.Body.String())
 }
+
+// A workbook downloads under the given name.
+func TestWriteXLSX(t *testing.T) {
+	rec := httptest.NewRecorder()
+	WriteXLSX(rec, "Faktur-2026-09", []byte("PK\x03\x04"))
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", rec.Header().Get("Content-Type"))
+	assert.Equal(t, `attachment; filename="Faktur-2026-09.xlsx"`, rec.Header().Get("Content-Disposition"))
+	assert.Equal(t, "PK\x03\x04", rec.Body.String())
+}
