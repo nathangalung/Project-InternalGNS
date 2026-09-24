@@ -132,6 +132,23 @@ test.describe("quotation wizard", () => {
     await expect(page.getByRole("button", { name: "Lanjut" })).toBeEnabled()
   })
 
+  test("the unsearched client picker offers only active clients", async ({ page, seed }) => {
+    // Sorts first by name, so it lands in the picker's first page.
+    const dropped = await seed.client({ label: "000 Nonaktif" })
+    await deactivate("client", dropped.id)
+    const listed = page.waitForResponse(
+      (r) => new URL(r.url()).pathname.endsWith("/clients") && r.request().method() === "GET",
+    )
+    await page.goto("/quotations/add")
+    await listed
+    const options = page.locator("main button[aria-pressed]")
+    await expect(options.first()).toBeVisible()
+    const shown = await options.allTextContents()
+    const clients = await api<{ name: string; isActive: boolean }[]>("GET", "/clients?limit=200")
+    const inactive = clients.filter((c) => !c.isActive).map((c) => c.name)
+    expect(shown.filter((text) => inactive.some((name) => text.includes(`${name} -`)))).toEqual([])
+  })
+
   test("Salin ke Offer keeps the catalog item's vendors and unit", async ({ page, seed }) => {
     const client = await seed.client()
     const vendor = await seed.vendor()

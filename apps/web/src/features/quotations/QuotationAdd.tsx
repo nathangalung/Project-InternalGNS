@@ -85,7 +85,8 @@ export default function QuotationAdd() {
 
   const trimmedSearch = search.trim()
   const debouncedSearch = useDebouncedValue(trimmedSearch, 250)
-  const { data: clientsData } = useClients({ limit: 50 })
+  // Search hits are active only; the first page must match.
+  const { data: clientsData } = useClients({ limit: 50, isActive: true })
   const { data: searchHits } = useClientSearch(debouncedSearch, { limit: 30 })
   const { data: unitsData } = useUnits()
   const createQuotation = useCreateQuotation()
