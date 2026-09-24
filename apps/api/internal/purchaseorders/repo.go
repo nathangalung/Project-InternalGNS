@@ -32,6 +32,11 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 	return &Repo{db: exec, store: store}
 }
 
+// poTotalExpr is the PO's own grand total.
+// The list column, the total filter, the sort and the export all read it,
+// so a PO edited after acceptance is ranked by what it will bill.
+const poTotalExpr = "COALESCE(t.po_grand_total, 0)"
+
 // sortable is the closed set of PO sort keys.
 var sortable = listq.Whitelist{
 	Default: "po_date",
@@ -40,7 +45,7 @@ var sortable = listq.Whitelist{
 		"po_date":    {Expr: "po.po_date", Dir: listq.Desc},
 		"createdAt":  {Expr: "po.created_at", Dir: listq.Desc},
 		"created_at": {Expr: "po.created_at", Dir: listq.Desc},
-		"total":      {Expr: "COALESCE(q.grand_total, 0)", Dir: listq.Desc},
+		"total":      {Expr: poTotalExpr, Dir: listq.Desc},
 		"poNumber":   {Expr: "po.po_number", Dir: listq.Desc},
 		"po_number":  {Expr: "po.po_number", Dir: listq.Desc},
 	},
@@ -70,11 +75,11 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	}
 	if f.MinTotal != nil {
 		p := c.Arg(*f.MinTotal)
-		c.And("COALESCE(q.grand_total, 0) >= " + p + "::numeric")
+		c.And(poTotalExpr + " >= " + p + "::numeric")
 	}
 	if f.MaxTotal != nil {
 		p := c.Arg(*f.MaxTotal)
-		c.And("COALESCE(q.grand_total, 0) <= " + p + "::numeric")
+		c.And(poTotalExpr + " <= " + p + "::numeric")
 	}
 
 	var out ListResult

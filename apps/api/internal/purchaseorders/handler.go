@@ -82,11 +82,8 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	headers := []string{"No. Delivery Note", "No. PO", "No. Quotation", "Tanggal", "Klien", "Status", "Total"}
 	rows := make([][]string, 0, len(res.Rows))
 	for _, po := range res.Rows {
-		// Blank until the note is issued at ON_PROGRESS.
-		dn := ""
-		if po.DeliveryNoteNumber != nil {
-			dn = *po.DeliveryNoteNumber
-		}
+		// Same rule as the PDF: blank unless the note can be printed.
+		dn, _ := issuedDeliveryNote(po)
 		rows = append(rows, []string{
 			dn,
 			po.PoNumber,
@@ -94,7 +91,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 			po.PoDate.In(tz.Jakarta()).Format("2006-01-02"),
 			po.CompanyName,
 			StatusLabel(po.Status),
-			po.PoTotalProduk,
+			po.PoGrandTotal,
 		})
 	}
 	data, err := sheet.Write("Delivery Note", headers, rows)
