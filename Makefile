@@ -7,6 +7,7 @@
         tidy \
         build build-api build-web \
         test test-db-reset test-api test-api-ci test-web \
+        cover cover-api cover-web \
         lint lint-fix fmt types \
         hooks-install hooks-run \
         docker-build docker-build-api docker-build-web \
@@ -199,6 +200,20 @@ test-api-ci: test-api ## Run Go tests the way CI does
 
 test-web: ## Typecheck and unit-test FE
 	cd $(WEB_DIR) && bun run typecheck && bun run test
+
+# Coverage gates. Minimums live in scripts/covercheck/thresholds.txt (Go)
+# and vitest.config.ts (web); both print the gap to each tier.
+cover: cover-api cover-web ## Run both coverage gates
+
+cover-api: deps-up test-db-reset ## Go tests with cross-package coverage, then the per-package gate
+	@mkdir -p $(API_DIR)/bin
+	cd $(API_DIR) && TEST_DATABASE_URL=$(CI_TEST_DSN) DATABASE_URL=$(CI_TEST_DSN) \
+	  MINIO_ENDPOINT=$${MINIO_ENDPOINT:-localhost:9000} \
+	  go test ./... -race -count=1 -p=1 -covermode=atomic -coverpkg=./... -coverprofile=bin/coverage.out
+	cd $(API_DIR) && go run ./scripts/covercheck -profile bin/coverage.out
+
+cover-web: ## Vitest with per-tier coverage thresholds
+	cd $(WEB_DIR) && bun run coverage
 
 lint: ## Lint api and web
 	cd $(API_DIR) && go vet ./...

@@ -1,0 +1,47 @@
+# Minimum statement coverage per package, in percent.
+#
+# Measured cross-package: `go test -coverpkg=./...` merges every test binary,
+# so a statement counts as covered when any package's tests run it.
+# `make cover-api` runs the suite and this gate; the checker prints the gap.
+# Ratchet rule: raise a minimum once coverage passes it, never lower one.
+# A new package fails as UNCLASSIFIED until it is tiered or excluded here.
+
+# Business logic: 98.
+internal/auth                98
+internal/users               98
+internal/clients             98
+internal/vendors             98
+internal/items               98
+internal/quotations          98
+internal/purchaseorders      98
+internal/invoices            98
+internal/dashboard           98
+internal/countries           98
+internal/units               98
+internal/pdfgen              98
+db/queries                   98
+internal/shared/money        98
+
+# Shared and app wiring: 95.
+internal/app                 95
+internal/shared/assetproxy   95
+internal/shared/db           95
+internal/shared/deps         95
+internal/shared/httperr      95
+internal/shared/httpx        95
+internal/shared/listq        95
+internal/shared/paginate     95
+internal/shared/sheet        95
+internal/shared/tz           95
+
+# Object storage, with MinIO running: 90.
+internal/storage             90
+
+# Excluded: entry points, test harness, acceptance suites, SQL-only packages.
+# cmd/api is covered by the boot smoke in the CI e2e job instead.
+exclude cmd/...
+exclude scripts/...
+exclude internal/testutil
+exclude internal/*/acceptance
+exclude db/functions
+exclude db/migrations
