@@ -1,6 +1,7 @@
 import { useId, useState } from "react"
 import { getPageNumbers } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
+import { requestDiffers, requestedCode } from "./lines"
 import type { ProductItem } from "./QuotationEdit"
 import type { Client } from "./Step1Client"
 import { qe, qep } from "./wizard-styles"
@@ -362,8 +363,8 @@ export default function Step4Summary({
                     const profitPct =
                       p.hargaBeli > 0 ? ((profit / p.hargaBeli) * 100).toFixed(2) : "0.00"
                     const requestNama = p.requestedNama || p.nama
-                    const requestKode = p.requestedKodeImpa || p.kodeImpa
-                    const isDifferent = requestNama !== p.nama || requestKode !== p.kodeImpa
+                    const requestKode = requestedCode(p)
+                    const isDifferent = requestDiffers(p)
                     return (
                       <div key={p.id} className={`${qep.card} mb-0`}>
                         <div className={qep.cardHeader}>

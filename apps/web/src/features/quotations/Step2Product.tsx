@@ -3,7 +3,7 @@ import { useRef, useState } from "react"
 import { matchRows } from "@/features/items/api"
 import { getPageNumbers } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
-import { isValidQty, QTY_ERROR } from "./lines"
+import { isValidQty, QTY_ERROR, requestDiffers, requestedCode } from "./lines"
 import type { ProductItem } from "./QuotationEdit"
 import QuotationReviewCard from "./QuotationReviewCard"
 import { parseProductFile } from "./uploadParser"
@@ -421,8 +421,8 @@ export default function Step2Product({
                 const profitPct =
                   p.hargaBeli > 0 ? ((profit / p.hargaBeli) * 100).toFixed(2) : "0.00"
                 const requestNama = p.requestedNama || p.nama
-                const requestKode = p.requestedKodeImpa || p.kodeImpa
-                const isDifferent = requestNama !== p.nama || requestKode !== p.kodeImpa
+                const requestKode = requestedCode(p)
+                const isDifferent = requestDiffers(p)
                 const qtyError = qtyErrors[p.id] ?? (isValidQty(p.jumlah) ? undefined : QTY_ERROR)
                 return (
                   <div key={p.id} className={`${qep.card} mb-0`}>

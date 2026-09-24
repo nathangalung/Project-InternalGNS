@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api-client"
-import { countInvalidQty, isValidQty, parseQty, qtyErrorIndexes, qtyErrorsById } from "./lines"
+import {
+  countInvalidQty,
+  isValidQty,
+  parseQty,
+  qtyErrorIndexes,
+  qtyErrorsById,
+  requestDiffers,
+  requestedCode,
+} from "./lines"
 
 describe("parseQty value", () => {
   it("keeps zero and negatives so they can be flagged", () => {
@@ -55,4 +63,47 @@ describe("qtyErrorIndexes mapping", () => {
       0,
     )
   })
+})
+
+describe("request code and difference", () => {
+  const base = { nama: "Rope", kodeImpa: "222", requestedNama: "Rope", requestedKodeImpa: "" }
+  const cases: {
+    name: string
+    line: Parameters<typeof requestedCode>[0]
+    code: string
+    differs: boolean
+  }[] = [
+    {
+      name: "catalog offer, code-less request",
+      line: { ...base, itemId: 5 },
+      code: "",
+      differs: false,
+    },
+    {
+      name: "catalog offer, other request code",
+      line: { ...base, itemId: 5, requestedKodeImpa: "111" },
+      code: "111",
+      differs: true,
+    },
+    {
+      name: "catalog offer, same request code",
+      line: { ...base, itemId: 5, requestedKodeImpa: "222" },
+      code: "222",
+      differs: false,
+    },
+    { name: "free-text offer rides on the request", line: base, code: "222", differs: false },
+    {
+      name: "request names another product",
+      line: { ...base, itemId: 5, requestedNama: "Tali" },
+      code: "",
+      differs: true,
+    },
+  ]
+
+  for (const c of cases) {
+    it(c.name, () => {
+      expect(requestedCode(c.line)).toBe(c.code)
+      expect(requestDiffers(c.line)).toBe(c.differs)
+    })
+  }
 })

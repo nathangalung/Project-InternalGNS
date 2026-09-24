@@ -3,7 +3,7 @@ import type { QuotationDetail, QuotationItemRow, QuotationStatusEvent } from "@/
 import {
   historyAction,
   historyDate,
-  toEditItemInput,
+  toItemInput,
   toQuotationData,
   toTableRow,
   toWizardProduct,
@@ -176,6 +176,7 @@ describe("edit wizard lines", () => {
       over: {
         requestedImpa: "111",
         requestedName: "Tali",
+        offeredItemId: 5,
         offeredImpa: "222",
         offeredName: "Rope 12mm",
       },
@@ -184,7 +185,12 @@ describe("edit wizard lines", () => {
     },
     {
       name: "only an offered name",
-      over: { requestedImpa: "111", requestedName: "Tali", offeredName: "Rope 12mm" },
+      over: {
+        requestedImpa: "111",
+        requestedName: "Tali",
+        offeredItemId: 5,
+        offeredName: "Rope 12mm",
+      },
       kode: "111",
       nama: "Rope 12mm",
     },
@@ -210,18 +216,38 @@ describe("edit wizard lines", () => {
     })
   }
 
-  it("saves the request as stored", () => {
-    const line = item({ requestedImpa: "111", requestedName: "Tali", offeredImpa: "222" })
-    const input = toEditItemInput(toWizardProduct(line, 1, "PCS"), 3)
-    expect(input.requestedImpa).toBe("111")
-    expect(input.requestedName).toBe("Tali")
-    expect(input.unitId).toBe(3)
-  })
+  const roundTrips: { name: string; over: Partial<QuotationItemRow>; impa: string | undefined }[] =
+    [
+      {
+        name: "a request with its own code",
+        over: { requestedImpa: "111", offeredItemId: 5, offeredImpa: "222", offeredName: "Rope" },
+        impa: "111",
+      },
+      {
+        name: "a code-less request for a catalog offer",
+        over: { offeredItemId: 5, offeredImpa: "222", offeredName: "Rope" },
+        impa: undefined,
+      },
+      {
+        name: "a free-text line keeps its code",
+        over: { requestedImpa: "333" },
+        impa: "333",
+      },
+      {
+        name: "a code-less free-text line",
+        over: {},
+        impa: undefined,
+      },
+    ]
 
-  it("does not print the offered code as a request", () => {
-    const line = item({ requestedName: "Tali", offeredImpa: "222", offeredName: "Rope" })
-    const input = toEditItemInput(toWizardProduct(line, 1, "PCS"), 3)
-    expect(input.requestedImpa).toBeUndefined()
-    expect(input.requestedName).toBe("Tali")
-  })
+  for (const c of roundTrips) {
+    it(`saves the request as stored: ${c.name}`, () => {
+      const line = item({ requestedName: "Tali", ...c.over })
+      const input = toItemInput(toWizardProduct(line, 1, "PCS"), 3)
+      expect(input.requestedImpa).toBe(c.impa)
+      expect(input.requestedName).toBe("Tali")
+      expect(input.offeredItemId).toBe(c.over.offeredItemId)
+      expect(input.unitId).toBe(3)
+    })
+  }
 })

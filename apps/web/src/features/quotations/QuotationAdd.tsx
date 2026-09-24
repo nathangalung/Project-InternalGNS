@@ -10,6 +10,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
 import { ui } from "@/lib/ui"
 import type { QuotationCreateInput, QuotationItemInput } from "@/types/api"
+import { toItemInput } from "./adapters"
 import DiscountModal from "./DiscountModal"
 import { countInvalidQty, parseQty, qtyErrorIndexes, qtyErrorsById } from "./lines"
 import type { ProductItem } from "./QuotationEdit"
@@ -156,18 +157,7 @@ export default function QuotationAdd() {
     hasContent
 
   function buildItems(): QuotationItemInput[] {
-    const items: QuotationItemInput[] = products.map((p) => ({
-      requestedItemId: p.requestedItemId,
-      requestedImpa: p.requestedKodeImpa || p.kodeImpa || undefined,
-      requestedName: p.requestedNama || p.nama,
-      offeredItemId: p.itemId,
-      vendorProductId: p.vendorProductId,
-      qty: String(p.jumlah),
-      unitId: unitIdByCode.get(p.satuan.toUpperCase()) ?? 0,
-      sellingPrice: String(p.hargaJual),
-      costPrice: String(p.hargaBeli),
-    }))
-    return items
+    return products.map((p) => toItemInput(p, unitIdByCode.get(p.satuan.toUpperCase()) ?? 0))
   }
 
   function handleSubmit() {

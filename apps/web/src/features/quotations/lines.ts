@@ -1,4 +1,5 @@
 import { ApiError } from "@/lib/api-client"
+import type { ProductItem } from "./QuotationEdit"
 
 // Wizard line quantity rules.
 //
@@ -49,4 +50,28 @@ export function qtyErrorsById(
     if (line) out[line.id] = msg
   }
   return out
+}
+
+type RequestLine = Pick<
+  ProductItem,
+  "itemId" | "kodeImpa" | "nama" | "requestedKodeImpa" | "requestedNama"
+>
+
+// Request IMPA a line saves.
+//
+// A catalog offer carries its own code, so a request without one stays
+// without one; the PDF prints this column as the client's words. A free-text
+// offer has nowhere else to keep its code, so it rides on the request, which
+// is where fn_create_purchase_order looks when no catalog item is linked.
+export function requestedCode(p: RequestLine): string {
+  return p.requestedKodeImpa || (p.itemId === undefined ? p.kodeImpa : "")
+}
+
+// Request differs from the offer.
+//
+// Mirrors the detail table: a request with no code does not differ on code.
+export function requestDiffers(p: RequestLine): boolean {
+  const kode = requestedCode(p)
+  const nama = p.requestedNama || p.nama
+  return nama !== p.nama || (kode !== "" && kode !== p.kodeImpa)
 }

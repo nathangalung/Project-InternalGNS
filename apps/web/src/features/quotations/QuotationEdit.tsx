@@ -15,7 +15,7 @@ import { useUnits } from "@/features/units/hooks"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
 import { ui } from "@/lib/ui"
 import type { QuotationItemInput, QuotationUpdateInput } from "@/types/api"
-import { toEditItemInput, toWizardProduct } from "./adapters"
+import { toItemInput, toWizardProduct } from "./adapters"
 import DiscountModal from "./DiscountModal"
 import { countInvalidQty, parseQty, qtyErrorIndexes, qtyErrorsById } from "./lines"
 import Step1Client, { type Client } from "./Step1Client"
@@ -218,7 +218,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   function handleSave() {
     if (!hasNumericQuotationId || !detail || !canSave) return
     const items: QuotationItemInput[] = products.map((p) =>
-      toEditItemInput(p, unitIdByCode.get(p.satuan.toUpperCase()) ?? 0),
+      toItemInput(p, unitIdByCode.get(p.satuan.toUpperCase()) ?? 0),
     )
     const shipDays = Number(shippingTime)
     // PUT replaces the row, so fields the wizard does not edit are sent back.

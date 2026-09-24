@@ -7,7 +7,7 @@ import type {
   QuotationStatusEvent as ApiStatusEvent,
   QuotationItemInput,
 } from "@/types/api"
-import { parseQty } from "./lines"
+import { parseQty, requestedCode } from "./lines"
 import type { ProductItem } from "./QuotationEdit"
 import type { QuotationRow } from "./QuotationList/helpers"
 import { quotationStatusLabel } from "./status"
@@ -49,7 +49,7 @@ function offered(it: ApiQuotationItem): { kode: string; nama: string } {
 // API line to wizard product.
 //
 // Shows the offered item like the detail does; the request stays alongside
-// and is what toEditItemInput sends back.
+// and is what toItemInput sends back.
 export function toWizardProduct(
   it: ApiQuotationItem,
   fallbackId: number,
@@ -75,15 +75,14 @@ export function toWizardProduct(
   }
 }
 
-// Edit wizard line to API.
+// Wizard line to API.
 //
-// The request goes back as stored. A request with no IMPA stays without one
-// rather than taking the offered code, which the PDF would then print as if
-// the client had asked for it.
-export function toEditItemInput(p: ProductItem, unitId: number): QuotationItemInput {
+// Add and edit share it, so a stored request round-trips unchanged and the
+// IMPA saved is the one the request block shows (see requestedCode).
+export function toItemInput(p: ProductItem, unitId: number): QuotationItemInput {
   return {
     requestedItemId: p.requestedItemId,
-    requestedImpa: p.requestedKodeImpa || undefined,
+    requestedImpa: requestedCode(p) || undefined,
     requestedName: p.requestedNama || p.nama,
     offeredItemId: p.itemId,
     vendorProductId: p.vendorProductId,
