@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// Long tokens get break points; short text is plain escaping.
+// Long tokens get break points.
 func TestLatexBreakable(t *testing.T) {
 	const br = `\discretionary{}{}{}`
 	long := strings.Repeat("A", breakRun+1)
@@ -29,7 +29,7 @@ func TestLatexBreakable(t *testing.T) {
 	}
 }
 
-// Q-16: a long part number wraps inside its cell.
+// Q-16: long tokens wrap.
 func TestLatexExports_LongTokenWraps(t *testing.T) {
 	long := "SUPERLONGUNBROKENPARTNUMBERWITHOUTANYSPACESXYZ1234567890ABCDEFGH"
 	for _, a4 := range []bool{false, true} {

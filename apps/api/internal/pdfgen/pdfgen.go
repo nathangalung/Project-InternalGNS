@@ -188,11 +188,11 @@ func LatexEscape(s string) string {
 	return r.Replace(s)
 }
 
-// breakRun is the longest unbroken token.
+// breakRun caps unbroken tokens.
 // Twenty characters fit the narrowest table cell at the A5 font size.
 const breakRun = 20
 
-// LatexBreakable escapes and wraps long tokens.
+// LatexBreakable wraps long tokens.
 // A run of more than breakRun non-space characters, such as a part number,
 // gets an invisible break point after each character so it wraps inside a
 // p{} cell instead of running off the page. Shorter text is LatexEscape.

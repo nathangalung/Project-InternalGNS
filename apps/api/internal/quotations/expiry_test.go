@@ -79,7 +79,7 @@ func TestRunExpiryLoop_CancelledContext(t *testing.T) {
 	}
 }
 
-// cancelOnRun cancels, then fails like a query cut by shutdown.
+// cancelOnRun mimics a shutdown.
 type cancelOnRun struct {
 	cancel context.CancelFunc
 	calls  int
@@ -91,7 +91,7 @@ func (c *cancelOnRun) ExpireDue(ctx context.Context, _ time.Time) (int64, error)
 	return 0, ctx.Err()
 }
 
-// A run cut by shutdown is not an error.
+// Shutdown mid-run logs no error.
 func TestRunExpiryLoop_ShutdownDuringRun(t *testing.T) {
 	var logs bytes.Buffer
 	prev := slog.Default()

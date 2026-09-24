@@ -23,7 +23,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
 )
 
-// pdfExec picks an executor per repo.
+// pdfExec picks executors per repo.
 type pdfExec struct {
 	quotes, clients, units quotations.Executor
 	root                   string
@@ -48,7 +48,7 @@ func servePDF(h *quotations.ExportHandler, w http.ResponseWriter, id string) {
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/quotations/"+id+"/pdf", nil))
 }
 
-// createInTx adds a quotation visible to tx.
+// createInTx adds a tx quotation.
 func createInTx(t *testing.T) (context.Context, pgx.Tx, quotations.QuotationDetail) {
 	t.Helper()
 	ctx, tx := testutil.BeginTx(t)
@@ -60,7 +60,7 @@ func createInTx(t *testing.T) (context.Context, pgx.Tx, quotations.QuotationDeta
 	return ctx, tx, d
 }
 
-// Each failing dependency answers 500 without leaking.
+// Failing dependencies answer 500.
 func TestQuotationExport_PDF_Failures(t *testing.T) {
 	_, tx, d := createInTx(t)
 	fake := testutil.FakeExec{}
@@ -117,7 +117,7 @@ func (f *failingWriter) Header() http.Header       { return f.header }
 func (f *failingWriter) WriteHeader(code int)      { f.status = code }
 func (f *failingWriter) Write([]byte) (int, error) { return 0, errors.New("client went away") }
 
-// A dropped connection is logged, not re-answered.
+// Dropped connections are only logged.
 func TestQuotationExport_PDF_WriteFailureIsLogged(t *testing.T) {
 	requireXelatex(t)
 	_, tx, d := createInTx(t)
@@ -136,7 +136,7 @@ func TestQuotationExport_PDF_WriteFailureIsLogged(t *testing.T) {
 	assert.Contains(t, logs.String(), "client went away")
 }
 
-// The attention line prefers the quotation's contact.
+// Attention prefers the quotation contact.
 func TestExportHandler_ContactComm(t *testing.T) {
 	ctx, tx, d := createInTx(t)
 	var contactID int64

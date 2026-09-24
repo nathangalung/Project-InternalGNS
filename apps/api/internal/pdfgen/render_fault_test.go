@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// The semaphore follows the CPU budget.
+// Semaphore follows the CPU budget.
 func TestRenderConcurrency(t *testing.T) {
 	cases := []struct {
 		name  string
@@ -39,7 +39,7 @@ func TestRenderConcurrency(t *testing.T) {
 	}
 }
 
-// A render that outlives its budget reports the deadline.
+// Overlong renders report the deadline.
 func TestRender_Timeout(t *testing.T) {
 	root, name := writeTemplate(t, `body`)
 	r := NewRenderer(root)
@@ -59,7 +59,7 @@ func TestRender_Timeout(t *testing.T) {
 	}
 }
 
-// A full semaphore fails at the deadline, not later.
+// Full semaphores fail at deadline.
 func TestRender_WaitsForSlotUntilDeadline(t *testing.T) {
 	for range cap(renderSem) {
 		renderSem <- struct{}{}
@@ -81,7 +81,7 @@ func TestRender_WaitsForSlotUntilDeadline(t *testing.T) {
 	}
 }
 
-// Shared assets are staged beside doc.tex.
+// Assets are staged beside doc.tex.
 func TestRender_StagesAssets(t *testing.T) {
 	base := t.TempDir()
 	root := filepath.Join(base, "documents")
@@ -109,7 +109,7 @@ printf`, 1)
 	}
 }
 
-// A staging failure stops the render.
+// Staging failures stop the render.
 func TestRender_StagingFailures(t *testing.T) {
 	tests := []struct {
 		name    string

@@ -12,7 +12,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Parallel creates never share a number.
+// Parallel creates get distinct numbers.
 func TestRepo_ConcurrentCreatesGetDistinctNumbers(t *testing.T) {
 	pool := testutil.Pool(t)
 	ctx := context.Background()

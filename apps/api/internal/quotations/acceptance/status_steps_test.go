@@ -152,7 +152,7 @@ func (s *scenarioState) actAs(role, action string) error {
 	return s.callAs(role, method, url, body)
 }
 
-// callAs sends one request as a role.
+// callAs sends a role request.
 // path is below /api/v1; a nil body sends none.
 func (s *scenarioState) callAs(role, method, path string, body any) error {
 	uid, err := s.userFor(role)

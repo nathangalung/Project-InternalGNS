@@ -192,7 +192,7 @@ func TestBuildExportData_PaperSize(t *testing.T) {
 	}
 }
 
-// The footer terms come from the header and the shipping line.
+// Footer terms follow stored data.
 func TestBuildExportData_FooterTerms(t *testing.T) {
 	withDays := func(days *int) QuotationItem {
 		s := shippingLine(2, "100.00")

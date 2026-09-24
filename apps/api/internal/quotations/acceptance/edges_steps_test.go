@@ -15,14 +15,14 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Notes carried by the delivery fixture.
+// Delivery fixture notes.
 const fixtureNotes = "Kirim pagi"
 
 func idPath(id int64, suffix string) string {
 	return "/quotations/" + strconv.FormatInt(id, 10) + suffix
 }
 
-// deliveryLine is the one product of the fixture.
+// deliveryLine is the fixture product.
 func deliveryLine() []quotations.CreateItem {
 	return []quotations.CreateItem{{
 		RequestedName: "ITEM 1", Qty: "1", UnitID: defaultUnit, SellingPrice: "10000",
@@ -167,7 +167,7 @@ func (s *scenarioState) requestUnchanged() error {
 	return nil
 }
 
-// addContact inserts a contact for the scenario.
+// addContact inserts a scenario contact.
 func (s *scenarioState) addContact(company int64, name string) (int64, error) {
 	pool := testutil.Pool(s.t)
 	ctx := context.Background()
@@ -209,7 +209,7 @@ func (s *scenarioState) contactIsSet() error {
 	return nil
 }
 
-// callPathAs fills {id} and calls as a role.
+// callPathAs calls a templated path.
 func (s *scenarioState) callPathAs(role, method, path string) error {
 	path = strings.ReplaceAll(path, "{id}", strconv.FormatInt(s.lastID, 10))
 	var body any

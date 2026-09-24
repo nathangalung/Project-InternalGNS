@@ -14,7 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// badScanExec answers one query with a foreign column.
+// badScanExec corrupts one query.
 // The rows arrive, but no field matches, so the scan fails.
 type badScanExec struct {
 	inner quotations.Executor
@@ -38,7 +38,7 @@ func (e *badScanExec) Exec(ctx context.Context, sql string, args ...any) (pgconn
 	return e.inner.Exec(ctx, sql, args...)
 }
 
-// Every repo call surfaces a failed query.
+// Repo calls surface query failures.
 func TestRepo_QueryFailuresPropagate(t *testing.T) {
 	r := quotations.NewRepo(testutil.FakeExec{}, testutil.Store(t))
 	ctx := context.Background()
@@ -70,7 +70,7 @@ func TestRepo_QueryFailuresPropagate(t *testing.T) {
 	}
 }
 
-// A failure after the first statement still surfaces.
+// Second-query failures still surface.
 func TestRepo_SecondQueryFailures(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	store := testutil.Store(t)
@@ -92,7 +92,7 @@ func TestRepo_SecondQueryFailures(t *testing.T) {
 	})
 }
 
-// A row that does not scan is an error, not a partial result.
+// Unscannable rows are errors.
 func TestRepo_ScanFailuresPropagate(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	store := testutil.Store(t)

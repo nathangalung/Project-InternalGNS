@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Q-15: a bad date filter is the caller's error, not a 500.
+// Q-15: bad dates are 422.
 // The ::date cast raises 22007 or 22008, which httperr maps to 422.
 func TestHandler_List_BadDateFilter(t *testing.T) {
 	srv, _ := resetServer(t)

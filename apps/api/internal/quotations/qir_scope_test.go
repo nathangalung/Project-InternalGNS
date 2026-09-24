@@ -11,7 +11,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 )
 
-// A request is reachable only under its own quotation.
+// Requests answer under their quotation.
 func TestHandler_ItemRequests_ScopedToParent(t *testing.T) {
 	srv, _ := resetServer(t)
 	owner := mustCreate(t, srv)

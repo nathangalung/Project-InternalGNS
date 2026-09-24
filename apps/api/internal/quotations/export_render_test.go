@@ -213,7 +213,7 @@ func TestQuotationPDF_A5FitsFiveLines(t *testing.T) {
 	}
 }
 
-// Q-16: a part number with no spaces wraps inside its cell.
+// Q-16: long part numbers wrap.
 func TestQuotationPDF_LongPartNumberWraps(t *testing.T) {
 	const part = "HYDRAULICPUMPSEALKITVICKERSV201P13P1C11OEMGENUINE"
 	cases := []struct {

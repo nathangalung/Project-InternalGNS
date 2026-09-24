@@ -27,7 +27,7 @@ func problemOf(t *testing.T, res *http.Response) httperr.Error {
 	return e
 }
 
-// getJSON reads a 200 body into v.
+// getJSON decodes a 200 body.
 func getJSON(t *testing.T, srv *httptest.Server, path string, v any) {
 	t.Helper()
 	res := doJSON(t, srv, http.MethodGet, path, nil)
@@ -285,7 +285,7 @@ func TestHandler_Update_MalformedIfMatch(t *testing.T) {
 	assert.Equal(t, "invalid If-Match header", e.Detail)
 }
 
-// Q-14: send on an unknown id is a 404.
+// Q-14: unknown send is 404.
 func TestHandler_Send_UnknownQuotation(t *testing.T) {
 	srv, _ := resetServer(t)
 
@@ -295,7 +295,7 @@ func TestHandler_Send_UnknownQuotation(t *testing.T) {
 	assert.Equal(t, "Quotation 9999999 tidak ditemukan.", e.Detail)
 }
 
-// The send note lands in the history.
+// Send notes reach the history.
 func TestHandler_Send_KeepsTheNote(t *testing.T) {
 	srv, _ := resetServer(t)
 
@@ -356,7 +356,7 @@ func TestHandler_Update_Refusals(t *testing.T) {
 	}
 }
 
-// No match is an empty array, not null.
+// Empty lists encode as arrays.
 func TestHandler_List_EmptyIsArray(t *testing.T) {
 	srv, _ := resetServer(t)
 	mustCreate(t, srv)

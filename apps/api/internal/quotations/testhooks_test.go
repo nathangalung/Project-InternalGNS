@@ -9,7 +9,7 @@ import (
 // BuildExportData exposes the PDF shaping to integration tests.
 var BuildExportData = buildExportData
 
-// ContactComm exposes the attention contact lookup.
+// ContactComm exposes the contact lookup.
 func (h *ExportHandler) ContactComm(ctx context.Context, d QuotationDetail, c clients.Client) (string, string) {
 	return h.contactComm(ctx, d, c)
 }

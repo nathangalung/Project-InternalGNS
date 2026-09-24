@@ -100,7 +100,7 @@ func TestBuildExportData_ReconcilesWithStoredQuotation(t *testing.T) {
 	assert.Equal(t, "KABEL NYM 3x2.5", got.Items[2].Offer)
 }
 
-// Q-12: the stored shipping days print as DELIVERY TIME.
+// Q-12: shipping days print.
 func TestBuildExportData_DeliveryTimeFromStoredShipping(t *testing.T) {
 	ctx, repo, _ := newRepo(t)
 
