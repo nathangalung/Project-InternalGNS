@@ -77,6 +77,11 @@ func (s *suite) userFor(role string) (int64, error) {
 		return 0, fmt.Errorf("create %s user: %w", role, err)
 	}
 	s.cleaner.User(u.ID)
+	// Each scenario mints a fresh token from the host clock; a backward
+	// wall-clock step must not make it older than this account.
+	if err := testutil.PredateSessions(context.Background(), testutil.Pool(s.t), u.ID); err != nil {
+		return 0, err
+	}
 	s.users[role] = u.ID
 	return u.ID, nil
 }
