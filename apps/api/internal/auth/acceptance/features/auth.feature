@@ -131,3 +131,71 @@ Feature: Login, session refresh and session revocation
     Then the response status is 401
     When the account logs in with the password "Baru-pw2@"
     Then the response status is 200
+
+  Scenario: Logging out ends the refresh token
+    Given the account is logged in
+    When the account logs out
+    Then the response status is 204
+    When the account refreshes its session
+    Then the response status is 401
+    And the problem detail is "Sesi Anda sudah diakhiri. Silakan masuk kembali."
+
+  Scenario: An expired refresh token asks for a new sign-in
+    Given the account is logged in
+    And the refresh token expired a minute ago
+    When the account refreshes its session
+    Then the response status is 401
+    And the problem detail is "Sesi Anda sudah berakhir. Silakan masuk kembali."
+
+  Scenario: An unknown refresh token is refused
+    When someone refreshes with the token "not-a-real-token"
+    Then the response status is 401
+    And the problem detail is "Token penyegar tidak valid. Silakan masuk kembali."
+
+  Scenario: A refresh without a token names the missing field
+    When someone refreshes with the token ""
+    Then the response status is 422
+    And the problem detail is "Token penyegar wajib diisi."
+
+  Scenario: A forged access token is refused
+    Given the account is logged in
+    When the account calls "/api/v1/auth/me" with its token signed by another key
+    Then the response status is 401
+    And the problem detail is "Token akses tidak valid atau sudah kedaluwarsa. Silakan masuk kembali."
+
+  Scenario: A login with a malformed body is a bad request
+    When someone posts to "/api/v1/auth/login":
+      """
+      {"email":
+      """
+    Then the response status is 400
+    And the response is problem+json
+
+  Scenario: A login without credentials names both fields
+    When someone posts to "/api/v1/auth/login":
+      """
+      {}
+      """
+    Then the response status is 422
+    And the problem detail is "Email wajib diisi.; Kata sandi wajib diisi."
+
+  Scenario Outline: Only a superadmin reaches user management
+    Given a logged-in "<role>" account
+    When the account calls "/api/v1/users/"
+    Then the response status is <status>
+
+    Examples:
+      | role        | status |
+      | operational | 403    |
+      | finance     | 403    |
+      | superadmin  | 200    |
+
+  Scenario Outline: A refused role is told why
+    Given a logged-in "<role>" account
+    When the account calls "/api/v1/users/"
+    Then the problem detail is "Peran Anda tidak memiliki akses ke fitur ini."
+
+    Examples:
+      | role        |
+      | operational |
+      | finance     |

@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/cucumber/godog"
+	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/app"
 	"github.com/nathangalung/internalgns/apps/api/internal/auth"
@@ -386,6 +387,64 @@ func (s *scenarioState) waitBlockedOn(ctx context.Context, pid int, done <-chan 
 	}
 }
 
+func (s *scenarioState) logOut() error {
+	return s.send(http.MethodPost, "/api/v1/auth/logout", "", "",
+		auth.LogoutRequest{RefreshToken: s.refresh})
+}
+
+// expireRefresh moves the account's tokens past their expiry.
+func (s *scenarioState) expireRefresh() error {
+	_, err := testutil.Pool(s.t).Exec(context.Background(),
+		`UPDATE refresh_tokens SET expires_at = now() - interval '1 minute' WHERE user_id = $1`, s.account.ID)
+	return err
+}
+
+func (s *scenarioState) refreshWith(token string) error {
+	return s.send(http.MethodPost, "/api/v1/auth/refresh", "", "", auth.RefreshRequest{RefreshToken: token})
+}
+
+// callsForged re-signs the access token under another key.
+func (s *scenarioState) callsForged(path string) error {
+	var claims auth.Claims
+	if _, _, err := jwt.NewParser().ParseUnverified(s.access, &claims); err != nil {
+		return fmt.Errorf("read access token: %w", err)
+	}
+	forged, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte("not-the-server-key"))
+	if err != nil {
+		return err
+	}
+	return s.send(http.MethodGet, path, forged, "", nil)
+}
+
+// postRaw sends a body exactly as written.
+func (s *scenarioState) postRaw(path string, doc *godog.DocString) error {
+	req, err := http.NewRequest(http.MethodPost, s.srv.URL+path, strings.NewReader(doc.Content))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Forwarded-For", nextIP())
+	res, err := s.srv.Client().Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	s.body, err = io.ReadAll(res.Body)
+	s.last = res
+	return err
+}
+
+// loggedInAs replaces the account with a signed-in one of role.
+func (s *scenarioState) loggedInAs(role string) error {
+	u, err := s.createUser(users.Role(role), rightPassword)
+	if err != nil {
+		return err
+	}
+	s.account = u
+	s.password = rightPassword
+	return s.loggedIn()
+}
+
 func (s *scenarioState) statusEquals(want int) error {
 	if s.last.StatusCode != want {
 		return fmt.Errorf("want %d got %d body=%s", want, s.last.StatusCode, s.body)
@@ -459,6 +518,12 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		})
 		sc.Step(`^the account changes its own password to "([^"]+)" while a superadmin resets it to "([^"]+)"$`,
 			state.changeOwnPasswordDuringReset)
+		sc.Step(`^the account logs out$`, state.logOut)
+		sc.Step(`^the refresh token expired a minute ago$`, state.expireRefresh)
+		sc.Step(`^someone refreshes with the token "([^"]*)"$`, state.refreshWith)
+		sc.Step(`^the account calls "([^"]+)" with its token signed by another key$`, state.callsForged)
+		sc.Step(`^someone posts to "([^"]+)":$`, state.postRaw)
+		sc.Step(`^a logged-in "([^"]+)" account$`, state.loggedInAs)
 		sc.Step(`^the response status is (\d+)$`, state.statusEquals)
 		sc.Step(`^the problem detail is "([^"]+)"$`, state.problemDetail)
 		sc.Step(`^the response is problem\+json$`, state.isProblemJSON)
@@ -474,6 +539,7 @@ func TestAuthFeatures(t *testing.T) {
 			Format:   "pretty",
 			Paths:    []string{"features"},
 			TestingT: t,
+			Strict:   true,
 		},
 	}
 	if status := suite.Run(); status != 0 {
