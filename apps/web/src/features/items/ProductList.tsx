@@ -13,6 +13,7 @@ import {
   katalogRowsFromHits,
   katalogSearchPlan,
   katalogSearchView,
+  katalogSource,
 } from "@/features/items/helpers"
 import { useItemSearchAdvanced, useItems } from "@/features/items/hooks"
 import ProductCreateModal from "@/features/items/ProductCreateModal"
@@ -48,7 +49,8 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
 
   const list = useListScreen<ProductFilterValues>({ status: "all", unitCode: "" })
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
-  const isSearchActive = debouncedSearch.length > 0
+  const source = katalogSource(list.search, debouncedSearch)
+  const isSearchActive = source === "search"
 
   const unitIdByCode = useMemo(() => {
     const map = new Map<string, number>()
@@ -75,7 +77,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
 
   // Skipped while searching: the search layer supplies the rows instead.
   const { data: listData, isLoading: itemsLoading } = useItems(listParams, {
-    enabled: !isSearchActive,
+    enabled: debouncedSearch.length === 0,
   })
   const searchPlan = useMemo(
     () => katalogSearchPlan(unitId, startIndex, itemsPerPage),
@@ -96,7 +98,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
     for (const h of searchView.hits) m.set(h.id, h.tier)
     return m
   }, [searchView.hits])
-  const isLoading = isSearchActive ? searchLoading : itemsLoading
+  const isLoading = source === "pending" || (isSearchActive ? searchLoading : itemsLoading)
 
   const unitOf = useMemo(() => {
     const map = new Map<number, string>()

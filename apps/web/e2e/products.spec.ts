@@ -133,8 +133,8 @@ test("a deactivated product is found by name under the Nonaktif filter", async (
   await filter.getByRole("button", { name: "Terapkan" }).click()
   await page.getByPlaceholder("Cari kode IMPA, nama, kategori produk...").fill(dropped.name)
   const row = page.getByRole("row", { name: new RegExp(dropped.name) })
-  // The tier badge exists only on a search hit. Without it the plain
-  // Nonaktif list row, still on screen during the debounce, passed alone.
+  // The tier badge exists only on a search hit, so a plain Nonaktif list
+  // row cannot satisfy this on its own.
   await expect(row).toContainText("EXACT")
   await expect(row).toContainText("NONAKTIF")
   await expect(page.getByRole("link", { name: kept.name, exact: true })).toHaveCount(0)

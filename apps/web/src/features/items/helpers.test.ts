@@ -9,6 +9,7 @@ import {
   katalogRowsFromHits,
   katalogSearchPlan,
   katalogSearchView,
+  katalogSource,
   productInitials,
   vendorInitials,
 } from "./helpers"
@@ -109,6 +110,19 @@ describe("katalogSearchView", () => {
     ["more matches than the scan", 251, true],
   ])("capped: %s", (_name, total, want) => {
     expect(katalogSearchView(resp(scanned, total), scan, 8, 0, 2).capped).toBe(want)
+  })
+})
+
+describe("katalogSource", () => {
+  it.each([
+    ["no term", "", "", "list"],
+    ["first keystroke", "a", "", "pending"],
+    ["term settled", "a", "a", "search"],
+    ["term cleared", "", "a", "pending"],
+    ["term refined", "ab", "a", "search"],
+    ["blank input", "   ", "", "list"],
+  ] as const)("%s", (_name, live, debounced, want) => {
+    expect(katalogSource(live, debounced)).toBe(want)
   })
 })
 

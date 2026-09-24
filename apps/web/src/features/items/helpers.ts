@@ -78,6 +78,20 @@ export function katalogSearchView(
   }
 }
 
+export type KatalogSource = "list" | "search" | "pending"
+
+// Which layer supplies rows.
+//
+// The live input decides whether the rows should come from the list or the
+// search, the debounced term decides which one is queried. While they
+// disagree the other source's rows are wrong, so the table waits instead.
+export function katalogSource(live: string, debounced: string): KatalogSource {
+  const wantsSearch = live.trim().length > 0
+  const searching = debounced.length > 0
+  if (wantsSearch !== searching) return "pending"
+  return searching ? "search" : "list"
+}
+
 // Two-letter product initials.
 export function productInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean)
