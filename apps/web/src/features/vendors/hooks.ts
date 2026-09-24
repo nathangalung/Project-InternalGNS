@@ -27,11 +27,14 @@ export function useVendor(id: number | undefined) {
   })
 }
 
-export function useVendorItems(vendorId: number | undefined) {
+export function useVendorItems(vendorId: number | undefined, page: vendorsApi.VendorItemsPage) {
   return useQuery({
-    queryKey: vendorId ? queryKeys.vendors.items(vendorId) : queryKeys.vendors.all,
+    queryKey: vendorId ? [...queryKeys.vendors.items(vendorId), page] : queryKeys.vendors.all,
     queryFn:
-      vendorId !== undefined && vendorId > 0 ? () => vendorsApi.listItems(vendorId) : skipToken,
+      vendorId !== undefined && vendorId > 0
+        ? () => vendorsApi.listItems(vendorId, page)
+        : skipToken,
+    placeholderData: keepPreviousData,
   })
 }
 

@@ -1,8 +1,8 @@
 import { useEffect, useId, useRef, useState } from "react"
 import EntityLink from "@/components/shared/EntityLink"
+import Pagination from "@/components/shared/Pagination"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
-import { VENDOR_ITEMS_LIMIT } from "@/features/vendors/api"
 import {
   useUpdateVendor,
   useUploadVendorLogo,
@@ -17,9 +17,9 @@ import { canWriteCatalog } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
+import { useListScreen } from "@/lib/useListScreen"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
 import { buildContactInfo } from "./contact-info"
-import { vendorItemsSummary } from "./helpers"
 
 type VendorDetailProps = {
   vendor: VendorRow
@@ -83,13 +83,18 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   const updateVendor = useUpdateVendor()
   const uploadLogo = useUploadVendorLogo()
   const { data: logoDownload } = useVendorLogoDownloadUrl(vendor.id, vendor.logoObjectKey)
+  const itemsList = useListScreen<Record<string, never>>({})
   const {
     data: vendorItems,
     isLoading: itemsLoading,
+    isPlaceholderData: itemsStale,
     isError: itemsError,
-  } = useVendorItems(vendor.id)
-  const items = vendorItems ?? []
-  const itemsSummary = vendorItemsSummary(items.length, VENDOR_ITEMS_LIMIT)
+  } = useVendorItems(vendor.id, {
+    limit: itemsList.itemsPerPage,
+    offset: itemsList.startIndex,
+  })
+  const items = vendorItems?.rows ?? []
+  const itemsTotal = vendorItems?.total ?? 0
 
   useEffect(() => {
     const path = logoDownload?.downloadUrl
@@ -504,10 +509,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
         <h3 className="m-0 text-[20px] font-extrabold leading-7 tracking-[-0.5px] text-[#191C1E]">
           Daftar Produk Vendor
           {!itemsLoading && !itemsError && (
-            <span className="ml-1 text-base font-semibold text-dark-500">
-              {" "}
-              ({itemsSummary.count})
-            </span>
+            <span className="ml-1 text-base font-semibold text-dark-500"> ({itemsTotal})</span>
           )}
         </h3>
 
@@ -546,10 +548,21 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                 ))}
             </tbody>
           </table>
+
+          {!itemsError && (
+            <Pagination
+              totalItems={itemsTotal}
+              startIndex={itemsList.startIndex}
+              itemsPerPage={itemsList.itemsPerPage}
+              currentPage={itemsList.currentPage}
+              totalPages={itemsList.totalPagesOf(itemsTotal)}
+              resourceLabel="Produk"
+              onItemsPerPage={itemsList.setItemsPerPage}
+              onPage={itemsList.setCurrentPage}
+              isLoading={itemsLoading || itemsStale}
+            />
+          )}
         </div>
-        {!itemsLoading && itemsSummary.notice && (
-          <p className="m-0 text-xs text-dark-500">{itemsSummary.notice}</p>
-        )}
       </div>
     </div>
   )

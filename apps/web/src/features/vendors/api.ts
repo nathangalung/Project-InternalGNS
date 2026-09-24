@@ -36,13 +36,18 @@ export async function get(id: number): Promise<VendorRow> {
   return apiRequest<VendorRow>({ path: `/vendors/${id}` })
 }
 
-// Server cap; the API has no offset.
-export const VENDOR_ITEMS_LIMIT = 200
+export type VendorItemsPage = {
+  limit: number
+  offset: number
+}
 
-export async function listItems(vendorId: number): Promise<VendorItemRow[]> {
-  return apiRequest<VendorItemRow[]>({
-    path: `/vendors/${vendorId}/items?limit=${VENDOR_ITEMS_LIMIT}`,
-  })
+// One page, total from header.
+export async function listItems(
+  vendorId: number,
+  page: VendorItemsPage,
+): Promise<PaginatedList<VendorItemRow>> {
+  const qs = buildQuery({ limit: page.limit, offset: page.offset })
+  return apiList<VendorItemRow>({ path: `/vendors/${vendorId}/items?${qs}` })
 }
 
 type CreateVendorInput = {
