@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
@@ -99,4 +101,38 @@ func TestNew_BadEndpoint(t *testing.T) {
 	}
 	// MinIO SDK either fails connect or returns lookup error; both fine.
 	assert.True(t, strings.Contains(err.Error(), "storage:") || err != nil)
+}
+
+// MinIO keeps the cap refusal typed.
+// The handler can only answer 413 if the SDK hands back the body reader's
+// error unchanged, and a refused upload must leave nothing behind, or the
+// retry with a smaller file would hit the overwrite guard.
+func TestHandler_OversizeStreamAgainstMinio(t *testing.T) {
+	cfg := requireMinio(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	c, err := storage.New(ctx, cfg)
+	require.NoError(t, err)
+
+	key := storage.BuildObjectKey("clients", time.Now().UnixNano(), "oversize.png")
+	t.Cleanup(func() { _ = c.RemoveObject(context.Background(), storage.BucketClientLogos, key) })
+	url := "/storage/object?bucket=" + storage.BucketClientLogos + "&key=" + key
+
+	h := storage.NewHandler(c)
+	big := bytes.Repeat([]byte{'x'}, int(storage.MaxBytes(storage.BucketClientLogos))+1)
+	req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(big))
+	req.ContentLength = -1
+	rec := httptest.NewRecorder()
+	h.Put(rec, req)
+	assert.Equal(t, http.StatusRequestEntityTooLarge, rec.Code, rec.Body.String())
+
+	exists, err := c.ObjectExists(ctx, storage.BucketClientLogos, key)
+	require.NoError(t, err)
+	assert.False(t, exists, "a refused upload must not leave an object")
+
+	small := []byte("small-logo")
+	req = httptest.NewRequest(http.MethodPut, url, bytes.NewReader(small))
+	rec = httptest.NewRecorder()
+	h.Put(rec, req)
+	assert.Equal(t, http.StatusNoContent, rec.Code, "the retry at the same key must be accepted")
 }

@@ -86,6 +86,15 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
 		return
 	}
+	limit := MaxBytes(bucket) // per-bucket policy cap (bucket already validated)
+	if limit <= 0 {
+		limit = maxUploadBytes
+	}
+	// A declared length past the cap is refused before any byte is read.
+	if r.ContentLength > limit {
+		renderTooLarge(w, limit)
+		return
+	}
 	// The key comes from the client, so a PUT is a create, never a replace:
 	// otherwise any role holding the bucket could overwrite another record's
 	// stored document with its own bytes.
@@ -98,13 +107,16 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Conflict("object already exists"))
 		return
 	}
-	limit := MaxBytes(bucket) // per-bucket policy cap (bucket already validated)
-	if limit <= 0 {
-		limit = maxUploadBytes
-	}
 	r.Body = http.MaxBytesReader(w, r.Body, limit)
 	defer r.Body.Close()
 	if err := h.store.PutObject(r.Context(), bucket, key, r.Body, r.ContentLength, r.Header.Get("Content-Type")); err != nil {
+		// A streamed body that outgrows the cap is the caller's file, not
+		// a store fault.
+		var tooLarge *http.MaxBytesError
+		if errors.As(err, &tooLarge) {
+			renderTooLarge(w, limit)
+			return
+		}
 		renderStoreErr(r.Context(), w, "put", bucket, key, err, "upload failed")
 		return
 	}
@@ -148,6 +160,12 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Cache-Control", "private, max-age=300")
 	_, _ = io.Copy(w, rc)
+}
+
+// Refuses a file past the cap.
+func renderTooLarge(w http.ResponseWriter, limit int64) {
+	httperr.Render(w, httperr.PayloadTooLarge(
+		fmt.Sprintf("Ukuran berkas melebihi batas %d MB. Pilih berkas yang lebih kecil.", limit>>20)))
 }
 
 // Logs a store failure with its cause.

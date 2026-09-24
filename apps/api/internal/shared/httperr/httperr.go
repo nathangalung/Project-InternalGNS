@@ -90,6 +90,9 @@ func fieldsDetail(fields map[string]string) string {
 	}
 	return strings.Join(msgs, "; ")
 }
+func PayloadTooLarge(detail string) Error {
+	return Error{Type: "about:blank", Title: "Payload Too Large", Status: http.StatusRequestEntityTooLarge, Detail: detail}
+}
 func TooManyRequests(detail string) Error {
 	return Error{Type: "about:blank", Title: "Too Many Requests", Status: http.StatusTooManyRequests, Detail: detail}
 }
