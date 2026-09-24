@@ -367,7 +367,8 @@ as `[Report Only] Refused to ...`. To enforce the policy:
 ## 13. Pre-deploy checks
 
 Run these before every deploy that carries migrations, and before the first
-deploy of this branch. It moves the database from 00047 (v0.3.1) to 00067.
+deploy of this branch. Its first deploy moves the database from the last
+migration in v0.3.1 (00047) to the last one in the new release.
 
 ### Migration order
 
@@ -386,7 +387,8 @@ BEGIN READ ONLY;
 -- Expected: zero rows. A row means a retired migration ran from an
 -- unmerged build; stop and restore from the last good backup.
 SELECT version_id FROM goose_db_version WHERE version_id IN (58, 60);
--- Expected: 47 before this branch first deploys, 67 after.
+-- Expected: the last migration in the deployed tag (00047 for v0.3.1);
+-- after the deploy, the last one in the new release.
 SELECT max(version_id) FROM goose_db_version WHERE is_applied;
 -- Expected: zero rows. 00064 without 00063 is the broken state above.
 SELECT 64 WHERE EXISTS (SELECT 1 FROM goose_db_version WHERE version_id = 64)
