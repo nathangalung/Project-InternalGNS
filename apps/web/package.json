@@ -16,9 +16,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
-    "lint": "biome check src",
+    "e2e": "playwright test",
+    "lint": "biome check src e2e/*.ts e2e/support playwright.config.ts vitest.config.ts",
     "format": "biome format --write src",
-    "typecheck": "bun run generate:routes && tsc --noEmit -p tsconfig.json",
+    "typecheck": "bun run generate:routes && tsc --noEmit -p tsconfig.json && tsc --noEmit -p e2e/tsconfig.json",
     "analyze": "ANALYZE=true bun run build",
     "lighthouse": "lhci autorun"
   },

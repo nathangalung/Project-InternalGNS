@@ -7,7 +7,7 @@
         tidy \
         build build-api build-web \
         test test-db-reset test-api test-api-ci test-web \
-        cover cover-api cover-web \
+        cover cover-api cover-web e2e \
         lint lint-fix fmt types \
         hooks-install hooks-run \
         docker-build docker-build-api docker-build-web \
@@ -214,6 +214,13 @@ cover-api: deps-up test-db-reset ## Go tests with cross-package coverage, then t
 
 cover-web: ## Vitest with per-tier coverage thresholds
 	cd $(WEB_DIR) && bun run coverage
+
+# Browser suite against the running dev stack (make dev). Admin credentials
+# come from apps/api/.env unless E2E_ADMIN_EMAIL/E2E_ADMIN_PASSWORD are set.
+e2e: ## Playwright e2e against the dev stack
+	@set -a; if [ -f $(API_DIR)/.env ]; then . $(API_DIR)/.env; fi; set +a; \
+	cd $(WEB_DIR) && E2E_ADMIN_EMAIL=$${E2E_ADMIN_EMAIL:-$$SUPERADMIN_EMAIL} \
+	  E2E_ADMIN_PASSWORD=$${E2E_ADMIN_PASSWORD:-$$SUPERADMIN_PASSWORD} bun run e2e
 
 lint: ## Lint api and web
 	cd $(API_DIR) && go vet ./...
