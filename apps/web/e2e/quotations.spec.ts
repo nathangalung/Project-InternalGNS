@@ -354,3 +354,38 @@ test.describe("quotation status", () => {
     })
   })
 })
+
+test.describe("quotation list", () => {
+  test("a status filter narrows the search and its chip removes it", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const lines = [{ item, qty: 1, price: 30_000 }]
+    const open = await seed.quotation({ client, lines })
+    const dropped = await seed.quotation({ client, lines })
+    await seed.setQuotationStatus(dropped.id, "cancelled", "Klien tidak jadi memesan")
+
+    await page.goto("/quotations")
+    await page.getByPlaceholder("Cari penawaran, klien, atau nomor...").fill(seed.prefix)
+    const rows = page.getByRole("row", { name: new RegExp(client.name) })
+    await expect(rows).toHaveCount(2)
+
+    await page.getByRole("button", { name: "Filter" }).click()
+    const filter = page.getByRole("dialog", { name: "Filter Quotation" })
+    await filter
+      .getByRole("group", { name: "Status Quotation" })
+      .getByRole("button", { name: "Dibatalkan" })
+      .click()
+    await filter.getByRole("button", { name: "Terapkan" }).click()
+    await expect(rows).toHaveCount(1)
+    await expect(rows).toContainText(dropped.quotationNo)
+    await expect(rows).toContainText("Dibatalkan")
+
+    // Removing the chip keeps the search in place.
+    await page.getByRole("button", { name: "Hapus filter Status: Dibatalkan" }).click()
+    await expect(rows).toHaveCount(2)
+    await expect(page.getByRole("link", { name: open.quotationNo })).toBeVisible()
+    await expect(page.getByPlaceholder("Cari penawaran, klien, atau nomor...")).toHaveValue(
+      seed.prefix,
+    )
+  })
+})

@@ -282,6 +282,15 @@ export class SalesSeed {
         const po = await this.poByQuotation(id).catch(() => null)
         if (po?.allowedTransitions.some((t) => t.to === "CANCELLED")) {
           await this.setPoStatus(po.id, "CANCELLED", note)
+        } else if (po?.status === "DELIVERED") {
+          // Delivery filed a draft invoice; void it.
+          const inv = await api<{ id: number; status: string }>(
+            "GET",
+            `/invoices/by-quotation/${id}`,
+          ).catch(() => null)
+          if (inv?.status === "draft") {
+            await api("PATCH", `/invoices/${inv.id}/status`, { status: "cancelled", note })
+          }
         }
       } else if (q.allowedTransitions.some((t) => t.to === "cancelled")) {
         await this.setQuotationStatus(id, "cancelled", note)

@@ -193,6 +193,27 @@ test.describe("purchase order status", () => {
     await expect(page.getByRole("button", { name: "Dibatalkan", exact: true })).toBeVisible()
   })
 
+  test("Dikirim delivers the PO and locks its lines", async ({ page, seed }) => {
+    const { q, po } = await acceptedPo(seed)
+    await seed.attachPoFile(po)
+    await seed.setPoStatus(po.id, "ON_PROGRESS")
+
+    await page.goto(`/purchase-orders/${q.id}`)
+    await choosePoStatus(page, "Dalam Progres", "Dikirim")
+    await expect(page).toHaveURL(/\/purchase-orders$/)
+    expect((await seed.poByQuotation(q.id)).status).toBe("DELIVERED")
+
+    await page.goto(`/purchase-orders/${q.id}`)
+    await expect(page.getByRole("button", { name: "Dikirim", exact: true })).toBeDisabled()
+    await expect(page.getByText("Status ini sudah final dan tidak dapat diubah.")).toBeVisible()
+    await expect(page.getByRole("button", { name: "Ubah", exact: true })).toBeDisabled()
+    // The file stays; only the number and date remain editable.
+    await expect(page.getByRole("button", { name: "Hapus Berkas" })).toHaveCount(0)
+    await expect(page.getByRole("button", { name: "Ubah Detail" })).toBeVisible()
+    await page.goto(`/purchase-orders/${q.id}/edit`)
+    await expect(page.getByText("Purchase Order tidak dapat diubah")).toBeVisible()
+  })
+
   test("Dibatalkan needs a reason and locks the PO", async ({ page, seed }) => {
     const { q } = await acceptedPo(seed)
     const reason = `${seed.prefix} klien membatalkan pesanan`
