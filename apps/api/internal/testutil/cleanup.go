@@ -71,7 +71,8 @@ func (c *Cleaner) Vendor(id int64) { c.add("vendors", id) }
 
 // Quotation tracks a quotation with its PO and invoices.
 // Their items and history cascade. A revision references its parent with
-// RESTRICT, so a suite that revises must track the chain itself.
+// RESTRICT, which one DELETE cannot order, so a suite that revises must
+// delete that chain itself.
 func (c *Cleaner) Quotation(id int64) { c.add("quotations", id) }
 
 // User tracks a created users row.
