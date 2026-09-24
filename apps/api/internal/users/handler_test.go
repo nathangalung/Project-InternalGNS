@@ -126,13 +126,17 @@ func TestHandler_Create_ValidationErrors(t *testing.T) {
 
 func TestHandler_Create_DuplicateEmail(t *testing.T) {
 	srv := newUsersServer(t)
+	c := testutil.NewCleaner(t)
 	email := fmt.Sprintf("dup-%d@test.local", randSuffix())
 	body := map[string]any{
 		"email": email, "name": "Dup User", "password": "Longenough1!", "role": "operational",
 	}
 	r1 := doJSON(t, srv, http.MethodPost, "/users/", body)
-	r1.Body.Close()
 	require.Equal(t, http.StatusCreated, r1.StatusCode)
+	var first users.User
+	require.NoError(t, json.NewDecoder(r1.Body).Decode(&first))
+	r1.Body.Close()
+	c.User(first.ID)
 
 	r2 := doJSON(t, srv, http.MethodPost, "/users/", body)
 	defer r2.Body.Close()
@@ -175,6 +179,7 @@ func TestHandler_Update_NotFound(t *testing.T) {
 
 func TestHandler_Update_OK(t *testing.T) {
 	srv := newUsersServer(t)
+	c := testutil.NewCleaner(t)
 	email := fmt.Sprintf("upd-%d@test.local", randSuffix())
 	create := map[string]any{
 		"email": email, "name": "Upd", "password": "Longenough1!", "role": "operational",
@@ -184,6 +189,7 @@ func TestHandler_Update_OK(t *testing.T) {
 	var created users.User
 	require.NoError(t, json.NewDecoder(cr.Body).Decode(&created))
 	cr.Body.Close()
+	c.User(created.ID)
 
 	upd := doJSON(t, srv, http.MethodPut, fmt.Sprintf("/users/%d", created.ID), map[string]any{
 		"email": email, "name": "Upd Renamed", "role": "finance", "isActive": false,
@@ -222,6 +228,7 @@ func TestHandler_ChangePassword_NotFound(t *testing.T) {
 
 func TestHandler_ChangePassword_OK(t *testing.T) {
 	srv := newUsersServer(t)
+	c := testutil.NewCleaner(t)
 	email := fmt.Sprintf("pwd-%d@test.local", randSuffix())
 	cr := doJSON(t, srv, http.MethodPost, "/users/", map[string]any{
 		"email": email, "name": "Pwd", "password": "Originalpwd1!", "role": "operational",
@@ -230,6 +237,7 @@ func TestHandler_ChangePassword_OK(t *testing.T) {
 	var created users.User
 	require.NoError(t, json.NewDecoder(cr.Body).Decode(&created))
 	cr.Body.Close()
+	c.User(created.ID)
 
 	res := doJSON(t, srv, http.MethodPatch, fmt.Sprintf("/users/%d/password", created.ID),
 		map[string]any{"password": "Newpassword1!"})
