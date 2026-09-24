@@ -216,14 +216,15 @@ func buildGoodService(it InvoiceItem) coretaxGoodService {
 	if it.UnitCoretaxCode != nil && *it.UnitCoretaxCode != "" {
 		unit = *it.UnitCoretaxCode
 	}
+	price, discount := lineGrossAndDiscount(it)
 	return coretaxGoodService{
 		Opt:           opt,
 		Code:          strDeref(it.ItemCode),
 		Name:          it.ItemName,
 		Unit:          unit,
-		Price:         normalizeMoney(it.UnitPrice),
+		Price:         price,
 		Qty:           normalizeMoney(it.Qty),
-		TotalDiscount: "0",
+		TotalDiscount: discount,
 		TaxBase:       normalizeMoneyPtr(it.Dpp),
 		OtherTaxBase:  normalizeMoneyPtr(it.DppNilaiLain),
 		VATRate:       normalizeMoneyPtr(it.PpnRate),
@@ -231,6 +232,27 @@ func buildGoodService(it InvoiceItem) coretaxGoodService {
 		STLGRate:      "0",
 		STLG:          "0",
 	}
+}
+
+// lineGrossAndDiscount files the gross price.
+// DJP checks Price * Qty - TotalDiscount = TaxBase per line. The stored net
+// unit price is rounded, so filing it with no discount misses the per-line
+// DPP by that rounding. The discount is the gross line amount, rounded per
+// line as fn_create_invoice does for the header total_discount, minus the
+// DPP. A legacy line without a gross price files its net price, and a
+// rounding shortfall is never filed as a negative discount.
+func lineGrossAndDiscount(it InvoiceItem) (string, string) {
+	price := normalizeMoney(it.UnitPrice)
+	if it.GrossUnitPrice != nil && strings.TrimSpace(*it.GrossUnitPrice) != "" {
+		price = normalizeMoney(*it.GrossUnitPrice)
+	}
+	// normalizeMoney always yields a valid decimal.
+	gross := decimal.RequireFromString(price).Mul(decimal.RequireFromString(normalizeMoney(it.Qty)))
+	disc := gross.Round(2).Sub(decimal.RequireFromString(normalizeMoneyPtr(it.Dpp)))
+	if !disc.IsPositive() {
+		return price, "0"
+	}
+	return price, disc.String()
 }
 
 // npwpDigits is the NPWP length Coretax accepts for an Indonesian buyer.
