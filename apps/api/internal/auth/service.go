@@ -297,7 +297,7 @@ func (s *Service) refusal(ctx context.Context, rr *RefreshRepo, hash []byte) (er
 		// token revoked longer ago than the grace window is treated as a
 		// genuine replay worth revoking every session; a very recent
 		// revocation is a benign race, so the other sessions survive.
-		if time.Since(st.revokedAt) > refreshReuseGrace {
+		if st.pastGrace {
 			if err := rr.revokeAllForUser(ctx, st.userID); err != nil {
 				return nil, err
 			}

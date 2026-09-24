@@ -28,7 +28,7 @@ var failingSQL = map[string]string{
 	"auth.refresh_insert":        `SELECT 1 / 0 WHERE $1::bigint IS NOT NULL AND $2::bytea IS NOT NULL AND $3::timestamptz IS NOT NULL AND $4::integer IS NOT NULL`,
 	"auth.refresh_lock_owner":    `SELECT 1 / 0 WHERE $1::bytea IS NOT NULL`,
 	"auth.refresh_redeem":        `SELECT 1 / 0, 1 WHERE $1::bytea IS NOT NULL`,
-	"auth.refresh_lookup":        `SELECT 1 / 0, now(), 'x', FALSE WHERE $1::bytea IS NOT NULL`,
+	"auth.refresh_lookup":        `SELECT 1 / 0, TRUE, 'x', FALSE, FALSE WHERE $1::bytea IS NOT NULL AND $2::float8 IS NOT NULL`,
 	"auth.refresh_revoke_user":   `SELECT 1 / 0 WHERE $1::bigint IS NOT NULL AND $2::text IS NOT NULL`,
 	"auth.refresh_revoke_token":  `SELECT 1 / 0 WHERE $1::bytea IS NOT NULL`,
 }

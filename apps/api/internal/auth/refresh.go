@@ -81,33 +81,29 @@ func (r *RefreshRepo) redeem(ctx context.Context, hash []byte) (redeemed, error)
 
 // lookupState reports the state of a token whose redeem failed.
 type lookupState struct {
-	userID    int64
-	revoked   bool
-	revokedAt time.Time
-	reason    string
+	userID  int64
+	revoked bool
+	reason  string
+	// pastGrace marks a revocation older than refreshReuseGrace.
+	pastGrace bool
 	// stale marks a token minted before a session version bump.
 	stale bool
 	found bool
 }
 
 func (r *RefreshRepo) lookup(ctx context.Context, hash []byte) (lookupState, error) {
-	row := r.db.QueryRow(ctx, r.store.Get("auth.refresh_lookup"), hash)
+	row := r.db.QueryRow(ctx, r.store.Get("auth.refresh_lookup"), hash, refreshReuseGrace.Seconds())
 	var (
-		st        lookupState
-		revokedAt *time.Time
-		reason    *string
+		st     lookupState
+		reason *string
 	)
-	if err := row.Scan(&st.userID, &revokedAt, &reason, &st.stale); err != nil {
+	if err := row.Scan(&st.userID, &st.revoked, &reason, &st.stale, &st.pastGrace); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return lookupState{}, nil
 		}
 		return lookupState{}, err
 	}
 	st.found = true
-	st.revoked = revokedAt != nil
-	if revokedAt != nil {
-		st.revokedAt = *revokedAt
-	}
 	if reason != nil {
 		st.reason = *reason
 	}

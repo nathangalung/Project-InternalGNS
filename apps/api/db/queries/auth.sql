@@ -24,11 +24,14 @@ RETURNING t.user_id, u.session_version;
 
 -- name: auth.refresh_lookup
 -- Used after refresh_redeem reports 0 rows: tells reuse (revoked_at IS NOT NULL)
--- apart from a version bump, expired and unknown.
+-- apart from a version bump, expired and unknown. past_grace compares
+-- revoked_at with the same Postgres clock that stamped it, against a window
+-- of $2 seconds, so an API host clock step cannot move a replay across it.
 SELECT t.user_id,
-       t.revoked_at,
+       t.revoked_at IS NOT NULL AS revoked,
        t.revoked_reason,
-       t.session_version <> u.session_version AS stale
+       t.session_version <> u.session_version AS stale,
+       COALESCE(t.revoked_at < clock_timestamp() - make_interval(secs => $2), FALSE) AS past_grace
 FROM refresh_tokens t
 JOIN users u ON u.id = t.user_id
 WHERE t.token_hash = $1;
