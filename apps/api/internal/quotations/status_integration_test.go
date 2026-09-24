@@ -450,20 +450,20 @@ func TestRevise_DoesNotRelearnMatches(t *testing.T) {
 	assert.Equal(t, 2, count, "the clone is not a new match")
 	assert.Equal(t, remapped, item, "the clone keeps the newer mapping")
 
-	// Learning resumes after the clone.
+	// Learning resumes after the clone: a changed match counts.
 	d, err := repo.GetDetail(ctx, child)
 	require.NoError(t, err)
 	_, err = repo.Update(ctx, child, quotations.UpdateRequest{
 		DiscountPct: "0",
 		Items: []quotations.CreateItem{{
-			RequestedItemID: int64Ptr(seedItemID), RequestedName: text,
+			RequestedItemID: int64Ptr(remapped), RequestedName: text,
 			Qty: "1", UnitID: seedUnitID, SellingPrice: "1000",
 		}},
 	}, seedUserID, &d.RowVersion)
 	require.NoError(t, err)
 	count, item = learnedMatch(t, ctx, tx, text)
 	assert.Equal(t, 3, count, "an edit in the same transaction still learns")
-	assert.Equal(t, seedItemID, item)
+	assert.Equal(t, remapped, item)
 }
 
 func TestRevise_NumbersFollowTheChain(t *testing.T) {
