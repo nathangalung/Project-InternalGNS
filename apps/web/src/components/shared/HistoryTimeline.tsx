@@ -3,7 +3,7 @@ import type { ReactNode } from "react"
 // Timeline class primitives.
 export const timeline = {
   card: "rounded-md border border-dark-100 bg-[rgba(242,244,246,0.5)] p-8",
-  // Preflight is off, so the list drops its markers here
+  // No markers without preflight
   list: "relative flex list-none flex-col gap-8 pl-10 before:absolute before:bottom-2 before:left-[11px] before:top-2 before:w-0.5 before:bg-dark-200 before:content-['']",
   item: "relative flex flex-col gap-1",
 }
@@ -45,7 +45,7 @@ export function isActiveEntry(entry: TimelineEntry, index: number, count: number
 type HistoryTimelineProps = {
   title: string
   entries: TimelineEntry[]
-  // Shown in place of no entries
+  // Shown instead of empty list
   empty?: ReactNode
 }
 

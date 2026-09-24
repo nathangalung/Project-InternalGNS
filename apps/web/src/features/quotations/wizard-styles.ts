@@ -1,6 +1,8 @@
 import { timeline } from "@/components/shared/HistoryTimeline"
 import { ui } from "@/lib/ui"
 
+// Quotation wizard class strings.
+//
 // Tailwind ports of the legacy qe-*/qep-* classes used by the quotation
 // wizard and detail screens. Values reproduce admin.css exactly.
 
