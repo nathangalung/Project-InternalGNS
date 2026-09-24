@@ -29,6 +29,11 @@ export default defineConfig({
   },
   server: {
     port: 5174,
+    // Playwright writes traces and auth state under e2e while `make e2e`
+    // drives this server; watching them reloaded every open page mid-test.
+    watch: {
+      ignored: ["**/e2e/.results/**", "**/e2e/.report/**", "**/e2e/.auth/**"],
+    },
     proxy: {
       "/api": {
         target: "http://localhost:8080",
