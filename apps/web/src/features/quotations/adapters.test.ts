@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest"
 import type { QuotationDetail, QuotationItemRow, QuotationStatusEvent } from "@/types/api"
-import { historyAction, historyDate, toQuotationData, toTableRow } from "./adapters"
+import {
+  historyAction,
+  historyDate,
+  toEditItemInput,
+  toQuotationData,
+  toTableRow,
+  toWizardProduct,
+} from "./adapters"
 
 function item(over: Partial<QuotationItemRow>): QuotationItemRow {
   return {
@@ -159,5 +166,62 @@ describe("historyDate actor", () => {
 
   it("leaves a user move unmarked", () => {
     expect(historyDate(event({ changedBy: 1 }))).not.toMatch(/Sistem/)
+  })
+})
+
+describe("edit wizard lines", () => {
+  const cases: { name: string; over: Partial<QuotationItemRow>; kode: string; nama: string }[] = [
+    {
+      name: "offered differs from the request",
+      over: {
+        requestedImpa: "111",
+        requestedName: "Tali",
+        offeredImpa: "222",
+        offeredName: "Rope 12mm",
+      },
+      kode: "222",
+      nama: "Rope 12mm",
+    },
+    {
+      name: "only an offered name",
+      over: { requestedImpa: "111", requestedName: "Tali", offeredName: "Rope 12mm" },
+      kode: "111",
+      nama: "Rope 12mm",
+    },
+    {
+      name: "no offered fields",
+      over: { requestedImpa: "111", requestedName: "Tali" },
+      kode: "111",
+      nama: "Tali",
+    },
+  ]
+
+  for (const c of cases) {
+    it(`shows the detail's item: ${c.name}`, () => {
+      const line = item(c.over)
+      const wiz = toWizardProduct(line, 1, "PCS")
+      const [row] = toQuotationData(detail([line]), () => "PCS").products
+      expect(wiz.kodeImpa).toBe(c.kode)
+      expect(wiz.nama).toBe(c.nama)
+      expect(row.kode).toBe(wiz.kodeImpa)
+      expect(row.nama).toBe(wiz.nama)
+      expect(wiz.requestedNama).toBe(c.over.requestedName)
+      expect(wiz.requestedKodeImpa).toBe(c.over.requestedImpa)
+    })
+  }
+
+  it("saves the request as stored", () => {
+    const line = item({ requestedImpa: "111", requestedName: "Tali", offeredImpa: "222" })
+    const input = toEditItemInput(toWizardProduct(line, 1, "PCS"), 3)
+    expect(input.requestedImpa).toBe("111")
+    expect(input.requestedName).toBe("Tali")
+    expect(input.unitId).toBe(3)
+  })
+
+  it("does not print the offered code as a request", () => {
+    const line = item({ requestedName: "Tali", offeredImpa: "222", offeredName: "Rope" })
+    const input = toEditItemInput(toWizardProduct(line, 1, "PCS"), 3)
+    expect(input.requestedImpa).toBeUndefined()
+    expect(input.requestedName).toBe("Tali")
   })
 })

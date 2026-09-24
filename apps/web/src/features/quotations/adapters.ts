@@ -5,7 +5,10 @@ import type {
   QuotationItemRow as ApiQuotationItem,
   QuotationListRow as ApiQuotationRow,
   QuotationStatusEvent as ApiStatusEvent,
+  QuotationItemInput,
 } from "@/types/api"
+import { parseQty } from "./lines"
+import type { ProductItem } from "./QuotationEdit"
 import type { QuotationRow } from "./QuotationList/helpers"
 import { quotationStatusLabel } from "./status"
 
@@ -35,15 +38,71 @@ export function historyDate(ev: ApiStatusEvent): string {
   return ev.changedBy === null ? `${date} · Sistem` : date
 }
 
+// Offered item, else the request.
+function offered(it: ApiQuotationItem): { kode: string; nama: string } {
+  return {
+    kode: it.offeredImpa ?? it.requestedImpa ?? "",
+    nama: it.offeredName ?? it.requestedName,
+  }
+}
+
+// API line to wizard product.
+//
+// Shows the offered item like the detail does; the request stays alongside
+// and is what toEditItemInput sends back.
+export function toWizardProduct(
+  it: ApiQuotationItem,
+  fallbackId: number,
+  unitName: string,
+): ProductItem {
+  const sell = Number(it.sellingPrice)
+  const cost = it.costPrice !== undefined ? Number(it.costPrice) : 0
+  const { kode, nama } = offered(it)
+  return {
+    id: it.id ?? fallbackId,
+    itemId: it.offeredItemId ?? it.requestedItemId,
+    requestedItemId: it.requestedItemId,
+    vendorProductId: it.vendorProductId,
+    nama,
+    kodeImpa: kode,
+    requestedNama: it.requestedName,
+    requestedKodeImpa: it.requestedImpa ?? "",
+    vendor: "",
+    jumlah: parseQty(it.qty),
+    satuan: unitName,
+    hargaBeli: Number.isFinite(cost) ? cost : 0,
+    hargaJual: Number.isFinite(sell) ? sell : 0,
+  }
+}
+
+// Edit wizard line to API.
+//
+// The request goes back as stored. A request with no IMPA stays without one
+// rather than taking the offered code, which the PDF would then print as if
+// the client had asked for it.
+export function toEditItemInput(p: ProductItem, unitId: number): QuotationItemInput {
+  return {
+    requestedItemId: p.requestedItemId,
+    requestedImpa: p.requestedKodeImpa || undefined,
+    requestedName: p.requestedNama || p.nama,
+    offeredItemId: p.itemId,
+    vendorProductId: p.vendorProductId,
+    qty: String(p.jumlah),
+    unitId,
+    sellingPrice: String(p.hargaJual),
+    costPrice: String(p.hargaBeli),
+  }
+}
+
 function toProductRow(it: ApiQuotationItem, unitName: string): ProductRow {
   const sell = Number(it.sellingPrice)
   const cost = it.costPrice !== undefined ? Number(it.costPrice) : 0
+  const { kode, nama } = offered(it)
   return {
     itemId: it.offeredItemId ?? it.requestedItemId,
     lineId: it.id,
-    // Offered item, else the request
-    kode: it.offeredImpa ?? it.requestedImpa ?? "",
-    nama: it.offeredName ?? it.requestedName,
+    kode,
+    nama,
     requestedKode: it.requestedImpa ?? "",
     requestedNama: it.requestedName,
     qty: Number(it.qty),

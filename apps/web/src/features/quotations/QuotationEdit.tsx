@@ -15,6 +15,7 @@ import { useUnits } from "@/features/units/hooks"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
 import { ui } from "@/lib/ui"
 import type { QuotationItemInput, QuotationUpdateInput } from "@/types/api"
+import { toEditItemInput, toWizardProduct } from "./adapters"
 import DiscountModal from "./DiscountModal"
 import { countInvalidQty, parseQty, qtyErrorIndexes, qtyErrorsById } from "./lines"
 import Step1Client, { type Client } from "./Step1Client"
@@ -172,25 +173,13 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     setDiscountPct(Number(detail.discountPct) || 0)
     const productItems: ProductItem[] = detail.items
       .filter((it) => it.itemType === "product")
-      .map((it, i) => {
-        const sell = Number(it.sellingPrice)
-        const cost = it.costPrice !== undefined ? Number(it.costPrice) : 0
-        return {
-          id: it.id ?? i + 1,
-          itemId: it.offeredItemId ?? it.requestedItemId,
-          requestedItemId: it.requestedItemId,
-          vendorProductId: it.vendorProductId,
-          nama: it.requestedName,
-          kodeImpa: it.requestedImpa ?? "",
-          requestedNama: it.requestedName,
-          requestedKodeImpa: it.requestedImpa ?? "",
-          vendor: "",
-          jumlah: parseQty(it.qty),
-          satuan: it.unitId !== undefined ? (unitNameById.get(it.unitId) ?? "") : "",
-          hargaBeli: Number.isFinite(cost) ? cost : 0,
-          hargaJual: Number.isFinite(sell) ? sell : 0,
-        }
-      })
+      .map((it, i) =>
+        toWizardProduct(
+          it,
+          i + 1,
+          it.unitId !== undefined ? (unitNameById.get(it.unitId) ?? "") : "",
+        ),
+      )
     setProducts(productItems)
     const ship = detail.items.find((it) => it.itemType === "shipping")
     if (ship) {
@@ -228,17 +217,9 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
 
   function handleSave() {
     if (!hasNumericQuotationId || !detail || !canSave) return
-    const items: QuotationItemInput[] = products.map((p) => ({
-      requestedItemId: p.requestedItemId,
-      requestedImpa: p.requestedKodeImpa || p.kodeImpa || undefined,
-      requestedName: p.requestedNama || p.nama,
-      offeredItemId: p.itemId,
-      vendorProductId: p.vendorProductId,
-      qty: String(p.jumlah),
-      unitId: unitIdByCode.get(p.satuan.toUpperCase()) ?? 0,
-      sellingPrice: String(p.hargaJual),
-      costPrice: String(p.hargaBeli),
-    }))
+    const items: QuotationItemInput[] = products.map((p) =>
+      toEditItemInput(p, unitIdByCode.get(p.satuan.toUpperCase()) ?? 0),
+    )
     const shipDays = Number(shippingTime)
     // PUT replaces the row, so fields the wizard does not edit are sent back.
     const input: QuotationUpdateInput = {
