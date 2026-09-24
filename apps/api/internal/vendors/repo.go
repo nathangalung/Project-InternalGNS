@@ -3,6 +3,7 @@ package vendors
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 
@@ -146,11 +147,19 @@ func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int
 	return pgx.CollectRows(rows, pgx.RowToStructByName[SearchResult])
 }
 
-// ListItems calls fn_search_items_by_vendor.
-func (r *Repo) ListItems(ctx context.Context, vendorID int64, limit int) ([]ItemByVendor, error) {
-	rows, err := r.db.Query(ctx, r.store.Get("vendors.list_items"), vendorID, limit)
-	if err != nil {
-		return nil, err
+// ListItems pages a vendor's active items.
+func (r *Repo) ListItems(ctx context.Context, vendorID int64, limit, offset int) (ItemListResult, error) {
+	var out ItemListResult
+	if err := r.db.QueryRow(ctx, r.store.Get("vendors.list_items_count"), vendorID).Scan(&out.Total); err != nil {
+		return out, fmt.Errorf("count vendor %d items: %w", vendorID, err)
 	}
-	return pgx.CollectRows(rows, pgx.RowToStructByName[ItemByVendor])
+	rows, err := r.db.Query(ctx, r.store.Get("vendors.list_items"), vendorID, limit, offset)
+	if err != nil {
+		return out, fmt.Errorf("list vendor %d items: %w", vendorID, err)
+	}
+	out.Rows, err = pgx.CollectRows(rows, pgx.RowToStructByName[ItemByVendor])
+	if err != nil {
+		return out, fmt.Errorf("scan vendor %d items: %w", vendorID, err)
+	}
+	return out, nil
 }

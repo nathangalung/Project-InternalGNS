@@ -27,6 +27,6 @@ func TestRepo_ErrorPaths(t *testing.T) {
 	_, err = r.Search(ctx, "x", 0.1, 5)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
-	_, err = r.ListItems(ctx, 1, 5)
+	_, err = r.ListItems(ctx, 1, 5, 0)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 }

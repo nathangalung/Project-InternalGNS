@@ -68,7 +68,17 @@ RETURNING id;
 -- name: vendors.search
 SELECT * FROM fn_search_vendors($1, $2, $3);
 
+-- name: vendors.list_items_count
+-- Same rows as vendors.list_items, so X-Total-Count matches the pages.
+SELECT COUNT(*)
+FROM vendor_products vp
+JOIN items i ON i.id = vp.item_id AND i.is_active = TRUE
+WHERE vp.vendor_id = $1
+  AND vp.is_active = TRUE;
+
 -- name: vendors.list_items
+-- i.id breaks name ties so a row never repeats or skips across pages.
+-- $1=vendor id, $2=limit, $3=offset
 SELECT
     i.id                  AS item_id,
     i.name                AS item_name,
@@ -81,5 +91,5 @@ FROM vendor_products vp
 JOIN items i ON i.id = vp.item_id AND i.is_active = TRUE
 WHERE vp.vendor_id = $1
   AND vp.is_active = TRUE
-ORDER BY i.name ASC
-LIMIT $2;
+ORDER BY i.name ASC, i.id ASC
+LIMIT $2 OFFSET $3;

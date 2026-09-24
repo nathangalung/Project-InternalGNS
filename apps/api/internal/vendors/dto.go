@@ -63,6 +63,12 @@ type ItemByVendor struct {
 	ProductURL   *string `db:"product_url"    json:"productUrl,omitempty"`
 }
 
+// ItemListResult is one page plus the full count.
+type ItemListResult struct {
+	Rows  []ItemByVendor
+	Total int64
+}
+
 type CreateVendorRequest struct {
 	Name        string          `json:"name"`
 	Location    *string         `json:"location"`

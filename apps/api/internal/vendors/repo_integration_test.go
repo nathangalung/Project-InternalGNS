@@ -99,9 +99,9 @@ func TestRepo_ListItems(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := vendors.NewRepo(tx, testutil.Store(t))
 
-	rows, err := repo.ListItems(ctx, seedVendorID, 50)
+	res, err := repo.ListItems(ctx, seedVendorID, 50, 0)
 	require.NoError(t, err)
-	_ = rows
+	assert.GreaterOrEqual(t, res.Total, int64(len(res.Rows)))
 }
 
 func TestRepo_List_IncludesProductCountAndTotalPurchase(t *testing.T) {

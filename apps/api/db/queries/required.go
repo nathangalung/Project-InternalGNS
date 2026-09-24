@@ -127,6 +127,7 @@ var RequiredKeys = []string{
 	"vendors.list_base",
 	"vendors.list_count_base",
 	"vendors.list_items",
+	"vendors.list_items_count",
 	"vendors.search",
 	"vendors.update",
 	"vendors.update_logo",

@@ -166,7 +166,7 @@ func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid id"))
 		return
 	}
-	limit := paginate.ParseLimit(r, 50)
+	limit, offset := paginate.Parse(r)
 
 	if _, err := h.repo.GetByID(r.Context(), id); err != nil {
 		if errors.Is(err, ErrNotFound) {
@@ -176,10 +176,11 @@ func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErr(w, fmt.Errorf("load vendor %d: %w", id, err))
 		return
 	}
-	items, err := h.repo.ListItems(r.Context(), id, limit)
+	res, err := h.repo.ListItems(r.Context(), id, limit, offset)
 	if err != nil {
 		httperr.RenderDBErr(w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, items)
+	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
+	httpx.WriteJSON(w, http.StatusOK, res.Rows)
 }
