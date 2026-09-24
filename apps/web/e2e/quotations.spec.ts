@@ -2,12 +2,14 @@ import type { Locator, Page } from "@playwright/test"
 import { api, deactivate, idFrom, rupiah } from "./support/sales"
 import { expect, test } from "./support/seed"
 
-// Quotation flows through the UI: the wizard, the status machine the server
-// drives, Buat Revisi and the PO an acceptance creates.
+// Quotation flows through the UI.
+//
+// The wizard, the server-driven status machine, Buat Revisi and the PO an
+// acceptance creates.
 
 type Request = { requestText: string; matchStatus: string }
 
-// Value printed next to a label in a cost summary.
+// Amount next to a label.
 function amountAfter(scope: Locator, label: string): Locator {
   return scope.getByText(label, { exact: true }).locator("xpath=following-sibling::*[1]")
 }
@@ -16,7 +18,7 @@ function costBreakdown(page: Page): Locator {
   return page.getByRole("heading", { name: "Rincian Biaya" }).locator("xpath=..")
 }
 
-// Rupiah figure after a label in raw text.
+// Rupiah figure after a label.
 function figure(text: string, label: string): number {
   const m = text.match(new RegExp(`${label}\\s*Rp\\s*([\\d.]+)`))
   if (!m) throw new Error(`${label} not found`)

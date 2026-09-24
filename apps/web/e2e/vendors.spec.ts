@@ -1,7 +1,7 @@
 import { api } from "./support/sales"
 import { expect, test } from "./support/seed"
 
-// Vendor master data through the UI.
+// Vendor master data flows.
 
 type Vendor = {
   name: string

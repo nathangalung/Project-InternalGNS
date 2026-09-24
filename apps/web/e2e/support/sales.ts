@@ -3,9 +3,11 @@ import { readFileSync } from "node:fs"
 import type { Tokens } from "./api"
 import { apiURL, authFile } from "./env"
 
-// Sales master data and documents, seeded through the API as the superadmin.
-// Every name carries the run prefix, so a spec finds its rows by searching
-// for it and parallel workers never see each other's data.
+// Sales seeding through the API.
+//
+// Seeded as the superadmin. Every name carries the run prefix, so a spec
+// finds its rows by searching for it and parallel workers never see each
+// other's data.
 
 export type ApiError = Error & { status: number; body: unknown }
 
@@ -57,7 +59,7 @@ function adminToken(): string {
   return (JSON.parse(readFileSync(authFile("superadmin"), "utf8")) as Tokens).token
 }
 
-// Short, unique, safe in every name field.
+// Unique run-safe name prefix.
 export function uniquePrefix(): string {
   return `E2E${randomBytes(4).toString("hex").toUpperCase()}`
 }
@@ -94,7 +96,7 @@ async function unitId(code: string): Promise<number> {
   return id
 }
 
-// Rows one test created, undone in reverse.
+// Per-test rows, undone later.
 export class SalesSeed {
   readonly prefix = uniquePrefix()
   private seq = 0
@@ -103,12 +105,14 @@ export class SalesSeed {
   private readonly items: number[] = []
   private readonly quotations: number[] = []
 
-  // Prefixed display name, unique per call.
+  // Prefixed name, unique per call.
   name(label: string): string {
     this.seq += 1
     return `${this.prefix} ${label} ${this.seq}`
   }
 
+  // Client, complete by default.
+  //
   // A complete client passes the PO completeness gate.
   async client(opts: { complete?: boolean; label?: string } = {}): Promise<SeedClient> {
     const complete = opts.complete ?? true
@@ -152,7 +156,7 @@ export class SalesSeed {
     return { id: created.id, name }
   }
 
-  // Catalog item, linked to a vendor when one is given.
+  // Catalog item, optionally vendor-linked.
   async item(opts: { vendor?: SeedVendor; cost?: number; label?: string } = {}): Promise<SeedItem> {
     const name = this.name(opts.label ?? "Produk")
     const impaCode = String(100000 + Math.floor(Math.random() * 899999))
@@ -180,7 +184,7 @@ export class SalesSeed {
     return { id: created.id, name, impaCode, vendorProductId }
   }
 
-  // Another contact on a seeded client.
+  // Extra contact for a client.
   async contact(client: SeedClient, name: string): Promise<number> {
     const created = await api<{ id: number }>("POST", `/clients/${client.id}/contacts`, {
       name,
@@ -191,7 +195,7 @@ export class SalesSeed {
     return created.id
   }
 
-  // One more vendor offer for an item.
+  // Extra vendor offer for item.
   async linkVendor(item: SeedItem, vendor: SeedVendor, cost: number): Promise<void> {
     await api("POST", `/items/${item.id}/vendors`, {
       vendorId: vendor.id,
@@ -199,7 +203,7 @@ export class SalesSeed {
     })
   }
 
-  // Draft quotation with priced product lines.
+  // Draft quotation, priced lines.
   async quotation(opts: {
     client: SeedClient
     lines: SeedLine[]
@@ -248,7 +252,7 @@ export class SalesSeed {
     await api("PATCH", `/quotations/${id}/status`, { status, note })
   }
 
-  // Sent then accepted; returns the PO it created.
+  // Send, accept, return PO.
   async accept(id: number): Promise<PurchaseOrder> {
     await this.send(id)
     await this.setQuotationStatus(id, "accepted")
@@ -265,7 +269,9 @@ export class SalesSeed {
     return api<PurchaseOrder>("GET", `/purchase-orders/by-quotation/${quotationId}`)
   }
 
-  // Uploads a small PDF and attaches it; PENDING becomes UPLOADED.
+  // Attach a PDF to PO.
+  //
+  // PENDING becomes UPLOADED. The presigned path is relative to the API base.
   async attachPoFile(po: PurchaseOrder, fileName = "po-klien.pdf"): Promise<void> {
     const presign = await api<{ uploadUrl: string; objectKey: string }>(
       "GET",
@@ -285,6 +291,8 @@ export class SalesSeed {
     })
   }
 
+  // Deliver a PO fully.
+  //
   // File, work, delivery; the server files a draft invoice.
   async deliver(po: PurchaseOrder): Promise<{ id: number; status: string }> {
     await this.attachPoFile(po)
@@ -301,6 +309,8 @@ export class SalesSeed {
     await api("PATCH", `/purchase-orders/${poId}/status`, { status, note })
   }
 
+  // Undo what the test created.
+  //
   // Cancels what is still open, then deactivates the master rows.
   async cleanup(): Promise<void> {
     const note = "Pembersihan data e2e"
@@ -330,7 +340,9 @@ export class SalesSeed {
     for (const id of this.clients) await deactivate("client", id)
   }
 
-  // A row the UI created, found by its exact name.
+  // Track a UI-created row.
+  //
+  // Found through the list search by its exact name.
   async adopt(kind: "client" | "vendor" | "item", name: string): Promise<number> {
     const path = { client: "/clients", vendor: "/vendors", item: "/items" }[kind]
     const rows = await api<{ id: number; name: string }[]>(
@@ -343,7 +355,7 @@ export class SalesSeed {
     return row.id
   }
 
-  // Rows a UI flow created, so cleanup covers them too.
+  // Track a row for cleanup.
   track(kind: "client" | "vendor" | "item" | "quotation", id: number): void {
     const list = {
       client: this.clients,
@@ -355,28 +367,30 @@ export class SalesSeed {
   }
 }
 
-// Rupiah the way the detail pages print it.
+// Rupiah as detail pages print.
 export function rupiah(n: number): string {
   return `Rp${n.toLocaleString("id-ID")}`
 }
 
-// Last numeric path segment of an href or URL.
+// Numeric id from a path.
 export function idFrom(href: string | null): number {
   const m = href?.match(/\/(\d+)(?:\/[a-z]+)?\/?$/)
   if (!m) throw new Error(`no id in ${href}`)
   return Number(m[1])
 }
 
-// Smallest valid PDF the upload policy accepts.
+// Smallest PDF the policy accepts.
 const pdfText =
   "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
 
-// The same PDF for a file input.
+// PDF payload for file inputs.
 export function pdfFile(name: string): { name: string; mimeType: string; buffer: Buffer } {
   return { name, mimeType: "application/pdf", buffer: Buffer.from(pdfText) }
 }
 
-// Master rows have no delete; deactivation is the undo.
+// Deactivate a master row.
+//
+// Master data has no delete endpoint; deactivation is the undo.
 export async function deactivate(kind: "client" | "vendor" | "item", id: number): Promise<void> {
   const path = `${{ client: "/clients", vendor: "/vendors", item: "/items" }[kind]}/${id}`
   const row = await api<Record<string, unknown>>("GET", path)

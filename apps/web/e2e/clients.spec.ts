@@ -2,11 +2,13 @@ import type { Page } from "@playwright/test"
 import { api, deactivate, idFrom } from "./support/sales"
 import { expect, test } from "./support/seed"
 
-// Client master data through the UI: create, edit, contacts, deactivate.
+// Client master data flows.
+//
+// Create, edit, contacts, logo and deactivation through the UI.
 
 type Contact = { id: number; name: string; email?: string; title?: string; phone?: string }
 
-// Contact card on the client detail page.
+// Client contact card locator.
 function contactsCard(page: Page) {
   return page.getByRole("heading", { name: "Daftar Narahubung" }).locator("xpath=../../..")
 }

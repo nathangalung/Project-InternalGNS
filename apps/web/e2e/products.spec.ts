@@ -1,7 +1,9 @@
 import { api, deactivate } from "./support/sales"
 import { expect, test } from "./support/seed"
 
-// Katalog Produk through the UI: create, link a vendor, read-only finance.
+// Katalog Produk flows.
+//
+// Create, link a vendor, filters and the read-only finance view.
 
 type ItemVendor = { vendorId: number; costPrice?: string }
 
@@ -112,8 +114,10 @@ test.describe("as finance", () => {
   })
 })
 
-// Open bug: the Katalog search never finds a deactivated product, not even
-// under Nonaktif. search-advanced reads its name layer from fn_search_items,
+// Open bug: inactive search gap.
+//
+// The Katalog search never finds a deactivated product, not even under
+// Nonaktif. search-advanced reads its name layer from fn_search_items,
 // which is active-only, while ProductDetail promises the product stays in
 // the Katalog. test.fail keeps the repro running; drop it once fixed.
 test("a deactivated product is found by name under the Nonaktif filter", async ({ page, seed }) => {

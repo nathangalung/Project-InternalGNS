@@ -2,11 +2,15 @@ import type { Page } from "@playwright/test"
 import { api, pdfFile, rupiah, type SalesSeed, type SeedClient } from "./support/sales"
 import { expect, test } from "./support/seed"
 
-// Purchase order flows: the PO an accepted quotation creates, its file,
-// the server-driven status moves and cancellation.
+// PO flows through the UI.
+//
+// The PO an accepted quotation creates, its file, the server-driven status
+// moves and cancellation.
 
-// Accepted quotation and its PO. A draft made first keeps the quotation
-// and PO ids apart, so a route that mixes them up lands on the wrong row.
+// Accepted quotation and its PO.
+//
+// A draft made first keeps the quotation and PO ids apart, so a route that
+// mixes them up lands on the wrong row.
 async function acceptedPo(
   seed: SalesSeed,
   opts: { client?: SeedClient; discountPct?: number } = {},
@@ -22,7 +26,7 @@ async function acceptedPo(
   return { client, vendor, item, q, po }
 }
 
-// Picks a move in the status menu and saves it.
+// Pick and save a move.
 async function choosePoStatus(page: Page, current: string, next: string): Promise<void> {
   await page.getByRole("button", { name: current, exact: true }).click()
   await page.getByRole("button", { name: next, exact: true }).click()
