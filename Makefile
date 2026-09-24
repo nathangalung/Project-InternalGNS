@@ -12,6 +12,7 @@
         hooks-install hooks-run \
         docker-build docker-build-api docker-build-web \
         orphan-blobs-dry orphan-blobs-purge \
+        backup restore \
         clean
 
 SHELL        := /bin/bash
@@ -270,6 +271,15 @@ orphan-blobs-dry: ## List MinIO keys not referenced by any DB row (read-only)
 
 orphan-blobs-purge: ## Delete unreferenced MinIO keys older than 60 min
 	cd $(API_DIR) && go run ./cmd/orphan-blobs --dry-run=false
+
+# Host-side backups (docs/backup_restore.md). Service and project names come
+# from PG_SERVICE, MINIO_SERVICE and COMPOSE_PROJECT.
+backup: ## Dump Postgres and copy MinIO into BACKUP_ROOT
+	scripts/backup.sh
+
+restore: ## Restore SNAPSHOT= into new DB= (BUCKET= for a rehearsal)
+	@test -n "$(SNAPSHOT)" -a -n "$(DB)" || { echo "usage: make restore SNAPSHOT=<dir> DB=<new_db> [BUCKET=<bucket>]"; exit 1; }
+	scripts/restore.sh "$(SNAPSHOT)" "$(DB)" $(BUCKET)
 
 # Cleanup.
 clean: ## Remove build artifacts
