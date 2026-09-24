@@ -480,6 +480,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the user lists items searching for the literal name$`, state.listByLiteralName)
 		sc.Step(`^the list holds only the item with the wildcard$`, state.listHoldsOnlySeeded)
 		sc.Step(`^the user sends GET "([^"]+)"$`, state.sendGet)
+		registerRuleSteps(sc, state)
 	}
 }
 

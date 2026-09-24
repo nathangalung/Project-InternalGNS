@@ -116,3 +116,31 @@ Feature: Item lifecycle
       | collection    |
       | vendors       |
       | price-history |
+
+  Scenario Outline: Whitespace-only names are rejected on update
+    Given an existing item
+    When the user renames the item to only <blank>
+    Then the response status is 422
+    When the user reads the item
+    Then the item name matches the seeded value
+
+    Examples:
+      | blank    |
+      | spaces   |
+      | a tab    |
+      | newlines |
+
+  Scenario: Image PATCH rejects a key outside the entity prefix
+    Given an existing item
+    When the user attaches an image stored under another item
+    Then the response status is 422
+
+  Scenario: The Katalog search total equals the server match count
+    Given 7 items share a new search token
+    When the user searches the Katalog for the token with "limit=4"
+    Then the response status is 200
+    And the page holds 4 hits of 7
+    When the user searches the Katalog for the token with "limit=4&offset=4"
+    Then the response status is 200
+    And the page holds 3 hits of 7
+    And the pages together hold every token item
