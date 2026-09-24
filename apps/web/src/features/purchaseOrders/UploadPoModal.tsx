@@ -1,8 +1,13 @@
 import { useRef, useState } from "react"
 import Modal from "@/components/shared/Modal"
+import { errorMessage } from "@/lib/errors"
 import { ui } from "@/lib/ui"
+import { validateAsset } from "@/lib/upload-validation"
 import { uploadRules } from "./PurchaseOrderDetail/helpers"
 import type { PoRow } from "./types"
+
+// Mirrors the poDoc upload policy.
+const PO_DOC_ACCEPT = ".pdf,.png,.jpg,.jpeg,.webp,.xlsx,.xls"
 
 type UploadPoModalProps = {
   row: PoRow
@@ -47,13 +52,10 @@ export default function UploadPoModal({
 
   function handlePick(f: File | undefined) {
     if (!f) return
-    const okExt = /\.(pdf|doc|docx|jpg|jpeg|png)$/i.test(f.name)
-    if (!okExt) {
-      setError("Format file harus PDF, DOC, DOCX, JPG, atau PNG.")
-      return
-    }
-    if (f.size > 10 * 1024 * 1024) {
-      setError("Ukuran file maksimal 10 MB.")
+    try {
+      validateAsset("poDoc", f)
+    } catch (err) {
+      setError(errorMessage(err, "Berkas PO tidak valid."))
       return
     }
     setError("")
@@ -160,7 +162,7 @@ export default function UploadPoModal({
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+              accept={PO_DOC_ACCEPT}
               className="hidden"
               onChange={(e) => {
                 handlePick(e.target.files?.[0])
@@ -190,7 +192,7 @@ export default function UploadPoModal({
               <div className="text-center">
                 <div className="text-sm font-bold text-[#191C1E]">Klik untuk pilih berkas</div>
                 <div className="mt-1 text-xs text-dark-500">
-                  PDF, DOC, JPG, PNG • maks 10 MB
+                  PDF, PNG, JPG, WEBP, XLS, XLSX • maks 20 MB
                   {hasExistingFile ? " • opsional, ganti berkas" : ""}
                 </div>
               </div>
