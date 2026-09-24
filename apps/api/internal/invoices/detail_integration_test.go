@@ -2,6 +2,7 @@ package invoices_test
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/jackc/pgx/v5"
@@ -113,4 +114,21 @@ func TestAllowedTransitions_OmitOverdue(t *testing.T) {
 	require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusSent), seedUserID))
 	assert.False(t, offers(invoices.StatusSent, invoices.StatusOverdue))
 	assert.ErrorIs(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusOverdue), seedUserID), invoices.ErrOverdueDerived)
+}
+
+// Fresh invoice history is [].
+// Rows land only on a status change, so a new invoice has none, and the
+// page iterates the field: it must serialize as [] rather than null.
+func TestRepo_GetDetail_FreshInvoiceHasEmptyHistory(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, _, invID := deliveredPOWithInvoice(t, tx)
+
+	det, err := invoices.NewRepo(tx, testutil.Store(t)).GetDetail(ctx, invID)
+	require.NoError(t, err)
+	require.NotNil(t, det.History)
+	assert.Empty(t, det.History)
+
+	raw, err := json.Marshal(det)
+	require.NoError(t, err)
+	assert.Contains(t, string(raw), `"history":[]`)
 }

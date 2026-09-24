@@ -2,7 +2,9 @@ package invoices_test
 
 import (
 	"bytes"
+	"errors"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os/exec"
@@ -110,6 +112,40 @@ func TestExport_PDF_Failures(t *testing.T) {
 	}
 }
 
+// failingWriter refuses the body.
+type failingWriter struct {
+	header http.Header
+	status int
+}
+
+func (f *failingWriter) Header() http.Header       { return f.header }
+func (f *failingWriter) WriteHeader(code int)      { f.status = code }
+func (f *failingWriter) Write([]byte) (int, error) { return 0, errors.New("client went away") }
+
+// Dropped connections are only logged.
+// The PDF headers are already out, so no error status can follow.
+func TestExport_PDF_WriteFailureIsLogged(t *testing.T) {
+	if _, err := exec.LookPath("xelatex"); err != nil {
+		t.Skip("xelatex unavailable")
+	}
+	_, tx := testutil.BeginTx(t)
+	_, _, invID := deliveredPOWithInvoice(t, tx)
+
+	var logs bytes.Buffer
+	prev := slog.Default()
+	slog.SetDefault(slog.New(slog.NewTextHandler(&logs, nil)))
+	t.Cleanup(func() { slog.SetDefault(prev) })
+
+	w := &failingWriter{header: http.Header{}}
+	req := httptest.NewRequest(http.MethodGet, "/invoices/"+itoaInv(invID)+"/pdf", nil)
+	exportRouter(t, tx, templatesRoot(t)).ServeHTTP(w, req)
+
+	assert.Equal(t, "application/pdf", w.header.Get("Content-Type"))
+	assert.Zero(t, w.status, "no error status follows a started PDF")
+	assert.Contains(t, logs.String(), "pdf write failed")
+	assert.Contains(t, logs.String(), "client went away")
+}
+
 // PDF header prints vessel, PO.
 func TestExport_PDF_Header(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
@@ -147,6 +183,14 @@ func TestExport_PDF_Header(t *testing.T) {
 
 func exportServer(t *testing.T, exec db.Executor, root string) *httptest.Server {
 	t.Helper()
+	srv := httptest.NewServer(exportRouter(t, exec, root))
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+// exportRouter mounts the invoice routes.
+func exportRouter(t *testing.T, exec db.Executor, root string) http.Handler {
+	t.Helper()
 	d := deps.Deps{
 		Pool:          exec,
 		Queries:       testutil.Store(t),
@@ -163,9 +207,7 @@ func exportServer(t *testing.T, exec db.Executor, root string) *httptest.Server 
 	r := chi.NewRouter()
 	r.Use(injectUser(seedUserID))
 	r.Mount("/invoices", invoices.Routes(d))
-	srv := httptest.NewServer(r)
-	t.Cleanup(srv.Close)
-	return srv
+	return r
 }
 
 func injectUser(uid int64) func(http.Handler) http.Handler {
