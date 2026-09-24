@@ -203,7 +203,8 @@ test-web: ## Typecheck and unit-test FE
 
 # Coverage gates. Minimums live in scripts/covercheck/thresholds.txt (Go)
 # and vitest.config.ts (web); both print the gap to each tier.
-cover: cover-api cover-web ## Run both coverage gates
+cover: ## Run both coverage gates, report every failure
+	@rc=0; $(MAKE) cover-api || rc=1; $(MAKE) cover-web || rc=1; exit $$rc
 
 cover-api: deps-up test-db-reset ## Go tests with cross-package coverage, then the per-package gate
 	@mkdir -p $(API_DIR)/bin
