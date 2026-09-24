@@ -499,7 +499,7 @@ test.describe("quotation list", () => {
     const rows = page.getByRole("row", { name: new RegExp(client.name) })
     await expect(rows).toHaveCount(2)
 
-    await page.getByRole("button", { name: "Filter" }).click()
+    await page.getByRole("button", { name: "Filter", exact: true }).click()
     const filter = page.getByRole("dialog", { name: "Filter Quotation" })
     await filter
       .getByRole("group", { name: "Status Quotation" })

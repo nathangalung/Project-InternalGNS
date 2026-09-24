@@ -306,7 +306,7 @@ test.describe("purchase order list", () => {
     await page.getByPlaceholder("Cari purchase order, klien, atau nomor...").fill(seed.prefix)
     const rows = page.getByRole("row", { name: new RegExp(client.name) })
     await expect(rows).toHaveCount(2)
-    await page.getByRole("button", { name: "Filter" }).click()
+    await page.getByRole("button", { name: "Filter", exact: true }).click()
     const filter = page.getByRole("dialog", { name: "Filter Purchase Order" })
     await filter.getByRole("button", { name: "Dibatalkan" }).click()
     await filter.getByRole("button", { name: "Terapkan" }).click()
