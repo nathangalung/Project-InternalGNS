@@ -133,6 +133,8 @@ func (s *scenarioState) acceptedQuotationWith(companyID int64, item quotations.C
 		return err
 	}
 	s.quotationID = resp["id"]
+	// Registered before the PO exists, so a failed accept still cleans up.
+	s.cleaner.Quotation(s.quotationID)
 
 	if err := s.sendRequest(http.MethodPost, "/quotations/"+strconv.FormatInt(s.quotationID, 10)+"/send", nil); err != nil {
 		return err
@@ -569,9 +571,9 @@ func trimNumeric(v string) string {
 	return strings.TrimRight(v, ".")
 }
 
-func initScenario(t *testing.T) func(*godog.ScenarioContext) {
+func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
-		state := &scenarioState{t: t, userID: defaultUserID, cleaner: testutil.NewCleaner(t)}
+		state := &scenarioState{t: t, userID: defaultUserID, cleaner: cleaner}
 		sc.Before(func(ctx context.Context, _ *godog.Scenario) (context.Context, error) {
 			state.last = nil
 			state.body = nil
@@ -633,8 +635,9 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 
 func TestPurchaseOrderFeatures(t *testing.T) {
 	testutil.RequireDB(t)
+	cleaner := testutil.NewCleaner(t)
 	suite := godog.TestSuite{
-		ScenarioInitializer: initScenario(t),
+		ScenarioInitializer: initScenario(t, cleaner),
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"features"},

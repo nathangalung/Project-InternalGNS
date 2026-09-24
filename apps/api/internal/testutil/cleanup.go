@@ -11,6 +11,13 @@ var cleanupPlan = []struct {
 	key   string
 	stmts []string
 }{
+	// First, since these rows reference clients, items and users.
+	{"quotations", []string{
+		`DELETE FROM invoices WHERE quotation_id = ANY($1)
+		   OR po_id IN (SELECT id FROM purchase_orders WHERE quotation_id = ANY($1))`,
+		`DELETE FROM purchase_orders WHERE quotation_id = ANY($1)`,
+		`DELETE FROM quotations WHERE id = ANY($1)`,
+	}},
 	{"company_client", []string{
 		`DELETE FROM company_contacts WHERE company_id = ANY($1)`,
 		`DELETE FROM company_client WHERE id = ANY($1)`,
@@ -61,6 +68,11 @@ func (c *Cleaner) Item(id int64) { c.add("items", id) }
 
 // Vendor tracks a created vendors row.
 func (c *Cleaner) Vendor(id int64) { c.add("vendors", id) }
+
+// Quotation tracks a quotation with its PO and invoices.
+// Their items and history cascade. A revision references its parent with
+// RESTRICT, so a suite that revises must track the chain itself.
+func (c *Cleaner) Quotation(id int64) { c.add("quotations", id) }
 
 // User tracks a created users row.
 func (c *Cleaner) User(id int64) { c.add("users", id) }
