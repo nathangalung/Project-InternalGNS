@@ -11,14 +11,17 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/cucumber/godog"
 	"github.com/shopspring/decimal"
+	"github.com/xuri/excelize/v2"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/dashboard"
 	"github.com/nathangalung/internalgns/apps/api/internal/invoices"
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -35,6 +38,7 @@ type scenarioState struct {
 	body      []byte
 	invoiceID int64
 	summary   dashboard.Summary
+	book      workbook
 }
 
 // send issues a request and keeps the response.
@@ -310,6 +314,301 @@ func (s *scenarioState) ppnIs(want string) error {
 	return figureMatches("PPN", s.summary.TotalPpn, want, raw)
 }
 
+// invoiceDue moves the invoice due date, optionally storing a status.
+// A stored overdue is legacy data no API move writes any more.
+func (s *scenarioState) invoiceDue(status string, days int) error {
+	_, err := testutil.Pool(s.t).Exec(context.Background(),
+		`UPDATE invoices SET status = COALESCE(NULLIF($2, ''), status), due_date = CURRENT_DATE + $3::int WHERE id = $1`,
+		s.invoiceID, status, days)
+	if err != nil {
+		return fmt.Errorf("move due date: %w", err)
+	}
+	return nil
+}
+
+func (s *scenarioState) financialFigures(want string) error {
+	stripped := s.summary.TotalRevenue == "0" && s.summary.TotalExpenses == "0" &&
+		s.summary.TotalProfit == "0" && s.summary.TotalPpn == "0" &&
+		s.summary.TotalInvoices == 0 && s.summary.TotalInvoicesPaid == 0 &&
+		s.summary.InvoicesDueSoon == 0 && s.summary.InvoicesOverdue == 0 &&
+		len(s.summary.InvoiceStatuses) == 0
+	shown := s.summary.TotalRevenue != "0" && s.summary.TotalInvoices == 1 &&
+		s.summary.TotalInvoicesPaid == 1 && len(s.summary.InvoiceStatuses) > 0
+	if (want == "stripped" && !stripped) || (want == "shown" && !shown) {
+		return fmt.Errorf("financial figures want %s got %+v", want, s.summary)
+	}
+	// Operational figures survive the strip.
+	if s.summary.TotalQuotations != 1 || s.summary.TotalPo != 1 {
+		return fmt.Errorf("operational figures want 1 quotation and 1 PO got %d and %d",
+			s.summary.TotalQuotations, s.summary.TotalPo)
+	}
+	return nil
+}
+
+func (s *scenarioState) readSeriesAs(role, metric string) error {
+	return s.send(testutil.DashboardServerAs(s.t, role), http.MethodGet, "/dashboard/timeseries?metric="+metric, nil)
+}
+
+func (s *scenarioState) readSeriesRange(role, metric, interval, from, to string) error {
+	path := "/dashboard/timeseries?metric=" + metric + "&interval=" + interval + "&from=" + from + "&to=" + to
+	return s.send(testutil.DashboardServerAs(s.t, role), http.MethodGet, path, nil)
+}
+
+// seriesReads compares month:value pairs in order.
+func (s *scenarioState) seriesReads(want string) error {
+	var points []dashboard.TimeseriesPoint
+	if err := json.Unmarshal(s.body, &points); err != nil {
+		return err
+	}
+	got := make([]string, 0, len(points))
+	for _, p := range points {
+		got = append(got, p.Month+":"+p.Value)
+	}
+	if strings.Join(got, ",") != want {
+		return fmt.Errorf("series want %q got %q", want, strings.Join(got, ","))
+	}
+	return nil
+}
+
+// quotationCreatedAt inserts a quotation at an instant.
+func (s *scenarioState) quotationCreatedAt(instant string) error {
+	at, err := time.Parse(time.RFC3339, instant)
+	if err != nil {
+		return err
+	}
+	_, err = testutil.Pool(s.t).Exec(context.Background(), `
+		INSERT INTO quotations (quotation_no, company_client_id, company_client_name,
+		                        discount_pct, total_produk, total, total_discount,
+		                        created_at, created_by, updated_by)
+		VALUES ('SQ-DASH-WIB', $1, 'PT. IMC Ship Management', 0, 10000, 10000, 0, $2, $3, $3)`,
+		defaultCompany, at, defaultUserID)
+	if err != nil {
+		return fmt.Errorf("insert quotation at %s: %w", instant, err)
+	}
+	return nil
+}
+
+// yearOf resolves "the current year" in WIB.
+func yearOf(spec string) (int, error) {
+	if spec == "the current year" {
+		return tz.Now().Year(), nil
+	}
+	return strconv.Atoi(strings.TrimPrefix(spec, "year "))
+}
+
+func (s *scenarioState) exportAs(role, spec string) error {
+	y, err := yearOf(spec)
+	if err != nil {
+		return err
+	}
+	if err := s.send(testutil.DashboardServerAs(s.t, role), http.MethodGet,
+		"/dashboard/export.xlsx?year="+strconv.Itoa(y), nil); err != nil {
+		return err
+	}
+	if s.last.StatusCode != http.StatusOK {
+		return nil
+	}
+	s.book, err = readBook(s.body)
+	return err
+}
+
+func (s *scenarioState) fileNamedForCurrentYear() error {
+	want := fmt.Sprintf(`filename="dashboard-export-%d.xlsx"`, tz.Now().Year())
+	if got := s.last.Header.Get("Content-Disposition"); !strings.Contains(got, want) {
+		return fmt.Errorf("Content-Disposition want %s got %q", want, got)
+	}
+	return nil
+}
+
+func (s *scenarioState) monthsListed(spec string) error {
+	y, err := yearOf(spec)
+	if err != nil {
+		return err
+	}
+	if len(s.book.months) != 12 {
+		return fmt.Errorf("want 12 monthly rows got %d", len(s.book.months))
+	}
+	for i, row := range s.book.months {
+		if want := fmt.Sprintf("%d-%02d", y, i+1); row[0] != want {
+			return fmt.Errorf("row %d want month %s got %s", i+1, want, row[0])
+		}
+	}
+	return nil
+}
+
+// Ringkasan rows and their Bulanan columns.
+var reconciled = []struct{ total, column string }{
+	{"Total Quotation", "Quotation"},
+	{"Total Invoice", "Invoice"},
+	{"Total Pendapatan", "Pendapatan"},
+	{"Total Laba Bersih", "Laba Bersih"},
+	{"Total PPN", "PPN"},
+}
+
+func (s *scenarioState) totalsEqualMonthlySums() error {
+	for _, r := range reconciled {
+		total, err := s.book.total(r.total)
+		if err != nil {
+			return err
+		}
+		sum, err := s.book.columnSum(r.column)
+		if err != nil {
+			return err
+		}
+		if !total.Equal(sum) {
+			return fmt.Errorf("%s is %s but the %s column sums to %s", r.total, total, r.column, sum)
+		}
+	}
+	return nil
+}
+
+func (s *scenarioState) exportRevenueMatchesTables() error {
+	y := tz.Now().Year()
+	var raw string
+	if err := testutil.Pool(s.t).QueryRow(context.Background(), `
+		SELECT COALESCE(SUM(dpp), 0)::text FROM invoices
+		 WHERE status = 'paid' AND invoice_date >= make_date($1, 1, 1) AND invoice_date < make_date($1 + 1, 1, 1)`,
+		y).Scan(&raw); err != nil {
+		return err
+	}
+	want, err := decimal.NewFromString(raw)
+	if err != nil {
+		return err
+	}
+	got, err := s.book.total("Total Pendapatan")
+	if err != nil {
+		return err
+	}
+	if !got.Equal(want) || want.IsZero() {
+		return fmt.Errorf("export revenue %s, paid DPP sum %s", got, want)
+	}
+	return nil
+}
+
+func (s *scenarioState) everyExportFigureZero() error {
+	for label, v := range s.book.totals {
+		if !v.IsZero() {
+			return fmt.Errorf("%s want 0 got %s", label, v)
+		}
+	}
+	for _, row := range s.book.months {
+		for _, cell := range row[1:] {
+			if cell != "0" {
+				return fmt.Errorf("month %s carries %s", row[0], cell)
+			}
+		}
+	}
+	return nil
+}
+
+func (s *scenarioState) everySummaryFigureZero() error {
+	money := []string{s.summary.TotalRevenue, s.summary.TotalExpenses, s.summary.TotalProfit, s.summary.TotalPpn}
+	for _, m := range money {
+		d, err := decimal.NewFromString(m)
+		if err != nil {
+			return err
+		}
+		if !d.IsZero() {
+			return fmt.Errorf("money figure want 0 got %s in %+v", m, s.summary)
+		}
+	}
+	counts := []int64{s.summary.TotalQuotations, s.summary.TotalQuotationsRejected, s.summary.TotalPo,
+		s.summary.TotalInvoices, s.summary.TotalInvoicesPaid, s.summary.InvoicesDueSoon, s.summary.InvoicesOverdue}
+	for _, c := range counts {
+		if c != 0 {
+			return fmt.Errorf("count want 0 got %d in %+v", c, s.summary)
+		}
+	}
+	return nil
+}
+
+func (s *scenarioState) overdueAndDueSoon(overdue, soon int64) error {
+	if s.summary.InvoicesOverdue != overdue || s.summary.InvoicesDueSoon != soon {
+		return fmt.Errorf("want %d overdue and %d due soon got %d and %d",
+			overdue, soon, s.summary.InvoicesOverdue, s.summary.InvoicesDueSoon)
+	}
+	return nil
+}
+
+// dueCountsMatchTables recounts from the rows.
+// The predicate is spelled out here rather than calling the SQL helper, so
+// the check does not grade the helper against itself.
+func (s *scenarioState) dueCountsMatchTables() error {
+	var overdue, soon int64
+	if err := testutil.Pool(s.t).QueryRow(context.Background(), `
+		SELECT COUNT(*) FILTER (WHERE status = 'overdue'
+		                           OR (status IN ('draft', 'sent') AND due_date < CURRENT_DATE)),
+		       COUNT(*) FILTER (WHERE status IN ('draft', 'sent')
+		                          AND due_date >= CURRENT_DATE AND due_date <= CURRENT_DATE + 7)
+		  FROM invoices
+		 WHERE status <> 'cancelled'`).Scan(&overdue, &soon); err != nil {
+		return err
+	}
+	return s.overdueAndDueSoon(overdue, soon)
+}
+
+// workbook is the parsed dashboard export.
+type workbook struct {
+	totals map[string]decimal.Decimal
+	header []string
+	months [][]string
+}
+
+func readBook(raw []byte) (workbook, error) {
+	f, err := excelize.OpenReader(bytes.NewReader(raw))
+	if err != nil {
+		return workbook{}, err
+	}
+	defer func() { _ = f.Close() }()
+	sum, err := f.GetRows("Ringkasan")
+	if err != nil {
+		return workbook{}, err
+	}
+	b := workbook{totals: map[string]decimal.Decimal{}}
+	for _, row := range sum[1:] {
+		v, err := decimal.NewFromString(row[1])
+		if err != nil {
+			return workbook{}, fmt.Errorf("Ringkasan %s: %w", row[0], err)
+		}
+		b.totals[row[0]] = v
+	}
+	rows, err := f.GetRows("Bulanan")
+	if err != nil {
+		return workbook{}, err
+	}
+	b.header, b.months = rows[0], rows[1:]
+	return b, nil
+}
+
+func (b workbook) total(label string) (decimal.Decimal, error) {
+	v, ok := b.totals[label]
+	if !ok {
+		return decimal.Zero, fmt.Errorf("Ringkasan has no %q row", label)
+	}
+	return v, nil
+}
+
+func (b workbook) columnSum(header string) (decimal.Decimal, error) {
+	col := -1
+	for i, h := range b.header {
+		if h == header {
+			col = i
+		}
+	}
+	if col < 0 {
+		return decimal.Zero, fmt.Errorf("Bulanan has no %q column", header)
+	}
+	sum := decimal.Zero
+	for _, row := range b.months {
+		v, err := decimal.NewFromString(row[col])
+		if err != nil {
+			return decimal.Zero, fmt.Errorf("Bulanan %s %s: %w", row[0], header, err)
+		}
+		sum = sum.Add(v)
+	}
+	return sum, nil
+}
+
 func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
 		state := &scenarioState{t: t}
@@ -319,6 +618,7 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 			state.body = nil
 			state.invoiceID = 0
 			state.summary = dashboard.Summary{}
+			state.book = workbook{}
 			return ctx, nil
 		})
 
@@ -328,8 +628,28 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the invoice is sent$`, func() error { return state.invoiceTo(invoices.StatusSent) })
 		sc.Step(`^the invoice is cancelled and replaced$`, state.cancelAndReplace)
 		sc.Step(`^the dashboard counts (\d+) invoices?$`, state.invoiceCountIs)
-		sc.Step(`^finance reads the dashboard summary$`, func() error { return state.readSummaryAs("finance") })
-		sc.Step(`^operational reads the dashboard summary$`, func() error { return state.readSummaryAs("operational") })
+		sc.Step(`^(superadmin|finance|operational) reads the dashboard summary$`, state.readSummaryAs)
+		sc.Step(`^the invoice is due in (\d+) days$`, func(days int) error { return state.invoiceDue("", days) })
+		sc.Step(`^the invoice is stored as overdue and due in (\d+) days$`, func(days int) error { return state.invoiceDue("overdue", days) })
+		sc.Step(`^the financial figures are (shown|stripped)$`, state.financialFigures)
+		sc.Step(`^(superadmin|finance|operational) reads the "([a-z]+)" series$`, state.readSeriesAs)
+		sc.Step(`^(superadmin|finance|operational) reads the "([a-z]+)" series by (month|day) from "([0-9-]+)" to "([0-9-]+)"$`, state.readSeriesRange)
+		sc.Step(`^the series reads "([^"]*)"$`, state.seriesReads)
+		sc.Step(`^a quotation created at "([^"]+)"$`, state.quotationCreatedAt)
+		sc.Step(`^(superadmin|finance|operational) exports the dashboard for (the current year|year \d{4})$`, state.exportAs)
+		sc.Step(`^the file is named for the current year$`, state.fileNamedForCurrentYear)
+		sc.Step(`^the monthly sheet lists the 12 months of (the current year|\d{4})$`, func(spec string) error {
+			if spec != "the current year" {
+				spec = "year " + spec
+			}
+			return state.monthsListed(spec)
+		})
+		sc.Step(`^each summary total equals the sum of its monthly column$`, state.totalsEqualMonthlySums)
+		sc.Step(`^the summary revenue equals the paid DPP sum for the current year$`, state.exportRevenueMatchesTables)
+		sc.Step(`^every summary and monthly figure is 0$`, state.everyExportFigureZero)
+		sc.Step(`^every summary figure is 0$`, state.everySummaryFigureZero)
+		sc.Step(`^the dashboard counts (\d+) overdue and (\d+) due soon invoices$`, state.overdueAndDueSoon)
+		sc.Step(`^the overdue and due soon counts match the tables$`, state.dueCountsMatchTables)
 		sc.Step(`^a quotation in status "([a-z]+)"$`, state.quotationIn)
 		sc.Step(`^the invoice is past its due date$`, state.invoicePastDue)
 		sc.Step(`^the (quotation|purchase order|invoice) tiles read "([^"]*)"$`, state.tilesRead)
