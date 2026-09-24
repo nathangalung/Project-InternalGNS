@@ -147,6 +147,63 @@ func TestRepo_RemoveFile(t *testing.T) {
 	}
 }
 
+// Terminal POs keep their file.
+func TestRepo_UpdateFile_StatusGuard(t *testing.T) {
+	uploaded := purchaseorders.StatusUploaded
+	tests := []struct {
+		name    string
+		reach   []purchaseorders.Status
+		wantErr error
+	}{
+		{"on progress replaces the file", []purchaseorders.Status{uploaded, purchaseorders.StatusOnProgress}, nil},
+		{"delivered is locked", []purchaseorders.Status{
+			uploaded, purchaseorders.StatusOnProgress, purchaseorders.StatusDelivered,
+		}, purchaseorders.ErrLocked},
+		{"cancelled is locked", []purchaseorders.Status{purchaseorders.StatusCancelled}, purchaseorders.ErrLocked},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, tx := testutil.BeginTx(t)
+			_, poID := acceptedQuotationWithPO(t, tx)
+			repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+			for _, s := range tc.reach {
+				if s == uploaded {
+					require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
+					continue
+				}
+				require.NoError(t, repo.Transition(ctx, poID, s, "alasan uji", seedUserID))
+			}
+			before, err := repo.GetByID(ctx, poID)
+			require.NoError(t, err)
+
+			replacement := purchaseorders.UpdateFileRequest{
+				FileName: "revisi.pdf", FileSize: 2048, ObjectKey: "po/test/2-revisi.pdf",
+			}
+			// A savepoint keeps the tx usable after the refusal.
+			sp, err := tx.Begin(ctx)
+			require.NoError(t, err)
+			err = purchaseorders.NewRepo(sp, testutil.Store(t)).UpdateFile(ctx, poID, replacement, seedUserID)
+			if err != nil {
+				require.NoError(t, sp.Rollback(ctx))
+			} else {
+				require.NoError(t, sp.Commit(ctx))
+			}
+			after, getErr := repo.GetByID(ctx, poID)
+			require.NoError(t, getErr)
+			if tc.wantErr == nil {
+				require.NoError(t, err)
+				require.NotNil(t, after.FileName)
+				assert.Equal(t, "revisi.pdf", *after.FileName)
+				return
+			}
+			require.ErrorIs(t, err, tc.wantErr)
+			assert.Equal(t, "Berkas PO tidak dapat diubah setelah PO dikirim atau dibatalkan.", err.Error())
+			assert.Equal(t, before.FileName, after.FileName)
+			assert.Equal(t, before.Status, after.Status)
+		})
+	}
+}
+
 func TestRepo_RemoveFile_NotFound(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))

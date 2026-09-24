@@ -1,4 +1,4 @@
--- Canonical current body of fn_attach_po_file (deployed by migration 00061).
+-- Canonical current body of fn_attach_po_file (deployed by migration 00064).
 CREATE OR REPLACE FUNCTION public.fn_attach_po_file(p_po_id bigint, p_file_name text, p_file_size bigint, p_file_url text, p_user_id bigint)
  RETURNS void
  LANGUAGE plpgsql
@@ -12,6 +12,11 @@ BEGIN
   IF v_old IS NULL THEN
     RAISE EXCEPTION 'Purchase order % not found', p_po_id
       USING ERRCODE = 'P0011';
+  END IF;
+
+  IF v_old IN ('DELIVERED', 'CANCELLED') THEN
+    RAISE EXCEPTION 'Berkas PO tidak dapat diubah setelah PO dikirim atau dibatalkan.'
+      USING ERRCODE = 'P0013';
   END IF;
 
   UPDATE purchase_orders

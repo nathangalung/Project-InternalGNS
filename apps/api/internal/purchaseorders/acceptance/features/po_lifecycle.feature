@@ -222,6 +222,19 @@ Feature: Purchase order lifecycle
       | DELIVERED   |
       | CANCELLED   |
 
+  Scenario Outline: The PO file cannot be replaced once the PO is closed
+    Given an accepted quotation
+    And the PO has reached "<status>"
+    When the user uploads a PO file named "revisi.pdf"
+    Then the response status is 409
+    When the user reads the PO by quotation
+    Then the PO status is "<status>"
+
+    Examples:
+      | status    |
+      | DELIVERED |
+      | CANCELLED |
+
   Scenario: Work moves back to UPLOADED while the file stays
     Given an accepted quotation
     And the PO has reached "ON_PROGRESS"

@@ -194,11 +194,14 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 
 	actor := deps.CurrentUserID(r.Context())
 	if err := h.repo.UpdateFile(r.Context(), id, req, actor); err != nil {
-		if errors.Is(err, ErrNotFound) {
+		switch {
+		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
-			return
+		case errors.Is(err, ErrLocked):
+			httperr.Render(w, httperr.Conflict(err.Error()))
+		default:
+			httperr.RenderDBErr(w, err)
 		}
-		httperr.RenderDBErr(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
