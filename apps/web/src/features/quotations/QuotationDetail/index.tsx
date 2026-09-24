@@ -1,4 +1,5 @@
 import { useState } from "react"
+import HistoryTimeline from "@/components/shared/HistoryTimeline"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import { downloadQuotationPdf } from "@/features/quotations/hooks"
 import type { QuotationData } from "@/features/quotations/types"
@@ -8,7 +9,6 @@ import { isEditable, quotationStatusFromLabel, splitTransitions, statusHint } fr
 import ClientSummaryCard from "./ClientSummaryCard"
 import CostBreakdown from "./CostBreakdown"
 import Header from "./Header"
-import HistoryTimeline from "./HistoryTimeline"
 import { profitAfterDiscount } from "./helpers"
 import ProductTable from "./ProductTable"
 import ReviseModal from "./ReviseModal"
@@ -85,7 +85,7 @@ export default function QuotationDetail({
         totalProfit={profitAfterDiscount(q.products, q.totalDiscount)}
         grandTotal={q.totalBayar}
       />
-      <HistoryTimeline title="Riwayat Status" history={q.history} />
+      <HistoryTimeline title="Riwayat Status" entries={q.history} />
       <RevisionHistoryCard quotationId={id} />
 
       {picked && (

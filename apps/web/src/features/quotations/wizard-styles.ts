@@ -1,7 +1,8 @@
+import { timeline } from "@/components/shared/HistoryTimeline"
 import { ui } from "@/lib/ui"
 
-// Tailwind ports of the legacy qe-*/qep-*/qd-timeline-* classes used by the
-// quotation wizard and detail screens. Values reproduce admin.css exactly.
+// Tailwind ports of the legacy qe-*/qep-* classes used by the quotation
+// wizard and detail screens. Values reproduce admin.css exactly.
 
 export const qe = {
   // Wraps below 640px
@@ -72,27 +73,17 @@ export const qep = {
   summaryValueGrand: "text-xl font-bold leading-6 tracking-tight text-primary-700",
 }
 
-// Detail-screen timeline (legacy qd-history-card / qd-timeline-*).
+// Interim aliases for invoices, PO.
+//
+// Their history cards still import these; each drops them when it moves to
+// the shared HistoryTimeline, and the aliases go with the last one.
+export {
+  timelineAction,
+  timelineDate,
+  timelineDot,
+} from "@/components/shared/HistoryTimeline"
 export const qd = {
-  historyCard: "rounded-md border border-dark-100 bg-[rgba(242,244,246,0.5)] p-8",
-  timeline:
-    "relative flex flex-col gap-8 pl-10 before:absolute before:bottom-2 before:left-[11px] before:top-2 before:w-0.5 before:bg-dark-200 before:content-['']",
-  timelineItem: "relative flex flex-col gap-1",
-}
-
-const timelineDotBase = "absolute -left-10 top-1 h-6 w-6 rounded-full"
-
-export function timelineDot(active: boolean): string {
-  return active
-    ? `${timelineDotBase} border-[4px] border-primary-600 bg-primary-700`
-    : `${timelineDotBase} border-[6px] border-dark-200 bg-white`
-}
-
-export function timelineDate(active: boolean): string {
-  const base = "text-overline font-bold uppercase tracking-[0.06em]"
-  return active ? `${base} text-primary-700` : `${base} text-[#4A4455]`
-}
-
-export function timelineAction(bold: boolean): string {
-  return bold ? "text-sm font-bold text-dark-900" : "text-sm font-semibold text-dark-900"
+  historyCard: timeline.card,
+  timeline: timeline.list,
+  timelineItem: timeline.item,
 }
