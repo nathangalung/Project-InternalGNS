@@ -130,3 +130,14 @@ describe("deriveInvoiceStatus cancelled", () => {
     expect(deriveInvoiceStatus(row("paid"), { cancelledAsNull: true })).toBe("DIBAYAR")
   })
 })
+
+describe("deriveInvoiceStatus malformed due date", () => {
+  it("never calls a short due date overdue, although it sorts before today", () => {
+    // "2026-6-1" < "2026-09-24" as a string; the length guard stops that.
+    expect(deriveInvoiceStatus(row("sent", "2026-6-1"))).toBe("DIKIRIM")
+  })
+
+  it("reads only the day of a full timestamp", () => {
+    expect(deriveInvoiceStatus(row("sent", "2000-01-01T00:00:00+07:00"))).toBe("TERLAMBAT")
+  })
+})

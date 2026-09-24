@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "./api-client"
-import { isMissing } from "./errors"
+import { errorMessage, isMissing } from "./errors"
 
 describe("isMissing", () => {
   it.each<[string, unknown, boolean]>([
@@ -12,5 +12,22 @@ describe("isMissing", () => {
     ["no error", null, false],
   ])("%s", (_name, err, want) => {
     expect(isMissing(err)).toBe(want)
+  })
+})
+
+describe("errorMessage", () => {
+  it.each<[string, unknown, string]>([
+    ["API detail", new ApiError(422, null, "Nama wajib diisi."), "Nama wajib diisi."],
+    ["API blank message", new ApiError(500, null, "   "), "Gagal."],
+    ["plain Error", new Error("Koneksi terputus"), "Koneksi terputus"],
+    ["blank Error", new Error(""), "Gagal."],
+    ["string thrown", "boom", "Gagal."],
+    ["nothing thrown", undefined, "Gagal."],
+  ])("%s", (_name, err, want) => {
+    expect(errorMessage(err, "Gagal.")).toBe(want)
+  })
+
+  it("trims the message it shows", () => {
+    expect(errorMessage(new Error("  Gagal login.  "), "x")).toBe("Gagal login.")
   })
 })

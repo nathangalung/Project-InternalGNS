@@ -46,3 +46,37 @@ describe("validateAsset", () => {
     expect(() => validateAsset("paymentProof", f)).not.toThrow()
   })
 })
+
+describe("validateAsset per kind", () => {
+  it.each<[AssetKind, string, number]>([
+    ["clientLogo", "logo klien", 2],
+    ["vendorLogo", "logo vendor", 2],
+    ["itemImage", "gambar produk", 5],
+    ["poDoc", "dokumen PO", 20],
+  ])("%s caps at its own size", (kind, label, mb) => {
+    const ext = kind === "poDoc" ? "a.pdf" : "a.png"
+    const type = kind === "poDoc" ? "application/pdf" : "image/png"
+    expect(() => validateAsset(kind, file(ext, mb * MB, type))).not.toThrow()
+    expect(() => validateAsset(kind, file(ext, mb * MB + 1, type))).toThrow(
+      `Ukuran ${label} melebihi ${mb} MB.`,
+    )
+  })
+
+  it("refuses a PDF as a logo", () => {
+    expect(() => validateAsset("clientLogo", file("logo.pdf", 10, "application/pdf"))).toThrow(
+      "Format logo klien tidak didukung. Gunakan: .png, .jpg, .jpeg, .webp, .gif.",
+    )
+  })
+
+  it("refuses a file with no extension", () => {
+    expect(() => validateAsset("poDoc", file("scan", 10, "application/pdf"))).toThrow(
+      "Format dokumen PO tidak didukung.",
+    )
+  })
+
+  it("refuses an image MIME dressed as a logo it is not", () => {
+    expect(() => validateAsset("vendorLogo", file("a.png", 10, "image/svg+xml"))).toThrow(
+      "Tipe file logo vendor tidak didukung.",
+    )
+  })
+})
