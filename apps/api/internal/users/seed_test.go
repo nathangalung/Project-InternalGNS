@@ -144,3 +144,38 @@ func TestSeedSuperadmin_ReseedMatchesCaseFoldedRow(t *testing.T) {
 		`SELECT COUNT(*) FROM users WHERE LOWER(email) = $1`, lowered).Scan(&count))
 	assert.Equal(t, 1, count, "seeding must never duplicate the superadmin")
 }
+
+// Seed failures stop the boot.
+// A seed that cannot open its transaction, or whose row the table refuses,
+// must fail loudly instead of booting with no superadmin.
+func TestSeedSuperadmin_StorageFailuresSurface(t *testing.T) {
+	pool := testutil.Pool(t)
+	cancelled, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	tests := []struct {
+		name string
+		ctx  context.Context
+		cfg  users.SeedConfig
+		want string
+	}{
+		{"cancelled before begin", cancelled, users.SeedConfig{
+			Email: "seed-cancel@test.local", Name: "Seed", Password: "Seed-pw1!",
+		}, "context canceled"},
+		{"name longer than the column", context.Background(), users.SeedConfig{
+			Email: "seed-long-name@test.local", Name: strings.Repeat("n", 256), Password: "Seed-pw1!",
+		}, "seed superadmin: insert:"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := users.SeedSuperadmin(tc.ctx, pool, tc.cfg)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tc.want)
+
+			var n int
+			require.NoError(t, pool.QueryRow(context.Background(),
+				`SELECT COUNT(*) FROM users WHERE email = $1`, tc.cfg.Email).Scan(&n))
+			assert.Zero(t, n, "a failed seed writes nothing")
+		})
+	}
+}

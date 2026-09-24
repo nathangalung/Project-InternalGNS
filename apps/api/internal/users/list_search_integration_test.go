@@ -68,3 +68,43 @@ func TestHandler_List_NulSearchIsRefused(t *testing.T) {
 	defer res.Body.Close()
 	assertUnprocessable(t, res, "")
 }
+
+// The status filter splits active from inactive.
+// An unparseable value is ignored, matching the other list screens.
+func TestHandler_List_FiltersByActiveState(t *testing.T) {
+	testutil.RequireDB(t)
+	c := testutil.NewCleaner(t)
+	srv := newUsersServer(t)
+	tag := fmt.Sprintf("state%d", randSuffix())
+	active := newStaff(t, c, srv, tag+"-on@test.local")
+	inactive := newStaff(t, c, srv, tag+"-off@test.local")
+	res := doJSON(t, srv, http.MethodPut, fmt.Sprintf("/users/%d", inactive.ID), users.UpdateUserRequest{
+		Email: inactive.Email, Name: inactive.Name, Role: inactive.Role, IsActive: false,
+	})
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	res.Body.Close()
+
+	tests := []struct {
+		isActive string
+		want     []int64
+	}{
+		{"true", []int64{active.ID}},
+		{"false", []int64{inactive.ID}},
+		{"sometimes", []int64{inactive.ID, active.ID}},
+	}
+	for _, tc := range tests {
+		t.Run(tc.isActive, func(t *testing.T) {
+			res := doJSON(t, srv, http.MethodGet, "/users/?sortBy=name&q="+tag+"&isActive="+tc.isActive, nil)
+			defer res.Body.Close()
+			require.Equal(t, http.StatusOK, res.StatusCode)
+			var rows []users.User
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&rows))
+			ids := make([]int64, 0, len(rows))
+			for _, r := range rows {
+				ids = append(ids, r.ID)
+			}
+			assert.ElementsMatch(t, tc.want, ids)
+			assert.Equal(t, fmt.Sprint(len(tc.want)), res.Header.Get("X-Total-Count"))
+		})
+	}
+}
