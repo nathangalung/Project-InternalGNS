@@ -18,7 +18,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 )
 
-// The database refuses a discount past the handler.
+// DB refuses out-of-range discounts.
 func TestUpdate_DiscountOutOfRangeIsTyped(t *testing.T) {
 	cases := []struct {
 		name      string
@@ -56,7 +56,7 @@ func TestUpdate_DiscountOutOfRangeIsTyped(t *testing.T) {
 	}
 }
 
-// matchCount reads a learned count, 0 when absent.
+// matchCount reads a learned count.
 func matchCount(t *testing.T, ctx context.Context, tx pgx.Tx, text string) (int, int64) {
 	t.Helper()
 	var count int
@@ -87,7 +87,7 @@ func insertItem(t *testing.T, ctx context.Context, tx pgx.Tx, name string) int64
 	return id
 }
 
-// Only a new or changed match is learned.
+// Only new matches learn.
 // Each step saves the whole draft and checks both texts.
 func TestUpdate_ResaveLearnsOnlyNewMatches(t *testing.T) {
 	ctx, repo, tx := newRepo(t)
@@ -150,7 +150,7 @@ func TestUpdate_ResaveLearnsOnlyNewMatches(t *testing.T) {
 	assert.Equal(t, 1, count, "a later insert in the same transaction still learns")
 }
 
-// An outer off switch still wins.
+// Outer off switch wins.
 func TestUpdate_KeepsCallerLearningOff(t *testing.T) {
 	ctx, repo, tx := newRepo(t)
 	text := fmt.Sprintf("RESAVE LEARN OFF %d", time.Now().UnixNano())
