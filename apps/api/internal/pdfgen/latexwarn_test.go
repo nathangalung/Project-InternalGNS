@@ -37,9 +37,10 @@ func compileLog(t *testing.T, name string, data any) string {
 	if err := os.WriteFile(tex, buf.Bytes(), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	// Two passes resolve page refs, like production.
+	// Two passes resolve page refs, like production. Relative paths keep
+	// the "Output written on" log line free of t.TempDir's random suffix.
 	for i := 0; i < 2; i++ {
-		cmd := exec.Command("xelatex", "-interaction=nonstopmode", "-output-directory="+dir, tex)
+		cmd := exec.Command("xelatex", "-interaction=nonstopmode", "doc.tex")
 		cmd.Dir = dir
 		_ = cmd.Run()
 	}
@@ -78,14 +79,37 @@ var pagesRe = regexp.MustCompile(`\((\d+) pages?\)`)
 
 // Read the emitted page count.
 func pageCount(log string) int {
-	// Collapse xelatex log line wrapping.
-	flat := strings.Join(strings.Fields(log), " ")
+	// TeX hard-wraps log lines at max_print_line without a space, so
+	// rejoin them with nothing; a space would split "(N pages)".
+	flat := strings.ReplaceAll(log, "\n", "")
 	m := pagesRe.FindStringSubmatch(flat)
 	if m == nil {
 		return 0
 	}
 	n, _ := strconv.Atoi(m[1])
 	return n
+}
+
+// pageCount survives TeX log wrapping.
+func TestPageCount(t *testing.T) {
+	tests := []struct {
+		name, log string
+		want      int
+	}{
+		{"one line", "Output written on doc.pdf (5 pages).\n", 5},
+		{"single page", "Output written on doc.pdf (1 page).\n", 1},
+		{"wrap after paren", "Output written on /tmp/x/001/doc.pdf (\n5 pages).\n", 5},
+		{"wrap inside number", "Output written on /tmp/x/doc.pdf (1\n2 pages).\n", 12},
+		{"wrap inside word", "Output written on /tmp/x/doc.pdf (5 pa\nges).\n", 5},
+		{"no output line", "No pages of output.\n", 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := pageCount(tt.log); got != tt.want {
+				t.Errorf("pageCount = %d, want %d", got, tt.want)
+			}
+		})
+	}
 }
 
 func sampleItems(n int) []map[string]any {
@@ -181,9 +205,7 @@ func TestLatexExports_MultiPage(t *testing.T) {
 			over, _, warn := badBoxes(log)
 			pages := pageCount(log)
 			if pages == 0 {
-				// Page count unparseable under concurrent CPU load; the
-				// single-page Clean test already guards correctness.
-				t.Skip("xelatex page count unavailable")
+				t.Fatalf("%s: no page count in xelatex log", d.name)
 			}
 			if pages < 2 {
 				t.Errorf("%s: expected multi-page split, got %d page(s)", d.name, pages)
