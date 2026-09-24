@@ -1,4 +1,4 @@
-# Shared helpers for backup scripts.
+# Shared backup script helpers.
 # shellcheck shell=bash
 
 log() { printf '%s %s\n' "$(date '+%Y-%m-%dT%H:%M:%S%z')" "$*" >&2; }
@@ -8,10 +8,10 @@ die() {
   exit 1
 }
 
-# Resolve one compose service container.
-# Dokploy may run the stack under its own project name, so the service label
-# is the stable handle; COMPOSE_PROJECT narrows it when several stacks match.
+# Resolve one service container.
 container_for() {
+  # Dokploy may run the stack under its own project name, so the service
+  # label is the stable handle; COMPOSE_PROJECT narrows it when several match.
   local filters=(--filter "label=com.docker.compose.service=$1")
   [ -z "${COMPOSE_PROJECT:-}" ] || filters+=(--filter "label=com.docker.compose.project=$COMPOSE_PROJECT")
   local ids
@@ -21,16 +21,16 @@ container_for() {
   printf '%s\n' "$ids"
 }
 
-# Read one container environment variable.
+# Read one container variable.
 minio_env() {
   docker exec "$1" printenv "$2" || die "$2 is not set in container $1"
 }
 
 # Run mc beside MinIO.
-# Usage: mc_run CONTAINER IMAGE SCRIPT [docker run args...]. The one-off
-# container shares MinIO's network namespace, so it reaches 127.0.0.1:9000 on
-# the internal-only network. Credentials pass by variable name, never argv.
 mc_run() {
+  # Usage: mc_run CONTAINER IMAGE SCRIPT [docker run args...]. The one-off
+  # container shares MinIO's network namespace, so it reaches 127.0.0.1:9000
+  # on the internal-only network. Credentials pass by name, never in argv.
   local minio=$1 image=$2 script=$3
   shift 3
   MINIO_ROOT_USER=$(minio_env "$minio" MINIO_ROOT_USER) \
@@ -41,10 +41,10 @@ mc_run() {
     'set -e; mc alias set src http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && '"$script"
 }
 
-# Exact row count per table.
-# Usage: pg_row_counts CONTAINER DATABASE (empty means POSTGRES_DB).
-pg_row_counts() {
-  docker exec -i "$1" sh -c 'exec psql -X -q -At -F " " -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "${1:-$POSTGRES_DB}"' sh "$2" <<'SQL'
+# Per-table count query.
+pg_count_sql() {
+  # psql prints "<schema.table> <rows>" per table through \gexec.
+  cat <<'SQL'
 SELECT format('SELECT %L, count(*) FROM %I.%I', n.nspname || '.' || c.relname, n.nspname, c.relname)
 FROM pg_class c
 JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -56,11 +56,18 @@ ORDER BY 1
 SQL
 }
 
+# Exact rows per table.
+pg_row_counts() {
+  # Usage: pg_row_counts CONTAINER DATABASE (empty means POSTGRES_DB).
+  pg_count_sql | docker exec -i "$1" sh -c \
+    'exec psql -X -q -At -F " " -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "${1:-$POSTGRES_DB}"' sh "$2"
+}
+
 # Objects and bytes per bucket.
-# Usage: minio_object_counts CONTAINER IMAGE [BUCKET]. Groups by the first
-# key segment: the bucket at the alias root, and the original bucket inside
-# a rehearsal bucket. Prints "<bucket> <objects> <bytes>" sorted.
 minio_object_counts() {
+  # Usage: minio_object_counts CONTAINER IMAGE [BUCKET]. Groups by the first
+  # key segment: the bucket at the alias root, and the original bucket inside
+  # a rehearsal bucket. Prints "<bucket> <objects> <bytes>" sorted.
   mc_run "$1" "$2" 'mc ls --recursive --json "src/'"${3:-}"'"' |
     awk -F'"' '
       { key = ""; size = 0

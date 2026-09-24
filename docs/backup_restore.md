@@ -13,7 +13,9 @@ network is internal-only, so a sidecar container would have no way out.
 1. `pg_dump -Fc` of the application database, run in the `gns-postgres`
    container. `pg_restore -l` then reads the dump back, and the run fails if the
    table of contents comes back empty.
-2. Exact row counts for every table, taken right after the dump.
+2. Exact row counts for every table. They run in the same repeatable-read
+   snapshot that `pg_dump --snapshot` reads, so they describe the dump
+   exactly even while the api keeps writing.
 3. Every object in every MinIO bucket, copied as plain files by `mc mirror`.
    The copy runs in a throwaway container that shares the `gns-minio` network
    namespace and uses the image already on the host. If the copy holds fewer
@@ -188,8 +190,9 @@ rehearsed below, on a stack with fresh volumes.
 1. Deploy the stack with the same `TAG` the backup was taken on, or a newer
    one. The api migrates forward on boot, never back, so an older image would
    meet a newer schema.
-2. Stop the api and web containers, so nothing writes and the api cannot
-   migrate the empty database first:
+2. Stop the api and web containers so nothing writes during the restore.
+   The api has already migrated the new, empty database on its first start;
+   the next step drops that database:
    `docker stop <project>-api-1 <project>-frontend-1`.
 3. Drop the empty database that Postgres created on first start:
    `docker exec <project>-gns-postgres-1 sh -c 'dropdb -U "$POSTGRES_USER" "$POSTGRES_DB"'`.
@@ -257,3 +260,9 @@ The ETags of all 73 restored objects matched their sources. The public schema
 had 71 functions in both databases. The restore also refused an existing
 database, a non-empty bucket and a snapshot with one byte appended to the dump
 (checksum mismatch), each before writing anything.
+
+A second run took the backup while a loop committed an insert into a probe
+table and an update to `units` on every iteration. The probe table grew from
+1,294 to 2,470 rows during the backup, and the manifest recorded 1,429. The
+restore of that snapshot still printed `restore ok: 23 tables, 26227 rows,
+70 objects, 129990 bytes`, because the counts and the dump share one snapshot.
