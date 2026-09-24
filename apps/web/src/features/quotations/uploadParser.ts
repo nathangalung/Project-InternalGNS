@@ -96,6 +96,8 @@ function cellToPrimitive(value: unknown): unknown {
   if (value == null) return ""
   if (typeof value === "object") {
     const v = value as Record<string, unknown>
+    // An error cell such as #N/A has no display text.
+    if ("error" in v) return ""
     if ("result" in v) return cellToPrimitive(v.result)
     if ("text" in v) return v.text
     if ("richText" in v && Array.isArray(v.richText)) {
