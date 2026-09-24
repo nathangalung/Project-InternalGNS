@@ -133,6 +133,16 @@ func FromDBErr(err error) Error {
 			return UnprocessableDetail("Format salah satu isian tidak sesuai. Periksa tanggal, angka, dan pilihan yang dipilih.", nil)
 		case db.SQLStateNumericOutOfRange:
 			return UnprocessableDetail("Nilai angka di luar batas yang diizinkan. Masukkan angka yang lebih kecil.", nil)
+		// A value that cannot be stored as sent is the caller's input, not
+		// a server fault, whichever slice forgot to screen it.
+		case db.SQLStateCharacterNotInRepertoire:
+			return UnprocessableDetail("Isian mengandung karakter yang tidak dapat disimpan. Hapus karakter tersebut lalu coba lagi.", nil)
+		case db.SQLStateStringDataRightTruncation:
+			return UnprocessableDetail("Isian terlalu panjang. Persingkat isian lalu simpan kembali.", nil)
+		case db.SQLStateInvalidDatetimeFormat:
+			return UnprocessableDetail("Format tanggal tidak dikenali. Gunakan format TTTT-BB-HH.", nil)
+		case db.SQLStateDatetimeFieldOverflow:
+			return UnprocessableDetail("Tanggal di luar rentang yang diizinkan. Periksa kembali tanggalnya.", nil)
 		}
 	}
 	// Never surface raw internal error text to the client; RenderDBErr logs it.

@@ -239,6 +239,10 @@ func TestFromDBErr_NamedSQLStates(t *testing.T) {
 		{"check violation", db.SQLStateCheckViolation, http.StatusUnprocessableEntity},
 		{"invalid text representation", db.SQLStateInvalidTextRepresentation, http.StatusUnprocessableEntity},
 		{"numeric out of range", db.SQLStateNumericOutOfRange, http.StatusUnprocessableEntity},
+		{"string too long", db.SQLStateStringDataRightTruncation, http.StatusUnprocessableEntity},
+		{"invalid datetime format", db.SQLStateInvalidDatetimeFormat, http.StatusUnprocessableEntity},
+		{"datetime overflow", db.SQLStateDatetimeFieldOverflow, http.StatusUnprocessableEntity},
+		{"character not in repertoire", db.SQLStateCharacterNotInRepertoire, http.StatusUnprocessableEntity},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -267,6 +271,36 @@ func TestSQLStateValues(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, tc.got)
+		})
+	}
+}
+
+// Bad input data is the caller's mistake.
+// Postgres raises these when a value cannot be stored as sent: a NUL byte or
+// invalid UTF-8 (22021), text past its column (22001), a malformed or
+// out-of-range date (22007, 22008). They are not server faults, so they must
+// not answer 500 or page the error stream, and the raw message stays hidden.
+func TestFromDBErr_DataExceptionsAreClientErrors(t *testing.T) {
+	cases := []struct {
+		name   string
+		code   string
+		detail string
+	}{
+		{"character not in repertoire", "22021",
+			"Isian mengandung karakter yang tidak dapat disimpan. Hapus karakter tersebut lalu coba lagi."},
+		{"string data right truncation", "22001",
+			"Isian terlalu panjang. Persingkat isian lalu simpan kembali."},
+		{"invalid datetime format", "22007",
+			"Format tanggal tidak dikenali. Gunakan format TTTT-BB-HH."},
+		{"datetime field overflow", "22008",
+			"Tanggal di luar rentang yang diizinkan. Periksa kembali tanggalnya."},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := FromDBErr(&pgconn.PgError{Code: tc.code, Message: "raw pg text"})
+			assert.Equal(t, http.StatusUnprocessableEntity, got.Status)
+			assert.Equal(t, tc.detail, got.Detail)
+			assert.NotContains(t, got.Detail, "raw pg text")
 		})
 	}
 }
