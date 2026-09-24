@@ -595,13 +595,13 @@ func TestHandler_MatchRows_FailedBatchRollsBack(t *testing.T) {
 
 	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", failing)
 	res.Body.Close()
-	require.Equal(t, http.StatusInternalServerError, res.StatusCode, "oversized row must fail the batch")
+	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode, "oversized row must fail the batch")
 	require.Equal(t, 0, countCreated(), "a failed batch must not leave earlier rows behind")
 
 	// Retrying the same broken batch stays at zero, never doubling.
 	res = doJSON(t, srv, http.MethodPost, "/items/match-rows", failing)
 	res.Body.Close()
-	require.Equal(t, http.StatusInternalServerError, res.StatusCode)
+	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 	require.Equal(t, 0, countCreated(), "retry of a failed batch must not duplicate")
 
 	// Retry without the bad row creates each product exactly once.
