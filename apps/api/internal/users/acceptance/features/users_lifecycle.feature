@@ -108,3 +108,34 @@ Feature: User management lifecycle
       | role       | active |
       | finance    | true   |
       | superadmin | false  |
+
+  Scenario: A search matches wildcard characters literally
+    Given staff accounts named "a_b" and "axb"
+    When the user searches staff for "a_b"
+    Then the response status is 200
+    And the staff list holds only "a_b"
+
+  Scenario: Paging returns one page and the full total
+    Given 3 staff accounts sharing a name
+    When the user lists that name with limit 2 and offset 0
+    Then the response status is 200
+    And the staff list has 2 rows of 3
+    When the user lists that name with limit 2 and offset 2
+    Then the staff list has 1 row of 3
+
+  Scenario: An unknown account is not found
+    When the user reads an unknown staff account
+    Then the response status is 404
+
+  Scenario: A non-numeric id is a bad request
+    When the user reads the staff account "abc"
+    Then the response status is 400
+
+  Scenario Outline: A name must fit the column
+    When the user creates a staff account with a <length>-character name
+    Then the response status is <status>
+
+    Examples:
+      | length | status |
+      | 255    | 201    |
+      | 256    | 422    |

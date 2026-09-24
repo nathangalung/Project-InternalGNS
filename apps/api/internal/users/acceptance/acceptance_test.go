@@ -34,6 +34,7 @@ type scenarioState struct {
 	name       string
 	firstEmail string
 	secondID   int64
+	tag        string
 	parked     []int64
 }
 
@@ -343,6 +344,95 @@ func (s *scenarioState) setSuperadmin(role string, active bool) error {
 	return s.sendRequest(http.MethodPut, "/users/"+strconv.FormatInt(s.userID, 10), body)
 }
 
+// createNamed creates an operational account named name.
+func (s *scenarioState) createNamed(name string) error {
+	body := users.CreateUserRequest{
+		Email: s.uniqueEmail(), Name: name, Password: "Secret123!", Role: users.RoleOperational,
+	}
+	if err := s.sendRequest(http.MethodPost, "/users/", body); err != nil {
+		return err
+	}
+	if s.last.StatusCode != http.StatusCreated {
+		return nil
+	}
+	return s.captureID()
+}
+
+// newTag starts a name prefix no other row shares.
+func (s *scenarioState) newTag() string {
+	s.tag = fmt.Sprintf("ATDD %d", time.Now().UnixNano())
+	return s.tag
+}
+
+func (s *scenarioState) staffNamed(a, b string) error {
+	tag := s.newTag()
+	for _, suffix := range []string{a, b} {
+		if err := s.createNamed(tag + " " + suffix); err != nil {
+			return err
+		}
+		if err := s.statusEquals(http.StatusCreated); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *scenarioState) searchStaff(text string) error {
+	return s.sendRequest(http.MethodGet, "/users/?q="+url.QueryEscape(s.tag+" "+text), nil)
+}
+
+func (s *scenarioState) staffListHoldsOnly(suffix string) error {
+	var rows []users.User
+	if err := json.Unmarshal(s.body, &rows); err != nil {
+		return err
+	}
+	want := s.tag + " " + suffix
+	if len(rows) != 1 || rows[0].Name != want {
+		return fmt.Errorf("want only %q got %d rows body=%s", want, len(rows), s.body)
+	}
+	return nil
+}
+
+func (s *scenarioState) staffSharingName(n int) error {
+	tag := s.newTag()
+	for range n {
+		if err := s.createNamed(tag); err != nil {
+			return err
+		}
+		if err := s.statusEquals(http.StatusCreated); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *scenarioState) listNamePage(limit, offset int) error {
+	return s.sendRequest(http.MethodGet, fmt.Sprintf("/users/?q=%s&limit=%d&offset=%d",
+		url.QueryEscape(s.tag), limit, offset), nil)
+}
+
+func (s *scenarioState) staffPage(rowsWant, total int) error {
+	var rows []users.User
+	if err := json.Unmarshal(s.body, &rows); err != nil {
+		return err
+	}
+	if len(rows) != rowsWant {
+		return fmt.Errorf("want %d rows got %d", rowsWant, len(rows))
+	}
+	if got := s.last.Header.Get("X-Total-Count"); got != strconv.Itoa(total) {
+		return fmt.Errorf("want X-Total-Count %d got %q", total, got)
+	}
+	return nil
+}
+
+func (s *scenarioState) readRaw(id string) error {
+	return s.sendRequest(http.MethodGet, "/users/"+id, nil)
+}
+
+func (s *scenarioState) createWithNameLength(n int) error {
+	return s.createNamed(strings.Repeat("n", n))
+}
+
 func (s *scenarioState) problemDetail(want string) error {
 	var p struct {
 		Detail string `json:"detail"`
@@ -367,6 +457,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 			state.name = ""
 			state.firstEmail = ""
 			state.secondID = 0
+			state.tag = ""
 			return ctx, nil
 		})
 		sc.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
@@ -404,6 +495,15 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 			return state.setSuperadmin(role, active == "true")
 		})
 		sc.Step(`^the problem detail is "([^"]+)"$`, state.problemDetail)
+		sc.Step(`^staff accounts named "([^"]+)" and "([^"]+)"$`, state.staffNamed)
+		sc.Step(`^the user searches staff for "([^"]+)"$`, state.searchStaff)
+		sc.Step(`^the staff list holds only "([^"]+)"$`, state.staffListHoldsOnly)
+		sc.Step(`^(\d+) staff accounts sharing a name$`, state.staffSharingName)
+		sc.Step(`^the user lists that name with limit (\d+) and offset (\d+)$`, state.listNamePage)
+		sc.Step(`^the staff list has (\d+) rows? of (\d+)$`, state.staffPage)
+		sc.Step(`^the user reads an unknown staff account$`, func() error { return state.readRaw("999999999999") })
+		sc.Step(`^the user reads the staff account "([^"]+)"$`, state.readRaw)
+		sc.Step(`^the user creates a staff account with a (\d+)-character name$`, state.createWithNameLength)
 	}
 }
 
@@ -416,6 +516,7 @@ func TestUsersFeatures(t *testing.T) {
 			Format:   "pretty",
 			Paths:    []string{"features"},
 			TestingT: t,
+			Strict:   true,
 		},
 	}
 	if status := suite.Run(); status != 0 {
