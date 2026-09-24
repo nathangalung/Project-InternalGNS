@@ -9,7 +9,13 @@ import { apiURL, authFile } from "./env"
 
 export type ApiError = Error & { status: number; body: unknown }
 
-export type SeedClient = { id: number; name: string; number: string; contactId?: number }
+export type SeedClient = {
+  id: number
+  name: string
+  number: string
+  contactId?: number
+  contactEmail?: string
+}
 export type SeedVendor = { id: number; name: string }
 export type SeedItem = { id: number; name: string; impaCode: string; vendorProductId?: number }
 export type SeedLine = { item: SeedItem; qty: number; price: number; cost?: number }
@@ -115,17 +121,21 @@ export class SalesSeed {
     })
     this.clients.push(created.id)
     let contactId: number | undefined
+    // Contact emails are unique across every client.
+    const contactEmail = complete
+      ? `${this.prefix.toLowerCase()}.${this.seq}@example.com`
+      : undefined
     if (complete) {
       const contact = await api<{ id: number }>("POST", `/clients/${created.id}/contacts`, {
         name: `${this.prefix} Narahubung`,
-        email: `${this.prefix.toLowerCase()}@example.com`,
+        email: contactEmail,
         phone: "81234567890",
         title: "Purchasing",
         countryCode: "IDN",
       })
       contactId = contact.id
     }
-    return { id: created.id, name, number: created.number, contactId }
+    return { id: created.id, name, number: created.number, contactId, contactEmail }
   }
 
   async vendor(opts: { complete?: boolean; label?: string } = {}): Promise<SeedVendor> {

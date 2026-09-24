@@ -111,7 +111,9 @@ test.describe("quotation wizard", () => {
     await modal.getByLabel("Alamat *").fill("Jl. Gatot Subroto Kav. 10, Jakarta Selatan")
     await modal.getByLabel("Nama Narahubung *").fill(`${seed.prefix} Narahubung`)
     // One of phone or email is required, despite both reading Opsional.
-    await modal.getByLabel("Email (Opsional)").fill("wizard@example.com")
+    await modal
+      .getByLabel("Email (Opsional)")
+      .fill(`${seed.prefix.toLowerCase()}.wizard@example.com`)
     await modal.getByRole("button", { name: "Simpan Data" }).click()
     await expect(modal).toBeHidden()
     await seed.adopt("client", name)
