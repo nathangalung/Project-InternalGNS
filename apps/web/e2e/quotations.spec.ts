@@ -125,6 +125,33 @@ test.describe("quotation wizard", () => {
     )
     await expect(page.getByRole("button", { name: "Lanjut" })).toBeEnabled()
   })
+
+  test("Salin ke Offer keeps the catalog item's vendors and unit", async ({ page, seed }) => {
+    const client = await seed.client()
+    const vendor = await seed.vendor()
+    const item = await seed.item({ vendor, cost: 75_000 })
+
+    await page.goto("/quotations/add")
+    await page.getByLabel("Cari klien").fill(seed.prefix)
+    await page.getByRole("button", { name: new RegExp(client.name) }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Tambah Produk" }).click()
+
+    const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
+    await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
+    await product.getByRole("button", { name: `${item.impaCode} - ${item.name}` }).click()
+    await product.getByRole("button", { name: "Salin ke Offer" }).click()
+    await expect(product.getByLabel("Kode IMPA/Nama Produk *", { exact: true })).toHaveValue(
+      `${item.impaCode} - ${item.name}`,
+    )
+    // The copied offer is the same catalog item, so its linked vendor and
+    // default unit apply exactly as when the offer is picked directly.
+    await expect(product.getByRole("button", { name: "Satuan *" })).toHaveText(/PCS/)
+    await product.getByLabel("Jumlah Produk *").fill("2")
+    await product.getByLabel("Nama Vendor *").click()
+    await product.getByRole("button", { name: new RegExp(vendor.name) }).click()
+    await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("75000")
+  })
 })
 
 test.describe("quotation status", () => {

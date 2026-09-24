@@ -57,6 +57,8 @@ export default function ProductAdd({
   const [showConfirm, setShowConfirm] = useState(false)
 
   const [pickedItemId, setPickedItemId] = useState<number | null>(null)
+  // Catalog item picked as the request
+  const [requestedItem, setRequestedItem] = useState<CatalogItem | null>(null)
   const [extraVendors, setExtraVendors] = useState<VendorOption[]>([])
   const [showProductNew, setShowProductNew] = useState(false)
   const [showVendorNew, setShowVendorNew] = useState(false)
@@ -368,6 +370,7 @@ export default function ProductAdd({
             }}
             onPickProduct={pickProduct}
             onPickRequestSuggestion={(item) => {
+              setRequestedItem(item)
               const label = formatKodeNama(item.kode, item.nama)
               setForm((prev) => ({
                 ...prev,
@@ -383,7 +386,12 @@ export default function ProductAdd({
                 vendorId: undefined,
                 vendorProductId: undefined,
               }))
-              setPickedItemId(null)
+              // A catalog request copies as that item, vendors and unit included.
+              if (requestedItem && requestedItem.id === form.requestedItemId) {
+                pickProduct(requestedItem)
+              } else {
+                setPickedItemId(null)
+              }
             }}
           />
 
