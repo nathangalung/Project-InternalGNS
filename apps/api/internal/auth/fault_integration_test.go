@@ -239,6 +239,7 @@ func TestService_RevokeRefresh_StorageFailureSurfaces(t *testing.T) {
 func TestHandler_Login_NulEmailIsNotAServerError(t *testing.T) {
 	srv := authServerOn(t, testutil.Store(t), nil)
 	res := send(t, srv, http.MethodPost, "/auth/login", `{"email":"a\u0000b@test.local","password":"x"}`)
+	defer res.Body.Close()
 	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 	assert.Equal(t, "application/problem+json", res.Header.Get("Content-Type"))
 	assert.NotContains(t, problemDetail(t, res), "SQLSTATE")

@@ -136,7 +136,6 @@ func send(t *testing.T, srv *httptest.Server, method, path, body string) *http.R
 	req.Header.Set("Content-Type", "application/json")
 	res, err := srv.Client().Do(req)
 	require.NoError(t, err)
-	t.Cleanup(func() { _ = res.Body.Close() })
 	return res
 }
 
@@ -172,6 +171,7 @@ func TestHandler_ChangeOwnPassword_Refusals(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			srv := authServerOn(t, tc.store(t), tc.userID)
 			res := send(t, srv, http.MethodPatch, "/auth/me/password", tc.body)
+			defer res.Body.Close()
 			assert.Equal(t, tc.wantStatus, res.StatusCode)
 			assert.Equal(t, "application/problem+json", res.Header.Get("Content-Type"))
 			assert.Equal(t, tc.wantDetail, problemDetail(t, res))
