@@ -118,10 +118,10 @@ async function parseXlsx(buf: ArrayBuffer): Promise<unknown[][][]> {
   for (const ws of wb.worksheets) {
     const aoa: unknown[][] = []
     ws.eachRow({ includeEmpty: false }, (row) => {
-      // row.values is 1-indexed; slot 0 is unused.
+      // row.values is 1-indexed and sparse; Array.from fills empty cells.
       const values = row.values as unknown[]
       const arr = Array.isArray(values) ? values.slice(1) : []
-      aoa.push(arr.map(cellToPrimitive))
+      aoa.push(Array.from(arr, cellToPrimitive))
     })
     if (aoa.length) sheets.push(aoa)
   }

@@ -174,6 +174,21 @@ describe("parseProductFile", () => {
     ])
   })
 
+  // Regression: ExcelJS leaves holes for empty cells, and a table starting
+  // at column B crashed the header scan with a TypeError.
+  it("reads a table that starts past column A", async () => {
+    const file = await workbookFile((wb) => {
+      const ws = wb.addWorksheet("Produk")
+      ws.getCell("B1").value = "Nama"
+      ws.getCell("C1").value = "Jumlah"
+      ws.getCell("B2").value = "Baut"
+      ws.getCell("C2").value = 2
+    })
+    await expect(parseProductFile(file)).resolves.toEqual([
+      { impaCode: "", name: "Baut", qty: 2, unit: "" },
+    ])
+  })
+
   it("returns nothing for a workbook without product rows", async () => {
     const file = await workbookFile((wb) => {
       wb.addWorksheet("Catatan").addRow(["Tidak ada produk"])
