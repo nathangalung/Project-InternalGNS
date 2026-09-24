@@ -3,6 +3,7 @@ package quotations_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -211,20 +212,27 @@ func TestExpireDue_Boundaries(t *testing.T) {
 	}
 }
 
+// A long-lapsed window moves only a sent row.
 func TestExpireDue_OnlyTouchesSent(t *testing.T) {
-	for _, status := range []string{quotations.StatusDraft, quotations.StatusRevision} {
+	for _, status := range []string{
+		quotations.StatusDraft, quotations.StatusRevision,
+		quotations.StatusAccepted, quotations.StatusRejected,
+		quotations.StatusCancelled, quotations.StatusExpired,
+	} {
 		t.Run(status, func(t *testing.T) {
 			seven := 7
 			ctx, repo, tx := newRepo(t)
 			id := sentWithValidity(t, ctx, repo, &seven)
 			setSentAt(t, ctx, tx, id, sentAt)
 			forceStatus(t, ctx, tx, id, status)
+			before := historyCount(t, ctx, tx, id)
 
 			_, err := repo.ExpireDue(ctx, longAfter)
 			require.NoError(t, err)
 			d, err := repo.GetDetail(ctx, id)
 			require.NoError(t, err)
 			assert.Equal(t, status, d.Status)
+			assert.Equal(t, before, historyCount(t, ctx, tx, id), "no expiry history")
 		})
 	}
 }
@@ -368,7 +376,94 @@ func TestRevise_OriginalIsFrozen(t *testing.T) {
 		}},
 	}, seedUserID, &o.RowVersion)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "Only draft can be edited")
+	assert.Equal(t, "P0013", sqlState(err), "a locked status is a conflict: %v", err)
+	assert.Contains(t, err.Error(), "Hanya quotation berstatus Draf yang dapat diubah; status saat ini Revisi.")
+}
+
+// Both update paths type a missing id.
+func TestUpdate_UnknownQuotation(t *testing.T) {
+	rv := int32(1)
+	for _, tc := range []struct {
+		name    string
+		ifMatch *int32
+	}{{"versioned", &rv}, {"legacy", nil}} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, repo, _ := newRepo(t)
+			_, err := repo.Update(ctx, 9_999_999, quotations.UpdateRequest{
+				DiscountPct: "0",
+				Items: []quotations.CreateItem{{
+					RequestedName: "BOLT M8", Qty: "1", UnitID: seedUnitID, SellingPrice: "1",
+				}},
+			}, seedUserID, tc.ifMatch)
+			require.Error(t, err)
+			if tc.ifMatch != nil {
+				assert.ErrorIs(t, err, quotations.ErrNotFound)
+				return
+			}
+			assert.Equal(t, "P0011", sqlState(err))
+		})
+	}
+}
+
+// learnedMatch reads one cache row.
+func learnedMatch(t *testing.T, ctx context.Context, tx pgx.Tx, text string) (int, int64) {
+	t.Helper()
+	var count int
+	var itemID int64
+	require.NoError(t, tx.QueryRow(ctx, `
+		SELECT match_count, matched_item_id FROM item_request_matches
+		WHERE LOWER(TRIM(request_text)) = LOWER(TRIM($1))`, text).Scan(&count, &itemID))
+	return count, itemID
+}
+
+// A revision copy is not new evidence.
+// It must neither count again nor restore a mapping learned since.
+func TestRevise_DoesNotRelearnMatches(t *testing.T) {
+	ctx, repo, tx := newRepo(t)
+	text := fmt.Sprintf("REVISE LEARN %d", time.Now().UnixNano())
+	var remapped int64
+	require.NoError(t, tx.QueryRow(ctx, `
+		INSERT INTO items (name, default_unit_id, created_by, updated_by)
+		VALUES ($1, $2, $3, $3) RETURNING id`, text+" ALT", seedUnitID, seedUserID).Scan(&remapped))
+
+	first := sampleCreate()
+	first.Items[0].RequestedName = text
+	orig, err := repo.Create(ctx, first, seedUserID)
+	require.NoError(t, err)
+	count, item := learnedMatch(t, ctx, tx, text)
+	assert.Equal(t, 1, count)
+	assert.Equal(t, seedItemID, item)
+
+	later := sampleCreate()
+	later.Items[0].RequestedName = text
+	later.Items[0].RequestedItemID = &remapped
+	_, err = repo.Create(ctx, later, seedUserID)
+	require.NoError(t, err)
+	count, item = learnedMatch(t, ctx, tx, text)
+	require.Equal(t, 2, count, "a new quotation still learns")
+	require.Equal(t, remapped, item)
+
+	require.NoError(t, repo.ChangeStatus(ctx, orig, quotations.StatusSent, nil, seedUserID))
+	child, err := repo.Revise(ctx, orig, nil, seedUserID)
+	require.NoError(t, err)
+	count, item = learnedMatch(t, ctx, tx, text)
+	assert.Equal(t, 2, count, "the clone is not a new match")
+	assert.Equal(t, remapped, item, "the clone keeps the newer mapping")
+
+	// Learning resumes after the clone.
+	d, err := repo.GetDetail(ctx, child)
+	require.NoError(t, err)
+	_, err = repo.Update(ctx, child, quotations.UpdateRequest{
+		DiscountPct: "0",
+		Items: []quotations.CreateItem{{
+			RequestedItemID: int64Ptr(seedItemID), RequestedName: text,
+			Qty: "1", UnitID: seedUnitID, SellingPrice: "1000",
+		}},
+	}, seedUserID, &d.RowVersion)
+	require.NoError(t, err)
+	count, item = learnedMatch(t, ctx, tx, text)
+	assert.Equal(t, 3, count, "an edit in the same transaction still learns")
+	assert.Equal(t, seedItemID, item)
 }
 
 func TestRevise_NumbersFollowTheChain(t *testing.T) {

@@ -283,8 +283,11 @@ func TestHandler_Update_DBRejects(t *testing.T) {
 	res := doJSONWithHeaders(t, srv, http.MethodPut,
 		"/quotations/"+strconv.FormatInt(id, 10), upd,
 		map[string]string{"If-Match": strconv.FormatInt(int64(rv), 10)})
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	var e httperr.Error
+	decodeBody(t, res, &e)
+	assert.Equal(t, http.StatusConflict, res.StatusCode)
+	assert.Equal(t, http.StatusConflict, e.Status)
+	assert.Equal(t, "Hanya quotation berstatus Draf yang dapat diubah; status saat ini Dikirim.", e.Detail)
 }
 
 func TestHandler_ChangeStatus(t *testing.T) {

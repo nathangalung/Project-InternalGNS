@@ -1,4 +1,4 @@
--- Canonical current body of fn_revise_quotation (deployed by migration 00059).
+-- Canonical current body of fn_revise_quotation (deployed by migration 00063).
 CREATE OR REPLACE FUNCTION public.fn_revise_quotation(p_quotation_id bigint, p_user_id bigint, p_note text DEFAULT NULL::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -7,6 +7,7 @@ DECLARE
   v_orig   quotations%ROWTYPE;
   v_new_id BIGINT;
   v_new_no TEXT;
+  v_learn  TEXT;
 BEGIN
   SELECT * INTO v_orig
   FROM quotations
@@ -61,6 +62,10 @@ BEGIN
   FROM quotation_item_requests r
   WHERE r.quotation_id = v_orig.id;
 
+  -- The copy teaches trg_learn_match nothing.
+  v_learn := current_setting('gns.learn_match', true);
+  PERFORM set_config('gns.learn_match', 'off', true);
+
   -- Vendor cost sync stays off: the copy quotes no new price.
   INSERT INTO quotation_items (
     quotation_id, line_number, item_type,
@@ -82,6 +87,8 @@ BEGIN
          ON nr.quotation_id = v_new_id AND nr.line_no = orr.line_no
   WHERE qi.quotation_id = v_orig.id
   ORDER BY qi.line_number;
+
+  PERFORM set_config('gns.learn_match', COALESCE(v_learn, ''), true);
 
   UPDATE quotations
   SET status     = 'revision',
