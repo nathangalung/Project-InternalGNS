@@ -41,6 +41,11 @@ describe("errorCopy", () => {
       detail: "x is undefined",
     },
     { name: "non-error value in production", err: { weird: true }, dev: false, detail: null },
+    { name: "thrown string shown in development", err: " kaput ", dev: true, detail: "kaput" },
+    { name: "non-error value in development", err: { weird: true }, dev: true, detail: null },
+    { name: "undefined in development", err: undefined, dev: true, detail: null },
+    { name: "blank exception text in development", err: new Error("   "), dev: true, detail: null },
+    { name: "blank thrown string in development", err: "", dev: true, detail: null },
   ]
   for (const c of cases) {
     it(c.name, () => {
