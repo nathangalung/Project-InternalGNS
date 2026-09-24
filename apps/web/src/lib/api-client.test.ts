@@ -58,6 +58,13 @@ describe("extractErrorMessage", () => {
     expect(extractErrorMessage({ title: "Not Found", fields: {} }, "fallback")).toBe("Not Found")
   })
 
+  it("reads a problem body without fields", () => {
+    expect(extractErrorMessage({ title: "Forbidden" }, "fallback")).toBe("Forbidden")
+    expect(extractErrorMessage({ status: 500 }, "Internal Server Error")).toBe(
+      "Internal Server Error",
+    )
+  })
+
   it("falls back to the status text for a non-object body", () => {
     expect(extractErrorMessage(null, "Bad Gateway")).toBe("Bad Gateway")
     expect(extractErrorMessage("boom", "Bad Gateway")).toBe("Bad Gateway")
