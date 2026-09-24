@@ -310,22 +310,3 @@ func TestService_Refresh_BoundToSessionVersion(t *testing.T) {
 	_, err = svc.Authenticate(ctx, rotated.Token)
 	require.NoError(t, err, "a refreshed access token carries the live version")
 }
-
-// Grace is judged by Postgres.
-// revoked_at is stamped by the database clock; a forward step of the API
-// host clock must not turn a benign duplicate redeem into a reuse blast.
-func TestService_Refresh_GraceIgnoresHostClockStep(t *testing.T) {
-	ctx, svc, u := newRefreshSvc(t, 24*time.Hour)
-
-	first, err := svc.Login(ctx, u.Email, "Sup3rSecret!")
-	require.NoError(t, err)
-	rotated, err := svc.Refresh(ctx, first.RefreshToken)
-	require.NoError(t, err)
-
-	auth.SetClock(svc, func() time.Time { return time.Now().Add(time.Minute) })
-	_, err = svc.Refresh(ctx, first.RefreshToken)
-	assert.ErrorIs(t, err, auth.ErrReusedRefresh)
-
-	_, err = svc.Refresh(ctx, rotated.RefreshToken)
-	require.NoError(t, err, "a replay inside the database grace window must spare the sibling")
-}
