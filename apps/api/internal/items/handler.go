@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,6 +22,11 @@ import (
 type Handler struct {
 	repo *Repo
 }
+
+// searchLayerCap bounds one search-advanced layer read. It sits above the
+// catalog size (about 3.1k items, 2.5k vendor offers and 3.1k request
+// matches), so the merged total is exact; a layer that reaches it is logged.
+const searchLayerCap = 5000
 
 func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
@@ -218,6 +224,7 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	limit := paginate.ParseLimit(r, 20)
+	_, offset := paginate.Parse(r)
 
 	var onlyActive *bool
 	if s := r.URL.Query().Get("isActive"); s != "" {
@@ -227,31 +234,35 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	perTier := limit * 2
-
 	var items []SearchResult
 	var offers []VendorOfferHit
 	var requests []RequestHistoryHit
 
+	// Every layer is read whole: paging needs the full merged set, and a
+	// window per layer would cut the vendor-offer layer by item id, not score.
 	eg, egCtx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		var err error
-		items, err = h.repo.Search(egCtx, q, minScore, perTier)
+		items, err = h.repo.Search(egCtx, q, minScore, searchLayerCap)
 		return err
 	})
 	eg.Go(func() error {
 		var err error
-		offers, err = h.repo.SearchVendorOffers(egCtx, q, perTier)
+		offers, err = h.repo.SearchVendorOffers(egCtx, q, searchLayerCap)
 		return err
 	})
 	eg.Go(func() error {
 		var err error
-		requests, err = h.repo.SearchRequestHistory(egCtx, q, perTier)
+		requests, err = h.repo.SearchRequestHistory(egCtx, q, searchLayerCap)
 		return err
 	})
 	if err := eg.Wait(); err != nil {
 		httperr.RenderDBErr(w, err)
 		return
+	}
+	if len(items) == searchLayerCap || len(offers) == searchLayerCap || len(requests) == searchLayerCap {
+		slog.WarnContext(ctx, "search-advanced layer reached its cap; total is a lower bound",
+			"cap", searchLayerCap, "items", len(items), "offers", len(offers), "requests", len(requests))
 	}
 
 	// fn_search_items filters to active items, but the vendor-offer and
@@ -263,7 +274,8 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := mergeAdvanced(q, items, offers, requests, meta, onlyActive, limit)
+	resp := mergeAdvanced(q, items, offers, requests, meta, onlyActive, limit, offset)
+	w.Header().Set("X-Total-Count", strconv.Itoa(resp.Total))
 	httpx.WriteJSON(w, http.StatusOK, resp)
 }
 

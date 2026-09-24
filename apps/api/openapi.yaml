@@ -41,7 +41,8 @@ paths:
       description: >
         Parallel merge of item-name trigram, vendor-offer match, and historical
         request-text match. Each hit is labelled with the strongest contributing
-        tier and the full set of tiers that matched.
+        tier and the full set of tiers that matched. `hits` holds one page;
+        `total` and `counts` cover every match after the isActive filter.
       tags: [items]
       parameters:
         - name: q
@@ -54,9 +55,19 @@ paths:
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 200, default: 20 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: isActive
+          in: query
+          schema: { type: boolean }
       responses:
         "200":
-          description: Merged tier-ranked hits.
+          description: One page of merged tier-ranked hits.
+          headers:
+            X-Total-Count:
+              description: Deduplicated matches after the isActive filter; equals `total`.
+              schema: { type: integer }
           content:
             application/json:
               schema: { $ref: "#/components/schemas/AdvancedSearchResponse" }
@@ -107,11 +118,12 @@ components:
       required: [query, total, hits, counts]
       properties:
         query: { type: string }
-        total: { type: integer }
+        total: { type: integer, description: "Every match, not only this page." }
         hits:
           type: array
           items: { $ref: "#/components/schemas/AdvancedSearchHit" }
         counts:
+          description: Matches per winning tier, over every page.
           type: object
           additionalProperties: { type: integer }
     ApiError:

@@ -1,6 +1,9 @@
 package items
 
-import "testing"
+import (
+	"slices"
+	"testing"
+)
 
 // A single item surfaced by both fuzzy search and a vendor offer must be
 // counted once, under its winning (higher-weight) tier — not once per source.
@@ -8,7 +11,7 @@ func TestMergeAdvanced_CountsByWinningTierNotInput(t *testing.T) {
 	items := []SearchResult{{ID: 42, Name: "Pump", Score: 0.5, MatchTier: "FUZZY"}}
 	offers := []VendorOfferHit{{ItemID: 42, VendorID: 7, VendorName: "Acme", Score: 0.9}}
 
-	resp := mergeAdvanced("pump", items, offers, nil, map[int64]ItemMeta{42: {Active: true}}, nil, 20)
+	resp := mergeAdvanced("pump", items, offers, nil, map[int64]ItemMeta{42: {Active: true}}, nil, 20, 0)
 
 	if resp.Total != 1 {
 		t.Fatalf("Total = %d, want 1 (same item deduped)", resp.Total)
@@ -21,20 +24,56 @@ func TestMergeAdvanced_CountsByWinningTierNotInput(t *testing.T) {
 	}
 }
 
-// Counts must reflect the truncated output, not everything seen pre-limit.
-func TestMergeAdvanced_CountsAfterTruncation(t *testing.T) {
+// Total and counts cover every match, so they hold still across pages.
+func TestMergeAdvanced_Paging(t *testing.T) {
+	// Equal scores leave the id tiebreak to fix the order.
 	items := make([]SearchResult, 5)
+	meta := map[int64]ItemMeta{}
 	for i := range items {
-		items[i] = SearchResult{ID: int64(i + 1), Name: "x", Score: 0.5, MatchTier: "FUZZY"}
+		id := int64(i + 1)
+		items[i] = SearchResult{ID: id, Name: "x", Score: 0.5, MatchTier: "FUZZY"}
+		meta[id] = ItemMeta{Active: id != 5}
 	}
-	active := map[int64]ItemMeta{1: {Active: true}, 2: {Active: true}, 3: {Active: true}, 4: {Active: true}, 5: {Active: true}}
-	resp := mergeAdvanced("x", items, nil, nil, active, nil, 3)
+	active := true
 
-	if resp.Total != 3 {
-		t.Fatalf("Total = %d, want 3 (limit)", resp.Total)
+	cases := []struct {
+		name       string
+		onlyActive *bool
+		limit      int
+		offset     int
+		wantIDs    []int64
+		wantTotal  int
+	}{
+		{"first page", nil, 2, 0, []int64{1, 2}, 5},
+		{"middle page", nil, 2, 2, []int64{3, 4}, 5},
+		{"last partial page", nil, 2, 4, []int64{5}, 5},
+		{"offset at the end", nil, 2, 5, []int64{}, 5},
+		{"offset past the end", nil, 2, 50, []int64{}, 5},
+		{"filter applies before the total", &active, 2, 2, []int64{3, 4}, 4},
+		{"filter shortens the last page", &active, 3, 3, []int64{4}, 4},
 	}
-	if resp.Counts["ITEM_FUZZY"] != 3 {
-		t.Errorf("ITEM_FUZZY count = %d, want 3 (matches returned, not the 5 seen)", resp.Counts["ITEM_FUZZY"])
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := mergeAdvanced("x", items, nil, nil, meta, tc.onlyActive, tc.limit, tc.offset)
+
+			if resp.Total != tc.wantTotal {
+				t.Errorf("Total = %d, want %d", resp.Total, tc.wantTotal)
+			}
+			if resp.Counts["ITEM_FUZZY"] != tc.wantTotal {
+				t.Errorf("ITEM_FUZZY count = %d, want %d (every match, not the page)",
+					resp.Counts["ITEM_FUZZY"], tc.wantTotal)
+			}
+			if resp.Hits == nil {
+				t.Fatal("Hits = nil, want an empty page to encode as []")
+			}
+			got := make([]int64, 0, len(resp.Hits))
+			for _, h := range resp.Hits {
+				got = append(got, h.ID)
+			}
+			if !slices.Equal(got, tc.wantIDs) {
+				t.Errorf("page ids = %v, want %v", got, tc.wantIDs)
+			}
+		})
 	}
 }
 
@@ -47,7 +86,7 @@ func TestMergeAdvanced_IsActiveFromCatalogNotFilter(t *testing.T) {
 	}
 	active := map[int64]ItemMeta{10: {Active: true}, 11: {Active: false}}
 
-	resp := mergeAdvanced("acme", nil, offers, nil, active, nil, 20)
+	resp := mergeAdvanced("acme", nil, offers, nil, active, nil, 20, 0)
 
 	if resp.Total != 2 {
 		t.Fatalf("Total = %d, want 2", resp.Total)
@@ -68,7 +107,7 @@ func TestMergeAdvanced_IsActiveFromCatalogNotFilter(t *testing.T) {
 func TestMergeAdvanced_MissingCatalogRowIsInactive(t *testing.T) {
 	requests := []RequestHistoryHit{{ItemID: 99, RequestText: "bearing", Score: 0.7}}
 
-	resp := mergeAdvanced("bearing", nil, nil, requests, map[int64]ItemMeta{}, nil, 20)
+	resp := mergeAdvanced("bearing", nil, nil, requests, map[int64]ItemMeta{}, nil, 20, 0)
 
 	if len(resp.Hits) != 1 {
 		t.Fatalf("Hits = %d, want 1", len(resp.Hits))
@@ -89,7 +128,7 @@ func TestMergeAdvanced_OnlyActiveFilterKeepsCountsConsistent(t *testing.T) {
 	active := map[int64]ItemMeta{1: {Active: true}, 2: {Active: false}, 3: {Active: false}}
 
 	inactive := false
-	resp := mergeAdvanced("q", items, offers, nil, active, &inactive, 20)
+	resp := mergeAdvanced("q", items, offers, nil, active, &inactive, 20, 0)
 
 	if resp.Total != 2 {
 		t.Fatalf("Total = %d, want 2 (only the inactive items)", resp.Total)

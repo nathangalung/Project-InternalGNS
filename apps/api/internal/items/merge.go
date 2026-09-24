@@ -58,11 +58,12 @@ func candidateItemIDs(items []SearchResult, offers []VendorOfferHit, requests []
 	return out
 }
 
-// mergeAdvanced dedups the three search layers into tier-ranked hits.
-// meta carries the real is_active and catalog identity per item id; onlyActive,
-// when set, keeps just the hits matching it. Both are applied before the limit
-// and the counts so hits, total and counts stay consistent.
-func mergeAdvanced(q string, items []SearchResult, offers []VendorOfferHit, requests []RequestHistoryHit, meta map[int64]ItemMeta, onlyActive *bool, limit int) AdvancedSearchResponse {
+// mergeAdvanced dedups the three search layers into tier-ranked hits and
+// returns the page at offset. meta carries the real is_active and catalog
+// identity per item id; onlyActive, when set, keeps just the hits matching it.
+// Total and counts cover every match after that filter, not only the page, so
+// they stay put while the caller pages.
+func mergeAdvanced(q string, items []SearchResult, offers []VendorOfferHit, requests []RequestHistoryHit, meta map[int64]ItemMeta, onlyActive *bool, limit, offset int) AdvancedSearchResponse {
 	hits := map[int64]*AdvancedSearchHit{}
 	counts := map[string]int{}
 
@@ -150,21 +151,18 @@ func mergeAdvanced(q string, items []SearchResult, offers []VendorOfferHit, requ
 		}
 		return out[i].ID < out[j].ID
 	})
-	if len(out) > limit {
-		out = out[:limit]
-	}
 
-	// Count tiers from the final, deduplicated, truncated output so badge
-	// counts reflect what is actually returned (each item by its winning
-	// tier only — not per input contribution before truncation).
+	// Each item counts once, under its winning tier.
 	for i := range out {
 		counts[out[i].Tier]++
 	}
 
+	start := min(offset, len(out))
+	end := min(start+limit, len(out))
 	return AdvancedSearchResponse{
 		Query:  q,
 		Total:  len(out),
-		Hits:   out,
+		Hits:   out[start:end:end],
 		Counts: counts,
 	}
 }
