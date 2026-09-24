@@ -91,6 +91,65 @@ jobs:
           go-package: ./...
           work-dir: apps/api
 
+  # The layout tests skip without xelatex, so the backend job never ran them.
+  # Here they run inside the api image itself, with the TeX Live the release
+  # ships, and any skip other than the root-only permission case fails.
+  pdf:
+    name: pdf layout (xelatex)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: apps/api/go.mod
+          cache-dependency-path: apps/api/go.sum
+
+      - name: download modules
+        run: go mod download
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: build api image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/api
+          push: false
+          load: true
+          tags: internalgns-api:pdf
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+
+      # The go binary is static, so the runner's toolchain runs in the image.
+      # poppler-utils supplies pdfinfo and pdftotext for the page assertions.
+      - name: layout tests in the runtime image
+        shell: bash
+        run: |
+          docker run --rm --user root --entrypoint bash \
+            -v "$PWD":/src -w /src \
+            -v "$(go env GOROOT)":/usr/local/go:ro \
+            -v "$(go env GOMODCACHE)":/go/pkg/mod \
+            -e GOMODCACHE=/go/pkg/mod -e GOTOOLCHAIN=local -e GOFLAGS=-mod=readonly \
+            -e CGO_ENABLED=0 -e PATH=/usr/local/go/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+            internalgns-api:pdf -c '
+              set -eo pipefail
+              apt-get update -qq
+              apt-get install -y -qq --no-install-recommends poppler-utils >/dev/null
+              xelatex --version | head -1
+              go test -count=1 -v \
+                -run "TestLatex|TestRender|TestRealTemplate|PaperSize|TestQuotationPDF|TestInvoiceTemplate" \
+                ./internal/pdfgen/ ./internal/quotations/ ./internal/invoices/' | tee pdf.log
+          skips=$(grep -- '--- SKIP' pdf.log | grep -v 'TestRender_StagingFailures/asset_unreadable' || true)
+          if [ -n "$skips" ]; then
+            echo "::error::PDF layout tests skipped; the gate needs every one to run"
+            echo "$skips"
+            exit 1
+          fi
+
   frontend:
     name: frontend (web)
     runs-on: ubuntu-24.04
