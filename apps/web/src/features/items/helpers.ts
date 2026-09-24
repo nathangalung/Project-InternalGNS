@@ -1,30 +1,81 @@
 import { ApiError } from "@/lib/api-client"
-import type { AdvancedSearchHit, ItemRow } from "@/types/api"
+import type {
+  AdvancedSearchHit,
+  AdvancedSearchResponse,
+  AdvancedSearchTier,
+  ItemRow,
+} from "@/types/api"
 
-// Katalog search page size.
+// Unit-filtered search scan size.
 //
-// search-advanced has no offset or total; it returns at most this many hits,
-// which is the server's clamp for any limit.
-export const KATALOG_SEARCH_LIMIT = 200
-
-// Server may hold more.
-export function isSearchCapped(hitCount: number, limit: number): boolean {
-  return limit > 0 && hitCount >= limit
-}
+// search-advanced takes no unit filter, so with one set the Katalog reads the
+// top hits at the server's limit clamp and filters and pages them here.
+export const KATALOG_UNIT_SCAN_LIMIT = 200
 
 // Fields the katalog table shows.
 export type KatalogRow = Pick<ItemRow, "id" | "name" | "impaCode" | "defaultUnitId" | "isActive">
 
 // Search hits as table rows.
-export function katalogRowsFromHits(hits: AdvancedSearchHit[], unitId?: number): KatalogRow[] {
-  const rows = hits.map((h) => ({
+export function katalogRowsFromHits(hits: AdvancedSearchHit[]): KatalogRow[] {
+  return hits.map((h) => ({
     id: h.id,
     name: h.name,
     impaCode: h.impaCode,
     defaultUnitId: h.defaultUnitId,
     isActive: h.isActive,
   }))
-  return unitId === undefined ? rows : rows.filter((r) => r.defaultUnitId === unitId)
+}
+
+// What the Katalog asks for.
+export type KatalogSearchPlan = {
+  limit: number
+  offset: number
+  // Unit filter pages here
+  clientPage: boolean
+}
+
+// Server page, or unit scan.
+export function katalogSearchPlan(
+  unitId: number | undefined,
+  startIndex: number,
+  itemsPerPage: number,
+): KatalogSearchPlan {
+  if (unitId === undefined) {
+    return { limit: itemsPerPage, offset: startIndex, clientPage: false }
+  }
+  return { limit: KATALOG_UNIT_SCAN_LIMIT, offset: 0, clientPage: true }
+}
+
+export type KatalogSearchView = {
+  // Hits on the current page
+  hits: AdvancedSearchHit[]
+  total: number
+  counts: Partial<Record<AdvancedSearchTier, number>>
+  // Only the scan was filtered
+  capped: boolean
+}
+
+// Page, total and tier counts.
+export function katalogSearchView(
+  data: AdvancedSearchResponse | undefined,
+  plan: KatalogSearchPlan,
+  unitId: number | undefined,
+  startIndex: number,
+  itemsPerPage: number,
+): KatalogSearchView {
+  if (!data) return { hits: [], total: 0, counts: {}, capped: false }
+  if (!plan.clientPage) {
+    return { hits: data.hits, total: data.total, counts: data.counts, capped: false }
+  }
+  const matched = data.hits.filter((h) => h.defaultUnitId === unitId)
+  const counts: Partial<Record<AdvancedSearchTier, number>> = {}
+  for (const h of matched) counts[h.tier] = (counts[h.tier] ?? 0) + 1
+  return {
+    hits: matched.slice(startIndex, startIndex + itemsPerPage),
+    total: matched.length,
+    counts,
+    capped: data.total > data.hits.length,
+  }
 }
 
 // Two-letter product initials.

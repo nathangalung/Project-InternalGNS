@@ -1,19 +1,20 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api-client"
-import type { AdvancedSearchHit } from "@/types/api"
+import type { AdvancedSearchHit, AdvancedSearchResponse, AdvancedSearchTier } from "@/types/api"
 import {
   addVendorError,
   apiFieldError,
   findVendorByName,
-  isSearchCapped,
-  KATALOG_SEARCH_LIMIT,
+  KATALOG_UNIT_SCAN_LIMIT,
   katalogRowsFromHits,
+  katalogSearchPlan,
+  katalogSearchView,
   productInitials,
   vendorInitials,
 } from "./helpers"
 
 // Hit fixture builder.
-function hit(id: number, defaultUnitId?: number): AdvancedSearchHit {
+function hit(id: number, defaultUnitId?: number, tier: AdvancedSearchTier = "ITEM_AUTO") {
   return {
     id,
     name: `Item ${id}`,
@@ -21,45 +22,93 @@ function hit(id: number, defaultUnitId?: number): AdvancedSearchHit {
     defaultUnitId,
     isActive: id % 2 === 0,
     score: 0.9,
-    tier: "ITEM_AUTO",
-    tiers: ["ITEM_AUTO"],
-  }
+    tier,
+    tiers: [tier],
+  } satisfies AdvancedSearchHit
 }
 
-describe("isSearchCapped", () => {
-  it.each([
-    [0, KATALOG_SEARCH_LIMIT, false],
-    [199, 200, false],
-    [200, 200, true],
-    [5, 0, false],
-  ])("%i hits of %i -> %s", (hits, limit, want) => {
-    expect(isSearchCapped(hits, limit)).toBe(want)
-  })
+// Response fixture builder.
+function resp(hits: AdvancedSearchHit[], total: number): AdvancedSearchResponse {
+  return { query: "q", total, hits, counts: { ITEM_AUTO: total } }
+}
 
-  it("asks for the server clamp", () => {
-    expect(KATALOG_SEARCH_LIMIT).toBe(200)
+describe("katalogRowsFromHits", () => {
+  it("keeps only table fields", () => {
+    expect(katalogRowsFromHits([hit(1, 7), hit(2)])).toEqual([
+      { id: 1, name: "Item 1", impaCode: "100001", defaultUnitId: 7, isActive: false },
+      { id: 2, name: "Item 2", impaCode: "100002", defaultUnitId: undefined, isActive: true },
+    ])
   })
 })
 
-describe("katalogRowsFromHits", () => {
-  const hits = [hit(1, 7), hit(2, 8), hit(3)]
+describe("katalogSearchPlan", () => {
+  it.each([
+    ["page 1, no unit", undefined, 0, 10, { limit: 10, offset: 0, clientPage: false }],
+    ["page 3, no unit", undefined, 30, 15, { limit: 15, offset: 30, clientPage: false }],
+    ["unit, page 1", 8, 0, 10, { limit: 200, offset: 0, clientPage: true }],
+    ["unit, page 4", 8, 30, 10, { limit: 200, offset: 0, clientPage: true }],
+  ])("%s", (_name, unitId, startIndex, perPage, want) => {
+    expect(katalogSearchPlan(unitId, startIndex, perPage)).toEqual(want)
+  })
 
-  it("keeps only table fields", () => {
-    expect(katalogRowsFromHits(hits)[0]).toEqual({
-      id: 1,
-      name: "Item 1",
-      impaCode: "100001",
-      defaultUnitId: 7,
-      isActive: false,
+  it("scans at the server clamp", () => {
+    expect(KATALOG_UNIT_SCAN_LIMIT).toBe(200)
+  })
+})
+
+describe("katalogSearchView", () => {
+  const server = katalogSearchPlan(undefined, 10, 10)
+  const scan = katalogSearchPlan(8, 0, 2)
+
+  it("is empty before data", () => {
+    expect(katalogSearchView(undefined, server, undefined, 10, 10)).toEqual({
+      hits: [],
+      total: 0,
+      counts: {},
+      capped: false,
+    })
+  })
+
+  it("takes a server page as is", () => {
+    const data = resp([hit(11), hit(12)], 251)
+    const view = katalogSearchView(data, server, undefined, 10, 10)
+    expect(view.hits.map((h) => h.id)).toEqual([11, 12])
+    expect(view.total).toBe(251)
+    expect(view.counts).toEqual({ ITEM_AUTO: 251 })
+    expect(view.capped).toBe(false)
+  })
+
+  const scanned = [
+    hit(1, 8, "ITEM_AUTO"),
+    hit(2, 7),
+    hit(3, 8, "VENDOR_OFFER"),
+    hit(4, 8, "ITEM_FUZZY"),
+    hit(5),
+  ]
+
+  it.each([
+    ["page 1", 0, [1, 3]],
+    ["page 2", 2, [4]],
+    ["past the end", 4, []],
+  ])("filters and pages the scan: %s", (_name, startIndex, want) => {
+    const view = katalogSearchView(resp(scanned, 5), scan, 8, startIndex, 2)
+    expect(view.hits.map((h) => h.id)).toEqual(want)
+    expect(view.total).toBe(3)
+  })
+
+  it("counts tiers over the filtered scan", () => {
+    expect(katalogSearchView(resp(scanned, 5), scan, 8, 0, 2).counts).toEqual({
+      ITEM_AUTO: 1,
+      VENDOR_OFFER: 1,
+      ITEM_FUZZY: 1,
     })
   })
 
   it.each([
-    ["no unit filter", undefined, [1, 2, 3]],
-    ["unit 8", 8, [2]],
-    ["unknown unit", 99, []],
-  ])("%s", (_name, unitId, want) => {
-    expect(katalogRowsFromHits(hits, unitId).map((r) => r.id)).toEqual(want)
+    ["whole match set read", 5, false],
+    ["more matches than the scan", 251, true],
+  ])("capped: %s", (_name, total, want) => {
+    expect(katalogSearchView(resp(scanned, total), scan, 8, 0, 2).capped).toBe(want)
   })
 })
 

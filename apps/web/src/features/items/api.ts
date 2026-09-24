@@ -53,16 +53,25 @@ export async function update(id: number, input: UpdateItemInput): Promise<ItemRo
   })
 }
 
+export type SearchAdvancedOptions = {
+  minScore?: number
+  limit?: number
+  offset?: number
+  isActive?: boolean
+}
+
 // Multi-source search: items + vendor offers + request history.
+// One page of hits; total and counts cover every match.
 // Tier ranks: ITEM_AUTO > VENDOR_OFFER > ITEM_SUGGESTED > REQUEST_HISTORY > ITEM_FUZZY.
 export async function searchAdvanced(
   q: string,
-  options: { minScore?: number; limit?: number; isActive?: boolean } = {},
+  options: SearchAdvancedOptions = {},
 ): Promise<AdvancedSearchResponse> {
   const qs = buildQuery({
     q,
     minScore: options.minScore,
     limit: options.limit,
+    offset: options.offset,
     isActive: options.isActive,
   })
   return apiRequest<AdvancedSearchResponse>({ path: `/items/search-advanced?${qs}` })

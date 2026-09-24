@@ -34,12 +34,12 @@ export function useItem(id: number | undefined) {
 
 // Multi-source advanced search. keepPreviousData prevents UI flicker
 // while user types (per TanStack Query v5 paginated-queries guidance).
-export function useItemSearchAdvanced(
-  q: string,
-  options: { minScore?: number; limit?: number; isActive?: boolean } = {},
-) {
+export function useItemSearchAdvanced(q: string, options: itemsApi.SearchAdvancedOptions = {}) {
   return useQuery({
-    queryKey: queryKeys.items.searchAdvanced(q, options.minScore, options.limit, options.isActive),
+    queryKey: [
+      ...queryKeys.items.searchAdvanced(q, options.minScore, options.limit, options.isActive),
+      options.offset ?? 0,
+    ],
     queryFn: () => itemsApi.searchAdvanced(q, options),
     enabled: q.trim().length > 0,
     placeholderData: keepPreviousData,

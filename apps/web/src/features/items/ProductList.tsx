@@ -8,10 +8,11 @@ import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
 import {
-  isSearchCapped,
-  KATALOG_SEARCH_LIMIT,
+  KATALOG_UNIT_SCAN_LIMIT,
   type KatalogRow,
   katalogRowsFromHits,
+  katalogSearchPlan,
+  katalogSearchView,
 } from "@/features/items/helpers"
 import { useItemSearchAdvanced, useItems } from "@/features/items/hooks"
 import ProductCreateModal from "@/features/items/ProductCreateModal"
@@ -21,7 +22,7 @@ import { canWriteCatalog } from "@/lib/rbac"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen } from "@/lib/useListScreen"
-import type { AdvancedSearchHit, AdvancedSearchTier } from "@/types/api"
+import type { AdvancedSearchTier } from "@/types/api"
 
 type ProductListProps = {
   onViewDetail?: (id: number) => void
@@ -55,6 +56,8 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
     return map
   }, [unitsData])
 
+  const unitId = filters.unitCode ? unitIdByCode.get(filters.unitCode) : undefined
+
   const listParams = useMemo(() => {
     const out: Parameters<typeof useItems>[0] = {
       limit: itemsPerPage,
@@ -62,12 +65,9 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
     }
     if (filters.status === "active") out.isActive = true
     if (filters.status === "inactive") out.isActive = false
-    if (filters.unitCode) {
-      const id = unitIdByCode.get(filters.unitCode)
-      if (id !== undefined) out.unitId = id
-    }
+    if (unitId !== undefined) out.unitId = unitId
     return out
-  }, [filters, itemsPerPage, startIndex, unitIdByCode])
+  }, [filters.status, itemsPerPage, startIndex, unitId])
 
   const filterActive = filters.status === "active"
   const filterInactive = filters.status === "inactive"
@@ -77,17 +77,25 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
   const { data: listData, isLoading: itemsLoading } = useItems(listParams, {
     enabled: !isSearchActive,
   })
+  const searchPlan = useMemo(
+    () => katalogSearchPlan(unitId, startIndex, itemsPerPage),
+    [unitId, startIndex, itemsPerPage],
+  )
   const { data: searchData, isFetching: searchLoading } = useItemSearchAdvanced(debouncedSearch, {
     minScore: 0.3,
-    limit: KATALOG_SEARCH_LIMIT,
+    limit: searchPlan.limit,
+    offset: searchPlan.offset,
     isActive: filterIsActive,
   })
-  const searchHits: AdvancedSearchHit[] = searchData?.hits ?? []
+  const searchView = useMemo(
+    () => katalogSearchView(searchData, searchPlan, unitId, startIndex, itemsPerPage),
+    [searchData, searchPlan, unitId, startIndex, itemsPerPage],
+  )
   const tierById = useMemo(() => {
     const m = new Map<number, AdvancedSearchTier>()
-    for (const h of searchHits) m.set(h.id, h.tier)
+    for (const h of searchView.hits) m.set(h.id, h.tier)
     return m
-  }, [searchHits])
+  }, [searchView.hits])
   const isLoading = isSearchActive ? searchLoading : itemsLoading
 
   const unitOf = useMemo(() => {
@@ -96,20 +104,11 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
     return (id?: number) => (id !== undefined ? (map.get(id) ?? "-") : "-")
   }, [unitsData])
 
-  const searchRows: KatalogRow[] = useMemo(() => {
-    if (!isSearchActive) return []
-    const unitId = filters.unitCode ? unitIdByCode.get(filters.unitCode) : undefined
-    return katalogRowsFromHits(searchHits, unitId)
-  }, [isSearchActive, searchHits, filters.unitCode, unitIdByCode])
-  // No offset on search; say so.
-  const searchCapped = isSearchActive && isSearchCapped(searchHits.length, KATALOG_SEARCH_LIMIT)
-
-  const serverRows: KatalogRow[] = listData?.rows ?? []
-  const totalItems = isSearchActive ? searchRows.length : (listData?.total ?? 0)
+  const totalItems = isSearchActive ? searchView.total : (listData?.total ?? 0)
   const totalPages = list.totalPagesOf(totalItems)
-  const currentRows = isSearchActive
-    ? searchRows.slice(startIndex, startIndex + itemsPerPage)
-    : serverRows
+  const currentRows: KatalogRow[] = isSearchActive
+    ? katalogRowsFromHits(searchView.hits)
+    : (listData?.rows ?? [])
 
   return (
     <>
@@ -162,7 +161,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
                 "ITEM_FUZZY",
               ] as AdvancedSearchTier[]
             )
-              .filter((t) => (searchData.counts[t] ?? 0) > 0)
+              .filter((t) => (searchView.counts[t] ?? 0) > 0)
               .map((t) => {
                 const b = TIER_BADGE[t]
                 return (
@@ -170,14 +169,14 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
                     key={t}
                     className={`rounded-[4px] px-2 py-0.5 text-[11px] font-bold ${b.cls}`}
                   >
-                    {searchData.counts[t]} {b.label}
+                    {searchView.counts[t]} {b.label}
                   </span>
                 )
               })}
-            {searchCapped && (
+            {searchView.capped && (
               <span className="text-caption text-dark-500">
-                Menampilkan {KATALOG_SEARCH_LIMIT} hasil teratas. Perjelas kata kunci untuk
-                mempersempit hasil.
+                Filter unit hanya diterapkan pada {KATALOG_UNIT_SCAN_LIMIT} hasil teratas dari{" "}
+                {searchData.total}. Perjelas kata kunci untuk mempersempit hasil.
               </span>
             )}
           </div>
