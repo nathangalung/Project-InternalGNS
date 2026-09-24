@@ -168,6 +168,16 @@ func validateItemQty(items []CreateItem) map[string]string {
 	return nil
 }
 
+// validateDiscountPct bounds the header discount.
+// NaN and infinities fail the range test, and so does an empty value.
+func validateDiscountPct(raw string) map[string]string {
+	v, err := strconv.ParseFloat(strings.TrimSpace(raw), 64)
+	if err == nil && v >= 0 && v <= 100 {
+		return nil
+	}
+	return map[string]string{"discountPct": "Diskon harus berupa angka antara 0 dan 100."}
+}
+
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -184,6 +194,10 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if fields := validateCreateStatus(req.Status); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
+	if fields := validateDiscountPct(req.DiscountPct); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
@@ -225,6 +239,10 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(req.Items) == 0 {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"items": "at least 1 required"}))
+		return
+	}
+	if fields := validateDiscountPct(req.DiscountPct); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
 	if fields := validateItemQty(req.Items); fields != nil {

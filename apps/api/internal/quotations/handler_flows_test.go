@@ -333,24 +333,32 @@ func TestHandler_Update_Refusals(t *testing.T) {
 	cases := []struct {
 		name      string
 		path      string
+		discount  string
 		items     []quotations.CreateItem
 		want      int
 		wantField string
 		wantMsg   string
 	}{
-		{"zero quantity line", idPath(id, ""), zeroQty, http.StatusUnprocessableEntity,
+		{"zero quantity line", idPath(id, ""), "0", zeroQty, http.StatusUnprocessableEntity,
 			"items[0].qty", "jumlah harus lebih besar dari 0"},
-		{"unknown quotation", "/quotations/9999999", sampleCreate().Items, http.StatusNotFound, "", ""},
+		{"discount above 100", idPath(id, ""), "150", sampleCreate().Items, http.StatusUnprocessableEntity,
+			"discountPct", discountMsg},
+		{"negative discount", idPath(id, ""), "-1", sampleCreate().Items, http.StatusUnprocessableEntity,
+			"discountPct", discountMsg},
+		{"blank discount", idPath(id, ""), "", sampleCreate().Items, http.StatusUnprocessableEntity,
+			"discountPct", discountMsg},
+		{"unknown quotation", "/quotations/9999999", "0", sampleCreate().Items, http.StatusNotFound, "", ""},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			res := doJSONWithHeaders(t, srv, http.MethodPut, c.path,
-				quotations.UpdateRequest{DiscountPct: "0", Items: c.items},
+				quotations.UpdateRequest{DiscountPct: c.discount, Items: c.items},
 				map[string]string{"If-Match": "0"})
 			e := problemOf(t, res)
 			assert.Equal(t, c.want, res.StatusCode)
 			if c.wantField != "" {
 				assert.Equal(t, c.wantMsg, e.Fields[c.wantField])
+				assert.Equal(t, c.wantMsg, e.Detail)
 			}
 		})
 	}

@@ -116,13 +116,17 @@ func TestHandler_Create_MissingItems(t *testing.T) {
 	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 }
 
-func TestHandler_Create_DBValidationError(t *testing.T) {
+// Pinned by the handler discount check.
+const discountMsg = "Diskon harus berupa angka antara 0 dan 100."
+
+func TestHandler_Create_DiscountOutOfRange(t *testing.T) {
 	srv, _ := resetServer(t)
 	req := sampleCreate()
 	req.DiscountPct = "300"
 	res := doJSON(t, srv, http.MethodPost, "/quotations/", req)
-	defer res.Body.Close()
+	e := problemOf(t, res)
 	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	assert.Equal(t, discountMsg, e.Fields["discountPct"])
 }
 
 func TestHandler_GetAndList(t *testing.T) {
