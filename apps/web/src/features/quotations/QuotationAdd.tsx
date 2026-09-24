@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
 import ClientAdd from "@/features/clients/ClientAdd"
 import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
-import { useClientContacts, useClientSearch, useClients } from "@/features/clients/hooks"
+import { useClient, useClientContacts, useClientSearch, useClients } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
 import { useCreateQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
@@ -13,11 +13,12 @@ import type { QuotationCreateInput, QuotationItemInput } from "@/types/api"
 import DiscountModal from "./DiscountModal"
 import { countInvalidQty, parseQty, qtyErrorIndexes, qtyErrorsById } from "./lines"
 import type { ProductItem } from "./QuotationEdit"
-import Step1Client, { type Client } from "./Step1Client"
+import Step1Client from "./Step1Client"
 import Step2Product from "./Step2Product"
 import Step3Shipping from "./Step3Shipping"
 import Step4Summary from "./Step4Summary"
 import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
+import { type PickClient, resolveClient, visibleClients } from "./wizardClient"
 
 const steps = [
   { n: 1, label: "KLIEN" },
@@ -93,27 +94,34 @@ export default function QuotationAdd() {
     numericClientId > 0 ? numericClientId : undefined,
   )
 
-  const remoteClients: Array<Client & { contactId?: number }> = useMemo(() => {
+  const remoteClients: PickClient[] = useMemo(() => {
     if (debouncedSearch.length > 0) {
       return dedupeByCompany(searchHits ?? []).map(fromClientHit)
     }
     return (clientsData?.rows ?? []).map(fromClientRow)
   }, [debouncedSearch, searchHits, clientsData])
 
+  // A selection outside the picker is fetched by id.
+  const isListed = remoteClients.some((c) => c.id === selectedClient)
+  const { data: selectedRow } = useClient(
+    !isListed && numericClientId > 0 ? numericClientId : undefined,
+  )
+  const currentClient = useMemo(
+    () => resolveClient(remoteClients, selectedClient, selectedRow),
+    [remoteClients, selectedClient, selectedRow],
+  )
+
   // The server already filtered by the search.
   const sortedClients = [...remoteClients].sort((a, b) => a.name.localeCompare(b.name, "id"))
-  const filteredClients = sortedClients.slice(0, 10)
-
-  const currentClient = remoteClients.find((c) => c.id === selectedClient)
+  const filteredClients = visibleClients(sortedClients, currentClient, 10)
 
   // Auto-select contact when client or contacts list changes.
+  const clientContactId = currentClient?.contactId
   useEffect(() => {
     if (!selectedClient) {
       setSelectedContactId(undefined)
       return
     }
-    const clientContactId = (currentClient as (Client & { contactId?: number }) | undefined)
-      ?.contactId
     const ids = contacts.map((c) => c.id)
     if (clientContactId && ids.includes(clientContactId)) {
       setSelectedContactId(clientContactId)
@@ -122,7 +130,7 @@ export default function QuotationAdd() {
     } else {
       setSelectedContactId(clientContactId)
     }
-  }, [selectedClient, contacts, currentClient])
+  }, [selectedClient, contacts, clientContactId])
 
   const unitIdByCode = useMemo(() => {
     const m = new Map<string, number>()
