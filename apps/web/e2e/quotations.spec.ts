@@ -1,9 +1,11 @@
 import type { Locator, Page } from "@playwright/test"
-import { idFrom, rupiah } from "./support/sales"
+import { api, deactivate, idFrom, rupiah } from "./support/sales"
 import { expect, test } from "./support/seed"
 
 // Quotation flows through the UI: the wizard, the status machine the server
 // drives, Buat Revisi and the PO an acceptance creates.
+
+type Request = { requestText: string; matchStatus: string }
 
 // Value printed next to a label in a cost summary.
 function amountAfter(scope: Locator, label: string): Locator {
@@ -153,6 +155,81 @@ test.describe("quotation wizard", () => {
     await product.getByLabel("Nama Vendor *").click()
     await product.getByRole("button", { name: new RegExp(vendor.name) }).click()
     await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("75000")
+  })
+})
+
+test.describe("quotation wizard import and requests", () => {
+  test("an Excel/CSV import matches the catalog and creates the rest", async ({ page, seed }) => {
+    const client = await seed.client()
+    const cheap = await seed.vendor({ label: "Vendor Murah" })
+    const active = await seed.vendor({ label: "Vendor Aktif" })
+    const item = await seed.item({ vendor: active, cost: 90_000 })
+    await seed.linkVendor(item, cheap, 50_000)
+    await deactivate("vendor", cheap.id)
+    // No shared words, so fuzzy matching cannot tie it to a seeded item.
+    const fresh = `Qzvx ${seed.prefix.slice(3).toLowerCase()} wkjh`
+    const csv = [
+      "No,Kode IMPA,Nama Produk,Jumlah,Satuan",
+      `1,${item.impaCode},${item.name},3,PCS`,
+      `2,,${fresh},2,PCS`,
+    ].join("\n")
+
+    await page.goto("/quotations/add")
+    await page.getByLabel("Cari klien").fill(seed.prefix)
+    await page.getByRole("button", { name: new RegExp(client.name) }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.locator('input[type="file"][accept=".csv,.xlsx"]').setInputFiles({
+      name: "permintaan.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(csv),
+    })
+    await expect(
+      page.getByText("2 produk diimport (1 cocok katalog, 1 produk baru, harga kosong)."),
+    ).toBeVisible()
+    await seed.adopt("item", fresh)
+
+    const main = page.locator("main")
+    await expect(main).toContainText(`KODE IMPA: ${item.impaCode}`)
+    await expect(main).toContainText(fresh)
+    // MD-01: the deactivated cheaper vendor never supplies the price.
+    await expect(main).toContainText(active.name)
+    await expect(main).not.toContainText(cheap.name)
+    await expect(main).toContainText("Rp 90.000")
+  })
+
+  test("a draft's client requests are added, reviewed and removed", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const q = await seed.quotation({ client, lines: [{ item, qty: 1, price: 10_000 }] })
+    const text = `${seed.prefix} tali tambang 12mm`
+
+    await page.goto(`/quotations/${q.id}/edit`)
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    const expand = page.getByRole("button", { name: "Tampilkan" })
+    if (await expand.isVisible()) await expand.click()
+    await page.getByRole("button", { name: "+ Tambah Permintaan" }).click()
+    await page.getByLabel("Deskripsi permintaan").fill(text)
+    await page.getByLabel("Kode IMPA", { exact: true }).last().fill("210101")
+    await page.getByLabel("Jumlah diminta").fill("4")
+    await page.getByLabel("Satuan diminta").fill("MTR")
+    await page.getByRole("button", { name: "Simpan", exact: true }).first().click()
+
+    const row = page.getByRole("row", { name: new RegExp(text) })
+    await expect(row).toBeVisible()
+    await row.getByRole("combobox").selectOption({ label: "Tidak Tersedia" })
+    await expect
+      .poll(async () =>
+        (await api<Request[]>("GET", `/quotations/${q.id}/requests`)).map((r) => [
+          r.requestText,
+          r.matchStatus,
+        ]),
+      )
+      .toEqual([[text, "unavailable"]])
+
+    page.once("dialog", (d) => void d.accept())
+    await row.getByRole("button", { name: "Hapus" }).click()
+    await expect(row).toHaveCount(0)
+    expect(await api<Request[]>("GET", `/quotations/${q.id}/requests`)).toEqual([])
   })
 })
 

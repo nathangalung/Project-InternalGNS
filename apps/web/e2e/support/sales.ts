@@ -178,6 +178,14 @@ export class SalesSeed {
     return { id: created.id, name, impaCode, vendorProductId }
   }
 
+  // One more vendor offer for an item.
+  async linkVendor(item: SeedItem, vendor: SeedVendor, cost: number): Promise<void> {
+    await api("POST", `/items/${item.id}/vendors`, {
+      vendorId: vendor.id,
+      costPrice: String(cost),
+    })
+  }
+
   // Draft quotation with priced product lines.
   async quotation(opts: {
     client: SeedClient
