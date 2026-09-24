@@ -145,8 +145,8 @@ func TestRepo_ChangeStatus_DeliveredIsTerminal(t *testing.T) {
 	assert.Equal(t, "PO yang sudah dikirim atau dibatalkan tidak dapat diubah statusnya.", err.Error())
 }
 
-// The DELIVERED edit lock shares P0013 with the invoice guard but keeps its
-// own 422: the handler matches ErrLocked before falling through to FromDBErr.
+// The DELIVERED edit lock shares P0013 with the invoice guard; the handler
+// matches ErrLocked and renders the shared 409 po_locked problem.
 func TestRepo_UpdateItems_DeliveredIsLocked(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)

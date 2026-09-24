@@ -99,7 +99,7 @@ Feature: Purchase order lifecycle
     Given an accepted quotation
     And the PO has reached "DELIVERED"
     When the user edits PO items with discount "0" and selling price "100000"
-    Then the response status is 422
+    Then the PO is refused as locked with "PO yang sudah dikirim atau dibatalkan tidak dapat diubah."
 
   Scenario: Edited PO price flows into invoice
     Given an accepted quotation
@@ -128,7 +128,7 @@ Feature: Purchase order lifecycle
     When the user sends the invoice
     Then the response status is 204
     When the user edits PO details with number "PO/KLIEN/002"
-    Then the response status is 409
+    Then the PO is refused as locked with "Nomor dan tanggal PO tidak dapat diubah setelah invoice dikirim."
 
   Scenario: A stale If-Match on PO details returns 409
     Given an accepted quotation
@@ -212,7 +212,7 @@ Feature: Purchase order lifecycle
     Given an accepted quotation
     And the PO has reached "<status>"
     When the user removes the PO file
-    Then the response status is 409
+    Then the PO is refused as locked with "Berkas PO tidak dapat dihapus"
     When the user reads the PO by quotation
     Then the PO status is "<status>"
 
@@ -226,7 +226,7 @@ Feature: Purchase order lifecycle
     Given an accepted quotation
     And the PO has reached "<status>"
     When the user uploads a PO file named "revisi.pdf"
-    Then the response status is 409
+    Then the PO is refused as locked with "Berkas PO tidak dapat diubah setelah PO dikirim atau dibatalkan."
     When the user reads the PO by quotation
     Then the PO status is "<status>"
 
@@ -284,7 +284,7 @@ Feature: Purchase order lifecycle
     Given an accepted quotation
     And the PO has reached "CANCELLED"
     When the user edits PO items with discount "0" and selling price "100000"
-    Then the response status is 422
+    Then the PO is refused as locked with "PO yang sudah dikirim atau dibatalkan tidak dapat diubah."
 
   Scenario: A cancelled PO has no delivery note
     Given an accepted quotation

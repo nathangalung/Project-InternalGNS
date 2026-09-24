@@ -369,6 +369,31 @@ func (s *scenarioState) objectKeyRejected() error {
 	return nil
 }
 
+// Every PO lock refusal shares one shape.
+func (s *scenarioState) poRefusedAsLocked(detail string) error {
+	if s.last.StatusCode != http.StatusConflict {
+		return fmt.Errorf("want 409 got %d body=%s", s.last.StatusCode, s.body)
+	}
+	if ct := s.last.Header.Get("Content-Type"); ct != "application/problem+json" {
+		return fmt.Errorf("want problem+json got %q", ct)
+	}
+	var problem struct {
+		Status int    `json:"status"`
+		Detail string `json:"detail"`
+		Code   string `json:"code"`
+	}
+	if err := json.Unmarshal(s.body, &problem); err != nil {
+		return fmt.Errorf("decode problem: %w body=%s", err, s.body)
+	}
+	if problem.Code != purchaseorders.LockedCode || problem.Status != http.StatusConflict {
+		return fmt.Errorf("want code %q status 409, body=%s", purchaseorders.LockedCode, s.body)
+	}
+	if !strings.Contains(problem.Detail, detail) {
+		return fmt.Errorf("detail %q does not mention %q", problem.Detail, detail)
+	}
+	return nil
+}
+
 func (s *scenarioState) poHasNoFile() error {
 	var po purchaseorders.PurchaseOrder
 	if err := json.Unmarshal(s.body, &po); err != nil {
@@ -574,6 +599,7 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^the user attaches the object key "([^"]+)"$`, state.attachObjectKey)
 		sc.Step(`^the user attaches the file uploaded for another PO$`, state.attachOtherPOKey)
 		sc.Step(`^the error rejects the object key$`, state.objectKeyRejected)
+		sc.Step(`^the PO is refused as locked with "([^"]+)"$`, state.poRefusedAsLocked)
 		sc.Step(`^the PO has no attached file$`, state.poHasNoFile)
 		sc.Step(`^the invoice status is "([^"]+)"$`, state.invoiceStatusEquals)
 		sc.Step(`^the user edits PO items with discount "([^"]*)" and selling price "([^"]*)"$`, state.editPOItems)

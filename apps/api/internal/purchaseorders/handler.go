@@ -198,7 +198,7 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 		case errors.Is(err, ErrLocked):
-			httperr.Render(w, httperr.Conflict(err.Error()))
+			renderLocked(w, err.Error())
 		default:
 			httperr.RenderDBErr(w, err)
 		}
@@ -276,8 +276,7 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 			httperr.Render(w, httperr.Conflict("purchase order row_version mismatch"))
 		// A filed invoice prints po_number and po_date, so both are read-only.
 		case errors.Is(err, ErrLocked):
-			httperr.Render(w, httperr.Conflict(
-				"Nomor dan tanggal PO tidak dapat diubah setelah invoice dikirim."))
+			renderLocked(w, "Nomor dan tanggal PO tidak dapat diubah setelah invoice dikirim.")
 		default:
 			httperr.RenderDBErr(w, err)
 		}
@@ -359,7 +358,7 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 		case errors.Is(err, ErrLocked):
-			httperr.Render(w, httperr.Unprocessable(map[string]string{"status": err.Error()}))
+			renderLocked(w, err.Error())
 		default:
 			httperr.RenderDBErr(w, err)
 		}
@@ -416,7 +415,7 @@ func (h *Handler) RemoveFile(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 		case errors.Is(err, ErrLocked):
-			httperr.Render(w, httperr.Conflict(err.Error()))
+			renderLocked(w, err.Error())
 		default:
 			httperr.RenderDBErr(w, err)
 		}
@@ -442,4 +441,22 @@ func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, rows)
+}
+
+// LockedCode tags every PO lock refusal.
+// The web branches on it: a 409 without it is an If-Match mismatch, which
+// a refetch resolves, while a lock needs no retry.
+const LockedCode = "po_locked"
+
+// lockedProblem is RFC 7807 plus code.
+type lockedProblem struct {
+	httperr.Error
+	Code string `json:"code"`
+}
+
+// renderLocked writes the shared lock refusal.
+func renderLocked(w http.ResponseWriter, detail string) {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(http.StatusConflict)
+	_ = json.NewEncoder(w).Encode(lockedProblem{Error: httperr.Conflict(detail), Code: LockedCode})
 }
