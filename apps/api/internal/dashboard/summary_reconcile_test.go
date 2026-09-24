@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/dashboard"
@@ -114,4 +115,53 @@ func TestRepo_Timeseries_RevenueAndProfitExcludePpn(t *testing.T) {
 	require.Len(t, profit, 1)
 	require.True(t, mustDecimal(t, profit[0].Value).Equal(decimal.NewFromInt(6000)),
 		"profit bucket must be DPP minus cost, got %s", profit[0].Value)
+}
+
+// A window's totals equal its monthly sums.
+// The export prints both, so Ringkasan must never disagree with Bulanan.
+func TestRepo_Totals_EqualMonthlySums(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	paidInvoiceFixture(t, ctx, tx, time.Date(2031, 3, 15, 0, 0, 0, 0, time.UTC))
+	repo := dashboard.NewRepo(tx, testutil.Store(t))
+
+	cases := []struct {
+		name     string
+		from, to time.Time
+		revenue  int64
+	}{
+		{"the fixture's year", time.Date(2031, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(2032, 1, 1, 0, 0, 0, 0, time.UTC), 10000},
+		{"the following year", time.Date(2032, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(2033, 1, 1, 0, 0, 0, 0, time.UTC), 0},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s, err := repo.Totals(ctx, &tc.from, &tc.to)
+			require.NoError(t, err)
+			require.True(t, mustDecimal(t, s.TotalRevenue).Equal(decimal.NewFromInt(tc.revenue)),
+				"revenue want %d got %s", tc.revenue, s.TotalRevenue)
+
+			sum := func(metric string) decimal.Decimal {
+				points, err := repo.Timeseries(ctx, metric, tc.from, tc.to, "month")
+				require.NoError(t, err)
+				total := decimal.Zero
+				for _, p := range points {
+					total = total.Add(mustDecimal(t, p.Value))
+				}
+				return total
+			}
+			figures := []struct {
+				metric string
+				got    decimal.Decimal
+			}{
+				{"revenue", mustDecimal(t, s.TotalRevenue)},
+				{"profit", mustDecimal(t, s.TotalProfit)},
+				{"ppn", mustDecimal(t, s.TotalPpn)},
+				{"invoice", decimal.NewFromInt(s.TotalInvoices)},
+				{"quotation", decimal.NewFromInt(s.TotalQuotations)},
+			}
+			for _, f := range figures {
+				want := sum(f.metric)
+				assert.Truef(t, want.Equal(f.got), "%s: total %s, monthly sum %s", f.metric, f.got, want)
+			}
+		})
+	}
 }

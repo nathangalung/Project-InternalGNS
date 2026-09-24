@@ -8,7 +8,8 @@ export async function summary(): Promise<DashboardSummary> {
 // Download the dashboard summary + monthly series as XLSX (optional year scope).
 export function exportXlsx(year?: number): Promise<void> {
   const qs = year ? `?year=${year}` : ""
-  return downloadXlsx(`/dashboard/export.xlsx${qs}`, "dashboard-export.xlsx")
+  const name = year ? `dashboard-export-${year}.xlsx` : "dashboard-export.xlsx"
+  return downloadXlsx(`/dashboard/export.xlsx${qs}`, name)
 }
 
 export async function timeseries(

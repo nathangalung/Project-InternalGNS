@@ -33,15 +33,11 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 	return &Repo{db: exec, store: store}
 }
 
-// Summary returns totals and tiles.
+// Summary returns all-time totals and tiles.
 func (r *Repo) Summary(ctx context.Context) (Summary, error) {
-	rows, err := r.db.Query(ctx, r.store.Get("dashboard.summary"))
+	s, err := r.Totals(ctx, nil, nil)
 	if err != nil {
-		return Summary{}, fmt.Errorf("dashboard summary: %w", err)
-	}
-	s, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Summary])
-	if err != nil {
-		return Summary{}, fmt.Errorf("dashboard summary: %w", err)
+		return Summary{}, err
 	}
 	counts, err := r.statusCounts(ctx)
 	if err != nil {
@@ -50,6 +46,21 @@ func (r *Repo) Summary(ctx context.Context) (Summary, error) {
 	s.QuotationStatuses = fold(quotationTiles, counts["quotation"])
 	s.PoStatuses = fold(poTiles, counts["purchase_order"])
 	s.InvoiceStatuses = fold(invoiceTiles(), counts["invoice"])
+	return s, nil
+}
+
+// Totals sums the figures over a window.
+// from is inclusive and to exclusive; a nil bound leaves that side open.
+// The status tiles stay empty.
+func (r *Repo) Totals(ctx context.Context, from, to *time.Time) (Summary, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("dashboard.summary"), from, to)
+	if err != nil {
+		return Summary{}, fmt.Errorf("dashboard summary: %w", err)
+	}
+	s, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Summary])
+	if err != nil {
+		return Summary{}, fmt.Errorf("dashboard summary: %w", err)
+	}
 	return s, nil
 }
 
