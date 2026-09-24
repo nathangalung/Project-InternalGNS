@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import type { Role } from "@/types/api"
 import { canWriteCatalog, roleCanAccess, type Section, sectionFromPathname } from "./rbac"
 
 const ALL: Section[] = [
@@ -87,5 +88,14 @@ describe("sectionFromPathname every section", () => {
     ["/login", "dashboard"],
   ])("%s", (path, want) => {
     expect(sectionFromPathname(path)).toBe(want)
+  })
+})
+
+describe("roleCanAccess fails closed", () => {
+  it("denies a role the app does not know beyond the common sections", () => {
+    const stranger = "admin" as Role
+    expect(roleCanAccess(stranger, "clients")).toBe(true)
+    expect(roleCanAccess(stranger, "users")).toBe(false)
+    expect(canWriteCatalog(stranger)).toBe(false)
   })
 })

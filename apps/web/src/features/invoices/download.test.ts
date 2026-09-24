@@ -1,6 +1,11 @@
-import { describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ApiError } from "@/lib/api-client"
-import { failureMessage, safeFileName, transferErrorMessage } from "./download"
+import { toast } from "@/lib/toast"
+import { failureMessage, runDownload, safeFileName, transferErrorMessage } from "./download"
+
+vi.mock("@/lib/toast", () => ({ toast: { error: vi.fn() } }))
+
+beforeEach(() => vi.clearAllMocks())
 
 describe("safeFileName", () => {
   it("replaces the slashes in invoice numbers", () => {
@@ -69,5 +74,36 @@ describe("failureMessage", () => {
     ],
   ])("%s", (_name, err, want) => {
     expect(failureMessage(err, fallback)).toBe(want)
+  })
+})
+
+describe("transferErrorMessage odd bodies", () => {
+  it.each<[string, unknown]>([
+    ["JSON null", "null"],
+    ["JSON string", '"Konflik"'],
+    ["no body", null],
+    ["number body", 409],
+  ])("falls back on a 409 with %s", (_name, body) => {
+    expect(transferErrorMessage(new ApiError(409, body, "Conflict"), "Gagal.")).toBe("Gagal.")
+  })
+})
+
+describe("runDownload", () => {
+  it("stays quiet when the download succeeds", async () => {
+    const run = vi.fn(async () => {})
+    await runDownload(run, "Gagal mengunduh invoice.")
+    expect(run).toHaveBeenCalledTimes(1)
+    expect(toast.error).not.toHaveBeenCalled()
+  })
+
+  it("toasts the user-facing 409 detail", async () => {
+    const err = new ApiError(409, JSON.stringify({ detail: "Invoice belum terbit." }), "Conflict")
+    await runDownload(() => Promise.reject(err), "Gagal mengunduh invoice.")
+    expect(toast.error).toHaveBeenCalledWith("Invoice belum terbit.")
+  })
+
+  it("toasts the fallback for an English failure", async () => {
+    await runDownload(() => Promise.reject(new Error("Bad Gateway")), "Gagal mengunduh invoice.")
+    expect(toast.error).toHaveBeenCalledWith("Gagal mengunduh invoice.")
   })
 })

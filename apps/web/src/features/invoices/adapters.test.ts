@@ -62,3 +62,12 @@ describe("invoiceItemsToShipping", () => {
     expect(invoiceItemsToShipping([line({})])).toEqual({ nama: "", deadline: "", hargaSatuan: 0 })
   })
 })
+
+describe("invoiceItemsToShipping destination", () => {
+  it("leaves the destination unset when the snapshot has none", () => {
+    const ship = invoiceItemsToShipping([
+      line({ lineType: "shipping", itemName: "Kirim", qty: "2", unitPrice: "100" }),
+    ])
+    expect(ship).toEqual({ nama: "Kirim", deadline: "", hargaSatuan: 200, alamat: undefined })
+  })
+})

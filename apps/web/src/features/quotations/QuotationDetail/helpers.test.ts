@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import type { ProductRow } from "@/features/quotations/types"
-import { profitAfterDiscount } from "./helpers"
+import { nowLabel, profitAfterDiscount } from "./helpers"
 
 function row(qty: number, sell: number, cost: number): ProductRow {
   return { kode: "", nama: "x", qty, satuan: "PCS", hargaSatuan: sell, profitSatuan: sell - cost }
@@ -14,5 +14,14 @@ describe("profitAfterDiscount total", () => {
 
   it("equals gross profit with no discount", () => {
     expect(profitAfterDiscount([row(3, 10, 4)], 0)).toBe(18)
+  })
+})
+
+describe("nowLabel", () => {
+  afterEach(() => vi.useRealTimers())
+
+  it("prints the local date and time without dots", () => {
+    vi.useFakeTimers({ now: new Date(2026, 8, 24, 9, 5) })
+    expect(nowLabel()).toBe("24 Sep 2026, 09 05")
   })
 })

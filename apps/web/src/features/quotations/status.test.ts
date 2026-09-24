@@ -139,3 +139,16 @@ describe("statusChangeToast", () => {
     expect(statusChangeToast(new ApiError(500, {}, ""))).toBe("Gagal mengubah status quotation.")
   })
 })
+
+describe("fieldError odd 422 bodies", () => {
+  it.each<[string, unknown]>([
+    ["no body", null],
+    ["text body", "Validasi gagal."],
+    ["no fields", { detail: "Validasi gagal." }],
+    ["fields not an object", { fields: "note" }],
+    ["blank message", { fields: { note: "   " } }],
+    ["non-string message", { fields: { note: 1 } }],
+  ])("reads nothing from %s", (_name, body) => {
+    expect(fieldError(new ApiError(422, body, "x"), "note")).toBeUndefined()
+  })
+})

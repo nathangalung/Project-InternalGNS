@@ -16,6 +16,7 @@ import {
   parseCompletenessIssues,
   poBreakdown,
   poErrorMessage,
+  shortDocNo,
   uploadRules,
 } from "./helpers"
 
@@ -223,5 +224,33 @@ describe("parseCompletenessIssues", () => {
     expect(parseCompletenessIssues({ fields: { status: "Perubahan tidak diizinkan." } })).toBeNull()
     expect(parseCompletenessIssues(null)).toBeNull()
     expect(parseCompletenessIssues("text")).toBeNull()
+  })
+})
+
+describe("shortDocNo", () => {
+  it.each<[string, string]>([
+    ["001/GNS/Q/IX/2026", "001…"],
+    ["PO-77", "PO-77"],
+    ["/GNS", "…"],
+  ])("%s -> %s", (no, want) => {
+    expect(shortDocNo(no)).toBe(want)
+  })
+})
+
+describe("parseCompletenessIssues ordering", () => {
+  it("puts the client first, then vendors by id", () => {
+    const issues = parseCompletenessIssues({
+      fields: {
+        "vendor:12": "Data vendor B belum lengkap: Lokasi",
+        "vendor:3": "Data vendor A belum lengkap: Lokasi",
+        "klien:9": "Data klien K belum lengkap: NPWP",
+      },
+    })
+    expect(issues?.map((i) => `${i.kind}:${i.id}`)).toEqual(["client:9", "vendor:3", "vendor:12"])
+  })
+
+  it("returns null when fields is not an object", () => {
+    expect(parseCompletenessIssues({ fields: "klien:1" })).toBeNull()
+    expect(parseCompletenessIssues({ detail: "x" })).toBeNull()
   })
 })

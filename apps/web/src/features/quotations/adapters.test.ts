@@ -251,3 +251,132 @@ describe("edit wizard lines", () => {
     })
   }
 })
+
+describe("unreadable money", () => {
+  it("shows zero for every total the server sent as junk", () => {
+    const d = {
+      ...detail([]),
+      grandTotal: "x",
+      subtotal: "x",
+      dppNilaiLain: "x",
+      ppnAmount: "x",
+      totalDiscount: "x",
+      discountPct: "x",
+    }
+    expect(toQuotationData(d, () => "")).toMatchObject({
+      totalBayar: 0,
+      subtotal: 0,
+      dppNilaiLain: 0,
+      ppnAmount: 0,
+      totalDiscount: 0,
+      discountPct: 0,
+    })
+  })
+
+  it("zeroes a junk price and its profit", () => {
+    const [row] = toQuotationData(detail([item({ sellingPrice: "x" })]), () => "").products
+    expect(row).toMatchObject({ hargaSatuan: 0, profitSatuan: 0 })
+  })
+
+  it("treats an unknown cost as zero, so the whole price is profit", () => {
+    const [row] = toQuotationData(detail([item({ costPrice: undefined })]), () => "").products
+    expect(row).toMatchObject({ hargaSatuan: 100, profitSatuan: 100 })
+    expect(toWizardProduct(item({ costPrice: undefined }), 1, "PCS").hargaBeli).toBe(0)
+  })
+
+  it("zeroes junk prices in the edit wizard", () => {
+    const wiz = toWizardProduct(item({ sellingPrice: "x", costPrice: "y" }), 1, "PCS")
+    expect(wiz).toMatchObject({ hargaJual: 0, hargaBeli: 0 })
+  })
+
+  it("zeroes a junk shipping cost", () => {
+    const ship = item({ itemType: "shipping", requestedName: "Kirim", sellingPrice: "x" })
+    expect(toQuotationData(detail([ship]), () => "").shipping.hargaSatuan).toBe(0)
+  })
+
+  it("prints the raw table totals when they are not numbers", () => {
+    const row = toTableRow({
+      id: 1,
+      quotationNo: "Q-1",
+      version: 1,
+      companyName: "PT Laut",
+      status: "draft",
+      grandTotal: "n/a",
+      subtotal: "0",
+      totalDiscount: "0",
+      totalHargaBeli: "-",
+      productCount: 0,
+      createdAt: "2026-09-01T12:00:00Z",
+    })
+    expect(row).toMatchObject({ total: "n/a", hargaBeli: "-", date: "01 Sep 2026" })
+  })
+
+  it("formats numeric table totals the Indonesian way", () => {
+    const row = toTableRow({
+      id: 1,
+      quotationNo: "Q-1",
+      version: 2,
+      companyName: "PT Laut",
+      status: "sent",
+      grandTotal: "1250000",
+      subtotal: "0",
+      totalDiscount: "0",
+      totalHargaBeli: "900000.5",
+      productCount: 1,
+      createdAt: "2026-09-01T12:00:00Z",
+    })
+    expect(row).toMatchObject({ id: "1", total: "1.250.000", hargaBeli: "900.000,5", version: 2 })
+  })
+})
+
+describe("toQuotationData shipping and history", () => {
+  it("reads the shipping line with its destination and days", () => {
+    const ship = item({
+      itemType: "shipping",
+      requestedName: "Kirim Batam",
+      sellingPrice: "50000",
+      shipDestination: "Batam",
+      shippingDays: 2,
+    })
+    expect(toQuotationData(detail([ship]), () => "").shipping).toEqual({
+      nama: "Kirim Batam",
+      deadline: "",
+      hargaSatuan: 50000,
+      alamat: "Batam",
+      hari: 2,
+    })
+  })
+
+  it("has a blank shipping row without one", () => {
+    expect(toQuotationData(detail([item({})]), () => "").shipping).toEqual({
+      nama: "",
+      deadline: "",
+      hargaSatuan: 0,
+    })
+  })
+
+  it("lists every status event, oldest first as sent", () => {
+    const d = {
+      ...detail([]),
+      history: [
+        event({ id: 1, toStatus: "draft" }),
+        event({ id: 2, fromStatus: "draft", toStatus: "sent", changedBy: null }),
+      ],
+    }
+    const history = toQuotationData(d, () => "").history
+    expect(history.map((h) => h.action)).toEqual(["Dibuat sebagai Draf", "Draf → Dikirim"])
+    expect(history[1].date).toMatch(/· Sistem$/)
+  })
+})
+
+describe("wizard line identity", () => {
+  it("uses the fallback id for a line the server has not numbered", () => {
+    const line = { ...item({}), id: undefined } as unknown as QuotationItemRow
+    expect(toWizardProduct(line, 99, "PCS").id).toBe(99)
+  })
+
+  it("saves the offered name when the request has none", () => {
+    const wiz = { ...toWizardProduct(item({ requestedName: "Tali" }), 1, "PCS"), requestedNama: "" }
+    expect(toItemInput(wiz, 3).requestedName).toBe("Tali")
+  })
+})

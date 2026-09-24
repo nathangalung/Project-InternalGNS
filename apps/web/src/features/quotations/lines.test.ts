@@ -98,6 +98,12 @@ describe("request code and difference", () => {
       code: "",
       differs: true,
     },
+    {
+      name: "a request without a name reads as the offer",
+      line: { ...base, itemId: 5, requestedNama: "" },
+      code: "",
+      differs: false,
+    },
   ]
 
   for (const c of cases) {
@@ -106,4 +112,21 @@ describe("request code and difference", () => {
       expect(requestDiffers(c.line)).toBe(c.differs)
     })
   }
+})
+
+describe("qtyErrorIndexes odd 422 bodies", () => {
+  it.each<[string, unknown]>([
+    ["no body", null],
+    ["text body", "Validasi gagal."],
+    ["no fields", { detail: "Validasi gagal." }],
+    ["fields not an object", { fields: "items[0].qty" }],
+    ["non-string message", { fields: { "items[0].qty": 5 } }],
+  ])("finds no line for %s", (_name, body) => {
+    expect(qtyErrorIndexes(new ApiError(422, body, "x")).size).toBe(0)
+  })
+
+  it("drops an index past the last card", () => {
+    const byIndex = new Map([[5, "Jumlah harus lebih dari 0."]])
+    expect(qtyErrorsById([{ id: 1 }], byIndex)).toEqual({})
+  })
 })

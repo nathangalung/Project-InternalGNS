@@ -9,6 +9,7 @@ import {
   type PoEditLine,
   poHistoryEntry,
   poItemsToProducts,
+  poItemsToShipping,
   poLinesToEdit,
   poRowFromBackend,
 } from "./adapters"
@@ -250,5 +251,63 @@ describe("loadFailureMessage", () => {
     const msg = loadFailureMessage(units, items)
     expect(msg.startsWith(start)).toBe(true)
     expect(msg.endsWith("Coba lagi dalam beberapa saat.")).toBe(true)
+  })
+})
+
+describe("snapshot edges", () => {
+  it("has no products and a blank shipping row without items", () => {
+    expect(poItemsToProducts(undefined)).toEqual([])
+    const blank = { nama: "Pengiriman", deadline: "", hargaSatuan: 0, alamat: "" }
+    expect(poItemsToShipping(undefined)).toEqual(blank)
+    expect(poItemsToShipping([line({})])).toEqual(blank)
+  })
+
+  it("reads the shipping line with its days and destination", () => {
+    const ship = line({
+      itemType: "shipping",
+      itemName: "Kirim Batam",
+      sellingPrice: "75000",
+      shipDestination: "Batam",
+      shippingDays: 3,
+    })
+    expect(poItemsToShipping([line({}), ship])).toEqual({
+      nama: "Kirim Batam",
+      deadline: "",
+      hargaSatuan: 75000,
+      alamat: "Batam",
+      hari: 3,
+    })
+  })
+
+  it("prints a blank destination rather than undefined", () => {
+    const ship = line({ itemType: "shipping", itemName: "Kirim", sellingPrice: "1" })
+    expect(poItemsToShipping([ship]).alamat).toBe("")
+  })
+})
+
+describe("wizard lines without an offered name", () => {
+  const [base] = poLinesToEdit([line({ id: 3, itemName: "Tali" })], () => "")
+  const nameless: PoEditLine = { ...base, nama: "", touched: true, satuan: "BOX" }
+
+  it("saves the requested name", () => {
+    expect(lineToInput(nameless, units).itemName).toBe("Tali")
+  })
+
+  it("names the line by its request when the unit is missing", () => {
+    expect(linesMissingUnit([nameless], units)).toEqual(["Tali"])
+  })
+})
+
+describe("poHistoryEntry without a reason", () => {
+  it("shows the bare move", () => {
+    const ev = {
+      id: 2,
+      fromStatus: "PENDING",
+      toStatus: "UPLOADED",
+      note: "   ",
+      changedBy: 3,
+      changedAt: "2026-09-01T03:00:00Z",
+    } as const
+    expect(poHistoryEntry(ev).action).toBe("Pending → PO Diunggah")
   })
 })

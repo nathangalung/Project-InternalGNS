@@ -221,3 +221,22 @@ describe("cancelReason", () => {
     expect(cancelReason({ history })).toBe(want)
   })
 })
+
+describe("history without events", () => {
+  it("shows only the creation row when history is missing", () => {
+    const items = historyItems({ createdAt: "2026-09-01T02:00:00Z" } as InvoiceDetail)
+    expect(items.map((i) => i.action)).toEqual(["Dibuat sebagai Draf"])
+  })
+
+  it("has no cancel reason when history is missing", () => {
+    expect(cancelReason({} as InvoiceDetail)).toBeUndefined()
+  })
+
+  it("prints an unknown stored status as is", () => {
+    const items = historyItems({
+      createdAt: "2026-09-01T02:00:00Z",
+      history: [event(1, "void" as InvoiceBackendStatus, "archived" as InvoiceBackendStatus)],
+    })
+    expect(items[1].action).toBe("void → archived")
+  })
+})

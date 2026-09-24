@@ -415,3 +415,69 @@ describe("fetchObjectUrl", () => {
     })
   })
 })
+
+describe("unreadable responses", () => {
+  // A body stream that fails mid-read.
+  const broken = (status: number) =>
+    ({
+      ok: false,
+      status,
+      headers: new Headers(),
+      body: null,
+      text: () => Promise.reject(new TypeError("network error")),
+    }) as unknown as Response
+
+  it("still reports a failed request whose body cannot be read", async () => {
+    serve(() => broken(500))
+    await expect(apiRequest({ path: "/x", authed: false })).rejects.toMatchObject({
+      status: 500,
+      body: null,
+      message: "Permintaan gagal (500).",
+    })
+  })
+
+  it("still reports a failed transfer whose body cannot be read", async () => {
+    serve(() => broken(502))
+    await expect(fetchObjectUrl("/x")).rejects.toMatchObject({
+      status: 502,
+      message: "Gagal mengunduh berkas.",
+    })
+  })
+
+  it("reads a 204 list as empty", async () => {
+    serve(() => new Response(null, { status: 204 }))
+    await expect(apiList({ path: "/clients" })).resolves.toEqual({ rows: [], total: 0 })
+  })
+
+  it("uses the status text when a problem body says nothing", async () => {
+    serve(() => json({ fields: { name: " " } }, { status: 400 }))
+    await expect(apiRequest({ path: "/x", authed: false })).rejects.toMatchObject({
+      message: "Permintaan gagal (400).",
+    })
+  })
+})
+
+describe("API base URL", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.resetModules()
+  })
+
+  async function pathFor(env: string | undefined): Promise<string> {
+    vi.stubEnv("VITE_API_URL", env)
+    vi.resetModules()
+    const mod = await import("./api-client")
+    const fetchMock = vi.fn(async () => json({}))
+    vi.stubGlobal("fetch", fetchMock)
+    await mod.apiRequest({ path: "/units", authed: false })
+    return String((fetchMock.mock.calls[0] as unknown[])[0])
+  }
+
+  it.each<[string, string | undefined, string]>([
+    ["same origin when unset", undefined, "/api/v1/units"],
+    ["a configured host", "http://localhost:8080/api/v1", "http://localhost:8080/api/v1/units"],
+    ["without a doubled slash", "https://gns.id/api/v1//", "https://gns.id/api/v1/units"],
+  ])("targets %s", async (_name, env, want) => {
+    expect(await pathFor(env)).toBe(want)
+  })
+})

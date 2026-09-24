@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest"
-import { clientKpis, contactUpdateBody } from "./helpers"
+import type { ClientRow, ClientSearchHit } from "@/types/api"
+import {
+  clientKpis,
+  contactUpdateBody,
+  dedupeByCompany,
+  fromClientHit,
+  fromClientRow,
+  getCompanyInitials,
+} from "./helpers"
 
 describe("clientKpis", () => {
   it("measures growth against the base at the start of the year", () => {
@@ -76,5 +84,109 @@ describe("contactUpdateBody", () => {
       title: "Manajer",
       countryCode: "SGP",
     })
+  })
+})
+
+describe("getCompanyInitials", () => {
+  it.each<[string, string]>([
+    ["PT Global Niaga Sakti", "GN"],
+    ["PT. Samudera", "SA"],
+    ["pt maju jaya", "MJ"],
+    ["CV Baja", "CB"],
+    ["Pertamina", "PE"],
+    ["   ", "?"],
+  ])("%s -> %s", (name, want) => {
+    expect(getCompanyInitials(name)).toBe(want)
+  })
+})
+
+const row: ClientRow = {
+  id: 7,
+  number: "C-007",
+  name: "PT Laut Biru",
+  npwp: "01.234",
+  address: "Jakarta",
+  email: "info@laut.id",
+  countryCode: "ID",
+  tkuId: "TKU1",
+  isActive: true,
+  createdAt: "",
+  updatedAt: "",
+  contactId: 3,
+  contactName: "Budi",
+  contactEmail: "budi@laut.id",
+  contactPhone: "0812",
+  totalPurchase: "0",
+  quotationCount: 0,
+}
+
+const hit: ClientSearchHit = {
+  companyId: 7,
+  companyName: "PT Laut Biru",
+  companyNumber: "C-007",
+  companyNpwp: "01.234",
+  companyAddress: "Jakarta",
+  companyEmail: "info@laut.id",
+  companyCountry: "ID",
+  companyTku: "TKU1",
+  contactId: 3,
+  contactName: "Budi",
+  contactEmail: "budi@laut.id",
+  contactPhone: "0812",
+  score: 1,
+  matchTier: "AUTO_MATCH",
+}
+
+describe("client picker cards", () => {
+  const card = {
+    id: "7",
+    name: "PT Laut Biru",
+    narahubung: "Budi",
+    country: "ID",
+    initials: "LB",
+    phone: "0812",
+    email: "budi@laut.id",
+    npwp: "01.234",
+    nomorTKU: "TKU1",
+    referenceNumber: "C-007",
+    lokasi: "Jakarta",
+    contactId: 3,
+  }
+
+  it("builds the same card from a list row and a search hit", () => {
+    expect(fromClientRow(row)).toEqual(card)
+    expect(fromClientHit(hit)).toEqual(card)
+  })
+
+  it("falls back to the company email and a blank contact without a contact", () => {
+    const bare = { contactId: undefined, contactName: undefined, contactEmail: undefined }
+    expect(fromClientRow({ ...row, ...bare })).toMatchObject({
+      narahubung: "",
+      email: "info@laut.id",
+      contactId: undefined,
+    })
+    expect(fromClientHit({ ...hit, ...bare })).toMatchObject({
+      narahubung: "",
+      email: "info@laut.id",
+      contactId: undefined,
+    })
+  })
+})
+
+describe("dedupeByCompany", () => {
+  it("keeps the first, best-ranked hit per company in order", () => {
+    const hits = [
+      { ...hit, companyId: 1, contactId: 10 },
+      { ...hit, companyId: 2, contactId: 20 },
+      { ...hit, companyId: 1, contactId: 11 },
+    ]
+    expect(dedupeByCompany(hits).map((h) => [h.companyId, h.contactId])).toEqual([
+      [1, 10],
+      [2, 20],
+    ])
+  })
+
+  it("returns nothing for no hits", () => {
+    expect(dedupeByCompany([])).toEqual([])
   })
 })
