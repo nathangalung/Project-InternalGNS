@@ -39,14 +39,16 @@ Feature: Invoice lifecycle
 
   Scenario: Saving an unchanged past-due draft is accepted
     Given a delivered purchase order
-    When the user updates invoice due date to "2020-01-01"
-    And the user tries to transition the invoice to "draft"
+    When the user updates the invoice dates to invoice "2019-12-02" due "2020-01-01"
+    Then the response status is 200
+    When the user tries to transition the invoice to "draft"
     Then the response status is 204
 
   Scenario: A past-due draft saved as Terlambat stays a draft
     Given a delivered purchase order
-    When the user updates invoice due date to "2020-01-01"
-    And the user tries to transition the invoice to "overdue"
+    When the user updates the invoice dates to invoice "2019-12-02" due "2020-01-01"
+    Then the response status is 200
+    When the user tries to transition the invoice to "overdue"
     Then the response status is 204
     When the user reads the invoice by quotation
     Then the invoice status is "draft"
@@ -64,20 +66,51 @@ Feature: Invoice lifecycle
 
   Scenario: Update invoice dates
     Given a delivered purchase order
-    When the user updates invoice due date to "2026-12-31"
+    When the user updates the invoice dates to invoice "2031-01-10" due "2031-02-09"
     Then the response status is 200
+    And the invoice dates read invoice "2031-01-10" due "2031-02-09"
 
   Scenario: Paid invoice keeps its dates
     Given a delivered purchase order
     When the user transitions the invoice through "sent,paid"
-    And the user updates invoice due date to "2026-12-31"
+    And the user updates invoice due date to "2031-12-31"
     Then the response status is 422
+    And the problem detail is "Invoice yang sudah dibayar atau dibatalkan tidak dapat diubah tanggalnya."
 
   Scenario: Cancelled invoice keeps its dates
     Given a delivered purchase order
     When the user transitions the invoice through "cancelled"
-    And the user updates invoice due date to "2026-12-31"
+    And the user updates invoice due date to "2031-12-31"
     Then the response status is 422
+    And the problem detail is "Invoice yang sudah dibayar atau dibatalkan tidak dapat diubah tanggalnya."
+
+  Scenario Outline: A due date before the invoice date is refused
+    Given a delivered purchase order
+    When the user updates the invoice dates to invoice "2031-01-10" due "2031-02-09"
+    And the user updates the invoice dates to invoice "<invoice>" due "<due>"
+    Then the response status is <status>
+    And the invoice dates read invoice "<keptInvoice>" due "<keptDue>"
+
+    Examples:
+      | invoice    | due        | status | keptInvoice | keptDue    |
+      | 2031-01-10 | 2031-01-09 | 422    | 2031-01-10  | 2031-02-09 |
+      |            | 2031-01-09 | 422    | 2031-01-10  | 2031-02-09 |
+      | 2031-02-10 |            | 422    | 2031-01-10  | 2031-02-09 |
+      | 2031-01-10 | 2031-01-10 | 200    | 2031-01-10  | 2031-01-10 |
+      |            | 2031-01-10 | 200    | 2031-01-10  | 2031-01-10 |
+
+  Scenario: The date order refusal names the due date
+    Given a delivered purchase order
+    When the user updates the invoice dates to invoice "2031-01-10" due "2031-01-09"
+    Then the response status is 422
+    And the problem detail is "Tanggal jatuh tempo tidak boleh sebelum tanggal invoice."
+
+  Scenario: A paid invoice reports its lock before the date order
+    Given a delivered purchase order
+    When the user transitions the invoice through "sent,paid"
+    And the user updates the invoice dates to invoice "2031-01-10" due "2031-01-09"
+    Then the response status is 422
+    And the problem detail is "Invoice yang sudah dibayar atau dibatalkan tidak dapat diubah tanggalnya."
 
   Scenario: Summary endpoint returns aggregates
     Given a delivered purchase order

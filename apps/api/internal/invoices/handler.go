@@ -265,6 +265,10 @@ func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrDatesLocked):
 			httperr.Render(w, httperr.UnprocessableDetail(
 				"Invoice yang sudah dibayar atau dibatalkan tidak dapat diubah tanggalnya.", nil))
+		case errors.Is(err, ErrDueBeforeInvoice):
+			httperr.Render(w, httperr.Unprocessable(map[string]string{
+				"dueDate": "Tanggal jatuh tempo tidak boleh sebelum tanggal invoice.",
+			}))
 		case errors.Is(err, ErrVersionMismatch):
 			// Use 409 per round3_plan optimistic-lock contract (not RFC 7232 412).
 			httperr.Render(w, httperr.Conflict("invoice row_version mismatch"))

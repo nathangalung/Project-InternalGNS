@@ -226,18 +226,25 @@ SELECT fn_replace_invoice($1::bigint, $2::bigint);
 
 -- name: invoices.update_dates
 -- A paid or cancelled invoice is filed: moving its dates would move booked
--- revenue and the date already reported to Coretax.
+-- revenue and the date already reported to Coretax. The due date never
+-- falls before the invoice date, whichever of the two the request moves.
 UPDATE invoices
 SET invoice_date = COALESCE($2, invoice_date),
     due_date     = COALESCE($3, due_date),
     updated_by   = $4
 WHERE id = $1
   AND status NOT IN ('paid', 'cancelled')
+  AND (COALESCE($3::date, due_date) < COALESCE($2::date, invoice_date)) IS NOT TRUE
   AND ($5::int IS NULL OR row_version = $5::int)
 RETURNING row_version;
 
 -- name: invoices.status_and_version
-SELECT status, row_version FROM invoices WHERE id = $1;
+-- Explains a refused invoices.update_dates; $2 and $3 are its dates.
+SELECT status,
+       row_version,
+       COALESCE(COALESCE($3::date, due_date) < COALESCE($2::date, invoice_date), false) AS misordered
+FROM invoices
+WHERE id = $1;
 
 -- name: invoices.is_overdue
 -- Terlambat is derived by fn_invoice_effective_status, the rule every

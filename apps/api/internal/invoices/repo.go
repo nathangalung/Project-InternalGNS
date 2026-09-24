@@ -14,10 +14,11 @@ import (
 )
 
 var (
-	ErrNotFound        = errors.New("invoice not found")
-	ErrVersionMismatch = errors.New("invoice version mismatch")
-	ErrDatesLocked     = errors.New("invoice dates locked")
-	ErrOverdueDerived  = errors.New("invoice overdue is derived from the due date")
+	ErrNotFound         = errors.New("invoice not found")
+	ErrVersionMismatch  = errors.New("invoice version mismatch")
+	ErrDatesLocked      = errors.New("invoice dates locked")
+	ErrDueBeforeInvoice = errors.New("invoice due date before invoice date")
+	ErrOverdueDerived   = errors.New("invoice overdue is derived from the due date")
 )
 
 type Repo struct {
@@ -305,8 +306,10 @@ func (r *Repo) UpdateAttachment(ctx context.Context, id int64, objectKey string,
 }
 
 // UpdateDates writes dates with optimistic-lock guard via row_version.
-// Returns new row_version on success; ErrDatesLocked when the invoice is filed;
-// ErrVersionMismatch when ifMatch stale; ErrNotFound when row gone.
+// Returns new row_version on success. A refusal reports, in order,
+// ErrNotFound when the row is gone, ErrDatesLocked when the invoice is filed,
+// ErrDueBeforeInvoice when the due date would precede the invoice date, and
+// ErrVersionMismatch when ifMatch is stale.
 func (r *Repo) UpdateDates(ctx context.Context, id int64, req UpdateDatesRequest, actorID int64, ifMatch *int32) (int32, error) {
 	var newVersion int32
 	err := r.db.QueryRow(ctx, r.store.Get("invoices.update_dates"),
@@ -320,10 +323,13 @@ func (r *Repo) UpdateDates(ctx context.Context, id int64, req UpdateDatesRequest
 	}
 	// Disambiguate 404 vs 422 vs 409.
 	var (
-		status   Status
-		existing int32
+		status     Status
+		existing   int32
+		misordered bool
 	)
-	probeErr := r.db.QueryRow(ctx, r.store.Get("invoices.status_and_version"), id).Scan(&status, &existing)
+	probeErr := r.db.QueryRow(ctx, r.store.Get("invoices.status_and_version"),
+		id, req.InvoiceDate, req.DueDate,
+	).Scan(&status, &existing, &misordered)
 	if errors.Is(probeErr, pgx.ErrNoRows) {
 		return 0, ErrNotFound
 	}
@@ -332,6 +338,9 @@ func (r *Repo) UpdateDates(ctx context.Context, id int64, req UpdateDatesRequest
 	}
 	if !isDateEditable(status) {
 		return 0, ErrDatesLocked
+	}
+	if misordered {
+		return 0, ErrDueBeforeInvoice
 	}
 	return 0, ErrVersionMismatch
 }

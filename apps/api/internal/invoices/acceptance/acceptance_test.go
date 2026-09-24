@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/cucumber/godog"
 	"github.com/go-chi/chi/v5"
@@ -605,6 +606,50 @@ func (s *scenarioState) updateInvoiceDueDate(date string) error {
 	)
 }
 
+// updateInvoiceDates sends either date.
+// An empty value leaves that date out of the body.
+func (s *scenarioState) updateInvoiceDates(invoiceDate, dueDate string) error {
+	if err := s.readInvoiceByID(); err != nil {
+		return err
+	}
+	var inv invoices.Invoice
+	if err := json.Unmarshal(s.body, &inv); err != nil {
+		return err
+	}
+	body := map[string]string{}
+	if invoiceDate != "" {
+		body["invoiceDate"] = invoiceDate + "T00:00:00+07:00"
+	}
+	if dueDate != "" {
+		body["dueDate"] = dueDate + "T00:00:00+07:00"
+	}
+	return s.sendRequestWithHeaders(
+		http.MethodPatch,
+		"/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/dates",
+		body,
+		map[string]string{"If-Match": strconv.FormatInt(int64(inv.RowVersion), 10)},
+	)
+}
+
+// invoiceDatesRead checks the stored dates.
+func (s *scenarioState) invoiceDatesRead(invoiceDate, dueDate string) error {
+	if err := s.readInvoiceByID(); err != nil {
+		return err
+	}
+	var inv invoices.Invoice
+	if err := json.Unmarshal(s.body, &inv); err != nil {
+		return err
+	}
+	got := inv.InvoiceDate.Format(time.DateOnly) + " / "
+	if inv.DueDate != nil {
+		got += inv.DueDate.Format(time.DateOnly)
+	}
+	if want := invoiceDate + " / " + dueDate; got != want {
+		return fmt.Errorf("want dates %s got %s", want, got)
+	}
+	return nil
+}
+
 func (s *scenarioState) summaryTotalAtLeast(min int64) error {
 	var sum invoices.Summary
 	if err := json.Unmarshal(s.body, &sum); err != nil {
@@ -736,6 +781,8 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner, roles *roleUsers) fun
 		sc.Step(`^the user lists invoice items$`, state.listInvoiceItems)
 		sc.Step(`^the user lists invoices filtered by status "([^"]+)"$`, state.listInvoicesByStatus)
 		sc.Step(`^the user reads the invoice summary$`, state.readSummary)
+		sc.Step(`^the user updates the invoice dates to invoice "([^"]*)" due "([^"]*)"$`, state.updateInvoiceDates)
+		sc.Step(`^the invoice dates read invoice "([^"]+)" due "([^"]+)"$`, state.invoiceDatesRead)
 		sc.Step(`^the user updates invoice due date to "([^"]+)"$`, state.updateInvoiceDueDate)
 		sc.Step(`^the user transitions the invoice through "([^"]+)"$`, state.walkInvoicePath)
 		sc.Step(`^every invoice transition succeeds$`, state.lastTransitionSucceeds)
