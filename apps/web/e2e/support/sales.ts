@@ -114,9 +114,11 @@ export class SalesSeed {
   // Client, complete by default.
   //
   // A complete client passes the PO completeness gate.
-  async client(opts: { complete?: boolean; label?: string } = {}): Promise<SeedClient> {
+  async client(
+    opts: { complete?: boolean; label?: string; name?: string } = {},
+  ): Promise<SeedClient> {
     const complete = opts.complete ?? true
-    const name = this.name(opts.label ?? "Klien")
+    const name = opts.name ?? this.name(opts.label ?? "Klien")
     const created = await api<{ id: number; number: string }>("POST", "/clients", {
       name,
       countryCode: "IDN",

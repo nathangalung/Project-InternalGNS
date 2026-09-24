@@ -133,9 +133,14 @@ test.describe("quotation wizard", () => {
   })
 
   test("the unsearched client picker offers only active clients", async ({ page, seed }) => {
-    // Sorts first by name, so it lands in the picker's first page.
-    const dropped = await seed.client({ label: "000 Nonaktif" })
+    // Sorts before every letter, so it lands on the picker's first page
+    // whenever it is among the first 50 clients.
+    const dropped = await seed.client({ name: `000 ${seed.prefix} Nonaktif` })
     await deactivate("client", dropped.id)
+    // Read before the page loads, so a client another test deactivates
+    // later is not blamed on the picker.
+    const clients = await api<{ name: string; isActive: boolean }[]>("GET", "/clients?limit=200")
+    const inactive = clients.filter((c) => !c.isActive).map((c) => c.name)
     const listed = page.waitForResponse(
       (r) => new URL(r.url()).pathname.endsWith("/clients") && r.request().method() === "GET",
     )
@@ -144,8 +149,6 @@ test.describe("quotation wizard", () => {
     const options = page.locator("main button[aria-pressed]")
     await expect(options.first()).toBeVisible()
     const shown = await options.allTextContents()
-    const clients = await api<{ name: string; isActive: boolean }[]>("GET", "/clients?limit=200")
-    const inactive = clients.filter((c) => !c.isActive).map((c) => c.name)
     expect(shown.filter((text) => inactive.some((name) => text.includes(`${name} -`)))).toEqual([])
   })
 
