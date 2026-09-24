@@ -41,7 +41,7 @@ export function seed(qc: QueryClient, keys: QueryKey[]): void {
   for (const key of keys) qc.setQueryData(key, { seeded: true })
 }
 
-// Keys marked stale by a mutation.
+// Keys a mutation invalidated.
 export function invalidated(qc: QueryClient, keys: QueryKey[]): QueryKey[] {
   return keys.filter((key) => qc.getQueryState(key)?.isInvalidated)
 }

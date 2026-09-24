@@ -128,7 +128,7 @@ describe("formatNumber", () => {
   })
 })
 
-// Noon UTC is the same calendar day on any host timezone.
+// Noon UTC: same day, UTC-12..+11.
 describe("formatDate and formatDateTime", () => {
   it("prints an Indonesian short date", () => {
     expect(formatDate("2026-09-24T12:00:00Z")).toBe("24 Sep 2026")

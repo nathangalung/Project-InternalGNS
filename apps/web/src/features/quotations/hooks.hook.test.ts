@@ -79,7 +79,7 @@ describe("quotation queries", () => {
   })
 })
 
-// Client and vendor pages show quotation counts.
+// Clients and vendors show counts.
 describe("quotation writes", () => {
   it("create refreshes quotations, dashboard, clients and vendors", async () => {
     m.create.mockResolvedValue({ id: 5 })

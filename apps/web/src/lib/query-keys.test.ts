@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { queryKeys } from "./query-keys"
 
-// TanStack invalidation matches a key by prefix.
+// Prefix match, as TanStack invalidates.
 function startsWith(key: readonly unknown[], prefix: readonly unknown[]): boolean {
   return prefix.every((part, i) => JSON.stringify(part) === JSON.stringify(key[i]))
 }

@@ -112,7 +112,7 @@ describe("rowsFromAOA rows", () => {
   })
 })
 
-// A real workbook, built and read back through ExcelJS.
+// Real ExcelJS workbook round-trip.
 async function workbookFile(build: (wb: import("exceljs").Workbook) => void): Promise<File> {
   const { default: ExcelJS } = await import("exceljs")
   const wb = new ExcelJS.Workbook()

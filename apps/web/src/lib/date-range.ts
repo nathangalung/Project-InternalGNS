@@ -1,4 +1,4 @@
-// Business timezone, matching the pinned DB session.
+// Business timezone, pinned DB session.
 const JAKARTA_TZ = "Asia/Jakarta"
 
 // Today in Jakarta, as YYYY-MM-DD.
@@ -15,7 +15,7 @@ function minusDays(day: string, n: number): string {
 
 const PRESET_DAYS: Record<string, number> = { "7-hari": 7, "30-hari": 30 }
 
-// Preset to a WIB day range.
+// Preset to WIB days.
 //
 // The server reads dateFrom and dateTo as inclusive WIB days, so the bounds
 // are Jakarta calendar days, not the UTC date toISOString gives before 07:00.

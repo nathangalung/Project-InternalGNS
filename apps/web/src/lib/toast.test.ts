@@ -3,7 +3,7 @@ import type { ToastItem } from "./toast"
 
 type ToastModule = typeof import("./toast")
 
-// Fresh module per test: the queue is a module singleton.
+// Fresh singleton module per test.
 async function load(): Promise<{ mod: ToastModule; seen: ToastItem[][] }> {
   vi.resetModules()
   const mod = await import("./toast")

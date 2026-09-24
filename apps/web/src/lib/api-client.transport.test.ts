@@ -22,7 +22,7 @@ import {
 type Call = { path: string; init: RequestInit }
 type Handler = (path: string, init: RequestInit) => Response | Promise<Response>
 
-// Routes fetch by path suffix after the base URL.
+// Fetch stub routed by path.
 function serve(handler: Handler) {
   const calls: Call[] = []
   const fetchMock = vi.fn(async (url: string, init: RequestInit = {}) => {
@@ -417,7 +417,7 @@ describe("fetchObjectUrl", () => {
 })
 
 describe("unreadable responses", () => {
-  // A body stream that fails mid-read.
+  // Body that fails mid-read.
   const broken = (status: number) =>
     ({
       ok: false,

@@ -147,7 +147,7 @@ describe("client writes", () => {
   })
 })
 
-// An open detail form must not be refetched under in-progress edits.
+// No detail refetch mid-edit.
 describe("contact writes", () => {
   const contactInput = { name: "Budi", countryCode: "ID" }
   type Mutation = () => { mutateAsync: (vars: never) => Promise<unknown> }
