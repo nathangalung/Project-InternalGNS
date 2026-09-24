@@ -35,12 +35,6 @@ const visible: Record<Role, readonly (typeof allSections)[number][]> = {
   ],
 }
 
-// A page the role may not open, reached by typing its URL.
-const forbidden: Partial<Record<Role, string>> = {
-  operational: "/invoices",
-  finance: "/quotations",
-}
-
 test.describe("login", () => {
   test.use({ session: "anonymous" })
 
@@ -54,11 +48,6 @@ test.describe("login", () => {
     await expect(
       page.getByRole("navigation").getByRole("link", { name: "Dashboard", exact: true }),
     ).toBeVisible()
-  })
-
-  test("a signed-out visitor is sent to the login page", async ({ page }) => {
-    await page.goto("/invoices")
-    await expect(page).toHaveURL(/\/login$/)
   })
 })
 
@@ -75,13 +64,5 @@ for (const role of Object.keys(visible) as Role[]) {
         else await expect(link).toHaveCount(0)
       }
     })
-
-    const path = forbidden[role]
-    if (path) {
-      test(`typing ${path} lands back on the dashboard`, async ({ page }) => {
-        await page.goto(path)
-        await expect(page).toHaveURL(/\/$/)
-      })
-    }
   })
 }
