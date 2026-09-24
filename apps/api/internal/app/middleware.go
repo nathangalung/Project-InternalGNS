@@ -149,12 +149,18 @@ func securityHeadersMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// Role refusal details, shown as toasts.
+const (
+	detailRoleRefused   = "Peran Anda tidak memiliki akses ke fitur ini."
+	detailBucketRefused = "Peran Anda tidak memiliki akses ke berkas ini."
+)
+
 // Gates the storage proxy by bucket role.
 func authorizeBucket(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bucket := r.URL.Query().Get("bucket")
 		if !storage.CanAccessBucket(deps.CurrentUserRole(r.Context()), bucket) {
-			httperr.Render(w, httperr.Forbidden("insufficient role for bucket"))
+			httperr.Render(w, httperr.Forbidden(detailBucketRefused))
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -224,7 +230,7 @@ func requireRole(roles ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if _, ok := allowed[deps.CurrentUserRole(r.Context())]; !ok {
-				httperr.Render(w, httperr.Forbidden("insufficient role"))
+				httperr.Render(w, httperr.Forbidden(detailRoleRefused))
 				return
 			}
 			next.ServeHTTP(w, r)
@@ -243,7 +249,7 @@ func readOnlyFor(roles ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if _, ok := denied[deps.CurrentUserRole(r.Context())]; ok && isWrite(r) {
-				httperr.Render(w, httperr.Forbidden("insufficient role"))
+				httperr.Render(w, httperr.Forbidden(detailRoleRefused))
 				return
 			}
 			next.ServeHTTP(w, r)
