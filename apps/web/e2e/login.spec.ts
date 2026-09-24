@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test"
-import { test as base, expect, savedTokens } from "./fixtures"
-import { call, generatePassword, ownIp } from "./support/api"
+import { test as base, expect, savedTokens, seedSession } from "./fixtures"
+import { call, generatePassword, login, ownIp } from "./support/api"
+import { baseURL } from "./support/env"
 import { createUser, resetPassword, type SeedUser, setUser, uniqueTag } from "./support/finance"
 import { isolateIp, signedInContext, submitLogin } from "./support/session"
 
@@ -116,6 +117,28 @@ test("an admin password reset clears the miss count (AU-8)", async ({ page, admi
   expect(status).toBe(200)
   expect(ms).toBeLessThan(2_500)
   await expect(page).toHaveURL(/\/$/)
+})
+
+test("an expired access token is renewed without a trip to the login page", async ({
+  browser,
+  user,
+}) => {
+  const context = await browser.newContext({ baseURL, locale: "id-ID", timezoneId: "Asia/Jakarta" })
+  try {
+    const ip = await isolateIp(context)
+    const { refreshToken } = await login(user.email, user.password, ip)
+    await seedSession(context, { token: "kedaluwarsa", refreshToken })
+    const page = await context.newPage()
+    const refreshed = page.waitForResponse((r) => r.url().endsWith("/auth/refresh"))
+    await page.goto("/invoices")
+    expect((await refreshed).status()).toBe(200)
+    await expect(page.getByRole("heading", { name: "Daftar Invoice" })).toBeVisible()
+    const token = await page.evaluate(() => sessionStorage.getItem("gns_token"))
+    expect(token).toBeTruthy()
+    expect(token).not.toBe("kedaluwarsa")
+  } finally {
+    await context.close()
+  }
 })
 
 test("signing out ends the session and its refresh token", async ({ browser, user }) => {

@@ -5,6 +5,7 @@ import {
   createClient,
   deactivateClient,
   deliveredInvoice,
+  patchInvoiceDates,
   type SeedClient,
   type SeedInvoice,
   setInvoiceDates,
@@ -151,6 +152,46 @@ test("a draft is sent, then paid with a proof, and locks (INV-2, INV-4, INV-8)",
     expect(stored.status).toBe("paid")
     expect(stored.paidAt).toBeTruthy()
     expect(stored.paymentProofKey).toMatch(new RegExp(`^invoices/${invoice.id}/payment/`))
+    // The lock is the server's, not only the disabled inputs.
+    const moved = await patchInvoiceDates(admin, invoice.id, wibDay(), wibDay(30))
+    expect(moved.status).toBe(422)
+  })
+})
+
+test("dates save in order and a due date before the invoice date is refused (INV-9)", async ({
+  page,
+  admin,
+  invoice,
+}) => {
+  await openInvoice(page, invoice)
+  const issued = page.getByRole("textbox", { name: "Tanggal Invoice" })
+  const due = page.getByRole("textbox", { name: "Jatuh Tempo" })
+  const saveDates = page.getByRole("button", { name: "Simpan Tanggal" })
+
+  await test.step("the page refuses a due date before the invoice date", async () => {
+    await issued.fill(wibDay(-5))
+    await due.fill(wibDay(-10))
+    await expect(
+      page.getByText("Tanggal jatuh tempo tidak boleh sebelum tanggal invoice."),
+    ).toBeVisible()
+    await expect(saveDates).toBeDisabled()
+  })
+
+  await test.step("so does the API", async () => {
+    const res = await patchInvoiceDates(admin, invoice.id, wibDay(-5), wibDay(-10))
+    expect(res.status).toBe(422)
+    const body = (await res.json()) as { fields?: Record<string, string> }
+    expect(body.fields?.dueDate).toBe("Tanggal jatuh tempo tidak boleh sebelum tanggal invoice.")
+  })
+
+  await test.step("an ordered pair saves", async () => {
+    await due.fill(wibDay(25))
+    await saveDates.click()
+    await expect(page.getByText("Tanggal invoice disimpan.")).toBeVisible()
+    const res = await call(`/invoices/${invoice.id}`, { token: admin })
+    const stored = (await res.json()) as { invoiceDate: string; dueDate: string }
+    expect(stored.invoiceDate.slice(0, 10)).toBe(wibDay(-5))
+    expect(stored.dueDate.slice(0, 10)).toBe(wibDay(25))
   })
 })
 

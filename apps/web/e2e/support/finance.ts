@@ -134,26 +134,32 @@ export async function setInvoiceStatus(
   await send(token, "PATCH", `/invoices/${id}/status`, { status, note })
 }
 
-// Dates as YYYY-MM-DD in WIB.
+// Raw date PATCH, YYYY-MM-DD in WIB.
+export async function patchInvoiceDates(
+  token: string,
+  id: number,
+  invoiceDate: string,
+  dueDate: string,
+): Promise<Response> {
+  const inv = await json<InvoiceRow>(call(`/invoices/${id}`, { token }), `get invoice ${id}`)
+  return call(`/invoices/${id}/dates`, {
+    method: "PATCH",
+    token,
+    headers: { "If-Match": String(inv.rowVersion) },
+    body: JSON.stringify({
+      invoiceDate: `${invoiceDate}T00:00:00+07:00`,
+      dueDate: `${dueDate}T00:00:00+07:00`,
+    }),
+  })
+}
+
 export async function setInvoiceDates(
   token: string,
   id: number,
   invoiceDate: string,
   dueDate: string,
 ): Promise<void> {
-  const inv = await json<InvoiceRow>(call(`/invoices/${id}`, { token }), `get invoice ${id}`)
-  await expectOk(
-    await call(`/invoices/${id}/dates`, {
-      method: "PATCH",
-      token,
-      headers: { "If-Match": String(inv.rowVersion) },
-      body: JSON.stringify({
-        invoiceDate: `${invoiceDate}T00:00:00+07:00`,
-        dueDate: `${dueDate}T00:00:00+07:00`,
-      }),
-    }),
-    `set dates ${id}`,
-  )
+  await expectOk(await patchInvoiceDates(token, id, invoiceDate, dueDate), `set dates ${id}`)
 }
 
 // WIB calendar day, offset in days.

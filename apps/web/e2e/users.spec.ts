@@ -136,6 +136,26 @@ test("a taken email is flagged on its field", async ({ page, makeUser }) => {
   await expect(dialog).toBeVisible()
 })
 
+test("an edit to another user's email is refused on its field (AU-3)", async ({
+  page,
+  admin,
+  makeUser,
+}) => {
+  const [first, second] = [await makeUser("finance"), await makeUser("operational")]
+  await openUser(page, first.id)
+  await page.getByLabel("Alamat Email").fill(second.email)
+  const refused = page.waitForResponse(
+    (r) => r.request().method() === "PUT" && r.url().endsWith(`/users/${first.id}`),
+  )
+  await page.getByRole("button", { name: "Simpan Perubahan" }).click()
+  expect((await refused).status()).toBe(409)
+  await expect(page.getByText("Email sudah digunakan pengguna lain.")).toBeVisible()
+  const stored = (await (await call(`/users/${first.id}`, { token: admin })).json()) as {
+    email: string
+  }
+  expect(stored.email).toBe(first.email)
+})
+
 test("deactivating ends the live session, and the inactive user can be reactivated (AU-1, AU-5)", async ({
   page,
   signIn,
@@ -171,7 +191,7 @@ test("deactivating ends the live session, and the inactive user can be reactivat
   })
 })
 
-test("a role change reaches the open session at once (AU-2)", async ({ page, signIn }) => {
+test("a role change reaches the open session on its next load (AU-2)", async ({ page, signIn }) => {
   const victim = await signIn("operational")
   const nav = victim.page.getByRole("navigation")
   await victim.page.goto("/")
