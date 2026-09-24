@@ -246,74 +246,80 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
       </div>
 
       <div className="flex flex-col gap-5">
-        <div className="flex items-center gap-5 rounded-lg bg-white px-6 py-5">
-          {canWrite ? (
-            <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                tabIndex={-1}
-                aria-hidden="true"
-                onChange={(e) => {
-                  handleLogoSelect(e.target.files?.[0])
-                  e.target.value = ""
-                }}
-              />
-              <div className="relative shrink-0">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  title="Klik untuk ganti logo"
-                  aria-label="Ganti logo vendor"
-                  className={`${logoBoxCls} ${ui.focusRing}`}
-                  // Runtime colour, hashed per name
-                  style={{ background: logoDataUrl ? "#FFFFFF" : logoBg }}
-                >
-                  {logoContent}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  title="Ganti logo"
+        {/* Status wraps below on phones */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-4 rounded-lg bg-white px-4 py-5 sm:px-6">
+          <div className="flex min-w-0 flex-[1_1_14rem] items-center gap-4 sm:gap-5">
+            {canWrite ? (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
                   tabIndex={-1}
                   aria-hidden="true"
-                  className="absolute -bottom-1 -right-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 border-white bg-white p-0 shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
-                >
-                  <span className="flex h-full w-full items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)]">
-                    <svg
-                      aria-hidden="true"
-                      width="13"
-                      height="13"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#FFFFFF"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                      <circle cx="12" cy="13" r="3.5" />
-                    </svg>
-                  </span>
-                </button>
+                  onChange={(e) => {
+                    handleLogoSelect(e.target.files?.[0])
+                    e.target.value = ""
+                  }}
+                />
+                <div className="relative shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Klik untuk ganti logo"
+                    aria-label="Ganti logo vendor"
+                    className={`${logoBoxCls} ${ui.focusRing}`}
+                    // Runtime colour, hashed per name
+                    style={{ background: logoDataUrl ? "#FFFFFF" : logoBg }}
+                  >
+                    {logoContent}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Ganti logo"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    className="absolute -bottom-1 -right-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 border-white bg-white p-0 shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
+                  >
+                    <span className="flex h-full w-full items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)]">
+                      <svg
+                        aria-hidden="true"
+                        width="13"
+                        height="13"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#FFFFFF"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="3.5" />
+                      </svg>
+                    </span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div
+                className={`${logoBoxCls} shrink-0`}
+                // Runtime colour, hashed per name
+                style={{ background: logoDataUrl ? "#FFFFFF" : logoBg }}
+              >
+                {logoContent}
               </div>
-            </>
-          ) : (
-            <div
-              className={`${logoBoxCls} shrink-0`}
-              // Runtime colour, hashed per name
-              style={{ background: logoDataUrl ? "#FFFFFF" : logoBg }}
-            >
-              {logoContent}
+            )}
+            <div className="min-w-0 flex-1">
+              <h2
+                title={vendor.name}
+                className="m-0 line-clamp-3 break-words text-[18px] font-bold leading-6 tracking-[-0.4px] text-[#191C1E]"
+              >
+                {vendor.name}
+              </h2>
+              <span className="text-[13px] font-medium leading-[18px] text-[#4A4455]">Vendor</span>
             </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <h2 className="m-0 break-words text-[18px] font-bold leading-6 tracking-[-0.4px] text-[#191C1E]">
-              {vendor.name}
-            </h2>
-            <span className="text-[13px] font-medium leading-[18px] text-[#4A4455]">Vendor</span>
           </div>
           <div
             className={`flex shrink-0 flex-col gap-0.5 rounded-[10px] border px-4 py-2.5 ${
