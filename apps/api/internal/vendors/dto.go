@@ -63,7 +63,7 @@ type ItemByVendor struct {
 	ProductURL   *string `db:"product_url"    json:"productUrl,omitempty"`
 }
 
-// ItemListResult is one page plus the full count.
+// ItemListResult wraps rows with total.
 type ItemListResult struct {
 	Rows  []ItemByVendor
 	Total int64

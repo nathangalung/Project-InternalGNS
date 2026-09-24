@@ -147,7 +147,7 @@ func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int
 	return pgx.CollectRows(rows, pgx.RowToStructByName[SearchResult])
 }
 
-// ListItems pages a vendor's active items.
+// ListItems pages vendor items.
 func (r *Repo) ListItems(ctx context.Context, vendorID int64, limit, offset int) (ItemListResult, error) {
 	var out ItemListResult
 	if err := r.db.QueryRow(ctx, r.store.Get("vendors.list_items_count"), vendorID).Scan(&out.Total); err != nil {
