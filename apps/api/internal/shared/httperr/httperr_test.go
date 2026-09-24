@@ -279,7 +279,7 @@ func TestSQLStateValues(t *testing.T) {
 	}
 }
 
-// Bad input data is the caller's mistake.
+// Bad input is client error.
 // Postgres raises these when a value cannot be stored as sent: a NUL byte or
 // invalid UTF-8 (22021), text past its column (22001), a malformed or
 // out-of-range date (22007, 22008). They are not server faults, so they must
@@ -305,6 +305,29 @@ func TestFromDBErr_DataExceptionsAreClientErrors(t *testing.T) {
 			assert.Equal(t, http.StatusUnprocessableEntity, got.Status)
 			assert.Equal(t, tc.detail, got.Detail)
 			assert.NotContains(t, got.Detail, "raw pg text")
+		})
+	}
+}
+
+// Constraint refusals read Indonesian.
+// A slice that does not map its own 23505 or 23503 hands this text to the
+// toast verbatim, so it must be written for the user (AU-12).
+func TestFromDBErr_ConstraintDetailsIndonesian(t *testing.T) {
+	cases := []struct {
+		code   string
+		status int
+		detail string
+	}{
+		{db.SQLStateUniqueViolation, http.StatusConflict,
+			"Data dengan nilai yang sama sudah ada. Periksa isian yang harus unik."},
+		{db.SQLStateForeignKeyViolation, http.StatusNotFound,
+			"Data yang dirujuk tidak ditemukan. Muat ulang halaman lalu coba lagi."},
+	}
+	for _, tc := range cases {
+		t.Run(tc.code, func(t *testing.T) {
+			got := FromDBErr(&pgconn.PgError{Code: tc.code, Message: "raw pg text"})
+			assert.Equal(t, tc.status, got.Status)
+			assert.Equal(t, tc.detail, got.Detail)
 		})
 	}
 }

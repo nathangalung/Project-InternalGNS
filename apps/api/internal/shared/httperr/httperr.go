@@ -123,9 +123,9 @@ func FromDBErr(err error) Error {
 			// Blocked by the state of a related record.
 			return Conflict(pgErr.Message)
 		case db.SQLStateForeignKeyViolation:
-			return NotFound("referenced record does not exist")
+			return NotFound("Data yang dirujuk tidak ditemukan. Muat ulang halaman lalu coba lagi.")
 		case db.SQLStateUniqueViolation:
-			return Conflict("a record with these values already exists")
+			return Conflict("Data dengan nilai yang sama sudah ada. Periksa isian yang harus unik.")
 		// The constraint names the column, not the form input, so name the
 		// remedy instead of echoing an untranslatable identifier.
 		case db.SQLStateNotNullViolation:

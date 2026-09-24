@@ -28,7 +28,7 @@ const (
 	SQLStateInvalidTextRepresentation = "22P02"
 	SQLStateNumericOutOfRange         = "22003"
 
-	// Data exceptions: a value Postgres cannot store as sent.
+	// Unstorable input data exceptions.
 	SQLStateStringDataRightTruncation = "22001"
 	SQLStateInvalidDatetimeFormat     = "22007"
 	SQLStateDatetimeFieldOverflow     = "22008"
