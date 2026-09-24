@@ -8,7 +8,7 @@ import "strings"
 // unescaped one in user input would consume the character after it.
 var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
 
-// likeContains builds a literal contains pattern.
+// likeContains builds a literal pattern.
 func likeContains(s string) string {
 	return "%" + likeEscaper.Replace(s) + "%"
 }

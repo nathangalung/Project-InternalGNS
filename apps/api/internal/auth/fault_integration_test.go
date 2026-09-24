@@ -19,7 +19,7 @@ import (
 
 const faultPassword = "Fault-pw1!"
 
-// Failing stand-ins, typed like the real statements they replace.
+// Typed failing query stand-ins.
 var failingSQL = map[string]string{
 	"users.get_by_id":            `SELECT 1 / 0 WHERE $1::bigint IS NOT NULL`,
 	"users.lock_status":          `SELECT (1 / 0) AS failed_login_attempts, NULL::timestamptz AS locked_until WHERE $1::text IS NOT NULL`,
@@ -33,10 +33,10 @@ var failingSQL = map[string]string{
 	"auth.refresh_revoke_token":  `SELECT 1 / 0 WHERE $1::bytea IS NOT NULL`,
 }
 
-// noLockRow reads as an account deactivated after the first read.
+// noLockRow mimics a late deactivation.
 const noLockRow = `SELECT 0 AS failed_login_attempts, NULL::timestamptz AS locked_until WHERE $1::text IS NULL`
 
-// storeWith copies the real store with overrides.
+// storeWith overrides real queries.
 func storeWith(t *testing.T, overrides map[string]string) queries.Store {
 	t.Helper()
 	store := queries.Store{}
@@ -49,7 +49,7 @@ func storeWith(t *testing.T, overrides map[string]string) queries.Store {
 	return store
 }
 
-// failing overrides the named queries with failingSQL.
+// failing swaps in failingSQL.
 func failing(t *testing.T, keys ...string) queries.Store {
 	t.Helper()
 	o := map[string]string{}
@@ -61,13 +61,13 @@ func failing(t *testing.T, keys ...string) queries.Store {
 	return storeWith(t, o)
 }
 
-// svcOn builds a refresh-enabled service on tx.
+// svcOn builds a refreshing service.
 func svcOn(tx pgx.Tx, store queries.Store) *auth.Service {
 	return auth.NewService(users.NewRepo(tx, store), "fault-secret", time.Hour).
 		WithRefresh(auth.NewRefreshRepo(tx, store), 24*time.Hour)
 }
 
-// faultAccount creates an account inside a test transaction.
+// faultAccount creates a transactional account.
 func faultAccount(t *testing.T) (context.Context, pgx.Tx, users.User) {
 	t.Helper()
 	ctx, tx := testutil.BeginTx(t)
@@ -78,7 +78,7 @@ func faultAccount(t *testing.T) (context.Context, pgx.Tx, users.User) {
 	return ctx, tx, u
 }
 
-// requireDBFault asserts err carries the injected division by zero.
+// requireDBFault expects division by zero.
 func requireDBFault(t *testing.T, err error) {
 	t.Helper()
 	var pgErr *pgconn.PgError
@@ -116,7 +116,8 @@ func TestService_Login_FailedBookkeepingKeepsVerdict(t *testing.T) {
 	assert.ErrorIs(t, err, auth.ErrInvalidCredentials)
 }
 
-// A storage failure is an error, not a verdict, and leaves no session.
+// Storage failures are errors.
+// Never a credential verdict, and no session is left behind.
 func TestService_Login_StorageFailuresSurface(t *testing.T) {
 	tests := []struct {
 		name string
@@ -146,7 +147,7 @@ func TestService_Login_StorageFailuresSurface(t *testing.T) {
 	}
 }
 
-// A failed refresh leaves the token redeemable.
+// Failed refresh keeps the token.
 // Everything the refresh did rolls back, so the client can retry the same
 // token once the database recovers instead of being signed out.
 func TestService_Refresh_StorageFailureKeepsTheToken(t *testing.T) {
@@ -167,7 +168,7 @@ func TestService_Refresh_StorageFailureKeepsTheToken(t *testing.T) {
 	}
 }
 
-// A refusal that cannot be explained surfaces.
+// Unexplained refusal surfaces.
 func TestService_Refresh_RefusalLookupFailureSurfaces(t *testing.T) {
 	ctx, tx, u := faultAccount(t)
 	real := svcOn(tx, testutil.Store(t))
@@ -181,7 +182,7 @@ func TestService_Refresh_RefusalLookupFailureSurfaces(t *testing.T) {
 	assert.NotErrorIs(t, err, auth.ErrReusedRefresh)
 }
 
-// A replay whose blast fails ends nothing.
+// Failed replay blast ends nothing.
 // The revocation of every session and the replay verdict are one unit, so
 // a failed blast is an error and the live session is left as it was.
 func TestService_Refresh_ReplayBlastFailureSurfaces(t *testing.T) {
@@ -202,7 +203,7 @@ func TestService_Refresh_ReplayBlastFailureSurfaces(t *testing.T) {
 	assert.NoError(t, err, "the failed blast must not have revoked the live session")
 }
 
-// An inactive owner's token is burned.
+// Inactive owner burns the token.
 // An account switched off without the admin endpoint (a direct SQL fix)
 // still has live tokens; presenting one is refused and consumes it, so
 // reactivating the account does not revive the session.
@@ -233,7 +234,7 @@ func TestService_RevokeRefresh_StorageFailureSurfaces(t *testing.T) {
 	requireDBFault(t, err)
 }
 
-// An unstorable email is the caller's fault.
+// Unstorable email is a 422.
 // A NUL byte cannot reach the users table, so the lookup's SQLSTATE 22021
 // must answer as a 422 on the unauthenticated login, not a 500.
 func TestHandler_Login_NulEmailIsNotAServerError(t *testing.T) {

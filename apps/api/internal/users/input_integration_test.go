@@ -14,13 +14,13 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
-// emailOfLen builds a unique address exactly n characters long.
+// emailOfLen builds an n-character address.
 func emailOfLen(n int) string {
 	domain := fmt.Sprintf("@%d.test", randSuffix())
 	return strings.Repeat("e", n-len(domain)) + domain
 }
 
-// Text the columns cannot store is a 422, never a 500.
+// Unstorable text is a 422.
 // Both columns are VARCHAR(255), which counts characters, not bytes, so a
 // multibyte name at the limit still fits.
 func TestHandler_Create_TextColumnBounds(t *testing.T) {

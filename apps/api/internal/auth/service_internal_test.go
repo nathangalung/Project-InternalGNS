@@ -47,7 +47,7 @@ func TestLoginBackoff(t *testing.T) {
 	}
 }
 
-// A caller that gives up stops paying.
+// Abandoned callers stop paying.
 // The wait ends at the request deadline, so a dropped connection does not
 // hold a handler goroutine for the whole backoff.
 func TestThrottle_EndsAtTheCallerDeadline(t *testing.T) {

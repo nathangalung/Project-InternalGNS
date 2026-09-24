@@ -51,7 +51,7 @@ func TestService_ChangeOwnPassword_Refusals(t *testing.T) {
 	}
 }
 
-// A storage failure is an error.
+// Storage failures are errors.
 // A failure inside the claim-and-write transaction also leaves the old
 // password working.
 func TestService_ChangeOwnPassword_StorageFailuresSurface(t *testing.T) {
@@ -104,7 +104,7 @@ func TestService_ChangeOwnPassword_LosesToAConcurrentDeactivation(t *testing.T) 
 	assert.Equal(t, u.PasswordHash, hash, "the refused change must not write")
 }
 
-// authServerOn mounts the auth routes on store.
+// authServerOn mounts routes on store.
 // A zero userID leaves the request anonymous.
 func authServerOn(t *testing.T, store queries.Store, userID func() int64) *httptest.Server {
 	t.Helper()
@@ -179,7 +179,7 @@ func TestHandler_ChangeOwnPassword_Refusals(t *testing.T) {
 	}
 }
 
-// Logout and refresh render storage failures as 500.
+// Session endpoints answer 500.
 // The detail stays generic: the SQL error text never reaches the client.
 func TestHandler_SessionEndpoints_StorageFailure(t *testing.T) {
 	tests := []struct {

@@ -344,7 +344,7 @@ func (s *scenarioState) setSuperadmin(role string, active bool) error {
 	return s.sendRequest(http.MethodPut, "/users/"+strconv.FormatInt(s.userID, 10), body)
 }
 
-// createNamed creates an operational account named name.
+// createNamed creates a named account.
 func (s *scenarioState) createNamed(name string) error {
 	body := users.CreateUserRequest{
 		Email: s.uniqueEmail(), Name: name, Password: "Secret123!", Role: users.RoleOperational,
@@ -358,7 +358,7 @@ func (s *scenarioState) createNamed(name string) error {
 	return s.captureID()
 }
 
-// newTag starts a name prefix no other row shares.
+// newTag starts a unique prefix.
 func (s *scenarioState) newTag() string {
 	s.tag = fmt.Sprintf("ATDD %d", time.Now().UnixNano())
 	return s.tag

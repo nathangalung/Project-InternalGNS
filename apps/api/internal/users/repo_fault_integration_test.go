@@ -29,7 +29,7 @@ const (
 	execFault    = "22012"
 )
 
-// Failing stand-ins, typed like the statements they replace.
+// Typed failing query stand-ins.
 var faultSQL = map[string]map[string]string{
 	prepareFault: {
 		"users.get_by_id_admin": `SELECT no_such_column FROM users WHERE id = $1`,
@@ -55,7 +55,7 @@ var faultSQL = map[string]map[string]string{
 	},
 }
 
-// storeWith copies the real store with overrides.
+// storeWith overrides real queries.
 func storeWith(t *testing.T, overrides map[string]string) queries.Store {
 	t.Helper()
 	store := queries.Store{}
@@ -68,7 +68,7 @@ func storeWith(t *testing.T, overrides map[string]string) queries.Store {
 	return store
 }
 
-// faulty overrides key with the stand-in for code.
+// faulty swaps in one stand-in.
 func faulty(t *testing.T, code, key string) queries.Store {
 	t.Helper()
 	sql, ok := faultSQL[code][key]
@@ -76,7 +76,7 @@ func faulty(t *testing.T, code, key string) queries.Store {
 	return storeWith(t, map[string]string{key: sql})
 }
 
-// faultTarget creates an operational account in a test transaction.
+// faultTarget creates a transactional account.
 func faultTarget(t *testing.T) (context.Context, pgx.Tx, users.User) {
 	t.Helper()
 	ctx, tx := testutil.BeginTx(t)
@@ -181,7 +181,8 @@ func TestRepo_StorageFailuresSurface(t *testing.T) {
 	}
 }
 
-// A failed list read still returns an empty slice.
+// Failed list reads surface.
+// A failed page read still returns an empty, non-nil slice.
 func TestRepo_List_StorageFailures(t *testing.T) {
 	for _, key := range []string{"users.list_count_base", "users.list_base"} {
 		t.Run(key, func(t *testing.T) {
@@ -209,13 +210,13 @@ func TestRepo_List_PageReadFailureSurfaces(t *testing.T) {
 	assert.ErrorIs(t, err, testutil.ErrFake)
 }
 
-// beginFails is an executor whose Begin fails.
+// beginFails cannot open transactions.
 type beginFails struct {
 	testutil.FakeExec
 	testutil.FakeBeginner
 }
 
-// A guard that cannot open its transaction does not write.
+// Unopened guard writes nothing.
 func TestRepo_Update_BeginFailureSurfaces(t *testing.T) {
 	repo := users.NewRepo(beginFails{}, testutil.Store(t))
 	_, err := repo.Update(context.Background(), 1, users.UpdateUserRequest{
@@ -225,7 +226,7 @@ func TestRepo_Update_BeginFailureSurfaces(t *testing.T) {
 	assert.ErrorContains(t, err, "begin user tx")
 }
 
-// A deactivated account has no lock row.
+// Deactivated accounts lack lock rows.
 // Login treats that as the neutral verdict, so the repo must say not found.
 func TestRepo_LockStatus_InactiveAccountIsNotFound(t *testing.T) {
 	ctx, tx, u := faultTarget(t)
@@ -241,7 +242,7 @@ func TestRepo_LockStatus_InactiveAccountIsNotFound(t *testing.T) {
 	assert.ErrorIs(t, err, users.ErrNotFound)
 }
 
-// usersServerOn mounts the users routes on tx and store.
+// usersServerOn mounts routes on store.
 func usersServerOn(t *testing.T, tx pgx.Tx, store queries.Store) *httptest.Server {
 	t.Helper()
 	r := chi.NewRouter()
@@ -256,7 +257,7 @@ func usersServerOn(t *testing.T, tx pgx.Tx, store queries.Store) *httptest.Serve
 	return srv
 }
 
-// Races the index and the guard catch.
+// Index and guard catch races.
 // The email pre-check cannot see a concurrent insert, and the row can go
 // between the precheck and the write; both keep their typed answers.
 func TestHandler_Update_RacesKeepTheirAnswers(t *testing.T) {
@@ -299,7 +300,7 @@ func TestHandler_Update_RacesKeepTheirAnswers(t *testing.T) {
 	}
 }
 
-// Handler storage failures are opaque 500s.
+// Storage failures are opaque 500s.
 func TestHandler_StorageFailuresAre500(t *testing.T) {
 	tests := []struct {
 		name   string

@@ -14,7 +14,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
-// A search matches its text literally: LIKE metacharacters in q are data.
+// Search matches text literally.
+// LIKE metacharacters in q are data, not wildcards.
 func TestHandler_List_SearchIsLiteral(t *testing.T) {
 	testutil.RequireDB(t)
 	c := testutil.NewCleaner(t)
@@ -60,7 +61,7 @@ func TestHandler_List_SearchIsLiteral(t *testing.T) {
 	}
 }
 
-// A NUL byte in the search is a 4xx problem, never a 500.
+// NUL search is a 422.
 func TestHandler_List_NulSearchIsRefused(t *testing.T) {
 	testutil.RequireDB(t)
 	srv := newUsersServer(t)
@@ -69,7 +70,7 @@ func TestHandler_List_NulSearchIsRefused(t *testing.T) {
 	assertUnprocessable(t, res, "")
 }
 
-// The status filter splits active from inactive.
+// Status filter splits accounts.
 // An unparseable value is ignored, matching the other list screens.
 func TestHandler_List_FiltersByActiveState(t *testing.T) {
 	testutil.RequireDB(t)

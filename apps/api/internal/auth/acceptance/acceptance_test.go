@@ -392,7 +392,7 @@ func (s *scenarioState) logOut() error {
 		auth.LogoutRequest{RefreshToken: s.refresh})
 }
 
-// expireRefresh moves the account's tokens past their expiry.
+// expireRefresh backdates token expiry.
 func (s *scenarioState) expireRefresh() error {
 	_, err := testutil.Pool(s.t).Exec(context.Background(),
 		`UPDATE refresh_tokens SET expires_at = now() - interval '1 minute' WHERE user_id = $1`, s.account.ID)
@@ -403,7 +403,7 @@ func (s *scenarioState) refreshWith(token string) error {
 	return s.send(http.MethodPost, "/api/v1/auth/refresh", "", "", auth.RefreshRequest{RefreshToken: token})
 }
 
-// callsForged re-signs the access token under another key.
+// callsForged re-signs with another key.
 func (s *scenarioState) callsForged(path string) error {
 	var claims auth.Claims
 	if _, _, err := jwt.NewParser().ParseUnverified(s.access, &claims); err != nil {
@@ -416,7 +416,7 @@ func (s *scenarioState) callsForged(path string) error {
 	return s.send(http.MethodGet, path, forged, "", nil)
 }
 
-// postRaw sends a body exactly as written.
+// postRaw sends a verbatim body.
 func (s *scenarioState) postRaw(path string, doc *godog.DocString) error {
 	req, err := http.NewRequest(http.MethodPost, s.srv.URL+path, strings.NewReader(doc.Content))
 	if err != nil {
@@ -434,7 +434,7 @@ func (s *scenarioState) postRaw(path string, doc *godog.DocString) error {
 	return err
 }
 
-// loggedInAs replaces the account with a signed-in one of role.
+// loggedInAs signs in a role.
 func (s *scenarioState) loggedInAs(role string) error {
 	u, err := s.createUser(users.Role(role), rightPassword)
 	if err != nil {
