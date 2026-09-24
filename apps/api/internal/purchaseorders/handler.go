@@ -3,6 +3,7 @@ package purchaseorders
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -165,13 +166,10 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
-	if strings.TrimSpace(req.FileName) == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "required"}))
-		return
-	}
+	req.FileName = strings.TrimSpace(req.FileName)
 	req.ObjectKey = strings.TrimSpace(req.ObjectKey)
-	if req.ObjectKey == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"objectKey": "required"}))
+	if fields := validateFile(req); len(fields) > 0 {
+		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
 	// Owner first, so a missing PO reads as 404.
@@ -459,4 +457,23 @@ func renderLocked(w http.ResponseWriter, detail string) {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(http.StatusConflict)
 	_ = json.NewEncoder(w).Encode(lockedProblem{Error: httperr.Conflict(detail), Code: LockedCode})
+}
+
+// validateFile checks the attach payload.
+// The key is bound to its PO later, once the PO is known to exist.
+func validateFile(req UpdateFileRequest) map[string]string {
+	fields := map[string]string{}
+	switch {
+	case req.FileName == "":
+		fields["fileName"] = "Nama berkas wajib diisi."
+	case storage.ValidateAssetFileName(storage.BucketPODocs, req.FileName) != nil:
+		fields["fileName"] = "Jenis berkas tidak didukung. Gunakan PDF, PNG, JPG, WEBP, XLS, atau XLSX."
+	}
+	if limit := storage.MaxBytes(storage.BucketPODocs); req.FileSize < 1 || req.FileSize > limit {
+		fields["fileSize"] = fmt.Sprintf("Ukuran berkas harus antara 1 byte dan %d MB.", limit>>20)
+	}
+	if req.ObjectKey == "" {
+		fields["objectKey"] = "Berkas PO wajib diunggah."
+	}
+	return fields
 }

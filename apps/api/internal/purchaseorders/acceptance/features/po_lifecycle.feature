@@ -49,26 +49,26 @@ Feature: Purchase order lifecycle
     And the PO status is "UPLOADED"
     And the PO file name is "po.pdf"
 
-  Scenario: Reject file upload without filename
+  Scenario Outline: PATCH file rejects a bad name, size or key (PO-09)
     Given an accepted quotation
-    When the user uploads a PO file with empty filename
+    When the user attaches "<fileName>" of <size> bytes under the key "<key>"
     Then the response status is 422
-
-  Scenario: Reject a file key that escapes the PO folder
-    Given an accepted quotation
-    When the user attaches the object key "../../etc/x"
-    Then the response status is 422
-    And the error rejects the object key
+    And the field "<field>" says "<message>"
     When the user reads the PO by quotation
     Then the PO has no attached file
 
-  Scenario: Reject a file uploaded for another PO
-    Given an accepted quotation
-    When the user attaches the file uploaded for another PO
-    Then the response status is 422
-    And the error rejects the object key
-    When the user reads the PO by quotation
-    Then the PO has no attached file
+    Examples:
+      | fileName  | size     | key                 | field     | message                     |
+      |           | 1024     | po/{po}/1-po.pdf    | fileName  | Nama berkas wajib diisi     |
+      | virus.exe | 1024     | po/{po}/1-po.pdf    | fileName  | Jenis berkas tidak didukung |
+      | po        | 1024     | po/{po}/1-po.pdf    | fileName  | Jenis berkas tidak didukung |
+      | po.pdf    | -1       | po/{po}/1-po.pdf    | fileSize  | Ukuran berkas               |
+      | po.pdf    | 0        | po/{po}/1-po.pdf    | fileSize  | Ukuran berkas               |
+      | po.pdf    | 20971521 | po/{po}/1-po.pdf    | fileSize  | Ukuran berkas               |
+      | po.pdf    | 1024     |                     | objectKey | Berkas PO wajib diunggah    |
+      | po.pdf    | 1024     | po/{po}/1-virus.exe | objectKey | Berkas tidak dikenali       |
+      | po.pdf    | 1024     | ../../etc/x         | objectKey | Berkas tidak dikenali       |
+      | po.pdf    | 1024     | po/{other}/1-po.pdf | objectKey | Berkas tidak dikenali       |
 
   Scenario: Delivered PO auto-creates draft invoice
     Given an accepted quotation

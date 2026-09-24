@@ -333,38 +333,54 @@ func (s *scenarioState) lastTransitionSucceeds() error {
 
 // Key shaped like storage.BuildObjectKey output.
 func (s *scenarioState) uploadPOFile(name string) error {
-	return s.attachObjectKey(fmt.Sprintf("po/%d/1-%s", s.poID, name))
+	return s.attachFile("po.pdf", 1024, fmt.Sprintf("po/%d/1-%s", s.poID, name))
 }
 
-func (s *scenarioState) attachObjectKey(key string) error {
-	body := purchaseorders.UpdateFileRequest{FileName: "po.pdf", FileSize: 1024, ObjectKey: key}
+func (s *scenarioState) attachFile(fileName string, size int64, key string) error {
+	body := purchaseorders.UpdateFileRequest{FileName: fileName, FileSize: size, ObjectKey: key}
 	return s.sendRequest(http.MethodPatch, "/purchase-orders/"+strconv.FormatInt(s.poID, 10)+"/file", body)
 }
 
-// Upload made for a second PO.
-func (s *scenarioState) attachOtherPOKey() error {
-	poID, quotationID := s.poID, s.quotationID
-	if err := s.acceptedQuotation(); err != nil {
-		return err
+// {po} is this PO, {other} a second one.
+func (s *scenarioState) attachFileUnderKey(fileName string, size int64, key string) error {
+	key = strings.ReplaceAll(key, "{po}", strconv.FormatInt(s.poID, 10))
+	if strings.Contains(key, "{other}") {
+		otherID, err := s.otherPOID()
+		if err != nil {
+			return err
+		}
+		key = strings.ReplaceAll(key, "{other}", strconv.FormatInt(otherID, 10))
 	}
-	otherID := s.poID
-	s.poID, s.quotationID = poID, quotationID
-	if otherID == poID {
-		return fmt.Errorf("second quotation reused PO %d", poID)
-	}
-	return s.attachObjectKey(fmt.Sprintf("po/%d/1-po.pdf", otherID))
+	return s.attachFile(fileName, size, key)
 }
 
-func (s *scenarioState) objectKeyRejected() error {
+// otherPOID accepts a second quotation.
+// acceptedQuotationWith registers it with the cleaner, like the first.
+func (s *scenarioState) otherPOID() (int64, error) {
+	poID, quotationID := s.poID, s.quotationID
+	defer func() { s.poID, s.quotationID = poID, quotationID }()
+	if err := s.acceptedQuotation(); err != nil {
+		return 0, err
+	}
+	if s.poID == poID {
+		return 0, fmt.Errorf("second quotation reused PO %d", poID)
+	}
+	return s.poID, nil
+}
+
+func (s *scenarioState) fieldSays(field, want string) error {
 	var problem struct {
+		Detail string            `json:"detail"`
 		Fields map[string]string `json:"fields"`
 	}
 	if err := json.Unmarshal(s.body, &problem); err != nil {
-		return err
+		return fmt.Errorf("decode problem: %w body=%s", err, s.body)
 	}
-	const want = "Berkas tidak dikenali. Unggah ulang berkasnya lalu simpan kembali."
-	if got := problem.Fields["objectKey"]; got != want {
-		return fmt.Errorf("want objectKey %q got %q body=%s", want, got, s.body)
+	if got := problem.Fields[field]; !strings.Contains(got, want) {
+		return fmt.Errorf("want %s to mention %q got %q body=%s", field, want, got, s.body)
+	}
+	if !strings.Contains(problem.Detail, want) {
+		return fmt.Errorf("detail %q does not carry the field message", problem.Detail)
 	}
 	return nil
 }
@@ -403,11 +419,6 @@ func (s *scenarioState) poHasNoFile() error {
 		return fmt.Errorf("want no file got %s", s.body)
 	}
 	return nil
-}
-
-func (s *scenarioState) uploadPOFileEmptyName() error {
-	body := purchaseorders.UpdateFileRequest{FileName: "", FileSize: 1, ObjectKey: "x"}
-	return s.sendRequest(http.MethodPatch, "/purchase-orders/"+strconv.FormatInt(s.poID, 10)+"/file", body)
 }
 
 func (s *scenarioState) editPOItems(discountPct, sellingPrice string) error {
@@ -595,10 +606,8 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		sc.Step(`^every PO transition succeeds$`, state.lastTransitionSucceeds)
 		sc.Step(`^the user tries to transition the PO to "([^"]+)"$`, state.tryPOTransition)
 		sc.Step(`^the user uploads a PO file named "([^"]+)"$`, state.uploadPOFile)
-		sc.Step(`^the user uploads a PO file with empty filename$`, state.uploadPOFileEmptyName)
-		sc.Step(`^the user attaches the object key "([^"]+)"$`, state.attachObjectKey)
-		sc.Step(`^the user attaches the file uploaded for another PO$`, state.attachOtherPOKey)
-		sc.Step(`^the error rejects the object key$`, state.objectKeyRejected)
+		sc.Step(`^the user attaches "([^"]*)" of (-?\d+) bytes under the key "([^"]*)"$`, state.attachFileUnderKey)
+		sc.Step(`^the field "([^"]+)" says "([^"]+)"$`, state.fieldSays)
 		sc.Step(`^the PO is refused as locked with "([^"]+)"$`, state.poRefusedAsLocked)
 		sc.Step(`^the PO has no attached file$`, state.poHasNoFile)
 		sc.Step(`^the invoice status is "([^"]+)"$`, state.invoiceStatusEquals)

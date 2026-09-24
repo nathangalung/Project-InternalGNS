@@ -156,6 +156,47 @@ func TestHandler_UpdateFile_NotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
+// Bad input is refused before any query.
+func TestHandler_UpdateFile_RejectsBadPayload(t *testing.T) {
+	const limit = 20 << 20
+	tests := []struct {
+		name  string
+		req   purchaseorders.UpdateFileRequest
+		field string
+	}{
+		{"blank name", purchaseorders.UpdateFileRequest{FileName: "  ", FileSize: 1, ObjectKey: "k.pdf"}, "fileName"},
+		{"executable name", purchaseorders.UpdateFileRequest{FileName: "po.exe", FileSize: 1, ObjectKey: "k.pdf"}, "fileName"},
+		{"no extension", purchaseorders.UpdateFileRequest{FileName: "po", FileSize: 1, ObjectKey: "k.pdf"}, "fileName"},
+		{"negative size", purchaseorders.UpdateFileRequest{FileName: "po.pdf", FileSize: -1, ObjectKey: "k.pdf"}, "fileSize"},
+		{"empty file", purchaseorders.UpdateFileRequest{FileName: "po.pdf", FileSize: 0, ObjectKey: "k.pdf"}, "fileSize"},
+		{"over the cap", purchaseorders.UpdateFileRequest{FileName: "po.pdf", FileSize: limit + 1, ObjectKey: "k.pdf"}, "fileSize"},
+		{"blank key", purchaseorders.UpdateFileRequest{FileName: "po.pdf", FileSize: 1, ObjectKey: " "}, "objectKey"},
+	}
+	srv := faultySrv(t)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			res := doJSON(t, srv, http.MethodPatch, "/purchase-orders/1/file", tc.req)
+			defer res.Body.Close()
+			require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+			var problem struct {
+				Fields map[string]string `json:"fields"`
+			}
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&problem))
+			assert.Len(t, problem.Fields, 1)
+			assert.NotEmpty(t, problem.Fields[tc.field])
+		})
+	}
+}
+
+// Exactly the cap passes validation.
+func TestHandler_UpdateFile_AcceptsTheCap(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPatch, "/purchase-orders/99999999/file",
+		purchaseorders.UpdateFileRequest{FileName: "PO.PDF", FileSize: 20 << 20, ObjectKey: "po/99999999/1-po.pdf"})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+}
+
 func TestHandler_UpdateNotes_BadID(t *testing.T) {
 	srv := newSrv(t)
 	res := doJSON(t, srv, http.MethodPatch, "/purchase-orders/abc/notes",
