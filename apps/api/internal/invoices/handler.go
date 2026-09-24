@@ -3,6 +3,7 @@ package invoices
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,10 +22,12 @@ import (
 
 type Handler struct {
 	repo *Repo
+	// proofs is nil when storage is not configured.
+	proofs ProofStore
 }
 
-func NewHandler(repo *Repo) *Handler {
-	return &Handler{repo: repo}
+func NewHandler(repo *Repo, proofs ProofStore) *Handler {
+	return &Handler{repo: repo, proofs: proofs}
 }
 
 // parseListFilter reads the shared invoice list filters (no pagination).
@@ -193,6 +196,9 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"paymentProofKey": msg}))
 		return
 	}
+	if !h.proofUploaded(w, r, req) {
+		return
+	}
 	actor := deps.CurrentUserID(r.Context())
 	if err := h.repo.ChangeStatus(r.Context(), id, req, actor); err != nil {
 		if errors.Is(err, ErrNotFound) {
@@ -281,7 +287,7 @@ func proofKeyProblem(id int64, req ChangeStatusRequest) string {
 		return "Bukti pembayaran hanya dapat dilampirkan saat invoice ditandai Dibayar."
 	}
 	key := strings.TrimSpace(*req.PaymentProofKey)
-	if err := storage.ValidateOwnedKey(storage.BucketInvoiceAttachments, proofKeyPrefix, id, key); err != nil {
+	if err := storage.ValidateFolderKey(storage.BucketInvoiceAttachments, proofFolder(id), key); err != nil {
 		return "Berkas bukti pembayaran tidak dikenali. Unggah ulang berkasnya lalu simpan kembali."
 	}
 	return ""
@@ -293,4 +299,30 @@ func isValidStatus(s Status) bool {
 		return true
 	}
 	return false
+}
+
+// proofUploaded confirms the proof object exists.
+// A valid key only says where an upload would land; a payment must never
+// point at a file that never arrived.
+func (h *Handler) proofUploaded(w http.ResponseWriter, r *http.Request, req ChangeStatusRequest) bool {
+	if req.PaymentProofKey == nil || strings.TrimSpace(*req.PaymentProofKey) == "" {
+		return true
+	}
+	if h.proofs == nil {
+		httperr.Render(w, httperr.ServiceUnavailable("Penyimpanan berkas belum dikonfigurasi."))
+		return false
+	}
+	key := strings.TrimSpace(*req.PaymentProofKey)
+	ok, err := h.proofs.ObjectExists(r.Context(), storage.BucketInvoiceAttachments, key)
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, fmt.Errorf("invoice payment proof stat: %w", err))
+		return false
+	}
+	if !ok {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{
+			"paymentProofKey": "Berkas bukti pembayaran belum terunggah. Unggah ulang berkasnya lalu simpan kembali.",
+		}))
+		return false
+	}
+	return true
 }

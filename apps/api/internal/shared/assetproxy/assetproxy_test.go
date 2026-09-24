@@ -327,6 +327,33 @@ func TestAssetRoutes_ServerErrorLogsRequestContext(t *testing.T) {
 // The attach endpoint takes the key from the request body, so it must refuse
 // any key that does not belong to the record being attached to. Client 42
 // carries logo_object_key='../../etc/x' because it did not.
+// A sub-folder asset keeps to its folder.
+// Upload writes into it and UpdateKey accepts nothing outside it.
+func TestKeySub_BindsTheFolder(t *testing.T) {
+	d := base("")
+	d.KeySub = "sub"
+	rec := serve(t, http.MethodGet, "/{id}/upload-url", "/7/upload-url?fileName=photo.png", assetproxy.Upload(d), "")
+	require.Equal(t, http.StatusOK, rec.Code)
+	key, _ := decode(t, rec)["objectKey"].(string)
+	assert.True(t, strings.HasPrefix(key, "items/7/sub/"), key)
+
+	cases := []struct {
+		name   string
+		key    string
+		status int
+	}{
+		{"the uploaded key", key, http.StatusNoContent},
+		{"the record's root folder", "items/7/1790-a.png", http.StatusUnprocessableEntity},
+		{"another record's sub-folder", "items/8/sub/1790-a.png", http.StatusUnprocessableEntity},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			rec := serve(t, http.MethodPatch, "/{id}", "/7", assetproxy.UpdateKey(d), `{"objectKey":"`+c.key+`"}`)
+			assert.Equal(t, c.status, rec.Code)
+		})
+	}
+}
+
 func TestUpdateKey_RejectsForeignKeys(t *testing.T) {
 	cases := []struct {
 		name string
@@ -339,6 +366,7 @@ func TestUpdateKey_RejectsForeignKeys(t *testing.T) {
 		{"absolute", "/items/7/1790-a.png"},
 		{"disallowed extension", "items/7/1790-a.exe"},
 		{"bare prefix", "items/7/"},
+		{"a sub-folder asset", "items/7/sub/1790-a.png"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

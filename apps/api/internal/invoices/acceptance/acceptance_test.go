@@ -347,8 +347,33 @@ func (s *scenarioState) cancelWithReason(reason string) error {
 	return s.sendRequest(http.MethodPatch, "/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/status", body)
 }
 
-func (s *scenarioState) markPaidWithProof() error {
-	proof := "invoices/" + strconv.FormatInt(s.invoiceID, 10) + "/1700000000-bukti-transfer.pdf"
+// memProofs is an in-memory proof store.
+type memProofs map[string]bool
+
+func (m memProofs) ObjectExists(_ context.Context, _, key string) (bool, error) {
+	return m[key], nil
+}
+
+// markPaidWithProof pays with a proof key.
+// FullServer has no storage, so the PATCH goes to a router whose proof store
+// holds the key only when the upload happened.
+func (s *scenarioState) markPaidWithProof(uploaded bool) error {
+	proof := "invoices/" + strconv.FormatInt(s.invoiceID, 10) + "/payment/1700000000-bukti-transfer.pdf"
+	store := memProofs{proof: uploaded}
+	d := deps.Deps{Pool: testutil.Pool(s.t), Queries: testutil.Store(s.t)}
+	r := chi.NewRouter()
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			next.ServeHTTP(w, req.WithContext(deps.WithUserID(req.Context(), s.userID)))
+		})
+	})
+	r.Mount("/invoices", invoices.RoutesWithProofs(d, store))
+	srv := httptest.NewServer(r)
+	defer srv.Close()
+
+	full := s.srv
+	s.srv = srv
+	defer func() { s.srv = full }()
 	body := invoices.ChangeStatusRequest{Status: invoices.StatusPaid, PaymentProofKey: &proof}
 	return s.sendRequest(http.MethodPatch, "/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/status", body)
 }
@@ -730,7 +755,8 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner, roles *roleUsers) fun
 		sc.Step(`^the invoice detail offers "([^"]*)"$`, state.invoiceDetailOffers)
 		sc.Step(`^the user cancels the invoice with reason "([^"]*)"$`, state.cancelWithReason)
 		sc.Step(`^the user cancels the invoice without a reason$`, func() error { return state.cancelWithReason("") })
-		sc.Step(`^the user marks the invoice paid with a payment proof$`, state.markPaidWithProof)
+		sc.Step(`^the user marks the invoice paid with a payment proof$`, func() error { return state.markPaidWithProof(true) })
+		sc.Step(`^the user marks the invoice paid with a payment proof that never arrived$`, func() error { return state.markPaidWithProof(false) })
 		sc.Step(`^the problem detail is "([^"]+)"$`, state.problemDetailIs)
 		sc.Step(`^the invoice records its payment date (with|without) a proof$`, state.invoicePaymentRecorded)
 		sc.Step(`^the invoice history is "([^"]*)"$`, state.invoiceHistoryIs)

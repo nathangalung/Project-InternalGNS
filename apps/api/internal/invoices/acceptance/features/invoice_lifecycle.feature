@@ -161,6 +161,14 @@ Feature: Invoice lifecycle
     And the invoice records its payment date with a proof
     And the invoice history is "draft>sent,sent>paid"
 
+  Scenario: A payment proof that never arrived is refused
+    Given a delivered purchase order
+    When the user transitions the invoice through "sent"
+    And the user marks the invoice paid with a payment proof that never arrived
+    Then the response status is 422
+    And the problem detail is "Berkas bukti pembayaran belum terunggah. Unggah ulang berkasnya lalu simpan kembali."
+    And the invoice history is "draft>sent"
+
   Scenario: The payment proof is optional
     Given a delivered purchase order
     When the user transitions the invoice through "sent,paid"

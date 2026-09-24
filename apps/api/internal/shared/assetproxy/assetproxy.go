@@ -29,9 +29,12 @@ type Asset struct {
 
 // Descriptor configures one resource asset route set.
 type Descriptor struct {
-	Storage     *storage.Client
-	Bucket      string
-	KeyPrefix   string
+	Storage   *storage.Client
+	Bucket    string
+	KeyPrefix string
+	// KeySub names a sub-folder under KeyPrefix/<id>/, so two assets of
+	// one record never share a folder and one cannot be attached as the other.
+	KeySub      string
 	NotFoundMsg string
 	NoAssetMsg  string
 	UploadTTL   time.Duration
@@ -43,6 +46,11 @@ type Descriptor struct {
 	CurrentAsset func(ctx context.Context, id int64) (Asset, error)
 	// SetKey persists the object key against the owner row.
 	SetKey func(ctx context.Context, id int64, key string, actor int64) error
+}
+
+// folder is the record's asset folder.
+func (d Descriptor) folder(id int64) string {
+	return storage.OwnerFolder(d.KeyPrefix, id, d.KeySub)
 }
 
 // Upload presigns a PUT for a new asset.
@@ -69,7 +77,7 @@ func Upload(d Descriptor) http.HandlerFunc {
 			httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "unsupported file type"}))
 			return
 		}
-		objectKey := storage.BuildObjectKey(d.KeyPrefix, id, fileName)
+		objectKey := storage.BuildFolderKey(d.folder(id), fileName)
 		url, err := d.Storage.PresignPut(r.Context(), d.Bucket, objectKey, d.UploadTTL)
 		if err != nil {
 			renderPresignErr(r.Context(), w, "put", d.Bucket, objectKey, err)
@@ -146,7 +154,7 @@ func UpdateKey(d Descriptor) http.HandlerFunc {
 		// The key arrives from the client, so it has to prove it addresses an
 		// upload made for this record: otherwise a caller could attach any
 		// object in the bucket, or a traversal path outside it.
-		if err := storage.ValidateOwnedKey(d.Bucket, d.KeyPrefix, id, objectKey); err != nil {
+		if err := storage.ValidateFolderKey(d.Bucket, d.folder(id), objectKey); err != nil {
 			httperr.Render(w, httperr.Unprocessable(map[string]string{
 				"objectKey": "Berkas tidak dikenali. Unggah ulang berkasnya lalu simpan kembali.",
 			}))

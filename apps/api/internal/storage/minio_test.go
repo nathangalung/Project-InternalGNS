@@ -70,3 +70,24 @@ func TestAllBuckets_DNSCompliant(t *testing.T) {
 		seen[b] = true
 	}
 }
+
+func TestOwnerFolder(t *testing.T) {
+	cases := []struct {
+		prefix string
+		id     int64
+		sub    string
+		want   string
+	}{
+		{"po", 42, "", "po/42/"},
+		{"invoices", 7, "payment", "invoices/7/payment/"},
+	}
+	for _, c := range cases {
+		if got := OwnerFolder(c.prefix, c.id, c.sub); got != c.want {
+			t.Errorf("OwnerFolder(%q, %d, %q) = %q, want %q", c.prefix, c.id, c.sub, got, c.want)
+		}
+		key := BuildFolderKey(c.want, "a b.pdf")
+		if !strings.HasPrefix(key, c.want) || !strings.HasSuffix(key, "-a_b.pdf") || strings.Contains(strings.TrimPrefix(key, c.want), "/") {
+			t.Errorf("BuildFolderKey(%q) = %q, want a stamped name directly in the folder", c.want, key)
+		}
+	}
+}

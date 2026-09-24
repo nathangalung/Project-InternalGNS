@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -159,9 +160,19 @@ func (c *Client) RemoveObject(ctx context.Context, bucket, key string) error {
 // BuildObjectKey returns a deterministic key under a namespace prefix.
 // Example: BuildObjectKey("po", 42, "scan.pdf") -> "po/42/<unix>-scan.pdf".
 func BuildObjectKey(prefix string, id int64, fileName string) string {
-	name := sanitizeFileName(fileName)
-	stamp := time.Now().UTC().Unix()
-	return path.Join(prefix, fmt.Sprintf("%d", id), fmt.Sprintf("%d-%s", stamp, name))
+	return BuildFolderKey(OwnerFolder(prefix, id, ""), fileName)
+}
+
+// OwnerFolder is one record's object folder.
+// sub names a sub-folder, so two assets of one record never share a folder.
+// Example: OwnerFolder("invoices", 7, "payment") -> "invoices/7/payment/".
+func OwnerFolder(prefix string, id int64, sub string) string {
+	return path.Join(prefix, strconv.FormatInt(id, 10), sub) + "/"
+}
+
+// BuildFolderKey returns a stamped key in a folder.
+func BuildFolderKey(folder, fileName string) string {
+	return folder + fmt.Sprintf("%d-%s", time.Now().UTC().Unix(), sanitizeFileName(fileName))
 }
 
 func sanitizeFileName(s string) string {

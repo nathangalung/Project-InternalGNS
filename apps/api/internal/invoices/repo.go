@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -50,6 +49,20 @@ var sortable = listq.Whitelist{
 // tiebreak keeps paging stable when the sort key ties.
 var tiebreak = listq.Column{Expr: "inv.id", Dir: listq.Desc}
 
+// filterableEffective keeps the known values.
+// Cancelled is not an effective-status filter; unknown values are ignored
+// rather than matching nothing.
+func filterableEffective(raw []string) []string {
+	out := make([]string, 0, len(raw))
+	for _, s := range raw {
+		switch Status(s) {
+		case StatusDraft, StatusSent, StatusPaid, StatusOverdue:
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
 // List returns invoices with filter/sort and total count.
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
@@ -61,23 +74,9 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 		p := c.Arg(f.Statuses)
 		c.And("inv.status = ANY(" + p + ")")
 	}
-	if len(f.EffectiveStatuses) > 0 {
-		clauses := []string{}
-		for _, s := range f.EffectiveStatuses {
-			switch s {
-			case "draft":
-				clauses = append(clauses, "(inv.status = 'draft' AND (inv.due_date IS NULL OR inv.due_date >= CURRENT_DATE))")
-			case "sent":
-				clauses = append(clauses, "(inv.status = 'sent' AND (inv.due_date IS NULL OR inv.due_date >= CURRENT_DATE))")
-			case "paid":
-				clauses = append(clauses, "inv.status = 'paid'")
-			case "overdue":
-				clauses = append(clauses, "(inv.status = 'overdue' OR (inv.status IN ('draft','sent') AND inv.due_date IS NOT NULL AND inv.due_date < CURRENT_DATE))")
-			}
-		}
-		if len(clauses) > 0 {
-			c.And("(" + strings.Join(clauses, " OR ") + ")")
-		}
+	if effective := filterableEffective(f.EffectiveStatuses); len(effective) > 0 {
+		p := c.Arg(effective)
+		c.And("fn_invoice_effective_status(inv.status, inv.due_date) = ANY(" + p + ")")
 	}
 	if f.DateFrom != nil {
 		p := c.Arg(*f.DateFrom)

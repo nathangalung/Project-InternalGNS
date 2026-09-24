@@ -240,10 +240,9 @@ RETURNING row_version;
 SELECT status, row_version FROM invoices WHERE id = $1;
 
 -- name: invoices.is_overdue
--- Terlambat is derived from the due date, with the same predicate as
--- invoices.summary, so a stored draft or sent can already be overdue.
-SELECT status = 'overdue'
-       OR (status IN ('draft', 'sent') AND due_date IS NOT NULL AND due_date < CURRENT_DATE)
+-- Terlambat is derived by fn_invoice_effective_status, the rule every
+-- count and filter shares, so a stored draft or sent can already be overdue.
+SELECT fn_invoice_effective_status(status, due_date) = 'overdue'
 FROM invoices
 WHERE id = $1;
 
@@ -312,20 +311,13 @@ WHERE ii.invoice_id = ANY($1::bigint[])
 ORDER BY ii.invoice_id, COALESCE(ii.line_number, 0), ii.id;
 
 -- name: invoices.summary
+-- Draft, sent and overdue are effective statuses, so the tiles add up to
+-- the total and match the list filter and the dashboard.
 SELECT
   COUNT(*)::BIGINT AS total,
-  COUNT(*) FILTER (
-    WHERE status = 'draft'
-      AND (due_date IS NULL OR due_date >= CURRENT_DATE)
-  )::BIGINT AS draft,
-  COUNT(*) FILTER (
-    WHERE status = 'sent'
-      AND (due_date IS NULL OR due_date >= CURRENT_DATE)
-  )::BIGINT AS sent,
-  COUNT(*) FILTER (WHERE status = 'paid')::BIGINT AS paid,
-  COUNT(*) FILTER (
-    WHERE status = 'overdue'
-       OR (status IN ('draft', 'sent') AND due_date IS NOT NULL AND due_date < CURRENT_DATE)
-  )::BIGINT AS overdue
+  COUNT(*) FILTER (WHERE fn_invoice_effective_status(status, due_date) = 'draft')::BIGINT   AS draft,
+  COUNT(*) FILTER (WHERE fn_invoice_effective_status(status, due_date) = 'sent')::BIGINT    AS sent,
+  COUNT(*) FILTER (WHERE status = 'paid')::BIGINT                                           AS paid,
+  COUNT(*) FILTER (WHERE fn_invoice_effective_status(status, due_date) = 'overdue')::BIGINT AS overdue
 FROM invoices
 WHERE status <> 'cancelled';

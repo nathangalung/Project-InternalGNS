@@ -31,7 +31,12 @@ func TestHandler_ChangeStatus_RejectsBadInput(t *testing.T) {
 		},
 		{
 			name:   "proof of another invoice",
-			body:   invoices.ChangeStatusRequest{Status: invoices.StatusPaid, PaymentProofKey: str("invoices/2/1700000000-bukti.pdf")},
+			body:   invoices.ChangeStatusRequest{Status: invoices.StatusPaid, PaymentProofKey: str("invoices/2/payment/1700000000-bukti.pdf")},
+			detail: "Berkas bukti pembayaran tidak dikenali. Unggah ulang berkasnya lalu simpan kembali.",
+		},
+		{
+			name:   "proof in the attachment folder",
+			body:   invoices.ChangeStatusRequest{Status: invoices.StatusPaid, PaymentProofKey: str("invoices/1/1700000000-bukti.pdf")},
 			detail: "Berkas bukti pembayaran tidak dikenali. Unggah ulang berkasnya lalu simpan kembali.",
 		},
 		{

@@ -83,6 +83,7 @@ func TestValidateOwnedKey(t *testing.T) {
 		{"bare prefix", BucketItemImages, "items", 7, "items/7/", true},
 		{"disallowed extension", BucketItemImages, "items", 7, "items/7/1790-a.exe", true},
 		{"empty", BucketItemImages, "items", 7, "", true},
+		{"another asset's sub-folder", BucketInvoiceAttachments, "invoices", 7, "invoices/7/payment/1790-a.pdf", true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -92,6 +93,33 @@ func TestValidateOwnedKey(t *testing.T) {
 			}
 			if !tc.wantErr && err != nil {
 				t.Fatalf("ValidateOwnedKey(%q) = %v, want nil", tc.key, err)
+			}
+		})
+	}
+}
+
+// A sub-folder asset is bound to its own folder.
+func TestValidateFolderKey(t *testing.T) {
+	folder := OwnerFolder("invoices", 7, "payment")
+	cases := []struct {
+		name    string
+		key     string
+		wantErr bool
+	}{
+		{"own folder", "invoices/7/payment/1790-a.pdf", false},
+		{"the record's root folder", "invoices/7/1790-a.pdf", true},
+		{"another record's folder", "invoices/8/payment/1790-a.pdf", true},
+		{"prefix overlap", "invoices/70/payment/1790-a.pdf", true},
+		{"deeper folder", "invoices/7/payment/x/1790-a.pdf", true},
+		{"traversal out", "invoices/7/payment/../1790-a.pdf", true},
+		{"bare folder", "invoices/7/payment/", true},
+		{"disallowed extension", "invoices/7/payment/1790-a.exe", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateFolderKey(BucketInvoiceAttachments, folder, tc.key)
+			if tc.wantErr != (err != nil) {
+				t.Fatalf("ValidateFolderKey(%q) = %v, wantErr %v", tc.key, err, tc.wantErr)
 			}
 		})
 	}

@@ -115,7 +115,7 @@ func TestChangeStatus_PaidRecordsPaymentAndHistory(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
 	repo := invoices.NewRepo(tx, testutil.Store(t))
-	proof := "invoices/" + strconv.FormatInt(invID, 10) + "/1700000000-bukti.pdf"
+	proof := "invoices/" + strconv.FormatInt(invID, 10) + "/payment/1700000000-bukti.pdf"
 
 	require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusSent), seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, invID, invoices.ChangeStatusRequest{
@@ -158,13 +158,43 @@ func TestChangeStatus_ProofOnlyWhenPaid(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
 	repo := invoices.NewRepo(tx, testutil.Store(t))
-	proof := "invoices/" + strconv.FormatInt(invID, 10) + "/1700000000-bukti.pdf"
+	proof := "invoices/" + strconv.FormatInt(invID, 10) + "/payment/1700000000-bukti.pdf"
 
 	err := repo.ChangeStatus(ctx, invID, invoices.ChangeStatusRequest{
 		Status: invoices.StatusSent, PaymentProofKey: &proof,
 	}, seedUserID)
 	require.Error(t, err)
 	assert.Equal(t, "P0014", sqlState(err))
+}
+
+// The database only records a proof from this invoice's payment folder.
+func TestChangeStatus_ProofOutsidePaymentFolder(t *testing.T) {
+	cases := []struct {
+		name string
+		key  func(id int64) string
+	}{
+		{"the attachment folder", func(id int64) string {
+			return "invoices/" + strconv.FormatInt(id, 10) + "/1700000000-bukti.pdf"
+		}},
+		{"another invoice's payment folder", func(id int64) string {
+			return "invoices/" + strconv.FormatInt(id+1, 10) + "/payment/1700000000-bukti.pdf"
+		}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, tx := testutil.BeginTx(t)
+			_, _, invID := deliveredPOWithInvoice(t, tx)
+			repo := invoices.NewRepo(tx, testutil.Store(t))
+			require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusSent), seedUserID))
+
+			key := tc.key(invID)
+			err := repo.ChangeStatus(ctx, invID, invoices.ChangeStatusRequest{
+				Status: invoices.StatusPaid, PaymentProofKey: &key,
+			}, seedUserID)
+			require.Error(t, err)
+			assert.Equal(t, "P0014", sqlState(err))
+		})
+	}
 }
 
 func TestChangeStatus_CancelKeepsReason(t *testing.T) {

@@ -3,7 +3,6 @@ package storage
 import (
 	"fmt"
 	"path"
-	"strconv"
 	"strings"
 )
 
@@ -75,12 +74,19 @@ func ValidateAssetFileName(bucket, fileName string) error {
 // caller could point a record at any object in the bucket, or at a traversal
 // path outside it. BuildObjectKey is what produces a conforming key.
 func ValidateOwnedKey(bucket, prefix string, id int64, key string) error {
+	return ValidateFolderKey(bucket, OwnerFolder(prefix, id, ""), key)
+}
+
+// ValidateFolderKey binds an object key to one folder.
+// The name must sit directly in the folder: a key in a sub-folder belongs to
+// another asset of the same record. BuildFolderKey produces a conforming key.
+func ValidateFolderKey(bucket, folder, key string) error {
 	if !safeKey(key) {
 		return fmt.Errorf("storage: unsafe object key %q", key)
 	}
-	want := path.Join(prefix, strconv.FormatInt(id, 10)) + "/"
-	if !strings.HasPrefix(key, want) || strings.TrimPrefix(key, want) == "" {
-		return fmt.Errorf("storage: object key %q is not under %q", key, want)
+	name, ok := strings.CutPrefix(key, folder)
+	if !ok || name == "" || strings.Contains(name, "/") {
+		return fmt.Errorf("storage: object key %q is not directly under %q", key, folder)
 	}
 	return ValidateAssetFileName(bucket, key)
 }

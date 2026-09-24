@@ -20,14 +20,38 @@ const (
 	attachmentUploadExpiry   = 15 * time.Minute
 	attachmentDownloadExpiry = 1 * time.Hour
 
-	// Proofs share the attachment layout.
-	proofKeyPrefix = "invoices"
+	// One folder per invoice; proofs keep a sub-folder, so an attachment
+	// never passes as a proof or the other way round.
+	keyPrefix   = "invoices"
+	proofKeySub = "payment"
 )
 
+// ProofStore confirms an uploaded proof exists.
+type ProofStore interface {
+	ObjectExists(ctx context.Context, bucket, key string) (bool, error)
+}
+
+// proofFolder is where an invoice's proofs live.
+func proofFolder(id int64) string {
+	return storage.OwnerFolder(keyPrefix, id, proofKeySub)
+}
+
+// Routes mounts the invoice API on the configured storage.
 func Routes(d deps.Deps) chi.Router {
+	// A nil client must stay a nil interface.
+	var proofs ProofStore
+	if d.Storage != nil {
+		proofs = d.Storage
+	}
+	return RoutesWithProofs(d, proofs)
+}
+
+// RoutesWithProofs takes the proof store explicitly.
+// Tests pass a fake; production goes through Routes.
+func RoutesWithProofs(d deps.Deps, proofs ProofStore) chi.Router {
 	r := chi.NewRouter()
 	repo := NewRepo(d.Pool, d.Queries)
-	h := NewHandler(repo)
+	h := NewHandler(repo, proofs)
 	clientsRepo := clients.NewRepo(d.Pool, d.Queries)
 
 	r.Get("/", h.List)
@@ -74,7 +98,7 @@ func attachmentAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
 	return assetproxy.Descriptor{
 		Storage:     sc,
 		Bucket:      storage.BucketInvoiceAttachments,
-		KeyPrefix:   proofKeyPrefix,
+		KeyPrefix:   keyPrefix,
 		NotFoundMsg: "invoice not found",
 		NoAssetMsg:  "no attachment",
 		UploadTTL:   attachmentUploadExpiry,
@@ -103,7 +127,7 @@ func attachmentAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
 // paymentProofAsset describes proof routes.
 func paymentProofAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
 	d := attachmentAsset(sc, repo)
-	d.KeyPrefix = proofKeyPrefix
+	d.KeySub = proofKeySub
 	d.NoAssetMsg = "no payment proof"
 	d.CurrentAsset = func(ctx context.Context, id int64) (assetproxy.Asset, error) {
 		inv, err := repo.GetByID(ctx, id)

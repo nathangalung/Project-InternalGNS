@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_invoice_status (deployed by migration 00062).
+-- Canonical current body of fn_change_invoice_status (deployed by migration 00065).
 CREATE OR REPLACE FUNCTION public.fn_change_invoice_status(p_invoice_id bigint, p_target text, p_user_id bigint, p_note text DEFAULT NULL::text, p_proof_key text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql
@@ -54,6 +54,14 @@ BEGIN
 
   IF v_proof IS NOT NULL AND p_target <> 'paid' THEN
     RAISE EXCEPTION 'Bukti pembayaran hanya dapat dilampirkan saat invoice ditandai Dibayar.'
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  -- The key must address this invoice's payment folder, never its
+  -- attachment or another invoice's upload.
+  IF v_proof IS NOT NULL
+     AND NOT starts_with(v_proof, 'invoices/' || p_invoice_id || '/payment/') THEN
+    RAISE EXCEPTION 'Berkas bukti pembayaran tidak dikenali. Unggah ulang berkasnya lalu simpan kembali.'
       USING ERRCODE = 'P0014';
   END IF;
 
