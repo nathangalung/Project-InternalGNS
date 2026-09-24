@@ -19,19 +19,19 @@ import { roleCanAccess } from "@/lib/rbac"
 import { pill, ui } from "@/lib/ui"
 import type { DashboardMetric } from "@/types/api"
 import { YEAR_OPTIONS } from "./DashboardFinancialFilter"
-import { type CardKey, cardRoute, statusCount } from "./helpers"
+import { type CardKey, cardRoute, REVENUE_LABEL, statusCount } from "./helpers"
 import SummaryError from "./SummaryError"
 import TrendChart from "./TrendChart"
 
 const chartTabs: { label: string; metric: DashboardMetric }[] = [
   { label: "Quotation", metric: "quotation" },
   { label: "Invoice", metric: "invoice" },
-  { label: "Pendapatan", metric: "revenue" },
+  { label: REVENUE_LABEL, metric: "revenue" },
   { label: "Laba Bersih", metric: "profit" },
   { label: "PPN", metric: "ppn" },
 ]
 
-const RP_METRICS: ReadonlyArray<string> = ["Pendapatan", "Laba Bersih", "PPN"]
+const RP_METRICS: ReadonlyArray<string> = [REVENUE_LABEL, "Laba Bersih", "PPN"]
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -77,7 +77,7 @@ export default function Dashboard() {
     () => ({
       Quotation: buildSeries(tsQuotation.data, baseYear),
       Invoice: buildSeries(tsInvoice.data, baseYear),
-      Pendapatan: buildSeries(tsRevenue.data, baseYear),
+      [REVENUE_LABEL]: buildSeries(tsRevenue.data, baseYear),
       "Laba Bersih": buildSeries(tsProfit.data, baseYear),
       PPN: buildSeries(tsPpn.data, baseYear),
     }),
@@ -190,7 +190,7 @@ export default function Dashboard() {
       {canFinance && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <StatCard
-            label="Total Pendapatan (DPP)"
+            label={`Total ${REVENUE_LABEL}`}
             value={fig(formatRp(totalRevenue))}
             onClick={cardLink("invoices")}
           />

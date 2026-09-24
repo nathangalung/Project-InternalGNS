@@ -27,13 +27,19 @@ import DashboardFinancialFilter, {
   type DashboardFilterValues,
   MONTH_LABELS,
 } from "./DashboardFinancialFilter"
-import { computeRpMax, expenseSeries, statusCount, toRecentInvoices } from "./helpers"
+import {
+  computeRpMax,
+  expenseSeries,
+  REVENUE_LABEL,
+  statusCount,
+  toRecentInvoices,
+} from "./helpers"
 import StatusTiles from "./StatusTiles"
 import SummaryError from "./SummaryError"
 import TrendChart, { CHART_MONTHS } from "./TrendChart"
 
 const chartTabs: { label: string; metric: DashboardMetric }[] = [
-  { label: "Pendapatan", metric: "revenue" },
+  { label: REVENUE_LABEL, metric: "revenue" },
   // Derived: revenue minus profit
   { label: "Pengeluaran", metric: "revenue" },
   { label: "Laba Bersih", metric: "profit" },
@@ -46,7 +52,7 @@ const chartTabs: { label: string; metric: DashboardMetric }[] = [
 const RECENT_INVOICE_PARAMS = { limit: 5, status: "draft,sent,overdue,paid" }
 
 export default function DashboardFinancial() {
-  const [activeTab, setActiveTab] = useState("Pendapatan")
+  const [activeTab, setActiveTab] = useState(REVENUE_LABEL)
   const [showFilter, setShowFilter] = useState(false)
   const [filters, setFilters] = useState<DashboardFilterValues | null>(null)
   const { data: summary, isError: summaryError } = useDashboardSummary()
@@ -77,7 +83,7 @@ export default function DashboardFinancial() {
     const profit = build(tsProfit.data)
     const ppn = build(tsPpn.data)
     return {
-      Pendapatan: revenue,
+      [REVENUE_LABEL]: revenue,
       Pengeluaran: expenseSeries(revenue, profit),
       "Laba Bersih": profit,
       PPN: ppn,
@@ -147,7 +153,7 @@ export default function DashboardFinancial() {
 
         {/* Row 1 */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <StatCard label="Total Pendapatan (DPP)" value={fig(formatRp(totalRevenue))} />
+          <StatCard label={`Total ${REVENUE_LABEL}`} value={fig(formatRp(totalRevenue))} />
           <StatCard label="Total Pengeluaran" value={fig(formatRp(totalExpenses))} />
           <StatCard label="Total Purchase Order Aktif" value={fig(formatId(totalPo))} />
         </div>

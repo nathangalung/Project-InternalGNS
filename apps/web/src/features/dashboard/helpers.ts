@@ -9,6 +9,11 @@ import {
 } from "@/lib/status"
 import type { DashboardStatusCount, InvoiceBackendRow, QuotationListRow, Role } from "@/types/api"
 
+// Revenue caption, card and tab.
+//
+// Revenue is booked on DPP, so the card and the chart tab share one name.
+export const REVENUE_LABEL = "Pendapatan (DPP)"
+
 // Overview card list targets.
 const CARD_TARGETS = {
   invoices: { to: "/invoices", section: "invoices" },
