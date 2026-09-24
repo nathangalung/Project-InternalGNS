@@ -11,7 +11,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Each read wraps the failing query's error.
+// Reads wrap the query error.
 func TestRepo_ReadFaults(t *testing.T) {
 	ctx := context.Background()
 	repo := purchaseorders.NewRepo(testutil.FakeExec{}, testutil.Store(t))
@@ -28,7 +28,7 @@ func TestRepo_ReadFaults(t *testing.T) {
 	assert.ErrorIs(t, repo.UpdateDetails(ctx, 1, "PO/1", poDateFixture(), seedUserID, nil), testutil.ErrFake)
 }
 
-// A failure after the first query still surfaces.
+// Second-query failures still surface.
 func TestRepo_SecondQueryFaults(t *testing.T) {
 	tests := []struct {
 		name string
@@ -62,14 +62,14 @@ func TestRepo_SecondQueryFaults(t *testing.T) {
 	}
 }
 
-// An unknown PO has no completeness answer.
+// Unknown PO has no completeness.
 func TestRepo_Completeness_NotFound(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, err := purchaseorders.NewRepo(tx, testutil.Store(t)).Completeness(ctx, 99999999)
 	assert.ErrorIs(t, err, purchaseorders.ErrNotFound)
 }
 
-// An edit without lines drops every line.
+// No lines drops every line.
 // A nil slice is sent as an empty array, not as JSON null, which the
 // function would refuse.
 func TestRepo_UpdateItems_NilItemsClearsLines(t *testing.T) {

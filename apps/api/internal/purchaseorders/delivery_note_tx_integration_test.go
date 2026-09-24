@@ -20,7 +20,8 @@ import (
 
 const seedContactID int64 = 1
 
-// The note prints the header data and the goods only (PO-12).
+// Header and goods only (PO-12).
+// The note prints the header data and the goods, never the charge.
 // CI has no xelatex, so there the render fails after the data is built
 // and the route answers 500; the text checks need xelatex and pdftotext.
 func TestDeliveryNote_PrintsGoodsNotTheShippingCharge(t *testing.T) {
@@ -64,7 +65,8 @@ func TestDeliveryNote_PrintsGoodsNotTheShippingCharge(t *testing.T) {
 	assert.NotContains(t, text, addr, "only the shipping line carried this destination")
 }
 
-// pdfText extracts the text layer, skipping without pdftotext.
+// pdfText extracts the text layer.
+// It skips the test without pdftotext.
 func pdfText(t *testing.T, pdf []byte) string {
 	t.Helper()
 	bin, err := exec.LookPath("pdftotext")
@@ -78,7 +80,8 @@ func pdfText(t *testing.T, pdf []byte) string {
 	return string(out)
 }
 
-// Each failure after the id parse is a generic 500.
+// Later failures are generic 500s.
+// Each failure after the id parse hides its cause.
 func TestDeliveryNote_Faults(t *testing.T) {
 	tests := []struct {
 		name      string

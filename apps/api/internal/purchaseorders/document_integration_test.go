@@ -14,7 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Presign, attach, then download the PO document.
+// Presign, attach, then download.
 // The key the upload route issues is the one PATCH /file accepts, and
 // the download hands back the original name.
 func TestHandler_DocumentRoundTrip(t *testing.T) {
@@ -68,7 +68,7 @@ func TestHandler_DocumentRoundTrip(t *testing.T) {
 	assert.Equal(t, "Surat PO.pdf", down.FileName)
 }
 
-// Presign refuses what attach would refuse.
+// Presign refuses what attach refuses.
 func TestHandler_DocumentPresignRefusals(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -106,7 +106,7 @@ func TestHandler_DocumentPresignRefusals(t *testing.T) {
 	}
 }
 
-// A failed owner lookup is a generic 500.
+// Owner lookup failures are 500s.
 func TestHandler_DocumentPresignFaults(t *testing.T) {
 	srv := execServer(t, testutil.FakeExec{}, "")
 	for _, path := range []string{"/purchase-orders/1/upload-url?fileName=po.pdf", "/purchase-orders/1/download-url"} {

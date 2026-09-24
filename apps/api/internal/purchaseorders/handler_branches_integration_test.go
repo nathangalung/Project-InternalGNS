@@ -13,7 +13,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Notes save under the current version and read back.
+// Notes save and read back.
 func TestHandler_UpdateNotes_RoundTrip(t *testing.T) {
 	ctx, tx, srv := txServer(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
@@ -34,7 +34,7 @@ func TestHandler_UpdateNotes_RoundTrip(t *testing.T) {
 	assert.Greater(t, after.RowVersion, before.RowVersion)
 }
 
-// Malformed and stale versions are refused before any write.
+// Bad If-Match refused before writing.
 func TestHandler_IfMatchRefusals(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -73,7 +73,8 @@ func TestHandler_IfMatchRefusals(t *testing.T) {
 	}
 }
 
-// A discount outside 0..100 is the database's 422.
+// Out-of-range discount is 422.
+// The database raises it.
 func TestHandler_UpdateItems_DiscountOutOfRange(t *testing.T) {
 	ctx, tx, srv := txServer(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
@@ -89,7 +90,7 @@ func TestHandler_UpdateItems_DiscountOutOfRange(t *testing.T) {
 	assert.Contains(t, readProblem(t, res).Detail, "discount_pct")
 }
 
-// A saved edit answers with the next version.
+// Saved edit returns the version.
 func TestHandler_UpdateItems_ReturnsNewVersion(t *testing.T) {
 	ctx, tx, srv := txServer(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
@@ -113,7 +114,7 @@ func TestHandler_UpdateItems_ReturnsNewVersion(t *testing.T) {
 	assert.Equal(t, "277500.00", after.PoGrandTotal)
 }
 
-// The ON_PROGRESS gate answers for the PO it reads.
+// ON_PROGRESS gate reads the PO.
 func TestHandler_ChangeStatus_OnProgressGate(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -155,7 +156,7 @@ func TestHandler_ChangeStatus_OnProgressGate(t *testing.T) {
 	}
 }
 
-// History and file removal validate the id and the PO.
+// History and removal validate input.
 func TestHandler_HistoryAndRemoveFile_Refusals(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -182,7 +183,7 @@ func TestHandler_HistoryAndRemoveFile_Refusals(t *testing.T) {
 	}
 }
 
-// A database failure on any route is a generic 500.
+// Database failures are generic 500s.
 func TestHandler_DatabaseFaults(t *testing.T) {
 	file := purchaseorders.UpdateFileRequest{FileName: "po.pdf", FileSize: 1, ObjectKey: "po/1/1-po.pdf"}
 	tests := []struct {
@@ -213,7 +214,8 @@ func TestHandler_DatabaseFaults(t *testing.T) {
 	}
 }
 
-// A failure after the PO was read is still a generic 500.
+// Later query failures are 500s.
+// The PO was read before the failure.
 func TestHandler_SecondQueryFaults(t *testing.T) {
 	tests := []struct {
 		name   string

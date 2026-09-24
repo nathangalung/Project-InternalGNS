@@ -132,7 +132,7 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, d
 	}
 }
 
-// deliveryNoteItems lists the lines the note hands over.
+// deliveryNoteItems lists the delivered lines.
 // The shipping charge is billed, not delivered, so it is left out.
 func deliveryNoteItems(items []PurchaseOrderItem) []dnItem {
 	out := make([]dnItem, 0, len(items))

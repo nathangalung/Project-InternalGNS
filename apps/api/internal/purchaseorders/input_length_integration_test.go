@@ -14,7 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Text past its column is refused as input (PO-08).
+// Over-length text is refused (PO-08).
 // Each value is one character over its varchar limit. The PO audit saw
 // a 500 here; the answer must be a 422 with Indonesian prose.
 func TestHandler_OverLengthInputIsUnprocessable(t *testing.T) {
@@ -76,7 +76,7 @@ func TestHandler_OverLengthInputIsUnprocessable(t *testing.T) {
 	}
 }
 
-// itemsWith is a one-line edit payload.
+// itemsWith builds a one-line edit.
 func itemsWith(line purchaseorders.UpdateItemsLine) purchaseorders.UpdateItemsRequest {
 	line.ItemName = "Barang"
 	line.Qty = "1"

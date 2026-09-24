@@ -19,7 +19,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// txServer serves PO routes inside one transaction.
+// txServer serves PO routes transactionally.
 // Every row a test creates rolls back with it, so nothing reaches the
 // shared database and no cleanup is needed. Requests run one at a time,
 // which is all a pgx.Tx supports. Storage is the zero client: presigning
@@ -30,7 +30,7 @@ func txServer(t *testing.T) (context.Context, pgx.Tx, *httptest.Server) {
 	return ctx, tx, execServer(t, tx, "")
 }
 
-// execServer mounts PO routes on any executor.
+// execServer mounts routes on executors.
 // A non-empty templatesRoot also mounts the delivery note route.
 func execServer(t *testing.T, exec db.Executor, templatesRoot string) *httptest.Server {
 	t.Helper()
@@ -47,7 +47,8 @@ func execServer(t *testing.T, exec db.Executor, templatesRoot string) *httptest.
 	return srv
 }
 
-// problem is the RFC 7807 body plus the PO lock code.
+// problem decodes RFC 7807 bodies.
+// Code carries the PO lock code.
 type problem struct {
 	Status int               `json:"status"`
 	Detail string            `json:"detail"`
@@ -64,13 +65,14 @@ func readProblem(t *testing.T, res *http.Response) problem {
 	return p
 }
 
-// readJSON decodes a JSON response into v.
+// readJSON decodes a JSON response.
 func readJSON(t *testing.T, res *http.Response, v any) {
 	t.Helper()
 	require.NoError(t, json.NewDecoder(res.Body).Decode(v))
 }
 
-// poAt moves a fresh PO to status through the real paths.
+// poAt walks a fresh PO.
+// It reaches status through the real paths.
 func poAt(t *testing.T, tx pgx.Tx, status purchaseorders.Status) (int64, int64) {
 	t.Helper()
 	qID, poID := acceptedQuotationWithPO(t, tx)
@@ -78,7 +80,8 @@ func poAt(t *testing.T, tx pgx.Tx, status purchaseorders.Status) (int64, int64) 
 	return qID, poID
 }
 
-// reachStatus walks a PENDING PO forward to status.
+// reachStatus walks a PENDING PO.
+// It moves forward to status.
 func reachStatus(t *testing.T, tx pgx.Tx, poID int64, status purchaseorders.Status) {
 	t.Helper()
 	ctx := context.Background()
@@ -104,7 +107,8 @@ func reachStatus(t *testing.T, tx pgx.Tx, poID int64, status purchaseorders.Stat
 	}
 }
 
-// ownedPOFile is an attach payload keyed to its PO.
+// ownedPOFile keys an attach payload.
+// The key sits in its PO's folder.
 func ownedPOFile(poID int64) purchaseorders.UpdateFileRequest {
 	return purchaseorders.UpdateFileRequest{
 		FileName:  "po.pdf",
@@ -113,7 +117,8 @@ func ownedPOFile(poID int64) purchaseorders.UpdateFileRequest {
 	}
 }
 
-// createQuotation accepts a quotation built from req.
+// createQuotation accepts a quotation.
+// It returns the quotation and PO ids.
 func createQuotation(t *testing.T, tx pgx.Tx, req quotations.CreateRequest) (int64, int64) {
 	t.Helper()
 	ctx := context.Background()

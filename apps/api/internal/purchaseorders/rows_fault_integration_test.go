@@ -14,7 +14,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// brokenRows fails while reading, as a dropped connection does.
+// brokenRows fails while reading.
+// A dropped connection does the same.
 // Postgres can accept a query and fail it only after the first rows,
 // so the error arrives from rows.Err rather than from Query.
 type brokenRows struct{}
@@ -29,7 +30,8 @@ func (brokenRows) Values() ([]any, error)                       { return nil, te
 func (brokenRows) RawValues() [][]byte                          { return nil }
 func (brokenRows) Conn() *pgx.Conn                              { return nil }
 
-// breakQuery runs every query but the nth, which reads as broken.
+// breakQuery breaks the nth query.
+// Every other query runs as usual.
 type breakQuery struct {
 	db.Executor
 	nth   int
@@ -44,7 +46,8 @@ func (b *breakQuery) Query(ctx context.Context, sql string, args ...any) (pgx.Ro
 	return b.Executor.Query(ctx, sql, args...)
 }
 
-// A read that breaks mid-result surfaces, never a short answer.
+// Broken result sets surface errors.
+// A short answer never passes as complete.
 func TestRepo_BrokenResultSets(t *testing.T) {
 	tests := []struct {
 		name string

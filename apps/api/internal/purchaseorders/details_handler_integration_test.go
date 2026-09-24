@@ -16,7 +16,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// PATCH /details validates, persists, and maps each refusal.
+// PATCH /details refusals and success.
 func TestHandler_UpdateDetails(t *testing.T) {
 	fiftyRunes := strings.Repeat("Ü", 50)
 	tests := []struct {
@@ -84,7 +84,7 @@ func TestHandler_UpdateDetails(t *testing.T) {
 	}
 }
 
-// A saved number and date read back trimmed.
+// Saved details read back trimmed.
 func TestHandler_UpdateDetails_Persists(t *testing.T) {
 	ctx, tx, srv := txServer(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
@@ -105,7 +105,8 @@ func TestHandler_UpdateDetails_Persists(t *testing.T) {
 	assert.Greater(t, after.RowVersion, before.RowVersion)
 }
 
-// A number another PO of the client holds is a field error.
+// Duplicates are field errors.
+// Another PO of the same client already holds the number.
 func TestHandler_UpdateDetails_DuplicateForClient(t *testing.T) {
 	ctx, tx, srv := txServer(t)
 	_, first := acceptedQuotationWithPO(t, tx)

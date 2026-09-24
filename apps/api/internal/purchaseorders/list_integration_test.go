@@ -21,7 +21,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// listFixture holds two POs of one fresh client.
+// listFixture holds two client POs.
+// Both belong to one fresh client.
 // A was quoted low and edited high, B was quoted in between and left
 // alone, so ordering by the quotation total and by the PO's own total
 // disagree. That is what tells the two total sources apart (PO-06).
@@ -68,7 +69,8 @@ func newListFixture(t *testing.T, tx pgx.Tx) listFixture {
 	return listFixture{client: client, a: a, b: b}
 }
 
-// probeClient inserts a client under a free four-digit number.
+// probeClient inserts a fresh client.
+// It takes the first free four-digit number.
 func probeClient(t *testing.T, tx pgx.Tx, name string) (int64, string) {
 	t.Helper()
 	var id int64
@@ -82,7 +84,8 @@ func probeClient(t *testing.T, tx pgx.Tx, name string) (int64, string) {
 	return id, name
 }
 
-// itemsAt is one product line of qty 2 at price.
+// itemsAt prices one product line.
+// The line is qty 2 at price.
 func itemsAt(price string) purchaseorders.UpdateItemsRequest {
 	return purchaseorders.UpdateItemsRequest{
 		DiscountPct: "0",
@@ -108,7 +111,8 @@ func ids(rows []purchaseorders.PurchaseOrder) []int64 {
 	return out
 }
 
-// Every filter narrows, and totals follow the PO's own total.
+// Every list filter narrows results.
+// Totals follow the PO's own total.
 func TestRepo_List_Filters(t *testing.T) {
 	day := func(m time.Month, d int) *time.Time {
 		v := time.Date(2026, m, d, 0, 0, 0, 0, time.UTC)
@@ -229,7 +233,7 @@ func TestRepo_List_Filters(t *testing.T) {
 	}
 }
 
-// A page keeps the full count.
+// A page keeps the count.
 func TestRepo_List_PageKeepsTotal(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	fx := newListFixture(t, tx)
@@ -241,7 +245,7 @@ func TestRepo_List_PageKeepsTotal(t *testing.T) {
 	assert.Equal(t, int64(2), res.Total)
 }
 
-// The query string reaches the filter.
+// Query parameters reach the filter.
 func TestHandler_List_ParsesFilters(t *testing.T) {
 	_, tx, srv := txServer(t)
 	fx := newListFixture(t, tx)
@@ -265,7 +269,7 @@ func TestHandler_List_ParsesFilters(t *testing.T) {
 	assert.Equal(t, "555000.00", rows[0].PoGrandTotal)
 }
 
-// The export prints what the list shows (PO-06).
+// Export matches the list (PO-06).
 func TestHandler_Export_MatchesList(t *testing.T) {
 	_, tx, srv := txServer(t)
 	fx := newListFixture(t, tx)
@@ -277,7 +281,7 @@ func TestHandler_Export_MatchesList(t *testing.T) {
 	assert.Equal(t, []string{"", fx.b.PoNumber, fx.b.QuotationNo, "2026-02-20", fx.client, "PO Diunggah", "333000.00"}, rows[2])
 }
 
-// exportRows downloads the XLSX and reads its one sheet.
+// exportRows reads the XLSX sheet.
 func exportRows(t *testing.T, srv *httptest.Server, q url.Values) [][]string {
 	t.Helper()
 	res := doJSON(t, srv, http.MethodGet, "/purchase-orders/export.xlsx?"+q.Encode(), nil)
@@ -292,7 +296,8 @@ func exportRows(t *testing.T, srv *httptest.Server, q url.Values) [][]string {
 	return rows
 }
 
-// The export prints a note number only where the PDF would (PO-14).
+// Register follows the PDF (PO-14).
+// The export prints a note number only where the PDF would.
 // A PO walked back from ON_PROGRESS keeps its stored number, but its
 // delivery note is refused, so the register must not list it either.
 func TestHandler_Export_DeliveryNoteFollowsIssuance(t *testing.T) {

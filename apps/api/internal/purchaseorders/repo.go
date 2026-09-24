@@ -32,9 +32,10 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 	return &Repo{db: exec, store: store}
 }
 
-// poTotalExpr is the PO's own grand total.
-// The list column, the total filter, the sort and the export all read it,
-// so a PO edited after acceptance is ranked by what it will bill.
+// poTotalExpr is the PO total.
+// It is the PO's own grand total. The list column, the total filter, the
+// sort and the export all read it, so a PO edited after acceptance is
+// ranked by what it will bill.
 const poTotalExpr = "COALESCE(t.po_grand_total, 0)"
 
 // sortable is the closed set of PO sort keys.

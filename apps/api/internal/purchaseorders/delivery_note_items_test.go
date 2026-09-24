@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// The note lists goods only, numbered without gaps (PO-12).
+// Goods only, without gaps (PO-12).
 // The shipping charge is billed on the invoice but is not something the
 // driver hands over, so it must not print as a delivered line.
 func TestDeliveryNoteItems(t *testing.T) {

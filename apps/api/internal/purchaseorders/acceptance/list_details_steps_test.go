@@ -15,7 +15,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 )
 
-// Export columns the list steps read.
+// Export columns the steps read.
 const (
 	exportDNCol    = 0
 	exportPOCol    = 1
@@ -42,7 +42,7 @@ func (s *scenarioState) poNumberAndDate(number, date string) error {
 	return nil
 }
 
-// The number fn_next_doc_no issued on acceptance.
+// The PO keeps fn_next_doc_no's number.
 func (s *scenarioState) poKeepsGeneratedNumber() error {
 	po, err := s.readPO()
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *scenarioState) poKeepsGeneratedNumber() error {
 	return nil
 }
 
-// A second PO of the default client takes number.
+// Another client PO takes number.
 // The scenario keeps working on the first PO.
 func (s *scenarioState) otherPOHoldsNumber(number string) error {
 	qID, poID := s.quotationID, s.poID
@@ -88,8 +88,8 @@ func (s *scenarioState) poListHasPO(verb string) error {
 	return nil
 }
 
-// exportRowForPO finds this PO's row in the last export.
-// It reads the PO number first and restores the export response after.
+// exportRowForPO finds this PO's row.
+// It searches the last export, reads the PO number first and restores the export response after.
 func (s *scenarioState) exportRowForPO() ([]string, error) {
 	f, err := excelize.OpenReader(bytes.NewReader(s.body))
 	if err != nil {
