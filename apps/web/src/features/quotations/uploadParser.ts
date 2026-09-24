@@ -105,6 +105,8 @@ function cellToPrimitive(value: unknown): unknown {
     }
     if ("hyperlink" in v && "text" in v) return v.text
     if (value instanceof Date) return value
+    // A formula with no cached result has no display text either.
+    return ""
   }
   return value
 }

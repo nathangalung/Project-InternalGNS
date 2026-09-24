@@ -174,6 +174,20 @@ describe("parseProductFile", () => {
     ])
   })
 
+  // Regression: a formula saved without a cached result, as generated
+  // workbooks do, was sent as the name "[object Object]".
+  it("reads a formula without a cached result as blank", async () => {
+    const file = await workbookFile((wb) => {
+      const ws = wb.addWorksheet("Produk")
+      ws.addRow(["Kode", "Nama", "Jumlah"])
+      ws.addRow([{ formula: "K1" }, { formula: "VLOOKUP(A2,K:L,2,0)" }, 1])
+      ws.addRow(["370115", "Mur", 2])
+    })
+    await expect(parseProductFile(file)).resolves.toEqual([
+      { impaCode: "370115", name: "Mur", qty: 2, unit: "" },
+    ])
+  })
+
   // Regression: ExcelJS leaves holes for empty cells, and a table starting
   // at column B crashed the header scan with a TypeError.
   it("reads a table that starts past column A", async () => {
