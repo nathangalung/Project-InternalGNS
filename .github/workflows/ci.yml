@@ -91,6 +91,7 @@ jobs:
           go-package: ./...
           work-dir: apps/api
 
+  # PDF layout gate.
   # The layout tests skip without xelatex, so the backend job never ran them.
   # Here they run inside the api image itself, with the TeX Live the release
   # ships, and any skip other than the root-only permission case fails.
@@ -124,6 +125,7 @@ jobs:
           cache-from: type=gha,scope=api
           cache-to: type=gha,scope=api,mode=max
 
+      # Runner Go, image TeX.
       # The go binary is static, so the runner's toolchain runs in the image.
       # poppler-utils supplies pdfinfo and pdftotext for the page assertions.
       - name: layout tests in the runtime image
@@ -139,7 +141,7 @@ jobs:
               set -eo pipefail
               apt-get update -qq
               apt-get install -y -qq --no-install-recommends poppler-utils >/dev/null
-              xelatex --version | head -1
+              xelatex --version | sed -n 1p
               go test -count=1 -v \
                 -run "TestLatex|TestRender|TestRealTemplate|PaperSize|TestQuotationPDF|TestInvoiceTemplate" \
                 ./internal/pdfgen/ ./internal/quotations/ ./internal/invoices/' | tee pdf.log

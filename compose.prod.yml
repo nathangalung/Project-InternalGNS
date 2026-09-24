@@ -9,8 +9,9 @@ x-logging: &default-logging
     max-size: "10m"
     max-file: "3"
 
-# No process may gain privileges through setuid binaries. The entrypoints
-# that drop root (postgres, nginx) use setuid syscalls, which this allows.
+# Block setuid privilege gain.
+# The entrypoints that drop root (postgres, nginx) use setuid syscalls, which
+# this still allows.
 x-security-opt: &no-new-privileges
   - no-new-privileges:true
 
@@ -82,12 +83,14 @@ services:
     networks: [internal]
 
   api:
-    # No default tag: release.yml publishes vX.Y.Z and sha-<short> only, so a
-    # fallback to latest pulled an image that never existed.
+    # TAG has no default.
+    # release.yml publishes vX.Y.Z and sha-<short> only, so a fallback to
+    # latest pulled an image that never existed.
     image: ghcr.io/${GH_OWNER}/internalgns-api:${TAG:?TAG must name a published release such as v0.3.0}
     logging: *default-logging
-    # The binary runs as uid 10001 on port 8080 and needs no capability. The
-    # root filesystem is read-only; xelatex, fontconfig and the render scratch
+    # Least privilege for the api.
+    # It runs as uid 10001 on port 8080 and needs no capability. The root
+    # filesystem is read-only; xelatex, fontconfig and the render scratch
     # directories write only under /tmp, which HOME points into.
     security_opt: *no-new-privileges
     cap_drop: [ALL]
@@ -106,8 +109,9 @@ services:
       ENV: production
       HTTP_ADDR: :8080
       TZ: Asia/Jakarta
-      # The image user has no home directory; TeX and fontconfig caches go
-      # to the writable tmpfs.
+      # Caches live on tmpfs.
+      # The image user has no home directory, so TeX and fontconfig write
+      # their caches to the tmpfs.
       HOME: /tmp
       # Overrides the pool sized from GOMAXPROCS. Leave unset unless a render
       # burst proves the default wrong.
@@ -158,9 +162,10 @@ services:
       - "traefik.http.routers.internalgns-api.entrypoints=websecure"
       - "traefik.http.routers.internalgns-api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.internalgns-api.middlewares=internalgns-api-headers"
-      # HSTS at the edge: nothing behind Traefik speaks TLS, so no other layer
-      # can send it. No includeSubDomains or preload until every sibling host
-      # is known to be HTTPS-only.
+      # HSTS at the edge.
+      # Nothing behind Traefik speaks TLS, so no other layer can send it. No
+      # includeSubDomains or preload until every sibling host is known to be
+      # HTTPS-only.
       - "traefik.http.middlewares.internalgns-api-headers.headers.stsSeconds=31536000"
       - "traefik.http.services.internalgns-api.loadbalancer.server.port=8080"
     restart: unless-stopped
@@ -169,8 +174,9 @@ services:
   frontend:
     image: ghcr.io/${GH_OWNER}/internalgns-web:${TAG:?TAG must name a published release such as v0.3.0}
     logging: *default-logging
-    # nginx starts as root to bind :80, then drops to the nginx user. These
-    # four capabilities are all that sequence needs.
+    # Four capabilities for nginx.
+    # nginx starts as root to bind :80, then drops to the nginx user; that
+    # sequence needs nothing else.
     security_opt: *no-new-privileges
     cap_drop: [ALL]
     cap_add: [CHOWN, SETGID, SETUID, NET_BIND_SERVICE]
@@ -188,7 +194,8 @@ services:
       - "traefik.http.routers.internalgns-web.tls.certresolver=letsencrypt"
       - "traefik.http.routers.internalgns-web.middlewares=internalgns-web-headers"
       - "traefik.http.middlewares.internalgns-web-headers.headers.stsSeconds=31536000"
-      # Report-only until a release shows no violations in the browser console
+      # Report-only SPA content policy.
+      # Enforce it once a release shows no violations in the browser console
       # (docs/deploy_vps.md). It lists exactly what the SPA loads: its own
       # bundle and fonts, blob: and data: images for logos and previews, and
       # the API host. The API sets its own stricter policy on its responses.
