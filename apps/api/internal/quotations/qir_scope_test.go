@@ -40,7 +40,7 @@ func TestHandler_ItemRequests_ScopedToParent(t *testing.T) {
 	}
 
 	var rows []quotations.ItemRequestRow
-	decodeBody(t, doJSON(t, srv, http.MethodGet, idPath(owner, "/requests"), nil), &rows)
+	getJSON(t, srv, idPath(owner, "/requests"), &rows)
 	require.Len(t, rows, 1, "the owner's request survives")
 	assert.Equal(t, "LAMP LED 12W", rows[0].RequestText)
 	assert.Equal(t, int32(0), rows[0].RowVersion)

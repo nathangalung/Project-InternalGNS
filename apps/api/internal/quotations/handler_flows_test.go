@@ -2,8 +2,10 @@ package quotations_test
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"strings"
 	"testing"
@@ -19,9 +21,19 @@ import (
 // problemOf decodes a problem+json body.
 func problemOf(t *testing.T, res *http.Response) httperr.Error {
 	t.Helper()
+	defer res.Body.Close()
 	var e httperr.Error
-	decodeBody(t, res, &e)
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&e))
 	return e
+}
+
+// getJSON reads a 200 body into v.
+func getJSON(t *testing.T, srv *httptest.Server, path string, v any) {
+	t.Helper()
+	res := doJSON(t, srv, http.MethodGet, path, nil)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.NoError(t, json.NewDecoder(res.Body).Decode(v))
 }
 
 // doRaw sends a literal body.
@@ -99,7 +111,7 @@ func TestHandler_ChangeContact(t *testing.T) {
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
 
 		var d quotations.QuotationDetail
-		decodeBody(t, doJSON(t, srv, http.MethodGet, idPath(id, ""), nil), &d)
+		getJSON(t, srv, idPath(id, ""), &d)
 		require.NotNil(t, d.ContactID)
 		assert.Equal(t, sibling, *d.ContactID)
 		require.NotNil(t, d.ContactName)
@@ -302,7 +314,7 @@ func TestHandler_Send_KeepsTheNote(t *testing.T) {
 			require.Equal(t, http.StatusNoContent, res.StatusCode)
 
 			var d quotations.QuotationDetail
-			decodeBody(t, doJSON(t, srv, http.MethodGet, idPath(id, ""), nil), &d)
+			getJSON(t, srv, idPath(id, ""), &d)
 			assert.Equal(t, "sent", d.Status)
 			last := d.History[len(d.History)-1]
 			assert.Equal(t, "sent", last.ToStatus)
