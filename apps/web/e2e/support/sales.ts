@@ -241,7 +241,7 @@ export class SalesSeed {
       `/purchase-orders/${po.id}/upload-url?fileName=${encodeURIComponent(fileName)}`,
     )
     const size = Buffer.byteLength(pdfText)
-    const res = await fetch(new URL(presign.uploadUrl, `${apiURL}/`).toString(), {
+    const res = await fetch(`${apiURL}${presign.uploadUrl}`, {
       method: "PUT",
       headers: { authorization: `Bearer ${adminToken()}`, "content-type": "application/pdf" },
       body: pdfText,
@@ -252,6 +252,10 @@ export class SalesSeed {
       fileSize: size,
       objectKey: presign.objectKey,
     })
+  }
+
+  async setPoNotes(poId: number, notes: string): Promise<void> {
+    await api("PATCH", `/purchase-orders/${poId}/notes`, { notes })
   }
 
   async setPoStatus(poId: number, status: string, note?: string): Promise<void> {
