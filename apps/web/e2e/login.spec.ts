@@ -54,7 +54,7 @@ test("a malformed email is caught before any request", async ({ page }) => {
 test("the sixth attempt in a minute is throttled with a readable message (AU-7)", async ({
   page,
 }) => {
-  // An unknown address, so the per-account lockout never takes part.
+  // An unknown address, so the per-account backoff never takes part.
   const email = `${uniqueTag().toLowerCase()}@globalsakti.com`
   for (let i = 0; i < 5; i++) {
     expect((await submitLogin(page, email, "Salah123!")).status()).toBe(401)
@@ -85,7 +85,7 @@ async function missNineTimes(user: SeedUser) {
   }
 }
 
-// Status and server time of one submit.
+// One submit's status and time.
 //
 // Read from the browser's own request timing, so the figure is the wait the
 // API imposed and not the test's scheduling.

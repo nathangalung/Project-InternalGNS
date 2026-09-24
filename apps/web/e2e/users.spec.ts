@@ -27,7 +27,7 @@ const test = base.extend<{
     })
     for (const user of made) await setUser(admin, user, { isActive: false })
   },
-  // A throwaway user with a live session in a second browser.
+  // Signed-in throwaway user, second browser.
   signIn: async ({ browser, makeUser }, use) => {
     const contexts: BrowserContext[] = []
     await use(async (role) => {

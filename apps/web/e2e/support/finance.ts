@@ -28,7 +28,7 @@ async function send(token: string, method: string, path: string, body?: unknown)
 
 export type SeedClient = { id: number; name: string }
 
-// Client the PO completeness gate accepts.
+// Client passing the PO gate.
 export async function createClient(token: string, tag: string): Promise<SeedClient> {
   const client = await json<SeedClient>(
     call("/clients", {
@@ -134,7 +134,9 @@ export async function setInvoiceStatus(
   await send(token, "PATCH", `/invoices/${id}/status`, { status, note })
 }
 
-// Raw date PATCH, YYYY-MM-DD in WIB.
+// Raw invoice date PATCH.
+//
+// Dates are YYYY-MM-DD in WIB.
 export async function patchInvoiceDates(
   token: string,
   id: number,
@@ -162,7 +164,7 @@ export async function setInvoiceDates(
   await expectOk(await patchInvoiceDates(token, id, invoiceDate, dueDate), `set dates ${id}`)
 }
 
-// WIB calendar day, offset in days.
+// WIB day, offset in days.
 export function wibDay(offsetDays = 0): string {
   const ms = Date.now() + 7 * 3_600_000 + offsetDays * 86_400_000
   return new Date(ms).toISOString().slice(0, 10)
