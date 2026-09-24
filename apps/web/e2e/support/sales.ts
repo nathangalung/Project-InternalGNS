@@ -287,18 +287,9 @@ export class SalesSeed {
         await this.setQuotationStatus(id, "cancelled", note)
       }
     }
-    for (const id of this.items) {
-      const it = await api<Record<string, unknown>>("GET", `/items/${id}`)
-      await api("PUT", `/items/${id}`, { ...it, isActive: false })
-    }
-    for (const id of this.vendors) {
-      const v = await api<Record<string, unknown>>("GET", `/vendors/${id}`)
-      await api("PUT", `/vendors/${id}`, { ...v, isActive: false })
-    }
-    for (const id of this.clients) {
-      const c = await api<Record<string, unknown>>("GET", `/clients/${id}`)
-      await api("PUT", `/clients/${id}`, { ...c, isActive: false })
-    }
+    for (const id of this.items) await deactivate("item", id)
+    for (const id of this.vendors) await deactivate("vendor", id)
+    for (const id of this.clients) await deactivate("client", id)
   }
 
   // A row the UI created, found by its exact name.
@@ -345,4 +336,11 @@ const pdfText =
 // The same PDF for a file input.
 export function pdfFile(name: string): { name: string; mimeType: string; buffer: Buffer } {
   return { name, mimeType: "application/pdf", buffer: Buffer.from(pdfText) }
+}
+
+// Master rows have no delete; deactivation is the undo.
+export async function deactivate(kind: "client" | "vendor" | "item", id: number): Promise<void> {
+  const path = `${{ client: "/clients", vendor: "/vendors", item: "/items" }[kind]}/${id}`
+  const row = await api<Record<string, unknown>>("GET", path)
+  await api("PUT", path, { ...row, isActive: false })
 }
