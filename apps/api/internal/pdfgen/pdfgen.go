@@ -13,6 +13,7 @@ import (
 	"strings"
 	"text/template"
 	"time"
+	"unicode"
 )
 
 // Bound concurrent xelatex processes so a burst of exports cannot exhaust the
@@ -185,6 +186,42 @@ func LatexEscape(s string) string {
 		"|", `\textbar{}`,
 	)
 	return r.Replace(s)
+}
+
+// breakRun is the longest unbroken token.
+// Twenty characters fit the narrowest table cell at the A5 font size.
+const breakRun = 20
+
+// LatexBreakable escapes and wraps long tokens.
+// A run of more than breakRun non-space characters, such as a part number,
+// gets an invisible break point after each character so it wraps inside a
+// p{} cell instead of running off the page. Shorter text is LatexEscape.
+func LatexBreakable(s string) string {
+	var b strings.Builder
+	run := make([]rune, 0, len(s))
+	flush := func() {
+		if len(run) <= breakRun {
+			b.WriteString(LatexEscape(string(run)))
+		} else {
+			for i, r := range run {
+				if i > 0 {
+					b.WriteString(`\discretionary{}{}{}`)
+				}
+				b.WriteString(LatexEscape(string(r)))
+			}
+		}
+		run = run[:0]
+	}
+	for _, r := range s {
+		if unicode.IsSpace(r) {
+			flush()
+			b.WriteRune(r)
+			continue
+		}
+		run = append(run, r)
+	}
+	flush()
+	return b.String()
 }
 
 // FormatIDR renders a numeric string as Rp 1.234.567 with dot grouping.

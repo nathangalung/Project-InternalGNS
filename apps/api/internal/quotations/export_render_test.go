@@ -212,3 +212,37 @@ func TestQuotationPDF_A5FitsFiveLines(t *testing.T) {
 		})
 	}
 }
+
+// Q-16: a part number with no spaces wraps inside its cell.
+func TestQuotationPDF_LongPartNumberWraps(t *testing.T) {
+	const part = "HYDRAULICPUMPSEALKITVICKERSV201P13P1C11OEMGENUINE"
+	cases := []struct {
+		name  string
+		lines int
+	}{{"A5", 1}, {"A4", 8}}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			items := make([]QuotationItem, 0, tc.lines)
+			for i := 0; i < tc.lines; i++ {
+				it := productLine(int16(i+1), part, "1.00", "1000.00", "1000.00")
+				it.RequestedImpa = qStr("IMPA" + part)
+				it.OfferedName = qStr(part)
+				items = append(items, it)
+			}
+			d := QuotationDetail{
+				Quotation: header("1000.00", "1000.00", "0.00", "1000.00", "916.67", "110.00", "1110.00"),
+				Items:     items,
+			}
+			data := buildExportData(d, qUnits, "", "", "Director")
+			if !strings.Contains(data.Items[0].Request, `\discretionary{}{}{}`) {
+				t.Fatalf("Request %q has no break points", data.Items[0].Request)
+			}
+
+			// No overfull box means no text ran past its cell.
+			_, _, log := renderQuotation(t, data)
+			for _, ln := range badBoxes(log) {
+				t.Errorf("latex: %s", ln)
+			}
+		})
+	}
+}

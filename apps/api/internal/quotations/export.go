@@ -208,10 +208,11 @@ func offerText(it QuotationItem) string {
 }
 
 // withCode appends the IMPA code.
+// Both parts may wrap, since table cells are narrow.
 func withCode(name string, code *string) string {
-	out := pdfgen.LatexEscape(name)
+	out := pdfgen.LatexBreakable(name)
 	if code != nil && *code != "" {
-		out += " (" + pdfgen.LatexEscape(*code) + ")"
+		out += " (" + pdfgen.LatexBreakable(*code) + ")"
 	}
 	return out
 }
