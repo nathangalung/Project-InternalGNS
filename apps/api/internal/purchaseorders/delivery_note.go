@@ -120,25 +120,6 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, d
 		}
 	}
 
-	expItems := make([]dnItem, 0, len(items))
-	for i, it := range items {
-		unit := ""
-		if it.UnitCode != nil {
-			unit = *it.UnitCode
-		}
-		ship := ""
-		if it.ShipDestination != nil {
-			ship = *it.ShipDestination
-		}
-		expItems = append(expItems, dnItem{
-			No:              i + 1,
-			Qty:             pdfgen.FormatQty(it.Qty),
-			Unit:            pdfgen.LatexEscape(unit),
-			Name:            pdfgen.LatexEscape(it.ItemName),
-			ShipDestination: pdfgen.LatexEscape(ship),
-		})
-	}
-
 	return dnData{
 		DeliveryNoteNo: pdfgen.LatexEscape(dnNo),
 		PONo:           pdfgen.LatexEscape(po.PoNumber),
@@ -147,6 +128,33 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, d
 		AttnName:       pdfgen.LatexEscape(attn),
 		VesselName:     pdfgen.LatexEscape(vessel),
 		DateLine:       pdfgen.JakartaDateLine(po.PoDate.In(tz.Jakarta())),
-		Items:          expItems,
+		Items:          deliveryNoteItems(items),
 	}
+}
+
+// deliveryNoteItems lists the lines the note hands over.
+// The shipping charge is billed, not delivered, so it is left out.
+func deliveryNoteItems(items []PurchaseOrderItem) []dnItem {
+	out := make([]dnItem, 0, len(items))
+	for _, it := range items {
+		if it.ItemType == "shipping" {
+			continue
+		}
+		unit := ""
+		if it.UnitCode != nil {
+			unit = *it.UnitCode
+		}
+		ship := ""
+		if it.ShipDestination != nil {
+			ship = *it.ShipDestination
+		}
+		out = append(out, dnItem{
+			No:              len(out) + 1,
+			Qty:             pdfgen.FormatQty(it.Qty),
+			Unit:            pdfgen.LatexEscape(unit),
+			Name:            pdfgen.LatexEscape(it.ItemName),
+			ShipDestination: pdfgen.LatexEscape(ship),
+		})
+	}
+	return out
 }
