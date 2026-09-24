@@ -36,6 +36,10 @@ type scenarioState struct {
 	// Revision fixtures.
 	origID int64
 	newID  int64
+	// Edge fixtures.
+	otherID   int64
+	requestID int64
+	contactID int64
 }
 
 func (s *scenarioState) reset() error {
@@ -44,6 +48,11 @@ func (s *scenarioState) reset() error {
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
+	return s.sendRequestWith(method, path, body, nil)
+}
+
+// sendRequestWith also sets headers.
+func (s *scenarioState) sendRequestWith(method, path string, body any, headers map[string]string) error {
 	var rdr io.Reader
 	if body != nil {
 		raw, err := json.Marshal(body)
@@ -58,6 +67,9 @@ func (s *scenarioState) sendRequest(method, path string, body any) error {
 	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
 	}
 	res, err := s.srv.Client().Do(req)
 	if err != nil {
@@ -332,9 +344,11 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 			state.lastID = 0
 			state.origID = 0
 			state.newID = 0
+			state.otherID, state.requestID, state.contactID = 0, 0, 0
 			return ctx, nil
 		})
 		registerStatusSteps(sc, state)
+		registerEdgeSteps(sc, state)
 
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
 		sc.Step(`^the quotation domain is empty$`, state.emptyDomain)

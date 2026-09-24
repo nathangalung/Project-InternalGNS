@@ -135,15 +135,7 @@ func tokenFor(userID int64, role string) (string, error) {
 
 // actAs calls the real router as a role.
 func (s *scenarioState) actAs(role, action string) error {
-	uid, err := s.userFor(role)
-	if err != nil {
-		return err
-	}
-	token, err := tokenFor(uid, role)
-	if err != nil {
-		return err
-	}
-	base := s.routerServer().URL + "/api/v1/quotations/" + strconv.FormatInt(s.lastID, 10)
+	base := "/quotations/" + strconv.FormatInt(s.lastID, 10)
 	reason := testReason
 	var method, url string
 	var body any
@@ -157,11 +149,25 @@ func (s *scenarioState) actAs(role, action string) error {
 	default:
 		return fmt.Errorf("unknown action %q", action)
 	}
-	raw, err := json.Marshal(body)
+	return s.callAs(role, method, url, body)
+}
+
+// callAs sends one request as a role.
+// path is below /api/v1; a nil body sends none.
+func (s *scenarioState) callAs(role, method, path string, body any) error {
+	uid, err := s.userFor(role)
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest(method, url, bytes.NewReader(raw))
+	token, err := tokenFor(uid, role)
+	if err != nil {
+		return err
+	}
+	var rdr io.Reader
+	if body != nil {
+		rdr = bytes.NewReader(mustJSON(body))
+	}
+	req, err := http.NewRequest(method, s.routerServer().URL+"/api/v1"+path, rdr)
 	if err != nil {
 		return err
 	}
