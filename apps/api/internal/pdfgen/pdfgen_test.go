@@ -33,6 +33,7 @@ func TestFormatQty(t *testing.T) {
 		"1.500":    "1.5",
 		"10.10":    "10.1",
 		"-3.0":     "-3",
+		"-.00":     "0",
 		"  7.50  ": "7.5",
 	}
 	for in, want := range cases {
