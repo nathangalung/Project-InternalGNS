@@ -40,8 +40,6 @@ func mkSvcWithRepo(t *testing.T) (*auth.Service, *users.Repo, context.Context, p
 }
 
 // mkMiddlewareUser creates an account for a middleware test.
-// Its session epoch is predated so a wall-clock step cannot refuse the token
-// the test mints next; the password-reset case still moves it forward.
 func mkMiddlewareUser(t *testing.T, ctx context.Context, tx pgx.Tx, repo *users.Repo, role users.Role) users.User {
 	t.Helper()
 	u, err := repo.Create(ctx, users.CreateUserRequest{
@@ -51,6 +49,8 @@ func mkMiddlewareUser(t *testing.T, ctx context.Context, tx pgx.Tx, repo *users.
 		Role:     role,
 	}, 1)
 	require.NoError(t, err)
+	// Predated so a wall-clock step cannot refuse the token minted next; the
+	// password-reset case still moves the epoch forward.
 	require.NoError(t, testutil.PredateSessions(ctx, tx, u.ID))
 	return u
 }
