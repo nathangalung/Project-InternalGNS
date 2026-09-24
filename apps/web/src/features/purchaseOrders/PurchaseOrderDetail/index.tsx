@@ -10,7 +10,6 @@ import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
 import { ApiError, downloadFile, downloadPdf } from "@/lib/api-client"
 import { formatDate, toNum } from "@/lib/format"
-import { roleCanAccess } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import type { PoTransition, PurchaseOrderRow } from "@/types/api"
@@ -19,11 +18,10 @@ import * as poApi from "../api"
 import {
   useActorNames,
   useChangePoStatus,
-  useInvoiceFiled,
   usePoHistory,
   usePoItems,
+  usePoUpload,
   useRemovePoFile,
-  useSavePoUpload,
 } from "../hooks"
 import type { PoStatus } from "../types"
 import UploadPoModal from "../UploadPoModal"
@@ -38,6 +36,7 @@ import {
   isPoLocked,
   parseCompletenessIssues,
   poBreakdown,
+  uploadRules,
 } from "./helpers"
 import ReasonModal from "./ReasonModal"
 import StatusBar from "./StatusBar"
@@ -58,13 +57,9 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
     (events ?? []).map((ev) => ev.changedBy),
     me?.role === "superadmin",
   )
-  // Operational cannot read invoices and relies on the server 409.
-  const { data: invoiceFiled = false } = useInvoiceFiled(
-    po.quotationId,
-    po.status === "DELIVERED" && roleCanAccess(me?.role, "invoices"),
-  )
+  const row = poRowFromBackend(po)
+  const upload = usePoUpload(row)
   const changeStatus = useChangePoStatus()
-  const uploadSave = useSavePoUpload()
   const removeFile = useRemovePoFile()
 
   // Pending choice, tied to the status it was made from
@@ -90,9 +85,10 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
   const figures = poBreakdown(po)
   const totalShip = shipping.hargaSatuan
   const clientName = quotation?.client ?? po.companyName
-  const row = poRowFromBackend(po)
   const dnReady = canDownloadDeliveryNote(po)
   const fileRemovable = po.status === "PENDING" || po.status === "UPLOADED"
+  const hasFile = Boolean(po.objectKey && po.fileName)
+  const rules = uploadRules(po.status, hasFile, upload.detailsLocked)
 
   async function applyStatus(t: PoTransition, note?: string) {
     try {
@@ -126,7 +122,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
     file: File | null,
     details: { poNumber: string; poDate: string },
   ) {
-    if (await uploadSave.save(row, file, details)) setShowUpload(false)
+    if (await upload.save(file, details)) setShowUpload(false)
   }
 
   async function handleRemoveFile() {
@@ -190,7 +186,8 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           fileName={po.fileName}
           fileSize={po.fileSize}
           uploadedAt={po.uploadedAt}
-          onUpload={() => setShowUpload(true)}
+          fileLocked={rules.fileLocked}
+          onUpload={rules.editable ? () => setShowUpload(true) : undefined}
           onDownload={() => void handleDownload()}
           onRemove={fileRemovable ? () => setConfirmRemove(true) : undefined}
         />
@@ -227,9 +224,10 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
       {showUpload && (
         <UploadPoModal
           row={row}
-          hasExistingFile={Boolean(po.objectKey && po.fileName)}
-          submitting={uploadSave.isPending}
-          detailsLocked={invoiceFiled}
+          hasExistingFile={hasFile}
+          submitting={upload.isPending}
+          detailsLocked={upload.detailsLocked}
+          checking={upload.checking}
           onClose={() => setShowUpload(false)}
           onSubmit={(file, details) => void handleUploadSubmit(file, details)}
         />

@@ -14,7 +14,7 @@ import { ui } from "@/lib/ui"
 import type { PoUpdateItemsInput, PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
 import { linesMissingUnit, lineToInput, type PoEditLine, poLinesToEdit } from "./adapters"
 import { usePoItems, usePurchaseOrderByQuotation, useUpdatePoItems } from "./hooks"
-import { isVersionConflict } from "./PurchaseOrderDetail/helpers"
+import { isPoLockRefusal, isVersionConflict } from "./PurchaseOrderDetail/helpers"
 
 type PurchaseOrderEditProps = {
   // Resolved from the route's quotation id
@@ -181,6 +181,11 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
       await updateMutation.mutateAsync({ id: po.id, input, rowVersion: po.rowVersion })
       void navigate({ to: "/purchase-orders/$id", params: { id: String(po.quotationId) } })
     } catch (err) {
+      // Locked meanwhile: nothing left to edit.
+      if (isPoLockRefusal(err)) {
+        void navigate({ to: "/purchase-orders/$id", params: { id: String(po.quotationId) } })
+        return
+      }
       // Someone saved first: reload their version.
       if (!isVersionConflict(err)) return
       const [fresh, items] = await Promise.all([refetchPo(), refetchItems()])

@@ -1,17 +1,21 @@
 import {
   keepPreviousData,
+  type QueryClient,
   skipToken,
   useMutation,
   useQueries,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
+import { useState } from "react"
+import { useMe } from "@/features/auth/hooks"
 import * as invoicesApi from "@/features/invoices/api"
 import * as poApi from "@/features/purchaseOrders/api"
 import * as usersApi from "@/features/users/api"
 import { ApiError } from "@/lib/api-client"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
+import { roleCanAccess } from "@/lib/rbac"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
@@ -19,6 +23,7 @@ import type { PoBackendStatus, PoUpdateItemsInput } from "@/types/api"
 import { detailsChanged } from "./adapters"
 import {
   isInvoiceFiled,
+  isPoLockRefusal,
   isVersionConflict,
   parseCompletenessIssues,
   poErrorMessage,
@@ -27,6 +32,18 @@ import type { PoRow } from "./types"
 
 // Under purchaseOrders.all, so one invalidation reaches it.
 const historyKey = (id: number) => [...queryKeys.purchaseOrders.all, "history", id] as const
+
+// Toast; reload a stale PO.
+//
+// A version race and a lock both mean the stored PO moved on, so the page
+// reloads it; a lock also changes what the page offers, such as the edit
+// button.
+function reportPoError(qc: QueryClient, err: unknown, fallback: string) {
+  if (isVersionConflict(err) || isPoLockRefusal(err)) {
+    qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
+  }
+  toast.error(poErrorMessage(err, fallback))
+}
 
 export function usePurchaseOrders(params: poApi.ListParams = {}) {
   return useQuery({
@@ -87,10 +104,13 @@ export function useActorNames(ids: number[], enabled: boolean): Map<number, stri
 // Filed invoice freezes number and date.
 //
 // Only roles that may read invoices ask; the rest rely on the server 409.
-export function useInvoiceFiled(quotationId: number, enabled: boolean) {
+export function useInvoiceFiled(quotationId: number | undefined, enabled: boolean) {
   return useQuery({
-    queryKey: queryKeys.invoices.byQuotation(quotationId),
-    queryFn: enabled ? () => invoicesApi.getByQuotation(quotationId) : skipToken,
+    queryKey: queryKeys.invoices.byQuotation(quotationId ?? 0),
+    queryFn:
+      enabled && quotationId !== undefined
+        ? () => invoicesApi.getByQuotation(quotationId)
+        : skipToken,
     select: (inv) => isInvoiceFiled(inv?.status),
   })
 }
@@ -129,10 +149,7 @@ export function useUpdatePoDetails() {
       rowVersion: number
     }) => poApi.updateDetails(id, { poNumber, poDate }, rowVersion),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all }),
-    onError: (err) => {
-      if (isVersionConflict(err)) qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
-      toast.error(poErrorMessage(err, "Gagal memperbarui detail PO."))
-    },
+    onError: (err) => reportPoError(qc, err, "Gagal memperbarui detail PO."),
   })
 }
 
@@ -144,7 +161,7 @@ export function useRemovePoFile() {
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
       qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal menghapus berkas PO.")),
+    onError: (err) => reportPoError(qc, err, "Gagal menghapus berkas PO."),
   })
 }
 
@@ -162,7 +179,7 @@ export function useUploadPoFile() {
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
       qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah berkas PO.")),
+    onError: (err) => reportPoError(qc, err, "Gagal mengunggah berkas PO."),
   })
 }
 
@@ -184,37 +201,55 @@ export function useUpdatePoItems() {
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.items(id) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
     },
-    onError: (err) => {
-      if (isVersionConflict(err)) qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
-      toast.error(poErrorMessage(err, "Gagal memperbarui item PO."))
-    },
+    onError: (err) => reportPoError(qc, err, "Gagal memperbarui item PO."),
   })
 }
 
-// Upload modal save: details, then file.
+// Upload modal: locks and save.
 //
 // Attaching a file bumps row_version, so the details write goes first while
 // the version the user loaded is still current. Both hooks toast their own
-// errors; the result only says whether to close the modal.
-export function useSavePoUpload() {
+// errors; save only says whether to close the modal.
+//
+// Number and date lock on a filed invoice. Roles that cannot read invoices
+// learn it from a refused save, which then locks the fields for that PO.
+// While the invoice is still loading the fields stay locked, so they never
+// open and then snap shut.
+export function usePoUpload(row: PoRow | undefined) {
+  const { data: me } = useMe()
   const uploadFile = useUploadPoFile()
   const updateDetails = useUpdatePoDetails()
+  const [refusedId, setRefusedId] = useState<number | null>(null)
+  const filed = useInvoiceFiled(
+    row?.quotationId,
+    row?.status === "DELIVERED" && roleCanAccess(me?.role, "invoices"),
+  )
+  const detailsLocked = filed.data === true || (row !== undefined && refusedId === row.id)
 
   async function save(
-    row: PoRow,
     file: File | null,
     details: { poNumber: string; poDate: string },
   ): Promise<boolean> {
+    if (!row) return false
+    let step: "details" | "file" = "details"
     try {
       if (detailsChanged(row, details)) {
         await updateDetails.mutateAsync({ id: row.id, ...details, rowVersion: row.rowVersion })
       }
+      step = "file"
       if (file) await uploadFile.mutateAsync({ id: row.id, file })
       return true
-    } catch {
+    } catch (err) {
+      if (step === "details" && isPoLockRefusal(err)) setRefusedId(row.id)
       return false
     }
   }
 
-  return { save, isPending: uploadFile.isPending || updateDetails.isPending }
+  return {
+    save,
+    isPending: uploadFile.isPending || updateDetails.isPending,
+    detailsLocked,
+    // Invoice lookup still in flight
+    checking: filed.isLoading,
+  }
 }

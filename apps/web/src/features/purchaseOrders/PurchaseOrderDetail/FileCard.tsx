@@ -4,7 +4,10 @@ type FileCardProps = {
   fileName?: string
   fileSize?: number
   uploadedAt?: string
-  onUpload: () => void
+  // Delivered or cancelled; details only
+  fileLocked?: boolean
+  // Undefined when nothing is editable
+  onUpload?: () => void
   onDownload: () => void
   // Only while PENDING or UPLOADED
   onRemove?: () => void
@@ -36,6 +39,7 @@ export default function FileCard({
   fileName,
   fileSize,
   uploadedAt,
+  fileLocked = false,
   onUpload,
   onDownload,
   onRemove,
@@ -86,24 +90,31 @@ export default function FileCard({
           )}
         </div>
         <div className="flex flex-wrap gap-2.5 max-sm:w-full max-sm:*:flex-1">
-          <button type="button" onClick={onUpload} className={`${ui.btnOutline} min-w-[120px]`}>
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-            {hasFile ? "Ganti Berkas" : "Unggah Berkas"}
-          </button>
+          {onUpload && fileLocked && (
+            <button type="button" onClick={onUpload} className={`${ui.btnOutline} min-w-[120px]`}>
+              Ubah Detail
+            </button>
+          )}
+          {onUpload && !fileLocked && (
+            <button type="button" onClick={onUpload} className={`${ui.btnOutline} min-w-[120px]`}>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              {hasFile ? "Ganti Berkas" : "Unggah Berkas"}
+            </button>
+          )}
           {hasFile && onRemove && (
             <button type="button" onClick={onRemove} className={removeBtn}>
               Hapus Berkas

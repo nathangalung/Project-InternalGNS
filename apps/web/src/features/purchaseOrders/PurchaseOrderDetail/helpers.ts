@@ -42,6 +42,34 @@ export function isPoLocked(status: PoStatus): boolean {
   return status === "DELIVERED" || status === "CANCELLED"
 }
 
+// What the upload modal allows.
+export type UploadRules = {
+  // Delivered or cancelled keeps its file
+  fileLocked: boolean
+  // First upload needs a file
+  needsFile: boolean
+  // False when nothing is left to change
+  editable: boolean
+}
+
+// Upload modal rules per PO.
+//
+// The server refuses a file swap once the PO is delivered or cancelled, and
+// number and date once the invoice is filed. A PO that reached work without a
+// file can still fix its details, so a locked file is never required.
+export function uploadRules(
+  status: PoStatus,
+  hasFile: boolean,
+  detailsLocked: boolean,
+): UploadRules {
+  const fileLocked = isPoLocked(status)
+  return {
+    fileLocked,
+    needsFile: !fileLocked && !hasFile,
+    editable: !(fileLocked && detailsLocked),
+  }
+}
+
 // Surat Jalan needs an issued number.
 export function canDownloadDeliveryNote(
   po: Pick<PurchaseOrderRow, "status" | "deliveryNoteNumber">,
@@ -63,12 +91,34 @@ export function isInvoiceFiled(status: InvoiceBackendStatus | undefined): boolea
 export const PO_CONFLICT_MESSAGE =
   "Data PO sudah diubah pengguna lain. Halaman dimuat ulang, periksa lalu simpan kembali."
 
-// Stale row_version or server prose.
+// PO lock refusal code.
+export const PO_LOCKED_CODE = "po_locked"
+
+// Server refused a locked PO.
+//
+// A lock is a state change, not a race: the page reloads the PO and shows the
+// server's Indonesian detail, and retrying the same write cannot succeed.
+export function isPoLockRefusal(err: unknown): boolean {
+  if (!(err instanceof ApiError) || err.status !== 409) return false
+  const body = err.body
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    (body as { code?: unknown }).code === PO_LOCKED_CODE
+  )
+}
+
+// Stale row_version, not a lock.
 //
 // The optimistic-lock 409 carries an English detail, so it gets Indonesian
-// copy. Any other 409, such as the filed-invoice lock, is already Indonesian.
+// copy. The lock 409 carries its own Indonesian detail.
 export function isVersionConflict(err: unknown): boolean {
-  return err instanceof ApiError && err.status === 409 && /row_version/i.test(err.message)
+  return (
+    err instanceof ApiError &&
+    err.status === 409 &&
+    !isPoLockRefusal(err) &&
+    /row_version/i.test(err.message)
+  )
 }
 
 export function poErrorMessage(err: unknown, fallback: string): string {

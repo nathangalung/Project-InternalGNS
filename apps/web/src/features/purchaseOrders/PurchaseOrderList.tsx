@@ -15,10 +15,11 @@ import { ui } from "@/lib/ui"
 import { useListScreen } from "@/lib/useListScreen"
 import { poRowFromBackend } from "./adapters"
 import * as purchaseOrdersApi from "./api"
-import { usePurchaseOrders, useSavePoUpload } from "./hooks"
+import { usePoUpload, usePurchaseOrders } from "./hooks"
 import {
   canDownloadDeliveryNote,
   deliveryNoteFileName,
+  isPoLocked,
   PO_LABEL,
   PO_STATUS_CONFIG,
   shortDocNo,
@@ -32,8 +33,6 @@ type PurchaseOrderListProps = {
 }
 
 export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListProps) {
-  const uploadSave = useSavePoUpload()
-
   // By PO id, so a refetch refreshes the modal row.
   const [uploadPoId, setUploadPoId] = useState<number | null>(null)
   const [showFilter, setShowFilter] = useState(false)
@@ -68,6 +67,7 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
 
   const currentRows: PoRow[] = useMemo(() => (rawList?.rows ?? []).map(poRowFromBackend), [rawList])
   const uploadRow = currentRows.find((r) => r.id === uploadPoId)
+  const upload = usePoUpload(uploadRow)
 
   const totalItems = rawList?.total ?? 0
   const totalPages = list.totalPagesOf(totalItems)
@@ -76,8 +76,7 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
     file: File | null,
     details: { poNumber: string; poDate: string },
   ) {
-    if (!uploadRow) return
-    if (await uploadSave.save(uploadRow, file, details)) setUploadPoId(null)
+    if (await upload.save(file, details)) setUploadPoId(null)
   }
 
   async function handleDownloadDN(row: PoRow) {
@@ -202,6 +201,8 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
                 currentRows.map((row) => {
                   const status = PO_STATUS_CONFIG[row.status]
                   const dnReady = canDownloadDeliveryNote(row)
+                  // A delivered PO keeps its file
+                  const uploadLabel = isPoLocked(row.status) ? "Ubah detail PO" : "Unggah berkas PO"
                   return (
                     <tr key={row.quotationId} className={ui.tr}>
                       <td className={`${ui.tdCenter} font-bold`} title={row.quotationNo}>
@@ -239,8 +240,8 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
                           </button>
                           <button
                             type="button"
-                            title="Unggah berkas PO"
-                            aria-label={`Unggah berkas PO ${row.poNumber}`}
+                            title={uploadLabel}
+                            aria-label={`${uploadLabel} ${row.poNumber}`}
                             className={ui.iconAction}
                             onClick={() => setUploadPoId(row.id)}
                           >
@@ -318,7 +319,9 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
         <UploadPoModal
           row={uploadRow}
           hasExistingFile={Boolean(uploadRow.objectKey && uploadRow.fileName)}
-          submitting={uploadSave.isPending}
+          submitting={upload.isPending}
+          detailsLocked={upload.detailsLocked}
+          checking={upload.checking}
           onClose={() => setUploadPoId(null)}
           onSubmit={(file, details) => void handleUploadSubmit(file, details)}
         />

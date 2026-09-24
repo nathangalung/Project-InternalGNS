@@ -6,13 +6,17 @@ import {
   deliveryNoteFileName,
   isInvoiceFiled,
   isPoLocked,
+  isPoLockRefusal,
+  isVersionConflict,
   PO_CONFLICT_MESSAGE,
   PO_LABEL,
+  PO_LOCKED_CODE,
   PO_STATUS_CONFIG,
   PO_STATUS_ORDER,
   parseCompletenessIssues,
   poBreakdown,
   poErrorMessage,
+  uploadRules,
 } from "./helpers"
 
 // WCAG relative luminance of #RRGGBB.
@@ -96,14 +100,63 @@ describe("poErrorMessage", () => {
     expect(poErrorMessage(err, "x")).toBe(PO_CONFLICT_MESSAGE)
   })
 
-  it("keeps the filed-invoice 409 prose", () => {
+  it("keeps the lock 409 prose", () => {
     const msg = "Nomor dan tanggal PO tidak dapat diubah setelah invoice dikirim."
-    expect(poErrorMessage(new ApiError(409, null, msg), "x")).toBe(msg)
+    const body = { status: 409, detail: msg, code: "po_locked" }
+    expect(poErrorMessage(new ApiError(409, body, msg), "x")).toBe(msg)
   })
 
   it("falls back for an empty message", () => {
     expect(poErrorMessage(new ApiError(500, null, ""), "Gagal.")).toBe("Gagal.")
   })
+})
+
+describe("409 classification", () => {
+  const lockBody = { status: 409, detail: "Berkas PO tidak dapat diubah.", code: "po_locked" }
+  it.each([
+    ["lock with code", new ApiError(409, lockBody, "Berkas PO tidak dapat diubah."), true, false],
+    ["lock that mentions row_version", new ApiError(409, lockBody, "row_version"), true, false],
+    [
+      "If-Match mismatch",
+      new ApiError(409, { status: 409 }, "purchase order row_version mismatch"),
+      false,
+      true,
+    ],
+    ["409 without code or version", new ApiError(409, null, "Konflik."), false, false],
+    ["other code", new ApiError(409, { code: "other" }, "Konflik."), false, false],
+    ["422 with the lock code", new ApiError(422, lockBody, "x"), false, false],
+    ["plain Error", new Error("row_version"), false, false],
+  ] as const)("%s", (_, err, lock, version) => {
+    expect(isPoLockRefusal(err)).toBe(lock)
+    expect(isVersionConflict(err)).toBe(version)
+  })
+
+  it("names the server code", () => {
+    expect(PO_LOCKED_CODE).toBe("po_locked")
+  })
+})
+
+describe("uploadRules", () => {
+  it.each([
+    // status, hasFile, detailsLocked -> fileLocked, needsFile, editable
+    ["PENDING", false, false, false, true, true],
+    ["PENDING", true, false, false, false, true],
+    ["UPLOADED", true, false, false, false, true],
+    ["ON_PROGRESS", false, false, false, true, true],
+    // Reached work with no file (PO-13): details stay fixable
+    ["DELIVERED", false, false, true, false, true],
+    ["DELIVERED", true, false, true, false, true],
+    ["DELIVERED", true, true, true, false, false],
+    ["CANCELLED", false, false, true, false, true],
+    ["CANCELLED", true, true, true, false, false],
+    // An open file keeps the modal useful
+    ["UPLOADED", true, true, false, false, true],
+  ] as const)(
+    "%s file=%s locked=%s",
+    (status, hasFile, locked, fileLocked, needsFile, editable) => {
+      expect(uploadRules(status, hasFile, locked)).toEqual({ fileLocked, needsFile, editable })
+    },
+  )
 })
 
 describe("poBreakdown", () => {
