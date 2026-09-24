@@ -116,7 +116,7 @@ func TestHandler_Create_MissingItems(t *testing.T) {
 	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 }
 
-// Pinned by the handler discount check.
+// discountMsg pins the handler text.
 const discountMsg = "Diskon harus berupa angka antara 0 dan 100."
 
 func TestHandler_Create_DiscountOutOfRange(t *testing.T) {
