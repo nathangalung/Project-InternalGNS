@@ -2,6 +2,7 @@ package quotations_test
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -309,4 +310,50 @@ func TestHandler_Send_KeepsTheNote(t *testing.T) {
 			assert.Equal(t, c.wantNote, *last.Note)
 		})
 	}
+}
+
+func TestHandler_Update_Refusals(t *testing.T) {
+	srv, _ := resetServer(t)
+	id := mustCreate(t, srv)
+	zeroQty := sampleCreate().Items
+	zeroQty[0].Qty = "0"
+
+	cases := []struct {
+		name      string
+		path      string
+		items     []quotations.CreateItem
+		want      int
+		wantField string
+		wantMsg   string
+	}{
+		{"zero quantity line", idPath(id, ""), zeroQty, http.StatusUnprocessableEntity,
+			"items[0].qty", "jumlah harus lebih besar dari 0"},
+		{"unknown quotation", "/quotations/9999999", sampleCreate().Items, http.StatusNotFound, "", ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			res := doJSONWithHeaders(t, srv, http.MethodPut, c.path,
+				quotations.UpdateRequest{DiscountPct: "0", Items: c.items},
+				map[string]string{"If-Match": "0"})
+			e := problemOf(t, res)
+			assert.Equal(t, c.want, res.StatusCode)
+			if c.wantField != "" {
+				assert.Equal(t, c.wantMsg, e.Fields[c.wantField])
+			}
+		})
+	}
+}
+
+// No match is an empty array, not null.
+func TestHandler_List_EmptyIsArray(t *testing.T) {
+	srv, _ := resetServer(t)
+	mustCreate(t, srv)
+
+	res := doJSON(t, srv, http.MethodGet, "/quotations/?q=tidak-ada-yang-cocok", nil)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, "0", res.Header.Get("X-Total-Count"))
+	raw, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+	assert.JSONEq(t, `[]`, string(raw))
 }

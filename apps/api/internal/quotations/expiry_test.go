@@ -1,8 +1,11 @@
 package quotations
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"log/slog"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -73,5 +76,45 @@ func TestRunExpiryLoop_CancelledContext(t *testing.T) {
 	RunExpiryLoop(ctx, repo, time.Hour, time.Now)
 	if got := repo.calls.Load(); got != 0 {
 		t.Fatalf("expiry calls = %d, want 0", got)
+	}
+}
+
+// cancelOnRun cancels, then fails like a query cut by shutdown.
+type cancelOnRun struct {
+	cancel context.CancelFunc
+	calls  int
+}
+
+func (c *cancelOnRun) ExpireDue(ctx context.Context, _ time.Time) (int64, error) {
+	c.calls++
+	c.cancel()
+	return 0, ctx.Err()
+}
+
+// A run cut by shutdown is not an error.
+func TestRunExpiryLoop_ShutdownDuringRun(t *testing.T) {
+	var logs bytes.Buffer
+	prev := slog.Default()
+	slog.SetDefault(slog.New(slog.NewTextHandler(&logs, nil)))
+	t.Cleanup(func() { slog.SetDefault(prev) })
+
+	ctx, cancel := context.WithCancel(t.Context())
+	repo := &cancelOnRun{cancel: cancel}
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		RunExpiryLoop(ctx, repo, time.Millisecond, time.Now)
+	}()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("loop kept running after shutdown")
+	}
+	if repo.calls != 1 {
+		t.Fatalf("expiry calls = %d, want 1", repo.calls)
+	}
+	if strings.Contains(logs.String(), "level=ERROR") {
+		t.Fatalf("shutdown logged an error: %s", logs.String())
 	}
 }
