@@ -23,13 +23,16 @@ type bucketSpec struct {
 	query  string
 }
 
-// Each bucket maps to a single DB column referencing object keys.
+// Each bucket maps to every DB column referencing its object keys.
 var specs = []bucketSpec{
 	{storage.BucketPODocs, "SELECT file_url FROM purchase_orders WHERE file_url IS NOT NULL"},
 	{storage.BucketClientLogos, "SELECT logo_object_key FROM company_client WHERE logo_object_key IS NOT NULL"},
 	{storage.BucketVendorLogos, "SELECT logo_object_key FROM vendors WHERE logo_object_key IS NOT NULL"},
 	{storage.BucketItemImages, "SELECT image_object_key FROM items WHERE image_object_key IS NOT NULL"},
-	{storage.BucketInvoiceAttachments, "SELECT attachment_object_key FROM invoices WHERE attachment_object_key IS NOT NULL"},
+	// Payment proofs share the invoice bucket; the history keeps each one too.
+	{storage.BucketInvoiceAttachments, `SELECT attachment_object_key FROM invoices WHERE attachment_object_key IS NOT NULL
+UNION SELECT payment_proof_key FROM invoices WHERE payment_proof_key IS NOT NULL
+UNION SELECT payment_proof_key FROM invoice_status_history WHERE payment_proof_key IS NOT NULL`},
 }
 
 func main() {
@@ -151,8 +154,8 @@ func sweepBucket(
 	return len(orphans), deleted, nil
 }
 
-func loadReferences(ctx context.Context, pool *pgxpool.Pool, query string) (map[string]struct{}, error) {
-	rows, err := pool.Query(ctx, query)
+func loadReferences(ctx context.Context, exec db.Executor, query string) (map[string]struct{}, error) {
+	rows, err := exec.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
