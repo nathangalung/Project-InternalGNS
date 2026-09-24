@@ -40,6 +40,7 @@ describe("transferErrorMessage", () => {
     ],
     ["422 parsed body", new ApiError(422, { detail: "NPWP kosong." }, "x"), "NPWP kosong."],
     ["422 field messages", new ApiError(422, fields, "x"), "Unggah ulang."],
+    ["422 blank fields", new ApiError(422, { fields: { a: "  ", b: 3 } }, "x"), fallback],
     [
       "422 title only",
       new ApiError(422, JSON.stringify({ title: "Unprocessable" }), "x"),

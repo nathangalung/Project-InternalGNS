@@ -100,6 +100,18 @@ describe("rowsFromAOA rows", () => {
     expect(rows).toEqual([{ impaCode: "", name: "Mur", qty: 5, unit: "PCS" }])
   })
 
+  it("keeps the header when a later row only looks like one", () => {
+    const rows = rowsFromAOA([
+      ["Nama", "Jumlah"],
+      ["Nama Baut", "2"],
+    ])
+    expect(rows).toEqual([{ impaCode: "", name: "Nama Baut", qty: 2, unit: "" }])
+  })
+
+  it("skips a row whose name cell is empty", () => {
+    expect(rowsFromAOA([HEADER, [1, "370115", null, "2", "PCS"]])).toEqual([])
+  })
+
   it("tolerates holes and nulls in the header scan", () => {
     const aoa: unknown[][] = []
     aoa[2] = [null, "Nama", "Jumlah"]

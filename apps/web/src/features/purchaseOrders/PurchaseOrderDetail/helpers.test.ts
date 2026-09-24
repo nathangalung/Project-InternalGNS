@@ -249,6 +249,16 @@ describe("parseCompletenessIssues ordering", () => {
     expect(issues?.map((i) => `${i.kind}:${i.id}`)).toEqual(["client:9", "vendor:3", "vendor:12"])
   })
 
+  it("keeps the client first when it already leads", () => {
+    const issues = parseCompletenessIssues({
+      fields: {
+        "klien:9": "Data klien K belum lengkap: NPWP",
+        "vendor:3": "Data vendor A belum lengkap: Lokasi",
+      },
+    })
+    expect(issues?.map((i) => `${i.kind}:${i.id}`)).toEqual(["client:9", "vendor:3"])
+  })
+
   it("returns null when fields is not an object", () => {
     expect(parseCompletenessIssues({ fields: "klien:1" })).toBeNull()
     expect(parseCompletenessIssues({ detail: "x" })).toBeNull()
