@@ -102,7 +102,8 @@ export function datesPatch(
 
 // Upload key to display name.
 //
-// "invoices/12/1700000000-receipt.pdf" becomes "receipt.pdf".
+// "invoices/12/1700000000-receipt.pdf" becomes "receipt.pdf", and a proof
+// under "invoices/12/payment/" reads the same way.
 export function fileNameFromKey(objectKey: string | undefined): string {
   if (!objectKey) return ""
   const last = objectKey.split("/").pop() ?? ""

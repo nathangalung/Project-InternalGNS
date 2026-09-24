@@ -68,7 +68,7 @@ function useInvalidateInvoices() {
 
 // Validated proof upload.
 async function uploadPaymentProof(id: number, file: File): Promise<string> {
-  validateAsset("invoiceAttachment", file)
+  validateAsset("paymentProof", file)
   return uploadWithFreshKey(() => invApi.presignPaymentProofUpload(id, file.name), file)
 }
 

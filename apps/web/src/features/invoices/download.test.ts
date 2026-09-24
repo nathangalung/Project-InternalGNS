@@ -64,8 +64,8 @@ describe("failureMessage", () => {
     ],
     [
       "validation error text",
-      new Error("Ukuran lampiran invoice maksimal 20 MB."),
-      "Ukuran lampiran invoice maksimal 20 MB.",
+      new Error("Ukuran bukti pembayaran melebihi 20 MB."),
+      "Ukuran bukti pembayaran melebihi 20 MB.",
     ],
   ])("%s", (_name, err, want) => {
     expect(failureMessage(err, fallback)).toBe(want)

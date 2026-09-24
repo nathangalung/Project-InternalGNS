@@ -141,7 +141,7 @@ describe("datesPatch", () => {
 describe("fileNameFromKey", () => {
   it.each<[string | undefined, string]>([
     ["invoices/12/1700000000-receipt.pdf", "receipt.pdf"],
-    ["invoices/12/1700000000-bukti-bayar.pdf", "bukti-bayar.pdf"],
+    ["invoices/12/payment/1700000000-bukti-bayar.pdf", "bukti-bayar.pdf"],
     ["plain.pdf", "plain.pdf"],
     [undefined, ""],
   ])("%s", (key, want) => {
@@ -184,7 +184,7 @@ describe("historyItems", () => {
       createdAt: "2026-09-01T02:00:00Z",
       history: [
         event(1, "draft", "sent"),
-        event(2, "sent", "paid", { paymentProofKey: "invoices/9/1-bukti.pdf" }),
+        event(2, "sent", "paid", { paymentProofKey: "invoices/9/payment/1-bukti.pdf" }),
       ],
     })
     expect(items.map((i) => [i.action, i.hasProof])).toEqual([
