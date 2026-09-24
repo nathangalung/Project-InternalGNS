@@ -152,3 +152,18 @@ func TestService_Authenticate_MissingVersionRefused(t *testing.T) {
 	_, err = svc.Authenticate(ctx, legacy)
 	assert.ErrorIs(t, err, auth.ErrSessionRevoked)
 }
+
+// Forward mint clocks keep sessions.
+// The clock that checks nbf may step back after the one that stamped it;
+// a token minted seconds "in the future" must still authenticate.
+func TestService_Authenticate_SurvivesClockStepAfterMint(t *testing.T) {
+	ctx, _, _, svc, u, _ := mkLoggedIn(t, users.RoleOperational)
+
+	auth.SetClock(svc, func() time.Time { return time.Now().Add(5 * time.Second) })
+	resp, err := svc.Login(ctx, u.Email, "Right-pw1!")
+	require.NoError(t, err)
+
+	ident, err := svc.Authenticate(ctx, resp.Token)
+	require.NoError(t, err)
+	assert.Equal(t, u.ID, ident.UserID)
+}

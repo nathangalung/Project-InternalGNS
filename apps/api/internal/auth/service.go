@@ -321,11 +321,18 @@ func (s *Service) RevokeRefresh(ctx context.Context, raw string) error {
 	return s.refresh.revokeToken(ctx, hashRefreshToken(raw))
 }
 
+// clockLeeway absorbs wall-clock steps.
+// nbf and exp are checked against the verifying host's clock, which NTP or a
+// VM host can step back after the mint; without slack a fresh token reads
+// as not yet valid. A minute is negligible against the access token expiry.
+const clockLeeway = time.Minute
+
 func (s *Service) Verify(tokenStr string) (Claims, error) {
 	parser := jwt.NewParser(
 		jwt.WithValidMethods([]string{"HS256"}),
 		jwt.WithIssuer(s.issuer),
 		jwt.WithExpirationRequired(),
+		jwt.WithLeeway(clockLeeway),
 	)
 
 	var claims Claims
