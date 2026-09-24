@@ -19,6 +19,14 @@ func TestPresign_ReturnsProxyPath(t *testing.T) {
 	if u != want {
 		t.Fatalf("PresignPut = %q, want %q", u, want)
 	}
+	// Uploads and downloads share the one proxy route.
+	g, err := c.PresignGet(context.Background(), BucketPODocs, "po/1/scan.pdf", time.Minute)
+	if err != nil {
+		t.Fatalf("presign get: %v", err)
+	}
+	if g != want {
+		t.Fatalf("PresignGet = %q, want %q", g, want)
+	}
 }
 
 // safeKey must allow filenames with consecutive dots while still blocking

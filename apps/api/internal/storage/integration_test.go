@@ -85,10 +85,9 @@ func TestNew_MissingCreds(t *testing.T) {
 	assert.ErrorIs(t, err, storage.ErrNotConfigured)
 }
 
+// An unreachable store fails the boot.
+// The first call New makes is the bucket check, so its error names that step.
 func TestNew_BadEndpoint(t *testing.T) {
-	if os.Getenv("MINIO_ENDPOINT") != "" {
-		t.Skip("real MINIO_ENDPOINT set; bad-endpoint test would need network isolation")
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	_, err := storage.New(ctx, storage.Config{
@@ -96,11 +95,94 @@ func TestNew_BadEndpoint(t *testing.T) {
 		AccessKey: "x",
 		SecretKey: "y",
 	})
-	if err == nil {
-		t.Fatal("expected error from unreachable endpoint")
-	}
-	// MinIO SDK either fails connect or returns lookup error; both fine.
-	assert.True(t, strings.Contains(err.Error(), "storage:") || err != nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "storage: bucket exists check")
+}
+
+// A malformed endpoint fails before any network call.
+func TestNew_MalformedEndpoint(t *testing.T) {
+	_, err := storage.New(context.Background(), storage.Config{
+		Endpoint:  "http://minio:9000/path",
+		AccessKey: "x",
+		SecretKey: "y",
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "storage: new client")
+}
+
+// Wrong credentials fail the boot too.
+func TestNew_WrongCredentials(t *testing.T) {
+	cfg := requireMinio(t)
+	cfg.SecretKey += "-wrong"
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err := storage.New(ctx, cfg)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "storage: bucket exists check")
+}
+
+// Missing objects and buckets answer typed.
+// A missing key is ErrObjectNotFound, which the proxy turns into 404, and
+// the existence probe reports false rather than failing the upload.
+func TestClient_MissingObjectsAndBuckets(t *testing.T) {
+	cfg := requireMinio(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	c, err := storage.New(ctx, cfg)
+	require.NoError(t, err)
+
+	const noBucket = "gns-no-such-bucket"
+	key := storage.BuildObjectKey("missing", time.Now().UnixNano(), "gone.pdf")
+
+	_, _, _, err = c.GetObject(ctx, storage.BucketPODocs, key)
+	assert.ErrorIs(t, err, storage.ErrObjectNotFound)
+
+	exists, err := c.ObjectExists(ctx, storage.BucketPODocs, key)
+	require.NoError(t, err)
+	assert.False(t, exists)
+
+	exists, err = c.ObjectExists(ctx, noBucket, key)
+	require.NoError(t, err)
+	assert.False(t, exists)
+
+	err = c.PutObject(ctx, noBucket, key, strings.NewReader("x"), 1, "application/pdf")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "storage: put object")
+
+	_, err = c.ListObjects(ctx, noBucket)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "storage: list")
+
+	_, _, _, err = c.GetObject(ctx, noBucket, key)
+	require.Error(t, err)
+	assert.NotErrorIs(t, err, storage.ErrObjectNotFound, "a missing bucket is a fault, not a missing file")
+
+	_, _, _, err = c.GetObject(ctx, "", key)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "storage: get object")
+}
+
+// An upload without a type is stored as octet-stream.
+func TestClient_PutDefaultsContentType(t *testing.T) {
+	cfg := requireMinio(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	c, err := storage.New(ctx, cfg)
+	require.NoError(t, err)
+
+	key := storage.BuildObjectKey("untyped", time.Now().UnixNano(), "scan.pdf")
+	t.Cleanup(func() { _ = c.RemoveObject(context.Background(), storage.BucketPODocs, key) })
+	require.NoError(t, c.PutObject(ctx, storage.BucketPODocs, key, strings.NewReader("abc"), 3, ""))
+
+	rc, contentType, size, err := c.GetObject(ctx, storage.BucketPODocs, key)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = rc.Close() })
+	assert.Equal(t, "application/octet-stream", contentType)
+	assert.EqualValues(t, 3, size)
+
+	exists, err := c.ObjectExists(ctx, storage.BucketPODocs, key)
+	require.NoError(t, err)
+	assert.True(t, exists)
 }
 
 // MinIO keeps the cap refusal typed.

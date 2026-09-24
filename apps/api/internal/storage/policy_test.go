@@ -25,3 +25,58 @@ func TestCanAccessBucket(t *testing.T) {
 		}
 	}
 }
+
+// Each bucket takes only its own file types.
+// Logos and item images are pictures; PO documents and invoice attachments
+// also take PDFs and workbooks. The check ignores case.
+func TestValidateAssetFileName(t *testing.T) {
+	cases := []struct {
+		bucket, name string
+		ok           bool
+	}{
+		{BucketClientLogos, "logo.png", true},
+		{BucketVendorLogos, "logo.JPEG", true},
+		{BucketItemImages, "photo.webp", true},
+		{BucketClientLogos, "logo.pdf", false},
+		{BucketItemImages, "sheet.xlsx", false},
+		{BucketPODocs, "scan.pdf", true},
+		{BucketPODocs, "order.xls", true},
+		{BucketInvoiceAttachments, "proof.PDF", true},
+		{BucketInvoiceAttachments, "proof.gif", false},
+		{BucketPODocs, "tool.exe", false},
+		{BucketPODocs, "noextension", false},
+		{BucketPODocs, "page.html", false},
+		{"nonexistent-bucket", "logo.png", false},
+	}
+	for _, c := range cases {
+		err := ValidateAssetFileName(c.bucket, c.name)
+		if (err == nil) != c.ok {
+			t.Errorf("ValidateAssetFileName(%q, %q) = %v, want ok=%v", c.bucket, c.name, err, c.ok)
+		}
+	}
+}
+
+// Documents get a larger cap than pictures.
+func TestMaxBytes(t *testing.T) {
+	cases := []struct {
+		bucket string
+		want   int64
+	}{
+		{BucketClientLogos, 2 << 20},
+		{BucketVendorLogos, 2 << 20},
+		{BucketItemImages, 5 << 20},
+		{BucketInvoiceAttachments, 20 << 20},
+		{BucketPODocs, 20 << 20},
+		{"nonexistent-bucket", 0},
+	}
+	for _, c := range cases {
+		if got := MaxBytes(c.bucket); got != c.want {
+			t.Errorf("MaxBytes(%q) = %d, want %d", c.bucket, got, c.want)
+		}
+	}
+	for _, b := range AllBuckets {
+		if MaxBytes(b) <= 0 || MaxBytes(b) > maxUploadBytes {
+			t.Errorf("bucket %q cap %d is outside (0, %d]", b, MaxBytes(b), maxUploadBytes)
+		}
+	}
+}
