@@ -262,6 +262,11 @@ test.describe("quotation status", () => {
     for (let step = 0; step < 3; step++) {
       await page.getByRole("button", { name: "Lanjut" }).click()
     }
+    // The editor summary reads the client too, not "Belum diisi".
+    const summary = page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
+    await expect(summary).toContainText("0123456789012345")
+    await expect(summary).toContainText("Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara")
+    await expect(summary).toContainText(client.contactEmail ?? "")
     await page.getByRole("button", { name: "Simpan" }).click()
     await expect(page).toHaveURL(new RegExp(`/quotations/${q.id}$`))
     // Q-11: saving the editor keeps the fields it does not show.
@@ -303,8 +308,8 @@ test.describe("quotation status", () => {
     await expect(
       page.getByText("Klien tidak dapat diganti setelah quotation dibuat."),
     ).toBeVisible()
-    await page.getByRole("button", { name: new RegExp(second) }).click()
-    await expect(page.getByRole("button", { name: new RegExp(second) })).toHaveAttribute(
+    await page.getByRole("button", { name: new RegExp(`^${second}`) }).click()
+    await expect(page.getByRole("button", { name: new RegExp(`^${second}`) })).toHaveAttribute(
       "aria-pressed",
       "true",
     )

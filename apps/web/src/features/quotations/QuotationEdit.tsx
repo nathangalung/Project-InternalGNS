@@ -3,8 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import LoadingState from "@/components/shared/LoadingState"
 import NotFoundState from "@/components/shared/NotFoundState"
 import StateMessage from "@/components/shared/StateMessage"
+import { clientCardInfo } from "@/features/clients/clientCard"
 import { getCompanyInitials } from "@/features/clients/helpers"
-import { useClientContacts } from "@/features/clients/hooks"
+import { useClient, useClientContacts } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
 import {
   useQuotation,
@@ -114,27 +115,41 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   const updateContactMutation = useUpdateQuotationContact()
   // Fetch contacts by quotation's own company, not selected client.
   const { data: contacts = [] } = useClientContacts(detail?.companyClientId)
+  const { data: clientRow } = useClient(detail?.companyClientId)
 
   const { data: unitsData } = useUnits()
 
   // The client is fixed on edit.
   //
   // PUT /quotations/{id} has no client field, so a different pick would be
-  // dropped silently. Step 1 shows the quotation's own client only.
-  const lockedClient: Client | undefined = useMemo(
-    () =>
-      detail
-        ? {
-            id: String(detail.companyClientId),
-            name: detail.companyClientName,
-            narahubung: detail.contactName ?? "",
-            country: "",
-            initials: getCompanyInitials(detail.companyClientName),
-            referenceNumber: detail.clientRefNo,
-          }
-        : undefined,
-    [detail],
-  )
+  // dropped silently. Step 1 shows the quotation's own client only; the
+  // summary reads its live data and the contact picked in step 1.
+  const lockedClient: Client | undefined = useMemo(() => {
+    if (!detail) return undefined
+    const contactId = selectedContactId ?? detail.contactId
+    const info = clientCardInfo(
+      {
+        narahubung: contactId === detail.contactId ? detail.contactName : undefined,
+        referenceNumber: detail.clientRefNo,
+      },
+      clientRow,
+      contacts,
+      contactId,
+    )
+    return {
+      id: String(detail.companyClientId),
+      name: detail.companyClientName,
+      narahubung: info.narahubung ?? "",
+      country: clientRow?.countryCode ?? "",
+      initials: getCompanyInitials(detail.companyClientName),
+      phone: info.phone,
+      email: info.email,
+      nomorTKU: info.nomorTKU,
+      referenceNumber: info.referenceNumber,
+      npwp: info.npwp,
+      lokasi: info.lokasi,
+    }
+  }, [detail, clientRow, contacts, selectedContactId])
   const clientOptions = lockedClient ? [lockedClient] : []
   const currentClient = lockedClient?.id === selectedClient ? lockedClient : undefined
 
