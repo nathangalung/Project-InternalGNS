@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test"
-import { api, idFrom } from "./support/sales"
+import { api, deactivate, idFrom } from "./support/sales"
 import { expect, test } from "./support/seed"
 
 // Client master data through the UI: create, edit, contacts, deactivate.
@@ -104,4 +104,23 @@ test.describe("as finance", () => {
     await expect(page.getByRole("heading", { name: client.name, level: 2 })).toBeVisible()
     await expect(contactsCard(page)).toContainText(`${seed.prefix} Narahubung`)
   })
+})
+
+test("the status filter separates active and inactive clients", async ({ page, seed }) => {
+  const kept = await seed.client({ label: "Klien Aktif" })
+  const dropped = await seed.client({ label: "Klien Nonaktif" })
+  await deactivate("client", dropped.id)
+
+  await page.goto("/clients")
+  await page.getByPlaceholder("Cari nama klien...").fill(seed.prefix)
+  const rows = page.getByRole("row", { name: new RegExp(seed.prefix) })
+  await expect(rows).toHaveCount(2)
+  await page.getByRole("button", { name: "Filter" }).click()
+  const filter = page.getByRole("dialog", { name: "Filter Klien" })
+  await filter.getByRole("button", { name: "Nonaktif" }).click()
+  await filter.getByRole("button", { name: "Terapkan" }).click()
+  await expect(rows).toHaveCount(1)
+  await expect(rows).toContainText(dropped.name)
+  await expect(rows).toContainText("NONAKTIF")
+  await expect(page.getByRole("link", { name: kept.name, exact: true })).toHaveCount(0)
 })

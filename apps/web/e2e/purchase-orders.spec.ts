@@ -245,3 +245,27 @@ test.describe("purchase order status", () => {
     await expect(page.getByText("Purchase Order tidak dapat diubah")).toBeVisible()
   })
 })
+
+test.describe("purchase order list", () => {
+  test("the Dibatalkan filter keeps only the cancelled PO", async ({ page, seed }) => {
+    const { client, po } = await acceptedPo(seed)
+    const other = await acceptedPo(seed, { client })
+    await seed.setPoStatus(other.po.id, "CANCELLED", "Pesanan ganda")
+
+    await page.goto("/purchase-orders")
+    await page.getByPlaceholder("Cari purchase order, klien, atau nomor...").fill(seed.prefix)
+    const rows = page.getByRole("row", { name: new RegExp(client.name) })
+    await expect(rows).toHaveCount(2)
+    await page.getByRole("button", { name: "Filter" }).click()
+    const filter = page.getByRole("dialog", { name: "Filter Purchase Order" })
+    await filter.getByRole("button", { name: "Dibatalkan" }).click()
+    await filter.getByRole("button", { name: "Terapkan" }).click()
+    await expect(rows).toHaveCount(1)
+    await expect(rows).toContainText("Dibatalkan")
+    await expect(rows.getByRole("link", { name: /^PO-/ })).toHaveAttribute(
+      "href",
+      `/purchase-orders/${other.q.id}`,
+    )
+    expect(po.id).not.toBe(other.po.id)
+  })
+})

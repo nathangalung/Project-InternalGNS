@@ -111,3 +111,24 @@ test.describe("as finance", () => {
     )
   })
 })
+
+// Open bug: the Katalog search never finds a deactivated product, not even
+// under Nonaktif. search-advanced reads its name layer from fn_search_items,
+// which is active-only, while ProductDetail promises the product stays in
+// the Katalog. test.fail keeps the repro running; drop it once fixed.
+test("a deactivated product is found by name under the Nonaktif filter", async ({ page, seed }) => {
+  test.fail(true, "search-advanced drops inactive items from its name layer")
+  const kept = await seed.item({ label: "Produk Aktif" })
+  const dropped = await seed.item({ label: "Produk Nonaktif" })
+  await deactivate("item", dropped.id)
+
+  await page.goto("/products")
+  await page.getByRole("button", { name: "Filter" }).click()
+  const filter = page.getByRole("dialog", { name: "Filter Produk" })
+  await filter.getByRole("button", { name: "Nonaktif" }).click()
+  await filter.getByRole("button", { name: "Terapkan" }).click()
+  await page.getByPlaceholder("Cari kode IMPA, nama, kategori produk...").fill(dropped.name)
+  const row = page.getByRole("row", { name: new RegExp(dropped.name) })
+  await expect(row).toContainText("NONAKTIF")
+  await expect(page.getByRole("link", { name: kept.name, exact: true })).toHaveCount(0)
+})
