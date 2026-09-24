@@ -45,6 +45,20 @@
     outline-offset: 2px;
   }
 
+  /* Honor reduced motion */
+  /* Important in base outranks every utility layer. Near-zero, not none,
+     so transitionend and animationend still fire. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   /* Status colors, read by lib/status.ts */
   :root {
     --status-disetujui-bg: #d1fae5;
