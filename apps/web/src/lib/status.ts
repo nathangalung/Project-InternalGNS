@@ -1,3 +1,4 @@
+import { todayInJakarta } from "@/lib/date-range"
 import type { InvoiceBackendRow, QuotationStatus } from "@/types/api"
 
 // Quotation status labels.
@@ -64,9 +65,6 @@ export const quotationBadge: Record<QuotationStatusLabel, { bg: string; color: s
 export const BADGE_AKTIF = { label: "AKTIF", bg: "#D1FAE5", color: "#047857" }
 export const BADGE_NONAKTIF = { label: "NONAKTIF", bg: "#FEE2E2", color: "#B91C1C" }
 
-// Business timezone, matching the pinned DB session.
-const JAKARTA_TZ = "Asia/Jakarta"
-
 // Displayed invoice statuses.
 export type InvoiceStatus = "DRAF" | "DIKIRIM" | "DIBAYAR" | "TERLAMBAT"
 
@@ -90,11 +88,6 @@ export function deriveInvoiceStatus(
   const base: InvoiceStatus = inv.status === "sent" ? "DIKIRIM" : "DRAF"
   if (inv.dueDate && isPastDueInJakarta(inv.dueDate)) return "TERLAMBAT"
   return base
-}
-
-// Today in Jakarta, as YYYY-MM-DD.
-function todayInJakarta(): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: JAKARTA_TZ }).format(new Date())
 }
 
 // Overdue the day after the due date.
