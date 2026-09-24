@@ -59,8 +59,11 @@ async function save(page: Page) {
   const saved = page.waitForResponse(
     (r) => r.request().method() === "PUT" && /\/users\/\d+$/.test(r.url()),
   )
-  await page.getByRole("button", { name: "Simpan Perubahan" }).click()
+  const button = page.getByRole("button", { name: "Simpan Perubahan" })
+  await button.click()
   expect((await saved).status()).toBe(200)
+  // Settled, including a password step after the PUT.
+  await expect(button).toBeDisabled()
 }
 
 // The reader's session has ended.
@@ -204,7 +207,12 @@ test("an admin password reset ends the user's session (AU-11)", async ({ page, s
   const fresh = generatePassword()
   await openUser(page, victim.user.id)
   await page.getByLabel("Kata Sandi Baru", { exact: true }).fill(fresh)
+  const reset = page.waitForResponse(
+    (r) =>
+      r.request().method() === "PATCH" && r.url().endsWith(`/users/${victim.user.id}/password`),
+  )
   await save(page)
+  expect((await reset).status()).toBe(204)
 
   await expectSignedOut(victim.page)
   expect(await loginStatus(victim.user.email, victim.user.password)).toBe(401)
