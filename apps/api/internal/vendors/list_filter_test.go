@@ -58,3 +58,18 @@ func TestHandler_List_Filters(t *testing.T) {
 		})
 	}
 }
+
+// Non-ASCII names search whole.
+func TestHandler_List_UnicodeName(t *testing.T) {
+	token := fmt.Sprintf("Çağrı 東京 Ñandú %d", time.Now().UnixNano())
+	id := insertVendor(t, "CV "+token, "Jakarta", true)
+	res := doJSON(t, newSrv(t), http.MethodGet, "/vendors/?q="+url.QueryEscape(token), nil)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var rows []vendors.Vendor
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&rows))
+	require.Len(t, rows, 1)
+	assert.Equal(t, id, rows[0].ID)
+	assert.Equal(t, "CV "+token, rows[0].Name)
+	assert.Equal(t, "1", res.Header.Get("X-Total-Count"))
+}

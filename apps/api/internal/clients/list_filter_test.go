@@ -72,3 +72,33 @@ func TestHandler_List_Filters(t *testing.T) {
 		})
 	}
 }
+
+// Non-ASCII names search whole.
+func TestHandler_List_UnicodeName(t *testing.T) {
+	token := fmt.Sprintf("Çağrı 東京 Ñandú %d", time.Now().UnixNano())
+	id := insertClient(t, "PT "+token, "IDN", true)
+	res := doJSON(t, newSrv(t), http.MethodGet, "/clients/?q="+url.QueryEscape(token), nil)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	var rows []clients.Client
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&rows))
+	require.Len(t, rows, 1)
+	assert.Equal(t, id, rows[0].ID)
+	assert.Equal(t, "PT "+token, rows[0].Name)
+	assert.Equal(t, "1", res.Header.Get("X-Total-Count"))
+}
+
+// Unknown country writes nothing.
+func TestHandler_Create_UnknownCountry(t *testing.T) {
+	name := fmt.Sprintf("PT Negeri Antah %d", time.Now().UnixNano())
+	res := doJSON(t, newSrv(t), http.MethodPost, "/clients/",
+		clients.CreateClientRequest{Name: name, CountryCode: "ZZZ"})
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+	assert.Equal(t, "application/problem+json", res.Header.Get("Content-Type"))
+
+	var n int
+	require.NoError(t, testutil.Pool(t).QueryRow(context.Background(),
+		`SELECT count(*) FROM company_client WHERE name = $1`, name).Scan(&n))
+	assert.Zero(t, n)
+}
