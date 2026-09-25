@@ -69,8 +69,11 @@ func TestRepo_MatchRows_AutoCreateDedupsAcrossChunks(t *testing.T) {
 	nonce := time.Now().UnixNano()
 	repeated := fmt.Sprintf("Barang Berulang %d", nonce)
 	rows := make([]items.MatchRowInput, 150)
+	// Fixed-width indexes keep every name's trigrams distinct: unpadded,
+	// row 111 is a trigram subset of row 11 whenever the nonce holds "111",
+	// so word_similarity hits 1.0 and the row matches instead of creating.
 	for i := range rows {
-		rows[i] = items.MatchRowInput{Name: fmt.Sprintf("QQZX%dVV%dUNIK", i, nonce), Qty: 1}
+		rows[i] = items.MatchRowInput{Name: fmt.Sprintf("QQZX%03dVV%dUNIK", i, nonce), Qty: 1}
 	}
 	rows[3] = items.MatchRowInput{Name: repeated, Qty: 1}
 	rows[140] = items.MatchRowInput{Name: "  " + strings.ToLower(repeated) + " ", Qty: 2}
