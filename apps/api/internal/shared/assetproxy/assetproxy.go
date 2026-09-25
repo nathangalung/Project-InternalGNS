@@ -31,19 +31,23 @@ type Descriptor struct {
 	Storage   *storage.Client
 	Bucket    string
 	KeyPrefix string
-	// KeySub names a sub-folder under KeyPrefix/<id>/, so two assets of
-	// one record never share a folder and one cannot be attached as the other.
+	// KeySub names a sub-folder.
+	// It sits under KeyPrefix/<id>/, so two assets of one record never share
+	// a folder and one cannot be attached as the other.
 	KeySub      string
 	NotFoundMsg string
 	NoAssetMsg  string
 	UploadTTL   time.Duration
 	DownloadTTL time.Duration
 
-	// Exists reports whether the owner row exists, returning ErrNotFound.
+	// Exists checks the owner row.
+	// A missing row returns ErrNotFound.
 	Exists func(ctx context.Context, id int64) error
-	// CurrentAsset returns the attached asset, or an empty Key when none.
+	// CurrentAsset returns the attachment.
+	// The Key is empty when none is attached.
 	CurrentAsset func(ctx context.Context, id int64) (Asset, error)
-	// SetKey persists the object key against the owner row.
+	// SetKey persists the object key.
+	// It is stored against the owner row.
 	SetKey func(ctx context.Context, id int64, key string, actor int64) error
 }
 
