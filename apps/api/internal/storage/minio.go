@@ -114,13 +114,13 @@ func objectPath(bucket, objectKey string) string {
 }
 
 // PresignPut returns the proxy path the browser PUTs the asset to.
-func (c *Client) PresignPut(_ context.Context, bucket, objectKey string, _ time.Duration) (string, error) {
-	return objectPath(bucket, objectKey), nil
+func (c *Client) PresignPut(_ context.Context, bucket, objectKey string, _ time.Duration) string {
+	return objectPath(bucket, objectKey)
 }
 
 // PresignGet returns the proxy path the browser GETs the asset from.
-func (c *Client) PresignGet(_ context.Context, bucket, objectKey string, _ time.Duration) (string, error) {
-	return objectPath(bucket, objectKey), nil
+func (c *Client) PresignGet(_ context.Context, bucket, objectKey string, _ time.Duration) string {
+	return objectPath(bucket, objectKey)
 }
 
 // ObjectInfo is the subset of MinIO metadata used by the orphan-blob sweeper.

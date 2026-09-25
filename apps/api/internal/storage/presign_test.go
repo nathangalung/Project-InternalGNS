@@ -11,19 +11,13 @@ import (
 // Presign now returns the API-relative proxy path (no public MinIO host).
 func TestPresign_ReturnsProxyPath(t *testing.T) {
 	c := &Client{}
-	u, err := c.PresignPut(context.Background(), BucketPODocs, "po/1/scan.pdf", time.Minute)
-	if err != nil {
-		t.Fatalf("presign put: %v", err)
-	}
+	u := c.PresignPut(context.Background(), BucketPODocs, "po/1/scan.pdf", time.Minute)
 	const want = "/storage/object?bucket=po-docs&key=po%2F1%2Fscan.pdf"
 	if u != want {
 		t.Fatalf("PresignPut = %q, want %q", u, want)
 	}
 	// Uploads and downloads share the one proxy route.
-	g, err := c.PresignGet(context.Background(), BucketPODocs, "po/1/scan.pdf", time.Minute)
-	if err != nil {
-		t.Fatalf("presign get: %v", err)
-	}
+	g := c.PresignGet(context.Background(), BucketPODocs, "po/1/scan.pdf", time.Minute)
 	if g != want {
 		t.Fatalf("PresignGet = %q, want %q", g, want)
 	}

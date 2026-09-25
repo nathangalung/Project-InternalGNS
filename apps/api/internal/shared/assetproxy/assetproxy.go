@@ -4,8 +4,6 @@ package assetproxy
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -78,13 +76,8 @@ func Upload(d Descriptor) http.HandlerFunc {
 			return
 		}
 		objectKey := storage.BuildFolderKey(d.folder(id), fileName)
-		url, err := d.Storage.PresignPut(r.Context(), d.Bucket, objectKey, d.UploadTTL)
-		if err != nil {
-			renderPresignErr(r.Context(), w, "put", d.Bucket, objectKey, err)
-			return
-		}
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{
-			"uploadUrl": url,
+			"uploadUrl": d.Storage.PresignPut(r.Context(), d.Bucket, objectKey, d.UploadTTL),
 			"objectKey": objectKey,
 			"expiresAt": time.Now().UTC().Add(d.UploadTTL).Unix(),
 		})
@@ -111,13 +104,8 @@ func Download(d Descriptor) http.HandlerFunc {
 			httperr.Render(w, httperr.NotFound(d.NoAssetMsg))
 			return
 		}
-		url, err := d.Storage.PresignGet(r.Context(), d.Bucket, asset.Key, d.DownloadTTL)
-		if err != nil {
-			renderPresignErr(r.Context(), w, "get", d.Bucket, asset.Key, err)
-			return
-		}
 		out := map[string]any{
-			"downloadUrl": url,
+			"downloadUrl": d.Storage.PresignGet(r.Context(), d.Bucket, asset.Key, d.DownloadTTL),
 			"expiresAt":   time.Now().UTC().Add(d.DownloadTTL).Unix(),
 		}
 		for k, v := range asset.Extra {
@@ -175,14 +163,4 @@ func renderOwnerErr(ctx context.Context, w http.ResponseWriter, err error, notFo
 		return
 	}
 	httperr.RenderDBErrCtx(ctx, w, err)
-}
-
-// Logs a presign failure with its cause.
-// The body stays generic; the wrapped error names the operation, bucket and
-// key so the 500 line is actionable instead of a bare "presign failed".
-func renderPresignErr(ctx context.Context, w http.ResponseWriter, op, bucket, key string, err error) {
-	slog.ErrorContext(ctx, "presign failed",
-		"op", op, "bucket", bucket, "key", key,
-		"error", fmt.Errorf("assetproxy: presign %s %s/%s: %w", op, bucket, key, err).Error())
-	httperr.Render(w, httperr.Internal("presign failed"))
 }
