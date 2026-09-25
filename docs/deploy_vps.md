@@ -505,12 +505,21 @@ invoices included. Step 2 keeps a copy of that work; operations decides how
 each document written after the deploy is handled, since a filed invoice is
 never restated.
 
+That decision comes too late to protect the numbers. A document number is
+the client number plus a counter in `doc_sequences`, and new clients draw
+their number from `company_client_number_seq`. The restore rewinds both, so
+the first quotation, PO, delivery note or invoice after the rollback would
+reuse a number already filed with a client or DJP. Step 3 saves the counters
+the failed release reached, and step 6 raises them again before the Deploy.
+
 ```bash
 set -a; . /etc/internalgns-backup.env; set +a
 SNAP=/var/backups/internalgns/predeploy-<failed TAG>/
+NUM=$BACKUP_ROOT/numbering-<failed TAG>
 svc() { docker ps -q --filter label=com.docker.compose.project=$COMPOSE_PROJECT \
   --filter label=com.docker.compose.service=$1; }
 PG=$(svc gns-postgres); MINIO=$(svc gns-minio)
+q() { docker exec -i "$PG" sh -c 'exec psql -X -q -At -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" "$@"' sh "$@"; }
 
 # 1. Stop the writers.
 docker stop $(svc api) $(svc frontend)
@@ -518,7 +527,13 @@ docker stop $(svc api) $(svc frontend)
 # 2. Back up what the failed release wrote; confirm "backup ok" in journalctl.
 systemctl start internalgns-backup.service
 
-# 3. Empty what restore.sh refuses to overwrite: the database and the
+# 3. Save the counters the failed release reached. Stop if either file is
+#    missing or the second one is empty.
+q -c "COPY (SELECT s.doc_type, s.company_id, c.number, s.year, s.last_seq
+  FROM doc_sequences s JOIN company_client c ON c.id = s.company_id) TO STDOUT" >"$NUM.tsv"
+q -F ' ' -c "SELECT last_value, is_called FROM company_client_number_seq" >"$NUM.seq"
+
+# 4. Empty what restore.sh refuses to overwrite: the database and the
 #    snapshot's buckets. The restore and the api's boot recreate buckets.
 DB=$(docker exec "$PG" printenv POSTGRES_DB)
 docker exec "$PG" sh -c 'dropdb -U "$POSTGRES_USER" "$POSTGRES_DB"'
@@ -526,15 +541,55 @@ for b in $(ls "$SNAP/minio"); do
   docker exec "$MINIO" sh -c 'mc alias set l http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && mc rb --force "l/$1"' sh "$b"
 done
 
-# 4. Restore; the last line reads "restore ok: ...".
+# 5. Restore; the last line reads "restore ok: ...".
 /opt/internalgns-ops/restore.sh "$SNAP" "$DB"
+
+# 6. Raise the counters to the saved ones, never lower. A client matches a
+#    saved row by id or by number; an id survives the restore even where
+#    00052 padded the number. It prints each saved client number no client
+#    has now: clients entered after the deploy, which the restore removed.
+raise() {
+  read -r last called <"$NUM.seq"
+  { printf '%s\n' 'BEGIN;' \
+      'CREATE TEMP TABLE seen (doc_type text, company_id bigint, number text, year int, last_seq int);' \
+      'COPY seen FROM STDIN;'
+    cat "$NUM.tsv"
+    printf '%s\n' '\.'
+    cat <<SQL
+INSERT INTO doc_sequences AS d (doc_type, company_id, year, last_seq)
+SELECT s.doc_type, c.id, s.year, max(s.last_seq)
+FROM seen s JOIN company_client c ON c.id = s.company_id OR c.number = s.number
+GROUP BY s.doc_type, c.id, s.year
+ON CONFLICT (doc_type, company_id, year)
+DO UPDATE SET last_seq = greatest(d.last_seq, excluded.last_seq), updated_at = now();
+SELECT 'client number sequence raised to ' || setval(r, last, called)
+FROM (SELECT to_regclass('company_client_number_seq') AS r,
+             $last AS last, '$called'::boolean AS called) x
+WHERE r IS NOT NULL
+  AND last + called::int > coalesce(pg_sequence_last_value(r) + 1, 1);
+COMMIT;
+SELECT DISTINCT 'removed client ' || s.number FROM seen s
+WHERE NOT EXISTS (SELECT 1 FROM company_client c
+                  WHERE c.id = s.company_id OR c.number = s.number);
+SQL
+  } | q
+}
+raise
 ```
 
-5. In Dokploy set `TAG` to the tag noted in section 13 and **Deploy**. The
+7. In Dokploy set `TAG` to the tag noted in section 13 and **Deploy**. The
    restored schema is the one that image last ran, so nothing migrates.
-6. Check `https://<API_HOST>/readyz`, log in, and open a quotation PDF and a
+8. Check `https://<API_HOST>/readyz`, log in, and open a quotation PDF and a
    client logo. Login writes a refresh token, the insert a tag-only rollback
    breaks.
+
+Keep the `removed client` lines from step 6. Their documents now exist only
+outside the database. v0.3.1 has no number generator, so client numbers are
+typed by hand there. When someone enters a client under a listed number,
+run `raise` again, with `NUM` and `q` set as above, before that client's
+first document. Until then its counters start at 1 and reissue the numbers
+the removed client filed. A rollback target without
+`company_client_number_seq` (00056) skips the sequence line.
 
 The database and the buckets now come from one snapshot, so the orphan-blob
 warning in `docs/backup_restore.md` does not apply to this restore.
@@ -552,13 +607,22 @@ dump, never from production data. Locally, "Deploy" is
 
 1. Bring the stack up on the previous `TAG` and seed it.
 2. Run `scripts/backup.sh` and pin its snapshot, as in section 13.
-3. Deploy the new `TAG`, log in, and create a quotation.
-4. Run steps 1 to 6 above, with `SNAP` at the pinned copy and
+3. Deploy the new `TAG` and log in. Create a quotation for a seeded client.
+   Add a client, create a quotation for it, and note both quotation numbers
+   and the new client's number.
+4. Run steps 1 to 8 above, with `SNAP` at the pinned copy and
    `scripts/backup.sh` in place of the systemd unit.
+5. Create a quotation for the same seeded client. Then enter the removed
+   client again under its old number, run `raise`, and create a quotation
+   for it.
 
-The drill passes when login succeeds on the old `TAG` and the quotation from
-step 3 is gone. Login is the check that matters: it is what a tag-only
-rollback breaks.
+The drill passes when all of these hold:
+
+- Login succeeds on the old `TAG`. This is what a tag-only rollback breaks.
+- The two step 3 quotations are gone.
+- Step 6 printed `removed client` with the number of the client from step 3.
+- Neither step 5 quotation has the number of a step 3 quotation. If one
+  does, the old release would reissue a number that was already filed.
 
 ## 15. Auto-redeploy (optional)
 
