@@ -67,7 +67,11 @@ Production step: confirm the pull works on the VPS (section 13), then
 redeploy. Compose replaces the `gns-minio` container with the Silo image on
 the same volume; nothing is copied or migrated. Until Silo has run for a
 while, do not `docker image prune` the cached `minio/minio` image: it can no
-longer be pulled, so it is the only way back.
+longer be pulled, so it is the only way back. The backup and restore scripts
+run on either image: they call `mcli` and fall back to `mc` on `minio/minio`,
+so the pre-deploy backup and dry run in section 13 work before the swap and
+after a rollback. The cleanup commands that may run on the old image carry the
+same fallback.
 
 Dependabot does not track this image. Its Docker tag parser cannot order
 `RELEASE.<timestamp>` tags, so bump the tag by hand from the Silo releases
@@ -600,7 +604,7 @@ q -c "COPY (SELECT regexp_replace(quotation_no, ' Rev\.[0-9]+\$', ''), max(versi
 DB=$(docker exec "$PG" printenv POSTGRES_DB)
 docker exec "$PG" sh -c 'dropdb -U "$POSTGRES_USER" "$POSTGRES_DB"'
 for b in $(ls "$SNAP/minio"); do
-  docker exec "$MINIO" sh -c 'mcli alias set l http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && mcli rb --force "l/$1"' sh "$b"
+  docker exec "$MINIO" sh -c 'command -v mcli >/dev/null || mcli() { mc "$@"; }; mcli alias set l http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && mcli rb --force "l/$1"' sh "$b"
 done
 
 # 5. Restore; the last line reads "restore ok: ...".

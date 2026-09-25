@@ -31,6 +31,8 @@ mcli_run() {
   # Usage: mcli_run CONTAINER IMAGE SCRIPT [docker run args...]. The one-off
   # container shares MinIO's network namespace, so it reaches 127.0.0.1:9000
   # on the internal-only network. Credentials pass by name, never in argv.
+  # Silo ships mcli; the old minio/minio image ships only mc, so mcli falls
+  # back to it before the Silo deploy and after a rollback.
   local minio=$1 image=$2 script=$3
   shift 3
   MINIO_ROOT_USER=$(minio_env "$minio" MINIO_ROOT_USER) \
@@ -38,7 +40,8 @@ mcli_run() {
     docker run --rm --network "container:$minio" --user "$(id -u):$(id -g)" \
     -e MC_CONFIG_DIR=/tmp/mc -e MINIO_ROOT_USER -e MINIO_ROOT_PASSWORD "$@" \
     --entrypoint sh "$image" -c \
-    'set -e; mcli alias set src http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && '"$script"
+    'set -e; command -v mcli >/dev/null 2>&1 || mcli() { mc "$@"; }
+    mcli alias set src http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && '"$script"
 }
 
 # Per-table count query.
