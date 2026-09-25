@@ -96,3 +96,32 @@ func TestRunRefreshPurgeLoop_RepeatsEachInterval(t *testing.T) {
 		t.Fatal("loop did not stop on context cancel")
 	}
 }
+
+// cancellingPurger fails after shutdown began.
+type cancellingPurger struct{ cancel context.CancelFunc }
+
+func (p cancellingPurger) PurgeExpired(context.Context) (int64, error) {
+	p.cancel()
+	return 0, context.Canceled
+}
+
+// Shutdown mid-sweep logs nothing.
+// A purge cut short by shutdown is expected, so it must not page anyone
+// with an error line.
+func TestRunRefreshPurgeLoop_ShutdownMidSweepIsSilent(t *testing.T) {
+	logs := captureLogs(t)
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		runRefreshPurgeLoop(ctx, cancellingPurger{cancel: cancel}, time.Hour)
+	}()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("loop did not stop after shutdown mid-sweep")
+	}
+	if _, msgs := logs.snapshot(); len(msgs) != 0 {
+		t.Fatalf("shutdown mid-sweep logged %q", msgs)
+	}
+}

@@ -207,6 +207,17 @@ func TestRefreshRepo_PurgeExpired(t *testing.T) {
 	assert.Equal(t, 3, remaining)
 }
 
+// Purge failure reaches the sweep.
+// The background loop decides whether to log, so the repo must hand the
+// database error back wrapped, not swallow it as zero rows.
+func TestRefreshRepo_PurgeExpired_DBError(t *testing.T) {
+	repo := auth.NewRefreshRepo(testutil.FakeExec{}, testutil.Store(t))
+	n, err := repo.PurgeExpired(context.Background())
+	require.ErrorIs(t, err, testutil.ErrFake)
+	assert.Contains(t, err.Error(), "purge expired refresh tokens")
+	assert.Zero(t, n)
+}
+
 // Raw token never reaches the DB — only its SHA-256 digest does. Sanity check
 // that the digest size matches what migration 00032 expects.
 func TestRefreshToken_HashShape(t *testing.T) {
