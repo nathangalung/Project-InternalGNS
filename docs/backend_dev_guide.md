@@ -35,7 +35,8 @@ PostgreSQL: tables, triggers, plpgsql functions
 ## 2. Layout
 
 ```
-cmd/api/              entry point; -bootstrap migrates and seeds, then exits;
+cmd/api/              entry point; -bootstrap migrates and creates the
+                      superadmin, then exits;
                       -healthcheck probes /readyz
 cmd/orphan-blobs/     unreferenced MinIO object sweeper
 cmd/pdfsmoke/         renders sample PDFs for one record
@@ -111,10 +112,11 @@ See the Status model section of `CLAUDE.md`. In code:
   (`shared/money`). Never `float64` for amounts.
 - Dates: the pool session runs in Asia/Jakarta, so `CURRENT_DATE` is the WIB
   date. Go formats dates through `shared/tz`.
-- Files: the browser uploads to a presigned MinIO URL issued by
-  `assetproxy.Upload`, then saves the key with a PATCH. The key must sit
-  under the record's own folder (`storage.OwnerFolder`), or the save is
-  refused.
+- Files: MinIO is never exposed. `assetproxy.Upload` returns an upload URL
+  that points at the API's own authenticated `/storage/object` proxy, which
+  streams the bytes to MinIO; the browser then saves the object key with a
+  PATCH. The key must sit under the record's own folder
+  (`storage.OwnerFolder`), or the save is refused.
 
 ## 8. Running it
 

@@ -2,8 +2,8 @@
 
 See also: the schema reference in [`erd/`](./erd/) (regenerate with
 `make db-erd`), ADRs in [`decisions/`](./decisions/), and `CLAUDE.md` for the
-conventions and the status model. `relational_model.html` is the original design
-draft and does not match the live schema.
+conventions and the status model. `relational_model.html` is a legacy design
+draft; `erd/` is current.
 
 ## Context
 
@@ -26,8 +26,9 @@ Nginx on its own host.
 ```
 
 Postgres and MinIO sit on an internal-only network. The browser never reaches
-MinIO: uploads and downloads go through presigned URLs issued by the API and
-an authenticated proxy (`internal/storage`).
+MinIO: the upload and download URLs the API issues point at its own
+authenticated `/storage/object` proxy (`internal/storage`), which streams to
+MinIO.
 
 Two background loops run inside the API process: the refresh-token purge and
 the quotation expiry job. Both stop with the server.

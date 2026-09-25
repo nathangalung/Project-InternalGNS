@@ -16,11 +16,11 @@ Bun-managed monorepo.
   Router and Query, Bun runtime, Biome for lint and format. Tables are plain
   markup; there is no table library.
 - Styling is Tailwind CSS v4 only. `src/styles/tailwind.css` is the only
-  stylesheet: the `@theme` tokens (brand scale, `--status-*` badge colours)
-  plus a small base layer (reset, body, button, reduced motion). Preflight is
-  off. Shared class strings live in `src/lib/ui.ts`. Inline `style` is only for
-  colours computed at runtime (status badges, logo and avatar fills).
-  Responsive down to 320px.
+  stylesheet: the `@theme` tokens (brand scale), the `--status-*` badge
+  colours on `:root`, and a small base layer (reset, body, button, reduced
+  motion). Preflight is off. Shared class strings live in `src/lib/ui.ts`.
+  Inline `style` is only for colours computed at runtime (status badges, logo
+  and avatar fills). Responsive down to 320px.
 - Infra: PostgreSQL 18, MinIO for object storage, xelatex for PDF rendering,
   Dokploy with Traefik for deployment, Nginx to serve the built frontend.
   Two compose files sit at the repo root: `compose.dev.yml` for local work and
@@ -312,8 +312,10 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    DJP e-faktur), and `ppn_amount` is computed from the already-rounded DPP
    base. Invoices snapshot `gross_unit_price` and `total_discount`, so the PDF
    prints a gross line plus a real discount row (`TotalProduk − Diskon = DPP`)
-   without reading the quotation. Do not restate already-filed invoices: a
-   wrong invoice is cancelled and replaced by a Pengganti, never edited.
+   without reading the quotation. Do not restate already-filed invoices: their
+   amounts are never recomputed, and a wrong invoice is cancelled and replaced
+   by a Pengganti. Only the invoice and due dates stay editable, and only until
+   the invoice is paid or cancelled.
 
 ## Tooling and style
 

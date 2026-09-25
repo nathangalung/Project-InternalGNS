@@ -113,10 +113,12 @@ both.
 
 Open http://localhost:5174 and sign in with `SUPERADMIN_EMAIL` and
 `SUPERADMIN_PASSWORD` from `apps/api/.env`. Create operational and finance
-users in the Pengguna screen.
+users in Manajemen Pengguna.
 
 `make stack-up` runs the API in Docker instead, with the values in
-`compose.dev.yml` (superadmin `admin@globalsakti.com` / `AdminGNS123!`).
+`compose.dev.yml`. On a fresh volume that creates the superadmin
+`admin@globalsakti.com` / `AdminGNS123!`; an account that already exists
+keeps its password.
 
 ## Common commands
 
