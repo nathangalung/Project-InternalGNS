@@ -71,6 +71,10 @@ func TestRepo_BrokenResultSets(t *testing.T) {
 			_, err := repo.Completeness(context.Background(), poID)
 			return err
 		}, "scan vendor completeness"},
+		{"line completeness", 3, func(repo *purchaseorders.Repo, poID int64) error {
+			_, err := repo.Completeness(context.Background(), poID)
+			return err
+		}, "scan line completeness"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

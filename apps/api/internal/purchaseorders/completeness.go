@@ -21,6 +21,8 @@ type ClientCompleteness struct {
 	ContactName  *string `db:"contact_name"`
 	ContactEmail *string `db:"contact_email"`
 	ContactPhone *string `db:"contact_phone"`
+	// The quotation's chosen contact was deactivated.
+	ContactInactive bool `db:"contact_inactive"`
 }
 
 // VendorCompleteness is a line's vendor.
@@ -30,6 +32,13 @@ type VendorCompleteness struct {
 	Location     *string `db:"location"`
 	ContactEmail *string `db:"contact_email"`
 	ContactPhone *string `db:"contact_phone"`
+}
+
+// LineCompleteness is a PO line.
+type LineCompleteness struct {
+	ID              int64   `db:"id"`
+	LineNumber      int16   `db:"line_number"`
+	ShipDestination *string `db:"ship_destination"`
 }
 
 // CompletenessIssue lists a record's gaps.
@@ -43,6 +52,7 @@ type CompletenessIssue struct {
 const (
 	scopeClient = "klien"
 	scopeVendor = "vendor"
+	scopeLine   = "baris"
 )
 
 func filled(v *string) bool {
@@ -64,6 +74,11 @@ func missingClientFields(c ClientCompleteness) []string {
 	if !filled(c.Address) {
 		missing = append(missing, "Alamat")
 	}
+	// A deactivated contact cannot be edited, so the quotation must pick
+	// another one; its own fields are moot until then.
+	if c.ContactInactive {
+		return append(missing, "Narahubung aktif")
+	}
 	if !filled(c.ContactName) {
 		missing = append(missing, "Nama Narahubung")
 	}
@@ -71,6 +86,21 @@ func missingClientFields(c ClientCompleteness) []string {
 		missing = append(missing, "Email atau Nomor Telepon Narahubung")
 	}
 	return missing
+}
+
+// lineIssues lists unaddressed PO lines.
+// The shipping address is optional on the quotation and required here.
+func lineIssues(lines []LineCompleteness) []CompletenessIssue {
+	var issues []CompletenessIssue
+	for _, l := range lines {
+		if !filled(l.ShipDestination) {
+			issues = append(issues, CompletenessIssue{
+				Scope: scopeLine, ID: l.ID, Name: strconv.Itoa(int(l.LineNumber)),
+				Missing: []string{"Alamat Pengiriman"},
+			})
+		}
+	}
+	return issues
 }
 
 // missingVendorFields lists vendor gaps.
@@ -90,6 +120,10 @@ func completenessFields(issues []CompletenessIssue) map[string]string {
 	fields := make(map[string]string, len(issues))
 	for _, is := range issues {
 		key := is.Scope + ":" + strconv.FormatInt(is.ID, 10)
+		if is.Scope == scopeLine {
+			fields[key] = "Alamat pengiriman baris " + is.Name + " belum diisi"
+			continue
+		}
 		fields[key] = "Data " + is.Scope + " " + is.Name +
 			" belum lengkap: " + strings.Join(is.Missing, ", ")
 	}

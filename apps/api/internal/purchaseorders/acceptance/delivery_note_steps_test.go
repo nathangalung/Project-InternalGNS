@@ -142,12 +142,13 @@ func (s *scenarioState) exportShowsStatusLabel(want string) error {
 func (s *scenarioState) acceptedQuotationOffering(itemID int64, requested string) error {
 	impa := "999999"
 	return s.acceptedQuotationWith(defaultCompany, quotations.CreateItem{
-		RequestedName: requested,
-		RequestedImpa: &impa,
-		OfferedItemID: &itemID,
-		Qty:           "2",
-		UnitID:        defaultUnit,
-		SellingPrice:  "100000",
+		RequestedName:   requested,
+		RequestedImpa:   &impa,
+		OfferedItemID:   &itemID,
+		Qty:             "2",
+		UnitID:          defaultUnit,
+		SellingPrice:    "100000",
+		ShipDestination: &testShipDestination,
 	})
 }
 

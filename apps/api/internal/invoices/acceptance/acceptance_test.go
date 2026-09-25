@@ -150,7 +150,14 @@ func (s *scenarioState) deliverLine(line quotations.CreateItem) error {
 }
 
 // deliverQuotation invoices a quotation.
+// Lines without a shipping address get one: work cannot start without it.
 func (s *scenarioState) deliverQuotation(create quotations.CreateRequest) error {
+	for i := range create.Items {
+		if create.Items[i].ShipDestination == nil {
+			ship := "Pelabuhan Tanjung Priok, Jakarta Utara"
+			create.Items[i].ShipDestination = &ship
+		}
+	}
 	if err := s.sendRequest(http.MethodPost, "/quotations/", create); err != nil {
 		return err
 	}

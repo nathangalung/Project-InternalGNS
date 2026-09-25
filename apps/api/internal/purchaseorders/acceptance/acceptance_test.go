@@ -27,6 +27,10 @@ const (
 	defaultUnit       int16 = 19
 )
 
+// testShipDestination addresses fixture lines.
+// The ON_PROGRESS gate refuses a line without one.
+var testShipDestination = "Pelabuhan Tanjung Priok, Jakarta Utara"
+
 type scenarioState struct {
 	t           *testing.T
 	srv         *httptest.Server
@@ -45,6 +49,8 @@ type scenarioState struct {
 	cleaner   *testutil.Cleaner
 	roleToken string
 	roleUsed  bool
+	// gate holds the readiness fixture.
+	gate *readinessFixture
 }
 
 func (s *scenarioState) reset() error {
@@ -112,19 +118,24 @@ func (s *scenarioState) acceptedQuotationIncompleteClient() error {
 
 func (s *scenarioState) acceptedQuotationForCompany(companyID int64) error {
 	return s.acceptedQuotationWith(companyID, quotations.CreateItem{
-		RequestedName: "Test Product",
-		Qty:           "2",
-		UnitID:        defaultUnit,
-		SellingPrice:  "100000",
+		RequestedName:   "Test Product",
+		Qty:             "2",
+		UnitID:          defaultUnit,
+		SellingPrice:    "100000",
+		ShipDestination: &testShipDestination,
 	})
 }
 
 func (s *scenarioState) acceptedQuotationWith(companyID int64, item quotations.CreateItem) error {
-	create := quotations.CreateRequest{
+	return s.acceptedQuotationFrom(quotations.CreateRequest{
 		CompanyClientID: companyID,
 		DiscountPct:     "0",
 		Items:           []quotations.CreateItem{item},
-	}
+	})
+}
+
+// acceptedQuotationFrom creates and accepts.
+func (s *scenarioState) acceptedQuotationFrom(create quotations.CreateRequest) error {
 	if err := s.sendRequest(http.MethodPost, "/quotations/", create); err != nil {
 		return err
 	}
@@ -439,10 +450,11 @@ func (s *scenarioState) editPOItems(discountPct, sellingPrice string) error {
 	body := purchaseorders.UpdateItemsRequest{
 		DiscountPct: discountPct,
 		Items: []purchaseorders.UpdateItemsLine{{
-			ItemName:     "Edited Product",
-			Qty:          "1",
-			UnitID:       int16PtrAcc(defaultUnit),
-			SellingPrice: sellingPrice,
+			ItemName:        "Edited Product",
+			Qty:             "1",
+			UnitID:          int16PtrAcc(defaultUnit),
+			SellingPrice:    sellingPrice,
+			ShipDestination: &testShipDestination,
 		}},
 	}
 	return s.sendRequestWithHeaders(
@@ -587,6 +599,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 			state.quotationID = 0
 			state.poID = 0
 			state.dnNumber = ""
+			state.gate = nil
 			return ctx, nil
 		})
 		sc.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
@@ -594,6 +607,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		})
 		registerStatusSteps(sc, state)
 		registerListDetailsSteps(sc, state)
+		registerReadinessSteps(sc, state)
 
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
 		sc.Step(`^the commercial domain is empty$`, state.emptyDomain)

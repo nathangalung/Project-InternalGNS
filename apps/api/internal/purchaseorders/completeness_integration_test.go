@@ -2,6 +2,9 @@ package purchaseorders_test
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"strconv"
 	"testing"
 
 	"github.com/jackc/pgx/v5"
@@ -43,6 +46,7 @@ func acceptedQuotationWithVendor(t *testing.T, tx pgx.Tx, companyID int64) int64
 			Qty:             "2",
 			UnitID:          seedUnitID,
 			SellingPrice:    "100000",
+			ShipDestination: strPtr("Kapal Uji"),
 			CostPrice:       strPtr("50000"),
 		}},
 	}, seedUserID)
@@ -114,4 +118,170 @@ func TestRepo_Completeness(t *testing.T) {
 		_, err := purchaseorders.NewRepo(tx, testutil.Store(t)).Completeness(ctx, 99999999)
 		assert.ErrorIs(t, err, purchaseorders.ErrNotFound)
 	})
+}
+
+// insertContact adds a client contact.
+func insertContact(t *testing.T, tx pgx.Tx, companyID int64, name string, email *string) int64 {
+	t.Helper()
+	var id int64
+	require.NoError(t, tx.QueryRow(context.Background(), `
+		INSERT INTO company_contacts (company_id, name, email, country_code, created_by, updated_by)
+		VALUES ($1, $2, $3, 'IDN', $4, $4)
+		RETURNING id`, companyID, name, email, seedUserID).Scan(&id))
+	return id
+}
+
+// quoteLine is one addressed line.
+func quoteLine(ship *string) quotations.CreateItem {
+	return quotations.CreateItem{
+		RequestedName: "Test Product", Qty: "1", UnitID: seedUnitID,
+		SellingPrice: "100000", ShipDestination: ship,
+	}
+}
+
+// Gate checks the quotation's contact.
+// It falls back to the first active contact only when none was chosen.
+func TestRepo_Completeness_ChosenContact(t *testing.T) {
+	tests := []struct {
+		name       string
+		email      *string
+		deactivate bool
+		want       []string
+	}{
+		{"chosen contact without a channel", nil, false, []string{"Email atau Nomor Telepon Narahubung"}},
+		{"chosen contact complete", strPtr("pilihan@gns.test"), false, nil},
+		{"chosen contact deactivated", strPtr("pilihan@gns.test"), true, []string{"Narahubung aktif"}},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, tx := testutil.BeginTx(t)
+			contactID := insertContact(t, tx, seedCompanyID, "Ibu Pilihan", tc.email)
+			_, poID := createQuotation(t, tx, quotations.CreateRequest{
+				CompanyClientID: seedCompanyID, ContactID: &contactID, DiscountPct: "0",
+				Items: []quotations.CreateItem{quoteLine(strPtr("Kapal Uji"))},
+			})
+			if tc.deactivate {
+				_, err := tx.Exec(ctx, `UPDATE company_contacts SET is_active = FALSE WHERE id = $1`, contactID)
+				require.NoError(t, err)
+			}
+
+			issues, err := purchaseorders.NewRepo(tx, testutil.Store(t)).Completeness(ctx, poID)
+			require.NoError(t, err)
+			if tc.want == nil {
+				assert.Empty(t, issues)
+				return
+			}
+			require.Len(t, issues, 1)
+			assert.Equal(t, "klien", issues[0].Scope)
+			assert.Equal(t, tc.want, issues[0].Missing)
+		})
+	}
+}
+
+// Blank lines block the gate.
+func TestRepo_Completeness_ShipDestination(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, poID := createQuotation(t, tx, quotations.CreateRequest{
+		CompanyClientID: seedCompanyID, DiscountPct: "0",
+		Items: []quotations.CreateItem{quoteLine(strPtr("Kapal Uji")), quoteLine(strPtr("  ")), quoteLine(nil)},
+	})
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	items, err := repo.ListItems(ctx, poID)
+	require.NoError(t, err)
+	require.Len(t, items, 3)
+
+	issues, err := repo.Completeness(ctx, poID)
+	require.NoError(t, err)
+	assert.Equal(t, []purchaseorders.CompletenessIssue{
+		{Scope: "baris", ID: items[1].ID, Name: "2", Missing: []string{"Alamat Pengiriman"}},
+		{Scope: "baris", ID: items[2].ID, Name: "3", Missing: []string{"Alamat Pengiriman"}},
+	}, issues)
+}
+
+// Addressless quote passes once filled.
+// The quotation is accepted with no client address, no vendor location and
+// no shipping address; the gate lists all three, and each fill clears one.
+func TestHandler_OnProgressGate_FillsAddresses(t *testing.T) {
+	ctx, tx, srv := txServer(t)
+	clientID, _ := probeClient(t, tx, "PT Tanpa Alamat")
+	_, err := tx.Exec(ctx, `UPDATE company_client SET npwp = '0612345678901000' WHERE id = $1`, clientID)
+	require.NoError(t, err)
+	contactID := insertContact(t, tx, clientID, "Bp. Tanpa Alamat", strPtr("tanpa.alamat@gns.test"))
+
+	var vendorID, vendorProductID int64
+	require.NoError(t, tx.QueryRow(ctx, `
+		INSERT INTO vendors (name, contact_info, created_by, updated_by)
+		VALUES ('CV Tanpa Lokasi', '{"email":"cv@gns.test"}', $1, $1)
+		RETURNING id`, seedUserID).Scan(&vendorID))
+	require.NoError(t, tx.QueryRow(ctx, `
+		INSERT INTO vendor_products (vendor_id, item_id, cost_price, created_by, updated_by)
+		VALUES ($1, $2, 50000, $3, $3)
+		RETURNING id`, vendorID, seedItemID, seedUserID).Scan(&vendorProductID))
+
+	offered := seedItemID
+	_, poID := createQuotation(t, tx, quotations.CreateRequest{
+		CompanyClientID: clientID, ContactID: &contactID, DiscountPct: "0",
+		Items: []quotations.CreateItem{{
+			RequestedName: "Test Product", OfferedItemID: &offered, VendorProductID: &vendorProductID,
+			Qty: "2", UnitID: seedUnitID, SellingPrice: "100000", CostPrice: strPtr("50000"),
+		}},
+	})
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	require.NoError(t, repo.UpdateFile(ctx, poID, ownedPOFile(poID), seedUserID))
+	items, err := repo.ListItems(ctx, poID)
+	require.NoError(t, err)
+	require.Len(t, items, 1)
+	lineKey := fmt.Sprintf("baris:%d", items[0].ID)
+	clientKey := fmt.Sprintf("klien:%d", clientID)
+	vendorKey := fmt.Sprintf("vendor:%d", vendorID)
+
+	promote := func() *http.Response {
+		return doJSON(t, srv, http.MethodPatch, fmt.Sprintf("/purchase-orders/%d/status", poID),
+			purchaseorders.ChangeStatusRequest{Status: purchaseorders.StatusOnProgress})
+	}
+	refused := func(want map[string]string) {
+		t.Helper()
+		res := promote()
+		defer res.Body.Close()
+		require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+		assert.Equal(t, want, readProblem(t, res).Fields)
+	}
+
+	refused(map[string]string{
+		clientKey: "Data klien PT Tanpa Alamat belum lengkap: Alamat",
+		vendorKey: "Data vendor CV Tanpa Lokasi belum lengkap: Lokasi",
+		lineKey:   "Alamat pengiriman baris 1 belum diisi",
+	})
+
+	_, err = tx.Exec(ctx, `UPDATE company_client SET address = 'Jl. Pelabuhan No. 1, Jakarta Utara' WHERE id = $1`, clientID)
+	require.NoError(t, err)
+	refused(map[string]string{
+		vendorKey: "Data vendor CV Tanpa Lokasi belum lengkap: Lokasi",
+		lineKey:   "Alamat pengiriman baris 1 belum diisi",
+	})
+
+	_, err = tx.Exec(ctx, `UPDATE vendors SET location = 'Surabaya' WHERE id = $1`, vendorID)
+	require.NoError(t, err)
+	refused(map[string]string{lineKey: "Alamat pengiriman baris 1 belum diisi"})
+
+	po, err := repo.GetByID(ctx, poID)
+	require.NoError(t, err)
+	line := items[0]
+	edit := purchaseorders.UpdateItemsRequest{DiscountPct: "0", Items: []purchaseorders.UpdateItemsLine{{
+		QuotationItemID: line.QuotationItemID, OfferedItemID: line.OfferedItemID,
+		ItemName: line.ItemName, Qty: line.Qty, UnitID: line.UnitID,
+		SellingPrice: line.SellingPrice, CostPrice: line.CostPrice,
+		ShipDestination: strPtr("Kapal Uji, Dermaga 3"),
+	}}}
+	res := doJSONWithHeaders(t, srv, http.MethodPut, fmt.Sprintf("/purchase-orders/%d/items", poID),
+		edit, map[string]string{"If-Match": strconv.Itoa(int(po.RowVersion))})
+	res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+
+	res = promote()
+	res.Body.Close()
+	require.Equal(t, http.StatusNoContent, res.StatusCode)
+	po, err = repo.GetByID(ctx, poID)
+	require.NoError(t, err)
+	assert.Equal(t, purchaseorders.StatusOnProgress, po.Status)
 }

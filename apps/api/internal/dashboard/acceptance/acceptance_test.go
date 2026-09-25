@@ -91,15 +91,18 @@ func (s *scenarioState) emptyDomain() error {
 // Walk quotation to invoiced PO.
 // The PO ends delivered, with its invoice.
 func (s *scenarioState) invoiceFor(qty, price, cost string) error {
+	// Work cannot start on a line without a shipping address.
+	ship := "Pelabuhan Tanjung Priok, Jakarta Utara"
 	create := quotations.CreateRequest{
 		CompanyClientID: defaultCompany,
 		DiscountPct:     "0",
 		Items: []quotations.CreateItem{{
-			RequestedName: "Dashboard Product",
-			Qty:           qty,
-			UnitID:        defaultUnit,
-			SellingPrice:  price,
-			CostPrice:     &cost,
+			RequestedName:   "Dashboard Product",
+			Qty:             qty,
+			UnitID:          defaultUnit,
+			SellingPrice:    price,
+			CostPrice:       &cost,
+			ShipDestination: &ship,
 		}},
 	}
 	if err := s.expect(http.StatusCreated, http.MethodPost, "/quotations/", create); err != nil {

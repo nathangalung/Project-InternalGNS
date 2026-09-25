@@ -31,10 +31,11 @@ func acceptedQuotationForCompany(t *testing.T, tx pgx.Tx, companyID int64) int64
 		CompanyClientID: companyID,
 		DiscountPct:     "0",
 		Items: []quotations.CreateItem{{
-			RequestedName: "Test Product",
-			Qty:           "2",
-			UnitID:        seedUnitID,
-			SellingPrice:  "100000",
+			RequestedName:   "Test Product",
+			Qty:             "2",
+			UnitID:          seedUnitID,
+			SellingPrice:    "100000",
+			ShipDestination: strPtr("Kapal Uji"),
 		}},
 	}, seedUserID)
 	require.NoError(t, err)

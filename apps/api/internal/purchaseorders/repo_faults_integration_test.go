@@ -62,6 +62,16 @@ func TestRepo_SecondQueryFaults(t *testing.T) {
 	}
 }
 
+// Line query failure still surfaces.
+func TestRepo_Completeness_LineQueryFault(t *testing.T) {
+	_, tx := testutil.BeginTx(t)
+	_, poID := acceptedQuotationWithPO(t, tx)
+	repo := purchaseorders.NewRepo(&testutil.CountingExec{Inner: tx, FailAfter: 2}, testutil.Store(t))
+	_, err := repo.Completeness(context.Background(), poID)
+	require.ErrorIs(t, err, testutil.ErrFake)
+	assert.ErrorContains(t, err, "query line completeness")
+}
+
 // Unknown PO has no completeness.
 func TestRepo_Completeness_NotFound(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)

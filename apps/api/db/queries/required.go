@@ -73,6 +73,7 @@ var RequiredKeys = []string{
 	"items.vendor_active",
 	"purchase_orders.change_status",
 	"purchase_orders.completeness_client",
+	"purchase_orders.completeness_lines",
 	"purchase_orders.completeness_vendors",
 	"purchase_orders.get_by_id",
 	"purchase_orders.get_by_quotation",

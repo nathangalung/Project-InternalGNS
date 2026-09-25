@@ -205,7 +205,7 @@ func (r *Repo) ListItems(ctx context.Context, poID int64) ([]PurchaseOrderItem, 
 }
 
 // Completeness lists ON_PROGRESS blockers.
-// Each is a client or vendor gap.
+// Each is a client, vendor or line gap.
 // An empty slice means the PO may be worked on.
 func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssue, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("purchase_orders.completeness_client"), poID)
@@ -229,6 +229,15 @@ func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssu
 		return nil, fmt.Errorf("scan vendor completeness: %w", err)
 	}
 
+	lineRows, err := r.db.Query(ctx, r.store.Get("purchase_orders.completeness_lines"), poID)
+	if err != nil {
+		return nil, fmt.Errorf("query line completeness: %w", err)
+	}
+	lines, err := pgx.CollectRows(lineRows, pgx.RowToStructByName[LineCompleteness])
+	if err != nil {
+		return nil, fmt.Errorf("scan line completeness: %w", err)
+	}
+
 	var issues []CompletenessIssue
 	if missing := missingClientFields(client); len(missing) > 0 {
 		issues = append(issues, CompletenessIssue{
@@ -242,7 +251,7 @@ func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssu
 			})
 		}
 	}
-	return issues, nil
+	return append(issues, lineIssues(lines)...), nil
 }
 
 // ChangeStatus transitions without note.

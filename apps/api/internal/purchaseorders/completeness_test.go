@@ -36,6 +36,16 @@ func TestMissingClientFields(t *testing.T) {
 			want:  []string{"Nama Narahubung", "Email atau Nomor Telepon Narahubung"},
 		},
 		{
+			// A deactivated contact cannot be edited, so its own fields are
+			// moot: the quotation has to pick an active one.
+			name: "chosen contact deactivated",
+			input: ClientCompleteness{
+				ID: 1, Name: "X", Number: s("1"), Npwp: s("2"),
+				ContactName: s("A"), ContactEmail: s("a@b.c"), ContactInactive: true,
+			},
+			want: []string{"Alamat", "Narahubung aktif"},
+		},
+		{
 			// TKU is derived from the NPWP when it is not recorded, the same
 			// fallback the Coretax export uses, so it is not required here.
 			name:  "missing TKU is not an issue",
@@ -81,9 +91,42 @@ func TestCompletenessFields(t *testing.T) {
 	issues := []CompletenessIssue{
 		{Scope: "klien", ID: 7, Name: "PT X", Missing: []string{"NPWP", "Alamat"}},
 		{Scope: "vendor", ID: 3, Name: "CV Y", Missing: []string{"Lokasi"}},
+		{Scope: "baris", ID: 41, Name: "2", Missing: []string{"Alamat Pengiriman"}},
 	}
 	assert.Equal(t, map[string]string{
 		"klien:7":  "Data klien PT X belum lengkap: NPWP, Alamat",
 		"vendor:3": "Data vendor CV Y belum lengkap: Lokasi",
+		"baris:41": "Alamat pengiriman baris 2 belum diisi",
 	}, completenessFields(issues))
+}
+
+func TestLineIssues(t *testing.T) {
+	cases := []struct {
+		name  string
+		input []LineCompleteness
+		want  []CompletenessIssue
+	}{
+		{name: "no lines"},
+		{
+			name:  "every line addressed",
+			input: []LineCompleteness{{ID: 5, LineNumber: 1, ShipDestination: s("Kapal A")}},
+		},
+		{
+			name: "blank and missing addresses are reported by line",
+			input: []LineCompleteness{
+				{ID: 5, LineNumber: 1, ShipDestination: s("Kapal A")},
+				{ID: 6, LineNumber: 2, ShipDestination: s("   ")},
+				{ID: 7, LineNumber: 3},
+			},
+			want: []CompletenessIssue{
+				{Scope: "baris", ID: 6, Name: "2", Missing: []string{"Alamat Pengiriman"}},
+				{Scope: "baris", ID: 7, Name: "3", Missing: []string{"Alamat Pengiriman"}},
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, lineIssues(tc.input))
+		})
+	}
 }

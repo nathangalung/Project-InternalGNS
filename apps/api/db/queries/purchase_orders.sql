@@ -141,6 +141,9 @@ ORDER BY poi.line_number;
 
 -- name: purchase_orders.completeness_client
 -- Client master data the PO's documents need; $1=po id.
+-- The narahubung is the quotation's chosen contact, even when it has since
+-- been deactivated, so the gate can say so; only a quotation with no chosen
+-- contact falls back to the client's first active one.
 SELECT cc.id,
        cc.name,
        cc.number,
@@ -148,17 +151,28 @@ SELECT cc.id,
        cc.address,
        co.name  AS contact_name,
        co.email AS contact_email,
-       co.phone AS contact_phone
+       co.phone AS contact_phone,
+       COALESCE(NOT co.is_active, FALSE) AS contact_inactive
 FROM purchase_orders po
 JOIN company_client cc ON cc.id = po.company_client_id
+LEFT JOIN quotations q ON q.id = po.quotation_id
 LEFT JOIN LATERAL (
-    SELECT name, email, phone
+    SELECT name, email, phone, is_active
     FROM company_contacts
-    WHERE company_id = cc.id AND is_active = TRUE
+    WHERE company_id = cc.id
+      AND CASE WHEN q.contact_id IS NULL THEN is_active = TRUE
+               ELSE id = q.contact_id END
     ORDER BY id ASC
     LIMIT 1
 ) co ON TRUE
 WHERE po.id = $1;
+
+-- name: purchase_orders.completeness_lines
+-- Every PO line's shipping address; $1=po id.
+SELECT id, line_number, ship_destination
+FROM purchase_order_items
+WHERE po_id = $1
+ORDER BY line_number;
 
 -- name: purchase_orders.completeness_vendors
 -- Vendors supplying the PO's lines, one row each; $1=po id.
