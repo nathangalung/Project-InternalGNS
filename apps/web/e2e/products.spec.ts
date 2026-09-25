@@ -114,14 +114,8 @@ test.describe("as finance", () => {
   })
 })
 
-// Open bug: inactive search gap.
-//
-// The Katalog search never finds a deactivated product, not even under
-// Nonaktif. search-advanced reads its name layer from fn_search_items,
-// which is active-only, while ProductDetail promises the product stays in
-// the Katalog. test.fail keeps the repro running; drop it once fixed.
+// Nonaktif search finds deactivated products.
 test("a deactivated product is found by name under the Nonaktif filter", async ({ page, seed }) => {
-  test.fail(true, "search-advanced drops inactive items from its name layer")
   const kept = await seed.item({ label: "Produk Aktif" })
   const dropped = await seed.item({ label: "Produk Nonaktif" })
   await deactivate("item", dropped.id)
