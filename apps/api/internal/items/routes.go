@@ -42,7 +42,7 @@ func Routes(d deps.Deps) chi.Router {
 	return r
 }
 
-// imageAsset describes the item image routes.
+// imageAsset describes image routes.
 func imageAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
 	return assetproxy.Descriptor{
 		Storage:     sc,
@@ -73,7 +73,7 @@ func imageAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
 	}
 }
 
-// assetErr maps the package sentinel onto the shared one.
+// assetErr maps onto shared sentinels.
 func assetErr(err error) error {
 	if errors.Is(err, ErrNotFound) {
 		return assetproxy.ErrNotFound

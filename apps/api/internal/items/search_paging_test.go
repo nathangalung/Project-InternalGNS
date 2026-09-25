@@ -17,7 +17,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Paging search-advanced walks every match exactly once (MD-09).
+// Paging visits each match once.
+// It covers MD-09.
 func TestHandler_SearchAdvanced_Paging(t *testing.T) {
 	const n = 5
 	pool := testutil.Pool(t)
@@ -63,7 +64,7 @@ func TestHandler_SearchAdvanced_Paging(t *testing.T) {
 	assert.Empty(t, past.Hits)
 }
 
-// Without offset the endpoint serves the first page, as before.
+// No offset serves page one.
 func TestHandler_SearchAdvanced_DefaultsToFirstPage(t *testing.T) {
 	srv := newSrv(t)
 	res := doJSON(t, srv, http.MethodGet, "/items/search-advanced?q=bearing&offset=junk", nil)

@@ -10,7 +10,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// LIKE metacharacters match themselves, not everything.
+// LIKE metacharacters match literally.
 func TestRepo_List_EscapesLikeWildcards(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
@@ -49,7 +49,8 @@ func TestRepo_List_EscapesLikeWildcards(t *testing.T) {
 	}
 }
 
-// A lone wildcard must not sweep the whole catalog into fuzzy search.
+// Lone wildcards sweep nothing.
+// They must not pull the whole catalog into fuzzy search.
 func TestRepo_Search_EscapesLikeWildcards(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
@@ -71,7 +72,8 @@ func TestRepo_Search_EscapesLikeWildcards(t *testing.T) {
 	}
 }
 
-// Import matching must not treat a wildcard as a catalog-wide match.
+// Import matching escapes wildcards.
+// A wildcard is never a catalog-wide match.
 func TestRepo_MatchRequest_EscapesLikeWildcards(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
@@ -93,7 +95,8 @@ func TestRepo_MatchRequest_EscapesLikeWildcards(t *testing.T) {
 	}
 }
 
-// The vendor-offer and request-history tiers escape wildcards too.
+// Search tiers escape wildcards too.
+// That covers vendor-offer and request-history.
 func TestRepo_SearchTiers_EscapeLikeWildcards(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))

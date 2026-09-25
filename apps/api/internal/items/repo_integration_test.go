@@ -131,6 +131,7 @@ func TestRepo_SearchVendorOffers(t *testing.T) {
 	_ = hits
 }
 
+// Deactivated offer hits read false.
 // Advanced search reads is_active from the catalog, so a deactivated item
 // surfaced by the vendor-offer layer must come back false.
 func TestRepo_ItemMetaByIDs(t *testing.T) {

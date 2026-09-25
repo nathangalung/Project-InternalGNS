@@ -12,12 +12,12 @@ import (
 // defaultUnitID is seeded SET.
 const defaultUnitID int16 = 19
 
-// uniqueItemName keeps concurrent runs from colliding.
+// uniqueItemName avoids concurrent collisions.
 func uniqueItemName(prefix string) string {
 	return fmt.Sprintf("%s ITEM %d", prefix, time.Now().UnixNano())
 }
 
-// deleteItem removes a row the test created.
+// deleteItem removes a test row.
 func deleteItem(t *testing.T, id int64) {
 	t.Helper()
 	if id == 0 {

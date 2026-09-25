@@ -13,10 +13,11 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// An import larger than one chunk.
+// bigImport exceeds one chunk.
 const bigImport = 250
 
-// Every row keeps its own index and match across chunk boundaries.
+// Rows map correctly across chunks.
+// Every row keeps its own index and match.
 func TestRepo_MatchRows_MapsEveryRowAcrossChunks(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
@@ -61,7 +62,7 @@ func TestRepo_MatchRows_MapsEveryRowAcrossChunks(t *testing.T) {
 	assert.Equal(t, "CATALOG_MATCH", out[1].Source)
 }
 
-// Auto-create dedups a name across chunks.
+// Auto-create dedups across chunks.
 func TestRepo_MatchRows_AutoCreateDedupsAcrossChunks(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
@@ -98,7 +99,8 @@ func TestRepo_MatchRows_AutoCreateDedupsAcrossChunks(t *testing.T) {
 	assert.Len(t, seen, len(rows)-1, "only the repeated name shares a product")
 }
 
-// A failing row rolls the whole import back.
+// Failing rows roll back everything.
+// One failing row undoes the whole import.
 func TestRepo_MatchRows_FailureKeepsNothing(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))

@@ -5,8 +5,9 @@ import (
 	"testing"
 )
 
-// A single item surfaced by both fuzzy search and a vendor offer must be
-// counted once, under its winning (higher-weight) tier — not once per source.
+// Items count under winning tier.
+// A single item surfaced by both fuzzy search and a vendor offer is counted
+// once, under its higher-weight tier, not once per source.
 func TestMergeAdvanced_CountsByWinningTierNotInput(t *testing.T) {
 	items := []SearchResult{{ID: 42, Name: "Pump", Score: 0.5, MatchTier: "FUZZY"}}
 	offers := []VendorOfferHit{{ItemID: 42, VendorID: 7, VendorName: "Acme", Score: 0.9}}
@@ -24,7 +25,8 @@ func TestMergeAdvanced_CountsByWinningTierNotInput(t *testing.T) {
 	}
 }
 
-// Total and counts cover every match, so they hold still across pages.
+// Totals hold still across pages.
+// Total and counts cover every match.
 func TestMergeAdvanced_Paging(t *testing.T) {
 	// Equal scores leave the id tiebreak to fix the order.
 	items := make([]SearchResult, 5)
@@ -77,8 +79,9 @@ func TestMergeAdvanced_Paging(t *testing.T) {
 	}
 }
 
-// A deactivated item reachable only through the vendor-offer layer must report
-// its real flag, not the caller's filter selection.
+// isActive comes from the catalog.
+// A deactivated item reachable only through the vendor-offer layer must
+// report its real flag, not the caller's filter selection.
 func TestMergeAdvanced_IsActiveFromCatalogNotFilter(t *testing.T) {
 	offers := []VendorOfferHit{
 		{ItemID: 10, VendorID: 1, VendorName: "Acme", Score: 0.9},
@@ -103,7 +106,8 @@ func TestMergeAdvanced_IsActiveFromCatalogNotFilter(t *testing.T) {
 	}
 }
 
-// An id with no catalog row is inactive, never a fabricated "active".
+// Missing catalog rows are inactive.
+// An id with no catalog row is never a fabricated "active".
 func TestMergeAdvanced_MissingCatalogRowIsInactive(t *testing.T) {
 	requests := []RequestHistoryHit{{ItemID: 99, RequestText: "bearing", Score: 0.7}}
 
@@ -117,8 +121,9 @@ func TestMergeAdvanced_MissingCatalogRowIsInactive(t *testing.T) {
 	}
 }
 
-// onlyActive filters before the limit and the counts, so hits, total and
-// counts all agree.
+// onlyActive keeps counts consistent.
+// It filters before the limit and the counts, so hits, total and counts all
+// agree.
 func TestMergeAdvanced_OnlyActiveFilterKeepsCountsConsistent(t *testing.T) {
 	items := []SearchResult{
 		{ID: 1, Name: "a", Score: 0.5, MatchTier: "FUZZY"},

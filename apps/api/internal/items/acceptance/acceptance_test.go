@@ -257,7 +257,8 @@ func (s *scenarioState) rowCreatedWithEmptyPrice() error {
 	return nil
 }
 
-// IMPA and vendor steps for MD-01, MD-03, MD-04, MD-11.
+// IMPA and vendor steps.
+// They cover MD-01, MD-03, MD-04 and MD-11.
 func (s *scenarioState) seedItemWithIMPA() error {
 	s.impa = fmt.Sprintf("AT%d", time.Now().UnixNano()%1_000_000_000_000)
 	s.name = s.uniqueName("ATDD IMPA ITEM")
@@ -273,7 +274,7 @@ func (s *scenarioState) seedItemWithIMPA() error {
 	return s.captureID()
 }
 
-// insertVendor adds a vendor the suite cleans up.
+// insertVendor adds a cleaned-up vendor.
 func (s *scenarioState) insertVendor(active bool) (int64, error) {
 	var id int64
 	err := testutil.Pool(s.t).QueryRow(context.Background(), `
@@ -385,7 +386,8 @@ func (s *scenarioState) linkInactiveVendor() error {
 	return s.linkVendor(vendorID)
 }
 
-// Input validation steps for MD-10, MD-15, MD-17, MD-18, MD-19.
+// Input validation steps.
+// They cover MD-10, MD-15, MD-17, MD-18 and MD-19.
 func (s *scenarioState) createItemNamed(name string) error {
 	name = strings.ReplaceAll(name, `\t`, "\t")
 	if err := s.sendRequest(http.MethodPost, "/items/", items.CreateItemRequest{Name: name}); err != nil {

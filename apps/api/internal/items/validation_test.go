@@ -13,7 +13,7 @@ import (
 
 const missingItemID = "999999999"
 
-// Reject unstorable query text with 400.
+// Unstorable query text is 400.
 func TestHandler_QueryParamTextIsValidated(t *testing.T) {
 	srv := newSrv(t)
 	tests := []struct {
@@ -36,7 +36,8 @@ func TestHandler_QueryParamTextIsValidated(t *testing.T) {
 	}
 }
 
-// Reject an unparsable unitId filter instead of ignoring it.
+// Unparsable unitId is 400.
+// The filter is rejected instead of ignored.
 func TestHandler_List_InvalidUnitIDIsBadRequest(t *testing.T) {
 	srv := newSrv(t)
 	tests := []struct {
@@ -55,7 +56,8 @@ func TestHandler_List_InvalidUnitIDIsBadRequest(t *testing.T) {
 	}
 }
 
-// Sub-collections of a missing item answer 404.
+// Missing parents answer 404.
+// That holds for every item sub-collection.
 func TestHandler_SubCollections_MissingParentIsNotFound(t *testing.T) {
 	srv := newSrv(t)
 	tests := []struct {
@@ -74,7 +76,8 @@ func TestHandler_SubCollections_MissingParentIsNotFound(t *testing.T) {
 	}
 }
 
-// Whitespace-only names are rejected and stored names are trimmed.
+// Blank names rejected, others trimmed.
+// Whitespace-only names are refused and stored names are trimmed.
 func TestHandler_Name_WhitespaceOnlyRejected(t *testing.T) {
 	srv := newSrv(t)
 	tests := []struct {

@@ -20,7 +20,7 @@ const matchChunk = 100
 // ErrNoTx: executor cannot begin transactions.
 var ErrNoTx = errors.New("items: executor cannot begin a transaction")
 
-// batchMatch is a row's best match.
+// batchMatch is a row's best.
 type batchMatch struct {
 	Idx        int64   `db:"idx"`
 	ItemID     int64   `db:"item_id"`
@@ -71,7 +71,7 @@ func (m *rowMatcher) run(ctx context.Context) ([]MatchRowResult, error) {
 	return out, nil
 }
 
-// chunk matches one slice of rows.
+// chunk matches a row slice.
 // IMPA wins, then the batched fuzzy match, then auto-create. Within one
 // chunk a later row cannot fuzzy-match an item an earlier row of the same
 // chunk created; the dedup key still catches an identical name.
@@ -140,7 +140,7 @@ func (m *rowMatcher) chunk(ctx context.Context, start int, rows []MatchRowInput)
 	return out, nil
 }
 
-// autoCreate adds a catalog item once.
+// autoCreate adds catalog items once.
 // Returns 0 for a row with no name to create from.
 func (m *rowMatcher) autoCreate(ctx context.Context, row MatchRowInput) (int64, error) {
 	name := strings.TrimSpace(row.Name)

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// tierWeight ranks tiers; higher = better.
+// tierWeight ranks tiers, higher better.
 func tierWeight(tier string) float32 {
 	switch tier {
 	case "ITEM_AUTO":
@@ -23,7 +23,8 @@ func tierWeight(tier string) float32 {
 	}
 }
 
-// classify maps item match_tier→canonical advanced tier.
+// classifyItem maps to advanced tiers.
+// It turns an item match_tier into the canonical advanced tier.
 func classifyItem(t string) string {
 	switch t {
 	case "AUTO_MATCH":
@@ -35,7 +36,8 @@ func classifyItem(t string) string {
 	}
 }
 
-// candidateItemIDs collects every distinct item id the three layers produced.
+// candidateItemIDs collects distinct layer ids.
+// Every item id the three layers produced appears once.
 func candidateItemIDs(items []SearchResult, offers []VendorOfferHit, requests []RequestHistoryHit) []int64 {
 	seen := map[int64]struct{}{}
 	out := make([]int64, 0, len(items)+len(offers)+len(requests))
@@ -58,9 +60,10 @@ func candidateItemIDs(items []SearchResult, offers []VendorOfferHit, requests []
 	return out
 }
 
-// mergeAdvanced dedups the three search layers into tier-ranked hits and
-// returns the page at offset. meta carries the real is_active and catalog
-// identity per item id; onlyActive, when set, keeps just the hits matching it.
+// mergeAdvanced ranks and pages hits.
+// It dedups the three search layers into tier-ranked hits and returns the
+// page at offset. meta carries the real is_active and catalog identity per
+// item id; onlyActive, when set, keeps just the hits matching it.
 // Total and counts cover every match after that filter, not only the page, so
 // they stay put while the caller pages.
 func mergeAdvanced(q string, items []SearchResult, offers []VendorOfferHit, requests []RequestHistoryHit, meta map[int64]ItemMeta, onlyActive *bool, limit, offset int) AdvancedSearchResponse {
@@ -176,7 +179,8 @@ func contains(xs []string, s string) bool {
 	return false
 }
 
-// autoCreateKey dedups import rows: impa wins, else normalized name.
+// autoCreateKey dedups import rows.
+// IMPA wins, else the normalized name.
 func autoCreateKey(impa, name string) string {
 	if impa != "" {
 		return "impa:" + impa

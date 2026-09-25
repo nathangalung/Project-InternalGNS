@@ -14,7 +14,8 @@ type Item struct {
 	ImageObjectKey *string   `db:"image_object_key" json:"imageObjectKey,omitempty"`
 }
 
-// UpdateImageRequest persists the MinIO object key for an item image.
+// UpdateImageRequest carries an image key.
+// It persists the MinIO object key of an item image.
 type UpdateImageRequest struct {
 	ObjectKey string `json:"objectKey"`
 }
@@ -117,7 +118,8 @@ type MatchedItemWithVendor struct {
 	CostPrice       *string `db:"cost_price"         json:"costPrice,omitempty"`
 }
 
-// POST /items/match-rows: input row from xlsx upload.
+// MatchRowInput is one xlsx row.
+// POST /items/match-rows takes one per uploaded row.
 type MatchRowInput struct {
 	IMPACode string  `json:"impaCode"`
 	Name     string  `json:"name"`
@@ -161,7 +163,8 @@ type RequestHistoryHit struct {
 	Score       float32 `db:"score"        json:"score"`
 }
 
-// AdvancedSearchHit is the merged, tier-labelled row served by /items/search-advanced.
+// AdvancedSearchHit is one merged hit.
+// It is the tier-labelled row /items/search-advanced serves.
 type AdvancedSearchHit struct {
 	ID            int64    `json:"id"`
 	Name          string   `json:"name"`
@@ -177,7 +180,8 @@ type AdvancedSearchHit struct {
 	RequestText   *string  `json:"requestText,omitempty"`
 }
 
-// AdvancedSearchResponse wraps the hit list with a per-tier count summary.
+// AdvancedSearchResponse wraps hits and counts.
+// The counts summarize hits per tier.
 type AdvancedSearchResponse struct {
 	Query  string              `json:"query"`
 	Total  int                 `json:"total"`

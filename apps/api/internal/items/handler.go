@@ -23,9 +23,10 @@ type Handler struct {
 	repo *Repo
 }
 
-// searchLayerCap bounds one search-advanced layer read. It sits above the
-// catalog size (about 3.1k items, 2.5k vendor offers and 3.1k request
-// matches), so the merged total is exact; a layer that reaches it is logged.
+// searchLayerCap bounds one layer read.
+// It sits above the catalog size (about 3.1k items, 2.5k vendor offers and
+// 3.1k request matches), so the merged total is exact; a layer that reaches
+// it is logged.
 const searchLayerCap = 5000
 
 func NewHandler(repo *Repo) *Handler {
@@ -204,7 +205,8 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, results)
 }
 
-// SearchAdvanced merges item-name, vendor-offer and request-history layers.
+// SearchAdvanced merges three search layers.
+// They are item name, vendor offer and request history.
 // Tier weight: ITEM_AUTO > VENDOR_OFFER > ITEM_SUGGESTED > REQUEST_HISTORY > ITEM_FUZZY.
 func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 	if key := badQueryParam(r.URL.Query()); key != "" {
@@ -300,7 +302,8 @@ func (h *Handler) MatchRequest(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, matches)
 }
 
-// MatchRows: batch match xlsx-imported rows. IMPA exact wins; else fuzzy.
+// MatchRows batch-matches imported xlsx rows.
+// IMPA exact wins; else fuzzy.
 // No-match rows return Matched=nil so FE keeps row empty.
 func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 	var req MatchRowsRequest
@@ -373,7 +376,8 @@ func (h *Handler) PriceHistory(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, history)
 }
 
-// requireItem reports a missing parent before a sub-collection read.
+// requireItem checks the parent exists.
+// It runs before a sub-collection read.
 func (h *Handler) requireItem(ctx context.Context, id int64) error {
 	_, err := h.repo.GetByID(ctx, id)
 	if err != nil {
@@ -382,7 +386,7 @@ func (h *Handler) requireItem(ctx context.Context, id int64) error {
 	return nil
 }
 
-// renderItemErr maps the package sentinel onto a problem response.
+// renderItemErr maps sentinels to problems.
 func renderItemErr(w http.ResponseWriter, err error) {
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("item not found"))

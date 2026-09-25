@@ -141,8 +141,8 @@ func TestHandler_SearchAdvanced(t *testing.T) {
 	}
 }
 
-// isActive on a search hit must be the catalog value, so it has to agree with
-// what GET /items/{id} reports for the same item.
+// Hit isActive matches the catalog.
+// It has to agree with what GET /items/{id} reports for the same item.
 func TestHandler_SearchAdvanced_IsActiveMatchesCatalog(t *testing.T) {
 	srv := newSrv(t)
 	pool := testutil.Pool(t)
@@ -197,8 +197,8 @@ func TestHandler_SearchAdvanced_BadParams(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
 
-// tierGE returns true when a's tier weight >= b's, matching the
-// production ordering inside SearchAdvanced.
+// tierGE compares tier weights.
+// It reports a >= b, matching the production ordering inside SearchAdvanced.
 func tierGE(a, b string) bool {
 	rank := map[string]int{
 		"ITEM_AUTO":       5,
@@ -496,7 +496,8 @@ func TestHandler_UpdateImage_NotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
-// Import auto-create: unmatched rows become new catalog products, empty price.
+// Unmatched imports become new products.
+// Auto-create leaves their price empty.
 func TestHandler_MatchRows_AutoCreate_CreatesProduct(t *testing.T) {
 	srv := newSrv(t)
 	name := fmt.Sprintf("AutoCreate New Product %d", time.Now().UnixNano())
@@ -561,9 +562,10 @@ func TestHandler_MatchRows_NoAutoCreate_LeavesNil(t *testing.T) {
 	assert.Equal(t, "NONE", out.Rows[0].Source)
 }
 
-// A batch that fails mid-loop must persist nothing, so retrying the same import
-// cannot duplicate the rows created before the failure. The oversized name
-// overflows items.name (VARCHAR(500)) and fails the third insert.
+// Failed batch persists nothing.
+// Retrying the same import therefore cannot duplicate the rows created
+// before the failure. The oversized name overflows items.name (VARCHAR(500))
+// and fails the third insert.
 func TestHandler_MatchRows_FailedBatchRollsBack(t *testing.T) {
 	srv := newSrv(t)
 	pool := testutil.Pool(t)
