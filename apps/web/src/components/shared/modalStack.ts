@@ -1,4 +1,5 @@
 // Escape ownership stack for modals.
+//
 // Each mounted Modal pushes a token and only the topmost one reacts to Escape,
 // so a single keypress never dismisses stacked modals at once.
 const stack: symbol[] = []
