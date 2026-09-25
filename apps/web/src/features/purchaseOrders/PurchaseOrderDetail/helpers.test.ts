@@ -220,26 +220,33 @@ describe("parseCompletenessIssues", () => {
     ])
   })
 
-  it("reads a shipping line gap by its line number, not its row id", () => {
+  it("reads the PO shipping address gap", () => {
     const issues = parseCompletenessIssues({
-      fields: { "baris:731": "Alamat pengiriman baris 2 belum diisi" },
+      fields: { "pengiriman:57": "Alamat pengiriman belum diisi" },
     })
     expect(issues).toEqual([
       {
-        kind: "line",
-        id: 2,
-        name: "Baris 2",
+        kind: "shipping",
+        id: 57,
+        name: undefined,
         missing: ["Alamat Pengiriman"],
-        message: "Alamat pengiriman baris 2 belum diisi",
+        message: "Alamat pengiriman belum diisi",
       },
     ])
   })
 
-  it("keeps the raw sentence of an unreadable line gap", () => {
-    const issues = parseCompletenessIssues({ fields: { "baris:731": "Baris belum siap." } })
+  it("keeps the raw sentence of an unreadable shipping gap", () => {
+    const issues = parseCompletenessIssues({
+      fields: { "pengiriman:57": "Pengiriman belum siap." },
+    })
     expect(issues).toEqual([
-      { kind: "line", id: 731, name: undefined, missing: [], message: "Baris belum siap." },
+      { kind: "shipping", id: 57, name: undefined, missing: [], message: "Pengiriman belum siap." },
     ])
+  })
+
+  it("ignores the retired per-line key", () => {
+    const body = { fields: { "baris:731": "Alamat pengiriman baris 2 belum diisi" } }
+    expect(parseCompletenessIssues(body)).toBeNull()
   })
 
   it("returns null for other 422 bodies", () => {
@@ -281,21 +288,15 @@ describe("parseCompletenessIssues ordering", () => {
     expect(issues?.map((i) => `${i.kind}:${i.id}`)).toEqual(["client:9", "vendor:3"])
   })
 
-  it("puts shipping lines last, by line number", () => {
+  it("puts the shipping gap last", () => {
     const issues = parseCompletenessIssues({
       fields: {
-        "baris:88": "Alamat pengiriman baris 3 belum diisi",
+        "pengiriman:57": "Alamat pengiriman belum diisi",
         "vendor:3": "Data vendor A belum lengkap: Lokasi",
-        "baris:91": "Alamat pengiriman baris 1 belum diisi",
         "klien:9": "Data klien K belum lengkap: NPWP",
       },
     })
-    expect(issues?.map((i) => `${i.kind}:${i.id}`)).toEqual([
-      "client:9",
-      "vendor:3",
-      "line:1",
-      "line:3",
-    ])
+    expect(issues?.map((i) => `${i.kind}:${i.id}`)).toEqual(["client:9", "vendor:3", "shipping:57"])
   })
 
   it("returns null when fields is not an object", () => {

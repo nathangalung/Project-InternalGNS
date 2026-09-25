@@ -151,18 +151,11 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
     hydrate(po, poItems)
   }, [hydrated, po, poItems, unitsData, hydrate])
 
-  // Clearing follows user edits only.
+  // Cost follows the days only.
   //
-  // A stored short address must not wipe the stored days and cost on load,
-  // so the dependent fields are cleared here rather than in an effect.
-  function changeAddress(v: string) {
-    setShippingAddress(v)
-    if (!isAddressValid(v)) {
-      setShippingTime("")
-      setShippingCost("")
-    }
-  }
-
+  // Typing an address must not wipe the stored days and cost: every
+  // keystroke before the 20th is a short address. The save guard below
+  // refuses a charge without a valid address instead.
   function changeTime(v: string) {
     setShippingTime(v)
     if (v.trim() === "") setShippingCost("")
@@ -374,7 +367,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
             {step === 2 && (
               <Step3Shipping
                 shippingAddress={shippingAddress}
-                setShippingAddress={changeAddress}
+                setShippingAddress={setShippingAddress}
                 shippingTime={shippingTime}
                 setShippingTime={changeTime}
                 shippingCost={shippingCost}

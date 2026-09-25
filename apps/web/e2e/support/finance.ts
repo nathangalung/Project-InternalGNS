@@ -70,7 +70,8 @@ type InvoiceRow = SeedInvoice & { rowVersion: number }
 
 // Quotation to delivered PO.
 //
-// Delivering the PO files the draft invoice, the only way one is made.
+// Delivering the PO files the draft invoice, the only way one is made. The
+// line carries its address, which the ON_PROGRESS gate requires.
 export async function deliveredInvoice(token: string, client: SeedClient): Promise<SeedInvoice> {
   const units = await json<{ id: number }[]>(call("/units", { token }), "list units")
   const q = await json<{ id: number }>(
@@ -87,6 +88,7 @@ export async function deliveredInvoice(token: string, client: SeedClient): Promi
             unitId: units[0].id,
             sellingPrice: "100000",
             costPrice: "60000",
+            shipDestination: "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
           },
         ],
       }),

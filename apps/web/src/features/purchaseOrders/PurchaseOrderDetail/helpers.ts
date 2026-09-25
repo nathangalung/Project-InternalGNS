@@ -159,8 +159,8 @@ export function poBreakdown(po: PurchaseOrderRow): PoBreakdown {
 
 // One gap the server reported.
 export type CompletenessIssue = {
-  kind: "client" | "vendor" | "line"
-  // Record id; a line's number when readable
+  kind: "client" | "vendor" | "shipping"
+  // Client, vendor or PO id
   id: number
   // Parsed from the sentence when possible
   name?: string
@@ -169,16 +169,16 @@ export type CompletenessIssue = {
   message: string
 }
 
-const ISSUE_KEY = /^(klien|vendor|baris):(\d+)$/
+const ISSUE_KEY = /^(klien|vendor|pengiriman):(\d+)$/
 const ISSUE_TEXT = /^Data (?:klien|vendor) (.+) belum lengkap: (.+)$/
-const LINE_TEXT = /^Alamat pengiriman baris (\d+) belum diisi$/
+const SHIPPING_TEXT = "Alamat pengiriman belum diisi"
 
 const KIND: Record<string, CompletenessIssue["kind"]> = {
   klien: "client",
   vendor: "vendor",
-  baris: "line",
+  pengiriman: "shipping",
 }
-const KIND_ORDER: CompletenessIssue["kind"][] = ["client", "vendor", "line"]
+const KIND_ORDER: CompletenessIssue["kind"][] = ["client", "vendor", "shipping"]
 
 function recordIssue(kind: "client" | "vendor", id: number, message: string): CompletenessIssue {
   const t = ISSUE_TEXT.exec(message)
@@ -191,21 +191,16 @@ function recordIssue(kind: "client" | "vendor", id: number, message: string): Co
   }
 }
 
-// Line gap by line number.
-//
-// The key carries the PO item id, which every item save replaces, so the
-// line number in the sentence is what the reader can find on the page.
-function lineIssue(rowId: number, message: string): CompletenessIssue {
-  const t = LINE_TEXT.exec(message)
-  if (!t) return { kind: "line", id: rowId, name: undefined, missing: [], message }
-  const n = Number(t[1])
-  return { kind: "line", id: n, name: `Baris ${n}`, missing: ["Alamat Pengiriman"], message }
+// The PO's shipping address gap.
+function shippingIssue(poId: number, message: string): CompletenessIssue {
+  const missing = message === SHIPPING_TEXT ? ["Alamat Pengiriman"] : []
+  return { kind: "shipping", id: poId, name: undefined, missing, message }
 }
 
 // Completeness 422 into issues.
 //
 // The ON_PROGRESS gate answers 422 with fields keyed klien:<id>,
-// vendor:<id> or baris:<po item id>. Returns null for any other body, so the
+// vendor:<id> or pengiriman:<po id>. Returns null for any other body, so the
 // caller falls back to the plain error toast.
 export function parseCompletenessIssues(body: unknown): CompletenessIssue[] | null {
   if (!body || typeof body !== "object") return null
@@ -218,11 +213,13 @@ export function parseCompletenessIssues(body: unknown): CompletenessIssue[] | nu
     const kind = KIND[k[1]]
     const message = String(value).trim()
     issues.push(
-      kind === "line" ? lineIssue(Number(k[2]), message) : recordIssue(kind, Number(k[2]), message),
+      kind === "shipping"
+        ? shippingIssue(Number(k[2]), message)
+        : recordIssue(kind, Number(k[2]), message),
     )
   }
   if (issues.length === 0) return null
-  // Client, vendors, then lines; each by id.
+  // Client, vendors by id, then shipping.
   return issues.sort(
     (a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || a.id - b.id,
   )

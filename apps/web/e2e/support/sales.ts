@@ -206,6 +206,9 @@ export class SalesSeed {
   }
 
   // Draft quotation, priced lines.
+  //
+  // A zero charge stores no shipping line, so each line carries the address
+  // itself: the ON_PROGRESS gate refuses unaddressed goods.
   async quotation(opts: {
     client: SeedClient
     lines: SeedLine[]
@@ -236,6 +239,7 @@ export class SalesSeed {
         unitId: pcs,
         sellingPrice: String(l.price),
         costPrice: l.cost === undefined ? undefined : String(l.cost),
+        shipDestination: "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
       })),
     })
     this.quotations.push(created.id)

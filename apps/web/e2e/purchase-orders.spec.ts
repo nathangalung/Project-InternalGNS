@@ -408,23 +408,19 @@ test.describe("purchase order address gaps", () => {
       `/clients/${client.id}`,
     )
     await expect(modal.getByRole("listitem").getByText("Alamat", { exact: true })).toBeVisible()
-    // The product line and the shipping line, both unaddressed.
-    for (const line of ["Baris 1", "Baris 2"]) {
-      await expect(modal.getByRole("link", { name: line, exact: true })).toHaveAttribute(
-        "href",
-        `/purchase-orders/${qid}/edit`,
-      )
-    }
+    // One address for the whole PO, set on the PO editor.
+    await expect(modal.getByRole("link", { name: "Ubah PO", exact: true })).toHaveAttribute(
+      "href",
+      `/purchase-orders/${qid}/edit`,
+    )
     await expect(
       modal.getByRole("listitem").getByText("Alamat Pengiriman", { exact: true }),
-    ).toHaveCount(2)
+    ).toHaveCount(1)
     await modal.getByRole("button", { name: "Mengerti" }).click()
     expect((await seed.poByQuotation(qid)).status).toBe("UPLOADED")
   })
 
-  // Blocked: the gate also checks product lines' ship_destination, which no
-  // screen sets, so "Baris 1" stays open after both links are used.
-  test.fixme("filling each gap through its link lets the PO reach Dalam Progres", async ({
+  test("filling each gap through its link lets the PO reach Dalam Progres", async ({
     page,
     seed,
   }) => {
@@ -446,10 +442,19 @@ test.describe("purchase order address gaps", () => {
 
     await page.goto(`/purchase-orders/${qid}`)
     await choosePoStatus(page, "PO Diunggah", "Dalam Progres")
-    await modal.getByRole("link", { name: "Baris 2", exact: true }).click()
+    await modal.getByRole("link", { name: "Ubah PO", exact: true }).click()
     await expect(page).toHaveURL(new RegExp(`/purchase-orders/${qid}/edit$`))
     await page.getByRole("button", { name: "Lanjut" }).click()
-    await page.getByLabel("Alamat Lengkap *").fill("Jl. Pelabuhan Raya No. 12, Tanjung Priok")
+    const days = page.getByLabel("Waktu Pengiriman (Hari) *")
+    const cost = page.getByLabel("Biaya Pengiriman *")
+    await expect(days).toHaveValue("5")
+    await expect(cost).toHaveValue("75000")
+    // Key by key, as a person types: no keystroke wipes the stored charge.
+    await page
+      .getByLabel("Alamat Lengkap *")
+      .pressSequentially("Jl. Pelabuhan Raya No. 12, Tanjung Priok")
+    await expect(days).toHaveValue("5")
+    await expect(cost).toHaveValue("75000")
     await page.getByRole("button", { name: "Lanjut" }).click()
     await page.getByRole("button", { name: "Simpan", exact: true }).click()
     await expect(page).toHaveURL(new RegExp(`/purchase-orders/${qid}$`))
@@ -457,5 +462,14 @@ test.describe("purchase order address gaps", () => {
     await choosePoStatus(page, "PO Diunggah", "Dalam Progres")
     await expect(page).toHaveURL(/\/purchase-orders$/)
     expect((await seed.poByQuotation(qid)).status).toBe("ON_PROGRESS")
+    // The Rp 75.000 charge survived the address fill.
+    const lines = await api<{ itemType: string; sellingPrice: string; shippingDays?: number }[]>(
+      "GET",
+      `/purchase-orders/${po.id}/items`,
+    )
+    expect(lines.find((l) => l.itemType === "shipping")).toMatchObject({
+      sellingPrice: "75000.00",
+      shippingDays: 5,
+    })
   })
 })

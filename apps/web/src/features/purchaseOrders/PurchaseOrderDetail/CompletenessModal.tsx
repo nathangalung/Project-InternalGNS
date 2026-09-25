@@ -14,7 +14,7 @@ type CompletenessModalProps = {
 const SCOPE: Record<CompletenessIssue["kind"], string> = {
   client: "Klien",
   vendor: "Vendor",
-  line: "Pengiriman",
+  shipping: "Pengiriman",
 }
 
 // Server-reported gaps before Dalam Progres.
@@ -35,8 +35,8 @@ export default function CompletenessModal({
     >
       <p className="m-0 text-[13px] leading-[1.5] text-[#4A4455]">
         Sebelum mengubah status menjadi <strong className="text-[#6B21A8]">Dalam Progres</strong>,
-        data berikut harus dilengkapi terlebih dahulu. Buka nama klien atau vendor, atau baris
-        pengiriman untuk mengubah PO, lalu lengkapi datanya.
+        data berikut harus dilengkapi terlebih dahulu. Buka nama klien atau vendor, atau Ubah PO
+        untuk mengisi alamat pengiriman, lalu lengkapi datanya.
       </p>
 
       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
@@ -47,13 +47,13 @@ export default function CompletenessModal({
           >
             <div className="mb-1 text-[13px] font-bold text-accent-900">
               {SCOPE[issue.kind]}:{" "}
-              {issue.kind === "line" ? (
+              {issue.kind === "shipping" ? (
                 <Link
                   to="/purchase-orders/$id/edit"
                   params={{ id: String(quotationId) }}
                   className={`${ui.entityLink} font-bold`}
                 >
-                  {issue.name ?? "Ubah PO"}
+                  Ubah PO
                 </Link>
               ) : (
                 <EntityLink kind={issue.kind} id={issue.id} className="font-bold">
