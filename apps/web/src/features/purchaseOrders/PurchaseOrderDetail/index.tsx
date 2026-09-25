@@ -273,7 +273,13 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
         </Modal>
       )}
 
-      {issues && <CompletenessModal issues={issues} onClose={() => setIssues(null)} />}
+      {issues && (
+        <CompletenessModal
+          issues={issues}
+          quotationId={po.quotationId}
+          onClose={() => setIssues(null)}
+        />
+      )}
     </>
   )
 }

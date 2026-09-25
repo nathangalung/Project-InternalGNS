@@ -159,7 +159,8 @@ export function poBreakdown(po: PurchaseOrderRow): PoBreakdown {
 
 // One gap the server reported.
 export type CompletenessIssue = {
-  kind: "client" | "vendor"
+  kind: "client" | "vendor" | "line"
+  // Record id; a line's number when readable
   id: number
   // Parsed from the sentence when possible
   name?: string
@@ -168,14 +169,44 @@ export type CompletenessIssue = {
   message: string
 }
 
-const ISSUE_KEY = /^(klien|vendor):(\d+)$/
+const ISSUE_KEY = /^(klien|vendor|baris):(\d+)$/
 const ISSUE_TEXT = /^Data (?:klien|vendor) (.+) belum lengkap: (.+)$/
+const LINE_TEXT = /^Alamat pengiriman baris (\d+) belum diisi$/
+
+const KIND: Record<string, CompletenessIssue["kind"]> = {
+  klien: "client",
+  vendor: "vendor",
+  baris: "line",
+}
+const KIND_ORDER: CompletenessIssue["kind"][] = ["client", "vendor", "line"]
+
+function recordIssue(kind: "client" | "vendor", id: number, message: string): CompletenessIssue {
+  const t = ISSUE_TEXT.exec(message)
+  return {
+    kind,
+    id,
+    name: t?.[1],
+    missing: t ? t[2].split(",").map((m) => m.trim()) : [],
+    message,
+  }
+}
+
+// Line gap by line number.
+//
+// The key carries the PO item id, which every item save replaces, so the
+// line number in the sentence is what the reader can find on the page.
+function lineIssue(rowId: number, message: string): CompletenessIssue {
+  const t = LINE_TEXT.exec(message)
+  if (!t) return { kind: "line", id: rowId, name: undefined, missing: [], message }
+  const n = Number(t[1])
+  return { kind: "line", id: n, name: `Baris ${n}`, missing: ["Alamat Pengiriman"], message }
+}
 
 // Completeness 422 into issues.
 //
-// The ON_PROGRESS gate answers 422 with fields keyed klien:<id> or
-// vendor:<id>. Returns null for any other body, so the caller falls back to
-// the plain error toast.
+// The ON_PROGRESS gate answers 422 with fields keyed klien:<id>,
+// vendor:<id> or baris:<po item id>. Returns null for any other body, so the
+// caller falls back to the plain error toast.
 export function parseCompletenessIssues(body: unknown): CompletenessIssue[] | null {
   if (!body || typeof body !== "object") return null
   const fields = (body as { fields?: unknown }).fields
@@ -184,17 +215,15 @@ export function parseCompletenessIssues(body: unknown): CompletenessIssue[] | nu
   for (const [key, value] of Object.entries(fields)) {
     const k = ISSUE_KEY.exec(key)
     if (!k) continue
+    const kind = KIND[k[1]]
     const message = String(value).trim()
-    const t = ISSUE_TEXT.exec(message)
-    issues.push({
-      kind: k[1] === "klien" ? "client" : "vendor",
-      id: Number(k[2]),
-      name: t?.[1],
-      missing: t ? t[2].split(",").map((m) => m.trim()) : [],
-      message,
-    })
+    issues.push(
+      kind === "line" ? lineIssue(Number(k[2]), message) : recordIssue(kind, Number(k[2]), message),
+    )
   }
   if (issues.length === 0) return null
-  // Client first, then vendors by id.
-  return issues.sort((a, b) => (a.kind === b.kind ? a.id - b.id : a.kind === "client" ? -1 : 1))
+  // Client, vendors, then lines; each by id.
+  return issues.sort(
+    (a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || a.id - b.id,
+  )
 }

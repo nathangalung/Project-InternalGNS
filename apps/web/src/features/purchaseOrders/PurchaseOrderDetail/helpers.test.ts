@@ -220,6 +220,28 @@ describe("parseCompletenessIssues", () => {
     ])
   })
 
+  it("reads a shipping line gap by its line number, not its row id", () => {
+    const issues = parseCompletenessIssues({
+      fields: { "baris:731": "Alamat pengiriman baris 2 belum diisi" },
+    })
+    expect(issues).toEqual([
+      {
+        kind: "line",
+        id: 2,
+        name: "Baris 2",
+        missing: ["Alamat Pengiriman"],
+        message: "Alamat pengiriman baris 2 belum diisi",
+      },
+    ])
+  })
+
+  it("keeps the raw sentence of an unreadable line gap", () => {
+    const issues = parseCompletenessIssues({ fields: { "baris:731": "Baris belum siap." } })
+    expect(issues).toEqual([
+      { kind: "line", id: 731, name: undefined, missing: [], message: "Baris belum siap." },
+    ])
+  })
+
   it("returns null for other 422 bodies", () => {
     expect(parseCompletenessIssues({ fields: { status: "Perubahan tidak diizinkan." } })).toBeNull()
     expect(parseCompletenessIssues(null)).toBeNull()
@@ -257,6 +279,23 @@ describe("parseCompletenessIssues ordering", () => {
       },
     })
     expect(issues?.map((i) => `${i.kind}:${i.id}`)).toEqual(["client:9", "vendor:3"])
+  })
+
+  it("puts shipping lines last, by line number", () => {
+    const issues = parseCompletenessIssues({
+      fields: {
+        "baris:88": "Alamat pengiriman baris 3 belum diisi",
+        "vendor:3": "Data vendor A belum lengkap: Lokasi",
+        "baris:91": "Alamat pengiriman baris 1 belum diisi",
+        "klien:9": "Data klien K belum lengkap: NPWP",
+      },
+    })
+    expect(issues?.map((i) => `${i.kind}:${i.id}`)).toEqual([
+      "client:9",
+      "vendor:3",
+      "line:1",
+      "line:3",
+    ])
   })
 
   it("returns null when fields is not an object", () => {
