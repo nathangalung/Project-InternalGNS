@@ -1,254 +1,194 @@
 # InternalGNS
 
-Internal operations & finance tool for PT Global Niaga Sakti. Manages the
-quotation → purchase order → invoice flow with Indonesian Coretax-compliant
-tax document export.
+Internal operations and finance tool for PT Global Niaga Sakti. It runs the
+quotation → purchase order → invoice flow and exports tax documents for
+Indonesian Coretax.
 
 ## Stack
 
-- **Frontend** — React 19 + TypeScript + Vite + Tailwind v4 + shadcn/ui,
-  TanStack Router (file-based), TanStack Query, TanStack Table.
-- **Backend** — Go 1.26 modular monolith: chi v5, pgx/v5, goose v3 (embedded),
-  JWT (HS256), bcrypt, godotenv.
-- **Database** — PostgreSQL 18-alpine with `pg_trgm`, GENERATED STORED columns,
-  row-version triggers for optimistic locking, PL/pgSQL business functions.
-- **Infra** — Docker Compose for dev, Dokploy on a single VPS for prod,
-  Traefik for routing + Let's Encrypt, MinIO for file storage.
+- **Frontend**: React 19, strict TypeScript, Vite 7, Tailwind CSS v4,
+  TanStack Router (file-based) and TanStack Query. Bun, Biome, Vitest,
+  Playwright.
+- **Backend**: Go 1.26 modular monolith with chi v5, pgx v5, goose v3
+  (embedded migrations), JWT (HS256) with bcrypt, and hand-written SQL loaded
+  from `db/queries`. PDFs render through xelatex; spreadsheets through
+  excelize.
+- **Database**: PostgreSQL 18 with `pg_trgm`, GENERATED STORED totals,
+  row-version triggers for optimistic locking, and plpgsql functions for the
+  status machines and document numbers.
+- **Infra**: Docker Compose for dev, Dokploy on a single VPS for production,
+  Traefik with Let's Encrypt, MinIO for uploaded files.
+
+`CLAUDE.md` holds the conventions, the status model and the testing rules.
 
 ## Layout
 
 ```
 apps/
-  web/                React frontend (Vite, Bun)
-  api/                Go backend
-    cmd/api/          entrypoint
-    internal/         feature modules + shared
+  web/                React SPA (Vite, Bun)
+    e2e/              Playwright suite
+  api/                Go API
+    cmd/              api, orphan-blobs, pdfsmoke
+    internal/         feature packages + shared
     db/migrations/    goose schema history
-    db/seeds/         master + dev sample data
-    db/queries/       named SQL queries
-infra/
-  dokploy/            production docker-compose.yml + .env
-docs/                 ERD, architecture, decisions
+    db/queries/       named SQL, loaded at startup
+    db/functions/     current body of every database function
+    db/seeds/         master and historical data (dev only)
+    db/import/        Excel-to-seed tool (uv)
+    templates/        LaTeX templates, fonts, Coretax workbook
+docs/                 deploy, backup, architecture, ERD, audits
+scripts/              backup.sh, restore.sh
 compose.dev.yml       dev stack
-Makefile              single source of truth for all targets
+compose.prod.yml      production stack (with .env.prod.example)
+Makefile              every task; `make help` lists them
 ```
 
-## Run Locally — Step by Step
+## Run locally
 
 ### 1. Prerequisites
 
-Install once on machine:
-
-| Tool | Version | Install |
-|------|---------|---------|
-| Go | 1.25+ | https://go.dev/dl/ or `brew install go` |
+| Tool | Version | Notes |
+|------|---------|-------|
+| Go | 1.26+ | https://go.dev/dl/ |
 | Bun | 1.3+ | `curl -fsSL https://bun.sh/install \| bash` |
-| Docker | latest | https://docs.docker.com/get-docker/ |
-| Make | any | preinstalled on macOS/Linux. Windows: use WSL2 |
-| psql | 14+ | `postgresql-client` package (Linux) or Postgres.app (macOS) |
-| Git | any | preinstalled |
+| Docker | with Compose v2 | runs Postgres, MinIO and pgweb |
+| Make | any | Windows: use WSL2 |
+| psql | 14+ | seeds are loaded as raw SQL (`postgresql-client`) |
+| xelatex | TeX Live | only for PDF export and the PDF layout tests |
 
-`make setup` auto-installs `goose` (via `go install`) if missing, so it's not
-required up front. `psql` IS required because seeds run as raw SQL files.
+`make setup` installs `goose` v3.27.1 with `go install` when it is missing.
 
-Verify:
-
-```bash
-go version       # go1.26+
-bun --version    # 1.3+
-docker --version
-make --version
-psql --version
-```
-
-### 2. Clone
-
-```bash
-git clone https://github.com/<owner>/InternalGNS.git
-cd InternalGNS
-```
-
-### 3. First-time setup
+### 2. First-time setup
 
 ```bash
 make setup
 ```
 
-What it does:
+It checks for `go`, `bun` and `docker`, copies `apps/api/.env.example` to
+`apps/api/.env` and `apps/web/.env.example` to `apps/web/.env` when missing,
+installs goose, and runs `go mod tidy` and `bun install`.
 
-- Checks `go`, `bun`, `docker` present.
-- Copies `apps/api/.env.example` → `apps/api/.env` (if missing).
-- Copies `apps/web/.env.example` → `apps/web/.env` (if missing).
-- Installs `goose` CLI via `go install` (if missing).
-- Runs `go mod tidy` in `apps/api`.
-- Runs `bun install` in `apps/web`.
+Then edit `apps/api/.env`:
 
-### 4. Start postgres + apply migrations + seed dev data
+- `JWT_SECRET`: the API refuses to start with the placeholder. Use
+  `openssl rand -hex 32`.
+- `SUPERADMIN_EMAIL` and `SUPERADMIN_PASSWORD`: the superadmin created on
+  first boot. An existing account keeps its password when these change.
+
+### 3. Database and dev data
 
 ```bash
 make seed-dev
 ```
 
-What it does (single command, in order):
+In order, it:
 
-1. Starts postgres container (`compose.dev.yml`).
-2. Runs all migrations via `go run ./cmd/api -bootstrap`
-   (embedded goose; no separate goose call needed).
-3. Creates superadmin user (id=1) from `SUPERADMIN_*` env vars.
-4. Loads master data from `db/seeds/01_master.sql`:
-   - 40 units (Coretax DJP UM.0001-UM.0033 + ship-supply extras).
-   - 251 countries (ISO 3166 + ITU-T E.164 dial codes).
-5. Loads dev samples from `db/seeds/02_dev_samples.sql`:
-   - 2 sample users (`ops@`, `finance@`).
-   - 3 clients (PT IMC, PT Yuxin, PT Transcoal) + 1 contact.
-   - 3 vendors + 14 items + 13 vendor_products.
-   - 1 quotation (Q-264128) with 13 line items.
-   - 1 purchase order + 1 invoice + 4 invoice items.
-   - Item-request-match learning entries.
+1. Starts Postgres (`compose.dev.yml`).
+2. Runs `go run ./cmd/api -bootstrap`: applies every migration and creates
+   the superadmin from `SUPERADMIN_*`.
+3. Loads every file in `apps/api/db/seeds/`:
+   - `01_master.sql`: 40 units (Coretax UM codes) and 251 countries.
+   - `03_historical.sql`: quotations, clients, items and vendors from the
+     2024 to 2026 Excel files, generated by `db/import`.
+   - `03b_extra_quotations.sql`: quotations the Excel import missed.
+   - `04_quotation_states.sql`, `05_real_purchase_orders.sql`,
+     `06_real_invoices.sql`: moves the quotations through the status machine
+     and loads the real POs and invoices.
 
-Idempotent — re-run safe. Master uses `ON CONFLICT DO NOTHING`. Dev samples
-use `TRUNCATE … RESTART IDENTITY CASCADE` to reset sample tables (preserves
-superadmin user).
+The master seed is idempotent. `03_historical.sql` truncates the
+transactional and client tables and rebuilds them, keeping users, units and
+countries. `make seed` loads only the master data.
 
-If you only need master tables (units + countries) without dev samples,
-run `make seed` instead.
-
-### 5. Start dev servers
+### 4. Start
 
 ```bash
 make dev
 ```
 
-Runs API + web in parallel:
+Starts Postgres and MinIO, then runs the API on http://localhost:8080 and the
+SPA on http://localhost:5174. Vite proxies `/api` to the API. `Ctrl+C` stops
+both.
 
-- API → http://localhost:8080
-- Web → http://localhost:5174
+### 5. Log in
 
-Web proxies `/api/*` → API at 8080 (configured in `vite.config.ts`).
+Open http://localhost:5174 and sign in with `SUPERADMIN_EMAIL` and
+`SUPERADMIN_PASSWORD` from `apps/api/.env`. Create operational and finance
+users in the Pengguna screen.
 
-`Ctrl+C` kills both.
+`make stack-up` runs the API in Docker instead, with the values in
+`compose.dev.yml` (superadmin `admin@globalsakti.com` / `AdminGNS123!`).
 
-### 6. Login
-
-| Field | Value |
-|-------|-------|
-| URL | http://localhost:5174 |
-| Email | `admin@globalsakti.com` |
-| Password | `AdminGNS123!` |
-
-Sample roles for testing:
-
-- `ops@globalsakti.com` / `changeme` (operational)
-- `finance@globalsakti.com` / `changeme` (finance)
-
-## Daily Workflow
-
-```bash
-git pull
-make seed-dev     # only if migrations or seeds changed
-make dev          # work
-# Ctrl+C when done
-```
-
-## Common Commands
+## Common commands
 
 | Command | Purpose |
 |---------|---------|
-| `make help` | List all targets |
-| `make setup` | Prep env, deps, tools |
-| `make db-up` | Start postgres only |
-| `make db-down` | Stop postgres |
-| `make db-logs` | Tail postgres logs |
-| `make db-shell` | Open psql shell inside container |
-| `make migrate` | Apply migrations + create superadmin (embedded goose) |
-| `make migrate-up` | Raw goose up (alternative) |
-| `make migrate-status` | Show migration state |
-| `make migrate-down` | Roll back last migration |
-| `make migrate-new NAME=xxx` | Create new migration file |
-| `make seed` | Load master only (units + countries, idempotent) |
-| `make seed-dev` | Migrate + master + dev sample data (recommended for dev) |
-| `make schema-dump` | Dump current schema to `docs/schema_current.sql` |
-| `make api` | Run API only |
-| `make web` | Run Vite dev server only |
-| `make dev` | Run API + web together |
-| `make stack-up` | Build + start postgres + api containers |
-| `make stack-down` | Stop full dev stack |
-| `make stack-logs` | Tail dev stack logs |
-| `make ps` | List dev containers |
-| `make reset` | Wipe dev stack + volumes (nuclear) |
-| `make build` | Build api binary + web bundle |
-| `make test` | Run all tests (api + web typecheck) |
-| `make test-api` | Go tests serialized (`-p=1` for godog stability) |
-| `make test-web` | TypeScript typecheck |
-| `make lint` | Lint api (go vet + golangci-lint) + web (biome) |
-| `make lint-fix` | Auto-fix lint + format issues (golangci-lint --fix + biome --write) |
-| `make fmt` | Format api (gofmt) + web (biome) |
-| `make types` | TypeScript typecheck (FE) |
-| `make hooks-install` | Install pre-commit hooks (one-time) |
-| `make hooks-run` | Run all pre-commit hooks across the repo |
-| `make sqlc` | Regenerate sqlc code |
-| `make db-erd` | Regenerate `docs/erd/` from the live dev DB via tbls |
-| `make tidy` | `go mod tidy` |
-| `make docker-build` | Build api + web container images |
-| `make clean` | Remove build artifacts |
+| `make help` | List every target |
+| `make setup` | Prepare env files, tools and dependencies |
+| `make db-up` / `make db-down` | Start or stop Postgres |
+| `make deps-up` | Start Postgres and MinIO |
+| `make db-logs` / `make db-shell` | Tail Postgres logs / open psql |
+| `make db-ui` / `make db-ui-down` | pgweb on http://localhost:8081 |
+| `make migrate` | Apply migrations and create the superadmin |
+| `make migrate-up` / `migrate-status` / `migrate-down` | Raw goose commands |
+| `make migrate-new NAME=xxx` | New migration file |
+| `make db-functions-dump` | Refresh `db/functions` after a function change |
+| `make seed` / `make seed-dev` | Master data only / migrate plus every seed |
+| `make db-clean-testdata` | Remove leftover acceptance rows (local only) |
+| `make check-reconcile` | Run the verification queries in `db/checks` |
+| `make schema-dump` | Write the schema to `docs/schema_current.sql` |
+| `make db-erd` | Regenerate `docs/erd/` with tbls |
+| `make api` / `make web` / `make dev` | API, SPA, or both |
+| `make stack-up` / `stack-down` / `stack-logs` / `ps` | Dockerized dev stack |
+| `make reset` | Remove the dev stack and its volumes |
+| `make build` | API binary and web bundle |
+| `make test` | Go tests, web typecheck and Vitest |
+| `make test-api` | Go tests on the throwaway `gns_citest` database |
+| `make test-web` | Web typecheck and Vitest |
+| `make e2e` | Playwright against the running dev stack |
+| `make cover` | Go and web coverage gates |
+| `make lint` / `make lint-fix` | go vet, golangci-lint, Biome / auto-fix |
+| `make fmt` / `make types` | Format / web typecheck |
+| `make hooks-install` / `hooks-run` | pre-commit hooks |
+| `make docker-build` | API and web images |
+| `make orphan-blobs-dry` / `orphan-blobs-purge` | Find / delete unreferenced MinIO objects |
+| `make backup` / `make restore` | Host backups, see `docs/backup_restore.md` |
+| `make clean` | Remove build output |
 
 ## Troubleshooting
 
-**Postgres won't start / mount errors:**
+**Postgres will not start, or a migration fails after a pull:**
 ```bash
-make reset && make seed-dev
+make reset && make seed-dev   # wipes the dev volumes
 ```
 
-**Port 5432 / 8080 / 5174 in use:**
-```bash
-lsof -i :5432    # find PID, kill it
-```
+**Port 5432, 8080 or 5174 in use:** `lsof -i :5432`, then stop that process.
 
-**Migration error after pull:**
-```bash
-make reset && make seed-dev   # full rebuild
-```
+**API exits with `JWT_SECRET ...`:** replace the placeholder in
+`apps/api/.env` (step 2).
 
-**Bun install hangs on Windows:**
-Use WSL2. Native Windows not supported.
+**`psql: command not found`:** `sudo apt install postgresql-client` (Linux,
+WSL2) or `brew install libpq && brew link --force libpq` (macOS).
 
-**`.env` missing:**
-```bash
-make setup        # idempotent, recreates from .env.example
-```
+**`goose: command not found`:** `go install
+github.com/pressly/goose/v3/cmd/goose@v3.27.1` and put `$(go env GOPATH)/bin`
+on `PATH`.
 
-**`psql: command not found`:**
-- Linux: `sudo apt install postgresql-client`
-- macOS: `brew install libpq && brew link --force libpq`
-- Windows (WSL2): `sudo apt install postgresql-client`
-
-**`goose: command not found`:**
-```bash
-go install github.com/pressly/goose/v3/cmd/goose@latest
-# Ensure $(go env GOPATH)/bin is on PATH
-```
-
-**Stale frontend build:**
-```bash
-make clean && make web
-```
-
-**Tests flake / "Quotation 1 not found":**
-Already handled — `make test-api` uses `-p=1` to serialize package execution
-so godog ATDD scenarios don't race with integration TRUNCATE.
+**Native Windows:** not supported. Use WSL2.
 
 ## Documents
 
-- `docs/ERD.drawio.xml` — data model.
-- `apps/api/db/migrations/` — schema history (goose).
-- `apps/api/db/seeds/01_master.sql` — master (units, countries; idempotent).
-- `apps/api/db/seeds/02_dev_samples.sql` — dev sample data.
-- `apps/api/db/checks/` — ad-hoc verification SQL.
-- `apps/api/db/queries/` — named SQL queries (loaded into `queries.Store`).
+- `CLAUDE.md`: conventions, status model, testing.
+- `docs/deploy_vps.md`: production deploy and pre-deploy checks.
+- `docs/backup_restore.md`: backups, restore rehearsal, disaster restore.
+- `docs/architecture.md`, `docs/tech_stack.md`, `docs/backend_dev_guide.md`.
+- `docs/erd/`: schema reference generated by tbls.
+- `apps/api/db/migrations/README.md`, `apps/api/db/import/README.md`.
+- `docs/architecture-audit*.md`, `docs/round*_plan.md`, `docs/coretax-review.md`:
+  dated audits and plans, kept as records.
 
 ## Deploy
 
-Production stack runs on Dokploy from `compose.prod.yml`, with `.env.prod.example`
-as the environment template and `docs/deploy_vps.md` as the deployment guide. CI
+Production runs on Dokploy from `compose.prod.yml`, with `.env.prod.example`
+as the environment template and `docs/deploy_vps.md` as the guide. CI
 publishes images to `ghcr.io/<owner>/internalgns-api` and
 `ghcr.io/<owner>/internalgns-web`.
