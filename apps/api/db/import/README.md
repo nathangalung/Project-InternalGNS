@@ -93,3 +93,7 @@ PGCLIENTENCODING=UTF8 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 < apps/api/db/seed
 - `unit_map.py` — raw unit string to canonical `units.code` mapping
 - `generate_seed.py` — emits `apps/api/db/seeds/03_historical.sql`
 - `staged.json` — output of `parse.py`
+- `cleanup_junk.sql` — one-shot, idempotent cleanup of parser artifacts the
+  initial historical load left (header residue loaded as items, template
+  text loaded as vendors). Run it by hand with `psql`; `make seed-dev` does
+  not load it.
