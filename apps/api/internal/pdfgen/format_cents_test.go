@@ -22,7 +22,8 @@ func TestFormatIDRCents(t *testing.T) {
 	}
 }
 
-// The printed column reconciles: total - discount = subtotal.
+// Printed column reconciles.
+// total - discount = subtotal.
 func TestFormatIDRCents_ColumnReconciles(t *testing.T) {
 	total, discount, subtotal := "1001.00", "75.50", "925.50"
 	if FormatIDRCents(total) == FormatIDR(total) {

@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// StrDeref returns *p or "" if p is nil.
+// StrDeref dereferences, nil as "".
 func StrDeref(p *string) string {
 	if p == nil {
 		return ""
@@ -14,7 +14,7 @@ func StrDeref(p *string) string {
 	return *p
 }
 
-// SanitizeFilename strips characters unsafe for Content-Disposition filenames.
+// SanitizeFilename makes Content-Disposition-safe names.
 // Allowed: ASCII alphanumerics, '-', '_', '.'. Anything else becomes '_'.
 // Empty result falls back to "document".
 func SanitizeFilename(s string) string {
@@ -36,8 +36,9 @@ func SanitizeFilename(s string) string {
 	return string(out)
 }
 
-// WritePDFResponse sets pdf headers (Content-Type, Content-Disposition with
-// sanitized filename) and writes pdfBytes. Returns any io error from Write.
+// WritePDFResponse writes a PDF response.
+// It sets the headers (Content-Type, Content-Disposition with a sanitized
+// filename) and writes pdfBytes. Returns any io error from Write.
 func WritePDFResponse(w http.ResponseWriter, nameBase string, pdfBytes []byte) error {
 	w.Header().Set("Content-Type", "application/pdf")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.pdf"`, SanitizeFilename(nameBase)))
@@ -45,7 +46,8 @@ func WritePDFResponse(w http.ResponseWriter, nameBase string, pdfBytes []byte) e
 	return err
 }
 
-// zero turns "" into "0", passing other strings through.
+// zero maps "" to "0".
+// Other strings pass through.
 func zero(s string) string {
 	if s == "" {
 		return "0"
@@ -65,18 +67,21 @@ func bigToStr(f *big.Float) string {
 	return f.Text('f', 2)
 }
 
-// BigMul multiplies two numeric strings using big.Float (64-bit precision),
-// returning a 2-decimal string. Used for monetary qty × price math.
+// BigMul multiplies numeric strings.
+// It uses big.Float (64-bit precision) and returns a 2-decimal string. Used
+// for monetary qty × price math.
 func BigMul(a, b string) string {
 	return bigToStr(new(big.Float).Mul(bigFromStr(a), bigFromStr(b)))
 }
 
-// BigSub subtracts b from a on numeric strings.
+// BigSub subtracts numeric strings.
+// It returns a - b.
 func BigSub(a, b string) string {
 	return bigToStr(new(big.Float).Sub(bigFromStr(a), bigFromStr(b)))
 }
 
-// BigMulDiv returns a * num / den. Returns "0" if den is zero.
+// BigMulDiv returns a*num/den.
+// It returns "0" if den is zero.
 func BigMulDiv(a, num, den string) string {
 	prod := new(big.Float).Mul(bigFromStr(a), bigFromStr(num))
 	d := bigFromStr(den)
@@ -86,7 +91,8 @@ func BigMulDiv(a, num, den string) string {
 	return bigToStr(new(big.Float).Quo(prod, d))
 }
 
-// BigAdd adds two numeric strings using big.Float.
+// BigAdd adds numeric strings.
+// It uses big.Float.
 func BigAdd(a, b string) string {
 	return bigToStr(new(big.Float).Add(bigFromStr(a), bigFromStr(b)))
 }

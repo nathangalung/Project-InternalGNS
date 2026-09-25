@@ -33,7 +33,8 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 	return &Repo{db: exec, store: store}
 }
 
-// Summary returns all-time totals and tiles.
+// Summary returns all-time figures.
+// That covers totals and tiles.
 func (r *Repo) Summary(ctx context.Context) (Summary, error) {
 	s, err := r.Totals(ctx, nil, nil)
 	if err != nil {
@@ -49,7 +50,7 @@ func (r *Repo) Summary(ctx context.Context) (Summary, error) {
 	return s, nil
 }
 
-// Totals sums the figures over a window.
+// Totals sums a window's figures.
 // from is inclusive and to exclusive; a nil bound leaves that side open.
 // The status tiles stay empty.
 func (r *Repo) Totals(ctx context.Context, from, to *time.Time) (Summary, error) {
@@ -89,7 +90,8 @@ func (r *Repo) statusCounts(ctx context.Context) (map[string]map[string]int64, e
 	return out, nil
 }
 
-// Timeseries returns metric buckets by interval.
+// Timeseries buckets a metric.
+// Buckets follow the interval.
 func (r *Repo) Timeseries(ctx context.Context, metric string, from, to time.Time, interval string) ([]TimeseriesPoint, error) {
 	key, ok := metricQuery[metric]
 	if !ok {

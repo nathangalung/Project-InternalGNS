@@ -23,13 +23,14 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 
 var ErrNotFound = errors.New("not found")
 
-// totalPurchaseExpr is the accepted-quotation cost sum per vendor.
+// totalPurchaseExpr sums accepted costs.
+// The accepted-quotation cost sum is per vendor.
 const totalPurchaseExpr = "COALESCE((SELECT SUM(qi.total_cost) FROM quotation_items qi" +
 	" JOIN vendor_products vp ON vp.id = qi.vendor_product_id" +
 	" JOIN quotations q ON q.id = qi.quotation_id" +
 	" WHERE vp.vendor_id = v.id AND q.status = 'accepted'), 0)"
 
-// sortable is the closed set of vendor sort keys.
+// sortable lists vendor sort keys.
 var sortable = listq.Whitelist{
 	Default: "name",
 	Columns: map[string]listq.Column{
@@ -43,10 +44,10 @@ var sortable = listq.Whitelist{
 	},
 }
 
-// tiebreak keeps paging stable when the sort key ties.
+// tiebreak keeps paging stable.
 var tiebreak = listq.Column{Expr: "v.id", Dir: listq.Desc}
 
-// List returns vendors with filter/sort and total count.
+// List pages vendors with total.
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
@@ -126,7 +127,7 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateVendorRequest, us
 	return v, err
 }
 
-// UpdateLogo writes the MinIO object key for the vendor logo.
+// UpdateLogo stores the logo key.
 func (r *Repo) UpdateLogo(ctx context.Context, id int64, objectKey string, userID int64) error {
 	tag, err := r.db.Exec(ctx, r.store.Get("vendors.update_logo"), id, objectKey, userID)
 	if err != nil {

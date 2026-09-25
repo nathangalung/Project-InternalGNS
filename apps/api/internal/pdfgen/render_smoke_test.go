@@ -13,7 +13,7 @@ type smokeItem struct {
 	ShipDestination string
 }
 
-// Full xelatex render proves logo staging.
+// xelatex render proves logo staging.
 func TestRenderDeliveryNoteWithAssets(t *testing.T) {
 	if _, err := os.Stat("../../templates/assets/Logo_Vertical.png"); err != nil {
 		t.Skip("assets missing")

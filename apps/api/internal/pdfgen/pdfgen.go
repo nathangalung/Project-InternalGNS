@@ -16,9 +16,10 @@ import (
 	"unicode"
 )
 
-// Bound concurrent xelatex processes so a burst of exports cannot exhaust the
-// host. Sized to half the CPU budget, clamped to [2, 8]. Shared across
-// renderers. PDF_RENDER_CONCURRENCY overrides the computed value.
+// renderSem bounds concurrent xelatex runs.
+// A burst of exports cannot then exhaust the host. Sized to half the CPU
+// budget, clamped to [2, 8]. Shared across renderers.
+// PDF_RENDER_CONCURRENCY overrides the computed value.
 var renderSem = make(chan struct{}, renderConcurrency())
 
 // renderConcurrency sizes the xelatex semaphore.
@@ -43,14 +44,15 @@ func renderConcurrency() int {
 	}
 }
 
-// Renderer compiles LaTeX templates to PDF bytes via xelatex.
+// Renderer compiles LaTeX to PDF.
+// It runs xelatex over the templates.
 type Renderer struct {
 	templatesRoot string
 	xelatexBinary string
 	timeout       time.Duration
 }
 
-// NewRenderer wires the LaTeX templates root.
+// NewRenderer wires the templates root.
 func NewRenderer(templatesRoot string) *Renderer {
 	return &Renderer{
 		templatesRoot: templatesRoot,
@@ -59,7 +61,8 @@ func NewRenderer(templatesRoot string) *Renderer {
 	}
 }
 
-// Render fills the named template and runs xelatex twice for accurate page refs.
+// Render fills and compiles templates.
+// xelatex runs twice for accurate page refs.
 func (r *Renderer) Render(ctx context.Context, name string, data any) ([]byte, error) {
 	// Bound each render by the renderer's own timeout, independent of the
 	// request deadline, and wire it (previously the field was unused).
@@ -116,7 +119,7 @@ func (r *Renderer) Render(ctx context.Context, name string, data any) ([]byte, e
 	return pdf, nil
 }
 
-// copyAssets stages shared images beside doc.tex.
+// copyAssets stages images beside doc.tex.
 func (r *Renderer) copyAssets(dir string) error {
 	assets := filepath.Join(r.templatesRoot, "..", "assets")
 	entries, err := os.ReadDir(assets)
@@ -168,7 +171,8 @@ func truncate(s string, n int) string {
 	return s[:n] + "...(truncated)"
 }
 
-// LatexEscape escapes user-provided text for safe LaTeX inclusion.
+// LatexEscape escapes user text.
+// The result is safe to include in LaTeX.
 func LatexEscape(s string) string {
 	r := strings.NewReplacer(
 		"\\", `\textbackslash{}`,
@@ -224,7 +228,8 @@ func LatexBreakable(s string) string {
 	return b.String()
 }
 
-// FormatIDR renders a numeric string as Rp 1.234.567 with dot grouping.
+// FormatIDR renders Rupiah amounts.
+// The format is Rp 1.234.567, with dot grouping.
 func FormatIDR(numericStr string) string {
 	if numericStr == "" {
 		return "Rp~--"
@@ -289,7 +294,7 @@ func FormatIDRCents(numericStr string) string {
 	return b.String()
 }
 
-// FormatQty trims trailing zeros from a numeric string.
+// FormatQty trims trailing zeros.
 // e.g. "5.00" -> "5", "1.500" -> "1.5", "" -> "0".
 func FormatQty(numericStr string) string {
 	s := strings.TrimSpace(numericStr)
@@ -306,7 +311,8 @@ func FormatQty(numericStr string) string {
 	return s
 }
 
-// JakartaDateLine returns "Jakarta, D Month YYYY" in English.
+// JakartaDateLine formats the date line.
+// It returns "Jakarta, D Month YYYY" in English.
 func JakartaDateLine(t time.Time) string {
 	months := []string{"January", "February", "March", "April", "May", "June",
 		"July", "August", "September", "October", "November", "December"}

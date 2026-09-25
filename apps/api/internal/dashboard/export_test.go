@@ -11,6 +11,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
 
+// wibFirstOfMonth is 30 September UTC.
 // 00:30 WIB on 1 October is still 30 September in UTC.
 var wibFirstOfMonth = time.Date(2026, 10, 1, 0, 30, 0, 0, tz.Jakarta())
 

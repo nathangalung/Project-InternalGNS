@@ -12,12 +12,12 @@ import (
 // unescaped one in user input would consume the character after it.
 var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
 
-// likeContains builds a literal contains pattern.
+// likeContains builds a literal pattern.
 func likeContains(s string) string {
 	return "%" + likeEscaper.Replace(s) + "%"
 }
 
-// badQueryParam names the first unstorable query value.
+// badQueryParam names the first offender.
 //
 // Postgres rejects a NUL byte and invalid UTF-8 in a text parameter with
 // SQLSTATE 22021, which would otherwise surface as a 500.

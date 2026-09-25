@@ -41,7 +41,7 @@ type scenarioState struct {
 	book      workbook
 }
 
-// send issues a request and keeps the response.
+// send requests and keeps responses.
 func (s *scenarioState) send(srv *httptest.Server, method, path string, body any) error {
 	var rdr io.Reader
 	if body != nil {
@@ -72,7 +72,8 @@ func (s *scenarioState) send(srv *httptest.Server, method, path string, body any
 	return nil
 }
 
-// expect sends and fails on any other status.
+// expect sends, requiring a status.
+// Any other status fails.
 func (s *scenarioState) expect(want int, method, path string, body any) error {
 	if err := s.send(s.commerce, method, path, body); err != nil {
 		return err
@@ -87,7 +88,8 @@ func (s *scenarioState) emptyDomain() error {
 	return testutil.ResetCommercialDomain(context.Background(), testutil.Pool(s.t))
 }
 
-// Walk quotation to a delivered PO and its invoice.
+// Walk quotation to invoiced PO.
+// The PO ends delivered, with its invoice.
 func (s *scenarioState) invoiceFor(qty, price, cost string) error {
 	create := quotations.CreateRequest{
 		CompanyClientID: defaultCompany,
@@ -162,7 +164,8 @@ func (s *scenarioState) invoiceTo(path ...invoices.Status) error {
 	return nil
 }
 
-// cancelAndReplace voids the invoice and issues its Pengganti.
+// cancelAndReplace issues a Pengganti.
+// It voids the invoice first.
 func (s *scenarioState) cancelAndReplace() error {
 	if err := s.invoiceTo(invoices.StatusCancelled); err != nil {
 		return err
@@ -243,7 +246,8 @@ func (s *scenarioState) statusEquals(want int) error {
 	return nil
 }
 
-// rawSum reads one aggregate straight from the tables.
+// rawSum reads a table aggregate.
+// It reads straight from the tables.
 func (s *scenarioState) rawSum(sql string) (decimal.Decimal, error) {
 	var raw string
 	if err := testutil.Pool(s.t).QueryRow(context.Background(), sql).Scan(&raw); err != nil {
@@ -252,7 +256,8 @@ func (s *scenarioState) rawSum(sql string) (decimal.Decimal, error) {
 	return decimal.NewFromString(raw)
 }
 
-// figureMatches compares a summary figure with a literal and a raw sum.
+// figureMatches checks a summary figure.
+// It compares the figure with a literal and a raw sum.
 func figureMatches(name, got, want string, raw decimal.Decimal) error {
 	g, err := decimal.NewFromString(got)
 	if err != nil {
@@ -314,7 +319,8 @@ func (s *scenarioState) ppnIs(want string) error {
 	return figureMatches("PPN", s.summary.TotalPpn, want, raw)
 }
 
-// invoiceDue moves the invoice due date, optionally storing a status.
+// invoiceDue moves the due date.
+// It optionally stores a status too.
 // A stored overdue is legacy data no API move writes any more.
 func (s *scenarioState) invoiceDue(status string, days int) error {
 	_, err := testutil.Pool(s.t).Exec(context.Background(),
@@ -354,7 +360,8 @@ func (s *scenarioState) readSeriesRange(role, metric, interval, from, to string)
 	return s.send(testutil.DashboardServerAs(s.t, role), http.MethodGet, path, nil)
 }
 
-// seriesReads compares month:value pairs in order.
+// seriesReads compares month:value pairs.
+// Order matters.
 func (s *scenarioState) seriesReads(want string) error {
 	var points []dashboard.TimeseriesPoint
 	if err := json.Unmarshal(s.body, &points); err != nil {
@@ -370,7 +377,8 @@ func (s *scenarioState) seriesReads(want string) error {
 	return nil
 }
 
-// quotationCreatedAt inserts a quotation at an instant.
+// quotationCreatedAt backdates a quotation.
+// It inserts one created at the given instant.
 func (s *scenarioState) quotationCreatedAt(instant string) error {
 	at, err := time.Parse(time.RFC3339, instant)
 	if err != nil {
@@ -388,7 +396,8 @@ func (s *scenarioState) quotationCreatedAt(instant string) error {
 	return nil
 }
 
-// yearOf resolves "the current year" in WIB.
+// yearOf resolves the WIB year.
+// "the current year" is read in WIB.
 func yearOf(spec string) (int, error) {
 	if spec == "the current year" {
 		return tz.Now().Year(), nil
@@ -436,7 +445,7 @@ func (s *scenarioState) monthsListed(spec string) error {
 	return nil
 }
 
-// Ringkasan rows and their Bulanan columns.
+// Ringkasan rows, Bulanan columns.
 var reconciled = []struct{ total, column string }{
 	{"Total Quotation", "Quotation"},
 	{"Total Invoice", "Invoice"},
@@ -547,7 +556,7 @@ func (s *scenarioState) dueCountsMatchTables() error {
 	return s.overdueAndDueSoon(overdue, soon)
 }
 
-// workbook is the parsed dashboard export.
+// workbook is the parsed export.
 type workbook struct {
 	totals map[string]decimal.Decimal
 	header []string

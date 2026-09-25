@@ -12,7 +12,8 @@ import (
 	"text/template"
 )
 
-// Render a template, return the xelatex log.
+// compileLog returns the xelatex log.
+// It renders the template first.
 func compileLog(t *testing.T, name string, data any) string {
 	t.Helper()
 	if _, err := exec.LookPath("xelatex"); err != nil {
@@ -55,7 +56,7 @@ func compileLog(t *testing.T, name string, data any) string {
 	return log
 }
 
-// True when xelatex emitted a PDF.
+// producedOutput spots emitted PDFs.
 func producedOutput(log string) bool {
 	return strings.Contains(strings.Join(strings.Fields(log), " "), "Output written on")
 }
@@ -160,7 +161,8 @@ func deliveryNoteData(items []map[string]any) map[string]any {
 	}
 }
 
-// Exports compile without bad boxes or warnings.
+// Exports compile without warnings.
+// That includes bad boxes.
 func TestLatexExports_Clean(t *testing.T) {
 	items := sampleItems(2)
 	docs := []struct {
@@ -185,7 +187,8 @@ func TestLatexExports_Clean(t *testing.T) {
 	}
 }
 
-// Long tables paginate cleanly without bad boxes.
+// Long tables paginate cleanly.
+// No page may carry a bad box.
 func TestLatexExports_MultiPage(t *testing.T) {
 	items := sampleItems(60)
 	docs := []struct {

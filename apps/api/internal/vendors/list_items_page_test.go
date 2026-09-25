@@ -15,7 +15,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/vendors"
 )
 
-// seedVendorWithItems links n fresh active items to a fresh vendor.
+// seedVendorWithItems links fresh items.
+// n fresh active items go to a fresh vendor.
 func seedVendorWithItems(t *testing.T, n int) (vendorID int64, itemIDs []int64) {
 	t.Helper()
 	ctx := context.Background()

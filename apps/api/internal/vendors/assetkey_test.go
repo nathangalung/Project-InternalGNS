@@ -9,7 +9,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/vendors"
 )
 
-// Attach binds the key to its record (MD-14).
+// Attach binds keys to records.
+// It covers MD-14.
 func TestHandler_UpdateLogo_RejectsForeignKey(t *testing.T) {
 	srv := newSrv(t)
 	cases := []struct {

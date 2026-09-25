@@ -18,7 +18,7 @@ import (
 
 var errInvalidYear = errors.New("invalid year")
 
-// exportMetrics drives both the monthly columns and their order.
+// exportMetrics orders the monthly columns.
 var exportMetrics = []struct{ key, header string }{
 	{"quotation", "Quotation"},
 	{"invoice", "Invoice"},
@@ -27,7 +27,8 @@ var exportMetrics = []struct{ key, header string }{
 	{"ppn", "PPN"},
 }
 
-// Export writes the dashboard summary + monthly series as XLSX.
+// Export writes the dashboard XLSX.
+// It holds the summary plus the monthly series.
 // GET /dashboard/export.xlsx?year=YYYY (year optional; defaults to the last
 // 12 WIB months). Both sheets cover the same window, so each Ringkasan
 // total equals the sum of its Bulanan column.
@@ -71,7 +72,8 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteXLSX(w, name, buf.Bytes())
 }
 
-// exportRange maps an optional year to [from, to) and a file name.
+// exportRange maps year to window.
+// It returns [from, to) and a file name.
 // An empty year is the default chart window.
 func exportRange(now time.Time, year string) (time.Time, time.Time, string, error) {
 	if year == "" {
@@ -88,7 +90,8 @@ func exportRange(now time.Time, year string) (time.Time, time.Time, string, erro
 	return from, from.AddDate(1, 0, 0), "dashboard-export-" + year, nil
 }
 
-// monthLabels lists every month in [from, to).
+// monthLabels lists the window's months.
+// They cover every month in [from, to).
 // The rows come from the window, not the data, so an empty month still
 // gets its zero row.
 func monthLabels(from, to time.Time) []string {
@@ -160,7 +163,8 @@ func writeGrid(f *excelize.File, sheet string, rows [][]any) {
 	}
 }
 
-// num parses a decimal string to float so the cell is numeric; 0 on failure.
+// num parses a numeric cell.
+// It returns 0 on failure.
 func num(s string) float64 {
 	v, err := strconv.ParseFloat(s, 64)
 	if err != nil {

@@ -37,7 +37,8 @@ type Vendor struct {
 	LogoObjectKey *string         `db:"logo_object_key" json:"logoObjectKey,omitempty"`
 }
 
-// UpdateLogoRequest persists the MinIO object key for a vendor logo.
+// UpdateLogoRequest carries a logo key.
+// It persists the MinIO object key of a vendor logo.
 type UpdateLogoRequest struct {
 	ObjectKey string `json:"objectKey"`
 }
@@ -52,7 +53,8 @@ type SearchResult struct {
 	MatchTier   string          `db:"match_tier"    json:"matchTier"`
 }
 
-// ItemByVendor row from vendor_products joined with items.
+// ItemByVendor is a vendor's item.
+// It joins vendor_products with items.
 type ItemByVendor struct {
 	ItemID       int64   `db:"item_id"        json:"itemId"`
 	ItemName     string  `db:"item_name"      json:"itemName"`

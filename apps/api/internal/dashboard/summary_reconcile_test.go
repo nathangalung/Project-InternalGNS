@@ -14,7 +14,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// paidInvoiceFixture inserts a quotation, PO and paid invoice.
+// paidInvoiceFixture inserts a paid chain.
+// The chain is a quotation, its PO and a paid invoice.
 // Figures follow fn_create_invoice: total = dpp + ppn_amount, so the PPN share
 // of revenue is visible and the DPP base is not.
 func paidInvoiceFixture(t *testing.T, ctx context.Context, tx pgx.Tx, invoiceDate time.Time) {
@@ -50,7 +51,7 @@ func paidInvoiceFixture(t *testing.T, ctx context.Context, tx pgx.Tx, invoiceDat
 	require.NoError(t, err)
 }
 
-// scalar reads one numeric aggregate as a decimal.
+// scalar reads a decimal aggregate.
 func scalar(t *testing.T, ctx context.Context, tx pgx.Tx, sql string, args ...any) decimal.Decimal {
 	t.Helper()
 	var raw string
@@ -67,7 +68,8 @@ func mustDecimal(t *testing.T, s string) decimal.Decimal {
 	return d
 }
 
-// Revenue and profit are DPP-based, so PPN is never booked as income.
+// Revenue and profit exclude PPN.
+// They are DPP-based, so PPN is never booked as income.
 func TestRepo_Summary_ReconcilesWithRawSums(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	paidInvoiceFixture(t, ctx, tx, time.Now())
@@ -94,7 +96,8 @@ func TestRepo_Summary_ReconcilesWithRawSums(t *testing.T) {
 	require.True(t, gotPpn.IsPositive(), "fixture must carry PPN, got %s", gotPpn)
 }
 
-// Revenue and profit buckets exclude PPN as well.
+// Series buckets exclude PPN too.
+// That holds for revenue and profit.
 func TestRepo_Timeseries_RevenueAndProfitExcludePpn(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	invoiceDate := time.Date(2031, 3, 15, 0, 0, 0, 0, time.UTC)
@@ -117,7 +120,7 @@ func TestRepo_Timeseries_RevenueAndProfitExcludePpn(t *testing.T) {
 		"profit bucket must be DPP minus cost, got %s", profit[0].Value)
 }
 
-// A window's totals equal its monthly sums.
+// Window totals equal monthly sums.
 // The export prints both, so Ringkasan must never disagree with Bulanan.
 func TestRepo_Totals_EqualMonthlySums(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)

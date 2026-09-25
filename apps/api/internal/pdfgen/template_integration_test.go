@@ -8,9 +8,10 @@ import (
 	"text/template"
 )
 
+// Shipped templates execute cleanly.
 // Parse + execute real shipped templates with representative data to catch
-// template-variable drift (typos, removed/renamed struct fields, missing
-// keys after refactors). Doesn't need tectonic/xelatex — pure text/template.
+// template-variable drift (typos, removed/renamed struct fields, missing keys
+// after refactors). Doesn't need tectonic/xelatex: pure text/template.
 // missingkey=error makes any unmapped variable a hard failure.
 
 const repoTemplatesRoot = "../../templates/documents"

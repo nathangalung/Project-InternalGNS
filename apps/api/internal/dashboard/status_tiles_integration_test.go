@@ -106,7 +106,8 @@ func TestRepo_Summary_OverdueIsDerived(t *testing.T) {
 	assert.Equal(t, int64(0), a["sent"]-b["sent"])
 }
 
-// Terlambat and due soon share one rule.
+// Terlambat and due soon agree.
+// They share one rule.
 // invoicesOverdue always equals the Terlambat tile, and a row is never both
 // Terlambat and due soon, whatever its stored status says.
 func TestRepo_Summary_OverdueMatchesTile(t *testing.T) {

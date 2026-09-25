@@ -11,7 +11,7 @@ import (
 
 const missingVendorID = "999999999"
 
-// Reject unstorable query text with 400.
+// Unstorable query text is 400.
 func TestHandler_QueryParamTextIsValidated(t *testing.T) {
 	srv := newSrv(t)
 	tests := []struct {
@@ -32,7 +32,8 @@ func TestHandler_QueryParamTextIsValidated(t *testing.T) {
 	}
 }
 
-// Sub-collections of a missing vendor answer 404.
+// Missing parents answer 404.
+// That holds for every vendor sub-collection.
 func TestHandler_ListItems_MissingParentIsNotFound(t *testing.T) {
 	srv := newSrv(t)
 	res := doJSON(t, srv, http.MethodGet, "/vendors/"+missingVendorID+"/items", nil)
