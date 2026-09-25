@@ -22,7 +22,7 @@ func (unreadableFS) ReadDir(string) ([]fs.DirEntry, error) {
 	return fstest.MapFS{"x.sql": {}}.ReadDir(".")
 }
 
-// Broken SQL sources fail the boot.
+// Broken sources fail the boot.
 // Each failure must stop Load with no store, naming the file at fault, so
 // the API never starts on a partial query set.
 func TestLoad_SourceFailuresFailTheBoot(t *testing.T) {

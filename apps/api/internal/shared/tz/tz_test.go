@@ -28,7 +28,7 @@ func TestNow(t *testing.T) {
 	assert.Equal(t, 7*60*60, offset)
 }
 
-// Missing tzdata falls back to WIB.
+// Missing tzdata still yields WIB.
 // A slim image without zoneinfo must still format dates at UTC+7.
 func TestJakartaFrom_FallsBackWithoutTZData(t *testing.T) {
 	loc := jakartaFrom(func(string) (*time.Location, error) {
@@ -40,7 +40,7 @@ func TestJakartaFrom_FallsBackWithoutTZData(t *testing.T) {
 	assert.Equal(t, 7*60*60, offset)
 }
 
-// The loader receives the zone name.
+// Loader receives the zone name.
 func TestJakartaFrom_UsesLoadedZone(t *testing.T) {
 	var asked string
 	want := time.FixedZone("probe", 0)

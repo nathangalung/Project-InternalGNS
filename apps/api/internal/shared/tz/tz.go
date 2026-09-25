@@ -16,7 +16,7 @@ func Jakarta() *time.Location {
 	return jakarta
 }
 
-// jakartaFrom falls back to fixed WIB.
+// jakartaFrom falls back to WIB.
 func jakartaFrom(load func(string) (*time.Location, error)) *time.Location {
 	loc, err := load("Asia/Jakarta")
 	if err != nil {

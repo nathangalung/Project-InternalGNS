@@ -27,7 +27,7 @@ func (s Store) Get(name string) string {
 // Load parses every embedded SQL.
 func Load() (Store, error) { return load(FS) }
 
-// load parses the SQL in fsys.
+// load parses SQL in fsys.
 func load(fsys fs.FS) (Store, error) {
 	store := Store{}
 
