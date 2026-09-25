@@ -8,7 +8,10 @@ SELECT cc.id, cc.number, cc.name, cc.npwp, cc.address, cc.email, cc.country_code
        COALESCE((SELECT SUM(q.grand_total)::TEXT
                  FROM quotations q
                  WHERE q.company_client_id = cc.id
-                   AND q.status = 'accepted'), '0') AS total_purchase,
+                   AND q.status = 'accepted'
+                   AND NOT EXISTS (SELECT 1 FROM purchase_orders po
+                                   WHERE po.quotation_id = q.id
+                                     AND po.status = 'CANCELLED')), '0') AS total_purchase,
        COALESCE((SELECT COUNT(*)
                  FROM quotations q
                  WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count,
@@ -45,7 +48,10 @@ SELECT cc.id, cc.number, cc.name, cc.npwp, cc.address, cc.email, cc.country_code
        COALESCE((SELECT SUM(q.grand_total)::TEXT
                  FROM quotations q
                  WHERE q.company_client_id = cc.id
-                   AND q.status = 'accepted'), '0') AS total_purchase,
+                   AND q.status = 'accepted'
+                   AND NOT EXISTS (SELECT 1 FROM purchase_orders po
+                                   WHERE po.quotation_id = q.id
+                                     AND po.status = 'CANCELLED')), '0') AS total_purchase,
        COALESCE((SELECT COUNT(*)
                  FROM quotations q
                  WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count,
@@ -72,7 +78,10 @@ SELECT cc.id, cc.number, cc.name, cc.npwp, cc.address, cc.email, cc.country_code
        COALESCE((SELECT SUM(q.grand_total)::TEXT
                  FROM quotations q
                  WHERE q.company_client_id = cc.id
-                   AND q.status = 'accepted'), '0') AS total_purchase,
+                   AND q.status = 'accepted'
+                   AND NOT EXISTS (SELECT 1 FROM purchase_orders po
+                                   WHERE po.quotation_id = q.id
+                                     AND po.status = 'CANCELLED')), '0') AS total_purchase,
        COALESCE((SELECT COUNT(*)
                  FROM quotations q
                  WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count,
@@ -139,7 +148,10 @@ RETURNING id, number, name, npwp, address, email, country_code,
           COALESCE((SELECT SUM(q.grand_total)::TEXT
                     FROM quotations q
                     WHERE q.company_client_id = company_client.id
-                      AND q.status = 'accepted'), '0') AS total_purchase,
+                      AND q.status = 'accepted'
+                      AND NOT EXISTS (SELECT 1 FROM purchase_orders po
+                                      WHERE po.quotation_id = q.id
+                                        AND po.status = 'CANCELLED')), '0') AS total_purchase,
           COALESCE((SELECT COUNT(*)
                     FROM quotations q
                     WHERE q.company_client_id = company_client.id), 0)::BIGINT AS quotation_count,

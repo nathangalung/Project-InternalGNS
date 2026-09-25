@@ -7,7 +7,10 @@ SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.up
                   JOIN vendor_products vp ON vp.id = qi.vendor_product_id
                   JOIN quotations q ON q.id = qi.quotation_id
                   WHERE vp.vendor_id = v.id
-                    AND q.status = 'accepted'), '0') AS total_purchase,
+                    AND q.status = 'accepted'
+                    AND NOT EXISTS (SELECT 1 FROM purchase_orders po
+                                    WHERE po.quotation_id = q.id
+                                      AND po.status = 'CANCELLED')), '0') AS total_purchase,
        v.logo_object_key
 FROM vendors v
 WHERE 1=1;
@@ -25,7 +28,10 @@ SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.up
                   JOIN vendor_products vp ON vp.id = qi.vendor_product_id
                   JOIN quotations q ON q.id = qi.quotation_id
                   WHERE vp.vendor_id = v.id
-                    AND q.status = 'accepted'), '0') AS total_purchase,
+                    AND q.status = 'accepted'
+                    AND NOT EXISTS (SELECT 1 FROM purchase_orders po
+                                    WHERE po.quotation_id = q.id
+                                      AND po.status = 'CANCELLED')), '0') AS total_purchase,
        v.logo_object_key
 FROM vendors v
 WHERE v.id = $1;
@@ -54,7 +60,10 @@ RETURNING id, name, location, contact_info, is_active, created_at, updated_at,
                     JOIN vendor_products vp ON vp.id = qi.vendor_product_id
                     JOIN quotations q ON q.id = qi.quotation_id
                     WHERE vp.vendor_id = vendors.id
-                      AND q.status = 'accepted'), '0') AS total_purchase,
+                      AND q.status = 'accepted'
+                      AND NOT EXISTS (SELECT 1 FROM purchase_orders po
+                                      WHERE po.quotation_id = q.id
+                                        AND po.status = 'CANCELLED')), '0') AS total_purchase,
           logo_object_key;
 
 -- name: vendors.update_logo

@@ -32,9 +32,12 @@ var ErrNumberInvalid = errors.New("client number invalid or taken")
 var ErrNumberLocked = errors.New("client number used by a quotation")
 
 // totalPurchaseExpr sums accepted quotations.
-// The sum is per client.
+// The sum is per client and skips deals whose PO was cancelled, matching
+// total_purchase in clients.sql.
 const totalPurchaseExpr = "COALESCE((SELECT SUM(q.grand_total) FROM quotations q" +
-	" WHERE q.company_client_id = cc.id AND q.status = 'accepted'), 0)"
+	" WHERE q.company_client_id = cc.id AND q.status = 'accepted'" +
+	" AND NOT EXISTS (SELECT 1 FROM purchase_orders po" +
+	" WHERE po.quotation_id = q.id AND po.status = 'CANCELLED')), 0)"
 
 // sortable lists client sort keys.
 var sortable = listq.Whitelist{

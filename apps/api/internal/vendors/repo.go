@@ -24,11 +24,14 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 var ErrNotFound = errors.New("not found")
 
 // totalPurchaseExpr sums accepted costs.
-// The accepted-quotation cost sum is per vendor.
+// The accepted-quotation cost sum is per vendor and skips deals whose PO
+// was cancelled, matching total_purchase in vendors.sql.
 const totalPurchaseExpr = "COALESCE((SELECT SUM(qi.total_cost) FROM quotation_items qi" +
 	" JOIN vendor_products vp ON vp.id = qi.vendor_product_id" +
 	" JOIN quotations q ON q.id = qi.quotation_id" +
-	" WHERE vp.vendor_id = v.id AND q.status = 'accepted'), 0)"
+	" WHERE vp.vendor_id = v.id AND q.status = 'accepted'" +
+	" AND NOT EXISTS (SELECT 1 FROM purchase_orders po" +
+	" WHERE po.quotation_id = q.id AND po.status = 'CANCELLED')), 0)"
 
 // sortable lists vendor sort keys.
 var sortable = listq.Whitelist{
