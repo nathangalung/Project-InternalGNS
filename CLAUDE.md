@@ -47,7 +47,7 @@ Everyone reaches the overview dashboard, clients, vendors, and products.
 Financial figures (revenue, expenses, profit, PPN, invoice totals) are limited
 to superadmin and finance at both layers, including the dashboard endpoints.
 
-Sessions end by version, not by time. Every access and refresh token carries
+Sessions end on expiry or by version. Every access and refresh token carries
 the `users.session_version` it was minted under, and the auth middleware
 refuses any other. A role change, a deactivation, or a password change bumps
 the version and revokes refresh tokens, so every open session of that user
