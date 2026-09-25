@@ -150,7 +150,7 @@ tables, so they would never be chosen) and removing the PO count LATERAL
 - **Sub-dashboards.** Role-gated `Dashboard.tsx` renders a strict superset of
   `DashboardFinancial` and `DashboardOperational`. Keep three screens and pay
   the duplication, or delete two and keep the gated one?
-- **Backups.** Done in code: `scripts/backup.sh` (`pg_dump` plus `mc mirror`)
+- **Backups.** Done in code: `scripts/backup.sh` (`pg_dump` plus `mcli mirror`)
   runs from a host systemd timer set up as in `backup_restore.md`, and
   `scripts/restore.sh` was rehearsed locally on 2026-09-25. Still open: the
   off-box copy and the first production run.

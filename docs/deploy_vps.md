@@ -33,6 +33,49 @@ The production services are `gns-postgres`, `gns-minio`, `api` and
 `frontend`. Use these names in every command below; `postgres` and `minio`
 are the dev services.
 
+### Object storage image
+
+MinIO, Inc. deleted `minio/minio` and `minio/mc` from Docker Hub on
+2026-09-11. The tag the stack pinned,
+`minio/minio:RELEASE.2025-09-07T16-13-09Z`, now answers `denied` on Docker Hub
+and `no such manifest` on `quay.io/minio`, so a fresh CI runner or a VPS
+without it cached cannot pull it.
+
+The `gns-minio` and `minio` services and the CI job now run
+`pgsty/silo:RELEASE.2026-09-16T00-00-00Z`. Silo is a maintained MinIO fork
+(AGPL-3.0-or-later, `github.com/pgsty/silo`). It is a drop-in:
+
+- It reads the same on-disk format (`.minio.sys`, `format.json` unchanged), so
+  it starts on the existing `internalgns_minio` volume and data stays.
+- It takes the same `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` and other
+  `MINIO_*` variables, serves S3 on 9000 and the console on 9001, and keeps
+  the `/minio/health/*` endpoints. The api's `minio-go` SDK is unchanged.
+- The server binary is `silo` and the client is `mcli`. The entrypoint still
+  accepts `server /data`. The healthcheck is `silo healthcheck cluster`, which
+  exits 1 at once when the server is down.
+
+Proven locally on 2026-09-26 against the dev volume: the same five buckets,
+the same objects and bytes per bucket (`client-logos 21/1772`,
+`invoice-attachments 44/1476`, `po-docs 147/142360`), the api serving an
+existing logo and PO file through `/api/v1/storage/object` with the same
+SHA-256 as the stored object, and the storage round-trip tests and the
+backup-then-restore rehearsal passing. The old image, started on a copy of the
+volume after Silo had run on it, still listed every object, so a rollback to
+it stays possible while the host has it cached.
+
+Production step: confirm the pull works on the VPS (section 13), then
+redeploy. Compose replaces the `gns-minio` container with the Silo image on
+the same volume; nothing is copied or migrated. Until Silo has run for a
+while, do not `docker image prune` the cached `minio/minio` image: it can no
+longer be pulled, so it is the only way back.
+
+Dependabot does not track this image. Its Docker tag parser cannot order
+`RELEASE.<timestamp>` tags, so bump the tag by hand from the Silo releases
+page, in `compose.dev.yml`, `compose.prod.yml` and both `start minio` steps
+of `.github/workflows/ci.yml`. The single-node deployment uses none of the
+features the release notes flag for upgrades (site replication, OIDC, remote
+tiers, several pools).
+
 ## Coexistence on a shared VPS
 
 The VPS hosts other Dokploy projects, so the compose is scoped to avoid
@@ -240,7 +283,7 @@ In Dokploy UI on the Compose app:
 2. Watch the deploy log. Order:
    - Pull `ghcr.io/.../internalgns-api:vX.Y.Z` + `internalgns-web:vX.Y.Z`.
    - Start `gns-postgres` → wait for healthcheck (`pg_isready`).
-   - Start `gns-minio` → wait for healthcheck (`mc ready local`).
+   - Start `gns-minio` → wait for healthcheck (`silo healthcheck cluster`).
    - Start `api`. On boot the API runs the embedded goose migrations against
      the Postgres in this stack, creates the five MinIO buckets it uses, and
      on first boot seeds the superadmin row from `SUPERADMIN_*`.
@@ -276,7 +319,7 @@ creating by hand. To confirm:
 
 ```bash
 docker exec "$P-gns-minio-1" sh -c \
-  'mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && mc ls local'
+  'mcli alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && mcli ls local'
 ```
 
 ## 9. Smoke checklist
@@ -305,7 +348,7 @@ docker exec "$P-gns-minio-1" sh -c \
 | Logs             | Dokploy UI → Logs tab (per-service)                                                |
 | Backup, restore  | `docs/backup_restore.md`: nightly host timer, restore rehearsal, disaster restore  |
 | DB shell         | `docker exec -it "$P-gns-postgres-1" sh -c 'psql -U "$POSTGRES_USER" "$POSTGRES_DB"'` |
-| MinIO console    | not exposed; use `mc` inside `$P-gns-minio-1` as in section 8                      |
+| MinIO console    | not exposed; use `mcli` inside `$P-gns-minio-1` as in section 8                    |
 | Orphan blob sweep| `docker exec "$P-api-1" /app/orphan-blobs --dry-run`; never purge against a restored older database |
 | Restart service  | Dokploy UI → Restart, or `docker restart "$P-api-1"`                               |
 
@@ -314,7 +357,7 @@ runner, and MinIO has no public route. Run the sweeper on the VPS as above.
 
 ## 11. Monitoring and alerts
 
-Every container has a healthcheck (`pg_isready`, `mc ready local`,
+Every container has a healthcheck (`pg_isready`, `silo healthcheck cluster`,
 `/app/api --healthcheck` probing `/readyz`, and nginx `/healthz`). Plain
 compose only marks a failing container `unhealthy`. It neither restarts it
 nor tells anyone, so something outside the VPS has to watch.
@@ -469,10 +512,26 @@ sh -c 'docker run --rm --network "container:$0" --read-only --tmpfs /tmp -e HOME
 # against gns_predeploy, should show the new max version.
 ```
 
-Clean up afterwards with the `dropdb` and `mc rb --force` commands from the
+Clean up afterwards with the `dropdb` and `mcli rb --force` commands from the
 rehearsal section of `docs/backup_restore.md`, using `gns_predeploy` and
 `predeploy-check`. A failed dry run means production would fail the same way
 on boot. Fix the release, not the database.
+
+### Image pulls
+
+Run this before every deploy, migrations or not. A registry can withdraw an
+image (MinIO did, see "Object storage image"), and Dokploy only finds out
+halfway through the deploy. On the VPS:
+
+```bash
+docker pull pgsty/silo:RELEASE.2026-09-16T00-00-00Z   # the tag in compose.prod.yml
+docker pull postgres:18.3-alpine
+```
+
+Each must end by printing the image reference, not `denied` or
+`manifest unknown`. Stop on any failure; the running stack is untouched until
+Deploy. The api and web images are this repository's own GHCR releases
+(section 1).
 
 ### Just before Deploy
 
@@ -541,7 +600,7 @@ q -c "COPY (SELECT regexp_replace(quotation_no, ' Rev\.[0-9]+\$', ''), max(versi
 DB=$(docker exec "$PG" printenv POSTGRES_DB)
 docker exec "$PG" sh -c 'dropdb -U "$POSTGRES_USER" "$POSTGRES_DB"'
 for b in $(ls "$SNAP/minio"); do
-  docker exec "$MINIO" sh -c 'mc alias set l http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && mc rb --force "l/$1"' sh "$b"
+  docker exec "$MINIO" sh -c 'mcli alias set l http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && mcli rb --force "l/$1"' sh "$b"
 done
 
 # 5. Restore; the last line reads "restore ok: ...".

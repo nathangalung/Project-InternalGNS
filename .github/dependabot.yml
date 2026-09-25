@@ -61,6 +61,8 @@ updates:
         patterns:
           - "*"
 
+  # pgsty/silo stays untracked: Dependabot's Docker tag parser cannot
+  # order RELEASE.<timestamp> tags. Bump it by hand (docs/deploy_vps.md).
   - package-ecosystem: docker
     directory: /apps/api
     schedule:

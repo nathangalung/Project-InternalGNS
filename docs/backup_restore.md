@@ -16,10 +16,11 @@ network is internal-only, so a sidecar container would have no way out.
 2. Exact row counts for every table. They run in the same repeatable-read
    snapshot that `pg_dump --snapshot` reads, so they describe the dump
    exactly even while the api keeps writing.
-3. Every object in every MinIO bucket, copied as plain files by `mc mirror`.
+3. Every object in every MinIO bucket, copied as plain files by `mcli mirror`.
    The copy runs in a throwaway container that shares the `gns-minio` network
-   namespace and uses the image already on the host. If the copy holds fewer
-   objects than MinIO held when it started, the run fails.
+   namespace and uses the image already on the host: the Silo server image
+   ships `mcli` (see "Object storage image" in `docs/deploy_vps.md`). If the
+   copy holds fewer objects than MinIO held when it started, the run fails.
 4. Object count and bytes per bucket, and a `SHA256SUMS` over every file.
 
 The database is dumped before the objects are copied. That way every object key
@@ -177,7 +178,7 @@ bucket as well:
 PG=$(docker ps -q --filter label=com.docker.compose.project=$COMPOSE_PROJECT --filter label=com.docker.compose.service=gns-postgres)
 MINIO=$(docker ps -q --filter label=com.docker.compose.project=$COMPOSE_PROJECT --filter label=com.docker.compose.service=gns-minio)
 docker exec "$PG" sh -c 'dropdb -U "$POSTGRES_USER" gns_restore_check'
-docker exec "$MINIO" sh -c 'mc alias set l http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && mc rb --force l/restore-rehearsal'
+docker exec "$MINIO" sh -c 'mcli alias set l http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && mcli rb --force l/restore-rehearsal'
 ```
 
 Write the date and the `restore ok` line in the log at the end of this page.
@@ -219,6 +220,7 @@ download, so nothing reads the stored value.
 | Date | Where | Result |
 |---|---|---|
 | 2026-09-25 | Local, `compose.prod.yml` with images built from this branch behind Traefik v3.6.7, seeded from a dump of the dev database (863 quotations, 143 invoices, 73 objects) | Backup and rehearsal restore match (table below). Disaster restore into a fresh stack: api healthy, `/readyz` 200, login, quotation PDF 200 (179 KB), client logo 200, `X-Total-Count` 863 quotations |
+| 2026-09-26 | Local dev stack after the switch to `pgsty/silo:RELEASE.2026-09-16T00-00-00Z` on the existing volume, scripts calling `mcli` | Backup `ok` (22 tables, 212 objects). Rehearsal restore into `gns_silo_restore_test` and bucket `silo-restore-rehearsal`: `restore ok: 22 tables, 36050 rows, 212 objects, 145608 bytes`. A second run into the same bucket refused before writing |
 | (first production run) | VPS | pending |
 
 Source (api stopped) against the restored database and bucket, counted outside
