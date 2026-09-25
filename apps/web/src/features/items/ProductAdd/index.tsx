@@ -73,8 +73,15 @@ export default function ProductAdd({
   const requestQueryRaw = form.requestedKodeImpaNama.trim()
   const productQueryDebounced = useDebouncedValue(productQueryRaw, 250)
   const requestQueryDebounced = useDebouncedValue(requestQueryRaw, 250)
-  const { data: searchResp } = useItemSearchAdvanced(productQueryDebounced, { limit: 10 })
-  const { data: requestSearchResp } = useItemSearchAdvanced(requestQueryDebounced, { limit: 10 })
+  // A deactivated product must not be offered for a new line.
+  const { data: searchResp } = useItemSearchAdvanced(productQueryDebounced, {
+    limit: 10,
+    isActive: true,
+  })
+  const { data: requestSearchResp } = useItemSearchAdvanced(requestQueryDebounced, {
+    limit: 10,
+    isActive: true,
+  })
   const { data: itemsAll } = useItems({ limit: 50 })
   const productCatalog: CatalogItem[] = useMemo(() => {
     if (productQueryDebounced.length > 0) {
