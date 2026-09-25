@@ -89,9 +89,11 @@ type lookupState struct {
 	userID  int64
 	revoked bool
 	reason  string
-	// pastGrace marks a revocation older than refreshReuseGrace.
+	// pastGrace marks revocation past grace.
+	// The revocation is older than refreshReuseGrace.
 	pastGrace bool
-	// stale marks a token minted before a session version bump.
+	// stale marks an outdated session.
+	// The token was minted before a session version bump.
 	stale bool
 	found bool
 }

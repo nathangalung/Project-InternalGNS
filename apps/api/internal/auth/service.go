@@ -70,8 +70,9 @@ func (s *Service) WithRefresh(repo *RefreshRepo, expiry time.Duration) *Service 
 
 type Claims struct {
 	Role users.Role `json:"role"`
-	// SessionVersion is the account's users.session_version at mint time. A
-	// token without it decodes to 0, which no account ever has.
+	// SessionVersion is the mint-time version.
+	// It is the account's users.session_version at mint time. A token without
+	// it decodes to 0, which no account ever has.
 	SessionVersion int64 `json:"sv"`
 	jwt.RegisteredClaims
 }

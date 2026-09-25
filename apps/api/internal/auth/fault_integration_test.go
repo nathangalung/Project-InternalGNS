@@ -122,8 +122,9 @@ func TestService_Login_StorageFailuresSurface(t *testing.T) {
 	tests := []struct {
 		name string
 		key  string
-		// outer reports a failure outside the login's own transaction,
-		// which aborts the test transaction too.
+		// outer fails outside login's transaction.
+		// It reports a failure outside the login's own transaction, which
+		// aborts the test transaction too.
 		outer bool
 	}{
 		{"lock status", "users.lock_status", true},
