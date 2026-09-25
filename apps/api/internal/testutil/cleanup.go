@@ -69,10 +69,11 @@ func (c *Cleaner) Item(id int64) { c.add("items", id) }
 // Vendor tracks a created vendors row.
 func (c *Cleaner) Vendor(id int64) { c.add("vendors", id) }
 
-// Quotation tracks a quotation with its PO and invoices.
-// Their items and history cascade. A revision references its parent with
-// RESTRICT, which one DELETE cannot order, so a suite that revises must
-// delete that chain itself.
+// Quotation tracks a quotation tree.
+// Its PO and invoices are deleted with it; items and history cascade. A
+// revision references its parent with RESTRICT, and one DELETE removes the
+// whole chain only when every revision id is in it, so a suite that revises
+// must track each revision too.
 func (c *Cleaner) Quotation(id int64) { c.add("quotations", id) }
 
 // User tracks a created users row.
