@@ -30,7 +30,9 @@ import {
 } from "./PurchaseOrderDetail/helpers"
 import type { PoRow } from "./types"
 
-// Under purchaseOrders.all, so one invalidation reaches it.
+// History key under purchaseOrders.all.
+//
+// One invalidation of the prefix reaches it.
 const historyKey = (id: number) => [...queryKeys.purchaseOrders.all, "history", id] as const
 
 // Toast; reload a stale PO.
@@ -101,7 +103,7 @@ export function useActorNames(ids: number[], enabled: boolean): Map<number, stri
   })
 }
 
-// Filed invoice freezes number and date.
+// Filed invoice freezes number, date.
 //
 // Only roles that may read invoices ask; the rest rely on the server 409.
 export function useInvoiceFiled(quotationId: number | undefined, enabled: boolean) {
@@ -116,7 +118,7 @@ export function useInvoiceFiled(quotationId: number | undefined, enabled: boolea
   })
 }
 
-// The completeness 422 opens a modal instead of a toast.
+// Completeness 422: modal, not toast.
 export function useChangePoStatus() {
   const qc = useQueryClient()
   return useMutation({

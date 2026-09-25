@@ -32,8 +32,10 @@ export function useItem(id: number | undefined) {
   })
 }
 
-// Multi-source advanced search. keepPreviousData prevents UI flicker
-// while user types (per TanStack Query v5 paginated-queries guidance).
+// Multi-source advanced search.
+//
+// keepPreviousData prevents UI flicker while the user types (per TanStack
+// Query v5 paginated-queries guidance).
 export function useItemSearchAdvanced(q: string, options: itemsApi.SearchAdvancedOptions = {}) {
   return useQuery({
     queryKey: [
@@ -93,7 +95,7 @@ export function useUpdateItem() {
   return useMutation({
     mutationFn: ({ id, input }: { id: number; input: itemsApi.UpdateItemInput }) =>
       itemsApi.update(id, input),
-    // Vendor product tabs show item names.
+    // Vendor tabs show item names.
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.items.all })
       qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
@@ -107,7 +109,7 @@ export function useAddVendorToItem() {
   return useMutation({
     mutationFn: ({ itemId, input }: { itemId: number; input: itemsApi.AddVendorToItemInput }) =>
       itemsApi.addVendor(itemId, input),
-    // Vendor detail and counts change too.
+    // Vendor detail, counts change too.
     onSuccess: (_data, { itemId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.items.vendors(itemId) })
       qc.invalidateQueries({ queryKey: queryKeys.vendors.all })

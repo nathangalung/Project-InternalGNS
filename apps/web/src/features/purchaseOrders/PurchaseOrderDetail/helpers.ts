@@ -37,7 +37,7 @@ export function shortDocNo(no: string): string {
   return `${no.slice(0, slash)}…`
 }
 
-// Lines frozen once delivered or cancelled.
+// Delivered or cancelled freezes lines.
 export function isPoLocked(status: PoStatus): boolean {
   return status === "DELIVERED" || status === "CANCELLED"
 }
@@ -70,7 +70,7 @@ export function uploadRules(
   }
 }
 
-// Surat Jalan needs an issued number.
+// Surat Jalan needs issued number.
 export function canDownloadDeliveryNote(
   po: Pick<PurchaseOrderRow, "status" | "deliveryNoteNumber">,
 ): boolean {
@@ -78,12 +78,12 @@ export function canDownloadDeliveryNote(
   return started && Boolean(po.deliveryNoteNumber?.trim())
 }
 
-// Download name from the stored number.
+// Download name from stored number.
 export function deliveryNoteFileName(deliveryNoteNumber: string): string {
   return `${deliveryNoteNumber.trim().replace(/[^A-Za-z0-9._-]/g, "_")}.pdf`
 }
 
-// A filed invoice freezes number and date.
+// Filed invoice freezes number, date.
 export function isInvoiceFiled(status: InvoiceBackendStatus | undefined): boolean {
   return status === "sent" || status === "paid" || status === "overdue"
 }

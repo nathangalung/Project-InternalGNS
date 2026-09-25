@@ -40,7 +40,7 @@ export function useCreateUser() {
   return useMutation({
     mutationFn: usersApi.create,
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.users.all }),
-    // Field and conflict errors render inline.
+    // Field, conflict errors render inline.
     onError: (err) => {
       if (!isInlineFormError(err)) toast.error(errorMessage(err, "Gagal menyimpan pengguna."))
     },
@@ -65,7 +65,9 @@ export function useUpdateUser() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, input }: UpdateUserVars) => usersApi.update(id, input),
-    // A self-edit that ends the session skips the refetch; the caller logs out.
+    // Session-ending self-edit skips refetch.
+    //
+    // The caller logs out instead.
     onSuccess: (_user, { endsOwnSession }) =>
       endsOwnSession ? undefined : refreshAfterUserEdit(qc),
     onError: (err) => {

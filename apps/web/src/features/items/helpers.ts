@@ -114,7 +114,7 @@ export function vendorInitials(name: string): string {
   return out || "?"
 }
 
-// One field from a problem body.
+// One problem-body field error.
 export function apiFieldError(err: unknown, key: string): string | undefined {
   if (!(err instanceof ApiError) || !err.body || typeof err.body !== "object") return undefined
   const fields = (err.body as { fields?: unknown }).fields

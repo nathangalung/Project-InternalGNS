@@ -7,7 +7,7 @@ import type { ProductItem } from "./QuotationEdit"
 // blocks it first and names the card instead of failing the whole save.
 export const QTY_ERROR = "Jumlah harus lebih dari 0."
 
-// Raw form value to a quantity.
+// Raw form value to quantity.
 export function parseQty(raw: string | number | undefined): number {
   const n = Number(raw)
   return Number.isFinite(n) ? n : 0

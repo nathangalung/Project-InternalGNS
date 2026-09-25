@@ -79,6 +79,8 @@ describe("vendor writes", () => {
     expect(invalidated(qc, [list, queryKeys.items.list()])).toEqual([list])
   })
 
+  // Lists printing the vendor name.
+  //
   // PO lines and item vendor lists carry the vendor name.
   it("refreshes the lists that print the vendor name, and nothing else", async () => {
     m.update.mockResolvedValue({ id: 4 } as never)
@@ -120,7 +122,7 @@ describe("useUploadVendorLogo", () => {
     expect(invalidated(qc, [detail, list])).toEqual([detail])
   })
 
-  // MD-13: a refused file never reaches storage.
+  // MD-13: refused files skip storage.
   it("refuses a non-image before asking for an upload URL", async () => {
     const { result } = renderQueryHook(() => useUploadVendorLogo())
     const pdf = new File(["x"], "logo.pdf", { type: "application/pdf" })

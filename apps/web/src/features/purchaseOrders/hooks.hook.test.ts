@@ -100,7 +100,7 @@ describe("PO queries", () => {
     expect(m.listHistory).toHaveBeenCalledWith(3)
   })
 
-  // One invalidation of purchaseOrders.all must reach the timeline.
+  // purchaseOrders.all reaches the timeline.
   it("keeps the history under the PO prefix", async () => {
     m.listHistory.mockResolvedValue([])
     const { qc, result } = renderQueryHook(() => usePoHistory(3))
@@ -153,7 +153,7 @@ describe("useInvoiceFiled", () => {
     expect(inv.getByQuotation).not.toHaveBeenCalled()
   })
 
-  // A hint only: the server still enforces the lock.
+  // Hint only; server enforces lock.
   it("keeps a failed lookup inline instead of throwing", async () => {
     inv.getByQuotation.mockRejectedValue(new ApiError(500, null, "x"))
     const { result } = renderQueryHook(() => useInvoiceFiled(5, true))
@@ -248,7 +248,9 @@ describe("PO writes", () => {
     expect(invalidated(qc, [poDetail, poItems, dash, invList])).toEqual([poDetail, poItems, dash])
   })
 
-  // A stale version and a lock both mean the stored PO moved on.
+  // Stale version or lock reloads.
+  //
+  // Both mean the stored PO moved on.
   it.each<[string, () => ApiError, string]>([
     ["version conflict", versionConflict, PO_CONFLICT_MESSAGE],
     ["lock refusal", lockRefusal, "Invoice sudah terbit."],
@@ -334,6 +336,8 @@ describe("usePoUpload", () => {
     return { ok, hook }
   }
 
+  // Details save before attaching.
+  //
   // Attaching bumps row_version, so details go first on the loaded version.
   it("saves changed details before attaching the file", async () => {
     const order: string[] = []
@@ -368,7 +372,9 @@ describe("usePoUpload", () => {
     expect(m.updateDetails).not.toHaveBeenCalled()
   })
 
-  // Roles that cannot read invoices learn of the lock from a refused save.
+  // Refused save reveals the lock.
+  //
+  // Roles that cannot read invoices learn of the lock this way.
   it("locks the details of that PO after a lock refusal", async () => {
     m.updateDetails.mockRejectedValue(lockRefusal())
     const { ok, hook } = await save(row, pdf(), changed)

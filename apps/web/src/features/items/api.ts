@@ -60,8 +60,10 @@ export type SearchAdvancedOptions = {
   isActive?: boolean
 }
 
-// Multi-source search: items + vendor offers + request history.
-// One page of hits; total and counts cover every match.
+// Multi-source item search.
+//
+// Searches items, vendor offers and request history. One page of hits; total
+// and counts cover every match.
 // Tier ranks: ITEM_AUTO > VENDOR_OFFER > ITEM_SUGGESTED > REQUEST_HISTORY > ITEM_FUZZY.
 export async function searchAdvanced(
   q: string,

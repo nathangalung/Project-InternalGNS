@@ -30,7 +30,7 @@ export const qe = {
   addBtn: `inline-flex items-center gap-2 rounded-lg border border-[rgba(124,58,237,0.2)] bg-white px-6 py-3 text-sm font-semibold text-primary-700 transition-colors duration-150 hover:bg-primary-50 ${ui.focusRing}`,
 }
 
-// Pill shrinks to a dot below 640px.
+// Pill becomes dot below 640px.
 const stepPillBase =
   "flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-300 motion-reduce:transition-none sm:w-[162px]"
 
@@ -44,7 +44,7 @@ export function stepNum(active: boolean): string {
   return active ? "text-sm font-bold text-white" : "text-sm font-bold text-dark-600"
 }
 
-// Only the active label shows on phones.
+// Phones show only active label.
 export function stepLabel(active: boolean): string {
   return active
     ? "text-caption font-bold uppercase tracking-[1px] text-primary-700"

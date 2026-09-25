@@ -16,7 +16,9 @@ const request = vi.mocked(apiRequest)
 describe("auth api", () => {
   beforeEach(() => vi.clearAllMocks())
 
-  // AU-4: a wrong password must read as the server's answer.
+  // AU-4: wrong password reads verbatim.
+  //
+  // A wrong password must read as the server's answer.
   it("logs in as a credential call, outside the refresh cycle", async () => {
     await login("a@gns.id", "rahasia")
     expect(request).toHaveBeenCalledWith({

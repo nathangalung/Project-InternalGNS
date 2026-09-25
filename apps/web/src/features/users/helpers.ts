@@ -2,7 +2,7 @@ import type { Role } from "@/types/api"
 
 type Access = { role: Role; isActive: boolean }
 
-// Edits that end the user's sessions.
+// Edits that end sessions.
 //
 // Mirrors users.Repo.Update and UpdatePassword on the API: a role change, a
 // deactivation or a new password revokes every session. A rename, an email

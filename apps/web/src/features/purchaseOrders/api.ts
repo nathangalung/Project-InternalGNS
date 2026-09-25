@@ -36,7 +36,9 @@ export async function list(params: ListParams = {}): Promise<PaginatedList<Purch
   return apiList<PurchaseOrderRow>({ path: `/purchase-orders${qs ? `?${qs}` : ""}` })
 }
 
-// Download the filtered list (delivery notes) as XLSX.
+// Filtered list XLSX download.
+//
+// The workbook lists the delivery notes.
 export function exportXlsx(params: ListParams = {}): Promise<void> {
   const qs = buildQuery(params)
   return downloadXlsx(
@@ -77,7 +79,9 @@ export async function listHistory(id: number): Promise<PoStatusEvent[]> {
   return apiRequest<PoStatusEvent[]>({ path: `/purchase-orders/${id}/history` })
 }
 
-// Detach the file; UPLOADED returns to PENDING.
+// Detach the file.
+//
+// UPLOADED returns to PENDING.
 export async function removeFile(id: number): Promise<void> {
   await apiRequest<void>({ path: `/purchase-orders/${id}/file`, method: "DELETE" })
 }

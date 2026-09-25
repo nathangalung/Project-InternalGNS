@@ -16,7 +16,7 @@ type HeaderIdx = {
   unit: number
 }
 
-// Match a header column by key.
+// Header column by key.
 function findIdx(headers: string[], keys: string[]): number {
   const norm = headers.map((h) => h.trim().toLowerCase())
   for (const k of keys) {
@@ -41,7 +41,7 @@ function detectHeaders(headers: string[]): HeaderIdx | null {
   return idx
 }
 
-// Locate the header row within leading rows.
+// Header row among leading rows.
 function findHeaderRow(aoa: unknown[][]): { row: number; idx: HeaderIdx } | null {
   const scan = Math.min(aoa.length, 15)
   let best: { row: number; idx: HeaderIdx; score: number } | null = null
@@ -66,7 +66,7 @@ export function parseQty(raw: unknown): number {
   return Number.isFinite(n) ? n : 0
 }
 
-// Extract product rows from a sheet.
+// Product rows from a sheet.
 export function rowsFromAOA(aoa: unknown[][]): MatchRowInput[] {
   const found = findHeaderRow(aoa)
   if (!found) return []
@@ -91,8 +91,10 @@ export function rowsFromAOA(aoa: unknown[][]): MatchRowInput[] {
   return out
 }
 
-// ExcelJS cells may be formulas, rich text, or hyperlinks; reduce each to its
-// display text so detection and extraction stay format-agnostic.
+// Cell to its display text.
+//
+// ExcelJS cells may be formulas, rich text, or hyperlinks; reducing each to
+// its display text keeps detection and extraction format-agnostic.
 function cellToPrimitive(value: unknown): unknown {
   if (value == null) return ""
   if (typeof value === "object") {
@@ -112,7 +114,7 @@ function cellToPrimitive(value: unknown): unknown {
   return value
 }
 
-// Read every sheet into arrays of rows.
+// Every sheet as row arrays.
 async function parseXlsx(buf: ArrayBuffer): Promise<unknown[][][]> {
   const { default: ExcelJS } = await import("exceljs")
   const wb = new ExcelJS.Workbook()
@@ -131,7 +133,9 @@ async function parseXlsx(buf: ArrayBuffer): Promise<unknown[][][]> {
   return sheets
 }
 
-// Minimal RFC 4180 CSV parser: quoted fields, escaped quotes, CRLF or LF.
+// Minimal RFC 4180 CSV parser.
+//
+// Handles quoted fields, escaped quotes, and CRLF or LF.
 export function parseCsv(text: string): unknown[][] {
   const clean = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text
   const rows: string[][] = []

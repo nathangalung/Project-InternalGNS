@@ -92,7 +92,9 @@ type CreateContactInput = {
   countryCode?: string
 }
 
-// Absent keeps, "" or null clears.
+// Absent keeps; empty clears.
+//
+// An absent field keeps its value; "" or null clears it.
 export type UpdateContactInput = {
   name: string
   email?: string | null

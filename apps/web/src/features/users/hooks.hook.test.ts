@@ -65,7 +65,7 @@ describe("useCreateUser", () => {
     expect(invalidated(qc, [userList, me])).toEqual([userList])
   })
 
-  // Field and conflict errors render inline on the form.
+  // Field, conflict errors render inline.
   it.each([422, 409])("leaves a %i to the form", async (status) => {
     m.create.mockRejectedValue(new ApiError(status, null, "Email sudah digunakan pengguna lain."))
     const { result } = renderQueryHook(() => useCreateUser())
@@ -82,7 +82,7 @@ describe("useCreateUser", () => {
 })
 
 describe("useUpdateUser", () => {
-  // AU-10: the sidebar reads the cached me query.
+  // AU-10: sidebar reads me cache.
   it("refreshes users and the signed-in user after an edit", async () => {
     m.update.mockResolvedValue({ id: 3 } as never)
     const { qc, result } = renderQueryHook(() => useUpdateUser())

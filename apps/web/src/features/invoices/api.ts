@@ -41,13 +41,15 @@ export async function list(params: ListParams = {}): Promise<PaginatedList<Invoi
   return apiList<InvoiceBackendRow>({ path: `/invoices${qs ? `?${qs}` : ""}` })
 }
 
-// Download the filtered list as XLSX.
+// Filtered list XLSX download.
 export function exportXlsx(params: ListParams = {}): Promise<void> {
   const qs = buildQuery(params)
   return downloadXlsx(`/invoices/export.xlsx${qs ? `?${qs}` : ""}`, "invoice-export.xlsx")
 }
 
-// Download the filtered list as the DJP Coretax bulk-import workbook.
+// Filtered list as Coretax workbook.
+//
+// The DJP Coretax bulk-import workbook.
 export function exportCoretaxXlsx(params: ListParams = {}): Promise<void> {
   const qs = buildQuery(params)
   return downloadXlsx(`/invoices/coretax.xlsx${qs ? `?${qs}` : ""}`, "coretax-export.xlsx")
@@ -61,14 +63,16 @@ export async function listItems(id: number): Promise<InvoiceItemRow[]> {
   return apiRequest<InvoiceItemRow[]>({ path: `/invoices/${id}/items` })
 }
 
-// Newest invoice, the Pengganti when one exists.
+// Newest invoice for a quotation.
+//
+// The Pengganti when one exists.
 export async function getByQuotation(quotationId: number): Promise<InvoiceDetail | null> {
   return nullOn404(() =>
     apiRequest<InvoiceDetail>({ path: `/invoices/by-quotation/${quotationId}` }),
   )
 }
 
-// One invoice by its own id.
+// One invoice by id.
 export async function getById(id: number): Promise<InvoiceDetail | null> {
   return nullOn404(() => apiRequest<InvoiceDetail>({ path: `/invoices/${id}` }))
 }
@@ -81,7 +85,7 @@ export async function changeStatus(id: number, input: ChangeInvoiceStatusInput):
   })
 }
 
-// Issue the Pengganti for a cancelled invoice.
+// Pengganti for cancelled invoice.
 export async function replace(id: number): Promise<InvoiceDetail> {
   return apiRequest<InvoiceDetail>({ path: `/invoices/${id}/replacement`, method: "POST" })
 }

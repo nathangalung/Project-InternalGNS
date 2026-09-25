@@ -18,7 +18,10 @@ type DashboardFinancialFilterProps = {
 
 const EARLIEST_YEAR = 2024
 const CURRENT_YEAR = new Date().getFullYear()
-// Earliest year is fixed at 2024; latest extends with the current year (2024..now), descending.
+// Year options, newest first.
+//
+// The earliest year is fixed at 2024; the latest extends with the current year
+// (2024..now).
 export const YEAR_OPTIONS: number[] = (() => {
   const max = Math.max(CURRENT_YEAR, EARLIEST_YEAR)
   const years: number[] = []
@@ -81,7 +84,7 @@ export default function DashboardFinancialFilter({
 
   const dirty = year !== DEFAULTS.year || month !== DEFAULTS.month
 
-  // Clicking the active month clears back to the whole year.
+  // Reclick returns to whole year.
   const pickMonth = (m: number) => setMonth((prev) => (prev === m ? null : m))
 
   const handleReset = () => {

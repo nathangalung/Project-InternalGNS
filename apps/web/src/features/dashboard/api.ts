@@ -5,7 +5,9 @@ export async function summary(): Promise<DashboardSummary> {
   return apiRequest<DashboardSummary>({ path: "/dashboard/summary" })
 }
 
-// Download the dashboard summary + monthly series as XLSX (optional year scope).
+// Dashboard summary XLSX download.
+//
+// Holds the summary and monthly series, optionally scoped to one year.
 export function exportXlsx(year?: number): Promise<void> {
   const qs = year ? `?year=${year}` : ""
   const name = year ? `dashboard-export-${year}.xlsx` : "dashboard-export.xlsx"

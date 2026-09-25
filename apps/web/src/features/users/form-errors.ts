@@ -1,7 +1,7 @@
 import { ApiError } from "@/lib/api-client"
 import { errorMessage } from "@/lib/errors"
 
-// Server copy for a duplicate email.
+// Duplicate email server copy.
 export const EMAIL_TAKEN_MESSAGE = "Email sudah digunakan pengguna lain."
 
 export type FormErrors<K extends string> = {

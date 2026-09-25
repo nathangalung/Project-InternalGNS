@@ -28,7 +28,9 @@ type PurchaseOrderEditProps = {
   po: PurchaseOrderRow
 }
 
-// The client is fixed on a PO, so there is no client step.
+// Steps without a client step.
+//
+// The client is fixed on a PO.
 const steps = [
   { n: 1, label: "PRODUK" },
   { n: 2, label: "PENGIRIMAN" },
@@ -39,7 +41,7 @@ function isAddressValid(v: string): boolean {
   return v.trim().length >= 20 && /[a-zA-Z]/.test(v)
 }
 
-// Split "123456 - Name" into parts.
+// Split "123456 - Name" parts.
 function splitOffer(s: string): { kode: string; nama: string } {
   const trimmed = s.trim()
   if (!trimmed) return { kode: "", nama: "" }
@@ -114,7 +116,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
     return m
   }, [unitsData])
 
-  // Form state from the stored PO.
+  // Form state from stored PO.
   const hydrate = useCallback(
     (source: PurchaseOrderRow, items: PurchaseOrderItemRow[]) => {
       setProducts(

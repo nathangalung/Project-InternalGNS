@@ -119,8 +119,10 @@ describe("rowsFromAOA rows", () => {
     expect(rowsFromAOA(aoa)).toEqual([{ impaCode: "", name: "Kabel", qty: 7, unit: "" }])
   })
 
-  // Regression: a sparse header row, as a sheet starting past column A
-  // yields, threw a TypeError in the partial header match.
+  // Regression: sparse header row.
+  //
+  // A sparse header row, as a sheet starting past column A yields, threw a
+  // TypeError in the partial header match.
   it("reads a sparse header row", () => {
     const header: unknown[] = []
     header[1] = "Nama"
@@ -184,8 +186,10 @@ describe("parseProductFile", () => {
     ])
   })
 
-  // Regression: an error cell, such as a failed VLOOKUP, was sent as the
-  // text "[object Object]" and matched or created a product by that name.
+  // Regression: error cell text.
+  //
+  // An error cell, such as a failed VLOOKUP, was sent as the text
+  // "[object Object]" and matched or created a product by that name.
   it("reads an error cell as blank", async () => {
     const file = await workbookFile((wb) => {
       const ws = wb.addWorksheet("Produk")
@@ -198,8 +202,10 @@ describe("parseProductFile", () => {
     ])
   })
 
-  // Regression: a formula saved without a cached result, as generated
-  // workbooks do, was sent as the name "[object Object]".
+  // Regression: uncached formula result.
+  //
+  // A formula saved without a cached result, as generated workbooks do, was
+  // sent as the name "[object Object]".
   it("reads a formula without a cached result as blank", async () => {
     const file = await workbookFile((wb) => {
       const ws = wb.addWorksheet("Produk")
@@ -212,8 +218,10 @@ describe("parseProductFile", () => {
     ])
   })
 
-  // Regression: ExcelJS leaves holes for empty cells, and a table starting
-  // at column B crashed the header scan with a TypeError.
+  // Regression: table past column A.
+  //
+  // ExcelJS leaves holes for empty cells, and a table starting at column B
+  // crashed the header scan with a TypeError.
   it("reads a table that starts past column A", async () => {
     const file = await workbookFile((wb) => {
       const ws = wb.addWorksheet("Produk")

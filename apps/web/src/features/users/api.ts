@@ -44,7 +44,7 @@ export type UpdateUserInput = {
   password?: string
 }
 
-// Profile saved but the password PATCH failed.
+// Profile saved, password PATCH failed.
 export class PartialUserUpdateError extends Error {
   readonly profileSaved = true
   constructor(readonly passwordError: unknown) {

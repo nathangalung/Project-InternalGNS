@@ -27,6 +27,8 @@ export const INVOICE_LABEL: Record<InvoiceDisplayStatus, string> = {
   DIBATALKAN: "Dibatalkan",
 }
 
+// Invoice status badge colours.
+//
 // Every text colour is at least 4.5:1 on its fill.
 export const INVOICE_STATUS_STYLE: Record<InvoiceDisplayStatus, { bg: string; color: string }> = {
   DRAF: { bg: "#FEF3C7", color: "#92400E" },

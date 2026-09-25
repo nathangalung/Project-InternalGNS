@@ -5,7 +5,7 @@ export type PasswordRule = {
   test: (pw: string) => boolean
 }
 
-// bcrypt's input limit, in UTF-8 bytes.
+// bcrypt input limit, UTF-8 bytes.
 export const PASSWORD_MAX_BYTES = 72
 
 export const PASSWORD_TOO_LONG_MESSAGE = `Kata sandi terlalu panjang, maksimal ${PASSWORD_MAX_BYTES} karakter.`

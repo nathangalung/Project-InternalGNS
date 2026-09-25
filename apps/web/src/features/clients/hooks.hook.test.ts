@@ -214,7 +214,7 @@ describe("useUploadClientLogo", () => {
     expect(invalidated(qc, [detail, list])).toEqual([detail])
   })
 
-  // MD-13: a refused file never reaches storage.
+  // MD-13: refused files skip storage.
   it("refuses an invalid file before asking for an upload URL", async () => {
     const { qc, result } = renderQueryHook(() => useUploadClientLogo())
     seed(qc, [detail])

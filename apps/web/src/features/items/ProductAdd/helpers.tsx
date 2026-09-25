@@ -16,7 +16,7 @@ export type ProductAddFormData = {
   vendorId?: number
 }
 
-// Persisted row hydrated back into form fields.
+// Stored row for form hydration.
 export type ProductAddInitialData = {
   kodeImpa: string
   nama: string

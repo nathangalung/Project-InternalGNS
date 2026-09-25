@@ -16,8 +16,10 @@ const pageBtnIdle = "font-medium text-[#4A4455] hover:bg-dark-100"
 const pageBtnActive = "bg-primary-700 font-bold text-white"
 const pageBtnNav = `flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100 disabled:cursor-not-allowed disabled:opacity-40 ${ui.focusRing}`
 const requestedNote = "mt-0.5 text-[11px] text-[#B45309]"
-// Profit column: legacy qd-th--profit / qd-td--profit, written standalone so no
-// ui.* colour utility competes with the override.
+// Profit column classes.
+//
+// Legacy qd-th--profit / qd-td--profit, written standalone so no ui.* colour
+// utility competes with the override.
 const thProfit =
   "px-5 py-4 text-center align-middle text-overline font-bold uppercase tracking-[0.05em] whitespace-nowrap text-primary-700"
 const tdProfit =

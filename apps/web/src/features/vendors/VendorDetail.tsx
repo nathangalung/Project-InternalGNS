@@ -47,7 +47,9 @@ function getContactField(
 const labelCls =
   "mb-2 block text-[10px] font-bold uppercase leading-[15px] tracking-[1px] text-[#4A4455]"
 
-// Shared field shell; height and radius vary per use, so they stay out of here.
+// Shared field shell.
+//
+// Height and radius vary per use, so they stay out of here.
 const inputBase = `w-full border-[1.5px] bg-[#F2F4F6] px-4 py-3 text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150 ${ui.fieldFocus}`
 
 const inputCls = `${inputBase} h-11 rounded-md border-transparent`

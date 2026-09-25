@@ -29,8 +29,10 @@ type ProductListProps = {
   onViewDetail?: (id: number) => void
 }
 
-// Tier → small inline label shown next to product name.
-// Layout-neutral: same line, same height, only adds badge content.
+// Tier badge labels.
+//
+// A small inline label shown next to the product name. Layout-neutral: same
+// line, same height, only adds badge content.
 const TIER_BADGE: Record<AdvancedSearchTier, { label: string; cls: string }> = {
   ITEM_AUTO: { label: "EXACT", cls: "bg-[#DCFCE7] text-[#15803D]" },
   VENDOR_OFFER: { label: "VENDOR", cls: "bg-primary-100 text-[#6D28D9]" },

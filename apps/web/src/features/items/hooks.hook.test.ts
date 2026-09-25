@@ -97,7 +97,9 @@ describe("item queries", () => {
     expect(m.searchAdvanced).toHaveBeenCalledWith("baut", { limit: 10, offset: 20 })
   })
 
-  // MD-02: every vendor must be reachable, not just the first page.
+  // MD-02: every vendor stays reachable.
+  //
+  // Not just the first page.
   it("asks the server for active vendors matching the trimmed term", async () => {
     vendors.list.mockResolvedValue({ rows: [], total: 0 })
     const { result } = renderQueryHook(() => useActiveVendorOptions("  sinar  "))
@@ -121,7 +123,7 @@ describe("item writes", () => {
     expect(invalidated(qc, [list, vendorDetail])).toEqual([list])
   })
 
-  // Vendor product tabs show item names.
+  // Vendor tabs show item names.
   it("refreshes items and vendors after an update", async () => {
     m.update.mockResolvedValue({ id: 9 } as never)
     const { qc, result } = renderQueryHook(() => useUpdateItem())
@@ -140,7 +142,7 @@ describe("item writes", () => {
     expect(toast.error).toHaveBeenCalledWith("Gagal memperbarui produk.")
   })
 
-  // Vendor detail and counts change too.
+  // Vendor detail, counts change too.
   it("refreshes the item's vendors and every vendor view after linking one", async () => {
     m.addVendor.mockResolvedValue({ id: 1 } as never)
     const { qc, result } = renderQueryHook(() => useAddVendorToItem())
@@ -174,7 +176,7 @@ describe("useUploadItemImage", () => {
     expect(invalidated(qc, [detail, list])).toEqual([detail, list])
   })
 
-  // MD-13: a refused file never reaches storage.
+  // MD-13: refused files skip storage.
   it("refuses an oversize image before asking for an upload URL", async () => {
     const { result } = renderQueryHook(() => useUploadItemImage())
     await settle(() => result.current.mutateAsync({ id: 9, file: img(5 * 1024 * 1024 + 1) }))

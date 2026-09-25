@@ -15,7 +15,7 @@ type StatusBarProps = {
   onAction: (kind: InvoiceActionKind | "replace") => void
 }
 
-// One line on the current state.
+// One-line current state summary.
 function describe(inv: InvoiceDetail, status: InvoiceDisplayStatus): string {
   if (inv.status === "paid") {
     return inv.paidAt ? `Dibayar pada ${formatDateTime(inv.paidAt)}.` : "Invoice sudah dibayar."

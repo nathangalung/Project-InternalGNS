@@ -82,6 +82,8 @@ describe("expenseSeries", () => {
   }
 })
 
+// Raw API quotation rows.
+//
 // Rows as the API sends them; JSON keeps statuses the web types lack.
 function quotation(status: string): QuotationListRow {
   return JSON.parse(

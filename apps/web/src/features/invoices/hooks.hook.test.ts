@@ -173,7 +173,9 @@ describe("replacement", () => {
     expect(toast.success).toHaveBeenCalledWith("Invoice pengganti INV/2026/IX/002 diterbitkan.")
   })
 
-  // Two calls: a failed second step leaves a cancelled invoice to show.
+  // Two calls; second may fail.
+  //
+  // A failed second step leaves a cancelled invoice to show.
   it("still refreshes when the Pengganti fails after the cancel", async () => {
     m.changeStatus.mockResolvedValue(undefined)
     m.replace.mockRejectedValue(new Error(""))

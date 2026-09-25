@@ -72,7 +72,7 @@ export function poRowFromBackend(po: PurchaseOrderRow): PoRow {
 
 type PoDetails = { poNumber: string; poDate: string }
 
-// Skip the details write when unchanged.
+// Skip unchanged details write.
 //
 // Once the invoice is filed the server refuses any details write, even one
 // that repeats the stored values, so a file-only upload must not send it.
@@ -94,7 +94,7 @@ export type PoLineSource = {
   shipDestination?: string
 }
 
-// Wizard row plus its stored line.
+// Wizard row with stored line.
 export type PoEditLine = ProductItem & {
   quotationItemId?: number
   // Absent on a line added in the wizard
@@ -172,7 +172,7 @@ export function lineToInput(line: PoEditLine, unitIdByCode: Map<string, number>)
   }
 }
 
-// Edited lines whose unit is unknown.
+// Edited lines lacking known unit.
 //
 // A stored line with no unit may stay that way; an edited or new line must
 // name a unit the catalogue knows.
@@ -186,7 +186,7 @@ export function linesMissingUnit(lines: PoEditLine[], unitIdByCode: Map<string, 
     .map((l) => l.nama || l.requestedNama)
 }
 
-// Fixed note on the creation row.
+// Creation row's fixed note.
 const CREATED_NOTE = "PO dibuat"
 
 // Timeline entry for one event.

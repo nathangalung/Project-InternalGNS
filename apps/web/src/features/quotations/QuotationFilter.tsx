@@ -34,7 +34,9 @@ type QuotationFilterProps = {
   }
 }
 
-// Faithful port of the legacy ca-phone-wrapper/-prefix/-input trio.
+// Legacy amount input trio.
+//
+// A faithful port of ca-phone-wrapper/-prefix/-input.
 const amountWrapper =
   "flex h-11 overflow-hidden rounded-md border-[1.5px] border-transparent bg-dark-200 transition-[border-color,box-shadow] duration-200 focus-within:border-primary-600 focus-within:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
 const amountPrefix =

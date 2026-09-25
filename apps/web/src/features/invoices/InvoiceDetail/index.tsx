@@ -41,7 +41,7 @@ type InvoiceDetailProps = {
   inv: InvoiceDetailData
 }
 
-// Open a presigned file in a tab.
+// Open presigned file in tab.
 async function openPresigned(downloadUrl: string): Promise<void> {
   const objectUrl = await fetchObjectUrl(downloadUrl)
   window.open(objectUrl, "_blank", "noopener,noreferrer")

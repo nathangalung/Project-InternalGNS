@@ -178,7 +178,7 @@ describe("useChangeQuotationStatus", () => {
     expect(m.changeStatus).not.toHaveBeenCalled()
   })
 
-  // Q-8: accepting creates a PO, which must show in the PO list.
+  // Q-8: accepting lists the PO.
   it("refreshes purchase orders as well after accepting", async () => {
     m.changeStatus.mockResolvedValue(undefined)
     const { qc, result } = renderQueryHook(() => useChangeQuotationStatus())

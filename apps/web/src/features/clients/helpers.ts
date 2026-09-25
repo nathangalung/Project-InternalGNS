@@ -2,8 +2,10 @@ import type { UpdateContactInput } from "@/features/clients/api"
 import type { Client } from "@/features/quotations/Step1Client"
 import type { ClientRow, ClientSearchHit, ClientSummary } from "@/types/api"
 
-// Two-letter avatar initials. Strips a leading "PT" / "PT." prefix
-// since most local company names start with it.
+// Two-letter avatar initials.
+//
+// Strips a leading "PT" / "PT." prefix since most local company names start
+// with it.
 export function getCompanyInitials(name: string): string {
   const parts = name
     .replace(/^PT\.?\s+/i, "")

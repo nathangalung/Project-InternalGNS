@@ -29,10 +29,12 @@ const STATUS_TO_EFFECTIVE: Record<InvoiceStatus, string> = {
   TERLAMBAT: "overdue",
 }
 
-// Every displayable status. Sent when no explicit status filter is set so the
-// server excludes cancelled invoices and X-Total-Count matches the rows shown.
-// Never map a status to "cancelled" above: it would re-admit cancelled rows
-// here and desync the pagination denominator again.
+// Every displayable status.
+//
+// Sent when no explicit status filter is set so the server excludes cancelled
+// invoices and X-Total-Count matches the rows shown. Never map a status to
+// "cancelled" above: it would re-admit cancelled rows here and desync the
+// pagination denominator again.
 const ALL_EFFECTIVE_STATUSES = Object.values(STATUS_TO_EFFECTIVE).join(",")
 
 function rupiahToDigits(s: string): string {

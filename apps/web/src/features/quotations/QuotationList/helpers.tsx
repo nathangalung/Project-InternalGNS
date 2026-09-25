@@ -4,7 +4,7 @@ import { quotationBadge } from "../status"
 // Badge colours, dashboard reuses.
 export const statusConfig: Record<Status, { bg: string; color: string }> = quotationBadge
 
-// Columns the table header can sort.
+// Sortable table header columns.
 export type SortableRowKey = "displayNo" | "version" | "date" | "total"
 
 export type QuotationRow = {

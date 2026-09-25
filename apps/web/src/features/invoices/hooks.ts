@@ -48,7 +48,7 @@ export function useInvoiceByQuotation(quotationId: number | undefined) {
   })
 }
 
-// One invoice by its own id.
+// One invoice by id.
 export function useInvoice(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.invoices.detail(id) : queryKeys.invoices.all,
@@ -125,7 +125,7 @@ export function useCancelAndReplaceInvoice() {
   })
 }
 
-// Pengganti for an already cancelled invoice.
+// Pengganti for cancelled invoice.
 export function useReplaceInvoice() {
   const qc = useQueryClient()
   const invalidate = useInvalidateInvoices()

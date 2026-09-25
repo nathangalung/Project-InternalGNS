@@ -28,12 +28,16 @@ type ClientDetailProps = {
 const labelCls =
   "mb-2 block text-[10px] font-bold uppercase leading-[15px] tracking-[1px] text-[#4A4455]"
 
-// Shared field shell; height and radius vary per use, so they stay out of here.
+// Shared field shell.
+//
+// Height and radius vary per use, so they stay out of here.
 const inputBase = `w-full border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color,box-shadow] duration-150 ${ui.fieldFocus}`
 
 const inputCls = `${inputBase} h-11 rounded-md border-transparent`
 
-// Same shell without a text color, for value-dependent coloring.
+// Shell without text color.
+//
+// For value-dependent coloring.
 const inputBaseNoColor = `w-full border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium outline-none transition-[border-color,box-shadow] duration-150 ${ui.fieldFocus}`
 
 // Responsive two column track sizing.
@@ -44,10 +48,10 @@ const dropdownPanelCls =
 
 const contactCancelCls = `rounded-md px-4 py-2 text-[13px] font-semibold text-primary-700 ${ui.focusRing}`
 
-// Brand gradient, faithful to legacy inline.
+// Brand gradient from legacy inline.
 const gradientCls = "bg-[linear-gradient(135deg,#630ED4_0%,#7C3AED_100%)]"
 
-// Contact form save button, enabled or not.
+// Contact save button classes.
 function contactSaveCls(enabled: boolean): string {
   return `rounded-md px-4 py-2 text-[13px] font-semibold text-white ${ui.focusRing} ${
     enabled ? `${gradientCls} cursor-pointer` : "cursor-default bg-[#CBD5E1]"

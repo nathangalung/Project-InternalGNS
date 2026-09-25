@@ -28,7 +28,7 @@ describe("dashboard queries", () => {
     expect(m.timeseries).toHaveBeenCalledWith("revenue", "2026-09-01", "2026-10-01", "day")
   })
 
-  // A role without financial access must not even ask.
+  // Non-financial roles never ask.
   it("does not ask for a disabled metric", async () => {
     const { result } = renderQueryHook(() =>
       useDashboardTimeseries("profit", undefined, undefined, undefined, false),

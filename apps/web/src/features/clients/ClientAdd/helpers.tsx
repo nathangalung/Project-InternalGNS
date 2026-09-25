@@ -2,7 +2,9 @@ import { ui } from "@/lib/ui"
 
 export { CheckIcon as CheckmarkIcon } from "@/components/document/icons"
 
-// Field class strings, ported from ca-*.
+// Field class strings.
+//
+// Ported from ca-*.
 export const optionalCls = "text-overline font-normal uppercase italic text-dark-600"
 
 export const fieldErrorCls = "mt-1 block text-xs text-[#EF4444]"

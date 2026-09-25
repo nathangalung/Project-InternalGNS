@@ -32,7 +32,7 @@ type ActiveFilters = {
   maxHarga: string
 }
 
-// Table column to API sort key.
+// Column to API sort key.
 const sortKeyToApi: Record<SortableRowKey, QuotationSortKey> = {
   displayNo: "quotationNo",
   version: "version",

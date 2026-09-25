@@ -34,7 +34,7 @@ export async function list(
   })
 }
 
-// Download the filtered list as XLSX.
+// Filtered list XLSX download.
 export function exportXlsx(params: QuotationListParams = {}): Promise<void> {
   const qs = buildListQuery(params)
   return downloadXlsx(`/quotations/export.xlsx${qs ? `?${qs}` : ""}`, "quotation-export.xlsx")

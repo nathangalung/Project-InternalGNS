@@ -3,7 +3,9 @@ import { errorMessage } from "@/lib/errors"
 import { QUOTATION_STATUSES, type QuotationStatusLabel, quotationStatusLabel } from "@/lib/status"
 import type { QuotationStatus, QuotationStatusCount, QuotationTransition } from "@/types/api"
 
-// Labels and badges live in lib/status.ts, shared with the dashboard.
+// Re-exported from lib/status.ts.
+//
+// Labels and badges live there, shared with the dashboard.
 export {
   QUOTATION_STATUS_LABELS,
   QUOTATION_STATUSES,
