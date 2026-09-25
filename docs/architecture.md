@@ -1,88 +1,101 @@
 # Architecture
 
-See also: live-schema ERD in [`erd/`](./erd/) (regenerate via `make db-erd`), legacy [`relational_model.html`](./relational_model.html), ADRs in [`decisions/`](./decisions/).
+See also: the schema reference in [`erd/`](./erd/) (regenerate with
+`make db-erd`), ADRs in [`decisions/`](./decisions/), and `CLAUDE.md` for the
+conventions and the status model. `relational_model.html` is the original design
+draft and does not match the live schema.
 
 ## Context
 
-PT Global Niaga Sakti ships marine supplies. Internal staff use this system to
-issue **quotations** (with revisions), convert them to **purchase orders**
-once a client accepts, and close the loop with **invoices** that export to
-Indonesian Coretax (DJP) Excel templates.
+PT Global Niaga Sakti ships marine supplies. Internal staff issue
+**quotations** (with revisions), turn an accepted quotation into a
+**purchase order**, deliver it with a **delivery note**, and close the loop
+with an **invoice** that exports to the Coretax (DJP) XML and XLSX formats.
 
 ## Shape
 
-Modular monolith. Single Go binary (`apps/api`) exposes HTTP under
-`/api/v1/*`, serves its own embedded goose migrations on boot, talks to
-Postgres + MinIO. The React frontend (`apps/web`) is a static SPA served
-separately via nginx.
+Modular monolith. One Go binary (`apps/api`) serves HTTP under `/api/v1`,
+applies its embedded goose migrations on boot, and talks to Postgres and
+MinIO. The React SPA (`apps/web`) is built to static files and served by
+Nginx on its own host.
 
 ```
-[browser] ── Traefik ──┬── web (nginx/static)
-                       └── api (Go, :8080) ── Postgres 17
-                                           └── MinIO
+[browser] ── Traefik ──┬── ${WEB_HOST}  frontend (nginx, static SPA)
+                       └── ${API_HOST}  api (Go, :8080) ──┬── Postgres 18
+                                                          └── MinIO
 ```
 
-Nothing in the monolith is shared state between requests except the pgx pool.
-Worker split (`cmd/api` + `cmd/worker`) is a future refactor if LaTeX/Excel
-rendering becomes a bottleneck — not now.
+Postgres and MinIO sit on an internal-only network. The browser never reaches
+MinIO: uploads and downloads go through presigned URLs issued by the API and
+an authenticated proxy (`internal/storage`).
 
-## Backend modules (`apps/api/internal/`)
+Two background loops run inside the API process: the refresh-token purge and
+the quotation expiry job. Both stop with the server.
 
-| Module | Purpose |
+## Backend packages (`apps/api/internal/`)
+
+| Package | Purpose |
 |---|---|
-| `app` | Wiring: config, server, chi router. |
-| `auth` | Login, JWT issuance, RBAC middleware. |
-| `users` | User CRUD (superadmin only). |
-| `clients` | `company_client` + `company_contacts`. |
-| `vendors` | Vendors + normalized contacts. |
-| `items` | Item master + unit defaults. |
-| `units` | Unit-of-measure master + Coretax code. |
-| `pricing` | Fuzzy item match (pg_trgm + `item_request_matches`), vendor rank, margin suggest. |
-| `quotations` | Quotation header + items, versioning via `parent_id`. |
-| `pos` | Purchase orders + line items. |
-| `invoices` | Invoices, items, and status transitions. |
-| `documents` | LaTeX templates + tectonic compile → PDF → MinIO. |
-| `tax` | Coretax Excel export (excelize). |
-| `files` | MinIO client + signed URL issuance. |
-| `audit` | `audit_logs` writer; every mutation writes a row in-tx. |
-| `shared/db` | pgxpool, tx helper, pg error mapping, embedded migrations. |
-| `shared/http` | chi helpers, request decoding, response rendering. |
-| `shared/httperr` | Typed errors → `application/problem+json`. |
-| `shared/validate` | validator/v10 wrapper. |
-| `shared/paginate` | Cursor pagination utilities. |
-| `shared/money` | `decimal.Decimal` helpers + Rupiah formatter. |
-| `shared/tz` | `Asia/Jakarta` location helper. |
+| `app` | Config, router, middleware (auth, RBAC, rate limit, logging, CORS, body limit, timeouts), background loops. |
+| `auth` | Login, JWT, refresh-token rotation, lockout, session version. |
+| `users` | User management (superadmin only), superadmin seed. |
+| `clients` | `company_client` and `company_contacts`, logos, client numbers. |
+| `vendors` | Vendors, logos, items per vendor. |
+| `items` | Product catalog, vendor prices, fuzzy search and request matching, images. |
+| `units`, `countries` | Read-only master data. |
+| `quotations` | Quotation header and lines, status machine, revisions, expiry job, item requests, PDF. |
+| `purchaseorders` | PO lines, file upload, status machine and history, delivery-note PDF. |
+| `invoices` | Invoice lines, status machine and history, payment proof, replacement, Coretax export, PDF. |
+| `dashboard` | Summary, time series and XLSX export, with financial gating. |
+| `pdfgen` | xelatex rendering of the LaTeX templates. |
+| `storage` | MinIO client, bucket policy, object proxy. |
+| `shared/*` | `db` (pool, migrations, tx, SQLSTATEs), `httperr` (RFC 7807), `httpx`, `paginate`, `listq`, `assetproxy`, `sheet`, `money`, `tz`, `deps`. |
+| `testutil` | Test server, pool, cleanup and seed helpers. |
 
-Each domain module holds: `types.go`, `queries.sql` (sqlc input),
-`db.sql.go` (sqlc output), `service.go`, `handler.go`, `routes.go`.
+Each feature package holds `routes.go`, `handler.go`, `repo.go` and `dto.go`,
+plus its tests and, for most, an `acceptance/` godog suite. SQL lives in
+`db/queries/*.sql` as named queries (`-- name: <feature>.<key>`), loaded once
+at startup; `db/queries/required.go` lists every key a repo reads.
 
-## Data flow — quotation create (example)
+## Data flow: accepting a quotation
 
-1. `POST /api/v1/quotations` → `quotations.Handler.Create`.
-2. Handler decodes + validates body, pulls `user_id` from JWT claim.
-3. `service.Create(ctx, in, userID)` opens a tx via `shared/db.WithTx`.
-4. In the tx: insert header → insert items → insert `audit_logs` row →
-   commit.
-5. Postgres GENERATED columns compute totals; `row_version` trigger bumps
-   version on later updates. App never writes those columns.
-6. Handler returns `201` with the created resource.
+1. `PATCH /api/v1/quotations/{id}/status` with `{"status":"accepted"}`
+   reaches `quotations.Handler.ChangeStatus` behind
+   `requireRole("superadmin","operational")`.
+2. The repo calls `fn_change_quotation_status`. The function locks the row,
+   checks the move against its transition table (mirrored by
+   `quotations.Transitions`), refuses unpriced product lines, updates the
+   status and writes `quotation_status_history`.
+3. In the same transaction, `fn_create_purchase_order` snapshots the lines
+   into a new PO in PENDING.
+4. A refused move raises P0012 or P0014, which `httperr` turns into a 422
+   whose detail is the function's Indonesian message.
+
+Business rules that must hold under concurrency (status machines, document
+numbers, invoice creation) live in plpgsql functions. `db/functions/` keeps
+the current body of each one, checked against the database by a drift test.
 
 ## Key disciplines
 
-- **Money:** `decimal.Decimal` end-to-end. Never `float`. DB `NUMERIC(15,2)`.
-- **Soft delete:** financial records get `deleted_at TIMESTAMPTZ NULL`. Hard
-  delete is forbidden on anything referenced by a quotation/PO/invoice.
-- **Snapshots, not FKs:** name/price fields on historical documents are
-  captured at write time. Not enforced as FK so they don't drift when master
-  data changes.
-- **Timezone:** store UTC, render `Asia/Jakarta`. Done in one place per layer.
-- **Audit rows:** every mutation writes `audit_logs` in the same tx as the
-  mutation. No mutation bypasses the service layer.
-- **Reconciliation:** `quotation_reconciliation` view asserts
-  `SUM(items.total_selling) == header.total`. A scheduled job logs drifts.
+- **Money:** `NUMERIC` in the database; Go uses `shopspring/decimal` in
+  `shared/money` where it does arithmetic. Tax is rounded per line, then
+  summed.
+- **Snapshots, not FKs:** client, contact, item and price fields on documents
+  are copied at write time, so a later master-data edit never changes a
+  filed document.
+- **Optimistic locking:** `row_version` triggers bump a version on each
+  update. Quotation, PO and invoice edits send the version they read in
+  `If-Match`, and a stale one gets a 409.
+- **Timezone:** timestamps are stored as `timestamptz`; the pool session is
+  pinned to Asia/Jakarta, so `CURRENT_DATE` and document periods are WIB.
+- **History:** status changes are recorded in `quotation_status_history`,
+  `po_status_history` and `invoice_status_history`. There is no generic audit
+  log.
+- **Reconciliation:** the `quotation_reconciliation` view compares line sums
+  with header totals; `make check-reconcile` runs the checks.
 
 ## Deploy
 
-Dokploy on a single VPS. Traefik terminates TLS and routes two hosts:
-`${API_HOST}` → api:8080, `${WEB_HOST}` → web:80. Postgres + MinIO are
-private on the internal network.
+Dokploy on a single VPS, from `compose.prod.yml`. Traefik terminates TLS and
+routes `${API_HOST}` to the api and `${WEB_HOST}` to the frontend. Steps and
+pre-deploy checks: `deploy_vps.md`. Backups: `backup_restore.md`.
