@@ -135,8 +135,16 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, d
 }
 
 // deliveryNoteItems lists the delivered lines.
-// The shipping charge is billed, not delivered, so it is left out.
+// The shipping charge is billed, not delivered, so it is left out. Its
+// address is where the goods go, so a line without its own prints it; the
+// stored lines are not touched.
 func deliveryNoteItems(items []PurchaseOrderItem) []dnItem {
+	fallback := ""
+	for _, it := range items {
+		if it.ItemType == "shipping" && filled(it.ShipDestination) {
+			fallback = *it.ShipDestination
+		}
+	}
 	out := make([]dnItem, 0, len(items))
 	for _, it := range items {
 		if it.ItemType == "shipping" {
@@ -146,8 +154,8 @@ func deliveryNoteItems(items []PurchaseOrderItem) []dnItem {
 		if it.UnitCode != nil {
 			unit = *it.UnitCode
 		}
-		ship := ""
-		if it.ShipDestination != nil {
+		ship := fallback
+		if filled(it.ShipDestination) {
 			ship = *it.ShipDestination
 		}
 		out = append(out, dnItem{

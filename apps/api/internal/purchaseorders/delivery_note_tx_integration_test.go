@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -62,7 +63,9 @@ func TestDeliveryNote_PrintsGoodsNotTheShippingCharge(t *testing.T) {
 	assert.Contains(t, text, vessel)
 	assert.Contains(t, text, "Restu Umar Singgih", "Attn is the quotation contact")
 	assert.NotContains(t, text, charge.ItemName, "the shipping charge is not a delivered line")
-	assert.NotContains(t, text, addr, "only the shipping line carried this destination")
+	// The goods line has no address of its own, so it prints the shipping
+	// line's as its Tujuan, once, and no charge row repeats it.
+	assert.Equal(t, 1, strings.Count(text, addr), "the goods line prints the shipping address")
 }
 
 // pdfText extracts the text layer.
