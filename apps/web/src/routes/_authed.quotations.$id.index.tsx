@@ -16,7 +16,7 @@ type QuotationSearch = {
   narahubung?: true
 }
 
-// Deep link from the PO gate.
+// Deep link from PO gate.
 //
 // ?narahubung=true opens Ganti Narahubung.
 export const Route = createFileRoute("/_authed/quotations/$id/")({
