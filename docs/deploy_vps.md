@@ -301,7 +301,7 @@ docker exec "$P-gns-minio-1" sh -c \
 | Task             | How                                                                                |
 | ---------------- | ---------------------------------------------------------------------------------- |
 | Redeploy         | bump `TAG=` in env, then **Deploy** in Dokploy UI                                  |
-| Rollback         | set `TAG=` back to previous version, **Deploy** (read section 14 first)            |
+| Rollback         | restore the pre-deploy snapshot, then set `TAG=` back (section 14; a tag alone breaks login from 00066) |
 | Logs             | Dokploy UI → Logs tab (per-service)                                                |
 | Backup, restore  | `docs/backup_restore.md`: nightly host timer, restore rehearsal, disaster restore  |
 | DB shell         | `docker exec -it "$P-gns-postgres-1" sh -c 'psql -U "$POSTGRES_USER" "$POSTGRES_DB"'` |
@@ -479,23 +479,84 @@ on boot. Fix the release, not the database.
 1. Start a backup now, not last night's:
    `systemctl start internalgns-backup.service`, and confirm `backup ok` in
    `journalctl`.
-2. Note the current `TAG`, which is the rollback target.
+2. Write down the current `TAG`, and pin the snapshot that backup just wrote
+   outside `daily/`, where retention would prune it after seven runs. Any
+   later snapshot, the nightly one included, already carries the new schema,
+   so the rollback target is this pair, not the tag alone:
 
-## 14. Rollback drill
+   ```bash
+   SNAP=$(ls -d /var/backups/internalgns/daily/*/ | tail -1)
+   cp -al "$SNAP" /var/backups/internalgns/predeploy-<new TAG>
+   ```
 
-Rehearse once before relying on it:
+From migration 00066 on, changing `TAG` back is not a rollback. 00066 makes
+`refresh_tokens.session_version` required, and v0.3.1 and every older image
+insert refresh tokens without it. On the migrated schema every login and
+token refresh fails (login returns 422), so nobody can sign in. Roll back
+with section 14.
+
+## 14. Rollback
+
+Migrations only go forward (goose), and an image older than the schema can
+break on it, as v0.3.1 does on 00066. Prefer a fix-up release. A rollback
+restores the snapshot noted in section 13 step 2 and deploys the old `TAG` on
+that database, so it discards everything written since that backup, filed
+invoices included. Step 2 keeps a copy of that work; operations decides how
+each document written after the deploy is handled, since a filed invoice is
+never restated.
 
 ```bash
-# in Dokploy UI:
-#   TAG = v0.3.1 (the previous release)
-#   Deploy
+set -a; . /etc/internalgns-backup.env; set +a
+SNAP=/var/backups/internalgns/predeploy-<failed TAG>/
+svc() { docker ps -q --filter label=com.docker.compose.project=$COMPOSE_PROJECT \
+  --filter label=com.docker.compose.service=$1; }
+PG=$(svc gns-postgres); MINIO=$(svc gns-minio)
+
+# 1. Stop the writers.
+docker stop $(svc api) $(svc frontend)
+
+# 2. Back up what the failed release wrote; confirm "backup ok" in journalctl.
+systemctl start internalgns-backup.service
+
+# 3. Empty what restore.sh refuses to overwrite: the database and the
+#    snapshot's buckets. The restore and the api's boot recreate buckets.
+DB=$(docker exec "$PG" printenv POSTGRES_DB)
+docker exec "$PG" sh -c 'dropdb -U "$POSTGRES_USER" "$POSTGRES_DB"'
+for b in $(ls "$SNAP/minio"); do
+  docker exec "$MINIO" sh -c 'mc alias set l http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && mc rb --force "l/$1"' sh "$b"
+done
+
+# 4. Restore; the last line reads "restore ok: ...".
+/opt/internalgns-ops/restore.sh "$SNAP" "$DB"
 ```
 
-Migrations are forward-only (goose), so rolling back the image rolls back
-code only, not schema. If a migration is incompatible with the previous image
-version, roll forward instead with a fix-up release, or restore the pre-deploy
-backup (`docs/backup_restore.md`, disaster restore) and deploy the previous
-`TAG` on it.
+5. In Dokploy set `TAG` to the tag noted in section 13 and **Deploy**. The
+   restored schema is the one that image last ran, so nothing migrates.
+6. Check `https://<API_HOST>/readyz`, log in, and open a quotation PDF and a
+   client logo. Login writes a refresh token, the insert a tag-only rollback
+   breaks.
+
+The database and the buckets now come from one snapshot, so the orphan-blob
+warning in `docs/backup_restore.md` does not apply to this restore.
+
+### Drill
+
+Rehearse once before the first deploy of a release that carries a new
+migration, on a separate stack, never on production: the steps drop the
+database and the buckets. Use the local `compose.prod.yml` setup from the
+rehearsal log in `docs/backup_restore.md`, with `COMPOSE_PROJECT` and
+`BACKUP_ROOT` pointed at it.
+
+1. Bring the stack up on the previous `TAG` and restore last night's
+   production snapshot into it (`docs/backup_restore.md`, disaster restore).
+2. Run `backup.sh` and pin its snapshot, as in section 13.
+3. Deploy the new `TAG`, log in, and create a quotation.
+4. Run steps 1 to 6 above, with `SNAP` at the pinned copy and `backup.sh`
+   in place of the systemd unit.
+
+The drill passes when login succeeds on the old `TAG` and the quotation from
+step 3 is gone. Login is the check that matters: it is what a tag-only
+rollback breaks.
 
 ## 15. Auto-redeploy (optional)
 
