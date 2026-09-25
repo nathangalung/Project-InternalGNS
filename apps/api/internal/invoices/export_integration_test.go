@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -86,6 +87,50 @@ func TestExport_PDF_Renders(t *testing.T) {
 	assert.True(t, bytes.HasPrefix(body, []byte("%PDF-")), "body is not a PDF")
 }
 
+// Stub xelatex writing a fixed PDF.
+// It goes first on PATH, so the write path runs where TeX is absent.
+func stubXelatex(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("bash stub unavailable on windows")
+	}
+	dir := t.TempDir()
+	script := `#!/usr/bin/env bash
+set -e
+outdir="."
+for arg in "$@"; do
+  case "$arg" in
+    -output-directory=*) outdir="${arg#-output-directory=}";;
+  esac
+done
+printf "%%PDF-1.4 stub\n" > "$outdir/doc.pdf"
+`
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "xelatex"), []byte(script), 0o755))
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+}
+
+// Rendered bytes reach the client.
+func TestExport_PDF_WritesRenderedBytes(t *testing.T) {
+	stubXelatex(t)
+	ctx, tx := testutil.BeginTx(t)
+	_, _, invID := deliveredPOWithInvoice(t, tx)
+	inv, err := invoices.NewRepo(tx, testutil.Store(t)).GetByID(ctx, invID)
+	require.NoError(t, err)
+
+	srv := exportServer(t, tx, templatesRoot(t))
+	res, err := srv.Client().Get(srv.URL + "/invoices/" + itoaInv(invID) + "/pdf")
+	require.NoError(t, err)
+	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+
+	require.Equal(t, http.StatusOK, res.StatusCode, string(body))
+	assert.Equal(t, "application/pdf", res.Header.Get("Content-Type"))
+	assert.Contains(t, res.Header.Get("Content-Disposition"),
+		`filename="`+pdfgen.SanitizeFilename(inv.InvoiceNo)+`.pdf"`)
+	assert.Equal(t, "%PDF-1.4 stub\n", string(body))
+}
+
 // Pre-write PDF failures are 500.
 func TestExport_PDF_Failures(t *testing.T) {
 	_, tx := testutil.BeginTx(t)
@@ -125,9 +170,7 @@ func (f *failingWriter) Write([]byte) (int, error) { return 0, errors.New("clien
 // Dropped connections are only logged.
 // The PDF headers are already out, so no error status can follow.
 func TestExport_PDF_WriteFailureIsLogged(t *testing.T) {
-	if _, err := exec.LookPath("xelatex"); err != nil {
-		t.Skip("xelatex unavailable")
-	}
+	stubXelatex(t)
 	_, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
 
