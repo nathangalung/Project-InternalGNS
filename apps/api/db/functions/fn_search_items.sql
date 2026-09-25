@@ -1,5 +1,5 @@
--- Canonical current body of fn_search_items (deployed by migration 00050).
-CREATE OR REPLACE FUNCTION public.fn_search_items(p_q text, p_min_score real DEFAULT 0.3, p_limit integer DEFAULT 10)
+-- Canonical current body of fn_search_items (deployed by migration 00068).
+CREATE OR REPLACE FUNCTION public.fn_search_items(p_q text, p_min_score real DEFAULT 0.3, p_limit integer DEFAULT 10, p_is_active boolean DEFAULT true)
  RETURNS TABLE(id bigint, name character varying, impa_code character varying, default_unit_id smallint, score real, match_tier text)
  LANGUAGE sql
  STABLE
@@ -27,7 +27,7 @@ AS $function$
         (similarity(COALESCE(i.impa_code,''), n.nq) * 0.80)::REAL
       ) AS combined_score
     FROM items i, normalized n
-    WHERE i.is_active = TRUE
+    WHERE (p_is_active IS NULL OR i.is_active = p_is_active)
       AND (
         i.name ILIKE n.pat
         OR i.impa_code ILIKE n.pat

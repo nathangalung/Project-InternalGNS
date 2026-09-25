@@ -243,17 +243,17 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 	eg, egCtx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		var err error
-		items, err = h.repo.Search(egCtx, q, minScore, searchLayerCap)
+		items, err = h.repo.SearchCatalog(egCtx, q, minScore, searchLayerCap, onlyActive)
 		return err
 	})
 	eg.Go(func() error {
 		var err error
-		offers, err = h.repo.SearchVendorOffers(egCtx, q, searchLayerCap)
+		offers, err = h.repo.SearchVendorOffers(egCtx, q, searchLayerCap, onlyActive)
 		return err
 	})
 	eg.Go(func() error {
 		var err error
-		requests, err = h.repo.SearchRequestHistory(egCtx, q, searchLayerCap)
+		requests, err = h.repo.SearchRequestHistory(egCtx, q, searchLayerCap, onlyActive)
 		return err
 	})
 	if err := eg.Wait(); err != nil {
@@ -265,9 +265,8 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 			"cap", searchLayerCap, "items", len(items), "offers", len(offers), "requests", len(requests))
 	}
 
-	// fn_search_items filters to active items, but the vendor-offer and
-	// request-history layers do not, so read the real flag and catalog identity
-	// per candidate (those layers carry no item name).
+	// Read the real flag and catalog identity per candidate; the vendor-offer
+	// and request-history layers carry no item name.
 	meta, err := h.repo.ItemMetaByIDs(ctx, candidateItemIDs(items, offers, requests))
 	if err != nil {
 		httperr.RenderDBErr(w, err)

@@ -180,6 +180,16 @@ func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int
 	return pgx.CollectRows(rows, pgx.RowToStructByName[SearchResult])
 }
 
+// SearchCatalog runs the name layer. A nil isActive keeps active and
+// inactive items alike.
+func (r *Repo) SearchCatalog(ctx context.Context, q string, minScore float32, limit int, isActive *bool) ([]SearchResult, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.search_catalog"), q, minScore, limit, isActive)
+	if err != nil {
+		return nil, err
+	}
+	return pgx.CollectRows(rows, pgx.RowToStructByName[SearchResult])
+}
+
 // ItemMeta is the real catalog identity for a merged search hit, used to set
 // the true is_active flag and to backfill name/impa/unit for hits that came
 // only from the vendor-offer or request-history layers.
@@ -270,8 +280,8 @@ func (r *Repo) SuggestSellingPrices(ctx context.Context, itemID int64, limit int
 }
 
 // SearchVendorOffers runs the VENDOR_OFFER tier query.
-func (r *Repo) SearchVendorOffers(ctx context.Context, q string, limit int) ([]VendorOfferHit, error) {
-	rows, err := r.db.Query(ctx, r.store.Get("items.search_vendor_offers"), q, limit)
+func (r *Repo) SearchVendorOffers(ctx context.Context, q string, limit int, isActive *bool) ([]VendorOfferHit, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.search_vendor_offers"), q, limit, isActive)
 	if err != nil {
 		return nil, err
 	}
@@ -279,8 +289,8 @@ func (r *Repo) SearchVendorOffers(ctx context.Context, q string, limit int) ([]V
 }
 
 // SearchRequestHistory runs the REQUEST_HISTORY tier query.
-func (r *Repo) SearchRequestHistory(ctx context.Context, q string, limit int) ([]RequestHistoryHit, error) {
-	rows, err := r.db.Query(ctx, r.store.Get("items.search_request_history"), q, limit)
+func (r *Repo) SearchRequestHistory(ctx context.Context, q string, limit int, isActive *bool) ([]RequestHistoryHit, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.search_request_history"), q, limit, isActive)
 	if err != nil {
 		return nil, err
 	}

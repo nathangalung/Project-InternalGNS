@@ -76,11 +76,16 @@ JOIN vendors v ON v.id = ins.vendor_id;
 -- name: items.search
 SELECT * FROM fn_search_items($1, $2, $3);
 
+-- name: items.search_catalog
+-- Name layer of search-advanced. $4 is the isActive filter; NULL keeps
+-- active and inactive items alike.
+-- $1=query, $2=min score, $3=limit, $4=is_active
+SELECT * FROM fn_search_items($1, $2, $3, $4::boolean);
+
 -- name: items.active_flags_by_ids
 -- Advanced-search enrichment: real is_active plus catalog identity per merged
--- hit. fn_search_items only returns active items, but the vendor-offer and
--- request-history layers can surface a deactivated item (and carry no name),
--- so we backfill name/impa/unit for hits those layers produced.
+-- hit. The vendor-offer and request-history layers carry no item name, so we
+-- backfill name/impa/unit for hits those layers produced.
 -- $1=item ids
 SELECT id, is_active, name, impa_code, default_unit_id
 FROM items
@@ -165,7 +170,7 @@ FROM fn_suggest_selling_prices($1, $2);
 -- name: items.search_vendor_offers
 -- VENDOR_OFFER layer: search by vendor SKU and vendor name.
 -- Returns matched item id w/ score 0..1. Powers "find product by vendor offer".
--- $1=query, $2=limit
+-- $1=query, $2=limit, $3=item is_active, NULL for both
 WITH q AS (
     SELECT
         lower(trim($1::text)) AS nq,
@@ -187,6 +192,7 @@ WITH q AS (
         ) AS score
     FROM vendor_products vp
     JOIN vendors v ON v.id = vp.vendor_id AND v.is_active = TRUE
+    JOIN items i ON i.id = vp.item_id AND ($3::boolean IS NULL OR i.is_active = $3)
     CROSS JOIN q
     WHERE vp.is_active = TRUE
       AND (
@@ -213,7 +219,7 @@ LIMIT $2;
 -- name: items.search_request_history
 -- REQUEST_HISTORY layer: search past klien request texts (item_request_matches).
 -- Returns matched item_id from cached confirmed matches.
--- $1=query, $2=limit
+-- $1=query, $2=limit, $3=item is_active, NULL for both
 WITH q AS (
     SELECT
         lower(trim($1::text)) AS nq,
@@ -231,6 +237,7 @@ SELECT
         word_similarity(q.nq, irm.request_text)
     )::real AS score
 FROM item_request_matches irm
+JOIN items i ON i.id = irm.matched_item_id AND ($3::boolean IS NULL OR i.is_active = $3)
 CROSS JOIN q
 WHERE irm.matched_item_id IS NOT NULL
   AND (

@@ -99,11 +99,11 @@ func TestRepo_SearchTiers_EscapeLikeWildcards(t *testing.T) {
 	repo := items.NewRepo(tx, testutil.Store(t))
 
 	for _, q := range []string{"%", "_", `\`} {
-		offers, err := repo.SearchVendorOffers(ctx, q, 50)
+		offers, err := repo.SearchVendorOffers(ctx, q, 50, nil)
 		require.NoError(t, err, "vendor offers q=%q", q)
 		assert.Empty(t, offers, "vendor offers q=%q", q)
 
-		history, err := repo.SearchRequestHistory(ctx, q, 50)
+		history, err := repo.SearchRequestHistory(ctx, q, 50, nil)
 		require.NoError(t, err, "request history q=%q", q)
 		assert.Empty(t, history, "request history q=%q", q)
 	}
