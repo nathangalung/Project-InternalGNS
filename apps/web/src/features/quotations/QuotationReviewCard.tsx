@@ -62,11 +62,11 @@ const STATUS_LABEL: Record<QuotationMatchStatus, string> = {
 
 const draftInput = "rounded-[4px] border border-[#E5E7EB] p-1.5 text-xs"
 
-const STATUS_COLOR: Record<QuotationMatchStatus, { bg: string; fg: string }> = {
-  pending: { bg: "rgba(245, 158, 11, 0.1)", fg: "#B45309" },
-  matched: { bg: "rgba(16, 185, 129, 0.1)", fg: "#059669" },
-  substituted: { bg: "rgba(59, 130, 246, 0.1)", fg: "#1D4ED8" },
-  unavailable: { bg: "rgba(239, 68, 68, 0.1)", fg: "#DC2626" },
+const STATUS_COLOR: Record<QuotationMatchStatus, string> = {
+  pending: "bg-[rgba(245,158,11,0.1)] text-[#B45309]",
+  matched: "bg-[rgba(16,185,129,0.1)] text-[#059669]",
+  substituted: "bg-[rgba(59,130,246,0.1)] text-[#1D4ED8]",
+  unavailable: "bg-[rgba(239,68,68,0.1)] text-[#DC2626]",
 }
 
 export default function QuotationReviewCard({ quotationId }: QuotationReviewCardProps) {
@@ -251,7 +251,6 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
               </thead>
               <tbody>
                 {rows.map((r) => {
-                  const color = STATUS_COLOR[r.matchStatus]
                   return (
                     <tr key={r.id} className="border-b border-[#F3F4F6]">
                       <td className="p-2 font-semibold">{r.lineNo}</td>
@@ -264,8 +263,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                           value={r.matchStatus}
                           onChange={(e) => changeStatus(r, e.target.value as QuotationMatchStatus)}
                           aria-label={`Status baris ${r.lineNo}`}
-                          className="rounded-[4px] border border-[#E5E7EB] px-2 py-1 text-[11px] font-semibold"
-                          style={{ background: color.bg, color: color.fg }}
+                          className={`rounded-[4px] border border-[#E5E7EB] px-2 py-1 text-[11px] font-semibold ${STATUS_COLOR[r.matchStatus]}`}
                         >
                           {(Object.keys(STATUS_LABEL) as QuotationMatchStatus[]).map((s) => (
                             <option key={s} value={s}>
