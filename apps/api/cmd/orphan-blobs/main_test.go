@@ -10,7 +10,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Every stored invoice key is referenced.
+// Invoice keys are all referenced.
 // A payment proof lives in the attachment bucket, so a sweep that only knew
 // attachment_object_key would purge every proof.
 func TestLoadReferences_InvoiceBucketKeepsProofs(t *testing.T) {

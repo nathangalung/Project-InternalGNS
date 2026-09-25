@@ -8,9 +8,10 @@ import (
 	"testing"
 )
 
-// Every store.Get("pkg.name") literal must be a RequiredKey. This replaces the
-// hand-maintained ledger's blind spot: adding a query and forgetting to list it
-// fails here instead of panicking in a handler on the first request.
+// storeGetKey finds store.Get literals.
+// Every store.Get("pkg.name") literal must be a RequiredKey. This replaces
+// the hand-maintained ledger's blind spot: adding a query and forgetting to
+// list it fails here instead of panicking in a handler on the first request.
 var storeGetKey = regexp.MustCompile(`store\.Get\("([a-z0-9_]+\.[a-z0-9_]+)"`)
 
 func TestRequiredKeys_CoverAllStoreGetCallSites(t *testing.T) {

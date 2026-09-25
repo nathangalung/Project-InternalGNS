@@ -1,4 +1,4 @@
-// Command covercheck gates per-package statement coverage.
+// Command covercheck gates package coverage.
 //
 // It reads one merged profile from `go test -coverpkg=./... -coverprofile`,
 // counts every block once even though each test binary repeats it, and
@@ -63,7 +63,8 @@ func main() {
 	}
 }
 
-// errGate marks a failed gate, as opposed to an I/O error.
+// errGate marks a failed gate.
+// It is distinct from an I/O error.
 var errGate = errors.New("coverage gate failed")
 
 func run(w io.Writer, profilePath, thresholdPath, gomodPath string) error {
@@ -93,7 +94,7 @@ func run(w io.Writer, profilePath, thresholdPath, gomodPath string) error {
 	return nil
 }
 
-// readModule returns the module path in go.mod.
+// readModule reads go.mod's module path.
 func readModule(p string) (string, error) {
 	b, err := os.ReadFile(p) //nolint:gosec // operator-supplied path
 	if err != nil {
@@ -107,7 +108,8 @@ func readModule(p string) (string, error) {
 	return "", fmt.Errorf("no module line in %s", p)
 }
 
-// readThresholds parses "<pkg> <min>" and "exclude <pattern>" lines.
+// readThresholds parses the thresholds file.
+// Lines are "<pkg> <min>" or "exclude <pattern>".
 func readThresholds(p string) (thresholds, error) {
 	b, err := os.ReadFile(p) //nolint:gosec // operator-supplied path
 	if err != nil {
@@ -158,7 +160,8 @@ type block struct {
 	covered    bool
 }
 
-// parseProfile merges duplicate blocks and totals them per package.
+// parseProfile totals blocks per package.
+// Duplicate blocks merge first.
 func parseProfile(r io.Reader, module string) (map[string]pkgCover, error) {
 	blocks := map[blockKey]block{}
 	sc := bufio.NewScanner(r)
@@ -209,7 +212,7 @@ func parseProfile(r io.Reader, module string) (map[string]pkgCover, error) {
 	return out, nil
 }
 
-// excluded reports whether pkg matches any pattern.
+// excluded matches pkg against patterns.
 // A trailing "/..." matches the directory and everything below it.
 func excluded(pkg string, patterns []string) bool {
 	for _, p := range patterns {
@@ -226,7 +229,8 @@ func excluded(pkg string, patterns []string) bool {
 	return false
 }
 
-// evaluate classifies every measured and every tiered package.
+// evaluate classifies every package.
+// That covers every measured and every tiered package.
 func evaluate(cover map[string]pkgCover, th thresholds) []row {
 	seen := map[string]bool{}
 	var rows []row
@@ -258,7 +262,8 @@ func evaluate(cover map[string]pkgCover, th thresholds) []row {
 	return rows
 }
 
-// report renders the table and returns the failure count.
+// report renders the table.
+// It returns the failure count.
 func report(rows []row) (string, int) {
 	var b strings.Builder
 	failed := 0
@@ -281,7 +286,8 @@ func report(rows []row) (string, int) {
 	return b.String(), failed
 }
 
-// floor1 truncates to one decimal so 97.96 never prints as 98.0.
+// floor1 truncates to one decimal.
+// 97.96 thus never prints as 98.0.
 func floor1(v float64) float64 {
 	return float64(int(v*10)) / 10
 }

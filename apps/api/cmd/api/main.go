@@ -74,7 +74,8 @@ func main() {
 	}
 }
 
-// probeReadyz GETs the local readiness endpoint for the container healthcheck.
+// probeReadyz backs the container healthcheck.
+// It GETs the local readiness endpoint.
 // Returns 0 when ready, 1 otherwise, without loading config or the DB.
 func probeReadyz() int {
 	addr := os.Getenv("HTTP_ADDR")

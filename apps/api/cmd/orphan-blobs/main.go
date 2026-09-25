@@ -1,4 +1,5 @@
-// orphan-blobs sweeps MinIO keys not referenced by any DB row.
+// orphan-blobs sweeps unreferenced MinIO keys.
+// A key is an orphan when no DB row references it.
 // Use --dry-run (default true) to list orphans without deleting.
 package main
 
@@ -23,7 +24,8 @@ type bucketSpec struct {
 	query  string
 }
 
-// Each bucket maps to every DB column referencing its object keys.
+// specs maps buckets to columns.
+// Each bucket lists every DB column referencing its object keys.
 var specs = []bucketSpec{
 	{storage.BucketPODocs, "SELECT file_url FROM purchase_orders WHERE file_url IS NOT NULL"},
 	{storage.BucketClientLogos, "SELECT logo_object_key FROM company_client WHERE logo_object_key IS NOT NULL"},

@@ -70,7 +70,7 @@ func child(t *testing.T, env bootEnv, out *bytes.Buffer, args ...string) *exec.C
 	return cmd
 }
 
-// exitCode waits and returns the status.
+// exitCode waits for the status.
 func exitCode(t *testing.T, cmd *exec.Cmd, timeout time.Duration) int {
 	t.Helper()
 	done := make(chan error, 1)
@@ -145,7 +145,7 @@ func get(url string) (int, error) {
 	return res.StatusCode, nil
 }
 
-// Bootstrap migrates, seeds and exits cleanly.
+// Bootstrap migrates, seeds, exits cleanly.
 func TestBoot_Bootstrap(t *testing.T) {
 	env := newEnv(t)
 	code, out := run(t, env, "-bootstrap")

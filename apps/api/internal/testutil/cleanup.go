@@ -6,7 +6,8 @@ import (
 	"testing"
 )
 
-// FK-safe delete plan per tracked table.
+// cleanupPlan orders FK-safe deletes.
+// There is one step per tracked table.
 var cleanupPlan = []struct {
 	key   string
 	stmts []string
@@ -36,7 +37,7 @@ var cleanupPlan = []struct {
 	}},
 }
 
-// Cleaner deletes rows an acceptance suite created.
+// Cleaner deletes rows suites created.
 //
 // Acceptance suites drive the real HTTP server against the shared dev
 // database, so every scenario leaves master data behind. Rows are tracked
@@ -60,13 +61,13 @@ func NewCleaner(t testing.TB) *Cleaner {
 	return c
 }
 
-// Client tracks a created company_client row.
+// Client tracks a company_client row.
 func (c *Cleaner) Client(id int64) { c.add("company_client", id) }
 
-// Item tracks a created items row.
+// Item tracks an items row.
 func (c *Cleaner) Item(id int64) { c.add("items", id) }
 
-// Vendor tracks a created vendors row.
+// Vendor tracks a vendors row.
 func (c *Cleaner) Vendor(id int64) { c.add("vendors", id) }
 
 // Quotation tracks a quotation tree.
@@ -76,7 +77,7 @@ func (c *Cleaner) Vendor(id int64) { c.add("vendors", id) }
 // must track each revision too.
 func (c *Cleaner) Quotation(id int64) { c.add("quotations", id) }
 
-// User tracks a created users row.
+// User tracks a users row.
 func (c *Cleaner) User(id int64) { c.add("users", id) }
 
 func (c *Cleaner) add(key string, id int64) {
@@ -88,7 +89,8 @@ func (c *Cleaner) add(key string, id int64) {
 	c.ids[key] = append(c.ids[key], id)
 }
 
-// Delete tracked rows without masking failures.
+// run deletes tracked rows.
+// Failures are never masked.
 func (c *Cleaner) run(t testing.TB) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -111,7 +113,8 @@ func (c *Cleaner) run(t testing.TB) {
 	}
 }
 
-// Log once the test already failed, else fail.
+// reportCleanupErr logs or fails.
+// It only logs once the test already failed.
 func reportCleanupErr(t testing.TB, format string, args ...any) {
 	if t.Failed() {
 		t.Logf(format, args...)

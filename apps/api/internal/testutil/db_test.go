@@ -28,7 +28,7 @@ func TestDSN_IgnoresDatabaseURL(t *testing.T) {
 	}
 }
 
-// Only test database names are resettable.
+// Only test databases reset.
 func TestIsTestDatabaseName(t *testing.T) {
 	cases := []struct {
 		name string

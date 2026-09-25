@@ -147,7 +147,7 @@ func DashboardServer(t testing.TB) *httptest.Server {
 	return DashboardServerAs(t, "superadmin")
 }
 
-// DashboardServerAs wires dashboard routes with a role.
+// DashboardServerAs wires dashboard as role.
 func DashboardServerAs(t testing.TB, role string) *httptest.Server {
 	t.Helper()
 	pool := Pool(t)
@@ -207,7 +207,8 @@ func UsersServer(t testing.TB, userID int64) *httptest.Server {
 	return srv
 }
 
-// FullServer wires quotation, PO, and invoice routes.
+// FullServer wires the document routes.
+// Quotation, PO and invoice routes share one server.
 func FullServer(t testing.TB, userID int64) *httptest.Server {
 	t.Helper()
 	pool := Pool(t)
@@ -243,7 +244,8 @@ func FaultyServer(t testing.TB, userID int64, mount func(chi.Router, deps.Deps))
 // ErrNotTestDatabase blocks a destructive reset.
 var ErrNotTestDatabase = errors.New("refusing to truncate a non-test database")
 
-// Refuse a reset outside a test database.
+// requireTestDatabase guards resets.
+// A reset outside a test database is refused.
 //
 // The pool DSN is not enough: a stray TEST_DATABASE_URL can still point at
 // the dev database, so ask the connection which database it is on.
