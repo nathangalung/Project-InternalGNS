@@ -16,7 +16,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// fakeProofs is an in-memory object store.
+// fakeProofs stores objects in memory.
 type fakeProofs struct {
 	keys  map[string]bool
 	err   error
@@ -28,7 +28,7 @@ func (f *fakeProofs) ObjectExists(_ context.Context, bucket, key string) (bool, 
 	return f.keys[key], f.err
 }
 
-// A payment only records a proof that was uploaded.
+// Payment records only uploaded proofs.
 // The checks run before the database, which FaultyServer makes fail, so a
 // 500 on the "uploaded" row means the proof passed and the repo was reached.
 func TestHandler_ChangeStatus_ProofMustExist(t *testing.T) {
@@ -105,7 +105,7 @@ func TestHandler_ChangeStatus_ProofMustExist(t *testing.T) {
 	}
 }
 
-// Paying without a proof needs no storage.
+// No proof means no storage.
 func TestHandler_ChangeStatus_NoProofSkipsStorage(t *testing.T) {
 	srv := testutil.FaultyServer(t, seedUserID, func(r chi.Router, d deps.Deps) {
 		r.Mount("/invoices", invoices.RoutesWithProofs(d, nil))

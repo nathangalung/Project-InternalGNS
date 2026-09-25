@@ -12,8 +12,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// A cancelled invoice is corrected by a Pengganti invoice for the same PO,
-// with its own number and the same billed amounts.
+// Pengganti corrects a cancelled invoice.
+// It bills the same PO and amounts under its own number.
 func TestRepo_Replace_CancelledInvoice(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	qid, poID, oldID := deliveredPOWithInvoice(t, tx)
@@ -55,7 +55,7 @@ func TestRepo_Replace_CancelledInvoice(t *testing.T) {
 	assert.Equal(t, det.ID, *after.ReplacedByInvoiceID)
 }
 
-// Only a cancelled, not yet replaced invoice can be replaced.
+// Only unreplaced cancelled invoices qualify.
 func TestRepo_Replace_Refusals(t *testing.T) {
 	cases := []struct {
 		name     string
@@ -99,7 +99,8 @@ func TestRepo_Replace_NotFound(t *testing.T) {
 	assert.ErrorIs(t, err, invoices.ErrNotFound)
 }
 
-// One live invoice per PO stays a schema invariant; cancelled ones do not count.
+// One live invoice per PO.
+// The schema enforces it; cancelled ones do not count.
 func TestSchema_OneLiveInvoicePerPO(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID, invID := deliveredPOWithInvoice(t, tx)

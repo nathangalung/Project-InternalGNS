@@ -10,8 +10,9 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Terlambat follows the due date, so asking for it only confirms what the
-// due date already says: past due is a no-op, not yet due is refused.
+// Terlambat follows the due date.
+// Asking for it only confirms what the due date already says: past due is a
+// no-op, not yet due is refused.
 func TestRepo_ChangeStatus_OverdueIsDerived(t *testing.T) {
 	cases := []struct {
 		name       string

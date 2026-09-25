@@ -2,7 +2,7 @@ package invoices
 
 import "context"
 
-// Test seam for the PDF totals block.
+// PDF totals block test seam.
 // exportData is unexported and testutil imports this package, so the
 // integration assertions live in invoices_test and reach buildData here.
 type PDFTotalsForTest struct {
@@ -14,7 +14,7 @@ type PDFTotalsForTest struct {
 	LineAmounts    []string
 }
 
-// Totals block as it will be printed.
+// Totals block as printed.
 func (h *ExportHandler) PDFTotalsForTest(
 	ctx context.Context, inv Invoice, items []InvoiceItem,
 ) PDFTotalsForTest {

@@ -30,7 +30,7 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 	return &Repo{db: exec, store: store}
 }
 
-// sortable is the closed set of invoice sort keys.
+// sortable lists invoice sort keys.
 var sortable = listq.Whitelist{
 	Default: "id",
 	Columns: map[string]listq.Column{
@@ -47,7 +47,7 @@ var sortable = listq.Whitelist{
 	},
 }
 
-// tiebreak keeps paging stable when the sort key ties.
+// tiebreak keeps paging stable.
 var tiebreak = listq.Column{Expr: "inv.id", Dir: listq.Desc}
 
 // filterableEffective keeps the known values.
@@ -64,7 +64,7 @@ func filterableEffective(raw []string) []string {
 	return out
 }
 
-// List returns invoices with filter/sort and total count.
+// List pages invoices with total.
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
@@ -151,12 +151,14 @@ func (r *Repo) GetByQuotation(ctx context.Context, quotationID int64) (Invoice, 
 	return inv, err
 }
 
-// GetDetail returns the invoice with its client, quotation and PO header.
+// GetDetail returns invoice plus header.
+// The header covers its client, quotation and PO.
 func (r *Repo) GetDetail(ctx context.Context, id int64) (InvoiceDetail, error) {
 	return r.detail(ctx, "invoices.get_detail_by_id", id)
 }
 
-// GetDetailByQuotation is GetDetail keyed by the quotation the screen routes on.
+// GetDetailByQuotation keys GetDetail by quotation.
+// The invoice screen routes on the quotation id.
 func (r *Repo) GetDetailByQuotation(ctx context.Context, quotationID int64) (InvoiceDetail, error) {
 	return r.detail(ctx, "invoices.get_detail_by_quotation", quotationID)
 }
@@ -207,7 +209,8 @@ func (r *Repo) ListItems(ctx context.Context, invoiceID int64) ([]InvoiceItem, e
 	return pgx.CollectRows(rows, pgx.RowToStructByName[InvoiceItem])
 }
 
-// ListItemsBulk groups the line items of many invoices in one round-trip.
+// ListItemsBulk groups many invoices' lines.
+// It takes one round-trip.
 // Invoices with no lines are absent from the map, matching what ListItems
 // returns empty for.
 func (r *Repo) ListItemsBulk(ctx context.Context, ids []int64) (map[int64][]InvoiceItem, error) {
@@ -268,7 +271,7 @@ func (r *Repo) confirmOverdue(ctx context.Context, id int64) error {
 	return nil
 }
 
-// Single ERRCODE to domain error table for this slice.
+// classifyPgErr maps ERRCODEs to errors.
 // Codes are assigned by migration 00046; P0012 invalid transitions and P0014
 // validation raises pass through so httperr renders them as 422 with the
 // raise message, which is what the invoice contract already returned.
@@ -291,7 +294,7 @@ func (r *Repo) Summary(ctx context.Context) (Summary, error) {
 	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Summary])
 }
 
-// UpdateAttachment writes the MinIO object key for an invoice attachment.
+// UpdateAttachment stores the attachment key.
 // No row_version guard — attachments are administrative metadata, not part
 // of the invoice numbers contract.
 func (r *Repo) UpdateAttachment(ctx context.Context, id int64, objectKey string, actorID int64) error {
@@ -305,7 +308,7 @@ func (r *Repo) UpdateAttachment(ctx context.Context, id int64, objectKey string,
 	return nil
 }
 
-// UpdateDates writes dates with optimistic-lock guard via row_version.
+// UpdateDates writes dates under row_version.
 // Returns new row_version on success. A refusal reports, in order,
 // ErrNotFound when the row is gone, ErrDatesLocked when the invoice is filed,
 // ErrDueBeforeInvoice when the due date would precede the invoice date, and
@@ -345,7 +348,7 @@ func (r *Repo) UpdateDates(ctx context.Context, id int64, req UpdateDatesRequest
 	return 0, ErrVersionMismatch
 }
 
-// isDateEditable mirrors the guard in invoices.update_dates.
+// isDateEditable mirrors invoices.update_dates.
 func isDateEditable(s Status) bool {
 	return s != StatusPaid && s != StatusCancelled
 }

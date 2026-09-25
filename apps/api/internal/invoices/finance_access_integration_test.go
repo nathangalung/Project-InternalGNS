@@ -25,7 +25,7 @@ import (
 
 const accessTestSecret = "invoice-access-test-secret"
 
-// bearerFor mints a token the real router accepts.
+// bearerFor mints a router token.
 func bearerFor(t *testing.T, userID int64, role users.Role) string {
 	t.Helper()
 	now := time.Now()
@@ -45,8 +45,9 @@ func bearerFor(t *testing.T, userID int64, role users.Role) string {
 	return "Bearer " + signed
 }
 
+// Finance passes every invoice call.
 // The invoice page runs on finance credentials through the real router, so
-// every call it makes must pass RBAC without the quotation or PO subtrees.
+// no call it makes may need the quotation or PO subtrees.
 func TestRouter_FinanceWorksTheInvoicePage(t *testing.T) {
 	ctx := context.Background()
 	pool := testutil.Pool(t)

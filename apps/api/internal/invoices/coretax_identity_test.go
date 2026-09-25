@@ -36,8 +36,9 @@ func TestNormalizeNPWP(t *testing.T) {
 	}
 }
 
-// An Indonesian buyer must be filed with a real NPWP; labelling them a
-// passport holder files a tax invoice DJP cannot match to the buyer.
+// Indonesian buyers need an NPWP.
+// Labelling them a passport holder files a tax invoice DJP cannot match to
+// the buyer.
 func TestValidateBuyerIdentity(t *testing.T) {
 	t.Parallel()
 	ptr := func(s string) *string { return &s }
@@ -68,7 +69,8 @@ func TestValidateBuyerIdentity(t *testing.T) {
 	}
 }
 
-// A printed NPWP must reach Coretax as the 16 digits it validates.
+// Printed NPWP reaches Coretax normalized.
+// Coretax validates the bare 16 digits.
 func TestCoretaxInvoiceFor_EmitsNormalizedTin(t *testing.T) {
 	t.Parallel()
 	npwp := "01.234.567.89.012.345"

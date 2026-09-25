@@ -14,7 +14,7 @@ import (
 
 func sptr(s string) *string { return &s }
 
-// loadTemplate reads the bundled DJP workbook from the repo.
+// loadTemplate reads the bundled workbook.
 func loadTemplate(t *testing.T) []byte {
 	t.Helper()
 	b, err := os.ReadFile("../../templates/documents/coretax/coretax_export_2026.xlsx")

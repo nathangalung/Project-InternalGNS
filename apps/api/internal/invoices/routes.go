@@ -20,23 +20,24 @@ const (
 	attachmentUploadExpiry   = 15 * time.Minute
 	attachmentDownloadExpiry = 1 * time.Hour
 
-	// One folder per invoice; proofs keep a sub-folder, so an attachment
-	// never passes as a proof or the other way round.
+	// One folder per invoice.
+	// Proofs keep a sub-folder, so an attachment never passes as a proof or the
+	// other way round.
 	keyPrefix   = "invoices"
 	proofKeySub = "payment"
 )
 
-// ProofStore confirms an uploaded proof exists.
+// ProofStore confirms uploaded proofs exist.
 type ProofStore interface {
 	ObjectExists(ctx context.Context, bucket, key string) (bool, error)
 }
 
-// proofFolder is where an invoice's proofs live.
+// proofFolder locates invoice proofs.
 func proofFolder(id int64) string {
 	return storage.OwnerFolder(keyPrefix, id, proofKeySub)
 }
 
-// Routes mounts the invoice API on the configured storage.
+// Routes mounts the invoice API.
 func Routes(d deps.Deps) chi.Router {
 	// A nil client must stay a nil interface.
 	var proofs ProofStore
@@ -46,7 +47,7 @@ func Routes(d deps.Deps) chi.Router {
 	return RoutesWithProofs(d, proofs)
 }
 
-// RoutesWithProofs takes the proof store explicitly.
+// RoutesWithProofs injects the proof store.
 // Tests pass a fake; production goes through Routes.
 func RoutesWithProofs(d deps.Deps, proofs ProofStore) chi.Router {
 	r := chi.NewRouter()
@@ -93,7 +94,7 @@ func RoutesWithProofs(d deps.Deps, proofs ProofStore) chi.Router {
 	return r
 }
 
-// attachmentAsset describes the invoice attachment routes.
+// attachmentAsset describes attachment routes.
 func attachmentAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
 	return assetproxy.Descriptor{
 		Storage:     sc,
@@ -144,7 +145,7 @@ func paymentProofAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
 	return d
 }
 
-// assetErr maps the package sentinel onto the shared one.
+// assetErr maps onto shared sentinels.
 func assetErr(err error) error {
 	if errors.Is(err, ErrNotFound) {
 		return assetproxy.ErrNotFound

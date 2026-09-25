@@ -23,7 +23,7 @@ var coretaxSettings = deps.CoretaxSettings{
 	SellerIDTKU: "9999999999999999000000",
 }
 
-// exportCoretaxXML calls the XML export the way chi routes it.
+// exportCoretaxXML calls the routed export.
 func exportCoretaxXML(t *testing.T, tx pgx.Tx, invoiceID int64) *httptest.ResponseRecorder {
 	t.Helper()
 	store := testutil.Store(t)
@@ -40,8 +40,9 @@ func exportCoretaxXML(t *testing.T, tx pgx.Tx, invoiceID int64) *httptest.Respon
 	return rec
 }
 
+// Export needs an Indonesian NPWP.
 // Filing an Indonesian buyer as a passport holder produces a tax invoice DJP
-// cannot match to the buyer, so the export refuses instead.
+// cannot match to the buyer.
 func TestCoretaxExport_RefusesIndonesianBuyerWithoutNPWP(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)

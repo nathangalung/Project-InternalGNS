@@ -18,6 +18,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
+// Cancelled invoices are never filed.
 // A cancelled invoice is void: filing it would report a sale that did not
 // happen, and next to its Pengganti it would report the sale twice.
 func TestCoretaxExport_RefusesCancelledInvoice(t *testing.T) {

@@ -108,7 +108,7 @@ func (s *scenarioState) authenticatedUser(id int64) error {
 
 func (s *scenarioState) emptyDomain() error { return s.reset() }
 
-// Walk quotation to delivered PO, materialize invoice.
+// Walk quotation to invoiced PO.
 func (s *scenarioState) deliveredPurchaseOrder() error {
 	return s.deliverLine(quotations.CreateItem{
 		RequestedName: "Test Product",
@@ -248,8 +248,9 @@ func (s *scenarioState) invoiceStatusEquals(want string) error {
 	return nil
 }
 
+// Detail carries the header itself.
 // The invoice screen runs on finance credentials, which cannot read
-// quotations or purchase orders, so the header must arrive from here.
+// quotations or purchase orders.
 func (s *scenarioState) invoiceDetailCarriesHeader() error {
 	var det invoices.InvoiceDetail
 	if err := json.Unmarshal(s.body, &det); err != nil {
@@ -353,14 +354,14 @@ func (s *scenarioState) cancelWithReason(reason string) error {
 	return s.sendRequest(http.MethodPatch, "/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/status", body)
 }
 
-// memProofs is an in-memory proof store.
+// memProofs stores proofs in memory.
 type memProofs map[string]bool
 
 func (m memProofs) ObjectExists(_ context.Context, _, key string) (bool, error) {
 	return m[key], nil
 }
 
-// markPaidWithProof pays with a proof key.
+// markPaidWithProof pays by proof key.
 // FullServer has no storage, so the PATCH goes to a router whose proof store
 // holds the key only when the upload happened.
 func (s *scenarioState) markPaidWithProof(uploaded bool) error {
@@ -486,7 +487,7 @@ func (s *scenarioState) replaceInvoice() error {
 	return s.sendRequest(http.MethodPost, "/invoices/"+strconv.FormatInt(s.invoiceID, 10)+"/replacement", nil)
 }
 
-// The replacement is a new Pengganti invoice linked to the cancelled one.
+// Pengganti links the cancelled invoice.
 func (s *scenarioState) invoiceIsPengganti() error {
 	var det invoices.InvoiceDetail
 	if err := json.Unmarshal(s.body, &det); err != nil {

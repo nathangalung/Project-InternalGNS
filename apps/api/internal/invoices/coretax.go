@@ -16,7 +16,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 )
 
-// CoretaxHandler renders the DJP e-faktur XML payload.
+// CoretaxHandler renders e-faktur XML.
 //
 // Schema reference: "Manual Book of CoreTax: Export Faktur Pajak Keluaran"
 // (Direktorat Jenderal Pajak / imamatek). Root element `TaxInvoiceBulk` carries
@@ -148,7 +148,8 @@ func (h *CoretaxHandler) buildBulk(inv Invoice, items []InvoiceItem, client clie
 	}
 }
 
-// coretaxInvoiceFor maps one invoice + its items + buyer into a TaxInvoice.
+// coretaxInvoiceFor builds one TaxInvoice.
+// It maps an invoice, its items and the buyer.
 // Shared by the single-invoice XML export and the bulk XLSX export so the
 // field derivation lives in one place.
 func coretaxInvoiceFor(settings deps.CoretaxSettings, inv Invoice, items []InvoiceItem, client clients.Client) coretaxTaxInvoice {
@@ -201,7 +202,7 @@ func coretaxInvoiceFor(settings deps.CoretaxSettings, inv Invoice, items []Invoi
 	}
 }
 
-// buildGoodService maps an invoice line to the Coretax `GoodService` element.
+// buildGoodService maps one invoice line.
 //
 // DB stores `goods_or_service` as 'B' (Barang / product) or 'J' (Jasa / shipping
 // service). Coretax XML `<Opt>` uses 'A' for Barang and 'B' for Jasa — the
@@ -255,14 +256,14 @@ func lineGrossAndDiscount(it InvoiceItem) (string, string) {
 	return price, disc.String()
 }
 
-// npwpDigits is the NPWP length Coretax accepts for an Indonesian buyer.
+// npwpDigits is Coretax's NPWP length.
 const npwpDigits = 16
 
-// ErrBuyerIdentity marks a buyer Coretax would reject.
+// ErrBuyerIdentity marks an unfileable buyer.
 var ErrBuyerIdentity = errors.New("coretax buyer identity invalid")
 
-// normalizeNPWP drops the separators DJP prints and reports whether what is
-// left is a full-length NPWP.
+// normalizeNPWP strips NPWP separators.
+// It also reports whether the digits left make a full-length NPWP.
 func normalizeNPWP(raw string) (string, bool) {
 	var b strings.Builder
 	for _, r := range raw {
@@ -278,13 +279,15 @@ func normalizeNPWP(raw string) (string, bool) {
 	return out, len(out) == npwpDigits
 }
 
-// isIndonesianBuyer treats a blank country as IDN, as the XML default does.
+// isIndonesianBuyer reads blank as IDN.
+// That matches the XML default.
 func isIndonesianBuyer(c clients.Client) bool {
 	return c.CountryCode == "" || strings.EqualFold(c.CountryCode, "IDN")
 }
 
-// buyerTin emits an Indonesian NPWP as the digits Coretax validates and
-// leaves a foreign buyer's own tax id untouched.
+// buyerTin picks the buyer's TIN.
+// An Indonesian NPWP goes out as the digits Coretax validates; a foreign
+// buyer's own tax id is left untouched.
 func buyerTin(c clients.Client) string {
 	raw := strings.TrimSpace(strDeref(c.NPWP))
 	if digits, ok := normalizeNPWP(raw); ok {
@@ -293,9 +296,9 @@ func buyerTin(c clients.Client) string {
 	return raw
 }
 
-// validateBuyerIdentity refuses an Indonesian buyer without a valid NPWP.
-// Filing them as a passport holder with no document number produces a tax
-// invoice DJP cannot match to the buyer.
+// validateBuyerIdentity checks Indonesian buyers.
+// One without a valid NPWP is refused: filing them as a passport holder with
+// no document number produces a tax invoice DJP cannot match to the buyer.
 func validateBuyerIdentity(c clients.Client) error {
 	if _, ok := normalizeNPWP(strings.TrimSpace(strDeref(c.NPWP))); ok {
 		return nil
@@ -306,7 +309,7 @@ func validateBuyerIdentity(c clients.Client) error {
 	return nil
 }
 
-// buyerIdentityMessage is the toast shown when an export is refused.
+// buyerIdentityMessage words the refusal toast.
 func buyerIdentityMessage(names []string) string {
 	return "Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia. " +
 		"Lengkapi NPWP klien: " + strings.Join(names, ", ") + "."
@@ -319,8 +322,9 @@ func strDeref(p *string) string {
 	return *p
 }
 
-// normalizeMoney parses a decimal string and re-renders without scientific
-// notation. Coretax rejects numerics in scientific form.
+// normalizeMoney avoids scientific notation.
+// It parses a decimal string and renders it plainly, since Coretax rejects
+// numerics in scientific form.
 func normalizeMoney(s string) string {
 	s = strings.TrimSpace(s)
 	if s == "" {

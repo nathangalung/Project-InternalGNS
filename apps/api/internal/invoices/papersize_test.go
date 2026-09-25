@@ -78,7 +78,8 @@ func renderInvTexWithLog(t *testing.T, root string, data exportData) (pdf []byte
 	return pdf, latexLog
 }
 
-// The Diskon branch must reference only fields exportData still has.
+// Diskon branch uses live fields.
+// It may reference only fields exportData still has.
 // TestExport_PDF_HappyPath tolerates a 500, so it cannot catch this.
 func TestInvoiceTemplateDiscountRow(t *testing.T) {
 	root, _ := filepath.Abs("../../templates/documents")

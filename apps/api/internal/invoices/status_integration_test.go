@@ -167,6 +167,7 @@ func TestChangeStatus_ProofOnlyWhenPaid(t *testing.T) {
 	assert.Equal(t, "P0014", sqlState(err))
 }
 
+// Proofs outside the folder fail.
 // The database only records a proof from this invoice's payment folder.
 func TestChangeStatus_ProofOutsidePaymentFolder(t *testing.T) {
 	cases := []struct {

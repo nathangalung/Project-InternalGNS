@@ -39,9 +39,10 @@ type Invoice struct {
 	PaymentProofKey     *string    `db:"payment_proof_key"       json:"paymentProofKey,omitempty"`
 }
 
-// InvoiceDetail is the read model behind the invoice screen. It carries the
-// client, quotation and PO header fields the page prints, so finance never
-// has to call the quotation or purchase-order endpoints its role forbids.
+// InvoiceDetail backs the invoice screen.
+// It carries the client, quotation and PO header fields the page prints, so
+// finance never has to call the quotation or purchase-order endpoints its
+// role forbids.
 type InvoiceDetail struct {
 	Invoice
 	VesselName          *string    `db:"vessel_name"          json:"vesselName,omitempty"`
@@ -65,8 +66,9 @@ type InvoiceDetail struct {
 	History            []StatusHistoryEntry `db:"-" json:"history"`
 }
 
-// UpdateAttachmentRequest persists the MinIO object key for an invoice
-// payment receipt or similar attachment.
+// UpdateAttachmentRequest carries an attachment key.
+// It persists the MinIO object key of a payment receipt or similar
+// attachment.
 type UpdateAttachmentRequest struct {
 	ObjectKey string `json:"objectKey"`
 }

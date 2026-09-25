@@ -10,7 +10,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Every Terlambat reader agrees on one row.
+// All Terlambat readers agree.
 // The tiles, the effective-status filter and the overdue probe all read
 // fn_invoice_effective_status, so a legacy stored overdue whose due date is
 // still ahead is Terlambat in each of them.

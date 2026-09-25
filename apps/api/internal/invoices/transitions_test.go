@@ -37,7 +37,7 @@ func TestAllowedTransitions(t *testing.T) {
 	}
 }
 
-// The caller may not mutate the package map through the returned slice.
+// Returned slice is a copy.
 func TestAllowedTransitions_ReturnsCopy(t *testing.T) {
 	got := invoices.AllowedTransitions(invoices.StatusDraft, true)
 	got[0].To = invoices.StatusPaid

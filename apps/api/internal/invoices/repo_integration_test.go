@@ -144,8 +144,8 @@ func parseF(t *testing.T, s *string) float64 {
 	return v
 }
 
-// Header tax equals the sum of the per-line rounded values (matches the DJP
-// e-faktur filing), not ROUND of the summed base.
+// Header tax sums rounded lines.
+// That matches the DJP e-faktur filing, not ROUND of the summed base.
 func TestRepo_InvoiceHeaderEqualsLineSums(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	store := testutil.Store(t)
@@ -261,7 +261,7 @@ func TestRepo_UpdateDates_NoIfMatchSkipsGuard(t *testing.T) {
 	assert.Greater(t, newVersion, int32(0))
 }
 
-// Clone an invoice line under a new line number.
+// Clone an invoice line renumbered.
 func addInvoiceLine(t *testing.T, ctx context.Context, tx pgx.Tx, invID int64, lineNumber *int16) {
 	t.Helper()
 	_, err := tx.Exec(ctx, `
@@ -278,7 +278,7 @@ FROM invoice_items WHERE invoice_id = $1 ORDER BY id LIMIT 1`, invID, lineNumber
 	require.NoError(t, err)
 }
 
-// Bulk grouping equals N ListItems calls.
+// Bulk grouping matches ListItems.
 func TestRepo_ListItemsBulk_MatchesListItems(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invA := deliveredPOWithInvoice(t, tx)

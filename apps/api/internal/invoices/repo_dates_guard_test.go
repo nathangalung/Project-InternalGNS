@@ -11,8 +11,9 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// A filed invoice keeps its dates: moving them would move booked revenue and
-// the date already reported to Coretax.
+// Filed invoices keep their dates.
+// Moving them would move booked revenue and the date already reported to
+// Coretax.
 func TestRepo_UpdateDates_RejectsFiledInvoice(t *testing.T) {
 	cases := []struct {
 		name string

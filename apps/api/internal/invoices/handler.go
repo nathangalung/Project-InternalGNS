@@ -30,7 +30,7 @@ func NewHandler(repo *Repo, proofs ProofStore) *Handler {
 	return &Handler{repo: repo, proofs: proofs}
 }
 
-// parseListFilter reads the shared invoice list filters (no pagination).
+// parseListFilter reads unpaged list filters.
 func parseListFilter(r *http.Request) ListFilter {
 	q := r.URL.Query()
 	f := ListFilter{
@@ -78,7 +78,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
 }
 
-// Export streams the filtered invoice list as an XLSX table.
+// Export streams the filtered list.
+// The list goes out as an XLSX table.
 func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	f := parseListFilter(r)
 	f.Limit, f.Offset = listq.Unbounded, 0
@@ -305,7 +306,7 @@ func isValidStatus(s Status) bool {
 	return false
 }
 
-// proofUploaded confirms the proof object exists.
+// proofUploaded confirms the proof exists.
 // A valid key only says where an upload would land; a payment must never
 // point at a file that never arrived.
 func (h *Handler) proofUploaded(w http.ResponseWriter, r *http.Request, req ChangeStatusRequest) bool {

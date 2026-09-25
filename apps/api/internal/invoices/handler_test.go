@@ -16,7 +16,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Bulk list export: filtered invoices -> XLSX with a header row.
+// Filtered list exports as XLSX.
+// The sheet starts with a header row.
 func TestHandler_Export_XLSX(t *testing.T) {
 	srv := newSrv(t)
 	res := doJSON(t, srv, http.MethodGet, "/invoices/export.xlsx", nil)

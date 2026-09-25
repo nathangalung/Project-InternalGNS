@@ -15,8 +15,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Same walk as deliveredPOWithInvoice, with a vessel and a client contact so
-// the header fields under test are populated.
+// deliveredPOWithVessel populates header fields.
+// Same walk as deliveredPOWithInvoice, plus a vessel and a client contact.
 func deliveredPOWithVessel(t *testing.T, tx pgx.Tx) (int64, int64) {
 	t.Helper()
 	ctx := context.Background()
@@ -50,8 +50,9 @@ func deliveredPOWithVessel(t *testing.T, tx pgx.Tx) (int64, int64) {
 	return qid, po.ID
 }
 
+// Detail carries every header field.
 // The invoice page runs on finance credentials, which cannot read quotations
-// or purchase orders, so every header field it prints comes from here.
+// or purchase orders.
 func TestRepo_GetDetailByQuotation_CarriesClientAndPoHeader(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	qid, poID := deliveredPOWithVessel(t, tx)
@@ -104,8 +105,9 @@ func TestRepo_GetDetail_NotFound(t *testing.T) {
 	assert.ErrorIs(t, err, invoices.ErrNotFound)
 }
 
-// Terlambat is derived from the due date, so it is never offered and a
-// sent invoice that is not yet due cannot be marked overdue by hand.
+// Terlambat is never offered.
+// It is derived from the due date, so a sent invoice that is not yet due
+// cannot be marked overdue by hand.
 func TestAllowedTransitions_OmitOverdue(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)

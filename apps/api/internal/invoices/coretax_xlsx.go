@@ -17,7 +17,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 )
 
-// coretaxTemplateRel is the DJP bulk-import workbook bundled with the image.
+// coretaxTemplateRel is the bundled workbook.
 const coretaxTemplateRel = "coretax/coretax_export_2026.xlsx"
 
 const (
@@ -25,7 +25,7 @@ const (
 	coretaxSheetDetail = "DetailFaktur"
 )
 
-// Faktur header columns, matching the DJP template row 3.
+// Faktur headers, template row 3.
 var coretaxFakturHeaders = []string{
 	"Baris", "Tanggal Faktur", "Jenis Faktur", "Kode Transaksi",
 	"Keterangan Tambahan", "Dokumen Pendukung", "Period Dok Pendukung",
@@ -34,7 +34,7 @@ var coretaxFakturHeaders = []string{
 	"Nama Pembeli", "Alamat Pembeli", "Email Pembeli", "ID TKU Pembeli",
 }
 
-// DetailFaktur header columns, matching the DJP template row 1.
+// DetailFaktur headers, template row 1.
 var coretaxDetailHeaders = []string{
 	"Baris", "Barang/Jasa", "Kode Barang Jasa", "Nama Barang/Jasa",
 	"Nama Satuan Ukur", "Harga Satuan", "Jumlah Barang Jasa", "Total Diskon",
@@ -42,9 +42,10 @@ var coretaxDetailHeaders = []string{
 	"Nomor Invoice",
 }
 
-// ExportBulkXLSX handles GET /invoices/coretax.xlsx — every invoice matching
-// the current list filter, rendered into the DJP bulk-import template. NPWP
-// header may be blank when the seller TIN is not configured.
+// ExportBulkXLSX serves GET /invoices/coretax.xlsx.
+// Every invoice matching the current list filter is rendered into the DJP
+// bulk-import template. The NPWP header may be blank when the seller TIN is
+// not configured.
 func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) {
 	if h.templatesRoot == "" {
 		httperr.Render(w, httperr.ServiceUnavailable("templates root not configured"))
@@ -130,7 +131,7 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 	httpx.WriteXLSX(w, "coretax-export", data)
 }
 
-// invalidBuyers names, once each, the clients Coretax would reject.
+// invalidBuyers names each rejected client.
 func invalidBuyers(invs []Invoice, clientsByID map[int64]clients.Client) []string {
 	seen := map[int64]struct{}{}
 	names := []string{}
@@ -150,10 +151,11 @@ func invalidBuyers(invs []Invoice, clientsByID map[int64]clients.Client) []strin
 	return names
 }
 
-// buildCoretaxWorkbook fills the DJP template with the given invoices. It is a
-// pure function (no DB/HTTP) so it can be unit-tested without Postgres. It
-// deletes the template's sample data sheets and recreates Faktur/DetailFaktur
-// from scratch, leaving the REF and Keterangan sheets intact.
+// buildCoretaxWorkbook fills the DJP template.
+// It is a pure function (no DB/HTTP) so it can be unit-tested without
+// Postgres. It deletes the template's sample data sheets and recreates
+// Faktur/DetailFaktur from scratch, leaving the REF and Keterangan sheets
+// intact.
 func buildCoretaxWorkbook(
 	tmpl []byte,
 	settings deps.CoretaxSettings,
@@ -238,7 +240,7 @@ func buildCoretaxWorkbook(
 	return buf.Bytes(), nil
 }
 
-// resetSheet drops a sheet's sample rows by deleting and recreating it empty.
+// resetSheet recreates a sheet empty.
 // The DJP importer keys on sheet name, not position, so the recreated sheet
 // moving to the end of the tab order is harmless.
 func resetSheet(f *excelize.File, name string) error {
@@ -251,8 +253,9 @@ func resetSheet(f *excelize.File, name string) error {
 	return nil
 }
 
-// writeRow writes a row of mixed values; nil entries are skipped so the date
-// cell can be set separately with its own format.
+// writeRow writes mixed row values.
+// Nil entries are skipped so the date cell can be set separately with its
+// own format.
 func writeRow(f *excelize.File, sheet string, row int, vals []any) {
 	for c, v := range vals {
 		if v == nil {
@@ -263,8 +266,9 @@ func writeRow(f *excelize.File, sheet string, row int, vals []any) {
 	}
 }
 
-// num parses a normalized decimal string into a float so the cell is numeric,
-// matching the template. Falls back to the raw string when unparseable.
+// num yields a numeric cell.
+// It parses a normalized decimal string into a float, matching the
+// template, and falls back to the raw string when unparseable.
 func num(s string) any {
 	if v, err := strconv.ParseFloat(s, 64); err == nil {
 		return v
