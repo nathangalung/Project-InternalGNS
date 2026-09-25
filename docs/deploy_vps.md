@@ -249,11 +249,12 @@ In Dokploy UI on the Compose app:
 4. Log in with `SUPERADMIN_EMAIL` + `SUPERADMIN_PASSWORD`.
 5. **Change the superadmin password immediately** (UI → profile menu).
 
-## 7. Seed master data (optional)
+## 7. Seed master data
 
-Master data (units + countries) is loaded by the dev seed. For prod, run it
-**once** against the prod DB. The seed file lives in the repository, not on the
-VPS, so pipe it from a local clone over SSH:
+Migration 00006 already loads the countries, but the units exist only in
+`01_master.sql`, and products and quotation lines pick their unit from them.
+Run it **once** against the prod DB (it is idempotent). The seed file lives in
+the repository, not on the VPS, so pipe it from a local clone over SSH:
 
 ```bash
 # from the repository root on your machine
@@ -263,8 +264,9 @@ ssh sysadmin@galung 'docker exec -i \
   < apps/api/db/seeds/01_master.sql
 ```
 
-The container supplies its own user and database name. Do **not** run
-`02_dev_*.sql` or later seeds on prod — those are dev fixtures.
+The container supplies its own user and database name. Do **not** run any
+other seed on prod: `03_historical.sql` truncates the quotation, PO, invoice,
+catalog and client tables before rebuilding them, and 04 to 06 build on it.
 
 ## 8. MinIO buckets
 
