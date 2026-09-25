@@ -2,6 +2,7 @@ package sheet
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
 
@@ -79,4 +80,19 @@ func TestWrite_InvalidSheetName(t *testing.T) {
 	require.Error(t, err)
 	_, err = Write("a:b", []string{"a"}, nil)
 	require.Error(t, err)
+}
+
+var errSink = errors.New("disk full")
+
+type failingWriter struct{}
+
+func (failingWriter) Write([]byte) (int, error) { return 0, errSink }
+
+// Sink failure surfaces wrapped.
+// A writer that refuses the bytes must fail the export, not return a
+// truncated workbook.
+func TestWrite_SinkFailure(t *testing.T) {
+	err := write(failingWriter{}, "Data", []string{"a"}, [][]string{{"1"}})
+	require.ErrorIs(t, err, errSink)
+	assert.Contains(t, err.Error(), "write xlsx")
 }
