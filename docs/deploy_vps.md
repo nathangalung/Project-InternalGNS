@@ -543,16 +543,18 @@ warning in `docs/backup_restore.md` does not apply to this restore.
 
 Rehearse once before the first deploy of a release that carries a new
 migration, on a separate stack, never on production: the steps drop the
-database and the buckets. Use the local `compose.prod.yml` setup from the
-rehearsal log in `docs/backup_restore.md`, with `COMPOSE_PROJECT` and
-`BACKUP_ROOT` pointed at it.
+database and the buckets. Use a local `compose.prod.yml` stack like the one
+in the rehearsal log of `docs/backup_restore.md`, seeded from a dev-database
+dump, never from production data. Locally, "Deploy" is
+`TAG=<tag> docker compose -f compose.prod.yml up -d`, `COMPOSE_PROJECT`,
+`BACKUP_ROOT` and `SNAP` are exported in the shell instead of read from
+`/etc/internalgns-backup.env`, and the scripts run from `scripts/`.
 
-1. Bring the stack up on the previous `TAG` and restore last night's
-   production snapshot into it (`docs/backup_restore.md`, disaster restore).
-2. Run `backup.sh` and pin its snapshot, as in section 13.
+1. Bring the stack up on the previous `TAG` and seed it.
+2. Run `scripts/backup.sh` and pin its snapshot, as in section 13.
 3. Deploy the new `TAG`, log in, and create a quotation.
-4. Run steps 1 to 6 above, with `SNAP` at the pinned copy and `backup.sh`
-   in place of the systemd unit.
+4. Run steps 1 to 6 above, with `SNAP` at the pinned copy and
+   `scripts/backup.sh` in place of the systemd unit.
 
 The drill passes when login succeeds on the old `TAG` and the quotation from
 step 3 is gone. Login is the check that matters: it is what a tag-only
