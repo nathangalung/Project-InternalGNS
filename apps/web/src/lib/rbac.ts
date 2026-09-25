@@ -1,6 +1,6 @@
 import type { Role } from "@/types/api"
 
-// Top-level app sections gated by role.
+// Role-gated top-level sections.
 export type Section =
   | "dashboard"
   | "dashboard-financial"
@@ -28,7 +28,7 @@ const EXTRA: Record<Role, Section[]> = {
   finance: ["dashboard-financial", "invoices"],
 }
 
-// Unknown role only sees common sections.
+// Unknown roles see common sections.
 export function roleCanAccess(role: Role | undefined, section: Section): boolean {
   if (COMMON.includes(section)) return true
   if (!role) return false
@@ -44,7 +44,7 @@ export function canWriteCatalog(role: Role | undefined): boolean {
   return role === "superadmin" || role === "operational"
 }
 
-// Maps a pathname to its section.
+// Pathname to its section.
 export function sectionFromPathname(pathname: string): Section {
   const first = pathname.split("/").filter(Boolean)[0] ?? ""
   switch (first) {

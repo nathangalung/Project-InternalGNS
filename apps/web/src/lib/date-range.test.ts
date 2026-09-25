@@ -15,7 +15,9 @@ describe("resolveRange", () => {
     expect(resolveRange("semua", "2026-01-05", "2026-02-10")).toEqual({ start: "", end: "" })
   })
 
-  // 14:00 WIB, the same calendar day in UTC and WIB.
+  // 14:00 WIB, one shared day.
+  //
+  // The same calendar day in UTC and WIB.
   it.each<[string, string, string]>([
     ["7-hari", "2026-09-17", "2026-09-24"],
     ["30-hari", "2026-08-25", "2026-09-24"],
@@ -25,8 +27,10 @@ describe("resolveRange", () => {
     expect(resolveRange(preset, "", "")).toEqual({ start, end })
   })
 
-  // Regression: before 07:00 WIB the UTC date is still yesterday, and the
-  // server reads dateTo as an inclusive WIB day, so today's rows vanished.
+  // Regression: before 07:00 WIB.
+  //
+  // Before 07:00 WIB the UTC date is still yesterday, and the server reads
+  // dateTo as an inclusive WIB day, so today's rows vanished.
   it.each<[string, string, string]>([
     ["7-hari", "2026-09-17", "2026-09-24"],
     ["30-hari", "2026-08-25", "2026-09-24"],

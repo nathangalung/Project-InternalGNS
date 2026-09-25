@@ -22,8 +22,10 @@ function focusables(root: HTMLElement): HTMLElement[] {
   )
 }
 
-// Shared modal shell — faithful port of the legacy ca-overlay/ca-modal/ca-header/
-// ca-body/ca-footer system. Body content uses ui.modalSection / ui.field etc.
+// Shared modal shell.
+//
+// A faithful port of the legacy ca-overlay/ca-modal/ca-header/ca-body/ca-footer
+// system. Body content uses ui.modalSection / ui.field etc.
 export default function Modal({ title, onClose, children, footer, className = "" }: ModalProps) {
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)

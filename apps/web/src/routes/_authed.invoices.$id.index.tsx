@@ -17,8 +17,10 @@ type InvoiceSearch = {
   invoiceId?: number
 }
 
-// $id is the quotation id. It names the newest invoice, the Pengganti when
-// one exists; ?invoiceId reaches an older, cancelled one.
+// $id is the quotation id.
+//
+// It names the newest invoice, the Pengganti when one exists; ?invoiceId
+// reaches an older, cancelled one.
 export const Route = createFileRoute("/_authed/invoices/$id/")({
   validateSearch: (search: Record<string, unknown>): InvoiceSearch => {
     const invoiceId = positiveInt(search.invoiceId)

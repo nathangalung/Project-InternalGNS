@@ -73,8 +73,10 @@ describe("deriveInvoiceStatus", () => {
   })
 })
 
-// Overdue the day after the due date, in Jakarta, matching the server's
-// due_date < CURRENT_DATE on a WIB-pinned session.
+// Overdue after the due date.
+//
+// Counted in Jakarta, matching the server's due_date < CURRENT_DATE on a
+// WIB-pinned session.
 describe("deriveInvoiceStatus overdue boundary", () => {
   afterEach(() => {
     vi.useRealTimers()

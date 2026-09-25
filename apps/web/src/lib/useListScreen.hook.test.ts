@@ -36,7 +36,9 @@ describe("useListScreen", () => {
     expect(result.current.startIndex).toBe(20)
   })
 
-  // Resetting mutators: the new result set starts at its first page.
+  // Mutators that reset the page.
+  //
+  // The new result set starts at its first page.
   it.each<[string, (s: ListScreen<Filters>) => void]>([
     ["setSearch", (s) => s.setSearch("baut")],
     ["applyFilters", (s) => s.applyFilters({ status: "active", min: 5 })],
@@ -48,7 +50,7 @@ describe("useListScreen", () => {
     expect(result.current.currentPage).toBe(1)
   })
 
-  // Removing a chip must keep the reader in place.
+  // Chip removal keeps the page.
   it.each<[string, (s: ListScreen<Filters>) => void]>([
     ["clearSearch", (s) => s.clearSearch()],
     ["patchFilters", (s) => s.patchFilters((f) => ({ ...f, min: 0 }))],

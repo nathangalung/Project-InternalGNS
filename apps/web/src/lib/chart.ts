@@ -1,6 +1,8 @@
 import { toNum } from "@/lib/format"
 
-// YYYY-MM → 0-based month index for the given year; -1 if different year.
+// YYYY-MM to month index.
+//
+// The 0-based month index for the given year; -1 for a different year.
 export function mapToMonthIndex(month: string, baseYear: number): number {
   const [y, m] = month.split("-").map(Number)
   if (y !== baseYear) return -1
@@ -20,7 +22,7 @@ export function buildSeries(
   return series
 }
 
-// Day count of a 0-based month.
+// Days in a 0-based month.
 export function daysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate()
 }
@@ -30,7 +32,9 @@ export function dayLabels(year: number, month: number): string[] {
   return Array.from({ length: daysInMonth(year, month) }, (_, i) => String(i + 1))
 }
 
-// YYYY-MM-DD daily buckets into a day-indexed array for one month.
+// Daily buckets by day index.
+//
+// Maps YYYY-MM-DD buckets into a day-indexed array for one month.
 export function buildDailySeries(
   points: { month: string; value: string }[] | undefined,
   year: number,
@@ -48,12 +52,14 @@ export function buildDailySeries(
   return series
 }
 
-// Inclusive-from, exclusive-to spanning a full year.
+// Inclusive-from, exclusive-to year range.
 export function yearRange(year: number): { from: string; to: string } {
   return { from: `${year}-01-01`, to: `${year + 1}-01-01` }
 }
 
-// Inclusive-from, exclusive-to spanning one 0-based month.
+// Inclusive-from, exclusive-to month range.
+//
+// The month is 0-based.
 export function monthRange(year: number, month: number): { from: string; to: string } {
   const mm = String(month + 1).padStart(2, "0")
   const from = `${year}-${mm}-01`

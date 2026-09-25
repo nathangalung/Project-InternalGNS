@@ -9,7 +9,9 @@ export function pushModal(): symbol {
   return token
 }
 
-// Removes by identity, so modals may unmount out of order.
+// Removes a modal by identity.
+//
+// Modals may unmount out of order.
 export function popModal(token: symbol): void {
   const index = stack.lastIndexOf(token)
   if (index !== -1) stack.splice(index, 1)

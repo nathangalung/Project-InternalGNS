@@ -27,9 +27,11 @@ type RequestInput = {
 
 type TokenPair = { token: string; refreshToken?: string }
 
-// Token storage: sessionStorage means refresh-on-tab-close. The trade-off vs
-// httpOnly cookies is accepted (no CSRF surface, XSS surface in exchange);
-// document that decision in the auth section of round3_plan.md.
+// Token storage in sessionStorage.
+//
+// sessionStorage means refresh-on-tab-close. The trade-off vs httpOnly cookies
+// is accepted (no CSRF surface, XSS surface in exchange); document that
+// decision in the auth section of round3_plan.md.
 export function setTokens(pair: TokenPair): void {
   sessionStorage.setItem(TOKEN_KEY, pair.token)
   if (pair.refreshToken) {
@@ -53,7 +55,9 @@ async function rawFetch(path: string, init: RequestInit & { authed?: boolean }):
   return fetch(`${BASE_URL}${path}`, { ...init, headers })
 }
 
-// In-flight refresh dedupe: simultaneous 401s share one /auth/refresh round-trip.
+// In-flight refresh dedupe.
+//
+// Simultaneous 401s share one /auth/refresh round-trip.
 let refreshInFlight: Promise<boolean> | null = null
 
 async function performRefresh(): Promise<boolean> {
@@ -83,6 +87,8 @@ function tryRefresh(): Promise<boolean> {
   return refreshInFlight
 }
 
+// Final refresh failure hook.
+//
 // Notifies the auth layer once refresh definitively fails.
 let onAuthExpired: (() => void) | null = null
 
@@ -90,9 +96,10 @@ export function setOnAuthExpired(fn: () => void): void {
   onAuthExpired = fn
 }
 
-// fetchAuthed: hits the API with the JWT, and on 401 transparently refreshes
-// + retries the original request once. The refresh path itself bypasses this
-// to avoid recursion.
+// fetchAuthed: API call with JWT.
+//
+// On 401 it transparently refreshes and retries the original request once. The
+// refresh path itself bypasses this to avoid recursion.
 async function fetchAuthed(
   path: string,
   init: RequestInit & { authed?: boolean },
@@ -163,7 +170,7 @@ export async function apiRequest<T>(input: RequestInput): Promise<T> {
   return (await parseResponse(res)) as T
 }
 
-// Resolves to null on 404, rethrows otherwise.
+// Null on 404, else rethrow.
 export async function nullOn404<T>(fn: () => Promise<T>): Promise<T | null> {
   try {
     return await fn()
@@ -177,8 +184,10 @@ export type PaginatedList<T> = { rows: T[]; total: number }
 
 type QueryValue = string | number | boolean | undefined | null | (string | number)[]
 
-// Encode a flat params object into a query string. Skips empty strings,
-// undefined and null. Arrays are CSV-joined. Booleans/numbers stringify.
+// Flat params to query string.
+//
+// Skips empty strings, undefined and null. Arrays are CSV-joined.
+// Booleans/numbers stringify.
 export function buildQuery(params: Record<string, QueryValue>): string {
   const search = new URLSearchParams()
   for (const [k, v] of Object.entries(params)) {
@@ -196,7 +205,9 @@ export function buildQuery(params: Record<string, QueryValue>): string {
   return search.toString()
 }
 
-// Returns rows + total from X-Total-Count. Falls back to rows.length if absent.
+// Rows plus X-Total-Count total.
+//
+// Falls back to rows.length when the header is absent.
 export async function apiList<T>(input: RequestInput): Promise<PaginatedList<T>> {
   const res = await doFetch(input)
   if (!res.ok) throw await failure(res)
@@ -207,10 +218,12 @@ export async function apiList<T>(input: RequestInput): Promise<PaginatedList<T>>
   return { rows, total: Number.isFinite(total) ? total : rows.length }
 }
 
-// Pick the most human message an RFC 7807 body offers. `detail` is prose meant
-// for the user, so it always wins. `fields` is keyed by API field name, which
-// is an identifier and not Indonesian, so only its values are shown -- never
-// `key: value`, which reads as debug output in a toast.
+// Most human RFC 7807 message.
+//
+// `detail` is prose meant for the user, so it always wins. `fields` is keyed by
+// API field name, which is an identifier and not Indonesian, so only its
+// values are shown -- never `key: value`, which reads as debug output in a
+// toast.
 export function extractErrorMessage(parsed: unknown, fallback: string): string {
   if (!parsed || typeof parsed !== "object") return fallback
   const body = parsed as { detail?: unknown; fields?: Record<string, unknown>; title?: unknown }
@@ -270,7 +283,7 @@ const PICKER_XLSX: PickerType = {
 }
 const PICKER_ANY: PickerType = { description: "Berkas", accept: { "*/*": [] } }
 
-// Pick the save dialog filter from a filename's extension.
+// Save dialog filter by extension.
 function pickerForFilename(filename: string): PickerType {
   const ext = filename.split(".").pop()?.toLowerCase()
   if (ext === "pdf") return PICKER_PDF
@@ -279,7 +292,10 @@ function pickerForFilename(filename: string): PickerType {
   return PICKER_ANY
 }
 
-// Fetch binary endpoint as blob; let user pick dir + edit filename when supported.
+// Fetch a binary, then save.
+//
+// Fetches the endpoint as a blob and, when supported, lets the user pick the
+// directory and edit the filename.
 async function downloadBinary(
   path: string,
   filename: string,
@@ -298,11 +314,13 @@ export const downloadXml = (path: string, filename: string) =>
 export const downloadXlsx = (path: string, filename: string) =>
   downloadBinary(path, filename, PICKER_XLSX)
 
-// Authed download; picker inferred from extension.
+// Authed download, picker by extension.
 export const downloadFile = (path: string, filename: string) =>
   downloadBinary(path, filename, pickerForFilename(filename))
 
-// Authed PUT of a file to an API asset path (proxy upload to MinIO).
+// Authed asset file PUT.
+//
+// Uploads to an API asset path, which proxies it to MinIO.
 export async function uploadAsset(path: string, file: File): Promise<void> {
   const res = await fetchAuthed(path, {
     method: "PUT",
@@ -312,7 +330,9 @@ export async function uploadAsset(path: string, file: File): Promise<void> {
   if (!res.ok) throw await transferFailure(res, "upload")
 }
 
-// Authed GET of an asset as a blob object URL (for <img src>). Caller revokes.
+// Authed asset object URL.
+//
+// Fetches the asset as a blob object URL for <img src>. The caller revokes it.
 export async function fetchObjectUrl(path: string): Promise<string> {
   const res = await fetchAuthed(path, { method: "GET" })
   if (!res.ok) throw await transferFailure(res, "download")
@@ -320,7 +340,9 @@ export async function fetchObjectUrl(path: string): Promise<string> {
   return URL.createObjectURL(blob)
 }
 
-// File System Access API where supported; else anchor fallback.
+// Save a blob locally.
+//
+// Uses the File System Access API where supported, else an anchor fallback.
 export async function saveBlob(
   blob: Blob,
   filename: string,

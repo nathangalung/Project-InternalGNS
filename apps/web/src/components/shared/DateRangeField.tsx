@@ -41,7 +41,7 @@ type DateInputProps = {
 const labelCls =
   "mb-1 block font-[Inter,sans-serif] text-[11px] font-medium tracking-[0.2px] text-[#9CA3AF]"
 
-// Native picker hidden, whole field clickable.
+// Hidden picker, clickable field.
 const pickerCls =
   "[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-clear-button]:hidden [&::-webkit-inner-spin-button]:hidden"
 

@@ -11,7 +11,9 @@ export const Route = createFileRoute("/_authed/purchase-orders/$id/edit")({
   component: PurchaseOrderEditRoute,
 })
 
-// $id is the quotation id, as on the detail route.
+// $id is the quotation id.
+//
+// As on the detail route.
 function PurchaseOrderEditRoute() {
   const { id } = Route.useParams()
   const numericId = Number(id)

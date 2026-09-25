@@ -61,9 +61,11 @@ export function formatDateTime(iso: string | null | undefined): string {
   return `${date}, ${time}`
 }
 
-// Indonesian tax math: 11/12 base, 12% PPN. The taxable base always includes
-// shipping, matching the DB GENERATED columns ((total - discount) where total
-// folds in shipping). subtotal here is products minus discount.
+// Indonesian tax math.
+//
+// 11/12 base, 12% PPN. The taxable base always includes shipping, matching the
+// DB GENERATED columns ((total - discount) where total folds in shipping).
+// subtotal here is products minus discount.
 export function computeTaxBreakdown(input: { subtotal: number; shipping: number }): {
   dppNilaiLain: number
   ppnAmount: number

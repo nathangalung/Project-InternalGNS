@@ -1,6 +1,8 @@
 import { act, type ReactNode } from "react"
 import { createRoot } from "react-dom/client"
 
+// Enable React act() flushing.
+//
 // React only flushes act() updates when this flag is set.
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -12,7 +14,7 @@ export type RenderedHook<P, R> = {
   unmount: () => void
 }
 
-// Minimal renderHook on React 19 act.
+// Minimal React 19 renderHook.
 export function renderHook<P, R>(
   hook: (props: P) => R,
   initialProps: P,

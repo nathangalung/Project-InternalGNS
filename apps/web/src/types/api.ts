@@ -140,7 +140,7 @@ export type AdvancedSearchResponse = {
   counts: Partial<Record<AdvancedSearchTier, number>>
 }
 
-// Batch row match for xlsx upload.
+// Batch xlsx row match.
 export type MatchRowInput = {
   impaCode: string
   name: string
@@ -382,7 +382,7 @@ export type QuotationCreateInput = {
 
 export type QuotationUpdateInput = Omit<QuotationCreateInput, "companyClientId" | "contactId">
 
-// Sort keys accepted by the API.
+// API-accepted sort keys.
 export type QuotationSortKey = "quotationNo" | "version" | "createdAt" | "grandTotal"
 
 export type QuotationListParams = {

@@ -7,7 +7,9 @@ type ActiveFiltersProps = {
   onClearAll?: () => void
 }
 
-// Shows the filters currently applied to a list, above the table.
+// Applied list filter chips.
+//
+// Shown above the table.
 export default function ActiveFilters({ chips, onClearAll }: ActiveFiltersProps) {
   if (chips.length === 0) return null
   return (

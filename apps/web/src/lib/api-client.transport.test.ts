@@ -96,7 +96,7 @@ describe("apiRequest", () => {
     expect(header(calls[0], "authorization")).toBeNull()
   })
 
-  // AU-4: credentials never ride on a stale session.
+  // AU-4: credentials skip stale tokens.
   it("leaves the token off a credential call", async () => {
     setTokens({ token: "stale" })
     const calls = serve(() => json({ token: "new" }))
@@ -112,7 +112,7 @@ describe("apiRequest", () => {
     await expect(apiRequest({ path: "/x" })).resolves.toBe(want)
   })
 
-  // AU-7: the rate limiter answered in plain text.
+  // AU-7: plain-text rate-limit answer.
   it("turns a plain-text 429 into a typed error, not a JSON crash", async () => {
     serve(() => new Response("Too Many Requests", { status: 429 }))
     const err = await apiRequest({ path: "/auth/login", authed: false }).catch((e: unknown) => e)

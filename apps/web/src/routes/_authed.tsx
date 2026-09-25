@@ -47,7 +47,7 @@ function AppShell({ children }: { children: ReactNode }) {
   )
 }
 
-// App shell for every authenticated route.
+// Shell for authenticated routes.
 function AuthedLayout() {
   return (
     <AppShell>

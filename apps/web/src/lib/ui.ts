@@ -1,5 +1,7 @@
-// Shared tailwind class strings for the app's primitives. One source keeps the
-// buttons, panels, and tables consistent across every screen.
+// Shared tailwind class strings.
+//
+// The app's primitives in one source keep the buttons, panels, and tables
+// consistent across every screen.
 
 const gradientPrimary =
   "bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)]"
@@ -136,7 +138,9 @@ export const ui = {
   dropdownItem: `flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent px-5 py-2.5 text-left ${focusRingInset}`,
 }
 
-// Small pill toggle used for chart metric tabs and similar.
+// Small pill toggle.
+//
+// Used for chart metric tabs and similar.
 export function pill(active: boolean): string {
   return `whitespace-nowrap rounded-full border px-3 py-1 text-caption font-medium transition ${focusRing} ${
     active

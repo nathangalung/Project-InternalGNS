@@ -90,7 +90,7 @@ export function deriveInvoiceStatus(
   return base
 }
 
-// Overdue the day after the due date.
+// Overdue after the due date.
 //
 // The server decides this with due_date < CURRENT_DATE on a session pinned to
 // WIB. Comparing Date objects instead would parse the date-only string as UTC
