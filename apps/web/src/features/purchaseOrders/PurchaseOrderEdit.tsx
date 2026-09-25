@@ -199,6 +199,12 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
       toast.error(`Satuan belum dikenali untuk: ${missing.join(", ")}.`)
       return
     }
+    // The server keeps the shipping line only with an address.
+    const hasShipping = shippingTime.trim() !== "" || toNum(shippingCost) > 0
+    if (hasShipping && !isAlamatFilled) {
+      toast.error("Isi alamat pengiriman (min. 20 karakter) sebelum menyimpan pengiriman.")
+      return
+    }
     const shipDays = Number(shippingTime)
     const input: PoUpdateItemsInput = {
       discountPct: String(discountPct),

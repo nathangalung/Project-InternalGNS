@@ -360,6 +360,15 @@ async function addresslessQuotation(page: Page, seed: SalesSeed): Promise<number
   await expect(page.getByLabel("Alamat Lengkap (Opsional)")).toHaveValue("")
   await page.getByLabel("Waktu Pengiriman (Hari) *").fill("5")
   await page.getByLabel("Biaya Pengiriman *").fill("75000")
+  // A short address is refused but keeps the days and cost.
+  const address = page.getByLabel("Alamat Lengkap (Opsional)")
+  await address.fill("Jl.")
+  await expect(
+    page.getByText("Alamat harus minimal 20 karakter dan mengandung huruf."),
+  ).toBeVisible()
+  await address.fill("")
+  await expect(page.getByLabel("Waktu Pengiriman (Hari) *")).toHaveValue("5")
+  await expect(page.getByLabel("Biaya Pengiriman *")).toHaveValue("75000")
   await page.getByRole("button", { name: "Lanjut" }).click()
 
   await page.getByLabel("JATUH TEMPO PEMBAYARAN (HARI) *").fill("30")

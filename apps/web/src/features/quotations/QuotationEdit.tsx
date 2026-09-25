@@ -86,16 +86,11 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   const isTenggatWaktuFilled = jatuhTempo.trim().length > 0 && berlakuSampai.trim().length > 0
   const hasContent = products.length > 0 || isValidAddress(shippingAddress)
 
+  // Cost follows the days only; typing an address must not wipe them.
+  const hasShippingTime = shippingTime.trim().length > 0
   useEffect(() => {
-    if (!isAlamatOk) {
-      setShippingTime("")
-      setShippingCost("")
-    }
-  }, [isAlamatOk])
-
-  useEffect(() => {
-    if (!isWaktuFilled) setShippingCost("")
-  }, [isWaktuFilled])
+    if (!hasShippingTime) setShippingCost("")
+  }, [hasShippingTime])
 
   let isNextDisabled = false
   if (step === 1) isNextDisabled = selectedClient === ""
@@ -167,12 +162,13 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     return m
   }, [unitsData])
 
-  // Blocks save on units and qty.
+  // Blocks save on units, qty, address.
   const invalidQty = countInvalidQty(products)
   const canSave =
     products.length > 0 &&
     invalidQty === 0 &&
-    products.every((p) => unitIdByCode.has(p.satuan.toUpperCase()))
+    products.every((p) => unitIdByCode.has(p.satuan.toUpperCase())) &&
+    isAlamatOk
 
   // Server errors apply to the lines they were raised for.
   const qtyErrors = qtyFail?.lines === products ? qtyFail.byId : {}

@@ -67,16 +67,11 @@ export default function QuotationAdd() {
   const isTenggatWaktuFilled = jatuhTempo.trim().length > 0 && berlakuSampai.trim().length > 0
   const hasContent = products.length > 0 || isValidAddress(shippingAddress)
 
+  // Cost follows the days only; typing an address must not wipe them.
+  const hasShippingTime = shippingTime.trim().length > 0
   useEffect(() => {
-    if (!isAlamatOk) {
-      setShippingTime("")
-      setShippingCost("")
-    }
-  }, [isAlamatOk])
-
-  useEffect(() => {
-    if (!isWaktuFilled) setShippingCost("")
-  }, [isWaktuFilled])
+    if (!hasShippingTime) setShippingCost("")
+  }, [hasShippingTime])
 
   let isNextDisabled = false
   if (step === 1) isNextDisabled = selectedClient === ""
@@ -157,7 +152,8 @@ export default function QuotationAdd() {
     invalidQty === 0 &&
     products.every((p) => unitIdByCode.has(p.satuan.toUpperCase())) &&
     isTenggatWaktuFilled &&
-    hasContent
+    hasContent &&
+    isAlamatOk
 
   function buildItems(): QuotationItemInput[] {
     return products.map((p) => toItemInput(p, unitIdByCode.get(p.satuan.toUpperCase()) ?? 0))

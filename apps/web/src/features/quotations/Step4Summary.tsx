@@ -1,5 +1,5 @@
 import { useId, useState } from "react"
-import { isValidAddress } from "@/features/clients/ClientAdd/helpers"
+import { isValidAddress, optionalAddressError } from "@/features/clients/ClientAdd/helpers"
 import { getPageNumbers } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { requestDiffers, requestedCode } from "./lines"
@@ -87,6 +87,7 @@ export default function Step4Summary({
 
   const isTenggatWaktuFilled = jatuhTempo.trim().length > 0 && berlakuSampai.trim().length > 0
   const hasContent = products.length > 0 || isValidAddress(shippingAddress)
+  const addressError = optionalAddressError(shippingAddress)
 
   return (
     <div className={qe.stepContent}>
@@ -229,6 +230,11 @@ export default function Step4Summary({
         {!hasContent && (
           <div className={`${alertBox} mb-5`}>
             Isi minimal satu produk atau informasi pengiriman sebelum menyimpan.
+          </div>
+        )}
+        {addressError && (
+          <div role="alert" className={`${alertBox} mb-5`}>
+            Alamat pengiriman: {addressError}
           </div>
         )}
 
