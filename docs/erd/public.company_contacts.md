@@ -38,12 +38,12 @@
 
 ## Indexes
 
-| Name                           | Definition                                                                                                                             |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| company_contacts_pkey          | CREATE UNIQUE INDEX company_contacts_pkey ON public.company_contacts USING btree (id)                                                  |
-| idx_company_contacts_company   | CREATE INDEX idx_company_contacts_company ON public.company_contacts USING btree (company_id)                                          |
-| idx_company_contacts_email     | CREATE UNIQUE INDEX idx_company_contacts_email ON public.company_contacts USING btree (lower((email)::text)) WHERE (email IS NOT NULL) |
-| idx_company_contacts_name_trgm | CREATE INDEX idx_company_contacts_name_trgm ON public.company_contacts USING gin (name gin_trgm_ops)                                   |
+| Name                           | Definition                                                                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| company_contacts_pkey          | CREATE UNIQUE INDEX company_contacts_pkey ON public.company_contacts USING btree (id)                                                                  |
+| idx_company_contacts_company   | CREATE INDEX idx_company_contacts_company ON public.company_contacts USING btree (company_id)                                                          |
+| idx_company_contacts_name_trgm | CREATE INDEX idx_company_contacts_name_trgm ON public.company_contacts USING gin (name gin_trgm_ops)                                                   |
+| idx_company_contacts_email     | CREATE UNIQUE INDEX idx_company_contacts_email ON public.company_contacts USING btree (lower((email)::text)) WHERE ((email IS NOT NULL) AND is_active) |
 
 ## Triggers
 

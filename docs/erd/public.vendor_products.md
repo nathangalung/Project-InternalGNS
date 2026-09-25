@@ -2,20 +2,20 @@
 
 ## Columns
 
-| Name           | Type                     | Default                                     | Nullable | Children                                            | Parents                             | Comment |
-| -------------- | ------------------------ | ------------------------------------------- | -------- | --------------------------------------------------- | ----------------------------------- | ------- |
-| id             | bigint                   | nextval('vendor_products_id_seq'::regclass) | false    | [public.quotation_items](public.quotation_items.md) |                                     |         |
-| vendor_id      | bigint                   |                                             | false    |                                                     | [public.vendors](public.vendors.md) |         |
-| item_id        | bigint                   |                                             | false    |                                                     | [public.items](public.items.md)     |         |
-| vendor_sku     | varchar(100)             |                                             | true     |                                                     |                                     |         |
-| cost_price     | numeric(15,2)            |                                             | false    |                                                     |                                     |         |
-| last_quoted_at | timestamp with time zone |                                             | true     |                                                     |                                     |         |
-| is_active      | boolean                  | true                                        | false    |                                                     |                                     |         |
-| created_by     | bigint                   |                                             | false    |                                                     | [public.users](public.users.md)     |         |
-| updated_by     | bigint                   |                                             | true     |                                                     | [public.users](public.users.md)     |         |
-| created_at     | timestamp with time zone | now()                                       | false    |                                                     |                                     |         |
-| updated_at     | timestamp with time zone | now()                                       | false    |                                                     |                                     |         |
-| product_url    | text                     |                                             | true     |                                                     |                                     |         |
+| Name           | Type                     | Default                                     | Nullable | Children                                            | Parents                             | Comment                                                                                                           |
+| -------------- | ------------------------ | ------------------------------------------- | -------- | --------------------------------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| id             | bigint                   | nextval('vendor_products_id_seq'::regclass) | false    | [public.quotation_items](public.quotation_items.md) |                                     |                                                                                                                   |
+| vendor_id      | bigint                   |                                             | false    |                                                     | [public.vendors](public.vendors.md) |                                                                                                                   |
+| item_id        | bigint                   |                                             | false    |                                                     | [public.items](public.items.md)     |                                                                                                                   |
+| vendor_sku     | varchar(100)             |                                             | true     |                                                     |                                     |                                                                                                                   |
+| cost_price     | numeric(15,2)            |                                             | false    |                                                     |                                     |                                                                                                                   |
+| last_quoted_at | timestamp with time zone |                                             | true     |                                                     |                                     |                                                                                                                   |
+| is_active      | boolean                  | true                                        | false    |                                                     |                                     |                                                                                                                   |
+| created_by     | bigint                   |                                             | false    |                                                     | [public.users](public.users.md)     |                                                                                                                   |
+| updated_by     | bigint                   |                                             | true     |                                                     | [public.users](public.users.md)     |                                                                                                                   |
+| created_at     | timestamp with time zone | now()                                       | false    |                                                     |                                     |                                                                                                                   |
+| updated_at     | timestamp with time zone | now()                                       | false    |                                                     |                                     |                                                                                                                   |
+| product_url    | text                     |                                             | true     |                                                     |                                     | Optional URL to the product page on the vendor site (e.g. catalog listing, quote reference). NULL = not provided. |
 
 ## Constraints
 
@@ -39,12 +39,13 @@
 
 ## Indexes
 
-| Name                                  | Definition                                                                                                           |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| vendor_products_pkey                  | CREATE UNIQUE INDEX vendor_products_pkey ON public.vendor_products USING btree (id)                                  |
-| vendor_products_vendor_id_item_id_key | CREATE UNIQUE INDEX vendor_products_vendor_id_item_id_key ON public.vendor_products USING btree (vendor_id, item_id) |
-| idx_vendor_products_vendor            | CREATE INDEX idx_vendor_products_vendor ON public.vendor_products USING btree (vendor_id)                            |
-| idx_vendor_products_item              | CREATE INDEX idx_vendor_products_item ON public.vendor_products USING btree (item_id)                                |
+| Name                                  | Definition                                                                                                             |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| vendor_products_pkey                  | CREATE UNIQUE INDEX vendor_products_pkey ON public.vendor_products USING btree (id)                                    |
+| vendor_products_vendor_id_item_id_key | CREATE UNIQUE INDEX vendor_products_vendor_id_item_id_key ON public.vendor_products USING btree (vendor_id, item_id)   |
+| idx_vendor_products_vendor            | CREATE INDEX idx_vendor_products_vendor ON public.vendor_products USING btree (vendor_id)                              |
+| idx_vendor_products_item              | CREATE INDEX idx_vendor_products_item ON public.vendor_products USING btree (item_id)                                  |
+| idx_vendor_products_sku_trgm          | CREATE INDEX idx_vendor_products_sku_trgm ON public.vendor_products USING gin (lower((vendor_sku)::text) gin_trgm_ops) |
 
 ## Triggers
 

@@ -2,6 +2,8 @@
 
 ## Description
 
+Owner-facing side-by-side: client_requested | matched_item_name | quoted_qty/price. One row per request line, repeated when 1 request maps to N quotation_items (1:N case). Quotations without requests still appear (LEFT JOIN, qir.* NULL). Order via ORDER BY quotation_id, line_no, quoted_line_number in queries.
+
 <details>
 <summary><strong>Table Definition</strong></summary>
 
@@ -78,12 +80,12 @@ CREATE VIEW v_quotation_request_audit AS (
 
 ## Referenced Tables
 
-| Name                                                                | Columns | Comment | Type       |
-| ------------------------------------------------------------------- | ------- | ------- | ---------- |
-| [public.quotations](public.quotations.md)                           | 27      |         | BASE TABLE |
-| [public.quotation_item_requests](public.quotation_item_requests.md) | 19      |         | BASE TABLE |
-| [public.items](public.items.md)                                     | 11      |         | BASE TABLE |
-| [public.quotation_items](public.quotation_items.md)                 | 30      |         | BASE TABLE |
+| Name                                                                | Columns | Comment                                                                                                                                                                                                                                               | Type       |
+| ------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| [public.quotations](public.quotations.md)                           | 27      |                                                                                                                                                                                                                                                       | BASE TABLE |
+| [public.quotation_item_requests](public.quotation_item_requests.md) | 19      | Pre-quotation request log. Each row = one RFQ line from klien (manual input or OCR). Goes through pending→matched/substituted/unavailable review, then 0..N quotation_items rows are built from it. Owner-facing audit via v_quotation_request_audit. | BASE TABLE |
+| [public.items](public.items.md)                                     | 11      |                                                                                                                                                                                                                                                       | BASE TABLE |
+| [public.quotation_items](public.quotation_items.md)                 | 31      |                                                                                                                                                                                                                                                       | BASE TABLE |
 
 ## Relations
 

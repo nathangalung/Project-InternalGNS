@@ -33,11 +33,13 @@
 
 ## Indexes
 
-| Name                | Definition                                                                                        |
-| ------------------- | ------------------------------------------------------------------------------------------------- |
-| items_pkey          | CREATE UNIQUE INDEX items_pkey ON public.items USING btree (id)                                   |
-| idx_items_name_trgm | CREATE INDEX idx_items_name_trgm ON public.items USING gin (name gin_trgm_ops)                    |
-| idx_items_impa      | CREATE INDEX idx_items_impa ON public.items USING btree (impa_code) WHERE (impa_code IS NOT NULL) |
+| Name                      | Definition                                                                                                                                         |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| items_pkey                | CREATE UNIQUE INDEX items_pkey ON public.items USING btree (id)                                                                                    |
+| idx_items_name_trgm       | CREATE INDEX idx_items_name_trgm ON public.items USING gin (name gin_trgm_ops)                                                                     |
+| idx_items_impa            | CREATE INDEX idx_items_impa ON public.items USING btree (impa_code) WHERE (impa_code IS NOT NULL)                                                  |
+| uq_items_impa_code_active | CREATE UNIQUE INDEX uq_items_impa_code_active ON public.items USING btree (upper((impa_code)::text)) WHERE (is_active AND (impa_code IS NOT NULL)) |
+| idx_items_impa_trgm       | CREATE INDEX idx_items_impa_trgm ON public.items USING gin (impa_code gin_trgm_ops)                                                                |
 
 ## Triggers
 

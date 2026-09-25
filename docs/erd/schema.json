@@ -58,6 +58,24 @@
           "type": "timestamp with time zone",
           "nullable": false,
           "default": "now()"
+        },
+        {
+          "name": "failed_login_attempts",
+          "type": "integer",
+          "nullable": false,
+          "default": "0"
+        },
+        {
+          "name": "locked_until",
+          "type": "timestamp with time zone",
+          "nullable": true
+        },
+        {
+          "name": "session_version",
+          "type": "integer",
+          "nullable": false,
+          "default": "1",
+          "comment": "Bumped on a role change, deactivation or password change. Access and refresh tokens minted under an older version are refused."
         }
       ],
       "indexes": [
@@ -75,6 +93,14 @@
           "table": "public.users",
           "columns": [
             "email"
+          ]
+        },
+        {
+          "name": "users_email_lower_idx",
+          "def": "CREATE UNIQUE INDEX users_email_lower_idx ON public.users USING btree (lower((email)::text))",
+          "table": "public.users",
+          "columns": [
+            "lower"
           ]
         }
       ],
@@ -97,6 +123,16 @@
           "referenced_table": "",
           "columns": [
             "email"
+          ]
+        },
+        {
+          "name": "users_failed_login_attempts_not_null",
+          "type": "n",
+          "def": "NOT NULL failed_login_attempts",
+          "table": "public.users",
+          "referenced_table": "",
+          "columns": [
+            "failed_login_attempts"
           ]
         },
         {
@@ -157,6 +193,16 @@
           "referenced_table": "",
           "columns": [
             "role"
+          ]
+        },
+        {
+          "name": "users_session_version_not_null",
+          "type": "n",
+          "def": "NOT NULL session_version",
+          "table": "public.users",
+          "referenced_table": "",
+          "columns": [
+            "session_version"
           ]
         },
         {
@@ -323,7 +369,8 @@
         {
           "name": "number",
           "type": "varchar(10)",
-          "nullable": true
+          "nullable": false,
+          "default": "fn_next_client_number()"
         },
         {
           "name": "name",
@@ -407,6 +454,14 @@
           "columns": [
             "name"
           ]
+        },
+        {
+          "name": "uq_company_client_number",
+          "def": "CREATE UNIQUE INDEX uq_company_client_number ON public.company_client USING btree (number)",
+          "table": "public.company_client",
+          "columns": [
+            "number"
+          ]
         }
       ],
       "constraints": [
@@ -458,6 +513,26 @@
           "referenced_table": "",
           "columns": [
             "name"
+          ]
+        },
+        {
+          "name": "company_client_number_format_check",
+          "type": "CHECK",
+          "def": "CHECK (((number)::text ~ '^[0-9]{4}$'::text))",
+          "table": "public.company_client",
+          "referenced_table": "",
+          "columns": [
+            "number"
+          ]
+        },
+        {
+          "name": "company_client_number_not_null",
+          "type": "n",
+          "def": "NOT NULL number",
+          "table": "public.company_client",
+          "referenced_table": "",
+          "columns": [
+            "number"
           ]
         },
         {
@@ -616,19 +691,19 @@
           ]
         },
         {
-          "name": "idx_company_contacts_email",
-          "def": "CREATE UNIQUE INDEX idx_company_contacts_email ON public.company_contacts USING btree (lower((email)::text)) WHERE (email IS NOT NULL)",
-          "table": "public.company_contacts",
-          "columns": [
-            "lower"
-          ]
-        },
-        {
           "name": "idx_company_contacts_name_trgm",
           "def": "CREATE INDEX idx_company_contacts_name_trgm ON public.company_contacts USING gin (name gin_trgm_ops)",
           "table": "public.company_contacts",
           "columns": [
             "name"
+          ]
+        },
+        {
+          "name": "idx_company_contacts_email",
+          "def": "CREATE UNIQUE INDEX idx_company_contacts_email ON public.company_contacts USING btree (lower((email)::text)) WHERE ((email IS NOT NULL) AND is_active)",
+          "table": "public.company_contacts",
+          "columns": [
+            "lower"
           ]
         }
       ],
@@ -1066,6 +1141,22 @@
           "columns": [
             "impa_code"
           ]
+        },
+        {
+          "name": "uq_items_impa_code_active",
+          "def": "CREATE UNIQUE INDEX uq_items_impa_code_active ON public.items USING btree (upper((impa_code)::text)) WHERE (is_active AND (impa_code IS NOT NULL))",
+          "table": "public.items",
+          "columns": [
+            "upper"
+          ]
+        },
+        {
+          "name": "idx_items_impa_trgm",
+          "def": "CREATE INDEX idx_items_impa_trgm ON public.items USING gin (impa_code gin_trgm_ops)",
+          "table": "public.items",
+          "columns": [
+            "impa_code"
+          ]
         }
       ],
       "constraints": [
@@ -1252,7 +1343,8 @@
         {
           "name": "product_url",
           "type": "text",
-          "nullable": true
+          "nullable": true,
+          "comment": "Optional URL to the product page on the vendor site (e.g. catalog listing, quote reference). NULL = not provided."
         }
       ],
       "indexes": [
@@ -1287,6 +1379,14 @@
           "table": "public.vendor_products",
           "columns": [
             "item_id"
+          ]
+        },
+        {
+          "name": "idx_vendor_products_sku_trgm",
+          "def": "CREATE INDEX idx_vendor_products_sku_trgm ON public.vendor_products USING gin (lower((vendor_sku)::text) gin_trgm_ops)",
+          "table": "public.vendor_products",
+          "columns": [
+            "lower"
           ]
         }
       ],
@@ -1779,6 +1879,30 @@
             "status",
             "created_at"
           ]
+        },
+        {
+          "name": "idx_quotations_client_name_trgm",
+          "def": "CREATE INDEX idx_quotations_client_name_trgm ON public.quotations USING gin (company_client_name gin_trgm_ops)",
+          "table": "public.quotations",
+          "columns": [
+            "company_client_name"
+          ]
+        },
+        {
+          "name": "idx_quotations_no_trgm",
+          "def": "CREATE INDEX idx_quotations_no_trgm ON public.quotations USING gin (quotation_no gin_trgm_ops)",
+          "table": "public.quotations",
+          "columns": [
+            "quotation_no"
+          ]
+        },
+        {
+          "name": "idx_quotations_created_at",
+          "def": "CREATE INDEX idx_quotations_created_at ON public.quotations USING btree (created_at DESC)",
+          "table": "public.quotations",
+          "columns": [
+            "created_at"
+          ]
         }
       ],
       "constraints": [
@@ -1875,13 +1999,12 @@
         {
           "name": "quotations_status_check",
           "type": "CHECK",
-          "def": "CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'sent'::character varying, 'accepted'::character varying, 'rejected'::character varying, 'revision'::character varying, 'expired'::character varying])::text[])))",
+          "def": "CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'sent'::character varying, 'accepted'::character varying, 'rejected'::character varying, 'revision'::character varying, 'expired'::character varying, 'cancelled'::character varying])::text[])))",
           "table": "public.quotations",
           "referenced_table": "",
           "columns": [
             "status"
-          ],
-          "comment": "Canonical status values. FE labels mapped in translation layer (FE), not in DB. expired = quotation past validity_days, set via job/cron."
+          ]
         },
         {
           "name": "quotations_status_not_null",
@@ -2185,7 +2308,14 @@
         {
           "name": "request_id",
           "type": "bigint",
-          "nullable": true
+          "nullable": true,
+          "comment": "Back-pointer to quotation_item_requests row that this line was built from. NULL = legacy row or admin-added line without an explicit klien request log."
+        },
+        {
+          "name": "shipping_days",
+          "type": "integer",
+          "nullable": true,
+          "comment": "Estimated delivery working days, shipping lines only."
         }
       ],
       "indexes": [
@@ -2341,7 +2471,7 @@
         {
           "name": "quotation_items_qty_check",
           "type": "CHECK",
-          "def": "CHECK ((qty \u003e= (0)::numeric))",
+          "def": "CHECK ((qty \u003e (0)::numeric)) NOT VALID",
           "table": "public.quotation_items",
           "referenced_table": "",
           "columns": [
@@ -2689,22 +2819,6 @@
           ]
         },
         {
-          "name": "purchase_orders_po_number_key",
-          "def": "CREATE UNIQUE INDEX purchase_orders_po_number_key ON public.purchase_orders USING btree (po_number)",
-          "table": "public.purchase_orders",
-          "columns": [
-            "po_number"
-          ]
-        },
-        {
-          "name": "idx_po_quotation",
-          "def": "CREATE INDEX idx_po_quotation ON public.purchase_orders USING btree (quotation_id)",
-          "table": "public.purchase_orders",
-          "columns": [
-            "quotation_id"
-          ]
-        },
-        {
           "name": "idx_po_company",
           "def": "CREATE INDEX idx_po_company ON public.purchase_orders USING btree (company_client_id)",
           "table": "public.purchase_orders",
@@ -2719,6 +2833,31 @@
           "columns": [
             "status",
             "po_date"
+          ]
+        },
+        {
+          "name": "idx_po_po_date",
+          "def": "CREATE INDEX idx_po_po_date ON public.purchase_orders USING btree (po_date DESC)",
+          "table": "public.purchase_orders",
+          "columns": [
+            "po_date"
+          ]
+        },
+        {
+          "name": "uq_purchase_orders_client_po_number",
+          "def": "CREATE UNIQUE INDEX uq_purchase_orders_client_po_number ON public.purchase_orders USING btree (company_client_id, po_number)",
+          "table": "public.purchase_orders",
+          "columns": [
+            "company_client_id",
+            "po_number"
+          ]
+        },
+        {
+          "name": "uq_purchase_orders_quotation_id",
+          "def": "CREATE UNIQUE INDEX uq_purchase_orders_quotation_id ON public.purchase_orders USING btree (quotation_id)",
+          "table": "public.purchase_orders",
+          "columns": [
+            "quotation_id"
           ]
         }
       ],
@@ -2826,7 +2965,7 @@
         {
           "name": "purchase_orders_status_check",
           "type": "CHECK",
-          "def": "CHECK (((status)::text = ANY ((ARRAY['PENDING'::character varying, 'UPLOADED'::character varying, 'ON_PROGRESS'::character varying, 'DELIVERED'::character varying])::text[])))",
+          "def": "CHECK (((status)::text = ANY ((ARRAY['PENDING'::character varying, 'UPLOADED'::character varying, 'ON_PROGRESS'::character varying, 'DELIVERED'::character varying, 'CANCELLED'::character varying])::text[])))",
           "table": "public.purchase_orders",
           "referenced_table": "",
           "columns": [
@@ -2851,6 +2990,17 @@
           "referenced_table": "",
           "columns": [
             "updated_at"
+          ]
+        },
+        {
+          "name": "purchase_orders_uploaded_has_file",
+          "type": "CHECK",
+          "def": "CHECK ((((status)::text \u003c\u003e 'UPLOADED'::text) OR (file_url IS NOT NULL)))",
+          "table": "public.purchase_orders",
+          "referenced_table": "",
+          "columns": [
+            "status",
+            "file_url"
           ]
         },
         {
@@ -2927,16 +3077,6 @@
           "columns": [
             "id"
           ]
-        },
-        {
-          "name": "purchase_orders_po_number_key",
-          "type": "UNIQUE",
-          "def": "UNIQUE (po_number)",
-          "table": "public.purchase_orders",
-          "referenced_table": "",
-          "columns": [
-            "po_number"
-          ]
         }
       ],
       "triggers": [
@@ -2947,6 +3087,10 @@
         {
           "name": "trg_po_inherit_quotation_discount",
           "def": "CREATE TRIGGER trg_po_inherit_quotation_discount BEFORE INSERT ON public.purchase_orders FOR EACH ROW EXECUTE FUNCTION trg_fn_po_inherit_quotation_discount()"
+        },
+        {
+          "name": "trg_log_po_creation",
+          "def": "CREATE TRIGGER trg_log_po_creation AFTER INSERT ON public.purchase_orders FOR EACH ROW EXECUTE FUNCTION trg_fn_log_po_creation()"
         }
       ]
     },
@@ -3089,6 +3233,12 @@
           "name": "ship_destination",
           "type": "varchar(255)",
           "nullable": true
+        },
+        {
+          "name": "shipping_days",
+          "type": "integer",
+          "nullable": true,
+          "comment": "Estimated delivery working days, shipping lines only."
         }
       ],
       "indexes": [
@@ -3441,8 +3591,7 @@
         {
           "name": "dpp_nilai_lain",
           "type": "numeric(15,2)",
-          "nullable": true,
-          "extra_def": "GENERATED ALWAYS AS ((dpp * 11.0) / 12.0) STORED"
+          "nullable": true
         },
         {
           "name": "ppn_rate",
@@ -3453,8 +3602,7 @@
         {
           "name": "ppn_amount",
           "type": "numeric(15,2)",
-          "nullable": true,
-          "extra_def": "GENERATED ALWAYS AS (((dpp * 11.0) / 12.0) * 0.12) STORED"
+          "nullable": true
         },
         {
           "name": "tax_transaction_code",
@@ -3505,14 +3653,34 @@
         {
           "name": "total",
           "type": "numeric(15,2)",
-          "nullable": true,
-          "extra_def": "GENERATED ALWAYS AS (dpp * 1.11) STORED"
+          "nullable": true
         },
         {
           "name": "attachment_object_key",
           "type": "text",
           "nullable": true,
           "comment": "MinIO object key inside bucket invoice-attachments (e.g. payment receipt). NULL = no attachment."
+        },
+        {
+          "name": "total_discount",
+          "type": "numeric(15,2)",
+          "nullable": false,
+          "default": "0"
+        },
+        {
+          "name": "replaces_invoice_id",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "paid_at",
+          "type": "timestamp with time zone",
+          "nullable": true
+        },
+        {
+          "name": "payment_proof_key",
+          "type": "text",
+          "nullable": true
         }
       ],
       "indexes": [
@@ -3541,14 +3709,6 @@
           ]
         },
         {
-          "name": "idx_invoices_po",
-          "def": "CREATE INDEX idx_invoices_po ON public.invoices USING btree (po_id)",
-          "table": "public.invoices",
-          "columns": [
-            "po_id"
-          ]
-        },
-        {
           "name": "idx_invoices_company",
           "def": "CREATE INDEX idx_invoices_company ON public.invoices USING btree (company_client_id)",
           "table": "public.invoices",
@@ -3563,6 +3723,38 @@
           "columns": [
             "status",
             "invoice_date"
+          ]
+        },
+        {
+          "name": "idx_invoices_invoice_date",
+          "def": "CREATE INDEX idx_invoices_invoice_date ON public.invoices USING btree (invoice_date)",
+          "table": "public.invoices",
+          "columns": [
+            "invoice_date"
+          ]
+        },
+        {
+          "name": "uq_invoices_replaces_invoice_id",
+          "def": "CREATE UNIQUE INDEX uq_invoices_replaces_invoice_id ON public.invoices USING btree (replaces_invoice_id) WHERE (replaces_invoice_id IS NOT NULL)",
+          "table": "public.invoices",
+          "columns": [
+            "replaces_invoice_id"
+          ]
+        },
+        {
+          "name": "uq_invoices_po_id_live",
+          "def": "CREATE UNIQUE INDEX uq_invoices_po_id_live ON public.invoices USING btree (po_id) WHERE ((po_id IS NOT NULL) AND ((status)::text \u003c\u003e 'cancelled'::text))",
+          "table": "public.invoices",
+          "columns": [
+            "po_id"
+          ]
+        },
+        {
+          "name": "idx_invoices_po",
+          "def": "CREATE INDEX idx_invoices_po ON public.invoices USING btree (po_id)",
+          "table": "public.invoices",
+          "columns": [
+            "po_id"
           ]
         }
       ],
@@ -3708,6 +3900,16 @@
           ]
         },
         {
+          "name": "invoices_total_discount_not_null",
+          "type": "n",
+          "def": "NOT NULL total_discount",
+          "table": "public.invoices",
+          "referenced_table": "",
+          "columns": [
+            "total_discount"
+          ]
+        },
+        {
           "name": "invoices_updated_at_not_null",
           "type": "n",
           "def": "NOT NULL updated_at",
@@ -3789,6 +3991,19 @@
           "table": "public.invoices",
           "referenced_table": "",
           "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "invoices_replaces_invoice_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (replaces_invoice_id) REFERENCES invoices(id)",
+          "table": "public.invoices",
+          "referenced_table": "public.invoices",
+          "columns": [
+            "replaces_invoice_id"
+          ],
+          "referenced_columns": [
             "id"
           ]
         },
@@ -3925,6 +4140,11 @@
         {
           "name": "ship_destination",
           "type": "varchar(255)",
+          "nullable": true
+        },
+        {
+          "name": "gross_unit_price",
+          "type": "numeric(15,2)",
           "nullable": true
         }
       ],
@@ -4529,7 +4749,8 @@
         {
           "name": "changed_by",
           "type": "bigint",
-          "nullable": false
+          "nullable": true,
+          "comment": "Acting user. NULL marks a system transition (fn_expire_quotations)."
         },
         {
           "name": "changed_at",
@@ -4566,16 +4787,6 @@
           "referenced_table": "",
           "columns": [
             "changed_at"
-          ]
-        },
-        {
-          "name": "quotation_status_history_changed_by_not_null",
-          "type": "n",
-          "def": "NOT NULL changed_by",
-          "table": "public.quotation_status_history",
-          "referenced_table": "",
-          "columns": [
-            "changed_by"
           ]
         },
         {
@@ -4649,6 +4860,7 @@
     {
       "name": "public.quotation_item_requests",
       "type": "BASE TABLE",
+      "comment": "Pre-quotation request log. Each row = one RFQ line from klien (manual input or OCR). Goes through pending→matched/substituted/unavailable review, then 0..N quotation_items rows are built from it. Owner-facing audit via v_quotation_request_audit.",
       "columns": [
         {
           "name": "id",
@@ -4695,13 +4907,15 @@
           "name": "match_status",
           "type": "varchar(20)",
           "nullable": false,
-          "default": "'pending'::character varying"
+          "default": "'pending'::character varying",
+          "comment": "pending=awaiting review; matched=catalog item identified, offer text matches client request text; substituted=catalog item identified, but offer text differs from client request text (e.g. \"Cement High Temperature\" offered for \"Semen cor tahan api\" request); unavailable=cannot fulfill from current catalog (either RFQ rejected, or historical/reverse-engineered quote where matched_item_id is NULL because the item was never added to master). \"confirmed\" is derived from EXISTS quotation_items.request_id."
         },
         {
           "name": "source_type",
           "type": "varchar(20)",
           "nullable": false,
-          "default": "'manual'::character varying"
+          "default": "'manual'::character varying",
+          "comment": "manual=staff typed it in, ocr=extracted from klien document via OCR, import=batch loaded from external file."
         },
         {
           "name": "source_ref",
@@ -5032,18 +5246,19 @@
       ],
       "triggers": [
         {
-          "name": "trg_qir_lock_parent",
-          "def": "CREATE TRIGGER trg_qir_lock_parent BEFORE INSERT OR DELETE OR UPDATE ON public.quotation_item_requests FOR EACH ROW EXECUTE FUNCTION trg_fn_qir_lock_parent()"
-        },
-        {
           "name": "trg_qir_updated_at",
           "def": "CREATE TRIGGER trg_qir_updated_at BEFORE UPDATE ON public.quotation_item_requests FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
+        },
+        {
+          "name": "trg_qir_lock_parent",
+          "def": "CREATE TRIGGER trg_qir_lock_parent BEFORE INSERT OR DELETE OR UPDATE ON public.quotation_item_requests FOR EACH ROW EXECUTE FUNCTION trg_fn_qir_lock_parent()"
         }
       ]
     },
     {
       "name": "public.v_quotation_request_audit",
       "type": "VIEW",
+      "comment": "Owner-facing side-by-side: client_requested | matched_item_name | quoted_qty/price. One row per request line, repeated when 1 request maps to N quotation_items (1:N case). Quotations without requests still appear (LEFT JOIN, qir.* NULL). Order via ORDER BY quotation_id, line_no, quoted_line_number in queries.",
       "columns": [
         {
           "name": "quotation_id",
@@ -5187,6 +5402,548 @@
         "public.quotation_item_requests",
         "public.items",
         "public.quotation_items"
+      ]
+    },
+    {
+      "name": "public.refresh_tokens",
+      "type": "BASE TABLE",
+      "comment": "Opaque refresh tokens (SHA-256 hashed). Rotation on use, revocation on logout.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "default": "nextval('refresh_tokens_id_seq'::regclass)"
+        },
+        {
+          "name": "user_id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "token_hash",
+          "type": "bytea",
+          "nullable": false,
+          "comment": "SHA-256(token); never store the raw token. 32 bytes."
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "revoked_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "comment": "Set when the token is consumed (rotated) or explicitly revoked. NULL = active."
+        },
+        {
+          "name": "revoked_reason",
+          "type": "text",
+          "nullable": true,
+          "comment": "Why the token was revoked: rotated, logout, admin, reuse. NULL on legacy rows."
+        },
+        {
+          "name": "session_version",
+          "type": "integer",
+          "nullable": false,
+          "comment": "The owner's users.session_version when this token was minted. Redeemable only while the two match."
+        }
+      ],
+      "indexes": [
+        {
+          "name": "refresh_tokens_pkey",
+          "def": "CREATE UNIQUE INDEX refresh_tokens_pkey ON public.refresh_tokens USING btree (id)",
+          "table": "public.refresh_tokens",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "refresh_tokens_token_hash_key",
+          "def": "CREATE UNIQUE INDEX refresh_tokens_token_hash_key ON public.refresh_tokens USING btree (token_hash)",
+          "table": "public.refresh_tokens",
+          "columns": [
+            "token_hash"
+          ]
+        },
+        {
+          "name": "refresh_tokens_user_id_idx",
+          "def": "CREATE INDEX refresh_tokens_user_id_idx ON public.refresh_tokens USING btree (user_id)",
+          "table": "public.refresh_tokens",
+          "columns": [
+            "user_id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "refresh_tokens_created_at_not_null",
+          "type": "n",
+          "def": "NOT NULL created_at",
+          "table": "public.refresh_tokens",
+          "referenced_table": "",
+          "columns": [
+            "created_at"
+          ]
+        },
+        {
+          "name": "refresh_tokens_expires_at_not_null",
+          "type": "n",
+          "def": "NOT NULL expires_at",
+          "table": "public.refresh_tokens",
+          "referenced_table": "",
+          "columns": [
+            "expires_at"
+          ]
+        },
+        {
+          "name": "refresh_tokens_id_not_null",
+          "type": "n",
+          "def": "NOT NULL id",
+          "table": "public.refresh_tokens",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "refresh_tokens_session_version_not_null",
+          "type": "n",
+          "def": "NOT NULL session_version",
+          "table": "public.refresh_tokens",
+          "referenced_table": "",
+          "columns": [
+            "session_version"
+          ]
+        },
+        {
+          "name": "refresh_tokens_token_hash_not_null",
+          "type": "n",
+          "def": "NOT NULL token_hash",
+          "table": "public.refresh_tokens",
+          "referenced_table": "",
+          "columns": [
+            "token_hash"
+          ]
+        },
+        {
+          "name": "refresh_tokens_user_id_not_null",
+          "type": "n",
+          "def": "NOT NULL user_id",
+          "table": "public.refresh_tokens",
+          "referenced_table": "",
+          "columns": [
+            "user_id"
+          ]
+        },
+        {
+          "name": "refresh_tokens_user_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE",
+          "table": "public.refresh_tokens",
+          "referenced_table": "public.users",
+          "columns": [
+            "user_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "refresh_tokens_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.refresh_tokens",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "refresh_tokens_token_hash_key",
+          "type": "UNIQUE",
+          "def": "UNIQUE (token_hash)",
+          "table": "public.refresh_tokens",
+          "referenced_table": "",
+          "columns": [
+            "token_hash"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.v_po_totals",
+      "type": "VIEW",
+      "comment": "PO money figures mirroring fn_create_invoice: per-line rounding, summed.",
+      "columns": [
+        {
+          "name": "po_id",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "po_subtotal",
+          "type": "numeric",
+          "nullable": true
+        },
+        {
+          "name": "po_total_produk",
+          "type": "numeric",
+          "nullable": true
+        },
+        {
+          "name": "po_total_profit",
+          "type": "numeric",
+          "nullable": true
+        },
+        {
+          "name": "po_dpp_nilai_lain",
+          "type": "numeric",
+          "nullable": true
+        },
+        {
+          "name": "po_ppn_amount",
+          "type": "numeric",
+          "nullable": true
+        },
+        {
+          "name": "po_grand_total",
+          "type": "numeric",
+          "nullable": true
+        },
+        {
+          "name": "po_total_discount",
+          "type": "numeric",
+          "nullable": true
+        }
+      ],
+      "def": "CREATE VIEW v_po_totals AS (\n SELECT po_id,\n    sum(subtotal) AS po_subtotal,\n    sum(total_selling) FILTER (WHERE ((item_type)::text = 'product'::text)) AS po_total_produk,\n    sum((subtotal - total_cost)) FILTER (WHERE ((item_type)::text = 'product'::text)) AS po_total_profit,\n    sum(round(((subtotal * 11.0) / 12.0), 2)) AS po_dpp_nilai_lain,\n    sum(round((round(((subtotal * 11.0) / 12.0), 2) * 0.12), 2)) AS po_ppn_amount,\n    (sum(subtotal) + sum(round((round(((subtotal * 11.0) / 12.0), 2) * 0.12), 2))) AS po_grand_total,\n    (sum(round((qty * selling_price), 2)) - sum(subtotal)) AS po_total_discount\n   FROM purchase_order_items poi\n  GROUP BY po_id\n)",
+      "referenced_tables": [
+        "public.purchase_order_items"
+      ]
+    },
+    {
+      "name": "public.po_status_history",
+      "type": "BASE TABLE",
+      "comment": "PO status timeline. from_status NULL marks creation. Written by trg_log_po_creation, fn_change_po_status, fn_attach_po_file and fn_detach_po_file.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "default": "nextval('po_status_history_id_seq'::regclass)"
+        },
+        {
+          "name": "po_id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "from_status",
+          "type": "varchar(20)",
+          "nullable": true
+        },
+        {
+          "name": "to_status",
+          "type": "varchar(20)",
+          "nullable": false
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "changed_by",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "changed_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "po_status_history_pkey",
+          "def": "CREATE UNIQUE INDEX po_status_history_pkey ON public.po_status_history USING btree (id)",
+          "table": "public.po_status_history",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "idx_po_status_history_po",
+          "def": "CREATE INDEX idx_po_status_history_po ON public.po_status_history USING btree (po_id, changed_at, id)",
+          "table": "public.po_status_history",
+          "columns": [
+            "po_id",
+            "changed_at",
+            "id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "po_status_history_changed_at_not_null",
+          "type": "n",
+          "def": "NOT NULL changed_at",
+          "table": "public.po_status_history",
+          "referenced_table": "",
+          "columns": [
+            "changed_at"
+          ]
+        },
+        {
+          "name": "po_status_history_changed_by_not_null",
+          "type": "n",
+          "def": "NOT NULL changed_by",
+          "table": "public.po_status_history",
+          "referenced_table": "",
+          "columns": [
+            "changed_by"
+          ]
+        },
+        {
+          "name": "po_status_history_id_not_null",
+          "type": "n",
+          "def": "NOT NULL id",
+          "table": "public.po_status_history",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "po_status_history_po_id_not_null",
+          "type": "n",
+          "def": "NOT NULL po_id",
+          "table": "public.po_status_history",
+          "referenced_table": "",
+          "columns": [
+            "po_id"
+          ]
+        },
+        {
+          "name": "po_status_history_to_status_not_null",
+          "type": "n",
+          "def": "NOT NULL to_status",
+          "table": "public.po_status_history",
+          "referenced_table": "",
+          "columns": [
+            "to_status"
+          ]
+        },
+        {
+          "name": "po_status_history_changed_by_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE RESTRICT",
+          "table": "public.po_status_history",
+          "referenced_table": "public.users",
+          "columns": [
+            "changed_by"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "po_status_history_po_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (po_id) REFERENCES purchase_orders(id) ON DELETE CASCADE",
+          "table": "public.po_status_history",
+          "referenced_table": "public.purchase_orders",
+          "columns": [
+            "po_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "po_status_history_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.po_status_history",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.invoice_status_history",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "default": "nextval('invoice_status_history_id_seq'::regclass)"
+        },
+        {
+          "name": "invoice_id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "from_status",
+          "type": "varchar(20)",
+          "nullable": false
+        },
+        {
+          "name": "to_status",
+          "type": "varchar(20)",
+          "nullable": false
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "payment_proof_key",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "changed_by",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "changed_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "invoice_status_history_pkey",
+          "def": "CREATE UNIQUE INDEX invoice_status_history_pkey ON public.invoice_status_history USING btree (id)",
+          "table": "public.invoice_status_history",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "idx_invoice_status_history_invoice",
+          "def": "CREATE INDEX idx_invoice_status_history_invoice ON public.invoice_status_history USING btree (invoice_id, changed_at)",
+          "table": "public.invoice_status_history",
+          "columns": [
+            "invoice_id",
+            "changed_at"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "invoice_status_history_changed_at_not_null",
+          "type": "n",
+          "def": "NOT NULL changed_at",
+          "table": "public.invoice_status_history",
+          "referenced_table": "",
+          "columns": [
+            "changed_at"
+          ]
+        },
+        {
+          "name": "invoice_status_history_changed_by_not_null",
+          "type": "n",
+          "def": "NOT NULL changed_by",
+          "table": "public.invoice_status_history",
+          "referenced_table": "",
+          "columns": [
+            "changed_by"
+          ]
+        },
+        {
+          "name": "invoice_status_history_from_status_not_null",
+          "type": "n",
+          "def": "NOT NULL from_status",
+          "table": "public.invoice_status_history",
+          "referenced_table": "",
+          "columns": [
+            "from_status"
+          ]
+        },
+        {
+          "name": "invoice_status_history_id_not_null",
+          "type": "n",
+          "def": "NOT NULL id",
+          "table": "public.invoice_status_history",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "invoice_status_history_invoice_id_not_null",
+          "type": "n",
+          "def": "NOT NULL invoice_id",
+          "table": "public.invoice_status_history",
+          "referenced_table": "",
+          "columns": [
+            "invoice_id"
+          ]
+        },
+        {
+          "name": "invoice_status_history_to_status_not_null",
+          "type": "n",
+          "def": "NOT NULL to_status",
+          "table": "public.invoice_status_history",
+          "referenced_table": "",
+          "columns": [
+            "to_status"
+          ]
+        },
+        {
+          "name": "invoice_status_history_changed_by_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE RESTRICT",
+          "table": "public.invoice_status_history",
+          "referenced_table": "public.users",
+          "columns": [
+            "changed_by"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "invoice_status_history_invoice_id_fkey",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE",
+          "table": "public.invoice_status_history",
+          "referenced_table": "public.invoices",
+          "columns": [
+            "invoice_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "invoice_status_history_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.invoice_status_history",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        }
       ]
     }
   ],
@@ -5816,6 +6573,19 @@
       "def": "FOREIGN KEY (po_id) REFERENCES purchase_orders(id) ON DELETE RESTRICT"
     },
     {
+      "table": "public.invoices",
+      "columns": [
+        "replaces_invoice_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.invoices",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "zero_or_one",
+      "def": "FOREIGN KEY (replaces_invoice_id) REFERENCES invoices(id)"
+    },
+    {
       "table": "public.invoice_items",
       "columns": [
         "created_by"
@@ -5916,7 +6686,7 @@
       "parent_columns": [
         "id"
       ],
-      "parent_cardinality": "exactly_one",
+      "parent_cardinality": "zero_or_one",
       "def": "FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE RESTRICT"
     },
     {
@@ -5996,6 +6766,71 @@
       ],
       "parent_cardinality": "exactly_one",
       "def": "FOREIGN KEY (quotation_id) REFERENCES quotations(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.refresh_tokens",
+      "columns": [
+        "user_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.po_status_history",
+      "columns": [
+        "changed_by"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE RESTRICT"
+    },
+    {
+      "table": "public.po_status_history",
+      "columns": [
+        "po_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.purchase_orders",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (po_id) REFERENCES purchase_orders(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.invoice_status_history",
+      "columns": [
+        "changed_by"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.users",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE RESTRICT"
+    },
+    {
+      "table": "public.invoice_status_history",
+      "columns": [
+        "invoice_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.invoices",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE"
     }
   ],
   "functions": [
@@ -6210,12 +7045,6 @@
       "type": "FUNCTION"
     },
     {
-      "name": "public.fn_search_items",
-      "return_type": "record",
-      "arguments": "p_q text, p_min_score real DEFAULT 0.3, p_limit integer DEFAULT 10",
-      "type": "FUNCTION"
-    },
-    {
       "name": "public.fn_search_items_by_vendor",
       "return_type": "record",
       "arguments": "p_vendor_id bigint, p_limit integer DEFAULT 50",
@@ -6324,27 +7153,15 @@
       "type": "FUNCTION"
     },
     {
-      "name": "public.fn_change_po_status",
-      "return_type": "void",
-      "arguments": "p_po_id bigint, p_new_status text, p_user_id bigint",
+      "name": "public.trg_fn_qir_lock_parent",
+      "return_type": "trigger",
+      "arguments": "",
       "type": "FUNCTION"
     },
     {
       "name": "public.fn_update_po_items",
       "return_type": "void",
       "arguments": "p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.fn_change_invoice_status",
-      "return_type": "void",
-      "arguments": "p_invoice_id bigint, p_target text, p_user_id bigint",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.trg_fn_qir_lock_parent",
-      "return_type": "trigger",
-      "arguments": "",
       "type": "FUNCTION"
     },
     {
@@ -6357,6 +7174,90 @@
       "name": "public.fn_update_po_items_versioned",
       "return_type": "int4",
       "arguments": "p_po_id bigint, p_if_match integer, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_update_po_details",
+      "return_type": "int4",
+      "arguments": "p_po_id bigint, p_if_match integer, p_po_number text, p_po_date date, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_update_po_notes",
+      "return_type": "int4",
+      "arguments": "p_po_id bigint, p_if_match integer, p_notes text, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_replace_invoice",
+      "return_type": "int8",
+      "arguments": "p_invoice_id bigint, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_next_client_number",
+      "return_type": "text",
+      "arguments": "",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_quotation_status_label",
+      "return_type": "text",
+      "arguments": "p_status text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_revise_quotation",
+      "return_type": "int8",
+      "arguments": "p_quotation_id bigint, p_user_id bigint, p_note text DEFAULT NULL::text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_expire_quotations",
+      "return_type": "int4",
+      "arguments": "p_today date",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.trg_fn_log_po_creation",
+      "return_type": "trigger",
+      "arguments": "",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_change_po_status",
+      "return_type": "void",
+      "arguments": "p_po_id bigint, p_new_status text, p_user_id bigint, p_note text DEFAULT NULL::text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_attach_po_file",
+      "return_type": "void",
+      "arguments": "p_po_id bigint, p_file_name text, p_file_size bigint, p_file_url text, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_detach_po_file",
+      "return_type": "void",
+      "arguments": "p_po_id bigint, p_user_id bigint",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_change_invoice_status",
+      "return_type": "void",
+      "arguments": "p_invoice_id bigint, p_target text, p_user_id bigint, p_note text DEFAULT NULL::text, p_proof_key text DEFAULT NULL::text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_invoice_effective_status",
+      "return_type": "text",
+      "arguments": "p_status text, p_due_date date",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.fn_search_items",
+      "return_type": "record",
+      "arguments": "p_q text, p_min_score real DEFAULT 0.3, p_limit integer DEFAULT 10, p_is_active boolean DEFAULT true",
       "type": "FUNCTION"
     }
   ],
