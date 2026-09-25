@@ -198,6 +198,8 @@ func TestRepo_Completeness_ShipDestination(t *testing.T) {
 			[]quotations.CreateItem{quoteLine(nil)}, true},
 		{"blank product, addressed shipping line", strPtr("Jl. Pelabuhan No. 1, Jakarta Utara"), strPtr("75000"),
 			[]quotations.CreateItem{quoteLine(nil)}, false},
+		{"blank product, addressed shipping line without cost", strPtr("Jl. Pelabuhan No. 1, Jakarta Utara"), nil,
+			[]quotations.CreateItem{quoteLine(nil)}, false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -207,7 +209,16 @@ func TestRepo_Completeness_ShipDestination(t *testing.T) {
 				ShippingAddress: tc.address, ShippingDays: &days, ShippingCost: tc.cost,
 				Items: tc.lines,
 			})
-			issues, err := purchaseorders.NewRepo(tx, testutil.Store(t)).Completeness(ctx, poID)
+			repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+			if tc.address != nil {
+				// The PO snapshot carries the quotation's address.
+				items, err := repo.ListItems(ctx, poID)
+				require.NoError(t, err)
+				ship := items[len(items)-1]
+				assert.Equal(t, "shipping", ship.ItemType)
+				assert.Equal(t, tc.address, ship.ShipDestination)
+			}
+			issues, err := repo.Completeness(ctx, poID)
 			require.NoError(t, err)
 			if !tc.gap {
 				assert.Empty(t, issues)

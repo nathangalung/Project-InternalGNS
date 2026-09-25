@@ -128,23 +128,27 @@ func buildExportData(
 	// fn_create_quotation writes at most one shipping line.
 	deliveryTime := ""
 
-	for i, it := range d.Items {
+	for _, it := range d.Items {
 		unitCode := ""
 		if it.UnitID != nil {
 			unitCode = unitsByID[*it.UnitID]
 		}
 		shipping := it.ItemType == "shipping"
 		if shipping {
-			hasShipping = true
 			if it.ShippingDays != nil {
 				deliveryTime = daysText(*it.ShippingDays)
 			}
+			// A line kept only for its address is no charge.
+			if !isPriced(it.SellingPrice) {
+				continue
+			}
+			hasShipping = true
 		} else {
 			productCount++
 		}
 
 		items = append(items, exportItem{
-			No:        i + 1,
+			No:        len(items) + 1,
 			Qty:       pdfgen.FormatQty(it.Qty),
 			Unit:      pdfgen.LatexEscape(unitCode),
 			Request:   withCode(it.RequestedName, it.RequestedImpa),

@@ -108,6 +108,35 @@ func TestBuildExportData_TotalsFromStoredHeader(t *testing.T) {
 	}
 }
 
+// Uncharged shipping prints no row.
+// A line kept only for its address must not read as a Rp 0 charge, in the
+// item table or in the totals; its delivery days still print.
+func TestBuildExportData_ZeroCostShipping(t *testing.T) {
+	for _, cost := range []string{"0.00", "0"} {
+		t.Run(cost, func(t *testing.T) {
+			three := 3
+			ship := shippingLine(2, cost)
+			ship.ShippingDays = &three
+			d := QuotationDetail{
+				Quotation: header("1000.00", "1000.00", "0.00", "1000.00", "916.67", "110.00", "1110.00"),
+				Items:     []QuotationItem{productLine(1, "ITEM", "1.00", "1000.00", "1000.00"), ship},
+			}
+
+			got := buildExportData(d, qUnits, "", "", "Director")
+
+			if got.HasShipping {
+				t.Error("HasShipping = true for a Rp 0 shipping line")
+			}
+			if len(got.Items) != 1 {
+				t.Fatalf("items = %d, want 1 (the Rp 0 shipping line is not printed)", len(got.Items))
+			}
+			if got.DeliveryTime != "3 days" {
+				t.Errorf("DeliveryTime = %q, want 3 days", got.DeliveryTime)
+			}
+		})
+	}
+}
+
 // Unpriced lines print No Offer.
 // A priced line is quoted.
 func TestBuildExportData_NoOfferIsUnpriced(t *testing.T) {
