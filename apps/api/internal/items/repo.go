@@ -180,8 +180,9 @@ func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int
 	return pgx.CollectRows(rows, pgx.RowToStructByName[SearchResult])
 }
 
-// SearchCatalog runs the name layer. A nil isActive keeps active and
-// inactive items alike.
+// SearchCatalog runs the name layer.
+//
+// A nil isActive keeps active and inactive items alike.
 func (r *Repo) SearchCatalog(ctx context.Context, q string, minScore float32, limit int, isActive *bool) ([]SearchResult, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("items.search_catalog"), q, minScore, limit, isActive)
 	if err != nil {

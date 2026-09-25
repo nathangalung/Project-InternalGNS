@@ -154,6 +154,8 @@ func TestRepo_ItemMetaByIDs(t *testing.T) {
 	assert.NotContains(t, meta, int64(99999999), "absent row must not be reported")
 }
 
+// Unset filter surfaces inactive offers.
+//
 // With isActive unset the vendor-offer layer still reaches a deactivated
 // item, which must be reported as inactive rather than assumed active.
 func TestRepo_SearchVendorOffers_SurfacesInactiveItem(t *testing.T) {

@@ -27,8 +27,10 @@ func insertItem(t *testing.T, clean *testutil.Cleaner, name string, active bool)
 	return id
 }
 
-// The isActive filter reaches the name layer: a deactivated product is found
-// by name under Nonaktif and under Semua, and never under Aktif.
+// Name layer honours isActive.
+//
+// A deactivated product is found by name under Nonaktif and under Semua,
+// and never under Aktif.
 func TestHandler_SearchAdvanced_InactiveByName(t *testing.T) {
 	clean := testutil.NewCleaner(t)
 	srv := newSrv(t)
@@ -67,8 +69,10 @@ func TestHandler_SearchAdvanced_InactiveByName(t *testing.T) {
 	}
 }
 
-// Each layer query applies isActive itself, so the layer cap and the total
-// count only the rows the filter keeps.
+// Every layer filters isActive itself.
+//
+// Filtering in SQL makes the layer cap and the total count only the rows
+// the filter keeps.
 func TestRepo_SearchLayers_HonourIsActive(t *testing.T) {
 	pool := testutil.Pool(t)
 	clean := testutil.NewCleaner(t)
