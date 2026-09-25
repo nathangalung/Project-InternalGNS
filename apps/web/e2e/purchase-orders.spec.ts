@@ -473,3 +473,43 @@ test.describe("purchase order address gaps", () => {
     })
   })
 })
+
+test.describe("purchase order contact gap", () => {
+  test("a deactivated narahubung is re-picked on the quotation, then the PO passes", async ({
+    page,
+    seed,
+  }) => {
+    const client = await seed.client()
+    const replacement = `${seed.prefix} Narahubung Pengganti`
+    const replacementId = await seed.contact(client, replacement)
+    const { q, po } = await acceptedPo(seed, { client })
+    await seed.attachPoFile(po)
+    await api("DELETE", `/clients/${client.id}/contacts/${client.contactId}`)
+
+    await page.goto(`/purchase-orders/${q.id}`)
+    await choosePoStatus(page, "PO Diunggah", "Dalam Progres")
+    const modal = page.getByRole("dialog", { name: "Data Belum Lengkap" })
+    await expect(modal.getByRole("listitem").getByText("Narahubung aktif")).toBeVisible()
+    // Other client gaps still open the client record.
+    await expect(modal.getByRole("link", { name: client.name })).toHaveAttribute(
+      "href",
+      `/clients/${client.id}`,
+    )
+    await modal.getByRole("link", { name: "Ganti Narahubung" }).click()
+
+    await expect(page).toHaveURL(new RegExp(`/quotations/${q.id}\\?narahubung=true$`))
+    const picker = page.getByRole("dialog", { name: "Ganti Narahubung" })
+    await picker.getByRole("button", { name: new RegExp(replacement) }).click()
+    await picker.getByRole("button", { name: "Simpan", exact: true }).click()
+    await expect(picker).toBeHidden()
+    await expect.poll(async () => (await seed.getQuotation(q.id)).contactId).toBe(replacementId)
+    await expect(
+      page.getByText("Narahubung", { exact: true }).locator("xpath=following-sibling::*[1]"),
+    ).toHaveText(replacement)
+
+    await page.goto(`/purchase-orders/${q.id}`)
+    await choosePoStatus(page, "PO Diunggah", "Dalam Progres")
+    await expect(page).toHaveURL(/\/purchase-orders$/)
+    expect((await seed.poByQuotation(q.id)).status).toBe("ON_PROGRESS")
+  })
+})

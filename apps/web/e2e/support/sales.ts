@@ -207,8 +207,8 @@ export class SalesSeed {
 
   // Draft quotation, priced lines.
   //
-  // A zero charge stores no shipping line, so each line carries the address
-  // itself: the ON_PROGRESS gate refuses unaddressed goods.
+  // The shipping address stores a line even at a zero charge, and each line
+  // carries the address too, so the ON_PROGRESS gate passes either way.
   async quotation(opts: {
     client: SeedClient
     lines: SeedLine[]

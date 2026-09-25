@@ -6,10 +6,13 @@ import type { CompletenessIssue } from "./helpers"
 
 type CompletenessModalProps = {
   issues: CompletenessIssue[]
-  // Route key of the PO edit screen
+  // Route key of the PO and its quotation
   quotationId: number
   onClose: () => void
 }
+
+// Deactivated narahubung server gap
+const INACTIVE_CONTACT = "Narahubung aktif"
 
 const SCOPE: Record<CompletenessIssue["kind"], string> = {
   client: "Klien",
@@ -35,8 +38,8 @@ export default function CompletenessModal({
     >
       <p className="m-0 text-[13px] leading-[1.5] text-[#4A4455]">
         Sebelum mengubah status menjadi <strong className="text-[#6B21A8]">Dalam Progres</strong>,
-        data berikut harus dilengkapi terlebih dahulu. Buka nama klien atau vendor, atau Ubah PO
-        untuk mengisi alamat pengiriman, lalu lengkapi datanya.
+        data berikut harus dilengkapi terlebih dahulu. Buka nama klien atau vendor, Ganti Narahubung
+        untuk memilih narahubung aktif, atau Ubah PO untuk mengisi alamat pengiriman.
       </p>
 
       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
@@ -64,7 +67,23 @@ export default function CompletenessModal({
             {issue.missing.length > 0 ? (
               <ul className="m-0 list-disc pl-5 text-xs leading-[1.6] text-accent-900">
                 {issue.missing.map((field) => (
-                  <li key={field}>{field}</li>
+                  <li key={field}>
+                    {field}
+                    {/* A deactivated narahubung is re-picked on the quotation. */}
+                    {issue.kind === "client" && field === INACTIVE_CONTACT && (
+                      <>
+                        {" — "}
+                        <Link
+                          to="/quotations/$id"
+                          params={{ id: String(quotationId) }}
+                          search={{ narahubung: true }}
+                          className={`${ui.entityLink} font-semibold`}
+                        >
+                          Ganti Narahubung
+                        </Link>
+                      </>
+                    )}
+                  </li>
                 ))}
               </ul>
             ) : (

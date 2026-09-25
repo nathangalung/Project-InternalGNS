@@ -7,6 +7,7 @@ import { ui } from "@/lib/ui"
 import type { QuotationTransition } from "@/types/api"
 import { isEditable, quotationStatusFromLabel, splitTransitions, statusHint } from "../status"
 import ClientSummaryCard from "./ClientSummaryCard"
+import ContactModal from "./ContactModal"
 import CostBreakdown from "./CostBreakdown"
 import Header from "./Header"
 import { profitAfterDiscount } from "./helpers"
@@ -23,6 +24,10 @@ type QuotationDetailProps = {
   // Server moves for the saved status
   transitions: QuotationTransition[]
   canRevise: boolean
+  // The chosen narahubung
+  contactId?: number
+  // Opened from the PO gate
+  openContactPicker?: boolean
   onEdit: () => void
 }
 
@@ -32,6 +37,8 @@ export default function QuotationDetail({
   quotation: q,
   transitions,
   canRevise,
+  contactId,
+  openContactPicker = false,
   onEdit,
 }: QuotationDetailProps) {
   const [picked, setPicked] = useState<QuotationTransition | null>(null)
@@ -40,6 +47,9 @@ export default function QuotationDetail({
   const id = Number(q.id)
   const status = quotationStatusFromLabel(q.status)
   const { moves, cancel } = splitTransitions(transitions)
+  // The editor covers drafts; an accepted quote re-picks here.
+  const canChangeContact = status === "accepted" && q.clientId !== undefined
+  const [changingContact, setChangingContact] = useState(openContactPicker && canChangeContact)
 
   const totalProduk = q.products.reduce((s, p) => s + p.qty * p.hargaSatuan, 0)
   const totalShip = q.shipping.hargaSatuan
@@ -70,6 +80,7 @@ export default function QuotationDetail({
         clientInitials={getCompanyInitials(q.client)}
         clientInfo={q.clientInfo}
         shippingAlamat={q.shipping.alamat}
+        onChangeContact={canChangeContact ? () => setChangingContact(true) : undefined}
       />
       {totalShip > 0 && <ShippingTable shipping={q.shipping} />}
       <ProductTable products={q.products} />
@@ -98,6 +109,14 @@ export default function QuotationDetail({
       )}
       {revising && (
         <ReviseModal quotationId={id} version={q.version} onClose={() => setRevising(false)} />
+      )}
+      {changingContact && q.clientId !== undefined && (
+        <ContactModal
+          quotationId={id}
+          companyId={q.clientId}
+          contactId={contactId}
+          onClose={() => setChangingContact(false)}
+        />
       )}
     </div>
   )

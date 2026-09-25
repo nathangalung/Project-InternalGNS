@@ -1,5 +1,6 @@
 import EntityLink from "@/components/shared/EntityLink"
 import type { ClientInfo } from "@/features/quotations/types"
+import { ui } from "@/lib/ui"
 import { qe } from "../wizard-styles"
 
 type ClientSummaryCardProps = {
@@ -9,6 +10,8 @@ type ClientSummaryCardProps = {
   clientInitials: string
   clientInfo?: ClientInfo
   shippingAlamat?: string
+  // Opens the contact re-pick
+  onChangeContact?: () => void
 }
 
 const fieldLabel = "mb-1 text-[11px] font-semibold uppercase text-[#6B7280]"
@@ -23,6 +26,7 @@ export default function ClientSummaryCard({
   clientInitials,
   clientInfo,
   shippingAlamat,
+  onChangeContact,
 }: ClientSummaryCardProps) {
   const ci = clientInfo
   return (
@@ -53,6 +57,15 @@ export default function ClientSummaryCard({
             <div>
               <div className={fieldLabel}>Narahubung</div>
               <div className={fieldValueSemibold}>{ci?.narahubung || "-"}</div>
+              {onChangeContact && (
+                <button
+                  type="button"
+                  onClick={onChangeContact}
+                  className={`mt-1 p-0 text-xs font-semibold ${ui.entityLink}`}
+                >
+                  Ganti Narahubung
+                </button>
+              )}
             </div>
             <div>
               <div className={fieldLabel}>Nomor HP</div>
