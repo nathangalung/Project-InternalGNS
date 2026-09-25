@@ -27,9 +27,10 @@ type Config struct {
 	SuperadminName     string `env:"SUPERADMIN_NAME"     envDefault:"Administrator"`
 	SuperadminPassword string `env:"SUPERADMIN_PASSWORD"`
 
-	// Optional second superadmin. Seeded on boot only if EMAIL + PASSWORD
-	// are both non-empty; otherwise skipped silently. SeedSuperadmin is
-	// idempotent — re-running with the same email is a no-op.
+	// Optional second superadmin.
+	// Seeded on boot only if EMAIL + PASSWORD are both non-empty; otherwise
+	// skipped silently. SeedSuperadmin is idempotent — re-running with the
+	// same email is a no-op.
 	Superadmin2Email    string `env:"SUPERADMIN2_EMAIL"`
 	Superadmin2Name     string `env:"SUPERADMIN2_NAME"     envDefault:"Administrator 2"`
 	Superadmin2Password string `env:"SUPERADMIN2_PASSWORD"`
@@ -49,9 +50,10 @@ type Config struct {
 	PdfBankAccountNm string `env:"PDF_BANK_ACCOUNT_NM" envDefault:"PT GLOBAL NIAGA SAKTI"`
 	PdfPaymentTerms  string `env:"PDF_PAYMENT_TERMS"   envDefault:"Net 30 days"`
 
-	// Coretax (DJP) e-faktur export: seller-side static fields. SellerTIN is
-	// the company NPWP (16 digits, no separators); SellerIDTKU appends the
-	// branch suffix ("000000" for headquarters).
+	// Coretax (DJP) seller fields.
+	// E-faktur export: seller-side static fields. SellerTIN is the company
+	// NPWP (16 digits, no separators); SellerIDTKU appends the branch suffix
+	// ("000000" for headquarters).
 	CoretaxSellerTIN   string `env:"CORETAX_SELLER_TIN"   envDefault:""`
 	CoretaxSellerIDTKU string `env:"CORETAX_SELLER_IDTKU" envDefault:""`
 }
