@@ -100,8 +100,9 @@ func TestRepo_StorageFailuresSurface(t *testing.T) {
 		key    string
 		prefix string
 		call   func(ctx context.Context, r *users.Repo, u users.User) error
-		// inTx marks calls that run in their own savepoint, so the test
-		// transaction survives and the rollback can be checked.
+		// inTx marks savepoint calls.
+		// They run in their own savepoint, so the test transaction survives and
+		// the rollback can be checked.
 		inTx bool
 	}{
 		{prepareFault, "users.get_by_id_admin", "read user", func(ctx context.Context, r *users.Repo, u users.User) error {

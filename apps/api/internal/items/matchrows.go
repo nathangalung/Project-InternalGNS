@@ -54,7 +54,8 @@ type rowMatcher struct {
 	req      MatchRowsRequest
 	minScore float32
 	userID   int64
-	// Dedups auto-created rows by IMPA or normalised name, across chunks.
+	// created dedups auto-created rows.
+	// Keyed by IMPA or normalised name, across chunks.
 	created map[string]int64
 }
 

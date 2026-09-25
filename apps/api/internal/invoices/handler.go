@@ -22,7 +22,8 @@ import (
 
 type Handler struct {
 	repo *Repo
-	// proofs is nil when storage is not configured.
+	// proofs may be nil.
+	// It is nil when storage is not configured.
 	proofs ProofStore
 }
 

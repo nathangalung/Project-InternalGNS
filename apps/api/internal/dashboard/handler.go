@@ -16,7 +16,7 @@ const defaultMonths = 12
 
 type Handler struct {
 	repo *Repo
-	// now is the clock the default windows read.
+	// now clocks the default windows.
 	now func() time.Time
 }
 
