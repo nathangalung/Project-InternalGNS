@@ -25,7 +25,9 @@ export async function seedSession(context: BrowserContext, tokens: Tokens): Prom
   }, tokens)
 }
 
-// Pages start signed in as `session`; override with test.use({ session }).
+// Pages start signed in.
+//
+// The role is `session`; override it with test.use({ session }).
 export const test = base.extend<{ session: Session }>({
   session: ["superadmin", { option: true }],
   context: async ({ context, session }, use) => {

@@ -1,6 +1,8 @@
 import { expect, type Session, test } from "./fixtures"
 
-// Every route, typed into the address bar, per session.
+// Every route, per session.
+//
+// Each route is typed into the address bar.
 //
 // The expectation is written out from the CLAUDE.md role table, not derived
 // from rbac.ts, so a wrong guard cannot agree with itself. Detail routes use

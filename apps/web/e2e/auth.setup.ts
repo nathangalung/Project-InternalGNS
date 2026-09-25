@@ -3,9 +3,11 @@ import { test as setup } from "@playwright/test"
 import { ensureUser, generatePassword, login } from "./support/api"
 import { adminCredentials, authDir, authFile, e2eUsers } from "./support/env"
 
-// One API login per role per run. The app keeps its tokens in
-// sessionStorage, which Playwright storageState does not capture, so the
-// tokens are saved here and the fixture seeds them into each page.
+// One API login per role.
+//
+// Once per run. The app keeps its tokens in sessionStorage, which Playwright
+// storageState does not capture, so the tokens are saved here and the fixture
+// seeds them into each page.
 setup("sign in every role", async () => {
   // Room for one throttled login to wait out the rate-limit window.
   setup.setTimeout(150_000)

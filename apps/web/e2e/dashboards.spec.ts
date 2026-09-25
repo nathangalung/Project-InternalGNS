@@ -11,9 +11,10 @@ import {
   uniqueTag,
 } from "./support/finance"
 
-// What each role sees on the dashboards. Totals move while parallel specs
-// file invoices, so these tests assert which figures, tabs and links a role
-// gets, never the figures themselves.
+// Dashboards as each role.
+//
+// Totals move while parallel specs file invoices, so these tests assert which
+// figures, tabs and links a role gets, never the figures themselves.
 
 type Summary = {
   totalRevenue: string

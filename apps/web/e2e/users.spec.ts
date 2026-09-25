@@ -4,9 +4,11 @@ import { call, findUser, generatePassword, ownIp } from "./support/api"
 import { createUser, type SeedUser, setUser, uniqueTag } from "./support/finance"
 import { signedInContext, submitLogin } from "./support/session"
 
-// User management as the superadmin, plus the self-service password change
-// every role has. Every account a test touches is a throwaway one: ending
-// its sessions must never sign out the users the other specs share.
+// User management as superadmin.
+//
+// Plus the self-service password change every role has. Every account a test
+// touches is a throwaway one: ending its sessions must never sign out the
+// users the other specs share.
 
 type Role = "superadmin" | "operational" | "finance"
 type Reader = { user: SeedUser; page: Page }

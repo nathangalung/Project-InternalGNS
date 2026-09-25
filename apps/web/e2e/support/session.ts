@@ -3,9 +3,11 @@ import { seedSession } from "../fixtures"
 import { login, ownIp } from "./api"
 import { baseURL } from "./env"
 
-// Browser sessions for throwaway users. Each context signs in from its own
-// client address, so login and password-change limits never spill over to
-// the setup project or another worker.
+// Throwaway-user browser sessions.
+//
+// Each context signs in from its own client address, so login and
+// password-change limits never spill over to the setup project or another
+// worker.
 
 // Own address for every request.
 export async function isolateIp(context: BrowserContext): Promise<string> {

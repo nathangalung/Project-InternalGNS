@@ -14,8 +14,10 @@ import {
   wibDay,
 } from "./support/finance"
 
-// Invoice work as finance, the role the page exists for. Each test files its
-// own invoice through a delivered PO; the client is deactivated afterwards.
+// Invoice work as finance.
+//
+// Finance is the role the page exists for. Each test files its own invoice
+// through a delivered PO; the client is deactivated afterwards.
 
 const test = base.extend<{ admin: string; client: SeedClient; invoice: SeedInvoice }>({
   // biome-ignore lint/correctness/noEmptyPattern: Playwright needs the destructured argument

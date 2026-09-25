@@ -30,6 +30,8 @@ export function ownIp(): string {
   return `10.${a}.${b}.${c}`
 }
 
+// Login, waiting out throttling.
+//
 // Login is limited to 5 per minute per IP; wait once when throttled.
 export async function login(email: string, password: string, ip?: string): Promise<Tokens> {
   const body = JSON.stringify({ email, password })
@@ -43,7 +45,9 @@ export async function login(email: string, password: string, ip?: string): Promi
   return (await res.json()) as Tokens
 }
 
-// Meets the password policy: upper, digit and symbol.
+// Policy-compliant random password.
+//
+// Has an upper case letter, a digit and a symbol.
 export function generatePassword(): string {
   return `E2e!${randomBytes(9).toString("base64url")}7`
 }
@@ -58,7 +62,9 @@ export async function findUser(admin: string, email: string): Promise<User> {
   return match
 }
 
-// Creates the user, or reactivates it and resets its password.
+// Create or reactivate a user.
+//
+// A reactivated user gets its password reset.
 export async function ensureUser(
   admin: string,
   user: { email: string; name: string; role: string },
@@ -92,7 +98,9 @@ export async function ensureUser(
   )
 }
 
-// The API has no user delete, so removal means deactivation.
+// Removal means deactivation.
+//
+// The API has no user delete.
 export async function deactivateUser(admin: string, email: string): Promise<void> {
   const u = await findUser(admin, email)
   await expectOk(

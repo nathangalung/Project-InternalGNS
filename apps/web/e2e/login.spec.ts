@@ -5,9 +5,11 @@ import { baseURL } from "./support/env"
 import { createUser, resetPassword, type SeedUser, setUser, uniqueTag } from "./support/finance"
 import { isolateIp, signedInContext, submitLogin } from "./support/session"
 
-// Login and logout through the form. Every test signs in from its own client
-// address and, when it needs a real account, a throwaway user, so no failed
-// attempt can throttle or lock the accounts the other specs share.
+// Form login and logout.
+//
+// Every test signs in from its own client address and, when it needs a real
+// account, a throwaway user, so no failed attempt can throttle or lock the
+// accounts the other specs share.
 
 const WRONG = "Email atau kata sandi salah."
 const THROTTLED = "Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi."

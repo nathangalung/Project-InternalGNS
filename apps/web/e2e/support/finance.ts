@@ -1,10 +1,12 @@
 import { randomBytes } from "node:crypto"
 import { call, expectOk, generatePassword, type User } from "./api"
 
-// Invoice and user data for the finance and admin specs, built through the
-// API. Every name carries a unique tag so parallel workers and reruns never
-// collide. Quotations, POs and invoices have no DELETE route, so they stay
-// behind; clients and users are deactivated by the spec that made them.
+// Finance and admin spec data.
+//
+// Invoice and user data, built through the API. Every name carries a unique
+// tag so parallel workers and reruns never collide. Quotations, POs and
+// invoices have no DELETE route, so they stay behind; clients and users are
+// deactivated by the spec that made them.
 
 // Unique per call.
 export function uniqueTag(): string {
