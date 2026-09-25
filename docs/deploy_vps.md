@@ -527,11 +527,14 @@ docker stop $(svc api) $(svc frontend)
 # 2. Back up what the failed release wrote; confirm "backup ok" in journalctl.
 systemctl start internalgns-backup.service
 
-# 3. Save the counters the failed release reached. Stop if either file is
-#    missing or the second one is empty.
+# 3. Save the counters the failed release reached, and the top version of
+#    each quotation chain. Stop if a command fails. If the failed release
+#    never started (its migrations failed), nothing was numbered: skip 3 and 6.
 q -c "COPY (SELECT s.doc_type, s.company_id, c.number, s.year, s.last_seq
   FROM doc_sequences s JOIN company_client c ON c.id = s.company_id) TO STDOUT" >"$NUM.tsv"
 q -F ' ' -c "SELECT last_value, is_called FROM company_client_number_seq" >"$NUM.seq"
+q -c "COPY (SELECT regexp_replace(quotation_no, ' Rev\.[0-9]+\$', ''), max(version)
+  FROM quotations GROUP BY 1) TO STDOUT" >"$NUM.rev"
 
 # 4. Empty what restore.sh refuses to overwrite: the database and the
 #    snapshot's buckets. The restore and the api's boot recreate buckets.
@@ -547,13 +550,16 @@ done
 # 6. Raise the counters to the saved ones, never lower. A client matches a
 #    saved row by id or by number; an id survives the restore even where
 #    00052 padded the number. It prints each saved client number no client
-#    has now: clients entered after the deploy, which the restore removed.
+#    has now (clients entered after the deploy, which the restore removed)
+#    and each quotation revised after the deploy.
 raise() {
   read -r last called <"$NUM.seq"
   { printf '%s\n' 'BEGIN;' \
       'CREATE TEMP TABLE seen (doc_type text, company_id bigint, number text, year int, last_seq int);' \
       'COPY seen FROM STDIN;'
     cat "$NUM.tsv"
+    printf '%s\n' '\.' 'CREATE TEMP TABLE revs (base text, version int);' 'COPY revs FROM STDIN;'
+    cat "$NUM.rev"
     printf '%s\n' '\.'
     cat <<SQL
 INSERT INTO doc_sequences AS d (doc_type, company_id, year, last_seq)
@@ -571,6 +577,11 @@ COMMIT;
 SELECT DISTINCT 'removed client ' || s.number FROM seen s
 WHERE NOT EXISTS (SELECT 1 FROM company_client c
                   WHERE c.id = s.company_id OR c.number = s.number);
+SELECT 'revised after the deploy ' || r.base FROM revs r
+JOIN (SELECT regexp_replace(quotation_no, ' Rev\.[0-9]+$', '') AS base,
+             max(version) AS version
+      FROM quotations GROUP BY 1) cur USING (base)
+WHERE cur.version < r.version;
 SQL
   } | q
 }
@@ -586,10 +597,18 @@ raise
 Keep the `removed client` lines from step 6. Their documents now exist only
 outside the database. v0.3.1 has no number generator, so client numbers are
 typed by hand there. When someone enters a client under a listed number,
-run `raise` again, with `NUM` and `q` set as above, before that client's
-first document. Until then its counters start at 1 and reissue the numbers
-the removed client filed. A rollback target without
+run `raise` again before that client's first document. In a new shell, run
+the whole preamble first (the env file, `NUM`, `svc`, `PG`, `q`) and paste
+the `raise` definition. Until then its counters start at 1 and reissue the
+numbers the removed client filed. A rollback target without
 `company_client_number_seq` (00056) skips the sequence line.
+
+A revision takes its number from the quotation it revises (`Rev.<n>` on the
+base number), not from a counter, so no raise can protect it. Do not revise
+a quotation listed as `revised after the deploy` in the restored release;
+the next revision would reuse a `Rev` number already sent. Issue a new
+quotation instead. v0.3.1 issues no `Rev` numbers, so this matters only
+when rolling back to a release that has `fn_revise_quotation` (00059).
 
 The database and the buckets now come from one snapshot, so the orphan-blob
 warning in `docs/backup_restore.md` does not apply to this restore.
@@ -609,7 +628,8 @@ dump, never from production data. Locally, "Deploy" is
 2. Run `scripts/backup.sh` and pin its snapshot, as in section 13.
 3. Deploy the new `TAG` and log in. Create a quotation for a seeded client.
    Add a client, create a quotation for it, and note both quotation numbers
-   and the new client's number.
+   and the new client's number. When the old `TAG` has
+   `fn_revise_quotation` (00059), also revise a seeded `sent` quotation.
 4. Run steps 1 to 8 above, with `SNAP` at the pinned copy and
    `scripts/backup.sh` in place of the systemd unit.
 5. Create a quotation for the same seeded client. Then enter the removed
@@ -620,7 +640,8 @@ The drill passes when all of these hold:
 
 - Login succeeds on the old `TAG`. This is what a tag-only rollback breaks.
 - The two step 3 quotations are gone.
-- Step 6 printed `removed client` with the number of the client from step 3.
+- Rollback step 6 printed `removed client` with the number of the client
+  from step 3, and `revised after the deploy` for a quotation revised there.
 - Neither step 5 quotation has the number of a step 3 quotation. If one
   does, the old release would reissue a number that was already filed.
 
