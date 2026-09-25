@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 	"path"
+	"slices"
 	"strings"
 )
 
@@ -15,10 +16,10 @@ var bucketExtensions = map[string]map[string]struct{}{
 	BucketPODocs:             docExts(),
 }
 
-// bucketRoles mirrors the resource RBAC.
+// bucketReaders mirrors the resource RBAC.
 // Logos and item images are shared master data; invoice attachments follow
 // /invoices; PO documents follow /purchase-orders.
-var bucketRoles = map[string][]string{
+var bucketReaders = map[string][]string{
 	BucketClientLogos:        {"superadmin", "operational", "finance"},
 	BucketVendorLogos:        {"superadmin", "operational", "finance"},
 	BucketItemImages:         {"superadmin", "operational", "finance"},
@@ -26,14 +27,25 @@ var bucketRoles = map[string][]string{
 	BucketPODocs:             {"superadmin", "operational"},
 }
 
-// CanAccessBucket checks role bucket access.
-func CanAccessBucket(role, bucket string) bool {
-	for _, r := range bucketRoles[bucket] {
-		if r == role {
-			return true
-		}
-	}
-	return false
+// bucketWriters mirrors the write RBAC.
+// Finance only reads /items and /vendors, so it stores no item image or
+// vendor logo. It keeps client writes for NPWP and TKU, logo included.
+var bucketWriters = map[string][]string{
+	BucketClientLogos:        {"superadmin", "operational", "finance"},
+	BucketVendorLogos:        {"superadmin", "operational"},
+	BucketItemImages:         {"superadmin", "operational"},
+	BucketInvoiceAttachments: {"superadmin", "finance"},
+	BucketPODocs:             {"superadmin", "operational"},
+}
+
+// CanReadBucket checks role read access.
+func CanReadBucket(role, bucket string) bool {
+	return slices.Contains(bucketReaders[bucket], role)
+}
+
+// CanWriteBucket checks role write access.
+func CanWriteBucket(role, bucket string) bool {
+	return slices.Contains(bucketWriters[bucket], role)
 }
 
 // Per-bucket size cap in bytes.

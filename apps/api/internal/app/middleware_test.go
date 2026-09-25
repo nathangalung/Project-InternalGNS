@@ -301,23 +301,32 @@ func TestAuthorizeBucket(t *testing.T) {
 	guarded := authorizeBucket(next)
 
 	cases := []struct {
-		role, bucket string
-		want         int
+		role, method, bucket string
+		want                 int
 	}{
-		{"finance", "invoice-attachments", http.StatusOK},
-		{"operational", "invoice-attachments", http.StatusForbidden},
-		{"operational", "po-docs", http.StatusOK},
-		{"finance", "po-docs", http.StatusForbidden},
-		{"operational", "client-logos", http.StatusOK},
-		{"operational", "", http.StatusForbidden},
+		{"finance", http.MethodGet, "invoice-attachments", http.StatusOK},
+		{"operational", http.MethodGet, "invoice-attachments", http.StatusForbidden},
+		{"operational", http.MethodGet, "po-docs", http.StatusOK},
+		{"finance", http.MethodGet, "po-docs", http.StatusForbidden},
+		{"operational", http.MethodGet, "client-logos", http.StatusOK},
+		{"operational", http.MethodGet, "", http.StatusForbidden},
+		{"finance", http.MethodPut, "invoice-attachments", http.StatusOK},
+		{"finance", http.MethodPut, "client-logos", http.StatusOK},
+		{"finance", http.MethodGet, "item-images", http.StatusOK},
+		{"finance", http.MethodGet, "vendor-logos", http.StatusOK},
+		{"finance", http.MethodPut, "item-images", http.StatusForbidden},
+		{"finance", http.MethodPut, "vendor-logos", http.StatusForbidden},
+		{"operational", http.MethodPut, "item-images", http.StatusOK},
+		{"superadmin", http.MethodPut, "vendor-logos", http.StatusOK},
+		{"operational", http.MethodPut, "invoice-attachments", http.StatusForbidden},
 	}
 	for _, c := range cases {
-		req := httptest.NewRequest(http.MethodGet, "/storage/object?bucket="+c.bucket, nil)
+		req := httptest.NewRequest(c.method, "/storage/object?bucket="+c.bucket, nil)
 		req = req.WithContext(deps.WithUserRole(req.Context(), c.role))
 		rec := httptest.NewRecorder()
 		guarded.ServeHTTP(rec, req)
 		if rec.Code != c.want {
-			t.Errorf("role %q bucket %q: got %d want %d", c.role, c.bucket, rec.Code, c.want)
+			t.Errorf("%s %s bucket %q: got %d want %d", c.role, c.method, c.bucket, rec.Code, c.want)
 		}
 	}
 }

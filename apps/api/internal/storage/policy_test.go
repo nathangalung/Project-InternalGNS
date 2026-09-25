@@ -2,26 +2,34 @@ package storage
 
 import "testing"
 
-func TestCanAccessBucket(t *testing.T) {
+// Finance reads catalog images only.
+// Every other role reads and writes the same buckets.
+func TestBucketAccess(t *testing.T) {
 	cases := []struct {
 		role, bucket string
-		want         bool
+		read, write  bool
 	}{
-		{"superadmin", BucketInvoiceAttachments, true},
-		{"finance", BucketInvoiceAttachments, true},
-		{"operational", BucketInvoiceAttachments, false},
-		{"superadmin", BucketPODocs, true},
-		{"operational", BucketPODocs, true},
-		{"finance", BucketPODocs, false},
-		{"operational", BucketClientLogos, true},
-		{"finance", BucketItemImages, true},
-		{"operational", BucketVendorLogos, true},
-		{"", BucketClientLogos, false},
-		{"superadmin", "nonexistent-bucket", false},
+		{"superadmin", BucketInvoiceAttachments, true, true},
+		{"finance", BucketInvoiceAttachments, true, true},
+		{"operational", BucketInvoiceAttachments, false, false},
+		{"superadmin", BucketPODocs, true, true},
+		{"operational", BucketPODocs, true, true},
+		{"finance", BucketPODocs, false, false},
+		{"operational", BucketClientLogos, true, true},
+		{"finance", BucketClientLogos, true, true},
+		{"finance", BucketItemImages, true, false},
+		{"finance", BucketVendorLogos, true, false},
+		{"operational", BucketItemImages, true, true},
+		{"superadmin", BucketVendorLogos, true, true},
+		{"", BucketClientLogos, false, false},
+		{"superadmin", "nonexistent-bucket", false, false},
 	}
 	for _, c := range cases {
-		if got := CanAccessBucket(c.role, c.bucket); got != c.want {
-			t.Errorf("CanAccessBucket(%q, %q) = %v, want %v", c.role, c.bucket, got, c.want)
+		if got := CanReadBucket(c.role, c.bucket); got != c.read {
+			t.Errorf("CanReadBucket(%q, %q) = %v, want %v", c.role, c.bucket, got, c.read)
+		}
+		if got := CanWriteBucket(c.role, c.bucket); got != c.write {
+			t.Errorf("CanWriteBucket(%q, %q) = %v, want %v", c.role, c.bucket, got, c.write)
 		}
 	}
 }

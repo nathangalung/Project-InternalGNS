@@ -58,7 +58,24 @@ Feature: Asset storage through the authenticated proxy
       | superadmin  | invoice-attachments | proof.xlsx |
       | operational | po-docs             | scan.jpg   |
       | operational | item-images         | item.webp  |
-      | finance     | vendor-logos        | logo.gif   |
+      | superadmin  | vendor-logos        | logo.gif   |
+
+  Scenario Outline: Finance reads catalog images but cannot store them
+    Given I am signed in as "operational"
+    And I uploaded "<file>" of 16 bytes to "<bucket>"
+    And I am signed in as "finance"
+    When I download that object
+    Then the response status is 200
+    And the download carries the uploaded bytes
+    When I upload "<file>" of 16 bytes to "<bucket>"
+    Then the response status is 403
+    And the response is problem+json
+    And nothing is stored under that key
+
+    Examples:
+      | bucket       | file      |
+      | item-images  | item.png  |
+      | vendor-logos | logo.webp |
 
   Scenario: A request without a session is told to sign in
     Given I am not signed in
