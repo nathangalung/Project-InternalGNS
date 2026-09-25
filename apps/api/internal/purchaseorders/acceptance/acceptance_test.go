@@ -28,7 +28,7 @@ const (
 )
 
 // testShipDestination addresses fixture lines.
-// The ON_PROGRESS gate refuses a line without one.
+// The ON_PROGRESS gate refuses unaddressed goods.
 var testShipDestination = "Pelabuhan Tanjung Priok, Jakarta Utara"
 
 type scenarioState struct {

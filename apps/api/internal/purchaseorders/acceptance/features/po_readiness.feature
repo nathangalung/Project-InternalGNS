@@ -1,6 +1,6 @@
 Feature: PO readiness before work starts
-  A quotation may leave the client address, the vendor location and each
-  line's shipping address blank. They are required once the PO moves from
+  A quotation may leave the client address, the vendor location and the
+  shipping address blank. They are required once the PO moves from
   UPLOADED to ON_PROGRESS, and the refusal lists every gap so the
   operator can fill them all in one pass. The narahubung checked is the
   one the quotation chose.
@@ -14,9 +14,9 @@ Feature: PO readiness before work starts
     And the PO has reached "UPLOADED"
     When the user tries to transition the PO to "ON_PROGRESS"
     Then the gate lists exactly these gaps:
-      | klien   | belum lengkap: Alamat                 |
-      | vendor  | belum lengkap: Lokasi                 |
-      | baris 1 | Alamat pengiriman baris 1 belum diisi |
+      | klien      | belum lengkap: Alamat         |
+      | vendor     | belum lengkap: Lokasi         |
+      | pengiriman | Alamat pengiriman belum diisi |
 
   Scenario: Each filled address clears its gap until work can start
     Given an accepted quotation for a new client and vendor without addresses
@@ -24,13 +24,13 @@ Feature: PO readiness before work starts
     When the user fills the client address
     And the user tries to transition the PO to "ON_PROGRESS"
     Then the gate lists exactly these gaps:
-      | vendor  | belum lengkap: Lokasi                 |
-      | baris 1 | Alamat pengiriman baris 1 belum diisi |
+      | vendor     | belum lengkap: Lokasi         |
+      | pengiriman | Alamat pengiriman belum diisi |
     When the user fills the vendor location
     And the user tries to transition the PO to "ON_PROGRESS"
     Then the gate lists exactly these gaps:
-      | baris 1 | Alamat pengiriman baris 1 belum diisi |
-    When the user fills the shipping address of every PO line
+      | pengiriman | Alamat pengiriman belum diisi |
+    When the user fills the PO shipping address
     And the user tries to transition the PO to "ON_PROGRESS"
     Then every PO transition succeeds
     And the PO has reached "ON_PROGRESS"

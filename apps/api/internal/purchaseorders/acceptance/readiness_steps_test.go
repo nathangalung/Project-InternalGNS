@@ -127,9 +127,10 @@ func (s *scenarioState) chooseOtherContact() error {
 	return nil
 }
 
-// Address lines through the API.
-// Each line keeps its quotation link, so its vendor still reaches the gate.
-func (s *scenarioState) fillShipDestinations() error {
+// Address the PO via API.
+// Each line keeps its quotation link, so its vendor still reaches the gate;
+// the address goes on the shipping line, as the PO editor sends it.
+func (s *scenarioState) fillShippingAddress() error {
 	poPath := "/purchase-orders/" + strconv.FormatInt(s.poID, 10)
 	if err := s.sendRequest(http.MethodGet, poPath+"/items", nil); err != nil {
 		return err
@@ -145,14 +146,13 @@ func (s *scenarioState) fillShipDestinations() error {
 	if err := json.Unmarshal(s.body, &po); err != nil {
 		return err
 	}
-	edit := purchaseorders.UpdateItemsRequest{DiscountPct: "0"}
+	edit := purchaseorders.UpdateItemsRequest{DiscountPct: "0", ShippingAddress: &testShipDestination}
 	for _, it := range items {
 		available := it.IsAvailable
 		edit.Items = append(edit.Items, purchaseorders.UpdateItemsLine{
 			QuotationItemID: it.QuotationItemID, OfferedItemID: it.OfferedItemID,
 			ItemName: it.ItemName, ItemCode: it.ItemCode, Qty: it.Qty, UnitID: it.UnitID,
 			SellingPrice: it.SellingPrice, CostPrice: it.CostPrice, IsAvailable: &available,
-			ShipDestination: &testShipDestination,
 		})
 	}
 	if err := s.sendRequestWithHeaders(http.MethodPut, poPath+"/items", edit,
@@ -166,7 +166,7 @@ func (s *scenarioState) fillShipDestinations() error {
 }
 
 func (s *scenarioState) fillEveryAddress() error {
-	for _, fill := range []func() error{s.fillClientAddress, s.fillVendorLocation, s.fillShipDestinations} {
+	for _, fill := range []func() error{s.fillClientAddress, s.fillVendorLocation, s.fillShippingAddress} {
 		if err := fill(); err != nil {
 			return err
 		}
@@ -175,7 +175,7 @@ func (s *scenarioState) fillEveryAddress() error {
 }
 
 // Gate lists exactly the table.
-// Rows are "klien", "vendor" or "baris N" against text the message carries.
+// Rows are "klien", "vendor" or "pengiriman" against text the message carries.
 func (s *scenarioState) gateListsExactly(table *godog.Table) error {
 	if s.last.StatusCode != http.StatusUnprocessableEntity {
 		return fmt.Errorf("want 422 got %d body=%s", s.last.StatusCode, s.body)
@@ -207,20 +207,13 @@ func (s *scenarioState) gateListsExactly(table *godog.Table) error {
 
 // gateKey resolves a table label.
 func (s *scenarioState) gateKey(label string) (string, error) {
-	switch {
-	case label == "klien":
+	switch label {
+	case "klien":
 		return "klien:" + strconv.FormatInt(s.gate.clientID, 10), nil
-	case label == "vendor":
+	case "vendor":
 		return "vendor:" + strconv.FormatInt(s.gate.vendorID, 10), nil
-	case strings.HasPrefix(label, "baris "):
-		var id int64
-		err := testutil.Pool(s.t).QueryRow(context.Background(),
-			`SELECT id FROM purchase_order_items WHERE po_id = $1 AND line_number = $2`,
-			s.poID, strings.TrimPrefix(label, "baris ")).Scan(&id)
-		if err != nil {
-			return "", fmt.Errorf("resolve %s: %w", label, err)
-		}
-		return "baris:" + strconv.FormatInt(id, 10), nil
+	case "pengiriman":
+		return "pengiriman:" + strconv.FormatInt(s.poID, 10), nil
 	}
 	return "", fmt.Errorf("unknown gap label %q", label)
 }
@@ -238,7 +231,7 @@ func registerReadinessSteps(sc *godog.ScenarioContext, s *scenarioState) {
 	sc.Step(`^an accepted quotation for a new client and vendor without addresses$`, s.acceptedQuotationWithoutAddresses)
 	sc.Step(`^the user fills the client address$`, s.fillClientAddress)
 	sc.Step(`^the user fills the vendor location$`, s.fillVendorLocation)
-	sc.Step(`^the user fills the shipping address of every PO line$`, s.fillShipDestinations)
+	sc.Step(`^the user fills the PO shipping address$`, s.fillShippingAddress)
 	sc.Step(`^every address is filled$`, s.fillEveryAddress)
 	sc.Step(`^the quotation's chosen contact is deactivated$`, s.deactivateChosenContact)
 	sc.Step(`^the user chooses the client's other contact on the quotation$`, s.chooseOtherContact)

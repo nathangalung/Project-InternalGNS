@@ -168,8 +168,8 @@ LEFT JOIN LATERAL (
 WHERE po.id = $1;
 
 -- name: purchase_orders.completeness_lines
--- Every PO line's shipping address; $1=po id.
-SELECT id, line_number, ship_destination
+-- Every PO line's type and shipping address; $1=po id.
+SELECT item_type, ship_destination
 FROM purchase_order_items
 WHERE po_id = $1
 ORDER BY line_number;

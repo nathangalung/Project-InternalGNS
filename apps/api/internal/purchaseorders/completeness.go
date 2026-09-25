@@ -36,8 +36,7 @@ type VendorCompleteness struct {
 
 // LineCompleteness is a PO line.
 type LineCompleteness struct {
-	ID              int64   `db:"id"`
-	LineNumber      int16   `db:"line_number"`
+	ItemType        string  `db:"item_type"`
 	ShipDestination *string `db:"ship_destination"`
 }
 
@@ -50,9 +49,9 @@ type CompletenessIssue struct {
 }
 
 const (
-	scopeClient = "klien"
-	scopeVendor = "vendor"
-	scopeLine   = "baris"
+	scopeClient   = "klien"
+	scopeVendor   = "vendor"
+	scopeShipping = "pengiriman"
 )
 
 func filled(v *string) bool {
@@ -88,19 +87,25 @@ func missingClientFields(c ClientCompleteness) []string {
 	return missing
 }
 
-// lineIssues lists unaddressed PO lines.
-// The shipping address is optional on the quotation and required here.
-func lineIssues(lines []LineCompleteness) []CompletenessIssue {
-	var issues []CompletenessIssue
+// shippingIssues flags unaddressed goods.
+// The shipping address is optional on the quotation and required here. The
+// shipping line's address covers every product; without one, each product
+// line must carry its own, so a PO with no shipping line is not exempt. The
+// gap is keyed by the PO, since the PO editor holds the one address.
+func shippingIssues(poID int64, lines []LineCompleteness) []CompletenessIssue {
+	blankProduct := false
 	for _, l := range lines {
-		if !filled(l.ShipDestination) {
-			issues = append(issues, CompletenessIssue{
-				Scope: scopeLine, ID: l.ID, Name: strconv.Itoa(int(l.LineNumber)),
-				Missing: []string{"Alamat Pengiriman"},
-			})
+		switch {
+		case l.ItemType == "shipping" && filled(l.ShipDestination):
+			return nil
+		case l.ItemType == "product" && !filled(l.ShipDestination):
+			blankProduct = true
 		}
 	}
-	return issues
+	if !blankProduct {
+		return nil
+	}
+	return []CompletenessIssue{{Scope: scopeShipping, ID: poID, Missing: []string{"Alamat Pengiriman"}}}
 }
 
 // missingVendorFields lists vendor gaps.
@@ -120,8 +125,8 @@ func completenessFields(issues []CompletenessIssue) map[string]string {
 	fields := make(map[string]string, len(issues))
 	for _, is := range issues {
 		key := is.Scope + ":" + strconv.FormatInt(is.ID, 10)
-		if is.Scope == scopeLine {
-			fields[key] = "Alamat pengiriman baris " + is.Name + " belum diisi"
+		if is.Scope == scopeShipping {
+			fields[key] = "Alamat pengiriman belum diisi"
 			continue
 		}
 		fields[key] = "Data " + is.Scope + " " + is.Name +

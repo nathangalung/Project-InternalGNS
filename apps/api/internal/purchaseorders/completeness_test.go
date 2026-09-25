@@ -91,42 +91,39 @@ func TestCompletenessFields(t *testing.T) {
 	issues := []CompletenessIssue{
 		{Scope: "klien", ID: 7, Name: "PT X", Missing: []string{"NPWP", "Alamat"}},
 		{Scope: "vendor", ID: 3, Name: "CV Y", Missing: []string{"Lokasi"}},
-		{Scope: "baris", ID: 41, Name: "2", Missing: []string{"Alamat Pengiriman"}},
+		{Scope: "pengiriman", ID: 41, Missing: []string{"Alamat Pengiriman"}},
 	}
 	assert.Equal(t, map[string]string{
-		"klien:7":  "Data klien PT X belum lengkap: NPWP, Alamat",
-		"vendor:3": "Data vendor CV Y belum lengkap: Lokasi",
-		"baris:41": "Alamat pengiriman baris 2 belum diisi",
+		"klien:7":       "Data klien PT X belum lengkap: NPWP, Alamat",
+		"vendor:3":      "Data vendor CV Y belum lengkap: Lokasi",
+		"pengiriman:41": "Alamat pengiriman belum diisi",
 	}, completenessFields(issues))
 }
 
-func TestLineIssues(t *testing.T) {
+// One gap for the PO's address.
+func TestShippingIssues(t *testing.T) {
+	product := func(dest *string) LineCompleteness {
+		return LineCompleteness{ItemType: "product", ShipDestination: dest}
+	}
+	shipping := func(dest *string) LineCompleteness {
+		return LineCompleteness{ItemType: "shipping", ShipDestination: dest}
+	}
+	gap := []CompletenessIssue{{Scope: "pengiriman", ID: 9, Missing: []string{"Alamat Pengiriman"}}}
+
 	cases := []struct {
 		name  string
 		input []LineCompleteness
 		want  []CompletenessIssue
 	}{
 		{name: "no lines"},
-		{
-			name:  "every line addressed",
-			input: []LineCompleteness{{ID: 5, LineNumber: 1, ShipDestination: s("Kapal A")}},
-		},
-		{
-			name: "blank and missing addresses are reported by line",
-			input: []LineCompleteness{
-				{ID: 5, LineNumber: 1, ShipDestination: s("Kapal A")},
-				{ID: 6, LineNumber: 2, ShipDestination: s("   ")},
-				{ID: 7, LineNumber: 3},
-			},
-			want: []CompletenessIssue{
-				{Scope: "baris", ID: 6, Name: "2", Missing: []string{"Alamat Pengiriman"}},
-				{Scope: "baris", ID: 7, Name: "3", Missing: []string{"Alamat Pengiriman"}},
-			},
-		},
+		{name: "products carry their own", input: []LineCompleteness{product(s("Kapal A")), product(s("Kapal B"))}},
+		{name: "shipping line covers the products", input: []LineCompleteness{product(nil), shipping(s("Kapal A"))}},
+		{name: "no shipping line and a blank product", input: []LineCompleteness{product(s("Kapal A")), product(s("  "))}, want: gap},
+		{name: "blank shipping line and a blank product", input: []LineCompleteness{product(nil), shipping(s(" "))}, want: gap},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.want, lineIssues(tc.input))
+			assert.Equal(t, tc.want, shippingIssues(9, tc.input))
 		})
 	}
 }
