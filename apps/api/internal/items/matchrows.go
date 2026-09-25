@@ -20,7 +20,7 @@ const matchChunk = 100
 // ErrNoTx: executor cannot begin transactions.
 var ErrNoTx = errors.New("items: executor cannot begin a transaction")
 
-// batchMatch is a row's best.
+// batchMatch is a best match.
 type batchMatch struct {
 	Idx        int64   `db:"idx"`
 	ItemID     int64   `db:"item_id"`

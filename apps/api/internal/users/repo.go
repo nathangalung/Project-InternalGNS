@@ -35,7 +35,7 @@ const (
 	lastSuperadminMessage = "Superadmin aktif terakhir tidak dapat diturunkan atau dinonaktifkan."
 )
 
-// isUniqueViolation spots email-index 23505s.
+// isUniqueViolation spots email duplicates.
 func isUniqueViolation(err error) bool {
 	var pgErr *pgconn.PgError
 	return errors.As(err, &pgErr) && pgErr.Code == "23505"

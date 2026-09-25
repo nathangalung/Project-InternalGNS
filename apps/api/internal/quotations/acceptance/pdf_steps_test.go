@@ -89,7 +89,7 @@ func (s *scenarioState) downloadPDF() error {
 	return err
 }
 
-// printed formats figures PDF-style.
+// printed mimics PDF figure text.
 func printed(numeric string) string {
 	return strings.Replace(pdfgen.FormatIDRCents(numeric), "Rp~", "Rp ", 1)
 }

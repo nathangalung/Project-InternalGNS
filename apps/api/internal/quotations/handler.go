@@ -156,7 +156,7 @@ func validateCreateStatus(status *string) map[string]string {
 	}
 }
 
-// validateItemQty refuses quantityless lines.
+// validateItemQty requires line quantities.
 func validateItemQty(items []CreateItem) map[string]string {
 	for i, it := range items {
 		qty, err := strconv.ParseFloat(strings.TrimSpace(it.Qty), 64)

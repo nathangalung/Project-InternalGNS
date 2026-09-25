@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-// logCapture records records with context.
+// logCapture keeps records with context.
 type logCapture struct {
 	mu   sync.Mutex
 	ctxs []context.Context

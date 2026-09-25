@@ -259,7 +259,7 @@ func lineGrossAndDiscount(it InvoiceItem) (string, string) {
 // npwpDigits is Coretax's NPWP length.
 const npwpDigits = 16
 
-// ErrBuyerIdentity marks an unfileable buyer.
+// ErrBuyerIdentity marks a rejected buyer.
 var ErrBuyerIdentity = errors.New("coretax buyer identity invalid")
 
 // normalizeNPWP strips NPWP separators.

@@ -48,7 +48,7 @@ func TestBuildObjectKey_SanitizesName(t *testing.T) {
 	}
 }
 
-// bucketNameRE is S3 DNS naming.
+// bucketNameRE matches S3 DNS names.
 // 3-63 chars, lowercase letters/digits/hyphens, must start+end with letter or
 // digit, no consecutive hyphens, no dots.
 var bucketNameRE = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?$`)

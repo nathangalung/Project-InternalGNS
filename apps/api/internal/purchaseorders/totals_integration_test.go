@@ -59,7 +59,7 @@ func TestRepo_PoTotals_MatchCreatedInvoice(t *testing.T) {
 	assert.Equal(t, discount, po.PoTotalDiscount)
 }
 
-// Profit nets the PO discount.
+// Profit excludes the PO discount.
 // That matches what the invoice bills.
 func TestRepo_PoTotalProfit_IsNetOfDiscount(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)

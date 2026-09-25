@@ -6,19 +6,19 @@ package db
 // named once here instead of repeated as literals in repos and httperr.
 // https://www.postgresql.org/docs/current/errcodes-appendix.html
 const (
-	// SQLStateRaiseException: RAISE without ERRCODE.
+	// SQLStateRaiseException is a bare RAISE.
 	SQLStateRaiseException = "P0001"
-	// SQLStateVersionMismatch: stale If-Match version.
+	// SQLStateVersionMismatch is a stale version.
 	SQLStateVersionMismatch = "P0010"
-	// SQLStateNotFound: missing target row.
+	// SQLStateNotFound is a missing row.
 	SQLStateNotFound = "P0011"
-	// SQLStateInvalidTransition: refused status change.
+	// SQLStateInvalidTransition is a refused transition.
 	SQLStateInvalidTransition = "P0012"
-	// SQLStateBlockedByRelated: related record forbids.
+	// SQLStateBlockedByRelated means related state forbids.
 	SQLStateBlockedByRelated = "P0013"
-	// SQLStateValidation: rejected function input.
+	// SQLStateValidation is rejected function input.
 	SQLStateValidation = "P0014"
-	// SQLStateUnpricedLine: finalising unpriced products.
+	// SQLStateUnpricedLine flags unpriced finalisation.
 	SQLStateUnpricedLine = "P0100"
 
 	SQLStateUniqueViolation           = "23505"

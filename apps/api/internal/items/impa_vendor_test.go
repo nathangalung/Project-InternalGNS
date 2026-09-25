@@ -71,7 +71,7 @@ func matchRows(t *testing.T, req items.MatchRowsRequest) items.MatchRowsResponse
 	return out
 }
 
-// IMPA codes store normalized.
+// IMPA codes are normalized.
 // They are upper-cased and trimmed (MD-03).
 func TestHandler_IMPA_NormalisedOnWrite(t *testing.T) {
 	code := uniqueIMPA()

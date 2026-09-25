@@ -17,7 +17,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 )
 
-// Direction is a validated direction.
+// Direction validates SQL sort direction.
 type Direction string
 
 const (
@@ -34,7 +34,7 @@ type Column struct {
 	Dir  Direction
 }
 
-// Whitelist closes sort keys.
+// Whitelist lists allowed sort keys.
 //
 // Default names the entry used for an empty or unrecognised sort key.
 type Whitelist struct {
@@ -42,7 +42,7 @@ type Whitelist struct {
 	Columns map[string]Column
 }
 
-// Order is an ORDER BY.
+// Order renders ORDER BY.
 type Order struct {
 	clause string
 }

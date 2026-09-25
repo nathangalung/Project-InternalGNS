@@ -103,7 +103,7 @@ func catalogCode(t *testing.T, tx pgx.Tx, id *int64) *string {
 	return code
 }
 
-// insertUncodedItem adds a code-less item.
+// insertUncodedItem adds an uncoded item.
 func insertUncodedItem(t *testing.T, tx pgx.Tx) *int64 {
 	t.Helper()
 	var id int64

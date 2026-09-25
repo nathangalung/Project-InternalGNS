@@ -52,6 +52,7 @@ func TestRouter_RBACPerMount(t *testing.T) {
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)
 
+	// policy marks each role's access.
 	// allowed = expect any status except 403; denied = expect 403.
 	type policy struct{ superadmin, finance, operational bool }
 	subtrees := []struct {

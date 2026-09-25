@@ -174,7 +174,7 @@ func TestBuildExportData_OfferShowsOfferedItem(t *testing.T) {
 	}
 }
 
-// Six product lines switch A4.
+// Six product lines need A4.
 // Five still fit A5.
 func TestBuildExportData_PaperSize(t *testing.T) {
 	cases := []struct {

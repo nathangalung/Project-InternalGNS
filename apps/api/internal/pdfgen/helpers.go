@@ -14,7 +14,7 @@ func StrDeref(p *string) string {
 	return *p
 }
 
-// SanitizeFilename makes Content-Disposition-safe names.
+// SanitizeFilename cleans download filenames.
 // Allowed: ASCII alphanumerics, '-', '_', '.'. Anything else becomes '_'.
 // Empty result falls back to "document".
 func SanitizeFilename(s string) string {

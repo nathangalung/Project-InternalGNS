@@ -19,7 +19,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
-// ctxLogCapture records records with context.
+// ctxLogCapture keeps records with context.
 type ctxLogCapture struct {
 	mu   sync.Mutex
 	ctxs []context.Context

@@ -97,7 +97,8 @@ func TestCompanyClientNumber_FixedFourDigits(t *testing.T) {
 	assert.Zero(t, n, "every existing client must carry a four digit number after the backfill")
 }
 
-// Prefix-sharing clients get distinct numbers.
+// Overlapping prefixes never collide.
+// Clients whose numbers share a prefix get distinct quotation numbers.
 func TestQuotationNo_NoCollisionAcrossPrefixOverlap(t *testing.T) {
 	srv, ctx := resetServer(t)
 	pool := testutil.Pool(t)
