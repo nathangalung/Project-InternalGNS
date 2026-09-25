@@ -150,17 +150,15 @@ tables, so they would never be chosen) and removing the PO count LATERAL
 - **Sub-dashboards.** Role-gated `Dashboard.tsx` renders a strict superset of
   `DashboardFinancial` and `DashboardOperational`. Keep three screens and pay
   the duplication, or delete two and keep the gated one?
-- **Backups.** Nothing backs up either volume today, and `internalgns_minio`
-  holds the documents behind the coretax export. Dokploy's scheduler may not
-  reach a service on an `internal: true` network, and would not cover MinIO
-  either way. The alternative is host cron `pg_dump` plus `mc mirror` to
-  off-box storage. Nothing has ever been restored as a rehearsal.
-- **Limit clamp.** `?limit=500` currently returns 50 because `paginate` rejects
-  and defaults before `listq` would clamp to 200. Pick one owner; the SPA never
-  asks for more than 100 today.
-- **Dead endpoints.** `/items/search`, `/vendors/search`,
-  `/items/match-request` and `/invoices/{id}/dates` have no client. Delete them,
-  or keep maintaining the unused optimistic-lock path on the last one?
+- **Backups.** Done in code: `scripts/backup.sh` (`pg_dump` plus `mc mirror`)
+  runs from a host systemd timer set up as in `backup_restore.md`, and
+  `scripts/restore.sh` was rehearsed locally on 2026-09-25. Still open: the
+  off-box copy and the first production run.
+- **Limit clamp.** Done: `paginate.ParseLimit` clamps to `paginate.MaxLimit`
+  (200), the same bound `listq.Page` uses.
+- **Dead endpoints.** `/items/search`, `/vendors/search` and
+  `/items/match-request` have no client. Delete them? (`/invoices/{id}/dates`
+  is used by the invoice dates card.)
 - **Import batch size.** `/items/match-rows` advertises 500 rows but the
   matcher needs roughly 50s for that against a 30s deadline, then rolls the
   whole batch back. Lower the cap to something honest, or invest in the
@@ -177,6 +175,11 @@ Fixing it means reworking the `Given the ... domain is empty` steps to scope
 themselves to the rows the scenario owns, the same way the id-tracking cleanup
 now works for clients, vendors, items and users. Worth doing before anyone
 relies on dev data surviving a test run.
+
+Since then the suites read `TEST_DATABASE_URL` only and the reset helpers
+refuse any database whose name does not end in `test`, so a test run can no
+longer reach the dev database. The scenarios still truncate their own test
+database.
 
 ## Follow-up found while fixing the CI-only test failures
 
