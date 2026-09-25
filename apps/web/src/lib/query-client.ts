@@ -17,9 +17,11 @@ export const queryClient = new QueryClient({
       gcTime: 5 * 60_000,
       retry: shouldRetry,
       refetchOnWindowFocus: false,
-      // Surface real failures (network errors, 5xx) to the route error boundary
-      // so an outage shows an error instead of an empty "no data" state; let
-      // handled 4xx pass through for components to render inline.
+      // Real failures reach the boundary.
+      //
+      // Network errors and 5xx go to the route error boundary so an outage
+      // shows an error instead of an empty "no data" state; handled 4xx pass
+      // through for components to render inline.
       throwOnError: (error) => !(error instanceof ApiError) || error.status >= 500,
     },
     mutations: {
