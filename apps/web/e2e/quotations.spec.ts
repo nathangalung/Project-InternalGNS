@@ -75,7 +75,9 @@ test.describe("quotation wizard", () => {
 
     const cost = page.getByLabel("Biaya Pengiriman *")
     await expect(cost).toBeDisabled()
-    await page.getByLabel("Alamat Lengkap *").fill("Jl. Pelabuhan Raya No. 12, Tanjung Priok")
+    await page
+      .getByLabel("Alamat Lengkap (Opsional)")
+      .fill("Jl. Pelabuhan Raya No. 12, Tanjung Priok")
     await page.getByLabel("Waktu Pengiriman (Hari) *").fill("7")
     await cost.fill("250000")
     await page.getByRole("button", { name: "Lanjut" }).click()
@@ -112,7 +114,7 @@ test.describe("quotation wizard", () => {
     await page.getByRole("button", { name: "Tambah Klien Baru" }).click()
     const modal = page.getByRole("dialog", { name: "Tambah Klien" })
     await modal.getByLabel("Nama Perusahaan *").fill(name)
-    await modal.getByLabel("Alamat *").fill("Jl. Gatot Subroto Kav. 10, Jakarta Selatan")
+    await modal.getByLabel("Alamat (Opsional)").fill("Jl. Gatot Subroto Kav. 10, Jakarta Selatan")
     await modal.getByLabel("Nama Narahubung *").fill(`${seed.prefix} Narahubung`)
     // One of phone or email is required, despite both reading Opsional.
     await modal

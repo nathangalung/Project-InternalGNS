@@ -20,7 +20,7 @@ test("Tambah Klien creates a server-numbered client the list finds", async ({ pa
   const modal = page.getByRole("dialog", { name: "Tambah Klien" })
   const save = modal.getByRole("button", { name: "Simpan Data" })
   await modal.getByLabel("Nama Perusahaan *").fill(name)
-  await modal.getByLabel("Alamat *").fill("Jl. Raya Pelabuhan No. 8, Surabaya")
+  await modal.getByLabel("Alamat (Opsional)").fill("Jl. Raya Pelabuhan No. 8, Surabaya")
   await modal.getByLabel("Nama Narahubung *").fill(`${seed.prefix} Rina`)
   // A contact needs a phone or an email.
   await expect(save).toBeDisabled()

@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test"
-import { api, pdfFile, rupiah, type SalesSeed, type SeedClient } from "./support/sales"
+import { api, idFrom, pdfFile, rupiah, type SalesSeed, type SeedClient } from "./support/sales"
 import { expect, test } from "./support/seed"
 
 // PO flows through the UI.
@@ -317,5 +317,136 @@ test.describe("purchase order list", () => {
       `/purchase-orders/${other.q.id}`,
     )
     expect(po.id).not.toBe(other.po.id)
+  })
+})
+
+// Addressless quotation through the wizard.
+//
+// A new client with no Alamat and a shipping cost with no address; the
+// vendor is complete, so the gate names only the address gaps.
+async function addresslessQuotation(page: Page, seed: SalesSeed): Promise<number> {
+  const vendor = await seed.vendor()
+  const item = await seed.item({ vendor, cost: 40_000 })
+  const name = seed.name("Klien Tanpa Alamat")
+
+  await page.goto("/quotations/add")
+  await page.getByRole("button", { name: "Tambah Klien Baru" }).click()
+  const modal = page.getByRole("dialog", { name: "Tambah Klien" })
+  await modal.getByLabel("Nama Perusahaan *").fill(name)
+  await expect(modal.getByLabel("Alamat (Opsional)")).toHaveValue("")
+  await expect(modal.getByText("Wajib diisi sebelum PO diproses")).toBeVisible()
+  await modal.getByLabel("Nama Narahubung *").fill(`${seed.prefix} Narahubung`)
+  await modal.getByLabel("Email (Opsional)").fill(`${seed.prefix.toLowerCase()}.alamat@example.com`)
+  await modal.getByLabel("NPWP (Opsional)").fill("0123456789012345")
+  await modal.getByRole("button", { name: "Simpan Data" }).click()
+  await expect(modal).toBeHidden()
+  await seed.adopt("client", name)
+
+  await page.getByRole("button", { name: "Tambah Produk" }).click()
+  const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
+  await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
+  await product.getByRole("button", { name: `${item.impaCode} - ${item.name}` }).click()
+  await product.getByLabel("Kode IMPA/Nama Produk *", { exact: true }).fill(item.name)
+  await product.getByRole("button", { name: `${item.impaCode} - ${item.name}` }).click()
+  await product.getByLabel("Jumlah Produk *").fill("2")
+  await product.getByLabel("Nama Vendor *").click()
+  await product.getByRole("button", { name: new RegExp(vendor.name) }).click()
+  await product.getByLabel("Harga Jual Satuan *").fill("60000")
+  await product.getByRole("button", { name: "Simpan Data" }).click()
+  await expect(product).toBeHidden()
+  await page.getByRole("button", { name: "Lanjut" }).click()
+
+  // The address is optional, so days and cost open without it.
+  await expect(page.getByLabel("Alamat Lengkap (Opsional)")).toHaveValue("")
+  await page.getByLabel("Waktu Pengiriman (Hari) *").fill("5")
+  await page.getByLabel("Biaya Pengiriman *").fill("75000")
+  await page.getByRole("button", { name: "Lanjut" }).click()
+
+  await page.getByLabel("JATUH TEMPO PEMBAYARAN (HARI) *").fill("30")
+  await page.getByLabel("BERLAKU SAMPAI (HARI) *").fill("14")
+  await expect(
+    page
+      .getByText("Alamat Pengiriman Barang", { exact: true })
+      .locator("xpath=following-sibling::*[1]"),
+  ).toHaveText("Belum diisi")
+  await page.getByRole("button", { name: "Buat Penawaran" }).click()
+
+  await expect(page).toHaveURL(/\/quotations$/)
+  await page.getByPlaceholder("Cari penawaran, klien, atau nomor...").fill(seed.prefix)
+  const row = page.getByRole("row", { name: new RegExp(name) })
+  await expect(row).toHaveCount(1)
+  const id = idFrom(await row.getByRole("link").first().getAttribute("href"))
+  seed.track("quotation", id)
+  return id
+}
+
+test.describe("purchase order address gaps", () => {
+  test("a quotation saved without addresses lists each gap at Dalam Progres", async ({
+    page,
+    seed,
+  }) => {
+    const qid = await addresslessQuotation(page, seed)
+    const po = await seed.accept(qid)
+    await seed.attachPoFile(po)
+
+    await page.goto(`/purchase-orders/${qid}`)
+    await choosePoStatus(page, "PO Diunggah", "Dalam Progres")
+    const modal = page.getByRole("dialog", { name: "Data Belum Lengkap" })
+    await expect(modal).toBeVisible()
+    const client = await api<{ id: number; name: string }>("GET", `/clients/${po.companyClientId}`)
+    await expect(modal.getByRole("link", { name: client.name })).toHaveAttribute(
+      "href",
+      `/clients/${client.id}`,
+    )
+    await expect(modal.getByRole("listitem").getByText("Alamat", { exact: true })).toBeVisible()
+    // The product line and the shipping line, both unaddressed.
+    for (const line of ["Baris 1", "Baris 2"]) {
+      await expect(modal.getByRole("link", { name: line, exact: true })).toHaveAttribute(
+        "href",
+        `/purchase-orders/${qid}/edit`,
+      )
+    }
+    await expect(
+      modal.getByRole("listitem").getByText("Alamat Pengiriman", { exact: true }),
+    ).toHaveCount(2)
+    await modal.getByRole("button", { name: "Mengerti" }).click()
+    expect((await seed.poByQuotation(qid)).status).toBe("UPLOADED")
+  })
+
+  // Blocked: the gate also checks product lines' ship_destination, which no
+  // screen sets, so "Baris 1" stays open after both links are used.
+  test.fixme("filling each gap through its link lets the PO reach Dalam Progres", async ({
+    page,
+    seed,
+  }) => {
+    const qid = await addresslessQuotation(page, seed)
+    const po = await seed.accept(qid)
+    await seed.attachPoFile(po)
+
+    await page.goto(`/purchase-orders/${qid}`)
+    await choosePoStatus(page, "PO Diunggah", "Dalam Progres")
+    const modal = page.getByRole("dialog", { name: "Data Belum Lengkap" })
+    const client = await api<{ id: number; name: string }>("GET", `/clients/${po.companyClientId}`)
+    await modal.getByRole("link", { name: client.name }).click()
+    await expect(page).toHaveURL(new RegExp(`/clients/${client.id}$`))
+    await page.getByLabel("Alamat Rinci").fill("Jl. Pelabuhan Raya No. 12, Tanjung Priok")
+    await page.getByRole("button", { name: "Simpan Perubahan" }).click()
+    await expect
+      .poll(async () => (await api<{ address?: string }>("GET", `/clients/${client.id}`)).address)
+      .toBe("Jl. Pelabuhan Raya No. 12, Tanjung Priok")
+
+    await page.goto(`/purchase-orders/${qid}`)
+    await choosePoStatus(page, "PO Diunggah", "Dalam Progres")
+    await modal.getByRole("link", { name: "Baris 2", exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`/purchase-orders/${qid}/edit$`))
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByLabel("Alamat Lengkap *").fill("Jl. Pelabuhan Raya No. 12, Tanjung Priok")
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Simpan", exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`/purchase-orders/${qid}$`))
+
+    await choosePoStatus(page, "PO Diunggah", "Dalam Progres")
+    await expect(page).toHaveURL(/\/purchase-orders$/)
+    expect((await seed.poByQuotation(qid)).status).toBe("ON_PROGRESS")
   })
 })

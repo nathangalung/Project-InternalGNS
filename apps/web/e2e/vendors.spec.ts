@@ -17,7 +17,7 @@ test("Tambah Vendor creates an active vendor the list finds", async ({ page, see
   const modal = page.getByRole("dialog", { name: "Tambah Vendor Baru" })
   const save = modal.getByRole("button", { name: "Simpan Vendor" })
   await modal.getByLabel("Nama Vendor *").fill(name)
-  await modal.getByLabel("Alamat *").fill("Jl. Rungkut Industri No. 5, Surabaya")
+  await modal.getByLabel("Alamat (Opsional)").fill("Jl. Rungkut Industri No. 5, Surabaya")
   await expect(save).toBeDisabled()
   await modal.getByLabel("Email (Opsional)").fill(`${seed.prefix.toLowerCase()}@vendor.example`)
   await save.click()
