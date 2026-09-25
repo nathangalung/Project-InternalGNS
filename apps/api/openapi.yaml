@@ -11,8 +11,10 @@ security:
 paths:
   /items/search:
     get:
-      summary: Multi-tier product search (legacy)
-      description: Trigram + IMPA prefix match scored across tiers.
+      summary: Product search (legacy, no web caller)
+      description: >
+        fn_search_items: exact or contained IMPA code, contained name, and
+        trigram word similarity on the name, scored 0 to 1. Active items only.
       tags: [items]
       parameters:
         - name: q
@@ -91,7 +93,8 @@ components:
         score: { type: number, format: float }
         matchTier:
           type: string
-          enum: [EXACT_IMPA, PREFIX_IMPA, TRIGRAM_NAME, VENDOR_OFFER, REQUEST_HISTORY]
+          description: AUTO_MATCH at 0.90 and up, SUGGESTED at 0.60 and up, else FUZZY.
+          enum: [AUTO_MATCH, SUGGESTED, FUZZY]
     AdvancedSearchTier:
       type: string
       description: Canonical tier label exposed by /items/search-advanced.
