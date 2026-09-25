@@ -48,8 +48,9 @@ func TestBuildObjectKey_SanitizesName(t *testing.T) {
 	}
 }
 
-// S3/MinIO DNS-style naming: 3-63 chars, lowercase letters/digits/hyphens,
-// must start+end with letter or digit, no consecutive hyphens, no dots.
+// bucketNameRE is S3 DNS naming.
+// 3-63 chars, lowercase letters/digits/hyphens, must start+end with letter or
+// digit, no consecutive hyphens, no dots.
 var bucketNameRE = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?$`)
 
 func TestAllBuckets_DNSCompliant(t *testing.T) {

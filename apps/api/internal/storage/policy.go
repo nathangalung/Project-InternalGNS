@@ -15,9 +15,9 @@ var bucketExtensions = map[string]map[string]struct{}{
 	BucketPODocs:             docExts(),
 }
 
-// Per-bucket role allowlist, mirroring the resource RBAC: logos and item
-// images are shared master data; invoice attachments follow /invoices;
-// PO documents follow /purchase-orders.
+// bucketRoles mirrors the resource RBAC.
+// Logos and item images are shared master data; invoice attachments follow
+// /invoices; PO documents follow /purchase-orders.
 var bucketRoles = map[string][]string{
 	BucketClientLogos:        {"superadmin", "operational", "finance"},
 	BucketVendorLogos:        {"superadmin", "operational", "finance"},
@@ -26,7 +26,7 @@ var bucketRoles = map[string][]string{
 	BucketPODocs:             {"superadmin", "operational"},
 }
 
-// CanAccessBucket reports whether a role may read or write a bucket.
+// CanAccessBucket checks role bucket access.
 func CanAccessBucket(role, bucket string) bool {
 	for _, r := range bucketRoles[bucket] {
 		if r == role {
@@ -56,7 +56,7 @@ func docExts() map[string]struct{} {
 	}
 }
 
-// ValidateAssetFileName guards the extension allowlist per bucket.
+// ValidateAssetFileName checks bucket extensions.
 func ValidateAssetFileName(bucket, fileName string) error {
 	allowed, ok := bucketExtensions[bucket]
 	if !ok {
@@ -69,7 +69,7 @@ func ValidateAssetFileName(bucket, fileName string) error {
 	return nil
 }
 
-// ValidateOwnedKey binds an object key to one record.
+// ValidateOwnedKey binds keys to records.
 // Attach endpoints take the key from the request body, so without this a
 // caller could point a record at any object in the bucket, or at a traversal
 // path outside it. BuildObjectKey is what produces a conforming key.
@@ -77,7 +77,7 @@ func ValidateOwnedKey(bucket, prefix string, id int64, key string) error {
 	return ValidateFolderKey(bucket, OwnerFolder(prefix, id, ""), key)
 }
 
-// ValidateFolderKey binds an object key to one folder.
+// ValidateFolderKey binds keys to folders.
 // The name must sit directly in the folder: a key in a sub-folder belongs to
 // another asset of the same record. BuildFolderKey produces a conforming key.
 func ValidateFolderKey(bucket, folder, key string) error {
@@ -91,7 +91,7 @@ func ValidateFolderKey(bucket, folder, key string) error {
 	return ValidateAssetFileName(bucket, key)
 }
 
-// MaxBytes returns the policy cap for a bucket.
+// MaxBytes returns a bucket's cap.
 func MaxBytes(bucket string) int64 {
 	return bucketMaxBytes[bucket]
 }

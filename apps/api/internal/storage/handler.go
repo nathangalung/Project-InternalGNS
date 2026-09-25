@@ -15,10 +15,10 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 )
 
-// maxUploadBytes caps a single proxied asset upload.
+// maxUploadBytes caps one upload.
 const maxUploadBytes = 25 << 20 // 25 MB
 
-// objectStore is the slice of Client the byte proxy uses.
+// objectStore narrows Client for proxying.
 // Named so the proxy's refusal rules can be tested without a live MinIO.
 type objectStore interface {
 	PutObject(ctx context.Context, bucket, objectKey string, r io.Reader, size int64, contentType string) error
@@ -26,8 +26,9 @@ type objectStore interface {
 	ObjectExists(ctx context.Context, bucket, objectKey string) (bool, error)
 }
 
-// Handler proxies asset bytes through the (authenticated) API so MinIO can
-// stay on the internal network with no public host.
+// Handler proxies asset bytes.
+// The bytes pass through the (authenticated) API so MinIO can stay on the
+// internal network with no public host.
 type Handler struct {
 	store objectStore
 }
@@ -39,7 +40,7 @@ func NewHandler(c *Client) *Handler {
 	return &Handler{store: c}
 }
 
-// newHandlerWithStore builds a handler on a fake store.
+// newHandlerWithStore wraps a fake store.
 func newHandlerWithStore(s objectStore) *Handler {
 	return &Handler{store: s}
 }
@@ -53,7 +54,8 @@ func allowedBucket(b string) bool {
 	return false
 }
 
-// safeKey rejects empty, absolute, or traversal keys. The ".." check is per
+// safeKey rejects unsafe keys.
+// That means empty, absolute, or traversal keys. The ".." check is per
 // segment, not a substring match, so legitimate filenames containing
 // consecutive dots (e.g. "report..final.pdf") are still accepted.
 func safeKey(k string) bool {
@@ -68,7 +70,8 @@ func safeKey(k string) bool {
 	return true
 }
 
-// Put streams the request body into MinIO. PUT /storage/object?bucket=&key=
+// Put streams bodies into MinIO.
+// PUT /storage/object?bucket=&key=
 func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 	bucket := r.URL.Query().Get("bucket")
 	key := r.URL.Query().Get("key")
@@ -123,7 +126,8 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Get streams an object back. GET /storage/object?bucket=&key=
+// Get streams an object back.
+// GET /storage/object?bucket=&key=
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	bucket := r.URL.Query().Get("bucket")
 	key := r.URL.Query().Get("key")
@@ -168,7 +172,7 @@ func renderTooLarge(w http.ResponseWriter, limit int64) {
 		fmt.Sprintf("Ukuran berkas melebihi batas %d MB. Pilih berkas yang lebih kecil.", limit>>20)))
 }
 
-// Logs a store failure with its cause.
+// renderStoreErr logs the cause.
 // The body stays generic; the log line names the operation and object under
 // the request context, so request_id joins it to its access-log line.
 func renderStoreErr(ctx context.Context, w http.ResponseWriter, op, bucket, key string, err error, detail string) {

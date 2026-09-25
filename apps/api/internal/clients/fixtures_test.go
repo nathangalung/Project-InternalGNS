@@ -32,13 +32,13 @@ func freeNumbers(t testing.TB, exec db.Executor, n int) []string {
 	return out
 }
 
-// freeNumber picks one unused client number.
+// freeNumber picks an unused number.
 func freeNumber(t testing.TB, exec db.Executor) *string {
 	t.Helper()
 	return &freeNumbers(t, exec, 1)[0]
 }
 
-// newClient inserts a client this test owns.
+// newClient inserts an owned client.
 // Contacts hang off it, so the Cleaner removes them with the client instead
 // of leaving them on a shared master row.
 func newClient(t testing.TB) int64 {

@@ -258,7 +258,8 @@ func TestRepo_Summary(t *testing.T) {
 	assert.GreaterOrEqual(t, s.PrevYearTotal, int64(0))
 }
 
-// Count and data queries must agree under the same filter.
+// Count and data queries agree.
+// They must, under the same filter.
 func TestRepo_List_CountAgreesWithData(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := clients.NewRepo(tx, testutil.Store(t))
@@ -275,7 +276,8 @@ func TestRepo_List_CountAgreesWithData(t *testing.T) {
 		"count query and data query disagree under the same filter")
 }
 
-// Paging must not repeat or drop a row when the sort key ties.
+// Tied sort keys page stably.
+// Paging must not repeat or drop a row.
 func TestRepo_List_PagingIsStableOnTiedSortKey(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := clients.NewRepo(tx, testutil.Store(t))

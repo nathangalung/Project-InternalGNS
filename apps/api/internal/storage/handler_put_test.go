@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-// Records what the proxy asked of the object store.
+// fakeStore records proxy calls.
 type fakeStore struct {
 	exists    bool
 	existsErr error
@@ -31,6 +31,7 @@ func (f *fakeStore) ObjectExists(context.Context, string, string) (bool, error) 
 	return f.exists, f.existsErr
 }
 
+// Put refuses overwriting objects.
 // A presigned PUT carries a client-supplied key, so without this check any
 // role with bucket access could overwrite another record's stored file.
 func TestHandler_Put_RefusesOverwrite(t *testing.T) {
@@ -63,6 +64,7 @@ func TestHandler_Put_RefusesOverwrite(t *testing.T) {
 	}
 }
 
+// Attached keys must be owned.
 // An attach endpoint takes the key from the client, so it has to prove the
 // key belongs to the record it is being attached to.
 func TestValidateOwnedKey(t *testing.T) {
@@ -98,6 +100,7 @@ func TestValidateOwnedKey(t *testing.T) {
 	}
 }
 
+// Sub-folder assets stay in-folder.
 // A sub-folder asset is bound to its own folder.
 func TestValidateFolderKey(t *testing.T) {
 	folder := OwnerFolder("invoices", 7, "payment")

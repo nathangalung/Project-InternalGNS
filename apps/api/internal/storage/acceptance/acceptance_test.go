@@ -94,7 +94,7 @@ func newSuite(t *testing.T) *suite {
 	return s
 }
 
-// track queues a key for removal.
+// track queues keys for removal.
 func (s *suite) track(bucket, key string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

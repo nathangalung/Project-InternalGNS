@@ -45,7 +45,8 @@ type Client struct {
 	LogoObjectKey  *string   `db:"logo_object_key" json:"logoObjectKey,omitempty"`
 }
 
-// UpdateLogoRequest persists the MinIO object key for a client logo.
+// UpdateLogoRequest carries a logo key.
+// It persists the MinIO object key of a client logo.
 type UpdateLogoRequest struct {
 	ObjectKey string `json:"objectKey"`
 }

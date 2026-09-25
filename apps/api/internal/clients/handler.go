@@ -25,7 +25,8 @@ func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
 
-// List handles GET /clients with filters, sort, pagination.
+// List handles GET /clients.
+// It applies filters, sort and pagination.
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	if key := badQueryParam(q); key != "" {
@@ -245,7 +246,8 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusCreated, c)
 }
 
-// UpdateContact edits an existing contact (PATCH /clients/{id}/contacts/{cid}).
+// UpdateContact edits a contact.
+// It serves PATCH /clients/{id}/contacts/{cid}.
 func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
@@ -305,7 +307,8 @@ func (h *Handler) DeleteContact(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// requireClient reports a missing parent before a sub-collection read.
+// requireClient checks the parent exists.
+// It runs before a sub-collection read.
 func (h *Handler) requireClient(ctx context.Context, id int64) error {
 	_, err := h.repo.GetByID(ctx, id)
 	if err != nil {
@@ -314,7 +317,7 @@ func (h *Handler) requireClient(ctx context.Context, id int64) error {
 	return nil
 }
 
-// renderClientErr maps the package sentinel onto a problem response.
+// renderClientErr maps sentinels to problems.
 func renderClientErr(w http.ResponseWriter, err error) {
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("client not found"))

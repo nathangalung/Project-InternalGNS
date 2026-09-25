@@ -91,7 +91,8 @@ func (s *scenarioState) createClient() error {
 	return nil
 }
 
-// freeNumber picks an unused four digit client number.
+// freeNumber picks an unused number.
+// Client numbers are four digits.
 func (s *scenarioState) freeNumber() (string, error) {
 	var n string
 	err := testutil.Pool(s.t).QueryRow(context.Background(), `
@@ -222,7 +223,8 @@ func (s *scenarioState) summaryTotalAtLeast(min int64) error {
 	return nil
 }
 
-// Contact steps for MD-06, MD-07, MD-08.
+// Contact steps.
+// They cover MD-06, MD-07 and MD-08.
 func (s *scenarioState) contactPath() string {
 	return "/clients/" + strconv.FormatInt(s.clientID, 10) + "/contacts/" + strconv.FormatInt(s.contact.ID, 10)
 }
@@ -275,7 +277,7 @@ func (s *scenarioState) otherClientReusesEmail() error {
 		map[string]any{"name": "Pemilik Baru", "email": email})
 }
 
-// attachForeignLogo points at another client's upload.
+// attachForeignLogo uses another client's upload.
 func (s *scenarioState) attachForeignLogo() error {
 	key := "clients/" + strconv.FormatInt(s.clientID+1, 10) + "/logo.png"
 	return s.sendRequest(http.MethodPatch, "/clients/"+strconv.FormatInt(s.clientID, 10)+"/logo",

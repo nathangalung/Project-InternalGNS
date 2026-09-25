@@ -17,8 +17,9 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
-// Integration test against the dev-compose MinIO. Gated on MINIO_ENDPOINT
-// so CI without MinIO still runs unit tests cleanly.
+// requireMinio gates on MINIO_ENDPOINT.
+// The integration tests run against the dev-compose MinIO, so CI without
+// MinIO still runs unit tests cleanly.
 func requireMinio(t *testing.T) storage.Config {
 	t.Helper()
 	endpoint := os.Getenv("MINIO_ENDPOINT")

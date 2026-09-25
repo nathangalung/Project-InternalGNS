@@ -14,7 +14,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 )
 
-// seedContact posts a contact with email and title.
+// seedContact posts a titled contact.
+// The contact has an email and a title.
 func seedContact(t *testing.T, clientID int64) clients.Contact {
 	t.Helper()
 	srv := newSrv(t)
@@ -37,7 +38,8 @@ func contactPath(clientID, contactID int64) string {
 	return "/clients/" + strconv.FormatInt(clientID, 10) + "/contacts/" + strconv.FormatInt(contactID, 10)
 }
 
-// PATCH keeps an absent field and clears a null or blank one (MD-06).
+// PATCH clears null, keeps absent.
+// A null or blank field is cleared; an absent one is kept (MD-06).
 func TestHandler_UpdateContact_ClearsEmailAndTitle(t *testing.T) {
 	cases := []struct {
 		name      string
@@ -81,6 +83,7 @@ func TestHandler_UpdateContact_ClearsEmailAndTitle(t *testing.T) {
 	}
 }
 
+// Deleted contacts reject edits.
 // A soft-deleted contact is gone for edits (MD-07).
 func TestHandler_UpdateContact_DeletedIsNotFound(t *testing.T) {
 	srv := newSrv(t)
@@ -97,7 +100,8 @@ func TestHandler_UpdateContact_DeletedIsNotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
-// A deleted contact frees its email (MD-08).
+// Deleted contacts free their email.
+// It covers MD-08.
 func TestHandler_CreateContact_ReusesDeletedEmail(t *testing.T) {
 	srv := newSrv(t)
 	firstClient := newClient(t)

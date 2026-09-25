@@ -11,7 +11,7 @@ import (
 
 const missingClientID = "999999999"
 
-// Reject unstorable query text with 400.
+// Unstorable query text is 400.
 func TestHandler_QueryParamTextIsValidated(t *testing.T) {
 	srv := newSrv(t)
 	tests := []struct {
@@ -32,7 +32,8 @@ func TestHandler_QueryParamTextIsValidated(t *testing.T) {
 	}
 }
 
-// Sub-collections of a missing client answer 404.
+// Missing parents answer 404.
+// That holds for every client sub-collection.
 func TestHandler_ListContacts_MissingParentIsNotFound(t *testing.T) {
 	srv := newSrv(t)
 	res := doJSON(t, srv, http.MethodGet, "/clients/"+missingClientID+"/contacts", nil)
@@ -40,7 +41,8 @@ func TestHandler_ListContacts_MissingParentIsNotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
-// Whitespace-only names are rejected on clients and contacts.
+// Whitespace-only names are rejected.
+// That holds for clients and contacts.
 func TestHandler_Name_WhitespaceOnlyRejected(t *testing.T) {
 	srv := newSrv(t)
 	tests := []struct {

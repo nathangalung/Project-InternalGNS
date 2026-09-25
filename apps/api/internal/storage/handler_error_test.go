@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-// Records each log record with its context.
+// logCapture records records with context.
 type logCapture struct {
 	mu   sync.Mutex
 	ctxs []context.Context
@@ -36,7 +36,7 @@ func (c *logCapture) Handle(ctx context.Context, r slog.Record) error {
 	return nil
 }
 
-// Fails GetObject with a fixed error.
+// failingGetStore fails every GetObject.
 type failingGetStore struct{ fakeStore }
 
 func (failingGetStore) GetObject(context.Context, string, string) (io.ReadCloser, string, int64, error) {
@@ -45,6 +45,7 @@ func (failingGetStore) GetObject(context.Context, string, string) (io.ReadCloser
 
 type probeKey struct{}
 
+// Failures log cause, render problem.
 // A proxy failure is a 5xx the operator has to act on, so it must log its
 // cause under the request context, and answer as problem+json like every
 // other API error.
@@ -97,7 +98,8 @@ func TestHandler_FailuresLogCauseAndRenderProblem(t *testing.T) {
 	}
 }
 
-// Client mistakes answer as problem+json too.
+// Refusals answer as problem+json.
+// Client mistakes do too, not only failures.
 func TestHandler_RefusalsRenderProblem(t *testing.T) {
 	cases := []struct {
 		name       string

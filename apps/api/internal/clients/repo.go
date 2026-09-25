@@ -31,11 +31,12 @@ var ErrNumberInvalid = errors.New("client number invalid or taken")
 // Number fixed by a quotation.
 var ErrNumberLocked = errors.New("client number used by a quotation")
 
-// totalPurchaseExpr is the accepted-quotation sum per client.
+// totalPurchaseExpr sums accepted quotations.
+// The sum is per client.
 const totalPurchaseExpr = "COALESCE((SELECT SUM(q.grand_total) FROM quotations q" +
 	" WHERE q.company_client_id = cc.id AND q.status = 'accepted'), 0)"
 
-// sortable is the closed set of client sort keys.
+// sortable lists client sort keys.
 var sortable = listq.Whitelist{
 	Default: "name",
 	Columns: map[string]listq.Column{
@@ -49,10 +50,10 @@ var sortable = listq.Whitelist{
 	},
 }
 
-// tiebreak keeps paging stable when the sort key ties.
+// tiebreak keeps paging stable.
 var tiebreak = listq.Column{Expr: "cc.id", Dir: listq.Desc}
 
-// List returns clients with filter/sort and total count.
+// List pages clients with total.
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
@@ -111,8 +112,9 @@ func (r *Repo) GetByID(ctx context.Context, id int64) (Client, error) {
 	return c, err
 }
 
-// GetByIDs maps client id to client in one round-trip. Ids with no row are
-// absent from the map; callers decide whether that is an error.
+// GetByIDs maps ids to clients.
+// It takes one round-trip. Ids with no row are absent from the map; callers
+// decide whether that is an error.
 func (r *Repo) GetByIDs(ctx context.Context, ids []int64) (map[int64]Client, error) {
 	out := map[int64]Client{}
 	if len(ids) == 0 {
@@ -178,9 +180,9 @@ func numberErr(err error) error {
 	return err
 }
 
-// UpdateLogo writes the MinIO object key. Empty string is allowed and stored
-// verbatim; pass NULL semantics through the SQL layer if a caller wants to
-// clear it.
+// UpdateLogo stores the logo key.
+// An empty string is allowed and stored verbatim; pass NULL semantics through
+// the SQL layer if a caller wants to clear it.
 func (r *Repo) UpdateLogo(ctx context.Context, id int64, objectKey string, userID int64) error {
 	tag, err := r.db.Exec(ctx, r.store.Get("clients.update_logo"), id, objectKey, userID)
 	if err != nil {
