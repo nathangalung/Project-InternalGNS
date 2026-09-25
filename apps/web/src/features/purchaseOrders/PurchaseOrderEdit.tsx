@@ -373,7 +373,8 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
                 setShippingTime={changeTime}
                 shippingCost={shippingCost}
                 setShippingCost={setShippingCost}
-                isAlamatFilled={isAlamatFilled}
+                isAlamatOk={isAlamatFilled}
+                addressRequired
                 isWaktuFilled={isWaktuFilled}
                 formatRp={formatRp}
               />

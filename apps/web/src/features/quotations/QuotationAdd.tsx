@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
 import ClientAdd from "@/features/clients/ClientAdd"
+import { isValidAddress, optionalAddressError } from "@/features/clients/ClientAdd/helpers"
 import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
 import { useClient, useClientContacts, useClientSearch, useClients } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
@@ -60,17 +61,18 @@ export default function QuotationAdd() {
   const [berlakuSampai, setBerlakuSampai] = useState("")
 
   // Step gating logic.
-  const isAlamatFilled = shippingAddress.trim().length >= 20 && /[a-zA-Z]/.test(shippingAddress)
-  const isWaktuFilled = isAlamatFilled && shippingTime.trim().length > 0
+  // The address is optional here and required at the PO.
+  const isAlamatOk = optionalAddressError(shippingAddress) === null
+  const isWaktuFilled = isAlamatOk && shippingTime.trim().length > 0
   const isTenggatWaktuFilled = jatuhTempo.trim().length > 0 && berlakuSampai.trim().length > 0
-  const hasContent = products.length > 0 || isAlamatFilled
+  const hasContent = products.length > 0 || isValidAddress(shippingAddress)
 
   useEffect(() => {
-    if (!isAlamatFilled) {
+    if (!isAlamatOk) {
       setShippingTime("")
       setShippingCost("")
     }
-  }, [isAlamatFilled])
+  }, [isAlamatOk])
 
   useEffect(() => {
     if (!isWaktuFilled) setShippingCost("")
@@ -345,7 +347,7 @@ export default function QuotationAdd() {
             setShippingTime={setShippingTime}
             shippingCost={shippingCost}
             setShippingCost={setShippingCost}
-            isAlamatFilled={isAlamatFilled}
+            isAlamatOk={isAlamatOk}
             isWaktuFilled={isWaktuFilled}
             formatRp={formatRp}
           />

@@ -8,9 +8,9 @@ import ContactCard from "./ContactCard"
 import {
   type ClientAddFormData,
   INITIAL_FORM,
-  isValidAddress,
   isValidEmail,
   isValidPhone,
+  optionalAddressError,
 } from "./helpers"
 import LegalCard from "./LegalCard"
 
@@ -37,13 +37,11 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
   if (!open) return null
 
   const isNamaPerusahaanFilled = form.namaPerusahaan.trim().length > 0
-  const isAlamatFilled = isNamaPerusahaanFilled && isValidAddress(form.alamat)
-  const alamatError =
-    isNamaPerusahaanFilled && form.alamat.trim().length > 0 && !isValidAddress(form.alamat)
-      ? "Alamat harus minimal 20 karakter dan mengandung huruf."
-      : null
+  // Alamat is optional; a filled one must still be valid.
+  const alamatError = isNamaPerusahaanFilled ? optionalAddressError(form.alamat) : null
+  const isCompanyReady = isNamaPerusahaanFilled && alamatError === null
 
-  const isNamaKontakFilled = isAlamatFilled && form.namaKontak.trim().length > 0
+  const isNamaKontakFilled = isCompanyReady && form.namaKontak.trim().length > 0
 
   const phoneFilledAndValid = form.nomorTelepon.trim().length > 0 && isValidPhone(form.nomorTelepon)
   const emailFilledAndValid = form.email.trim().length > 0 && isValidEmail(form.email)
@@ -144,7 +142,7 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
       <ContactCard
         form={form}
         onChange={handleChange}
-        isAlamatFilled={isAlamatFilled}
+        isCompanyReady={isCompanyReady}
         isNamaKontakFilled={isNamaKontakFilled}
         phoneError={phoneError}
         emailError={emailError}

@@ -6,6 +6,7 @@ import {
   CheckmarkIcon,
   type ClientAddFormData,
   fieldErrorCls,
+  fieldHintCls,
   inputCls,
   optionalCls,
 } from "./helpers"
@@ -159,7 +160,7 @@ export default function CompanyCard({
       </div>
       <div className={ui.field}>
         <label htmlFor={`${id}-address`} className={ui.fieldLabel}>
-          Alamat <span className="text-primary-700">*</span>
+          Alamat <span className={optionalCls}>(Opsional)</span>
         </label>
         <textarea
           id={`${id}-address`}
@@ -169,8 +170,18 @@ export default function CompanyCard({
           onChange={(e) => onChange("alamat", e.target.value)}
           rows={3}
           disabled={!isNamaPerusahaanFilled}
+          aria-invalid={alamatError ? true : undefined}
+          aria-describedby={`${id}-address-hint`}
         />
-        {alamatError && <span className={fieldErrorCls}>{alamatError}</span>}
+        {alamatError ? (
+          <span id={`${id}-address-hint`} className={fieldErrorCls}>
+            {alamatError}
+          </span>
+        ) : (
+          <span id={`${id}-address-hint`} className={fieldHintCls}>
+            Wajib diisi sebelum PO diproses
+          </span>
+        )}
       </div>
       <div className={ui.field}>
         <span id={`${id}-logo`} className={ui.fieldLabel}>

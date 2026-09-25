@@ -7,6 +7,8 @@ import type { VendorContactInfo, VendorRow } from "@/types/api"
 
 const fieldErrorCls = "mt-1 block text-xs text-error"
 
+const fieldHintCls = "mt-1 block text-xs text-dark-600"
+
 const optionalCls = "text-overline font-normal uppercase italic text-dark-600"
 
 const inputCls = `${ui.fieldInput} placeholder:text-dark-500 ${ui.disabledField}`
@@ -31,9 +33,11 @@ function isValidPhone(s: string): boolean {
   return digits.length >= 9 && digits.length <= 13
 }
 
-function isValidAddress(s: string): boolean {
+// Optional address, checked once filled.
+function addressErrorOf(s: string): string | null {
   const t = s.trim()
-  return t.length >= 20 && /[a-zA-Z]/.test(t)
+  if (t === "" || (t.length >= 20 && /[a-zA-Z]/.test(t))) return null
+  return "Alamat harus minimal 20 karakter dan mengandung huruf."
 }
 
 export default function VendorAddModal({
@@ -57,24 +61,22 @@ export default function VendorAddModal({
   if (!open) return null
 
   const isNameFilled = name.trim().length > 0
-  const isAddressFilled = isNameFilled && isValidAddress(address)
-  const addressError =
-    isNameFilled && address.trim().length > 0 && !isValidAddress(address)
-      ? "Alamat harus minimal 20 karakter dan mengandung huruf."
-      : null
+  const addressError = isNameFilled ? addressErrorOf(address) : null
+  // Alamat is optional; a filled one must still be valid.
+  const isVendorReady = isNameFilled && addressError === null
 
   const phoneFilledAndValid = phone.trim().length > 0 && isValidPhone(phone)
   const emailFilledAndValid = email.trim().length > 0 && isValidEmail(email)
   const phoneError =
-    isAddressFilled && phone.trim().length > 0 && !isValidPhone(phone)
+    isVendorReady && phone.trim().length > 0 && !isValidPhone(phone)
       ? "Nomor telepon harus 9–13 digit angka."
       : null
   const emailError =
-    isAddressFilled && email.trim().length > 0 && !isValidEmail(email)
+    isVendorReady && email.trim().length > 0 && !isValidEmail(email)
       ? "Format email tidak valid."
       : null
 
-  const isContactValid = isAddressFilled && (phoneFilledAndValid || emailFilledAndValid)
+  const isContactValid = isVendorReady && (phoneFilledAndValid || emailFilledAndValid)
   const canSubmit = isContactValid
 
   const reset = () => {
@@ -134,7 +136,7 @@ export default function VendorAddModal({
         footer={
           <>
             {submitError && <span className="flex-1 text-xs text-error">{submitError}</span>}
-            {!submitError && isAddressFilled && !isContactValid && (
+            {!submitError && isVendorReady && !isContactValid && (
               <span className="flex-1 text-xs text-error">
                 Isi minimal email atau nomor telepon.
               </span>
@@ -174,7 +176,7 @@ export default function VendorAddModal({
           </div>
           <div className={ui.field}>
             <label htmlFor={`${fid}-address`} className={ui.fieldLabel}>
-              Alamat <span className="text-primary-700">*</span>
+              Alamat <span className={optionalCls}>(Opsional)</span>
             </label>
             <textarea
               className={`${inputCls} resize-none font-sans leading-5`}
@@ -184,8 +186,18 @@ export default function VendorAddModal({
               onChange={(e) => setAddress(e.target.value)}
               rows={3}
               disabled={!isNameFilled}
+              aria-invalid={addressError ? true : undefined}
+              aria-describedby={`${fid}-address-hint`}
             />
-            {addressError && <span className={fieldErrorCls}>{addressError}</span>}
+            {addressError ? (
+              <span id={`${fid}-address-hint`} className={fieldErrorCls}>
+                {addressError}
+              </span>
+            ) : (
+              <span id={`${fid}-address-hint`} className={fieldHintCls}>
+                Wajib diisi sebelum PO diproses
+              </span>
+            )}
           </div>
           <div className={ui.field}>
             <label htmlFor={`${fid}-sku`} className={ui.fieldLabel}>
@@ -205,7 +217,7 @@ export default function VendorAddModal({
 
         <div
           className={`${ui.modalSection} transition-opacity duration-200 ease-[ease] motion-reduce:transition-none ${
-            !isAddressFilled ? "opacity-60" : "opacity-100"
+            !isVendorReady ? "opacity-60" : "opacity-100"
           }`}
         >
           <div className={ui.modalSectionHeading}>Informasi Kontak</div>
@@ -221,7 +233,7 @@ export default function VendorAddModal({
                 placeholder="example@vendor.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={!isAddressFilled}
+                disabled={!isVendorReady}
               />
               {emailError && <span className={fieldErrorCls}>{emailError}</span>}
             </div>
@@ -239,7 +251,7 @@ export default function VendorAddModal({
                   placeholder="812xxxx"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                  disabled={!isAddressFilled}
+                  disabled={!isVendorReady}
                 />
               </div>
               {phoneError && <span className={fieldErrorCls}>{phoneError}</span>}

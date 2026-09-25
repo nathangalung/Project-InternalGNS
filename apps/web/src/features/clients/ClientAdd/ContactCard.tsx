@@ -5,7 +5,7 @@ import { type ClientAddFormData, fieldErrorCls, inputCls, optionalCls } from "./
 type ContactCardProps = {
   form: ClientAddFormData
   onChange: (field: keyof ClientAddFormData, value: string) => void
-  isAlamatFilled: boolean
+  isCompanyReady: boolean
   isNamaKontakFilled: boolean
   phoneError: string | null
   emailError: string | null
@@ -15,7 +15,7 @@ type ContactCardProps = {
 export default function ContactCard({
   form,
   onChange,
-  isAlamatFilled,
+  isCompanyReady,
   isNamaKontakFilled,
   phoneError,
   emailError,
@@ -24,7 +24,7 @@ export default function ContactCard({
   return (
     <div
       className={`${ui.modalSection} transition-opacity duration-200 ease-[ease] ${
-        !isAlamatFilled ? "opacity-60" : "opacity-100"
+        !isCompanyReady ? "opacity-60" : "opacity-100"
       }`}
     >
       <div className={ui.modalSectionHeading}>Kontak &amp; Teknis</div>
@@ -39,7 +39,7 @@ export default function ContactCard({
           placeholder="Nama lengkap kontak"
           value={form.namaKontak}
           onChange={(e) => onChange("namaKontak", e.target.value)}
-          disabled={!isAlamatFilled}
+          disabled={!isCompanyReady}
         />
       </div>
       <div className={ui.row2}>

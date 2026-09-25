@@ -1,4 +1,5 @@
 import { useId, useState } from "react"
+import { isValidAddress } from "@/features/clients/ClientAdd/helpers"
 import { getPageNumbers } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { requestDiffers, requestedCode } from "./lines"
@@ -85,8 +86,7 @@ export default function Step4Summary({
   const pageSlice = products.slice((prodPage - 1) * PAGE_SIZE, prodPage * PAGE_SIZE)
 
   const isTenggatWaktuFilled = jatuhTempo.trim().length > 0 && berlakuSampai.trim().length > 0
-  const hasContent =
-    products.length > 0 || (shippingAddress.trim().length >= 20 && /[a-zA-Z]/.test(shippingAddress))
+  const hasContent = products.length > 0 || isValidAddress(shippingAddress)
 
   return (
     <div className={qe.stepContent}>
@@ -233,7 +233,7 @@ export default function Step4Summary({
         )}
 
         {/* Shipping detail (when set) */}
-        {shippingAddress && (
+        {(shippingAddress || shippingTime || shippingCost) && (
           <div className={`${card} ${grid2} mb-6 gap-6`}>
             <div>
               <div className={fieldLabel}>WAKTU PENGIRIMAN (HARI)</div>
