@@ -18,7 +18,7 @@ type PdfSettings struct {
 	PaymentTerms  string
 }
 
-// CoretaxSettings carries seller-side identifiers for the DJP e-faktur XML.
+// CoretaxSettings holds seller e-faktur identifiers.
 type CoretaxSettings struct {
 	SellerTIN   string
 	SellerIDTKU string

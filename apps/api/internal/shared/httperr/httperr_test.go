@@ -74,7 +74,8 @@ func TestUnprocessable(t *testing.T) {
 	assert.Equal(t, "msg", e.Detail)
 }
 
-// Detail must keep each field's message, not flatten them to one sentence.
+// Detail keeps each field message.
+// It must not flatten them to one sentence.
 func TestUnprocessable_DetailKeepsFieldMessages(t *testing.T) {
 	e := Unprocessable(map[string]string{
 		"email":    "Email wajib diisi.",
@@ -94,6 +95,7 @@ func TestUnprocessable_DetailIsStableAcrossRuns(t *testing.T) {
 	}
 }
 
+// Blank fields get generic prose.
 // A field with no usable message still needs prose for the toast.
 func TestUnprocessable_BlankFieldsFallBackToGenericProse(t *testing.T) {
 	assert.Equal(t, genericInvalidPayload, Unprocessable(nil).Detail)
@@ -108,7 +110,8 @@ func TestUnprocessableDetail(t *testing.T) {
 	assert.Equal(t, "required", e.Fields["name"])
 }
 
-// Every 422 must carry prose; none may lean on a synthetic field key.
+// Every 422 carries prose.
+// None may lean on a synthetic field key.
 func TestUnprocessable_AlwaysHasDetail(t *testing.T) {
 	codes := []string{"P0001", "P0012", "P0014", "23502", "23514", "22P02", "22003"}
 	for _, code := range codes {
@@ -148,7 +151,8 @@ func TestFromDBErr_SQLSTATE(t *testing.T) {
 	}
 }
 
-// Business-rule raises must keep their message; only opaque codes are curated.
+// Business raises keep their message.
+// Only opaque codes are curated.
 func TestFromDBErr_BusinessCodesKeepMessage(t *testing.T) {
 	got := FromDBErr(&pgconn.PgError{Code: "P0014", Message: "discount_pct must be between 0 and 100"})
 	assert.Equal(t, "discount_pct must be between 0 and 100", got.Detail)
@@ -179,7 +183,7 @@ func TestRenderDBErr(t *testing.T) {
 	assert.Equal(t, http.StatusConflict, res.StatusCode)
 }
 
-// Records the context each log record was handled with.
+// ctxCapture records handler contexts.
 type ctxCapture struct {
 	slog.Handler
 	seen []context.Context
@@ -224,6 +228,7 @@ func TestRenderDBErrCtx_LogsWithRequestContext(t *testing.T) {
 	}
 }
 
+// Mapped SQLSTATEs are named constants.
 // Every SQLSTATE httperr maps is named once, in shared/db, so a migration's
 // ERRCODE and the status it renders as are tied to one constant.
 func TestFromDBErr_NamedSQLStates(t *testing.T) {
@@ -256,7 +261,7 @@ func TestFromDBErr_NamedSQLStates(t *testing.T) {
 	}
 }
 
-// The slice-translated codes pin their literal values.
+// Translated codes pin literal values.
 // Repos turn these into sentinel errors before httperr sees them, so the
 // constant's value is the contract with the plpgsql ERRCODE.
 func TestSQLStateValues(t *testing.T) {

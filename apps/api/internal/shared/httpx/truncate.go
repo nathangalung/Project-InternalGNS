@@ -5,7 +5,8 @@ import (
 	"log/slog"
 )
 
-// WarnIfTruncated logs when a list response was capped below its true total.
+// WarnIfTruncated logs capped lists.
+// It fires when a list response was capped below its true total.
 // Exports opt out of pagination but the repo still clamps, so a large result
 // set is silently cut; this leaves the operator a signal until the export
 // path is made unbounded.

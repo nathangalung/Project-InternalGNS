@@ -14,7 +14,8 @@ func WriteJSON(w http.ResponseWriter, status int, v any) {
 	_ = json.NewEncoder(w).Encode(v)
 }
 
-// XLSX attachment response. filename is the base name without extension.
+// WriteXLSX sends an XLSX attachment.
+// filename is the base name without extension.
 func WriteXLSX(w http.ResponseWriter, filename string, data []byte) {
 	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.xlsx"`, filename))

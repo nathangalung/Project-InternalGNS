@@ -67,8 +67,9 @@ func TestRunMigrations_AcquireErrorOnCancelledCtx(t *testing.T) {
 	assert.Error(t, err)
 }
 
+// Begin failures name their step.
 // WithTx takes any TxBeginner, so a repo can run it on the pool or nest it
-// inside a caller's transaction, and a begin failure names its step.
+// inside a caller's transaction.
 func TestWithTx_BeginnerFailureIsWrapped(t *testing.T) {
 	var b db.TxBeginner = testutil.FakeBeginner{}
 	err := db.WithTx(context.Background(), b, func(_ pgx.Tx) error { return nil })

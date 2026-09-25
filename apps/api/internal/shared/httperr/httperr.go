@@ -49,7 +49,8 @@ func Conflict(detail string) Error {
 	return Error{Type: "about:blank", Title: "Conflict", Status: http.StatusConflict, Detail: detail}
 }
 
-// Shown when no field carries a message.
+// genericInvalidPayload is the fallback detail.
+// It shows when no field carries a message.
 const genericInvalidPayload = "Data yang dikirim tidak valid. Periksa kembali isian Anda."
 
 // UnprocessableDetail carries prose plus fields.
@@ -63,15 +64,16 @@ func UnprocessableDetail(detail string, fields map[string]string) Error {
 	}
 }
 
-// Unprocessable pairs field errors with prose. Detail is what the toast reads
-// and Fields stays per-field so forms can mark the offending inputs. The two
-// must agree, so Detail is built from the field messages rather than a fixed
-// sentence that would erase which input failed.
+// Unprocessable pairs fields with prose.
+// Detail is what the toast reads and Fields stays per-field so forms can
+// mark the offending inputs. The two must agree, so Detail is built from the
+// field messages rather than a fixed sentence that would erase which input
+// failed.
 func Unprocessable(fields map[string]string) Error {
 	return UnprocessableDetail(fieldsDetail(fields), fields)
 }
 
-// Joins field messages, never their keys.
+// fieldsDetail joins messages, not keys.
 func fieldsDetail(fields map[string]string) string {
 	keys := make([]string, 0, len(fields))
 	for k, v := range fields {
@@ -106,7 +108,8 @@ func ServiceUnavailable(detail string) Error {
 	return Error{Type: "about:blank", Title: "Service Unavailable", Status: http.StatusServiceUnavailable, Detail: detail}
 }
 
-// FromDBErr maps pg SQLSTATE to HTTP with a curated, non-leaking message.
+// FromDBErr maps SQLSTATE to HTTP.
+// The message is curated and never leaks internals.
 func FromDBErr(err error) Error {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
@@ -160,7 +163,7 @@ func RenderDBErr(w http.ResponseWriter, err error) {
 	RenderDBErrCtx(context.Background(), w, err)
 }
 
-// RenderDBErrCtx renders and logs with context.
+// RenderDBErrCtx renders, logging with context.
 // The slog handler in app/logging.go stamps request_id from this context, so
 // passing the request context is what puts a 500 line next to its request.
 func RenderDBErrCtx(ctx context.Context, w http.ResponseWriter, err error) {

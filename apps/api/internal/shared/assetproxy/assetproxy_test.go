@@ -22,7 +22,7 @@ import (
 
 var errDB = errors.New("boom")
 
-// base returns a descriptor wired to an in-memory asset.
+// base wires an in-memory asset.
 func base(key string) assetproxy.Descriptor {
 	return assetproxy.Descriptor{
 		Storage:     &storage.Client{},
@@ -56,6 +56,7 @@ func decode(t *testing.T, rec *httptest.ResponseRecorder) map[string]any {
 	return out
 }
 
+// Nil storage beats bad ids.
 // Storage-nil is checked before the id parse, so a bad id still yields 503.
 func TestUpload_NilStorageBeatsBadID(t *testing.T) {
 	d := base("")
@@ -72,7 +73,8 @@ func TestDownload_NilStorageBeatsBadID(t *testing.T) {
 	assert.Equal(t, http.StatusServiceUnavailable, rec.Code)
 }
 
-// UpdateKey has no storage dependency, so a bad id is a 400.
+// UpdateKey parses ids without storage.
+// It has no storage dependency, so a bad id is a 400.
 func TestUpdateKey_NilStorageStillParsesID(t *testing.T) {
 	d := base("")
 	d.Storage = nil
@@ -151,7 +153,7 @@ func TestUpload(t *testing.T) {
 	}
 }
 
-// The existence check runs before the file-name checks.
+// Existence check precedes name checks.
 func TestUpload_ExistenceBeatsFileName(t *testing.T) {
 	d := base("")
 	d.Exists = notFound
@@ -212,6 +214,7 @@ func TestDownload(t *testing.T) {
 	})
 }
 
+// Extra fields reach the download.
 // Purchase orders return the original file name alongside the URL.
 func TestDownload_ExtraFields(t *testing.T) {
 	name := "scan.pdf"
@@ -284,7 +287,7 @@ func keys(m map[string]any) []string {
 	return out
 }
 
-// Captures the context each log record was handled with.
+// logCtxCapture records handler contexts.
 type logCtxCapture struct {
 	slog.Handler
 	seen []context.Context
@@ -299,7 +302,8 @@ func (h *logCtxCapture) Enabled(context.Context, slog.Level) bool { return true 
 
 type reqProbeKey struct{}
 
-// A repo failure on any asset route must log with the request context, so the
+// Repo failures log request context.
+// A failure on any asset route must log with the request context, so the
 // slog handler can stamp request_id onto the 500 line.
 func TestAssetRoutes_ServerErrorLogsRequestContext(t *testing.T) {
 	cases := []struct {
@@ -338,10 +342,7 @@ func TestAssetRoutes_ServerErrorLogsRequestContext(t *testing.T) {
 	}
 }
 
-// The attach endpoint takes the key from the request body, so it must refuse
-// any key that does not belong to the record being attached to. Client 42
-// carries logo_object_key='../../etc/x' because it did not.
-// A sub-folder asset keeps to its folder.
+// Sub-folder assets keep their folder.
 // Upload writes into it and UpdateKey accepts nothing outside it.
 func TestKeySub_BindsTheFolder(t *testing.T) {
 	d := base("")
@@ -368,6 +369,10 @@ func TestKeySub_BindsTheFolder(t *testing.T) {
 	}
 }
 
+// Attach refuses foreign keys.
+// The attach endpoint takes the key from the request body, so it must refuse
+// any key that does not belong to the record being attached to. Client 42
+// carries logo_object_key='../../etc/x' because it did not.
 func TestUpdateKey_RejectsForeignKeys(t *testing.T) {
 	cases := []struct {
 		name string
@@ -398,6 +403,7 @@ func TestUpdateKey_RejectsForeignKeys(t *testing.T) {
 	}
 }
 
+// Missing owner beats key check.
 // A missing owner is reported as 404, not as a malformed key.
 func TestUpdateKey_OwnerMissingBeatsKeyCheck(t *testing.T) {
 	d := base("")

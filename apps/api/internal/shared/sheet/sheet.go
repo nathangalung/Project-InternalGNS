@@ -1,4 +1,5 @@
-// Package sheet writes a single-sheet XLSX from headers + string rows.
+// Package sheet writes single-sheet XLSX.
+// The sheet is built from headers and string rows.
 package sheet
 
 import (
@@ -9,7 +10,8 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-// Write returns XLSX bytes: bold header row, then one row per record.
+// Write builds the XLSX bytes.
+// A bold header row comes first, then one row per record.
 func Write(sheetName string, headers []string, rows [][]string) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := write(&buf, sheetName, headers, rows); err != nil {

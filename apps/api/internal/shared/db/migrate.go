@@ -12,8 +12,9 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/db/migrations"
 )
 
-// Apply pending goose migrations under a Postgres advisory lock, so two
-// instances booting at once cannot run migrations concurrently.
+// RunMigrations applies goose migrations.
+// A Postgres advisory lock serialises them, so two instances booting at
+// once cannot run migrations concurrently.
 func RunMigrations(ctx context.Context, pool *pgxpool.Pool) error {
 	conn, err := pool.Acquire(ctx)
 	if err != nil {

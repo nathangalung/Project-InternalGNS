@@ -13,7 +13,7 @@ type TxBeginner interface {
 	Begin(ctx context.Context) (pgx.Tx, error)
 }
 
-// WithTx runs fn in a transaction.
+// WithTx runs fn transactionally.
 // fn's own error is returned unwrapped so callers can match sentinels.
 func WithTx(ctx context.Context, b TxBeginner, fn func(pgx.Tx) error) error {
 	tx, err := b.Begin(ctx)

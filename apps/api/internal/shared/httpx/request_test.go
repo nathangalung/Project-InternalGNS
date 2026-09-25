@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Reads the detail of a problem+json body.
+// problemDetail reads problem+json detail.
 func problemDetail(t *testing.T, rec *httptest.ResponseRecorder) string {
 	t.Helper()
 	assert.Equal(t, "application/problem+json", rec.Header().Get("Content-Type"))

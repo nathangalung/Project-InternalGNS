@@ -1,4 +1,5 @@
-// Package assetproxy shares the presigned asset routes.
+// Package assetproxy shares asset routes.
+// Every slice mounts the same presigned asset handlers.
 package assetproxy
 
 import (
@@ -14,10 +15,10 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
-// ErrNotFound signals a missing owner row.
+// ErrNotFound signals missing owners.
 var ErrNotFound = errors.New("assetproxy: not found")
 
-// Asset is the stored key plus extra download fields.
+// Asset is key plus extras.
 // Extra is merged into the download response; purchase orders use it to
 // return the original file name alongside the URL.
 type Asset struct {
@@ -25,7 +26,7 @@ type Asset struct {
 	Extra map[string]any
 }
 
-// Descriptor configures one resource asset route set.
+// Descriptor configures one route set.
 type Descriptor struct {
 	Storage   *storage.Client
 	Bucket    string
@@ -46,12 +47,12 @@ type Descriptor struct {
 	SetKey func(ctx context.Context, id int64, key string, actor int64) error
 }
 
-// folder is the record's asset folder.
+// folder is a record's folder.
 func (d Descriptor) folder(id int64) string {
 	return storage.OwnerFolder(d.KeyPrefix, id, d.KeySub)
 }
 
-// Upload presigns a PUT for a new asset.
+// Upload presigns a new PUT.
 func Upload(d Descriptor) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if d.Storage == nil {
@@ -84,7 +85,7 @@ func Upload(d Descriptor) http.HandlerFunc {
 	}
 }
 
-// Download presigns a GET for the attached asset.
+// Download presigns the attached GET.
 func Download(d Descriptor) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if d.Storage == nil {
@@ -115,7 +116,7 @@ func Download(d Descriptor) http.HandlerFunc {
 	}
 }
 
-// UpdateKey persists the uploaded object key.
+// UpdateKey persists uploaded keys.
 func UpdateKey(d Descriptor) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := httpx.PathID(w, r, "id", "invalid id")

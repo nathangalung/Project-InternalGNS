@@ -5,8 +5,9 @@ import (
 	"time"
 )
 
-// ParseDateParam parses a query-string date, accepting YYYY-MM-DD or RFC3339;
-// returns nil when blank or unparseable.
+// ParseDateParam parses query dates.
+// It accepts YYYY-MM-DD or RFC3339 and returns nil when blank or
+// unparseable.
 func ParseDateParam(s string) *time.Time {
 	s = strings.TrimSpace(s)
 	if s == "" {
