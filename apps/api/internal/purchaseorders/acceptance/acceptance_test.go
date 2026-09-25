@@ -97,11 +97,12 @@ func (s *scenarioState) authenticatedUser(id int64) error {
 
 func (s *scenarioState) emptyDomain() error { return s.reset() }
 
-// Drive quotation to accepted, PO auto-created.
+// Accept a quotation, creating PO.
 func (s *scenarioState) acceptedQuotation() error {
 	return s.acceptedQuotationForCompany(defaultCompany)
 }
 
+// Accept for an incomplete client.
 // Company 2 in the master seed has no NPWP, address or contact.
 func (s *scenarioState) acceptedQuotationIncompleteClient() error {
 	return s.acceptedQuotationForCompany(incompleteCompany)
@@ -219,6 +220,7 @@ func (s *scenarioState) poDiscountEquals(want string) error {
 	return nil
 }
 
+// PO totals equal its invoice.
 // PO-05: the PO read model must agree with the invoice it produced.
 func (s *scenarioState) poTotalsEqualInvoice() error {
 	var po purchaseorders.PurchaseOrder
@@ -343,6 +345,7 @@ func (s *scenarioState) attachFile(fileName string, size int64, key string) erro
 	return s.sendRequest(http.MethodPatch, "/purchase-orders/"+strconv.FormatInt(s.poID, 10)+"/file", body)
 }
 
+// Attach a file under key.
 // {po} is this PO, {other} a second one.
 func (s *scenarioState) attachFileUnderKey(fileName string, size int64, key string) error {
 	key = strings.ReplaceAll(key, "{po}", strconv.FormatInt(s.poID, 10))
@@ -387,7 +390,7 @@ func (s *scenarioState) fieldSays(field, want string) error {
 	return nil
 }
 
-// Every PO lock refusal shares one shape.
+// Lock refusals share one shape.
 func (s *scenarioState) poRefusedAsLocked(detail string) error {
 	if s.last.StatusCode != http.StatusConflict {
 		return fmt.Errorf("want 409 got %d body=%s", s.last.StatusCode, s.body)
@@ -450,7 +453,7 @@ func (s *scenarioState) editPOItems(discountPct, sellingPrice string) error {
 
 func int16PtrAcc(v int16) *int16 { return &v }
 
-// The 422 must say which record blocks the promotion.
+// 422 names the blocking record.
 func (s *scenarioState) errorNamesIncompleteClient() error {
 	var problem struct {
 		Detail string            `json:"detail"`
@@ -478,7 +481,8 @@ func (s *scenarioState) editPODetails(poNumber string) error {
 	)
 }
 
-// Stale If-Match must lose the race, not overwrite silently.
+// Stale If-Match loses the race.
+// It must never overwrite silently.
 func (s *scenarioState) editPODetailsStaleVersion() error {
 	body := purchaseorders.UpdateDetailsRequest{PoNumber: "PO/STALE", PoDate: "2026-01-15"}
 	return s.sendRequestWithHeaders(
@@ -499,7 +503,8 @@ func (s *scenarioState) editPONotesStaleVersion() error {
 	)
 }
 
-// Move the PO's invoice to sent, which files it with the client.
+// Send the PO's invoice.
+// Sending files it with the client.
 func (s *scenarioState) sendInvoice() error {
 	if err := s.readInvoiceByQuotation(); err != nil {
 		return err
@@ -529,7 +534,7 @@ func (s *scenarioState) invoiceStatusEquals(want string) error {
 	return nil
 }
 
-// Fetch invoice items via invoice id.
+// Fetch items by invoice id.
 func (s *scenarioState) listInvoiceItems() error {
 	if err := s.readInvoiceByQuotation(); err != nil {
 		return err
@@ -544,7 +549,7 @@ func (s *scenarioState) listInvoiceItems() error {
 	return s.sendRequest(http.MethodGet, "/invoices/"+strconv.FormatInt(inv.ID, 10)+"/items", nil)
 }
 
-// Assert any product line has price.
+// Some product line has price.
 func (s *scenarioState) invoiceProductLineUnitPriceEquals(want string) error {
 	var rows []invoices.InvoiceItem
 	if err := json.Unmarshal(s.body, &rows); err != nil {

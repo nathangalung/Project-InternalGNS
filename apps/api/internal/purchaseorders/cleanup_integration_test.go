@@ -11,7 +11,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Quotation cleanup removes PO and invoice.
+// Quotation cleanup takes PO, invoice.
 func TestCleaner_QuotationRemovesPOAndInvoice(t *testing.T) {
 	pool := testutil.Pool(t)
 	ctx := context.Background()

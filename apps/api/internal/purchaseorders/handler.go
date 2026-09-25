@@ -29,7 +29,7 @@ func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
 
-// parseListFilter reads the shared PO list filters (no pagination).
+// parseListFilter reads unpaged list filters.
 func parseListFilter(r *http.Request) ListFilter {
 	q := r.URL.Query()
 	f := ListFilter{
@@ -68,7 +68,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
 }
 
-// Export streams the filtered PO list (with delivery-note numbers) as XLSX.
+// Export streams the filtered list.
+// The XLSX carries delivery-note numbers.
 func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	f := parseListFilter(r)
 	f.Limit, f.Offset = listq.Unbounded, 0
@@ -365,7 +366,7 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// allowOnProgress gates work on complete client and vendor master data.
+// allowOnProgress requires complete master data.
 // It reports whether the caller may continue; it has already written the
 // response when it returns false.
 func (h *Handler) allowOnProgress(w http.ResponseWriter, r *http.Request, id int64, target Status) bool {
@@ -419,7 +420,7 @@ func (h *Handler) RemoveFile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// History returns the PO status timeline.
+// History returns the status timeline.
 func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
@@ -438,18 +439,19 @@ func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, rows)
 }
 
-// LockedCode tags every PO lock refusal.
+// LockedCode tags lock refusals.
 // The web branches on it: a 409 without it is an If-Match mismatch, which
 // a refetch resolves, while a lock needs no retry.
 const LockedCode = "po_locked"
 
-// lockedProblem is RFC 7807 plus code.
+// lockedProblem extends RFC 7807.
+// It adds the lock code.
 type lockedProblem struct {
 	httperr.Error
 	Code string `json:"code"`
 }
 
-// renderLocked writes the shared lock refusal.
+// renderLocked writes lock refusals.
 func renderLocked(w http.ResponseWriter, detail string) {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(http.StatusConflict)

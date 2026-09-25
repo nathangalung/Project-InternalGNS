@@ -12,7 +12,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Drive a PO to DELIVERED so its invoice exists.
+// Deliver a PO, creating invoice.
 func deliveredPO(t *testing.T, tx pgx.Tx) (int64, int64) {
 	t.Helper()
 	ctx := context.Background()
@@ -31,6 +31,7 @@ func setInvoiceStatus(t *testing.T, tx pgx.Tx, qID int64, status string) {
 	require.NoError(t, err)
 }
 
+// Filed invoice locks PO details.
 // PO-04: po_number and po_date are read-only once the invoice is filed.
 func TestRepo_UpdateDetails_InvoiceStatusLock(t *testing.T) {
 	cases := []struct {
@@ -62,7 +63,8 @@ func TestRepo_UpdateDetails_InvoiceStatusLock(t *testing.T) {
 	}
 }
 
-// If-Match guards the details edit against a lost update.
+// If-Match guards details edits.
+// A lost update is refused.
 func TestRepo_UpdateDetails_IfMatch(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
@@ -87,7 +89,8 @@ func TestRepo_UpdateDetails_NotFound(t *testing.T) {
 	assert.ErrorIs(t, err, purchaseorders.ErrNotFound)
 }
 
-// If-Match guards the notes edit against a lost update.
+// If-Match guards notes edits.
+// A lost update is refused.
 func TestRepo_UpdateNotes_IfMatch(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)

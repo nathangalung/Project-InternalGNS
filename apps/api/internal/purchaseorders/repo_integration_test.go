@@ -22,7 +22,7 @@ const (
 	seedUnitID    int16 = 19
 )
 
-// testPOFile stands in for an uploaded PO document.
+// testPOFile fakes an uploaded document.
 var testPOFile = purchaseorders.UpdateFileRequest{
 	FileName: "po.pdf", FileSize: 1024, ObjectKey: "po/test/1-po.pdf",
 }
@@ -128,8 +128,9 @@ func TestRepo_ChangeStatus_DeliveredStampsDeliveryNote(t *testing.T) {
 	require.Error(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 }
 
-// Migration 00061 makes DELIVERED terminal, so the refusal is an invalid
-// transition carrying Indonesian prose. The raise aborts the transaction.
+// DELIVERED is terminal.
+// Migration 00061 made it so; the refusal is an invalid transition carrying
+// Indonesian prose. The raise aborts the transaction.
 func TestRepo_ChangeStatus_DeliveredIsTerminal(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
@@ -145,8 +146,9 @@ func TestRepo_ChangeStatus_DeliveredIsTerminal(t *testing.T) {
 	assert.Equal(t, "PO yang sudah dikirim atau dibatalkan tidak dapat diubah statusnya.", err.Error())
 }
 
-// The DELIVERED edit lock shares P0013 with the invoice guard; the handler
-// matches ErrLocked and renders the shared 409 po_locked problem.
+// DELIVERED locks item edits.
+// The lock shares P0013 with the invoice guard; the handler matches
+// ErrLocked and renders the shared 409 po_locked problem.
 func TestRepo_UpdateItems_DeliveredIsLocked(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
@@ -169,7 +171,8 @@ func TestRepo_UpdateItems_DeliveredIsLocked(t *testing.T) {
 	assert.Equal(t, "PO yang sudah dikirim atau dibatalkan tidak dapat diubah.", err.Error())
 }
 
-// Migration 00046: fn_update_po_items validation now raises the typed P0014
+// Out-of-range discount is 422.
+// Since migration 00046 fn_update_po_items validation raises the typed P0014
 // rather than the untyped P0001, and the handler's default branch still
 // renders 422 carrying the raise message.
 func TestRepo_UpdateItems_DiscountOutOfRangeIsUnprocessable(t *testing.T) {
@@ -395,7 +398,8 @@ func TestRepo_UpdateItems_VersionedNotFound(t *testing.T) {
 	assert.ErrorIs(t, err, purchaseorders.ErrNotFound)
 }
 
-// Shipping days survive create then update.
+// Shipping days round-trip.
+// They survive create then update.
 func TestRepo_ShippingDays_RoundTrip(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	poID := acceptedQuotationWithShipping(t, tx, 7)
@@ -431,7 +435,7 @@ func TestRepo_ShippingDays_RoundTrip(t *testing.T) {
 	assert.Equal(t, 12, *updatedShip.ShippingDays)
 }
 
-// Accept quotation carrying shipping, return PO.
+// Accept shipping quotation, return PO.
 func acceptedQuotationWithShipping(t *testing.T, tx pgx.Tx, days int) int64 {
 	t.Helper()
 	ctx := context.Background()
@@ -475,7 +479,8 @@ func shippingLine(t *testing.T, items []purchaseorders.PurchaseOrderItem) purcha
 func int16Ptr(v int16) *int16 { return &v }
 func strPtr(v string) *string { return &v }
 
-// The note number is issued at ON_PROGRESS and never reissued.
+// ON_PROGRESS issues the note number.
+// It is never reissued.
 func TestRepo_ChangeStatus_OnProgressIssuesDeliveryNote(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)

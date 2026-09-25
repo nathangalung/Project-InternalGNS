@@ -16,7 +16,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
 
-// DeliveryNoteHandler renders the delivery note PDF mirror of a PO.
+// DeliveryNoteHandler renders delivery note PDFs.
+// The note mirrors its PO.
 type DeliveryNoteHandler struct {
 	repo       *Repo
 	clients    *clients.Repo
@@ -95,7 +96,8 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-// issuedDeliveryNote returns the stored number once work has started.
+// issuedDeliveryNote returns the stored number.
+// It does so only once work has started.
 // A PO reverted below ON_PROGRESS keeps its number but cannot print it.
 func issuedDeliveryNote(po PurchaseOrder) (string, bool) {
 	if po.Status != StatusOnProgress && po.Status != StatusDelivered {

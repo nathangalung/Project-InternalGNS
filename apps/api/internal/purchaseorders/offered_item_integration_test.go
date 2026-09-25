@@ -13,7 +13,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Quote one line, optionally matched to a catalog item.
+// Quote one line, optionally matched.
+// The match is to a catalog item.
 func acceptedQuotationWithOffer(t *testing.T, tx pgx.Tx, requested string, offered *int64) int64 {
 	t.Helper()
 	ctx := context.Background()
@@ -39,8 +40,8 @@ func acceptedQuotationWithOffer(t *testing.T, tx pgx.Tx, requested string, offer
 	return po.ID
 }
 
-// The PO and its delivery note describe what is supplied, not what was asked
-// for: documents naming the request text told nobody what was delivered. The
+// PO documents describe supplied goods.
+// Documents naming the request text told nobody what was delivered. The
 // code travels with the name, so a catalog item without an IMPA code never
 // borrows the customer's requested code.
 func TestPurchaseOrder_SnapshotsLineIdentity(t *testing.T) {
@@ -92,7 +93,7 @@ func catalogName(t *testing.T, tx pgx.Tx, id *int64) string {
 	return name
 }
 
-// Code of a catalog item that has one.
+// catalogCode reads an item's code.
 func catalogCode(t *testing.T, tx pgx.Tx, id *int64) *string {
 	t.Helper()
 	var code *string
@@ -102,7 +103,7 @@ func catalogCode(t *testing.T, tx pgx.Tx, id *int64) *string {
 	return code
 }
 
-// Catalog item with no IMPA code.
+// insertUncodedItem adds a code-less item.
 func insertUncodedItem(t *testing.T, tx pgx.Tx) *int64 {
 	t.Helper()
 	var id int64
@@ -113,7 +114,8 @@ func insertUncodedItem(t *testing.T, tx pgx.Tx) *int64 {
 	return &id
 }
 
-// A name typed in the edit wizard is not overwritten by the catalog.
+// Wizard-edited line names survive.
+// The catalog does not overwrite a name typed in the edit wizard.
 func TestPurchaseOrder_EditedLineNameSurvives(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	offered := seedItemID

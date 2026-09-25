@@ -21,7 +21,8 @@ func poDateFixture() time.Time {
 	return time.Date(2026, time.January, 15, 0, 0, 0, 0, time.UTC)
 }
 
-// Accept a quotation for one client, return its PO.
+// Accept a client quotation.
+// It returns the created PO.
 func acceptedQuotationForCompany(t *testing.T, tx pgx.Tx, companyID int64) int64 {
 	t.Helper()
 	ctx := context.Background()
@@ -45,7 +46,8 @@ func acceptedQuotationForCompany(t *testing.T, tx pgx.Tx, companyID int64) int64
 	return po.ID
 }
 
-// One PO per quotation, enforced by the database.
+// One PO per quotation.
+// The database enforces it.
 func TestPurchaseOrders_QuotationIsUnique(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	qID, _ := acceptedQuotationWithPO(t, tx)
@@ -63,7 +65,8 @@ func TestPurchaseOrders_QuotationIsUnique(t *testing.T) {
 	assert.Equal(t, "uq_purchase_orders_quotation_id", pgErr.ConstraintName)
 }
 
-// A client PO number is unique per client, not globally.
+// Client PO numbers are per-client.
+// They are unique per client, not globally.
 func TestPurchaseOrders_ClientPoNumberScopedToClient(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)

@@ -21,7 +21,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// PO routes with the document templates mounted.
+// PO routes with document templates.
 func (s *scenarioState) deliveryNoteServer() *httptest.Server {
 	if s.dnSrv != nil {
 		return s.dnSrv
@@ -84,6 +84,7 @@ func (s *scenarioState) poHasDeliveryNoteNumber() error {
 	return nil
 }
 
+// Re-promotion reuses the number.
 // A revert and re-promotion must not consume a second number.
 func (s *scenarioState) deliveryNoteNumberUnchanged() error {
 	dn, err := s.readDeliveryNoteNumber()
@@ -150,7 +151,8 @@ func (s *scenarioState) acceptedQuotationOffering(itemID int64, requested string
 	})
 }
 
-// Documents print the offered item, not the request text.
+// Documents print the offered item.
+// The request text never names the line.
 func (s *scenarioState) firstLineNamedAfterItem(itemID int64) error {
 	var want string
 	if err := testutil.Pool(s.t).QueryRow(context.Background(),
@@ -170,7 +172,7 @@ func (s *scenarioState) firstLineNamedAfterItem(itemID int64) error {
 	return nil
 }
 
-// Guards the fixture the next steps rely on.
+// Guard the next steps' fixture.
 func (s *scenarioState) catalogItemHasNoCode(itemID int64) error {
 	var code *string
 	if err := testutil.Pool(s.t).QueryRow(context.Background(),
@@ -183,7 +185,8 @@ func (s *scenarioState) catalogItemHasNoCode(itemID int64) error {
 	return nil
 }
 
-// A matched line never borrows the requested code.
+// Matched lines never borrow codes.
+// The requested code stays with the request.
 func (s *scenarioState) firstLineHasNoCode() error {
 	var rows []purchaseorders.PurchaseOrderItem
 	if err := json.Unmarshal(s.body, &rows); err != nil {

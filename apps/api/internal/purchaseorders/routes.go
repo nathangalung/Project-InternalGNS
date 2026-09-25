@@ -54,9 +54,9 @@ func Routes(d deps.Deps) chi.Router {
 	return r
 }
 
-// docAsset describes the PO document routes. SetKey stays nil: PATCH
-// /{id}/file also persists the original name and size, so it keeps its
-// own handler rather than assetproxy.UpdateKey.
+// docAsset describes document routes.
+// SetKey stays nil: PATCH /{id}/file also persists the original name and
+// size, so it keeps its own handler rather than assetproxy.UpdateKey.
 func docAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
 	return assetproxy.Descriptor{
 		Storage:     sc,
@@ -87,7 +87,7 @@ func docAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
 	}
 }
 
-// assetErr maps the package sentinel onto the shared one.
+// assetErr maps onto shared sentinels.
 func assetErr(err error) error {
 	if errors.Is(err, ErrNotFound) {
 		return assetproxy.ErrNotFound

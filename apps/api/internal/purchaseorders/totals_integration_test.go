@@ -10,7 +10,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// PO totals equal the invoice they produce.
+// PO totals equal its invoice.
 // Prices are chosen so per-line rounding drifts from header rounding: a
 // formula that rounds on the header sum instead of per line fails here.
 func TestRepo_PoTotals_MatchCreatedInvoice(t *testing.T) {
@@ -59,7 +59,8 @@ func TestRepo_PoTotals_MatchCreatedInvoice(t *testing.T) {
 	assert.Equal(t, discount, po.PoTotalDiscount)
 }
 
-// Profit is net of the PO discount, as the invoice bills it.
+// Profit nets the PO discount.
+// That matches what the invoice bills.
 func TestRepo_PoTotalProfit_IsNetOfDiscount(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)

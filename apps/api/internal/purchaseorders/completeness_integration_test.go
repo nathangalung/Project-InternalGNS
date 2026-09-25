@@ -19,7 +19,8 @@ const (
 	incompleteVendorLabel       = "CV Marine Supply"
 )
 
-// Quote one catalog item from one vendor, then accept it.
+// Accept a one-vendor catalog quote.
+// One catalog item comes from one vendor.
 func acceptedQuotationWithVendor(t *testing.T, tx pgx.Tx, companyID int64) int64 {
 	t.Helper()
 	ctx := context.Background()
@@ -54,7 +55,8 @@ func acceptedQuotationWithVendor(t *testing.T, tx pgx.Tx, companyID int64) int64
 	return po.ID
 }
 
-// One response carries each line's supplying vendor.
+// Lines carry their supplying vendor.
+// One response carries every line's vendor.
 func TestRepo_ListItems_CarriesVendor(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	poID := acceptedQuotationWithVendor(t, tx, seedCompanyID)
@@ -69,7 +71,8 @@ func TestRepo_ListItems_CarriesVendor(t *testing.T) {
 	assert.Equal(t, incompleteVendorLabel, *items[0].VendorName)
 }
 
-// The ON_PROGRESS gate answers from the server, in one round trip.
+// Server answers the ON_PROGRESS gate.
+// It takes one round trip.
 func TestRepo_Completeness(t *testing.T) {
 	t.Run("complete client and no vendor", func(t *testing.T) {
 		ctx, tx := testutil.BeginTx(t)

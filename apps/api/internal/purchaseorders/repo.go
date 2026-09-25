@@ -38,7 +38,7 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 // ranked by what it will bill.
 const poTotalExpr = "COALESCE(t.po_grand_total, 0)"
 
-// sortable is the closed set of PO sort keys.
+// sortable lists PO sort keys.
 var sortable = listq.Whitelist{
 	Default: "po_date",
 	Columns: map[string]listq.Column{
@@ -52,10 +52,10 @@ var sortable = listq.Whitelist{
 	},
 }
 
-// tiebreak keeps paging stable when the sort key ties.
+// tiebreak keeps paging stable.
 var tiebreak = listq.Column{Expr: "po.id", Dir: listq.Desc}
 
-// List returns POs with filter/sort and total count.
+// List pages POs with total.
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
@@ -135,22 +135,25 @@ func (r *Repo) GetByQuotation(ctx context.Context, quotationID int64) (PurchaseO
 	return po, err
 }
 
-// UpdateFile attaches the PO document; a PENDING PO becomes UPLOADED.
+// UpdateFile attaches the PO document.
+// A PENDING PO becomes UPLOADED.
 func (r *Repo) UpdateFile(ctx context.Context, id int64, req UpdateFileRequest, actorID int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("purchase_orders.update_file"),
 		id, req.FileName, req.FileSize, req.ObjectKey, actorID)
 	return classifyPgErr(err)
 }
 
-// RemoveFile detaches the PO document; an UPLOADED PO returns to PENDING.
+// RemoveFile detaches the PO document.
+// An UPLOADED PO returns to PENDING.
 // Once work has started the file stays, reported as ErrLocked.
 func (r *Repo) RemoveFile(ctx context.Context, id, actorID int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("purchase_orders.remove_file"), id, actorID)
 	return classifyPgErr(err)
 }
 
-// History returns the status timeline, oldest first. Every PO has its
-// creation entry, so an empty timeline means the PO does not exist.
+// History returns the status timeline.
+// It runs oldest first. Every PO has its creation entry, so an empty
+// timeline means the PO does not exist.
 func (r *Repo) History(ctx context.Context, id int64) ([]StatusHistoryEntry, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("purchase_orders.status_history"), id)
 	if err != nil {
@@ -174,7 +177,8 @@ func (r *Repo) UpdateNotes(ctx context.Context, id int64, notes string, actorID 
 	return classifyPgErr(err)
 }
 
-// UpdateDetails rewrites the client PO number and date.
+// UpdateDetails rewrites PO number, date.
+// Both are the client's PO number and date.
 // ifMatch nil skips the optimistic-lock guard; a filed invoice locks both
 // fields, which the function reports as ErrLocked.
 func (r *Repo) UpdateDetails(
@@ -200,7 +204,8 @@ func (r *Repo) ListItems(ctx context.Context, poID int64) ([]PurchaseOrderItem, 
 	return pgx.CollectRows(rows, pgx.RowToStructByName[PurchaseOrderItem])
 }
 
-// Completeness lists the client and vendor gaps blocking ON_PROGRESS.
+// Completeness lists ON_PROGRESS blockers.
+// Each is a client or vendor gap.
 // An empty slice means the PO may be worked on.
 func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssue, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("purchase_orders.completeness_client"), poID)
@@ -240,12 +245,13 @@ func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssu
 	return issues, nil
 }
 
-// ChangeStatus is Transition without a note.
+// ChangeStatus transitions without note.
 func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, actorID int64) error {
 	return r.Transition(ctx, id, status, "", actorID)
 }
 
-// Transition moves the PO and records note in its history.
+// Transition moves and records history.
+// The note goes into the PO's history.
 // CANCELLED requires a non-blank note.
 func (r *Repo) Transition(ctx context.Context, id int64, status Status, note string, actorID int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("purchase_orders.change_status"),
@@ -253,8 +259,8 @@ func (r *Repo) Transition(ctx context.Context, id int64, status Status, note str
 	return classifyPgErr(err)
 }
 
-// ruleError carries the raise message, which is
-// user-facing, under a domain sentinel.
+// ruleError wraps user-facing raises.
+// It carries the raise message under a domain sentinel.
 type ruleError struct {
 	kind error
 	msg  string
@@ -263,7 +269,7 @@ type ruleError struct {
 func (e *ruleError) Error() string { return e.msg }
 func (e *ruleError) Unwrap() error { return e.kind }
 
-// Single ERRCODE to domain error table for this slice.
+// classifyPgErr maps ERRCODEs to errors.
 // Codes are assigned by migration 00046; P0014 validation raises pass
 // through so httperr renders them as 422 with the raise message.
 func classifyPgErr(err error) error {

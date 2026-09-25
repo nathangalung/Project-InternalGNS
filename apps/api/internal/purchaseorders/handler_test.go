@@ -21,7 +21,8 @@ func newSrv(t *testing.T) *httptest.Server {
 	return testutil.PurchaseOrdersServer(t, seedUserID)
 }
 
-// Bulk list export: filtered POs -> XLSX with delivery-note number column.
+// Filtered list exports as XLSX.
+// The sheet has a delivery-note number column.
 func TestHandler_Export_XLSX(t *testing.T) {
 	srv := newSrv(t)
 	res := doJSON(t, srv, http.MethodGet, "/purchase-orders/export.xlsx", nil)
@@ -156,7 +157,7 @@ func TestHandler_UpdateFile_NotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
-// Bad input is refused before any query.
+// Bad input refused before querying.
 func TestHandler_UpdateFile_RejectsBadPayload(t *testing.T) {
 	const limit = 20 << 20
 	tests := []struct {

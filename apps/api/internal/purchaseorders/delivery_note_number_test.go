@@ -2,7 +2,8 @@ package purchaseorders
 
 import "testing"
 
-// The note prints only its stored number, only once work started.
+// Note prints its stored number.
+// It prints only once work started.
 func TestIssuedDeliveryNote(t *testing.T) {
 	num := "DN-26264141/GNS/IX/2026"
 	empty := ""

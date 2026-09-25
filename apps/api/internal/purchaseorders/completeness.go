@@ -5,12 +5,13 @@ import (
 	"strings"
 )
 
-// Master data a PO needs before it is worked on.
+// Master data gating PO work.
 // The browser used to run this check by fetching every item and then every
 // vendor, and let the promotion through while those requests were still in
 // flight. The server owns it now, and answers in one round trip.
 
-// ClientCompleteness is the client side of the ON_PROGRESS gate.
+// ClientCompleteness is the client gate.
+// It is the client side of the ON_PROGRESS gate.
 type ClientCompleteness struct {
 	ID           int64   `db:"id"`
 	Name         string  `db:"name"`
@@ -22,7 +23,7 @@ type ClientCompleteness struct {
 	ContactPhone *string `db:"contact_phone"`
 }
 
-// VendorCompleteness is one vendor behind a PO line.
+// VendorCompleteness is a line's vendor.
 type VendorCompleteness struct {
 	ID           int64   `db:"id"`
 	Name         string  `db:"name"`
@@ -31,7 +32,7 @@ type VendorCompleteness struct {
 	ContactPhone *string `db:"contact_phone"`
 }
 
-// CompletenessIssue lists what one record still lacks.
+// CompletenessIssue lists a record's gaps.
 type CompletenessIssue struct {
 	Scope   string   `json:"scope"`
 	ID      int64    `json:"id"`
@@ -48,7 +49,7 @@ func filled(v *string) bool {
 	return v != nil && strings.TrimSpace(*v) != ""
 }
 
-// missingClientFields lists the client fields the documents need.
+// missingClientFields lists document client gaps.
 // Nomor TKU is absent on purpose: the Coretax export derives it from the
 // NPWP when the client has none recorded, so the NPWP is the real
 // requirement.
@@ -72,7 +73,7 @@ func missingClientFields(c ClientCompleteness) []string {
 	return missing
 }
 
-// missingVendorFields lists what a supplying vendor still lacks.
+// missingVendorFields lists vendor gaps.
 func missingVendorFields(v VendorCompleteness) []string {
 	var missing []string
 	if !filled(v.Location) {
@@ -84,7 +85,7 @@ func missingVendorFields(v VendorCompleteness) []string {
 	return missing
 }
 
-// completenessFields renders issues as problem+json field errors.
+// completenessFields renders problem field errors.
 func completenessFields(issues []CompletenessIssue) map[string]string {
 	fields := make(map[string]string, len(issues))
 	for _, is := range issues {
