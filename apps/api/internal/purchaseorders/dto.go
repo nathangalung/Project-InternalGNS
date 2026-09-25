@@ -29,8 +29,9 @@ type PurchaseOrder struct {
 	DiscountPct       string     `db:"discount_pct"        json:"discountPct"`
 	QuotationTotal    *string    `db:"quotation_total"     json:"quotationTotal,omitempty"`
 	QuotationSubtotal *string    `db:"quotation_subtotal"  json:"quotationSubtotal,omitempty"`
-	// Money figures come from v_po_totals, which mirrors fn_create_invoice:
-	// PoSubtotal is the invoice DPP and the tax figures round per line.
+	// Money figures from v_po_totals.
+	// The view mirrors fn_create_invoice: PoSubtotal is the invoice DPP and
+	// the tax figures round per line.
 	PoSubtotal      string    `db:"po_subtotal"         json:"poSubtotal"`
 	PoTotalProduk   string    `db:"po_total_produk"     json:"poTotalProduk"`
 	PoTotalProfit   string    `db:"po_total_profit"     json:"poTotalProfit"`
@@ -42,10 +43,12 @@ type PurchaseOrder struct {
 	CreatedAt       time.Time `db:"created_at"          json:"createdAt"`
 	UpdatedAt       time.Time `db:"updated_at"          json:"updatedAt"`
 
-	// Issued when work starts (ON_PROGRESS); nil until then.
+	// Issued when work starts.
+	// Set at ON_PROGRESS; nil until then.
 	DeliveryNoteNumber *string `db:"delivery_note_number" json:"deliveryNoteNumber,omitempty"`
 
-	// Moves the caller may offer from Status.
+	// Moves the caller may offer.
+	// Each starts from Status.
 	AllowedTransitions []Transition `db:"-" json:"allowedTransitions"`
 }
 
@@ -70,15 +73,17 @@ type PurchaseOrderItem struct {
 	ShipDestination *string `db:"ship_destination"   json:"shipDestination,omitempty"`
 	ShippingDays    *int    `db:"shipping_days"      json:"shippingDays,omitempty"`
 	IsAvailable     bool    `db:"is_available"       json:"isAvailable"`
-	// Supplying vendor, resolved through the quotation line it came from, so
-	// the detail screen does not fetch one vendor per item.
+	// Supplying vendor of the line.
+	// Resolved through the quotation line it came from, so the detail screen
+	// does not fetch one vendor per item.
 	VendorID   *int64  `db:"vendor_id"   json:"vendorId,omitempty"`
 	VendorName *string `db:"vendor_name" json:"vendorName,omitempty"`
 }
 
 type ChangeStatusRequest struct {
 	Status Status `json:"status"`
-	// Required for CANCELLED; kept in the history otherwise.
+	// Required for CANCELLED.
+	// Kept in the history otherwise.
 	Note string `json:"note,omitempty"`
 }
 

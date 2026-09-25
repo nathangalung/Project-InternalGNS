@@ -35,10 +35,12 @@ type scenarioState struct {
 	userID      int64
 	quotationID int64
 	poID        int64
-	// Delivery note routes need templates, which FullServer omits.
+	// dnSrv serves delivery note routes.
+	// They need templates, which FullServer omits.
 	dnSrv    *httptest.Server
 	dnNumber string
-	// Role scenarios run on the production router.
+	// appSrv hosts role scenarios.
+	// They run on the production router.
 	appSrv    *httptest.Server
 	cleaner   *testutil.Cleaner
 	roleToken string
