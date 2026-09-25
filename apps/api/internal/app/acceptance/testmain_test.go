@@ -7,7 +7,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Serialize against acceptance suites on shared DB.
+// Serialize suites sharing the DB.
 func TestMain(m *testing.M) {
 	release := testutil.LockProcessForTests()
 	code := m.Run()

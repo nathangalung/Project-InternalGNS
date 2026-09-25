@@ -58,6 +58,7 @@ func TestRunRefreshPurgeLoop(t *testing.T) {
 	}
 }
 
+// Cancelled context sweeps nothing.
 // A context cancelled up front must not run a sweep at all.
 func TestRunRefreshPurgeLoop_CancelledContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())

@@ -135,8 +135,9 @@ func (c Config) validate() error {
 	return nil
 }
 
-// isWeakCred flags vendor-default or unreplaced-placeholder secrets. Empty is
-// NOT weak — it is the supported "storage disabled" signal.
+// isWeakCred flags weak secrets.
+// That means vendor defaults or unreplaced placeholders. Empty is NOT weak:
+// it is the supported "storage disabled" signal.
 func isWeakCred(v string) bool {
 	if strings.EqualFold(strings.TrimSpace(v), "minioadmin") {
 		return true
@@ -144,15 +145,17 @@ func isWeakCred(v string) bool {
 	return isPlaceholder(v)
 }
 
-// Secrets committed to the repository for local work.
+// committedDevSecrets are publicly known secrets.
+// They are committed to the repository for local work.
 // Kept working outside production, where compose.dev.yml needs them to boot.
 var committedDevSecrets = []string{
 	"local_dev_only_jwt_signing_key_0123456789abcdef",
 	"AdminGNS123!",
 }
 
-// isCommittedDevSecret reports a value published in the repository. Empty is
-// not one: an empty optional secret is the "disabled" signal, as elsewhere.
+// isCommittedDevSecret flags repository-published values.
+// Empty is not one: an empty optional secret is the "disabled" signal, as
+// elsewhere.
 func isCommittedDevSecret(v string) bool {
 	s := strings.TrimSpace(v)
 	if s == "" {
@@ -166,16 +169,17 @@ func isCommittedDevSecret(v string) bool {
 	return false
 }
 
-// Markers that only ever appear in template values.
+// Markers only template values carry.
 var placeholderMarkers = []string{
 	"change_me", "changeme", "generate_with", "placeholder",
 	"before_deploy", "yourdomain", "your-domain", "replace_me",
 }
 
-// isPlaceholder reports an unreplaced template value. Matching on markers
-// rather than a fixed list keeps it working when the template text changes; a
-// real random secret contains none of them. Empty is not a placeholder, since
-// some settings treat it as a deliberate "disabled" signal.
+// isPlaceholder flags unreplaced template values.
+// Matching on markers rather than a fixed list keeps it working when the
+// template text changes; a real random secret contains none of them. Empty
+// is not a placeholder, since some settings treat it as a deliberate
+// "disabled" signal.
 func isPlaceholder(v string) bool {
 	s := strings.ToLower(strings.TrimSpace(v))
 	if s == "" {
@@ -189,7 +193,8 @@ func isPlaceholder(v string) bool {
 	return false
 }
 
-// SlogLevel maps LOG_LEVEL to a slog level, defaulting to Info on anything else.
+// SlogLevel maps LOG_LEVEL to slog.
+// Anything unrecognised defaults to Info.
 func (c Config) SlogLevel() slog.Level {
 	switch strings.ToLower(strings.TrimSpace(c.LogLevel)) {
 	case "debug":

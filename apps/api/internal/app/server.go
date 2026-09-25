@@ -19,7 +19,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
-// Server owns the HTTP server and its pool.
+// Server owns HTTP and pool.
 // The pool outlives every in-flight request, so releasing it is the caller's
 // last act after Shutdown returns, not something http.Server can do.
 type Server struct {
@@ -47,7 +47,8 @@ func (s *Server) Close() {
 	}
 }
 
-// NewServer opens the pool and wires the server.
+// NewServer opens and wires everything.
+// It opens the pool and wires the server.
 // Every failure after the pool is open closes it on the way out, so a failed
 // boot leaves no connections behind.
 func NewServer(ctx context.Context, cfg Config) (*Server, error) {
@@ -79,7 +80,7 @@ func NewServer(ctx context.Context, cfg Config) (*Server, error) {
 	return s, nil
 }
 
-// buildServer wires migrations, seeds and routes.
+// buildServer wires migrations, seeds, routes.
 // The store is returned for the purge NewServer starts.
 func buildServer(ctx context.Context, cfg Config, pool *pgxpool.Pool) (*http.Server, queries.Store, error) {
 	// Fail fast if the session zone did not take: every date-derived value

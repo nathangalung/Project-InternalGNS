@@ -10,7 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// A 40-byte placeholder that satisfies the length guard; not a real key.
+// testSecret passes the length guard.
+// It is a 40-byte placeholder, not a real key.
 var testSecret = strings.Repeat("x", 40)
 
 func TestLoadConfig_HappyPath(t *testing.T) {
@@ -166,6 +167,7 @@ func TestLoadConfig_ProductionRejectsWeakDefaults(t *testing.T) {
 	})
 }
 
+// Production rejects committed dev secrets.
 // compose.dev.yml is committed, so the secrets it sets are public. A
 // production boot must refuse them however well-formed they look.
 func TestConfig_ProductionRejectsCommittedDevSecrets(t *testing.T) {
@@ -210,8 +212,9 @@ func TestConfig_ProductionRejectsCommittedDevSecrets(t *testing.T) {
 	}
 }
 
-// The same values must keep working outside production: compose.dev.yml sets
-// them, so rejecting them everywhere would stop `make dev` booting.
+// Development accepts committed dev secrets.
+// compose.dev.yml sets them, so rejecting them everywhere would stop
+// `make dev` booting.
 func TestConfig_DevelopmentAcceptsCommittedDevSecrets(t *testing.T) {
 	c := Config{
 		Env:                "development",
@@ -222,6 +225,7 @@ func TestConfig_DevelopmentAcceptsCommittedDevSecrets(t *testing.T) {
 	assert.NoError(t, c.validate())
 }
 
+// Unknown ENV fails closed.
 // Every production check keys on ENV == "production", so a near miss such
 // as "prod" or "Production" used to boot with all of them skipped: the dev
 // secrets, a wildcard CORS origin and a "-" bank account all passed. An

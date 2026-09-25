@@ -23,7 +23,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
-// Mint a valid bearer token for a user.
+// mintToken signs a user's token.
 func mintToken(t *testing.T, userID int64, role string) string {
 	t.Helper()
 	now := time.Now()
@@ -43,7 +43,7 @@ func mintToken(t *testing.T, userID int64, role string) string {
 	return signed
 }
 
-// Each role-gated mount enforces its policy at the router.
+// Router enforces each mount's roles.
 // The middleware reads the role from the account, not the claim, so each
 // role needs a real user of its own.
 func TestRouter_RBACPerMount(t *testing.T) {
@@ -223,7 +223,8 @@ func TestNewServer_HappyPath(t *testing.T) {
 	assert.Equal(t, ":0", srv.HTTP.Addr)
 }
 
-// Close must release the pool, or every boot leaks 20 connections.
+// Close releases the pool.
+// Otherwise every boot leaks 20 connections.
 func TestNewServer_CloseReleasesPool(t *testing.T) {
 	_ = testutil.Pool(t)
 	cfg := Config{
@@ -252,7 +253,8 @@ func TestNewServer_CloseReleasesPool(t *testing.T) {
 	srv.Close() // idempotent: main defers it after Shutdown
 }
 
-// A failed boot returns no server, so no caller can leak a half-built one.
+// Failed boot returns no server.
+// No caller can then leak a half-built one.
 func TestNewServer_FailedBootReturnsNoServer(t *testing.T) {
 	_ = testutil.Pool(t)
 	long := strings.Repeat("a", 80)
@@ -289,7 +291,8 @@ func TestNewServer_FailedBootReturnsNoServer(t *testing.T) {
 	}
 }
 
-// The long request budget covers exactly the workbook and PDF routes.
+// Long budget covers render routes.
+// It covers exactly the workbook and PDF routes.
 func TestRouter_RenderRoutesClassified(t *testing.T) {
 	store, err := queries.Load()
 	require.NoError(t, err)
@@ -328,7 +331,7 @@ func TestRouter_RenderRoutesClassified(t *testing.T) {
 	assert.Contains(t, short, "/api/v1/invoices/{id}/coretax.xml")
 }
 
-// rbacUsers creates one real user per role.
+// rbacUsers creates per-role users.
 func rbacUsers(t *testing.T) map[string]int64 {
 	t.Helper()
 	cleaner := testutil.NewCleaner(t)
@@ -348,7 +351,8 @@ func rbacUsers(t *testing.T) map[string]int64 {
 	return userIDs
 }
 
-// Finance reads items and vendors but writes neither.
+// Finance reads items and vendors.
+// It writes neither.
 // Client writes stay open to finance for NPWP and TKU. Every write carries
 // an empty body, so an allowed request stops at validation and stores
 // nothing.

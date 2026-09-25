@@ -14,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 )
 
+// 429s become problem+json.
 // httprate writes a plain-text 429, which the SPA feeds to JSON.parse and
 // reports as "Unexpected token 'T'". The mount rewrites it as problem+json
 // and leaves a response that is already problem+json alone.
@@ -79,6 +80,7 @@ func TestProblemJSON429(t *testing.T) {
 	})
 }
 
+// Limited login answers problem+json.
 // End to end through the mounted limiter: the sixth login in a minute must
 // come back as problem+json, not as text the SPA cannot parse.
 func TestRouter_RateLimitedLoginIsProblemJSON(t *testing.T) {

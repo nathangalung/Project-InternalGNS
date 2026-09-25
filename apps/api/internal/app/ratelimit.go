@@ -8,10 +8,10 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 )
 
-// Shown when the login limiter refuses a request.
+// rateLimitDetail explains a limiter refusal.
 const rateLimitDetail = "Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi."
 
-// problemJSON429 renders a rate-limited reply as problem+json.
+// problemJSON429 renders 429 as problem+json.
 // httprate writes plain text and offers no hook for the body, while the SPA
 // runs every error response through JSON.parse, so the raw "Too Many
 // Requests" surfaced to the user as "Unexpected token 'T'". Rewriting at the
@@ -22,14 +22,16 @@ func problemJSON429(next http.Handler) http.Handler {
 	})
 }
 
-// problem429Writer swaps a plain-text 429 body for problem+json.
+// problem429Writer rewrites plain-text 429s.
+// The body becomes problem+json.
 type problem429Writer struct {
 	http.ResponseWriter
 	headerWritten bool
 	replaced      bool
 }
 
-// Unwrap exposes the real writer to http.ResponseController.
+// Unwrap exposes the real writer.
+// http.ResponseController needs it.
 func (w *problem429Writer) Unwrap() http.ResponseWriter { return w.ResponseWriter }
 
 func (w *problem429Writer) WriteHeader(status int) {

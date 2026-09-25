@@ -29,8 +29,9 @@ func mkSvc(t *testing.T) *auth.Service {
 	return svc
 }
 
-// mkSvcWithRepo exposes the repo so a test can create the account its token
-// names; the middleware now reads live account state per request.
+// mkSvcWithRepo also returns the repo.
+// A test can then create the account its token names; the middleware reads
+// live account state per request.
 func mkSvcWithRepo(t *testing.T) (*auth.Service, *users.Repo, context.Context) {
 	t.Helper()
 	ctx, tx := testutil.BeginTx(t)
@@ -38,7 +39,7 @@ func mkSvcWithRepo(t *testing.T) (*auth.Service, *users.Repo, context.Context) {
 	return auth.NewService(repo, middlewareSecret, time.Hour), repo, ctx
 }
 
-// mkMiddlewareUser creates an account for a middleware test.
+// mkMiddlewareUser creates a test account.
 func mkMiddlewareUser(t *testing.T, ctx context.Context, repo *users.Repo, role users.Role) users.User {
 	t.Helper()
 	u, err := repo.Create(ctx, users.CreateUserRequest{
@@ -51,7 +52,7 @@ func mkMiddlewareUser(t *testing.T, ctx context.Context, repo *users.Repo, role 
 	return u
 }
 
-// mkToken signs a token for a subject.
+// mkToken signs a subject's token.
 func mkToken(t *testing.T, subject string) string {
 	t.Helper()
 	now := time.Now()
@@ -163,6 +164,7 @@ func TestAuthMiddleware_HappyPath(t *testing.T) {
 	assert.True(t, called)
 }
 
+// Tokens track live account state.
 // A structurally valid token must not outlive the account state behind it.
 func TestAuthMiddleware_LiveAccountState(t *testing.T) {
 	tests := []struct {
@@ -331,6 +333,7 @@ func TestSecurityHeaders(t *testing.T) {
 	assert.Contains(t, rec.Header().Get("Content-Security-Policy"), "default-src 'none'")
 }
 
+// Budgets follow the request path.
 // Render routes get the long budget, everything else the default.
 func TestRequestTimeout_BudgetPerPath(t *testing.T) {
 	const short, long = 50 * time.Millisecond, time.Hour
@@ -367,6 +370,7 @@ func TestRequestTimeout_BudgetPerPath(t *testing.T) {
 	}
 }
 
+// Storage routes extend read deadline.
 // A slow asset upload must outlive the server ReadTimeout that guards every
 // other route. The handler context budget alone cannot do this: ReadTimeout
 // covers reading the body, so it fires first and severs the connection.

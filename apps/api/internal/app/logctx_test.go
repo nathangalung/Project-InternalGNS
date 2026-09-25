@@ -19,7 +19,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
-// Records each log record with its context.
+// ctxLogCapture records records with context.
 type ctxLogCapture struct {
 	mu   sync.Mutex
 	ctxs []context.Context
@@ -60,6 +60,7 @@ func captureLogs(t *testing.T) *ctxLogCapture {
 
 type logProbeKey struct{}
 
+// Auth DB errors log context.
 // A database outage during authentication is a 500 the operator has to
 // trace, so its log line must carry the request context for request_id.
 func TestAuthMiddleware_DBErrorLogsWithRequestContext(t *testing.T) {
@@ -81,6 +82,7 @@ func TestAuthMiddleware_DBErrorLogsWithRequestContext(t *testing.T) {
 	assert.Equal(t, "req-1", ctxs[0].Value(logProbeKey{}))
 }
 
+// Purge failures log with context.
 // A background sweep has no request, but its failure line should still go
 // through the context-aware logger with the error under the usual key.
 func TestRunRefreshPurgeLoop_LogsWithContext(t *testing.T) {

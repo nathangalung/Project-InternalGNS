@@ -15,7 +15,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
-// Sets client IP from the last proxy hop.
+// trustedProxyIP takes the last hop.
+// It sets the client IP from the last proxy hop.
 func trustedProxyIP(next http.Handler) http.Handler {
 	// Our single reverse proxy appends the real client to X-Forwarded-For,
 	// so the last hop is trustworthy. True-Client-IP, X-Real-IP, and earlier
@@ -78,25 +79,29 @@ func accessLogMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// Request budgets. See the shutdown chain comment in cmd/api/main.go:
+// Request budgets.
+// See the shutdown chain comment in cmd/api/main.go:
 // grace (80s) > drain (70s) > longest handler (60s), and the server's
 // WriteTimeout (90s) sits above all of them so the handler deadline is what
 // fires, rendering 503 + Retry-After instead of a severed connection.
 const (
 	defaultRequestTimeout = 30 * time.Second
-	// Workbook and PDF renders get a longer budget: pdfgen already reserves
-	// 45s for xelatex, which the 30s default silently cut short, and the
-	// coretax export is unbounded in row count.
+	// Renders get a longer budget.
+	// Workbook and PDF renders need it: pdfgen already reserves 45s for
+	// xelatex, which the 30s default silently cut short, and the coretax export
+	// is unbounded in row count.
 	renderRequestTimeout = 60 * time.Second
-	// Asset uploads stream up to 25 MB through the proxy. Finishing 20 MB in
-	// the 30s default needs 5.6 Mbit/s of sustained upstream, which office
-	// links do not hold, so a real upload was cut mid-body.
+	// Uploads get a longer budget.
+	// Asset uploads stream up to 25 MB through the proxy. Finishing 20 MB in the
+	// 30s default needs 5.6 Mbit/s of sustained upstream, which office links do
+	// not hold, so a real upload was cut mid-body.
 	uploadRequestTimeout = 60 * time.Second
 )
 
-// requestTimeout applies a per-request deadline, longer for export and render
-// routes. Nesting a second chi Timeout inside a subtree cannot do this: nested
-// contexts take the minimum, so the choice has to be made once, up front.
+// requestTimeout sets per-route deadlines.
+// Export and render routes get longer ones. Nesting a second chi Timeout
+// inside a subtree cannot do this: nested contexts take the minimum, so the
+// choice has to be made once, up front.
 func requestTimeout(def, render, upload time.Duration) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -121,14 +126,14 @@ func requestTimeout(def, render, upload time.Duration) func(http.Handler) http.H
 	}
 }
 
-// isStorageRoute reports whether a path is the asset byte proxy.
+// isStorageRoute spots the asset proxy.
 // It carries the upload budget and is the only route whose connection read
 // deadline is extended.
 func isStorageRoute(path string) bool {
 	return strings.HasPrefix(path, "/api/v1/storage/")
 }
 
-// isRenderRoute reports whether a path is one of the workbook or PDF routes.
+// isRenderRoute spots workbook, PDF routes.
 // TestRouter_RenderRoutesClassified pins this against the mounted route table.
 func isRenderRoute(path string) bool {
 	return strings.HasSuffix(path, ".xlsx") ||
@@ -155,7 +160,7 @@ const (
 	detailBucketRefused = "Peran Anda tidak memiliki akses ke berkas ini."
 )
 
-// Gates the storage proxy by bucket role.
+// authorizeBucket gates storage by role.
 func authorizeBucket(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bucket := r.URL.Query().Get("bucket")
@@ -221,7 +226,7 @@ func authMiddleware(svc *auth.Service) func(http.Handler) http.Handler {
 	}
 }
 
-// requireRole gates a subtree by role.
+// requireRole gates subtrees by role.
 func requireRole(roles ...string) func(http.Handler) http.Handler {
 	allowed := make(map[string]struct{}, len(roles))
 	for _, role := range roles {
@@ -238,7 +243,7 @@ func requireRole(roles ...string) func(http.Handler) http.Handler {
 	}
 }
 
-// readOnlyFor refuses writes by these roles.
+// readOnlyFor blocks these roles' writes.
 // Reads pass. An upload-url GET counts as a write: the URL it returns lets
 // the holder store a file for the record.
 func readOnlyFor(roles ...string) func(http.Handler) http.Handler {
