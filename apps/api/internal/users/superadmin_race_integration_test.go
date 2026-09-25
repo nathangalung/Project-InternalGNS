@@ -15,8 +15,9 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
-// soleSuperadminPair parks every other active superadmin, leaving only the
-// two it creates, and restores the parked ones afterwards.
+// soleSuperadminPair leaves two superadmins.
+// It parks every other active superadmin, keeping only the two it creates,
+// and restores the parked ones afterwards.
 func soleSuperadminPair(t *testing.T, repo *users.Repo) (users.User, users.User) {
 	t.Helper()
 	pool := testutil.Pool(t)
@@ -58,6 +59,7 @@ func soleSuperadminPair(t *testing.T, repo *users.Repo) (users.User, users.User)
 	return mk("a"), mk("b")
 }
 
+// Update serialises on the guard.
 // D12: the guard is only sound if the precheck and the write are one
 // serialised unit. Holding the guard lock elsewhere must therefore block an
 // update; without the lock the update sails past its stale precheck.
@@ -90,7 +92,8 @@ func TestRepo_Update_SerialisesOnTheSuperadminGuard(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// Two demotions racing on the last two superadmins must not both pass.
+// Racing demotions keep one superadmin.
+// Two demotions on the last two superadmins must not both pass.
 func TestRepo_Update_ConcurrentDemotionsKeepOneSuperadmin(t *testing.T) {
 	testutil.RequireDB(t)
 	pool := testutil.Pool(t)
@@ -126,7 +129,7 @@ func TestRepo_Update_ConcurrentDemotionsKeepOneSuperadmin(t *testing.T) {
 	assert.Equal(t, 1, active)
 }
 
-// brokenRevokeStore makes the refresh-token revocation fail.
+// brokenRevokeStore fails token revocation.
 func brokenRevokeStore(t *testing.T) queries.Store {
 	t.Helper()
 	store := queries.Store{}
@@ -137,6 +140,7 @@ func brokenRevokeStore(t *testing.T) queries.Store {
 	return store
 }
 
+// Revoke failure rolls back roles.
 // A role change that cannot end the sessions must not commit either: a
 // demoted user keeping a live refresh token is the exact gap the revoke
 // closes.
@@ -162,7 +166,8 @@ func TestRepo_Update_RevokeFailureRollsBackTheChange(t *testing.T) {
 	assert.Equal(t, users.RoleOperational, role)
 }
 
-// A reset that cannot end the sessions must keep the old password.
+// Revoke failure keeps the password.
+// A reset that cannot end the sessions must not change the hash.
 func TestRepo_UpdatePassword_RevokeFailureRollsBackTheHash(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := users.NewRepo(tx, brokenRevokeStore(t))

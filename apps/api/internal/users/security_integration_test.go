@@ -14,8 +14,9 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
-// mkSuperadmin creates a superadmin and, when sole is true, leaves it the
-// only active one inside the caller's transaction.
+// mkSuperadmin creates a superadmin.
+// When sole is true it leaves it the only active one inside the caller's
+// transaction.
 func mkSuperadmin(t *testing.T, ctx context.Context, tx pgx.Tx, repo *users.Repo, email string, sole bool) users.User {
 	t.Helper()
 	u, err := repo.Create(ctx, users.CreateUserRequest{
@@ -81,7 +82,7 @@ func TestRepo_Update_AllowsDemotionWhenAnotherSuperadminActive(t *testing.T) {
 	assert.Equal(t, users.RoleFinance, u.Role)
 }
 
-// A non-superadmin is never covered by the guard.
+// Guard ignores non-superadmins.
 func TestRepo_Update_AllowsDeactivatingNonSuperadmin(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := users.NewRepo(tx, testutil.Store(t))
@@ -140,7 +141,8 @@ func TestRepo_Update_RevokesOnRoleChangeAndDeactivation(t *testing.T) {
 	assert.Equal(t, 0, activeTokens(t, ctx, tx, u.ID))
 }
 
-// A rename is not security-relevant, so sessions survive it.
+// Renames keep sessions alive.
+// A rename is not security-relevant.
 func TestRepo_Update_KeepsTokensOnNameChange(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := users.NewRepo(tx, testutil.Store(t))
@@ -177,7 +179,8 @@ func TestRepo_EmailNormalizedOnWrite(t *testing.T) {
 	assert.Equal(t, "other@example.local", updated.Email)
 }
 
-// The case-folded unique index must reject a differing-case duplicate.
+// Case-variant duplicate emails fail.
+// The case-folded unique index must reject them.
 func TestRepo_Create_RejectsCaseDuplicateEmail(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := users.NewRepo(tx, testutil.Store(t))

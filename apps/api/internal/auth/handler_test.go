@@ -104,8 +104,9 @@ func TestHandler_Logout(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, res.StatusCode)
 }
 
-// mkAuthServerWithRefresh wires the refresh repo so we can hit /auth/refresh
-// end-to-end against the real DB tx.
+// mkAuthServerWithRefresh wires refresh too.
+// The refresh repo lets a test hit /auth/refresh end-to-end against the real
+// DB tx.
 func mkAuthServerWithRefresh(t *testing.T) (*httptest.Server, users.User) {
 	t.Helper()
 	ctx, tx := testutil.BeginTx(t)

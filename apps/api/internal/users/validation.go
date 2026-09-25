@@ -7,14 +7,16 @@ import (
 	"unicode"
 )
 
-// Password bounds. The maximum is bcrypt's own input limit: anything longer
-// made the hash call fail and surfaced as a 500.
+// Password length bounds.
+// The maximum is bcrypt's own input limit: anything longer made the hash
+// call fail and surfaced as a 500.
 const (
 	passwordMinRunes = 8
 	passwordMaxBytes = 72
 )
 
-// ValidatePassword returns the policy message, or "" when pw passes.
+// ValidatePassword returns the policy message.
+// It is "" when pw passes.
 // Mirrors apps/web/src/features/users/password.ts so the form and the server
 // accept exactly the same passwords.
 func ValidatePassword(pw string) string {
@@ -51,8 +53,9 @@ func ValidatePassword(pw string) string {
 	return "Kata sandi harus memuat " + strings.Join(missing, ", ") + "."
 }
 
-// validateEmail rejects anything the address column cannot resolve to one
-// mailbox, including the "Nama <a@b>" display form net/mail also parses.
+// validateEmail requires a single mailbox.
+// It rejects anything the address column cannot resolve to one mailbox,
+// including the "Nama <a@b>" display form net/mail also parses.
 func validateEmail(email string) string {
 	trimmed := strings.TrimSpace(email)
 	if trimmed == "" {
@@ -65,7 +68,7 @@ func validateEmail(email string) string {
 	return ""
 }
 
-// validateName rejects a name that is only whitespace.
+// validateName rejects whitespace-only names.
 func validateName(name string) string {
 	if strings.TrimSpace(name) == "" {
 		return "Nama wajib diisi."
@@ -82,7 +85,7 @@ func validateRole(r Role) string {
 	return "Peran tidak valid."
 }
 
-// put records a message when there is one.
+// put records non-empty messages.
 func put(errs map[string]string, field, msg string) {
 	if msg != "" {
 		errs[field] = msg

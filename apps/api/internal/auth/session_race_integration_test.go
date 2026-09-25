@@ -17,8 +17,9 @@ import (
 
 const racePassword = "Lama-pw1!"
 
-// committedUser creates a user outside any test transaction, since the
-// race needs a second connection to see it.
+// committedUser creates a committed user.
+// It lives outside any test transaction, since the race needs a second
+// connection to see it.
 func committedUser(t *testing.T) (*auth.Service, users.User) {
 	t.Helper()
 	testutil.RequireDB(t)
@@ -39,7 +40,8 @@ func committedUser(t *testing.T) (*auth.Service, users.User) {
 	return svc, u
 }
 
-// holdUserRow opens a password change that has not reached its writes yet.
+// holdUserRow opens a pending change.
+// The password change has not reached its writes yet.
 func holdUserRow(t *testing.T, id int64) pgx.Tx {
 	t.Helper()
 	tx, err := testutil.Pool(t).Begin(context.Background())
@@ -50,7 +52,8 @@ func holdUserRow(t *testing.T, id int64) pgx.Tx {
 	return tx
 }
 
-// finishReset runs the reset's writes on the held transaction and commits.
+// finishReset commits the held reset.
+// It runs the reset's writes on the held transaction first.
 func finishReset(t *testing.T, tx pgx.Tx, id int64) {
 	t.Helper()
 	ctx := context.Background()
@@ -72,7 +75,8 @@ func activeRefreshTokens(t *testing.T, id int64) int {
 	return n
 }
 
-// requireStillBlocked fails when the call finished while the reset was open.
+// requireStillBlocked asserts the call waits.
+// It fails when the call finished while the reset was open.
 func requireStillBlocked(t *testing.T, done <-chan struct{}) {
 	t.Helper()
 	select {
@@ -82,6 +86,7 @@ func requireStillBlocked(t *testing.T, done <-chan struct{}) {
 	}
 }
 
+// Racing refresh cannot outlive reset.
 // Decision (2): a refresh racing a reset must not mint a session the reset
 // never saw. It waits for the reset, then finds its token revoked.
 func TestService_Refresh_CannotOutliveAConcurrentReset(t *testing.T) {
@@ -105,6 +110,7 @@ func TestService_Refresh_CannotOutliveAConcurrentReset(t *testing.T) {
 	assert.Equal(t, 0, activeRefreshTokens(t, u.ID))
 }
 
+// Racing login cannot outlive reset.
 // A login with the old password racing a reset must not survive it.
 func TestService_Login_CannotOutliveAConcurrentReset(t *testing.T) {
 	svc, u := committedUser(t)

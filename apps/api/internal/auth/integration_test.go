@@ -14,7 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
-// Serialize against acceptance suites on shared DB.
+// Serialize suites sharing the DB.
 func TestMain(m *testing.M) {
 	release := testutil.LockProcessForTests()
 	code := m.Run()
@@ -22,8 +22,9 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-// Full login cycle against real DB: create user via users.Repo, hit
-// auth.Service.Login, then verify the issued JWT and Me lookup.
+// Full login cycle, real DB.
+// Create a user via users.Repo, hit auth.Service.Login, then verify the
+// issued JWT and Me lookup.
 func TestService_LoginCycle_IntegratesUsersRepo(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := users.NewRepo(tx, testutil.Store(t))
@@ -80,8 +81,9 @@ func TestService_Login_UnknownEmail_RealDB(t *testing.T) {
 	assert.ErrorIs(t, err, auth.ErrInvalidCredentials)
 }
 
-// Misses accumulate on the counter that sets the throttle, and no hard lock
-// is ever written: the account must stay reachable with the right password.
+// Misses accumulate without locking.
+// They count toward the throttle, and no hard lock is ever written: the
+// account must stay reachable with the right password.
 func TestService_Login_FailuresAccumulateWithoutLocking_RealDB(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := users.NewRepo(tx, testutil.Store(t))
@@ -126,8 +128,9 @@ func TestService_Login_SuccessResetsAttempts_RealDB(t *testing.T) {
 	assert.Nil(t, st.LockedUntil)
 }
 
-// uniqueEmail keeps tests in the same process from colliding on the unique
-// email index even though each test runs in its own rolled-back tx.
+// uniqueEmail avoids email index collisions.
+// Tests in one process would otherwise collide on the unique email index
+// even though each test runs in its own rolled-back tx.
 func uniqueEmail(t *testing.T) string {
 	t.Helper()
 	return "auth-it-" + t.Name() + "-" + time.Now().UTC().Format("150405.000000") + "@test"

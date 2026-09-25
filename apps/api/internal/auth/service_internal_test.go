@@ -10,6 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Dummy hash matches real cost.
 // The unknown-email path must do real bcrypt work at the same cost as a
 // stored hash, otherwise timing still separates registered addresses.
 func TestDummyPasswordHash_MatchesDefaultCost(t *testing.T) {
@@ -22,8 +23,9 @@ func TestDummyPasswordHash_MatchesDefaultCost(t *testing.T) {
 	assert.Error(t, bcrypt.CompareHashAndPassword(dummyPasswordHash, []byte("any-guess")))
 }
 
-// The throttle must stay invisible for ordinary typos and escalate only
-// under sustained guessing, with a ceiling a real user can wait out.
+// Backoff spares typos, escalates guessing.
+// It must stay invisible for ordinary typos and escalate only under
+// sustained guessing, with a ceiling a real user can wait out.
 func TestLoginBackoff(t *testing.T) {
 	tests := []struct {
 		name     string

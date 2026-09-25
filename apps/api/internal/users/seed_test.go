@@ -62,9 +62,10 @@ func TestSeedSuperadmin_IdempotentReRun(t *testing.T) {
 	assert.Equal(t, 1, count, "a re-run must not add a second account")
 }
 
-// Two distinct emails seeded back-to-back must both end up as active
-// superadmins. Mirrors the boot path that seeds SUPERADMIN_* then
-// SUPERADMIN2_* when both are configured.
+// Two seeded superadmins both activate.
+// Two distinct emails seeded back-to-back must both end up active. Mirrors
+// the boot path that seeds SUPERADMIN_* then SUPERADMIN2_* when both are
+// configured.
 func TestSeedSuperadmin_TwoDistinctAccounts(t *testing.T) {
 	pool := testutil.Pool(t)
 	ctx := context.Background()
@@ -119,8 +120,9 @@ func dropSeeded(t *testing.T, emails ...string) {
 	})
 }
 
-// A mixed-case SUPERADMIN_EMAIL must be stored case-folded, matching what
-// users.Repo writes and what users_email_lower_idx (00045) indexes.
+// Seeded email is case-folded.
+// A mixed-case SUPERADMIN_EMAIL must be stored as users.Repo writes it and
+// as users_email_lower_idx (00045) indexes it.
 func TestSeedSuperadmin_MixedCaseEmailStoredCaseFolded(t *testing.T) {
 	pool := testutil.Pool(t)
 	ctx := context.Background()
@@ -138,8 +140,9 @@ func TestSeedSuperadmin_MixedCaseEmailStoredCaseFolded(t *testing.T) {
 	assert.Equal(t, lowered, stored, "seed must store the canonical case-folded address")
 }
 
-// The boot-time re-seed must recognise its own row after that row has been
-// case-folded, and must not create a second one.
+// Re-seed recognises case-folded rows.
+// The boot-time re-seed must not create a second row after its own was
+// case-folded.
 //
 // Reproduces the reported outage: a mixed-case SUPERADMIN_EMAIL, an admin edit
 // that rewrites the row through normalizeEmail, then a restart. The old

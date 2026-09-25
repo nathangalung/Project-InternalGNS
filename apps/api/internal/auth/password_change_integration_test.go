@@ -22,7 +22,8 @@ import (
 
 const ownPassword = "Right-pw1!"
 
-// mkOwnSession logs a fresh user in with refresh enabled.
+// mkOwnSession logs in a user.
+// The fresh user has refresh enabled.
 func mkOwnSession(t *testing.T) (context.Context, pgx.Tx, *auth.Service, users.User, auth.LoginResponse) {
 	t.Helper()
 	ctx, tx := testutil.BeginTx(t)
@@ -39,6 +40,7 @@ func mkOwnSession(t *testing.T) (context.Context, pgx.Tx, *auth.Service, users.U
 	return ctx, tx, svc, u, resp
 }
 
+// Own password change ends sessions.
 // D27: any role can change its own password, which ends every session.
 func TestService_ChangeOwnPassword_EndsEverySession(t *testing.T) {
 	ctx, _, svc, u, sess := mkOwnSession(t)
@@ -58,8 +60,9 @@ func TestService_ChangeOwnPassword_EndsEverySession(t *testing.T) {
 	require.NoError(t, err, "the re-login right after the change must hold")
 }
 
-// A wrong current password changes nothing and counts as a failed guess,
-// so a stolen access token cannot grind it without the login backoff.
+// Wrong current password counts.
+// It changes nothing and counts as a failed guess, so a stolen access token
+// cannot grind it without the login backoff.
 func TestService_ChangeOwnPassword_WrongCurrentIsRefusedAndCounted(t *testing.T) {
 	ctx, tx, svc, u, sess := mkOwnSession(t)
 
@@ -78,7 +81,8 @@ func TestService_ChangeOwnPassword_WrongCurrentIsRefusedAndCounted(t *testing.T)
 	require.NoError(t, err, "the password must be unchanged")
 }
 
-// mkPasswordServer mounts the auth routes with the caller fixed to u.
+// mkPasswordServer mounts auth as u.
+// The caller is fixed to u.
 func mkPasswordServer(t *testing.T) *httptest.Server {
 	t.Helper()
 	_, _, svc, u, _ := mkOwnSession(t)

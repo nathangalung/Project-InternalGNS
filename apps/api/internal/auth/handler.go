@@ -129,7 +129,8 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, toMeUser(u))
 }
 
-// ChangeOwnPassword lets any role replace its own password.
+// ChangeOwnPassword serves self-service changes.
+// Any role may replace its own password.
 func (h *Handler) ChangeOwnPassword(w http.ResponseWriter, r *http.Request) {
 	id := deps.CurrentUserID(r.Context())
 	if id == 0 {

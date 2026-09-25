@@ -63,7 +63,8 @@ func TestService_Login_UserNotFound(t *testing.T) {
 	assert.ErrorIs(t, err, auth.ErrInvalidCredentials)
 }
 
-// An unknown email must be indistinguishable from a bad password.
+// Unknown email mimics wrong password.
+// The two must be indistinguishable.
 func TestService_Login_UnknownEmailMatchesWrongPassword(t *testing.T) {
 	svc, u := mkUserAndSvc(t)
 

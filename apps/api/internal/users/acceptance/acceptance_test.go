@@ -296,7 +296,8 @@ func (s *scenarioState) staffActiveIs(want bool) error {
 	return nil
 }
 
-// soleSuperadmin parks every active superadmin, then creates the only one.
+// soleSuperadmin leaves one active superadmin.
+// It parks every active superadmin, then creates the only one.
 // restoreParked undoes the parking after the scenario.
 func (s *scenarioState) soleSuperadmin() error {
 	ctx := context.Background()

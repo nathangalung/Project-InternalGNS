@@ -29,8 +29,9 @@ const (
 	adminPassword = "Admin-pw1!"
 )
 
-// ipSeq hands every request its own client address, so the per-IP login
-// limiter only fires in the scenario that pins one on purpose.
+// ipSeq varies each client address.
+// Every request gets its own address, so the per-IP login limiter only
+// fires in the scenario that pins one on purpose.
 var ipSeq atomic.Int64
 
 func nextIP() string {
@@ -56,7 +57,8 @@ type scenarioState struct {
 	adminToken string
 }
 
-// newServer builds the production router on the test database.
+// newServer builds the production router.
+// It runs on the test database.
 func (s *scenarioState) newServer() {
 	cfg := app.Config{
 		JWTSecret:          "auth-acceptance-secret",
@@ -137,7 +139,8 @@ func (s *scenarioState) loginAs(email, password, ip string) error {
 		auth.LoginRequest{Email: email, Password: password})
 }
 
-// captureTokens keeps the session a successful login or refresh returned.
+// captureTokens keeps the returned session.
+// It stores what a successful login or refresh returned.
 func (s *scenarioState) captureTokens() error {
 	if s.last.StatusCode != http.StatusOK {
 		return nil
@@ -173,7 +176,8 @@ func (s *scenarioState) loggedIn() error {
 	return nil
 }
 
-// loggedInAgain opens a second session and keeps the first token for replay.
+// loggedInAgain opens a second session.
+// It keeps the first token for replay.
 func (s *scenarioState) loggedInAgain() error {
 	if err := s.logInRight(); err != nil {
 		return err
@@ -249,7 +253,8 @@ func (s *scenarioState) refreshRotated() error {
 	return nil
 }
 
-// backdateRevocations moves the account's revocations past the reuse grace.
+// backdateRevocations passes the reuse grace.
+// It moves the account's revocations back that far.
 func (s *scenarioState) backdateRevocations(secs int) error {
 	_, err := testutil.Pool(s.t).Exec(context.Background(),
 		`UPDATE refresh_tokens SET revoked_at = now() - make_interval(secs => $2)
@@ -257,7 +262,8 @@ func (s *scenarioState) backdateRevocations(secs int) error {
 	return err
 }
 
-// admin signs a fresh superadmin in once per scenario.
+// admin signs in a superadmin.
+// A fresh one signs in once per scenario.
 func (s *scenarioState) admin() (string, error) {
 	if s.adminToken != "" {
 		return s.adminToken, nil

@@ -18,29 +18,32 @@ import (
 
 var (
 	ErrNotFound = errors.New("user not found")
-	// Demoting or deactivating the last active superadmin locks everyone out
-	// of user management for good: SeedSuperadmin is ON CONFLICT DO NOTHING,
-	// so a restart does not restore the account.
+	// Last superadmin must stay active.
+	// Demoting or deactivating it locks everyone out of user management for
+	// good: SeedSuperadmin is ON CONFLICT DO NOTHING, so a restart does not
+	// restore the account.
 	ErrLastSuperadmin = errors.New("cannot demote or deactivate the last active superadmin")
-	// ErrEmailTaken keeps a duplicate address a 409 with a sentence the user
-	// can act on, instead of the untyped error that rendered as a 500.
+	// Duplicate email is a 409.
+	// ErrEmailTaken carries a sentence the user can act on, instead of the
+	// untyped error that rendered as a 500.
 	ErrEmailTaken = errors.New("email already used")
 )
 
-// Messages the handler renders for these sentinels.
+// Sentinel messages the handler renders.
 const (
 	emailTakenMessage     = "Email sudah digunakan pengguna lain."
 	lastSuperadminMessage = "Superadmin aktif terakhir tidak dapat diturunkan atau dinonaktifkan."
 )
 
-// isUniqueViolation reports a 23505 from the email index.
+// isUniqueViolation spots email-index 23505s.
 func isUniqueViolation(err error) bool {
 	var pgErr *pgconn.PgError
 	return errors.As(err, &pgErr) && pgErr.Code == "23505"
 }
 
-// normalizeEmail keeps stored addresses case-folded, matching the
-// LOWER(email) lookups and the users_email_lower_idx unique index.
+// normalizeEmail case-folds stored addresses.
+// That matches the LOWER(email) lookups and the users_email_lower_idx unique
+// index.
 func normalizeEmail(email string) string {
 	return strings.ToLower(strings.TrimSpace(email))
 }
@@ -66,13 +69,13 @@ func (r *Repo) GetByEmail(ctx context.Context, email string) (User, error) {
 	return u, err
 }
 
-// LockStatus reports login-lockout state for an email.
+// LockStatus is login throttle state.
 type LockStatus struct {
 	FailedLoginAttempts int        `db:"failed_login_attempts"`
 	LockedUntil         *time.Time `db:"locked_until"`
 }
 
-// LockStatus reads the account's lockout state.
+// LockStatus reads throttle state.
 func (r *Repo) LockStatus(ctx context.Context, email string) (LockStatus, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("users.lock_status"), email)
 	if err != nil {
@@ -85,7 +88,8 @@ func (r *Repo) LockStatus(ctx context.Context, email string) (LockStatus, error)
 	return s, err
 }
 
-// RecordFailedLogin increments the counter and locks past the threshold.
+// RecordFailedLogin counts a miss.
+// No hard lock is written; the count sets the next attempt's backoff.
 func (r *Repo) RecordFailedLogin(ctx context.Context, email string) error {
 	_, err := r.db.Exec(ctx, r.store.Get("users.record_failed_login"), email)
 	return err
@@ -108,14 +112,16 @@ func (r *Repo) ClaimLogin(ctx context.Context, id int64, hash string) (int64, er
 	return version, nil
 }
 
-// AuthContext is the live account state behind an access token.
+// AuthContext is live account state.
+// It is what backs an access token.
 type AuthContext struct {
 	Role           Role  `db:"role"`
 	IsActive       bool  `db:"is_active"`
 	SessionVersion int64 `db:"session_version"`
 }
 
-// AuthContext reads the state the auth middleware checks per request.
+// AuthContext reads middleware auth state.
+// The auth middleware checks it per request.
 func (r *Repo) AuthContext(ctx context.Context, id int64) (AuthContext, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("users.auth_context"), id)
 	if err != nil {
@@ -131,7 +137,8 @@ func (r *Repo) AuthContext(ctx context.Context, id int64) (AuthContext, error) {
 	return a, nil
 }
 
-// GetByIDAdmin reads any account, active or not, for the admin detail page.
+// GetByIDAdmin reads any account.
+// Active or not, for the admin detail page.
 func (r *Repo) GetByIDAdmin(ctx context.Context, id int64) (User, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("users.get_by_id_admin"), id)
 	if err != nil {
@@ -183,7 +190,7 @@ func (r *Repo) Create(ctx context.Context, req CreateUserRequest, actorID int64)
 	return u, nil
 }
 
-// sortable is the closed set of user sort keys.
+// sortable lists user sort keys.
 var sortable = listq.Whitelist{
 	Default: "created_at",
 	Columns: map[string]listq.Column{
@@ -193,7 +200,7 @@ var sortable = listq.Whitelist{
 	},
 }
 
-// tiebreak keeps paging stable when the sort key ties.
+// tiebreak keeps paging stable.
 var tiebreak = listq.Column{Expr: "id", Dir: listq.Desc}
 
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
@@ -235,20 +242,21 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	return out, err
 }
 
-// updatePrecheck is the target's state before an update.
+// updatePrecheck is pre-update state.
 type updatePrecheck struct {
 	Role                  Role `db:"role"`
 	IsActive              bool `db:"is_active"`
 	OtherActiveSuperadmin bool `db:"other_active_superadmin"`
 }
 
-// ErrNoTx marks an executor that cannot open a transaction, so the guard
-// could not be serialised.
+// ErrNoTx marks a non-transactional executor.
+// It cannot open a transaction, so the guard could not be serialised.
 var ErrNoTx = errors.New("users: executor cannot begin a transaction")
 
-// inTx runs fn on a repo bound to one transaction. Under a pool that is a
-// real transaction; under a caller's pgx.Tx it is a savepoint, so a failure
-// here leaves the caller's transaction usable.
+// inTx runs fn transactionally.
+// fn gets a repo bound to it. Under a pool that is a real transaction; under
+// a caller's pgx.Tx it is a savepoint, so a failure here leaves the caller's
+// transaction usable.
 func (r *Repo) inTx(ctx context.Context, fn func(q *Repo) error) error {
 	b, ok := r.db.(db.TxBeginner)
 	if !ok {
@@ -268,16 +276,18 @@ func (r *Repo) inTx(ctx context.Context, fn func(q *Repo) error) error {
 	return nil
 }
 
-// InTx runs fn inside one transaction. fn gets this repo bound to it and
-// the transaction itself, so the caller can bind its own repos alongside.
+// InTx runs fn transactionally.
+// fn gets this repo bound to it and the transaction itself, so the caller
+// can bind its own repos alongside.
 func (r *Repo) InTx(ctx context.Context, fn func(q *Repo, tx db.Executor) error) error {
 	return r.inTx(ctx, func(q *Repo) error { return fn(q, q.db) })
 }
 
-// Update runs the email check, the last-superadmin guard, the write and the
-// session revocation as one unit behind the guard lock. Stays READ
-// COMMITTED on purpose: each statement after the lock sees the state the
-// previous holder committed, which a REPEATABLE READ snapshot would not.
+// Update applies one guarded unit.
+// The email check, the last-superadmin guard, the write and the session
+// revocation run as one unit behind the guard lock. Stays READ COMMITTED on
+// purpose: each statement after the lock sees the state the previous holder
+// committed, which a REPEATABLE READ snapshot would not.
 func (r *Repo) Update(ctx context.Context, id int64, req UpdateUserRequest, actorID int64) (User, error) {
 	var out User
 	err := r.inTx(ctx, func(q *Repo) error {
@@ -346,8 +356,9 @@ func (r *Repo) update(ctx context.Context, id int64, req UpdateUserRequest, acto
 	return u, nil
 }
 
-// precheck reads prior state without the is_active filter GetByID applies,
-// so reactivating a disabled account still works.
+// precheck reads prior state unfiltered.
+// It skips the is_active filter GetByID applies, so reactivating a disabled
+// account still works.
 func (r *Repo) precheck(ctx context.Context, id int64) (updatePrecheck, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("users.update_precheck"), id)
 	if err != nil {
@@ -371,9 +382,9 @@ func (r *Repo) bumpSessionVersion(ctx context.Context, id int64) error {
 	return nil
 }
 
-// revokeRefreshTokens ends every live session for a user after a
-// security-relevant credential change. The auth query is reached through
-// the store because auth already imports users.
+// revokeRefreshTokens ends every session.
+// It runs after a security-relevant credential change. The auth query is
+// reached through the store because auth already imports users.
 func (r *Repo) revokeRefreshTokens(ctx context.Context, id int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("auth.refresh_revoke_user"), id, "admin")
 	if err != nil {
@@ -382,8 +393,9 @@ func (r *Repo) revokeRefreshTokens(ctx context.Context, id int64) error {
 	return nil
 }
 
-// UpdatePassword swaps the hash and ends every session in one transaction:
-// a reset that kept a stolen refresh token alive would be worse than none.
+// UpdatePassword swaps hash, ends sessions.
+// Both happen in one transaction: a reset that kept a stolen refresh token
+// alive would be worse than none.
 func (r *Repo) UpdatePassword(ctx context.Context, id int64, newPassword string, actorID int64) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {

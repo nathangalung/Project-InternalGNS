@@ -17,7 +17,7 @@ import (
 
 const validPassword = "Rahasia1!"
 
-// newStaff creates an account through the API and returns it.
+// newStaff creates an API account.
 func newStaff(t *testing.T, c *testutil.Cleaner, srv *httptest.Server, email string) users.User {
 	t.Helper()
 	res := doJSON(t, srv, http.MethodPost, "/users/", map[string]any{
@@ -31,6 +31,7 @@ func newStaff(t *testing.T, c *testutil.Cleaner, srv *httptest.Server, email str
 	return u
 }
 
+// Server enforces form password policy.
 // AU-9, AU-6: the server enforces the same policy the form shows, and a
 // password bcrypt cannot hash is a 422 rather than a 500.
 func TestHandler_Create_PasswordAndEmailPolicy(t *testing.T) {
@@ -71,7 +72,7 @@ func TestHandler_Create_PasswordAndEmailPolicy(t *testing.T) {
 	}
 }
 
-// The reset endpoint shares the one policy.
+// Reset shares the password policy.
 func TestHandler_ChangePassword_SharesPolicy(t *testing.T) {
 	c := testutil.NewCleaner(t)
 	srv := newUsersServer(t)
@@ -96,6 +97,7 @@ func TestHandler_ChangePassword_SharesPolicy(t *testing.T) {
 	}
 }
 
+// Duplicate update email is 409.
 // AU-3: an email another user holds is a 409, not a 500.
 func TestHandler_Update_DuplicateEmailIsConflict(t *testing.T) {
 	c := testutil.NewCleaner(t)
@@ -116,6 +118,7 @@ func TestHandler_Update_DuplicateEmailIsConflict(t *testing.T) {
 	assert.Contains(t, problem.Detail, "Email")
 }
 
+// Duplicate message is Indonesian.
 // AU-12: the duplicate message on create reaches the UI in Indonesian.
 func TestHandler_Create_DuplicateEmailMessageIsIndonesian(t *testing.T) {
 	c := testutil.NewCleaner(t)
@@ -135,7 +138,8 @@ func TestHandler_Create_DuplicateEmailMessageIsIndonesian(t *testing.T) {
 	assert.Equal(t, "Email sudah digunakan pengguna lain.", problem.Detail)
 }
 
-// AU-5: an inactive account must stay readable, or nobody can reactivate it.
+// Inactive accounts stay readable.
+// AU-5: otherwise nobody can reactivate them.
 func TestHandler_Get_InactiveUserIsReadable(t *testing.T) {
 	c := testutil.NewCleaner(t)
 	srv := newUsersServer(t)
@@ -155,6 +159,7 @@ func TestHandler_Get_InactiveUserIsReadable(t *testing.T) {
 	assert.False(t, got.IsActive)
 }
 
+// Create trims name padding.
 // AU-13: a padded name must not be stored with its padding.
 func TestHandler_Create_TrimsName(t *testing.T) {
 	c := testutil.NewCleaner(t)

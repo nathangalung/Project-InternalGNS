@@ -25,7 +25,7 @@ func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
 
-// List returns paged users with X-Total-Count header.
+// List pages users with X-Total-Count.
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	limit, offset := paginate.Parse(r)
 	q := r.URL.Query()

@@ -18,6 +18,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
+// Throttled accounts accept correct passwords.
 // D17: a hard lock let anyone lock a known superadmin address out on
 // purpose. Guessing is throttled instead, and the right password still works.
 func TestService_Login_ThrottledAccountStillAcceptsCorrectPassword(t *testing.T) {
@@ -45,8 +46,9 @@ func TestService_Login_ThrottledAccountStillAcceptsCorrectPassword(t *testing.T)
 	assert.Nil(t, st.LockedUntil)
 }
 
-// A throttled account answers the same 401 a wrong password does, so the
-// response never tells an attacker which addresses are under attack.
+// Throttling answers a plain 401.
+// It is the same 401 a wrong password gets, so the response never tells an
+// attacker which addresses are under attack.
 func TestHandler_Login_ThrottledAccountAnswersUnauthorized(t *testing.T) {
 	_, u, svc := mkAuthServer(t)
 	// Mounted without the per-IP limiter, whose own 429 would mask the
@@ -63,6 +65,7 @@ func TestHandler_Login_ThrottledAccountAnswersUnauthorized(t *testing.T) {
 	}
 }
 
+// Password reset clears the throttle.
 // AU-8: an admin password reset must unstick a throttled account.
 func TestRepo_UpdatePassword_ClearsThrottle(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)

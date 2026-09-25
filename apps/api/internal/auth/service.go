@@ -18,14 +18,16 @@ import (
 var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrInvalidToken       = errors.New("invalid token")
-	// ErrSessionRevoked marks a structurally valid token whose account no
-	// longer backs it: deactivated, or minted under an older session version.
+	// ErrSessionRevoked marks an orphaned token.
+	// The token is structurally valid, but its account no longer backs it:
+	// deactivated, or minted under an older session version.
 	ErrSessionRevoked = errors.New("session revoked")
 )
 
-// Compared against when the email is unknown so an unregistered address costs
-// the same bcrypt work as a real one. Built at init with the same cost
-// Repo.Create uses, so the two never drift apart.
+// dummyPasswordHash equalizes unknown-email cost.
+// It is compared against when the email is unknown, so an unregistered
+// address costs the same bcrypt work as a real one. Built at init with the
+// same cost Repo.Create uses, so the two never drift apart.
 var dummyPasswordHash = mustDummyHash()
 
 func mustDummyHash() []byte {
@@ -57,9 +59,9 @@ func NewService(repo *users.Repo, secret string, expiry time.Duration) *Service 
 	}
 }
 
-// WithRefresh enables refresh-token issuance + rotation. Without it, Login
-// still works but returns an empty RefreshToken (back-compat for callers
-// that don't wire the table yet).
+// WithRefresh enables refresh-token rotation.
+// Without it, Login still works but returns an empty RefreshToken
+// (back-compat for callers that don't wire the table yet).
 func (s *Service) WithRefresh(repo *RefreshRepo, expiry time.Duration) *Service {
 	s.refresh = repo
 	s.refreshExpiry = expiry
@@ -92,12 +94,14 @@ func parseInt64(s string) (int64, error) {
 	return n, nil
 }
 
-// Attempts below this cost nothing, so ordinary typos are not punished.
+// loginBackoffFree attempts cost nothing.
+// Ordinary typos are therefore not punished.
 const loginBackoffFree = 4
 
-// loginBackoff is the delay an attempt pays for the misses before it. A hard
-// lock was worse than useless: it refused the correct password, so anyone who
-// knew a superadmin address could lock that account out at will.
+// loginBackoff prices prior misses.
+// It is the delay an attempt pays for the misses before it. A hard lock was
+// worse than useless: it refused the correct password, so anyone who knew a
+// superadmin address could lock that account out at will.
 func loginBackoff(attempts int) time.Duration {
 	const (
 		base = 250 * time.Millisecond
@@ -116,7 +120,8 @@ func loginBackoff(attempts int) time.Duration {
 	return ceil
 }
 
-// throttle waits out the backoff or the caller's deadline, whichever first.
+// throttle waits out the backoff.
+// It returns early when the caller's deadline comes first.
 func throttle(ctx context.Context, d time.Duration) {
 	if d <= 0 {
 		return
@@ -228,9 +233,10 @@ func (s *Service) issue(ctx context.Context, rr *RefreshRepo, u users.User, vers
 	return resp, nil
 }
 
-// Refresh redeems an opaque refresh token, rotating it and re-issuing the
-// JWT + a fresh refresh token. Reuse of an already-redeemed token triggers
-// revocation of every active refresh token for that user.
+// Refresh redeems and rotates tokens.
+// It re-issues the JWT plus a fresh refresh token. Reuse of an
+// already-redeemed token triggers revocation of every active refresh token
+// for that user.
 func (s *Service) Refresh(ctx context.Context, raw string) (LoginResponse, error) {
 	if s.refresh == nil || raw == "" {
 		return LoginResponse{}, ErrInvalidRefresh
@@ -278,7 +284,7 @@ func (s *Service) Refresh(ctx context.Context, raw string) (LoginResponse, error
 	return resp, nil
 }
 
-// refusal explains a token that could not be redeemed.
+// refusal explains unredeemable tokens.
 func (s *Service) refusal(ctx context.Context, rr *RefreshRepo, hash []byte) (error, error) {
 	st, err := rr.lookup(ctx, hash)
 	if err != nil {
@@ -312,9 +318,9 @@ func (s *Service) refusal(ctx context.Context, rr *RefreshRepo, hash []byte) (er
 	return ErrExpiredRefresh, nil
 }
 
-// RevokeRefresh marks a specific refresh token revoked. Silent no-op when
-// the token is already revoked, expired, or unknown — logout must succeed
-// even on a stale tab.
+// RevokeRefresh revokes one refresh token.
+// Silent no-op when the token is already revoked, expired, or unknown:
+// logout must succeed even on a stale tab.
 func (s *Service) RevokeRefresh(ctx context.Context, raw string) error {
 	if s.refresh == nil || raw == "" {
 		return nil
@@ -346,13 +352,15 @@ func (s *Service) Verify(tokenStr string) (Claims, error) {
 	return claims, nil
 }
 
-// Identity is the live account state behind an access token.
+// Identity is live account state.
+// It is what backs an access token.
 type Identity struct {
 	UserID int64
 	Role   users.Role
 }
 
-// Authenticate resolves a bearer token to the caller's live identity.
+// Authenticate resolves a bearer token.
+// It returns the caller's live identity.
 func (s *Service) Authenticate(ctx context.Context, tokenStr string) (Identity, error) {
 	claims, err := s.Verify(tokenStr)
 	if err != nil {

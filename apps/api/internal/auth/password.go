@@ -18,10 +18,10 @@ var ErrWrongCurrentPassword = errors.New("current password is wrong")
 // A newer change overtook verification.
 var ErrPasswordChanged = errors.New("password changed since it was verified")
 
-// ChangeOwnPassword replaces the caller's password after re-checking the
-// current one, then ends every session, the caller's included. The check
-// shares the login attempt counter and backoff: an access token alone must
-// not buy an unthrottled password oracle.
+// ChangeOwnPassword replaces the caller's password.
+// It re-checks the current one first, then ends every session, the caller's
+// included. The check shares the login attempt counter and backoff: an
+// access token alone must not buy an unthrottled password oracle.
 func (s *Service) ChangeOwnPassword(ctx context.Context, userID int64, current, next string) error {
 	u, err := s.users.GetByID(ctx, userID)
 	if errors.Is(err, users.ErrNotFound) {

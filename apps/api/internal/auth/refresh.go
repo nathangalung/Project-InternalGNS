@@ -19,15 +19,18 @@ var (
 	ErrInvalidRefresh = errors.New("invalid refresh token")
 	ErrExpiredRefresh = errors.New("refresh token expired")
 	ErrReusedRefresh  = errors.New("refresh token reused")
-	// ErrRevokedRefresh is a token ended on purpose (logout, admin change,
-	// an earlier reuse blast). Replaying it is not evidence of theft.
+	// ErrRevokedRefresh marks deliberately ended tokens.
+	// The end was on purpose (logout, admin change, an earlier reuse blast),
+	// so replaying such a token is not evidence of theft.
 	ErrRevokedRefresh = errors.New("refresh token revoked")
 )
 
-// 32 bytes of CSPRNG output, base64url-encoded (43 chars, no padding).
+// refreshTokenBytes is the CSPRNG size.
+// 32 bytes, base64url-encoded (43 chars, no padding).
 const refreshTokenBytes = 32
 
-// Window in which a redeemed-then-reused token is treated as a benign race
+// refreshReuseGrace forgives benign reuse.
+// Within it, a redeemed-then-reused token is treated as a benign race
 // (concurrent tabs, retried request) rather than a replay attack.
 const refreshReuseGrace = 10 * time.Second
 
@@ -40,8 +43,8 @@ func NewRefreshRepo(exec db.Executor, store queries.Store) *RefreshRepo {
 	return &RefreshRepo{db: exec, store: store}
 }
 
-// generateRefreshToken returns (raw, hash). The raw token is what the client
-// receives; only the hash is persisted.
+// generateRefreshToken returns raw and hash.
+// The raw token is what the client receives; only the hash is persisted.
 func generateRefreshToken() (string, []byte, error) {
 	buf := make([]byte, refreshTokenBytes)
 	if _, err := rand.Read(buf); err != nil {
@@ -80,7 +83,8 @@ func (r *RefreshRepo) redeem(ctx context.Context, hash []byte) (redeemed, error)
 	return out, err
 }
 
-// lookupState reports the state of a token whose redeem failed.
+// lookupState describes a failed redeem.
+// It is the state of the token whose redeem failed.
 type lookupState struct {
 	userID  int64
 	revoked bool
@@ -111,8 +115,9 @@ func (r *RefreshRepo) lookup(ctx context.Context, hash []byte) (lookupState, err
 	return st, nil
 }
 
-// on binds the repo to a caller's transaction; nil stays nil, so an
-// unwired refresh store keeps issuing access tokens only.
+// on binds a caller's transaction.
+// nil stays nil, so an unwired refresh store keeps issuing access tokens
+// only.
 func (r *RefreshRepo) on(exec db.Executor) *RefreshRepo {
 	if r == nil {
 		return nil
@@ -120,8 +125,9 @@ func (r *RefreshRepo) on(exec db.Executor) *RefreshRepo {
 	return &RefreshRepo{db: exec, store: r.store}
 }
 
-// lockOwner share-locks the token owner's users row. An unknown token
-// locks nothing; the redeem that follows reports it.
+// lockOwner share-locks the owner row.
+// It locks the token owner's users row. An unknown token locks nothing; the
+// redeem that follows reports it.
 func (r *RefreshRepo) lockOwner(ctx context.Context, hash []byte) error {
 	if _, err := r.db.Exec(ctx, r.store.Get("auth.refresh_lock_owner"), hash); err != nil {
 		return fmt.Errorf("lock refresh owner: %w", err)
@@ -129,8 +135,9 @@ func (r *RefreshRepo) lockOwner(ctx context.Context, hash []byte) error {
 	return nil
 }
 
-// revokedByRotation reports a token retired by a successful refresh. A NULL
-// reason predates the column and is read as rotation, the cautious side.
+// revokedByRotation spots a rotated token.
+// Rotation retires a token on a successful refresh. A NULL reason predates
+// the column and is read as rotation, the cautious side.
 func revokedByRotation(reason string) bool {
 	return reason == "" || reason == "rotated"
 }
@@ -148,7 +155,8 @@ func (r *RefreshRepo) revokeAllForUser(ctx context.Context, userID int64) error 
 	return nil
 }
 
-// PurgeExpired drops tokens past the retention window, returning rows deleted.
+// PurgeExpired drops expired tokens.
+// It deletes tokens past the retention window and returns the row count.
 // Called by the background sweep in internal/app; without it revoked and
 // expired rows accumulate forever.
 func (r *RefreshRepo) PurgeExpired(ctx context.Context) (int64, error) {

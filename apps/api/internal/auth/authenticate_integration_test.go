@@ -16,7 +16,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
-// mkLoggedIn creates a user and returns its repo, service and access token.
+// mkLoggedIn creates a signed-in user.
+// It returns its repo, service and access token.
 func mkLoggedIn(t *testing.T, role users.Role) (context.Context, pgx.Tx, *users.Repo, *auth.Service, users.User, string) {
 	t.Helper()
 	ctx, tx := testutil.BeginTx(t)
@@ -34,6 +35,7 @@ func mkLoggedIn(t *testing.T, role users.Role) (context.Context, pgx.Tx, *users.
 	return ctx, tx, repo, svc, u, resp.Token
 }
 
+// Live tokens resolve current identity.
 // A live token must resolve to the account's current id and role.
 func TestService_Authenticate_LiveToken(t *testing.T) {
 	ctx, _, _, svc, u, token := mkLoggedIn(t, users.RoleOperational)
@@ -44,6 +46,7 @@ func TestService_Authenticate_LiveToken(t *testing.T) {
 	assert.Equal(t, users.RoleOperational, ident.Role)
 }
 
+// Deactivation ends access tokens.
 // AU-1: deactivating a user must end the existing access token at once.
 func TestService_Authenticate_DeactivatedUserRejected(t *testing.T) {
 	ctx, _, repo, svc, u, token := mkLoggedIn(t, users.RoleOperational)
@@ -78,6 +81,7 @@ func TestService_Authenticate_RoleChangeTakesEffect(t *testing.T) {
 	assert.Equal(t, users.RoleFinance, ident.Role)
 }
 
+// Password reset ends access tokens.
 // AU-11: a password reset must end the target's existing access token.
 func TestService_Authenticate_PasswordResetRevokesToken(t *testing.T) {
 	ctx, _, repo, svc, u, token := mkLoggedIn(t, users.RoleOperational)
