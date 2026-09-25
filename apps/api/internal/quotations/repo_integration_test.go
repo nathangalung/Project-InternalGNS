@@ -542,7 +542,8 @@ func TestRepo_UpdateContact_NotFound(t *testing.T) {
 
 func int64Ptr(v int64) *int64 { return &v }
 
-// Count and data queries must agree under the same filter.
+// Count and data queries agree.
+// They must, under the same filter.
 func TestRepo_List_CountAgreesWithData(t *testing.T) {
 	ctx, repo, _ := newRepo(t)
 
@@ -566,7 +567,8 @@ func TestRepo_List_CountAgreesWithData(t *testing.T) {
 		"count query and data query disagree under the same filter")
 }
 
-// Paging must not repeat or drop a row when the sort key ties.
+// Tied sort keys page stably.
+// Paging must not repeat or drop a row.
 func TestRepo_List_PagingIsStableOnTiedSortKey(t *testing.T) {
 	ctx, repo, _ := newRepo(t)
 
@@ -595,7 +597,7 @@ func TestRepo_List_PagingIsStableOnTiedSortKey(t *testing.T) {
 
 func ptrStr(s string) *string { return &s }
 
-// The list counts product lines only.
+// List counts only product lines.
 // Shipping is a line too, so the count must skip it.
 func TestRepo_List_ProductCount(t *testing.T) {
 	cases := []struct {

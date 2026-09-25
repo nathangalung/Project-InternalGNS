@@ -11,7 +11,8 @@ func qInt16(v int16) *int16 { return &v }
 
 func qInt64(v int64) *int64 { return &v }
 
-// productLine builds a priced, catalog-linked product line.
+// productLine builds a product line.
+// The line is priced and catalog-linked.
 func productLine(n int16, name, qty, price, total string) QuotationItem {
 	return QuotationItem{
 		LineNumber:    n,
@@ -26,7 +27,7 @@ func productLine(n int16, name, qty, price, total string) QuotationItem {
 	}
 }
 
-// shippingLine builds the shipping line fn_create_quotation inserts.
+// shippingLine mirrors fn_create_quotation's shipping.
 func shippingLine(n int16, cost string) QuotationItem {
 	return QuotationItem{
 		LineNumber:    n,
@@ -40,7 +41,7 @@ func shippingLine(n int16, cost string) QuotationItem {
 	}
 }
 
-// header mirrors the stored quotation columns.
+// header mirrors stored quotation columns.
 func header(totalProduk, total, totalDiscount, subtotal, dpp, ppn, grand string) Quotation {
 	return Quotation{
 		QuotationNo:       "Q-26090193/GNS/IX/2026",
@@ -59,7 +60,8 @@ func header(totalProduk, total, totalDiscount, subtotal, dpp, ppn, grand string)
 
 var qUnits = map[int16]string{19: "SET", 18: "UNIT"}
 
-// The printed totals come from the stored header and reconcile.
+// Printed totals reconcile with header.
+// They come from the stored header.
 func TestBuildExportData_TotalsFromStoredHeader(t *testing.T) {
 	// 2 x 1.000,50 = 2.001,00 product, 10% discount, 150,25 shipping.
 	// subtotal = 2001,00 + 150,25 - 200,10 = 1.951,15
@@ -106,7 +108,8 @@ func TestBuildExportData_TotalsFromStoredHeader(t *testing.T) {
 	}
 }
 
-// An unpriced line is No Offer; a priced line is quoted.
+// Unpriced lines print No Offer.
+// A priced line is quoted.
 func TestBuildExportData_NoOfferIsUnpriced(t *testing.T) {
 	// Unpriced lines add nothing to total_produk, so the printed lines
 	// still sum to the stored header. Catalog linking does not matter.
@@ -142,7 +145,8 @@ func TestBuildExportData_NoOfferIsUnpriced(t *testing.T) {
 	}
 }
 
-// The offer column describes the catalog item that is supplied.
+// Offer column describes supplied item.
+// It names the catalog item actually supplied.
 func TestBuildExportData_OfferShowsOfferedItem(t *testing.T) {
 	offered := productLine(1, "LAMPU LED 12W", "1.00", "1000.00", "1000.00")
 	offered.RequestedImpa = qStr("790268")
@@ -170,7 +174,8 @@ func TestBuildExportData_OfferShowsOfferedItem(t *testing.T) {
 	}
 }
 
-// Five product lines still fit A5; six switch to A4.
+// Six product lines switch A4.
+// Five still fit A5.
 func TestBuildExportData_PaperSize(t *testing.T) {
 	cases := []struct {
 		products int

@@ -13,13 +13,14 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Ids reserved for the document-number fixtures.
+// Ids for document-number fixtures.
 const (
 	docNoClientA int64 = 9100001
 	docNoClientB int64 = 9100002
 )
 
-// insertClient writes a client fixture and returns the insert error.
+// insertClient writes a client fixture.
+// It returns the insert error.
 func insertClient(t *testing.T, ctx context.Context, id int64, number any) error {
 	t.Helper()
 	_, err := testutil.Pool(t).Exec(ctx,
@@ -29,7 +30,7 @@ func insertClient(t *testing.T, ctx context.Context, id int64, number any) error
 	return err
 }
 
-// dropClients removes the fixtures and anything hanging off them.
+// dropClients removes fixtures and dependents.
 func dropClients(t *testing.T, ids ...int64) {
 	t.Helper()
 	ctx := context.Background()
@@ -45,7 +46,7 @@ func dropClients(t *testing.T, ids ...int64) {
 	}
 }
 
-// A client number is required and exactly four digits.
+// Client numbers are four digits.
 //
 // Document numbers embed it with no delimiter, so a variable-width number
 // lets two clients produce the same quotation number and permanently block
@@ -96,7 +97,7 @@ func TestCompanyClientNumber_FixedFourDigits(t *testing.T) {
 	assert.Zero(t, n, "every existing client must carry a four digit number after the backfill")
 }
 
-// Clients whose numbers share a prefix get distinct quotation numbers.
+// Prefix-sharing clients get distinct numbers.
 func TestQuotationNo_NoCollisionAcrossPrefixOverlap(t *testing.T) {
 	srv, ctx := resetServer(t)
 	pool := testutil.Pool(t)
@@ -121,7 +122,8 @@ func TestQuotationNo_NoCollisionAcrossPrefixOverlap(t *testing.T) {
 	assert.Contains(t, noB, "09111")
 }
 
-// createQuotationFor posts a one line draft and returns its number.
+// createQuotationFor posts a one-line draft.
+// It returns the new quotation number.
 func createQuotationFor(t *testing.T, srv *httptest.Server, clientID int64) string {
 	t.Helper()
 	res := doJSON(t, srv, http.MethodPost, "/quotations/", createBody{

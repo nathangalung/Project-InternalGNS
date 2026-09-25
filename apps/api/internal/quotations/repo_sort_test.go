@@ -8,7 +8,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
 )
 
-// Every UI sort key resolves to its column.
+// UI sort keys resolve columns.
 func TestSortableWhitelist(t *testing.T) {
 	tests := []struct {
 		name    string

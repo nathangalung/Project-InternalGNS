@@ -6,7 +6,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 )
 
-// BuildExportData exposes the PDF shaping to integration tests.
+// BuildExportData exposes PDF shaping.
 var BuildExportData = buildExportData
 
 // ContactComm exposes the contact lookup.

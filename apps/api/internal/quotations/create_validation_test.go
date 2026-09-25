@@ -14,7 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Body shape accepted by POST /quotations.
+// POST /quotations body shape.
 type createBody struct {
 	CompanyClientID int64                   `json:"companyClientId"`
 	DiscountPct     string                  `json:"discountPct"`
@@ -39,7 +39,8 @@ func countQuotations(t *testing.T) int64 {
 	return n
 }
 
-// POST rejects any status but draft and inserts nothing.
+// POST accepts only draft status.
+// Any other status is refused and nothing is inserted.
 func TestHandler_Create_RejectsNonDraftStatus(t *testing.T) {
 	srv, _ := resetServer(t)
 
@@ -83,7 +84,7 @@ func TestHandler_Create_RejectsNonDraftStatus(t *testing.T) {
 	}
 }
 
-// Zero or negative quantity lines are refused.
+// Nonpositive quantity lines are refused.
 func TestHandler_Create_RejectsZeroQtyLine(t *testing.T) {
 	srv, _ := resetServer(t)
 
@@ -115,7 +116,7 @@ func TestHandler_Create_RejectsZeroQtyLine(t *testing.T) {
 	}
 }
 
-// The database refuses a zero quantity line too.
+// Database refuses zero quantity too.
 func TestQuotationItems_QtyCheckConstraint(t *testing.T) {
 	srv, ctx := resetServer(t)
 	res := doJSON(t, srv, http.MethodPost, "/quotations/", createBody{

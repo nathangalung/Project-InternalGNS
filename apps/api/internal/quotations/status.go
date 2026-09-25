@@ -19,13 +19,13 @@ const (
 	StatusExpired   = "expired"
 )
 
-// StatusInfo is one status and its label.
+// StatusInfo pairs status and label.
 type StatusInfo struct {
 	Status string `json:"status"`
 	Label  string `json:"label"`
 }
 
-// Statuses is the canonical display order.
+// Statuses is the display order.
 var Statuses = []StatusInfo{
 	{StatusDraft, "Draf"},
 	{StatusSent, "Dikirim"},
@@ -47,7 +47,7 @@ func move(to string, requiresNote bool) Transition {
 	return Transition{To: to, Label: StatusLabel(to), RequiresNote: requiresNote}
 }
 
-// Transitions lists manual moves per status.
+// Transitions lists manual moves.
 // Terminal statuses map to no moves.
 var Transitions = map[string][]Transition{
 	StatusDraft:     {move(StatusSent, false), move(StatusCancelled, true)},
@@ -67,10 +67,10 @@ func AllowedTransitions(status string) []Transition {
 	return out
 }
 
-// CanRevise reports the Buat Revisi action.
+// CanRevise gates Buat Revisi.
 func CanRevise(status string) bool { return status == StatusSent }
 
-// StatusLabel falls back to the key.
+// StatusLabel defaults to the key.
 func StatusLabel(status string) string {
 	for _, s := range Statuses {
 		if s.Status == status {

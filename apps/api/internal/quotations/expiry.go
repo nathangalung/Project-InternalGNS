@@ -12,7 +12,7 @@ import (
 // run after downtime catches up every missed day at once.
 const ExpiryInterval = time.Hour
 
-// Expirer is the job's only dependency.
+// Expirer is the job's dependency.
 type Expirer interface {
 	ExpireDue(ctx context.Context, asOf time.Time) (int64, error)
 }

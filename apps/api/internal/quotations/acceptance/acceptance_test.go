@@ -151,7 +151,7 @@ func (s *scenarioState) createUnpricedQuotation() error {
 	return s.responseHasID()
 }
 
-// Ids reserved for the document-number fixtures.
+// Ids for document-number fixtures.
 const (
 	docNoClientA int64 = 9100001
 	docNoClientB int64 = 9100002
@@ -278,7 +278,7 @@ func (s *scenarioState) detailStatusEquals(want string) error {
 
 func (s *scenarioState) walkPath(path string) error { return s.walk(path, nil) }
 
-// walkWithReason also supports none and revise.
+// walkWithReason also handles none, revise.
 func (s *scenarioState) walkWithReason(path string) error {
 	reason := testReason
 	return s.walk(path, &reason)

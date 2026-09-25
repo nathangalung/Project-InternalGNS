@@ -303,7 +303,8 @@ func TestHandler_ChangeStatus(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, res.StatusCode)
 }
 
-// Bulk list export: filtered rows -> XLSX, header + one row per quotation.
+// Filtered list exports as XLSX.
+// The sheet holds a header plus one row per quotation.
 func TestHandler_Export_XLSX(t *testing.T) {
 	srv, _ := resetServer(t)
 	mustCreate(t, srv)
@@ -323,7 +324,8 @@ func TestHandler_Export_XLSX(t *testing.T) {
 	assert.Equal(t, "No. Quotation", rows[0][0])
 }
 
-// Send-time guard: a product line with no selling price blocks finalizing.
+// Unpriced product lines block sending.
+// A product line with no selling price cannot be finalized.
 func TestHandler_ChangeStatus_RejectsUnpricedOnSend(t *testing.T) {
 	srv, _ := resetServer(t)
 	req := sampleCreate()
@@ -418,6 +420,7 @@ func mustCreate(t *testing.T, srv *httptest.Server) int64 {
 	return got["id"]
 }
 
+// Locked QIR parent is 409.
 // Migration 00046 retyped the quotation_item_requests parent lock from
 // check_violation to P0013 and its not-found raise from P0001 to P0011. That
 // moved /quotations/{id}/requests from a generic 422 to 409-with-reason and
@@ -466,6 +469,7 @@ func TestHandler_QIR_LockedParentConflicts(t *testing.T) {
 	}
 }
 
+// Missing QIR parent is 404.
 // The same trigger raises P0011 for a missing parent, which must surface as
 // 404 rather than the pre-00046 422.
 func TestHandler_QIR_UnknownParentNotFound(t *testing.T) {

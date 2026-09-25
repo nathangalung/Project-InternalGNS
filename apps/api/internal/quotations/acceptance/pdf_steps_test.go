@@ -26,7 +26,7 @@ import (
 // Catalog item seeded by SeedMasterIfMissing.
 const offeredItemID int64 = 9000001
 
-// pdfServer mounts quotations with real templates.
+// pdfServer mounts real-template quotations.
 func (s *scenarioState) pdfServer() *httptest.Server {
 	_, here, _, _ := runtime.Caller(0)
 	root := filepath.Join(filepath.Dir(here), "..", "..", "..", "templates", "documents")
@@ -89,7 +89,7 @@ func (s *scenarioState) downloadPDF() error {
 	return err
 }
 
-// printed renders a stored figure as the PDF text shows it.
+// printed formats figures PDF-style.
 func printed(numeric string) string {
 	return strings.Replace(pdfgen.FormatIDRCents(numeric), "Rp~", "Rp ", 1)
 }

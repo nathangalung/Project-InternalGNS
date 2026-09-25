@@ -109,7 +109,7 @@ func (r *Repo) CreateItemRequest(ctx context.Context, quotationID int64, req Ite
 	return pgx.CollectOneRow(rows, pgx.RowToStructByName[ItemRequestRow])
 }
 
-// UpdateItemRequest full replace + bump version.
+// UpdateItemRequest replaces and bumps version.
 // Sets reviewed_by/at on first pending→non-pending only. A request that
 // belongs to another quotation is ErrNotFound.
 func (r *Repo) UpdateItemRequest(

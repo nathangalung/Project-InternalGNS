@@ -48,7 +48,7 @@ type ListFilter struct {
 	Offset   int
 }
 
-// sortable is the closed set of quotation sort keys.
+// sortable lists quotation sort keys.
 var sortable = listq.Whitelist{
 	Default: "created_at",
 	Columns: map[string]listq.Column{
@@ -63,10 +63,11 @@ var sortable = listq.Whitelist{
 	},
 }
 
-// tiebreak keeps paging stable when the sort key ties.
+// tiebreak keeps paging stable.
 var tiebreak = listq.Column{Expr: "q.id", Dir: listq.Desc}
 
-// List rows with cost total + matching count.
+// List pages quotations with totals.
+// Each row carries its cost total, beside the matching count.
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
@@ -117,7 +118,7 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	return out, err
 }
 
-// Stats returns one row per status.
+// Stats lists every status count.
 // Rows follow Statuses, zero counts included, so every tile has a source.
 func (r *Repo) Stats(ctx context.Context) ([]StatusCount, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("quotations.stats"))
@@ -283,7 +284,8 @@ func (r *Repo) UpdateContact(ctx context.Context, id, contactID, userID int64) e
 	return nil
 }
 
-// ListRevisions returns the full parent/child chain ordered by version.
+// ListRevisions returns the version chain.
+// It covers every parent and child, ordered by version.
 // Empty slice when id is unknown.
 func (r *Repo) ListRevisions(ctx context.Context, id int64) ([]RevisionRow, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("quotations.list_revisions"), id)
@@ -304,7 +306,7 @@ func (r *Repo) Revise(ctx context.Context, id int64, note *string, userID int64)
 	return newID, nil
 }
 
-// ExpireDue expires sent quotations past validity.
+// ExpireDue expires lapsed sent quotations.
 // asOf is read on the WIB calendar. Returns 0 when another replica holds
 // the job lock.
 func (r *Repo) ExpireDue(ctx context.Context, asOf time.Time) (int64, error) {

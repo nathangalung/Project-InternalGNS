@@ -26,7 +26,7 @@ type ExportHandler struct {
 	settings deps.PdfSettings
 }
 
-// NewExportHandler wires repos for PDF export.
+// NewExportHandler wires PDF export repos.
 func NewExportHandler(repo *Repo, c *clients.Repo, u *units.Repo, r *pdfgen.Renderer, s deps.PdfSettings) *ExportHandler {
 	return &ExportHandler{repo: repo, clients: c, units: u, renderer: r, settings: s}
 }
@@ -68,7 +68,7 @@ type exportData struct {
 	UseA4         bool
 }
 
-// ExportPDF returns the quotation as a PDF stream.
+// ExportPDF streams the quotation PDF.
 func (h *ExportHandler) ExportPDF(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {

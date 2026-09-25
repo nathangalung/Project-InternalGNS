@@ -12,7 +12,7 @@ import (
 	"text/template"
 )
 
-// renderQuotation returns the PDF text, page count and log.
+// renderQuotation returns text, pages, log.
 func renderQuotation(t *testing.T, data exportData) (text string, pages int, latexLog string) {
 	t.Helper()
 	for _, bin := range []string{"xelatex", "pdftotext", "pdfinfo"} {
@@ -87,7 +87,8 @@ func renderQuotation(t *testing.T, data exportData) (text string, pages int, lat
 	return string(txt), pages, string(logBytes)
 }
 
-// sampleExport builds a discounted quotation with shipping.
+// sampleExport builds a discounted quotation.
+// It includes a shipping line.
 func sampleExport(productLines int) exportData {
 	items := make([]QuotationItem, 0, productLines+1)
 	for i := 0; i < productLines; i++ {
@@ -111,7 +112,8 @@ func sampleExport(productLines int) exportData {
 	return buildExportData(d, qUnits, "riza@example.com", "0811-000-000", "Director")
 }
 
-// badBoxes lists overfull, underfull and warning lines.
+// badBoxes lists bad box lines.
+// That covers overfull, underfull and warning lines.
 func badBoxes(log string) []string {
 	var out []string
 	for _, ln := range strings.Split(log, "\n") {
@@ -123,7 +125,8 @@ func badBoxes(log string) []string {
 	return out
 }
 
-// Both paper sizes print the stored figures cleanly.
+// Both sizes print stored figures.
+// Each paper size prints them cleanly.
 func TestQuotationPDF_PrintsStoredTotals(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -170,7 +173,8 @@ func TestQuotationPDF_PrintsStoredTotals(t *testing.T) {
 	}
 }
 
-// A short quotation fits one A5 sheet up to five product lines.
+// A5 fits five product lines.
+// A short quotation stays on one sheet.
 func TestQuotationPDF_A5FitsFiveLines(t *testing.T) {
 	const longRequest = "MARINE RADIO HANDHELD VHF INTRINSICALLY SAFE WITH SPARE BATTERY AND CHARGER"
 	const longOffer = "ENTEL HT844 VHF PORTABLE RADIO, ATEX CERTIFIED, LI-ION 2500MAH BATTERY (370021)"

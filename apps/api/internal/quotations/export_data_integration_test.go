@@ -22,7 +22,7 @@ func cents(t *testing.T, s string) int64 {
 	return n
 }
 
-// The printed column reconciles with the stored quotation.
+// Printed column reconciles with storage.
 func TestBuildExportData_ReconcilesWithStoredQuotation(t *testing.T) {
 	ctx, repo, tx := newRepo(t)
 

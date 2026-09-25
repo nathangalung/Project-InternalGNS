@@ -31,7 +31,7 @@ const testReason = "Klien tidak melanjutkan"
 // Secret for the role router.
 const roleJWTSecret = "quotation-role-secret"
 
-// roleFixture holds one user per role.
+// roleFixture holds per-role users.
 // Users are created on first use and removed after the suite, once the
 // quotation rows that reference them are gone.
 type roleFixture struct {
@@ -72,7 +72,7 @@ func roleTeardown(t *testing.T) {
 	})
 }
 
-// userFor creates the role user once.
+// userFor creates role users once.
 func (s *scenarioState) userFor(role string) (int64, error) {
 	roles.mu.Lock()
 	defer roles.mu.Unlock()
@@ -93,7 +93,7 @@ func (s *scenarioState) userFor(role string) (int64, error) {
 	return u.ID, nil
 }
 
-// routerServer is the real router with RBAC.
+// routerServer is the RBAC router.
 func (s *scenarioState) routerServer() *httptest.Server {
 	roles.mu.Lock()
 	defer roles.mu.Unlock()
@@ -134,7 +134,7 @@ func tokenFor(userID int64, role string) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(roleJWTSecret))
 }
 
-// actAs calls the real router as a role.
+// actAs calls routes as role.
 func (s *scenarioState) actAs(role, action string) error {
 	base := "/quotations/" + strconv.FormatInt(s.lastID, 10)
 	reason := testReason
@@ -193,7 +193,7 @@ func (s *scenarioState) tryWithoutReason(target string) error {
 	return s.transitionWith(target, nil)
 }
 
-// statusStill rereads without losing the response.
+// statusStill rereads, keeping the response.
 func (s *scenarioState) statusStill(want string) error {
 	last, body := s.last, s.body
 	defer func() { s.last, s.body = last, body }()
@@ -490,7 +490,7 @@ func (s *scenarioState) sentAt(at string, validity int) error {
 	return nil
 }
 
-// onceExpirer stops the loop after one run.
+// onceExpirer stops after one run.
 type onceExpirer struct {
 	repo   *quotations.Repo
 	cancel context.CancelFunc
@@ -504,7 +504,7 @@ func (o *onceExpirer) ExpireDue(ctx context.Context, asOf time.Time) (int64, err
 	return n, err
 }
 
-// runExpiryAt runs the real loop once.
+// runExpiryAt runs the loop once.
 // The clock is injected, so the WIB boundary is exact.
 func (s *scenarioState) runExpiryAt(at string) error {
 	now, err := time.Parse(time.RFC3339, at)

@@ -78,7 +78,8 @@ type QuotationDetail struct {
 	CanRevise          bool                 `json:"canRevise"`
 }
 
-// Revision row in the parent/child chain.
+// RevisionRow is one chain link.
+// The chain runs parent to child.
 type RevisionRow struct {
 	ID          int64     `db:"id"            json:"id"`
 	ParentID    *int64    `db:"parent_id"     json:"parentId,omitempty"`
@@ -106,7 +107,7 @@ type ListRow struct {
 	CreatedAt      time.Time `db:"created_at"       json:"createdAt"`
 }
 
-// ListResult wraps rows with total count.
+// ListResult wraps rows with total.
 type ListResult struct {
 	Rows  []ListRow `json:"rows"`
 	Total int64     `json:"total"`
@@ -172,7 +173,7 @@ type ChangeStatusRequest struct {
 	Note   *string `json:"note,omitempty"`
 }
 
-// Revise body; the note is optional.
+// ReviseRequest carries an optional note.
 type ReviseRequest struct {
 	Note *string `json:"note,omitempty"`
 }

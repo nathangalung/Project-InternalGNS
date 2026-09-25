@@ -20,7 +20,8 @@ import (
 // Mirrors the key in fn_expire_quotations.
 const expiryLockKey int64 = 7_431_590_059
 
-// sqlState returns the pg code or "".
+// sqlState returns the pg code.
+// It is "" for a non-pg error.
 func sqlState(err error) string {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
@@ -29,14 +30,15 @@ func sqlState(err error) string {
 	return ""
 }
 
-// forceStatus sets a status outside the machine.
+// forceStatus bypasses the state machine.
 func forceStatus(t *testing.T, ctx context.Context, tx pgx.Tx, id int64, status string) {
 	t.Helper()
 	_, err := tx.Exec(ctx, `UPDATE quotations SET status = $2 WHERE id = $1`, id, status)
 	require.NoError(t, err)
 }
 
-// The DB table must match the Go map.
+// DB table matches the map.
+// The database transition table must mirror Transitions.
 func TestChangeStatus_MirrorsTransitions(t *testing.T) {
 	note := "alasan pengujian"
 	for _, from := range quotations.Statuses {
@@ -126,12 +128,12 @@ func TestChangeStatus_RequiresNote(t *testing.T) {
 	}
 }
 
-// wib is a wall-clock instant in WIB.
+// wib builds a WIB instant.
 func wib(month time.Month, day, hour, minute int) time.Time {
 	return time.Date(2026, month, day, hour, minute, 0, 0, tz.Jakarta())
 }
 
-// Injected clock for the expiry job.
+// Expiry job's injected clock.
 var (
 	sentAt     = wib(time.March, 1, 10, 0)
 	longAfter  = wib(time.April, 20, 12, 0)
@@ -149,7 +151,8 @@ func setSentAt(t *testing.T, ctx context.Context, tx pgx.Tx, id int64, at time.T
 	require.EqualValues(t, 1, tag.RowsAffected())
 }
 
-// Sent quotation with a validity window.
+// sentWithValidity creates a sent quotation.
+// It carries the given validity window.
 func sentWithValidity(t *testing.T, ctx context.Context, repo *quotations.Repo, validity *int) int64 {
 	t.Helper()
 	req := sampleCreate()
@@ -212,7 +215,8 @@ func TestExpireDue_Boundaries(t *testing.T) {
 	}
 }
 
-// A long-lapsed window moves only a sent row.
+// Expiry moves only sent rows.
+// Even a long-lapsed window leaves other statuses alone.
 func TestExpireDue_OnlyTouchesSent(t *testing.T) {
 	for _, status := range []string{
 		quotations.StatusDraft, quotations.StatusRevision,
@@ -254,7 +258,7 @@ func TestExpireDue_RunsOnce(t *testing.T) {
 	assert.Equal(t, after, historyCount(t, ctx, tx, id), "no duplicate history")
 }
 
-// A held lock means another replica runs.
+// Held lock means another replica.
 func TestExpireDue_SkipsWhenLocked(t *testing.T) {
 	seven := 7
 	ctx, repo, tx := newRepo(t)
@@ -358,7 +362,8 @@ func TestRevise_ClonesSentIntoDraft(t *testing.T) {
 	require.NoError(t, repo.ChangeStatus(ctx, orig, quotations.StatusCancelled, &note, seedUserID))
 }
 
-// What the client received stays frozen.
+// Sent original stays frozen.
+// What the client received must not change.
 func TestRevise_OriginalIsFrozen(t *testing.T) {
 	ctx, repo, _ := newRepo(t)
 	orig, err := repo.Create(ctx, sampleCreate(), seedUserID)
@@ -380,7 +385,7 @@ func TestRevise_OriginalIsFrozen(t *testing.T) {
 	assert.Contains(t, err.Error(), "Hanya quotation berstatus Draf yang dapat diubah; status saat ini Revisi.")
 }
 
-// Both update paths type a missing id.
+// Both updates type missing ids.
 func TestUpdate_UnknownQuotation(t *testing.T) {
 	rv := int32(1)
 	for _, tc := range []struct {
@@ -416,7 +421,7 @@ func learnedMatch(t *testing.T, ctx context.Context, tx pgx.Tx, text string) (in
 	return count, itemID
 }
 
-// A revision copy is not new evidence.
+// Revision copies are not evidence.
 // It must neither count again nor restore a mapping learned since.
 func TestRevise_DoesNotRelearnMatches(t *testing.T) {
 	ctx, repo, tx := newRepo(t)

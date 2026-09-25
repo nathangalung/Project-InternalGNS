@@ -27,7 +27,7 @@ func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
 
-// parseListFilter reads the shared list filters (no pagination).
+// parseListFilter reads unpaged list filters.
 func parseListFilter(r *http.Request) ListFilter {
 	q := r.URL.Query()
 	f := ListFilter{
@@ -66,7 +66,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
 }
 
-// Export streams the filtered quotation list as an XLSX table.
+// Export streams the filtered list.
+// The list goes out as an XLSX table.
 func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	f := parseListFilter(r)
 	f.Limit, f.Offset = listq.Unbounded, 0
@@ -141,7 +142,7 @@ func (h *Handler) Revisions(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, revs)
 }
 
-// validateCreateStatus keeps create on the draft entry point.
+// validateCreateStatus keeps create at draft.
 //
 // Every later state is reached through fn_change_quotation_status, which owns
 // the transition table, the unpriced guard and PO creation. Returns nil when
@@ -155,7 +156,7 @@ func validateCreateStatus(status *string) map[string]string {
 	}
 }
 
-// validateItemQty refuses lines that carry no quantity.
+// validateItemQty refuses quantityless lines.
 func validateItemQty(items []CreateItem) map[string]string {
 	for i, it := range items {
 		qty, err := strconv.ParseFloat(strings.TrimSpace(it.Qty), 64)
@@ -310,7 +311,8 @@ func validateChangeStatus(req ChangeStatusRequest) map[string]string {
 	return nil
 }
 
-// renderStatusErr maps the unpriced-products guard to 422, else a DB error.
+// renderStatusErr maps the unpriced guard.
+// That guard is a 422; anything else is a DB error.
 func renderStatusErr(w http.ResponseWriter, err error) {
 	if errors.Is(err, ErrUnpricedProducts) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{
@@ -379,7 +381,8 @@ func (h *Handler) ChangeContact(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Send forces status to sent with optional note.
+// Send moves status to sent.
+// An optional note rides along.
 func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
