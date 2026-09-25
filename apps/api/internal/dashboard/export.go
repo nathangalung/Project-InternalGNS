@@ -3,6 +3,8 @@ package dashboard
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -61,12 +63,12 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 		series[m.key] = byMonth
 	}
 
-	data, err := buildDashboardWorkbook(summary, monthLabels(from, to), series)
-	if err != nil {
+	var buf bytes.Buffer
+	if err := buildDashboardWorkbook(&buf, summary, monthLabels(from, to), series); err != nil {
 		httperr.Render(w, httperr.Internal("dashboard workbook build failed"))
 		return
 	}
-	httpx.WriteXLSX(w, name, data)
+	httpx.WriteXLSX(w, name, buf.Bytes())
 }
 
 // exportRange maps an optional year to [from, to) and a file name.
@@ -97,11 +99,13 @@ func monthLabels(from, to time.Time) []string {
 	return out
 }
 
+// buildDashboardWorkbook writes both sheets.
 func buildDashboardWorkbook(
+	w io.Writer,
 	s Summary,
 	months []string,
 	series map[string]map[string]string,
-) ([]byte, error) {
+) error {
 	f := excelize.NewFile()
 	defer func() { _ = f.Close() }()
 
@@ -125,7 +129,7 @@ func buildDashboardWorkbook(
 
 	const monthSheet = "Bulanan"
 	if _, err := f.NewSheet(monthSheet); err != nil {
-		return nil, err
+		return err
 	}
 	header := []any{"Bulan"}
 	for _, m := range exportMetrics {
@@ -141,11 +145,10 @@ func buildDashboardWorkbook(
 	}
 	writeGrid(f, monthSheet, monthRows)
 
-	var buf bytes.Buffer
-	if err := f.Write(&buf); err != nil {
-		return nil, err
+	if err := f.Write(w); err != nil {
+		return fmt.Errorf("write dashboard xlsx: %w", err)
 	}
-	return buf.Bytes(), nil
+	return nil
 }
 
 func writeGrid(f *excelize.File, sheet string, rows [][]any) {

@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 	"time"
 
@@ -110,11 +111,11 @@ func TestBuildDashboardWorkbook(t *testing.T) {
 		"ppn":       {"2026-02": "60000"},
 	}
 
-	data, err := buildDashboardWorkbook(s, months, series)
-	if err != nil {
+	var buf bytes.Buffer
+	if err := buildDashboardWorkbook(&buf, s, months, series); err != nil {
 		t.Fatalf("build: %v", err)
 	}
-	f, err := excelize.OpenReader(bytes.NewReader(data))
+	f, err := excelize.OpenReader(&buf)
 	if err != nil {
 		t.Fatalf("reopen: %v", err)
 	}
@@ -139,5 +140,21 @@ func TestBuildDashboardWorkbook(t *testing.T) {
 	// Missing metric for a month falls back to 0.
 	if v, _ := f.GetCellValue("Bulanan", "F2"); v != "0" { // ppn 2026-01 absent
 		t.Errorf("Bulanan F2 (ppn jan) = %q, want 0", v)
+	}
+}
+
+var errSink = errors.New("connection reset")
+
+type failingWriter struct{}
+
+func (failingWriter) Write([]byte) (int, error) { return 0, errSink }
+
+// Sink failure fails the build.
+// A writer that refuses the bytes must surface its error, not report a
+// workbook that never left the process.
+func TestBuildDashboardWorkbook_SinkFailure(t *testing.T) {
+	err := buildDashboardWorkbook(failingWriter{}, Summary{}, []string{"2026-01"}, nil)
+	if !errors.Is(err, errSink) {
+		t.Fatalf("err = %v, want wrapped %v", err, errSink)
 	}
 }
