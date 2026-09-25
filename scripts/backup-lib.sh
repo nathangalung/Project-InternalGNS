@@ -26,9 +26,9 @@ minio_env() {
   docker exec "$1" printenv "$2" || die "$2 is not set in container $1"
 }
 
-# Run mc beside MinIO.
-mc_run() {
-  # Usage: mc_run CONTAINER IMAGE SCRIPT [docker run args...]. The one-off
+# Run mcli beside MinIO.
+mcli_run() {
+  # Usage: mcli_run CONTAINER IMAGE SCRIPT [docker run args...]. The one-off
   # container shares MinIO's network namespace, so it reaches 127.0.0.1:9000
   # on the internal-only network. Credentials pass by name, never in argv.
   local minio=$1 image=$2 script=$3
@@ -38,7 +38,7 @@ mc_run() {
     docker run --rm --network "container:$minio" --user "$(id -u):$(id -g)" \
     -e MC_CONFIG_DIR=/tmp/mc -e MINIO_ROOT_USER -e MINIO_ROOT_PASSWORD "$@" \
     --entrypoint sh "$image" -c \
-    'set -e; mc alias set src http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && '"$script"
+    'set -e; mcli alias set src http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && '"$script"
 }
 
 # Per-table count query.
@@ -68,7 +68,7 @@ minio_object_counts() {
   # Usage: minio_object_counts CONTAINER IMAGE [BUCKET]. Groups by the first
   # key segment: the bucket at the alias root, and the original bucket inside
   # a rehearsal bucket. Prints "<bucket> <objects> <bytes>" sorted.
-  mc_run "$1" "$2" 'mc ls --recursive --json "src/'"${3:-}"'"' |
+  mcli_run "$1" "$2" 'mcli ls --recursive --json "src/'"${3:-}"'"' |
     awk -F'"' '
       { key = ""; size = 0
         for (i = 1; i < NF; i++) {

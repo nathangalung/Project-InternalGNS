@@ -13,7 +13,7 @@
 # After loading, it compares exact row counts with postgres.counts and object
 # counts and bytes with minio.counts, and exits non-zero on any difference.
 # Docs: docs/backup_restore.md.
-# The single-quoted mc scripts expand inside the MinIO container.
+# The single-quoted mcli scripts expand inside the MinIO container.
 # shellcheck disable=SC2016
 set -euo pipefail
 umask 077
@@ -45,9 +45,9 @@ targets=$bucket
 [ -n "$targets" ] || targets=$(find "$snap/minio" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)
 exists=$(docker exec "$pg" sh -c 'psql -X -At -U "$POSTGRES_USER" -d postgres -c "SELECT 1 FROM pg_database WHERE datname = '"'$db'"'"')
 [ -z "$exists" ] || die "database $db already exists; restore only into a new database"
-mc_run "$minio" "$minio_image" '
+mcli_run "$minio" "$minio_image" '
   for b in $TARGETS; do
-    if mc ls "src/$b" >/dev/null 2>&1 && [ -n "$(mc ls --recursive "src/$b")" ]; then
+    if mcli ls "src/$b" >/dev/null 2>&1 && [ -n "$(mcli ls --recursive "src/$b")" ]; then
       echo "bucket $b is not empty" >&2
       exit 1
     fi
@@ -65,17 +65,17 @@ pg_row_counts "$pg" "$db" >"$restored_rows"
 
 log "restoring objects"
 if [ -n "$bucket" ]; then
-  mc_run "$minio" "$minio_image" '
-    mc mb --ignore-existing "src/$BUCKET" >/dev/null
-    mc mirror --quiet /snap "src/$BUCKET" >/dev/null' \
+  mcli_run "$minio" "$minio_image" '
+    mcli mb --ignore-existing "src/$BUCKET" >/dev/null
+    mcli mirror --quiet /snap "src/$BUCKET" >/dev/null' \
     -e "BUCKET=$bucket" -v "$snap/minio:/snap:ro"
   minio_object_counts "$minio" "$minio_image" "$bucket" >"$restored_objects"
 else
-  mc_run "$minio" "$minio_image" '
+  mcli_run "$minio" "$minio_image" '
     for d in /snap/*/; do
       b=$(basename "$d")
-      mc mb --ignore-existing "src/$b" >/dev/null
-      mc mirror --quiet "$d" "src/$b" >/dev/null
+      mcli mb --ignore-existing "src/$b" >/dev/null
+      mcli mirror --quiet "$d" "src/$b" >/dev/null
     done' -v "$snap/minio:/snap:ro"
   minio_object_counts "$minio" "$minio_image" >"$restored_objects"
 fi

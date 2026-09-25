@@ -16,7 +16,7 @@
 # Sunday snapshots are also linked into weekly/. Files are never modified
 # after a snapshot is finalised, so the hard links cannot alias a change.
 # Docs: docs/backup_restore.md.
-# The single-quoted mc scripts expand inside the MinIO container.
+# The single-quoted mcli scripts expand inside the MinIO container.
 # shellcheck disable=SC2016
 set -euo pipefail
 umask 077
@@ -104,15 +104,15 @@ log "copying objects from $minio"
 before=$(minio_object_counts "$minio" "$minio_image" | awk '{n += $2} END {print n + 0}')
 # Copy every bucket.
 # Each bucket gets a directory, so empty buckets come back on restore. The
-# MinIO image has no awk or sed, hence the parameter expansion.
-mc_run "$minio" "$minio_image" '
-  buckets=$(mc ls src)
+# Silo image has no awk or sed, hence the parameter expansion.
+mcli_run "$minio" "$minio_image" '
+  buckets=$(mcli ls src)
   printf "%s\n" "$buckets" | while IFS= read -r line; do
     [ -n "$line" ] || continue
     b=${line##* }
     b=${b%/}
     mkdir -p "/mirror/$b"
-    mc mirror --quiet "src/$b" "/mirror/$b" >/dev/null
+    mcli mirror --quiet "src/$b" "/mirror/$b" >/dev/null
   done' -v "$work/minio:/mirror"
 dir_object_counts "$work/minio" >"$work/minio.counts"
 copied=$(awk '{n += $2} END {print n + 0}' "$work/minio.counts")
