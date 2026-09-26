@@ -14,6 +14,7 @@ import {
   useUpdateQuotationContact,
 } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
+import { isVersionConflict } from "@/lib/errors"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
 import { ui } from "@/lib/ui"
 import type { QuotationDetail, QuotationItemInput, QuotationUpdateInput } from "@/types/api"
@@ -24,7 +25,7 @@ import Step1Client, { type Client } from "./Step1Client"
 import Step2Product from "./Step2Product"
 import Step3Shipping from "./Step3Shipping"
 import Step4Summary from "./Step4Summary"
-import { isEditable, isVersionConflict, quotationStatusLabel } from "./status"
+import { isEditable, quotationStatusLabel } from "./status"
 import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
 
 type QuotationEditProps = {

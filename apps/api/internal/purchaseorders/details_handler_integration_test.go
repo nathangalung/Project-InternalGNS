@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -78,7 +79,8 @@ func TestHandler_UpdateDetails(t *testing.T) {
 			}
 			if tc.want == http.StatusConflict {
 				// A version mismatch is retried after a refetch; a lock is not.
-				assert.Empty(t, p.Code)
+				assert.Equal(t, httperr.VersionConflictCode, p.Code)
+				assert.Equal(t, httperr.VersionConflict().Detail, p.Detail)
 			}
 		})
 	}

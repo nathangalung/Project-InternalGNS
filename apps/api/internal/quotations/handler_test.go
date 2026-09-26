@@ -237,8 +237,12 @@ func TestHandler_Update_VersionMismatch(t *testing.T) {
 	res := doJSONWithHeaders(t, srv, http.MethodPut,
 		"/quotations/"+strconv.FormatInt(id, 10), upd,
 		map[string]string{"If-Match": "999"})
-	defer res.Body.Close()
+	var e httperr.Error
+	decodeBody(t, res, &e)
 	assert.Equal(t, http.StatusConflict, res.StatusCode)
+	// The editor reloads on the code; a reader sees Indonesian, never row_version.
+	assert.Equal(t, httperr.VersionConflictCode, e.Code)
+	assert.Equal(t, httperr.VersionConflict().Detail, e.Detail)
 }
 
 func TestHandler_Update_BadID(t *testing.T) {

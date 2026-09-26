@@ -7,12 +7,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import * as quotationsApi from "@/features/quotations/api"
-import {
-  isVersionConflict,
-  QUOTATION_CONFLICT_MESSAGE,
-  statusChangeToast,
-} from "@/features/quotations/status"
-import { errorMessage } from "@/lib/errors"
+import { QUOTATION_CONFLICT_MESSAGE, statusChangeToast } from "@/features/quotations/status"
+import { errorMessage, isVersionConflict } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
 import type {

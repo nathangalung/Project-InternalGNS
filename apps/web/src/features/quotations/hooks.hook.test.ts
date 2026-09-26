@@ -161,7 +161,16 @@ describe("quotation writes", () => {
   })
 
   it("update toasts Indonesian copy when another save won the race", async () => {
-    m.update.mockRejectedValue(new ApiError(409, null, "quotation row_version mismatch"))
+    m.update.mockRejectedValue(
+      new ApiError(
+        409,
+        {
+          code: "version_conflict",
+          detail: "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
+        },
+        "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
+      ),
+    )
     const { result } = renderQueryHook(() => useUpdateQuotation())
     await settle(() => result.current.mutateAsync({ id: 5, input: {} as never, rowVersion: 1 }))
     expect(toast.error).toHaveBeenCalledWith(QUOTATION_CONFLICT_MESSAGE)

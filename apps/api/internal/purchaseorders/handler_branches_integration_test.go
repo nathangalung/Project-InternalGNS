@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -44,13 +45,16 @@ func TestHandler_IfMatchRefusals(t *testing.T) {
 		ifMatch string
 		want    int
 		detail  string
+		code    string
 	}{
 		{"notes malformed", http.MethodPatch, "/notes", purchaseorders.UpdateNotesRequest{Notes: "x"},
-			"abc", http.StatusBadRequest, "invalid If-Match header"},
+			"abc", http.StatusBadRequest, "invalid If-Match header", ""},
 		{"items malformed", http.MethodPut, "/items", itemsAt("1000"),
-			"abc", http.StatusBadRequest, "invalid If-Match header"},
+			"abc", http.StatusBadRequest, "invalid If-Match header", ""},
+		{"notes stale", http.MethodPatch, "/notes", purchaseorders.UpdateNotesRequest{Notes: "x"},
+			"stale", http.StatusConflict, httperr.VersionConflict().Detail, httperr.VersionConflictCode},
 		{"items stale", http.MethodPut, "/items", itemsAt("1000"),
-			"stale", http.StatusConflict, "purchase order row_version mismatch"},
+			"stale", http.StatusConflict, httperr.VersionConflict().Detail, httperr.VersionConflictCode},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -68,7 +72,8 @@ func TestHandler_IfMatchRefusals(t *testing.T) {
 			require.Equal(t, tc.want, res.StatusCode)
 			p := readProblem(t, res)
 			assert.Contains(t, p.Detail, tc.detail)
-			assert.Empty(t, p.Code, "only a lock carries po_locked")
+			// A stale version is tagged for a reload; a malformed header is not.
+			assert.Equal(t, tc.code, p.Code)
 		})
 	}
 }

@@ -60,14 +60,6 @@ export function statusChangeToast(err: unknown): string | undefined {
 export const QUOTATION_CONFLICT_MESSAGE =
   "Data quotation sudah diubah pengguna lain. Halaman dimuat ulang, periksa lalu simpan kembali."
 
-// Stale rowVersion on save.
-//
-// The optimistic-lock 409 carries an English detail, so it gets Indonesian
-// copy, and the editor reloads the stored quotation.
-export function isVersionConflict(err: unknown): boolean {
-  return err instanceof ApiError && err.status === 409 && /row_version/i.test(err.message)
-}
-
 // Status bar helper text.
 //
 // Says why a move the user expects is missing, instead of an empty menu.

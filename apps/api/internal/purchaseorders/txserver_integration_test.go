@@ -49,7 +49,7 @@ func execServer(t *testing.T, exec db.Executor, templatesRoot string) *httptest.
 }
 
 // problem decodes RFC 7807 bodies.
-// Code carries the PO lock code.
+// Code tags a lock or a stale version.
 type problem struct {
 	Status int               `json:"status"`
 	Detail string            `json:"detail"`

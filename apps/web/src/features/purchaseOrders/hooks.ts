@@ -13,7 +13,7 @@ import * as invoicesApi from "@/features/invoices/api"
 import * as poApi from "@/features/purchaseOrders/api"
 import * as usersApi from "@/features/users/api"
 import { ApiError } from "@/lib/api-client"
-import { errorMessage } from "@/lib/errors"
+import { errorMessage, isVersionConflict } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { roleCanAccess } from "@/lib/rbac"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
@@ -24,7 +24,6 @@ import { detailsChanged } from "./adapters"
 import {
   isInvoiceFiled,
   isPoLockRefusal,
-  isVersionConflict,
   parseCompletenessIssues,
   poErrorMessage,
 } from "./PurchaseOrderDetail/helpers"

@@ -336,3 +336,29 @@ func TestFromDBErr_ConstraintDetailsIndonesian(t *testing.T) {
 		})
 	}
 }
+
+// Stale version is a tagged 409.
+// The web branches on the code, and a user reads the detail.
+func TestVersionConflict(t *testing.T) {
+	e := VersionConflict()
+	assert.Equal(t, http.StatusConflict, e.Status)
+	assert.Equal(t, "Conflict", e.Title)
+	assert.Equal(t, "version_conflict", e.Code)
+	assert.Equal(t, VersionConflictCode, e.Code)
+	assert.Equal(t, "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.", e.Detail)
+
+	rec := httptest.NewRecorder()
+	Render(rec, e)
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(rec.Body).Decode(&body))
+	assert.Equal(t, "version_conflict", body["code"])
+}
+
+// Untagged problems omit code.
+func TestRender_OmitsEmptyCode(t *testing.T) {
+	rec := httptest.NewRecorder()
+	Render(rec, Conflict("x"))
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(rec.Body).Decode(&body))
+	assert.NotContains(t, body, "code")
+}
