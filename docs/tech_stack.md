@@ -29,7 +29,7 @@ SQL is hand-written in `db/queries`; there is no code generator.
 | What | Version | Pinned in |
 |---|---|---|
 | Bun (package manager) | 1.4.2 | `package.json` `packageManager`, `apps/web/Dockerfile` |
-| Node (runtime floor) | >=22.0.0 | `package.json` `engines.node` |
+| Node (runtime floor) | >=24.0.0 | `package.json` `engines.node` |
 | Node (CI) | 24 (LTS line) | `.github/workflows/ci.yml` `setup-node` |
 | TypeScript | ^5.9.3 | `package.json` |
 | React / react-dom | ^19.3.0 | `package.json` |
