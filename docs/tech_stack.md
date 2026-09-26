@@ -7,7 +7,8 @@ matching `go.mod`, `package.json`, `Dockerfile`, or compose file.
 
 | What | Version | Pinned in |
 |---|---|---|
-| Go | 1.26.8 | `go.mod`, `apps/api/Dockerfile` (`golang:1.26.8-alpine`) |
+| Go | 1.27.1 | `go.mod`, `apps/api/Dockerfile` (`golang:1.27.1-alpine`) |
+| golangci-lint | v2.14 | `.github/workflows/ci.yml` (`golangci-lint-action` `version`) |
 | Postgres | 18.6-alpine | `compose.dev.yml`, `compose.prod.yml`, `.github/workflows/ci.yml` |
 | chi router | v5.3.2 | `go.mod` |
 | pgx | v5.11.0 | `go.mod` |

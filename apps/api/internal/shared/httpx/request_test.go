@@ -71,6 +71,10 @@ func TestDecodeJSON(t *testing.T) {
 		{"malformed", `{"name":`, false, ""},
 		{"empty", ``, false, ""},
 		{"wrong type", `{"name":7}`, false, ""},
+		// v1 semantics on the v2 backend: the last duplicate wins and
+		// invalid UTF-8 becomes U+FFFD. v2 defaults would reject both.
+		{"duplicate key", `{"name":"Andi","name":"Budi"}`, true, "Budi"},
+		{"invalid utf-8", "{\"name\":\"Bu\xffdi\"}", true, "Bu�di"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

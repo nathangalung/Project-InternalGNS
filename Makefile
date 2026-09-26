@@ -38,7 +38,7 @@ help: ## Show available targets
 
 # Local toolchain prep.
 setup: ## Prep env, deps, tools
-	@command -v go     >/dev/null || { echo "missing: go (need 1.26+)"; exit 1; }
+	@command -v go     >/dev/null || { echo "missing: go (need 1.27+)"; exit 1; }
 	@command -v bun    >/dev/null || { echo "missing: bun (need 1.3+)"; exit 1; }
 	@command -v docker >/dev/null || { echo "missing: docker"; exit 1; }
 	@test -f $(API_DIR)/.env || cp $(API_DIR)/.env.example $(API_DIR)/.env
