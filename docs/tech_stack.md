@@ -31,7 +31,7 @@ SQL is hand-written in `db/queries`; there is no code generator.
 | Bun (package manager) | 1.4.2 | `package.json` `packageManager`, `apps/web/Dockerfile` |
 | Node (runtime floor) | >=24.0.0 | `package.json` `engines.node` |
 | Node (CI) | 24 (LTS line) | `.github/workflows/ci.yml` `setup-node` |
-| TypeScript | ^6.0.3 | `package.json` |
+| TypeScript | ^7.0.2 | `package.json` |
 | React / react-dom | ^19.3.0 | `package.json` |
 | Vite | ^8.3.1 | `package.json` |
 | Tailwind CSS | ^4.3.3 | `package.json` |
