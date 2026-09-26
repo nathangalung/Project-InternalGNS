@@ -529,7 +529,7 @@ halfway through the deploy. On the VPS:
 
 ```bash
 docker pull pgsty/silo:RELEASE.2026-09-16T00-00-00Z   # the tag in compose.prod.yml
-docker pull postgres:18.3-alpine
+docker pull postgres:18.6-alpine
 ```
 
 Each must end by printing the image reference, not `denied` or

@@ -82,3 +82,9 @@ updates:
     labels:
       - dependencies
       - docker
+    # nginx follows the stable branch (even minor). Odd minors are mainline,
+    # so take patches here and move to the next stable branch by hand.
+    ignore:
+      - dependency-name: nginx
+        update-types:
+          - version-update:semver-minor

@@ -8,7 +8,7 @@ matching `go.mod`, `package.json`, `Dockerfile`, or compose file.
 | What | Version | Pinned in |
 |---|---|---|
 | Go | 1.26.8 | `go.mod`, `apps/api/Dockerfile` (`golang:1.26.8-alpine`) |
-| Postgres | 18.3-alpine | `compose.dev.yml`, `compose.prod.yml` |
+| Postgres | 18.6-alpine | `compose.dev.yml`, `compose.prod.yml`, `.github/workflows/ci.yml` |
 | chi router | v5.3.2 | `go.mod` |
 | pgx | v5.11.0 | `go.mod` |
 | goose (embedded, and the CLI `make setup` installs) | v3.28.0 | `go.mod`, `Makefile` |
@@ -43,14 +43,15 @@ SQL is hand-written in `db/queries`; there is no code generator.
 
 Caret ranges are intentional; exact versions are pinned by `bun.lock`. CI runs
 `bun install --frozen-lockfile` to refuse drift. The production image serves
-the build from `nginx:1.31-alpine`.
+the build from `nginx:1.30.5-alpine` (the stable branch).
 
 ## Infra
 
 | What | Version | Pinned in |
 |---|---|---|
 | Docker Compose schema | v2 (no `version:` key) | `compose.dev.yml`, `compose.prod.yml` |
-| MinIO | `RELEASE.2025-09-07T16-13-09Z` | `compose.dev.yml`, `compose.prod.yml` |
+| MinIO server (Silo fork) | `pgsty/silo:RELEASE.2026-09-16T00-00-00Z` | `compose.dev.yml`, `compose.prod.yml`, `.github/workflows/ci.yml` |
+| pgweb (dev only) | `sosedoff/pgweb:0.17.0` | `compose.dev.yml` |
 | Dokploy | follow upstream stable | external |
 | Traefik | provided by Dokploy | external |
 
