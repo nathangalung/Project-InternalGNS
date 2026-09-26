@@ -302,26 +302,8 @@ export class SalesSeed {
     return api<PurchaseOrder>("GET", `/purchase-orders/by-quotation/${quotationId}`)
   }
 
-  // Attach a PDF to PO.
-  //
-  // PENDING becomes UPLOADED. The presigned path is relative to the API base.
-  async attachPoFile(po: PurchaseOrder, fileName = "po-klien.pdf"): Promise<void> {
-    const presign = await api<{ uploadUrl: string; objectKey: string }>(
-      "GET",
-      `/purchase-orders/${po.id}/upload-url?fileName=${encodeURIComponent(fileName)}`,
-    )
-    const size = Buffer.byteLength(pdfText)
-    const res = await fetch(`${apiURL}${presign.uploadUrl}`, {
-      method: "PUT",
-      headers: { authorization: `Bearer ${adminToken()}`, "content-type": "application/pdf" },
-      body: pdfText,
-    })
-    if (!res.ok) throw new Error(`upload ${fileName}: ${res.status} ${await res.text()}`)
-    await api("PATCH", `/purchase-orders/${po.id}/file`, {
-      fileName,
-      fileSize: size,
-      objectKey: presign.objectKey,
-    })
+  attachPoFile(po: PurchaseOrder, fileName = "po-klien.pdf"): Promise<void> {
+    return uploadPoFile(adminToken(), po.id, fileName)
   }
 
   // Deliver a PO fully.
@@ -415,6 +397,53 @@ export function idFrom(href: string | null): number {
 // Smallest PDF the policy accepts.
 const pdfText =
   "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
+
+// Attach a PDF to PO.
+//
+// The app's own path: presign, PUT through the storage proxy, then attach.
+// PENDING becomes UPLOADED. The server refuses a key with no upload behind
+// it, so the object must really exist.
+export async function uploadPoFile(
+  token: string,
+  poId: number,
+  fileName = "po-klien.pdf",
+): Promise<void> {
+  const authed = async (what: string, path: string, init: RequestInit, type: string) => {
+    const res = await fetch(`${apiURL}${path}`, {
+      ...init,
+      headers: { authorization: `Bearer ${token}`, "content-type": type },
+    })
+    if (!res.ok) throw new Error(`${what}: ${res.status} ${await res.text()}`)
+    return res
+  }
+  const presign = (await (
+    await authed(
+      "presign PO file",
+      `/purchase-orders/${poId}/upload-url?fileName=${encodeURIComponent(fileName)}`,
+      {},
+      "application/json",
+    )
+  ).json()) as { uploadUrl: string; objectKey: string }
+  await authed(
+    `upload ${fileName}`,
+    presign.uploadUrl,
+    { method: "PUT", body: pdfText },
+    "application/pdf",
+  )
+  await authed(
+    "attach PO file",
+    `/purchase-orders/${poId}/file`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        fileName,
+        fileSize: Buffer.byteLength(pdfText),
+        objectKey: presign.objectKey,
+      }),
+    },
+    "application/json",
+  )
+}
 
 // PDF payload for file inputs.
 export function pdfFile(name: string): { name: string; mimeType: string; buffer: Buffer } {
