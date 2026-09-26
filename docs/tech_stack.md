@@ -31,14 +31,14 @@ SQL is hand-written in `db/queries`; there is no code generator.
 | Bun (package manager) | 1.3.9 | `package.json` `packageManager`, `apps/web/Dockerfile` |
 | Node (runtime floor) | >=22.0.0 | `package.json` `engines.node` |
 | TypeScript | ^5.9.3 | `package.json` |
-| React / react-dom | ^19.2.8 | `package.json` |
+| React / react-dom | ^19.3.0 | `package.json` |
 | Vite | ^7.3.6 | `package.json` |
 | Tailwind CSS | ^4.3.3 | `package.json` |
-| TanStack Router | ^1.170.18 | `package.json` |
-| TanStack Query | ^5.101.4 | `package.json` |
-| Biome | ^2.5.6 | `package.json` |
-| Vitest | ^4.1.10 | `package.json` |
-| Playwright | ^1.62.1 | `package.json` |
+| TanStack Router | ^1.170.39 | `package.json` |
+| TanStack Query | ^5.103.3 | `package.json` |
+| Biome | ^2.5.14 | `package.json` |
+| Vitest | ^4.1.11 | `package.json` |
+| Playwright | ^1.63.0 | `package.json` |
 | exceljs (RFQ import) | ^4.4.0 | `package.json` |
 
 Caret ranges are intentional; exact versions are pinned by `bun.lock`. CI runs
