@@ -82,7 +82,6 @@ export default function ChangeOwnPasswordModal({ onClose }: ChangeOwnPasswordMod
     <Modal
       title="Ubah Kata Sandi"
       onClose={close}
-      className="w-[520px]"
       footer={
         <div className="flex w-full flex-wrap items-center justify-end gap-x-4 gap-y-3">
           {banner && (

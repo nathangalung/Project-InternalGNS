@@ -19,8 +19,9 @@ export default function ToastViewport() {
   const [items, setItems] = useState<ToastItem[]>([])
   useEffect(() => subscribe(setItems), [])
 
-  if (items.length === 0) return null
-
+  // The live region stays mounted while empty. A region inserted together
+  // with its first toast is often not announced, and an open modal keeps
+  // only the live regions that exist when it opens out of aria-hidden.
   return (
     <div
       className="pointer-events-none fixed right-6 bottom-6 z-[10000] flex flex-col gap-2.5"

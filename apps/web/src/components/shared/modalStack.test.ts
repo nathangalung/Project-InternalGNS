@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isTopModal, modalStackDepth, popModal, pushModal } from "./modalStack"
+import { closeDecision, isTopModal, modalStackDepth, popModal, pushModal } from "./modalStack"
 
 describe("modalStack", () => {
   it("gives a single modal ownership of Escape", () => {
@@ -56,5 +56,23 @@ describe("modalStack", () => {
     expect(modalStackDepth()).toBe(1)
     popModal(inner)
     expect(modalStackDepth()).toBe(0)
+  })
+})
+
+describe("closeDecision", () => {
+  it.each([
+    ["escape-key", true, "close"],
+    ["escape-key", false, "cancel"],
+    ["outside-press", true, "close"],
+    ["outside-press", false, "cancel"],
+    ["close-press", true, "close"],
+    ["close-press", false, "close"],
+    ["imperative-action", false, "close"],
+  ] as const)("%s with top=%s -> %s", (reason, isTop, expected) => {
+    expect(closeDecision(false, reason, isTop)).toBe(expected)
+  })
+
+  it("ignores an open request", () => {
+    expect(closeDecision(true, "trigger-press", true)).toBe("ignore")
   })
 })

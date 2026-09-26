@@ -62,7 +62,6 @@ export default function ActionModal({
     <Modal
       title={copy.title}
       onClose={pending ? () => {} : onClose}
-      className="w-[560px]"
       footer={
         <div className="flex w-full justify-end gap-4 max-sm:flex-col-reverse">
           <button type="button" className={ui.modalCancel} onClick={onClose} disabled={pending}>
