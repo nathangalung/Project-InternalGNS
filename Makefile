@@ -188,7 +188,9 @@ build-web: ## Build FE bundle
 test: test-api test-web ## Run all tests
 
 # The suites TRUNCATE, so they only ever get a database built here.
+# The name guard fires at expansion, so it also stops make -n.
 test-db-reset: db-up ## Recreate the throwaway test database
+	$(if $(filter-out 1,$(words $(CI_TEST_DB)))$(filter-out %test,$(CI_TEST_DB)),$(error refusing CI_TEST_DB '$(CI_TEST_DB)': it must be one name ending in test))
 	@$(COMPOSE_DEV) exec -T postgres psql -U gns_app -d postgres \
 	  -c "DROP DATABASE IF EXISTS $(CI_TEST_DB) WITH (FORCE);" \
 	  -c "CREATE DATABASE $(CI_TEST_DB) OWNER gns_app;" >/dev/null
