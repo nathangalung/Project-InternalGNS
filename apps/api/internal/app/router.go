@@ -30,7 +30,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(requestIDResponseMiddleware)
-	r.Use(trustedProxyIP)
+	r.Use(clientIP)
 	r.Use(accessLogMiddleware)
 	r.Use(middleware.Recoverer)
 	r.Use(requestTimeout(defaultRequestTimeout, renderRequestTimeout, uploadRequestTimeout))
