@@ -73,10 +73,13 @@ so the pre-deploy backup and dry run in section 13 work before the swap and
 after a rollback. The cleanup commands that may run on the old image carry the
 same fallback.
 
-Dependabot does not track this image. Its Docker tag parser cannot order
-`RELEASE.<timestamp>` tags, so bump the tag by hand from the Silo releases
-page, in `compose.dev.yml`, `compose.prod.yml` and both `start minio` steps
-of `.github/workflows/ci.yml`. The single-node deployment uses none of the
+Dependabot only refreshes the digest of the pinned tag. Its Docker tag parser
+cannot order `RELEASE.<timestamp>` tags, so move to a new release by hand from
+the Silo releases page: resolve its index digest
+(`docker buildx imagetools inspect pgsty/silo:<tag> --format '{{json .Manifest.Digest}}'`)
+and write `pgsty/silo:<tag>@sha256:<digest>` in `compose.dev.yml`,
+`compose.prod.yml` and both `start minio` steps of
+`.github/workflows/ci.yml`. The single-node deployment uses none of the
 features the release notes flag for upgrades (site replication, OIDC, remote
 tiers, several pools).
 
@@ -553,8 +556,9 @@ image (MinIO did, see "Object storage image"), and Dokploy only finds out
 halfway through the deploy. On the VPS:
 
 ```bash
-docker pull pgsty/silo:RELEASE.2026-09-16T00-00-00Z   # the tag in compose.prod.yml
-docker pull postgres:18.6-alpine
+# The exact references in compose.prod.yml, digest included.
+docker pull pgsty/silo:RELEASE.2026-09-16T00-00-00Z@sha256:635197cb9f36d01bee221d34d1c7d7960f6a95c48b0b6c01d99cd13bdae51a46
+docker pull postgres:18.6-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
 ```
 
 Each must end by printing the image reference, not `denied` or

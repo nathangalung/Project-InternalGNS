@@ -23,8 +23,8 @@ Bun-managed monorepo.
   and avatar fills). Responsive down to 320px.
 - Infra: PostgreSQL 18, MinIO for object storage, xelatex for PDF rendering,
   Dokploy with Traefik for deployment, Nginx to serve the built frontend.
-  The MinIO server is the Silo fork (`pgsty/silo`, pinned by release tag in
-  both compose files and `ci.yml`), since MinIO, Inc. pulled its images; its
+  The MinIO server is the Silo fork (`pgsty/silo`, pinned by release tag and
+  index digest in both compose files and `ci.yml`), since MinIO, Inc. pulled its images; its
   client is `mcli`, not `mc`. The Go SDK stays `minio-go`.
   Two compose files sit at the repo root: `compose.dev.yml` for local work and
   `compose.prod.yml` for the VPS, with `.env.prod.example` as its template.

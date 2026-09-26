@@ -72,6 +72,16 @@ GitHub Actions in `.github/workflows` are pinned by full commit SHA with the
 release as a trailing comment (`@<sha> # v7.0.1`); Dependabot's
 `github-actions` ecosystem bumps both together.
 
+Container base images (both Dockerfiles, both compose files, and the CI
+postgres and Silo containers) are pinned as `name:tag@sha256:<digest>`, where
+the digest is the multi-arch index, not one platform's manifest, so arm64
+hosts still pull. Resolve a new one with
+`docker buildx imagetools inspect <name:tag> --format '{{json .Manifest.Digest}}'`.
+Dependabot's `docker` (Dockerfiles) and `docker-compose` (compose files)
+ecosystems move tag and digest together. No ecosystem reads workflow
+images, so `ci.yml` copies the `compose.dev.yml` pins and its first backend
+step fails until they match.
+
 ## Bumping policy
 
 - **Patch / minor**: update the lock files (`go.sum`, `bun.lock`), run

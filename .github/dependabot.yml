@@ -61,8 +61,9 @@ updates:
         patterns:
           - "*"
 
-  # pgsty/silo stays untracked: Dependabot's Docker tag parser cannot
-  # order RELEASE.<timestamp> tags. Bump it by hand (docs/deploy_vps.md).
+  # Base images are pinned as tag@sha256 index digests; these entries move
+  # both. Workflow images cannot be tracked, so ci.yml copies the compose
+  # pins and fails until it matches compose.dev.yml.
   - package-ecosystem: docker
     directory: /apps/api
     schedule:
@@ -88,3 +89,21 @@ updates:
       - dependency-name: nginx
         update-types:
           - version-update:semver-minor
+
+  # compose.dev.yml and compose.prod.yml. pgsty/silo gets digest updates for
+  # its tag only: RELEASE.<timestamp> tags do not parse as versions, so move
+  # the tag by hand (docs/deploy_vps.md). A postgres major needs a dump and
+  # restore, not a bump.
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: monthly
+      time: "06:00"
+      timezone: Asia/Jakarta
+    labels:
+      - dependencies
+      - docker
+    ignore:
+      - dependency-name: postgres
+        update-types:
+          - version-update:semver-major
