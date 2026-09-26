@@ -347,7 +347,7 @@ docker exec "$P-gns-minio-1" sh -c \
 
 | Task             | How                                                                                |
 | ---------------- | ---------------------------------------------------------------------------------- |
-| Redeploy         | bump `TAG=` in env, then **Deploy** in Dokploy UI                                  |
+| Redeploy         | bump `TAG=` in env (UI, or the script below), then **Deploy** in Dokploy UI        |
 | Rollback         | restore the pre-deploy snapshot, then set `TAG=` back (section 14; a tag alone breaks login from 00066) |
 | Logs             | Dokploy UI → Logs tab (per-service)                                                |
 | Backup, restore  | `docs/backup_restore.md`: nightly host timer, restore rehearsal, disaster restore  |
@@ -358,6 +358,31 @@ docker exec "$P-gns-minio-1" sh -c \
 
 The `cleanup` GitHub workflow cannot reach this MinIO: it runs on a GitHub
 runner, and MinIO has no public route. Run the sweeper on the VPS as above.
+
+### Setting TAG from the command line
+
+`scripts/dokploy-set-tag.sh` changes the `TAG` line of the app's saved
+environment over SSH, without opening the Dokploy UI. It deploys nothing.
+
+1. Tag the commit to ship and push the tag (section 1).
+2. Wait for the `release` workflow's `publish images` job to finish green.
+3. Run the script with the VPS login in `DEPLOY_SSH`. The login is not kept in
+   the repository; use your own `user@host` or `~/.ssh/config` alias.
+
+   ```bash
+   DEPLOY_SSH=<user>@<vps> scripts/dokploy-set-tag.sh v0.4.0
+   # add DEPLOY_SSH_PORT=<port> when sshd is not on 22 and no alias sets Port
+   ```
+
+4. After the section 13 checks, click **Deploy** in Dokploy, or merge to
+   `main` when the section 15 webhook redeploy is on.
+
+The script refuses a tag that is not `vX.Y.Z` or whose api or web image the
+VPS cannot pull, so an unpublished tag leaves `TAG` unchanged. Before the
+update it saves the previous environment row under `~/dokploy-env-backups`
+on the VPS (mode 600), and it prints the old and new `TAG` and the changed
+keys, never values. `DOKPLOY_APP` and `GHCR_OWNER` override the app name and
+image owner.
 
 ## 11. Monitoring and alerts
 
