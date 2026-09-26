@@ -4,6 +4,7 @@ import type { QuotationTransition } from "@/types/api"
 import {
   fieldError,
   isEditable,
+  isVersionConflict,
   QUOTATION_STATUS_LABELS,
   QUOTATION_STATUSES,
   quotationBadge,
@@ -137,6 +138,17 @@ describe("statusChangeToast", () => {
     const other = new ApiError(422, { fields: { status: "x" } }, "Status tidak valid.")
     expect(statusChangeToast(other)).toBe("Status tidak valid.")
     expect(statusChangeToast(new ApiError(500, {}, ""))).toBe("Gagal mengubah status quotation.")
+  })
+})
+
+describe("isVersionConflict", () => {
+  it.each<[string, unknown, boolean]>([
+    ["stale row version", new ApiError(409, null, "quotation row_version mismatch"), true],
+    ["other conflict", new ApiError(409, {}, "Status sudah berubah."), false],
+    ["row_version outside a 409", new ApiError(400, null, "row_version"), false],
+    ["plain Error", new Error("row_version"), false],
+  ])("%s", (_name, err, want) => {
+    expect(isVersionConflict(err)).toBe(want)
   })
 })
 

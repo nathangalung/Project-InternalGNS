@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import LoadingState from "@/components/shared/LoadingState"
 import NotFoundState from "@/components/shared/NotFoundState"
 import StateMessage from "@/components/shared/StateMessage"
@@ -16,7 +16,7 @@ import {
 import { useUnits } from "@/features/units/hooks"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
 import { ui } from "@/lib/ui"
-import type { QuotationItemInput, QuotationUpdateInput } from "@/types/api"
+import type { QuotationDetail, QuotationItemInput, QuotationUpdateInput } from "@/types/api"
 import { toItemInput, toWizardProduct } from "./adapters"
 import DiscountModal from "./DiscountModal"
 import { countInvalidQty, parseQty, qtyErrorIndexes, qtyErrorsById } from "./lines"
@@ -24,7 +24,7 @@ import Step1Client, { type Client } from "./Step1Client"
 import Step2Product from "./Step2Product"
 import Step3Shipping from "./Step3Shipping"
 import Step4Summary from "./Step4Summary"
-import { isEditable, quotationStatusLabel } from "./status"
+import { isEditable, isVersionConflict, quotationStatusLabel } from "./status"
 import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
 
 type QuotationEditProps = {
@@ -101,9 +101,11 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
 
   const numericQuotationId = Number(quotationId)
   const hasNumericQuotationId = Number.isInteger(numericQuotationId) && numericQuotationId > 0
-  const { data: detail, isPending: isDetailPending } = useQuotation(
-    hasNumericQuotationId ? numericQuotationId : undefined,
-  )
+  const {
+    data: detail,
+    isPending: isDetailPending,
+    refetch: refetchDetail,
+  } = useQuotation(hasNumericQuotationId ? numericQuotationId : undefined)
   const [qtyFail, setQtyFail] = useState<{
     lines: ProductItem[]
     byId: Record<number, string>
@@ -173,38 +175,49 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   // Server errors apply to the lines they were raised for.
   const qtyErrors = qtyFail?.lines === products ? qtyFail.byId : {}
 
+  // Seed steps from a quotation.
+  //
+  // Each field is set outright, so a reseed after a save conflict also drops
+  // what the other user removed.
+  const hydrate = useCallback(
+    (d: QuotationDetail) => {
+      setSelectedClient(String(d.companyClientId))
+      setSelectedContactId(d.contactId || undefined)
+      setDiscountPct(Number(d.discountPct) || 0)
+      const productItems: ProductItem[] = d.items
+        .filter((it) => it.itemType === "product")
+        .map((it, i) =>
+          toWizardProduct(
+            it,
+            i + 1,
+            it.unitId !== undefined ? (unitNameById.get(it.unitId) ?? "") : "",
+          ),
+        )
+      setProducts(productItems)
+      setProdPage(1)
+      const ship = d.items.find((it) => it.itemType === "shipping")
+      setShippingAddress(ship?.shipDestination ?? "")
+      setShippingTime(ship?.shippingDays ? String(ship.shippingDays) : "")
+      const cost = Number(ship?.sellingPrice)
+      setShippingCost(Number.isFinite(cost) ? String(cost) : "")
+      setBerlakuSampai(d.validityDays ? String(d.validityDays) : "")
+      const termDays = Number.parseInt(d.paymentTerms ?? "", 10)
+      setJatuhTempo(Number.isFinite(termDays) && termDays > 0 ? String(termDays) : "")
+    },
+    [unitNameById],
+  )
+
   // Wizard state is seeded once, after both the quotation and the units it
   // needs to resolve unit codes have arrived. Any later refetch of the same
   // quotation leaves entered steps alone; the route keys this component by id,
-  // so a different quotation remounts and seeds again.
+  // so a different quotation remounts and seeds again. A save conflict reseeds
+  // explicitly.
   const hydrated = useRef(false)
   useEffect(() => {
     if (hydrated.current || !detail || !unitsData) return
     hydrated.current = true
-    setSelectedClient(String(detail.companyClientId))
-    if (detail.contactId) setSelectedContactId(detail.contactId)
-    setDiscountPct(Number(detail.discountPct) || 0)
-    const productItems: ProductItem[] = detail.items
-      .filter((it) => it.itemType === "product")
-      .map((it, i) =>
-        toWizardProduct(
-          it,
-          i + 1,
-          it.unitId !== undefined ? (unitNameById.get(it.unitId) ?? "") : "",
-        ),
-      )
-    setProducts(productItems)
-    const ship = detail.items.find((it) => it.itemType === "shipping")
-    if (ship) {
-      setShippingAddress(ship.shipDestination ?? "")
-      if (ship.shippingDays) setShippingTime(String(ship.shippingDays))
-      const cost = Number(ship.sellingPrice)
-      setShippingCost(Number.isFinite(cost) ? String(cost) : "")
-    }
-    if (detail.validityDays) setBerlakuSampai(String(detail.validityDays))
-    const termDays = Number.parseInt(detail.paymentTerms ?? "", 10)
-    if (Number.isFinite(termDays) && termDays > 0) setJatuhTempo(String(termDays))
-  }, [detail, unitsData, unitNameById])
+    hydrate(detail)
+  }, [detail, unitsData, hydrate])
 
   // Summary computation.
   const summaryTotalProdukQty = products.reduce((sum, p) => sum + p.jumlah, 0)
@@ -226,6 +239,17 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
 
   function goToDetail() {
     void navigate({ to: "/quotations/$id", params: { id: quotationId } })
+  }
+
+  // Someone saved first: reload theirs.
+  //
+  // Saving the stale wizard with the fresh rowVersion would silently
+  // overwrite their change, so every step is reseeded from the stored row.
+  async function reloadAfterConflict() {
+    const fresh = await refetchDetail()
+    if (!fresh.data) return
+    hydrate(fresh.data)
+    setStep(1)
   }
 
   function handleSave() {
@@ -261,8 +285,13 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             goToDetail()
           }
         },
-        onError: (err) =>
-          setQtyFail({ lines: products, byId: qtyErrorsById(products, qtyErrorIndexes(err)) }),
+        onError: (err) => {
+          if (isVersionConflict(err)) {
+            void reloadAfterConflict()
+            return
+          }
+          setQtyFail({ lines: products, byId: qtyErrorsById(products, qtyErrorIndexes(err)) })
+        },
       },
     )
   }

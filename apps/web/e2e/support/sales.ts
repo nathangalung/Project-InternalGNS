@@ -31,6 +31,8 @@ export type QuotationDetail = SeedQuotation & {
   grandTotal: string
   notes?: string
   vesselName?: string
+  validityDays?: number
+  rowVersion: number
   allowedTransitions: Transition[]
   canRevise: boolean
 }
@@ -64,12 +66,18 @@ export function uniquePrefix(): string {
   return `E2E${randomBytes(4).toString("hex").toUpperCase()}`
 }
 
-export async function api<T>(method: Method, path: string, body?: unknown): Promise<T> {
+export async function api<T>(
+  method: Method,
+  path: string,
+  body?: unknown,
+  headers: Record<string, string> = {},
+): Promise<T> {
   const res = await fetch(`${apiURL}${path}`, {
     method,
     headers: {
       authorization: `Bearer ${adminToken()}`,
       "content-type": "application/json",
+      ...headers,
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   })
@@ -94,6 +102,43 @@ async function unitId(code: string): Promise<number> {
   const id = unitIds.get(code)
   if (id === undefined) throw new Error(`unit ${code} is not seeded`)
   return id
+}
+
+type QuotationOpts = {
+  client: SeedClient
+  lines: SeedLine[]
+  discountPct?: number
+  shippingCost?: number
+  notes?: string
+  vesselName?: string
+  validityDays?: number
+}
+
+// Create and update body.
+async function quotationBody(opts: QuotationOpts): Promise<Record<string, unknown>> {
+  const pcs = await unitId("PCS")
+  return {
+    paymentTerms: "30 days",
+    validityDays: opts.validityDays ?? 30,
+    discountPct: String(opts.discountPct ?? 0),
+    shippingAddress: "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
+    shippingDays: 7,
+    shippingCost: opts.shippingCost ? String(opts.shippingCost) : undefined,
+    notes: opts.notes,
+    vesselName: opts.vesselName,
+    items: opts.lines.map((l) => ({
+      requestedItemId: l.item.id,
+      requestedImpa: l.item.impaCode,
+      requestedName: l.item.name,
+      offeredItemId: l.item.id,
+      vendorProductId: l.item.vendorProductId,
+      qty: String(l.qty),
+      unitId: pcs,
+      sellingPrice: String(l.price),
+      costPrice: l.cost === undefined ? undefined : String(l.cost),
+      shipDestination: "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
+    })),
+  }
 }
 
 // Per-test rows, undone later.
@@ -209,41 +254,23 @@ export class SalesSeed {
   //
   // The shipping address stores a line even at a zero charge, and each line
   // carries the address too, so the ON_PROGRESS gate passes either way.
-  async quotation(opts: {
-    client: SeedClient
-    lines: SeedLine[]
-    discountPct?: number
-    shippingCost?: number
-    notes?: string
-    vesselName?: string
-  }): Promise<SeedQuotation> {
-    const pcs = await unitId("PCS")
+  async quotation(opts: QuotationOpts): Promise<QuotationDetail> {
     const created = await api<{ id: number }>("POST", "/quotations", {
       companyClientId: opts.client.id,
       contactId: opts.client.contactId,
-      paymentTerms: "30 days",
-      validityDays: 30,
-      discountPct: String(opts.discountPct ?? 0),
-      shippingAddress: "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
-      shippingDays: 7,
-      shippingCost: opts.shippingCost ? String(opts.shippingCost) : undefined,
-      notes: opts.notes,
-      vesselName: opts.vesselName,
-      items: opts.lines.map((l) => ({
-        requestedItemId: l.item.id,
-        requestedImpa: l.item.impaCode,
-        requestedName: l.item.name,
-        offeredItemId: l.item.id,
-        vendorProductId: l.item.vendorProductId,
-        qty: String(l.qty),
-        unitId: pcs,
-        sellingPrice: String(l.price),
-        costPrice: l.cost === undefined ? undefined : String(l.cost),
-        shipDestination: "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
-      })),
+      ...(await quotationBody(opts)),
     })
     this.quotations.push(created.id)
     return this.getQuotation(created.id)
+  }
+
+  // Save as another user would.
+  //
+  // Bumps rowVersion, so an editor opened earlier holds a stale version.
+  async updateQuotation(q: QuotationDetail, opts: QuotationOpts): Promise<void> {
+    await api("PUT", `/quotations/${q.id}`, await quotationBody(opts), {
+      "If-Match": String(q.rowVersion),
+    })
   }
 
   getQuotation(id: number): Promise<QuotationDetail> {
