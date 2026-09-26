@@ -247,7 +247,7 @@ types: ## TypeScript typecheck (FE)
 # the pre-commit binary so the repo stays python-toolchain-free.
 hooks-install: ## Install git pre-commit hooks (auto-installs pre-commit via uv)
 	@command -v uv >/dev/null 2>&1 || { echo "missing: uv (https://docs.astral.sh/uv/)"; exit 1; }
-	@command -v pre-commit >/dev/null 2>&1 || uv tool install pre-commit
+	@command -v pre-commit >/dev/null 2>&1 || uv tool install pre-commit==4.6.2
 	pre-commit install
 
 hooks-run: ## Run all hooks against every file (CI-style sweep)
