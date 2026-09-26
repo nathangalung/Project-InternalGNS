@@ -158,7 +158,9 @@ document's status history table.
   `pg_try_advisory_xact_lock` keeps two replicas from both doing a run.
 - Purchase order: PENDING, UPLOADED, ON_PROGRESS, DELIVERED, CANCELLED.
   PENDING and UPLOADED follow the PO file: attaching it moves PENDING to
-  UPLOADED and removing it moves back, and neither is a manual move. UPLOADED
+  UPLOADED and removing it moves back, and neither is a manual move. Every
+  attach (PO file, logo, item image, invoice attachment or proof) first stats
+  the object, so a key with no upload behind it is a 422. UPLOADED
   goes to ON_PROGRESS; ON_PROGRESS to DELIVERED or back to UPLOADED; any open
   state to CANCELLED with a reason. The delivery-note number is stamped on
   ON_PROGRESS or DELIVERED, and DELIVERED creates the invoice. DELIVERED and

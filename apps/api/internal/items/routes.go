@@ -34,7 +34,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.Post("/{id}/vendors", h.AddVendor)
 	r.Get("/{id}/price-history", h.PriceHistory)
 
-	image := imageAsset(d.Storage, repo)
+	image := imageAsset(d.Storage, d.Objects, repo)
 	r.Get("/{id}/image/upload-url", assetproxy.Upload(image))
 	r.Get("/{id}/image/download-url", assetproxy.Download(image))
 	r.Patch("/{id}/image", assetproxy.UpdateKey(image))
@@ -43,9 +43,10 @@ func Routes(d deps.Deps) chi.Router {
 }
 
 // imageAsset describes image routes.
-func imageAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
+func imageAsset(sc *storage.Client, objects deps.ObjectStore, repo *Repo) assetproxy.Descriptor {
 	return assetproxy.Descriptor{
 		Storage:     sc,
+		Objects:     objects,
 		Bucket:      storage.BucketItemImages,
 		KeyPrefix:   "items",
 		NotFoundMsg: "item not found",

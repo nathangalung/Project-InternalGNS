@@ -35,6 +35,14 @@ type Deps struct {
 	Pdf           PdfSettings
 	Coretax       CoretaxSettings
 	Storage       *storage.Client
+	// Objects stats uploads before attach.
+	// Nil when storage is not configured, never a nil client.
+	Objects ObjectStore
+}
+
+// ObjectStore confirms uploaded objects.
+type ObjectStore interface {
+	ObjectExists(ctx context.Context, bucket, key string) (bool, error)
 }
 
 // User id context key.

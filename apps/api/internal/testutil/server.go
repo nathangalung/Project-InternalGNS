@@ -162,6 +162,15 @@ func DashboardServerAs(t testing.TB, role string) *httptest.Server {
 	return srv
 }
 
+// StoredObjects finds every object.
+// Servers without MinIO attach any key that passes the shape checks.
+type StoredObjects struct{}
+
+// ObjectExists always finds it.
+func (StoredObjects) ObjectExists(context.Context, string, string) (bool, error) {
+	return true, nil
+}
+
 // PurchaseOrdersServer wires PO routes.
 func PurchaseOrdersServer(t testing.TB, userID int64) *httptest.Server {
 	t.Helper()
@@ -170,7 +179,7 @@ func PurchaseOrdersServer(t testing.TB, userID int64) *httptest.Server {
 
 	r := chi.NewRouter()
 	r.Use(withUserID(userID))
-	r.Mount("/purchase-orders", purchaseorders.Routes(deps.Deps{Pool: pool, Queries: store}))
+	r.Mount("/purchase-orders", purchaseorders.Routes(deps.Deps{Pool: pool, Queries: store, Objects: StoredObjects{}}))
 
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)
@@ -213,7 +222,7 @@ func FullServer(t testing.TB, userID int64) *httptest.Server {
 	t.Helper()
 	pool := Pool(t)
 	store := Store(t)
-	d := deps.Deps{Pool: pool, Queries: store}
+	d := deps.Deps{Pool: pool, Queries: store, Objects: StoredObjects{}}
 
 	r := chi.NewRouter()
 	r.Use(withUserID(userID))

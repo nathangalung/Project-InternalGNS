@@ -65,13 +65,13 @@ func RoutesWithProofs(d deps.Deps, proofs ProofStore) chi.Router {
 	r.Post("/{id}/replacement", h.Replace)
 	r.Patch("/{id}/dates", h.UpdateDates)
 
-	attachment := attachmentAsset(d.Storage, repo)
+	attachment := attachmentAsset(d.Storage, d.Objects, repo)
 	r.Get("/{id}/attachment/upload-url", assetproxy.Upload(attachment))
 	r.Get("/{id}/attachment/download-url", assetproxy.Download(attachment))
 	r.Patch("/{id}/attachment", assetproxy.UpdateKey(attachment))
 
 	// Paid status saves the key.
-	proof := paymentProofAsset(d.Storage, repo)
+	proof := paymentProofAsset(d.Storage, d.Objects, repo)
 	r.Get("/{id}/payment-proof/upload-url", assetproxy.Upload(proof))
 	r.Get("/{id}/payment-proof/download-url", assetproxy.Download(proof))
 
@@ -95,9 +95,10 @@ func RoutesWithProofs(d deps.Deps, proofs ProofStore) chi.Router {
 }
 
 // attachmentAsset describes attachment routes.
-func attachmentAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
+func attachmentAsset(sc *storage.Client, objects deps.ObjectStore, repo *Repo) assetproxy.Descriptor {
 	return assetproxy.Descriptor{
 		Storage:     sc,
+		Objects:     objects,
 		Bucket:      storage.BucketInvoiceAttachments,
 		KeyPrefix:   keyPrefix,
 		NotFoundMsg: "invoice not found",
@@ -126,8 +127,8 @@ func attachmentAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
 }
 
 // paymentProofAsset describes proof routes.
-func paymentProofAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
-	d := attachmentAsset(sc, repo)
+func paymentProofAsset(sc *storage.Client, objects deps.ObjectStore, repo *Repo) assetproxy.Descriptor {
+	d := attachmentAsset(sc, objects, repo)
 	d.KeySub = proofKeySub
 	d.NoAssetMsg = "no payment proof"
 	d.CurrentAsset = func(ctx context.Context, id int64) (assetproxy.Asset, error) {

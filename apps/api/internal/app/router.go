@@ -83,6 +83,10 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 		},
 		Storage: storageClient,
 	}
+	// A nil client must stay a nil interface.
+	if storageClient != nil {
+		d.Objects = storageClient
+	}
 
 	authSvc := auth.NewService(users.NewRepo(pool, store), cfg.JWTSecret, cfg.JWTExpiry).
 		WithRefresh(auth.NewRefreshRepo(pool, store), cfg.RefreshTokenExpiry)

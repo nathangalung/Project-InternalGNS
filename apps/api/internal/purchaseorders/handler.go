@@ -23,10 +23,13 @@ import (
 
 type Handler struct {
 	repo *Repo
+	// objects may be nil.
+	// Nil means storage is not configured.
+	objects deps.ObjectStore
 }
 
-func NewHandler(repo *Repo) *Handler {
-	return &Handler{repo: repo}
+func NewHandler(repo *Repo, objects deps.ObjectStore) *Handler {
+	return &Handler{repo: repo, objects: objects}
 }
 
 // parseListFilter reads unpaged list filters.
@@ -187,6 +190,9 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 		}))
 		return
 	}
+	if !h.fileUploaded(w, r, req.ObjectKey) {
+		return
+	}
 
 	actor := deps.CurrentUserID(r.Context())
 	if err := h.repo.UpdateFile(r.Context(), id, req, actor); err != nil {
@@ -201,6 +207,28 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// fileUploaded confirms the upload arrived.
+// A valid key only says where an upload would land; attaching moves the PO
+// to UPLOADED, so it must never point at a file that never arrived.
+func (h *Handler) fileUploaded(w http.ResponseWriter, r *http.Request, key string) bool {
+	if h.objects == nil {
+		httperr.Render(w, httperr.ServiceUnavailable("Penyimpanan berkas belum dikonfigurasi."))
+		return false
+	}
+	ok, err := h.objects.ObjectExists(r.Context(), storage.BucketPODocs, key)
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, fmt.Errorf("po file stat: %w", err))
+		return false
+	}
+	if !ok {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{
+			"objectKey": "Berkas PO belum terunggah. Unggah ulang berkasnya lalu simpan kembali.",
+		}))
+		return false
+	}
+	return true
 }
 
 func (h *Handler) UpdateNotes(w http.ResponseWriter, r *http.Request) {
