@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_po_items (deployed by migration 00061).
+-- Canonical current body of fn_update_po_items (deployed by migration 00071).
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -30,6 +30,20 @@ BEGIN
 
   IF p_items IS NULL OR jsonb_typeof(p_items) <> 'array' THEN
     RAISE EXCEPTION 'items must be a JSON array'
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  -- Every element becomes a product line.
+  IF jsonb_array_length(p_items) = 0 THEN
+    RAISE EXCEPTION 'PO harus memiliki minimal satu baris produk.'
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM jsonb_array_elements(p_items) AS e
+    WHERE COALESCE(NULLIF(e->>'sellingPrice', '')::NUMERIC, 0) <= 0
+  ) THEN
+    RAISE EXCEPTION 'Semua baris produk harus memiliki harga jual.'
       USING ERRCODE = 'P0014';
   END IF;
 

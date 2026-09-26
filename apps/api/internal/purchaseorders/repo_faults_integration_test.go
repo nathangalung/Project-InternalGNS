@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -79,20 +80,17 @@ func TestRepo_Completeness_NotFound(t *testing.T) {
 	assert.ErrorIs(t, err, purchaseorders.ErrNotFound)
 }
 
-// No lines drops every line.
-// A nil slice is sent as an empty array, not as JSON null, which the
-// function would refuse.
-func TestRepo_UpdateItems_NilItemsClearsLines(t *testing.T) {
+// Nil lines send an array.
+// A nil slice goes out as an empty array, not as JSON null, so the function
+// refuses it for having no product line rather than for its shape.
+func TestRepo_UpdateItems_NilItemsSendsEmptyArray(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
 	_, err := repo.UpdateItems(ctx, poID, purchaseorders.UpdateItemsRequest{DiscountPct: "0"}, seedUserID, nil)
-	require.NoError(t, err)
-	items, err := repo.ListItems(ctx, poID)
-	require.NoError(t, err)
-	assert.Empty(t, items)
-	po, err := repo.GetByID(ctx, poID)
-	require.NoError(t, err)
-	assert.Equal(t, "0", po.PoGrandTotal)
+	var pgErr *pgconn.PgError
+	require.ErrorAs(t, err, &pgErr)
+	assert.Equal(t, "P0014", pgErr.Code)
+	assert.Equal(t, "PO harus memiliki minimal satu baris produk.", pgErr.Message)
 }

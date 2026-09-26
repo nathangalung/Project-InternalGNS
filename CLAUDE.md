@@ -162,7 +162,10 @@ document's status history table.
   goes to ON_PROGRESS; ON_PROGRESS to DELIVERED or back to UPLOADED; any open
   state to CANCELLED with a reason. The delivery-note number is stamped on
   ON_PROGRESS or DELIVERED, and DELIVERED creates the invoice. DELIVERED and
-  CANCELLED are terminal, and the file is locked in both.
+  CANCELLED are terminal, and the file is locked in both. A PO keeps at least
+  one product line and every product line priced above zero: the line edit
+  (`fn_update_po_items`) refuses otherwise, and so do ON_PROGRESS and
+  DELIVERED, so no Rp 0 invoice is issued. A qty 0 line stays allowed.
 - Invoice: draft, sent, paid, cancelled; overdue is stored only on legacy
   rows. Draft goes to sent; sent or overdue to paid, which stamps `paid_at`
   and takes an optional proof stored under `invoices/<id>/payment/`. Draft,
