@@ -30,7 +30,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(requestIDResponseMiddleware)
-	r.Use(trustedProxyIP)
+	r.Use(clientIP)
 	r.Use(accessLogMiddleware)
 	r.Use(middleware.Recoverer)
 	r.Use(requestTimeout(defaultRequestTimeout, renderRequestTimeout, uploadRequestTimeout))
@@ -82,6 +82,10 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 			SellerIDTKU: cfg.CoretaxSellerIDTKU,
 		},
 		Storage: storageClient,
+	}
+	// A nil client must stay a nil interface.
+	if storageClient != nil {
+		d.Objects = storageClient
 	}
 
 	authSvc := auth.NewService(users.NewRepo(pool, store), cfg.JWTSecret, cfg.JWTExpiry).

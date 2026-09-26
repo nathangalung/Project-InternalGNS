@@ -23,7 +23,7 @@ import (
 // Every row a test creates rolls back with it, so nothing reaches the
 // shared database and no cleanup is needed. Requests run one at a time,
 // which is all a pgx.Tx supports. Storage is the zero client: presigning
-// builds a proxy path and never calls MinIO.
+// builds a proxy path and never calls MinIO, and Objects finds every upload.
 func txServer(t *testing.T) (context.Context, pgx.Tx, *httptest.Server) {
 	t.Helper()
 	ctx, tx := testutil.BeginTx(t)
@@ -40,6 +40,7 @@ func execServer(t *testing.T, exec db.Executor, templatesRoot string) *httptest.
 		Pool:          exec,
 		Queries:       testutil.Store(t),
 		Storage:       &storage.Client{},
+		Objects:       testutil.StoredObjects{},
 		TemplatesRoot: templatesRoot,
 	}))
 	srv := httptest.NewServer(r)
@@ -48,7 +49,7 @@ func execServer(t *testing.T, exec db.Executor, templatesRoot string) *httptest.
 }
 
 // problem decodes RFC 7807 bodies.
-// Code carries the PO lock code.
+// Code tags a lock or a stale version.
 type problem struct {
 	Status int               `json:"status"`
 	Detail string            `json:"detail"`

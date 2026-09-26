@@ -226,7 +226,16 @@ describe("useUpdateInvoiceDates", () => {
   })
 
   it("reloads a row changed elsewhere and says so in Indonesian", async () => {
-    m.updateDates.mockRejectedValue(new ApiError(409, null, "row_version mismatch"))
+    m.updateDates.mockRejectedValue(
+      new ApiError(
+        409,
+        {
+          code: "version_conflict",
+          detail: "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
+        },
+        "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
+      ),
+    )
     const { qc, result } = renderQueryHook(() => useUpdateInvoiceDates())
     seed(qc, views)
     await settle(() => result.current.mutateAsync(vars))
@@ -234,6 +243,15 @@ describe("useUpdateInvoiceDates", () => {
     expect(toast.error).toHaveBeenCalledWith(
       "Invoice ini baru saja diubah di tempat lain. Periksa tanggalnya lalu simpan lagi.",
     )
+  })
+
+  it("shows an untagged conflict without reloading", async () => {
+    m.updateDates.mockRejectedValue(new ApiError(409, { detail: "Konflik lain." }, "Konflik lain."))
+    const { qc, result } = renderQueryHook(() => useUpdateInvoiceDates())
+    seed(qc, views)
+    await settle(() => result.current.mutateAsync(vars))
+    expect(toast.error).toHaveBeenCalledWith("Konflik lain.")
+    expect(invalidated(qc, views)).toEqual([])
   })
 
   it("shows any other refusal without reloading", async () => {

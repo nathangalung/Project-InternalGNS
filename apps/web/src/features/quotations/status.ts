@@ -57,6 +57,9 @@ export function statusChangeToast(err: unknown): string | undefined {
   return errorMessage(err, "Gagal mengubah status quotation.")
 }
 
+export const QUOTATION_CONFLICT_MESSAGE =
+  "Data quotation sudah diubah pengguna lain. Halaman dimuat ulang, periksa lalu simpan kembali."
+
 // Status bar helper text.
 //
 // Says why a move the user expects is missing, instead of an empty menu.

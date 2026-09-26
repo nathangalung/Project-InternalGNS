@@ -31,6 +31,8 @@ export type QuotationDetail = SeedQuotation & {
   grandTotal: string
   notes?: string
   vesselName?: string
+  validityDays?: number
+  rowVersion: number
   allowedTransitions: Transition[]
   canRevise: boolean
 }
@@ -64,12 +66,27 @@ export function uniquePrefix(): string {
   return `E2E${randomBytes(4).toString("hex").toUpperCase()}`
 }
 
-export async function api<T>(method: Method, path: string, body?: unknown): Promise<T> {
+// IMPA code no real item holds.
+//
+// Active codes are unique and the master data holds real six-digit ones, so
+// a random six-digit code collides now and then. Twelve digits cannot hit
+// a real one and stay numeric, as the product forms require.
+export function uniqueImpa(): string {
+  return String(10 ** 11 + Math.floor(Math.random() * 9 * 10 ** 11))
+}
+
+export async function api<T>(
+  method: Method,
+  path: string,
+  body?: unknown,
+  headers: Record<string, string> = {},
+): Promise<T> {
   const res = await fetch(`${apiURL}${path}`, {
     method,
     headers: {
       authorization: `Bearer ${adminToken()}`,
       "content-type": "application/json",
+      ...headers,
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   })
@@ -94,6 +111,43 @@ async function unitId(code: string): Promise<number> {
   const id = unitIds.get(code)
   if (id === undefined) throw new Error(`unit ${code} is not seeded`)
   return id
+}
+
+type QuotationOpts = {
+  client: SeedClient
+  lines: SeedLine[]
+  discountPct?: number
+  shippingCost?: number
+  notes?: string
+  vesselName?: string
+  validityDays?: number
+}
+
+// Create and update body.
+async function quotationBody(opts: QuotationOpts): Promise<Record<string, unknown>> {
+  const pcs = await unitId("PCS")
+  return {
+    paymentTerms: "30 days",
+    validityDays: opts.validityDays ?? 30,
+    discountPct: String(opts.discountPct ?? 0),
+    shippingAddress: "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
+    shippingDays: 7,
+    shippingCost: opts.shippingCost ? String(opts.shippingCost) : undefined,
+    notes: opts.notes,
+    vesselName: opts.vesselName,
+    items: opts.lines.map((l) => ({
+      requestedItemId: l.item.id,
+      requestedImpa: l.item.impaCode,
+      requestedName: l.item.name,
+      offeredItemId: l.item.id,
+      vendorProductId: l.item.vendorProductId,
+      qty: String(l.qty),
+      unitId: pcs,
+      sellingPrice: String(l.price),
+      costPrice: l.cost === undefined ? undefined : String(l.cost),
+      shipDestination: "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
+    })),
+  }
 }
 
 // Per-test rows, undone later.
@@ -161,7 +215,7 @@ export class SalesSeed {
   // Catalog item, optionally vendor-linked.
   async item(opts: { vendor?: SeedVendor; cost?: number; label?: string } = {}): Promise<SeedItem> {
     const name = this.name(opts.label ?? "Produk")
-    const impaCode = String(100000 + Math.floor(Math.random() * 899999))
+    const impaCode = uniqueImpa()
     const created = await api<{ id: number }>("POST", "/items", {
       name,
       impaCode,
@@ -209,41 +263,23 @@ export class SalesSeed {
   //
   // The shipping address stores a line even at a zero charge, and each line
   // carries the address too, so the ON_PROGRESS gate passes either way.
-  async quotation(opts: {
-    client: SeedClient
-    lines: SeedLine[]
-    discountPct?: number
-    shippingCost?: number
-    notes?: string
-    vesselName?: string
-  }): Promise<SeedQuotation> {
-    const pcs = await unitId("PCS")
+  async quotation(opts: QuotationOpts): Promise<QuotationDetail> {
     const created = await api<{ id: number }>("POST", "/quotations", {
       companyClientId: opts.client.id,
       contactId: opts.client.contactId,
-      paymentTerms: "30 days",
-      validityDays: 30,
-      discountPct: String(opts.discountPct ?? 0),
-      shippingAddress: "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
-      shippingDays: 7,
-      shippingCost: opts.shippingCost ? String(opts.shippingCost) : undefined,
-      notes: opts.notes,
-      vesselName: opts.vesselName,
-      items: opts.lines.map((l) => ({
-        requestedItemId: l.item.id,
-        requestedImpa: l.item.impaCode,
-        requestedName: l.item.name,
-        offeredItemId: l.item.id,
-        vendorProductId: l.item.vendorProductId,
-        qty: String(l.qty),
-        unitId: pcs,
-        sellingPrice: String(l.price),
-        costPrice: l.cost === undefined ? undefined : String(l.cost),
-        shipDestination: "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
-      })),
+      ...(await quotationBody(opts)),
     })
     this.quotations.push(created.id)
     return this.getQuotation(created.id)
+  }
+
+  // Save as another user would.
+  //
+  // Bumps rowVersion, so an editor opened earlier holds a stale version.
+  async updateQuotation(q: QuotationDetail, opts: QuotationOpts): Promise<void> {
+    await api("PUT", `/quotations/${q.id}`, await quotationBody(opts), {
+      "If-Match": String(q.rowVersion),
+    })
   }
 
   getQuotation(id: number): Promise<QuotationDetail> {
@@ -275,26 +311,8 @@ export class SalesSeed {
     return api<PurchaseOrder>("GET", `/purchase-orders/by-quotation/${quotationId}`)
   }
 
-  // Attach a PDF to PO.
-  //
-  // PENDING becomes UPLOADED. The presigned path is relative to the API base.
-  async attachPoFile(po: PurchaseOrder, fileName = "po-klien.pdf"): Promise<void> {
-    const presign = await api<{ uploadUrl: string; objectKey: string }>(
-      "GET",
-      `/purchase-orders/${po.id}/upload-url?fileName=${encodeURIComponent(fileName)}`,
-    )
-    const size = Buffer.byteLength(pdfText)
-    const res = await fetch(`${apiURL}${presign.uploadUrl}`, {
-      method: "PUT",
-      headers: { authorization: `Bearer ${adminToken()}`, "content-type": "application/pdf" },
-      body: pdfText,
-    })
-    if (!res.ok) throw new Error(`upload ${fileName}: ${res.status} ${await res.text()}`)
-    await api("PATCH", `/purchase-orders/${po.id}/file`, {
-      fileName,
-      fileSize: size,
-      objectKey: presign.objectKey,
-    })
+  attachPoFile(po: PurchaseOrder, fileName = "po-klien.pdf"): Promise<void> {
+    return uploadPoFile(adminToken(), po.id, fileName)
   }
 
   // Deliver a PO fully.
@@ -388,6 +406,53 @@ export function idFrom(href: string | null): number {
 // Smallest PDF the policy accepts.
 const pdfText =
   "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
+
+// Attach a PDF to PO.
+//
+// The app's own path: presign, PUT through the storage proxy, then attach.
+// PENDING becomes UPLOADED. The server refuses a key with no upload behind
+// it, so the object must really exist.
+export async function uploadPoFile(
+  token: string,
+  poId: number,
+  fileName = "po-klien.pdf",
+): Promise<void> {
+  const authed = async (what: string, path: string, init: RequestInit, type: string) => {
+    const res = await fetch(`${apiURL}${path}`, {
+      ...init,
+      headers: { authorization: `Bearer ${token}`, "content-type": type },
+    })
+    if (!res.ok) throw new Error(`${what}: ${res.status} ${await res.text()}`)
+    return res
+  }
+  const presign = (await (
+    await authed(
+      "presign PO file",
+      `/purchase-orders/${poId}/upload-url?fileName=${encodeURIComponent(fileName)}`,
+      {},
+      "application/json",
+    )
+  ).json()) as { uploadUrl: string; objectKey: string }
+  await authed(
+    `upload ${fileName}`,
+    presign.uploadUrl,
+    { method: "PUT", body: pdfText },
+    "application/pdf",
+  )
+  await authed(
+    "attach PO file",
+    `/purchase-orders/${poId}/file`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        fileName,
+        fileSize: Buffer.byteLength(pdfText),
+        objectKey: presign.objectKey,
+      }),
+    },
+    "application/json",
+  )
+}
 
 // PDF payload for file inputs.
 export function pdfFile(name: string): { name: string; mimeType: string; buffer: Buffer } {

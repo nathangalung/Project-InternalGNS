@@ -1,5 +1,5 @@
 import { ApiError } from "@/lib/api-client"
-import { errorMessage } from "@/lib/errors"
+import { errorMessage, isVersionConflict, problemCode } from "@/lib/errors"
 import { toNum } from "@/lib/format"
 import type { InvoiceBackendStatus, PurchaseOrderRow } from "@/types/api"
 import type { PoStatus } from "../types"
@@ -99,28 +99,13 @@ export const PO_LOCKED_CODE = "po_locked"
 // A lock is a state change, not a race: the page reloads the PO and shows the
 // server's Indonesian detail, and retrying the same write cannot succeed.
 export function isPoLockRefusal(err: unknown): boolean {
-  if (!(err instanceof ApiError) || err.status !== 409) return false
-  const body = err.body
-  return (
-    typeof body === "object" &&
-    body !== null &&
-    (body as { code?: unknown }).code === PO_LOCKED_CODE
-  )
+  return err instanceof ApiError && err.status === 409 && problemCode(err) === PO_LOCKED_CODE
 }
 
-// Stale row_version, not a lock.
+// Stale save gets PO copy.
 //
-// The optimistic-lock 409 carries an English detail, so it gets Indonesian
-// copy. The lock 409 carries its own Indonesian detail.
-export function isVersionConflict(err: unknown): boolean {
-  return (
-    err instanceof ApiError &&
-    err.status === 409 &&
-    !isPoLockRefusal(err) &&
-    /row_version/i.test(err.message)
-  )
-}
-
+// It says the page reloaded, which the server detail cannot know. A lock
+// keeps the server's own Indonesian detail.
 export function poErrorMessage(err: unknown, fallback: string): string {
   return isVersionConflict(err) ? PO_CONFLICT_MESSAGE : errorMessage(err, fallback)
 }

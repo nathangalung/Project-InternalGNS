@@ -24,7 +24,7 @@ jobs:
         working-directory: apps/api
     services:
       postgres:
-        image: postgres:18.3-alpine
+        image: postgres:18.6-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
         env:
           POSTGRES_DB: gns_citest
           POSTGRES_USER: gns_app
@@ -37,9 +37,23 @@ jobs:
           --health-timeout 3s
           --health-retries 20
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-go@v6
+      # Dependabot cannot update workflow images, only compose.dev.yml, so
+      # its compose PRs fail here until these pins are copied over.
+      - name: ci images match compose.dev.yml
+        working-directory: .
+        run: |
+          refs=$(grep -ohE '(postgres|pgsty/silo):[0-9A-Z][^[:space:]]*' .github/workflows/ci.yml | sort -u)
+          test -n "$refs"
+          for ref in $refs; do
+            grep -qxF "    image: $ref" compose.dev.yml || {
+              echo "::error::$ref differs from the compose.dev.yml pin"
+              exit 1
+            }
+          done
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: apps/api/go.mod
           cache-dependency-path: apps/api/go.sum
@@ -48,19 +62,21 @@ jobs:
         run: go vet ./...
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v9
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
-          version: v2.11
+          version: v2.14
           working-directory: apps/api
           args: --timeout=5m
+          # verify fetches the schema from golangci-lint.run at run time.
+          verify: false
 
       # Service containers cannot pass `server /data`, so MinIO runs by hand.
       - name: start minio
         run: |
           docker run -d --name minio -p 9000:9000 \
             -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
-            pgsty/silo:RELEASE.2026-09-16T00-00-00Z server /data
-          for i in $(seq 1 30); do
+            pgsty/silo:RELEASE.2026-09-16T00-00-00Z@sha256:635197cb9f36d01bee221d34d1c7d7960f6a95c48b0b6c01d99cd13bdae51a46 server /data
+          for _ in $(seq 1 30); do
             curl -fsS http://127.0.0.1:9000/minio/health/live && exit 0
             sleep 1
           done
@@ -78,14 +94,14 @@ jobs:
         run: go test ./... -race -count=1 -p=1 -covermode=atomic -coverpkg=./... -coverprofile=coverage.out
 
       - name: upload coverage profile
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: go-coverage
           path: apps/api/coverage.out
           retention-days: 14
 
       - name: govulncheck
-        uses: golang/govulncheck-action@v1
+        uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1.1.0
         with:
           go-version-file: apps/api/go.mod
           go-package: ./...
@@ -103,9 +119,9 @@ jobs:
       run:
         working-directory: apps/api
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: apps/api/go.mod
           cache-dependency-path: apps/api/go.sum
@@ -113,10 +129,10 @@ jobs:
       - name: download modules
         run: go mod download
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: build api image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ./apps/api
           push: false
@@ -160,9 +176,13 @@ jobs:
       run:
         working-directory: apps/web
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: apps/web/package.json
 
@@ -198,14 +218,14 @@ jobs:
       run:
         working-directory: apps/api
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: apps/api/go.mod
           cache-dependency-path: apps/api/go.sum
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: go-coverage
           path: apps/api
@@ -221,9 +241,13 @@ jobs:
       run:
         working-directory: apps/web
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: apps/web/package.json
 
@@ -235,7 +259,7 @@ jobs:
 
       - name: upload coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: web-coverage
           path: apps/web/coverage
@@ -248,7 +272,7 @@ jobs:
     needs: [frontend, backend]
     services:
       postgres:
-        image: postgres:18.3-alpine
+        image: postgres:18.6-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
         env:
           POSTGRES_DB: gns_e2e_test
           POSTGRES_USER: gns_app
@@ -276,14 +300,18 @@ jobs:
       E2E_ADMIN_EMAIL: admin@globalsakti.com
       E2E_ADMIN_PASSWORD: AdminGNS123!
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: apps/api/go.mod
           cache-dependency-path: apps/api/go.sum
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: apps/web/package.json
 
@@ -291,8 +319,8 @@ jobs:
         run: |
           docker run -d --name minio -p 9000:9000 \
             -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
-            pgsty/silo:RELEASE.2026-09-16T00-00-00Z server /data
-          for i in $(seq 1 30); do
+            pgsty/silo:RELEASE.2026-09-16T00-00-00Z@sha256:635197cb9f36d01bee221d34d1c7d7960f6a95c48b0b6c01d99cd13bdae51a46 server /data
+          for _ in $(seq 1 30); do
             curl -fsS http://127.0.0.1:9000/minio/health/live && exit 0
             sleep 1
           done
@@ -315,7 +343,7 @@ jobs:
         run: |
           ./bin/api > /tmp/api.log 2>&1 &
           echo "API_PID=$!" >> "$GITHUB_ENV"
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8080/healthz > /dev/null; then
               echo "api ready"
               exit 0
@@ -342,7 +370,7 @@ jobs:
         run: |
           bun run build
           bun run preview --port 4173 --strictPort --host 127.0.0.1 > /tmp/preview.log 2>&1 &
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             curl -fsS http://127.0.0.1:4173/login > /dev/null && exit 0
             sleep 1
           done
@@ -361,11 +389,11 @@ jobs:
 
       - name: stop api
         if: always()
-        run: kill $API_PID 2>/dev/null || true
+        run: kill "$API_PID" 2>/dev/null || true
 
       - name: upload playwright report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report
           path: |
@@ -380,7 +408,7 @@ jobs:
     needs: [frontend, backend]
     services:
       postgres:
-        image: postgres:18.3-alpine
+        image: postgres:18.6-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
         env:
           POSTGRES_DB: gns_citest
           POSTGRES_USER: gns_app
@@ -402,14 +430,18 @@ jobs:
       SUPERADMIN_NAME: Administrator
       SUPERADMIN_PASSWORD: AdminGNS123!
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: apps/api/go.mod
           cache-dependency-path: apps/api/go.sum
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: apps/web/package.json
 
@@ -422,7 +454,7 @@ jobs:
         run: |
           go run ./cmd/api > /tmp/api.log 2>&1 &
           echo "API_PID=$!" >> "$GITHUB_ENV"
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8080/healthz > /dev/null; then
               echo "api ready"
               exit 0
@@ -439,7 +471,7 @@ jobs:
 
       - name: install chrome
         id: setup-chrome
-        uses: browser-actions/setup-chrome@v1
+        uses: browser-actions/setup-chrome@48ad923757ca74d66703209fe939badbdf80f2f4 # v2.2.0
         with:
           chrome-version: stable
 
@@ -464,11 +496,11 @@ jobs:
 
       - name: stop api
         if: always()
-        run: kill $API_PID 2>/dev/null || true
+        run: kill "$API_PID" 2>/dev/null || true
 
       - name: upload lhci report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: lighthouse-report
           path: apps/web/.lighthouseci
@@ -479,10 +511,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: trivy fs scan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -498,12 +530,12 @@ jobs:
     timeout-minutes: 15
     needs: [backend, frontend]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: build api image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ./apps/api
           push: false
@@ -512,7 +544,7 @@ jobs:
           cache-to: type=gha,scope=api,mode=max
 
       - name: build web image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ./apps/web
           push: false

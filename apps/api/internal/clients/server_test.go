@@ -32,7 +32,7 @@ func mountedSrv(t *testing.T, exec db.Executor) *httptest.Server {
 		})
 	})
 	r.Mount("/clients", clients.Routes(deps.Deps{
-		Pool: exec, Queries: testutil.Store(t), Storage: &storage.Client{},
+		Pool: exec, Queries: testutil.Store(t), Storage: &storage.Client{}, Objects: testutil.StoredObjects{},
 	}))
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)

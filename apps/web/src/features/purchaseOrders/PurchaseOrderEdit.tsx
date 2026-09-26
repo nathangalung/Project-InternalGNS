@@ -9,6 +9,7 @@ import Step2Product from "@/features/quotations/Step2Product"
 import Step3Shipping from "@/features/quotations/Step3Shipping"
 import Step4Summary from "@/features/quotations/Step4Summary"
 import { useUnits } from "@/features/units/hooks"
+import { isVersionConflict } from "@/lib/errors"
 import { computeTaxBreakdown, formatNumber as formatRp, toNum } from "@/lib/format"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
@@ -21,7 +22,7 @@ import {
   poLinesToEdit,
 } from "./adapters"
 import { usePoItems, usePurchaseOrderByQuotation, useUpdatePoItems } from "./hooks"
-import { isPoLockRefusal, isVersionConflict } from "./PurchaseOrderDetail/helpers"
+import { isPoLockRefusal } from "./PurchaseOrderDetail/helpers"
 
 type PurchaseOrderEditProps = {
   // Resolved from the route's quotation id

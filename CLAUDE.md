@@ -8,11 +8,11 @@ InternalGNS is the internal quotation to purchase-order to invoice system for
 PT Global Niaga Sakti. It is a Go REST API and a React single-page app in a
 Bun-managed monorepo.
 
-- Backend (`apps/api`): Go 1.26, Chi v5 router, pgx v5 against PostgreSQL,
+- Backend (`apps/api`): Go 1.27, Chi v5 router, pgx v5 against PostgreSQL,
   Goose migrations, JWT auth with role-based access, slog logging. SQL is
   hand-written in `.sql` files that are embedded and parsed at startup
   (`apps/api/db/queries`); there is no ORM or code generator.
-- Frontend (`apps/web`): React 19 with strict TypeScript, Vite 7, TanStack
+- Frontend (`apps/web`): React 19 with strict TypeScript, Vite 8, TanStack
   Router and Query, Bun runtime, Biome for lint and format. Tables are plain
   markup; there is no table library.
 - Styling is Tailwind CSS v4 only. `src/styles/tailwind.css` is the only
@@ -23,8 +23,8 @@ Bun-managed monorepo.
   and avatar fills). Responsive down to 320px.
 - Infra: PostgreSQL 18, MinIO for object storage, xelatex for PDF rendering,
   Dokploy with Traefik for deployment, Nginx to serve the built frontend.
-  The MinIO server is the Silo fork (`pgsty/silo`, pinned by release tag in
-  both compose files and `ci.yml`), since MinIO, Inc. pulled its images; its
+  The MinIO server is the Silo fork (`pgsty/silo`, pinned by release tag and
+  index digest in both compose files and `ci.yml`), since MinIO, Inc. pulled its images; its
   client is `mcli`, not `mc`. The Go SDK stays `minio-go`.
   Two compose files sit at the repo root: `compose.dev.yml` for local work and
   `compose.prod.yml` for the VPS, with `.env.prod.example` as its template.
@@ -122,7 +122,10 @@ db/
 
 Handlers stay thin; each feature owns its repo and DTOs. The API is mounted
 under `/api/v1`. Errors are RFC 7807 problem+json (`shared/httperr`). List
-endpoints return the total count in the `X-Total-Count` header.
+endpoints return the total count in the `X-Total-Count` header. A stale
+`If-Match` is a 409 from `httperr.VersionConflict()` with `code:
+"version_conflict"` (a PO lock carries `po_locked`); the web branches on the
+code through `lib/errors.ts`, never on the detail text.
 
 Every query key a repo reads is listed in `db/queries/required.go`, and
 `Load()` fails at startup when one is missing; add the key in the same commit
@@ -158,11 +161,16 @@ document's status history table.
   `pg_try_advisory_xact_lock` keeps two replicas from both doing a run.
 - Purchase order: PENDING, UPLOADED, ON_PROGRESS, DELIVERED, CANCELLED.
   PENDING and UPLOADED follow the PO file: attaching it moves PENDING to
-  UPLOADED and removing it moves back, and neither is a manual move. UPLOADED
+  UPLOADED and removing it moves back, and neither is a manual move. Every
+  attach (PO file, logo, item image, invoice attachment or proof) first stats
+  the object, so a key with no upload behind it is a 422. UPLOADED
   goes to ON_PROGRESS; ON_PROGRESS to DELIVERED or back to UPLOADED; any open
   state to CANCELLED with a reason. The delivery-note number is stamped on
   ON_PROGRESS or DELIVERED, and DELIVERED creates the invoice. DELIVERED and
-  CANCELLED are terminal, and the file is locked in both.
+  CANCELLED are terminal, and the file is locked in both. A PO keeps at least
+  one product line and every product line priced above zero: the line edit
+  (`fn_update_po_items`) refuses otherwise, and so do ON_PROGRESS and
+  DELIVERED, so no Rp 0 invoice is issued. A qty 0 line stays allowed.
 - Invoice: draft, sent, paid, cancelled; overdue is stored only on legacy
   rows. Draft goes to sent; sent or overdue to paid, which stamps `paid_at`
   and takes an optional proof stored under `invoices/<id>/payment/`. Draft,

@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net"
 	"net/http"
+	"net/netip"
 	"strings"
 	"time"
 
@@ -15,21 +17,46 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
-// trustedProxyIP takes the last hop.
-// It sets the client IP from the last proxy hop.
-func trustedProxyIP(next http.Handler) http.Handler {
-	// Our single reverse proxy appends the real client to X-Forwarded-For,
-	// so the last hop is trustworthy. True-Client-IP, X-Real-IP, and earlier
-	// XFF entries are attacker-controlled and must not key the rate limiter.
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-			parts := strings.Split(xff, ",")
-			if last := strings.TrimSpace(parts[len(parts)-1]); last != "" {
-				r.RemoteAddr = last
-			}
+// clientIP resolves the real client.
+// The API publishes no port, so only Traefik (on dokploy-network), co-tenant
+// containers, and the in-container healthcheck can open a connection, all
+// from private or loopback addresses. Traefik appends the client it saw to
+// X-Forwarded-For, so for such a peer the rightmost entry is the client;
+// entries left of it, True-Client-IP, and X-Real-IP are attacker-controlled.
+// A public peer is not our proxy, so its headers are ignored and the peer
+// itself is the client. Read the result with middleware.GetClientIP; it keys
+// the login limiter and the access log.
+func clientIP(next http.Handler) http.Handler {
+	fromPeer := middleware.ClientIPFromRemoteAddr(next)
+	// A proxied request without a usable last hop falls back to the peer.
+	fromProxy := middleware.ClientIPFromXFFTrustedProxies(1)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if middleware.GetClientIPAddr(r.Context()).IsValid() {
+			next.ServeHTTP(w, r)
+			return
 		}
-		next.ServeHTTP(w, r)
+		fromPeer.ServeHTTP(w, r)
+	}))
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if peerIsProxy(r.RemoteAddr) {
+			fromProxy.ServeHTTP(w, r)
+			return
+		}
+		fromPeer.ServeHTTP(w, r)
 	})
+}
+
+// peerIsProxy trusts private, loopback peers.
+func peerIsProxy(remoteAddr string) bool {
+	host, _, err := net.SplitHostPort(remoteAddr)
+	if err != nil {
+		host = remoteAddr
+	}
+	ip, err := netip.ParseAddr(host)
+	if err != nil {
+		return false
+	}
+	ip = ip.Unmap()
+	return ip.IsPrivate() || ip.IsLoopback()
 }
 
 // Propagate request id header.
@@ -62,7 +89,7 @@ func accessLogMiddleware(next http.Handler) http.Handler {
 			slog.Int("status", status),
 			slog.Int("bytes", ww.BytesWritten()),
 			slog.Duration("duration", elapsed),
-			slog.String("remote", r.RemoteAddr),
+			slog.String("remote", middleware.GetClientIP(r.Context())),
 		}
 		level := slog.LevelInfo
 		switch {

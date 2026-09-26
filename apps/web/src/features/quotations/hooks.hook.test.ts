@@ -20,6 +20,7 @@ import {
   useUpdateQuotationContact,
   useUpsertQuotationRequest,
 } from "./hooks"
+import { QUOTATION_CONFLICT_MESSAGE } from "./status"
 
 vi.mock("./api")
 vi.mock("@/lib/toast", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }))
@@ -157,6 +158,22 @@ describe("quotation writes", () => {
     const { result } = renderQueryHook(hook)
     await settle(() => result.current.mutateAsync(vars as never))
     expect(toast.error).toHaveBeenCalledWith(msg)
+  })
+
+  it("update toasts Indonesian copy when another save won the race", async () => {
+    m.update.mockRejectedValue(
+      new ApiError(
+        409,
+        {
+          code: "version_conflict",
+          detail: "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
+        },
+        "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
+      ),
+    )
+    const { result } = renderQueryHook(() => useUpdateQuotation())
+    await settle(() => result.current.mutateAsync({ id: 5, input: {} as never, rowVersion: 1 }))
+    expect(toast.error).toHaveBeenCalledWith(QUOTATION_CONFLICT_MESSAGE)
   })
 
   it("contact change refreshes only that quotation", async () => {

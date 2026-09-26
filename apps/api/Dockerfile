@@ -1,4 +1,4 @@
-FROM golang:1.26.8-alpine AS build
+FROM golang:1.27.1-alpine@sha256:8a5910f31396cd4d89662f56c68b3ae31d374308270a1c3bd96672ee5ed43414 AS build
 WORKDIR /src
 
 RUN apk add --no-cache ca-certificates tzdata git
@@ -21,7 +21,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 # Runtime needs a XeLaTeX engine for PDF export, so distroless is not viable.
 # debian-slim + minimal TeX Live covers the templates' packages and fontspec.
-FROM debian:bookworm-slim
+FROM debian:bookworm-slim@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251
 WORKDIR /app
 
 ENV DEBIAN_FRONTEND=noninteractive

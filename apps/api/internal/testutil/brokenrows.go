@@ -5,6 +5,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // BrokenStreamExec breaks a result stream.
@@ -52,6 +53,7 @@ func (r *brokenRows) Scan(_ ...any) error                          { return ErrF
 func (r *brokenRows) Values() ([]any, error)                       { return nil, ErrFake }
 func (r *brokenRows) RawValues() [][]byte                          { return nil }
 func (r *brokenRows) Conn() *pgx.Conn                              { return nil }
+func (r *brokenRows) TypeMap() *pgtype.Map                         { return pgtype.NewMap() }
 
 func (r *brokenRows) Next() bool {
 	if r.left == 0 {

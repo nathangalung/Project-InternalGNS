@@ -38,14 +38,14 @@ help: ## Show available targets
 
 # Local toolchain prep.
 setup: ## Prep env, deps, tools
-	@command -v go     >/dev/null || { echo "missing: go (need 1.26+)"; exit 1; }
+	@command -v go     >/dev/null || { echo "missing: go (need 1.27+)"; exit 1; }
 	@command -v bun    >/dev/null || { echo "missing: bun (need 1.3+)"; exit 1; }
 	@command -v docker >/dev/null || { echo "missing: docker"; exit 1; }
 	@test -f $(API_DIR)/.env || cp $(API_DIR)/.env.example $(API_DIR)/.env
 	@test -f $(WEB_DIR)/.env || cp $(WEB_DIR)/.env.example $(WEB_DIR)/.env
 	@command -v goose >/dev/null 2>&1 || { \
 	  echo "installing goose..."; \
-	  go install github.com/pressly/goose/v3/cmd/goose@v3.27.1; \
+	  go install github.com/pressly/goose/v3/cmd/goose@v3.28.0; \
 	}
 	cd $(API_DIR) && go mod tidy
 	cd $(WEB_DIR) && bun install
@@ -154,7 +154,7 @@ db-functions-dump: db-up ## Regenerate db/functions from the live DB
 db-erd: db-up ## Regenerate docs/erd from the live dev DB (requires tbls)
 	@command -v tbls >/dev/null 2>&1 || { \
 	  echo "installing tbls..."; \
-	  go install github.com/k1LoW/tbls@latest; \
+	  go install github.com/k1LoW/tbls@v1.96.0; \
 	}
 	tbls doc --force
 
@@ -188,7 +188,9 @@ build-web: ## Build FE bundle
 test: test-api test-web ## Run all tests
 
 # The suites TRUNCATE, so they only ever get a database built here.
+# The name guard fires at expansion, so it also stops make -n.
 test-db-reset: db-up ## Recreate the throwaway test database
+	$(if $(filter-out 1,$(words $(CI_TEST_DB)))$(filter-out %test,$(CI_TEST_DB)),$(error refusing CI_TEST_DB '$(CI_TEST_DB)': it must be one name ending in test))
 	@$(COMPOSE_DEV) exec -T postgres psql -U gns_app -d postgres \
 	  -c "DROP DATABASE IF EXISTS $(CI_TEST_DB) WITH (FORCE);" \
 	  -c "CREATE DATABASE $(CI_TEST_DB) OWNER gns_app;" >/dev/null
@@ -247,7 +249,7 @@ types: ## TypeScript typecheck (FE)
 # the pre-commit binary so the repo stays python-toolchain-free.
 hooks-install: ## Install git pre-commit hooks (auto-installs pre-commit via uv)
 	@command -v uv >/dev/null 2>&1 || { echo "missing: uv (https://docs.astral.sh/uv/)"; exit 1; }
-	@command -v pre-commit >/dev/null 2>&1 || uv tool install pre-commit
+	@command -v pre-commit >/dev/null 2>&1 || uv tool install pre-commit==4.6.2
 	pre-commit install
 
 hooks-run: ## Run all hooks against every file (CI-style sweep)

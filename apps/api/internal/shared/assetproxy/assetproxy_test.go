@@ -22,10 +22,23 @@ import (
 
 var errDB = errors.New("boom")
 
+// fakeObjects answers stat calls.
+type fakeObjects struct {
+	found bool
+	err   error
+	asked []string
+}
+
+func (f *fakeObjects) ObjectExists(_ context.Context, bucket, key string) (bool, error) {
+	f.asked = append(f.asked, bucket+"/"+key)
+	return f.found, f.err
+}
+
 // base wires an in-memory asset.
 func base(key string) assetproxy.Descriptor {
 	return assetproxy.Descriptor{
 		Storage:     &storage.Client{},
+		Objects:     &fakeObjects{found: true},
 		Bucket:      storage.BucketItemImages,
 		KeyPrefix:   "items",
 		NotFoundMsg: "item not found",
@@ -74,10 +87,11 @@ func TestDownload_NilStorageBeatsBadID(t *testing.T) {
 }
 
 // UpdateKey parses ids without storage.
-// It has no storage dependency, so a bad id is a 400.
+// Storage is checked last, so a bad id is still a 400.
 func TestUpdateKey_NilStorageStillParsesID(t *testing.T) {
 	d := base("")
 	d.Storage = nil
+	d.Objects = nil
 	rec := serve(t, http.MethodPatch, "/{id}", "/abc", assetproxy.UpdateKey(d), `{"objectKey":"k"}`)
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 	assert.Equal(t, "invalid id", decode(t, rec)["detail"])
@@ -412,4 +426,92 @@ func TestUpdateKey_OwnerMissingBeatsKeyCheck(t *testing.T) {
 		`{"objectKey":"items/1/1790-a.png"}`)
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 	assert.Equal(t, "item not found", decode(t, rec)["detail"])
+}
+
+// Attach needs the uploaded object.
+// A valid key only says where an upload would land, so the stored key must
+// never point at a file that never arrived.
+func TestUpdateKey_ObjectMustExist(t *testing.T) {
+	const key = "items/7/1790-a.png"
+	cases := []struct {
+		name      string
+		store     *fakeObjects
+		key       string
+		status    int
+		detail    string
+		field     string
+		asked     bool
+		persisted bool
+	}{
+		{
+			name:   "storage not configured",
+			key:    key,
+			status: http.StatusServiceUnavailable,
+			detail: "storage not configured",
+		},
+		{
+			name:   "a foreign key before storage",
+			key:    "items/8/1790-a.png",
+			status: http.StatusUnprocessableEntity,
+			detail: "Berkas tidak dikenali. Unggah ulang berkasnya lalu simpan kembali.",
+			field:  "Berkas tidak dikenali. Unggah ulang berkasnya lalu simpan kembali.",
+		},
+		{
+			name:   "never uploaded",
+			store:  &fakeObjects{},
+			key:    key,
+			status: http.StatusUnprocessableEntity,
+			detail: "Berkas belum terunggah. Unggah ulang berkasnya lalu simpan kembali.",
+			field:  "Berkas belum terunggah. Unggah ulang berkasnya lalu simpan kembali.",
+			asked:  true,
+		},
+		{
+			name:   "storage fails",
+			store:  &fakeObjects{err: errDB},
+			key:    key,
+			status: http.StatusInternalServerError,
+			detail: "internal server error",
+			asked:  true,
+		},
+		{
+			name:      "uploaded",
+			store:     &fakeObjects{found: true},
+			key:       key,
+			status:    http.StatusNoContent,
+			asked:     true,
+			persisted: true,
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			var persisted bool
+			d := base("")
+			d.Objects = nil
+			if c.store != nil {
+				d.Objects = c.store
+			}
+			d.SetKey = func(context.Context, int64, string, int64) error {
+				persisted = true
+				return nil
+			}
+			rec := serve(t, http.MethodPatch, "/{id}", "/7", assetproxy.UpdateKey(d), `{"objectKey":" `+c.key+` "}`)
+			require.Equal(t, c.status, rec.Code)
+			if c.detail != "" {
+				body := decode(t, rec)
+				assert.Equal(t, c.detail, body["detail"])
+				fields, _ := body["fields"].(map[string]any)
+				if c.field != "" {
+					assert.Equal(t, c.field, fields["objectKey"])
+				}
+			}
+			if c.store != nil {
+				var want []string
+				if c.asked {
+					want = []string{storage.BucketItemImages + "/" + c.key}
+				}
+				assert.Equal(t, want, c.store.asked)
+			}
+			assert.Equal(t, c.persisted, persisted)
+		})
+	}
 }

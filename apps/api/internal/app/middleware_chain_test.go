@@ -11,40 +11,61 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Limiter keys on last hop.
-// Earlier X-Forwarded-For entries come from the client, so trusting them
-// would let anyone dodge the login limit by inventing an address.
-func TestTrustedProxyIP(t *testing.T) {
+// Client IP trusts only the proxy.
+// Earlier X-Forwarded-For entries come from the client, and a public peer is
+// not Traefik, so trusting either would let anyone dodge the login limit by
+// inventing an address.
+func TestClientIP(t *testing.T) {
+	const traefik = "10.0.1.5:40000"
 	cases := []struct {
-		name string
-		xff  string
-		want string
+		name   string
+		peer   string
+		xff    []string
+		header [2]string
+		want   string
 	}{
-		{"no header keeps the peer", "", "192.0.2.1:1234"},
-		{"single hop", "203.0.113.7", "203.0.113.7"},
-		{"spoofed entries ignored", "1.1.1.1, 2.2.2.2, 203.0.113.7", "203.0.113.7"},
-		{"spaces trimmed", "1.1.1.1 ,  203.0.113.7  ", "203.0.113.7"},
-		{"empty last hop keeps the peer", "1.1.1.1, ", "192.0.2.1:1234"},
+		{name: "proxied single hop", peer: traefik, xff: []string{"203.0.113.7"}, want: "203.0.113.7"},
+		{name: "proxied spoofed entries ignored", peer: traefik, xff: []string{"1.1.1.1, 2.2.2.2, 203.0.113.7"}, want: "203.0.113.7"},
+		{name: "proxied duplicate headers merge", peer: traefik, xff: []string{"1.1.1.1", "203.0.113.7"}, want: "203.0.113.7"},
+		{name: "proxied spaces trimmed", peer: traefik, xff: []string{"1.1.1.1 ,  203.0.113.7  "}, want: "203.0.113.7"},
+		{name: "proxied v4-mapped folds", peer: traefik, xff: []string{"::ffff:203.0.113.7"}, want: "203.0.113.7"},
+		{name: "loopback peer is trusted", peer: "127.0.0.1:5555", xff: []string{"203.0.113.7"}, want: "203.0.113.7"},
+		{name: "v4-mapped private peer is trusted", peer: "[::ffff:172.18.0.3]:80", xff: []string{"203.0.113.7"}, want: "203.0.113.7"},
+		{name: "proxied without header keeps the peer", peer: traefik, want: "10.0.1.5"},
+		// chi skips empty entries; Traefik always appends a non-empty client.
+		{name: "proxied empty entries skipped", peer: traefik, xff: []string{"203.0.113.7, , "}, want: "203.0.113.7"},
+		{name: "proxied blank header keeps the peer", peer: traefik, xff: []string{" , "}, want: "10.0.1.5"},
+		{name: "proxied garbage last hop keeps the peer", peer: traefik, xff: []string{"1.1.1.1, not-an-ip"}, want: "10.0.1.5"},
+		{name: "public peer ignores forwarded for", peer: "198.51.100.9:1234", xff: []string{"203.0.113.7"}, want: "198.51.100.9"},
+		{name: "public peer ignores real ip", peer: "198.51.100.9:1234", header: [2]string{"X-Real-IP", "203.0.113.7"}, want: "198.51.100.9"},
+		{name: "proxied real ip ignored", peer: traefik, header: [2]string{"True-Client-IP", "203.0.113.7"}, want: "10.0.1.5"},
+		{name: "port-less public peer", peer: "198.51.100.9", xff: []string{"203.0.113.7"}, want: "198.51.100.9"},
+		{name: "unparseable peer sets nothing", peer: "pipe", xff: []string{"203.0.113.7"}, want: ""},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			var got string
-			h := trustedProxyIP(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
-				got = r.RemoteAddr
+			got := "unset"
+			h := clientIP(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+				got = middleware.GetClientIP(r.Context())
 			}))
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
-			req.RemoteAddr = "192.0.2.1:1234"
-			if c.xff != "" {
-				req.Header.Set("X-Forwarded-For", c.xff)
+			req.RemoteAddr = c.peer
+			for _, v := range c.xff {
+				req.Header.Add("X-Forwarded-For", v)
+			}
+			if c.header[0] != "" {
+				req.Header.Set(c.header[0], c.header[1])
 			}
 			h.ServeHTTP(httptest.NewRecorder(), req)
 			assert.Equal(t, c.want, got)
+			assert.Equal(t, c.peer, req.RemoteAddr, "RemoteAddr must stay the TCP peer")
 		})
 	}
 }

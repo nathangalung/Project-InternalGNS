@@ -5,6 +5,7 @@ package assetproxy
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -28,7 +29,10 @@ type Asset struct {
 
 // Descriptor configures one route set.
 type Descriptor struct {
-	Storage   *storage.Client
+	Storage *storage.Client
+	// Objects confirms uploads exist.
+	// Nil when storage is not configured.
+	Objects   deps.ObjectStore
 	Bucket    string
 	KeyPrefix string
 	// KeySub names a sub-folder.
@@ -153,6 +157,9 @@ func UpdateKey(d Descriptor) http.HandlerFunc {
 			}))
 			return
 		}
+		if !d.uploaded(w, r, objectKey) {
+			return
+		}
 		actor := deps.CurrentUserID(r.Context())
 		if err := d.SetKey(r.Context(), id, objectKey, actor); err != nil {
 			renderOwnerErr(r.Context(), w, err, d.NotFoundMsg)
@@ -160,6 +167,28 @@ func UpdateKey(d Descriptor) http.HandlerFunc {
 		}
 		w.WriteHeader(http.StatusNoContent)
 	}
+}
+
+// uploaded confirms the upload arrived.
+// A valid key only says where an upload would land; the stored key must
+// never point at a file that never arrived.
+func (d Descriptor) uploaded(w http.ResponseWriter, r *http.Request, key string) bool {
+	if d.Objects == nil {
+		httperr.Render(w, httperr.ServiceUnavailable("storage not configured"))
+		return false
+	}
+	ok, err := d.Objects.ObjectExists(r.Context(), d.Bucket, key)
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, fmt.Errorf("asset stat: %w", err))
+		return false
+	}
+	if !ok {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{
+			"objectKey": "Berkas belum terunggah. Unggah ulang berkasnya lalu simpan kembali.",
+		}))
+		return false
+	}
+	return true
 }
 
 func renderOwnerErr(ctx context.Context, w http.ResponseWriter, err error, notFoundMsg string) {

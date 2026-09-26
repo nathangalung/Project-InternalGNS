@@ -256,7 +256,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// 409 per round3_plan optimistic-lock contract (not RFC 7232 412).
 		if errors.Is(err, ErrVersionMismatch) {
-			httperr.Render(w, httperr.Conflict("quotation row_version mismatch"))
+			httperr.Render(w, httperr.VersionConflict())
 			return
 		}
 		if errors.Is(err, ErrNotFound) {

@@ -23,7 +23,7 @@ const (
 func Routes(d deps.Deps) chi.Router {
 	r := chi.NewRouter()
 	repo := NewRepo(d.Pool, d.Queries)
-	h := NewHandler(repo)
+	h := NewHandler(repo, d.Objects)
 
 	doc := docAsset(d.Storage, repo)
 	r.Get("/", h.List)

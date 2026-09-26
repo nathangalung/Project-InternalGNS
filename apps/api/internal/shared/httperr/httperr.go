@@ -22,6 +22,8 @@ type Error struct {
 	Detail   string            `json:"detail,omitempty"`
 	Instance string            `json:"instance,omitempty"`
 	Fields   map[string]string `json:"fields,omitempty"`
+	// Code is a stable tag the web branches on, never shown to the user.
+	Code string `json:"code,omitempty"`
 }
 
 func (e Error) Error() string { return e.Title + ": " + e.Detail }
@@ -47,6 +49,19 @@ func NotFound(detail string) Error {
 }
 func Conflict(detail string) Error {
 	return Error{Type: "about:blank", Title: "Conflict", Status: http.StatusConflict, Detail: detail}
+}
+
+// VersionConflictCode tags stale If-Match.
+// The web reloads the record on it instead of matching the detail text.
+const VersionConflictCode = "version_conflict"
+
+const versionConflictDetail = "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi."
+
+// VersionConflict is the optimistic-lock 409.
+func VersionConflict() Error {
+	e := Conflict(versionConflictDetail)
+	e.Code = VersionConflictCode
+	return e
 }
 
 // genericInvalidPayload is the fallback detail.

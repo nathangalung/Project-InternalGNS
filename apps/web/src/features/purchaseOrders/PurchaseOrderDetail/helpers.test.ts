@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api-client"
+import { isVersionConflict } from "@/lib/errors"
 import type { PurchaseOrderRow } from "@/types/api"
 import {
   canDownloadDeliveryNote,
@@ -7,7 +8,6 @@ import {
   isInvoiceFiled,
   isPoLocked,
   isPoLockRefusal,
-  isVersionConflict,
   PO_CONFLICT_MESSAGE,
   PO_LABEL,
   PO_LOCKED_CODE,
@@ -97,7 +97,14 @@ describe("isInvoiceFiled", () => {
 
 describe("poErrorMessage", () => {
   it("translates the optimistic-lock 409", () => {
-    const err = new ApiError(409, null, "purchase order row_version mismatch")
+    const err = new ApiError(
+      409,
+      {
+        code: "version_conflict",
+        detail: "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
+      },
+      "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
+    )
     expect(poErrorMessage(err, "x")).toBe(PO_CONFLICT_MESSAGE)
   })
 
@@ -114,14 +121,19 @@ describe("poErrorMessage", () => {
 
 describe("409 classification", () => {
   const lockBody = { status: 409, detail: "Berkas PO tidak dapat diubah.", code: "po_locked" }
+  const versionBody = {
+    status: 409,
+    detail: "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
+    code: "version_conflict",
+  }
   it.each([
     ["lock with code", new ApiError(409, lockBody, "Berkas PO tidak dapat diubah."), true, false],
-    ["lock that mentions row_version", new ApiError(409, lockBody, "row_version"), true, false],
+    ["stale version", new ApiError(409, versionBody, versionBody.detail), false, true],
     [
-      "If-Match mismatch",
-      new ApiError(409, { status: 409 }, "purchase order row_version mismatch"),
+      "untagged 409 naming row_version",
+      new ApiError(409, null, "row_version mismatch"),
       false,
-      true,
+      false,
     ],
     ["409 without code or version", new ApiError(409, null, "Konflik."), false, false],
     ["other code", new ApiError(409, { code: "other" }, "Konflik."), false, false],

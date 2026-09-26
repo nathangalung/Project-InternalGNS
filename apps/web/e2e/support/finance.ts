@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto"
 import { call, expectOk, generatePassword, type User } from "./api"
+import { uploadPoFile } from "./sales"
 
 // Finance and admin spec data.
 //
@@ -101,12 +102,7 @@ export async function deliveredInvoice(token: string, client: SeedClient): Promi
     call(`/purchase-orders/by-quotation/${q.id}`, { token }),
     "get PO",
   )
-  // The key must sit directly in the PO's own folder.
-  await send(token, "PATCH", `/purchase-orders/${po.id}/file`, {
-    fileName: "po.pdf",
-    fileSize: 1024,
-    objectKey: `po/${po.id}/${Math.floor(Date.now() / 1000)}-po.pdf`,
-  })
+  await uploadPoFile(token, po.id)
   for (const status of ["ON_PROGRESS", "DELIVERED"]) {
     await send(token, "PATCH", `/purchase-orders/${po.id}/status`, { status })
   }

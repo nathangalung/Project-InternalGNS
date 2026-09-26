@@ -1,5 +1,5 @@
 # Build stage uses bun.
-FROM oven/bun:1.3.9-alpine AS build
+FROM oven/bun:1.4.2-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33dd270fb93c0dd5cef6f AS build
 WORKDIR /src
 
 COPY package.json bun.lockb* bun.lock* ./
@@ -12,7 +12,7 @@ ENV VITE_API_URL=${VITE_API_URL}
 RUN bun run build
 
 # Serve stage uses nginx.
-FROM nginx:1.31-alpine AS runtime
+FROM nginx:1.30.5-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94 AS runtime
 
 # Base ships vulnerable libexpat; tags not rebuilt yet.
 RUN apk upgrade --no-cache libexpat

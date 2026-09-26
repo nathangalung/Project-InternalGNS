@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_po_status (deployed by migration 00061).
+-- Canonical current body of fn_change_po_status (deployed by migration 00071).
 CREATE OR REPLACE FUNCTION public.fn_change_po_status(p_po_id bigint, p_new_status text, p_user_id bigint, p_note text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql
@@ -56,6 +56,22 @@ BEGIN
 
   IF p_new_status = 'UPLOADED' AND v_file IS NULL THEN
     RAISE EXCEPTION 'PO belum memiliki berkas. Unggah berkas PO terlebih dahulu.'
+      USING ERRCODE = 'P0012';
+  END IF;
+
+  -- Work needs a priced product.
+  IF p_new_status IN ('ON_PROGRESS', 'DELIVERED') AND (
+    NOT EXISTS (
+      SELECT 1 FROM purchase_order_items
+      WHERE po_id = p_po_id AND item_type = 'product'
+    )
+    OR EXISTS (
+      SELECT 1 FROM purchase_order_items
+      WHERE po_id = p_po_id AND item_type = 'product'
+        AND (selling_price IS NULL OR selling_price <= 0)
+    )
+  ) THEN
+    RAISE EXCEPTION 'PO harus memiliki minimal satu baris produk dan setiap baris produk harus memiliki harga jual. Lengkapi melalui Ubah PO.'
       USING ERRCODE = 'P0012';
   END IF;
 

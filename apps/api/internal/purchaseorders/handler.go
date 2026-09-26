@@ -23,10 +23,13 @@ import (
 
 type Handler struct {
 	repo *Repo
+	// objects may be nil.
+	// Nil means storage is not configured.
+	objects deps.ObjectStore
 }
 
-func NewHandler(repo *Repo) *Handler {
-	return &Handler{repo: repo}
+func NewHandler(repo *Repo, objects deps.ObjectStore) *Handler {
+	return &Handler{repo: repo, objects: objects}
 }
 
 // parseListFilter reads unpaged list filters.
@@ -187,6 +190,9 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 		}))
 		return
 	}
+	if !h.fileUploaded(w, r, req.ObjectKey) {
+		return
+	}
 
 	actor := deps.CurrentUserID(r.Context())
 	if err := h.repo.UpdateFile(r.Context(), id, req, actor); err != nil {
@@ -201,6 +207,28 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// fileUploaded confirms the upload arrived.
+// A valid key only says where an upload would land; attaching moves the PO
+// to UPLOADED, so it must never point at a file that never arrived.
+func (h *Handler) fileUploaded(w http.ResponseWriter, r *http.Request, key string) bool {
+	if h.objects == nil {
+		httperr.Render(w, httperr.ServiceUnavailable("Penyimpanan berkas belum dikonfigurasi."))
+		return false
+	}
+	ok, err := h.objects.ObjectExists(r.Context(), storage.BucketPODocs, key)
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, fmt.Errorf("po file stat: %w", err))
+		return false
+	}
+	if !ok {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{
+			"objectKey": "Berkas PO belum terunggah. Unggah ulang berkasnya lalu simpan kembali.",
+		}))
+		return false
+	}
+	return true
 }
 
 func (h *Handler) UpdateNotes(w http.ResponseWriter, r *http.Request) {
@@ -225,7 +253,7 @@ func (h *Handler) UpdateNotes(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 		case errors.Is(err, ErrVersionMismatch):
-			httperr.Render(w, httperr.Conflict("purchase order row_version mismatch"))
+			httperr.Render(w, httperr.VersionConflict())
 		default:
 			httperr.RenderDBErr(w, err)
 		}
@@ -269,7 +297,7 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 				"poNumber": "sudah dipakai PO lain untuk klien ini",
 			}))
 		case errors.Is(err, ErrVersionMismatch):
-			httperr.Render(w, httperr.Conflict("purchase order row_version mismatch"))
+			httperr.Render(w, httperr.VersionConflict())
 		// A filed invoice prints po_number and po_date, so both are read-only.
 		case errors.Is(err, ErrLocked):
 			renderLocked(w, "Nomor dan tanggal PO tidak dapat diubah setelah invoice dikirim.")
@@ -350,7 +378,7 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		switch {
 		// 409 per round3_plan optimistic-lock contract (not RFC 7232 412).
 		case errors.Is(err, ErrVersionMismatch):
-			httperr.Render(w, httperr.Conflict("purchase order row_version mismatch"))
+			httperr.Render(w, httperr.VersionConflict())
 		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 		case errors.Is(err, ErrLocked):
@@ -440,22 +468,16 @@ func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
 }
 
 // LockedCode tags lock refusals.
-// The web branches on it: a 409 without it is an If-Match mismatch, which
-// a refetch resolves, while a lock needs no retry.
+// The web branches on it: an If-Match mismatch carries
+// httperr.VersionConflictCode instead, which a refetch resolves, while a
+// lock needs no retry.
 const LockedCode = "po_locked"
-
-// lockedProblem extends RFC 7807.
-// It adds the lock code.
-type lockedProblem struct {
-	httperr.Error
-	Code string `json:"code"`
-}
 
 // renderLocked writes lock refusals.
 func renderLocked(w http.ResponseWriter, detail string) {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.WriteHeader(http.StatusConflict)
-	_ = json.NewEncoder(w).Encode(lockedProblem{Error: httperr.Conflict(detail), Code: LockedCode})
+	e := httperr.Conflict(detail)
+	e.Code = LockedCode
+	httperr.Render(w, e)
 }
 
 // validateFile checks the attach payload.

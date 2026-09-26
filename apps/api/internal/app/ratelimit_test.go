@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -112,6 +113,26 @@ func TestRouter_RateLimitedLoginIsProblemJSON(t *testing.T) {
 	require.NoError(t, json.Unmarshal(raw, &body), "body must parse as JSON, got %q", raw)
 	assert.Equal(t, http.StatusTooManyRequests, body.Status)
 	assert.Equal(t, rateLimitDetail, body.Detail)
+}
+
+// Spoofed forwarding keeps the limit.
+// A peer outside the private networks is not Traefik, so its own
+// X-Forwarded-For is ignored: rotating it per request must still hit the
+// login limit on the sixth attempt, keyed by the peer address.
+func TestRouter_SpoofedForwardedForKeepsLoginLimit(t *testing.T) {
+	router := mkRouter(t)
+	var last int
+	for i := 0; i < 6; i++ {
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login",
+			strings.NewReader(`{"email":"x@y.z","password":"wrong-password"}`))
+		req.Header.Set("Content-Type", "application/json")
+		req.RemoteAddr = "198.51.100.9:4321"
+		req.Header.Set("X-Forwarded-For", fmt.Sprintf("203.0.113.%d", i+1))
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+		last = rec.Code
+	}
+	assert.Equal(t, http.StatusTooManyRequests, last)
 }
 
 // Rewrite keeps writer contract.

@@ -6,8 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import * as invApi from "@/features/invoices/api"
-import { ApiError } from "@/lib/api-client"
-import { errorMessage } from "@/lib/errors"
+import { errorMessage, isVersionConflict } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
@@ -157,8 +156,8 @@ export function useUpdateInvoiceDates() {
       toast.success("Tanggal invoice disimpan.")
     },
     onError: async (err) => {
-      // The 409 detail is English; the page reloads the newer row.
-      if (err instanceof ApiError && err.status === 409) {
+      // Stale version; the page reloads the newer row.
+      if (isVersionConflict(err)) {
         await invalidate()
         toast.error(
           "Invoice ini baru saja diubah di tempat lain. Periksa tanggalnya lalu simpan lagi.",

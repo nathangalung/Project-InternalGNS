@@ -6,10 +6,10 @@ Indonesian Coretax.
 
 ## Stack
 
-- **Frontend**: React 19, strict TypeScript, Vite 7, Tailwind CSS v4,
+- **Frontend**: React 19, strict TypeScript, Vite 8, Tailwind CSS v4,
   TanStack Router (file-based) and TanStack Query. Bun, Biome, Vitest,
   Playwright.
-- **Backend**: Go 1.26 modular monolith with chi v5, pgx v5, goose v3
+- **Backend**: Go 1.27 modular monolith with chi v5, pgx v5, goose v3
   (embedded migrations), JWT (HS256) with bcrypt, and hand-written SQL loaded
   from `db/queries`. PDFs render through xelatex; spreadsheets through
   excelize.
@@ -49,14 +49,14 @@ Makefile              every task; `make help` lists them
 
 | Tool | Version | Notes |
 |------|---------|-------|
-| Go | 1.26+ | https://go.dev/dl/ |
+| Go | 1.27+ | https://go.dev/dl/ |
 | Bun | 1.3+ | `curl -fsSL https://bun.sh/install \| bash` |
 | Docker | with Compose v2 | runs Postgres, MinIO and pgweb |
 | Make | any | Windows: use WSL2 |
 | psql | 14+ | seeds are loaded as raw SQL (`postgresql-client`) |
 | xelatex | TeX Live | only for PDF export and the PDF layout tests |
 
-`make setup` installs `goose` v3.27.1 with `go install` when it is missing.
+`make setup` installs `goose` v3.28.0 with `go install` when it is missing.
 
 ### 2. First-time setup
 
@@ -172,7 +172,7 @@ make reset && make seed-dev   # wipes the dev volumes
 WSL2) or `brew install libpq && brew link --force libpq` (macOS).
 
 **`goose: command not found`:** `go install
-github.com/pressly/goose/v3/cmd/goose@v3.27.1` and put `$(go env GOPATH)/bin`
+github.com/pressly/goose/v3/cmd/goose@v3.28.0` and put `$(go env GOPATH)/bin`
 on `PATH`.
 
 **Native Windows:** not supported. Use WSL2.

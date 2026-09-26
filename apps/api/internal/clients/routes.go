@@ -33,7 +33,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.Patch("/{id}/contacts/{contactId}", h.UpdateContact)
 	r.Delete("/{id}/contacts/{contactId}", h.DeleteContact)
 
-	logo := logoAsset(d.Storage, repo)
+	logo := logoAsset(d.Storage, d.Objects, repo)
 	r.Get("/{id}/logo/upload-url", assetproxy.Upload(logo))
 	r.Get("/{id}/logo/download-url", assetproxy.Download(logo))
 	r.Patch("/{id}/logo", assetproxy.UpdateKey(logo))
@@ -42,9 +42,10 @@ func Routes(d deps.Deps) chi.Router {
 }
 
 // logoAsset describes logo routes.
-func logoAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
+func logoAsset(sc *storage.Client, objects deps.ObjectStore, repo *Repo) assetproxy.Descriptor {
 	return assetproxy.Descriptor{
 		Storage:     sc,
+		Objects:     objects,
 		Bucket:      storage.BucketClientLogos,
 		KeyPrefix:   "clients",
 		NotFoundMsg: "client not found",

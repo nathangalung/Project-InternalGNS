@@ -273,7 +273,7 @@ func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
 			}))
 		case errors.Is(err, ErrVersionMismatch):
 			// Use 409 per round3_plan optimistic-lock contract (not RFC 7232 412).
-			httperr.Render(w, httperr.Conflict("invoice row_version mismatch"))
+			httperr.Render(w, httperr.VersionConflict())
 		default:
 			httperr.RenderDBErr(w, err)
 		}

@@ -53,7 +53,15 @@ const invList = queryKeys.invoices.list()
 const dash = queryKeys.dashboard.summary()
 const quotations = queryKeys.quotations.list()
 
-const versionConflict = () => new ApiError(409, null, "row_version mismatch")
+const versionConflict = () =>
+  new ApiError(
+    409,
+    {
+      code: "version_conflict",
+      detail: "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
+    },
+    "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
+  )
 const lockRefusal = () =>
   new ApiError(409, { code: "po_locked", detail: "Invoice sudah terbit." }, "Invoice sudah terbit.")
 const pdf = () => new File(["x"], "po.pdf", { type: "application/pdf" })

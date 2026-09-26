@@ -345,6 +345,30 @@ test.describe("quotation status", () => {
     await expect(card).toContainText(second)
   })
 
+  test("a save that lost a race reloads the winning edit", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const lines = [{ item, qty: 1, price: 25_000 }]
+    const q = await seed.quotation({ client, lines })
+
+    await page.goto(`/quotations/${q.id}/edit`)
+    const next = page.getByRole("button", { name: "Lanjut" })
+    await expect(next).toBeEnabled()
+    // Another user saves while this editor is open.
+    await seed.updateQuotation(q, { client, lines, validityDays: 45 })
+    for (let step = 0; step < 3; step++) await next.click()
+    await page.getByRole("button", { name: "Simpan" }).click()
+    await expect(page.getByText("Data quotation sudah diubah pengguna lain.")).toBeVisible()
+    await expect(page.getByText(/row_version/)).toHaveCount(0)
+    // Back on step 1 with their version seeded.
+    await expect(page.getByRole("button", { name: "Kembali" })).toHaveCount(0)
+    for (let step = 0; step < 3; step++) await next.click()
+    await expect(page.getByLabel(/BERLAKU SAMPAI/)).toHaveValue("45")
+    await page.getByRole("button", { name: "Simpan" }).click()
+    await expect(page).toHaveURL(new RegExp(`/quotations/${q.id}$`))
+    await expect.poll(async () => (await seed.getQuotation(q.id)).validityDays).toBe(45)
+  })
+
   test("Ditolak waits for a reason and is final", async ({ page, seed }) => {
     const client = await seed.client()
     const item = await seed.item()
