@@ -154,7 +154,7 @@ db-functions-dump: db-up ## Regenerate db/functions from the live DB
 db-erd: db-up ## Regenerate docs/erd from the live dev DB (requires tbls)
 	@command -v tbls >/dev/null 2>&1 || { \
 	  echo "installing tbls..."; \
-	  go install github.com/k1LoW/tbls@latest; \
+	  go install github.com/k1LoW/tbls@v1.96.0; \
 	}
 	tbls doc --force
 

@@ -63,6 +63,7 @@ the build from `nginx:1.30.5-alpine` (the stable branch).
 |---|---|---|
 | pre-commit (installed by `make hooks-install`) | 4.6.2 | `Makefile` |
 | pre-commit-hooks | v6.0.0 | `.pre-commit-config.yaml` |
+| tbls (installed by `make db-erd`) | v1.96.0 | `Makefile` |
 
 GitHub Actions in `.github/workflows` are pinned by full commit SHA with the
 release as a trailing comment (`@<sha> # v7.0.1`); Dependabot's
