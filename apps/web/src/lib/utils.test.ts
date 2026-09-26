@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest"
 import { cn, tv } from "./utils"
 
 describe("cn", () => {
+  it("returns an empty string for no classes", () => {
+    expect(cn()).toBe("")
+    expect(cn(false, null)).toBe("")
+  })
+
   it("joins conditional classes and drops falsy ones", () => {
     expect(cn("a", false, null, undefined, { b: true, c: false }, ["d"])).toBe("a b d")
   })

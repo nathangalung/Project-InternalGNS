@@ -1,14 +1,14 @@
 import { type ClassValue, clsx } from "clsx"
-import { extendTailwindMerge } from "tailwind-merge"
-import { createTV, type TWMergeConfig } from "tailwind-variants"
+import { cnMerge, createTV, type TWMergeConfig } from "tailwind-variants"
 
 // Theme-aware merge config.
 //
-// tailwind-merge only knows the default type scale, so it reads the custom
+// tailwind-variants carries its own copy of the tailwind-merge engine, and
+// cn() uses it too: one engine in the bundle, one set of rules for cn() and
+// tv(). The engine only knows the default type scale, so it reads the custom
 // text-caption and text-overline sizes as colours and drops them next to a
-// text colour. It also reads font-[Inter,sans-serif] as a weight and drops
-// it next to font-bold. Registering both keeps them. One config serves cn()
-// and tv().
+// text colour; it also reads font-[Inter,sans-serif] as a weight and drops
+// it next to font-bold. Registering both keeps them.
 const twMergeConfig = {
   extend: {
     theme: { text: ["caption", "overline"] },
@@ -16,11 +16,11 @@ const twMergeConfig = {
   },
 } satisfies TWMergeConfig
 
-const twMerge = extendTailwindMerge(twMergeConfig)
+const mergeOptions = { twMerge: true, twMergeConfig }
 
 // Conditional classes, conflicts resolved.
 export function cn(...inputs: ClassValue[]): string {
-  return twMerge(clsx(inputs))
+  return cnMerge(clsx(inputs))(mergeOptions) ?? ""
 }
 
 // Base UI props, string className.
@@ -30,4 +30,4 @@ export function cn(...inputs: ClassValue[]): string {
 export type WithClassName<P> = Omit<P, "className"> & { className?: string }
 
 // Recipe factory, same merge rules.
-export const tv = createTV({ twMerge: true, twMergeConfig })
+export const tv = createTV(mergeOptions)
