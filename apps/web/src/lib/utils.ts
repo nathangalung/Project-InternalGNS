@@ -23,5 +23,11 @@ export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs))
 }
 
+// Base UI props, string className.
+//
+// Base UI also accepts a state function for className; the styled wrappers
+// merge a plain string with cn(), so they narrow it.
+export type WithClassName<P> = Omit<P, "className"> & { className?: string }
+
 // Recipe factory, same merge rules.
 export const tv = createTV({ twMerge: true, twMergeConfig })

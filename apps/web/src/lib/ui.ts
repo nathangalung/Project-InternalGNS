@@ -225,19 +225,23 @@ export const statusMenu = tv({
       ring,
     ],
     panel:
-      "absolute left-0 top-[calc(100%+8px)] w-[162px] rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-2 shadow-[0_0_0_1px_rgba(0,0,0,0.05)]",
+      "w-[162px] rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-2 shadow-[0_0_0_1px_rgba(0,0,0,0.05)]",
     option: [
       "flex h-8 w-full items-center justify-between px-5 py-1 text-left transition hover:bg-dark-100",
       ringInset,
     ],
   },
+  variants: {
+    // inline: under a relative parent; floating: a Base UI positioner
+    placement: { inline: { panel: "absolute left-0 top-[calc(100%+8px)]" }, floating: {} },
+  },
+  defaultVariants: { placement: "inline" },
 })
 
 // Dropdown panel and rows.
 export const dropdown = tv({
   slots: {
-    panel:
-      "absolute top-[calc(100%+4px)] right-0 left-0 z-50 flex flex-col rounded-md border bg-white [box-shadow:0_4px_12px_rgba(0,0,0,0.08)]",
+    panel: "flex flex-col rounded-md border bg-white [box-shadow:0_4px_12px_rgba(0,0,0,0.08)]",
     item: [
       "flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent px-5 py-2.5 text-left",
       ringInset,
@@ -245,6 +249,11 @@ export const dropdown = tv({
     label: "font-[Inter,sans-serif] text-sm leading-5",
   },
   variants: {
+    // inline: under a relative parent; floating: a Base UI positioner
+    placement: {
+      inline: { panel: "absolute top-[calc(100%+4px)] right-0 left-0 z-50" },
+      floating: {},
+    },
     density: {
       default: { panel: "border-[rgba(204,195,216,0.2)] py-2" },
       compact: { panel: "border-[rgba(204,195,216,0.4)] py-1" },
@@ -254,7 +263,7 @@ export const dropdown = tv({
       false: { label: "font-medium text-[#4A4455]" },
     },
   },
-  defaultVariants: { density: "default", active: false },
+  defaultVariants: { placement: "inline", density: "default", active: false },
 })
 
 // Small pill toggle.
