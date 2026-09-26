@@ -116,13 +116,17 @@ func TestHandler_Create_MissingItems(t *testing.T) {
 	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 }
 
-func TestHandler_Create_DBValidationError(t *testing.T) {
+// discountMsg pins the handler text.
+const discountMsg = "Diskon harus berupa angka antara 0 dan 100."
+
+func TestHandler_Create_DiscountOutOfRange(t *testing.T) {
 	srv, _ := resetServer(t)
 	req := sampleCreate()
 	req.DiscountPct = "300"
 	res := doJSON(t, srv, http.MethodPost, "/quotations/", req)
-	defer res.Body.Close()
+	e := problemOf(t, res)
 	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	assert.Equal(t, discountMsg, e.Fields["discountPct"])
 }
 
 func TestHandler_GetAndList(t *testing.T) {
@@ -283,8 +287,11 @@ func TestHandler_Update_DBRejects(t *testing.T) {
 	res := doJSONWithHeaders(t, srv, http.MethodPut,
 		"/quotations/"+strconv.FormatInt(id, 10), upd,
 		map[string]string{"If-Match": strconv.FormatInt(int64(rv), 10)})
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	var e httperr.Error
+	decodeBody(t, res, &e)
+	assert.Equal(t, http.StatusConflict, res.StatusCode)
+	assert.Equal(t, http.StatusConflict, e.Status)
+	assert.Equal(t, "Hanya quotation berstatus Draf yang dapat diubah; status saat ini Dikirim.", e.Detail)
 }
 
 func TestHandler_ChangeStatus(t *testing.T) {
@@ -296,7 +303,8 @@ func TestHandler_ChangeStatus(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, res.StatusCode)
 }
 
-// Bulk list export: filtered rows -> XLSX, header + one row per quotation.
+// Filtered list exports as XLSX.
+// The sheet holds a header plus one row per quotation.
 func TestHandler_Export_XLSX(t *testing.T) {
 	srv, _ := resetServer(t)
 	mustCreate(t, srv)
@@ -316,7 +324,8 @@ func TestHandler_Export_XLSX(t *testing.T) {
 	assert.Equal(t, "No. Quotation", rows[0][0])
 }
 
-// Send-time guard: a product line with no selling price blocks finalizing.
+// Unpriced product lines block sending.
+// A product line with no selling price cannot be finalized.
 func TestHandler_ChangeStatus_RejectsUnpricedOnSend(t *testing.T) {
 	srv, _ := resetServer(t)
 	req := sampleCreate()
@@ -411,6 +420,7 @@ func mustCreate(t *testing.T, srv *httptest.Server) int64 {
 	return got["id"]
 }
 
+// Locked QIR parent is 409.
 // Migration 00046 retyped the quotation_item_requests parent lock from
 // check_violation to P0013 and its not-found raise from P0001 to P0011. That
 // moved /quotations/{id}/requests from a generic 422 to 409-with-reason and
@@ -453,12 +463,13 @@ func TestHandler_QIR_LockedParentConflicts(t *testing.T) {
 			decodeBody(t, res, &e)
 			assert.Equal(t, http.StatusConflict, res.StatusCode)
 			assert.Equal(t, http.StatusConflict, e.Status)
-			assert.Contains(t, e.Detail, `has status "sent"`)
-			assert.Contains(t, e.Detail, "Only draft/revision allow request edits")
+			assert.Contains(t, e.Detail, "status saat ini Dikirim")
+			assert.Contains(t, e.Detail, "hanya dapat diubah saat quotation berstatus Draf")
 		})
 	}
 }
 
+// Missing QIR parent is 404.
 // The same trigger raises P0011 for a missing parent, which must surface as
 // 404 rather than the pre-00046 422.
 func TestHandler_QIR_UnknownParentNotFound(t *testing.T) {
@@ -470,5 +481,5 @@ func TestHandler_QIR_UnknownParentNotFound(t *testing.T) {
 	decodeBody(t, res, &e)
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	assert.Equal(t, http.StatusNotFound, e.Status)
-	assert.Contains(t, e.Detail, "Parent quotation 9999999 not found")
+	assert.Contains(t, e.Detail, "Quotation 9999999 tidak ditemukan.")
 }

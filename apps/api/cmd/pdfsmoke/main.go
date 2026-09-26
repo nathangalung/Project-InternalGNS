@@ -1,4 +1,5 @@
-// Smoke renders quotation/invoice/delivery-note PDFs for one record.
+// Command pdfsmoke renders sample PDFs.
+// It renders the quotation, invoice and delivery-note PDFs for one record.
 package main
 
 import (

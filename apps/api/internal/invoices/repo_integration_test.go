@@ -13,6 +13,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/invoices"
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
+	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -25,11 +26,7 @@ const (
 // Drive quotation to delivered PO.
 func deliveredPOWithInvoice(t *testing.T, tx pgx.Tx) (int64, int64, int64) {
 	t.Helper()
-	ctx := context.Background()
-	store := testutil.Store(t)
-
-	qrepo := quotations.NewRepo(tx, store)
-	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+	return deliverQuotation(t, tx, quotations.CreateRequest{
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		Items: []quotations.CreateItem{{
@@ -38,7 +35,18 @@ func deliveredPOWithInvoice(t *testing.T, tx pgx.Tx) (int64, int64, int64) {
 			UnitID:        seedUnitID,
 			SellingPrice:  "100000",
 		}},
-	}, seedUserID)
+	})
+}
+
+// deliverQuotation invoices any quotation.
+// It returns the quotation, PO and invoice ids.
+func deliverQuotation(t *testing.T, tx pgx.Tx, req quotations.CreateRequest) (int64, int64, int64) {
+	t.Helper()
+	ctx := context.Background()
+	store := testutil.Store(t)
+
+	qrepo := quotations.NewRepo(tx, store)
+	qid, err := qrepo.Create(ctx, req, seedUserID)
 	require.NoError(t, err)
 	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "sent", nil, seedUserID))
 	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "accepted", nil, seedUserID))
@@ -46,7 +54,7 @@ func deliveredPOWithInvoice(t *testing.T, tx pgx.Tx) (int64, int64, int64) {
 	porepo := purchaseorders.NewRepo(tx, store)
 	po, err := porepo.GetByQuotation(ctx, qid)
 	require.NoError(t, err)
-	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusUploaded, seedUserID))
+	attachPOFile(ctx, t, porepo, po.ID)
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -136,8 +144,8 @@ func parseF(t *testing.T, s *string) float64 {
 	return v
 }
 
-// Header tax equals the sum of the per-line rounded values (matches the DJP
-// e-faktur filing), not ROUND of the summed base.
+// Header tax sums rounded lines.
+// That matches the DJP e-faktur filing, not ROUND of the summed base.
 func TestRepo_InvoiceHeaderEqualsLineSums(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	store := testutil.Store(t)
@@ -160,7 +168,7 @@ func TestRepo_InvoiceHeaderEqualsLineSums(t *testing.T) {
 	porepo := purchaseorders.NewRepo(tx, store)
 	po, err := porepo.GetByQuotation(ctx, qid)
 	require.NoError(t, err)
-	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusUploaded, seedUserID))
+	attachPOFile(ctx, t, porepo, po.ID)
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -188,8 +196,8 @@ func TestRepo_ChangeStatus_Lifecycle(t *testing.T) {
 	_, _, invID := deliveredPOWithInvoice(t, tx)
 
 	repo := invoices.NewRepo(tx, testutil.Store(t))
-	require.NoError(t, repo.ChangeStatus(ctx, invID, invoices.StatusSent, seedUserID))
-	require.NoError(t, repo.ChangeStatus(ctx, invID, invoices.StatusPaid, seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusSent), seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusPaid), seedUserID))
 
 	inv, err := repo.GetByID(ctx, invID)
 	require.NoError(t, err)
@@ -199,7 +207,7 @@ func TestRepo_ChangeStatus_Lifecycle(t *testing.T) {
 func TestRepo_ChangeStatus_NotFound(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := invoices.NewRepo(tx, testutil.Store(t))
-	err := repo.ChangeStatus(ctx, 99999999, invoices.StatusSent, seedUserID)
+	err := repo.ChangeStatus(ctx, 99999999, move(invoices.StatusSent), seedUserID)
 	assert.ErrorIs(t, err, invoices.ErrNotFound)
 }
 
@@ -253,7 +261,7 @@ func TestRepo_UpdateDates_NoIfMatchSkipsGuard(t *testing.T) {
 	assert.Greater(t, newVersion, int32(0))
 }
 
-// Clone an invoice line under a new line number.
+// Clone an invoice line renumbered.
 func addInvoiceLine(t *testing.T, ctx context.Context, tx pgx.Tx, invID int64, lineNumber *int16) {
 	t.Helper()
 	_, err := tx.Exec(ctx, `
@@ -270,7 +278,7 @@ FROM invoice_items WHERE invoice_id = $1 ORDER BY id LIMIT 1`, invID, lineNumber
 	require.NoError(t, err)
 }
 
-// Bulk grouping equals N ListItems calls.
+// Bulk grouping matches ListItems.
 func TestRepo_ListItemsBulk_MatchesListItems(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invA := deliveredPOWithInvoice(t, tx)
@@ -331,4 +339,15 @@ func TestRepo_Summary(t *testing.T) {
 	assert.GreaterOrEqual(t, s.Paid, int64(0))
 	assert.GreaterOrEqual(t, s.Overdue, int64(0))
 	assert.Equal(t, s.Total, s.Draft+s.Sent+s.Paid+s.Overdue)
+}
+
+// attachPOFile uploads the client PO.
+// It moves PENDING to UPLOADED.
+func attachPOFile(ctx context.Context, t *testing.T, porepo *purchaseorders.Repo, poID int64) {
+	t.Helper()
+	require.NoError(t, porepo.UpdateFile(ctx, poID, purchaseorders.UpdateFileRequest{
+		FileName:  "po.pdf",
+		FileSize:  1024,
+		ObjectKey: storage.BuildObjectKey("po", poID, "po.pdf"),
+	}, seedUserID))
 }

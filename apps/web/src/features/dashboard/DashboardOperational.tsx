@@ -1,13 +1,13 @@
+import { Link } from "@tanstack/react-router"
 import { useMemo, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
+import EntityLink from "@/components/shared/EntityLink"
 import FilterButton from "@/components/shared/FilterButton"
 import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
-import { toTableRow } from "@/features/quotations/adapters"
 import { useQuotations } from "@/features/quotations/hooks"
-import { statusConfig } from "@/features/quotations/QuotationList/helpers"
 import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
 import { formatNumber as formatId } from "@/lib/format"
 import { pill, ui } from "@/lib/ui"
@@ -15,25 +15,24 @@ import DashboardFinancialFilter, {
   type DashboardFilterValues,
   MONTH_LABELS,
 } from "./DashboardFinancialFilter"
+import { toRecentQuotation } from "./helpers"
+import StatusTiles from "./StatusTiles"
+import SummaryError from "./SummaryError"
 import TrendChart, { CHART_MONTHS } from "./TrendChart"
 
 const chartTabs = [{ label: "Quotation", metric: "quotation" as const }]
 
-interface DashboardOperationalProps {
-  onViewQuotation?: (quotationId: number) => void
-  onViewAllQuotations?: () => void
-}
-
-export default function DashboardOperational({
-  onViewQuotation,
-  onViewAllQuotations,
-}: DashboardOperationalProps) {
+export default function DashboardOperational() {
   const [activeTab, setActiveTab] = useState("Quotation")
   const [showFilter, setShowFilter] = useState(false)
   const [filters, setFilters] = useState<DashboardFilterValues | null>(null)
 
-  const { data: summary } = useDashboardSummary()
-  const { data: rawQuotations, isPending: quotationsPending } = useQuotations({ limit: 5 })
+  const { data: summary, isError: summaryError } = useDashboardSummary()
+  const {
+    data: rawQuotations,
+    isPending: quotationsPending,
+    isError: quotationsError,
+  } = useQuotations({ limit: 5 })
 
   const baseYear = filters?.year ?? new Date().getFullYear()
   const selectedMonth = filters?.month ?? null // null = whole year
@@ -57,26 +56,26 @@ export default function DashboardOperational({
   const totalQuotation = summary?.totalQuotations ?? 0
   const totalRejected = summary?.totalQuotationsRejected ?? 0
   const totalPo = summary?.totalPo ?? 0
+  // Dash until the summary arrives
+  const fig = (text: string) => (summary ? text : "–")
 
-  const recentQuotations = useMemo(() => {
-    return (rawQuotations?.rows ?? []).slice(0, 5).map((q) => {
-      const row = toTableRow(q)
-      return {
-        ...row,
-        productCount: 0, // Not in list payload; left blank to avoid extra fetch.
-      }
-    })
-  }, [rawQuotations])
+  const statusLabels = summary?.quotationStatuses
+  const recentQuotations = useMemo(
+    () => (rawQuotations?.rows ?? []).slice(0, 5).map((q) => toRecentQuotation(q, statusLabels)),
+    [rawQuotations, statusLabels],
+  )
 
   return (
     <>
-      <div className="page-content" style={{ gap: "29px" }}>
-        <div className="page-header">
-          <h1 className="page-title">Dashboard Operasional</h1>
-          <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
+      <div className={ui.pageContent}>
+        <div className={ui.pageHeader}>
+          <h1 className={ui.pageTitle}>Dashboard Operasional</h1>
+          <div className={ui.pageActionsTight}>
             <FilterButton onClick={() => setShowFilter(true)} />
           </div>
         </div>
+
+        <SummaryError show={summaryError} />
 
         {filters && (
           <ActiveFilters
@@ -91,10 +90,13 @@ export default function DashboardOperational({
         )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <StatCard label="Total Quotation" value={formatId(totalQuotation)} />
-          <StatCard label="Total Quotation Ditolak" value={formatId(totalRejected)} />
-          <StatCard label="Total Purchase Order" value={formatId(totalPo)} />
+          <StatCard label="Total Quotation" value={fig(formatId(totalQuotation))} />
+          <StatCard label="Total Quotation Ditolak" value={fig(formatId(totalRejected))} />
+          <StatCard label="Total Purchase Order Aktif" value={fig(formatId(totalPo))} />
         </div>
+
+        <StatusTiles title="Status Quotation" items={summary?.quotationStatuses} />
+        <StatusTiles title="Status Purchase Order" items={summary?.poStatuses} />
 
         <div className={ui.panel}>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -103,6 +105,8 @@ export default function DashboardOperational({
               {chartTabs.map((tab) => (
                 <button
                   key={tab.label}
+                  type="button"
+                  aria-pressed={activeTab === tab.label}
                   className={pill(activeTab === tab.label)}
                   onClick={() => setActiveTab(tab.label)}
                 >
@@ -114,69 +118,56 @@ export default function DashboardOperational({
           <TrendChart series={series} activeKey={activeTab} monthLabels={chartLabels} />
         </div>
 
-        <div className="tbl-container">
+        <div className={ui.tableWrap}>
           <div className="flex items-center justify-between border-b border-[#F1F5F9] bg-[rgba(242,244,246,0.3)] px-8 py-5">
             <h3 className="text-lg font-bold leading-7 tracking-[-0.45px] text-[#191C1E]">
               Quotation Terkini
             </h3>
-            <button type="button" className={ui.btnPrimary} onClick={onViewAllQuotations}>
+            <Link to="/quotations" className={`${ui.btnPrimary} no-underline`}>
               Lihat Semua
-            </button>
+            </Link>
           </div>
 
           <table className="w-full border-collapse">
             <thead>
               <tr className={ui.theadRow}>
-                <th className={ui.thCenter} style={{ width: 150 }}>
-                  Nomor Quotation
-                </th>
-                <th className={ui.thCenter} style={{ width: 80 }}>
-                  Versi
-                </th>
-                <th className={ui.thCenter} style={{ width: 200 }}>
-                  Nama Klien
-                </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Tanggal
-                </th>
-                <th className={ui.thCenter} style={{ width: 130 }}>
-                  Jumlah Produk
-                </th>
-                <th className={ui.thCenter} style={{ width: 160 }}>
-                  Total Penawaran
-                </th>
-                <th className={ui.thCenter} style={{ width: 130 }}>
-                  Status
-                </th>
+                <th className={`${ui.thCenter} w-[150px]`}>Nomor Quotation</th>
+                <th className={`${ui.thCenter} w-[80px]`}>Versi</th>
+                <th className={`${ui.thCenter} w-[200px]`}>Nama Klien</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Tanggal</th>
+                <th className={`${ui.thCenter} w-[130px]`}>Jumlah Produk</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Total Penawaran</th>
+                <th className={`${ui.thCenter} w-[130px]`}>Status</th>
               </tr>
             </thead>
             <tbody>
               {quotationsPending && <TableLoadingRow colSpan={7} />}
-              {!quotationsPending && recentQuotations.length === 0 && (
+              {quotationsError && (
+                <TableEmptyRow colSpan={7}>Gagal memuat Quotation terkini.</TableEmptyRow>
+              )}
+              {!quotationsPending && !quotationsError && recentQuotations.length === 0 && (
                 <TableEmptyRow colSpan={7}>Belum ada Quotation.</TableEmptyRow>
               )}
-              {recentQuotations.map((row) => {
-                const style = statusConfig[row.status]
-                return (
-                  <tr
-                    key={row.id}
-                    className={`${ui.tr} ${onViewQuotation ? "cursor-pointer" : "cursor-default"}`}
-                    onClick={() => onViewQuotation?.(Number(row.id))}
-                  >
-                    <td className={`${ui.tdCenter} font-bold text-primary-700`}>{row.displayNo}</td>
-                    <td className={ui.tdCenter}>{row.version}</td>
-                    <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>{row.client}</td>
-                    <td className={ui.tdCenter}>{row.date}</td>
-                    <td className={ui.tdCenter}>{row.productCount || "-"}</td>
-                    <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>Rp{row.total}</td>
-                    <td className={ui.tdCenter}>
-                      <StatusBadge bg={style.bg} color={style.color}>
-                        {row.status}
-                      </StatusBadge>
-                    </td>
-                  </tr>
-                )
-              })}
+              {recentQuotations.map((row) => (
+                <tr key={row.id} className={ui.tr}>
+                  <td className={`${ui.tdCenter} font-bold text-primary-700`}>
+                    <EntityLink kind="quotation" id={row.id}>
+                      {row.quotationNo}
+                    </EntityLink>
+                  </td>
+                  <td className={ui.tdCenter}>{row.version}</td>
+                  {/* List payload has no client id */}
+                  <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>{row.client}</td>
+                  <td className={ui.tdCenter}>{row.date}</td>
+                  <td className={ui.tdCenter}>{row.productCount}</td>
+                  <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>{row.total}</td>
+                  <td className={ui.tdCenter}>
+                    <StatusBadge bg={row.badge.bg} color={row.badge.color}>
+                      {row.label}
+                    </StatusBadge>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

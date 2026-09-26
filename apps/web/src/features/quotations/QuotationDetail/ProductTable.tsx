@@ -1,23 +1,25 @@
 import { useState } from "react"
+import EntityLink from "@/components/shared/EntityLink"
 import type { ProductRow } from "@/features/quotations/types"
 import { formatRupiah as formatRp } from "@/lib/format"
 import { ui } from "@/lib/ui"
 import { qe } from "../wizard-styles"
 import { getPageNumbers, PAGE_SIZE_OPTIONS } from "./helpers"
 
-interface ProductTableProps {
+type ProductTableProps = {
   showProfit?: boolean
   products: ProductRow[]
 }
 
-const pageBtn = "flex h-8 w-8 items-center justify-center rounded-sm text-sm transition"
+const pageBtn = `flex h-8 w-8 items-center justify-center rounded-sm text-sm transition ${ui.focusRing}`
 const pageBtnIdle = "font-medium text-[#4A4455] hover:bg-dark-100"
 const pageBtnActive = "bg-primary-700 font-bold text-white"
-const pageBtnNav =
-  "flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100"
+const pageBtnNav = `flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100 disabled:cursor-not-allowed disabled:opacity-40 ${ui.focusRing}`
 const requestedNote = "mt-0.5 text-[11px] text-[#B45309]"
-// Profit column: legacy qd-th--profit / qd-td--profit, written standalone so no
-// ui.* colour utility competes with the override.
+// Profit column classes.
+//
+// Legacy qd-th--profit / qd-td--profit, written standalone so no ui.* colour
+// utility competes with the override.
 const thProfit =
   "px-5 py-4 text-center align-middle text-overline font-bold uppercase tracking-[0.05em] whitespace-nowrap text-primary-700"
 const tdProfit =
@@ -41,22 +43,24 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
     <div>
       <h2 className={`${qe.sectionTitle} mb-3`}>Detail Produk</h2>
       <div
-        className={`flex items-center justify-between border border-[rgba(204,195,216,0.2)] bg-white px-5 py-3.5 ${
+        className={`flex flex-wrap items-center justify-between gap-3 border border-[rgba(204,195,216,0.2)] bg-white px-5 py-3.5 ${
           expanded ? "rounded-t-lg" : "rounded-lg"
         }`}
       >
         <div className="flex items-center gap-2.5">
           <span className="text-[13px] font-semibold text-[#374151]">{products.length} produk</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <button
               type="button"
               onClick={() => setIsRowDropdownOpen((o) => !o)}
-              className="flex items-center gap-1.5 rounded-sm border border-dark-200 bg-white px-2.5 py-[5px] text-xs text-[#4A4455]"
+              aria-haspopup="listbox"
+              aria-expanded={isRowDropdownOpen}
+              className={`flex items-center gap-1.5 rounded-sm border border-dark-200 bg-white px-2.5 py-[5px] text-xs text-[#4A4455] ${ui.focusRing}`}
             >
               {pageSize} Baris
-              <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+              <svg aria-hidden="true" width="10" height="6" viewBox="0 0 10 6" fill="none">
                 <path
                   d="M1 1L5 5L9 1"
                   stroke="#4A4455"
@@ -79,7 +83,7 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
                         setPage(1)
                         setIsRowDropdownOpen(false)
                       }}
-                      className={`flex h-8 w-full items-center px-5 py-1 ${
+                      className={`flex h-8 w-full items-center px-5 py-1 ${ui.focusRingInset} ${
                         isActive ? "justify-between" : "justify-start"
                       }`}
                     >
@@ -91,7 +95,13 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
                         {val} Baris
                       </span>
                       {isActive && (
-                        <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+                        <svg
+                          aria-hidden="true"
+                          width="14"
+                          height="11"
+                          viewBox="0 0 14 11"
+                          fill="none"
+                        >
                           <path
                             d="M1 5.5L4.5 9L13 1"
                             stroke="#630ED4"
@@ -111,10 +121,11 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
             <button
               type="button"
               className={pageBtnNav}
+              aria-label="Halaman sebelumnya"
               disabled={page === 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
-              <svg width="5" height="8" viewBox="0 0 5 8" fill="none">
+              <svg aria-hidden="true" width="5" height="8" viewBox="0 0 5 8" fill="none">
                 <path
                   d="M4 1L1 4L4 7"
                   stroke="#191C1E"
@@ -137,6 +148,7 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
                   key={n}
                   type="button"
                   onClick={() => setPage(n)}
+                  aria-current={n === page ? "page" : undefined}
                   className={`${pageBtn} ${n === page ? pageBtnActive : pageBtnIdle}`}
                 >
                   {n}
@@ -146,10 +158,11 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
             <button
               type="button"
               className={pageBtnNav}
+              aria-label="Halaman berikutnya"
               disabled={page === totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             >
-              <svg width="5" height="8" viewBox="0 0 5 8" fill="none">
+              <svg aria-hidden="true" width="5" height="8" viewBox="0 0 5 8" fill="none">
                 <path
                   d="M1 1L4 4L1 7"
                   stroke="#191C1E"
@@ -163,15 +176,17 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
           <button
             type="button"
             onClick={() => setExpanded((e) => !e)}
-            className="flex items-center gap-[5px] rounded-sm border border-[rgba(204,195,216,0.5)] px-2.5 py-[5px] text-xs font-medium text-[#6B7280]"
+            aria-expanded={expanded}
+            className={`flex items-center gap-[5px] rounded-sm border border-[rgba(204,195,216,0.5)] px-2.5 py-[5px] text-xs font-medium text-[#6B7280] ${ui.focusRing}`}
           >
             {expanded ? "Sembunyikan" : "Tampilkan"}
             <svg
+              aria-hidden="true"
               width="10"
               height="6"
               viewBox="0 0 10 6"
               fill="none"
-              className={`transition-transform duration-200 ${expanded ? "" : "rotate-180"}`}
+              className={`motion-safe:transition-transform motion-safe:duration-200 ${expanded ? "" : "rotate-180"}`}
             >
               <path
                 d="M1 5L5 1L9 5"
@@ -186,70 +201,62 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
       </div>
       {expanded && (
         <div className="overflow-hidden rounded-b-lg border border-t-0 border-[rgba(204,195,216,0.2)]">
-          <table className="w-full min-w-full table-auto border-collapse lg:table-fixed">
-            <thead>
-              <tr className={ui.theadRow}>
-                <th className={ui.thCenter} style={{ width: 110 }}>
-                  Kode IMPA
-                </th>
-                <th className={ui.thCenter} style={{ width: 220 }}>
-                  Nama Produk
-                </th>
-                <th className={ui.thCenter} style={{ width: 80 }}>
-                  Jumlah
-                </th>
-                <th className={ui.thCenter} style={{ width: 80 }}>
-                  Satuan
-                </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Harga Jual Satuan
-                </th>
-                {showProfit && (
-                  <th className={thProfit} style={{ width: 150 }}>
-                    Profit (Rp)
-                  </th>
-                )}
-                <th className={ui.thCenter} style={{ width: 150 }}>
-                  Total (Rp)
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {slice.map((p, i) => {
-                const reqKode = p.requestedKode ?? ""
-                const reqNama = p.requestedNama ?? ""
-                const kodeDiffers = reqKode.length > 0 && reqKode !== p.kode
-                const namaDiffers = reqNama.length > 0 && reqNama !== p.nama
-                return (
-                  <tr key={i} className={ui.tr}>
-                    <td className={`${ui.tdCenter} truncate font-bold text-primary-700`}>
-                      <div>{p.kode || "-"}</div>
-                      {kodeDiffers && (
-                        <div className={requestedNote} title="Kode IMPA yang diminta klien">
-                          Diminta: {reqKode}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-full table-auto border-collapse max-lg:min-w-[760px] lg:table-fixed">
+              <thead>
+                <tr className={ui.theadRow}>
+                  <th className={`${ui.thCenter} w-[110px]`}>Kode IMPA</th>
+                  <th className={`${ui.thCenter} w-[220px]`}>Nama Produk</th>
+                  <th className={`${ui.thCenter} w-[80px]`}>Jumlah</th>
+                  <th className={`${ui.thCenter} w-[80px]`}>Satuan</th>
+                  <th className={`${ui.thCenter} w-[140px]`}>Harga Jual Satuan</th>
+                  {showProfit && <th className={`${thProfit} w-[150px]`}>Profit (Rp)</th>}
+                  <th className={`${ui.thCenter} w-[150px]`}>Total (Rp)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {slice.map((p, i) => {
+                  const reqKode = p.requestedKode ?? ""
+                  const reqNama = p.requestedNama ?? ""
+                  const kodeDiffers = reqKode.length > 0 && reqKode !== p.kode
+                  const namaDiffers = reqNama.length > 0 && reqNama !== p.nama
+                  return (
+                    <tr key={p.lineId ?? start + i} className={ui.tr}>
+                      <td className={`${ui.tdCenter} truncate font-bold text-primary-700`}>
+                        <div>{p.kode || "-"}</div>
+                        {kodeDiffers && (
+                          <div className={requestedNote} title="Kode IMPA yang diminta klien">
+                            Diminta: {reqKode}
+                          </div>
+                        )}
+                      </td>
+                      <td className={`${ui.tdCenter} truncate font-medium text-dark-900`}>
+                        <div className="truncate">
+                          <EntityLink kind="product" id={p.itemId} tone="name">
+                            {p.nama}
+                          </EntityLink>
                         </div>
+                        {namaDiffers && (
+                          <div className={requestedNote} title="Nama produk yang diminta klien">
+                            Diminta: {reqNama}
+                          </div>
+                        )}
+                      </td>
+                      <td className={`${ui.tdCenter} truncate`}>{p.qty}</td>
+                      <td className={`${ui.tdCenter} truncate`}>{p.satuan}</td>
+                      <td className={`${ui.tdCenter} truncate`}>{formatRp(p.hargaSatuan)}</td>
+                      {showProfit && (
+                        <td className={tdProfit}>{formatRp(p.qty * p.profitSatuan)}</td>
                       )}
-                    </td>
-                    <td className={`${ui.tdCenter} truncate font-medium text-dark-900`}>
-                      <div>{p.nama}</div>
-                      {namaDiffers && (
-                        <div className={requestedNote} title="Nama produk yang diminta klien">
-                          Diminta: {reqNama}
-                        </div>
-                      )}
-                    </td>
-                    <td className={`${ui.tdCenter} truncate`}>{p.qty}</td>
-                    <td className={`${ui.tdCenter} truncate`}>{p.satuan}</td>
-                    <td className={`${ui.tdCenter} truncate`}>{formatRp(p.hargaSatuan)}</td>
-                    {showProfit && <td className={tdProfit}>{formatRp(p.qty * p.profitSatuan)}</td>}
-                    <td className={`${ui.tdCenter} truncate font-bold text-dark-900`}>
-                      {formatRp(p.qty * p.hargaSatuan)}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                      <td className={`${ui.tdCenter} truncate font-bold text-dark-900`}>
+                        {formatRp(p.qty * p.hargaSatuan)}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
           <div className="flex items-center justify-between border-t border-dark-200 p-6">
             <span className="text-sm text-[#4A4455]">
               Menampilkan {total === 0 ? 0 : start + 1}–{Math.min(start + pageSize, total)} dari{" "}

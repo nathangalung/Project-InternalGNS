@@ -1,8 +1,13 @@
 package app
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -20,8 +25,51 @@ const middlewareSecret = "middleware-test-secret"
 
 func mkSvc(t *testing.T) *auth.Service {
 	t.Helper()
-	_, tx := testutil.BeginTx(t)
-	return auth.NewService(users.NewRepo(tx, testutil.Store(t)), middlewareSecret, time.Hour)
+	svc, _, _ := mkSvcWithRepo(t)
+	return svc
+}
+
+// mkSvcWithRepo also returns the repo.
+// A test can then create the account its token names; the middleware reads
+// live account state per request.
+func mkSvcWithRepo(t *testing.T) (*auth.Service, *users.Repo, context.Context) {
+	t.Helper()
+	ctx, tx := testutil.BeginTx(t)
+	repo := users.NewRepo(tx, testutil.Store(t))
+	return auth.NewService(repo, middlewareSecret, time.Hour), repo, ctx
+}
+
+// mkMiddlewareUser creates a test account.
+func mkMiddlewareUser(t *testing.T, ctx context.Context, repo *users.Repo, role users.Role) users.User {
+	t.Helper()
+	u, err := repo.Create(ctx, users.CreateUserRequest{
+		Email:    fmt.Sprintf("mw-%s-%d@test", t.Name(), time.Now().UnixNano()),
+		Name:     "Middleware",
+		Password: "Middle-pw1!",
+		Role:     role,
+	}, 1)
+	require.NoError(t, err)
+	return u
+}
+
+// mkToken signs a subject's token.
+func mkToken(t *testing.T, subject string) string {
+	t.Helper()
+	now := time.Now()
+	claims := auth.Claims{
+		Role:           users.RoleSuperadmin,
+		SessionVersion: 1,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "internalgns-api",
+			Subject:   subject,
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour)),
+		},
+	}
+	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(middlewareSecret))
+	require.NoError(t, err)
+	return signed
 }
 
 func protectedHandler(t *testing.T, svc *auth.Service) http.Handler {
@@ -77,7 +125,8 @@ func TestAuthMiddleware_BadSubject(t *testing.T) {
 	svc := mkSvc(t)
 	now := time.Now()
 	claims := auth.Claims{
-		Role: users.RoleSuperadmin,
+		Role:           users.RoleSuperadmin,
+		SessionVersion: 1,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "internalgns-api",
 			Subject:   "not-a-number",
@@ -98,20 +147,9 @@ func TestAuthMiddleware_BadSubject(t *testing.T) {
 }
 
 func TestAuthMiddleware_HappyPath(t *testing.T) {
-	svc := mkSvc(t)
-	now := time.Now()
-	claims := auth.Claims{
-		Role: users.RoleSuperadmin,
-		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "internalgns-api",
-			Subject:   "42",
-			IssuedAt:  jwt.NewNumericDate(now),
-			NotBefore: jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour)),
-		},
-	}
-	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(middlewareSecret))
-	require.NoError(t, err)
+	svc, repo, ctx := mkSvcWithRepo(t)
+	u := mkMiddlewareUser(t, ctx, repo, users.RoleSuperadmin)
+	signed := mkToken(t, strconv.FormatInt(u.ID, 10))
 
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 	r.Header.Set("Authorization", "Bearer "+signed)
@@ -121,16 +159,106 @@ func TestAuthMiddleware_HappyPath(t *testing.T) {
 	mw := authMiddleware(svc)
 	mw(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		called = true
-		assert.Equal(t, int64(42), deps.CurrentUserID(r.Context()))
+		assert.Equal(t, u.ID, deps.CurrentUserID(r.Context()))
 	})).ServeHTTP(w, r)
 	assert.True(t, called)
+}
+
+// Tokens track live account state.
+// A structurally valid token must not outlive the account state behind it.
+func TestAuthMiddleware_LiveAccountState(t *testing.T) {
+	tests := []struct {
+		name     string
+		mutate   func(t *testing.T, ctx context.Context, repo *users.Repo, u users.User)
+		wantCode int
+		wantRole string
+	}{
+		{
+			name:     "active user passes with its stored role",
+			mutate:   func(*testing.T, context.Context, *users.Repo, users.User) {},
+			wantCode: http.StatusOK,
+			wantRole: string(users.RoleOperational),
+		},
+		{
+			name: "deactivated user is refused at once",
+			mutate: func(t *testing.T, ctx context.Context, repo *users.Repo, u users.User) {
+				_, err := repo.Update(ctx, u.ID, users.UpdateUserRequest{
+					Email: u.Email, Name: u.Name, Role: u.Role, IsActive: false,
+				}, 1)
+				require.NoError(t, err)
+			},
+			wantCode: http.StatusUnauthorized,
+		},
+		{
+			name: "role change ends the token",
+			mutate: func(t *testing.T, ctx context.Context, repo *users.Repo, u users.User) {
+				_, err := repo.Update(ctx, u.ID, users.UpdateUserRequest{
+					Email: u.Email, Name: u.Name, Role: users.RoleFinance, IsActive: true,
+				}, 1)
+				require.NoError(t, err)
+			},
+			wantCode: http.StatusUnauthorized,
+		},
+		{
+			name: "rename keeps the token",
+			mutate: func(t *testing.T, ctx context.Context, repo *users.Repo, u users.User) {
+				_, err := repo.Update(ctx, u.ID, users.UpdateUserRequest{
+					Email: u.Email, Name: "Renamed", Role: u.Role, IsActive: true,
+				}, 1)
+				require.NoError(t, err)
+			},
+			wantCode: http.StatusOK,
+			wantRole: string(users.RoleOperational),
+		},
+		{
+			name: "reactivation does not revive the token",
+			mutate: func(t *testing.T, ctx context.Context, repo *users.Repo, u users.User) {
+				for _, active := range []bool{false, true} {
+					_, err := repo.Update(ctx, u.ID, users.UpdateUserRequest{
+						Email: u.Email, Name: u.Name, Role: u.Role, IsActive: active,
+					}, 1)
+					require.NoError(t, err)
+				}
+			},
+			wantCode: http.StatusUnauthorized,
+		},
+		{
+			name: "password reset ends the token",
+			mutate: func(t *testing.T, ctx context.Context, repo *users.Repo, u users.User) {
+				require.NoError(t, repo.UpdatePassword(ctx, u.ID, "Another-pw1!", 1))
+			},
+			wantCode: http.StatusUnauthorized,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			svc, repo, ctx := mkSvcWithRepo(t)
+			u := mkMiddlewareUser(t, ctx, repo, users.RoleOperational)
+			signed := mkToken(t, strconv.FormatInt(u.ID, 10))
+			tc.mutate(t, ctx, repo, u)
+
+			r := httptest.NewRequest(http.MethodGet, "/", nil)
+			r.Header.Set("Authorization", "Bearer "+signed)
+			w := httptest.NewRecorder()
+			gotRole := ""
+			authMiddleware(svc)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				gotRole = deps.CurrentUserRole(r.Context())
+				w.WriteHeader(http.StatusOK)
+			})).ServeHTTP(w, r)
+
+			assert.Equal(t, tc.wantCode, w.Code)
+			assert.Equal(t, tc.wantRole, gotRole)
+		})
+	}
 }
 
 func TestAuthMiddleware_ExpiredToken(t *testing.T) {
 	svc := mkSvc(t)
 	past := time.Now().Add(-2 * time.Hour)
 	claims := auth.Claims{
-		Role: users.RoleSuperadmin,
+		Role:           users.RoleSuperadmin,
+		SessionVersion: 1,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "internalgns-api",
 			Subject:   "1",
@@ -151,20 +279,9 @@ func TestAuthMiddleware_ExpiredToken(t *testing.T) {
 }
 
 func TestAuthMiddleware_PreservesProtectedHandler(t *testing.T) {
-	svc := mkSvc(t)
-	now := time.Now()
-	claims := auth.Claims{
-		Role: users.RoleSuperadmin,
-		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "internalgns-api",
-			Subject:   "7",
-			IssuedAt:  jwt.NewNumericDate(now),
-			NotBefore: jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(time.Hour)),
-		},
-	}
-	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(middlewareSecret))
-	require.NoError(t, err)
+	svc, repo, ctx := mkSvcWithRepo(t)
+	u := mkMiddlewareUser(t, ctx, repo, users.RoleSuperadmin)
+	signed := mkToken(t, strconv.FormatInt(u.ID, 10))
 
 	srv := httptest.NewServer(protectedHandler(t, svc))
 	defer srv.Close()
@@ -184,23 +301,32 @@ func TestAuthorizeBucket(t *testing.T) {
 	guarded := authorizeBucket(next)
 
 	cases := []struct {
-		role, bucket string
-		want         int
+		role, method, bucket string
+		want                 int
 	}{
-		{"finance", "invoice-attachments", http.StatusOK},
-		{"operational", "invoice-attachments", http.StatusForbidden},
-		{"operational", "po-docs", http.StatusOK},
-		{"finance", "po-docs", http.StatusForbidden},
-		{"operational", "client-logos", http.StatusOK},
-		{"operational", "", http.StatusForbidden},
+		{"finance", http.MethodGet, "invoice-attachments", http.StatusOK},
+		{"operational", http.MethodGet, "invoice-attachments", http.StatusForbidden},
+		{"operational", http.MethodGet, "po-docs", http.StatusOK},
+		{"finance", http.MethodGet, "po-docs", http.StatusForbidden},
+		{"operational", http.MethodGet, "client-logos", http.StatusOK},
+		{"operational", http.MethodGet, "", http.StatusForbidden},
+		{"finance", http.MethodPut, "invoice-attachments", http.StatusOK},
+		{"finance", http.MethodPut, "client-logos", http.StatusOK},
+		{"finance", http.MethodGet, "item-images", http.StatusOK},
+		{"finance", http.MethodGet, "vendor-logos", http.StatusOK},
+		{"finance", http.MethodPut, "item-images", http.StatusForbidden},
+		{"finance", http.MethodPut, "vendor-logos", http.StatusForbidden},
+		{"operational", http.MethodPut, "item-images", http.StatusOK},
+		{"superadmin", http.MethodPut, "vendor-logos", http.StatusOK},
+		{"operational", http.MethodPut, "invoice-attachments", http.StatusForbidden},
 	}
 	for _, c := range cases {
-		req := httptest.NewRequest(http.MethodGet, "/storage/object?bucket="+c.bucket, nil)
+		req := httptest.NewRequest(c.method, "/storage/object?bucket="+c.bucket, nil)
 		req = req.WithContext(deps.WithUserRole(req.Context(), c.role))
 		rec := httptest.NewRecorder()
 		guarded.ServeHTTP(rec, req)
 		if rec.Code != c.want {
-			t.Errorf("role %q bucket %q: got %d want %d", c.role, c.bucket, rec.Code, c.want)
+			t.Errorf("%s %s bucket %q: got %d want %d", c.role, c.method, c.bucket, rec.Code, c.want)
 		}
 	}
 }
@@ -216,6 +342,7 @@ func TestSecurityHeaders(t *testing.T) {
 	assert.Contains(t, rec.Header().Get("Content-Security-Policy"), "default-src 'none'")
 }
 
+// Budgets follow the request path.
 // Render routes get the long budget, everything else the default.
 func TestRequestTimeout_BudgetPerPath(t *testing.T) {
 	const short, long = 50 * time.Millisecond, time.Hour
@@ -231,11 +358,12 @@ func TestRequestTimeout_BudgetPerPath(t *testing.T) {
 		{"coretax export", "/api/v1/invoices/coretax.xlsx", true},
 		{"invoice pdf", "/api/v1/invoices/1/pdf", true},
 		{"delivery note", "/api/v1/purchase-orders/1/delivery-note.pdf", true},
+		{"storage object", "/api/v1/storage/object", true},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var budget time.Duration
-			h := requestTimeout(short, long)(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+			h := requestTimeout(short, long, long)(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 				deadline, ok := r.Context().Deadline()
 				require.True(t, ok)
 				budget = time.Until(deadline)
@@ -247,6 +375,95 @@ func TestRequestTimeout_BudgetPerPath(t *testing.T) {
 			} else {
 				assert.LessOrEqual(t, budget, short)
 			}
+		})
+	}
+}
+
+// Storage routes extend read deadline.
+// A slow asset upload must outlive the server ReadTimeout that guards every
+// other route. The handler context budget alone cannot do this: ReadTimeout
+// covers reading the body, so it fires first and severs the connection.
+func TestRequestTimeout_StorageRouteExtendsReadDeadline(t *testing.T) {
+	const readTimeout = 300 * time.Millisecond
+	const stall = 900 * time.Millisecond
+
+	tests := []struct {
+		name    string
+		path    string
+		wantErr bool
+	}{
+		{"storage upload survives", "/api/v1/storage/object", false},
+		{"other route keeps ReadTimeout", "/api/v1/clients/1/logo", true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			h := requestTimeout(time.Minute, time.Minute, time.Minute)(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if _, err := io.ReadAll(r.Body); err != nil {
+						http.Error(w, err.Error(), http.StatusRequestTimeout)
+						return
+					}
+					w.WriteHeader(http.StatusNoContent)
+				}))
+			// accessLogMiddleware wraps the writer, so the controller has to
+			// unwrap past it to reach the connection.
+			srv := httptest.NewUnstartedServer(accessLogMiddleware(h))
+			srv.Config.ReadTimeout = readTimeout
+			srv.Start()
+			t.Cleanup(srv.Close)
+
+			pr, pw := io.Pipe()
+			go func() {
+				_, _ = pw.Write([]byte("first"))
+				time.Sleep(stall)
+				_, _ = pw.Write([]byte("second"))
+				_ = pw.Close()
+			}()
+
+			req, err := http.NewRequest(http.MethodPut, srv.URL+tc.path, pr)
+			require.NoError(t, err)
+			res, err := srv.Client().Do(req)
+			if tc.wantErr {
+				if err == nil {
+					defer res.Body.Close()
+					assert.NotEqual(t, http.StatusNoContent, res.StatusCode)
+				}
+				return
+			}
+			require.NoError(t, err)
+			defer res.Body.Close()
+			assert.Equal(t, http.StatusNoContent, res.StatusCode)
+		})
+	}
+}
+
+// 401 details read as Indonesian.
+// Each one reaches the toast verbatim.
+func TestAuthMiddleware_UnauthorizedDetailIsIndonesian(t *testing.T) {
+	svc := mkSvc(t)
+	tests := []struct {
+		name   string
+		header string
+		want   string
+	}{
+		{"no header", "", "Anda belum masuk. Silakan masuk terlebih dahulu."},
+		{"not a jwt", "Bearer not-a-jwt", "Token akses tidak valid atau sudah kedaluwarsa. Silakan masuk kembali."},
+		{"account gone", "Bearer " + mkToken(t, "99999999"), "Sesi Anda tidak berlaku lagi. Silakan masuk kembali."},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			r := httptest.NewRequest(http.MethodGet, "/", nil)
+			if tc.header != "" {
+				r.Header.Set("Authorization", tc.header)
+			}
+			w := httptest.NewRecorder()
+			authMiddleware(svc)(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {})).ServeHTTP(w, r)
+			require.Equal(t, http.StatusUnauthorized, w.Code)
+			var p struct {
+				Detail string `json:"detail"`
+			}
+			require.NoError(t, json.NewDecoder(w.Body).Decode(&p))
+			assert.Equal(t, tc.want, p.Detail)
 		})
 	}
 }

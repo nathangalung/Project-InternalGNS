@@ -22,6 +22,11 @@ const (
 	seedUnitID    int16 = 19
 )
 
+// testPOFile fakes an uploaded document.
+var testPOFile = purchaseorders.UpdateFileRequest{
+	FileName: "po.pdf", FileSize: 1024, ObjectKey: "po/test/1-po.pdf",
+}
+
 // Accept quotation, return PO.
 func acceptedQuotationWithPO(t *testing.T, tx pgx.Tx) (int64, int64) {
 	t.Helper()
@@ -31,10 +36,11 @@ func acceptedQuotationWithPO(t *testing.T, tx pgx.Tx) (int64, int64) {
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		Items: []quotations.CreateItem{{
-			RequestedName: "Test Product",
-			Qty:           "2",
-			UnitID:        seedUnitID,
-			SellingPrice:  "100000",
+			RequestedName:   "Test Product",
+			Qty:             "2",
+			UnitID:          seedUnitID,
+			SellingPrice:    "100000",
+			ShipDestination: strPtr("Kapal Uji"),
 		}},
 	}, seedUserID)
 	require.NoError(t, err)
@@ -94,7 +100,7 @@ func TestRepo_ChangeStatus_FullLifecycle(t *testing.T) {
 
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -108,7 +114,7 @@ func TestRepo_ChangeStatus_DeliveredStampsDeliveryNote(t *testing.T) {
 	_, poID := acceptedQuotationWithPO(t, tx)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -123,33 +129,33 @@ func TestRepo_ChangeStatus_DeliveredStampsDeliveryNote(t *testing.T) {
 	require.Error(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 }
 
-// Migration 00046: the invoice guard raises P0013, so the caller learns the
-// real reason instead of the generic invalid-transition error 00035 collapsed
-// into. The raise aborts the transaction, so it is the last DB action here.
-func TestRepo_ChangeStatus_RevertBlockedByInvoiceReportsReason(t *testing.T) {
+// DELIVERED is terminal.
+// Migration 00061 made it so; the refusal is an invalid transition carrying
+// Indonesian prose. The raise aborts the transaction.
+func TestRepo_ChangeStatus_DeliveredIsTerminal(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
 
 	err := repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, purchaseorders.ErrLocked)
-	assert.NotErrorIs(t, err, purchaseorders.ErrInvalidTransition)
-	assert.Contains(t, err.Error(), "has an invoice; cannot revert from DELIVERED")
+	assert.ErrorIs(t, err, purchaseorders.ErrInvalidTransition)
+	assert.Equal(t, "PO yang sudah dikirim atau dibatalkan tidak dapat diubah statusnya.", err.Error())
 }
 
-// The DELIVERED edit lock shares P0013 with the invoice guard but keeps its
-// own 422: the handler matches ErrLocked before falling through to FromDBErr.
+// DELIVERED locks item edits.
+// The lock shares P0013 with the invoice guard; the handler matches
+// ErrLocked and renders the shared 409 po_locked problem.
 func TestRepo_UpdateItems_DeliveredIsLocked(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithPO(t, tx)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -163,10 +169,11 @@ func TestRepo_UpdateItems_DeliveredIsLocked(t *testing.T) {
 	}, seedUserID, &rowVersion)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, purchaseorders.ErrLocked)
-	assert.Contains(t, err.Error(), "Cannot edit PO in DELIVERED state")
+	assert.Equal(t, "PO yang sudah dikirim atau dibatalkan tidak dapat diubah.", err.Error())
 }
 
-// Migration 00046: fn_update_po_items validation now raises the typed P0014
+// Out-of-range discount is 422.
+// Since migration 00046 fn_update_po_items validation raises the typed P0014
 // rather than the untyped P0001, and the handler's default branch still
 // renders 422 carrying the raise message.
 func TestRepo_UpdateItems_DiscountOutOfRangeIsUnprocessable(t *testing.T) {
@@ -203,7 +210,7 @@ func TestRepo_ChangeStatus_DeliveredSnapshotsGoodsOrService(t *testing.T) {
 	qID, poID := acceptedQuotationWithPO(t, tx)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -242,7 +249,7 @@ func TestRepo_ChangeStatus_NotFound(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 
-	err := repo.ChangeStatus(ctx, 99999999, purchaseorders.StatusUploaded, seedUserID)
+	err := repo.ChangeStatus(ctx, 99999999, purchaseorders.StatusOnProgress, seedUserID)
 	assert.ErrorIs(t, err, purchaseorders.ErrNotFound)
 }
 
@@ -251,7 +258,7 @@ func TestRepo_UpdateNotes(t *testing.T) {
 	_, poID := acceptedQuotationWithPO(t, tx)
 
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
-	require.NoError(t, repo.UpdateNotes(ctx, poID, "added by test", seedUserID))
+	require.NoError(t, repo.UpdateNotes(ctx, poID, "added by test", seedUserID, nil))
 
 	po, err := repo.GetByID(ctx, poID)
 	require.NoError(t, err)
@@ -335,7 +342,7 @@ func TestRepo_UpdateItems_LockedWhenDelivered(t *testing.T) {
 	_, poID := acceptedQuotationWithPO(t, tx)
 
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
-	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusUploaded, seedUserID))
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, repo.ChangeStatus(ctx, poID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -392,7 +399,8 @@ func TestRepo_UpdateItems_VersionedNotFound(t *testing.T) {
 	assert.ErrorIs(t, err, purchaseorders.ErrNotFound)
 }
 
-// Shipping days survive create then update.
+// Shipping days round-trip.
+// They survive create then update.
 func TestRepo_ShippingDays_RoundTrip(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	poID := acceptedQuotationWithShipping(t, tx, 7)
@@ -428,7 +436,7 @@ func TestRepo_ShippingDays_RoundTrip(t *testing.T) {
 	assert.Equal(t, 12, *updatedShip.ShippingDays)
 }
 
-// Accept quotation carrying shipping, return PO.
+// Accept shipping quotation, return PO.
 func acceptedQuotationWithShipping(t *testing.T, tx pgx.Tx, days int) int64 {
 	t.Helper()
 	ctx := context.Background()
@@ -471,3 +479,36 @@ func shippingLine(t *testing.T, items []purchaseorders.PurchaseOrderItem) purcha
 
 func int16Ptr(v int16) *int16 { return &v }
 func strPtr(v string) *string { return &v }
+
+// ON_PROGRESS issues the note number.
+// It is never reissued.
+func TestRepo_ChangeStatus_OnProgressIssuesDeliveryNote(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, poID := acceptedQuotationWithPO(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+
+	dnAfter := func(target purchaseorders.Status) *string {
+		t.Helper()
+		require.NoError(t, repo.ChangeStatus(ctx, poID, target, seedUserID))
+		po, err := repo.GetByID(ctx, poID)
+		require.NoError(t, err)
+		return po.DeliveryNoteNumber
+	}
+
+	require.NoError(t, repo.UpdateFile(ctx, poID, testPOFile, seedUserID))
+	po, err := repo.GetByID(ctx, poID)
+	require.NoError(t, err)
+	assert.Nil(t, po.DeliveryNoteNumber)
+	issued := dnAfter(purchaseorders.StatusOnProgress)
+	require.NotNil(t, issued)
+	assert.Contains(t, *issued, "DN-")
+	for _, step := range []purchaseorders.Status{
+		purchaseorders.StatusUploaded,
+		purchaseorders.StatusOnProgress,
+		purchaseorders.StatusDelivered,
+	} {
+		got := dnAfter(step)
+		require.NotNil(t, got, step)
+		assert.Equal(t, *issued, *got, step)
+	}
+}

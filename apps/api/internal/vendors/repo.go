@@ -3,6 +3,7 @@ package vendors
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 
@@ -22,13 +23,17 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 
 var ErrNotFound = errors.New("not found")
 
-// totalPurchaseExpr is the accepted-quotation cost sum per vendor.
+// totalPurchaseExpr sums accepted costs.
+// The accepted-quotation cost sum is per vendor and skips deals whose PO
+// was cancelled, matching total_purchase in vendors.sql.
 const totalPurchaseExpr = "COALESCE((SELECT SUM(qi.total_cost) FROM quotation_items qi" +
 	" JOIN vendor_products vp ON vp.id = qi.vendor_product_id" +
 	" JOIN quotations q ON q.id = qi.quotation_id" +
-	" WHERE vp.vendor_id = v.id AND q.status = 'accepted'), 0)"
+	" WHERE vp.vendor_id = v.id AND q.status = 'accepted'" +
+	" AND NOT EXISTS (SELECT 1 FROM purchase_orders po" +
+	" WHERE po.quotation_id = q.id AND po.status = 'CANCELLED')), 0)"
 
-// sortable is the closed set of vendor sort keys.
+// sortable lists vendor sort keys.
 var sortable = listq.Whitelist{
 	Default: "name",
 	Columns: map[string]listq.Column{
@@ -42,14 +47,14 @@ var sortable = listq.Whitelist{
 	},
 }
 
-// tiebreak keeps paging stable when the sort key ties.
+// tiebreak keeps paging stable.
 var tiebreak = listq.Column{Expr: "v.id", Dir: listq.Desc}
 
-// List returns vendors with filter/sort and total count.
+// List pages vendors with total.
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
-		p := c.Arg("%" + f.Q + "%")
+		p := c.Arg(likeContains(f.Q))
 		c.And("(v.name ILIKE " + p + " OR v.location ILIKE " + p + ")")
 	}
 	if f.IsActive != nil {
@@ -57,7 +62,7 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 		c.And("v.is_active = " + p)
 	}
 	if f.CountryName != "" {
-		p := c.Arg("%" + f.CountryName + "%")
+		p := c.Arg(likeContains(f.CountryName))
 		c.And("v.location ILIKE " + p)
 	}
 	if f.MinTotal != nil {
@@ -125,7 +130,7 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateVendorRequest, us
 	return v, err
 }
 
-// UpdateLogo writes the MinIO object key for the vendor logo.
+// UpdateLogo stores the logo key.
 func (r *Repo) UpdateLogo(ctx context.Context, id int64, objectKey string, userID int64) error {
 	tag, err := r.db.Exec(ctx, r.store.Get("vendors.update_logo"), id, objectKey, userID)
 	if err != nil {
@@ -146,11 +151,19 @@ func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int
 	return pgx.CollectRows(rows, pgx.RowToStructByName[SearchResult])
 }
 
-// ListItems calls fn_search_items_by_vendor.
-func (r *Repo) ListItems(ctx context.Context, vendorID int64, limit int) ([]ItemByVendor, error) {
-	rows, err := r.db.Query(ctx, r.store.Get("vendors.list_items"), vendorID, limit)
-	if err != nil {
-		return nil, err
+// ListItems pages vendor items.
+func (r *Repo) ListItems(ctx context.Context, vendorID int64, limit, offset int) (ItemListResult, error) {
+	var out ItemListResult
+	if err := r.db.QueryRow(ctx, r.store.Get("vendors.list_items_count"), vendorID).Scan(&out.Total); err != nil {
+		return out, fmt.Errorf("count vendor %d items: %w", vendorID, err)
 	}
-	return pgx.CollectRows(rows, pgx.RowToStructByName[ItemByVendor])
+	rows, err := r.db.Query(ctx, r.store.Get("vendors.list_items"), vendorID, limit, offset)
+	if err != nil {
+		return out, fmt.Errorf("list vendor %d items: %w", vendorID, err)
+	}
+	out.Rows, err = pgx.CollectRows(rows, pgx.RowToStructByName[ItemByVendor])
+	if err != nil {
+		return out, fmt.Errorf("scan vendor %d items: %w", vendorID, err)
+	}
+	return out, nil
 }

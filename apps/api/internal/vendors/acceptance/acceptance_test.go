@@ -200,6 +200,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the vendor search results contain the seeded vendor$`, state.searchContainsVendor)
 		sc.Step(`^the user lists items for vendor (\d+)$`, state.listItemsForVendor)
 		sc.Step(`^the items list contains at least (\d+) row(?:s)?$`, state.itemsListAtLeast)
+		registerRuleSteps(sc, state)
 	}
 }
 
@@ -212,6 +213,7 @@ func TestVendorsFeatures(t *testing.T) {
 			Format:   "pretty",
 			Paths:    []string{"features"},
 			TestingT: t,
+			Strict:   true,
 		},
 	}
 	if status := suite.Run(); status != 0 {

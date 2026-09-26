@@ -1,4 +1,6 @@
+import { Link } from "@tanstack/react-router"
 import { useMemo, useState } from "react"
+import EntityLink from "@/components/shared/EntityLink"
 import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
 import Pagination from "@/components/shared/Pagination"
@@ -14,17 +16,17 @@ import type { Role } from "@/types/api"
 import UserAddModal from "./UserAddModal"
 import UserFilter, { type RoleFilter, type StatusFilter } from "./UserFilter"
 
-interface UserListProps {
-  onViewDetail?: (id: number) => void
-}
-
 type SortKey = "name" | "createdAt"
+
+// Sortable header, keyboard reachable.
+const sortBtn = `mx-auto flex cursor-pointer items-center justify-center gap-1.5 rounded-sm p-0 font-bold uppercase tracking-[0.05em] ${ui.focusRing}`
 
 type UserFilters = { role: RoleFilter; status: StatusFilter }
 
 const ROLE_BADGE: Record<Role, { label: string; bg: string; color: string }> = {
   superadmin: { label: "SUPERADMIN", bg: "#EDE9FE", color: "#5B21B6" },
-  operational: { label: "OPERASIONAL", bg: "#FFE16D", color: "#DA6900" },
+  // Text darkened from #DA6900 (2.3:1) to 6.7:1.
+  operational: { label: "OPERASIONAL", bg: "#FFE16D", color: "#92400E" },
   finance: { label: "FINANCE", bg: "#DBEAFE", color: "#1D4ED8" },
 }
 
@@ -49,7 +51,7 @@ function formatDateID(iso: string): string {
   return `${d.getDate()} ${MONTHS_ID[d.getMonth()]} ${d.getFullYear()}`
 }
 
-export default function UserList({ onViewDetail }: UserListProps) {
+export default function UserList() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
   const [sortKey, setSortKey] = useState<SortKey>("createdAt")
   const [showFilter, setShowFilter] = useState(false)
@@ -57,6 +59,11 @@ export default function UserList({ onViewDetail }: UserListProps) {
 
   const list = useListScreen<UserFilters>({ role: "all", status: "all" })
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
+
+  function ariaSort(key: SortKey): "ascending" | "descending" | "none" {
+    if (sortKey !== key) return "none"
+    return sortDir === "asc" ? "ascending" : "descending"
+  }
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
@@ -88,16 +95,17 @@ export default function UserList({ onViewDetail }: UserListProps) {
 
   return (
     <>
-      <div className="page-content">
-        <div className="page-header">
-          <h1 className="page-title">Manajemen Pengguna</h1>
-          <div className="page-actions">
+      <div className={ui.pageContent}>
+        <div className={ui.pageHeader}>
+          <h1 className={ui.pageTitle}>Manajemen Pengguna</h1>
+          <div className={ui.pageActions}>
             <button
               className={`${ui.btnPrimary} w-[200px]`}
               type="button"
               onClick={() => setShowAdd(true)}
             >
               <svg
+                aria-hidden="true"
                 width="14"
                 height="14"
                 viewBox="0 0 24 24"
@@ -118,7 +126,7 @@ export default function UserList({ onViewDetail }: UserListProps) {
           <SearchInput
             value={list.search}
             onChange={list.setSearch}
-            placeholder="Cari nama, peran, status admin..."
+            placeholder="Cari nama atau email..."
           />
           <FilterButton onClick={() => setShowFilter(true)} />
         </div>
@@ -127,38 +135,22 @@ export default function UserList({ onViewDetail }: UserListProps) {
           <table className="w-full border-collapse">
             <thead>
               <tr className={ui.theadRow}>
-                <th
-                  className={`${ui.thCenter} cursor-pointer`}
-                  style={{ width: 200 }}
-                  onClick={() => toggleSort("name")}
-                >
-                  <div className="flex items-center justify-center gap-1.5">
-                    <span>Nama Admin</span>
+                <th className={`${ui.thCenter} w-[200px]`} aria-sort={ariaSort("name")}>
+                  <button type="button" className={sortBtn} onClick={() => toggleSort("name")}>
+                    <span>Nama Pengguna</span>
                     <SortIcon direction={sortKey === "name" ? sortDir : null} />
-                  </div>
+                  </button>
                 </th>
-                <th className={ui.thCenter} style={{ width: 220 }}>
-                  Email
-                </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Peran
-                </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Status
-                </th>
-                <th
-                  className={`${ui.thCenter} cursor-pointer`}
-                  style={{ width: 160 }}
-                  onClick={() => toggleSort("createdAt")}
-                >
-                  <div className="flex items-center justify-center gap-1.5">
+                <th className={`${ui.thCenter} w-[220px]`}>Email</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Peran</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Status</th>
+                <th className={`${ui.thCenter} w-[160px]`} aria-sort={ariaSort("createdAt")}>
+                  <button type="button" className={sortBtn} onClick={() => toggleSort("createdAt")}>
                     <span>Tanggal Pembuatan</span>
                     <SortIcon direction={sortKey === "createdAt" ? sortDir : null} />
-                  </div>
+                  </button>
                 </th>
-                <th className={ui.thCenter} style={{ width: 80 }}>
-                  Aksi
-                </th>
+                <th className={`${ui.thCenter} w-[80px]`}>Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -173,7 +165,11 @@ export default function UserList({ onViewDetail }: UserListProps) {
                   return (
                     <tr key={u.id} className={ui.tr}>
                       <td className={ui.tdCenter}>
-                        <span className="font-medium text-dark-900">{u.name}</span>
+                        <span className="font-medium text-dark-900">
+                          <EntityLink kind="user" id={u.id} tone="name">
+                            {u.name}
+                          </EntityLink>
+                        </span>
                       </td>
                       <td className={ui.tdCenter}>{u.email}</td>
                       <td className={ui.tdCenter}>
@@ -188,14 +184,15 @@ export default function UserList({ onViewDetail }: UserListProps) {
                       </td>
                       <td className={ui.tdCenter}>{formatDateID(u.createdAt)}</td>
                       <td className={ui.tdCenter}>
-                        <button
-                          type="button"
+                        <Link
+                          to="/users/$id"
+                          params={{ id: String(u.id) }}
                           className={ui.iconAction}
                           title="Lihat detail"
-                          onClick={() => onViewDetail?.(u.id)}
+                          aria-label={`Lihat detail ${u.name}`}
                         >
                           <EyeIcon />
-                        </button>
+                        </Link>
                       </td>
                     </tr>
                   )
@@ -209,7 +206,7 @@ export default function UserList({ onViewDetail }: UserListProps) {
             itemsPerPage={itemsPerPage}
             currentPage={list.currentPage}
             totalPages={totalPages}
-            resourceLabel="Admin"
+            resourceLabel="Pengguna"
             onItemsPerPage={list.setItemsPerPage}
             onPage={list.setCurrentPage}
           />

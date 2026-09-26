@@ -1,11 +1,16 @@
+import { Link } from "@tanstack/react-router"
 import { useMemo, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
+import EntityLink from "@/components/shared/EntityLink"
 import FilterButton from "@/components/shared/FilterButton"
 import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
-import * as dashboardApi from "@/features/dashboard/api"
-import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
+import {
+  useDashboardExport,
+  useDashboardSummary,
+  useDashboardTimeseries,
+} from "@/features/dashboard/hooks"
 import { useInvoices } from "@/features/invoices/hooks"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "@/features/invoices/types"
 import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
@@ -16,43 +21,47 @@ import {
   formatRupiahAxis as formatRpAxis,
   toNum,
 } from "@/lib/format"
-import { deriveInvoiceStatus } from "@/lib/status"
 import { pill, ui } from "@/lib/ui"
 import type { DashboardMetric } from "@/types/api"
 import DashboardFinancialFilter, {
   type DashboardFilterValues,
   MONTH_LABELS,
 } from "./DashboardFinancialFilter"
+import {
+  computeRpMax,
+  expenseSeries,
+  REVENUE_LABEL,
+  statusCount,
+  toRecentInvoices,
+} from "./helpers"
+import StatusTiles from "./StatusTiles"
+import SummaryError from "./SummaryError"
 import TrendChart, { CHART_MONTHS } from "./TrendChart"
 
 const chartTabs: { label: string; metric: DashboardMetric }[] = [
-  { label: "Pendapatan", metric: "revenue" },
-  { label: "Pengeluaran", metric: "revenue" }, // expenses derived from revenue - profit
+  { label: REVENUE_LABEL, metric: "revenue" },
+  // Derived: revenue minus profit
+  { label: "Pengeluaran", metric: "revenue" },
   { label: "Laba Bersih", metric: "profit" },
   { label: "PPN", metric: "ppn" },
 ]
 
-function computeRpMax(values: number[]): number {
-  const m = Math.max(...values, 0)
-  if (m <= 50_000_000) return 50_000_000
-  const step = 10 ** Math.floor(Math.log10(m))
-  return Math.ceil(m / step) * step
-}
+// Latest invoices, cancelled excluded.
+//
+// Filtering on the server keeps five rows (DASH-6).
+const RECENT_INVOICE_PARAMS = { limit: 5, status: "draft,sent,overdue,paid" }
 
-interface DashboardFinancialProps {
-  onViewInvoice?: (quotationId: number) => void
-  onViewAllInvoices?: () => void
-}
-
-export default function DashboardFinancial({
-  onViewInvoice,
-  onViewAllInvoices,
-}: DashboardFinancialProps) {
-  const [activeTab, setActiveTab] = useState("Pendapatan")
+export default function DashboardFinancial() {
+  const [activeTab, setActiveTab] = useState(REVENUE_LABEL)
   const [showFilter, setShowFilter] = useState(false)
   const [filters, setFilters] = useState<DashboardFilterValues | null>(null)
-  const { data: summary } = useDashboardSummary()
-  const { data: rawInvoices, isPending: invoicesPending } = useInvoices({ limit: 5 })
+  const { data: summary, isError: summaryError } = useDashboardSummary()
+  const { exporting, exportXlsx } = useDashboardExport()
+  const {
+    data: rawInvoices,
+    isPending: invoicesPending,
+    isError: invoicesError,
+  } = useInvoices(RECENT_INVOICE_PARAMS)
 
   const baseYear = filters?.year ?? new Date().getFullYear()
   const selectedMonth = filters?.month ?? null // null = whole year
@@ -73,12 +82,9 @@ export default function DashboardFinancial({
     const revenue = build(tsRevenue.data)
     const profit = build(tsProfit.data)
     const ppn = build(tsPpn.data)
-    // Expenses = cost = revenue - profit (profit already nets PPN out);
-    // matches the Total Pengeluaran stat card (SUM of cost).
-    const expenses = revenue.map((v, i) => Math.max(0, v - profit[i]))
     return {
-      Pendapatan: revenue,
-      Pengeluaran: expenses,
+      [REVENUE_LABEL]: revenue,
+      Pengeluaran: expenseSeries(revenue, profit),
       "Laba Bersih": profit,
       PPN: ppn,
     }
@@ -91,38 +97,24 @@ export default function DashboardFinancial({
   const totalPo = summary?.totalPo ?? 0
   const totalInvoice = summary?.totalInvoices ?? 0
   const dueSoon = summary?.invoicesDueSoon ?? 0
-  const overdue = summary?.invoicesOverdue ?? 0
+  // Tile count, one Terlambat source
+  const overdue = statusCount(summary?.invoiceStatuses, "overdue") ?? summary?.invoicesOverdue ?? 0
+  // Dash until the summary arrives
+  const fig = (text: string) => (summary ? text : "–")
 
-  const recentInvoices = useMemo(() => {
-    return (rawInvoices?.rows ?? [])
-      .map((inv) => {
-        const status = deriveInvoiceStatus(inv, { cancelledAsNull: true })
-        if (!status) return null
-        return {
-          id: inv.id,
-          quotationId: inv.quotationId,
-          invoiceNo: inv.invoiceNo,
-          client: inv.companyName,
-          createdAt: inv.invoiceDate,
-          dueDate: inv.dueDate ?? inv.invoiceDate,
-          total: formatRp(toNum(inv.total ?? inv.subtotal)),
-          status,
-        }
-      })
-      .filter((r): r is NonNullable<typeof r> => r !== null)
-      .slice(0, 5)
-  }, [rawInvoices])
+  const recentInvoices = useMemo(() => toRecentInvoices(rawInvoices?.rows ?? []), [rawInvoices])
 
   return (
     <>
-      <div className="page-content" style={{ gap: "29px" }}>
-        <div className="page-header">
-          <h1 className="page-title">Dashboard Finansial</h1>
-          <div className="page-actions" style={{ display: "flex", gap: "10px" }}>
+      <div className={ui.pageContent}>
+        <div className={ui.pageHeader}>
+          <h1 className={ui.pageTitle}>Dashboard Finansial</h1>
+          <div className={ui.pageActionsTight}>
             <button
               type="button"
               className={ui.btnOutline}
-              onClick={() => dashboardApi.exportXlsx(baseYear)}
+              disabled={exporting}
+              onClick={() => void exportXlsx(baseYear)}
             >
               <svg
                 width="16"
@@ -133,6 +125,7 @@ export default function DashboardFinancial({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                aria-hidden="true"
               >
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="7 10 12 15 17 10" />
@@ -143,6 +136,8 @@ export default function DashboardFinancial({
             <FilterButton onClick={() => setShowFilter(true)} />
           </div>
         </div>
+
+        <SummaryError show={summaryError} />
 
         {filters && (
           <ActiveFilters
@@ -158,17 +153,19 @@ export default function DashboardFinancial({
 
         {/* Row 1 */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <StatCard label="Total Pendapatan" value={formatRp(totalRevenue)} />
-          <StatCard label="Total Pengeluaran" value={formatRp(totalExpenses)} />
-          <StatCard label="Total Purchase Order" value={formatId(totalPo)} />
+          <StatCard label={`Total ${REVENUE_LABEL}`} value={fig(formatRp(totalRevenue))} />
+          <StatCard label="Total Pengeluaran" value={fig(formatRp(totalExpenses))} />
+          <StatCard label="Total Purchase Order Aktif" value={fig(formatId(totalPo))} />
         </div>
 
         {/* Row 2 */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <StatCard label="Total Laba Bersih" value={formatRp(totalProfit)} />
-          <StatCard label="Total PPN" value={formatRp(totalPpn)} />
-          <StatCard label="Total Invoice" value={formatId(totalInvoice)} />
+          <StatCard label="Total Laba Bersih" value={fig(formatRp(totalProfit))} />
+          <StatCard label="Total PPN" value={fig(formatRp(totalPpn))} />
+          <StatCard label="Total Invoice" value={fig(formatId(totalInvoice))} />
         </div>
+
+        <StatusTiles title="Status Invoice" items={summary?.invoiceStatuses} />
 
         {/* Chart */}
         <div className={ui.panel}>
@@ -178,6 +175,8 @@ export default function DashboardFinancial({
               {chartTabs.map((tab) => (
                 <button
                   key={tab.label}
+                  type="button"
+                  aria-pressed={activeTab === tab.label}
                   className={pill(activeTab === tab.label)}
                   onClick={() => setActiveTab(tab.label)}
                 >
@@ -200,78 +199,75 @@ export default function DashboardFinancial({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex items-center justify-between gap-4 rounded-xl border border-warning/30 bg-warning/10 px-6 py-6">
             <div>
-              <h3 className="text-xl font-bold text-accent-900">{formatId(dueSoon)} Invoice</h3>
+              <h3 className="text-xl font-bold text-accent-900">
+                {fig(formatId(dueSoon))} Invoice
+              </h3>
               <p className="mt-1 text-overline font-semibold uppercase tracking-[0.05em] text-accent-800/70">
-                Invoice akan segera jatuh tempo
+                Invoice segera jatuh tempo
               </p>
             </div>
-            <button type="button" className={ui.btnPrimary} onClick={onViewAllInvoices}>
+            <Link to="/invoices" className={`${ui.btnPrimary} no-underline`}>
               Tinjau
-            </button>
+            </Link>
           </div>
           <div className="flex items-center justify-between gap-4 rounded-xl border border-error/30 bg-error/10 px-6 py-6">
             <div>
-              <h3 className="text-xl font-bold text-red-800">{formatId(overdue)} Invoice</h3>
+              <h3 className="text-xl font-bold text-red-800">{fig(formatId(overdue))} Invoice</h3>
               <p className="mt-1 text-overline font-semibold uppercase tracking-[0.05em] text-red-700/70">
-                Invoice telah jatuh tempo
+                Invoice terlambat
               </p>
             </div>
-            <button type="button" className={ui.btnPrimary} onClick={onViewAllInvoices}>
+            <Link to="/invoices" className={`${ui.btnPrimary} no-underline`}>
               Tinjau
-            </button>
+            </Link>
           </div>
         </div>
 
         {/* Recent invoices */}
-        <div className="tbl-container">
+        <div className={ui.tableWrap}>
           <div className="flex items-center justify-between border-b border-[#F1F5F9] bg-[rgba(242,244,246,0.3)] px-8 py-5">
             <h3 className="text-lg font-bold leading-7 tracking-[-0.45px] text-[#191C1E]">
               Invoice Terkini
             </h3>
-            <button type="button" className={ui.btnPrimary} onClick={onViewAllInvoices}>
+            <Link to="/invoices" className={`${ui.btnPrimary} no-underline`}>
               Lihat Semua
-            </button>
+            </Link>
           </div>
 
           <table className="w-full border-collapse">
             <thead>
               <tr className={ui.theadRow}>
-                <th className={ui.thCenter} style={{ width: 150 }}>
-                  Nomor Invoice
-                </th>
-                <th className={ui.thCenter} style={{ width: 200 }}>
-                  Nama Klien
-                </th>
-                <th className={ui.thCenter} style={{ width: 160 }}>
-                  Tanggal Pembuatan
-                </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Jatuh Tempo
-                </th>
-                <th className={ui.thCenter} style={{ width: 160 }}>
-                  Total Tagihan
-                </th>
-                <th className={ui.thCenter} style={{ width: 130 }}>
-                  Status
-                </th>
+                <th className={`${ui.thCenter} w-[150px]`}>Nomor Invoice</th>
+                <th className={`${ui.thCenter} w-[200px]`}>Nama Klien</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Tanggal Invoice</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Jatuh Tempo</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Total Tagihan</th>
+                <th className={`${ui.thCenter} w-[130px]`}>Status</th>
               </tr>
             </thead>
             <tbody>
               {invoicesPending && <TableLoadingRow colSpan={6} />}
-              {!invoicesPending && recentInvoices.length === 0 && (
+              {invoicesError && (
+                <TableEmptyRow colSpan={6}>Gagal memuat Invoice terkini.</TableEmptyRow>
+              )}
+              {!invoicesPending && !invoicesError && recentInvoices.length === 0 && (
                 <TableEmptyRow colSpan={6}>Belum ada Invoice.</TableEmptyRow>
               )}
               {recentInvoices.map((row) => {
                 const style = INVOICE_STATUS_STYLE[row.status]
                 return (
-                  <tr
-                    key={row.id}
-                    className={`${ui.tr} ${onViewInvoice ? "cursor-pointer" : "cursor-default"}`}
-                    onClick={() => onViewInvoice?.(row.quotationId)}
-                  >
-                    <td className={`${ui.tdCenter} font-bold text-primary-700`}>{row.invoiceNo}</td>
-                    <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>{row.client}</td>
-                    <td className={ui.tdCenter}>{formatDate(row.createdAt)}</td>
+                  <tr key={row.id} className={ui.tr}>
+                    <td className={`${ui.tdCenter} font-bold text-primary-700`}>
+                      <EntityLink kind="invoice" quotationId={row.quotationId}>
+                        {row.invoiceNo}
+                      </EntityLink>
+                    </td>
+                    <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>
+                      <EntityLink kind="client" id={row.clientId} tone="name">
+                        {row.client}
+                      </EntityLink>
+                    </td>
+                    <td className={ui.tdCenter}>{formatDate(row.invoiceDate)}</td>
                     <td className={ui.tdCenter}>{formatDate(row.dueDate)}</td>
                     <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>{row.total}</td>
                     <td className={ui.tdCenter}>

@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// ParseIfMatch reads an optimistic-lock version from an If-Match header.
+// ParseIfMatch reads the lock version.
 // A missing header yields (nil, nil). A present value must be an integer,
 // optionally wrapped in the RFC 7232 quotes (If-Match: "5"); a present but
 // unparseable value is rejected.

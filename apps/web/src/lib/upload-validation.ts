@@ -1,5 +1,11 @@
 // Per-asset upload policy.
-export type AssetKind = "clientLogo" | "vendorLogo" | "itemImage" | "invoiceAttachment" | "poDoc"
+export type AssetKind =
+  | "clientLogo"
+  | "vendorLogo"
+  | "itemImage"
+  | "invoiceAttachment"
+  | "paymentProof"
+  | "poDoc"
 
 type Policy = {
   maxBytes: number
@@ -47,6 +53,13 @@ const POLICIES: Record<AssetKind, Policy> = {
     mimeTypes: DOC_MIMES,
     extensions: DOC_EXTS,
     label: "lampiran invoice",
+  },
+  // Same bucket rules as attachments
+  paymentProof: {
+    maxBytes: 20 * MB,
+    mimeTypes: DOC_MIMES,
+    extensions: DOC_EXTS,
+    label: "bukti pembayaran",
   },
   poDoc: { maxBytes: 20 * MB, mimeTypes: DOC_MIMES, extensions: DOC_EXTS, label: "dokumen PO" },
 }

@@ -1,7 +1,8 @@
 package storage
 
-// DNS-compliant bucket names (S3/MinIO require lowercase, 3-63 chars,
-// letters/digits/hyphens, no underscores, no leading/trailing hyphen).
+// DNS-compliant bucket names.
+// S3/MinIO require lowercase, 3-63 chars, letters/digits/hyphens, no
+// underscores, no leading/trailing hyphen.
 const (
 	BucketPODocs             = "po-docs"
 	BucketClientLogos        = "client-logos"
@@ -10,7 +11,7 @@ const (
 	BucketInvoiceAttachments = "invoice-attachments"
 )
 
-// AllBuckets is the canonical set ensured at boot.
+// AllBuckets is ensured at boot.
 var AllBuckets = []string{
 	BucketPODocs,
 	BucketClientLogos,

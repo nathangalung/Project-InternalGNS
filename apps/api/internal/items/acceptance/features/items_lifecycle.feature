@@ -55,3 +55,92 @@ Feature: Item lifecycle
     When the user imports an unknown product row with auto-create
     Then the response status is 200
     And the imported row is a newly created product with empty price
+
+  Scenario: Import match skips a deactivated vendor's cheaper price
+    Given an existing item with an IMPA code
+    And the item is offered at 100 by a vendor that is later deactivated
+    And the item is offered at 200 by an active vendor
+    When the user imports a row with the item's IMPA code
+    Then the response status is 200
+    And the imported row carries the active vendor's price of "200.00"
+
+  Scenario: A lowercase IMPA code matches on import
+    Given an existing item with an IMPA code
+    When the user imports a row with the item's IMPA code in lowercase and auto-create
+    Then the response status is 200
+    And the imported row matched the seeded item by IMPA code
+
+  Scenario: A duplicate active IMPA code returns 409
+    Given an existing item with an IMPA code
+    When the user creates another item with the same IMPA code
+    Then the response status is 409
+
+  Scenario: Linking an inactive vendor returns 422
+    Given an existing item
+    When the user links an inactive vendor to the item
+    Then the response status is 422
+
+  Scenario Outline: Whitespace-only names are rejected on create
+    When the user creates an item named "<name>"
+    Then the response status is 422
+
+    Examples:
+      | name |
+      |      |
+      | \t   |
+
+  Scenario Outline: A search with LIKE wildcards matches literally
+    Given an item named with "<wildcard>" and a decoy without it
+    When the user lists items searching for the literal name
+    Then the response status is 200
+    And the list holds only the item with the wildcard
+
+    Examples:
+      | wildcard |
+      | %        |
+      | _        |
+
+  Scenario: A search with a NUL byte returns 400
+    When the user sends GET "/items/?q=bolt%00nut"
+    Then the response status is 400
+
+  Scenario: An invalid unitId filter returns 400
+    When the user sends GET "/items/?unitId=pcs"
+    Then the response status is 400
+
+  Scenario Outline: A sub-collection of a missing item returns 404
+    When the user sends GET "/items/999999999/<collection>"
+    Then the response status is 404
+
+    Examples:
+      | collection    |
+      | vendors       |
+      | price-history |
+
+  Scenario Outline: Whitespace-only names are rejected on update
+    Given an existing item
+    When the user renames the item to only <blank>
+    Then the response status is 422
+    When the user reads the item
+    Then the item name matches the seeded value
+
+    Examples:
+      | blank    |
+      | spaces   |
+      | a tab    |
+      | newlines |
+
+  Scenario: Image PATCH rejects a key outside the entity prefix
+    Given an existing item
+    When the user attaches an image stored under another item
+    Then the response status is 422
+
+  Scenario: The Katalog search total equals the server match count
+    Given 7 items share a new search token
+    When the user searches the Katalog for the token with "limit=4"
+    Then the response status is 200
+    And the page holds 4 hits of 7
+    When the user searches the Katalog for the token with "limit=4&offset=4"
+    Then the response status is 200
+    And the page holds 3 hits of 7
+    And the pages together hold every token item

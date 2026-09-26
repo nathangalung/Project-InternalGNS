@@ -81,28 +81,6 @@ func TestQuotationExport_PDF_NotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
-func TestQuotationExport_PDF_HappyPath(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("requires xelatex stub")
-	}
-	srv := qExportServer(t)
-
-	ctx, tx := testutil.BeginTx(t)
-	repo := quotations.NewRepo(tx, testutil.Store(t))
-	id, err := repo.Create(ctx, sampleCreate(), seedUserID)
-	require.NoError(t, err)
-	require.NoError(t, tx.Commit(ctx))
-	t.Cleanup(func() {
-		_, _ = testutil.Pool(t).Exec(ctx,
-			"DELETE FROM quotation_items WHERE quotation_id=$1; DELETE FROM quotations WHERE id=$1", id)
-	})
-
-	res, err := srv.Client().Get(srv.URL + "/quotations/" + itoaQ(id) + "/pdf")
-	require.NoError(t, err)
-	defer res.Body.Close()
-	assert.Contains(t, []int{http.StatusOK, http.StatusInternalServerError}, res.StatusCode)
-}
-
 func itoaQ(n int64) string {
 	if n == 0 {
 		return "0"

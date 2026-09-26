@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useId, useState } from "react"
 import { IconCalendar } from "@/components/document/icons"
 import {
   DATE_PRESETS,
@@ -6,15 +6,15 @@ import {
   type DatePreset,
   presetToIsoRange,
 } from "@/components/shared/DateRangeField"
-import { chipStyle, presetChipStyle } from "@/components/shared/filter-styles"
+import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
-import { ui } from "@/lib/ui"
+import { chip, presetChip, ui } from "@/lib/ui"
 import type { InvoiceStatus } from "./types"
 import { INVOICE_LABEL } from "./types"
 
 export type { DatePreset }
 
-export interface InvoiceFilterValues {
+export type InvoiceFilterValues = {
   createdPreset: DatePreset
   createdStart: string
   createdEnd: string
@@ -26,7 +26,7 @@ export interface InvoiceFilterValues {
   maxHarga: string
 }
 
-interface InvoiceFilterProps {
+type InvoiceFilterProps = {
   onClose: () => void
   onApply: (filters: InvoiceFilterValues) => void
   initialValues?: InvoiceFilterValues
@@ -47,7 +47,7 @@ const DEFAULTS: InvoiceFilterValues = {
 
 const STATUS_OPTIONS: InvoiceStatus[] = ["DRAF", "DIKIRIM", "DIBAYAR", "TERLAMBAT"]
 
-interface DateRangeBlockProps {
+type DateRangeBlockProps = {
   heading: string
   preset: DatePreset
   startDate: string
@@ -77,7 +77,8 @@ function DateRangeBlock({ heading, preset, startDate, endDate, onChange }: DateR
                 key={key}
                 type="button"
                 onClick={() => pick(key)}
-                style={presetChipStyle(isActive)}
+                aria-pressed={isActive}
+                className={presetChip(isActive)}
               >
                 {label}
                 {key === "kustom" ? (
@@ -85,7 +86,7 @@ function DateRangeBlock({ heading, preset, startDate, endDate, onChange }: DateR
                     <IconCalendar />
                   </span>
                 ) : isActive ? (
-                  <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+                  <svg aria-hidden="true" width="14" height="11" viewBox="0 0 14 11" fill="none">
                     <path
                       d="M1 5.5L4.5 9L13 1"
                       stroke="#630ED4"
@@ -135,6 +136,7 @@ export default function InvoiceFilter({ onClose, onApply, initialValues }: Invoi
   const [activeStatuses, setActiveStatuses] = useState<InvoiceStatus[]>(
     initialValues?.statuses ?? DEFAULTS.statuses,
   )
+  const fieldId = useId()
   const [minHarga, setMinHarga] = useState(initialValues?.minHarga ?? DEFAULTS.minHarga)
   const [maxHarga, setMaxHarga] = useState(initialValues?.maxHarga ?? DEFAULTS.maxHarga)
 
@@ -184,36 +186,12 @@ export default function InvoiceFilter({ onClose, onApply, initialValues }: Invoi
       title="Filter Invoice"
       onClose={onClose}
       footer={
-        <div className="flex w-full items-center justify-between">
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={!dirty}
-            className={`bg-transparent p-0 text-[13px] font-medium underline-offset-[3px] ${
-              dirty
-                ? "cursor-pointer text-primary-700 underline"
-                : "cursor-default text-dark-300 no-underline"
-            }`}
-          >
-            Hapus Filter
-          </button>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-md px-[18px] py-2 text-[13px] font-bold text-dark-600 transition hover:bg-dark-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
-              onClick={onClose}
-            >
-              Batal
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-md bg-[linear-gradient(135deg,var(--color-primary-700)_0%,var(--color-primary-600)_100%)] px-[22px] py-2 text-[13px] font-bold text-white shadow-sm transition hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
-              onClick={handleApply}
-            >
-              Terapkan
-            </button>
-          </div>
-        </div>
+        <FilterFooter
+          onReset={handleReset}
+          canReset={dirty}
+          onCancel={onClose}
+          onApply={handleApply}
+        />
       }
     >
       <DateRangeBlock
@@ -243,18 +221,20 @@ export default function InvoiceFilter({ onClose, onApply, initialValues }: Invoi
         <div className={ui.modalSectionHeading}>Rentang Total Tagihan</div>
         <div className={ui.row2}>
           {[
-            { label: "Min Total", value: minHarga, set: setMinHarga },
-            { label: "Max Total", value: maxHarga, set: setMaxHarga },
-          ].map(({ label, value, set }) => (
-            <div className={ui.field} key={label}>
-              <label className={ui.fieldLabel}>{label}</label>
-              <div className="flex h-11 overflow-hidden rounded-md border-[1.5px] border-transparent bg-dark-200 transition focus-within:border-primary-600 focus-within:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]">
-                <span className="flex items-center whitespace-nowrap border-r border-dark-300 px-3 text-sm font-medium text-dark-600">
-                  IDR
-                </span>
+            { id: `${fieldId}-min`, label: "Min Total", value: minHarga, set: setMinHarga },
+            { id: `${fieldId}-max`, label: "Max Total", value: maxHarga, set: setMaxHarga },
+          ].map(({ id, label, value, set }) => (
+            <div className={ui.field} key={id}>
+              <label htmlFor={id} className={ui.fieldLabel}>
+                {label}
+              </label>
+              <div className={ui.prefixWrap}>
+                <span className={ui.prefixLabel}>IDR</span>
                 <input
-                  className="flex-1 border-none bg-transparent px-3 text-sm text-dark-900 outline-none placeholder:text-dark-500"
+                  id={id}
+                  className={ui.prefixInput}
                   type="text"
+                  inputMode="numeric"
                   value={value}
                   onChange={(e) => set(e.target.value)}
                 />
@@ -271,7 +251,8 @@ export default function InvoiceFilter({ onClose, onApply, initialValues }: Invoi
             <button
               type="button"
               onClick={() => setActiveStatuses([])}
-              style={chipStyle(activeStatuses.length === 0)}
+              aria-pressed={activeStatuses.length === 0}
+              className={chip(activeStatuses.length === 0)}
             >
               Semua
             </button>
@@ -280,7 +261,8 @@ export default function InvoiceFilter({ onClose, onApply, initialValues }: Invoi
                 key={value}
                 type="button"
                 onClick={() => toggleStatus(value)}
-                style={chipStyle(activeStatuses.includes(value))}
+                aria-pressed={activeStatuses.includes(value)}
+                className={chip(activeStatuses.includes(value))}
               >
                 {INVOICE_LABEL[value]}
               </button>

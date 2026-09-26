@@ -81,6 +81,9 @@ func TestHandler_Create_HappyPath(t *testing.T) {
 	res := doJSON(t, srv, http.MethodPost, "/items/", body)
 	defer res.Body.Close()
 	require.Equal(t, http.StatusCreated, res.StatusCode)
+	var it items.Item
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&it))
+	testutil.NewCleaner(t).Item(it.ID)
 }
 
 func TestHandler_Create_BadJSON(t *testing.T) {
@@ -138,8 +141,8 @@ func TestHandler_SearchAdvanced(t *testing.T) {
 	}
 }
 
-// isActive on a search hit must be the catalog value, so it has to agree with
-// what GET /items/{id} reports for the same item.
+// Hit isActive matches the catalog.
+// It has to agree with what GET /items/{id} reports for the same item.
 func TestHandler_SearchAdvanced_IsActiveMatchesCatalog(t *testing.T) {
 	srv := newSrv(t)
 	pool := testutil.Pool(t)
@@ -194,8 +197,8 @@ func TestHandler_SearchAdvanced_BadParams(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
 
-// tierGE returns true when a's tier weight >= b's, matching the
-// production ordering inside SearchAdvanced.
+// tierGE compares tier weights.
+// It reports a >= b, matching the production ordering inside SearchAdvanced.
 func tierGE(a, b string) bool {
 	rank := map[string]int{
 		"ITEM_AUTO":       5,
@@ -321,6 +324,7 @@ func TestHandler_Update_OK(t *testing.T) {
 	var it items.Item
 	require.NoError(t, json.NewDecoder(created.Body).Decode(&it))
 	created.Body.Close()
+	testutil.NewCleaner(t).Item(it.ID)
 
 	body := items.UpdateItemRequest{Name: "UPD ITEM RENAMED", IsActive: true}
 	res := doJSON(t, srv, http.MethodPut, "/items/"+itoa(it.ID), body)
@@ -492,7 +496,8 @@ func TestHandler_UpdateImage_NotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 }
 
-// Import auto-create: unmatched rows become new catalog products, empty price.
+// Unmatched imports become new products.
+// Auto-create leaves their price empty.
 func TestHandler_MatchRows_AutoCreate_CreatesProduct(t *testing.T) {
 	srv := newSrv(t)
 	name := fmt.Sprintf("AutoCreate New Product %d", time.Now().UnixNano())
@@ -511,6 +516,7 @@ func TestHandler_MatchRows_AutoCreate_CreatesProduct(t *testing.T) {
 	require.Len(t, out.Rows, 1)
 	require.NotNil(t, out.Rows[0].Matched, "unmatched row should be auto-created")
 	assert.Equal(t, "CREATED", out.Rows[0].Source)
+	testutil.NewCleaner(t).Item(out.Rows[0].Matched.ItemID)
 	assert.Greater(t, out.Rows[0].Matched.ItemID, int64(0))
 	assert.Nil(t, out.Rows[0].Matched.CostPrice, "new product has empty price")
 }
@@ -534,6 +540,7 @@ func TestHandler_MatchRows_AutoCreate_DedupsSameName(t *testing.T) {
 	require.Len(t, out.Rows, 2)
 	require.NotNil(t, out.Rows[0].Matched)
 	require.NotNil(t, out.Rows[1].Matched)
+	testutil.NewCleaner(t).Item(out.Rows[0].Matched.ItemID)
 	assert.Equal(t, out.Rows[0].Matched.ItemID, out.Rows[1].Matched.ItemID,
 		"same normalized name should map to one product")
 }
@@ -555,9 +562,10 @@ func TestHandler_MatchRows_NoAutoCreate_LeavesNil(t *testing.T) {
 	assert.Equal(t, "NONE", out.Rows[0].Source)
 }
 
-// A batch that fails mid-loop must persist nothing, so retrying the same import
-// cannot duplicate the rows created before the failure. The oversized name
-// overflows items.name (VARCHAR(500)) and fails the third insert.
+// Failed batch persists nothing.
+// Retrying the same import therefore cannot duplicate the rows created
+// before the failure. The oversized name overflows items.name (VARCHAR(500))
+// and fails the third insert.
 func TestHandler_MatchRows_FailedBatchRollsBack(t *testing.T) {
 	srv := newSrv(t)
 	pool := testutil.Pool(t)
@@ -589,13 +597,13 @@ func TestHandler_MatchRows_FailedBatchRollsBack(t *testing.T) {
 
 	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", failing)
 	res.Body.Close()
-	require.Equal(t, http.StatusInternalServerError, res.StatusCode, "oversized row must fail the batch")
+	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode, "oversized row must fail the batch")
 	require.Equal(t, 0, countCreated(), "a failed batch must not leave earlier rows behind")
 
 	// Retrying the same broken batch stays at zero, never doubling.
 	res = doJSON(t, srv, http.MethodPost, "/items/match-rows", failing)
 	res.Body.Close()
-	require.Equal(t, http.StatusInternalServerError, res.StatusCode)
+	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 	require.Equal(t, 0, countCreated(), "retry of a failed batch must not duplicate")
 
 	// Retry without the bad row creates each product exactly once.

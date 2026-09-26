@@ -1,26 +1,47 @@
 -- name: dashboard.summary
+-- Totals over [$1, $2); a NULL bound leaves that side open, so the overview
+-- passes neither and reads all time. Each figure keys on the same date and
+-- predicate as its dashboard.ts_* series, so an export's Ringkasan equals
+-- the sum of its Bulanan column: invoices by invoice_date, cost in the month
+-- of the quotation's first paid invoice, quotations by created_at, POs by
+-- po_date. Revenue is the DPP base, never the PPN-inclusive total: PPN is
+-- collected for the state, so booking it as income would inflate revenue
+-- and profit. Due soon and Terlambat are as of today.
 WITH paid_inv AS (
-  SELECT COALESCE(SUM(total), 0)        AS revenue,
+  SELECT COALESCE(SUM(dpp), 0)          AS revenue,
          COALESCE(SUM(ppn_amount), 0)   AS ppn,
          COUNT(*)                       AS paid_count
     FROM invoices
    WHERE status = 'paid'
+     AND ($1::date IS NULL OR invoice_date >= $1::date)
+     AND ($2::date IS NULL OR invoice_date <  $2::date)
 ),
+-- Terlambat and due soon share fn_invoice_effective_status with the invoice
+-- page, so a stored overdue is never also due soon.
 inv AS (
-  SELECT COUNT(*)                                                                            AS total_count,
-         COUNT(*) FILTER (WHERE status NOT IN ('paid','cancelled') AND due_date IS NOT NULL
-                           AND due_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '7 day') AS due_soon,
-         COUNT(*) FILTER (WHERE status NOT IN ('paid','cancelled') AND due_date IS NOT NULL
-                           AND due_date < CURRENT_DATE)                                       AS overdue
-    FROM invoices
+  SELECT COUNT(*)                                                         AS total_count,
+         COUNT(*) FILTER (WHERE eff IN ('draft', 'sent')
+                            AND due_date BETWEEN CURRENT_DATE AND CURRENT_DATE + 7) AS due_soon,
+         COUNT(*) FILTER (WHERE eff = 'overdue')                          AS overdue
+    FROM (SELECT fn_invoice_effective_status(status, due_date) AS eff, due_date
+            FROM invoices
+           WHERE status <> 'cancelled'
+             AND ($1::date IS NULL OR invoice_date >= $1::date)
+             AND ($2::date IS NULL OR invoice_date <  $2::date)) i
 ),
 qstat AS (
   SELECT COUNT(*)                                                          AS total_count,
-         COUNT(*) FILTER (WHERE status IN ('rejected','expired'))          AS rejected_count
+         COUNT(*) FILTER (WHERE status = 'rejected')                       AS rejected_count
     FROM quotations
+   WHERE ($1::date IS NULL OR created_at >= $1::date)
+     AND ($2::date IS NULL OR created_at <  $2::date)
 ),
+-- Cancelled POs are inactive.
 po AS (
-  SELECT COUNT(*) AS total_count FROM purchase_orders
+  SELECT COUNT(*) FILTER (WHERE status <> 'CANCELLED') AS total_count
+    FROM purchase_orders
+   WHERE ($1::date IS NULL OR po_date >= $1::date)
+     AND ($2::date IS NULL OR po_date <  $2::date)
 ),
 -- Prefer PO actuals (re-edited cost after PO creation), fall back to quotation.
 po_cost AS (
@@ -36,12 +57,20 @@ q_cost AS (
     FROM quotation_items
    GROUP BY quotation_id
 ),
--- Sum cost across quotations with any paid invoice; PO cost wins when present.
+-- Cost is booked once, when the quotation's first invoice is paid.
+first_paid AS (
+  SELECT quotation_id, MIN(invoice_date) AS first_date
+    FROM invoices
+   WHERE status = 'paid'
+   GROUP BY quotation_id
+),
 exp AS (
   SELECT COALESCE(SUM(COALESCE(pc.cost, qc.cost, 0)), 0) AS expenses
-    FROM (SELECT DISTINCT quotation_id FROM invoices WHERE status = 'paid') pq
-    LEFT JOIN po_cost pc ON pc.quotation_id = pq.quotation_id
-    LEFT JOIN q_cost  qc ON qc.quotation_id = pq.quotation_id
+    FROM first_paid fp
+    LEFT JOIN po_cost pc ON pc.quotation_id = fp.quotation_id
+    LEFT JOIN q_cost  qc ON qc.quotation_id = fp.quotation_id
+   WHERE ($1::date IS NULL OR fp.first_date >= $1::date)
+     AND ($2::date IS NULL OR fp.first_date <  $2::date)
 )
 SELECT paid_inv.revenue                  AS total_revenue,
        exp.expenses                      AS total_expenses,
@@ -56,6 +85,21 @@ SELECT paid_inv.revenue                  AS total_revenue,
        inv.overdue                       AS invoices_overdue
   FROM paid_inv, inv, qstat, po, exp;
 
+-- name: dashboard.status_counts
+-- One row per entity status. Invoices count by effective status, the rule
+-- the invoice page and dashboard.summary share.
+SELECT 'quotation' AS entity, status, COUNT(*)::bigint AS count
+  FROM quotations
+ GROUP BY status
+UNION ALL
+SELECT 'purchase_order', status, COUNT(*)::bigint
+  FROM purchase_orders
+ GROUP BY status
+UNION ALL
+SELECT 'invoice', fn_invoice_effective_status(status, due_date), COUNT(*)::bigint
+  FROM invoices
+ GROUP BY 2;
+
 -- name: dashboard.ts_quotation
 SELECT to_char(date_trunc($3::text, created_at),
                CASE $3::text WHEN 'day' THEN 'YYYY-MM-DD' ELSE 'YYYY-MM' END) AS month,
@@ -66,16 +110,19 @@ SELECT to_char(date_trunc($3::text, created_at),
  ORDER BY 1;
 
 -- name: dashboard.ts_invoice
+-- A cancelled invoice is void; its Pengganti is the one counted.
 SELECT to_char(date_trunc($3::text, invoice_date), CASE $3::text WHEN 'day' THEN 'YYYY-MM-DD' ELSE 'YYYY-MM' END) AS month,
        COUNT(*)::text                                         AS value
   FROM invoices
- WHERE invoice_date >= $1::date AND invoice_date < $2::date
+ WHERE status <> 'cancelled'
+   AND invoice_date >= $1::date AND invoice_date < $2::date
  GROUP BY 1
  ORDER BY 1;
 
 -- name: dashboard.ts_revenue
+-- DPP base, matching dashboard.summary: PPN is not revenue.
 SELECT to_char(date_trunc($3::text, invoice_date), CASE $3::text WHEN 'day' THEN 'YYYY-MM-DD' ELSE 'YYYY-MM' END) AS month,
-       COALESCE(SUM(total), 0)::text                          AS value
+       COALESCE(SUM(dpp), 0)::text                            AS value
   FROM invoices
  WHERE status = 'paid'
    AND invoice_date >= $1::date AND invoice_date < $2::date
@@ -114,7 +161,7 @@ first_paid AS (
 ),
 rev AS (
   SELECT to_char(date_trunc($3::text, invoice_date), CASE $3::text WHEN 'day' THEN 'YYYY-MM-DD' ELSE 'YYYY-MM' END) AS month,
-         SUM(total)                                            AS revenue
+         SUM(dpp)                                              AS revenue
     FROM invoices
    WHERE status = 'paid'
      AND invoice_date >= $1::date AND invoice_date < $2::date

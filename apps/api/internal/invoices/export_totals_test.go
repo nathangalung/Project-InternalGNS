@@ -18,7 +18,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// Discounted product line plus a shipping line.
+// Discounted line plus shipping line.
 func discountedPOWithInvoice(t *testing.T, tx pgx.Tx) int64 {
 	t.Helper()
 	ctx := context.Background()
@@ -46,7 +46,7 @@ func discountedPOWithInvoice(t *testing.T, tx pgx.Tx) int64 {
 	porepo := purchaseorders.NewRepo(tx, store)
 	po, err := porepo.GetByQuotation(ctx, qid)
 	require.NoError(t, err)
-	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusUploaded, seedUserID))
+	attachPOFile(ctx, t, porepo, po.ID)
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusOnProgress, seedUserID))
 	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusDelivered, seedUserID))
 
@@ -62,7 +62,8 @@ func mustF(t *testing.T, s string) float64 {
 	return v
 }
 
-// The printed totals block must balance: TotalProduk - Diskon = DPP.
+// Printed totals block must balance.
+// TotalProduk - Diskon = DPP.
 func TestExport_TotalsBlockBalances(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	invID := discountedPOWithInvoice(t, tx)
@@ -135,7 +136,8 @@ func TestExport_TotalsBlockBalances(t *testing.T) {
 	assert.NotContains(t, totals.LineUnitPrices, pdfgen.FormatIDR("90000"))
 }
 
-// Historical rows have no gross snapshot and fall back to the net price.
+// Historical rows use net price.
+// They have no gross snapshot to discount from.
 func TestExport_TotalsBlock_NoDiscountHidesRow(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)

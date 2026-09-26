@@ -1,9 +1,10 @@
 import { type FormEvent, useState } from "react"
 import EyeIcon from "@/components/shared/EyeIcon"
+import { errorMessage } from "@/lib/errors"
 
 const logoImg = "/logo.png"
 
-interface LoginProps {
+type LoginProps = {
   onLogin: (email: string, password: string) => Promise<void>
 }
 
@@ -18,6 +19,7 @@ export default function Login({ onLogin }: LoginProps) {
   const [emailError, setEmailError] = useState("")
   const [passwordError, setPasswordError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   const validateEmail = (value: string) => {
     if (!value) {
@@ -50,18 +52,16 @@ export default function Login({ onLogin }: LoginProps) {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!validateEmail(email)) return
-    if (!password) return
+    if (!password || submitting) return
+    // A failed login is throttled server-side and can take seconds.
+    setSubmitting(true)
     try {
       await onLogin(email, password)
     } catch (err) {
-      const message = (err instanceof Error ? err.message : "").toLowerCase()
-      if (message.includes("invalid password") || message.includes("invalid email or password")) {
-        // Backend no longer says whether the email exists; keep it neutral.
-        setEmailError("")
-        setPasswordError("Surel atau kata sandi salah")
-      } else {
-        setPasswordError(err instanceof Error ? err.message : "Gagal masuk")
-      }
+      // The server's 401 and 429 details are already Indonesian.
+      setPasswordError(errorMessage(err, "Gagal masuk"))
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -96,7 +96,7 @@ export default function Login({ onLogin }: LoginProps) {
               </label>
               <div className="relative flex items-center">
                 <span className="pointer-events-none absolute left-4 flex h-[18px] w-[18px] items-center justify-center text-dark-400 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-width:1.8] [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]">
-                  <svg viewBox="0 0 24 24">
+                  <svg aria-hidden="true" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="4" />
                     <path d="M16 8v5a3 3 0 0 0 6 0V12a10 10 0 1 0-4 8" />
                   </svg>
@@ -123,7 +123,7 @@ export default function Login({ onLogin }: LoginProps) {
               </label>
               <div className="relative flex items-center">
                 <span className="pointer-events-none absolute left-4 flex h-[18px] w-[18px] items-center justify-center text-dark-400 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:[stroke-width:1.8] [&_svg]:[stroke-linecap:round] [&_svg]:[stroke-linejoin:round]">
-                  <svg viewBox="0 0 24 24">
+                  <svg aria-hidden="true" viewBox="0 0 24 24">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
@@ -146,6 +146,7 @@ export default function Login({ onLogin }: LoginProps) {
                 >
                   {showPassword ? (
                     <svg
+                      aria-hidden="true"
                       width="18"
                       height="18"
                       viewBox="0 0 24 24"
@@ -174,9 +175,9 @@ export default function Login({ onLogin }: LoginProps) {
             <button
               className="mt-3 flex w-full items-center justify-center rounded-lg bg-[linear-gradient(135deg,var(--color-primary-600)_0%,var(--color-primary-900)_100%)] px-4 py-3.5 text-base font-semibold text-white transition hover:opacity-95 hover:shadow-[0_4px_14px_rgba(124,58,237,0.35)] active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40 focus-visible:ring-offset-2"
               type="submit"
-              disabled={!email || !password || !!emailError}
+              disabled={!email || !password || !!emailError || submitting}
             >
-              Masuk
+              {submitting ? "Memproses…" : "Masuk"}
             </button>
           </form>
         </div>

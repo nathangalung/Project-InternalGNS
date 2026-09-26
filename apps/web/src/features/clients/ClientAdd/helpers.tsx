@@ -1,30 +1,29 @@
 import { ui } from "@/lib/ui"
 
 export { CheckIcon as CheckmarkIcon } from "@/components/document/icons"
-export {
-  dropdownItemStyle,
-  dropdownLabelStyle,
-  dropdownPanelStyle,
-} from "@/components/shared/filter-styles"
 
-// Field class strings, ported from ca-*.
-export const optionalCls = "text-overline font-normal italic text-dark-600"
+// Field class strings.
+//
+// Ported from ca-*.
+export const optionalCls = "text-overline font-normal uppercase italic text-dark-600"
 
 export const fieldErrorCls = "mt-1 block text-xs text-[#EF4444]"
 
+export const fieldHintCls = "mt-1 block text-xs text-dark-600"
+
 export const inputCls = `${ui.fieldInput} font-sans placeholder:text-dark-500 ${ui.disabledField}`
 
-export interface ClientAddFormData {
+export type ClientAddFormData = {
   namaPerusahaan: string
   kodeNegara: string
   alamat: string
-  logo: string // data URL for preview only (not yet persisted)
+  // Preview data URL; the file uploads after save.
+  logo: string
   namaKontak: string
   nomorTelepon: string
   email: string
   npwp: string
   tku: string
-  referenceNumber: string
 }
 
 export const INITIAL_FORM: ClientAddFormData = {
@@ -37,12 +36,21 @@ export const INITIAL_FORM: ClientAddFormData = {
   email: "",
   npwp: "",
   tku: "",
-  referenceNumber: "",
 }
+
+export const ADDRESS_ERROR = "Alamat harus minimal 20 karakter dan mengandung huruf."
 
 export function isValidAddress(s: string): boolean {
   const t = s.trim()
   return t.length >= 20 && /[a-zA-Z]/.test(t)
+}
+
+// Optional address, checked once filled.
+//
+// The quotation may go out without one; the PO gate asks for it before the
+// work starts.
+export function optionalAddressError(s: string): string | null {
+  return s.trim() === "" || isValidAddress(s) ? null : ADDRESS_ERROR
 }
 
 export function isValidEmail(s: string): boolean {

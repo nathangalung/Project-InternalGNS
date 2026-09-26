@@ -1,20 +1,32 @@
 import {
   keepPreviousData,
+  type QueryClient,
   skipToken,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
 import * as quotationsApi from "@/features/quotations/api"
+import { statusChangeToast } from "@/features/quotations/status"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
 import type {
-  CanonicalStatus,
   QuotationItemRequestCreateInput,
   QuotationItemRequestUpdateInput,
   QuotationListParams,
+  QuotationStatus,
 } from "@/types/api"
+
+// Caches a quotation write touches.
+//
+// Client and vendor pages show quotation counts.
+function invalidateQuotationDeps(qc: QueryClient) {
+  qc.invalidateQueries({ queryKey: queryKeys.quotations.all })
+  qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+  qc.invalidateQueries({ queryKey: queryKeys.clients.all })
+  qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
+}
 
 export function useQuotations(params: QuotationListParams = {}) {
   return useQuery({
@@ -42,10 +54,7 @@ export function useCreateQuotation() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: quotationsApi.create,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.quotations.all })
-      qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
-    },
+    onSuccess: () => invalidateQuotationDeps(qc),
     onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan quotation.")),
   })
 }
@@ -62,11 +71,7 @@ export function useUpdateQuotation() {
       input: Parameters<typeof quotationsApi.update>[1]
       rowVersion: number
     }) => quotationsApi.update(id, input, rowVersion),
-    onSuccess: (_, { id }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) })
-      qc.invalidateQueries({ queryKey: queryKeys.quotations.all })
-      qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
-    },
+    onSuccess: () => invalidateQuotationDeps(qc),
     onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui quotation.")),
   })
 }
@@ -74,17 +79,29 @@ export function useUpdateQuotation() {
 export function useChangeQuotationStatus() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, status, note }: { id: number; status: CanonicalStatus; note?: string }) =>
+    mutationFn: ({ id, status, note }: { id: number; status: QuotationStatus; note?: string }) =>
       status === "sent"
         ? quotationsApi.send(id, note)
         : quotationsApi.changeStatus(id, status, note),
-    onSuccess: (_, { id }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) })
-      qc.invalidateQueries({ queryKey: queryKeys.quotations.all })
-      qc.invalidateQueries({ queryKey: queryKeys.quotations.stats() })
-      qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+    onSuccess: () => {
+      invalidateQuotationDeps(qc)
+      // Accepting creates a PO.
+      qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal mengubah status quotation.")),
+    onError: (err) => {
+      const msg = statusChangeToast(err)
+      if (msg) toast.error(msg)
+    },
+  })
+}
+
+// Buat Revisi mutation.
+export function useReviseQuotation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, note }: { id: number; note?: string }) => quotationsApi.revise(id, note),
+    onSuccess: () => invalidateQuotationDeps(qc),
+    onError: (err) => toast.error(errorMessage(err, "Gagal membuat revisi quotation.")),
   })
 }
 
@@ -147,4 +164,22 @@ export function useDeleteQuotationRequest() {
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal menghapus item request.")),
   })
+}
+
+// PDF download, Indonesian toast.
+export async function downloadQuotationPdf(id: number, quotationNo: string): Promise<void> {
+  try {
+    await quotationsApi.downloadPdfFile(id, quotationNo)
+  } catch {
+    toast.error("Gagal mengunduh PDF quotation. Coba lagi.")
+  }
+}
+
+// XLSX export, Indonesian toast.
+export async function exportQuotationsXlsx(params: QuotationListParams): Promise<void> {
+  try {
+    await quotationsApi.exportXlsx(params)
+  } catch {
+    toast.error("Gagal mengekspor daftar quotation. Coba lagi.")
+  }
 }

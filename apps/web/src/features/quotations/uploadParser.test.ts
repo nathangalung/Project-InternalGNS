@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { parseCsv, parseQty, rowsFromAOA } from "./uploadParser"
+import { parseCsv, parseProductFile, parseQty, rowsFromAOA } from "./uploadParser"
 
 describe("parseQty id-ID number format", () => {
   it("passes native numbers through", () => {
@@ -70,5 +70,175 @@ describe("parseCsv", () => {
   it("strips a leading BOM", () => {
     const rows = parseCsv("﻿Nama,Jumlah\nBolt,2")
     expect(rows[0][0]).toBe("Nama")
+  })
+})
+
+describe("rowsFromAOA rows", () => {
+  it("skips blank rows and rows without a name", () => {
+    const rows = rowsFromAOA([
+      HEADER,
+      [],
+      [null, "", "", "", ""],
+      [2, "370116", "   ", "3", "PCS"],
+      [3, null, "Baut", "4", null],
+    ])
+    expect(rows).toEqual([{ impaCode: "", name: "Baut", qty: 4, unit: "" }])
+  })
+
+  it("reads zero quantity and blank unit when those columns are missing", () => {
+    expect(rowsFromAOA([["Nama"], ["Tali"]])).toEqual([
+      { impaCode: "", name: "Tali", qty: 0, unit: "" },
+    ])
+  })
+
+  it("picks the richest header row when several could match", () => {
+    const rows = rowsFromAOA([
+      ["Nama Kapal", "", ""],
+      ["Nama", "Qty", "Unit"],
+      ["Mur", "5", "PCS"],
+    ])
+    expect(rows).toEqual([{ impaCode: "", name: "Mur", qty: 5, unit: "PCS" }])
+  })
+
+  it("keeps the header when a later row only looks like one", () => {
+    const rows = rowsFromAOA([
+      ["Nama", "Jumlah"],
+      ["Nama Baut", "2"],
+    ])
+    expect(rows).toEqual([{ impaCode: "", name: "Nama Baut", qty: 2, unit: "" }])
+  })
+
+  it("skips a row whose name cell is empty", () => {
+    expect(rowsFromAOA([HEADER, [1, "370115", null, "2", "PCS"]])).toEqual([])
+  })
+
+  it("tolerates holes and nulls in the header scan", () => {
+    const aoa: unknown[][] = []
+    aoa[2] = [null, "Nama", "Jumlah"]
+    aoa[3] = [null, "Kabel", "7"]
+    expect(rowsFromAOA(aoa)).toEqual([{ impaCode: "", name: "Kabel", qty: 7, unit: "" }])
+  })
+
+  // Regression: sparse header row.
+  //
+  // A sparse header row, as a sheet starting past column A yields, threw a
+  // TypeError in the partial header match.
+  it("reads a sparse header row", () => {
+    const header: unknown[] = []
+    header[1] = "Nama"
+    header[2] = "Jumlah"
+    const data: unknown[] = []
+    data[1] = "Baut"
+    data[2] = "2"
+    expect(rowsFromAOA([header, data])).toEqual([{ impaCode: "", name: "Baut", qty: 2, unit: "" }])
+  })
+
+  it("reads a non-finite numeric quantity as zero", () => {
+    expect(parseQty(Number.POSITIVE_INFINITY)).toBe(0)
+  })
+})
+
+// Real ExcelJS workbook round-trip.
+async function workbookFile(build: (wb: import("exceljs").Workbook) => void): Promise<File> {
+  const { default: ExcelJS } = await import("exceljs")
+  const wb = new ExcelJS.Workbook()
+  build(wb)
+  const buf = await wb.xlsx.writeBuffer()
+  return new File([buf], "Daftar.XLSX")
+}
+
+describe("parseProductFile", () => {
+  it("reads a CSV upload", async () => {
+    const file = new File(["Nama,Jumlah,Satuan\nBaut,2,PCS\n"], "produk.CSV")
+    await expect(parseProductFile(file)).resolves.toEqual([
+      { impaCode: "", name: "Baut", qty: 2, unit: "PCS" },
+    ])
+  })
+
+  it("takes the first sheet that has product rows", async () => {
+    const file = await workbookFile((wb) => {
+      wb.addWorksheet("Kosong")
+      wb.addWorksheet("Catatan").addRow(["Dikirim ke Batam"])
+      const ws = wb.addWorksheet("Produk")
+      ws.addRow(["Kode IMPA", "Nama Produk", "Jumlah", "Satuan"])
+      ws.addRow(["370115", "Marine Radio", 2, "PCS"])
+    })
+    await expect(parseProductFile(file)).resolves.toEqual([
+      { impaCode: "370115", name: "Marine Radio", qty: 2, unit: "PCS" },
+    ])
+  })
+
+  it("reads formula results, links, rich text and dates as their display value", async () => {
+    const shipped = new Date(Date.UTC(2026, 8, 24))
+    const file = await workbookFile((wb) => {
+      const ws = wb.addWorksheet("Produk")
+      ws.addRow(["Kode", "Nama", "Jumlah", "Satuan", "Tanggal"])
+      ws.addRow([
+        { formula: "1+1", result: 370115 },
+        { text: "Tali Nylon", hyperlink: "https://gns.id/tali" },
+        { formula: "2*3", result: 6 },
+        { richText: [{ text: "RO" }, { text: "LL" }] },
+        shipped,
+      ])
+    })
+    await expect(parseProductFile(file)).resolves.toEqual([
+      { impaCode: "370115", name: "Tali Nylon", qty: 6, unit: "ROLL" },
+    ])
+  })
+
+  // Regression: error cell text.
+  //
+  // An error cell, such as a failed VLOOKUP, was sent as the text
+  // "[object Object]" and matched or created a product by that name.
+  it("reads an error cell as blank", async () => {
+    const file = await workbookFile((wb) => {
+      const ws = wb.addWorksheet("Produk")
+      ws.addRow(["Kode", "Nama", "Jumlah", "Satuan"])
+      ws.addRow([{ error: "#N/A" }, "Mur", { formula: "1/0", result: { error: "#DIV/0!" } }, "PCS"])
+      ws.addRow(["370115", { formula: "VLOOKUP(A3,K:L,2,0)", result: { error: "#N/A" } }, 2, "PCS"])
+    })
+    await expect(parseProductFile(file)).resolves.toEqual([
+      { impaCode: "", name: "Mur", qty: 0, unit: "PCS" },
+    ])
+  })
+
+  // Regression: uncached formula result.
+  //
+  // A formula saved without a cached result, as generated workbooks do, was
+  // sent as the name "[object Object]".
+  it("reads a formula without a cached result as blank", async () => {
+    const file = await workbookFile((wb) => {
+      const ws = wb.addWorksheet("Produk")
+      ws.addRow(["Kode", "Nama", "Jumlah"])
+      ws.addRow([{ formula: "K1" }, { formula: "VLOOKUP(A2,K:L,2,0)" }, 1])
+      ws.addRow(["370115", "Mur", 2])
+    })
+    await expect(parseProductFile(file)).resolves.toEqual([
+      { impaCode: "370115", name: "Mur", qty: 2, unit: "" },
+    ])
+  })
+
+  // Regression: table past column A.
+  //
+  // ExcelJS leaves holes for empty cells, and a table starting at column B
+  // crashed the header scan with a TypeError.
+  it("reads a table that starts past column A", async () => {
+    const file = await workbookFile((wb) => {
+      const ws = wb.addWorksheet("Produk")
+      ws.getCell("B1").value = "Nama"
+      ws.getCell("C1").value = "Jumlah"
+      ws.getCell("B2").value = "Baut"
+      ws.getCell("C2").value = 2
+    })
+    await expect(parseProductFile(file)).resolves.toEqual([
+      { impaCode: "", name: "Baut", qty: 2, unit: "" },
+    ])
+  })
+
+  it("returns nothing for a workbook without product rows", async () => {
+    const file = await workbookFile((wb) => {
+      wb.addWorksheet("Catatan").addRow(["Tidak ada produk"])
+    })
+    await expect(parseProductFile(file)).resolves.toEqual([])
   })
 })

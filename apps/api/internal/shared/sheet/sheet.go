@@ -1,15 +1,27 @@
-// Package sheet writes a single-sheet XLSX from headers + string rows.
+// Package sheet writes single-sheet XLSX.
+// The sheet is built from headers and string rows.
 package sheet
 
 import (
 	"bytes"
 	"fmt"
+	"io"
 
 	"github.com/xuri/excelize/v2"
 )
 
-// Write returns XLSX bytes: bold header row, then one row per record.
+// Write builds the XLSX bytes.
+// A bold header row comes first, then one row per record.
 func Write(sheetName string, headers []string, rows [][]string) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := write(&buf, sheetName, headers, rows); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+// write streams the workbook out.
+func write(w io.Writer, sheetName string, headers []string, rows [][]string) error {
 	f := excelize.NewFile()
 	defer func() { _ = f.Close() }()
 
@@ -18,7 +30,7 @@ func Write(sheetName string, headers []string, rows [][]string) ([]byte, error) 
 	}
 	idx, err := f.NewSheet(sheetName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	f.SetActiveSheet(idx)
 	if sheetName != "Sheet1" {
@@ -27,7 +39,7 @@ func Write(sheetName string, headers []string, rows [][]string) ([]byte, error) 
 
 	bold, err := f.NewStyle(&excelize.Style{Font: &excelize.Font{Bold: true}})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for c, h := range headers {
@@ -42,9 +54,8 @@ func Write(sheetName string, headers []string, rows [][]string) ([]byte, error) 
 		}
 	}
 
-	var buf bytes.Buffer
-	if err := f.Write(&buf); err != nil {
-		return nil, fmt.Errorf("write xlsx: %w", err)
+	if err := f.Write(w); err != nil {
+		return fmt.Errorf("write xlsx: %w", err)
 	}
-	return buf.Bytes(), nil
+	return nil
 }

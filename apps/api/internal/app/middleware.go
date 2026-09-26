@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -14,7 +15,8 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
-// Sets client IP from the last proxy hop.
+// trustedProxyIP takes the last hop.
+// It sets the client IP from the last proxy hop.
 func trustedProxyIP(next http.Handler) http.Handler {
 	// Our single reverse proxy appends the real client to X-Forwarded-For,
 	// so the last hop is trustworthy. True-Client-IP, X-Real-IP, and earlier
@@ -77,26 +79,44 @@ func accessLogMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// Request budgets. See the shutdown chain comment in cmd/api/main.go:
+// Request budgets.
+// See the shutdown chain comment in cmd/api/main.go:
 // grace (80s) > drain (70s) > longest handler (60s), and the server's
 // WriteTimeout (90s) sits above all of them so the handler deadline is what
 // fires, rendering 503 + Retry-After instead of a severed connection.
 const (
 	defaultRequestTimeout = 30 * time.Second
-	// Workbook and PDF renders get a longer budget: pdfgen already reserves
-	// 45s for xelatex, which the 30s default silently cut short, and the
-	// coretax export is unbounded in row count.
+	// Renders get a longer budget.
+	// Workbook and PDF renders need it: pdfgen already reserves 45s for
+	// xelatex, which the 30s default silently cut short, and the coretax export
+	// is unbounded in row count.
 	renderRequestTimeout = 60 * time.Second
+	// Uploads get a longer budget.
+	// Asset uploads stream up to 25 MB through the proxy. Finishing 20 MB in the
+	// 30s default needs 5.6 Mbit/s of sustained upstream, which office links do
+	// not hold, so a real upload was cut mid-body.
+	uploadRequestTimeout = 60 * time.Second
 )
 
-// requestTimeout applies a per-request deadline, longer for export and render
-// routes. Nesting a second chi Timeout inside a subtree cannot do this: nested
-// contexts take the minimum, so the choice has to be made once, up front.
-func requestTimeout(def, render time.Duration) func(http.Handler) http.Handler {
+// requestTimeout sets per-route deadlines.
+// Export and render routes get longer ones. Nesting a second chi Timeout
+// inside a subtree cannot do this: nested contexts take the minimum, so the
+// choice has to be made once, up front.
+func requestTimeout(def, render, upload time.Duration) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			d := def
-			if isRenderRoute(r.URL.Path) {
+			switch {
+			case isStorageRoute(r.URL.Path):
+				d = upload
+				// Server.ReadTimeout (30s) covers reading the request body,
+				// so it fires before any handler budget and severs a slow
+				// upload. Push this one connection's read deadline out to the
+				// same budget; every other route keeps ReadTimeout.
+				if err := http.NewResponseController(w).SetReadDeadline(time.Now().Add(d)); err != nil {
+					slog.WarnContext(r.Context(), "upload read deadline not settable", "error", err.Error())
+				}
+			case isRenderRoute(r.URL.Path):
 				d = render
 			}
 			ctx, cancel := context.WithTimeout(r.Context(), d)
@@ -106,7 +126,14 @@ func requestTimeout(def, render time.Duration) func(http.Handler) http.Handler {
 	}
 }
 
-// isRenderRoute reports whether a path is one of the workbook or PDF routes.
+// isStorageRoute spots the asset proxy.
+// It carries the upload budget and is the only route whose connection read
+// deadline is extended.
+func isStorageRoute(path string) bool {
+	return strings.HasPrefix(path, "/api/v1/storage/")
+}
+
+// isRenderRoute spots workbook, PDF routes.
 // TestRouter_RenderRoutesClassified pins this against the mounted route table.
 func isRenderRoute(path string) bool {
 	return strings.HasSuffix(path, ".xlsx") ||
@@ -127,12 +154,23 @@ func securityHeadersMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// Gates the storage proxy by bucket role.
+// Role refusal toast details.
+const (
+	detailRoleRefused   = "Peran Anda tidak memiliki akses ke fitur ini."
+	detailBucketRefused = "Peran Anda tidak memiliki akses ke berkas ini."
+)
+
+// authorizeBucket gates storage by role.
+// Any method but GET or HEAD stores bytes, so it needs the write set.
 func authorizeBucket(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		bucket := r.URL.Query().Get("bucket")
-		if !storage.CanAccessBucket(deps.CurrentUserRole(r.Context()), bucket) {
-			httperr.Render(w, httperr.Forbidden("insufficient role for bucket"))
+		role, bucket := deps.CurrentUserRole(r.Context()), r.URL.Query().Get("bucket")
+		allowed := storage.CanReadBucket
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			allowed = storage.CanWriteBucket
+		}
+		if !allowed(role, bucket) {
+			httperr.Render(w, httperr.Forbidden(detailBucketRefused))
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -165,30 +203,35 @@ func authMiddleware(svc *auth.Service) func(http.Handler) http.Handler {
 			raw := r.Header.Get("Authorization")
 			token, ok := strings.CutPrefix(raw, "Bearer ")
 			if !ok || token == "" {
-				httperr.Render(w, httperr.Unauthorized("missing bearer token"))
+				httperr.Render(w, httperr.Unauthorized(auth.DetailNotSignedIn))
 				return
 			}
 
-			claims, err := svc.Verify(token)
-			if err != nil {
-				httperr.Render(w, httperr.Unauthorized("invalid or expired token"))
+			// Authenticate re-reads the account per request, so deactivation,
+			// a role change and a password reset all take effect now rather
+			// than when the 24h token happens to expire.
+			ident, err := svc.Authenticate(r.Context(), token)
+			switch {
+			case errors.Is(err, auth.ErrSessionRevoked):
+				httperr.Render(w, httperr.Unauthorized(auth.DetailSessionRevoked))
+				return
+			case errors.Is(err, auth.ErrInvalidToken):
+				httperr.Render(w, httperr.Unauthorized(auth.DetailInvalidToken))
+				return
+			case err != nil:
+				// A database outage is not a credential verdict.
+				httperr.RenderDBErrCtx(r.Context(), w, err)
 				return
 			}
 
-			userID, err := claims.UserID()
-			if err != nil {
-				httperr.Render(w, httperr.Unauthorized("malformed token subject"))
-				return
-			}
-
-			ctx := deps.WithUserID(r.Context(), userID)
-			ctx = deps.WithUserRole(ctx, string(claims.Role))
+			ctx := deps.WithUserID(r.Context(), ident.UserID)
+			ctx = deps.WithUserRole(ctx, string(ident.Role))
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-// requireRole gates a subtree by role.
+// requireRole gates subtrees by role.
 func requireRole(roles ...string) func(http.Handler) http.Handler {
 	allowed := make(map[string]struct{}, len(roles))
 	for _, role := range roles {
@@ -197,10 +240,38 @@ func requireRole(roles ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if _, ok := allowed[deps.CurrentUserRole(r.Context())]; !ok {
-				httperr.Render(w, httperr.Forbidden("insufficient role"))
+				httperr.Render(w, httperr.Forbidden(detailRoleRefused))
 				return
 			}
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+// readOnlyFor blocks these roles' writes.
+// Reads pass. An upload-url GET counts as a write: the URL it returns lets
+// the holder store a file for the record.
+func readOnlyFor(roles ...string) func(http.Handler) http.Handler {
+	denied := make(map[string]struct{}, len(roles))
+	for _, role := range roles {
+		denied[role] = struct{}{}
+	}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if _, ok := denied[deps.CurrentUserRole(r.Context())]; ok && isWrite(r) {
+				httperr.Render(w, httperr.Forbidden(detailRoleRefused))
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// isWrite reports a state-changing request.
+func isWrite(r *http.Request) bool {
+	switch r.Method {
+	case http.MethodGet, http.MethodHead, http.MethodOptions:
+		return strings.HasSuffix(r.URL.Path, "/upload-url")
+	}
+	return true
 }

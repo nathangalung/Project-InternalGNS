@@ -17,7 +17,10 @@ updates:
           - minor
           - patch
 
-  - package-ecosystem: npm
+  # The web app is locked by bun.lock. The npm ecosystem bumped package.json
+  # without refreshing it, so every PR died on bun install --frozen-lockfile.
+  # Bun has no Dependabot security updates; CI's bun audit covers that gap.
+  - package-ecosystem: bun
     directory: /apps/web
     schedule:
       interval: weekly
@@ -36,6 +39,11 @@ updates:
       tanstack:
         patterns:
           - "@tanstack/*"
+    # Majors (TypeScript 7, Vite 8, @types/node 26) need a planned migration.
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: github-actions
     directory: /
@@ -48,7 +56,13 @@ updates:
     labels:
       - dependencies
       - ci
+    groups:
+      actions:
+        patterns:
+          - "*"
 
+  # pgsty/silo stays untracked: Dependabot's Docker tag parser cannot
+  # order RELEASE.<timestamp> tags. Bump it by hand (docs/deploy_vps.md).
   - package-ecosystem: docker
     directory: /apps/api
     schedule:

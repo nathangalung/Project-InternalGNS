@@ -6,9 +6,10 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import * as itemsApi from "@/features/items/api"
+import * as vendorsApi from "@/features/vendors/api"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
-import { uploadToPresignedUrl } from "@/lib/storage-upload"
+import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
 
@@ -31,14 +32,16 @@ export function useItem(id: number | undefined) {
   })
 }
 
-// Multi-source advanced search. keepPreviousData prevents UI flicker
-// while user types (per TanStack Query v5 paginated-queries guidance).
-export function useItemSearchAdvanced(
-  q: string,
-  options: { minScore?: number; limit?: number; isActive?: boolean } = {},
-) {
+// Multi-source advanced search.
+//
+// keepPreviousData prevents UI flicker while the user types (per TanStack
+// Query v5 paginated-queries guidance).
+export function useItemSearchAdvanced(q: string, options: itemsApi.SearchAdvancedOptions = {}) {
   return useQuery({
-    queryKey: queryKeys.items.searchAdvanced(q, options.minScore, options.limit, options.isActive),
+    queryKey: [
+      ...queryKeys.items.searchAdvanced(q, options.minScore, options.limit, options.isActive),
+      options.offset ?? 0,
+    ],
     queryFn: () => itemsApi.searchAdvanced(q, options),
     enabled: q.trim().length > 0,
     placeholderData: keepPreviousData,
@@ -50,6 +53,22 @@ export function useItemVendors(itemId: number | undefined) {
   return useQuery({
     queryKey: itemId ? queryKeys.items.vendors(itemId) : queryKeys.items.all,
     queryFn: itemId !== undefined && itemId > 0 ? () => itemsApi.listVendors(itemId) : skipToken,
+  })
+}
+
+// Active vendors matching q.
+//
+// Searches on the server so every vendor is reachable, not just the first
+// page. Inactive vendors are left out because the API refuses to link them.
+export function useActiveVendorOptions(q: string, limit = 10) {
+  const term = q.trim()
+  const params: vendorsApi.VendorListParams = { q: term, isActive: true, limit }
+  return useQuery({
+    queryKey: queryKeys.vendors.list(params),
+    queryFn: () => vendorsApi.list(params),
+    enabled: term.length > 0,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
   })
 }
 
@@ -76,7 +95,11 @@ export function useUpdateItem() {
   return useMutation({
     mutationFn: ({ id, input }: { id: number; input: itemsApi.UpdateItemInput }) =>
       itemsApi.update(id, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.items.all }),
+    // Vendor tabs show item names.
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.items.all })
+      qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
+    },
     onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui produk.")),
   })
 }
@@ -86,8 +109,11 @@ export function useAddVendorToItem() {
   return useMutation({
     mutationFn: ({ itemId, input }: { itemId: number; input: itemsApi.AddVendorToItemInput }) =>
       itemsApi.addVendor(itemId, input),
-    onSuccess: (_data, { itemId }) =>
-      qc.invalidateQueries({ queryKey: queryKeys.items.vendors(itemId) }),
+    // Vendor detail, counts change too.
+    onSuccess: (_data, { itemId }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.items.vendors(itemId) })
+      qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
+    },
   })
 }
 
@@ -96,9 +122,11 @@ export function useUploadItemImage() {
   return useMutation({
     mutationFn: async ({ id, file }: { id: number; file: File }) => {
       validateAsset("itemImage", file)
-      const presign = await itemsApi.presignImageUpload(id, file.name)
-      await uploadToPresignedUrl(presign.uploadUrl, file)
-      await itemsApi.updateImage(id, presign.objectKey)
+      const objectKey = await uploadWithFreshKey(
+        () => itemsApi.presignImageUpload(id, file.name),
+        file,
+      )
+      await itemsApi.updateImage(id, objectKey)
     },
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: queryKeys.items.detail(id) })

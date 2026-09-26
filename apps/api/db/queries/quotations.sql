@@ -15,23 +15,26 @@ FROM quotations
 WHERE id = $1;
 
 -- name: quotations.get_items
-SELECT id, quotation_id, line_number, item_type,
-       requested_item_id, requested_impa, requested_name,
-       offered_item_id, vendor_product_id,
-       qty::text, unit_id,
-       selling_price::text, cost_price::text,
-       discount_pct::text, total_selling::text,
-       discount_amount::text, subtotal::text,
-       is_available, ship_destination, shipping_days
-FROM quotation_items
-WHERE quotation_id = $1
-ORDER BY line_number;
+SELECT qi.id, qi.quotation_id, qi.line_number, qi.item_type,
+       qi.requested_item_id, qi.requested_impa, qi.requested_name,
+       qi.offered_item_id, qi.vendor_product_id,
+       oi.name       AS offered_name,
+       oi.impa_code  AS offered_impa,
+       qi.qty::text, qi.unit_id,
+       qi.selling_price::text, qi.cost_price::text,
+       qi.discount_pct::text, qi.total_selling::text,
+       qi.discount_amount::text, qi.subtotal::text,
+       qi.is_available, qi.ship_destination, qi.shipping_days
+FROM quotation_items qi
+LEFT JOIN items oi ON oi.id = qi.offered_item_id
+WHERE qi.quotation_id = $1
+ORDER BY qi.line_number;
 
 -- name: quotations.get_history
 SELECT id, from_status, to_status, note, changed_by, changed_at
 FROM quotation_status_history
 WHERE quotation_id = $1
-ORDER BY changed_at;
+ORDER BY changed_at, id;
 
 -- name: quotations.list_base
 SELECT
@@ -44,10 +47,12 @@ SELECT
     q.subtotal::text          AS subtotal,
     q.total_discount::text    AS total_discount,
     COALESCE(c.total_harga_beli, '0') AS total_harga_beli,
+    c.product_count,
     q.created_at
 FROM quotations q
 LEFT JOIN LATERAL (
-    SELECT SUM(qi.qty * qi.cost_price)::text AS total_harga_beli
+    SELECT SUM(qi.qty * qi.cost_price)::text AS total_harga_beli,
+           COUNT(*)                          AS product_count
     FROM quotation_items qi
     WHERE qi.quotation_id = q.id AND qi.item_type = 'product'
 ) c ON TRUE
@@ -82,6 +87,12 @@ SELECT row_version FROM quotations WHERE id = $1;
 
 -- name: quotations.fn_change_status
 SELECT fn_change_quotation_status($1, $2, $3, $4);
+
+-- name: quotations.fn_revise
+SELECT fn_revise_quotation($1, $2, $3);
+
+-- name: quotations.expire_due
+SELECT fn_expire_quotations($1::date);
 
 -- name: quotations.list_revisions
 WITH RECURSIVE chain AS (
@@ -158,7 +169,7 @@ UPDATE quotation_item_requests SET
     END,
     updated_by      = $12,
     row_version     = row_version + 1
-WHERE id = $1
+WHERE id = $1 AND quotation_id = $13
 RETURNING id, quotation_id, line_no, request_text, request_impa,
           requested_qty::text, requested_uom,
           matched_item_id, match_status, source_type, source_ref, notes,
@@ -167,7 +178,7 @@ RETURNING id, quotation_id, line_no, request_text, request_impa,
 
 -- name: quotations.qir_delete
 DELETE FROM quotation_item_requests
-WHERE id = $1
+WHERE id = $1 AND quotation_id = $2
 RETURNING id;
 
 

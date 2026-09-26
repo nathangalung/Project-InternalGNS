@@ -1,14 +1,17 @@
+import { Link } from "@tanstack/react-router"
 import { useMemo, useState } from "react"
+import EntityLink from "@/components/shared/EntityLink"
 import EntityLogo from "@/components/shared/EntityLogo"
 import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
 import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
+import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
-import SummaryCard from "@/components/shared/SummaryCard"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import ClientAdd from "@/features/clients/ClientAdd"
 import ClientFilter, { type ClientFilterValues } from "@/features/clients/ClientFilter"
+import { clientKpis } from "@/features/clients/helpers"
 import { useClientSummary, useClients } from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
 import { formatNumber, formatRupiah } from "@/lib/format"
@@ -17,11 +20,7 @@ import { ui } from "@/lib/ui"
 import { useListScreen } from "@/lib/useListScreen"
 import type { ClientRow } from "@/types/api"
 
-interface ClientListProps {
-  onViewDetail?: (id: number) => void
-}
-
-export default function ClientList({ onViewDetail }: ClientListProps) {
+export default function ClientList() {
   const { data: countriesData } = useCountries()
   const { data: summaryData } = useClientSummary()
 
@@ -57,33 +56,16 @@ export default function ClientList({ onViewDetail }: ClientListProps) {
     return (code: string) => map.get(code) ?? code
   }, [countriesData])
 
-  const kpis = useMemo(() => {
-    const total = summaryData?.total ?? 0
-    const newThisMonth = summaryData?.newThisMonth ?? 0
-    const newThisYear = summaryData?.newThisYear ?? 0
-    const prevYearTotal = summaryData?.prevYearTotal ?? 0
-    const activeCount = summaryData?.activeCount ?? 0
-    const yoyPct =
-      prevYearTotal > 0 ? Math.round(((newThisYear - prevYearTotal) / prevYearTotal) * 100) : null
-    const retentionPct = total > 0 ? Math.round((activeCount / total) * 100) : null
-    const yoyText = yoyPct === null ? "-" : `${yoyPct >= 0 ? "+" : ""}${yoyPct}%`
-    const retentionText = retentionPct === null ? "-" : `${retentionPct}%`
-    return {
-      total,
-      yoy: yoyText,
-      newThisMonth,
-      retention: retentionText,
-    }
-  }, [summaryData])
+  const kpis = useMemo(() => clientKpis(summaryData), [summaryData])
 
   const totalPages = list.totalPagesOf(totalItems)
 
   return (
     <>
-      <div className="page-content" style={{ gap: "29px" }}>
-        <div className="page-header">
-          <h1 className="page-title">Daftar Klien</h1>
-          <div className="page-actions">
+      <div className={ui.pageContent}>
+        <div className={ui.pageHeader}>
+          <h1 className={ui.pageTitle}>Daftar Klien</h1>
+          <div className={ui.pageActions}>
             <button
               className={`${ui.btnPrimary} w-[200px]`}
               type="button"
@@ -97,6 +79,7 @@ export default function ClientList({ onViewDetail }: ClientListProps) {
                 stroke="currentColor"
                 strokeWidth="2.5"
                 strokeLinecap="round"
+                aria-hidden="true"
               >
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
@@ -107,21 +90,17 @@ export default function ClientList({ onViewDetail }: ClientListProps) {
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <SummaryCard variant="violet" label="Total Klien" value={formatNumber(kpis.total)} />
-          <SummaryCard variant="blue" label="Pertumbuhan (YoY)" value={kpis.yoy} />
-          <SummaryCard
-            variant="green"
-            label="Baru bulan ini"
-            value={formatNumber(kpis.newThisMonth)}
-          />
-          <SummaryCard variant="gold" label="Retensi klien" value={kpis.retention} />
+          <StatCard tone="violet" label="Total Klien" value={formatNumber(kpis.total)} />
+          <StatCard tone="blue" label="Pertumbuhan tahun ini" value={kpis.growth} />
+          <StatCard tone="green" label="Baru bulan ini" value={formatNumber(kpis.newThisMonth)} />
+          <StatCard tone="gold" label="Klien aktif" value={kpis.activeShare} />
         </div>
 
         <div className="flex items-center gap-4 pt-2">
           <SearchInput
             value={list.search}
             onChange={list.setSearch}
-            placeholder="Cari nama, negara asal klien..."
+            placeholder="Cari nama klien..."
           />
           <FilterButton onClick={() => setShowFilter(true)} />
         </div>
@@ -130,24 +109,12 @@ export default function ClientList({ onViewDetail }: ClientListProps) {
           <table className="w-full border-collapse">
             <thead>
               <tr className={ui.theadRow}>
-                <th className={ui.thCenter} style={{ width: 240 }}>
-                  Nama Klien
-                </th>
-                <th className={ui.thCenter} style={{ width: 160 }}>
-                  Negara
-                </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Status
-                </th>
-                <th className={ui.thCenter} style={{ width: 180 }}>
-                  Total Pembelian
-                </th>
-                <th className={ui.thCenter} style={{ width: 160 }}>
-                  Jumlah Pembelian
-                </th>
-                <th className={ui.thCenter} style={{ width: 80 }}>
-                  Aksi
-                </th>
+                <th className={`${ui.thCenter} w-[240px]`}>Nama Klien</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Negara</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Status</th>
+                <th className={`${ui.thCenter} w-[180px]`}>Total Pembelian</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Jumlah Pembelian</th>
+                <th className={`${ui.thCenter} w-[80px]`}>Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -164,7 +131,9 @@ export default function ClientList({ onViewDetail }: ClientListProps) {
                         <div className="flex items-center gap-4 pl-3">
                           <EntityLogo name={c.name} />
                           <span className="min-w-0 flex-1 break-words text-sm font-bold leading-[1.35] text-[#191C1E]">
-                            {c.name}
+                            <EntityLink kind="client" id={c.id} tone="name">
+                              {c.name}
+                            </EntityLink>
                           </span>
                         </div>
                       </td>
@@ -183,14 +152,15 @@ export default function ClientList({ onViewDetail }: ClientListProps) {
                         {c.quotationCount}
                       </td>
                       <td className={ui.tdCenter}>
-                        <button
-                          type="button"
+                        <Link
+                          to="/clients/$id"
+                          params={{ id: String(c.id) }}
                           className={ui.iconAction}
                           title="Lihat detail"
-                          onClick={() => onViewDetail?.(c.id)}
+                          aria-label={`Lihat detail ${c.name}`}
                         >
                           <EyeIcon />
-                        </button>
+                        </Link>
                       </td>
                     </tr>
                   )
@@ -205,6 +175,7 @@ export default function ClientList({ onViewDetail }: ClientListProps) {
             currentPage={list.currentPage}
             totalPages={totalPages}
             resourceLabel="Klien"
+            isLoading={isLoading}
             onItemsPerPage={list.setItemsPerPage}
             onPage={list.setCurrentPage}
           />

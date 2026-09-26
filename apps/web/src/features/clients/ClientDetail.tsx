@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react"
+import { Link } from "@tanstack/react-router"
+import { useEffect, useId, useRef, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
-import { dropdownItemStyle, dropdownLabelStyle } from "@/components/shared/filter-styles"
+import Modal from "@/components/shared/Modal"
 import * as clientsApi from "@/features/clients/api"
-import { getCompanyInitials } from "@/features/clients/helpers"
+import { contactUpdateBody, getCompanyInitials } from "@/features/clients/helpers"
 import {
   useClientContacts,
   useClientLogoDownloadUrl,
@@ -15,26 +16,29 @@ import {
 import { useCountries } from "@/features/countries/hooks"
 import { ApiError, fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
-import { ui } from "@/lib/ui"
+import { toast } from "@/lib/toast"
+import { dropdownLabel, ui } from "@/lib/ui"
+import { validateAsset } from "@/lib/upload-validation"
 import type { ClientRow } from "@/types/api"
 
-interface ClientDetailProps {
+type ClientDetailProps = {
   client: ClientRow
-  onBack: () => void
 }
 
 const labelCls =
   "mb-2 block text-[10px] font-bold uppercase leading-[15px] tracking-[1px] text-[#4A4455]"
 
-// Shared field shell; height and radius vary per use, so they stay out of here.
-const inputBase =
-  "w-full border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150"
+// Shared field shell.
+//
+// Height and radius vary per use, so they stay out of here.
+const inputBase = `w-full border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color,box-shadow] duration-150 ${ui.fieldFocus}`
 
 const inputCls = `${inputBase} h-11 rounded-md border-transparent`
 
-// Same shell without a text color, for value-dependent coloring.
-const inputBaseNoColor =
-  "w-full border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium outline-none transition-[border-color] duration-150"
+// Shell without text color.
+//
+// For value-dependent coloring.
+const inputBaseNoColor = `w-full border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium outline-none transition-[border-color,box-shadow] duration-150 ${ui.fieldFocus}`
 
 // Responsive two column track sizing.
 const grid2 = "grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))]"
@@ -42,19 +46,19 @@ const grid2 = "grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))]"
 const dropdownPanelCls =
   "absolute left-0 right-0 top-[calc(100%+4px)] z-50 flex max-h-[260px] flex-col overflow-y-auto rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
 
-const contactCancelCls = "px-4 py-2 text-[13px] font-semibold text-primary-700"
+const contactCancelCls = `rounded-md px-4 py-2 text-[13px] font-semibold text-primary-700 ${ui.focusRing}`
 
-// Brand gradient, faithful to legacy inline.
+// Brand gradient from legacy inline.
 const gradientCls = "bg-[linear-gradient(135deg,#630ED4_0%,#7C3AED_100%)]"
 
-// Contact form save button, enabled or not.
+// Contact save button classes.
 function contactSaveCls(enabled: boolean): string {
-  return `rounded-md px-4 py-2 text-[13px] font-semibold text-white ${
+  return `rounded-md px-4 py-2 text-[13px] font-semibold text-white ${ui.focusRing} ${
     enabled ? `${gradientCls} cursor-pointer` : "cursor-default bg-[#CBD5E1]"
   }`
 }
 
-export default function ClientDetail({ client, onBack }: ClientDetailProps) {
+export default function ClientDetail({ client }: ClientDetailProps) {
   const [name, setName] = useState(client.name)
   const [tkuId, setTkuId] = useState(client.tkuId ?? "")
   const [countryCode, setCountryCode] = useState(client.countryCode)
@@ -69,6 +73,8 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
   const [countryQuery, setCountryQuery] = useState("")
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
+  const fid = useId()
 
   // Contact form state.
   const [contactFormOpen, setContactFormOpen] = useState(false)
@@ -93,9 +99,13 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
   const updateContact = useUpdateContact()
   const deleteContact = useDeleteContact()
 
-  const handleRemoveContact = (contactId: number) => {
-    if (!window.confirm("Hapus narahubung ini?")) return
-    deleteContact.mutate({ companyId: client.id, contactId })
+  // Deactivate, not delete.
+  function confirmRemoveContact() {
+    if (pendingDeleteId === null) return
+    deleteContact.mutate(
+      { companyId: client.id, contactId: pendingDeleteId },
+      { onSettled: () => setPendingDeleteId(null) },
+    )
   }
 
   useEffect(() => {
@@ -224,33 +234,54 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
 
   const logoBg = logoBackground(client.name)
 
+  // Preview, revert on failure.
+  //
+  // Only a valid file reaches the preview.
   function handleLogoSelect(file: File | undefined) {
     if (!file) return
-    if (!file.type.startsWith("image/")) return
+    try {
+      validateAsset("clientLogo", file)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Logo tidak valid.")
+      return
+    }
+    const previous = logoDataUrl
     const reader = new FileReader()
     reader.onload = () => {
       if (typeof reader.result === "string") setLogoDataUrl(reader.result)
     }
     reader.readAsDataURL(file)
-    uploadLogo.mutate({ id: client.id, file })
+    uploadLogo.mutate(
+      { id: client.id, file },
+      {
+        onError: () => {
+          reader.abort()
+          setLogoDataUrl(previous)
+        },
+      },
+    )
   }
 
   return (
-    <div className="page-content" style={{ gap: "29px" }}>
+    <div className={ui.pageContent}>
       <div className="flex flex-col gap-3">
-        <nav className={ui.breadcrumb}>
-          <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
+        <nav aria-label="Breadcrumb" className={ui.breadcrumb}>
+          <Link to="/clients" className={`${ui.breadcrumbLink} no-underline`}>
             Daftar Klien
-          </button>
-          <span className={ui.breadcrumbSep}>&rsaquo;</span>
-          <span className={ui.breadcrumbCurrent}>Detail Klien</span>
+          </Link>
+          <span aria-hidden="true" className={ui.breadcrumbSep}>
+            &rsaquo;
+          </span>
+          <span aria-current="page" className={ui.breadcrumbCurrent}>
+            Detail Klien
+          </span>
         </nav>
 
         <div className="flex items-center gap-5">
-          <button
-            type="button"
-            onClick={onBack}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.05)]"
+          <Link
+            to="/clients"
+            aria-label="Kembali ke Daftar Klien"
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.05)] ${ui.focusRing}`}
           >
             <svg
               width="16"
@@ -261,22 +292,24 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
               strokeWidth="2.2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
             </svg>
-          </button>
-          <h1 className="page-title m-0">Detail Klien</h1>
+          </Link>
+          <h1 className={ui.pageTitle}>Detail Klien</h1>
         </div>
       </div>
 
       <div className="flex flex-col gap-5">
-        <div className="flex items-center gap-5 rounded-lg bg-white px-6 py-5">
+        <div className="flex items-center gap-5 rounded-lg bg-white px-6 py-5 max-sm:flex-wrap">
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/png,image/jpeg,image/webp,image/gif"
             className="hidden"
+            aria-label="Pilih logo klien"
             onChange={(e) => {
               handleLogoSelect(e.target.files?.[0])
               e.target.value = ""
@@ -287,11 +320,12 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               title="Klik untuk ganti logo"
-              className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg p-0 text-[20px] font-extrabold tracking-[0.5px] text-white"
+              aria-label="Ganti logo klien"
+              className={`flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg p-0 text-[20px] font-extrabold tracking-[0.5px] text-white ${ui.focusRing}`}
               style={{ background: logoDataUrl ? "#FFFFFF" : logoBg }}
             >
               {logoDataUrl ? (
-                <img src={logoDataUrl} alt="Logo klien" className="h-full w-full object-cover" />
+                <img src={logoDataUrl} alt="" className="h-full w-full object-cover" />
               ) : (
                 getCompanyInitials(client.name)
               )}
@@ -300,7 +334,8 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               title="Ganti logo"
-              aria-label="Ganti logo"
+              aria-hidden="true"
+              tabIndex={-1}
               className="absolute -bottom-1 -right-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border-2 border-white bg-white p-0 shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
             >
               <span
@@ -315,6 +350,7 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                   strokeWidth="2.2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  aria-hidden="true"
                 >
                   <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                   <circle cx="12" cy="13" r="3.5" />
@@ -326,10 +362,13 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
             <h2 className="m-0 break-words text-[18px] font-bold leading-6 tracking-[-0.4px] text-[#191C1E]">
               {client.name}
             </h2>
-            <span className="text-[13px] font-medium leading-[18px] text-[#4A4455]">Klien</span>
+            <p className="m-0 text-[13px] font-medium leading-[18px] text-[#4A4455]">
+              Nomor Klien{" "}
+              <span className="font-bold tabular-nums text-[#191C1E]">{client.number || "-"}</span>
+            </p>
           </div>
           <div
-            className={`flex shrink-0 flex-col gap-0.5 rounded-[10px] border px-4 py-2.5 ${
+            className={`flex shrink-0 flex-col gap-0.5 rounded-[10px] border px-4 py-2.5 max-sm:basis-full ${
               client.isActive ? "border-[#BBF7D0] bg-[#F0FDF4]" : "border-[#FECACA] bg-[#FEF2F2]"
             }`}
           >
@@ -358,10 +397,12 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
 
           <div className="flex flex-col gap-6">
             <div>
-              <label className={labelCls}>
+              <label htmlFor={`${fid}-name`} className={labelCls}>
                 Nama Klien <span className="text-[#DC2626]">*</span>
               </label>
               <input
+                id={`${fid}-name`}
+                aria-invalid={Boolean(fieldErrors.name)}
                 type="text"
                 value={name}
                 onChange={(e) => {
@@ -379,8 +420,11 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
 
             <div className={`${grid2} gap-6`}>
               <div>
-                <label className={labelCls}>Nomor TKU</label>
+                <label htmlFor={`${fid}-tku`} className={labelCls}>
+                  Nomor TKU
+                </label>
                 <input
+                  id={`${fid}-tku`}
                   type="text"
                   value={tkuId}
                   placeholder="Masukkan TKU"
@@ -389,10 +433,15 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                 />
               </div>
               <div>
-                <label className={labelCls}>Kode Negara</label>
+                <label htmlFor={`${fid}-country`} className={labelCls}>
+                  Kode Negara
+                </label>
                 <div className="relative">
                   <button
                     type="button"
+                    id={`${fid}-country`}
+                    aria-haspopup="listbox"
+                    aria-expanded={countryOpen}
                     onClick={() => setCountryOpen((o) => !o)}
                     className={`${inputBase} flex h-11 items-center justify-between rounded-md border-transparent text-left`}
                   >
@@ -409,6 +458,7 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                       stroke="#94A3B8"
                       strokeWidth="2.5"
                       strokeLinecap="round"
+                      aria-hidden="true"
                     >
                       <polyline points="6 9 12 15 18 9" />
                     </svg>
@@ -419,9 +469,10 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                         <input
                           type="text"
                           placeholder="Cari negara..."
+                          aria-label="Cari negara"
                           value={countryQuery}
                           onChange={(e) => setCountryQuery(e.target.value)}
-                          className="w-full rounded-sm border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-3 py-2 font-sans text-[13px] text-[#191C1E] outline-none"
+                          className={`w-full rounded-sm border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-3 py-2 font-sans text-[13px] text-[#191C1E] outline-none transition ${ui.fieldFocus}`}
                         />
                       </div>
                       {(() => {
@@ -447,14 +498,14 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                             <button
                               key={c.code}
                               type="button"
-                              style={dropdownItemStyle}
+                              className={ui.dropdownItem}
                               onClick={() => {
                                 setCountryCode(c.code)
                                 setCountryQuery("")
                                 setCountryOpen(false)
                               }}
                             >
-                              <span style={dropdownLabelStyle(active)}>
+                              <span className={dropdownLabel(active)}>
                                 {c.code} - {c.name}
                               </span>
                               {active && <CheckIcon />}
@@ -470,13 +521,17 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
 
             <div className={`${grid2} gap-6`}>
               <div>
-                <label className={labelCls}>No HP</label>
+                <label htmlFor={`${fid}-phone`} className={labelCls}>
+                  No HP
+                </label>
                 <div className="flex h-11 overflow-hidden rounded-md">
                   <span className="flex shrink-0 items-center whitespace-nowrap bg-[#E6E8EA] px-3 text-sm font-medium text-[#4A4455]">
                     {dialCode || "+62"}
                   </span>
                   <input
+                    id={`${fid}-phone`}
                     type="text"
+                    inputMode="numeric"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
                     placeholder="-"
@@ -488,8 +543,11 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                 </div>
               </div>
               <div>
-                <label className={labelCls}>Email</label>
+                <label htmlFor={`${fid}-email`} className={labelCls}>
+                  Email
+                </label>
                 <input
+                  id={`${fid}-email`}
                   type="email"
                   value={email}
                   placeholder="contact@nusantara.com"
@@ -500,19 +558,25 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
             </div>
 
             <div>
-              <label className={labelCls}>NPWP</label>
+              <label htmlFor={`${fid}-npwp`} className={labelCls}>
+                NPWP
+              </label>
               <input
+                id={`${fid}-npwp`}
                 type="text"
                 value={npwp}
                 placeholder="00.000.000.0-000.000"
                 onChange={(e) => setNpwp(e.target.value)}
-                className="h-[47px] w-full rounded-md border-[1.5px] border-transparent bg-[#F2F4F6] px-4 py-3 font-sans text-base font-medium text-[#191C1E] outline-none transition-[border-color] duration-150"
+                className={`h-[47px] w-full rounded-md border-[1.5px] border-transparent bg-[#F2F4F6] px-4 py-3 font-sans text-base font-medium text-[#191C1E] outline-none transition-[border-color,box-shadow] duration-150 ${ui.fieldFocus}`}
               />
             </div>
 
             <div>
-              <label className={labelCls}>Alamat Rinci</label>
+              <label htmlFor={`${fid}-address`} className={labelCls}>
+                Alamat Rinci
+              </label>
               <textarea
+                id={`${fid}-address`}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 rows={3}
@@ -524,11 +588,16 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
 
           <div className="border-t border-[#ECEEF0] pt-6">
             <div className="flex items-center justify-between gap-6 rounded-md bg-[#F2F4F6] px-6 py-5">
-              <div className="flex-1">
-                <div className="text-sm font-bold leading-5 text-[#191C1E]">Status Akun</div>
-                <div className="mt-1 text-xs font-normal leading-4 text-[#4A4455]">
-                  Menonaktifkan akun akan segera memutuskan semua sesi aktif dan mencegah pengguna
-                  masuk kembali ke sistem.
+              <div className="min-w-0 flex-1">
+                <div id={`${fid}-status`} className="text-sm font-bold leading-5 text-[#191C1E]">
+                  Status Klien
+                </div>
+                <div
+                  id={`${fid}-status-desc`}
+                  className="mt-1 text-xs font-normal leading-4 text-[#4A4455]"
+                >
+                  Klien nonaktif tidak dapat dipakai untuk penawaran baru. Penawaran, PO, dan
+                  invoice yang sudah ada tidak berubah.
                 </div>
               </div>
               <button
@@ -536,12 +605,14 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                 onClick={() => setIsActive((a) => !a)}
                 role="switch"
                 aria-checked={isActive}
-                className={`relative h-8 w-14 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] ${
+                aria-labelledby={`${fid}-status`}
+                aria-describedby={`${fid}-status-desc`}
+                className={`relative h-8 w-14 shrink-0 cursor-pointer rounded-full transition-[background] duration-200 ease-[ease] motion-reduce:transition-none ${ui.focusRing} ${
                   isActive ? "bg-primary-700" : "bg-[#CBD5E1]"
                 }`}
               >
                 <span
-                  className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ease-[ease] ${
+                  className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.15)] transition-[left] duration-200 ease-[ease] motion-reduce:transition-none ${
                     isActive ? "left-7" : "left-1"
                   }`}
                 />
@@ -550,17 +621,19 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
           </div>
 
           {submitError && (
-            <div className="rounded-md border-l-4 border-[#DC2626] bg-[#FEF2F2] px-4 py-3 text-[13px] text-[#7F1D1D]">
+            <div
+              role="alert"
+              className="rounded-md border-l-4 border-[#DC2626] bg-[#FEF2F2] px-4 py-3 text-[13px] text-[#7F1D1D]"
+            >
               {submitError}
             </div>
           )}
         </div>
       </div>
 
-      {/* Contacts card */}
-      <div className="flex flex-col gap-6 rounded-lg bg-white p-8">
-        <div className="flex items-start justify-between">
-          <div>
+      <div className="flex flex-col gap-6 rounded-lg bg-white p-8 max-sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
             <h3 className="m-0 text-[20px] font-bold leading-7 tracking-[-0.5px] text-[#191C1E]">
               Daftar Narahubung
             </h3>
@@ -572,7 +645,7 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
             <button
               type="button"
               onClick={() => setContactFormOpen(true)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-md px-4 py-2 text-[13px] font-semibold text-white ${gradientCls}`}
+              className={`flex shrink-0 items-center gap-1.5 rounded-md px-4 py-2 text-[13px] font-semibold text-white ${gradientCls} ${ui.focusRing}`}
             >
               + Tambah Narahubung
             </button>
@@ -586,10 +659,11 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                 <div key={c.id} className="flex flex-col gap-3 rounded-md bg-[#F5F0FF] p-4">
                   <div className={`${grid2} gap-3`}>
                     <div>
-                      <label className={labelCls}>
+                      <label htmlFor={`${fid}-edit-name`} className={labelCls}>
                         Nama <span className="text-[#DC2626]">*</span>
                       </label>
                       <input
+                        id={`${fid}-edit-name`}
                         type="text"
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
@@ -597,8 +671,11 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                       />
                     </div>
                     <div>
-                      <label className={labelCls}>Jabatan</label>
+                      <label htmlFor={`${fid}-edit-title`} className={labelCls}>
+                        Jabatan
+                      </label>
                       <input
+                        id={`${fid}-edit-title`}
                         type="text"
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
@@ -606,17 +683,24 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                       />
                     </div>
                     <div>
-                      <label className={labelCls}>No HP</label>
+                      <label htmlFor={`${fid}-edit-phone`} className={labelCls}>
+                        No HP
+                      </label>
                       <input
+                        id={`${fid}-edit-phone`}
                         type="text"
+                        inputMode="numeric"
                         value={editPhone}
                         onChange={(e) => setEditPhone(e.target.value.replace(/\D/g, ""))}
                         className={inputCls}
                       />
                     </div>
                     <div>
-                      <label className={labelCls}>Email</label>
+                      <label htmlFor={`${fid}-edit-email`} className={labelCls}>
+                        Email
+                      </label>
                       <input
+                        id={`${fid}-edit-email`}
                         type="email"
                         value={editEmail}
                         onChange={(e) => setEditEmail(e.target.value)}
@@ -641,12 +725,15 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                           {
                             companyId: client.id,
                             contactId: c.id,
-                            input: {
-                              name: editName.trim(),
-                              phone: editPhone.trim() || undefined,
-                              email: editEmail.trim() || undefined,
-                              title: editTitle.trim() || undefined,
-                            },
+                            input: contactUpdateBody(
+                              {
+                                name: editName,
+                                phone: editPhone,
+                                email: editEmail,
+                                title: editTitle,
+                              },
+                              c.countryCode,
+                            ),
                           },
                           { onSuccess: () => setEditingContactId(null) },
                         )
@@ -660,17 +747,18 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
               ) : (
                 <div
                   key={c.id}
-                  className="flex items-center justify-between gap-4 rounded-md bg-[#F2F4F6] px-4 py-3"
+                  className="flex flex-wrap items-center justify-between gap-4 rounded-md bg-[#F2F4F6] px-4 py-3"
                 >
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold text-[#191C1E]">
+                  {/* Own row on phones, actions below */}
+                  <div className="min-w-0 flex-1 max-sm:basis-full">
+                    <div className="break-words text-sm font-semibold text-[#191C1E]">
                       {c.name}
                       {c.title && (
                         <span className="ml-2 text-xs font-normal text-dark-500">{c.title}</span>
                       )}
                     </div>
                     {(c.phone || c.email) && (
-                      <div className="mt-0.5 text-xs text-dark-500">
+                      <div className="mt-0.5 break-words text-xs text-dark-500">
                         {[c.phone, c.email].filter(Boolean).join(" · ")}
                       </div>
                     )}
@@ -679,14 +767,16 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                     <button
                       type="button"
                       onClick={() => openEditContact(c)}
-                      className="rounded-sm border-[1.5px] border-primary-700 px-3 py-1.5 text-xs font-semibold text-primary-700"
+                      aria-label={`Ubah narahubung ${c.name}`}
+                      className={`rounded-sm border-[1.5px] border-primary-700 px-3 py-1.5 text-xs font-semibold text-primary-700 ${ui.focusRing}`}
                     >
                       Ubah
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleRemoveContact(c.id)}
-                      className="rounded-sm border-[1.5px] border-[#DC2626] px-3 py-1.5 text-xs font-semibold text-[#DC2626]"
+                      onClick={() => setPendingDeleteId(c.id)}
+                      aria-label={`Hapus narahubung ${c.name}`}
+                      className={`rounded-sm border-[1.5px] border-[#DC2626] px-3 py-1.5 text-xs font-semibold text-[#DC2626] ${ui.focusRing}`}
                     >
                       Hapus
                     </button>
@@ -701,10 +791,11 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
           <div className="flex flex-col gap-3 rounded-md bg-[#F5F0FF] p-4">
             <div className={`${grid2} gap-3`}>
               <div>
-                <label className={labelCls}>
+                <label htmlFor={`${fid}-new-name`} className={labelCls}>
                   Nama <span className="text-[#DC2626]">*</span>
                 </label>
                 <input
+                  id={`${fid}-new-name`}
                   type="text"
                   value={newContactName}
                   onChange={(e) => setNewContactName(e.target.value)}
@@ -713,8 +804,11 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                 />
               </div>
               <div>
-                <label className={labelCls}>Jabatan</label>
+                <label htmlFor={`${fid}-new-title`} className={labelCls}>
+                  Jabatan
+                </label>
                 <input
+                  id={`${fid}-new-title`}
                   type="text"
                   value={newContactTitle}
                   onChange={(e) => setNewContactTitle(e.target.value)}
@@ -723,9 +817,13 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                 />
               </div>
               <div>
-                <label className={labelCls}>No HP</label>
+                <label htmlFor={`${fid}-new-phone`} className={labelCls}>
+                  No HP
+                </label>
                 <input
+                  id={`${fid}-new-phone`}
                   type="text"
+                  inputMode="numeric"
                   value={newContactPhone}
                   onChange={(e) => setNewContactPhone(e.target.value.replace(/\D/g, ""))}
                   placeholder="-"
@@ -733,8 +831,11 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
                 />
               </div>
               <div>
-                <label className={labelCls}>Email</label>
+                <label htmlFor={`${fid}-new-email`} className={labelCls}>
+                  Email
+                </label>
                 <input
+                  id={`${fid}-new-email`}
                   type="email"
                   value={newContactEmail}
                   onChange={(e) => setNewContactEmail(e.target.value)}
@@ -780,12 +881,12 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
         )}
       </div>
 
-      <div className="mt-2 flex justify-end gap-4">
+      <div className="mt-2 flex flex-wrap justify-end gap-4">
         <button
           type="button"
           onClick={handleCancel}
           disabled={!dirty || updateClient.isPending}
-          className={`rounded-lg bg-transparent px-7 py-3 text-sm font-bold ${
+          className={`rounded-lg bg-transparent px-7 py-3 text-sm font-bold ${ui.focusRing} ${
             dirty && !updateClient.isPending
               ? "cursor-pointer text-primary-700"
               : "cursor-default text-[#CBD5E1]"
@@ -797,7 +898,7 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
           type="button"
           onClick={handleSubmit}
           disabled={!dirty || updateClient.isPending}
-          className={`rounded-lg px-8 py-3 text-sm font-bold text-white ${
+          className={`rounded-lg px-8 py-3 text-sm font-bold text-white ${ui.focusRing} ${
             dirty
               ? `${gradientCls} shadow-[0px_10px_15px_-3px_rgba(99,14,212,0.2),0px_4px_6px_-4px_rgba(99,14,212,0.2)]`
               : "bg-[#CBD5E1] shadow-none"
@@ -808,6 +909,39 @@ export default function ClientDetail({ client, onBack }: ClientDetailProps) {
           {updateClient.isPending ? "Menyimpan…" : "Simpan Perubahan"}
         </button>
       </div>
+
+      {pendingDeleteId !== null && (
+        <Modal
+          title="Nonaktifkan narahubung ini?"
+          onClose={() => setPendingDeleteId(null)}
+          className="max-w-[min(440px,92vw)]!"
+          footer={
+            <>
+              <button
+                type="button"
+                className={ui.modalCancel}
+                onClick={() => setPendingDeleteId(null)}
+                disabled={deleteContact.isPending}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                className={ui.modalSubmit}
+                onClick={confirmRemoveContact}
+                disabled={deleteContact.isPending}
+              >
+                {deleteContact.isPending ? "Memproses..." : "Nonaktifkan"}
+              </button>
+            </>
+          }
+        >
+          <p className="m-0 text-sm leading-6 text-[#4A4455]">
+            Narahubung tidak lagi tampil di daftar ini dan tidak dapat dipilih untuk penawaran baru.
+            Dokumen yang sudah memakainya tidak berubah.
+          </p>
+        </Modal>
+      )}
     </div>
   )
 }

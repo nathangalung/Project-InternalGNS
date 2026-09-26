@@ -18,7 +18,7 @@ type PdfSettings struct {
 	PaymentTerms  string
 }
 
-// CoretaxSettings carries seller-side identifiers for the DJP e-faktur XML.
+// CoretaxSettings holds seller e-faktur identifiers.
 type CoretaxSettings struct {
 	SellerTIN   string
 	SellerIDTKU string
@@ -26,7 +26,8 @@ type CoretaxSettings struct {
 
 // Deps holds shared application dependencies.
 type Deps struct {
-	// Pool serves reads; Tx opens a transaction for multi-write handlers.
+	// Pool serves reads.
+	// Tx opens a transaction for multi-write handlers.
 	Pool          db.Executor
 	Tx            db.TxBeginner
 	Queries       queries.Store

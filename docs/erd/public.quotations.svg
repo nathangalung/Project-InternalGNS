@@ -208,35 +208,38 @@
 <!-- public.invoices -->
 <g id="node4" class="node">
 <title>public.invoices</title>
-<polygon fill="#efefef" stroke="none" points="861.2,-935 861.2,-970.6 1109.17,-970.6 1109.17,-935 861.2,-935"/>
-<polygon fill="none" stroke="black" points="861.2,-935 861.2,-970.6 1109.17,-970.6 1109.17,-935 861.2,-935"/>
-<text text-anchor="start" x="868.2" y="-948.4" font-family="Arial Bold" font-size="18.00">public.invoices</text>
-<text text-anchor="start" x="977.68" y="-948.4" font-family="Arial" font-size="14.00">    </text>
-<text text-anchor="start" x="1008.8" y="-948.4" font-family="Arial" font-size="14.00" fill="#666666">[BASE TABLE]</text>
-<polygon fill="none" stroke="black" points="861.2,-904.2 861.2,-935 1109.17,-935 1109.17,-904.2 861.2,-904.2"/>
-<text text-anchor="start" x="868.2" y="-916.4" font-family="Arial" font-size="14.00">id </text>
-<text text-anchor="start" x="882.99" y="-916.4" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
-<polygon fill="none" stroke="black" points="861.2,-873.4 861.2,-904.2 1109.17,-904.2 1109.17,-873.4 861.2,-873.4"/>
-<text text-anchor="start" x="868.2" y="-885.6" font-family="Arial" font-size="14.00">quotation_id </text>
-<text text-anchor="start" x="948.38" y="-885.6" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
-<polygon fill="none" stroke="black" points="861.2,-842.6 861.2,-873.4 1109.17,-873.4 1109.17,-842.6 861.2,-842.6"/>
-<text text-anchor="start" x="868.2" y="-854.8" font-family="Arial" font-size="14.00">po_id </text>
-<text text-anchor="start" x="906.35" y="-854.8" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
-<polygon fill="none" stroke="black" points="861.2,-811.8 861.2,-842.6 1109.17,-842.6 1109.17,-811.8 861.2,-811.8"/>
-<text text-anchor="start" x="868.2" y="-824" font-family="Arial" font-size="14.00">company_client_id </text>
-<text text-anchor="start" x="988.05" y="-824" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
-<polygon fill="none" stroke="black" points="861.2,-781 861.2,-811.8 1109.17,-811.8 1109.17,-781 861.2,-781"/>
-<text text-anchor="start" x="868.2" y="-793.2" font-family="Arial" font-size="14.00">created_by </text>
-<text text-anchor="start" x="941.36" y="-793.2" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
-<polygon fill="none" stroke="black" points="861.2,-750.2 861.2,-781 1109.17,-781 1109.17,-750.2 861.2,-750.2"/>
-<text text-anchor="start" x="868.2" y="-762.4" font-family="Arial" font-size="14.00">updated_by </text>
-<text text-anchor="start" x="945.27" y="-762.4" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="#efefef" stroke="none" points="861.2,-950.4 861.2,-986 1109.17,-986 1109.17,-950.4 861.2,-950.4"/>
+<polygon fill="none" stroke="black" points="861.2,-950.4 861.2,-986 1109.17,-986 1109.17,-950.4 861.2,-950.4"/>
+<text text-anchor="start" x="868.2" y="-963.8" font-family="Arial Bold" font-size="18.00">public.invoices</text>
+<text text-anchor="start" x="977.68" y="-963.8" font-family="Arial" font-size="14.00">    </text>
+<text text-anchor="start" x="1008.8" y="-963.8" font-family="Arial" font-size="14.00" fill="#666666">[BASE TABLE]</text>
+<polygon fill="none" stroke="black" points="861.2,-919.6 861.2,-950.4 1109.17,-950.4 1109.17,-919.6 861.2,-919.6"/>
+<text text-anchor="start" x="868.2" y="-931.8" font-family="Arial" font-size="14.00">id </text>
+<text text-anchor="start" x="882.99" y="-931.8" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="none" stroke="black" points="861.2,-888.8 861.2,-919.6 1109.17,-919.6 1109.17,-888.8 861.2,-888.8"/>
+<text text-anchor="start" x="868.2" y="-901" font-family="Arial" font-size="14.00">quotation_id </text>
+<text text-anchor="start" x="948.38" y="-901" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="none" stroke="black" points="861.2,-858 861.2,-888.8 1109.17,-888.8 1109.17,-858 861.2,-858"/>
+<text text-anchor="start" x="868.2" y="-870.2" font-family="Arial" font-size="14.00">po_id </text>
+<text text-anchor="start" x="906.35" y="-870.2" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="none" stroke="black" points="861.2,-827.2 861.2,-858 1109.17,-858 1109.17,-827.2 861.2,-827.2"/>
+<text text-anchor="start" x="868.2" y="-839.4" font-family="Arial" font-size="14.00">company_client_id </text>
+<text text-anchor="start" x="988.05" y="-839.4" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="none" stroke="black" points="861.2,-796.4 861.2,-827.2 1109.17,-827.2 1109.17,-796.4 861.2,-796.4"/>
+<text text-anchor="start" x="868.2" y="-808.6" font-family="Arial" font-size="14.00">created_by </text>
+<text text-anchor="start" x="941.36" y="-808.6" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="none" stroke="black" points="861.2,-765.6 861.2,-796.4 1109.17,-796.4 1109.17,-765.6 861.2,-765.6"/>
+<text text-anchor="start" x="868.2" y="-777.8" font-family="Arial" font-size="14.00">updated_by </text>
+<text text-anchor="start" x="945.27" y="-777.8" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="none" stroke="black" points="861.2,-734.8 861.2,-765.6 1109.17,-765.6 1109.17,-734.8 861.2,-734.8"/>
+<text text-anchor="start" x="868.2" y="-747" font-family="Arial" font-size="14.00">replaces_invoice_id </text>
+<text text-anchor="start" x="995.06" y="-747" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
 </g>
 <!-- public.invoices&#45;&gt;public.quotations -->
 <g id="edge4" class="edge">
 <title>public.invoices:quotation_id&#45;&gt;public.quotations:id</title>
-<path fill="none" stroke="black" d="M1118.56,-883.13C1151.16,-837.17 1154.84,-527.6 1117.67,-527.6"/>
-<polygon fill="black" stroke="black" points="1118.73,-883.01 1107.92,-884.88 1114.31,-886 1110.72,-888.43 1110.72,-888.43 1110.72,-888.43 1114.31,-886 1112.97,-892.34 1118.73,-883.01"/>
+<path fill="none" stroke="black" d="M1118.7,-898.58C1152.85,-851.74 1156.5,-527.6 1117.67,-527.6"/>
+<polygon fill="black" stroke="black" points="1118.8,-898.52 1107.97,-900.26 1114.34,-901.45 1110.73,-903.83 1110.73,-903.83 1110.73,-903.83 1114.34,-901.45 1112.92,-907.77 1118.8,-898.52"/>
 </g>
 <!-- public.quotation_status_history -->
 <g id="node5" class="node">

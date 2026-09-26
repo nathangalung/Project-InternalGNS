@@ -9,6 +9,7 @@ const (
 	StatusUploaded   Status = "UPLOADED"
 	StatusOnProgress Status = "ON_PROGRESS"
 	StatusDelivered  Status = "DELIVERED"
+	StatusCancelled  Status = "CANCELLED"
 )
 
 type PurchaseOrder struct {
@@ -25,14 +26,30 @@ type PurchaseOrder struct {
 	UploadedAt        *time.Time `db:"uploaded_at"         json:"uploadedAt,omitempty"`
 	Notes             *string    `db:"notes"               json:"notes,omitempty"`
 	FileURL           *string    `db:"file_url"            json:"objectKey,omitempty"`
+	DiscountPct       string     `db:"discount_pct"        json:"discountPct"`
 	QuotationTotal    *string    `db:"quotation_total"     json:"quotationTotal,omitempty"`
 	QuotationSubtotal *string    `db:"quotation_subtotal"  json:"quotationSubtotal,omitempty"`
-	PoSubtotal        string     `db:"po_subtotal"         json:"poSubtotal"`
-	PoTotalProduk     string     `db:"po_total_produk"     json:"poTotalProduk"`
-	PoTotalProfit     string     `db:"po_total_profit"     json:"poTotalProfit"`
-	RowVersion        int32      `db:"row_version"         json:"rowVersion"`
-	CreatedAt         time.Time  `db:"created_at"          json:"createdAt"`
-	UpdatedAt         time.Time  `db:"updated_at"          json:"updatedAt"`
+	// Money figures from v_po_totals.
+	// The view mirrors fn_create_invoice: PoSubtotal is the invoice DPP and
+	// the tax figures round per line.
+	PoSubtotal      string    `db:"po_subtotal"         json:"poSubtotal"`
+	PoTotalProduk   string    `db:"po_total_produk"     json:"poTotalProduk"`
+	PoTotalProfit   string    `db:"po_total_profit"     json:"poTotalProfit"`
+	PoDppNilaiLain  string    `db:"po_dpp_nilai_lain"   json:"poDppNilaiLain"`
+	PoPpnAmount     string    `db:"po_ppn_amount"       json:"poPpnAmount"`
+	PoGrandTotal    string    `db:"po_grand_total"      json:"poGrandTotal"`
+	PoTotalDiscount string    `db:"po_total_discount"   json:"poTotalDiscount"`
+	RowVersion      int32     `db:"row_version"         json:"rowVersion"`
+	CreatedAt       time.Time `db:"created_at"          json:"createdAt"`
+	UpdatedAt       time.Time `db:"updated_at"          json:"updatedAt"`
+
+	// Issued when work starts.
+	// Set at ON_PROGRESS; nil until then.
+	DeliveryNoteNumber *string `db:"delivery_note_number" json:"deliveryNoteNumber,omitempty"`
+
+	// Moves the caller may offer.
+	// Each starts from Status.
+	AllowedTransitions []Transition `db:"-" json:"allowedTransitions"`
 }
 
 // PO line snapshot row.
@@ -56,10 +73,28 @@ type PurchaseOrderItem struct {
 	ShipDestination *string `db:"ship_destination"   json:"shipDestination,omitempty"`
 	ShippingDays    *int    `db:"shipping_days"      json:"shippingDays,omitempty"`
 	IsAvailable     bool    `db:"is_available"       json:"isAvailable"`
+	// Supplying vendor of the line.
+	// Resolved through the quotation line it came from, so the detail screen
+	// does not fetch one vendor per item.
+	VendorID   *int64  `db:"vendor_id"   json:"vendorId,omitempty"`
+	VendorName *string `db:"vendor_name" json:"vendorName,omitempty"`
 }
 
 type ChangeStatusRequest struct {
 	Status Status `json:"status"`
+	// Required for CANCELLED.
+	// Kept in the history otherwise.
+	Note string `json:"note,omitempty"`
+}
+
+// StatusHistoryEntry mirrors po_status_history.
+type StatusHistoryEntry struct {
+	ID         int64     `db:"id"          json:"id"`
+	FromStatus *Status   `db:"from_status" json:"fromStatus,omitempty"`
+	ToStatus   Status    `db:"to_status"   json:"toStatus"`
+	Note       *string   `db:"note"        json:"note,omitempty"`
+	ChangedBy  int64     `db:"changed_by"  json:"changedBy"`
+	ChangedAt  time.Time `db:"changed_at"  json:"changedAt"`
 }
 
 type UpdateFileRequest struct {

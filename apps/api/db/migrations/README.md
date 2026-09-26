@@ -1,74 +1,74 @@
-# Database — goose migrations
+# Database migrations (goose)
 
-Canonical schema source for InternalGNS. The Go binary embeds this folder and
-applies pending migrations automatically on boot.
+The schema history for InternalGNS. The Go binary embeds this folder
+(`migrations.go`) and applies pending migrations on every boot, under a
+Postgres advisory lock so two instances cannot migrate at once
+(`internal/shared/db/migrate.go`).
 
 ## Layout
 
 ```
-migrations/
-├── 00001_baseline_schema.sql     # initial DDL (promoted from legacy db/01_schema.sql)
-├── NNNNN_<name>.sql              # subsequent changes; never edit an applied file
-├── seeds/
-│   ├── 01_master.sql             # master data (users, units, clients, items, vendors)
-│   └── 02_dev_samples.sql        # sample transactions for dev/staging ONLY
-└── checks/
-    └── 01_verify_advanced.sql    # ad-hoc verification queries
+db/
+├── migrations/     00001_baseline_schema.sql, then NNNNN_<name>.sql
+├── functions/      current body of every function, generated and drift-tested
+├── queries/        named SQL the repos run
+├── seeds/          master and historical data, loaded by make seed-dev (dev only)
+├── checks/         verification queries for make check-reconcile
+└── maintenance/    clean_test_data.sql for make db-clean-testdata
 ```
 
 ## Rules
 
-- **Files are immutable once applied anywhere.** To change schema, add a new
-  timestamped migration — never edit `00001_baseline_schema.sql`.
-- **Wrap PL/pgSQL in `-- +goose StatementBegin` / `-- +goose StatementEnd`.**
-  Goose splits by `;`, which breaks function bodies.
-- **Seeds and checks are NOT run by goose.** They're invoked via
-  `apps/api/Makefile` targets (`make seed-dev`, `make check-reconcile`).
+- **Never edit an applied migration.** Add a new one.
+- **Number order is apply order.** Goose runs without out-of-order, so it
+  refuses a migration numbered below one a database has already applied. A
+  new migration takes the next number above the highest on the branch
+  (`make migrate-new` does this).
+- **Retired numbers stay empty.** 00049, 00058 and 00060 were never merged.
+  Do not reuse them; goose skips the gaps.
+- **Wrap plpgsql in `-- +goose StatementBegin` / `-- +goose StatementEnd`.**
+  Goose splits on `;` otherwise.
+- **After changing a function, run `make db-functions-dump`** and commit the
+  refreshed `db/functions/<name>.sql` with the migration. The drift test fails
+  when the two disagree.
+- **A new query key goes into `db/queries/required.go`** in the same commit.
+- Seeds and checks are not goose migrations and never run in production.
 
 ## Commands
 
+From the repo root:
+
 ```bash
-make -C apps/api migrate-up        # apply pending
-make -C apps/api migrate-status    # list applied/pending
-make -C apps/api migrate-down      # roll back last
-make -C apps/api migrate-new NAME=add_payments
-make -C apps/api seed-dev          # DEV ONLY — loads seeds/*.sql
-make -C apps/api check-reconcile   # runs checks/01_verify_advanced.sql
+make migrate                  # apply pending migrations and create the superadmin
+make migrate-up               # raw goose up
+make migrate-status           # applied and pending
+make migrate-down             # roll back the last one (dev only)
+make migrate-new NAME=add_x   # next numbered file
+make db-functions-dump        # refresh db/functions from the dev database
+make seed-dev                 # migrate, then load every seed (dev only)
+make check-reconcile          # run checks/01_verify_advanced.sql
 ```
 
-Defaults to `$DATABASE_URL` in the env; override per environment.
+The goose targets use `DATABASE_URL`, which defaults to the dev database.
 
-## Prod behavior
+## Production
 
-On production (Dokploy), the API container runs `goose.Up` on startup via
-the embedded migrations in `internal/shared/db/migrate.go`. Seeds are
-**never** applied in production.
+The API container migrates forward on boot; no deploy runs a down migration.
+Rollback and the pre-deploy checks are in `docs/deploy_vps.md`.
 
-## Baseline schema notes
+## Baseline notes
 
-The baseline (`00001_baseline_schema.sql`) includes:
+`00001_baseline_schema.sql` and its successors rely on:
 
-- `pg_trgm` extension for fuzzy item matching.
-- GENERATED STORED columns on headers/items for computed totals
-  (`total`, `subtotal`, `dpp_nilai_lain`, `ppn_amount`, `grand_total`,
-  `profit_amount`, `profit_pct`).
-- `row_version` trigger for optimistic locking.
-- CHECK constraints on enum-like VARCHAR fields (`status`, `role`, ...).
-- `quotation_reconciliation` view for drift detection
-  (`SUM(items.total_selling) == header.total`).
-- Snapshot fields (`company_client_name`, `invoice_items.item_name`, ...)
-  are **intentionally not FK** — historical documents stay frozen even if
-  master data changes.
-- Application DB: `gns_quotation`, application user: `gns_app`.
-
-## Local setup without Docker
-
-If you prefer a native Postgres:
-
-```sql
-CREATE DATABASE gns_quotation;
-CREATE USER gns_app WITH PASSWORD 'change_me';
-GRANT ALL PRIVILEGES ON DATABASE gns_quotation TO gns_app;
-```
-
-Then `make -C apps/api migrate-up` and `make -C apps/api seed-dev`.
+- `pg_trgm` for fuzzy item, client and vendor search.
+- GENERATED STORED columns for line and header totals. The app never writes
+  them.
+- `row_version` triggers for optimistic locking.
+- CHECK constraints on status and role columns, kept in step with the Go
+  status lists.
+- The `quotation_reconciliation` view, which compares line sums with header
+  totals.
+- Snapshot columns (`company_client_name`, `invoice_items.item_name`, ...)
+  that are deliberately not foreign keys, so filed documents never change
+  when master data does.
+- Database `gns_quotation`, owner `gns_app`.

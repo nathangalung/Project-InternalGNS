@@ -1,18 +1,24 @@
-import { PASSWORD_RULES } from "./password"
+import { PASSWORD_RULES, PASSWORD_TOO_LONG_MESSAGE, passwordTooLong } from "./password"
 
-interface PasswordChecklistProps {
+type PasswordChecklistProps = {
   value: string
-  /** When true, render the checklist regardless of length. Default: only when value.length > 0. */
+  // Target for aria-describedby.
+  id?: string
+  // Show even when empty.
   alwaysShow?: boolean
 }
 
-export default function PasswordChecklist({ value, alwaysShow = false }: PasswordChecklistProps) {
+export default function PasswordChecklist({
+  value,
+  id,
+  alwaysShow = false,
+}: PasswordChecklistProps) {
   if (!alwaysShow && value.length === 0) return null
 
   const passedCount = PASSWORD_RULES.filter((r) => r.test(value)).length
 
   return (
-    <div className="mt-2.5">
+    <div id={id} className="mt-2.5">
       <div className="mb-2.5 flex gap-1">
         {PASSWORD_RULES.map((_, i) => (
           <div
@@ -35,7 +41,14 @@ export default function PasswordChecklist({ value, alwaysShow = false }: Passwor
               }`}
             >
               {ok ? (
-                <svg width="12" height="12" viewBox="0 0 14 11" fill="none" className="shrink-0">
+                <svg
+                  aria-hidden="true"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 14 11"
+                  fill="none"
+                  className="shrink-0"
+                >
                   <path
                     d="M1 5.5L4.5 9L13 1"
                     stroke="#10B981"
@@ -45,7 +58,14 @@ export default function PasswordChecklist({ value, alwaysShow = false }: Passwor
                   />
                 </svg>
               ) : (
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="shrink-0">
+                <svg
+                  aria-hidden="true"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  className="shrink-0"
+                >
                   <line
                     x1="3"
                     y1="7"
@@ -62,6 +82,11 @@ export default function PasswordChecklist({ value, alwaysShow = false }: Passwor
           )
         })}
       </ul>
+      {passwordTooLong(value) && (
+        <p role="alert" className="mt-1.5 text-[12px] font-medium text-[#DC2626]">
+          {PASSWORD_TOO_LONG_MESSAGE}
+        </p>
+      )}
     </div>
   )
 }

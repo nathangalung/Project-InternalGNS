@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import Modal from "@/components/shared/Modal"
+import { findVendorByName } from "@/features/items/helpers"
 import {
   useItemPriceHistory,
   useItemSearchAdvanced,
@@ -7,8 +8,10 @@ import {
   useItemVendors,
 } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
+import * as vendorsApi from "@/features/vendors/api"
 import { useCreateVendor } from "@/features/vendors/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import { errorMessage } from "@/lib/errors"
 import { ui } from "@/lib/ui"
 import ProductCreateModal from "../ProductCreateModal"
 import {
@@ -30,7 +33,7 @@ import VendorPriceCard from "./VendorPriceCard"
 
 export type { ProductAddFormData } from "./helpers"
 
-interface ProductAddProps {
+type ProductAddProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: (data: ProductAddFormData & { profit: number }) => void
@@ -54,10 +57,14 @@ export default function ProductAdd({
   const [showConfirm, setShowConfirm] = useState(false)
 
   const [pickedItemId, setPickedItemId] = useState<number | null>(null)
+  // Catalog item picked as the request
+  const [requestedItem, setRequestedItem] = useState<CatalogItem | null>(null)
   const [extraVendors, setExtraVendors] = useState<VendorOption[]>([])
   const [showProductNew, setShowProductNew] = useState(false)
   const [showVendorNew, setShowVendorNew] = useState(false)
   const [newVendorForm, setNewVendorForm] = useState<NewVendorForm>({ nama: "", harga: "" })
+  const [newVendorError, setNewVendorError] = useState<string | null>(null)
+  const [newVendorSaving, setNewVendorSaving] = useState(false)
 
   const { data: units } = useUnits()
   const satuanOptions = useMemo(() => (units ?? []).map((u) => u.code), [units])
@@ -66,8 +73,15 @@ export default function ProductAdd({
   const requestQueryRaw = form.requestedKodeImpaNama.trim()
   const productQueryDebounced = useDebouncedValue(productQueryRaw, 250)
   const requestQueryDebounced = useDebouncedValue(requestQueryRaw, 250)
-  const { data: searchResp } = useItemSearchAdvanced(productQueryDebounced, { limit: 10 })
-  const { data: requestSearchResp } = useItemSearchAdvanced(requestQueryDebounced, { limit: 10 })
+  // A deactivated product must not be offered for a new line.
+  const { data: searchResp } = useItemSearchAdvanced(productQueryDebounced, {
+    limit: 10,
+    isActive: true,
+  })
+  const { data: requestSearchResp } = useItemSearchAdvanced(requestQueryDebounced, {
+    limit: 10,
+    isActive: true,
+  })
   const { data: itemsAll } = useItems({ limit: 50 })
   const productCatalog: CatalogItem[] = useMemo(() => {
     if (productQueryDebounced.length > 0) {
@@ -269,13 +283,21 @@ export default function ProductAdd({
     setOpenDropdown(null)
   }
 
+  // Reuse an active same-name vendor.
   async function submitNewVendor() {
-    if (!newVendorForm.nama.trim()) return
+    const name = newVendorForm.nama.trim()
+    if (!name || newVendorSaving) return
     const harga = Number(newVendorForm.harga) || 0
+    setNewVendorError(null)
+    setNewVendorSaving(true)
     try {
-      const created = await createVendor.mutateAsync({ name: newVendorForm.nama.trim() })
-      const newVendor: VendorOption = { nama: created.name, harga, vendorId: created.id }
-      setExtraVendors((prev) => [...prev, newVendor])
+      const existing = await vendorsApi.list({ q: name, isActive: true, limit: 20 })
+      const vendor =
+        findVendorByName(existing.rows, name) ?? (await createVendor.mutateAsync({ name }))
+      const newVendor: VendorOption = { nama: vendor.name, harga, vendorId: vendor.id }
+      setExtraVendors((prev) =>
+        prev.some((v) => v.vendorId === newVendor.vendorId) ? prev : [...prev, newVendor],
+      )
       setForm((prev) => ({
         ...prev,
         namaVendor: newVendor.nama,
@@ -285,8 +307,10 @@ export default function ProductAdd({
       }))
       if (harga > 0) setInitialPrices((prev) => ({ ...prev, beli: harga }))
       setShowVendorNew(false)
-    } catch {
-      // Surface persisted via mutation state.
+    } catch (err) {
+      setNewVendorError(errorMessage(err, "Gagal menyimpan vendor."))
+    } finally {
+      setNewVendorSaving(false)
     }
   }
 
@@ -315,17 +339,19 @@ export default function ProductAdd({
               {isVendorFilled && !isHargaJualValid && (
                 <span className="flex-1 text-[12px] text-error">Harga jual harus lebih dari 0</span>
               )}
-              <button type="button" className={ui.modalCancel} onClick={handleCancel}>
-                Batal
-              </button>
-              <button
-                type="button"
-                className={ui.modalSubmit}
-                onClick={handlePreSubmit}
-                disabled={!canSubmit}
-              >
-                {initialData ? "Simpan Perubahan" : "Simpan Data"}
-              </button>
+              <div className="flex gap-4 max-sm:w-full max-sm:*:flex-1 max-sm:*:px-4">
+                <button type="button" className={ui.modalCancel} onClick={handleCancel}>
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  className={ui.modalSubmit}
+                  onClick={handlePreSubmit}
+                  disabled={!canSubmit}
+                >
+                  {initialData ? "Simpan Perubahan" : "Simpan Data"}
+                </button>
+              </div>
             </>
           }
         >
@@ -351,6 +377,7 @@ export default function ProductAdd({
             }}
             onPickProduct={pickProduct}
             onPickRequestSuggestion={(item) => {
+              setRequestedItem(item)
               const label = formatKodeNama(item.kode, item.nama)
               setForm((prev) => ({
                 ...prev,
@@ -366,7 +393,12 @@ export default function ProductAdd({
                 vendorId: undefined,
                 vendorProductId: undefined,
               }))
-              setPickedItemId(null)
+              // A catalog request copies as that item, vendors and unit included.
+              if (requestedItem && requestedItem.id === form.requestedItemId) {
+                pickProduct(requestedItem)
+              } else {
+                setPickedItemId(null)
+              }
             }}
           />
 
@@ -390,6 +422,7 @@ export default function ProductAdd({
             onAddVendorNew={() => {
               setOpenDropdown(null)
               setNewVendorForm({ nama: "", harga: "" })
+              setNewVendorError(null)
               setShowVendorNew(true)
             }}
           />
@@ -400,7 +433,9 @@ export default function ProductAdd({
         open={showProductNew}
         onOpenChange={setShowProductNew}
         onSuccess={(data) => {
+          // Offer the created item itself.
           handleChange("kodeImpaNama", formatKodeNama(data.kode, data.nama))
+          pickProduct({ id: data.id, kode: data.kode, nama: data.nama })
           if (data.satuan) handleChange("satuan", data.satuan)
           setShowProductNew(false)
         }}
@@ -412,8 +447,8 @@ export default function ProductAdd({
         onChange={setNewVendorForm}
         onClose={() => setShowVendorNew(false)}
         onSubmit={submitNewVendor}
-        isSaving={createVendor.isPending}
-        error={createVendor.error instanceof Error ? createVendor.error.message : null}
+        isSaving={newVendorSaving}
+        error={newVendorError}
       />
 
       <PriceConfirmModal

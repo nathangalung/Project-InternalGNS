@@ -1,6 +1,9 @@
 package clients
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // ListFilter for clients.list query.
 type ListFilter struct {
@@ -42,7 +45,8 @@ type Client struct {
 	LogoObjectKey  *string   `db:"logo_object_key" json:"logoObjectKey,omitempty"`
 }
 
-// UpdateLogoRequest persists the MinIO object key for a client logo.
+// UpdateLogoRequest carries a logo key.
+// It persists the MinIO object key of a client logo.
 type UpdateLogoRequest struct {
 	ObjectKey string `json:"objectKey"`
 }
@@ -93,6 +97,7 @@ type CreateClientRequest struct {
 
 // Update client body.
 type UpdateClientRequest struct {
+	Number      *string `json:"number"` // omitted or blank keeps it
 	Name        string  `json:"name"`
 	NPWP        *string `json:"npwp"`
 	Address     *string `json:"address"`
@@ -118,4 +123,28 @@ type CreateContactRequest struct {
 	Phone       *string `json:"phone"` // 9 to 12 digits
 	Title       *string `json:"title"`
 	CountryCode string  `json:"countryCode"` // defaults to IDN
+}
+
+// Update contact body, PATCH semantics.
+// Email and title stay as stored when absent and are cleared by null or a
+// blank string. Phone keeps its replace-on-every-call behaviour, which the
+// client detail form relies on to clear it.
+type UpdateContactRequest struct {
+	Name        string       `json:"name"`
+	Email       OptionalText `json:"email"`
+	Phone       *string      `json:"phone"`
+	Title       OptionalText `json:"title"`
+	CountryCode string       `json:"countryCode"`
+}
+
+// OptionalText tracks a sent key.
+type OptionalText struct {
+	Set   bool
+	Value *string
+}
+
+// Runs only for present keys.
+func (o *OptionalText) UnmarshalJSON(b []byte) error {
+	o.Set = true
+	return json.Unmarshal(b, &o.Value)
 }

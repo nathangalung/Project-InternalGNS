@@ -1,3 +1,4 @@
+import EntityLink from "@/components/shared/EntityLink"
 import EyeIcon from "@/components/shared/EyeIcon"
 import SortIcon from "@/components/shared/SortIcon"
 import StatusBadge from "@/components/shared/StatusBadge"
@@ -5,7 +6,7 @@ import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { ui } from "@/lib/ui"
 import { type QuotationRow, type SortableRowKey, statusConfig } from "./helpers"
 
-interface QuotationTableProps {
+type QuotationTableProps = {
   rows: QuotationRow[]
   isLoading: boolean
   sortKey: SortableRowKey | null
@@ -15,7 +16,8 @@ interface QuotationTableProps {
   onDownload?: (row: QuotationRow) => void
 }
 
-const sortHead = "flex items-center justify-center gap-1.5"
+// Sort control, keyboard reachable.
+const sortHead = `inline-flex w-full items-center justify-center gap-1.5 rounded-sm p-0 font-bold uppercase tracking-[0.05em] ${ui.focusRing}`
 
 // Sortable rows with action buttons.
 export default function QuotationTable({
@@ -28,62 +30,42 @@ export default function QuotationTable({
   onDownload,
 }: QuotationTableProps) {
   const dirOf = (key: SortableRowKey) => (sortKey === key ? sortDir : null)
+  const ariaSort = (key: SortableRowKey) => {
+    const d = dirOf(key)
+    return d === "asc" ? "ascending" : d === "desc" ? "descending" : undefined
+  }
   return (
     <table className="w-full min-w-full table-auto border-collapse lg:table-fixed">
       <thead>
         <tr className={ui.theadRow}>
-          <th
-            className={`${ui.thCenter} cursor-pointer`}
-            style={{ width: 160 }}
-            onClick={() => onSort("displayNo")}
-          >
-            <div className={sortHead}>
+          <th className={`${ui.thCenter} w-[160px]`} aria-sort={ariaSort("displayNo")}>
+            <button type="button" className={sortHead} onClick={() => onSort("displayNo")}>
               <span>Nomor Quotation</span>
               <SortIcon direction={dirOf("displayNo")} />
-            </div>
+            </button>
           </th>
-          <th
-            className={`${ui.thCenter} cursor-pointer`}
-            style={{ width: 70 }}
-            onClick={() => onSort("version")}
-          >
-            <div className={sortHead}>
+          <th className={`${ui.thCenter} w-[70px]`} aria-sort={ariaSort("version")}>
+            <button type="button" className={sortHead} onClick={() => onSort("version")}>
               <span>Versi</span>
               <SortIcon direction={dirOf("version")} />
-            </div>
+            </button>
           </th>
-          <th className={ui.thCenter} style={{ width: 170 }}>
-            Nama Klien
-          </th>
-          <th
-            className={`${ui.thCenter} cursor-pointer`}
-            style={{ width: 120 }}
-            onClick={() => onSort("date")}
-          >
-            <div className={sortHead}>
+          <th className={`${ui.thCenter} w-[170px]`}>Nama Klien</th>
+          <th className={`${ui.thCenter} w-[120px]`} aria-sort={ariaSort("date")}>
+            <button type="button" className={sortHead} onClick={() => onSort("date")}>
               <span>Tanggal</span>
               <SortIcon direction={dirOf("date")} />
-            </div>
+            </button>
           </th>
-          <th className={ui.thCenter} style={{ width: 160 }}>
-            Total Harga Beli
-          </th>
-          <th
-            className={`${ui.thCenter} cursor-pointer`}
-            style={{ width: 160 }}
-            onClick={() => onSort("total")}
-          >
-            <div className={sortHead}>
+          <th className={`${ui.thCenter} w-[160px]`}>Total Harga Beli</th>
+          <th className={`${ui.thCenter} w-[160px]`} aria-sort={ariaSort("total")}>
+            <button type="button" className={sortHead} onClick={() => onSort("total")}>
               <span>Total Penawaran</span>
               <SortIcon direction={dirOf("total")} />
-            </div>
+            </button>
           </th>
-          <th className={ui.thCenter} style={{ width: 120 }}>
-            Status
-          </th>
-          <th className={ui.thCenter} style={{ width: 80 }}>
-            Aksi
-          </th>
+          <th className={`${ui.thCenter} w-[120px]`}>Status</th>
+          <th className={`${ui.thCenter} w-[80px]`}>Aksi</th>
         </tr>
       </thead>
       <tbody>
@@ -96,8 +78,10 @@ export default function QuotationTable({
             const badge = statusConfig[row.status]
             return (
               <tr key={row.id} className={ui.tr}>
-                <td className={`${ui.tdCenter} truncate font-bold text-primary-700`}>
-                  {row.displayNo}
+                <td className={`${ui.tdCenter} truncate font-bold`}>
+                  <EntityLink kind="quotation" id={Number(row.id)}>
+                    {row.displayNo}
+                  </EntityLink>
                 </td>
                 <td className={`${ui.tdCenter} truncate`}>{row.version}</td>
                 <td className={`${ui.tdCenter} truncate font-medium text-dark-900`}>
@@ -117,6 +101,7 @@ export default function QuotationTable({
                       type="button"
                       className={ui.iconAction}
                       title="Lihat"
+                      aria-label={`Lihat ${row.displayNo}`}
                       onClick={() => onViewDetail?.(row.id)}
                     >
                       <EyeIcon size={18} />
@@ -124,10 +109,12 @@ export default function QuotationTable({
                     <button
                       type="button"
                       className={ui.iconAction}
-                      title="Download"
+                      title="Unduh PDF"
+                      aria-label={`Unduh PDF ${row.displayNo}`}
                       onClick={() => onDownload?.(row)}
                     >
                       <svg
+                        aria-hidden="true"
                         width="18"
                         height="18"
                         viewBox="0 0 24 24"

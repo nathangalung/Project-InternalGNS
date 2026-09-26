@@ -1,11 +1,15 @@
--- Canonical current body of fn_search_items (deployed by migration 00003).
-CREATE OR REPLACE FUNCTION public.fn_search_items(p_q text, p_min_score real DEFAULT 0.3, p_limit integer DEFAULT 10)
+-- Canonical current body of fn_search_items (deployed by migration 00068).
+CREATE OR REPLACE FUNCTION public.fn_search_items(p_q text, p_min_score real DEFAULT 0.3, p_limit integer DEFAULT 10, p_is_active boolean DEFAULT true)
  RETURNS TABLE(id bigint, name character varying, impa_code character varying, default_unit_id smallint, score real, match_tier text)
  LANGUAGE sql
  STABLE
 AS $function$
   WITH normalized AS (
-    SELECT UPPER(REGEXP_REPLACE(TRIM(p_q), '\s+', ' ', 'g')) AS nq
+    SELECT
+      UPPER(REGEXP_REPLACE(TRIM(p_q), '\s+', ' ', 'g')) AS nq,
+      '%' || REPLACE(REPLACE(REPLACE(
+        UPPER(REGEXP_REPLACE(TRIM(p_q), '\s+', ' ', 'g')),
+        '\', '\\'), '%', '\%'), '_', '\_') || '%' AS pat
   ),
   candidates AS (
     SELECT
@@ -14,21 +18,21 @@ AS $function$
         -- 1. Exact IMPA match (highest signal)
         CASE WHEN i.impa_code = n.nq THEN 1.00::REAL ELSE 0::REAL END,
         -- 2. IMPA contains query
-        CASE WHEN COALESCE(i.impa_code,'') ILIKE '%'||n.nq||'%' THEN 0.95::REAL ELSE 0::REAL END,
+        CASE WHEN i.impa_code ILIKE n.pat THEN 0.95::REAL ELSE 0::REAL END,
         -- 3. Name contains query verbatim (case-insensitive ILIKE)
-        CASE WHEN i.name ILIKE '%'||n.nq||'%' THEN 0.90::REAL ELSE 0::REAL END,
+        CASE WHEN i.name ILIKE n.pat THEN 0.90::REAL ELSE 0::REAL END,
         -- 4. Fuzzy word match on name (workhorse)
         word_similarity(n.nq, i.name),
         -- 5. Fuzzy IMPA (typo di digit), weighted down
         (similarity(COALESCE(i.impa_code,''), n.nq) * 0.80)::REAL
       ) AS combined_score
     FROM items i, normalized n
-    WHERE i.is_active = TRUE
+    WHERE (p_is_active IS NULL OR i.is_active = p_is_active)
       AND (
-        i.name ILIKE '%'||n.nq||'%'
-        OR COALESCE(i.impa_code,'') ILIKE '%'||n.nq||'%'
+        i.name ILIKE n.pat
+        OR i.impa_code ILIKE n.pat
         OR n.nq <% i.name
-        OR COALESCE(i.impa_code,'') % n.nq
+        OR i.impa_code % n.nq
       )
   )
   SELECT

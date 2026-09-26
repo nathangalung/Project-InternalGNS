@@ -8,20 +8,26 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
 var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrInvalidToken       = errors.New("invalid token")
-	ErrAccountLocked      = errors.New("account temporarily locked")
+	// ErrSessionRevoked marks an orphaned token.
+	// The token is structurally valid, but its account no longer backs it:
+	// deactivated, or minted under an older session version.
+	ErrSessionRevoked = errors.New("session revoked")
 )
 
-// Compared against when the email is unknown so an unregistered address costs
-// the same bcrypt work as a real one. Built at init with the same cost
-// Repo.Create uses, so the two never drift apart.
+// dummyPasswordHash equalizes unknown-email cost.
+// It is compared against when the email is unknown, so an unregistered
+// address costs the same bcrypt work as a real one. Built at init with the
+// same cost Repo.Create uses, so the two never drift apart.
 var dummyPasswordHash = mustDummyHash()
 
 func mustDummyHash() []byte {
@@ -39,6 +45,7 @@ type Service struct {
 	expiry        time.Duration
 	refreshExpiry time.Duration
 	issuer        string
+	now           func() time.Time
 }
 
 func NewService(repo *users.Repo, secret string, expiry time.Duration) *Service {
@@ -48,12 +55,13 @@ func NewService(repo *users.Repo, secret string, expiry time.Duration) *Service 
 		expiry:        expiry,
 		refreshExpiry: 0,
 		issuer:        "internalgns-api",
+		now:           time.Now,
 	}
 }
 
-// WithRefresh enables refresh-token issuance + rotation. Without it, Login
-// still works but returns an empty RefreshToken (back-compat for callers
-// that don't wire the table yet).
+// WithRefresh enables refresh-token rotation.
+// Without it, Login still works but returns an empty RefreshToken
+// (back-compat for callers that don't wire the table yet).
 func (s *Service) WithRefresh(repo *RefreshRepo, expiry time.Duration) *Service {
 	s.refresh = repo
 	s.refreshExpiry = expiry
@@ -62,6 +70,10 @@ func (s *Service) WithRefresh(repo *RefreshRepo, expiry time.Duration) *Service 
 
 type Claims struct {
 	Role users.Role `json:"role"`
+	// SessionVersion is the mint-time version.
+	// It is the account's users.session_version at mint time. A token without
+	// it decodes to 0, which no account ever has.
+	SessionVersion int64 `json:"sv"`
 	jwt.RegisteredClaims
 }
 
@@ -83,6 +95,46 @@ func parseInt64(s string) (int64, error) {
 	return n, nil
 }
 
+// loginBackoffFree attempts cost nothing.
+// Ordinary typos are therefore not punished.
+const loginBackoffFree = 4
+
+// loginBackoff prices prior misses.
+// It is the delay an attempt pays for the misses before it. A hard lock was
+// worse than useless: it refused the correct password, so anyone who knew a
+// superadmin address could lock that account out at will.
+func loginBackoff(attempts int) time.Duration {
+	const (
+		base = 250 * time.Millisecond
+		ceil = 4 * time.Second
+	)
+	if attempts <= loginBackoffFree {
+		return 0
+	}
+	shift := attempts - loginBackoffFree - 1
+	if shift > 8 {
+		return ceil
+	}
+	if d := base << uint(shift); d < ceil {
+		return d
+	}
+	return ceil
+}
+
+// throttle waits out the backoff.
+// It returns early when the caller's deadline comes first.
+func throttle(ctx context.Context, d time.Duration) {
+	if d <= 0 {
+		return
+	}
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+	case <-ctx.Done():
+	}
+}
+
 func (s *Service) Login(ctx context.Context, email, password string) (LoginResponse, error) {
 	u, err := s.users.GetByEmail(ctx, email)
 	if errors.Is(err, users.ErrNotFound) {
@@ -97,8 +149,9 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 		return LoginResponse{}, err
 	}
 
-	// Per-account lockout: reject before checking the password so a locked
-	// account cannot be probed, and count each miss toward the threshold.
+	// Guessing is throttled, never refused: the delay is paid before the
+	// password is checked, so parallel guesses pay it too, and a correct
+	// password still gets through.
 	lock, err := s.users.LockStatus(ctx, email)
 	if errors.Is(err, users.ErrNotFound) {
 		// Deactivated or removed between the two reads: same verdict.
@@ -107,9 +160,7 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 	if err != nil {
 		return LoginResponse{}, err
 	}
-	if lock.LockedUntil != nil && lock.LockedUntil.After(time.Now()) {
-		return LoginResponse{}, ErrAccountLocked
-	}
+	throttle(ctx, loginBackoff(lock.FailedLoginAttempts))
 
 	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)); err != nil {
 		// Bookkeeping must never overturn the verdict nor raise a 500 that
@@ -119,15 +170,36 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 		}
 		return LoginResponse{}, ErrInvalidCredentials
 	}
-	if err := s.users.ResetLoginAttempts(ctx, email); err != nil {
+	// Claim and issue in one transaction. The claim row-locks the account,
+	// so a concurrent password change either lands first and fails the
+	// claim, or waits and then revokes the session issued here.
+	var resp LoginResponse
+	err = s.users.InTx(ctx, func(q *users.Repo, tx db.Executor) error {
+		version, err := q.ClaimLogin(ctx, u.ID, u.PasswordHash)
+		if err != nil {
+			return err
+		}
+		resp, err = s.issue(ctx, s.refresh.on(tx), u, version)
+		return err
+	})
+	if errors.Is(err, users.ErrNotFound) {
+		return LoginResponse{}, ErrInvalidCredentials
+	}
+	if err != nil {
 		return LoginResponse{}, err
 	}
+	return resp, nil
+}
 
-	now := time.Now()
+// issue mints a bound session.
+// It signs an access token and, when refresh is wired, stores a refresh
+// token through rr, both bound to the session version.
+func (s *Service) issue(ctx context.Context, rr *RefreshRepo, u users.User, version int64) (LoginResponse, error) {
+	now := s.now()
 	expiresAt := now.Add(s.expiry)
-
 	claims := Claims{
-		Role: u.Role,
+		Role:           u.Role,
+		SessionVersion: version,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    s.issuer,
 			Subject:   fmt.Sprintf("%d", u.ID),
@@ -136,10 +208,9 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 		},
 	}
-
 	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(s.secret)
 	if err != nil {
-		return LoginResponse{}, err
+		return LoginResponse{}, fmt.Errorf("sign access token: %w", err)
 	}
 
 	resp := LoginResponse{
@@ -147,104 +218,110 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 		ExpiresAt: expiresAt.Unix(),
 		User:      toMeUser(u),
 	}
-	if s.refresh != nil {
-		raw, hash, err := generateRefreshToken()
-		if err != nil {
-			return LoginResponse{}, err
-		}
-		refreshExpiresAt := now.Add(s.refreshExpiry)
-		if err := s.refresh.insert(ctx, u.ID, hash, refreshExpiresAt); err != nil {
-			return LoginResponse{}, err
-		}
-		resp.RefreshToken = raw
-		resp.RefreshExpiresAt = refreshExpiresAt.Unix()
+	if rr == nil {
+		return resp, nil
 	}
+	raw, hash, err := generateRefreshToken()
+	if err != nil {
+		return LoginResponse{}, fmt.Errorf("generate refresh token: %w", err)
+	}
+	refreshExpiresAt := now.Add(s.refreshExpiry)
+	if err := rr.insert(ctx, u.ID, hash, refreshExpiresAt, version); err != nil {
+		return LoginResponse{}, fmt.Errorf("store refresh token: %w", err)
+	}
+	resp.RefreshToken = raw
+	resp.RefreshExpiresAt = refreshExpiresAt.Unix()
 	return resp, nil
 }
 
-// Refresh redeems an opaque refresh token, rotating it and re-issuing the
-// JWT + a fresh refresh token. Reuse of an already-redeemed token triggers
-// revocation of every active refresh token for that user.
+// Refresh redeems and rotates tokens.
+// It re-issues the JWT plus a fresh refresh token. Reuse of an
+// already-redeemed token triggers revocation of every active refresh token
+// for that user.
 func (s *Service) Refresh(ctx context.Context, raw string) (LoginResponse, error) {
-	if s.refresh == nil {
-		return LoginResponse{}, ErrInvalidRefresh
-	}
-	if raw == "" {
+	if s.refresh == nil || raw == "" {
 		return LoginResponse{}, ErrInvalidRefresh
 	}
 	hash := hashRefreshToken(raw)
 
-	_, userID, err := s.refresh.redeem(ctx, hash)
-	if err != nil {
-		st, lookupErr := s.refresh.lookup(ctx, hash)
-		if lookupErr != nil {
-			return LoginResponse{}, lookupErr
+	// One transaction with the owner's row share-locked first: a password
+	// change or deactivation either commits before, leaving this token
+	// revoked, or waits and then revokes the successor issued here. The
+	// verdict is returned after commit so a reuse blast still lands.
+	var (
+		resp    LoginResponse
+		verdict error
+	)
+	err := s.users.InTx(ctx, func(q *users.Repo, tx db.Executor) error {
+		rr := s.refresh.on(tx)
+		if err := rr.lockOwner(ctx, hash); err != nil {
+			return err
 		}
-		if !st.found {
-			return LoginResponse{}, ErrInvalidRefresh
+		red, err := rr.redeem(ctx, hash)
+		if errors.Is(err, pgx.ErrNoRows) {
+			verdict, err = s.refusal(ctx, rr, hash)
+			return err
 		}
-		if st.revoked {
-			// A concurrent or retried redeem (a duplicate tab, a network retry)
-			// revokes the token moments before the loser looks it up. Only a
-			// token revoked longer ago than the grace window is treated as a
-			// genuine replay worth revoking every session; a very recent
-			// revocation is a benign race, so the other sessions survive.
-			if time.Since(st.revokedAt) > refreshReuseGrace {
-				if err := s.refresh.revokeAllForUser(ctx, st.userID); err != nil {
-					return LoginResponse{}, err
-				}
-			}
-			return LoginResponse{}, ErrReusedRefresh
+		if err != nil {
+			return fmt.Errorf("redeem refresh token: %w", err)
 		}
-		return LoginResponse{}, ErrExpiredRefresh
-	}
-
-	u, err := s.users.GetByID(ctx, userID)
-	if errors.Is(err, users.ErrNotFound) {
-		return LoginResponse{}, ErrInvalidRefresh
-	}
+		u, err := q.GetByID(ctx, red.userID)
+		if errors.Is(err, users.ErrNotFound) {
+			verdict = ErrInvalidRefresh
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("read refresh owner: %w", err)
+		}
+		resp, err = s.issue(ctx, rr, u, red.version)
+		return err
+	})
 	if err != nil {
 		return LoginResponse{}, err
 	}
-
-	now := time.Now()
-	expiresAt := now.Add(s.expiry)
-	claims := Claims{
-		Role: u.Role,
-		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    s.issuer,
-			Subject:   fmt.Sprintf("%d", u.ID),
-			IssuedAt:  jwt.NewNumericDate(now),
-			NotBefore: jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(expiresAt),
-		},
+	if verdict != nil {
+		return LoginResponse{}, verdict
 	}
-	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(s.secret)
-	if err != nil {
-		return LoginResponse{}, err
-	}
-
-	rawNext, hashNext, err := generateRefreshToken()
-	if err != nil {
-		return LoginResponse{}, err
-	}
-	refreshExpiresAt := now.Add(s.refreshExpiry)
-	if err := s.refresh.insert(ctx, u.ID, hashNext, refreshExpiresAt); err != nil {
-		return LoginResponse{}, err
-	}
-
-	return LoginResponse{
-		Token:            signed,
-		ExpiresAt:        expiresAt.Unix(),
-		RefreshToken:     rawNext,
-		RefreshExpiresAt: refreshExpiresAt.Unix(),
-		User:             toMeUser(u),
-	}, nil
+	return resp, nil
 }
 
-// RevokeRefresh marks a specific refresh token revoked. Silent no-op when
-// the token is already revoked, expired, or unknown — logout must succeed
-// even on a stale tab.
+// refusal explains unredeemable tokens.
+func (s *Service) refusal(ctx context.Context, rr *RefreshRepo, hash []byte) (error, error) {
+	st, err := rr.lookup(ctx, hash)
+	if err != nil {
+		return nil, fmt.Errorf("look up refresh token: %w", err)
+	}
+	if !st.found {
+		return ErrInvalidRefresh, nil
+	}
+	// Only rotation hands out a successor, so only a rotated token coming
+	// back is a replay. One ended on purpose is just a dead session.
+	if st.revoked && !revokedByRotation(st.reason) {
+		return ErrRevokedRefresh, nil
+	}
+	if st.revoked {
+		// A concurrent or retried redeem (a duplicate tab, a network retry)
+		// revokes the token moments before the loser looks it up. Only a
+		// token revoked longer ago than the grace window is treated as a
+		// genuine replay worth revoking every session; a very recent
+		// revocation is a benign race, so the other sessions survive.
+		if st.pastGrace {
+			if err := rr.revokeAllForUser(ctx, st.userID); err != nil {
+				return nil, err
+			}
+		}
+		return ErrReusedRefresh, nil
+	}
+	// Minted before a session version bump: ended on purpose, not expired.
+	if st.stale {
+		return ErrRevokedRefresh, nil
+	}
+	return ErrExpiredRefresh, nil
+}
+
+// RevokeRefresh revokes one refresh token.
+// Silent no-op when the token is already revoked, expired, or unknown:
+// logout must succeed even on a stale tab.
 func (s *Service) RevokeRefresh(ctx context.Context, raw string) error {
 	if s.refresh == nil || raw == "" {
 		return nil
@@ -252,11 +329,18 @@ func (s *Service) RevokeRefresh(ctx context.Context, raw string) error {
 	return s.refresh.revokeToken(ctx, hashRefreshToken(raw))
 }
 
+// clockLeeway absorbs wall-clock steps.
+// nbf and exp are checked against the verifying host's clock, which NTP or a
+// VM host can step back after the mint; without slack a fresh token reads
+// as not yet valid. A minute is negligible against the access token expiry.
+const clockLeeway = time.Minute
+
 func (s *Service) Verify(tokenStr string) (Claims, error) {
 	parser := jwt.NewParser(
 		jwt.WithValidMethods([]string{"HS256"}),
 		jwt.WithIssuer(s.issuer),
 		jwt.WithExpirationRequired(),
+		jwt.WithLeeway(clockLeeway),
 	)
 
 	var claims Claims
@@ -267,6 +351,42 @@ func (s *Service) Verify(tokenStr string) (Claims, error) {
 		return Claims{}, ErrInvalidToken
 	}
 	return claims, nil
+}
+
+// Identity is live account state.
+// It is what backs an access token.
+type Identity struct {
+	UserID int64
+	Role   users.Role
+}
+
+// Authenticate resolves a bearer token.
+// It returns the caller's live identity.
+func (s *Service) Authenticate(ctx context.Context, tokenStr string) (Identity, error) {
+	claims, err := s.Verify(tokenStr)
+	if err != nil {
+		return Identity{}, err
+	}
+	id, err := claims.UserID()
+	if err != nil {
+		return Identity{}, err
+	}
+	live, err := s.users.AuthContext(ctx, id)
+	if errors.Is(err, users.ErrNotFound) {
+		return Identity{}, ErrSessionRevoked
+	}
+	if err != nil {
+		return Identity{}, fmt.Errorf("authenticate: %w", err)
+	}
+	if !live.IsActive {
+		return Identity{}, ErrSessionRevoked
+	}
+	// A version, not a timestamp: the API and Postgres clocks never meet, so
+	// a wall-clock step cannot refuse a token minted after the bump.
+	if claims.SessionVersion != live.SessionVersion {
+		return Identity{}, ErrSessionRevoked
+	}
+	return Identity{UserID: id, Role: live.Role}, nil
 }
 
 func (s *Service) Me(ctx context.Context, id int64) (users.User, error) {

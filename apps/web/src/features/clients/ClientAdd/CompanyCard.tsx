@@ -1,20 +1,21 @@
-import { useMemo, useRef, useState } from "react"
+import { useId, useMemo, useRef, useState } from "react"
 import { useCountries } from "@/features/countries/hooks"
-import { ui } from "@/lib/ui"
+import { dropdownLabel, ui } from "@/lib/ui"
+import { validateAsset } from "@/lib/upload-validation"
 import {
   CheckmarkIcon,
   type ClientAddFormData,
-  dropdownItemStyle,
-  dropdownLabelStyle,
-  dropdownPanelStyle,
   fieldErrorCls,
+  fieldHintCls,
   inputCls,
   optionalCls,
 } from "./helpers"
 
-interface CompanyCardProps {
+type CompanyCardProps = {
   form: ClientAddFormData
   onChange: (field: keyof ClientAddFormData, value: string) => void
+  // The picked file, uploaded after save.
+  onLogoFile: (file: File | null) => void
   isNamaPerusahaanFilled: boolean
   alamatError: string | null
   negaraOpen: boolean
@@ -26,6 +27,7 @@ interface CompanyCardProps {
 export default function CompanyCard({
   form,
   onChange,
+  onLogoFile,
   isNamaPerusahaanFilled,
   alamatError,
   negaraOpen,
@@ -46,10 +48,20 @@ export default function CompanyCard({
   const selectedNegara = negaraOptions.find((n) => n.value === form.kodeNegara)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [logoError, setLogoError] = useState<string | null>(null)
+  const id = useId()
 
+  // Validate before previewing.
   function handleLogoSelect(file: File | undefined) {
     if (!file) return
-    if (!file.type.startsWith("image/")) return
+    try {
+      validateAsset("clientLogo", file)
+    } catch (err) {
+      setLogoError(err instanceof Error ? err.message : "Logo tidak valid.")
+      return
+    }
+    setLogoError(null)
+    onLogoFile(file)
     const reader = new FileReader()
     reader.onload = () => {
       if (typeof reader.result === "string") onChange("logo", reader.result)
@@ -64,10 +76,11 @@ export default function CompanyCard({
       <div className={ui.modalSectionHeading}>Identitas Perusahaan</div>
       <div className={ui.row2}>
         <div className={ui.field}>
-          <label className={ui.fieldLabel}>
+          <label htmlFor={`${id}-name`} className={ui.fieldLabel}>
             Nama Perusahaan <span className="text-primary-700">*</span>
           </label>
           <input
+            id={`${id}-name`}
             className={inputCls}
             type="text"
             placeholder="Masukkan nama lengkap klien"
@@ -76,12 +89,15 @@ export default function CompanyCard({
           />
         </div>
         <div className={ui.field}>
-          <label className={ui.fieldLabel}>
+          <label htmlFor={`${id}-country`} className={ui.fieldLabel}>
             Kode Negara <span className="text-primary-700">*</span>
           </label>
           <div className="relative">
             <button
               type="button"
+              id={`${id}-country`}
+              aria-haspopup="listbox"
+              aria-expanded={negaraOpen && isNamaPerusahaanFilled}
               className={ui.selectBtn}
               onClick={() => {
                 if (isNamaPerusahaanFilled) setNegaraOpen((o) => !o)
@@ -97,19 +113,21 @@ export default function CompanyCard({
                 stroke="currentColor"
                 strokeWidth="2.5"
                 strokeLinecap="round"
+                aria-hidden="true"
               >
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
             {negaraOpen && isNamaPerusahaanFilled && (
-              <div style={dropdownPanelStyle}>
+              <div className={ui.dropdownPanel}>
                 <div className="px-3 pb-2">
                   <input
                     type="text"
                     placeholder="Cari negara..."
+                    aria-label="Cari negara"
                     value={negaraQuery}
                     onChange={(e) => setNegaraQuery(e.target.value)}
-                    className="w-full rounded-sm border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-3 py-2 font-sans text-[13px] text-[#191C1E] outline-none"
+                    className={`w-full rounded-sm border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-3 py-2 font-sans text-[13px] text-[#191C1E] outline-none transition ${ui.fieldFocus}`}
                   />
                 </div>
                 {filteredNegaraOptions.length === 0 && (
@@ -123,14 +141,14 @@ export default function CompanyCard({
                     <button
                       key={opt.value}
                       type="button"
-                      style={dropdownItemStyle}
+                      className={ui.dropdownItem}
                       onClick={() => {
                         onChange("kodeNegara", opt.value)
                         setNegaraQuery("")
                         closeNegara()
                       }}
                     >
-                      <span style={dropdownLabelStyle(isActive)}>{opt.label}</span>
+                      <span className={dropdownLabel(isActive)}>{opt.label}</span>
                       {isActive && <CheckmarkIcon />}
                     </button>
                   )
@@ -141,28 +159,40 @@ export default function CompanyCard({
         </div>
       </div>
       <div className={ui.field}>
-        <label className={ui.fieldLabel}>
-          Alamat <span className="text-primary-700">*</span>
+        <label htmlFor={`${id}-address`} className={ui.fieldLabel}>
+          Alamat <span className={optionalCls}>(Opsional)</span>
         </label>
         <textarea
-          className={`${inputCls} resize-none leading-5`}
+          id={`${id}-address`}
+          className={`${inputCls} resize-none font-sans leading-5`}
           placeholder="Alamat lengkap operasional (min. 20 karakter)"
           value={form.alamat}
           onChange={(e) => onChange("alamat", e.target.value)}
           rows={3}
           disabled={!isNamaPerusahaanFilled}
+          aria-invalid={alamatError ? true : undefined}
+          aria-describedby={`${id}-address-hint`}
         />
-        {alamatError && <span className={fieldErrorCls}>{alamatError}</span>}
+        {alamatError ? (
+          <span id={`${id}-address-hint`} className={fieldErrorCls}>
+            {alamatError}
+          </span>
+        ) : (
+          <span id={`${id}-address-hint`} className={fieldHintCls}>
+            Wajib diisi sebelum PO diproses
+          </span>
+        )}
       </div>
       <div className={ui.field}>
-        <label className={ui.fieldLabel}>
+        <span id={`${id}-logo`} className={ui.fieldLabel}>
           Logo <span className={optionalCls}>(Opsional)</span>
-        </label>
+        </span>
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/png,image/jpeg,image/webp,image/gif"
           className="hidden"
+          aria-labelledby={`${id}-logo`}
           onChange={(e) => {
             handleLogoSelect(e.target.files?.[0])
             e.target.value = ""
@@ -180,15 +210,18 @@ export default function CompanyCard({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={!isNamaPerusahaanFilled}
-              className={`rounded-md border border-[rgba(204,195,216,0.4)] bg-white px-3.5 py-2 font-sans text-xs font-semibold text-[#4A4455] ${logoActionCls}`}
+              className={`rounded-md border border-[rgba(204,195,216,0.4)] bg-white px-3.5 py-2 font-sans text-xs font-semibold text-[#4A4455] ${logoActionCls} ${ui.focusRing}`}
             >
               Ganti
             </button>
             <button
               type="button"
-              onClick={() => onChange("logo", "")}
+              onClick={() => {
+                onChange("logo", "")
+                onLogoFile(null)
+              }}
               disabled={!isNamaPerusahaanFilled}
-              className={`rounded-md bg-transparent px-3.5 py-2 font-sans text-xs font-semibold text-[#DC2626] ${logoActionCls}`}
+              className={`rounded-md bg-transparent px-3.5 py-2 font-sans text-xs font-semibold text-[#DC2626] ${logoActionCls} ${ui.focusRing}`}
             >
               Hapus
             </button>
@@ -198,7 +231,7 @@ export default function CompanyCard({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={!isNamaPerusahaanFilled}
-            className={`flex w-full flex-col items-center justify-center gap-1.5 rounded-md border-[1.5px] border-dashed border-[rgba(204,195,216,0.6)] bg-[#F7F7F8] p-5 font-sans transition-all duration-150 ${logoActionCls}`}
+            className={`flex w-full flex-col items-center justify-center gap-1.5 rounded-md border-[1.5px] border-dashed border-[rgba(204,195,216,0.6)] bg-[#F7F7F8] p-5 font-sans transition-all duration-150 ${logoActionCls} ${ui.focusRing}`}
           >
             <svg
               width="22"
@@ -209,14 +242,20 @@ export default function CompanyCard({
               strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <circle cx="9" cy="9" r="2" />
               <path d="M21 15l-5-5L5 21" />
             </svg>
             <span className="text-[13px] font-semibold text-[#4A4455]">Unggah logo perusahaan</span>
-            <span className="text-[11px] text-[#94A3B8]">PNG, JPG, atau SVG · maks 2MB</span>
+            <span className="text-[11px] text-[#94A3B8]">PNG, JPG, WEBP, atau GIF · maks 2MB</span>
           </button>
+        )}
+        {logoError && (
+          <span role="alert" className={fieldErrorCls}>
+            {logoError}
+          </span>
         )}
       </div>
     </div>

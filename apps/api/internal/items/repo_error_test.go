@@ -36,9 +36,12 @@ func TestRepo_ErrorPaths(t *testing.T) {
 	_, err = r.SuggestSellingPrices(ctx, 1, 5)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
-	_, err = r.SearchVendorOffers(ctx, "x", 5)
+	_, err = r.SearchCatalog(ctx, "x", 0.1, 5, nil)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
-	_, err = r.SearchRequestHistory(ctx, "x", 5)
+	_, err = r.SearchVendorOffers(ctx, "x", 5, nil)
+	assert.ErrorIs(t, err, testutil.ErrFake)
+
+	_, err = r.SearchRequestHistory(ctx, "x", 5, nil)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 }

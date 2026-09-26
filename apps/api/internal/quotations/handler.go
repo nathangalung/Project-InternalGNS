@@ -3,6 +3,7 @@ package quotations
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -26,7 +27,7 @@ func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
 
-// parseListFilter reads the shared list filters (no pagination).
+// parseListFilter reads unpaged list filters.
 func parseListFilter(r *http.Request) ListFilter {
 	q := r.URL.Query()
 	f := ListFilter{
@@ -65,7 +66,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
 }
 
-// Export streams the filtered quotation list as an XLSX table.
+// Export streams the filtered list.
+// The list goes out as an XLSX table.
 func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	f := parseListFilter(r)
 	f.Limit, f.Offset = listq.Unbounded, 0
@@ -140,6 +142,43 @@ func (h *Handler) Revisions(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, revs)
 }
 
+// validateCreateStatus keeps create at draft.
+//
+// Every later state is reached through fn_change_quotation_status, which owns
+// the transition table, the unpriced guard and PO creation. Returns nil when
+// the payload is acceptable.
+func validateCreateStatus(status *string) map[string]string {
+	if status == nil || strings.TrimSpace(*status) == "" || strings.TrimSpace(*status) == "draft" {
+		return nil
+	}
+	return map[string]string{
+		"status": "quotation baru selalu berstatus draf; ubah status lewat endpoint status",
+	}
+}
+
+// validateItemQty requires line quantities.
+func validateItemQty(items []CreateItem) map[string]string {
+	for i, it := range items {
+		qty, err := strconv.ParseFloat(strings.TrimSpace(it.Qty), 64)
+		if err != nil || qty <= 0 {
+			return map[string]string{
+				"items[" + strconv.Itoa(i) + "].qty": "jumlah harus lebih besar dari 0",
+			}
+		}
+	}
+	return nil
+}
+
+// validateDiscountPct bounds the header discount.
+// NaN and infinities fail the range test, and so does an empty value.
+func validateDiscountPct(raw string) map[string]string {
+	v, err := strconv.ParseFloat(strings.TrimSpace(raw), 64)
+	if err == nil && v >= 0 && v <= 100 {
+		return nil
+	}
+	return map[string]string{"discountPct": "Diskon harus berupa angka antara 0 dan 100."}
+}
+
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -153,6 +192,18 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(req.Items) == 0 {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"items": "at least 1 required"}))
+		return
+	}
+	if fields := validateCreateStatus(req.Status); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
+	if fields := validateDiscountPct(req.DiscountPct); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
+	if fields := validateItemQty(req.Items); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
 
@@ -191,6 +242,14 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"items": "at least 1 required"}))
 		return
 	}
+	if fields := validateDiscountPct(req.DiscountPct); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
+	if fields := validateItemQty(req.Items); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
 
 	userID := deps.CurrentUserID(r.Context())
 	newVersion, err := h.repo.Update(r.Context(), id, req, userID, ifMatch)
@@ -225,8 +284,8 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
-	if req.Status == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "required"}))
+	if fields := validateChangeStatus(req); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
 
@@ -238,15 +297,53 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// renderStatusErr maps the unpriced-products guard to 422, else a DB error.
+// validateChangeStatus checks the body shape.
+// The transition itself is judged by the database under its row lock.
+func validateChangeStatus(req ChangeStatusRequest) map[string]string {
+	if strings.TrimSpace(req.Status) == "" {
+		return map[string]string{"status": "Status wajib diisi."}
+	}
+	if noteRequired(req.Status) && (req.Note == nil || strings.TrimSpace(*req.Note) == "") {
+		return map[string]string{
+			"note": "Alasan wajib diisi untuk status " + StatusLabel(req.Status) + ".",
+		}
+	}
+	return nil
+}
+
+// renderStatusErr maps the unpriced guard.
+// That guard is a 422; anything else is a DB error.
 func renderStatusErr(w http.ResponseWriter, err error) {
 	if errors.Is(err, ErrUnpricedProducts) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{
-			"items": "all product lines must have a selling price before sending",
+			"items": "Semua baris produk harus memiliki harga jual sebelum quotation dikirim atau disetujui.",
 		}))
 		return
 	}
 	httperr.RenderDBErr(w, err)
+}
+
+// Revise clones a sent quotation.
+// Answers 201 with the new draft id; the original moves to revision.
+func (h *Handler) Revise(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	var req ReviseRequest
+	// The note is optional, so an empty body is fine.
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil && !errors.Is(err, io.EOF) {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	userID := deps.CurrentUserID(r.Context())
+	newID, err := h.repo.Revise(r.Context(), id, req.Note, userID)
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusCreated, map[string]int64{"id": newID})
 }
 
 func (h *Handler) ChangeContact(w http.ResponseWriter, r *http.Request) {
@@ -284,7 +381,8 @@ func (h *Handler) ChangeContact(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Send forces status to sent with optional note.
+// Send moves status to sent.
+// An optional note rides along.
 func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {

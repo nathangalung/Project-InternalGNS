@@ -3,6 +3,7 @@ package invoices
 import (
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,7 +16,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 )
 
-// CoretaxHandler renders the DJP e-faktur XML payload.
+// CoretaxHandler renders e-faktur XML.
 //
 // Schema reference: "Manual Book of CoreTax: Export Faktur Pajak Keluaran"
 // (Direktorat Jenderal Pajak / imamatek). Root element `TaxInvoiceBulk` carries
@@ -102,6 +103,12 @@ func (h *CoretaxHandler) Export(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErr(w, err)
 		return
 	}
+	// A void invoice is never filed; its Pengganti is.
+	if inv.Status == StatusCancelled {
+		httperr.Render(w, httperr.UnprocessableDetail(
+			"Invoice yang dibatalkan tidak dapat diekspor ke Coretax.", nil))
+		return
+	}
 
 	items, err := h.repo.ListItems(r.Context(), id)
 	if err != nil {
@@ -112,6 +119,11 @@ func (h *CoretaxHandler) Export(w http.ResponseWriter, r *http.Request) {
 	client, err := h.clients.GetByID(r.Context(), inv.CompanyClientID)
 	if err != nil {
 		httperr.RenderDBErr(w, err)
+		return
+	}
+
+	if verr := validateBuyerIdentity(client); verr != nil {
+		httperr.Render(w, httperr.UnprocessableDetail(buyerIdentityMessage([]string{client.Name}), nil))
 		return
 	}
 
@@ -136,7 +148,8 @@ func (h *CoretaxHandler) buildBulk(inv Invoice, items []InvoiceItem, client clie
 	}
 }
 
-// coretaxInvoiceFor maps one invoice + its items + buyer into a TaxInvoice.
+// coretaxInvoiceFor builds one TaxInvoice.
+// It maps an invoice, its items and the buyer.
 // Shared by the single-invoice XML export and the bulk XLSX export so the
 // field derivation lives in one place.
 func coretaxInvoiceFor(settings deps.CoretaxSettings, inv Invoice, items []InvoiceItem, client clients.Client) coretaxTaxInvoice {
@@ -153,7 +166,7 @@ func coretaxInvoiceFor(settings deps.CoretaxSettings, inv Invoice, items []Invoi
 	if client.CountryCode != "" {
 		buyerCountry = client.CountryCode
 	}
-	buyerTIN := strDeref(client.NPWP)
+	buyerTIN := buyerTin(client)
 	buyerIDTKU := strDeref(client.TkuID)
 	if buyerIDTKU == "" && buyerTIN != "" {
 		// DJP convention: headquarters branch suffix when no TKU recorded.
@@ -161,7 +174,9 @@ func coretaxInvoiceFor(settings deps.CoretaxSettings, inv Invoice, items []Invoi
 	}
 	buyerDoc := "TIN"
 	if buyerTIN == "" {
-		// DJP requires an alt-document identifier when buyer has no NPWP.
+		// A foreign buyer with no TIN is filed on an alt document. An
+		// Indonesian one never reaches here: validateBuyerIdentity refuses
+		// the export first.
 		buyerDoc = "Passport"
 	}
 
@@ -187,7 +202,7 @@ func coretaxInvoiceFor(settings deps.CoretaxSettings, inv Invoice, items []Invoi
 	}
 }
 
-// buildGoodService maps an invoice line to the Coretax `GoodService` element.
+// buildGoodService maps one invoice line.
 //
 // DB stores `goods_or_service` as 'B' (Barang / product) or 'J' (Jasa / shipping
 // service). Coretax XML `<Opt>` uses 'A' for Barang and 'B' for Jasa — the
@@ -202,14 +217,15 @@ func buildGoodService(it InvoiceItem) coretaxGoodService {
 	if it.UnitCoretaxCode != nil && *it.UnitCoretaxCode != "" {
 		unit = *it.UnitCoretaxCode
 	}
+	price, discount := lineGrossAndDiscount(it)
 	return coretaxGoodService{
 		Opt:           opt,
 		Code:          strDeref(it.ItemCode),
 		Name:          it.ItemName,
 		Unit:          unit,
-		Price:         normalizeMoney(it.UnitPrice),
+		Price:         price,
 		Qty:           normalizeMoney(it.Qty),
-		TotalDiscount: "0",
+		TotalDiscount: discount,
 		TaxBase:       normalizeMoneyPtr(it.Dpp),
 		OtherTaxBase:  normalizeMoneyPtr(it.DppNilaiLain),
 		VATRate:       normalizeMoneyPtr(it.PpnRate),
@@ -219,6 +235,86 @@ func buildGoodService(it InvoiceItem) coretaxGoodService {
 	}
 }
 
+// lineGrossAndDiscount files the gross price.
+// DJP checks Price * Qty - TotalDiscount = TaxBase per line. The stored net
+// unit price is rounded, so filing it with no discount misses the per-line
+// DPP by that rounding. The discount is the gross line amount, rounded per
+// line as fn_create_invoice does for the header total_discount, minus the
+// DPP. A legacy line without a gross price files its net price, and a
+// rounding shortfall is never filed as a negative discount.
+func lineGrossAndDiscount(it InvoiceItem) (string, string) {
+	price := normalizeMoney(it.UnitPrice)
+	if it.GrossUnitPrice != nil && strings.TrimSpace(*it.GrossUnitPrice) != "" {
+		price = normalizeMoney(*it.GrossUnitPrice)
+	}
+	// normalizeMoney always yields a valid decimal.
+	gross := decimal.RequireFromString(price).Mul(decimal.RequireFromString(normalizeMoney(it.Qty)))
+	disc := gross.Round(2).Sub(decimal.RequireFromString(normalizeMoneyPtr(it.Dpp)))
+	if !disc.IsPositive() {
+		return price, "0"
+	}
+	return price, disc.String()
+}
+
+// npwpDigits is Coretax's NPWP length.
+const npwpDigits = 16
+
+// ErrBuyerIdentity marks a rejected buyer.
+var ErrBuyerIdentity = errors.New("coretax buyer identity invalid")
+
+// normalizeNPWP strips NPWP separators.
+// It also reports whether the digits left make a full-length NPWP.
+func normalizeNPWP(raw string) (string, bool) {
+	var b strings.Builder
+	for _, r := range raw {
+		switch {
+		case r >= '0' && r <= '9':
+			b.WriteRune(r)
+		case r == '.' || r == '-' || r == ' ':
+		default:
+			return "", false
+		}
+	}
+	out := b.String()
+	return out, len(out) == npwpDigits
+}
+
+// isIndonesianBuyer reads blank as IDN.
+// That matches the XML default.
+func isIndonesianBuyer(c clients.Client) bool {
+	return c.CountryCode == "" || strings.EqualFold(c.CountryCode, "IDN")
+}
+
+// buyerTin picks the buyer's TIN.
+// An Indonesian NPWP goes out as the digits Coretax validates; a foreign
+// buyer's own tax id is left untouched.
+func buyerTin(c clients.Client) string {
+	raw := strings.TrimSpace(strDeref(c.NPWP))
+	if digits, ok := normalizeNPWP(raw); ok {
+		return digits
+	}
+	return raw
+}
+
+// validateBuyerIdentity checks Indonesian buyers.
+// One without a valid NPWP is refused: filing them as a passport holder with
+// no document number produces a tax invoice DJP cannot match to the buyer.
+func validateBuyerIdentity(c clients.Client) error {
+	if _, ok := normalizeNPWP(strings.TrimSpace(strDeref(c.NPWP))); ok {
+		return nil
+	}
+	if isIndonesianBuyer(c) {
+		return fmt.Errorf("client %d: %w", c.ID, ErrBuyerIdentity)
+	}
+	return nil
+}
+
+// buyerIdentityMessage words the refusal toast.
+func buyerIdentityMessage(names []string) string {
+	return "Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia. " +
+		"Lengkapi NPWP klien: " + strings.Join(names, ", ") + "."
+}
+
 func strDeref(p *string) string {
 	if p == nil {
 		return ""
@@ -226,8 +322,9 @@ func strDeref(p *string) string {
 	return *p
 }
 
-// normalizeMoney parses a decimal string and re-renders without scientific
-// notation. Coretax rejects numerics in scientific form.
+// normalizeMoney avoids scientific notation.
+// It parses a decimal string and renders it plainly, since Coretax rejects
+// numerics in scientific form.
 func normalizeMoney(s string) string {
 	s = strings.TrimSpace(s)
 	if s == "" {

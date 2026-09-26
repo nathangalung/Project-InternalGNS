@@ -1,4 +1,4 @@
--- Canonical current body of trg_fn_qir_lock_parent (deployed by migration 00046).
+-- Canonical current body of trg_fn_qir_lock_parent (deployed by migration 00059).
 CREATE OR REPLACE FUNCTION public.trg_fn_qir_lock_parent()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -15,14 +15,14 @@ BEGIN
   FOR UPDATE;
 
   IF v_status IS NULL THEN
-    RAISE EXCEPTION 'Parent quotation % not found', v_qid
+    RAISE EXCEPTION 'Quotation % tidak ditemukan.', v_qid
       USING ERRCODE = 'P0011';
   END IF;
 
-  IF v_status NOT IN ('draft', 'revision') THEN
-    RAISE EXCEPTION
-      'Cannot modify quotation_item_requests: parent quotation % has status "%". Only draft/revision allow request edits.',
-      v_qid, v_status
+  -- A superseded original keeps its requests frozen.
+  IF v_status <> 'draft' THEN
+    RAISE EXCEPTION 'Permintaan barang hanya dapat diubah saat quotation berstatus Draf; status saat ini %.',
+      fn_quotation_status_label(v_status)
       USING ERRCODE = 'P0013';
   END IF;
 

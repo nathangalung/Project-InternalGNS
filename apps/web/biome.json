@@ -43,16 +43,6 @@
     "enabled": true,
     "rules": {
       "recommended": true,
-      "a11y": {
-        "noSvgWithoutTitle": "off",
-        "useButtonType": "off",
-        "noLabelWithoutControl": "off",
-        "noStaticElementInteractions": "off",
-        "useKeyWithClickEvents": "off",
-        "useKeyWithMouseEvents": "off",
-        "noAutofocus": "off",
-        "useSemanticElements": "off"
-      },
       "style": {
         "useImportType": "error",
         "noNonNullAssertion": "off"

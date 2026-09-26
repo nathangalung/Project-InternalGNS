@@ -1,16 +1,18 @@
 .PHONY: help setup \
-        db-up db-down db-logs db-shell \
+        db-up db-down db-logs db-shell deps-up \
         stack-up stack-down stack-logs ps reset \
         migrate migrate-up migrate-status migrate-down migrate-new \
         seed seed-dev db-clean-testdata check-reconcile schema-dump db-erd db-functions-dump \
         api web dev \
-        tidy sqlc \
+        tidy \
         build build-api build-web \
-        test test-api test-api-ci test-web \
+        test test-db-reset test-api test-api-ci test-web \
+        cover cover-api cover-web e2e \
         lint lint-fix fmt types \
         hooks-install hooks-run \
         docker-build docker-build-api docker-build-web \
         orphan-blobs-dry orphan-blobs-purge \
+        backup restore \
         clean
 
 SHELL        := /bin/bash
@@ -36,14 +38,14 @@ help: ## Show available targets
 
 # Local toolchain prep.
 setup: ## Prep env, deps, tools
-	@command -v go     >/dev/null || { echo "missing: go (need 1.25+)"; exit 1; }
+	@command -v go     >/dev/null || { echo "missing: go (need 1.26+)"; exit 1; }
 	@command -v bun    >/dev/null || { echo "missing: bun (need 1.3+)"; exit 1; }
 	@command -v docker >/dev/null || { echo "missing: docker"; exit 1; }
 	@test -f $(API_DIR)/.env || cp $(API_DIR)/.env.example $(API_DIR)/.env
 	@test -f $(WEB_DIR)/.env || cp $(WEB_DIR)/.env.example $(WEB_DIR)/.env
 	@command -v goose >/dev/null 2>&1 || { \
 	  echo "installing goose..."; \
-	  go install github.com/pressly/goose/v3/cmd/goose@latest; \
+	  go install github.com/pressly/goose/v3/cmd/goose@v3.27.1; \
 	}
 	cd $(API_DIR) && go mod tidy
 	cd $(WEB_DIR) && bun install
@@ -52,6 +54,9 @@ setup: ## Prep env, deps, tools
 # Database container lifecycle.
 db-up: ## Start postgres only
 	$(COMPOSE_DEV) up -d --wait postgres
+
+deps-up: ## Start postgres and minio
+	$(COMPOSE_DEV) up -d --wait postgres minio
 
 db-down: ## Stop postgres
 	$(COMPOSE_DEV) stop postgres
@@ -70,7 +75,7 @@ db-ui-down: ## Stop pgweb
 	$(COMPOSE_DEV) stop pgweb
 
 # Full dev stack lifecycle.
-stack-up: ## Build and start postgres + api
+stack-up: ## Build and start postgres, minio, pgweb, api
 	$(COMPOSE_DEV) up -d --build --wait
 
 stack-down: ## Stop full dev stack
@@ -139,9 +144,11 @@ schema-dump: ## Dump current schema to docs/schema_current.sql
 	pg_dump --schema-only --no-owner "$(DATABASE_URL)" > docs/schema_current.sql
 
 # Canonical plpgsql bodies. The drift test is the enforcement; this only
-# refreshes the files after a migration changes a function.
+# refreshes the files after a migration changes a function. It reads the dev
+# DB on purpose and only reads; the reset helpers refuse any database whose
+# name does not end in "test", so nothing here can truncate it.
 db-functions-dump: db-up ## Regenerate db/functions from the live DB
-	cd $(API_DIR) && DATABASE_URL="$(DATABASE_URL)" GNS_UPDATE_FUNCTIONS=1 \
+	cd $(API_DIR) && TEST_DATABASE_URL="$(DATABASE_URL)" GNS_UPDATE_FUNCTIONS=1 \
 	  go test ./db/functions -run TestFunctionBodiesMatchDatabase -count=1
 
 db-erd: db-up ## Regenerate docs/erd from the live dev DB (requires tbls)
@@ -152,24 +159,21 @@ db-erd: db-up ## Regenerate docs/erd from the live dev DB (requires tbls)
 	tbls doc --force
 
 # Local dev servers.
-api: db-up ## Run API on host
+api: deps-up ## Run API on host
 	cd $(API_DIR) && go run ./cmd/api
 
 web: ## Run Vite dev server
 	cd $(WEB_DIR) && bun run dev
 
-dev: db-up ## Run api and web together
+dev: deps-up ## Run api and web together
 	@trap 'kill 0' INT TERM EXIT; \
 	$(MAKE) api & \
 	$(MAKE) web & \
 	wait
 
-# Code generation / dependency tidy.
+# Dependency tidy.
 tidy: ## go mod tidy
 	cd $(API_DIR) && go mod tidy
-
-sqlc: ## Generate sqlc code
-	cd $(API_DIR) && sqlc generate
 
 # Build artifacts.
 build: build-api build-web ## Build api binary and web bundle
@@ -183,18 +187,42 @@ build-web: ## Build FE bundle
 # Tests and checks.
 test: test-api test-web ## Run all tests
 
-test-api: ## Run Go unit tests (serialized to avoid godog/integration interference)
-	cd $(API_DIR) && go test ./... -race -count=1 -p=1
-
-test-api-ci: ## Run Go tests against a throwaway DB, like CI
+# The suites TRUNCATE, so they only ever get a database built here.
+test-db-reset: db-up ## Recreate the throwaway test database
 	@$(COMPOSE_DEV) exec -T postgres psql -U gns_app -d postgres \
 	  -c "DROP DATABASE IF EXISTS $(CI_TEST_DB) WITH (FORCE);" \
 	  -c "CREATE DATABASE $(CI_TEST_DB) OWNER gns_app;" >/dev/null
+
+test-api: test-db-reset ## Run Go tests against a throwaway DB (serialized)
 	cd $(API_DIR) && TEST_DATABASE_URL=$(CI_TEST_DSN) DATABASE_URL=$(CI_TEST_DSN) \
 	  go test ./... -race -count=1 -p=1
 
-test-web: ## Typecheck FE
-	cd $(WEB_DIR) && bun run typecheck
+test-api-ci: test-api ## Run Go tests the way CI does
+
+test-web: ## Typecheck and unit-test FE
+	cd $(WEB_DIR) && bun run typecheck && bun run test
+
+# Coverage gates. Minimums live in scripts/covercheck/thresholds.txt (Go)
+# and vitest.config.ts (web); both print the gap to each tier.
+cover: ## Run both coverage gates, report every failure
+	@rc=0; $(MAKE) cover-api || rc=1; $(MAKE) cover-web || rc=1; exit $$rc
+
+cover-api: deps-up test-db-reset ## Go tests with cross-package coverage, then the per-package gate
+	@mkdir -p $(API_DIR)/bin
+	cd $(API_DIR) && TEST_DATABASE_URL=$(CI_TEST_DSN) DATABASE_URL=$(CI_TEST_DSN) \
+	  MINIO_ENDPOINT=$${MINIO_ENDPOINT:-localhost:9000} \
+	  go test ./... -race -count=1 -p=1 -covermode=atomic -coverpkg=./... -coverprofile=bin/coverage.out
+	cd $(API_DIR) && go run ./scripts/covercheck -profile bin/coverage.out
+
+cover-web: ## Vitest with per-tier coverage thresholds
+	cd $(WEB_DIR) && bun run coverage
+
+# Browser suite against the running dev stack (make dev). Admin credentials
+# come from apps/api/.env unless E2E_ADMIN_EMAIL/E2E_ADMIN_PASSWORD are set.
+e2e: ## Playwright e2e against the dev stack
+	@set -a; if [ -f $(API_DIR)/.env ]; then . $(API_DIR)/.env; fi; set +a; \
+	cd $(WEB_DIR) && E2E_ADMIN_EMAIL=$${E2E_ADMIN_EMAIL:-$$SUPERADMIN_EMAIL} \
+	  E2E_ADMIN_PASSWORD=$${E2E_ADMIN_PASSWORD:-$$SUPERADMIN_PASSWORD} bun run e2e
 
 lint: ## Lint api and web
 	cd $(API_DIR) && go vet ./...
@@ -243,6 +271,15 @@ orphan-blobs-dry: ## List MinIO keys not referenced by any DB row (read-only)
 
 orphan-blobs-purge: ## Delete unreferenced MinIO keys older than 60 min
 	cd $(API_DIR) && go run ./cmd/orphan-blobs --dry-run=false
+
+# Host-side backups (docs/backup_restore.md). Service and project names come
+# from PG_SERVICE, MINIO_SERVICE and COMPOSE_PROJECT.
+backup: ## Dump Postgres and copy MinIO into BACKUP_ROOT
+	scripts/backup.sh
+
+restore: ## Restore SNAPSHOT= into new DB= (BUCKET= for a rehearsal)
+	@test -n "$(SNAPSHOT)" -a -n "$(DB)" || { echo "usage: make restore SNAPSHOT=<dir> DB=<new_db> [BUCKET=<bucket>]"; exit 1; }
+	scripts/restore.sh "$(SNAPSHOT)" "$(DB)" $(BUCKET)
 
 # Cleanup.
 clean: ## Remove build artifacts

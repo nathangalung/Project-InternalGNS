@@ -35,10 +35,40 @@ type Invoice struct {
 	CreatedAt           time.Time  `db:"created_at"              json:"createdAt"`
 	UpdatedAt           time.Time  `db:"updated_at"              json:"updatedAt"`
 	AttachmentObjectKey *string    `db:"attachment_object_key"   json:"attachmentObjectKey,omitempty"`
+	PaidAt              *time.Time `db:"paid_at"                 json:"paidAt,omitempty"`
+	PaymentProofKey     *string    `db:"payment_proof_key"       json:"paymentProofKey,omitempty"`
 }
 
-// UpdateAttachmentRequest persists the MinIO object key for an invoice
-// payment receipt or similar attachment.
+// InvoiceDetail backs the invoice screen.
+// It carries the client, quotation and PO header fields the page prints, so
+// finance never has to call the quotation or purchase-order endpoints its
+// role forbids.
+type InvoiceDetail struct {
+	Invoice
+	VesselName          *string    `db:"vessel_name"          json:"vesselName,omitempty"`
+	PoNumber            *string    `db:"po_number"            json:"poNumber,omitempty"`
+	PoDate              *time.Time `db:"po_date"              json:"poDate,omitempty"`
+	CompanyNpwp         *string    `db:"company_npwp"         json:"companyNpwp,omitempty"`
+	CompanyAddress      *string    `db:"company_address"      json:"companyAddress,omitempty"`
+	CompanyEmail        *string    `db:"company_email"        json:"companyEmail,omitempty"`
+	CompanyCountryCode  string     `db:"company_country_code" json:"companyCountryCode"`
+	CompanyTkuID        *string    `db:"company_tku_id"       json:"companyTkuId,omitempty"`
+	ContactName         *string    `db:"contact_name"         json:"contactName,omitempty"`
+	ContactEmail        *string    `db:"contact_email"        json:"contactEmail,omitempty"`
+	ContactPhone        *string    `db:"contact_phone"        json:"contactPhone,omitempty"`
+	ReplacesInvoiceID   *int64     `db:"replaces_invoice_id"    json:"replacesInvoiceId,omitempty"`
+	ReplacesInvoiceNo   *string    `db:"replaces_invoice_no"    json:"replacesInvoiceNo,omitempty"`
+	ReplacedByInvoiceID *int64     `db:"replaced_by_invoice_id" json:"replacedByInvoiceId,omitempty"`
+
+	// Moves, Pengganti and timeline.
+	AllowedTransitions []Transition         `db:"-" json:"allowedTransitions"`
+	CanReplace         bool                 `db:"-" json:"canReplace"`
+	History            []StatusHistoryEntry `db:"-" json:"history"`
+}
+
+// UpdateAttachmentRequest carries an attachment key.
+// It persists the MinIO object key of a payment receipt or similar
+// attachment.
 type UpdateAttachmentRequest struct {
 	ObjectKey string `json:"objectKey"`
 }
@@ -76,8 +106,23 @@ type Summary struct {
 	Overdue int64 `db:"overdue" json:"overdue"`
 }
 
+// ChangeStatusRequest moves an invoice.
+// A cancel needs Note.
 type ChangeStatusRequest struct {
-	Status Status `json:"status"`
+	Status          Status  `json:"status"`
+	Note            *string `json:"note,omitempty"`
+	PaymentProofKey *string `json:"paymentProofKey,omitempty"`
+}
+
+// StatusHistoryEntry mirrors invoice_status_history.
+type StatusHistoryEntry struct {
+	ID              int64     `db:"id"                json:"id"`
+	FromStatus      Status    `db:"from_status"       json:"fromStatus"`
+	ToStatus        Status    `db:"to_status"         json:"toStatus"`
+	Note            *string   `db:"note"              json:"note,omitempty"`
+	PaymentProofKey *string   `db:"payment_proof_key" json:"paymentProofKey,omitempty"`
+	ChangedBy       int64     `db:"changed_by"        json:"changedBy"`
+	ChangedAt       time.Time `db:"changed_at"        json:"changedAt"`
 }
 
 type UpdateDatesRequest struct {

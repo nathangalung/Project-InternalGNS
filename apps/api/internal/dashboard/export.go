@@ -3,8 +3,9 @@ package dashboard
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
-	"sort"
 	"strconv"
 	"time"
 
@@ -17,7 +18,7 @@ import (
 
 var errInvalidYear = errors.New("invalid year")
 
-// exportMetrics drives both the monthly columns and their order.
+// exportMetrics orders the monthly columns.
 var exportMetrics = []struct{ key, header string }{
 	{"quotation", "Quotation"},
 	{"invoice", "Invoice"},
@@ -26,73 +27,88 @@ var exportMetrics = []struct{ key, header string }{
 	{"ppn", "PPN"},
 }
 
-// Export writes the dashboard summary + monthly series as XLSX.
-// GET /dashboard/export.xlsx?year=YYYY (year optional; defaults to last 12 months).
+// Export writes the dashboard XLSX.
+// It holds the summary plus the monthly series.
+// GET /dashboard/export.xlsx?year=YYYY (year optional; defaults to the last
+// 12 WIB months). Both sheets cover the same window, so each Ringkasan
+// total equals the sum of its Bulanan column.
 func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	if !canViewFinancial(deps.CurrentUserRole(r.Context())) {
 		httperr.Render(w, httperr.Forbidden("insufficient role"))
 		return
 	}
-	from, to, err := exportRange(r.URL.Query().Get("year"))
+	from, to, name, err := exportRange(h.now(), r.URL.Query().Get("year"))
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest(err.Error()))
 		return
 	}
 
-	summary, err := h.repo.Summary(r.Context())
+	summary, err := h.repo.Totals(r.Context(), &from, &to)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 
 	// Collect each metric's monthly points keyed by month label.
 	series := make(map[string]map[string]string, len(exportMetrics))
-	monthsSet := map[string]struct{}{}
 	for _, m := range exportMetrics {
 		points, err := h.repo.Timeseries(r.Context(), m.key, from, to, "month")
 		if err != nil {
-			httperr.RenderDBErr(w, err)
+			httperr.RenderDBErrCtx(r.Context(), w, err)
 			return
 		}
 		byMonth := make(map[string]string, len(points))
 		for _, p := range points {
 			byMonth[p.Month] = p.Value
-			monthsSet[p.Month] = struct{}{}
 		}
 		series[m.key] = byMonth
 	}
-	months := make([]string, 0, len(monthsSet))
-	for m := range monthsSet {
-		months = append(months, m)
-	}
-	sort.Strings(months)
 
-	data, err := buildDashboardWorkbook(summary, months, series)
-	if err != nil {
+	var buf bytes.Buffer
+	if err := buildDashboardWorkbook(&buf, summary, monthLabels(from, to), series); err != nil {
 		httperr.Render(w, httperr.Internal("dashboard workbook build failed"))
 		return
 	}
-	httpx.WriteXLSX(w, "dashboard-export", data)
+	httpx.WriteXLSX(w, name, buf.Bytes())
 }
 
-// exportRange maps an optional year to [from, to). Empty year => last 12 months.
-func exportRange(year string) (time.Time, time.Time, error) {
+// exportRange maps year to window.
+// It returns [from, to) and a file name.
+// An empty year is the default chart window.
+func exportRange(now time.Time, year string) (time.Time, time.Time, string, error) {
 	if year == "" {
-		return parseRange("", "")
+		from, to, err := parseRange(now, "", "")
+		last := to.AddDate(0, -1, 0)
+		name := "dashboard-export-" + from.Format("2006-01") + "_" + last.Format("2006-01")
+		return from, to, name, err
 	}
 	y, err := strconv.Atoi(year)
 	if err != nil || y < 2000 || y > 9999 {
-		return time.Time{}, time.Time{}, errInvalidYear
+		return time.Time{}, time.Time{}, "", errInvalidYear
 	}
 	from := time.Date(y, 1, 1, 0, 0, 0, 0, time.UTC)
-	return from, from.AddDate(1, 0, 0), nil
+	return from, from.AddDate(1, 0, 0), "dashboard-export-" + year, nil
 }
 
+// monthLabels lists the window's months.
+// They cover every month in [from, to).
+// The rows come from the window, not the data, so an empty month still
+// gets its zero row.
+func monthLabels(from, to time.Time) []string {
+	var out []string
+	for m := time.Date(from.Year(), from.Month(), 1, 0, 0, 0, 0, time.UTC); m.Before(to); m = m.AddDate(0, 1, 0) {
+		out = append(out, m.Format("2006-01"))
+	}
+	return out
+}
+
+// buildDashboardWorkbook writes both sheets.
 func buildDashboardWorkbook(
+	w io.Writer,
 	s Summary,
 	months []string,
 	series map[string]map[string]string,
-) ([]byte, error) {
+) error {
 	f := excelize.NewFile()
 	defer func() { _ = f.Close() }()
 
@@ -109,14 +125,14 @@ func buildDashboardWorkbook(
 		{"Total Purchase Order", s.TotalPo},
 		{"Total Invoice", s.TotalInvoices},
 		{"Total Invoice Dibayar", s.TotalInvoicesPaid},
-		{"Invoice Akan Jatuh Tempo", s.InvoicesDueSoon},
-		{"Invoice Jatuh Tempo", s.InvoicesOverdue},
+		{"Invoice Segera Jatuh Tempo", s.InvoicesDueSoon},
+		{"Invoice Terlambat", s.InvoicesOverdue},
 	}
 	writeGrid(f, sumSheet, summaryRows)
 
 	const monthSheet = "Bulanan"
 	if _, err := f.NewSheet(monthSheet); err != nil {
-		return nil, err
+		return err
 	}
 	header := []any{"Bulan"}
 	for _, m := range exportMetrics {
@@ -132,11 +148,10 @@ func buildDashboardWorkbook(
 	}
 	writeGrid(f, monthSheet, monthRows)
 
-	var buf bytes.Buffer
-	if err := f.Write(&buf); err != nil {
-		return nil, err
+	if err := f.Write(w); err != nil {
+		return fmt.Errorf("write dashboard xlsx: %w", err)
 	}
-	return buf.Bytes(), nil
+	return nil
 }
 
 func writeGrid(f *excelize.File, sheet string, rows [][]any) {
@@ -148,7 +163,8 @@ func writeGrid(f *excelize.File, sheet string, rows [][]any) {
 	}
 }
 
-// num parses a decimal string to float so the cell is numeric; 0 on failure.
+// num parses a numeric cell.
+// It returns 0 on failure.
 func num(s string) float64 {
 	v, err := strconv.ParseFloat(s, 64)
 	if err != nil {

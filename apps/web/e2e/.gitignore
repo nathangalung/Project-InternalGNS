@@ -1,0 +1,4 @@
+# Session tokens and run output; never commit.
+.auth/
+.results/
+.report/

@@ -16,11 +16,11 @@ type HeaderIdx = {
   unit: number
 }
 
-// Match a header column by key.
+// Header column by key.
 function findIdx(headers: string[], keys: string[]): number {
-  const norm = headers.map((h) => (h ?? "").toString().trim().toLowerCase())
+  const norm = headers.map((h) => h.trim().toLowerCase())
   for (const k of keys) {
-    const exact = norm.findIndex((h) => h === k)
+    const exact = norm.indexOf(k)
     if (exact !== -1) return exact
   }
   for (const k of keys) {
@@ -41,12 +41,13 @@ function detectHeaders(headers: string[]): HeaderIdx | null {
   return idx
 }
 
-// Locate the header row within leading rows.
+// Header row among leading rows.
 function findHeaderRow(aoa: unknown[][]): { row: number; idx: HeaderIdx } | null {
   const scan = Math.min(aoa.length, 15)
   let best: { row: number; idx: HeaderIdx; score: number } | null = null
   for (let r = 0; r < scan; r++) {
-    const headers = (aoa[r] ?? []).map((c) => (c ?? "").toString())
+    // Array.from fills holes; map would keep them for the partial match.
+    const headers = Array.from(aoa[r] ?? [], (c) => (c ?? "").toString())
     const idx = detectHeaders(headers)
     if (!idx) continue
     const score = [idx.impa, idx.name, idx.qty, idx.unit].filter((x) => x >= 0).length
@@ -65,7 +66,7 @@ export function parseQty(raw: unknown): number {
   return Number.isFinite(n) ? n : 0
 }
 
-// Extract product rows from a sheet.
+// Product rows from a sheet.
 export function rowsFromAOA(aoa: unknown[][]): MatchRowInput[] {
   const found = findHeaderRow(aoa)
   if (!found) return []
@@ -90,12 +91,16 @@ export function rowsFromAOA(aoa: unknown[][]): MatchRowInput[] {
   return out
 }
 
-// ExcelJS cells may be formulas, rich text, or hyperlinks; reduce each to its
-// display text so detection and extraction stay format-agnostic.
+// Cell to its display text.
+//
+// ExcelJS cells may be formulas, rich text, or hyperlinks; reducing each to
+// its display text keeps detection and extraction format-agnostic.
 function cellToPrimitive(value: unknown): unknown {
   if (value == null) return ""
   if (typeof value === "object") {
     const v = value as Record<string, unknown>
+    // An error cell such as #N/A has no display text.
+    if ("error" in v) return ""
     if ("result" in v) return cellToPrimitive(v.result)
     if ("text" in v) return v.text
     if ("richText" in v && Array.isArray(v.richText)) {
@@ -103,11 +108,13 @@ function cellToPrimitive(value: unknown): unknown {
     }
     if ("hyperlink" in v && "text" in v) return v.text
     if (value instanceof Date) return value
+    // A formula with no cached result has no display text either.
+    return ""
   }
   return value
 }
 
-// Read every sheet into arrays of rows.
+// Every sheet as row arrays.
 async function parseXlsx(buf: ArrayBuffer): Promise<unknown[][][]> {
   const { default: ExcelJS } = await import("exceljs")
   const wb = new ExcelJS.Workbook()
@@ -116,17 +123,19 @@ async function parseXlsx(buf: ArrayBuffer): Promise<unknown[][][]> {
   for (const ws of wb.worksheets) {
     const aoa: unknown[][] = []
     ws.eachRow({ includeEmpty: false }, (row) => {
-      // row.values is 1-indexed; slot 0 is unused.
+      // row.values is 1-indexed and sparse; Array.from fills empty cells.
       const values = row.values as unknown[]
       const arr = Array.isArray(values) ? values.slice(1) : []
-      aoa.push(arr.map(cellToPrimitive))
+      aoa.push(Array.from(arr, cellToPrimitive))
     })
     if (aoa.length) sheets.push(aoa)
   }
   return sheets
 }
 
-// Minimal RFC 4180 CSV parser: quoted fields, escaped quotes, CRLF or LF.
+// Minimal RFC 4180 CSV parser.
+//
+// Handles quoted fields, escaped quotes, and CRLF or LF.
 export function parseCsv(text: string): unknown[][] {
   const clean = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text
   const rows: string[][] = []

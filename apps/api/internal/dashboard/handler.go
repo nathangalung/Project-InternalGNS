@@ -8,6 +8,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 )
 
 // Default lookback for chart range.
@@ -15,10 +16,12 @@ const defaultMonths = 12
 
 type Handler struct {
 	repo *Repo
+	// now clocks the default windows.
+	now func() time.Time
 }
 
 func NewHandler(repo *Repo) *Handler {
-	return &Handler{repo: repo}
+	return &Handler{repo: repo, now: tz.Now}
 }
 
 // Summary returns aggregate KPIs.
@@ -48,7 +51,7 @@ func (h *Handler) Timeseries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	from, to, err := parseRange(q.Get("from"), q.Get("to"))
+	from, to, err := parseRange(h.now(), q.Get("from"), q.Get("to"))
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest(err.Error()))
 		return
@@ -73,9 +76,10 @@ func (h *Handler) Timeseries(w http.ResponseWriter, r *http.Request) {
 }
 
 // parseRange returns inclusive-from exclusive-to.
-func parseRange(rawFrom, rawTo string) (time.Time, time.Time, error) {
-	now := time.Now().UTC()
-	to := firstOfNextMonth(now)
+// The default window is the last defaultMonths months ending with the
+// current WIB month, so the new month shows from 00:00 WIB on the 1st.
+func parseRange(now time.Time, rawFrom, rawTo string) (time.Time, time.Time, error) {
+	to := firstOfNextMonth(now.In(tz.Jakarta()))
 	from := to.AddDate(0, -defaultMonths, 0)
 
 	if rawFrom != "" {
@@ -99,6 +103,7 @@ func parseRange(rawFrom, rawTo string) (time.Time, time.Time, error) {
 }
 
 // firstOfNextMonth marks exclusive upper bound.
+// Only the calendar date matters: the bound is sent as a SQL date.
 func firstOfNextMonth(t time.Time) time.Time {
 	y, m, _ := t.Date()
 	return time.Date(y, m+1, 1, 0, 0, 0, 0, time.UTC)

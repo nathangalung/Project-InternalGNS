@@ -13,7 +13,6 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
-	"github.com/nathangalung/internalgns/apps/api/internal/shared/money"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
 )
@@ -27,7 +26,7 @@ type ExportHandler struct {
 	settings deps.PdfSettings
 }
 
-// NewExportHandler wires repos for PDF export.
+// NewExportHandler wires PDF export repos.
 func NewExportHandler(repo *Repo, c *clients.Repo, u *units.Repo, r *pdfgen.Renderer, s deps.PdfSettings) *ExportHandler {
 	return &ExportHandler{repo: repo, clients: c, units: u, renderer: r, settings: s}
 }
@@ -55,6 +54,8 @@ type exportData struct {
 	TotalProduk   string
 	DiscountPct   string
 	TotalDiscount string
+	Shipping      string
+	HasShipping   bool
 	Subtotal      string
 	DPP           string
 	PPN           string
@@ -67,7 +68,7 @@ type exportData struct {
 	UseA4         bool
 }
 
-// ExportPDF returns the quotation as a PDF stream.
+// ExportPDF streams the quotation PDF.
 func (h *ExportHandler) ExportPDF(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
@@ -109,45 +110,56 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 	}
 
 	client, _ := h.clients.GetByID(ctx, d.CompanyClientID)
-
 	contactEmail, contactPhone := h.contactComm(ctx, d, client)
 
-	productCount := 0
-	for _, it := range d.Items {
-		if it.ItemType == "product" {
-			productCount++
-		}
-	}
+	return buildExportData(d, unitsByID, contactEmail, contactPhone, h.settings.SignerName), nil
+}
 
+// buildExportData shapes the template data.
+func buildExportData(
+	d QuotationDetail, unitsByID map[int16]string, contactEmail, contactPhone, signerName string,
+) exportData {
+	// Every total is the stored header, so the app, the PDF and the
+	// invoice agree. An unpriced line is No Offer: it adds nothing to
+	// total_produk and P0100 refuses to send it.
 	items := make([]exportItem, 0, len(d.Items))
-	for i, it := range d.Items {
+	productCount := 0
+	hasShipping := false
+	// fn_create_quotation writes at most one shipping line.
+	deliveryTime := ""
+
+	for _, it := range d.Items {
 		unitCode := ""
 		if it.UnitID != nil {
 			unitCode = unitsByID[*it.UnitID]
 		}
-		req := pdfgen.LatexEscape(it.RequestedName)
-		if it.RequestedImpa != nil && *it.RequestedImpa != "" {
-			req += " (" + pdfgen.LatexEscape(*it.RequestedImpa) + ")"
+		shipping := it.ItemType == "shipping"
+		if shipping {
+			if it.ShippingDays != nil {
+				deliveryTime = daysText(*it.ShippingDays)
+			}
+			// A line kept only for its address is no charge.
+			if !isPriced(it.SellingPrice) {
+				continue
+			}
+			hasShipping = true
+		} else {
+			productCount++
 		}
-		hasOffer := it.IsAvailable && it.OfferedItemID != nil
+
 		items = append(items, exportItem{
-			No:        i + 1,
+			No:        len(items) + 1,
 			Qty:       pdfgen.FormatQty(it.Qty),
 			Unit:      pdfgen.LatexEscape(unitCode),
-			Request:   req,
-			Offer:     pdfgen.LatexEscape(it.RequestedName),
-			HasOffer:  hasOffer,
-			UnitPrice: pdfgen.FormatIDR(it.SellingPrice),
-			Amount:    pdfgen.FormatIDR(it.TotalSelling),
+			Request:   withCode(it.RequestedName, it.RequestedImpa),
+			Offer:     offerText(it),
+			HasOffer:  shipping || isPriced(it.SellingPrice),
+			UnitPrice: pdfgen.FormatIDRCents(it.SellingPrice),
+			Amount:    pdfgen.FormatIDRCents(it.TotalSelling),
 		})
 	}
 
-	subtotal := pdfgen.BigSub(d.TotalProduk, d.TotalDiscount)
-	dpp := pdfgen.BigMulDiv(subtotal, money.DPPNumeratorStr, money.DPPDenominatorStr)
-	ppn := pdfgen.BigMul(dpp, money.PPNRateStr)
-
 	delivery := ""
-	deliveryTime := ""
 	if d.VesselName != nil {
 		delivery = *d.VesselName
 	}
@@ -157,9 +169,8 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 	}
 	validity := ""
 	if d.ValidityDays != nil {
-		validity = strconv.Itoa(*d.ValidityDays) + " days"
+		validity = daysText(*d.ValidityDays)
 	}
-
 	attn := ""
 	if d.ContactName != nil {
 		attn = *d.ContactName
@@ -174,20 +185,40 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 		AttnPhone:     pdfgen.LatexEscape(contactPhone),
 		DateLine:      pdfgen.JakartaDateLine(d.CreatedAt.In(tz.Jakarta())),
 		Items:         items,
-		TotalProduk:   pdfgen.FormatIDR(d.TotalProduk),
+		TotalProduk:   pdfgen.FormatIDRCents(d.TotalProduk),
 		DiscountPct:   d.DiscountPct,
-		TotalDiscount: pdfgen.FormatIDR(d.TotalDiscount),
-		Subtotal:      pdfgen.FormatIDR(subtotal),
-		DPP:           pdfgen.FormatIDR(dpp),
-		PPN:           pdfgen.FormatIDR(ppn),
-		GrandTotal:    pdfgen.FormatIDR(d.Total),
+		TotalDiscount: pdfgen.FormatIDRCents(d.TotalDiscount),
+		Shipping:      pdfgen.FormatIDRCents(pdfgen.BigSub(d.Total, d.TotalProduk)),
+		HasShipping:   hasShipping,
+		Subtotal:      pdfgen.FormatIDRCents(d.Subtotal),
+		DPP:           pdfgen.FormatIDRCents(d.DppNilaiLain),
+		PPN:           pdfgen.FormatIDRCents(d.PpnAmount),
+		GrandTotal:    pdfgen.FormatIDRCents(d.GrandTotal),
 		DeliveryPlace: pdfgen.LatexEscape(delivery),
 		DeliveryTime:  pdfgen.LatexEscape(deliveryTime),
 		Payment:       pdfgen.LatexEscape(payment),
 		Validity:      pdfgen.LatexEscape(validity),
-		SignerName:    pdfgen.LatexEscape(h.settings.SignerName),
+		SignerName:    pdfgen.LatexEscape(signerName),
 		UseA4:         productCount > 5,
-	}, nil
+	}
+}
+
+// offerText names the supplied item.
+func offerText(it QuotationItem) string {
+	if it.OfferedName != nil && *it.OfferedName != "" {
+		return withCode(*it.OfferedName, it.OfferedImpa)
+	}
+	return withCode(it.RequestedName, nil)
+}
+
+// withCode appends the IMPA code.
+// Both parts may wrap, since table cells are narrow.
+func withCode(name string, code *string) string {
+	out := pdfgen.LatexBreakable(name)
+	if code != nil && *code != "" {
+		out += " (" + pdfgen.LatexBreakable(*code) + ")"
+	}
+	return out
 }
 
 func (h *ExportHandler) unitsLookup(ctx context.Context) (map[int16]string, error) {
@@ -216,4 +247,18 @@ func (h *ExportHandler) contactComm(ctx context.Context, d QuotationDetail, c cl
 		}
 	}
 	return pdfgen.StrDeref(c.ContactEmail), pdfgen.StrDeref(c.ContactPhone)
+}
+
+// isPriced reports a positive price.
+func isPriced(price string) bool {
+	v, err := strconv.ParseFloat(price, 64)
+	return err == nil && v > 0
+}
+
+// daysText renders a day count.
+func daysText(n int) string {
+	if n == 1 {
+		return "1 day"
+	}
+	return strconv.Itoa(n) + " days"
 }

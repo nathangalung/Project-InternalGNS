@@ -1,8 +1,9 @@
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
 import ClientAdd from "@/features/clients/ClientAdd"
+import { isValidAddress, optionalAddressError } from "@/features/clients/ClientAdd/helpers"
 import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
-import { useClientContacts, useClientSearch, useClients } from "@/features/clients/hooks"
+import { useClient, useClientContacts, useClientSearch, useClients } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
 import { useCreateQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
@@ -10,17 +11,16 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
 import { ui } from "@/lib/ui"
 import type { QuotationCreateInput, QuotationItemInput } from "@/types/api"
+import { toItemInput } from "./adapters"
 import DiscountModal from "./DiscountModal"
+import { countInvalidQty, parseQty, qtyErrorIndexes, qtyErrorsById } from "./lines"
 import type { ProductItem } from "./QuotationEdit"
-import Step1Client, { type Client } from "./Step1Client"
+import Step1Client from "./Step1Client"
 import Step2Product from "./Step2Product"
 import Step3Shipping from "./Step3Shipping"
 import Step4Summary from "./Step4Summary"
 import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
-
-// Flat brand submit (legacy used a solid #630ED4, not the primary gradient).
-const flatSubmit =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-primary-700 px-6 py-2 text-sm font-bold text-white shadow-sm transition hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600/40"
+import { type PickClient, resolveClient, visibleClients } from "./wizardClient"
 
 const steps = [
   { n: 1, label: "KLIEN" },
@@ -61,21 +61,17 @@ export default function QuotationAdd() {
   const [berlakuSampai, setBerlakuSampai] = useState("")
 
   // Step gating logic.
-  const isAlamatFilled = shippingAddress.trim().length >= 20 && /[a-zA-Z]/.test(shippingAddress)
-  const isWaktuFilled = isAlamatFilled && shippingTime.trim().length > 0
+  // The address is optional here and required at the PO.
+  const isAlamatOk = optionalAddressError(shippingAddress) === null
+  const isWaktuFilled = isAlamatOk && shippingTime.trim().length > 0
   const isTenggatWaktuFilled = jatuhTempo.trim().length > 0 && berlakuSampai.trim().length > 0
-  const hasContent = products.length > 0 || isAlamatFilled
+  const hasContent = products.length > 0 || isValidAddress(shippingAddress)
 
+  // Cost follows the days only; typing an address must not wipe them.
+  const hasShippingTime = shippingTime.trim().length > 0
   useEffect(() => {
-    if (!isAlamatFilled) {
-      setShippingTime("")
-      setShippingCost("")
-    }
-  }, [isAlamatFilled])
-
-  useEffect(() => {
-    if (!isWaktuFilled) setShippingCost("")
-  }, [isWaktuFilled])
+    if (!hasShippingTime) setShippingCost("")
+  }, [hasShippingTime])
 
   let isNextDisabled = false
   if (step === 1) isNextDisabled = selectedClient === ""
@@ -86,7 +82,8 @@ export default function QuotationAdd() {
 
   const trimmedSearch = search.trim()
   const debouncedSearch = useDebouncedValue(trimmedSearch, 250)
-  const { data: clientsData } = useClients({ limit: 50 })
+  // Search hits are active only; the first page must match.
+  const { data: clientsData } = useClients({ limit: 50, isActive: true })
   const { data: searchHits } = useClientSearch(debouncedSearch, { limit: 30 })
   const { data: unitsData } = useUnits()
   const createQuotation = useCreateQuotation()
@@ -96,34 +93,34 @@ export default function QuotationAdd() {
     numericClientId > 0 ? numericClientId : undefined,
   )
 
-  const remoteClients: Array<Client & { contactId?: number }> = useMemo(() => {
+  const remoteClients: PickClient[] = useMemo(() => {
     if (debouncedSearch.length > 0) {
       return dedupeByCompany(searchHits ?? []).map(fromClientHit)
     }
     return (clientsData?.rows ?? []).map(fromClientRow)
   }, [debouncedSearch, searchHits, clientsData])
 
-  const baseClients: Client[] = remoteClients
-  const sortedClients = [...baseClients].sort((a, b) => a.name.localeCompare(b.name, "id"))
-  const filteredClients =
-    trimmedSearch && remoteClients.length === 0
-      ? sortedClients.filter(
-          (c) =>
-            c.name.toLowerCase().includes(trimmedSearch.toLowerCase()) ||
-            c.narahubung.toLowerCase().includes(trimmedSearch.toLowerCase()),
-        )
-      : sortedClients.slice(0, 10)
+  // A selection outside the picker is fetched by id.
+  const isListed = remoteClients.some((c) => c.id === selectedClient)
+  const { data: selectedRow } = useClient(
+    !isListed && numericClientId > 0 ? numericClientId : undefined,
+  )
+  const currentClient = useMemo(
+    () => resolveClient(remoteClients, selectedClient, selectedRow),
+    [remoteClients, selectedClient, selectedRow],
+  )
 
-  const currentClient = baseClients.find((c) => c.id === selectedClient)
+  // The server already filtered by the search.
+  const sortedClients = [...remoteClients].sort((a, b) => a.name.localeCompare(b.name, "id"))
+  const filteredClients = visibleClients(sortedClients, currentClient, 10)
 
   // Auto-select contact when client or contacts list changes.
+  const clientContactId = currentClient?.contactId
   useEffect(() => {
     if (!selectedClient) {
       setSelectedContactId(undefined)
       return
     }
-    const clientContactId = (currentClient as (Client & { contactId?: number }) | undefined)
-      ?.contactId
     const ids = contacts.map((c) => c.id)
     if (clientContactId && ids.includes(clientContactId)) {
       setSelectedContactId(clientContactId)
@@ -132,7 +129,7 @@ export default function QuotationAdd() {
     } else {
       setSelectedContactId(clientContactId)
     }
-  }, [selectedClient, contacts, currentClient])
+  }, [selectedClient, contacts, clientContactId])
 
   const unitIdByCode = useMemo(() => {
     const m = new Map<string, number>()
@@ -140,27 +137,26 @@ export default function QuotationAdd() {
     return m
   }, [unitsData])
 
+  const [qtyFail, setQtyFail] = useState<{
+    lines: ProductItem[]
+    byId: Record<number, string>
+  } | null>(null)
+  // Server errors apply to the lines they were raised for.
+  const qtyErrors = qtyFail?.lines === products ? qtyFail.byId : {}
+
+  const invalidQty = countInvalidQty(products)
   const canSubmit =
     Number.isFinite(numericClientId) &&
     numericClientId > 0 &&
     products.length > 0 &&
+    invalidQty === 0 &&
     products.every((p) => unitIdByCode.has(p.satuan.toUpperCase())) &&
     isTenggatWaktuFilled &&
-    hasContent
+    hasContent &&
+    isAlamatOk
 
   function buildItems(): QuotationItemInput[] {
-    const items: QuotationItemInput[] = products.map((p) => ({
-      requestedItemId: p.requestedItemId,
-      requestedImpa: p.requestedKodeImpa || p.kodeImpa || undefined,
-      requestedName: p.requestedNama || p.nama,
-      offeredItemId: p.itemId,
-      vendorProductId: p.vendorProductId,
-      qty: String(p.jumlah),
-      unitId: unitIdByCode.get(p.satuan.toUpperCase()) ?? 0,
-      sellingPrice: String(p.hargaJual),
-      costPrice: String(p.hargaBeli),
-    }))
-    return items
+    return products.map((p) => toItemInput(p, unitIdByCode.get(p.satuan.toUpperCase()) ?? 0))
   }
 
   function handleSubmit() {
@@ -181,6 +177,8 @@ export default function QuotationAdd() {
     }
     createQuotation.mutate(input, {
       onSuccess: () => void navigate({ to: "/quotations" }),
+      onError: (err) =>
+        setQtyFail({ lines: products, byId: qtyErrorsById(products, qtyErrorIndexes(err)) }),
     })
   }
 
@@ -204,7 +202,7 @@ export default function QuotationAdd() {
 
   return (
     <>
-      <div className="page-content">
+      <div className={ui.pageContent}>
         {/* Header & Stepper */}
         <div className={qe.headerSection}>
           <div className={qe.headerLeft}>
@@ -232,6 +230,7 @@ export default function QuotationAdd() {
                 onClick={() => setStep(step - 1)}
               >
                 <svg
+                  aria-hidden="true"
                   width="16"
                   height="16"
                   viewBox="0 0 24 24"
@@ -255,6 +254,7 @@ export default function QuotationAdd() {
               >
                 Lanjut{" "}
                 <svg
+                  aria-hidden="true"
                   width="16"
                   height="16"
                   viewBox="0 0 24 24"
@@ -272,7 +272,7 @@ export default function QuotationAdd() {
             {step === steps.length && (
               <button
                 type="button"
-                className={`${flatSubmit} w-[180px]`}
+                className={`${qe.submit} w-[180px]`}
                 onClick={handleSubmit}
                 disabled={!canSubmit || createQuotation.isPending}
               >
@@ -332,6 +332,7 @@ export default function QuotationAdd() {
             summaryDpp={summaryDpp}
             summaryPpn={summaryPpn}
             onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
+            qtyErrors={qtyErrors}
           />
         )}
         {step === 3 && (
@@ -342,7 +343,7 @@ export default function QuotationAdd() {
             setShippingTime={setShippingTime}
             shippingCost={shippingCost}
             setShippingCost={setShippingCost}
-            isAlamatFilled={isAlamatFilled}
+            isAlamatOk={isAlamatOk}
             isWaktuFilled={isWaktuFilled}
             formatRp={formatRp}
           />
@@ -370,6 +371,7 @@ export default function QuotationAdd() {
             summaryShippingCost={summaryShippingCost}
             summaryProfit={summaryProfit}
             summaryGrandTotal={summaryGrandTotal}
+            invalidQtyCount={invalidQty}
           />
         )}
       </div>
@@ -387,7 +389,9 @@ export default function QuotationAdd() {
       <ClientAdd
         open={showClientAdd}
         onOpenChange={setShowClientAdd}
-        onSuccess={() => {
+        onSuccess={(_, created) => {
+          // Select the new client, not just close.
+          setSelectedClient(String(created.id))
           setShowClientAdd(false)
           setStep(2)
         }}
@@ -431,7 +435,7 @@ export default function QuotationAdd() {
                       requestedNama,
                       requestedKodeImpa,
                       vendor: data.namaVendor,
-                      jumlah: Number(data.jumlahProduk) || 1,
+                      jumlah: parseQty(data.jumlahProduk),
                       satuan: data.satuan,
                       hargaBeli: Number(data.hargaBeli) || 0,
                       hargaJual: Number(data.hargaJual) || 0,
@@ -454,7 +458,7 @@ export default function QuotationAdd() {
                 requestedNama,
                 requestedKodeImpa,
                 vendor: data.namaVendor,
-                jumlah: Number(data.jumlahProduk) || 1,
+                jumlah: parseQty(data.jumlahProduk),
                 satuan: data.satuan,
                 hargaBeli: Number(data.hargaBeli) || 0,
                 hargaJual: Number(data.hargaJual) || 0,

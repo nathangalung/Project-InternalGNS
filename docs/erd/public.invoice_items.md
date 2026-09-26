@@ -26,6 +26,7 @@
 | cost_price        | numeric(15,2)            |                                           | true     |          |                                                     |                                                                          |
 | unit_id           | smallint                 |                                           | true     |          | [public.units](public.units.md)                     |                                                                          |
 | ship_destination  | varchar(255)             |                                           | true     |          |                                                     |                                                                          |
+| gross_unit_price  | numeric(15,2)            |                                           | true     |          |                                                     |                                                                          |
 
 ## Constraints
 

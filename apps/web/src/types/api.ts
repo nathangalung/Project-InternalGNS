@@ -1,7 +1,5 @@
 export type Role = "superadmin" | "operational" | "finance"
 
-export type CanonicalStatus = "draft" | "sent" | "accepted" | "rejected" | "revision" | "expired"
-
 export type MeUser = {
   id: number
   email: string
@@ -18,6 +16,12 @@ export type LoginResponse = {
 }
 
 export type RefreshResponse = LoginResponse
+
+// PATCH /auth/me/password body.
+export type ChangeOwnPasswordInput = {
+  currentPassword: string
+  newPassword: string
+}
 
 export type ClientRow = {
   id: number
@@ -136,7 +140,7 @@ export type AdvancedSearchResponse = {
   counts: Partial<Record<AdvancedSearchTier, number>>
 }
 
-// Batch row match for xlsx upload.
+// Batch xlsx row match.
 export type MatchRowInput = {
   impaCode: string
   name: string
@@ -230,21 +234,39 @@ export type VendorItemRow = {
 }
 
 // Quotation list, detail, and writes.
+export type QuotationStatus =
+  | "draft"
+  | "sent"
+  | "revision"
+  | "accepted"
+  | "rejected"
+  | "cancelled"
+  | "expired"
+
+// Manual move the server allows.
+export type QuotationTransition = {
+  to: QuotationStatus
+  label: string
+  requiresNote: boolean
+}
+
 export type QuotationListRow = {
   id: number
   quotationNo: string
   version: number
   companyName: string
-  status: CanonicalStatus
+  status: QuotationStatus
   grandTotal: string
   subtotal: string
   totalDiscount: string
   totalHargaBeli: string
+  productCount: number
   createdAt: string
 }
 
 export type QuotationStatusCount = {
-  status: CanonicalStatus
+  status: QuotationStatus
+  label: string
   count: number
 }
 
@@ -257,6 +279,9 @@ export type QuotationItemRow = {
   requestedImpa?: string
   requestedName: string
   offeredItemId?: number
+  // Live catalog name and IMPA
+  offeredName?: string
+  offeredImpa?: string
   vendorProductId?: number
   qty: string
   unitId?: number
@@ -273,10 +298,11 @@ export type QuotationItemRow = {
 
 export type QuotationStatusEvent = {
   id: number
-  fromStatus?: CanonicalStatus
-  toStatus: CanonicalStatus
+  fromStatus?: QuotationStatus
+  toStatus: QuotationStatus
   note?: string
-  changedBy: number
+  // Null for the expiry job
+  changedBy: number | null
   changedAt: string
 }
 
@@ -290,7 +316,7 @@ export type QuotationDetail = {
   contactName?: string
   clientRefNo?: string
   vesselName?: string
-  status: CanonicalStatus
+  status: QuotationStatus
   paymentTerms?: string
   validityDays?: number
   discountPct: string
@@ -307,6 +333,9 @@ export type QuotationDetail = {
   updatedAt: string
   items: QuotationItemRow[]
   history: QuotationStatusEvent[]
+  // Empty for a terminal status
+  allowedTransitions: QuotationTransition[]
+  canRevise: boolean
 }
 
 export type QuotationRevisionRow = {
@@ -314,7 +343,7 @@ export type QuotationRevisionRow = {
   parentId?: number
   quotationNo: string
   version: number
-  status: CanonicalStatus
+  status: QuotationStatus
   grandTotal: string
   totalProduk: string
   createdAt: string
@@ -349,20 +378,16 @@ export type QuotationCreateInput = {
   shippingCost?: string
   items: QuotationItemInput[]
   notes?: string
-  status?: CanonicalStatus
 }
 
-export type QuotationUpdateInput = Omit<
-  QuotationCreateInput,
-  "companyClientId" | "contactId" | "status"
->
+export type QuotationUpdateInput = Omit<QuotationCreateInput, "companyClientId" | "contactId">
 
-// Sort keys accepted by the API.
+// API-accepted sort keys.
 export type QuotationSortKey = "quotationNo" | "version" | "createdAt" | "grandTotal"
 
 export type QuotationListParams = {
   q?: string
-  statuses?: CanonicalStatus[]
+  statuses?: QuotationStatus[]
   dateFrom?: string
   dateTo?: string
   minTotal?: string
@@ -426,7 +451,14 @@ export type QuotationItemRequestUpdateInput = {
 }
 
 // Purchase orders.
-export type PoBackendStatus = "PENDING" | "UPLOADED" | "ON_PROGRESS" | "DELIVERED"
+export type PoBackendStatus = "PENDING" | "UPLOADED" | "ON_PROGRESS" | "DELIVERED" | "CANCELLED"
+
+// Manual move the server allows.
+export type PoTransition = {
+  to: PoBackendStatus
+  label: string
+  requiresNote: boolean
+}
 
 export type PurchaseOrderRow = {
   id: number
@@ -444,12 +476,32 @@ export type PurchaseOrderRow = {
   objectKey?: string
   quotationTotal?: string
   quotationSubtotal?: string
+  discountPct: string
+  // PO money from v_po_totals, rounded per line like the invoice
   poSubtotal: string
   poTotalProduk: string
   poTotalProfit: string
+  poTotalDiscount: string
+  poDppNilaiLain: string
+  poPpnAmount: string
+  poGrandTotal: string
+  // Issued at ON_PROGRESS
+  deliveryNoteNumber?: string
+  // Empty for a terminal status
+  allowedTransitions: PoTransition[]
   rowVersion: number
   createdAt: string
   updatedAt: string
+}
+
+export type PoStatusEvent = {
+  id: number
+  // Absent on the creation row
+  fromStatus?: PoBackendStatus
+  toStatus: PoBackendStatus
+  note?: string
+  changedBy: number
+  changedAt: string
 }
 
 export type PoItemInput = {
@@ -494,6 +546,9 @@ export type PurchaseOrderItemRow = {
   shipDestination?: string
   shippingDays?: number
   isAvailable: boolean
+  // Supplying vendor, from the quotation line
+  vendorId?: number
+  vendorName?: string
 }
 
 // Invoices.
@@ -522,6 +577,53 @@ export type InvoiceBackendRow = {
   createdAt: string
   updatedAt: string
   attachmentObjectKey?: string
+  // Set when marked paid
+  paidAt?: string
+  paymentProofKey?: string
+}
+
+// One offered invoice move.
+export type InvoiceTransition = {
+  to: InvoiceBackendStatus
+  label: string
+  requiresNote: boolean
+}
+
+// One stored invoice status change.
+export type InvoiceStatusEvent = {
+  id: number
+  fromStatus: InvoiceBackendStatus
+  toStatus: InvoiceBackendStatus
+  note?: string
+  paymentProofKey?: string
+  changedBy: number
+  changedAt: string
+}
+
+// GET /invoices/{id} and /by-quotation.
+//
+// Carries the header fields so finance never calls the quotation or PO
+// endpoints. by-quotation returns the newest invoice, the Pengganti when
+// one exists.
+export type InvoiceDetail = InvoiceBackendRow & {
+  vesselName?: string
+  poNumber?: string
+  poDate?: string
+  companyNpwp?: string
+  companyAddress?: string
+  companyEmail?: string
+  companyCountryCode: string
+  companyTkuId?: string
+  contactName?: string
+  contactEmail?: string
+  contactPhone?: string
+  replacesInvoiceId?: number
+  replacesInvoiceNo?: string
+  replacedByInvoiceId?: number
+  // Empty for a terminal status
+  allowedTransitions: InvoiceTransition[]
+  canReplace: boolean
+  history: InvoiceStatusEvent[]
 }
 
 export type InvoiceItemRow = {
@@ -568,6 +670,17 @@ export type DashboardSummary = {
   totalInvoicesPaid: number
   invoicesDueSoon: number
   invoicesOverdue: number
+  // One tile per status, in display order, zero-filled.
+  quotationStatuses: DashboardStatusCount[]
+  poStatuses: DashboardStatusCount[]
+  // Empty for operational
+  invoiceStatuses: DashboardStatusCount[]
+}
+
+export type DashboardStatusCount = {
+  status: string
+  label: string
+  count: number
 }
 
 export type DashboardMetric = "quotation" | "invoice" | "revenue" | "profit" | "ppn"

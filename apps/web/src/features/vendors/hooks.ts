@@ -8,7 +8,7 @@ import {
 import * as vendorsApi from "@/features/vendors/api"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
-import { uploadToPresignedUrl } from "@/lib/storage-upload"
+import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
 
@@ -27,11 +27,14 @@ export function useVendor(id: number | undefined) {
   })
 }
 
-export function useVendorItems(vendorId: number | undefined) {
+export function useVendorItems(vendorId: number | undefined, page: vendorsApi.VendorItemsPage) {
   return useQuery({
-    queryKey: vendorId ? queryKeys.vendors.items(vendorId) : queryKeys.vendors.all,
+    queryKey: vendorId ? [...queryKeys.vendors.items(vendorId), page] : queryKeys.vendors.all,
     queryFn:
-      vendorId !== undefined && vendorId > 0 ? () => vendorsApi.listItems(vendorId) : skipToken,
+      vendorId !== undefined && vendorId > 0
+        ? () => vendorsApi.listItems(vendorId, page)
+        : skipToken,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -48,7 +51,15 @@ export function useUpdateVendor() {
   return useMutation({
     mutationFn: ({ id, input }: { id: number; input: vendorsApi.UpdateVendorInput }) =>
       vendorsApi.update(id, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.vendors.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
+      // PO lines and item vendor lists carry the vendor name.
+      qc.invalidateQueries({
+        predicate: (q) =>
+          (q.queryKey[0] === "items" && q.queryKey[2] === "vendors") ||
+          (q.queryKey[0] === "purchase-orders" && q.queryKey[2] === "items"),
+      })
+    },
     onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui vendor.")),
   })
 }
@@ -58,9 +69,11 @@ export function useUploadVendorLogo() {
   return useMutation({
     mutationFn: async ({ id, file }: { id: number; file: File }) => {
       validateAsset("vendorLogo", file)
-      const presign = await vendorsApi.presignLogoUpload(id, file.name)
-      await uploadToPresignedUrl(presign.uploadUrl, file)
-      await vendorsApi.updateLogo(id, presign.objectKey)
+      const objectKey = await uploadWithFreshKey(
+        () => vendorsApi.presignLogoUpload(id, file.name),
+        file,
+      )
+      await vendorsApi.updateLogo(id, objectKey)
     },
     onSuccess: (_, { id }) => {
       // Detail carries the new object key that the logo URL query depends on.

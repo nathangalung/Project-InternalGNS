@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -66,10 +67,35 @@ func TestRunMigrations_AcquireErrorOnCancelledCtx(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestPlainDB(t *testing.T) {
+// Begin failures name their step.
+// WithTx takes any TxBeginner, so a repo can run it on the pool or nest it
+// inside a caller's transaction.
+func TestWithTx_BeginnerFailureIsWrapped(t *testing.T) {
+	var b db.TxBeginner = testutil.FakeBeginner{}
+	err := db.WithTx(context.Background(), b, func(_ pgx.Tx) error { return nil })
+	require.ErrorIs(t, err, testutil.ErrFake)
+	assert.Contains(t, err.Error(), "begin tx")
+}
+
+// Failed commit is reported.
+// A deferred constraint only fires at COMMIT, after fn has returned nil, so
+// WithTx must still surface it (wrapped, with its SQLSTATE reachable) rather
+// than report success for rows that were rolled back.
+func TestWithTx_CommitFailureIsReported(t *testing.T) {
 	pool := testutil.Pool(t)
-	sqldb := db.PlainDB(pool)
-	require.NotNil(t, sqldb)
-	defer sqldb.Close()
-	require.NoError(t, sqldb.PingContext(context.Background()))
+	ctx := context.Background()
+
+	err := db.WithTx(ctx, pool, func(tx pgx.Tx) error {
+		if _, err := tx.Exec(ctx, `CREATE TEMP TABLE withtx_deferred (
+			v int UNIQUE DEFERRABLE INITIALLY DEFERRED) ON COMMIT DROP`); err != nil {
+			return err
+		}
+		_, err := tx.Exec(ctx, `INSERT INTO withtx_deferred VALUES (1), (1)`)
+		return err
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "commit tx")
+	var pgErr *pgconn.PgError
+	require.ErrorAs(t, err, &pgErr)
+	assert.Equal(t, db.SQLStateUniqueViolation, pgErr.Code)
 }

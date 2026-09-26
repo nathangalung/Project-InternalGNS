@@ -1,6 +1,7 @@
 Feature: Quotation lifecycle
   Operations team must move a quotation through draft, sent,
-  accepted, rejected, revision and expired states under defined rules.
+  accepted, rejected, cancelled, revision and expired states under
+  defined rules.
 
   Background:
     Given an authenticated user with id 1
@@ -14,6 +15,22 @@ Feature: Quotation lifecycle
   Scenario: Reject create with no items
     When the user creates a quotation with no items
     Then the response status is 422
+
+  Scenario Outline: Create is refused a status other than draft
+    When the user creates a quotation with status "<status>"
+    Then the response status is 422
+    And no quotation was stored
+
+    Examples:
+      | status   |
+      | sent     |
+      | accepted |
+      | rejected |
+
+  Scenario: Create with a zero quantity line is refused
+    When the user creates a quotation with a zero quantity product line
+    Then the response status is 422
+    And no quotation was stored
 
   Scenario: Reject create with invalid discount
     When the user creates a quotation with discount 200 percent and 1 product line
@@ -34,16 +51,17 @@ Feature: Quotation lifecycle
 
   Scenario Outline: Valid status transitions
     Given an existing draft quotation
-    When the user transitions the quotation through "<path>"
+    When the user transitions the quotation through "<path>" giving a reason
     Then every transition succeeds
 
     Examples:
-      | path                              |
-      | sent,accepted                     |
-      | sent,rejected                     |
-      | sent,revision,sent                |
-      | sent,revision,rejected            |
-      | expired                           |
+      | path                   |
+      | sent,accepted          |
+      | sent,rejected          |
+      | sent,cancelled         |
+      | cancelled              |
+      | sent,revise,rejected   |
+      | sent,revise,cancelled  |
 
   Scenario: Cannot exit accepted state
     Given an existing draft quotation
@@ -51,8 +69,20 @@ Feature: Quotation lifecycle
     And the user tries to transition the quotation to "sent"
     Then the response status is 422
 
+  Scenario: Clients whose numbers share a prefix get distinct quotation numbers
+    Given a client numbered "0901" already on quotation sequence 10
+    And a client numbered "0911"
+    When the user creates one quotation for each of those clients
+    Then the two quotation numbers differ
+
   Scenario: List filters return matching rows
     Given an existing draft quotation
     When the user lists quotations filtered by status "draft"
     Then the response status is 200
     And the list contains at least 1 quotation
+
+  Scenario: The quotation PDF prints the stored totals on one A5 sheet
+    Given a draft quotation with a discount, shipping and an unpriced line
+    When the user downloads the quotation PDF
+    Then the PDF prints the stored totals, the offered item and No Offer
+    And the PDF has 1 page

@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"strings"
@@ -26,9 +27,10 @@ type Config struct {
 	SuperadminName     string `env:"SUPERADMIN_NAME"     envDefault:"Administrator"`
 	SuperadminPassword string `env:"SUPERADMIN_PASSWORD"`
 
-	// Optional second superadmin. Seeded on boot only if EMAIL + PASSWORD
-	// are both non-empty; otherwise skipped silently. SeedSuperadmin is
-	// idempotent — re-running with the same email is a no-op.
+	// Optional second superadmin.
+	// Seeded on boot only if EMAIL + PASSWORD are both non-empty; otherwise
+	// skipped silently. SeedSuperadmin is idempotent — re-running with the
+	// same email is a no-op.
 	Superadmin2Email    string `env:"SUPERADMIN2_EMAIL"`
 	Superadmin2Name     string `env:"SUPERADMIN2_NAME"     envDefault:"Administrator 2"`
 	Superadmin2Password string `env:"SUPERADMIN2_PASSWORD"`
@@ -48,9 +50,10 @@ type Config struct {
 	PdfBankAccountNm string `env:"PDF_BANK_ACCOUNT_NM" envDefault:"PT GLOBAL NIAGA SAKTI"`
 	PdfPaymentTerms  string `env:"PDF_PAYMENT_TERMS"   envDefault:"Net 30 days"`
 
-	// Coretax (DJP) e-faktur export: seller-side static fields. SellerTIN is
-	// the company NPWP (16 digits, no separators); SellerIDTKU appends the
-	// branch suffix ("000000" for headquarters).
+	// Coretax (DJP) seller fields.
+	// E-faktur export: seller-side static fields. SellerTIN is the company
+	// NPWP (16 digits, no separators); SellerIDTKU appends the branch suffix
+	// ("000000" for headquarters).
 	CoretaxSellerTIN   string `env:"CORETAX_SELLER_TIN"   envDefault:""`
 	CoretaxSellerIDTKU string `env:"CORETAX_SELLER_IDTKU" envDefault:""`
 }
@@ -71,6 +74,13 @@ func LoadConfig() (Config, error) {
 
 // validate rejects fail-open configuration.
 func (c Config) validate() error {
+	// Every production check below keys on this value, so a near miss
+	// ("prod", "Production") would skip them all. Refuse it instead.
+	switch c.Env {
+	case "development", "test", "production":
+	default:
+		return fmt.Errorf("ENV is %q; it must be development, test or production", c.Env)
+	}
 	// A short HMAC key is trivially brute-forced; reject empty or weak keys.
 	if len(c.JWTSecret) < 32 {
 		return errors.New("JWT_SECRET must be at least 32 bytes")
@@ -84,11 +94,21 @@ func (c Config) validate() error {
 		return errors.New("JWT_SECRET is still the placeholder from .env.prod.example; generate one with openssl rand -hex 32")
 	}
 	if c.Env == "production" {
+		// compose.dev.yml is committed, so every secret it sets is public.
+		// They are well-formed and clear every check above, which is exactly
+		// why they have to be named: a production box running one of them is
+		// forgeable by anyone with the repository.
+		if isCommittedDevSecret(c.JWTSecret) {
+			return errors.New("JWT_SECRET is the dev value published in compose.dev.yml; generate one with openssl rand -hex 32")
+		}
 		if c.SuperadminPassword == "" {
 			return errors.New("SUPERADMIN_PASSWORD is required in production")
 		}
 		if isPlaceholder(c.SuperadminPassword) || isPlaceholder(c.Superadmin2Password) {
 			return errors.New("SUPERADMIN_PASSWORD/SUPERADMIN2_PASSWORD is still a placeholder in production")
+		}
+		if isCommittedDevSecret(c.SuperadminPassword) || isCommittedDevSecret(c.Superadmin2Password) {
+			return errors.New("SUPERADMIN_PASSWORD/SUPERADMIN2_PASSWORD is the dev value published in compose.dev.yml")
 		}
 		for _, o := range c.CORSAllowedOrigins {
 			if o == "*" {
@@ -117,8 +137,9 @@ func (c Config) validate() error {
 	return nil
 }
 
-// isWeakCred flags vendor-default or unreplaced-placeholder secrets. Empty is
-// NOT weak — it is the supported "storage disabled" signal.
+// isWeakCred flags weak secrets.
+// That means vendor defaults or unreplaced placeholders. Empty is NOT weak:
+// it is the supported "storage disabled" signal.
 func isWeakCred(v string) bool {
 	if strings.EqualFold(strings.TrimSpace(v), "minioadmin") {
 		return true
@@ -126,16 +147,41 @@ func isWeakCred(v string) bool {
 	return isPlaceholder(v)
 }
 
-// Markers that only ever appear in template values.
+// committedDevSecrets are publicly known secrets.
+// They are committed to the repository for local work.
+// Kept working outside production, where compose.dev.yml needs them to boot.
+var committedDevSecrets = []string{
+	"local_dev_only_jwt_signing_key_0123456789abcdef",
+	"AdminGNS123!",
+}
+
+// isCommittedDevSecret flags repository-published values.
+// Empty is not one: an empty optional secret is the "disabled" signal, as
+// elsewhere.
+func isCommittedDevSecret(v string) bool {
+	s := strings.TrimSpace(v)
+	if s == "" {
+		return false
+	}
+	for _, known := range committedDevSecrets {
+		if s == known {
+			return true
+		}
+	}
+	return false
+}
+
+// Markers only template values carry.
 var placeholderMarkers = []string{
 	"change_me", "changeme", "generate_with", "placeholder",
 	"before_deploy", "yourdomain", "your-domain", "replace_me",
 }
 
-// isPlaceholder reports an unreplaced template value. Matching on markers
-// rather than a fixed list keeps it working when the template text changes; a
-// real random secret contains none of them. Empty is not a placeholder, since
-// some settings treat it as a deliberate "disabled" signal.
+// isPlaceholder flags unreplaced template values.
+// Matching on markers rather than a fixed list keeps it working when the
+// template text changes; a real random secret contains none of them. Empty
+// is not a placeholder, since some settings treat it as a deliberate
+// "disabled" signal.
 func isPlaceholder(v string) bool {
 	s := strings.ToLower(strings.TrimSpace(v))
 	if s == "" {
@@ -149,7 +195,8 @@ func isPlaceholder(v string) bool {
 	return false
 }
 
-// SlogLevel maps LOG_LEVEL to a slog level, defaulting to Info on anything else.
+// SlogLevel maps LOG_LEVEL to slog.
+// Anything unrecognised defaults to Info.
 func (c Config) SlogLevel() slog.Level {
 	switch strings.ToLower(strings.TrimSpace(c.LogLevel)) {
 	case "debug":

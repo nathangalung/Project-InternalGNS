@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_purchase_order (deployed by migration 00043).
+-- Canonical current body of fn_create_purchase_order (deployed by migration 00057).
 CREATE OR REPLACE FUNCTION public.fn_create_purchase_order(p_quotation_id bigint, p_user_id bigint)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -41,9 +41,12 @@ BEGIN
   SELECT
     v_po_id, qi.id, qi.line_number, qi.item_type,
     qi.offered_item_id, qi.qty, qi.unit_id, qi.selling_price, qi.cost_price,
-    COALESCE(qi.requested_name, ''), qi.requested_impa, qi.ship_destination, qi.shipping_days,
+    COALESCE(NULLIF(oi.name, ''), qi.requested_name, ''),
+    CASE WHEN oi.id IS NOT NULL THEN NULLIF(oi.impa_code, '') ELSE qi.requested_impa END,
+    qi.ship_destination, qi.shipping_days,
     qi.is_available, p_user_id, p_user_id
   FROM quotation_items qi
+  LEFT JOIN items oi ON oi.id = qi.offered_item_id
   WHERE qi.quotation_id = p_quotation_id
   ORDER BY qi.line_number;
 

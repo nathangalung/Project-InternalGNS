@@ -5,7 +5,9 @@ export const queryKeys = {
   },
   clients: {
     all: ["clients"] as const,
-    // Prefix matching every list param variant, without touching detail.
+    // Prefix for every list variant.
+    //
+    // Matches each list param variant without touching detail.
     lists: () => ["clients", "list"] as const,
     list: (params: { limit?: number; offset?: number } = {}) =>
       ["clients", "list", params] as const,
@@ -59,8 +61,6 @@ export const queryKeys = {
     detail: (id: number) => ["purchase-orders", "detail", id] as const,
     items: (id: number) => ["purchase-orders", id, "items"] as const,
     byQuotation: (quotationId: number) => ["purchase-orders", "by-quotation", quotationId] as const,
-    itemVendors: (itemId: number) => ["purchase-orders", "item-vendors", itemId] as const,
-    vendorDetail: (vendorId: number) => ["purchase-orders", "vendor-detail", vendorId] as const,
   },
   invoices: {
     all: ["invoices"] as const,

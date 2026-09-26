@@ -21,7 +21,7 @@ func TestParse(t *testing.T) {
 		{"both", "?limit=100&offset=200", 100, 200},
 		{"limit zero rejected", "?limit=0", 50, 0},
 		{"limit negative rejected", "?limit=-5", 50, 0},
-		{"limit over 200 rejected", "?limit=500", 50, 0},
+		{"limit over 200 clamped", "?limit=500", MaxLimit, 0},
 		{"limit at boundary 200", "?limit=200", 200, 0},
 		{"limit non-numeric rejected", "?limit=abc", 50, 0},
 		{"offset negative rejected", "?offset=-1", 50, 0},
@@ -49,7 +49,8 @@ func TestParseLimit(t *testing.T) {
 		{"valid", "?limit=25", 10, 25},
 		{"zero rejected", "?limit=0", 10, 10},
 		{"negative rejected", "?limit=-1", 10, 10},
-		{"over max rejected", "?limit=500", 10, 10},
+		{"over max clamped", "?limit=500", 10, MaxLimit},
+		{"far over max clamped", "?limit=100000", 5, MaxLimit},
 		{"at max boundary accepted", "?limit=200", 10, 200},
 		{"non-numeric rejected", "?limit=abc", 10, 10},
 		{"default of 5 honored", "", 5, 5},
@@ -58,6 +59,28 @@ func TestParseLimit(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r := httptest.NewRequest(http.MethodGet, "/x"+tc.query, nil)
 			assert.Equal(t, tc.want, ParseLimit(r, tc.def))
+		})
+	}
+}
+
+// Body limits clamp like ?limit.
+// That covers match-request.
+func TestClamp(t *testing.T) {
+	cases := []struct {
+		name string
+		v    int
+		def  int
+		want int
+	}{
+		{"zero falls back", 0, 5, 5},
+		{"negative falls back", -3, 5, 5},
+		{"in range kept", 30, 5, 30},
+		{"at max kept", MaxLimit, 5, MaxLimit},
+		{"over max clamped", 100000, 5, MaxLimit},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, Clamp(tc.v, tc.def))
 		})
 	}
 }

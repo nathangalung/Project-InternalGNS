@@ -11,6 +11,24 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
+// Indonesian 401 problem details.
+const (
+	DetailNotSignedIn    = "Anda belum masuk. Silakan masuk terlebih dahulu."
+	DetailSessionRevoked = "Sesi Anda tidak berlaku lagi. Silakan masuk kembali."
+	DetailInvalidToken   = "Token akses tidak valid atau sudah kedaluwarsa. Silakan masuk kembali."
+)
+
+// Refresh refusal details.
+var refreshDetails = []struct {
+	err    error
+	detail string
+}{
+	{ErrInvalidRefresh, "Token penyegar tidak valid. Silakan masuk kembali."},
+	{ErrExpiredRefresh, "Sesi Anda sudah berakhir. Silakan masuk kembali."},
+	{ErrReusedRefresh, "Token penyegar sudah pernah dipakai. Silakan masuk kembali."},
+	{ErrRevokedRefresh, "Sesi Anda sudah diakhiri. Silakan masuk kembali."},
+}
+
 type Handler struct {
 	svc *Service
 }
@@ -43,11 +61,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	// One neutral 401 for every credential failure: a distinct "email not
 	// registered" reply enumerated accounts for anyone who could POST.
 	if errors.Is(err, ErrInvalidCredentials) {
-		httperr.Render(w, httperr.Unauthorized("invalid email or password"))
-		return
-	}
-	if errors.Is(err, ErrAccountLocked) {
-		httperr.Render(w, httperr.TooManyRequests("account temporarily locked, try again later"))
+		httperr.Render(w, httperr.Unauthorized("Email atau kata sandi salah."))
 		return
 	}
 	if err != nil {
@@ -83,13 +97,13 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := h.svc.Refresh(r.Context(), req.RefreshToken)
-	switch {
-	case errors.Is(err, ErrInvalidRefresh),
-		errors.Is(err, ErrExpiredRefresh),
-		errors.Is(err, ErrReusedRefresh):
-		httperr.Render(w, httperr.Unauthorized(err.Error()))
-		return
-	case err != nil:
+	for _, rd := range refreshDetails {
+		if errors.Is(err, rd.err) {
+			httperr.Render(w, httperr.Unauthorized(rd.detail))
+			return
+		}
+	}
+	if err != nil {
 		httperr.RenderDBErr(w, err)
 		return
 	}
@@ -99,13 +113,13 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 	id := deps.CurrentUserID(r.Context())
 	if id == 0 {
-		httperr.Render(w, httperr.Unauthorized("not authenticated"))
+		httperr.Render(w, httperr.Unauthorized(DetailNotSignedIn))
 		return
 	}
 
 	u, err := h.svc.Me(r.Context(), id)
 	if errors.Is(err, users.ErrNotFound) {
-		httperr.Render(w, httperr.Unauthorized("user no longer exists"))
+		httperr.Render(w, httperr.Unauthorized(DetailSessionRevoked))
 		return
 	}
 	if err != nil {
@@ -113,4 +127,54 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, toMeUser(u))
+}
+
+// ChangeOwnPassword serves self-service changes.
+// Any role may replace its own password.
+func (h *Handler) ChangeOwnPassword(w http.ResponseWriter, r *http.Request) {
+	id := deps.CurrentUserID(r.Context())
+	if id == 0 {
+		httperr.Render(w, httperr.Unauthorized(DetailNotSignedIn))
+		return
+	}
+
+	var req ChangeOwnPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid json"))
+		return
+	}
+	fields := map[string]string{}
+	if req.CurrentPassword == "" {
+		fields["currentPassword"] = "Kata sandi saat ini wajib diisi."
+	}
+	if msg := users.ValidatePassword(req.NewPassword); msg != "" {
+		fields["newPassword"] = msg
+	}
+	if len(fields) > 0 {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
+
+	err := h.svc.ChangeOwnPassword(r.Context(), id, req.CurrentPassword, req.NewPassword)
+	switch {
+	// 422, not 401: the SPA reads any 401 as an expired session.
+	case errors.Is(err, ErrWrongCurrentPassword):
+		httperr.Render(w, httperr.Unprocessable(map[string]string{
+			"currentPassword": "Kata sandi saat ini salah.",
+		}))
+		return
+	// 409: the password is right, but a newer change already replaced it.
+	case errors.Is(err, ErrPasswordChanged):
+		httperr.Render(w, httperr.Conflict(
+			"Kata sandi akun ini baru saja diubah di tempat lain. Masuk kembali dengan kata sandi terbaru."))
+		return
+	case errors.Is(err, ErrSessionRevoked):
+		httperr.Render(w, httperr.Unauthorized(DetailSessionRevoked))
+		return
+	case err != nil:
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	// Every session ended, this one too; the client signs in again.
+	w.WriteHeader(http.StatusNoContent)
 }

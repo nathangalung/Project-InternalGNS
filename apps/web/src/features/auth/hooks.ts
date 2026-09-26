@@ -57,7 +57,7 @@ export function clearAuthState(): void {
   window.dispatchEvent(new Event(EVENT_NAME))
 }
 
-// Expired session drops auth state immediately.
+// Expiry drops auth state immediately.
 setOnAuthExpired(clearAuthState)
 
 export function useMe() {

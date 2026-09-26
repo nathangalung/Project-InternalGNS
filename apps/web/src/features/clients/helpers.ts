@@ -1,8 +1,11 @@
+import type { UpdateContactInput } from "@/features/clients/api"
 import type { Client } from "@/features/quotations/Step1Client"
-import type { ClientRow, ClientSearchHit } from "@/types/api"
+import type { ClientRow, ClientSearchHit, ClientSummary } from "@/types/api"
 
-// Two-letter avatar initials. Strips a leading "PT" / "PT." prefix
-// since most local company names start with it.
+// Two-letter avatar initials.
+//
+// Strips a leading "PT" / "PT." prefix since most local company names start
+// with it.
 export function getCompanyInitials(name: string): string {
   const parts = name
     .replace(/^PT\.?\s+/i, "")
@@ -57,4 +60,56 @@ export function dedupeByCompany(hits: ClientSearchHit[]): ClientSearchHit[] {
     out.push(h)
   }
   return out
+}
+
+// Percent text, or a dash.
+function pctText(num: number, den: number, signed: boolean): string {
+  if (den <= 0) return "-"
+  const pct = Math.round((num / den) * 100)
+  return `${signed && pct >= 0 ? "+" : ""}${pct}%`
+}
+
+export type ClientKpis = {
+  total: number
+  // Base growth since 1 January.
+  growth: string
+  newThisMonth: number
+  // Active clients over all clients.
+  activeShare: string
+}
+
+// Client list KPI figures.
+//
+// prevYearTotal is every client created before this year, so the base grew
+// by newThisYear over it. A true year-over-year figure needs a dated count
+// from the API.
+export function clientKpis(s: ClientSummary | undefined): ClientKpis {
+  const total = s?.total ?? 0
+  return {
+    total,
+    growth: pctText(s?.newThisYear ?? 0, s?.prevYearTotal ?? 0, true),
+    newThisMonth: s?.newThisMonth ?? 0,
+    activeShare: pctText(s?.activeCount ?? 0, total, false),
+  }
+}
+
+export type ContactFormValues = {
+  name: string
+  phone: string
+  email: string
+  title: string
+}
+
+// PATCH body for a contact.
+//
+// The API keeps an absent email or title, so a blank one is sent as "" to
+// clear it. Phone is replaced on every call, so blank simply drops it.
+export function contactUpdateBody(f: ContactFormValues, countryCode: string): UpdateContactInput {
+  return {
+    name: f.name.trim(),
+    phone: f.phone.trim() || undefined,
+    email: f.email.trim(),
+    title: f.title.trim(),
+    countryCode,
+  }
 }

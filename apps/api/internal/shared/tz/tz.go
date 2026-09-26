@@ -12,14 +12,17 @@ var (
 
 // Asia/Jakarta location, lazy.
 func Jakarta() *time.Location {
-	jakartaOnce.Do(func() {
-		loc, err := time.LoadLocation("Asia/Jakarta")
-		if err != nil {
-			loc = time.FixedZone("WIB", 7*60*60)
-		}
-		jakarta = loc
-	})
+	jakartaOnce.Do(func() { jakarta = jakartaFrom(time.LoadLocation) })
 	return jakarta
+}
+
+// jakartaFrom falls back to WIB.
+func jakartaFrom(load func(string) (*time.Location, error)) *time.Location {
+	loc, err := load("Asia/Jakarta")
+	if err != nil {
+		return time.FixedZone("WIB", 7*60*60)
+	}
+	return loc
 }
 
 // Current time in Jakarta.

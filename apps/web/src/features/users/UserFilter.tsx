@@ -1,13 +1,14 @@
-import { useState } from "react"
-import { chipStyle, type StatusFilterValue } from "@/components/shared/filter-styles"
+import { useId, useState } from "react"
+import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
-import { ui } from "@/lib/ui"
+import type { StatusFilterValue } from "@/lib/filter-options"
+import { chip, ui } from "@/lib/ui"
 import type { Role } from "@/types/api"
 
 export type RoleFilter = "all" | Role
 export type StatusFilter = StatusFilterValue
 
-interface UserFilterProps {
+type UserFilterProps = {
   onClose: () => void
   onApply: (filters: { role: RoleFilter; status: StatusFilter }) => void
   initialValues?: { role: RoleFilter; status: StatusFilter }
@@ -30,6 +31,9 @@ export default function UserFilter({ onClose, onApply, initialValues }: UserFilt
   const [role, setRole] = useState<RoleFilter>(initialValues?.role ?? "all")
   const [status, setStatus] = useState<StatusFilter>(initialValues?.status ?? "all")
 
+  const roleHeadingId = useId()
+  const statusHeadingId = useId()
+
   const dirty = role !== "all" || status !== "all"
 
   return (
@@ -37,71 +41,65 @@ export default function UserFilter({ onClose, onApply, initialValues }: UserFilt
       title="Filter Pengguna"
       onClose={onClose}
       footer={
-        <>
-          <button
-            type="button"
-            onClick={() => {
-              setRole("all")
-              setStatus("all")
-            }}
-            disabled={!dirty}
-            className={`mr-auto p-0 text-[13px] font-medium underline-offset-[3px] ${
-              dirty
-                ? "cursor-pointer text-primary-700 underline"
-                : "cursor-default text-dark-300 no-underline"
-            }`}
-          >
-            Hapus Filter
-          </button>
-          <button type="button" className={ui.modalCancel} onClick={onClose}>
-            Batal
-          </button>
-          <button
-            type="button"
-            className={ui.modalSubmit}
-            onClick={() => {
-              onApply({ role, status })
-              onClose()
-            }}
-          >
-            Terapkan
-          </button>
-        </>
+        <FilterFooter
+          canReset={dirty}
+          onReset={() => {
+            setRole("all")
+            setStatus("all")
+          }}
+          onCancel={onClose}
+          onApply={() => {
+            onApply({ role, status })
+            onClose()
+          }}
+        />
       }
     >
       <div className={ui.modalSection}>
-        <div className={ui.modalSectionHeading}>Peran</div>
+        <div id={roleHeadingId} className={ui.modalSectionHeading}>
+          Peran
+        </div>
         <div className={ui.field}>
-          <div className="flex flex-wrap gap-2">
+          <fieldset
+            aria-labelledby={roleHeadingId}
+            className="m-0 min-w-0 border-0 p-0 flex flex-wrap gap-2"
+          >
             {ROLE_OPTIONS.map((o) => (
               <button
                 key={o.value}
                 type="button"
                 onClick={() => setRole(o.value)}
-                style={chipStyle(role === o.value)}
+                aria-pressed={role === o.value}
+                className={chip(role === o.value)}
               >
                 {o.label}
               </button>
             ))}
-          </div>
+          </fieldset>
         </div>
       </div>
 
       <div className={ui.modalSection}>
-        <div className={ui.modalSectionHeading}>Status</div>
+        <div id={statusHeadingId} className={ui.modalSectionHeading}>
+          Status
+        </div>
         <div className={ui.field}>
-          <div className="flex flex-wrap gap-2">
+          <fieldset
+            aria-labelledby={statusHeadingId}
+            className="m-0 min-w-0 border-0 p-0 flex flex-wrap gap-2"
+          >
             {STATUS_OPTIONS.map((o) => (
               <button
                 key={o.value}
                 type="button"
                 onClick={() => setStatus(o.value)}
-                style={chipStyle(status === o.value)}
+                aria-pressed={status === o.value}
+                className={chip(status === o.value)}
               >
                 {o.label}
               </button>
             ))}
-          </div>
+          </fieldset>
         </div>
       </div>
     </Modal>

@@ -6,15 +6,15 @@ import {
   type DatePreset,
   presetToIsoRange,
 } from "@/components/shared/DateRangeField"
-import { chipStyle, presetChipStyle } from "@/components/shared/filter-styles"
+import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
-import { ui } from "@/lib/ui"
+import { chip, presetChip, ui } from "@/lib/ui"
 import { PO_LABEL, PO_STATUS_ORDER } from "./PurchaseOrderDetail/helpers"
 import type { PoStatus } from "./types"
 
 export type { DatePreset }
 
-export interface PoFilterValues {
+export type PoFilterValues = {
   preset: DatePreset
   startDate: string
   endDate: string
@@ -23,7 +23,7 @@ export interface PoFilterValues {
   maxHarga: string
 }
 
-interface PurchaseOrderFilterProps {
+type PurchaseOrderFilterProps = {
   onClose: () => void
   onApply: (filters: PoFilterValues) => void
   initialValues?: PoFilterValues
@@ -39,7 +39,7 @@ const DEFAULTS: PoFilterValues = {
   maxHarga: "",
 }
 
-// Labels from PO_LABEL match the badges.
+// PO_LABEL labels match badges.
 const STATUS_OPTIONS: { value: PoStatus; label: string }[] = PO_STATUS_ORDER.map((value) => ({
   value,
   label: PO_LABEL[value],
@@ -107,26 +107,12 @@ export default function PurchaseOrderFilter({
       title="Filter Purchase Order"
       onClose={onClose}
       footer={
-        <div className="flex w-full items-center justify-between">
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={!dirty}
-            className={`p-0 text-[13px] font-medium underline-offset-[3px] ${
-              dirty ? "cursor-pointer text-primary-700 underline" : "cursor-default text-dark-300"
-            }`}
-          >
-            Hapus Filter
-          </button>
-          <div className="flex items-center gap-4">
-            <button type="button" className={ui.modalCancel} onClick={onClose}>
-              Batal
-            </button>
-            <button type="button" className={ui.modalSubmit} onClick={handleApply}>
-              Terapkan
-            </button>
-          </div>
-        </div>
+        <FilterFooter
+          onReset={handleReset}
+          canReset={dirty}
+          onCancel={onClose}
+          onApply={handleApply}
+        />
       }
     >
       <div className={ui.modalSection}>
@@ -140,7 +126,8 @@ export default function PurchaseOrderFilter({
                   key={key}
                   type="button"
                   onClick={() => handlePresetClick(key)}
-                  style={presetChipStyle(isActive)}
+                  aria-pressed={isActive}
+                  className={presetChip(isActive)}
                 >
                   {label}
                   {key === "kustom" ? (
@@ -148,7 +135,7 @@ export default function PurchaseOrderFilter({
                       <IconCalendar />
                     </span>
                   ) : isActive ? (
-                    <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+                    <svg aria-hidden="true" width="14" height="11" viewBox="0 0 14 11" fill="none">
                       <path
                         d="M1 5.5L4.5 9L13 1"
                         stroke="#630ED4"
@@ -177,7 +164,8 @@ export default function PurchaseOrderFilter({
             <button
               type="button"
               onClick={() => setActiveStatuses([])}
-              style={chipStyle(activeStatuses.length === 0)}
+              aria-pressed={activeStatuses.length === 0}
+              className={chip(activeStatuses.length === 0)}
             >
               Semua
             </button>
@@ -186,7 +174,8 @@ export default function PurchaseOrderFilter({
                 key={value}
                 type="button"
                 onClick={() => toggleStatus(value)}
-                style={chipStyle(activeStatuses.includes(value))}
+                aria-pressed={activeStatuses.includes(value)}
+                className={chip(activeStatuses.includes(value))}
               >
                 {label}
               </button>
@@ -199,18 +188,20 @@ export default function PurchaseOrderFilter({
         <div className={ui.modalSectionHeading}>Rentang Total PO</div>
         <div className={ui.row2}>
           {[
-            { label: "Min Total", value: minHarga, set: setMinHarga },
-            { label: "Max Total", value: maxHarga, set: setMaxHarga },
-          ].map(({ label, value, set }) => (
-            <div className={ui.field} key={label}>
-              <label className={ui.fieldLabel}>{label}</label>
-              <div className="flex h-11 overflow-hidden rounded-md border-[1.5px] border-transparent bg-dark-200 transition focus-within:border-primary-600 focus-within:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]">
-                <span className="flex items-center whitespace-nowrap border-r border-dark-300 px-3 text-sm font-medium text-dark-600">
-                  IDR
-                </span>
+            { id: "po-filter-min", label: "Min Total", value: minHarga, set: setMinHarga },
+            { id: "po-filter-max", label: "Max Total", value: maxHarga, set: setMaxHarga },
+          ].map(({ id, label, value, set }) => (
+            <div className={ui.field} key={id}>
+              <label htmlFor={id} className={ui.fieldLabel}>
+                {label}
+              </label>
+              <div className={ui.prefixWrap}>
+                <span className={ui.prefixLabel}>IDR</span>
                 <input
-                  className="flex-1 border-none bg-transparent px-3 text-sm text-dark-900 outline-none placeholder:text-dark-500"
+                  id={id}
+                  className={ui.prefixInput}
                   type="text"
+                  inputMode="numeric"
                   value={value}
                   onChange={(e) => set(e.target.value)}
                 />

@@ -10,7 +10,7 @@
 --      because items mirror purchase_order_items (snapshot rebuilt by 05).
 --
 -- Status heuristic: invoice with due_date <= 2026-05-09 -> 'paid', else 'sent'.
--- Coverage: 56/57 POs matched to invoice files. qid 549 (Q-2640061) has a real
+-- Coverage: 54/55 POs matched to invoice files. qid 549 (Q-2640061) has a real
 -- PO but no invoice file yet, so it stays accepted with a PO and no invoice.
 
 BEGIN;
@@ -29,7 +29,7 @@ BEGIN
         (488::bigint),
         (489::bigint),
         (490::bigint),
-        (491::bigint),
+        -- Q-491 dropped: unpriced quotation, stays draft (see 04).
         (492::bigint),
         (498::bigint),
         (500::bigint),
@@ -67,7 +67,7 @@ BEGIN
         (611::bigint),
         (614::bigint),
         (619::bigint),
-        (624::bigint),
+        -- Q-624 dropped: unpriced quotation, stays draft (see 04).
         (640::bigint),
         (641::bigint),
         (643::bigint),
@@ -125,7 +125,7 @@ UPDATE invoices i
     (530::bigint, '2026-02-03'::date, '2026-02-18'::date, 'paid'),  -- 026_2_2026 - PO-SML_II_2026-00004 - Gland Packing
     (576::bigint, '2026-03-04'::date, '2026-04-03'::date, 'paid'),  -- 038_3_2026 - Sentra Makmur Lines.xlsx
     (660::bigint, '2026-05-07'::date, '2026-06-06'::date, 'sent'),  -- 057_5_2026 - Flow meter - Kasen Maritim Logistik.x
-    (624::bigint, '2026-04-22'::date, '2026-05-22'::date, 'sent'),  -- 049_4_2026 - Infrared Night Vision Binocular - Dew
+    -- Q-624 dropped: unpriced quotation, stays draft (see 04).
     (565::bigint, '2026-02-24'::date, '2026-03-26'::date, 'paid'),  -- 027_2_2026 - Cardboard - Dewi Saraswati - Pelita G
     (649::bigint, '2026-05-07'::date, '2026-06-06'::date, 'sent'),  -- 053_4_2026 - Obat  - Dewi Shinta Manggala - Pelita
     (647::bigint, '2026-04-22'::date, '2026-05-22'::date, 'sent'),  -- 10616_4_2026 - Pengiriman dan boat CIlegon - Pelit
@@ -141,7 +141,7 @@ UPDATE invoices i
     (509::bigint, '2026-01-19'::date, '2026-02-18'::date, 'paid'),  -- 009_1_2026 - Butterfly Valve - Daidan Pertiwi - Pe
     (512::bigint, '2026-01-19'::date, '2026-02-18'::date, 'paid'),  -- 007_1_2026 - spare roller, demolation dll - Daidan
     (543::bigint, '2026-02-04'::date, '2026-03-06'::date, 'paid'),  -- 019_1_2026 - Check Valves DIN Bronze PN10 - Pelita
-    (491::bigint, '2026-01-19'::date, '2026-02-18'::date, 'paid'),  -- 002_1_2026 - Floodlight 100w - Daidan Pertiwi - Pe
+    -- Q-491 dropped: unpriced quotation, stays draft (see 04).
     (519::bigint, '2026-01-21'::date, '2026-02-20'::date, 'paid'),  -- 011_1_2026 - Impeller - Daidan Pertiwi - Pelita Gl
     (524::bigint, '2026-01-27'::date, '2026-02-26'::date, 'paid'),  -- 013_1_2026 - Angle Valve - Daidan Pertiwi - Pelita
     (522::bigint, '2026-01-27'::date, '2026-02-26'::date, 'paid'),  -- 012_1_2026 - Butterfly Valve double flange 5K 200
@@ -172,7 +172,7 @@ BEGIN
         (488::bigint),
         (489::bigint),
         (490::bigint),
-        (491::bigint),
+        -- Q-491 dropped: unpriced quotation, stays draft (see 04).
         (492::bigint),
         (498::bigint),
         (500::bigint),
@@ -210,7 +210,7 @@ BEGIN
         (611::bigint),
         (614::bigint),
         (619::bigint),
-        (624::bigint),
+        -- Q-624 dropped: unpriced quotation, stays draft (see 04).
         (640::bigint),
         (641::bigint),
         (643::bigint),

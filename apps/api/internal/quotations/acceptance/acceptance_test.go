@@ -25,12 +25,21 @@ const (
 )
 
 type scenarioState struct {
-	t      *testing.T
-	srv    *httptest.Server
-	last   *http.Response
-	body   []byte
-	lastID int64
-	userID int64
+	t       *testing.T
+	srv     *httptest.Server
+	last    *http.Response
+	body    []byte
+	lastID  int64
+	userID  int64
+	docNos  [2]string
+	pdfPath string
+	// Revision fixtures.
+	origID int64
+	newID  int64
+	// Edge fixtures.
+	otherID   int64
+	requestID int64
+	contactID int64
 }
 
 func (s *scenarioState) reset() error {
@@ -39,6 +48,11 @@ func (s *scenarioState) reset() error {
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
+	return s.sendRequestWith(method, path, body, nil)
+}
+
+// sendRequestWith also sets headers.
+func (s *scenarioState) sendRequestWith(method, path string, body any, headers map[string]string) error {
 	var rdr io.Reader
 	if body != nil {
 		raw, err := json.Marshal(body)
@@ -53,6 +67,9 @@ func (s *scenarioState) sendRequest(method, path string, body any) error {
 	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
 	}
 	res, err := s.srv.Client().Do(req)
 	if err != nil {
@@ -101,6 +118,30 @@ func (s *scenarioState) createWithoutItems() error {
 	return s.sendRequest(http.MethodPost, "/quotations/", s.buildCreate("0", 0))
 }
 
+func (s *scenarioState) createWithStatus(status string) error {
+	req := s.buildCreate("0", 1)
+	req.Status = &status
+	return s.sendRequest(http.MethodPost, "/quotations/", req)
+}
+
+func (s *scenarioState) createZeroQtyQuotation() error {
+	req := s.buildCreate("0", 1)
+	req.Items[0].Qty = "0"
+	return s.sendRequest(http.MethodPost, "/quotations/", req)
+}
+
+func (s *scenarioState) noQuotationStored() error {
+	var n int64
+	err := testutil.Pool(s.t).QueryRow(context.Background(), "SELECT COUNT(*) FROM quotations").Scan(&n)
+	if err != nil {
+		return err
+	}
+	if n != 0 {
+		return fmt.Errorf("want 0 quotations stored, got %d", n)
+	}
+	return nil
+}
+
 func (s *scenarioState) createUnpricedQuotation() error {
 	req := s.buildCreate("0", 1)
 	req.Items[0].SellingPrice = "0"
@@ -108,6 +149,83 @@ func (s *scenarioState) createUnpricedQuotation() error {
 		return err
 	}
 	return s.responseHasID()
+}
+
+// Ids for document-number fixtures.
+const (
+	docNoClientA int64 = 9100001
+	docNoClientB int64 = 9100002
+)
+
+func (s *scenarioState) seedNumberedClient(id int64, number string, seq int) error {
+	pool := testutil.Pool(s.t)
+	ctx := context.Background()
+	if _, err := pool.Exec(ctx,
+		`INSERT INTO company_client (id, number, name, country_code, created_by, updated_by)
+		 VALUES ($1, $2, $3, 'IDN', 1, 1)`, id, number, "Fixture "+number); err != nil {
+		return err
+	}
+	if seq > 0 {
+		if _, err := pool.Exec(ctx,
+			`INSERT INTO doc_sequences (doc_type, company_id, year, last_seq, updated_at)
+			 VALUES ('Q', $1, EXTRACT(YEAR FROM NOW())::INT, $2, NOW())`, id, seq); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *scenarioState) dropNumberedClients() {
+	pool := testutil.Pool(s.t)
+	ctx := context.Background()
+	for _, id := range []int64{docNoClientA, docNoClientB} {
+		_, _ = pool.Exec(ctx, `DELETE FROM quotation_items WHERE quotation_id IN
+			(SELECT id FROM quotations WHERE company_client_id = $1)`, id)
+		_, _ = pool.Exec(ctx, `DELETE FROM quotation_status_history WHERE quotation_id IN
+			(SELECT id FROM quotations WHERE company_client_id = $1)`, id)
+		_, _ = pool.Exec(ctx, `DELETE FROM quotations WHERE company_client_id = $1`, id)
+		_, _ = pool.Exec(ctx, `DELETE FROM doc_sequences WHERE company_id = $1`, id)
+		_, _ = pool.Exec(ctx, `DELETE FROM company_client WHERE id = $1`, id)
+	}
+}
+
+func (s *scenarioState) quotationNoFor(client int64) (string, error) {
+	req := s.buildCreate("0", 1)
+	req.CompanyClientID = client
+	if err := s.sendRequest(http.MethodPost, "/quotations/", req); err != nil {
+		return "", err
+	}
+	if err := s.responseHasID(); err != nil {
+		return "", err
+	}
+	if err := s.readDetail(); err != nil {
+		return "", err
+	}
+	var d quotations.QuotationDetail
+	if err := json.Unmarshal(s.body, &d); err != nil {
+		return "", err
+	}
+	return d.QuotationNo, nil
+}
+
+func (s *scenarioState) createForBothClients() error {
+	a, err := s.quotationNoFor(docNoClientA)
+	if err != nil {
+		return err
+	}
+	b, err := s.quotationNoFor(docNoClientB)
+	if err != nil {
+		return err
+	}
+	s.docNos = [2]string{a, b}
+	return nil
+}
+
+func (s *scenarioState) docNosDiffer() error {
+	if s.docNos[0] == s.docNos[1] {
+		return fmt.Errorf("both clients got quotation number %s", s.docNos[0])
+	}
+	return nil
 }
 
 func (s *scenarioState) statusEquals(want int) error {
@@ -158,9 +276,30 @@ func (s *scenarioState) detailStatusEquals(want string) error {
 	return nil
 }
 
-func (s *scenarioState) walkPath(path string) error {
+func (s *scenarioState) walkPath(path string) error { return s.walk(path, nil) }
+
+// walkWithReason also handles none, revise.
+func (s *scenarioState) walkWithReason(path string) error {
+	reason := testReason
+	return s.walk(path, &reason)
+}
+
+func (s *scenarioState) walk(path string, note *string) error {
 	for _, step := range strings.Split(path, ",") {
-		if err := s.transitionTo(strings.TrimSpace(step)); err != nil {
+		step = strings.TrimSpace(step)
+		switch step {
+		case "none":
+			continue
+		case "revise":
+			if err := s.reviseQuotation(); err != nil {
+				return err
+			}
+			if s.last.StatusCode != http.StatusCreated {
+				return fmt.Errorf("revise wanted 201 got %d body=%s", s.last.StatusCode, s.body)
+			}
+			continue
+		}
+		if err := s.transitionWith(step, note); err != nil {
 			return err
 		}
 		if s.last.StatusCode != http.StatusNoContent {
@@ -170,8 +309,10 @@ func (s *scenarioState) walkPath(path string) error {
 	return nil
 }
 
-func (s *scenarioState) transitionTo(target string) error {
-	body := quotations.ChangeStatusRequest{Status: target}
+func (s *scenarioState) transitionTo(target string) error { return s.transitionWith(target, nil) }
+
+func (s *scenarioState) transitionWith(target string, note *string) error {
+	body := quotations.ChangeStatusRequest{Status: target, Note: note}
 	return s.sendRequest(http.MethodPatch, "/quotations/"+strconv.FormatInt(s.lastID, 10)+"/status", body)
 }
 
@@ -201,8 +342,13 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 			state.last = nil
 			state.body = nil
 			state.lastID = 0
+			state.origID = 0
+			state.newID = 0
+			state.otherID, state.requestID, state.contactID = 0, 0, 0
 			return ctx, nil
 		})
+		registerStatusSteps(sc, state)
+		registerEdgeSteps(sc, state)
 
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
 		sc.Step(`^the quotation domain is empty$`, state.emptyDomain)
@@ -211,6 +357,18 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		})
 		sc.Step(`^the user creates a quotation with no items$`, state.createWithoutItems)
 		sc.Step(`^the user creates a quotation with an unpriced product line$`, state.createUnpricedQuotation)
+		sc.Step(`^the user creates a quotation with status "([^"]+)"$`, state.createWithStatus)
+		sc.Step(`^the user creates a quotation with a zero quantity product line$`, state.createZeroQtyQuotation)
+		sc.Step(`^no quotation was stored$`, state.noQuotationStored)
+		sc.Step(`^a client numbered "([^"]+)" already on quotation sequence (\d+)$`, func(number string, seq int) error {
+			state.dropNumberedClients()
+			return state.seedNumberedClient(docNoClientA, number, seq)
+		})
+		sc.Step(`^a client numbered "([^"]+)"$`, func(number string) error {
+			return state.seedNumberedClient(docNoClientB, number, 0)
+		})
+		sc.Step(`^the user creates one quotation for each of those clients$`, state.createForBothClients)
+		sc.Step(`^the two quotation numbers differ$`, state.docNosDiffer)
 		sc.Step(`^the response status is (\d+)$`, state.statusEquals)
 		sc.Step(`^the response contains a quotation id$`, state.responseHasID)
 		sc.Step(`^an existing draft quotation$`, state.seedDraft)
@@ -226,12 +384,17 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		})
 		sc.Step(`^the user tries to transition the quotation to "([^"]+)"$`, state.tryTransition)
 		sc.Step(`^the user lists quotations filtered by status "([^"]+)"$`, state.listFilteredByStatus)
+		sc.Step(`^a draft quotation with a discount, shipping and an unpriced line$`, state.createPricedQuotation)
+		sc.Step(`^the user downloads the quotation PDF$`, state.downloadPDF)
+		sc.Step(`^the PDF prints the stored totals, the offered item and No Offer$`, state.pdfPrintsStoredTotals)
+		sc.Step(`^the PDF has (\d+) page$`, state.pdfPages)
 		sc.Step(`^the list contains at least (\d+) quotation(?:s)?$`, state.listAtLeast)
 	}
 }
 
 func TestQuotationFeatures(t *testing.T) {
 	testutil.RequireDB(t)
+	roleTeardown(t)
 	suite := godog.TestSuite{
 		ScenarioInitializer: initScenario(t),
 		Options: &godog.Options{

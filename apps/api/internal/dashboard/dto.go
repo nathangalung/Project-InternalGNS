@@ -13,6 +13,11 @@ type Summary struct {
 	TotalInvoicesPaid       int64  `db:"total_invoices_paid"       json:"totalInvoicesPaid"`
 	InvoicesDueSoon         int64  `db:"invoices_due_soon"         json:"invoicesDueSoon"`
 	InvoicesOverdue         int64  `db:"invoices_overdue"          json:"invoicesOverdue"`
+
+	// Status tiles, in order.
+	QuotationStatuses []StatusCount `db:"-" json:"quotationStatuses"`
+	PoStatuses        []StatusCount `db:"-" json:"poStatuses"`
+	InvoiceStatuses   []StatusCount `db:"-" json:"invoiceStatuses"`
 }
 
 // Zero finance-only figures.
@@ -25,6 +30,14 @@ func (s *Summary) StripFinancial() {
 	s.TotalInvoicesPaid = 0
 	s.InvoicesDueSoon = 0
 	s.InvoicesOverdue = 0
+	s.InvoiceStatuses = []StatusCount{}
+}
+
+// StatusCount is one status tile.
+type StatusCount struct {
+	Status string `json:"status"`
+	Label  string `json:"label"`
+	Count  int64  `json:"count"`
 }
 
 // TimeseriesPoint is one bucket.

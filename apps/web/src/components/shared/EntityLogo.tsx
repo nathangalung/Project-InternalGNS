@@ -14,22 +14,10 @@ function initials(name: string): string {
 export default function EntityLogo({ name }: { name: string }) {
   const bg = logoBackground(name)
   return (
+    // Background is hashed per name.
     <div
-      style={{
-        width: "48px",
-        height: "48px",
-        borderRadius: "8px",
-        background: bg,
-        color: "#FFFFFF",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "'Inter', sans-serif",
-        fontWeight: 700,
-        fontSize: "13px",
-        letterSpacing: "0.5px",
-        flexShrink: 0,
-      }}
+      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md font-[Inter,sans-serif] text-[13px] font-bold tracking-[0.5px] text-white"
+      style={{ background: bg }}
     >
       {initials(name)}
     </div>

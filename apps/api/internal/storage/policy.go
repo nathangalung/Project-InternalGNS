@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 	"path"
+	"slices"
 	"strings"
 )
 
@@ -15,10 +16,10 @@ var bucketExtensions = map[string]map[string]struct{}{
 	BucketPODocs:             docExts(),
 }
 
-// Per-bucket role allowlist, mirroring the resource RBAC: logos and item
-// images are shared master data; invoice attachments follow /invoices;
-// PO documents follow /purchase-orders.
-var bucketRoles = map[string][]string{
+// bucketReaders mirrors the resource RBAC.
+// Logos and item images are shared master data; invoice attachments follow
+// /invoices; PO documents follow /purchase-orders.
+var bucketReaders = map[string][]string{
 	BucketClientLogos:        {"superadmin", "operational", "finance"},
 	BucketVendorLogos:        {"superadmin", "operational", "finance"},
 	BucketItemImages:         {"superadmin", "operational", "finance"},
@@ -26,14 +27,25 @@ var bucketRoles = map[string][]string{
 	BucketPODocs:             {"superadmin", "operational"},
 }
 
-// CanAccessBucket reports whether a role may read or write a bucket.
-func CanAccessBucket(role, bucket string) bool {
-	for _, r := range bucketRoles[bucket] {
-		if r == role {
-			return true
-		}
-	}
-	return false
+// bucketWriters mirrors the write RBAC.
+// Finance only reads /items and /vendors, so it stores no item image or
+// vendor logo. It keeps client writes for NPWP and TKU, logo included.
+var bucketWriters = map[string][]string{
+	BucketClientLogos:        {"superadmin", "operational", "finance"},
+	BucketVendorLogos:        {"superadmin", "operational"},
+	BucketItemImages:         {"superadmin", "operational"},
+	BucketInvoiceAttachments: {"superadmin", "finance"},
+	BucketPODocs:             {"superadmin", "operational"},
+}
+
+// CanReadBucket checks role read access.
+func CanReadBucket(role, bucket string) bool {
+	return slices.Contains(bucketReaders[bucket], role)
+}
+
+// CanWriteBucket checks role write access.
+func CanWriteBucket(role, bucket string) bool {
+	return slices.Contains(bucketWriters[bucket], role)
 }
 
 // Per-bucket size cap in bytes.
@@ -56,7 +68,7 @@ func docExts() map[string]struct{} {
 	}
 }
 
-// ValidateAssetFileName guards the extension allowlist per bucket.
+// ValidateAssetFileName checks bucket extensions.
 func ValidateAssetFileName(bucket, fileName string) error {
 	allowed, ok := bucketExtensions[bucket]
 	if !ok {
@@ -69,19 +81,29 @@ func ValidateAssetFileName(bucket, fileName string) error {
 	return nil
 }
 
-// ValidateAssetSize guards the byte cap per bucket. Pass 0 to skip.
-func ValidateAssetSize(bucket string, size int64) error {
-	cap, ok := bucketMaxBytes[bucket]
-	if !ok {
-		return fmt.Errorf("storage: unknown bucket %q", bucket)
-	}
-	if size > 0 && size > cap {
-		return fmt.Errorf("size %d exceeds %d for %s", size, cap, bucket)
-	}
-	return nil
+// ValidateOwnedKey binds keys to records.
+// Attach endpoints take the key from the request body, so without this a
+// caller could point a record at any object in the bucket, or at a traversal
+// path outside it. BuildObjectKey is what produces a conforming key.
+func ValidateOwnedKey(bucket, prefix string, id int64, key string) error {
+	return ValidateFolderKey(bucket, OwnerFolder(prefix, id, ""), key)
 }
 
-// MaxBytes returns the policy cap for a bucket.
+// ValidateFolderKey binds keys to folders.
+// The name must sit directly in the folder: a key in a sub-folder belongs to
+// another asset of the same record. BuildFolderKey produces a conforming key.
+func ValidateFolderKey(bucket, folder, key string) error {
+	if !safeKey(key) {
+		return fmt.Errorf("storage: unsafe object key %q", key)
+	}
+	name, ok := strings.CutPrefix(key, folder)
+	if !ok || name == "" || strings.Contains(name, "/") {
+		return fmt.Errorf("storage: object key %q is not directly under %q", key, folder)
+	}
+	return ValidateAssetFileName(bucket, key)
+}
+
+// MaxBytes returns a bucket's cap.
 func MaxBytes(bucket string) int64 {
 	return bucketMaxBytes[bucket]
 }

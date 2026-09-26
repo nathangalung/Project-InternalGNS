@@ -3,6 +3,7 @@ package purchaseorders
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -17,6 +18,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
+	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
 type Handler struct {
@@ -27,7 +29,7 @@ func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
 
-// parseListFilter reads the shared PO list filters (no pagination).
+// parseListFilter reads unpaged list filters.
 func parseListFilter(r *http.Request) ListFilter {
 	q := r.URL.Query()
 	f := ListFilter{
@@ -66,7 +68,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
 }
 
-// Export streams the filtered PO list (with delivery-note numbers) as XLSX.
+// Export streams the filtered list.
+// The XLSX carries delivery-note numbers.
 func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	f := parseListFilter(r)
 	f.Limit, f.Offset = listq.Unbounded, 0
@@ -80,14 +83,16 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	headers := []string{"No. Delivery Note", "No. PO", "No. Quotation", "Tanggal", "Klien", "Status", "Total"}
 	rows := make([][]string, 0, len(res.Rows))
 	for _, po := range res.Rows {
+		// Same rule as the PDF: blank unless the note can be printed.
+		dn, _ := issuedDeliveryNote(po)
 		rows = append(rows, []string{
-			deliveryNoteNumber(po.QuotationNo, po.PoNumber),
+			dn,
 			po.PoNumber,
 			po.QuotationNo,
 			po.PoDate.In(tz.Jakarta()).Format("2006-01-02"),
 			po.CompanyName,
-			string(po.Status),
-			po.PoTotalProduk,
+			StatusLabel(po.Status),
+			po.PoGrandTotal,
 		})
 	}
 	data, err := sheet.Write("Delivery Note", headers, rows)
@@ -159,22 +164,40 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
-	if strings.TrimSpace(req.FileName) == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"fileName": "required"}))
+	req.FileName = strings.TrimSpace(req.FileName)
+	req.ObjectKey = strings.TrimSpace(req.ObjectKey)
+	if fields := validateFile(req); len(fields) > 0 {
+		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
-	if strings.TrimSpace(req.ObjectKey) == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"objectKey": "required"}))
-		return
-	}
-
-	actor := deps.CurrentUserID(r.Context())
-	if err := h.repo.UpdateFile(r.Context(), id, req, actor); err != nil {
+	// Owner first, so a missing PO reads as 404.
+	if _, err := h.repo.GetByID(r.Context(), id); err != nil {
 		if errors.Is(err, ErrNotFound) {
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 			return
 		}
 		httperr.RenderDBErr(w, err)
+		return
+	}
+	// The key comes from the client, so it must address an upload made for
+	// this PO rather than any object in the bucket or a traversal path.
+	if err := storage.ValidateOwnedKey(storage.BucketPODocs, "po", id, req.ObjectKey); err != nil {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{
+			"objectKey": "Berkas tidak dikenali. Unggah ulang berkasnya lalu simpan kembali.",
+		}))
+		return
+	}
+
+	actor := deps.CurrentUserID(r.Context())
+	if err := h.repo.UpdateFile(r.Context(), id, req, actor); err != nil {
+		switch {
+		case errors.Is(err, ErrNotFound):
+			httperr.Render(w, httperr.NotFound("purchase order not found"))
+		case errors.Is(err, ErrLocked):
+			renderLocked(w, err.Error())
+		default:
+			httperr.RenderDBErr(w, err)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -186,18 +209,26 @@ func (h *Handler) UpdateNotes(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid id"))
 		return
 	}
+	ifMatch, err := httpx.ParseIfMatch(r.Header.Get("If-Match"))
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest(err.Error()))
+		return
+	}
 	var req UpdateNotesRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())
-	if err := h.repo.UpdateNotes(r.Context(), id, req.Notes, actor); err != nil {
-		if errors.Is(err, ErrNotFound) {
+	if err := h.repo.UpdateNotes(r.Context(), id, req.Notes, actor, ifMatch); err != nil {
+		switch {
+		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
-			return
+		case errors.Is(err, ErrVersionMismatch):
+			httperr.Render(w, httperr.Conflict("purchase order row_version mismatch"))
+		default:
+			httperr.RenderDBErr(w, err)
 		}
-		httperr.RenderDBErr(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -207,6 +238,11 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	ifMatch, err := httpx.ParseIfMatch(r.Header.Get("If-Match"))
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest(err.Error()))
 		return
 	}
 	var req UpdateDetailsRequest
@@ -224,12 +260,19 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())
-	if err := h.repo.UpdateDetails(r.Context(), id, strings.TrimSpace(req.PoNumber), poDate, actor); err != nil {
+	if err := h.repo.UpdateDetails(r.Context(), id, strings.TrimSpace(req.PoNumber), poDate, actor, ifMatch); err != nil {
 		switch {
 		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 		case errors.Is(err, ErrDuplicatePoNumber):
-			httperr.Render(w, httperr.Unprocessable(map[string]string{"poNumber": "already used by another PO"}))
+			httperr.Render(w, httperr.Unprocessable(map[string]string{
+				"poNumber": "sudah dipakai PO lain untuk klien ini",
+			}))
+		case errors.Is(err, ErrVersionMismatch):
+			httperr.Render(w, httperr.Conflict("purchase order row_version mismatch"))
+		// A filed invoice prints po_number and po_date, so both are read-only.
+		case errors.Is(err, ErrLocked):
+			renderLocked(w, "Nomor dan tanggal PO tidak dapat diubah setelah invoice dikirim.")
 		default:
 			httperr.RenderDBErr(w, err)
 		}
@@ -250,20 +293,25 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !isValidStatus(req.Status) {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "invalid status"}))
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "Status PO tidak dikenal."}))
+		return
+	}
+	req.Note = strings.TrimSpace(req.Note)
+	if requiresNote(req.Status) && req.Note == "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"note": "Alasan pembatalan wajib diisi."}))
+		return
+	}
+	if !h.allowOnProgress(w, r, id, req.Status) {
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())
-	if err := h.repo.ChangeStatus(r.Context(), id, req.Status, actor); err != nil {
+	if err := h.repo.Transition(r.Context(), id, req.Status, req.Note, actor); err != nil {
 		switch {
 		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
+		// The DB prose says why, e.g. the status follows the file.
 		case errors.Is(err, ErrInvalidTransition):
 			httperr.Render(w, httperr.Unprocessable(map[string]string{"status": err.Error()}))
-		// 409, unlike the 422 UpdateItems returns for the same sentinel: here
-		// the PO itself is valid and a dependent invoice blocks the change.
-		case errors.Is(err, ErrLocked):
-			httperr.Render(w, httperr.Conflict(err.Error()))
 		default:
 			httperr.RenderDBErr(w, err)
 		}
@@ -306,7 +354,7 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 		case errors.Is(err, ErrLocked):
-			httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "PO locked in DELIVERED state"}))
+			renderLocked(w, err.Error())
 		default:
 			httperr.RenderDBErr(w, err)
 		}
@@ -318,10 +366,113 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func isValidStatus(s Status) bool {
-	switch s {
-	case StatusPending, StatusUploaded, StatusOnProgress, StatusDelivered:
+// allowOnProgress requires complete master data.
+// It reports whether the caller may continue; it has already written the
+// response when it returns false.
+func (h *Handler) allowOnProgress(w http.ResponseWriter, r *http.Request, id int64, target Status) bool {
+	if target != StatusOnProgress {
 		return true
 	}
+	po, err := h.repo.GetByID(r.Context(), id)
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("purchase order not found"))
+		return false
+	}
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return false
+	}
+	// Only the promotion from UPLOADED is gated; the DB refuses the rest.
+	if po.Status != StatusUploaded {
+		return true
+	}
+	issues, err := h.repo.Completeness(r.Context(), id)
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return false
+	}
+	if len(issues) == 0 {
+		return true
+	}
+	httperr.Render(w, httperr.Unprocessable(completenessFields(issues)))
 	return false
+}
+
+// RemoveFile detaches the PO document.
+func (h *Handler) RemoveFile(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	actor := deps.CurrentUserID(r.Context())
+	if err := h.repo.RemoveFile(r.Context(), id, actor); err != nil {
+		switch {
+		case errors.Is(err, ErrNotFound):
+			httperr.Render(w, httperr.NotFound("purchase order not found"))
+		case errors.Is(err, ErrLocked):
+			renderLocked(w, err.Error())
+		default:
+			httperr.RenderDBErr(w, err)
+		}
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// History returns the status timeline.
+func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	rows, err := h.repo.History(r.Context(), id)
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("purchase order not found"))
+		return
+	}
+	if err != nil {
+		httperr.RenderDBErr(w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, rows)
+}
+
+// LockedCode tags lock refusals.
+// The web branches on it: a 409 without it is an If-Match mismatch, which
+// a refetch resolves, while a lock needs no retry.
+const LockedCode = "po_locked"
+
+// lockedProblem extends RFC 7807.
+// It adds the lock code.
+type lockedProblem struct {
+	httperr.Error
+	Code string `json:"code"`
+}
+
+// renderLocked writes lock refusals.
+func renderLocked(w http.ResponseWriter, detail string) {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(http.StatusConflict)
+	_ = json.NewEncoder(w).Encode(lockedProblem{Error: httperr.Conflict(detail), Code: LockedCode})
+}
+
+// validateFile checks the attach payload.
+// The key is bound to its PO later, once the PO is known to exist.
+func validateFile(req UpdateFileRequest) map[string]string {
+	fields := map[string]string{}
+	switch {
+	case req.FileName == "":
+		fields["fileName"] = "Nama berkas wajib diisi."
+	case storage.ValidateAssetFileName(storage.BucketPODocs, req.FileName) != nil:
+		fields["fileName"] = "Jenis berkas tidak didukung. Gunakan PDF, PNG, JPG, WEBP, XLS, atau XLSX."
+	}
+	if limit := storage.MaxBytes(storage.BucketPODocs); req.FileSize < 1 || req.FileSize > limit {
+		fields["fileSize"] = fmt.Sprintf("Ukuran berkas harus antara 1 byte dan %d MB.", limit>>20)
+	}
+	if req.ObjectKey == "" {
+		fields["objectKey"] = "Berkas PO wajib diunggah."
+	}
+	return fields
 }

@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 )
 
 // Wire-shape error response.
@@ -47,7 +49,8 @@ func Conflict(detail string) Error {
 	return Error{Type: "about:blank", Title: "Conflict", Status: http.StatusConflict, Detail: detail}
 }
 
-// Shown when no field carries a message.
+// genericInvalidPayload is the fallback detail.
+// It shows when no field carries a message.
 const genericInvalidPayload = "Data yang dikirim tidak valid. Periksa kembali isian Anda."
 
 // UnprocessableDetail carries prose plus fields.
@@ -61,15 +64,16 @@ func UnprocessableDetail(detail string, fields map[string]string) Error {
 	}
 }
 
-// Unprocessable pairs field errors with prose. Detail is what the toast reads
-// and Fields stays per-field so forms can mark the offending inputs. The two
-// must agree, so Detail is built from the field messages rather than a fixed
-// sentence that would erase which input failed.
+// Unprocessable pairs fields with prose.
+// Detail is what the toast reads and Fields stays per-field so forms can
+// mark the offending inputs. The two must agree, so Detail is built from the
+// field messages rather than a fixed sentence that would erase which input
+// failed.
 func Unprocessable(fields map[string]string) Error {
 	return UnprocessableDetail(fieldsDetail(fields), fields)
 }
 
-// Joins field messages, never their keys.
+// fieldsDetail joins messages, not keys.
 func fieldsDetail(fields map[string]string) string {
 	keys := make([]string, 0, len(fields))
 	for k, v := range fields {
@@ -88,65 +92,92 @@ func fieldsDetail(fields map[string]string) string {
 	}
 	return strings.Join(msgs, "; ")
 }
+func PayloadTooLarge(detail string) Error {
+	return Error{Type: "about:blank", Title: "Payload Too Large", Status: http.StatusRequestEntityTooLarge, Detail: detail}
+}
 func TooManyRequests(detail string) Error {
 	return Error{Type: "about:blank", Title: "Too Many Requests", Status: http.StatusTooManyRequests, Detail: detail}
 }
 func Internal(detail string) Error {
 	return Error{Type: "about:blank", Title: "Internal Server Error", Status: http.StatusInternalServerError, Detail: detail}
 }
+func BadGateway(detail string) Error {
+	return Error{Type: "about:blank", Title: "Bad Gateway", Status: http.StatusBadGateway, Detail: detail}
+}
 func ServiceUnavailable(detail string) Error {
 	return Error{Type: "about:blank", Title: "Service Unavailable", Status: http.StatusServiceUnavailable, Detail: detail}
 }
 
-// FromDBErr maps pg SQLSTATE to HTTP with a curated, non-leaking message.
+// FromDBErr maps SQLSTATE to HTTP.
+// The message is curated and never leaks internals.
 func FromDBErr(err error) Error {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		switch pgErr.Code {
-		case "P0001", "P0012", "P0014":
+		case db.SQLStateRaiseException, db.SQLStateInvalidTransition, db.SQLStateValidation:
 			// Business-rule message raised intentionally by plpgsql; safe to
 			// surface. P0012 invalid transition and P0014 validation are the
 			// typed successors assigned by migration 00046. It is prose, not a
 			// field error, so it belongs in Detail like P0011 and P0013.
 			return UnprocessableDetail(pgErr.Message, nil)
-		case "P0011":
+		case db.SQLStateNotFound:
 			return NotFound(pgErr.Message)
-		case "P0013":
+		case db.SQLStateBlockedByRelated:
 			// Blocked by the state of a related record.
 			return Conflict(pgErr.Message)
-		case "23503":
-			return NotFound("referenced record does not exist")
-		case "23505":
-			return Conflict("a record with these values already exists")
+		case db.SQLStateForeignKeyViolation:
+			return NotFound("Data yang dirujuk tidak ditemukan. Muat ulang halaman lalu coba lagi.")
+		case db.SQLStateUniqueViolation:
+			return Conflict("Data dengan nilai yang sama sudah ada. Periksa isian yang harus unik.")
 		// The constraint names the column, not the form input, so name the
 		// remedy instead of echoing an untranslatable identifier.
-		case "23502":
+		case db.SQLStateNotNullViolation:
 			return UnprocessableDetail("Ada isian wajib yang masih kosong. Lengkapi data lalu simpan kembali.", nil)
-		case "23514":
+		case db.SQLStateCheckViolation:
 			return UnprocessableDetail("Ada isian yang melanggar aturan validasi. Periksa nilai yang dimasukkan.", nil)
-		case "22P02":
+		case db.SQLStateInvalidTextRepresentation:
 			return UnprocessableDetail("Format salah satu isian tidak sesuai. Periksa tanggal, angka, dan pilihan yang dipilih.", nil)
-		case "22003":
+		case db.SQLStateNumericOutOfRange:
 			return UnprocessableDetail("Nilai angka di luar batas yang diizinkan. Masukkan angka yang lebih kecil.", nil)
+		// A value that cannot be stored as sent is the caller's input, not
+		// a server fault, whichever slice forgot to screen it.
+		case db.SQLStateCharacterNotInRepertoire:
+			return UnprocessableDetail("Isian mengandung karakter yang tidak dapat disimpan. Hapus karakter tersebut lalu coba lagi.", nil)
+		case db.SQLStateStringDataRightTruncation:
+			return UnprocessableDetail("Isian terlalu panjang. Persingkat isian lalu simpan kembali.", nil)
+		case db.SQLStateInvalidDatetimeFormat:
+			return UnprocessableDetail("Format tanggal tidak dikenali. Gunakan format TTTT-BB-HH.", nil)
+		case db.SQLStateDatetimeFieldOverflow:
+			return UnprocessableDetail("Tanggal di luar rentang yang diizinkan. Periksa kembali tanggalnya.", nil)
 		}
 	}
 	// Never surface raw internal error text to the client; RenderDBErr logs it.
 	return Internal("internal server error")
 }
 
-// RenderDBErr writes a pg-aware response and logs the real error on a 500.
+// RenderDBErr renders without request context.
+// Kept for call sites that have not been converted yet: its log line carries
+// no request_id, so it cannot be joined to its access-log line. Prefer
+// RenderDBErrCtx everywhere a request context is in hand.
 func RenderDBErr(w http.ResponseWriter, err error) {
+	RenderDBErrCtx(context.Background(), w, err)
+}
+
+// RenderDBErrCtx renders, logging with context.
+// The slog handler in app/logging.go stamps request_id from this context, so
+// passing the request context is what puts a 500 line next to its request.
+func RenderDBErrCtx(ctx context.Context, w http.ResponseWriter, err error) {
 	// A deadline is backpressure, not a crash: 503 + Retry-After is retryable
 	// and must not page a 5xx alert. Logged Warn, never Error.
 	if errors.Is(err, context.DeadlineExceeded) {
-		slog.Warn("request deadline exceeded", "error", err.Error())
+		slog.WarnContext(ctx, "request deadline exceeded", "error", err.Error())
 		w.Header().Set("Retry-After", "2")
 		Render(w, ServiceUnavailable("request timed out, please retry"))
 		return
 	}
 	e := FromDBErr(err)
 	if e.Status >= http.StatusInternalServerError {
-		slog.Error("unhandled server error", "error", err.Error())
+		slog.ErrorContext(ctx, "unhandled server error", "error", err.Error())
 	}
 	Render(w, e)
 }

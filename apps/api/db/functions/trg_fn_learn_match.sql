@@ -1,9 +1,14 @@
--- Canonical current body of trg_fn_learn_match (deployed by migration 00003).
+-- Canonical current body of trg_fn_learn_match (deployed by migration 00063).
 CREATE OR REPLACE FUNCTION public.trg_fn_learn_match()
  RETURNS trigger
  LANGUAGE plpgsql
 AS $function$
 BEGIN
+  -- A revision clone is not new evidence.
+  IF current_setting('gns.learn_match', true) = 'off' THEN
+    RETURN NEW;
+  END IF;
+
   IF NEW.requested_item_id IS NOT NULL
      AND NEW.requested_name IS NOT NULL
      AND TRIM(NEW.requested_name) != '' THEN

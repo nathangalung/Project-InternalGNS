@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,7 +13,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
@@ -21,16 +21,25 @@ import (
 
 type Handler struct {
 	repo *Repo
-	tx   db.TxBeginner
 }
 
-func NewHandler(repo *Repo, tx db.TxBeginner) *Handler {
-	return &Handler{repo: repo, tx: tx}
+// searchLayerCap bounds one layer read.
+// It sits above the catalog size (about 3.1k items, 2.5k vendor offers and
+// 3.1k request matches), so the merged total is exact; a layer that reaches
+// it is logged.
+const searchLayerCap = 5000
+
+func NewHandler(repo *Repo) *Handler {
+	return &Handler{repo: repo}
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	limit, offset := paginate.Parse(r)
 	q := r.URL.Query()
+	if key := badQueryParam(q); key != "" {
+		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
+		return
+	}
 
 	f := ListFilter{
 		Q:       strings.TrimSpace(q.Get("q")),
@@ -45,10 +54,13 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if s := q.Get("unitId"); s != "" {
-		if v, err := strconv.ParseInt(s, 10, 16); err == nil {
-			u := int16(v)
-			f.UnitID = &u
+		v, err := strconv.ParseInt(s, 10, 16)
+		if err != nil {
+			httperr.Render(w, httperr.BadRequest("invalid unitId"))
+			return
 		}
+		u := int16(v)
+		f.UnitID = &u
 	}
 
 	res, err := h.repo.List(r.Context(), f)
@@ -84,6 +96,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
+	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
@@ -110,6 +123,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
+	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
@@ -148,6 +162,16 @@ func (h *Handler) AddVendor(w http.ResponseWriter, r *http.Request) {
 	userID := deps.CurrentUserID(r.Context())
 	row, err := h.repo.AddVendor(r.Context(), id, req, userID)
 	if err != nil {
+		switch {
+		case errors.Is(err, ErrVendorNotFound):
+			httperr.Render(w, httperr.NotFound("vendor not found"))
+			return
+		case errors.Is(err, ErrVendorInactive):
+			httperr.Render(w, httperr.Unprocessable(map[string]string{
+				"vendorId": "Vendor sudah nonaktif. Aktifkan vendor itu atau pilih vendor lain.",
+			}))
+			return
+		}
 		httperr.RenderDBErr(w, err)
 		return
 	}
@@ -155,6 +179,10 @@ func (h *Handler) AddVendor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
+	if key := badQueryParam(r.URL.Query()); key != "" {
+		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
+		return
+	}
 	q := r.URL.Query().Get("q")
 	if q == "" {
 		httperr.Render(w, httperr.BadRequest("q is required"))
@@ -177,9 +205,14 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, results)
 }
 
-// SearchAdvanced merges item-name, vendor-offer and request-history layers.
+// SearchAdvanced merges three search layers.
+// They are item name, vendor offer and request history.
 // Tier weight: ITEM_AUTO > VENDOR_OFFER > ITEM_SUGGESTED > REQUEST_HISTORY > ITEM_FUZZY.
 func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
+	if key := badQueryParam(r.URL.Query()); key != "" {
+		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
+		return
+	}
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	if q == "" {
 		httperr.Render(w, httperr.BadRequest("q is required"))
@@ -193,6 +226,7 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	limit := paginate.ParseLimit(r, 20)
+	_, offset := paginate.Parse(r)
 
 	var onlyActive *bool
 	if s := r.URL.Query().Get("isActive"); s != "" {
@@ -202,43 +236,47 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	perTier := limit * 2
-
 	var items []SearchResult
 	var offers []VendorOfferHit
 	var requests []RequestHistoryHit
 
+	// Every layer is read whole: paging needs the full merged set, and a
+	// window per layer would cut the vendor-offer layer by item id, not score.
 	eg, egCtx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		var err error
-		items, err = h.repo.Search(egCtx, q, minScore, perTier)
+		items, err = h.repo.SearchCatalog(egCtx, q, minScore, searchLayerCap, onlyActive)
 		return err
 	})
 	eg.Go(func() error {
 		var err error
-		offers, err = h.repo.SearchVendorOffers(egCtx, q, perTier)
+		offers, err = h.repo.SearchVendorOffers(egCtx, q, searchLayerCap, onlyActive)
 		return err
 	})
 	eg.Go(func() error {
 		var err error
-		requests, err = h.repo.SearchRequestHistory(egCtx, q, perTier)
+		requests, err = h.repo.SearchRequestHistory(egCtx, q, searchLayerCap, onlyActive)
 		return err
 	})
 	if err := eg.Wait(); err != nil {
 		httperr.RenderDBErr(w, err)
 		return
 	}
+	if len(items) == searchLayerCap || len(offers) == searchLayerCap || len(requests) == searchLayerCap {
+		slog.WarnContext(ctx, "search-advanced layer reached its cap; total is a lower bound",
+			"cap", searchLayerCap, "items", len(items), "offers", len(offers), "requests", len(requests))
+	}
 
-	// fn_search_items filters to active items, but the vendor-offer and
-	// request-history layers do not, so read the real flag and catalog identity
-	// per candidate (those layers carry no item name).
+	// Read the real flag and catalog identity per candidate; the vendor-offer
+	// and request-history layers carry no item name.
 	meta, err := h.repo.ItemMetaByIDs(ctx, candidateItemIDs(items, offers, requests))
 	if err != nil {
 		httperr.RenderDBErr(w, err)
 		return
 	}
 
-	resp := mergeAdvanced(q, items, offers, requests, meta, onlyActive, limit)
+	resp := mergeAdvanced(q, items, offers, requests, meta, onlyActive, limit, offset)
+	w.Header().Set("X-Total-Count", strconv.Itoa(resp.Total))
 	httpx.WriteJSON(w, http.StatusOK, resp)
 }
 
@@ -264,7 +302,8 @@ func (h *Handler) MatchRequest(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, matches)
 }
 
-// MatchRows: batch match xlsx-imported rows. IMPA exact wins; else fuzzy.
+// MatchRows batch-matches imported xlsx rows.
+// IMPA exact wins; else fuzzy.
 // No-match rows return Matched=nil so FE keeps row empty.
 func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 	var req MatchRowsRequest
@@ -276,8 +315,8 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteJSON(w, http.StatusOK, MatchRowsResponse{Rows: []MatchRowResult{}})
 		return
 	}
-	// Bound the batch: each row runs 1-3 sequential queries on one connection,
-	// so an unbounded batch holds a pool connection open indefinitely.
+	// Bound the batch: the whole import holds one transaction and one pool
+	// connection, so an unbounded batch would hold them indefinitely.
 	const maxMatchRows = 500
 	if len(req.Rows) > maxMatchRows {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{
@@ -291,102 +330,22 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	userID := deps.CurrentUserID(ctx)
-
-	// Auto-create writes one catalog row per unmatched import row, so the whole
-	// batch runs in one transaction: any row error rolls back every earlier
-	// create, leaving a retry of the same batch free of duplicates.
-	tx, err := h.tx.Begin(ctx)
+	out, err := h.repo.MatchRows(ctx, req, minScore, deps.CurrentUserID(ctx))
 	if err != nil {
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-
-	out, err := matchRows(ctx, h.repo.WithExec(tx), req, minScore, userID)
-	if err != nil {
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	if err := tx.Commit(ctx); err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(ctx, w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, MatchRowsResponse{Rows: out})
-}
-
-// matchRows resolves every import row on one executor.
-func matchRows(ctx context.Context, repo *Repo, req MatchRowsRequest, minScore float32, userID int64) ([]MatchRowResult, error) {
-	// Dedup auto-created rows within this batch by impa-or-normalized-name.
-	created := map[string]int64{}
-	out := make([]MatchRowResult, 0, len(req.Rows))
-	for i, row := range req.Rows {
-		res := MatchRowResult{Index: i, Requested: row, Source: "NONE"}
-		var itemID int64
-		var confidence float32
-		var source string
-
-		impa := strings.ToUpper(strings.TrimSpace(row.IMPACode))
-		if impa != "" {
-			id, err := repo.FindByIMPA(ctx, impa)
-			if err == nil {
-				itemID, confidence, source = id, 1.0, "IMPA_EXACT"
-			} else if !errors.Is(err, ErrNotFound) {
-				return nil, err
-			}
-		}
-
-		if itemID == 0 && strings.TrimSpace(row.Name) != "" {
-			matches, err := repo.MatchRequest(ctx, row.Name, 1)
-			if err != nil {
-				return nil, err
-			}
-			if len(matches) > 0 && matches[0].Confidence >= minScore {
-				itemID, confidence, source = matches[0].ItemID, matches[0].Confidence, matches[0].Source
-			}
-		}
-
-		// No catalog match: create a new product (empty price) when asked.
-		if itemID == 0 && req.AutoCreate {
-			name := strings.TrimSpace(row.Name)
-			if name != "" {
-				key := autoCreateKey(impa, name)
-				if existing, ok := created[key]; ok {
-					itemID, confidence, source = existing, 1.0, "CREATED"
-				} else {
-					var impaPtr *string
-					if impa != "" {
-						impaPtr = &impa
-					}
-					it, err := repo.Create(ctx, CreateItemRequest{Name: name, IMPACode: impaPtr}, userID)
-					if err != nil {
-						return nil, err
-					}
-					created[key] = it.ID
-					itemID, confidence, source = it.ID, 1.0, "CREATED"
-				}
-			}
-		}
-
-		if itemID > 0 {
-			m, err := repo.MatchWithVendorByID(ctx, itemID)
-			if err == nil {
-				res.Matched = &m
-				res.Confidence = confidence
-				res.Source = source
-			} else if !errors.Is(err, ErrNotFound) {
-				return nil, err
-			}
-		}
-		out = append(out, res)
-	}
-	return out, nil
 }
 
 func (h *Handler) ListVendorsForItem(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	if err := h.requireItem(r.Context(), id); err != nil {
+		renderItemErr(w, err)
 		return
 	}
 	vendors, err := h.repo.ListVendorsForItem(r.Context(), id)
@@ -405,10 +364,33 @@ func (h *Handler) PriceHistory(w http.ResponseWriter, r *http.Request) {
 	}
 	limit := paginate.ParseLimit(r, 5)
 
+	if err := h.requireItem(r.Context(), id); err != nil {
+		renderItemErr(w, err)
+		return
+	}
 	history, err := h.repo.SuggestSellingPrices(r.Context(), id, limit)
 	if err != nil {
 		httperr.RenderDBErr(w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, history)
+}
+
+// requireItem checks the parent exists.
+// It runs before a sub-collection read.
+func (h *Handler) requireItem(ctx context.Context, id int64) error {
+	_, err := h.repo.GetByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("load item %d: %w", id, err)
+	}
+	return nil
+}
+
+// renderItemErr maps sentinels to problems.
+func renderItemErr(w http.ResponseWriter, err error) {
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("item not found"))
+		return
+	}
+	httperr.RenderDBErr(w, err)
 }

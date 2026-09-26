@@ -25,7 +25,7 @@ func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
 
-// List returns paged users with X-Total-Count header.
+// List pages users with X-Total-Count.
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	limit, offset := paginate.Parse(r)
 	q := r.URL.Query()
@@ -63,7 +63,9 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := h.repo.GetByID(r.Context(), id)
+	// Admin read: an inactive account must stay visible or nobody can
+	// reactivate it.
+	u, err := h.repo.GetByIDAdmin(r.Context(), id)
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("user not found"))
 		return
@@ -90,6 +92,10 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	actor := deps.CurrentUserID(r.Context())
 	u, err := h.repo.Create(r.Context(), req, actor)
+	if errors.Is(err, ErrEmailTaken) {
+		httperr.Render(w, httperr.Conflict(emailTakenMessage))
+		return
+	}
 	if err != nil {
 		httperr.RenderDBErr(w, err)
 		return
@@ -122,8 +128,12 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.NotFound("user not found"))
 		return
 	}
+	if errors.Is(err, ErrEmailTaken) {
+		httperr.Render(w, httperr.Conflict(emailTakenMessage))
+		return
+	}
 	if errors.Is(err, ErrLastSuperadmin) {
-		httperr.Render(w, httperr.Conflict(err.Error()))
+		httperr.Render(w, httperr.Conflict(lastSuperadminMessage))
 		return
 	}
 	if err != nil {
@@ -146,8 +156,8 @@ func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
-	if len(req.Password) < 8 {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"password": "min 8 chars"}))
+	if msg := ValidatePassword(req.Password); msg != "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"password": msg}))
 		return
 	}
 
@@ -161,53 +171,4 @@ func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
-}
-
-// validateCreate enforces required fields.
-func validateCreate(req CreateUserRequest) map[string]string {
-	errs := map[string]string{}
-	if strings.TrimSpace(req.Email) == "" {
-		errs["email"] = "required"
-	}
-	if strings.TrimSpace(req.Name) == "" {
-		errs["name"] = "required"
-	}
-	if len(req.Password) < 8 {
-		errs["password"] = "min 8 chars"
-	}
-	if !isValidRole(req.Role) {
-		errs["role"] = "invalid role"
-	}
-	if len(errs) == 0 {
-		return nil
-	}
-	return errs
-}
-
-// validateUpdate enforces required fields.
-func validateUpdate(req UpdateUserRequest) map[string]string {
-	errs := map[string]string{}
-	if strings.TrimSpace(req.Email) == "" {
-		errs["email"] = "required"
-	}
-	if strings.TrimSpace(req.Name) == "" {
-		errs["name"] = "required"
-	}
-	if !isValidRole(req.Role) {
-		errs["role"] = "invalid role"
-	}
-	if len(errs) == 0 {
-		return nil
-	}
-	return errs
-}
-
-// isValidRole checks role enum.
-func isValidRole(r Role) bool {
-	switch r {
-	case RoleSuperadmin, RoleOperational, RoleFinance:
-		return true
-	default:
-		return false
-	}
 }

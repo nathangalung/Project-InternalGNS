@@ -1,13 +1,18 @@
 package httperr
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgconn"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,6 +50,10 @@ func TestFactories(t *testing.T) {
 		{"NotFound", NotFound("d"), http.StatusNotFound, "Not Found"},
 		{"Conflict", Conflict("e"), http.StatusConflict, "Conflict"},
 		{"Internal", Internal("f"), http.StatusInternalServerError, "Internal Server Error"},
+		{"PayloadTooLarge", PayloadTooLarge("g"), http.StatusRequestEntityTooLarge, "Payload Too Large"},
+		{"TooManyRequests", TooManyRequests("h"), http.StatusTooManyRequests, "Too Many Requests"},
+		{"BadGateway", BadGateway("i"), http.StatusBadGateway, "Bad Gateway"},
+		{"ServiceUnavailable", ServiceUnavailable("j"), http.StatusServiceUnavailable, "Service Unavailable"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -65,7 +74,8 @@ func TestUnprocessable(t *testing.T) {
 	assert.Equal(t, "msg", e.Detail)
 }
 
-// Detail must keep each field's message, not flatten them to one sentence.
+// Detail keeps each field message.
+// It must not flatten them to one sentence.
 func TestUnprocessable_DetailKeepsFieldMessages(t *testing.T) {
 	e := Unprocessable(map[string]string{
 		"email":    "Email wajib diisi.",
@@ -85,6 +95,7 @@ func TestUnprocessable_DetailIsStableAcrossRuns(t *testing.T) {
 	}
 }
 
+// Blank fields get generic prose.
 // A field with no usable message still needs prose for the toast.
 func TestUnprocessable_BlankFieldsFallBackToGenericProse(t *testing.T) {
 	assert.Equal(t, genericInvalidPayload, Unprocessable(nil).Detail)
@@ -99,7 +110,8 @@ func TestUnprocessableDetail(t *testing.T) {
 	assert.Equal(t, "required", e.Fields["name"])
 }
 
-// Every 422 must carry prose; none may lean on a synthetic field key.
+// Every 422 carries prose.
+// None may lean on a synthetic field key.
 func TestUnprocessable_AlwaysHasDetail(t *testing.T) {
 	codes := []string{"P0001", "P0012", "P0014", "23502", "23514", "22P02", "22003"}
 	for _, code := range codes {
@@ -139,7 +151,8 @@ func TestFromDBErr_SQLSTATE(t *testing.T) {
 	}
 }
 
-// Business-rule raises must keep their message; only opaque codes are curated.
+// Business raises keep their message.
+// Only opaque codes are curated.
 func TestFromDBErr_BusinessCodesKeepMessage(t *testing.T) {
 	got := FromDBErr(&pgconn.PgError{Code: "P0014", Message: "discount_pct must be between 0 and 100"})
 	assert.Equal(t, "discount_pct must be between 0 and 100", got.Detail)
@@ -168,4 +181,158 @@ func TestRenderDBErr(t *testing.T) {
 	res := rec.Result()
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusConflict, res.StatusCode)
+}
+
+// ctxCapture records handler contexts.
+type ctxCapture struct {
+	slog.Handler
+	seen []context.Context
+}
+
+func (h *ctxCapture) Handle(ctx context.Context, r slog.Record) error {
+	h.seen = append(h.seen, ctx)
+	return nil
+}
+
+func (h *ctxCapture) Enabled(context.Context, slog.Level) bool { return true }
+
+type ctxProbeKey struct{}
+
+func TestRenderDBErrCtx_LogsWithRequestContext(t *testing.T) {
+	cases := []struct {
+		name       string
+		err        error
+		wantStatus int
+	}{
+		{"server error", errors.New("boom"), http.StatusInternalServerError},
+		{"deadline exceeded", context.DeadlineExceeded, http.StatusServiceUnavailable},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			cap := &ctxCapture{Handler: slog.NewJSONHandler(io.Discard, nil)}
+			prev := slog.Default()
+			slog.SetDefault(slog.New(cap))
+			t.Cleanup(func() { slog.SetDefault(prev) })
+
+			ctx := context.WithValue(context.Background(), ctxProbeKey{}, "req-1")
+			rec := httptest.NewRecorder()
+			RenderDBErrCtx(ctx, rec, c.err)
+
+			res := rec.Result()
+			defer res.Body.Close()
+			assert.Equal(t, c.wantStatus, res.StatusCode)
+			require.Len(t, cap.seen, 1, "expected exactly one log record")
+			assert.Equal(t, "req-1", cap.seen[0].Value(ctxProbeKey{}),
+				"log record must carry the request context so request_id is stamped")
+		})
+	}
+}
+
+// Mapped SQLSTATEs are named constants.
+// Every SQLSTATE httperr maps is named once, in shared/db, so a migration's
+// ERRCODE and the status it renders as are tied to one constant.
+func TestFromDBErr_NamedSQLStates(t *testing.T) {
+	cases := []struct {
+		name   string
+		code   string
+		status int
+	}{
+		{"raise exception", db.SQLStateRaiseException, http.StatusUnprocessableEntity},
+		{"not found", db.SQLStateNotFound, http.StatusNotFound},
+		{"invalid transition", db.SQLStateInvalidTransition, http.StatusUnprocessableEntity},
+		{"blocked by related", db.SQLStateBlockedByRelated, http.StatusConflict},
+		{"validation", db.SQLStateValidation, http.StatusUnprocessableEntity},
+		{"unique violation", db.SQLStateUniqueViolation, http.StatusConflict},
+		{"foreign key violation", db.SQLStateForeignKeyViolation, http.StatusNotFound},
+		{"not null violation", db.SQLStateNotNullViolation, http.StatusUnprocessableEntity},
+		{"check violation", db.SQLStateCheckViolation, http.StatusUnprocessableEntity},
+		{"invalid text representation", db.SQLStateInvalidTextRepresentation, http.StatusUnprocessableEntity},
+		{"numeric out of range", db.SQLStateNumericOutOfRange, http.StatusUnprocessableEntity},
+		{"string too long", db.SQLStateStringDataRightTruncation, http.StatusUnprocessableEntity},
+		{"invalid datetime format", db.SQLStateInvalidDatetimeFormat, http.StatusUnprocessableEntity},
+		{"datetime overflow", db.SQLStateDatetimeFieldOverflow, http.StatusUnprocessableEntity},
+		{"character not in repertoire", db.SQLStateCharacterNotInRepertoire, http.StatusUnprocessableEntity},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := FromDBErr(&pgconn.PgError{Code: tc.code, Message: "x"})
+			assert.Equal(t, tc.status, got.Status)
+		})
+	}
+}
+
+// Translated codes pin literal values.
+// Repos turn these into sentinel errors before httperr sees them, so the
+// constant's value is the contract with the plpgsql ERRCODE.
+func TestSQLStateValues(t *testing.T) {
+	cases := []struct {
+		name string
+		got  string
+		want string
+	}{
+		{"version mismatch", db.SQLStateVersionMismatch, "P0010"},
+		{"not found", db.SQLStateNotFound, "P0011"},
+		{"invalid transition", db.SQLStateInvalidTransition, "P0012"},
+		{"blocked by related", db.SQLStateBlockedByRelated, "P0013"},
+		{"validation", db.SQLStateValidation, "P0014"},
+		{"unpriced line", db.SQLStateUnpricedLine, "P0100"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, tc.got)
+		})
+	}
+}
+
+// Bad input is client error.
+// Postgres raises these when a value cannot be stored as sent: a NUL byte or
+// invalid UTF-8 (22021), text past its column (22001), a malformed or
+// out-of-range date (22007, 22008). They are not server faults, so they must
+// not answer 500 or page the error stream, and the raw message stays hidden.
+func TestFromDBErr_DataExceptionsAreClientErrors(t *testing.T) {
+	cases := []struct {
+		name   string
+		code   string
+		detail string
+	}{
+		{"character not in repertoire", "22021",
+			"Isian mengandung karakter yang tidak dapat disimpan. Hapus karakter tersebut lalu coba lagi."},
+		{"string data right truncation", "22001",
+			"Isian terlalu panjang. Persingkat isian lalu simpan kembali."},
+		{"invalid datetime format", "22007",
+			"Format tanggal tidak dikenali. Gunakan format TTTT-BB-HH."},
+		{"datetime field overflow", "22008",
+			"Tanggal di luar rentang yang diizinkan. Periksa kembali tanggalnya."},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := FromDBErr(&pgconn.PgError{Code: tc.code, Message: "raw pg text"})
+			assert.Equal(t, http.StatusUnprocessableEntity, got.Status)
+			assert.Equal(t, tc.detail, got.Detail)
+			assert.NotContains(t, got.Detail, "raw pg text")
+		})
+	}
+}
+
+// Constraint refusals read Indonesian.
+// A slice that does not map its own 23505 or 23503 hands this text to the
+// toast verbatim, so it must be written for the user (AU-12).
+func TestFromDBErr_ConstraintDetailsIndonesian(t *testing.T) {
+	cases := []struct {
+		code   string
+		status int
+		detail string
+	}{
+		{db.SQLStateUniqueViolation, http.StatusConflict,
+			"Data dengan nilai yang sama sudah ada. Periksa isian yang harus unik."},
+		{db.SQLStateForeignKeyViolation, http.StatusNotFound,
+			"Data yang dirujuk tidak ditemukan. Muat ulang halaman lalu coba lagi."},
+	}
+	for _, tc := range cases {
+		t.Run(tc.code, func(t *testing.T) {
+			got := FromDBErr(&pgconn.PgError{Code: tc.code, Message: "raw pg text"})
+			assert.Equal(t, tc.status, got.Status)
+			assert.Equal(t, tc.detail, got.Detail)
+		})
+	}
 }

@@ -33,7 +33,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 	r.Use(trustedProxyIP)
 	r.Use(accessLogMiddleware)
 	r.Use(middleware.Recoverer)
-	r.Use(requestTimeout(defaultRequestTimeout, renderRequestTimeout))
+	r.Use(requestTimeout(defaultRequestTimeout, renderRequestTimeout, uploadRequestTimeout))
 	r.Use(securityHeadersMiddleware)
 	r.Use(bodyLimitMiddleware(2 * 1024 * 1024))
 
@@ -90,7 +90,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 	requireAuth := authMiddleware(authSvc)
 
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Mount("/auth", auth.Routes(authHandler, requireAuth))
+		r.With(problemJSON429).Mount("/auth", auth.Routes(authHandler, requireAuth))
 
 		r.Group(func(r chi.Router) {
 			r.Use(requireAuth)
@@ -98,8 +98,10 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 			r.Mount("/units", units.Routes(d))
 			r.Mount("/countries", countries.Routes(d))
 			r.Mount("/clients", clients.Routes(d))
-			r.Mount("/items", items.Routes(d))
-			r.Mount("/vendors", vendors.Routes(d))
+			// Finance keeps client writes for NPWP and TKU, but only reads the
+			// catalog and vendors.
+			r.With(readOnlyFor("finance")).Mount("/items", items.Routes(d))
+			r.With(readOnlyFor("finance")).Mount("/vendors", vendors.Routes(d))
 			r.With(requireRole("superadmin", "operational")).
 				Mount("/quotations", quotations.Routes(d))
 			r.With(requireRole("superadmin", "operational")).

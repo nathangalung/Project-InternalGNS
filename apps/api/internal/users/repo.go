@@ -3,11 +3,12 @@ package users
 import (
 	"context"
 	"errors"
-	"log/slog"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
@@ -17,14 +18,32 @@ import (
 
 var (
 	ErrNotFound = errors.New("user not found")
-	// Demoting or deactivating the last active superadmin locks everyone out
-	// of user management for good: SeedSuperadmin is ON CONFLICT DO NOTHING,
-	// so a restart does not restore the account.
+	// Last superadmin must stay active.
+	// Demoting or deactivating it locks everyone out of user management for
+	// good: SeedSuperadmin is ON CONFLICT DO NOTHING, so a restart does not
+	// restore the account.
 	ErrLastSuperadmin = errors.New("cannot demote or deactivate the last active superadmin")
+	// Duplicate email is a 409.
+	// ErrEmailTaken carries a sentence the user can act on, instead of the
+	// untyped error that rendered as a 500.
+	ErrEmailTaken = errors.New("email already used")
 )
 
-// normalizeEmail keeps stored addresses case-folded, matching the
-// LOWER(email) lookups and the users_email_lower_idx unique index.
+// Sentinel messages the handler renders.
+const (
+	emailTakenMessage     = "Email sudah digunakan pengguna lain."
+	lastSuperadminMessage = "Superadmin aktif terakhir tidak dapat diturunkan atau dinonaktifkan."
+)
+
+// isUniqueViolation spots email duplicates.
+func isUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23505"
+}
+
+// normalizeEmail case-folds stored addresses.
+// That matches the LOWER(email) lookups and the users_email_lower_idx unique
+// index.
 func normalizeEmail(email string) string {
 	return strings.ToLower(strings.TrimSpace(email))
 }
@@ -50,13 +69,13 @@ func (r *Repo) GetByEmail(ctx context.Context, email string) (User, error) {
 	return u, err
 }
 
-// LockStatus reports login-lockout state for an email.
+// LockStatus is login throttle state.
 type LockStatus struct {
 	FailedLoginAttempts int        `db:"failed_login_attempts"`
 	LockedUntil         *time.Time `db:"locked_until"`
 }
 
-// LockStatus reads the account's lockout state.
+// LockStatus reads throttle state.
 func (r *Repo) LockStatus(ctx context.Context, email string) (LockStatus, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("users.lock_status"), email)
 	if err != nil {
@@ -69,16 +88,70 @@ func (r *Repo) LockStatus(ctx context.Context, email string) (LockStatus, error)
 	return s, err
 }
 
-// RecordFailedLogin increments the counter and locks past the threshold.
+// RecordFailedLogin counts a miss.
+// No hard lock is written; the count sets the next attempt's backoff.
 func (r *Repo) RecordFailedLogin(ctx context.Context, email string) error {
 	_, err := r.db.Exec(ctx, r.store.Get("users.record_failed_login"), email)
 	return err
 }
 
-// ResetLoginAttempts clears the counter after a successful login.
-func (r *Repo) ResetLoginAttempts(ctx context.Context, email string) error {
-	_, err := r.db.Exec(ctx, r.store.Get("users.reset_login_attempts"), email)
-	return err
+// ClaimLogin locks a verified login.
+// It clears the attempt counter for a verified password and holds
+// the account row until the caller's transaction ends. It returns the
+// session version read under that lock. ErrNotFound means the password
+// changed or the account was deactivated since hash was read.
+func (r *Repo) ClaimLogin(ctx context.Context, id int64, hash string) (int64, error) {
+	var version int64
+	err := r.db.QueryRow(ctx, r.store.Get("users.reset_login_attempts"), id, hash).Scan(&version)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, ErrNotFound
+	}
+	if err != nil {
+		return 0, fmt.Errorf("claim login: %w", err)
+	}
+	return version, nil
+}
+
+// AuthContext is live account state.
+// It is what backs an access token.
+type AuthContext struct {
+	Role           Role  `db:"role"`
+	IsActive       bool  `db:"is_active"`
+	SessionVersion int64 `db:"session_version"`
+}
+
+// AuthContext reads middleware auth state.
+// The auth middleware checks it per request.
+func (r *Repo) AuthContext(ctx context.Context, id int64) (AuthContext, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("users.auth_context"), id)
+	if err != nil {
+		return AuthContext{}, fmt.Errorf("read auth context: %w", err)
+	}
+	a, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[AuthContext])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return AuthContext{}, ErrNotFound
+	}
+	if err != nil {
+		return AuthContext{}, fmt.Errorf("read auth context: %w", err)
+	}
+	return a, nil
+}
+
+// GetByIDAdmin reads any account.
+// Active or not, for the admin detail page.
+func (r *Repo) GetByIDAdmin(ctx context.Context, id int64) (User, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("users.get_by_id_admin"), id)
+	if err != nil {
+		return User{}, fmt.Errorf("read user: %w", err)
+	}
+	u, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[User])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return User{}, ErrNotFound
+	}
+	if err != nil {
+		return User{}, fmt.Errorf("read user: %w", err)
+	}
+	return u, nil
 }
 
 func (r *Repo) GetByID(ctx context.Context, id int64) (User, error) {
@@ -100,15 +173,24 @@ func (r *Repo) Create(ctx context.Context, req CreateUserRequest, actorID int64)
 	}
 
 	rows, err := r.db.Query(ctx, r.store.Get("users.create"),
-		normalizeEmail(req.Email), req.Name, string(hash), req.Role, req.IsActive, actorID,
+		normalizeEmail(req.Email), strings.TrimSpace(req.Name), string(hash), req.Role, req.IsActive, actorID,
 	)
 	if err != nil {
 		return User{}, err
 	}
-	return pgx.CollectOneRow(rows, pgx.RowToStructByName[User])
+	u, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[User])
+	// The unique index is the only thing that sees a concurrent insert, so
+	// the sentinel has to be recognised here too and not only on update.
+	if isUniqueViolation(err) {
+		return User{}, ErrEmailTaken
+	}
+	if err != nil {
+		return User{}, fmt.Errorf("create user: %w", err)
+	}
+	return u, nil
 }
 
-// sortable is the closed set of user sort keys.
+// sortable lists user sort keys.
 var sortable = listq.Whitelist{
 	Default: "created_at",
 	Columns: map[string]listq.Column{
@@ -118,13 +200,13 @@ var sortable = listq.Whitelist{
 	},
 }
 
-// tiebreak keeps paging stable when the sort key ties.
+// tiebreak keeps paging stable.
 var tiebreak = listq.Column{Expr: "id", Dir: listq.Desc}
 
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
-		p := c.Arg("%" + f.Q + "%")
+		p := c.Arg(likeContains(f.Q))
 		c.And("(LOWER(name) LIKE LOWER(" + p +
 			") OR LOWER(email) LIKE LOWER(" + p + "))")
 	}
@@ -160,34 +242,80 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	return out, err
 }
 
-// updatePrecheck is the target's state before an update.
+// updatePrecheck is pre-update state.
 type updatePrecheck struct {
 	Role                  Role `db:"role"`
 	IsActive              bool `db:"is_active"`
 	OtherActiveSuperadmin bool `db:"other_active_superadmin"`
 }
 
-func (r *Repo) Update(ctx context.Context, id int64, req UpdateUserRequest, actorID int64) (User, error) {
-	email := normalizeEmail(req.Email)
+// ErrNoTx marks a non-transactional executor.
+// It cannot open a transaction, so the guard could not be serialised.
+var ErrNoTx = errors.New("users: executor cannot begin a transaction")
 
+// inTx runs fn transactionally.
+// fn gets a repo bound to it. Under a pool that is a real transaction; under
+// a caller's pgx.Tx it is a savepoint, so a failure here leaves the caller's
+// transaction usable.
+func (r *Repo) inTx(ctx context.Context, fn func(q *Repo) error) error {
+	b, ok := r.db.(db.TxBeginner)
+	if !ok {
+		return ErrNoTx
+	}
+	tx, err := b.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin user tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
+	if err := fn(&Repo{db: tx, store: r.store}); err != nil {
+		return err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit user tx: %w", err)
+	}
+	return nil
+}
+
+// InTx runs fn transactionally.
+// fn gets this repo bound to it and the transaction itself, so the caller
+// can bind its own repos alongside.
+func (r *Repo) InTx(ctx context.Context, fn func(q *Repo, tx db.Executor) error) error {
+	return r.inTx(ctx, func(q *Repo) error { return fn(q, q.db) })
+}
+
+// Update applies one guarded unit.
+// The email check, the last-superadmin guard, the write and the session
+// revocation run as one unit behind the guard lock. Stays READ COMMITTED on
+// purpose: each statement after the lock sees the state the previous holder
+// committed, which a REPEATABLE READ snapshot would not.
+func (r *Repo) Update(ctx context.Context, id int64, req UpdateUserRequest, actorID int64) (User, error) {
+	var out User
+	err := r.inTx(ctx, func(q *Repo) error {
+		u, err := q.update(ctx, id, req, actorID)
+		out = u
+		return err
+	})
+	return out, err
+}
+
+func (r *Repo) update(ctx context.Context, id int64, req UpdateUserRequest, actorID int64) (User, error) {
+	if _, err := r.db.Exec(ctx, r.store.Get("users.superadmin_guard_lock")); err != nil {
+		return User{}, fmt.Errorf("take superadmin guard: %w", err)
+	}
+
+	email := normalizeEmail(req.Email)
 	var count int64
 	if err := r.db.QueryRow(ctx, r.store.Get("users.exists_email_other"), email, id).Scan(&count); err != nil {
-		return User{}, err
+		return User{}, fmt.Errorf("check email: %w", err)
 	}
 	if count > 0 {
-		return User{}, errors.New("email already used")
+		return User{}, ErrEmailTaken
 	}
 
 	prior, err := r.precheck(ctx, id)
 	if err != nil {
 		return User{}, err
 	}
-	// Enforced here rather than in a trigger: the one migration this change
-	// ships is NO TRANSACTION (CONCURRENTLY), so adding DDL to it risks
-	// partial state, and a trigger's SQLSTATE would need a new mapping in
-	// shared/httperr to reach the client as RFC 7807. Residual race: two
-	// concurrent demotes can both read other_active_superadmin = false and
-	// pass. Closing that needs the caller-owned transaction seam (audit #17).
 	losingLastSuperadmin := prior.Role == RoleSuperadmin && prior.IsActive &&
 		!prior.OtherActiveSuperadmin &&
 		(req.Role != RoleSuperadmin || !req.IsActive)
@@ -196,75 +324,91 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateUserRequest, acto
 	}
 
 	rows, err := r.db.Query(ctx, r.store.Get("users.update"),
-		id, req.Name, email, req.Role, req.IsActive, actorID,
+		id, strings.TrimSpace(req.Name), email, req.Role, req.IsActive, actorID,
 	)
 	if err != nil {
-		return User{}, err
+		return User{}, fmt.Errorf("update user: %w", err)
 	}
 	u, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[User])
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, ErrNotFound
 	}
+	// The email check cannot see a concurrent insert; the index can.
+	if isUniqueViolation(err) {
+		return User{}, ErrEmailTaken
+	}
 	if err != nil {
-		return User{}, err
+		return User{}, fmt.Errorf("update user: %w", err)
 	}
 
 	// A role change or a deactivation must not leave live sessions behind; a
-	// plain rename is not security-relevant, so it keeps them.
+	// plain rename is not security-relevant, so it keeps them. Inside the
+	// transaction, so a failed bump or revoke undoes the change and a retry
+	// redoes all three.
 	if prior.Role != u.Role || (prior.IsActive && !u.IsActive) {
+		if err := r.bumpSessionVersion(ctx, id); err != nil {
+			return User{}, err
+		}
 		if err := r.revokeRefreshTokens(ctx, id); err != nil {
-			// The update already committed. A 500 here would send the admin
-			// into a retry whose precheck sees no change and so revokes
-			// nothing; report success and log the sessions left standing.
-			slog.ErrorContext(ctx, "revoke refresh tokens after user update",
-				"error", err, "user_id", id)
+			return User{}, err
 		}
 	}
 	return u, nil
 }
 
-// precheck reads prior state without the is_active filter GetByID applies,
-// so reactivating a disabled account still works.
+// precheck reads prior state unfiltered.
+// It skips the is_active filter GetByID applies, so reactivating a disabled
+// account still works.
 func (r *Repo) precheck(ctx context.Context, id int64) (updatePrecheck, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("users.update_precheck"), id)
 	if err != nil {
-		return updatePrecheck{}, err
+		return updatePrecheck{}, fmt.Errorf("read user precheck: %w", err)
 	}
 	p, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[updatePrecheck])
 	if errors.Is(err, pgx.ErrNoRows) {
 		return updatePrecheck{}, ErrNotFound
 	}
-	return p, err
+	if err != nil {
+		return updatePrecheck{}, fmt.Errorf("read user precheck: %w", err)
+	}
+	return p, nil
 }
 
-// revokeRefreshTokens ends every live session for a user after a
-// security-relevant credential change; without it a stolen refresh token
-// keeps rotating for the full refresh window after a password reset.
-// Runs after the write rather than inside it: sharing the caller's
-// transaction needs the DI seam from audit #17. The auth query is reached
-// through the store because auth already imports users.
+// bumpSessionVersion refuses every existing token.
+func (r *Repo) bumpSessionVersion(ctx context.Context, id int64) error {
+	if _, err := r.db.Exec(ctx, r.store.Get("users.bump_session_version"), id); err != nil {
+		return fmt.Errorf("bump session version: %w", err)
+	}
+	return nil
+}
+
+// revokeRefreshTokens ends every session.
+// It runs after a security-relevant credential change. The auth query is
+// reached through the store because auth already imports users.
 func (r *Repo) revokeRefreshTokens(ctx context.Context, id int64) error {
-	_, err := r.db.Exec(ctx, r.store.Get("auth.refresh_revoke_user"), id)
-	return err
+	_, err := r.db.Exec(ctx, r.store.Get("auth.refresh_revoke_user"), id, "admin")
+	if err != nil {
+		return fmt.Errorf("revoke refresh tokens: %w", err)
+	}
+	return nil
 }
 
+// UpdatePassword swaps hash, ends sessions.
+// Both happen in one transaction: a reset that kept a stolen refresh token
+// alive would be worse than none.
 func (r *Repo) UpdatePassword(ctx context.Context, id int64, newPassword string, actorID int64) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return fmt.Errorf("hash password: %w", err)
 	}
-
-	tag, err := r.db.Exec(ctx, r.store.Get("users.update_password"),
-		string(hash), actorID, id,
-	)
-	if err != nil {
-		return err
-	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
-	}
-	// Surfaced, not logged: a swallowed failure leaves the attacker's stolen
-	// token alive behind a password the admin believes is now safe. The retry
-	// is harmless (re-hash, re-revoke).
-	return r.revokeRefreshTokens(ctx, id)
+	return r.inTx(ctx, func(q *Repo) error {
+		tag, err := q.db.Exec(ctx, q.store.Get("users.update_password"), string(hash), actorID, id)
+		if err != nil {
+			return fmt.Errorf("update password: %w", err)
+		}
+		if tag.RowsAffected() == 0 {
+			return ErrNotFound
+		}
+		return q.revokeRefreshTokens(ctx, id)
+	})
 }

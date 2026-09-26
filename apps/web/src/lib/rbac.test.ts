@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { roleCanAccess, type Section, sectionFromPathname } from "./rbac"
+import type { Role } from "@/types/api"
+import { canWriteCatalog, roleCanAccess, type Section, sectionFromPathname } from "./rbac"
 
 const ALL: Section[] = [
   "dashboard",
@@ -58,5 +59,43 @@ describe("sectionFromPathname", () => {
     expect(sectionFromPathname("/invoices")).toBe("invoices")
     expect(sectionFromPathname("/users/5")).toBe("users")
     expect(sectionFromPathname("/")).toBe("dashboard")
+  })
+})
+
+describe("canWriteCatalog", () => {
+  it.each([
+    ["superadmin", true],
+    ["operational", true],
+    ["finance", false],
+    [undefined, false],
+  ] as const)("%s -> %s", (role, want) => {
+    expect(canWriteCatalog(role)).toBe(want)
+  })
+})
+
+describe("sectionFromPathname every section", () => {
+  it.each<[string, Section]>([
+    ["/dashboard-financial", "dashboard-financial"],
+    ["/dashboard-operational", "dashboard-operational"],
+    ["/quotations/new", "quotation"],
+    ["/purchase-orders/9/edit", "purchase-orders"],
+    ["/invoices/4", "invoices"],
+    ["/users", "users"],
+    ["/clients/2", "clients"],
+    ["/vendors/3", "vendors"],
+    ["/products/5", "products"],
+    ["", "dashboard"],
+    ["/login", "dashboard"],
+  ])("%s", (path, want) => {
+    expect(sectionFromPathname(path)).toBe(want)
+  })
+})
+
+describe("roleCanAccess fails closed", () => {
+  it("denies a role the app does not know beyond the common sections", () => {
+    const stranger = "admin" as Role
+    expect(roleCanAccess(stranger, "clients")).toBe(true)
+    expect(roleCanAccess(stranger, "users")).toBe(false)
+    expect(canWriteCatalog(stranger)).toBe(false)
   })
 })

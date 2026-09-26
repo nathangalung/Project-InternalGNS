@@ -1,4 +1,4 @@
-// Package listq builds filtered list queries.
+// Package listq builds list queries.
 //
 // A list endpoint runs two statements over one filter: a COUNT and a paged
 // data SELECT. Conditions owns the argument slice and the placeholder
@@ -17,7 +17,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 )
 
-// Direction is a validated SQL sort direction.
+// Direction validates SQL sort direction.
 type Direction string
 
 const (
@@ -34,7 +34,7 @@ type Column struct {
 	Dir  Direction
 }
 
-// Whitelist is a closed set of sort keys.
+// Whitelist lists allowed sort keys.
 //
 // Default names the entry used for an empty or unrecognised sort key.
 type Whitelist struct {
@@ -42,15 +42,15 @@ type Whitelist struct {
 	Columns map[string]Column
 }
 
-// Order is a rendered ORDER BY clause.
+// Order renders ORDER BY.
 type Order struct {
 	clause string
 }
 
-// Clause returns the rendered ORDER BY body.
+// Clause returns the rendered body.
 func (o Order) Clause() string { return o.clause }
 
-// OrderBy resolves a client sort key through the whitelist.
+// OrderBy resolves whitelisted sort keys.
 //
 // An unknown key falls back to the whitelist default. sortDir overrides the
 // column direction only when it is exactly asc or desc; anything else keeps
@@ -75,20 +75,22 @@ func OrderBy(w Whitelist, sortBy, sortDir string, tiebreak Column) Order {
 	return Order{clause: clause}
 }
 
-// DefaultLimit applies when a caller passes a non-positive limit.
+// DefaultLimit replaces non-positive limits.
 const DefaultLimit = 50
 
-// Paging is a clamped LIMIT/OFFSET pair.
+// Paging is clamped LIMIT/OFFSET.
 type Paging struct {
 	Limit  int
 	Offset int
 }
 
-// Unbounded is the Limit a caller sets to opt out of pagination entirely.
+// Unbounded opts out of pagination.
+// A caller sets it as the Limit.
 // Exports use it; it survives Page unclamped, unlike a large sentinel value.
 const Unbounded = -1
 
-// Page clamps a requested window to (0, paginate.MaxLimit].
+// Page clamps a requested window.
+// The limit ends up in (0, paginate.MaxLimit].
 func Page(limit, offset int) Paging {
 	if limit == Unbounded {
 		return All()
@@ -105,14 +107,16 @@ func Page(limit, offset int) Paging {
 	return Paging{Limit: limit, Offset: offset}
 }
 
-// All returns an unclamped window for exports, which must contain every
-// matching row. Explicit rather than a large Limit sentinel: overloading the
-// limit is what let the repo clamp silently truncate exports to 200 rows.
+// All returns an unclamped window.
+// Exports use it, since they must contain every matching row. Explicit rather
+// than a large Limit sentinel: overloading the limit is what let the repo
+// clamp silently truncate exports to 200 rows.
 func All() Paging {
 	return Paging{Limit: 0, Offset: 0}
 }
 
-// Conditions accumulates WHERE fragments and their arguments.
+// Conditions accumulates WHERE fragments.
+// It also keeps their arguments.
 //
 // The zero value is ready to use.
 type Conditions struct {
@@ -123,7 +127,8 @@ type Conditions struct {
 // New returns empty conditions.
 func New() *Conditions { return &Conditions{} }
 
-// Arg binds a value and returns its placeholder.
+// Arg binds a placeholder value.
+// It returns the placeholder.
 func (c *Conditions) Arg(v any) string {
 	c.args = append(c.args, v)
 	return "$" + strconv.Itoa(len(c.args))
@@ -161,7 +166,8 @@ func (c *Conditions) Data(base string, order Order, p Paging) (string, []any) {
 		" LIMIT " + limit + " OFFSET " + offset, args
 }
 
-// cloneArgs copies the args so a render never aliases the accumulator.
+// cloneArgs copies the args.
+// A render then never aliases the accumulator.
 func (c *Conditions) cloneArgs() []any {
 	out := make([]any, len(c.args))
 	copy(out, c.args)

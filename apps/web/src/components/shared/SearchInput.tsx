@@ -1,6 +1,6 @@
 import { ui } from "@/lib/ui"
 
-interface SearchInputProps {
+type SearchInputProps = {
   value: string
   onChange: (next: string) => void
   placeholder: string
@@ -10,6 +10,7 @@ export default function SearchInput({ value, onChange, placeholder }: SearchInpu
   return (
     <div className="relative flex-1">
       <svg
+        aria-hidden="true"
         className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2"
         width="16"
         height="16"
@@ -27,6 +28,7 @@ export default function SearchInput({ value, onChange, placeholder }: SearchInpu
         type="text"
         className={ui.searchInput}
         placeholder={placeholder}
+        aria-label={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />

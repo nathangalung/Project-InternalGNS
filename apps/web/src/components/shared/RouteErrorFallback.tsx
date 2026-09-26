@@ -1,67 +1,33 @@
-import type { CSSProperties } from "react"
+import { ui } from "@/lib/ui"
+import { errorCopy } from "./errorDetail"
+import StateMessage from "./StateMessage"
 
-interface RouteErrorFallbackProps {
+type RouteErrorFallbackProps = {
   error: unknown
   reset?: () => void
 }
 
-const containerStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  minHeight: "60vh",
-  padding: "32px",
-  fontFamily: "'Inter', sans-serif",
-  color: "#4A4455",
-  textAlign: "center",
-  gap: "12px",
-}
-
-const buttonStyle: CSSProperties = {
-  marginTop: "8px",
-  padding: "8px 22px",
-  borderRadius: "8px",
-  border: "1px solid #630ED4",
-  background: "#630ED4",
-  color: "#FFFFFF",
-  cursor: "pointer",
-  fontWeight: 600,
-  fontSize: "13px",
-}
-
-const detailStyle: CSSProperties = {
-  marginTop: "8px",
-  maxWidth: "520px",
-  fontSize: "12px",
-  color: "#7B7287",
-  whiteSpace: "pre-wrap",
-  wordBreak: "break-word",
-}
-
-function describe(err: unknown): string {
-  if (err instanceof Error) return err.message
-  if (typeof err === "string") return err
-  try {
-    return JSON.stringify(err)
-  } catch {
-    return "Unknown error"
-  }
-}
-
+// Route error fallback.
 export default function RouteErrorFallback({ error, reset }: RouteErrorFallbackProps) {
+  const { message, detail } = errorCopy(error, import.meta.env.DEV)
   return (
-    <div style={containerStyle}>
-      <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 700 }}>Terjadi kesalahan</h2>
-      <p style={{ margin: 0, fontSize: "14px" }}>
-        Halaman tidak dapat dimuat. Coba muat ulang atau hubungi administrator.
-      </p>
-      <pre style={detailStyle}>{describe(error)}</pre>
-      {reset && (
-        <button type="button" onClick={reset} style={buttonStyle}>
-          Coba Lagi
-        </button>
+    <StateMessage
+      title="Terjadi kesalahan"
+      size="page"
+      action={
+        reset && (
+          <button type="button" onClick={reset} className={ui.btnPrimary}>
+            Coba Lagi
+          </button>
+        )
+      }
+    >
+      <p>{message}</p>
+      {detail && (
+        <p className="mt-2 text-xs whitespace-pre-wrap text-dark-500 [word-break:break-word]">
+          {detail}
+        </p>
       )}
-    </div>
+    </StateMessage>
   )
 }

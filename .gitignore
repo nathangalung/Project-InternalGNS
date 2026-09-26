@@ -57,3 +57,9 @@ __pycache__/
 
 # Source documents for seed generation (large binaries, not needed at build/runtime)
 apps/api/db/extracts/
+
+# Local Go build output (go build in apps/api)
+apps/api/api
+
+# Playwright MCP session output
+.playwright-mcp/

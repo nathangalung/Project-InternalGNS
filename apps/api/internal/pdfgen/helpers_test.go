@@ -72,6 +72,20 @@ func TestBigSub(t *testing.T) {
 	}
 }
 
+func TestBigAdd(t *testing.T) {
+	cases := []struct{ a, b, want string }{
+		{"1000.50", "2000.75", "3001.25"},
+		{"", "10", "10.00"},
+		{"-5", "2.5", "-2.50"},
+		{"bad", "5", "5.00"},
+	}
+	for _, c := range cases {
+		if got := BigAdd(c.a, c.b); got != c.want {
+			t.Errorf("BigAdd(%q,%q)=%q want %q", c.a, c.b, got, c.want)
+		}
+	}
+}
+
 func TestBigMulDiv(t *testing.T) {
 	cases := []struct{ a, num, den, want string }{
 		{"120", "11", "12", "110.00"},

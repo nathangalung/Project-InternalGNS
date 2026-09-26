@@ -1,4 +1,7 @@
-import type { ClientRow, VendorContactInfo, VendorRow } from "@/types/api"
+import { ApiError } from "@/lib/api-client"
+import { errorMessage } from "@/lib/errors"
+import { toNum } from "@/lib/format"
+import type { InvoiceBackendStatus, PurchaseOrderRow } from "@/types/api"
 import type { PoStatus } from "../types"
 
 // PO status -> Indonesian label.
@@ -7,31 +10,26 @@ export const PO_LABEL: Record<PoStatus, string> = {
   UPLOADED: "PO Diunggah",
   ON_PROGRESS: "Dalam Progres",
   DELIVERED: "Dikirim",
+  CANCELLED: "Dibatalkan",
 }
 
-// PO status visual tokens.
+// Badge colours, text at 4.5:1+.
 export const PO_STATUS_CONFIG: Record<PoStatus, { bg: string; color: string }> = {
-  PENDING: { bg: "#FFE16D", color: "#DA6900" },
+  PENDING: { bg: "#FFE16D", color: "#92400E" },
   UPLOADED: { bg: "#DBEAFE", color: "#1D4ED8" },
-  ON_PROGRESS: { bg: "#CEC2FF", color: "#9333EA" },
+  ON_PROGRESS: { bg: "#CEC2FF", color: "#6B21A8" },
   DELIVERED: { bg: "#D1FAE5", color: "#047857" },
+  CANCELLED: { bg: "#FEE2E2", color: "#B91C1C" },
 }
 
-export const PO_STATUS_ORDER: PoStatus[] = ["PENDING", "UPLOADED", "ON_PROGRESS", "DELIVERED"]
-
-// Allowed manual transitions; DELIVERED is terminal.
-export const PO_TRANSITIONS: Record<PoStatus, PoStatus[]> = {
-  PENDING: ["UPLOADED"],
-  UPLOADED: ["ON_PROGRESS", "PENDING"],
-  ON_PROGRESS: ["DELIVERED", "UPLOADED"],
-  DELIVERED: [],
-}
-
-export function poNumberFromQuotationNo(no: string): string {
-  if (no.startsWith("Q-")) return `PO-${no.slice(2)}`
-  if (no.startsWith("Q")) return `PO-${no.slice(1)}`
-  return `PO-${no}`
-}
+// Server display order.
+export const PO_STATUS_ORDER: PoStatus[] = [
+  "PENDING",
+  "UPLOADED",
+  "ON_PROGRESS",
+  "DELIVERED",
+  "CANCELLED",
+]
 
 export function shortDocNo(no: string): string {
   const slash = no.indexOf("/")
@@ -39,45 +37,190 @@ export function shortDocNo(no: string): string {
   return `${no.slice(0, slash)}…`
 }
 
-function isFilled(v: string | undefined | null): boolean {
-  return typeof v === "string" && v.trim().length > 0
+// Delivered or cancelled freezes lines.
+export function isPoLocked(status: PoStatus): boolean {
+  return status === "DELIVERED" || status === "CANCELLED"
 }
 
-function vendorContactField(
-  contactInfo: VendorContactInfo | undefined,
-  key: "email" | "phone",
-): string {
-  return contactInfo?.[key] ?? ""
+// What the upload modal allows.
+export type UploadRules = {
+  // Delivered or cancelled keeps its file
+  fileLocked: boolean
+  // First upload needs a file
+  needsFile: boolean
+  // False when nothing is left to change
+  editable: boolean
 }
 
-export interface CompletenessIssue {
-  scope: "Klien" | "Vendor"
+// Upload modal rules per PO.
+//
+// The server refuses a file swap once the PO is delivered or cancelled, and
+// number and date once the invoice is filed. A PO that reached work without a
+// file can still fix its details, so a locked file is never required.
+export function uploadRules(
+  status: PoStatus,
+  hasFile: boolean,
+  detailsLocked: boolean,
+): UploadRules {
+  const fileLocked = isPoLocked(status)
+  return {
+    fileLocked,
+    needsFile: !fileLocked && !hasFile,
+    editable: !(fileLocked && detailsLocked),
+  }
+}
+
+// Surat Jalan needs issued number.
+export function canDownloadDeliveryNote(
+  po: Pick<PurchaseOrderRow, "status" | "deliveryNoteNumber">,
+): boolean {
+  const started = po.status === "ON_PROGRESS" || po.status === "DELIVERED"
+  return started && Boolean(po.deliveryNoteNumber?.trim())
+}
+
+// Download name from stored number.
+export function deliveryNoteFileName(deliveryNoteNumber: string): string {
+  return `${deliveryNoteNumber.trim().replace(/[^A-Za-z0-9._-]/g, "_")}.pdf`
+}
+
+// Filed invoice freezes number, date.
+export function isInvoiceFiled(status: InvoiceBackendStatus | undefined): boolean {
+  return status === "sent" || status === "paid" || status === "overdue"
+}
+
+export const PO_CONFLICT_MESSAGE =
+  "Data PO sudah diubah pengguna lain. Halaman dimuat ulang, periksa lalu simpan kembali."
+
+// PO lock refusal code.
+export const PO_LOCKED_CODE = "po_locked"
+
+// Server refused a locked PO.
+//
+// A lock is a state change, not a race: the page reloads the PO and shows the
+// server's Indonesian detail, and retrying the same write cannot succeed.
+export function isPoLockRefusal(err: unknown): boolean {
+  if (!(err instanceof ApiError) || err.status !== 409) return false
+  const body = err.body
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    (body as { code?: unknown }).code === PO_LOCKED_CODE
+  )
+}
+
+// Stale row_version, not a lock.
+//
+// The optimistic-lock 409 carries an English detail, so it gets Indonesian
+// copy. The lock 409 carries its own Indonesian detail.
+export function isVersionConflict(err: unknown): boolean {
+  return (
+    err instanceof ApiError &&
+    err.status === 409 &&
+    !isPoLockRefusal(err) &&
+    /row_version/i.test(err.message)
+  )
+}
+
+export function poErrorMessage(err: unknown, fallback: string): string {
+  return isVersionConflict(err) ? PO_CONFLICT_MESSAGE : errorMessage(err, fallback)
+}
+
+// Figures the cost breakdown renders.
+export type PoBreakdown = {
+  totalProduk: number
+  discountPct: number
+  nominalDiskon: number
+  subTotal: number
+  dppNilaiLain: number
+  ppn12: number
+  totalProfit: number
+  grandTotal: number
+}
+
+// PO totals exactly as stored.
+//
+// Every figure comes from v_po_totals, which rounds per line the way the
+// invoice does, so the page matches the invoice this PO becomes. Sub Total is
+// the discounted product value, before shipping.
+export function poBreakdown(po: PurchaseOrderRow): PoBreakdown {
+  const totalProduk = toNum(po.poTotalProduk)
+  const nominalDiskon = toNum(po.poTotalDiscount)
+  return {
+    totalProduk,
+    discountPct: toNum(po.discountPct),
+    nominalDiskon,
+    subTotal: totalProduk - nominalDiskon,
+    dppNilaiLain: toNum(po.poDppNilaiLain),
+    ppn12: toNum(po.poPpnAmount),
+    totalProfit: toNum(po.poTotalProfit),
+    grandTotal: toNum(po.poGrandTotal),
+  }
+}
+
+// One gap the server reported.
+export type CompletenessIssue = {
+  kind: "client" | "vendor" | "shipping"
+  // Client, vendor or PO id
   id: number
-  name: string
+  // Parsed from the sentence when possible
+  name?: string
   missing: string[]
+  // Server sentence, shown when parsing fails
+  message: string
 }
 
-// Check client + vendor completeness. Email/phone counted as one combined field.
-export function validateClientCompleteness(client: ClientRow): string[] {
-  const missing: string[] = []
-  if (!isFilled(client.number)) missing.push("Nomor Klien")
-  if (!isFilled(client.npwp)) missing.push("NPWP")
-  if (!isFilled(client.address)) missing.push("Alamat")
-  if (!isFilled(client.tkuId)) missing.push("Nomor TKU")
-  if (!isFilled(client.contactName)) missing.push("Nama Narahubung")
-  if (!isFilled(client.contactEmail) && !isFilled(client.contactPhone)) {
-    missing.push("Email atau Nomor Telepon Narahubung")
+const ISSUE_KEY = /^(klien|vendor|pengiriman):(\d+)$/
+const ISSUE_TEXT = /^Data (?:klien|vendor) (.+) belum lengkap: (.+)$/
+const SHIPPING_TEXT = "Alamat pengiriman belum diisi"
+
+const KIND: Record<string, CompletenessIssue["kind"]> = {
+  klien: "client",
+  vendor: "vendor",
+  pengiriman: "shipping",
+}
+const KIND_ORDER: CompletenessIssue["kind"][] = ["client", "vendor", "shipping"]
+
+function recordIssue(kind: "client" | "vendor", id: number, message: string): CompletenessIssue {
+  const t = ISSUE_TEXT.exec(message)
+  return {
+    kind,
+    id,
+    name: t?.[1],
+    missing: t ? t[2].split(",").map((m) => m.trim()) : [],
+    message,
   }
-  return missing
 }
 
-export function validateVendorCompleteness(vendor: VendorRow): string[] {
-  const missing: string[] = []
-  if (!isFilled(vendor.location)) missing.push("Lokasi")
-  const email = vendorContactField(vendor.contactInfo, "email")
-  const phone = vendorContactField(vendor.contactInfo, "phone")
-  if (!isFilled(email) && !isFilled(phone)) {
-    missing.push("Email atau Nomor Telepon")
+// The PO's shipping address gap.
+function shippingIssue(poId: number, message: string): CompletenessIssue {
+  const missing = message === SHIPPING_TEXT ? ["Alamat Pengiriman"] : []
+  return { kind: "shipping", id: poId, name: undefined, missing, message }
+}
+
+// Completeness 422 into issues.
+//
+// The ON_PROGRESS gate answers 422 with fields keyed klien:<id>,
+// vendor:<id> or pengiriman:<po id>. Returns null for any other body, so the
+// caller falls back to the plain error toast.
+export function parseCompletenessIssues(body: unknown): CompletenessIssue[] | null {
+  if (!body || typeof body !== "object") return null
+  const fields = (body as { fields?: unknown }).fields
+  if (!fields || typeof fields !== "object") return null
+  const issues: CompletenessIssue[] = []
+  for (const [key, value] of Object.entries(fields)) {
+    const k = ISSUE_KEY.exec(key)
+    if (!k) continue
+    const kind = KIND[k[1]]
+    const message = String(value).trim()
+    issues.push(
+      kind === "shipping"
+        ? shippingIssue(Number(k[2]), message)
+        : recordIssue(kind, Number(k[2]), message),
+    )
   }
-  return missing
+  if (issues.length === 0) return null
+  // Client, vendors by id, then shipping.
+  return issues.sort(
+    (a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || a.id - b.id,
+  )
 }

@@ -10,7 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// A 40-byte placeholder that satisfies the length guard; not a real key.
+// testSecret passes the length guard.
+// It is a 40-byte placeholder, not a real key.
 var testSecret = strings.Repeat("x", 40)
 
 func TestLoadConfig_HappyPath(t *testing.T) {
@@ -164,4 +165,168 @@ func TestLoadConfig_ProductionRejectsWeakDefaults(t *testing.T) {
 		_, err := LoadConfig()
 		require.NoError(t, err)
 	})
+}
+
+// Production rejects committed dev secrets.
+// compose.dev.yml is committed, so the secrets it sets are public. A
+// production boot must refuse them however well-formed they look.
+func TestConfig_ProductionRejectsCommittedDevSecrets(t *testing.T) {
+	const devJWT = "local_dev_only_jwt_signing_key_0123456789abcdef"
+	const devPassword = "AdminGNS123!"
+
+	prod := func() Config {
+		return Config{
+			Env:                 "production",
+			JWTSecret:           testSecret,
+			DatabaseURL:         "postgres://u:p@db:5432/gns",
+			CORSAllowedOrigins:  []string{"https://app.example"},
+			SuperadminPassword:  "a-real-generated-password",
+			Superadmin2Password: "",
+			PdfBankAccountNo:    "1234567890",
+			PdfSignerName:       "Budi",
+		}
+	}
+
+	cases := []struct {
+		name    string
+		mutate  func(*Config)
+		wantErr bool
+	}{
+		{"baseline is accepted", func(*Config) {}, false},
+		{"dev jwt secret", func(c *Config) { c.JWTSecret = devJWT }, true},
+		{"dev superadmin password", func(c *Config) { c.SuperadminPassword = devPassword }, true},
+		{"dev second superadmin password", func(c *Config) { c.Superadmin2Password = devPassword }, true},
+		{"dev jwt secret with surrounding space", func(c *Config) { c.JWTSecret = " " + devJWT + " " }, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := prod()
+			tc.mutate(&c)
+			err := c.validate()
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}
+
+// Development accepts committed dev secrets.
+// compose.dev.yml sets them, so rejecting them everywhere would stop
+// `make dev` booting.
+func TestConfig_DevelopmentAcceptsCommittedDevSecrets(t *testing.T) {
+	c := Config{
+		Env:                "development",
+		JWTSecret:          "local_dev_only_jwt_signing_key_0123456789abcdef",
+		DatabaseURL:        "postgres://gns_app:gns_app@postgres:5432/gns_quotation",
+		SuperadminPassword: "AdminGNS123!",
+	}
+	assert.NoError(t, c.validate())
+}
+
+// Unknown ENV fails closed.
+// Every production check keys on ENV == "production", so a near miss such
+// as "prod" or "Production" used to boot with all of them skipped: the dev
+// secrets, a wildcard CORS origin and a "-" bank account all passed. An
+// unrecognised ENV now refuses to boot instead of failing open.
+func TestConfig_UnknownEnvFailsClosed(t *testing.T) {
+	cases := []struct {
+		env     string
+		wantErr bool
+	}{
+		{"development", false},
+		{"test", false},
+		{"production", false},
+		{"prod", true},
+		{"Production", true},
+		{"production ", true},
+		{"staging", true},
+		{"", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.env, func(t *testing.T) {
+			c := Config{
+				Env:                tc.env,
+				JWTSecret:          testSecret,
+				DatabaseURL:        "postgres://u:p@db:5432/gns",
+				CORSAllowedOrigins: []string{"https://app.example"},
+				SuperadminPassword: "a-real-generated-password",
+				PdfBankAccountNo:   "1234567890",
+				PdfSignerName:      "Budi",
+			}
+			err := c.validate()
+			if tc.wantErr {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "ENV")
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}
+
+// .env fills gaps, never overrides.
+// Compose and the orchestrator set the real values in the environment; a
+// stray .env left in the working directory must not replace them, and one
+// that cannot be read is a boot error rather than silently skipped.
+func TestLoadConfig_DotEnv(t *testing.T) {
+	t.Run("fills unset values and keeps set ones", func(t *testing.T) {
+		dir := t.TempDir()
+		require.NoError(t, os.WriteFile(dir+"/.env", []byte(
+			"DATABASE_URL=postgres://from-file\nJWT_SECRET="+testSecret+"\nHTTP_ADDR=:7777\n"), 0o600))
+		t.Chdir(dir)
+		t.Setenv("HTTP_ADDR", ":8888")
+		// Unset, so only the file can supply them.
+		unsetForTest(t, "DATABASE_URL")
+		unsetForTest(t, "JWT_SECRET")
+
+		c, err := LoadConfig()
+		require.NoError(t, err)
+		assert.Equal(t, "postgres://from-file", c.DatabaseURL)
+		assert.Equal(t, ":8888", c.HTTPAddr, "the environment wins over the file")
+	})
+
+	t.Run("an unreadable .env fails the boot", func(t *testing.T) {
+		dir := t.TempDir()
+		require.NoError(t, os.Mkdir(dir+"/.env", 0o700))
+		t.Chdir(dir)
+		_, err := LoadConfig()
+		require.Error(t, err)
+	})
+
+	t.Run("a config the validator refuses fails the boot", func(t *testing.T) {
+		t.Chdir(t.TempDir())
+		t.Setenv("DATABASE_URL", "postgres://x")
+		t.Setenv("JWT_SECRET", testSecret)
+		t.Setenv("ENV", "prod")
+		_, err := LoadConfig()
+		require.ErrorContains(t, err, "ENV is \"prod\"")
+	})
+}
+
+// unsetForTest clears one variable.
+func unsetForTest(t *testing.T, key string) {
+	t.Helper()
+	t.Setenv(key, "")
+	require.NoError(t, os.Unsetenv(key))
+}
+
+// Production refuses placeholder signer.
+func TestConfig_ProductionRefusesPlaceholderSigner(t *testing.T) {
+	c := Config{
+		Env:                "production",
+		JWTSecret:          testSecret,
+		DatabaseURL:        "postgres://u:p@db:5432/gns",
+		CORSAllowedOrigins: []string{"https://app.example"},
+		SuperadminPassword: "a-real-generated-password",
+		PdfBankAccountNo:   "1234567890",
+		PdfSignerName:      "Budi",
+	}
+	require.NoError(t, c.validate())
+	c.PdfSignerName = "CHANGE_ME Director"
+	require.ErrorContains(t, c.validate(), "PDF_SIGNER_NAME")
+	// Outside production the same value is tolerated.
+	c.Env = "development"
+	require.NoError(t, c.validate())
 }

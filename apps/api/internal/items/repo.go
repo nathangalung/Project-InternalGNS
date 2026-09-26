@@ -3,6 +3,7 @@ package items
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 
@@ -20,14 +21,21 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 	return &Repo{db: exec, store: store}
 }
 
-// WithExec rebinds the repo to another executor, e.g. a pgx.Tx.
+// WithExec rebinds the executor.
+// Pass a pgx.Tx to run inside a transaction.
 func (r *Repo) WithExec(exec db.Executor) *Repo {
 	return &Repo{db: exec, store: r.store}
 }
 
 var ErrNotFound = errors.New("not found")
 
-// sortable is the closed set of item sort keys.
+// Vendor link failures.
+var (
+	ErrVendorNotFound = errors.New("items: vendor not found")
+	ErrVendorInactive = errors.New("items: vendor inactive")
+)
+
+// sortable lists item sort keys.
 var sortable = listq.Whitelist{
 	Default: "name",
 	Columns: map[string]listq.Column{
@@ -39,13 +47,13 @@ var sortable = listq.Whitelist{
 	},
 }
 
-// tiebreak keeps paging stable when the sort key ties.
+// tiebreak keeps paging stable.
 var tiebreak = listq.Column{Expr: "id", Dir: listq.Desc}
 
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
-		p := c.Arg("%" + f.Q + "%")
+		p := c.Arg(likeContains(f.Q))
 		c.And("(name ILIKE " + p + " OR impa_code ILIKE " + p + ")")
 	}
 	if f.IsActive != nil {
@@ -116,7 +124,7 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateItemRequest, user
 	return item, err
 }
 
-// UpdateImage writes the MinIO object key for the item image.
+// UpdateImage stores the image key.
 func (r *Repo) UpdateImage(ctx context.Context, id int64, objectKey string, userID int64) error {
 	tag, err := r.db.Exec(ctx, r.store.Get("items.update_image"), id, objectKey, userID)
 	if err != nil {
@@ -144,7 +152,25 @@ func (r *Repo) AddVendor(ctx context.Context, itemID int64, req AddVendorToItemR
 	if err != nil {
 		return VendorForItem{}, err
 	}
-	return pgx.CollectOneRow(rows, pgx.RowToStructByName[VendorForItem])
+	link, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[VendorForItem])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return VendorForItem{}, r.vendorLinkErr(ctx, req.VendorID)
+	}
+	return link, err
+}
+
+// vendorLinkErr explains a refused link.
+func (r *Repo) vendorLinkErr(ctx context.Context, vendorID int64) error {
+	var active bool
+	err := r.db.QueryRow(ctx, r.store.Get("items.vendor_active"), vendorID).Scan(&active)
+	switch {
+	case errors.Is(err, pgx.ErrNoRows):
+		return ErrVendorNotFound
+	case err != nil:
+		return fmt.Errorf("load vendor %d: %w", vendorID, err)
+	}
+	// Inactive, or reactivated since the insert refused it.
+	return ErrVendorInactive
 }
 
 func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int) ([]SearchResult, error) {
@@ -155,9 +181,20 @@ func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int
 	return pgx.CollectRows(rows, pgx.RowToStructByName[SearchResult])
 }
 
-// ItemMeta is the real catalog identity for a merged search hit, used to set
-// the true is_active flag and to backfill name/impa/unit for hits that came
-// only from the vendor-offer or request-history layers.
+// SearchCatalog runs the name layer.
+//
+// A nil isActive keeps active and inactive items alike.
+func (r *Repo) SearchCatalog(ctx context.Context, q string, minScore float32, limit int, isActive *bool) ([]SearchResult, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.search_catalog"), q, minScore, limit, isActive)
+	if err != nil {
+		return nil, err
+	}
+	return pgx.CollectRows(rows, pgx.RowToStructByName[SearchResult])
+}
+
+// ItemMeta is catalog identity.
+// It supplies the true is_active flag and backfills name/impa/unit for hits
+// that came only from the vendor-offer or request-history layers.
 type ItemMeta struct {
 	Active        bool
 	Name          string
@@ -165,8 +202,9 @@ type ItemMeta struct {
 	DefaultUnitID *int16
 }
 
-// ItemMetaByIDs maps item id to its catalog identity. Ids with no row are
-// absent from the map (treated as inactive by the caller).
+// ItemMetaByIDs maps ids to identity.
+// Ids with no row are absent from the map (treated as inactive by the
+// caller).
 func (r *Repo) ItemMetaByIDs(ctx context.Context, ids []int64) (map[int64]ItemMeta, error) {
 	out := map[int64]ItemMeta{}
 	if len(ids) == 0 {
@@ -205,7 +243,8 @@ func (r *Repo) ListVendorsForItem(ctx context.Context, itemID int64) ([]VendorFo
 	return pgx.CollectRows(rows, pgx.RowToStructByName[VendorForItem])
 }
 
-// FindByIMPA returns first active item matching IMPA code exactly.
+// FindByIMPA finds exact active matches.
+// The first active item with that IMPA code wins.
 func (r *Repo) FindByIMPA(ctx context.Context, impa string) (int64, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("items.find_by_impa"), impa)
 	if err != nil {
@@ -222,7 +261,8 @@ func (r *Repo) FindByIMPA(ctx context.Context, impa string) (int64, error) {
 	return id, nil
 }
 
-// MatchWithVendorByID returns item enriched with cheapest active vendor.
+// MatchWithVendorByID adds the cheapest vendor.
+// Only active vendors are considered.
 func (r *Repo) MatchWithVendorByID(ctx context.Context, itemID int64) (MatchedItemWithVendor, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("items.match_with_vendor_by_id"), itemID)
 	if err != nil {
@@ -244,18 +284,18 @@ func (r *Repo) SuggestSellingPrices(ctx context.Context, itemID int64, limit int
 	return pgx.CollectRows(rows, pgx.RowToStructByName[PriceHistory])
 }
 
-// SearchVendorOffers runs the VENDOR_OFFER tier query.
-func (r *Repo) SearchVendorOffers(ctx context.Context, q string, limit int) ([]VendorOfferHit, error) {
-	rows, err := r.db.Query(ctx, r.store.Get("items.search_vendor_offers"), q, limit)
+// SearchVendorOffers queries VENDOR_OFFER tier.
+func (r *Repo) SearchVendorOffers(ctx context.Context, q string, limit int, isActive *bool) ([]VendorOfferHit, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.search_vendor_offers"), q, limit, isActive)
 	if err != nil {
 		return nil, err
 	}
 	return pgx.CollectRows(rows, pgx.RowToStructByName[VendorOfferHit])
 }
 
-// SearchRequestHistory runs the REQUEST_HISTORY tier query.
-func (r *Repo) SearchRequestHistory(ctx context.Context, q string, limit int) ([]RequestHistoryHit, error) {
-	rows, err := r.db.Query(ctx, r.store.Get("items.search_request_history"), q, limit)
+// SearchRequestHistory queries REQUEST_HISTORY tier.
+func (r *Repo) SearchRequestHistory(ctx context.Context, q string, limit int, isActive *bool) ([]RequestHistoryHit, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.search_request_history"), q, limit, isActive)
 	if err != nil {
 		return nil, err
 	}

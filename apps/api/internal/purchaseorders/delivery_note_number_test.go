@@ -2,19 +2,31 @@ package purchaseorders
 
 import "testing"
 
-// DN number mirrors the quotation number with a DN- prefix.
-func TestDeliveryNoteNumber(t *testing.T) {
+// Note prints its stored number.
+// It prints only once work started.
+func TestIssuedDeliveryNote(t *testing.T) {
+	num := "DN-26264141/GNS/IX/2026"
+	empty := ""
 	cases := []struct {
-		name, qno, pono, want string
+		name   string
+		status Status
+		dn     *string
+		want   string
+		wantOK bool
 	}{
-		{"from quotation", "Q-2640034/GNS/I/2026", "JKT-PO/031.034/A01/0226", "DN-2640034/GNS/I/2026"},
-		{"december core", "Q-25400537/GNS/XII/2025", "V-26-2405-005-E/02/01", "DN-25400537/GNS/XII/2025"},
-		{"fallback to po number", "", "JKT-PO/zzz", "DN-JKT-PO/zzz"},
+		{"pending has none", StatusPending, nil, "", false},
+		{"uploaded has none", StatusUploaded, nil, "", false},
+		{"reverted keeps number but cannot print", StatusUploaded, &num, "", false},
+		{"on progress prints stored", StatusOnProgress, &num, num, true},
+		{"delivered prints stored", StatusDelivered, &num, num, true},
+		{"on progress without number refused", StatusOnProgress, nil, "", false},
+		{"blank number refused", StatusDelivered, &empty, "", false},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			if got := deliveryNoteNumber(c.qno, c.pono); got != c.want {
-				t.Errorf("deliveryNoteNumber(%q, %q) = %q, want %q", c.qno, c.pono, got, c.want)
+			got, ok := issuedDeliveryNote(PurchaseOrder{Status: c.status, DeliveryNoteNumber: c.dn})
+			if got != c.want || ok != c.wantOK {
+				t.Errorf("issuedDeliveryNote = (%q, %v), want (%q, %v)", got, ok, c.want, c.wantOK)
 			}
 		})
 	}

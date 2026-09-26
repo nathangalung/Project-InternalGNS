@@ -3,8 +3,10 @@ package clients
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
@@ -23,11 +25,21 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 // Missing client or contact.
 var ErrNotFound = errors.New("not found")
 
-// totalPurchaseExpr is the accepted-quotation sum per client.
-const totalPurchaseExpr = "COALESCE((SELECT SUM(q.grand_total) FROM quotations q" +
-	" WHERE q.company_client_id = cc.id AND q.status = 'accepted'), 0)"
+// Number malformed or already taken.
+var ErrNumberInvalid = errors.New("client number invalid or taken")
 
-// sortable is the closed set of client sort keys.
+// Number fixed by a quotation.
+var ErrNumberLocked = errors.New("client number used by a quotation")
+
+// totalPurchaseExpr sums accepted quotations.
+// The sum is per client and skips deals whose PO was cancelled, matching
+// total_purchase in clients.sql.
+const totalPurchaseExpr = "COALESCE((SELECT SUM(q.grand_total) FROM quotations q" +
+	" WHERE q.company_client_id = cc.id AND q.status = 'accepted'" +
+	" AND NOT EXISTS (SELECT 1 FROM purchase_orders po" +
+	" WHERE po.quotation_id = q.id AND po.status = 'CANCELLED')), 0)"
+
+// sortable lists client sort keys.
 var sortable = listq.Whitelist{
 	Default: "name",
 	Columns: map[string]listq.Column{
@@ -41,14 +53,14 @@ var sortable = listq.Whitelist{
 	},
 }
 
-// tiebreak keeps paging stable when the sort key ties.
+// tiebreak keeps paging stable.
 var tiebreak = listq.Column{Expr: "cc.id", Dir: listq.Desc}
 
-// List returns clients with filter/sort and total count.
+// List pages clients with total.
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
-		p := c.Arg("%" + f.Q + "%")
+		p := c.Arg(likeContains(f.Q))
 		c.And("(cc.name ILIKE " + p +
 			" OR cc.number ILIKE " + p +
 			" OR cc.npwp ILIKE " + p +
@@ -103,8 +115,9 @@ func (r *Repo) GetByID(ctx context.Context, id int64) (Client, error) {
 	return c, err
 }
 
-// GetByIDs maps client id to client in one round-trip. Ids with no row are
-// absent from the map; callers decide whether that is an error.
+// GetByIDs maps ids to clients.
+// It takes one round-trip. Ids with no row are absent from the map; callers
+// decide whether that is an error.
 func (r *Repo) GetByIDs(ctx context.Context, ids []int64) (map[int64]Client, error) {
 	out := map[int64]Client{}
 	if len(ids) == 0 {
@@ -125,36 +138,54 @@ func (r *Repo) GetByIDs(ctx context.Context, ids []int64) (map[int64]Client, err
 }
 
 // Create inserts a new client.
+// A nil or blank number is assigned by the database.
 func (r *Repo) Create(ctx context.Context, req CreateClientRequest, userID int64) (Client, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("clients.create"),
 		req.Number, req.Name, req.NPWP, req.Address, req.Email,
 		req.CountryCode, req.TkuID, userID,
 	)
 	if err != nil {
-		return Client{}, err
+		return Client{}, numberErr(err)
 	}
-	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Client])
+	c, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Client])
+	return c, numberErr(err)
 }
 
 // Update edits a client row.
+// No row back means missing, or a number change on a quoted client.
 func (r *Repo) Update(ctx context.Context, id int64, req UpdateClientRequest, userID int64) (Client, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("clients.update"),
 		id, req.Name, req.NPWP, req.Address, req.Email,
-		req.CountryCode, req.TkuID, req.IsActive, userID,
+		req.CountryCode, req.TkuID, req.IsActive, userID, req.Number,
 	)
 	if err != nil {
-		return Client{}, err
+		return Client{}, numberErr(err)
 	}
 	c, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Client])
 	if errors.Is(err, pgx.ErrNoRows) {
-		return Client{}, ErrNotFound
+		if _, err := r.GetByID(ctx, id); err != nil {
+			return Client{}, fmt.Errorf("recheck client %d: %w", id, err)
+		}
+		return Client{}, ErrNumberLocked
 	}
-	return c, err
+	return c, numberErr(err)
 }
 
-// UpdateLogo writes the MinIO object key. Empty string is allowed and stored
-// verbatim; pass NULL semantics through the SQL layer if a caller wants to
-// clear it.
+// numberErr maps number constraint violations.
+func numberErr(err error) error {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		switch pgErr.ConstraintName {
+		case "uq_company_client_number", "company_client_number_format_check":
+			return fmt.Errorf("%w: %s", ErrNumberInvalid, pgErr.ConstraintName)
+		}
+	}
+	return err
+}
+
+// UpdateLogo stores the logo key.
+// An empty string is allowed and stored verbatim; pass NULL semantics through
+// the SQL layer if a caller wants to clear it.
 func (r *Repo) UpdateLogo(ctx context.Context, id int64, objectKey string, userID int64) error {
 	tag, err := r.db.Exec(ctx, r.store.Get("clients.update_logo"), id, objectKey, userID)
 	if err != nil {
@@ -205,12 +236,12 @@ func (r *Repo) CreateContact(ctx context.Context, companyID int64, req CreateCon
 	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Contact])
 }
 
-// UpdateContact edits an existing company contact. ErrNotFound when the
-// contact does not belong to the company.
-func (r *Repo) UpdateContact(ctx context.Context, companyID, contactID int64, req CreateContactRequest, userID int64) (Contact, error) {
+// UpdateContact edits an active contact.
+// ErrNotFound when the contact belongs to another company or was deleted.
+func (r *Repo) UpdateContact(ctx context.Context, companyID, contactID int64, req UpdateContactRequest, userID int64) (Contact, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("clients.update_contact"),
-		companyID, contactID, req.Name, req.Email, req.Phone, req.Title,
-		req.CountryCode, userID,
+		companyID, contactID, req.Name, req.Email.Set, req.Email.Value, req.Phone,
+		req.Title.Set, req.Title.Value, req.CountryCode, userID,
 	)
 	if err != nil {
 		return Contact{}, err

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -20,7 +22,7 @@ import (
 
 var errDB = errors.New("boom")
 
-// base returns a descriptor wired to an in-memory asset.
+// base wires an in-memory asset.
 func base(key string) assetproxy.Descriptor {
 	return assetproxy.Descriptor{
 		Storage:     &storage.Client{},
@@ -54,6 +56,7 @@ func decode(t *testing.T, rec *httptest.ResponseRecorder) map[string]any {
 	return out
 }
 
+// Nil storage beats bad ids.
 // Storage-nil is checked before the id parse, so a bad id still yields 503.
 func TestUpload_NilStorageBeatsBadID(t *testing.T) {
 	d := base("")
@@ -70,7 +73,8 @@ func TestDownload_NilStorageBeatsBadID(t *testing.T) {
 	assert.Equal(t, http.StatusServiceUnavailable, rec.Code)
 }
 
-// UpdateKey has no storage dependency, so a bad id is a 400.
+// UpdateKey parses ids without storage.
+// It has no storage dependency, so a bad id is a 400.
 func TestUpdateKey_NilStorageStillParsesID(t *testing.T) {
 	d := base("")
 	d.Storage = nil
@@ -149,7 +153,7 @@ func TestUpload(t *testing.T) {
 	}
 }
 
-// The existence check runs before the file-name checks.
+// Existence check precedes name checks.
 func TestUpload_ExistenceBeatsFileName(t *testing.T) {
 	d := base("")
 	d.Exists = notFound
@@ -194,8 +198,23 @@ func TestDownload(t *testing.T) {
 		assert.ElementsMatch(t, []string{"downloadUrl", "expiresAt"}, keys(body))
 		assert.Contains(t, body["downloadUrl"], "key=items%2F1%2Fa.png")
 	})
+	t.Run("bad id", func(t *testing.T) {
+		rec := serve(t, http.MethodGet, "/{id}/download-url", "/x/download-url", assetproxy.Download(base("items/1/a.png")), "")
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Equal(t, "invalid id", decode(t, rec)["detail"])
+	})
+	t.Run("owner lookup fails", func(t *testing.T) {
+		d := base("")
+		d.CurrentAsset = func(context.Context, int64) (assetproxy.Asset, error) {
+			return assetproxy.Asset{}, errors.New("connection reset")
+		}
+		rec := serve(t, http.MethodGet, "/{id}/download-url", "/1/download-url", assetproxy.Download(d), "")
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+		assert.NotContains(t, rec.Body.String(), "connection reset", "the cause stays in the log")
+	})
 }
 
+// Extra fields reach the download.
 // Purchase orders return the original file name alongside the URL.
 func TestDownload_ExtraFields(t *testing.T) {
 	name := "scan.pdf"
@@ -234,12 +253,13 @@ func TestUpdateKey(t *testing.T) {
 	t.Run("owner missing", func(t *testing.T) {
 		d := base("")
 		d.SetKey = func(context.Context, int64, string, int64) error { return assetproxy.ErrNotFound }
-		rec := serve(t, http.MethodPatch, "/{id}", "/1", assetproxy.UpdateKey(d), `{"objectKey":"k"}`)
+		rec := serve(t, http.MethodPatch, "/{id}", "/1", assetproxy.UpdateKey(d), `{"objectKey":"items/1/1790-a.png"}`)
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 		assert.Equal(t, "item not found", decode(t, rec)["detail"])
 	})
-	// Validation trims, persistence does not.
-	t.Run("persists untrimmed key", func(t *testing.T) {
+	// The stored key must address a real object, so the trimmed value is what
+	// is persisted.
+	t.Run("persists the trimmed key", func(t *testing.T) {
 		var got string
 		var gotID, gotActor int64
 		d := base("")
@@ -247,10 +267,10 @@ func TestUpdateKey(t *testing.T) {
 			gotID, got, gotActor = id, key, actor
 			return nil
 		}
-		rec := serve(t, http.MethodPatch, "/{id}", "/7", assetproxy.UpdateKey(d), `{"objectKey":" items/1/a.png "}`)
+		rec := serve(t, http.MethodPatch, "/{id}", "/7", assetproxy.UpdateKey(d), `{"objectKey":" items/7/1790-a.png "}`)
 		assert.Equal(t, http.StatusNoContent, rec.Code)
 		assert.Empty(t, rec.Body.String())
-		assert.Equal(t, " items/1/a.png ", got)
+		assert.Equal(t, "items/7/1790-a.png", got)
 		assert.Equal(t, int64(7), gotID)
 		assert.Equal(t, int64(0), gotActor)
 	})
@@ -265,4 +285,131 @@ func keys(m map[string]any) []string {
 		out = append(out, k)
 	}
 	return out
+}
+
+// logCtxCapture records handler contexts.
+type logCtxCapture struct {
+	slog.Handler
+	seen []context.Context
+}
+
+func (h *logCtxCapture) Handle(ctx context.Context, _ slog.Record) error {
+	h.seen = append(h.seen, ctx)
+	return nil
+}
+
+func (h *logCtxCapture) Enabled(context.Context, slog.Level) bool { return true }
+
+type reqProbeKey struct{}
+
+// Repo failures log request context.
+// A failure on any asset route must log with the request context, so the
+// slog handler can stamp request_id onto the 500 line.
+func TestAssetRoutes_ServerErrorLogsRequestContext(t *testing.T) {
+	cases := []struct {
+		name    string
+		method  string
+		pattern string
+		target  string
+		body    string
+		handler func(assetproxy.Descriptor) http.HandlerFunc
+	}{
+		{"download", http.MethodGet, "/{id}/image", "/7/image", "", assetproxy.Download},
+		{"update key", http.MethodPatch, "/{id}/image", "/7/image", `{"objectKey":"items/7/a.png"}`, assetproxy.UpdateKey},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			capture := &logCtxCapture{Handler: slog.NewJSONHandler(io.Discard, nil)}
+			prev := slog.Default()
+			slog.SetDefault(slog.New(capture))
+			t.Cleanup(func() { slog.SetDefault(prev) })
+
+			d := base("items/7/a.png")
+			d.CurrentAsset = func(context.Context, int64) (assetproxy.Asset, error) { return assetproxy.Asset{}, errDB }
+			d.SetKey = func(context.Context, int64, string, int64) error { return errDB }
+
+			r := chi.NewRouter()
+			r.Method(c.method, c.pattern, c.handler(d))
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(c.method, c.target, strings.NewReader(c.body))
+			req = req.WithContext(context.WithValue(req.Context(), reqProbeKey{}, "req-9"))
+			r.ServeHTTP(rec, req)
+
+			assert.Equal(t, http.StatusInternalServerError, rec.Code)
+			require.Len(t, capture.seen, 1, "expected exactly one log record")
+			assert.Equal(t, "req-9", capture.seen[0].Value(reqProbeKey{}))
+		})
+	}
+}
+
+// Sub-folder assets keep their folder.
+// Upload writes into it and UpdateKey accepts nothing outside it.
+func TestKeySub_BindsTheFolder(t *testing.T) {
+	d := base("")
+	d.KeySub = "sub"
+	rec := serve(t, http.MethodGet, "/{id}/upload-url", "/7/upload-url?fileName=photo.png", assetproxy.Upload(d), "")
+	require.Equal(t, http.StatusOK, rec.Code)
+	key, _ := decode(t, rec)["objectKey"].(string)
+	assert.True(t, strings.HasPrefix(key, "items/7/sub/"), key)
+
+	cases := []struct {
+		name   string
+		key    string
+		status int
+	}{
+		{"the uploaded key", key, http.StatusNoContent},
+		{"the record's root folder", "items/7/1790-a.png", http.StatusUnprocessableEntity},
+		{"another record's sub-folder", "items/8/sub/1790-a.png", http.StatusUnprocessableEntity},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			rec := serve(t, http.MethodPatch, "/{id}", "/7", assetproxy.UpdateKey(d), `{"objectKey":"`+c.key+`"}`)
+			assert.Equal(t, c.status, rec.Code)
+		})
+	}
+}
+
+// Attach refuses foreign keys.
+// The attach endpoint takes the key from the request body, so it must refuse
+// any key that does not belong to the record being attached to. Client 42
+// carries logo_object_key='../../etc/x' because it did not.
+func TestUpdateKey_RejectsForeignKeys(t *testing.T) {
+	cases := []struct {
+		name string
+		key  string
+	}{
+		{"another record", "items/8/1790-a.png"},
+		{"prefix overlap", "items/70/1790-a.png"},
+		{"other namespace", "clients/7/1790-a.png"},
+		{"traversal", "../../etc/x"},
+		{"absolute", "/items/7/1790-a.png"},
+		{"disallowed extension", "items/7/1790-a.exe"},
+		{"bare prefix", "items/7/"},
+		{"a sub-folder asset", "items/7/sub/1790-a.png"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			var persisted bool
+			d := base("")
+			d.SetKey = func(context.Context, int64, string, int64) error {
+				persisted = true
+				return nil
+			}
+			rec := serve(t, http.MethodPatch, "/{id}", "/7", assetproxy.UpdateKey(d),
+				`{"objectKey":"`+c.key+`"}`)
+			assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
+			assert.False(t, persisted, "a foreign key must never reach the repo")
+		})
+	}
+}
+
+// Missing owner beats key check.
+// A missing owner is reported as 404, not as a malformed key.
+func TestUpdateKey_OwnerMissingBeatsKeyCheck(t *testing.T) {
+	d := base("")
+	d.Exists = func(context.Context, int64) error { return assetproxy.ErrNotFound }
+	rec := serve(t, http.MethodPatch, "/{id}", "/99999999", assetproxy.UpdateKey(d),
+		`{"objectKey":"items/1/1790-a.png"}`)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+	assert.Equal(t, "item not found", decode(t, rec)["detail"])
 }

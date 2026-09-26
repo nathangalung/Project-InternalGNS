@@ -1,11 +1,8 @@
-export { CheckIcon as CheckmarkIcon } from "@/components/document/icons"
-export {
-  dropdownItemStyle,
-  dropdownLabelStyle,
-  dropdownPanelStyle,
-} from "@/components/shared/filter-styles"
+import { ui } from "@/lib/ui"
 
-export interface ProductAddFormData {
+export { CheckIcon as CheckmarkIcon } from "@/components/document/icons"
+
+export type ProductAddFormData = {
   requestedKodeImpaNama: string
   kodeImpaNama: string
   jumlahProduk: string
@@ -19,8 +16,8 @@ export interface ProductAddFormData {
   vendorId?: number
 }
 
-// Persisted row hydrated back into form fields.
-export interface ProductAddInitialData {
+// Stored row for form hydration.
+export type ProductAddInitialData = {
   kodeImpa: string
   nama: string
   requestedKodeImpa?: string
@@ -36,26 +33,26 @@ export interface ProductAddInitialData {
   vendorProductId?: number
 }
 
-export interface VendorOption {
+export type VendorOption = {
   nama: string
   harga: number
   vendorId?: number
   vendorProductId?: number
 }
 
-export interface HistorisOption {
+export type HistorisOption = {
   keterangan: string
   harga: number
 }
 
-export interface CatalogItem {
+export type CatalogItem = {
   id?: number
   kode: string
   nama: string
   defaultUnitId?: number
 }
 
-export interface NewVendorForm {
+export type NewVendorForm = {
   nama: string
   harga: string
 }
@@ -84,15 +81,6 @@ export function parseRp(v: string): number {
 
 export { formatNumber as formatRp } from "@/lib/format"
 
-// Confirm dialog shell (width comes from the caller).
-export const confirmOverlayCls =
-  "fixed inset-0 z-[9999] flex items-center justify-center bg-[rgba(0,0,0,0.4)]"
-
-export const confirmModalCls =
-  "flex w-full flex-col gap-4 rounded-lg bg-white p-6 font-sans shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
-
-export { disabledStyle } from "@/lib/styles"
-
 export function AddNewButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <div className="mt-1 flex justify-end border-t border-[rgba(204,195,216,0.2)] pt-1">
@@ -100,9 +88,16 @@ export function AddNewButton({ label, onClick }: { label: string; onClick: () =>
         type="button"
         onMouseDown={(e) => e.preventDefault()}
         onClick={onClick}
-        className="inline-flex items-center gap-1 px-5 py-1 text-caption font-bold text-primary-700"
+        className={`inline-flex items-center gap-1 rounded-sm px-5 py-1 text-caption font-bold text-primary-700 ${ui.focusRing}`}
       >
-        <svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg
+          aria-hidden="true"
+          width="9"
+          height="9"
+          viewBox="0 0 9 9"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
           <line
             x1="4.5"
             y1="1"

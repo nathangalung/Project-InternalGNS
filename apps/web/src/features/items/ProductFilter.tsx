@@ -1,24 +1,22 @@
-import { useState } from "react"
+import { useId, useState } from "react"
 import { CheckIcon } from "@/components/document/icons"
-import {
-  chipStyle,
-  dropdownItemStyle,
-  dropdownLabelStyle,
-  STATUS_FILTER_OPTIONS as STATUS_OPTIONS,
-  type StatusFilterValue,
-} from "@/components/shared/filter-styles"
+import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
 import { useUnits } from "@/features/units/hooks"
-import { ui } from "@/lib/ui"
+import {
+  STATUS_FILTER_OPTIONS as STATUS_OPTIONS,
+  type StatusFilterValue,
+} from "@/lib/filter-options"
+import { chip, dropdownLabel, ui } from "@/lib/ui"
 
 export type ProductStatusFilter = StatusFilterValue
 
-export interface ProductFilterValues {
+export type ProductFilterValues = {
   status: ProductStatusFilter
   unitCode: string // "" means all
 }
 
-interface ProductFilterProps {
+type ProductFilterProps = {
   onClose: () => void
   onApply: (filters: ProductFilterValues) => void
   initialValues?: ProductFilterValues
@@ -33,6 +31,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
   const [showUnitSuggestions, setShowUnitSuggestions] = useState(false)
 
   const { data: units } = useUnits()
+  const unitHeadingId = useId()
 
   const filteredUnits = (units ?? [])
     .filter((u) => {
@@ -61,26 +60,12 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
       title="Filter Produk"
       onClose={onClose}
       footer={
-        <>
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={!dirty}
-            className={`mr-auto p-0 text-[13px] font-medium ${
-              dirty
-                ? "cursor-pointer text-primary-700 underline underline-offset-[3px]"
-                : "cursor-default text-[#CBD5E1] no-underline"
-            }`}
-          >
-            Hapus Filter
-          </button>
-          <button type="button" className={ui.modalCancel} onClick={onClose}>
-            Batal
-          </button>
-          <button type="button" className={ui.modalSubmit} onClick={handleApply}>
-            Terapkan
-          </button>
-        </>
+        <FilterFooter
+          onReset={handleReset}
+          canReset={dirty}
+          onCancel={onClose}
+          onApply={handleApply}
+        />
       }
     >
       <div className={ui.modalSection}>
@@ -92,7 +77,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
                 key={o.value}
                 type="button"
                 onClick={() => setStatus(o.value)}
-                style={chipStyle(status === o.value)}
+                className={chip(status === o.value)}
               >
                 {o.label}
               </button>
@@ -102,10 +87,13 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
       </div>
 
       <div className={ui.modalSection}>
-        <div className={ui.modalSectionHeading}>Satuan</div>
+        <div id={unitHeadingId} className={ui.modalSectionHeading}>
+          Satuan
+        </div>
         <div className={ui.field}>
           <div className="relative">
             <svg
+              aria-hidden="true"
               width="14"
               height="14"
               viewBox="0 0 24 24"
@@ -122,6 +110,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
             <input
               type="text"
               placeholder="Ketik nama satuan..."
+              aria-labelledby={unitHeadingId}
               value={unitQuery}
               onChange={(e) => {
                 setUnitQuery(e.target.value)
@@ -131,7 +120,7 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
               onFocus={() => {
                 if (unitQuery.length > 0 && !unitCode) setShowUnitSuggestions(true)
               }}
-              className="h-11 w-full rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-9 py-2.5 font-sans text-sm text-[#191C1E] outline-none"
+              className={`h-11 w-full rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-9 py-2.5 font-sans text-sm text-[#191C1E] outline-none transition ${ui.fieldFocus}`}
             />
             {unitQuery && (
               <button
@@ -142,9 +131,11 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
                   setShowUnitSuggestions(false)
                 }}
                 title="Bersihkan"
-                className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-[#94A3B8]"
+                aria-label="Bersihkan satuan"
+                className={`absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center rounded-sm p-1 text-[#94A3B8] ${ui.focusRing}`}
               >
                 <svg
+                  aria-hidden="true"
                   width="14"
                   height="14"
                   viewBox="0 0 14 14"
@@ -172,14 +163,14 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
                       <button
                         key={u.id}
                         type="button"
-                        style={dropdownItemStyle}
+                        className={ui.dropdownItem}
                         onClick={() => {
                           setUnitCode(u.code)
                           setUnitQuery(u.code)
                           setShowUnitSuggestions(false)
                         }}
                       >
-                        <span style={dropdownLabelStyle(active)}>{label}</span>
+                        <span className={dropdownLabel(active)}>{label}</span>
                         {active && <CheckIcon />}
                       </button>
                     )

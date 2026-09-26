@@ -10,10 +10,12 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/cucumber/godog"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
@@ -22,14 +24,18 @@ import (
 const defaultUserID int64 = 1
 
 type scenarioState struct {
-	t       *testing.T
-	cleaner *testutil.Cleaner
-	srv     *httptest.Server
-	last    *http.Response
-	body    []byte
-	userID  int64
-	email   string
-	name    string
+	t          *testing.T
+	cleaner    *testutil.Cleaner
+	srv        *httptest.Server
+	last       *http.Response
+	body       []byte
+	userID     int64
+	email      string
+	name       string
+	firstEmail string
+	secondID   int64
+	tag        string
+	parked     []int64
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
@@ -77,7 +83,7 @@ func (s *scenarioState) createStaff() error {
 	body := users.CreateUserRequest{
 		Email:    s.email,
 		Name:     s.name,
-		Password: "secret123",
+		Password: "Secret123!",
 		Role:     users.RoleOperational,
 	}
 	if err := s.sendRequest(http.MethodPost, "/users/", body); err != nil {
@@ -93,7 +99,7 @@ func (s *scenarioState) createStaffEmptyEmail() error {
 	body := users.CreateUserRequest{
 		Email:    "",
 		Name:     "no email",
-		Password: "secret123",
+		Password: "Secret123!",
 		Role:     users.RoleOperational,
 	}
 	return s.sendRequest(http.MethodPost, "/users/", body)
@@ -113,7 +119,7 @@ func (s *scenarioState) createStaffWithRole(role string) error {
 	body := users.CreateUserRequest{
 		Email:    s.uniqueEmail(),
 		Name:     "bad role",
-		Password: "secret123",
+		Password: "Secret123!",
 		Role:     users.Role(role),
 	}
 	return s.sendRequest(http.MethodPost, "/users/", body)
@@ -123,7 +129,7 @@ func (s *scenarioState) createStaffSeededEmail() error {
 	body := users.CreateUserRequest{
 		Email:    s.email,
 		Name:     "duplicate",
-		Password: "secret123",
+		Password: "Secret123!",
 		Role:     users.RoleOperational,
 	}
 	return s.sendRequest(http.MethodPost, "/users/", body)
@@ -220,6 +226,227 @@ func (s *scenarioState) staffListAtLeast(min int) error {
 	return nil
 }
 
+func (s *scenarioState) createStaffWithEmail(email string) error {
+	body := users.CreateUserRequest{
+		Email: email, Name: "bad email", Password: "Secret123!", Role: users.RoleOperational,
+	}
+	return s.sendRequest(http.MethodPost, "/users/", body)
+}
+
+func (s *scenarioState) createStaffOversizedPassword() error {
+	return s.createStaffWithPassword("A1!" + strings.Repeat("a", 70))
+}
+
+func (s *scenarioState) createStaffPaddedName() error {
+	body := users.CreateUserRequest{
+		Email: s.uniqueEmail(), Name: "  Nama Berspasi  ",
+		Password: "Secret123!", Role: users.RoleOperational,
+	}
+	if err := s.sendRequest(http.MethodPost, "/users/", body); err != nil {
+		return err
+	}
+	if s.last.StatusCode == http.StatusCreated {
+		return s.captureID()
+	}
+	return nil
+}
+
+func (s *scenarioState) nameHasNoPadding() error {
+	var u users.User
+	if err := json.Unmarshal(s.body, &u); err != nil {
+		return err
+	}
+	if u.Name != "Nama Berspasi" {
+		return fmt.Errorf("want trimmed name got %q", u.Name)
+	}
+	return nil
+}
+
+func (s *scenarioState) seedSecondStaff() error {
+	s.firstEmail = s.email
+	if err := s.seedStaff(); err != nil {
+		return err
+	}
+	s.secondID = s.userID
+	return nil
+}
+
+func (s *scenarioState) updateSecondToFirstEmail() error {
+	body := users.UpdateUserRequest{
+		Email: s.firstEmail, Name: "Bentrok", Role: users.RoleOperational, IsActive: true,
+	}
+	return s.sendRequest(http.MethodPut, "/users/"+strconv.FormatInt(s.secondID, 10), body)
+}
+
+func (s *scenarioState) setStaffActive(active bool) error {
+	body := users.UpdateUserRequest{
+		Email: s.email, Name: s.name, Role: users.RoleOperational, IsActive: active,
+	}
+	return s.sendRequest(http.MethodPut, "/users/"+strconv.FormatInt(s.userID, 10), body)
+}
+
+func (s *scenarioState) staffActiveIs(want bool) error {
+	var u users.User
+	if err := json.Unmarshal(s.body, &u); err != nil {
+		return err
+	}
+	if u.IsActive != want {
+		return fmt.Errorf("want isActive=%v got %v", want, u.IsActive)
+	}
+	return nil
+}
+
+// soleSuperadmin leaves one active superadmin.
+// It parks every active superadmin, then creates the only one.
+// restoreParked undoes the parking after the scenario.
+func (s *scenarioState) soleSuperadmin() error {
+	ctx := context.Background()
+	pool := testutil.Pool(s.t)
+	rows, err := pool.Query(ctx,
+		`UPDATE users SET is_active = FALSE
+		  WHERE role = 'superadmin' AND is_active = TRUE RETURNING id`)
+	if err != nil {
+		return fmt.Errorf("park superadmins: %w", err)
+	}
+	ids, err := pgx.CollectRows(rows, pgx.RowTo[int64])
+	if err != nil {
+		return fmt.Errorf("park superadmins: %w", err)
+	}
+	s.parked = ids
+
+	s.email = s.uniqueEmail()
+	s.name = "ATDD Sole Admin"
+	body := users.CreateUserRequest{
+		Email: s.email, Name: s.name, Password: "Secret123!", Role: users.RoleSuperadmin,
+	}
+	if err := s.sendRequest(http.MethodPost, "/users/", body); err != nil {
+		return err
+	}
+	if err := s.statusEquals(http.StatusCreated); err != nil {
+		return err
+	}
+	return s.captureID()
+}
+
+func (s *scenarioState) restoreParked() error {
+	if len(s.parked) == 0 {
+		return nil
+	}
+	_, err := testutil.Pool(s.t).Exec(context.Background(),
+		`UPDATE users SET is_active = TRUE WHERE id = ANY($1)`, s.parked)
+	s.parked = nil
+	return err
+}
+
+func (s *scenarioState) setSuperadmin(role string, active bool) error {
+	body := users.UpdateUserRequest{
+		Email: s.email, Name: s.name, Role: users.Role(role), IsActive: active,
+	}
+	return s.sendRequest(http.MethodPut, "/users/"+strconv.FormatInt(s.userID, 10), body)
+}
+
+// createNamed creates a named account.
+func (s *scenarioState) createNamed(name string) error {
+	body := users.CreateUserRequest{
+		Email: s.uniqueEmail(), Name: name, Password: "Secret123!", Role: users.RoleOperational,
+	}
+	if err := s.sendRequest(http.MethodPost, "/users/", body); err != nil {
+		return err
+	}
+	if s.last.StatusCode != http.StatusCreated {
+		return nil
+	}
+	return s.captureID()
+}
+
+// newTag starts a unique prefix.
+func (s *scenarioState) newTag() string {
+	s.tag = fmt.Sprintf("ATDD %d", time.Now().UnixNano())
+	return s.tag
+}
+
+func (s *scenarioState) staffNamed(a, b string) error {
+	tag := s.newTag()
+	for _, suffix := range []string{a, b} {
+		if err := s.createNamed(tag + " " + suffix); err != nil {
+			return err
+		}
+		if err := s.statusEquals(http.StatusCreated); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *scenarioState) searchStaff(text string) error {
+	return s.sendRequest(http.MethodGet, "/users/?q="+url.QueryEscape(s.tag+" "+text), nil)
+}
+
+func (s *scenarioState) staffListHoldsOnly(suffix string) error {
+	var rows []users.User
+	if err := json.Unmarshal(s.body, &rows); err != nil {
+		return err
+	}
+	want := s.tag + " " + suffix
+	if len(rows) != 1 || rows[0].Name != want {
+		return fmt.Errorf("want only %q got %d rows body=%s", want, len(rows), s.body)
+	}
+	return nil
+}
+
+func (s *scenarioState) staffSharingName(n int) error {
+	tag := s.newTag()
+	for range n {
+		if err := s.createNamed(tag); err != nil {
+			return err
+		}
+		if err := s.statusEquals(http.StatusCreated); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *scenarioState) listNamePage(limit, offset int) error {
+	return s.sendRequest(http.MethodGet, fmt.Sprintf("/users/?q=%s&limit=%d&offset=%d",
+		url.QueryEscape(s.tag), limit, offset), nil)
+}
+
+func (s *scenarioState) staffPage(rowsWant, total int) error {
+	var rows []users.User
+	if err := json.Unmarshal(s.body, &rows); err != nil {
+		return err
+	}
+	if len(rows) != rowsWant {
+		return fmt.Errorf("want %d rows got %d", rowsWant, len(rows))
+	}
+	if got := s.last.Header.Get("X-Total-Count"); got != strconv.Itoa(total) {
+		return fmt.Errorf("want X-Total-Count %d got %q", total, got)
+	}
+	return nil
+}
+
+func (s *scenarioState) readRaw(id string) error {
+	return s.sendRequest(http.MethodGet, "/users/"+id, nil)
+}
+
+func (s *scenarioState) createWithNameLength(n int) error {
+	return s.createNamed(strings.Repeat("n", n))
+}
+
+func (s *scenarioState) problemDetail(want string) error {
+	var p struct {
+		Detail string `json:"detail"`
+	}
+	if err := json.Unmarshal(s.body, &p); err != nil {
+		return fmt.Errorf("decode problem: %w body=%s", err, s.body)
+	}
+	if p.Detail != want {
+		return fmt.Errorf("want detail %q got %q", want, p.Detail)
+	}
+	return nil
+}
+
 func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioContext) {
 	return func(sc *godog.ScenarioContext) {
 		state := &scenarioState{t: t, cleaner: cleaner}
@@ -229,7 +456,13 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 			state.userID = 0
 			state.email = ""
 			state.name = ""
+			state.firstEmail = ""
+			state.secondID = 0
+			state.tag = ""
 			return ctx, nil
+		})
+		sc.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
+			return ctx, state.restoreParked()
 		})
 
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
@@ -248,6 +481,30 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the user changes the password to "([^"]+)"$`, state.changePassword)
 		sc.Step(`^the user lists staff filtered by role "([^"]+)"$`, state.listByRole)
 		sc.Step(`^the staff list contains at least (\d+) row(?:s)?$`, state.staffListAtLeast)
+		sc.Step(`^the user creates a staff account with email "([^"]*)"$`, state.createStaffWithEmail)
+		sc.Step(`^the user creates a staff account with an oversized password$`, state.createStaffOversizedPassword)
+		sc.Step(`^the user creates a staff account with a padded name$`, state.createStaffPaddedName)
+		sc.Step(`^the user name has no padding$`, state.nameHasNoPadding)
+		sc.Step(`^a second staff account$`, state.seedSecondStaff)
+		sc.Step(`^the user updates the second account to the first email$`, state.updateSecondToFirstEmail)
+		sc.Step(`^the user deactivates the staff account$`, func() error { return state.setStaffActive(false) })
+		sc.Step(`^the user reactivates the staff account$`, func() error { return state.setStaffActive(true) })
+		sc.Step(`^the staff account is inactive$`, func() error { return state.staffActiveIs(false) })
+		sc.Step(`^the staff account is active$`, func() error { return state.staffActiveIs(true) })
+		sc.Step(`^the only active superadmin account$`, state.soleSuperadmin)
+		sc.Step(`^the user sets that superadmin to role "([^"]+)" and active (true|false)$`, func(role, active string) error {
+			return state.setSuperadmin(role, active == "true")
+		})
+		sc.Step(`^the problem detail is "([^"]+)"$`, state.problemDetail)
+		sc.Step(`^staff accounts named "([^"]+)" and "([^"]+)"$`, state.staffNamed)
+		sc.Step(`^the user searches staff for "([^"]+)"$`, state.searchStaff)
+		sc.Step(`^the staff list holds only "([^"]+)"$`, state.staffListHoldsOnly)
+		sc.Step(`^(\d+) staff accounts sharing a name$`, state.staffSharingName)
+		sc.Step(`^the user lists that name with limit (\d+) and offset (\d+)$`, state.listNamePage)
+		sc.Step(`^the staff list has (\d+) rows? of (\d+)$`, state.staffPage)
+		sc.Step(`^the user reads an unknown staff account$`, func() error { return state.readRaw("999999999999") })
+		sc.Step(`^the user reads the staff account "([^"]+)"$`, state.readRaw)
+		sc.Step(`^the user creates a staff account with a (\d+)-character name$`, state.createWithNameLength)
 	}
 }
 
@@ -260,6 +517,7 @@ func TestUsersFeatures(t *testing.T) {
 			Format:   "pretty",
 			Paths:    []string{"features"},
 			TestingT: t,
+			Strict:   true,
 		},
 	}
 	if status := suite.Run(); status != 0 {

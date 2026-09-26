@@ -7,7 +7,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 )
 
-// whitelist mirrors a repo definition for the tests below.
+// whitelist mirrors a repo definition.
 var whitelist = Whitelist{
 	Default: "name",
 	Columns: map[string]Column{
@@ -56,6 +56,7 @@ func TestConditionsPlaceholderNumbering(t *testing.T) {
 	}
 }
 
+// Dual rendering stays stable.
 // Rendering twice must not mutate or alias the shared arg set.
 func TestConditionsDualRenderIsStable(t *testing.T) {
 	c := New()
@@ -111,6 +112,7 @@ func TestOrderByWhitelist(t *testing.T) {
 	}
 }
 
+// Caller text never reaches SQL.
 // No caller-supplied text may reach the rendered clause.
 func TestOrderByNeverInterpolatesCallerInput(t *testing.T) {
 	poison := []string{
@@ -128,6 +130,7 @@ func TestOrderByNeverInterpolatesCallerInput(t *testing.T) {
 	}
 }
 
+// Redundant tiebreaks are suppressed.
 // A tiebreak identical to the primary column must not be repeated.
 func TestOrderBySuppressesRedundantTiebreak(t *testing.T) {
 	w := Whitelist{
@@ -174,7 +177,8 @@ func TestPageClamp(t *testing.T) {
 	}
 }
 
-// Empty conditions still render a valid pair.
+// Empty conditions render validly.
+// They still render a valid pair.
 func TestNoConditions(t *testing.T) {
 	c := New()
 	countSQL, countArgs := c.Count("SELECT COUNT(*) FROM t WHERE 1=1")
@@ -191,9 +195,10 @@ func TestNoConditions(t *testing.T) {
 	}
 }
 
-// Exports opt out of pagination: the clamp must not silently cap them, which is
-// how every XLSX export (including the DJP coretax workbook) was truncated to
-// 200 rows while X-Total-Count kept reporting the true total.
+// Unbounded skips the clamp.
+// Exports opt out of pagination: the clamp must not silently cap them, which
+// is how every XLSX export (including the DJP coretax workbook) was truncated
+// to 200 rows while X-Total-Count kept reporting the true total.
 func TestPage_UnboundedSkipsClampAndLimitClause(t *testing.T) {
 	p := Page(Unbounded, 0)
 	if p.Limit != 0 {

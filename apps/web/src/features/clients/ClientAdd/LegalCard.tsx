@@ -1,7 +1,8 @@
+import { useId } from "react"
 import { ui } from "@/lib/ui"
 import { type ClientAddFormData, inputCls, optionalCls } from "./helpers"
 
-interface LegalCardProps {
+type LegalCardProps = {
   form: ClientAddFormData
   onChange: (field: keyof ClientAddFormData, value: string) => void
   isNamaKontakFilled: boolean
@@ -9,6 +10,7 @@ interface LegalCardProps {
 
 // Legal identifiers card.
 export default function LegalCard({ form, onChange, isNamaKontakFilled }: LegalCardProps) {
+  const id = useId()
   return (
     <div
       className={`${ui.modalSection} transition-opacity duration-200 ease-[ease] ${
@@ -18,10 +20,11 @@ export default function LegalCard({ form, onChange, isNamaKontakFilled }: LegalC
       <div className={ui.modalSectionHeading}>Legalitas</div>
       <div className={ui.row2}>
         <div className={ui.field}>
-          <label className={ui.fieldLabel}>
+          <label htmlFor={`${id}-npwp`} className={ui.fieldLabel}>
             NPWP <span className={optionalCls}>(Opsional)</span>
           </label>
           <input
+            id={`${id}-npwp`}
             className={inputCls}
             type="text"
             inputMode="numeric"
@@ -32,10 +35,11 @@ export default function LegalCard({ form, onChange, isNamaKontakFilled }: LegalC
           />
         </div>
         <div className={ui.field}>
-          <label className={ui.fieldLabel}>
+          <label htmlFor={`${id}-tku`} className={ui.fieldLabel}>
             TKU <span className={optionalCls}>(Opsional)</span>
           </label>
           <input
+            id={`${id}-tku`}
             className={inputCls}
             type="text"
             inputMode="numeric"
@@ -46,19 +50,9 @@ export default function LegalCard({ form, onChange, isNamaKontakFilled }: LegalC
           />
         </div>
       </div>
-      <div className={ui.field}>
-        <label className={ui.fieldLabel}>
-          Reference Number <span className={optionalCls}>(Opsional)</span>
-        </label>
-        <input
-          className={inputCls}
-          type="text"
-          placeholder="Masukkan reference number"
-          value={form.referenceNumber}
-          onChange={(e) => onChange("referenceNumber", e.target.value)}
-          disabled={!isNamaKontakFilled}
-        />
-      </div>
+      <p className="text-xs leading-5 text-dark-500">
+        Nomor klien 4 digit diberikan otomatis setelah data disimpan.
+      </p>
     </div>
   )
 }

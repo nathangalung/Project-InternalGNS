@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"database/sql"
+	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
@@ -12,12 +12,13 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/db/migrations"
 )
 
-// Apply pending goose migrations under a Postgres advisory lock, so two
-// instances booting at once cannot run migrations concurrently.
+// RunMigrations applies goose migrations.
+// A Postgres advisory lock serialises them, so two instances booting at
+// once cannot run migrations concurrently.
 func RunMigrations(ctx context.Context, pool *pgxpool.Pool) error {
 	conn, err := pool.Acquire(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("acquire migration conn: %w", err)
 	}
 	defer conn.Release()
 
@@ -26,18 +27,15 @@ func RunMigrations(ctx context.Context, pool *pgxpool.Pool) error {
 
 	locker, err := lock.NewPostgresSessionLocker()
 	if err != nil {
-		return err
+		return fmt.Errorf("migration locker: %w", err)
 	}
 	provider, err := goose.NewProvider(goose.DialectPostgres, sqldb, migrations.FS,
 		goose.WithSessionLocker(locker))
 	if err != nil {
-		return err
+		return fmt.Errorf("migration provider: %w", err)
 	}
-	_, err = provider.Up(ctx)
-	return err
-}
-
-// database/sql backed by pgx.
-func PlainDB(pool *pgxpool.Pool) *sql.DB {
-	return stdlib.OpenDBFromPool(pool)
+	if _, err := provider.Up(ctx); err != nil {
+		return fmt.Errorf("apply migrations: %w", err)
+	}
+	return nil
 }

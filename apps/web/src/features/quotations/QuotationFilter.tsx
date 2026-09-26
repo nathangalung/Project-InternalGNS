@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useId, useState } from "react"
 import { IconCalendar } from "@/components/document/icons"
 import {
   DATE_PRESETS,
@@ -6,14 +6,15 @@ import {
   type DatePreset,
   presetToIsoRange,
 } from "@/components/shared/DateRangeField"
+import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
-import type { DisplayStatus } from "@/lib/status"
-import { ui } from "@/lib/ui"
+import { chip, presetChip, ui } from "@/lib/ui"
+import { QUOTATION_STATUS_LABELS, type QuotationStatusLabel } from "./status"
 
 export type { DatePreset }
-export type StatusFilter = DisplayStatus
+export type StatusFilter = QuotationStatusLabel
 
-interface QuotationFilterProps {
+type QuotationFilterProps = {
   onClose: () => void
   onApply?: (filters: {
     preset: DatePreset
@@ -33,18 +34,9 @@ interface QuotationFilterProps {
   }
 }
 
-const STATUSES: StatusFilter[] = ["Draf", "Dikirim", "Ditolak", "Revisi", "Disetujui"]
-
-const presetChip =
-  "flex items-center justify-between rounded-md px-3.5 py-2.5 text-[13px] transition-all duration-150"
-const statusChip = "rounded-[20px] px-4 py-1.5 text-[13px] transition-all duration-150"
-const chipActive =
-  "border-[1.5px] border-primary-700 bg-[rgba(99,14,212,0.05)] font-bold text-primary-700"
-const statusChipActive =
-  "border-[1.5px] border-primary-700 bg-[rgba(99,14,212,0.07)] font-bold text-primary-700"
-const chipIdle = "border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] font-medium text-[#4A4455]"
-
-// Faithful port of the legacy ca-phone-wrapper/-prefix/-input trio.
+// Legacy amount input trio.
+//
+// A faithful port of ca-phone-wrapper/-prefix/-input.
 const amountWrapper =
   "flex h-11 overflow-hidden rounded-md border-[1.5px] border-transparent bg-dark-200 transition-[border-color,box-shadow] duration-200 focus-within:border-primary-600 focus-within:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
 const amountPrefix =
@@ -85,6 +77,10 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
     setMaxHarga("")
   }
 
+  const dateHeadingId = useId()
+  const statusHeadingId = useId()
+  const amountId = useId()
+
   const handleApply = () => {
     onApply?.({ preset, startDate, endDate, statuses: activeStatuses, minHarga, maxHarga })
     onClose()
@@ -95,32 +91,25 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
       title="Filter Quotation"
       onClose={onClose}
       footer={
-        <>
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={!dirty}
-            className={`mr-auto p-0 text-[13px] font-medium underline-offset-[3px] ${
-              dirty ? "cursor-pointer text-primary-700 underline" : "cursor-default text-dark-300"
-            }`}
-          >
-            Hapus Filter
-          </button>
-          <button type="button" className={ui.modalCancel} onClick={onClose}>
-            Batal
-          </button>
-          <button type="button" className={ui.modalSubmit} onClick={handleApply}>
-            Terapkan
-          </button>
-        </>
+        <FilterFooter
+          canReset={dirty}
+          onReset={handleReset}
+          onCancel={onClose}
+          onApply={handleApply}
+        />
       }
     >
       {/* Rentang Tanggal */}
       <div className={ui.modalSection}>
-        <div className={ui.modalSectionHeading}>Rentang Tanggal</div>
+        <div id={dateHeadingId} className={ui.modalSectionHeading}>
+          Rentang Tanggal
+        </div>
 
         <div className={ui.field}>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-2">
+          <fieldset
+            aria-labelledby={dateHeadingId}
+            className="m-0 min-w-0 border-0 p-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-2"
+          >
             {DATE_PRESETS.map(({ key, label }) => {
               const isActive = preset === key
               return (
@@ -128,7 +117,8 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                   key={key}
                   type="button"
                   onClick={() => pickPreset(key)}
-                  className={`${presetChip} ${isActive ? chipActive : chipIdle}`}
+                  aria-pressed={isActive}
+                  className={presetChip(isActive)}
                 >
                   {label}
                   {key === "kustom" ? (
@@ -136,7 +126,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                       <IconCalendar />
                     </span>
                   ) : isActive ? (
-                    <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+                    <svg aria-hidden="true" width="14" height="11" viewBox="0 0 14 11" fill="none">
                       <path
                         d="M1 5.5L4.5 9L13 1"
                         stroke="#630ED4"
@@ -149,7 +139,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
                 </button>
               )
             })}
-          </div>
+          </fieldset>
         </div>
 
         <div className={ui.row2}>
@@ -172,37 +162,44 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
         </div>
       </div>
 
-      {/* Status Penawaran */}
+      {/* Status Quotation */}
       <div className={ui.modalSection}>
-        <div className={ui.modalSectionHeading}>Status Penawaran</div>
+        <div id={statusHeadingId} className={ui.modalSectionHeading}>
+          Status Quotation
+        </div>
         <div className={ui.field}>
-          <div className="flex flex-wrap gap-2">
+          <fieldset
+            aria-labelledby={statusHeadingId}
+            className="m-0 min-w-0 border-0 p-0 flex flex-wrap gap-2"
+          >
             {(() => {
               const allActive = activeStatuses.length === 0
               return (
                 <button
                   type="button"
                   onClick={() => setActiveStatuses([])}
-                  className={`${statusChip} ${allActive ? statusChipActive : chipIdle}`}
+                  aria-pressed={allActive}
+                  className={chip(allActive)}
                 >
                   Semua
                 </button>
               )
             })()}
-            {STATUSES.map((s) => {
+            {QUOTATION_STATUS_LABELS.map((s) => {
               const isActive = activeStatuses.includes(s)
               return (
                 <button
                   key={s}
                   type="button"
                   onClick={() => toggleStatus(s)}
-                  className={`${statusChip} ${isActive ? statusChipActive : chipIdle}`}
+                  aria-pressed={isActive}
+                  className={chip(isActive)}
                 >
                   {s}
                 </button>
               )
             })}
-          </div>
+          </fieldset>
         </div>
       </div>
 
@@ -211,16 +208,20 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
         <div className={ui.modalSectionHeading}>Rentang Total Penawaran</div>
         <div className={ui.row2}>
           {[
-            { label: "Min Total", value: minHarga, set: setMinHarga },
-            { label: "Max Total", value: maxHarga, set: setMaxHarga },
-          ].map(({ label, value, set }) => (
-            <div className={ui.field} key={label}>
-              <label className={ui.fieldLabel}>{label}</label>
+            { key: "min", label: "Min Total", value: minHarga, set: setMinHarga },
+            { key: "max", label: "Max Total", value: maxHarga, set: setMaxHarga },
+          ].map(({ key, label, value, set }) => (
+            <div className={ui.field} key={key}>
+              <label htmlFor={`${amountId}-${key}`} className={ui.fieldLabel}>
+                {label}
+              </label>
               <div className={amountWrapper}>
                 <span className={amountPrefix}>IDR</span>
                 <input
+                  id={`${amountId}-${key}`}
                   className={amountInput}
                   type="text"
+                  inputMode="numeric"
                   value={value}
                   onChange={(e) => set(e.target.value)}
                 />

@@ -1,45 +1,47 @@
 import { useState } from "react"
 import Modal from "@/components/shared/Modal"
-import { useCreateClient, useCreateContact } from "@/features/clients/hooks"
+import { useCreateClient, useCreateContact, useUploadClientLogo } from "@/features/clients/hooks"
 import { ui } from "@/lib/ui"
+import type { ClientRow } from "@/types/api"
 import CompanyCard from "./CompanyCard"
 import ContactCard from "./ContactCard"
 import {
   type ClientAddFormData,
   INITIAL_FORM,
-  isValidAddress,
   isValidEmail,
   isValidPhone,
+  optionalAddressError,
 } from "./helpers"
 import LegalCard from "./LegalCard"
 
 export type { ClientAddFormData } from "./helpers"
 
-interface ClientAddProps {
+type ClientAddProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSuccess?: (data: ClientAddFormData) => void
+  // created is the saved row, for callers that select it.
+  onSuccess?: (data: ClientAddFormData, created: ClientRow) => void
 }
 
 // Client creation modal.
 export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddProps) {
   const [form, setForm] = useState<ClientAddFormData>(INITIAL_FORM)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
   const [negaraOpen, setNegaraOpen] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const createClient = useCreateClient()
   const createContact = useCreateContact()
+  const uploadLogo = useUploadClientLogo()
   const isSaving = createClient.isPending || createContact.isPending
 
   if (!open) return null
 
   const isNamaPerusahaanFilled = form.namaPerusahaan.trim().length > 0
-  const isAlamatFilled = isNamaPerusahaanFilled && isValidAddress(form.alamat)
-  const alamatError =
-    isNamaPerusahaanFilled && form.alamat.trim().length > 0 && !isValidAddress(form.alamat)
-      ? "Alamat harus minimal 20 karakter dan mengandung huruf."
-      : null
+  // Alamat is optional; a filled one must still be valid.
+  const alamatError = isNamaPerusahaanFilled ? optionalAddressError(form.alamat) : null
+  const isCompanyReady = isNamaPerusahaanFilled && alamatError === null
 
-  const isNamaKontakFilled = isAlamatFilled && form.namaKontak.trim().length > 0
+  const isNamaKontakFilled = isCompanyReady && form.namaKontak.trim().length > 0
 
   const phoneFilledAndValid = form.nomorTelepon.trim().length > 0 && isValidPhone(form.nomorTelepon)
   const emailFilledAndValid = form.email.trim().length > 0 && isValidEmail(form.email)
@@ -68,7 +70,6 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
         email: form.email.trim() || undefined,
         npwp: form.npwp.trim() || undefined,
         tkuId: form.tku.trim() || undefined,
-        number: form.referenceNumber.trim() || undefined,
       })
       await createContact.mutateAsync({
         companyId: created.id,
@@ -79,8 +80,11 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
           countryCode: form.kodeNegara || "IDN",
         },
       })
-      onSuccess?.(form)
+      // The client exists now; a failed upload only toasts.
+      if (logoFile) uploadLogo.mutate({ id: created.id, file: logoFile })
+      onSuccess?.(form, created)
       setForm(INITIAL_FORM)
+      setLogoFile(null)
       onOpenChange(false)
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Gagal menyimpan klien."
@@ -90,6 +94,7 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
 
   function handleCancel() {
     setForm(INITIAL_FORM)
+    setLogoFile(null)
     onOpenChange(false)
   }
 
@@ -127,6 +132,7 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
       <CompanyCard
         form={form}
         onChange={handleChange}
+        onLogoFile={setLogoFile}
         isNamaPerusahaanFilled={isNamaPerusahaanFilled}
         alamatError={alamatError}
         negaraOpen={negaraOpen}
@@ -136,7 +142,7 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
       <ContactCard
         form={form}
         onChange={handleChange}
-        isAlamatFilled={isAlamatFilled}
+        isCompanyReady={isCompanyReady}
         isNamaKontakFilled={isNamaKontakFilled}
         phoneError={phoneError}
         emailError={emailError}

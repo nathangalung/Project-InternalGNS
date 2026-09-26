@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_invoice (deployed by migration 00042).
+-- Canonical current body of fn_create_invoice (deployed by migration 00054).
 -- Snapshots a delivered PO's items into a draft invoice. Line tax figures are
 -- rounded per line; the header tax figures are the SUM of those per-line values
 -- so the invoice matches what is filed with DJP per line via e-faktur.
@@ -14,8 +14,11 @@ DECLARE
   v_quotation_id  BIGINT;
   v_company_id    BIGINT;
   v_dpp           NUMERIC(15,2);
+  v_replaces_id   BIGINT;
 BEGIN
-  SELECT id INTO v_inv_id FROM invoices WHERE po_id = p_po_id;
+  -- A cancelled invoice is void, so only a live one makes this a no-op.
+  SELECT id INTO v_inv_id FROM invoices
+  WHERE po_id = p_po_id AND status <> 'cancelled';
   IF v_inv_id IS NOT NULL THEN
     RETURN v_inv_id;
   END IF;
@@ -27,6 +30,15 @@ BEGIN
     RAISE EXCEPTION 'Purchase order % not found', p_po_id;
   END IF;
 
+  -- The newest cancelled invoice nothing replaces yet is the one corrected.
+  SELECT c.id INTO v_replaces_id
+  FROM invoices c
+  WHERE c.po_id = p_po_id
+    AND c.status = 'cancelled'
+    AND NOT EXISTS (SELECT 1 FROM invoices r WHERE r.replaces_invoice_id = c.id)
+  ORDER BY c.id DESC
+  LIMIT 1;
+
   SELECT COALESCE(SUM(subtotal), 0) INTO v_dpp
   FROM purchase_order_items WHERE po_id = p_po_id;
 
@@ -35,12 +47,15 @@ BEGIN
   INSERT INTO invoices (
     invoice_no, quotation_id, po_id, company_client_id,
     invoice_date, due_date, subtotal, dpp,
-    status, created_by, updated_by
+    status, faktur_type, replaces_invoice_id, created_by, updated_by
   ) VALUES (
     v_inv_no, v_quotation_id, p_po_id, v_company_id,
     CURRENT_DATE, CURRENT_DATE + INTERVAL '30 days',
     v_dpp, v_dpp,
-    'draft', p_user_id, p_user_id
+    'draft',
+    CASE WHEN v_replaces_id IS NULL THEN 'Normal' ELSE 'Pengganti' END,
+    v_replaces_id,
+    p_user_id, p_user_id
   ) RETURNING id INTO v_inv_id;
 
   INSERT INTO invoice_items (

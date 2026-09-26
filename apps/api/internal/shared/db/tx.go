@@ -2,9 +2,9 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // TxBeginner opens a transaction.
@@ -13,16 +13,20 @@ type TxBeginner interface {
 	Begin(ctx context.Context) (pgx.Tx, error)
 }
 
-// Run fn inside transaction.
-func WithTx(ctx context.Context, pool *pgxpool.Pool, fn func(pgx.Tx) error) error {
-	tx, err := pool.Begin(ctx)
+// WithTx runs fn transactionally.
+// fn's own error is returned unwrapped so callers can match sentinels.
+func WithTx(ctx context.Context, b TxBeginner, fn func(pgx.Tx) error) error {
+	tx, err := b.Begin(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("begin tx: %w", err)
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
 	if err := fn(tx); err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit tx: %w", err)
+	}
+	return nil
 }

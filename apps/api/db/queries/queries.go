@@ -25,19 +25,22 @@ func (s Store) Get(name string) string {
 }
 
 // Load parses every embedded SQL.
-func Load() (Store, error) {
+func Load() (Store, error) { return load(FS) }
+
+// load parses SQL in fsys.
+func load(fsys fs.FS) (Store, error) {
 	store := Store{}
 
-	entries, err := fs.ReadDir(FS, ".")
+	entries, err := fs.ReadDir(fsys, ".")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list sql: %w", err)
 	}
 
 	for _, e := range entries {
 		if e.IsDir() || !strings.HasSuffix(e.Name(), ".sql") {
 			continue
 		}
-		body, err := fs.ReadFile(FS, e.Name())
+		body, err := fs.ReadFile(fsys, e.Name())
 		if err != nil {
 			return nil, fmt.Errorf("read %s: %w", e.Name(), err)
 		}

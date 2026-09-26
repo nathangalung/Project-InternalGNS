@@ -1,35 +1,60 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { useMemo } from "react"
+import LoadingState from "@/components/shared/LoadingState"
+import NotFoundState from "@/components/shared/NotFoundState"
+import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
+import { useInvoice, useInvoiceByQuotation } from "@/features/invoices/hooks"
 import InvoiceDetail from "@/features/invoices/InvoiceDetail"
-import { toQuotationData } from "@/features/quotations/adapters"
-import { useQuotation } from "@/features/quotations/hooks"
-import { useUnits } from "@/features/units/hooks"
+import { isMissing } from "@/lib/errors"
 
+// Positive integer or nothing.
+function positiveInt(v: unknown): number | undefined {
+  const n = typeof v === "string" ? Number(v) : v
+  return typeof n === "number" && Number.isInteger(n) && n > 0 ? n : undefined
+}
+
+type InvoiceSearch = {
+  // A specific invoice of this quotation
+  invoiceId?: number
+}
+
+// $id is the quotation id.
+//
+// It names the newest invoice, the Pengganti when one exists; ?invoiceId
+// reaches an older, cancelled one.
 export const Route = createFileRoute("/_authed/invoices/$id/")({
+  validateSearch: (search: Record<string, unknown>): InvoiceSearch => {
+    const invoiceId = positiveInt(search.invoiceId)
+    return invoiceId ? { invoiceId } : {}
+  },
   component: InvoiceDetailRoute,
 })
 
 function InvoiceDetailRoute() {
   const { id } = Route.useParams()
+  const { invoiceId } = Route.useSearch()
+  const quotationId = positiveInt(id)
 
-  const numericId = Number(id)
-  const hasNumericId = Number.isFinite(numericId) && numericId > 0
-  const { data: detail } = useQuotation(hasNumericId ? numericId : undefined)
-  const { data: units } = useUnits()
+  // Invoices API only, so finance can open it.
+  const newest = useInvoiceByQuotation(invoiceId ? undefined : quotationId)
+  const exact = useInvoice(quotationId ? invoiceId : undefined)
+  const query = invoiceId ? exact : newest
 
-  const unitOf = useMemo(() => {
-    const map = new Map<number, string>()
-    for (const u of units ?? []) map.set(u.id, u.code)
-    return (unitId?: number) => (unitId !== undefined ? (map.get(unitId) ?? "") : "")
-  }, [units])
+  if (quotationId && query.isPending) return <LoadingState label="Memuat data invoice…" />
 
-  const quotation = detail ? toQuotationData(detail, unitOf) : undefined
+  if (query.error && !isMissing(query.error)) {
+    return <RouteErrorFallback error={query.error} reset={() => void query.refetch()} />
+  }
 
-  return (
-    <InvoiceDetail
-      quotationId={numericId}
-      quotationNo={detail?.quotationNo ?? id}
-      quotation={quotation}
-    />
-  )
+  const inv = query.data
+  if (!inv || inv.quotationId !== quotationId) {
+    return (
+      <NotFoundState
+        title="Invoice tidak ditemukan"
+        size="page"
+        backTo={{ to: "/invoices", label: "Kembali ke Daftar Invoice" }}
+      />
+    )
+  }
+
+  return <InvoiceDetail key={inv.id} inv={inv} />
 }

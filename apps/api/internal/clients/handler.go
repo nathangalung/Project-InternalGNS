@@ -1,10 +1,13 @@
 package clients
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 
@@ -22,9 +25,14 @@ func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
 
-// List handles GET /clients with filters, sort, pagination.
+// List handles GET /clients.
+// It applies filters, sort and pagination.
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
+	if key := badQueryParam(q); key != "" {
+		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
+		return
+	}
 	limit, offset := paginate.Parse(r)
 
 	f := ListFilter{
@@ -85,13 +93,23 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
+	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
 	}
+	number, ok := normalizeNumber(req.Number)
+	if !ok {
+		numberProblem(w, ErrNumberInvalid)
+		return
+	}
+	req.Number = number
 
 	userID := deps.CurrentUserID(r.Context())
 	c, err := h.repo.Create(r.Context(), req, userID)
+	if numberProblem(w, err) {
+		return
+	}
 	if err != nil {
 		httperr.RenderDBErr(w, err)
 		return
@@ -112,15 +130,26 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
+	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
 	}
 
+	number, ok := normalizeNumber(req.Number)
+	if !ok {
+		numberProblem(w, ErrNumberInvalid)
+		return
+	}
+	req.Number = number
+
 	userID := deps.CurrentUserID(r.Context())
 	c, err := h.repo.Update(r.Context(), id, req, userID)
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("client not found"))
+		return
+	}
+	if numberProblem(w, err) {
 		return
 	}
 	if err != nil {
@@ -142,6 +171,10 @@ func (h *Handler) Summary(w http.ResponseWriter, r *http.Request) {
 
 // Search handles GET /clients/search?q=&minScore=&limit=
 func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
+	if key := badQueryParam(r.URL.Query()); key != "" {
+		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
+		return
+	}
 	q := r.URL.Query().Get("q")
 	if q == "" {
 		httperr.Render(w, httperr.BadRequest("q is required"))
@@ -173,6 +206,10 @@ func (h *Handler) ListContacts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := h.requireClient(r.Context(), id); err != nil {
+		renderClientErr(w, err)
+		return
+	}
 	contacts, err := h.repo.ListContacts(r.Context(), id)
 	if err != nil {
 		httperr.RenderDBErr(w, err)
@@ -194,6 +231,7 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
+	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
@@ -208,7 +246,8 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusCreated, c)
 }
 
-// UpdateContact edits an existing contact (PATCH /clients/{id}/contacts/{cid}).
+// UpdateContact edits a contact.
+// It serves PATCH /clients/{id}/contacts/{cid}.
 func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
@@ -221,11 +260,12 @@ func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req CreateContactRequest
+	var req UpdateContactRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httperr.Render(w, httperr.BadRequest("invalid json"))
 		return
 	}
+	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
@@ -265,4 +305,23 @@ func (h *Handler) DeleteContact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// requireClient checks the parent exists.
+// It runs before a sub-collection read.
+func (h *Handler) requireClient(ctx context.Context, id int64) error {
+	_, err := h.repo.GetByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("load client %d: %w", id, err)
+	}
+	return nil
+}
+
+// renderClientErr maps sentinels to problems.
+func renderClientErr(w http.ResponseWriter, err error) {
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("client not found"))
+		return
+	}
+	httperr.RenderDBErr(w, err)
 }

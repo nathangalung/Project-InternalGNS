@@ -1,6 +1,8 @@
-import { confirmModalCls, confirmOverlayCls, formatRp } from "./helpers"
+import Modal from "@/components/shared/Modal"
+import { ui } from "@/lib/ui"
+import { formatRp } from "./helpers"
 
-interface PriceConfirmModalProps {
+type PriceConfirmModalProps = {
   open: boolean
   onCancel: () => void
   onConfirm: () => void
@@ -26,11 +28,24 @@ export default function PriceConfirmModal({
 }: PriceConfirmModalProps) {
   if (!open) return null
   return (
-    <div className={confirmOverlayCls} onClick={onCancel}>
-      <div className={`${confirmModalCls} max-w-[400px]`} onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-base font-bold text-[#111827]">Konfirmasi Perubahan Harga</h3>
-        <p className="text-sm leading-[1.5] text-[#4B5563]">Apakah Anda yakin mengubah:</p>
-        <ul className="pl-5 text-sm text-[#374151]">
+    <Modal
+      title="Konfirmasi Perubahan Harga"
+      onClose={onCancel}
+      className="max-w-[min(440px,92vw)]!"
+      footer={
+        <div className="flex gap-4 max-sm:w-full max-sm:*:flex-1 max-sm:*:px-4">
+          <button type="button" className={ui.modalCancel} onClick={onCancel}>
+            Batal
+          </button>
+          <button type="button" className={ui.modalSubmit} onClick={onConfirm}>
+            Ya, Ubah
+          </button>
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-3 text-sm text-[#374151]">
+        <p className="leading-[1.5] text-[#4B5563]">Apakah Anda yakin mengubah:</p>
+        <ul className="list-disc pl-5">
           {isBeliChanged && initialBeli !== null && (
             <li className="mb-2">
               Harga beli dari{" "}
@@ -46,23 +61,7 @@ export default function PriceConfirmModal({
             </li>
           )}
         </ul>
-        <div className="mt-2 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-sm border border-[#D1D5DB] bg-white px-4 py-2 text-sm font-semibold text-[#374151]"
-          >
-            Batal
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="rounded-sm bg-primary-700 px-4 py-2 text-sm font-semibold text-white"
-          >
-            Iya
-          </button>
-        </div>
       </div>
-    </div>
+    </Modal>
   )
 }

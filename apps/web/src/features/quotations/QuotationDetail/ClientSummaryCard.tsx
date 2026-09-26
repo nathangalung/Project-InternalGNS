@@ -1,11 +1,17 @@
+import EntityLink from "@/components/shared/EntityLink"
 import type { ClientInfo } from "@/features/quotations/types"
+import { ui } from "@/lib/ui"
 import { qe } from "../wizard-styles"
 
-interface ClientSummaryCardProps {
+type ClientSummaryCardProps = {
   clientName: string
+  // Links the name when set
+  clientId?: number
   clientInitials: string
   clientInfo?: ClientInfo
   shippingAlamat?: string
+  // Opens the contact re-pick
+  onChangeContact?: () => void
 }
 
 const fieldLabel = "mb-1 text-[11px] font-semibold uppercase text-[#6B7280]"
@@ -16,9 +22,11 @@ const emptyValue = "text-sm font-medium italic text-[#9CA3AF]"
 // Client header card.
 export default function ClientSummaryCard({
   clientName,
+  clientId,
   clientInitials,
   clientInfo,
   shippingAlamat,
+  onChangeContact,
 }: ClientSummaryCardProps) {
   const ci = clientInfo
   return (
@@ -32,7 +40,11 @@ export default function ClientSummaryCard({
             </span>
           </div>
           <div>
-            <div className="mb-1 text-base font-bold text-[#111827]">{clientName}</div>
+            <div className="mb-1 text-base font-bold text-[#111827]">
+              <EntityLink kind="client" id={clientId} tone="name">
+                {clientName}
+              </EntityLink>
+            </div>
             <span className="text-xs font-medium text-[#6B7280]">Indonesia</span>
           </div>
         </div>
@@ -45,6 +57,15 @@ export default function ClientSummaryCard({
             <div>
               <div className={fieldLabel}>Narahubung</div>
               <div className={fieldValueSemibold}>{ci?.narahubung || "-"}</div>
+              {onChangeContact && (
+                <button
+                  type="button"
+                  onClick={onChangeContact}
+                  className={`mt-1 p-0 text-xs font-semibold ${ui.entityLink}`}
+                >
+                  Ganti Narahubung
+                </button>
+              )}
             </div>
             <div>
               <div className={fieldLabel}>Nomor HP</div>

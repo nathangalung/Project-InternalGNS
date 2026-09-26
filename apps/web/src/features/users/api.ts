@@ -44,11 +44,11 @@ export type UpdateUserInput = {
   password?: string
 }
 
-// Profile saved but the password PATCH failed.
+// Profile saved, password PATCH failed.
 export class PartialUserUpdateError extends Error {
   readonly profileSaved = true
-  constructor(cause: unknown) {
-    super(cause instanceof Error ? cause.message : "Kata sandi gagal diperbarui")
+  constructor(readonly passwordError: unknown) {
+    super(passwordError instanceof Error ? passwordError.message : "Kata sandi gagal diperbarui")
     this.name = "PartialUserUpdateError"
   }
 }

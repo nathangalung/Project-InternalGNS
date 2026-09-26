@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router"
 import { ui } from "@/lib/ui"
 
-interface PageHeaderProps {
+type PageHeaderProps = {
   onExport: () => void
 }
 
@@ -9,11 +9,16 @@ interface PageHeaderProps {
 export default function PageHeader({ onExport }: PageHeaderProps) {
   const navigate = useNavigate()
   return (
-    <div className="page-header">
-      <h1 className="page-title">Daftar Quotation</h1>
-      <div className="page-actions">
-        <button type="button" className={`${ui.btnOutline} w-[160px]`} onClick={onExport}>
+    <div className={ui.pageHeader}>
+      <h1 className={ui.pageTitle}>Daftar Quotation</h1>
+      <div className={ui.pageActions}>
+        <button
+          type="button"
+          className={`${ui.btnOutline} min-w-[160px] whitespace-nowrap`}
+          onClick={onExport}
+        >
           <svg
+            aria-hidden="true"
             width="14"
             height="14"
             viewBox="0 0 24 24"
@@ -31,10 +36,11 @@ export default function PageHeader({ onExport }: PageHeaderProps) {
         </button>
         <button
           type="button"
-          className={`${ui.btnPrimary} w-[180px]`}
+          className={`${ui.btnPrimary} min-w-[180px] whitespace-nowrap`}
           onClick={() => void navigate({ to: "/quotations/add" })}
         >
           <svg
+            aria-hidden="true"
             width="14"
             height="14"
             viewBox="0 0 24 24"

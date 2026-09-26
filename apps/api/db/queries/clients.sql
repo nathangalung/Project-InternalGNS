@@ -8,7 +8,10 @@ SELECT cc.id, cc.number, cc.name, cc.npwp, cc.address, cc.email, cc.country_code
        COALESCE((SELECT SUM(q.grand_total)::TEXT
                  FROM quotations q
                  WHERE q.company_client_id = cc.id
-                   AND q.status = 'accepted'), '0') AS total_purchase,
+                   AND q.status = 'accepted'
+                   AND NOT EXISTS (SELECT 1 FROM purchase_orders po
+                                   WHERE po.quotation_id = q.id
+                                     AND po.status = 'CANCELLED')), '0') AS total_purchase,
        COALESCE((SELECT COUNT(*)
                  FROM quotations q
                  WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count,
@@ -45,7 +48,10 @@ SELECT cc.id, cc.number, cc.name, cc.npwp, cc.address, cc.email, cc.country_code
        COALESCE((SELECT SUM(q.grand_total)::TEXT
                  FROM quotations q
                  WHERE q.company_client_id = cc.id
-                   AND q.status = 'accepted'), '0') AS total_purchase,
+                   AND q.status = 'accepted'
+                   AND NOT EXISTS (SELECT 1 FROM purchase_orders po
+                                   WHERE po.quotation_id = q.id
+                                     AND po.status = 'CANCELLED')), '0') AS total_purchase,
        COALESCE((SELECT COUNT(*)
                  FROM quotations q
                  WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count,
@@ -72,7 +78,10 @@ SELECT cc.id, cc.number, cc.name, cc.npwp, cc.address, cc.email, cc.country_code
        COALESCE((SELECT SUM(q.grand_total)::TEXT
                  FROM quotations q
                  WHERE q.company_client_id = cc.id
-                   AND q.status = 'accepted'), '0') AS total_purchase,
+                   AND q.status = 'accepted'
+                   AND NOT EXISTS (SELECT 1 FROM purchase_orders po
+                                   WHERE po.quotation_id = q.id
+                                     AND po.status = 'CANCELLED')), '0') AS total_purchase,
        COALESCE((SELECT COUNT(*)
                  FROM quotations q
                  WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count,
@@ -89,11 +98,14 @@ WHERE cc.id = ANY($1::bigint[])
 ORDER BY cc.id;
 
 -- name: clients.create
+-- A NULL number draws the next free one; COALESCE is lazy, so a supplied
+-- number never consumes a sequence value.
 WITH ins AS (
     INSERT INTO company_client
         (number, name, npwp, address, email, country_code, tku_id, created_by, updated_by)
     VALUES
-        ($1, $2, $3, $4, $5, COALESCE(NULLIF($6, ''), 'IDN'), $7, $8, $8)
+        (COALESCE(NULLIF(BTRIM($1::text), ''), fn_next_client_number()),
+         $2, $3, $4, $5, COALESCE(NULLIF($6, ''), 'IDN'), $7, $8, $8)
     RETURNING id, number, name, npwp, address, email, country_code,
               tku_id, is_active, created_at, updated_at
 )
@@ -109,8 +121,12 @@ SELECT ins.id, ins.number, ins.name, ins.npwp, ins.address, ins.email, ins.count
 FROM ins;
 
 -- name: clients.update
+-- A NULL $10 keeps the number. A different one is refused once any
+-- quotation references the client, since its document numbers embed it; no
+-- row comes back and the caller tells that apart from a missing client.
 UPDATE company_client
-   SET name         = $2,
+   SET number       = COALESCE($10::text, number),
+       name         = $2,
        npwp         = $3,
        address      = $4,
        email        = $5,
@@ -120,6 +136,9 @@ UPDATE company_client
        updated_by   = $9,
        updated_at   = NOW()
  WHERE id = $1
+   AND ($10::text IS NULL
+        OR $10::text = number
+        OR NOT EXISTS (SELECT 1 FROM quotations q WHERE q.company_client_id = $1))
 RETURNING id, number, name, npwp, address, email, country_code,
           tku_id, is_active, created_at, updated_at,
           NULL::BIGINT AS contact_id,
@@ -129,7 +148,10 @@ RETURNING id, number, name, npwp, address, email, country_code,
           COALESCE((SELECT SUM(q.grand_total)::TEXT
                     FROM quotations q
                     WHERE q.company_client_id = company_client.id
-                      AND q.status = 'accepted'), '0') AS total_purchase,
+                      AND q.status = 'accepted'
+                      AND NOT EXISTS (SELECT 1 FROM purchase_orders po
+                                      WHERE po.quotation_id = q.id
+                                        AND po.status = 'CANCELLED')), '0') AS total_purchase,
           COALESCE((SELECT COUNT(*)
                     FROM quotations q
                     WHERE q.company_client_id = company_client.id), 0)::BIGINT AS quotation_count,
@@ -154,22 +176,27 @@ WHERE company_id = $1 AND is_active = TRUE
 ORDER BY name;
 
 -- name: clients.create_contact
+-- A blank email or title is stored as NULL: two blank emails would otherwise
+-- collide on the unique email index.
 INSERT INTO company_contacts
     (company_id, name, email, phone, title, country_code, created_by, updated_by)
 VALUES
-    ($1, $2, $3, $4, $5, COALESCE(NULLIF($6, ''), 'IDN'), $7, $7)
+    ($1, $2, NULLIF(BTRIM($3), ''), $4, NULLIF(BTRIM($5), ''),
+     COALESCE(NULLIF($6, ''), 'IDN'), $7, $7)
 RETURNING id, company_id, name, email, phone, title, country_code,
           is_active, created_at, updated_at;
 
 -- name: clients.update_contact
+-- PATCH: $4 and $7 say whether email and title were sent; a sent null or
+-- blank clears the column. A deleted contact is not editable.
 UPDATE company_contacts
    SET name = $3,
-       email = COALESCE($4, email),
-       phone = $5,
-       title = COALESCE($6, title),
-       country_code = COALESCE(NULLIF($7, ''), country_code),
-       updated_by = $8
- WHERE id = $2 AND company_id = $1
+       email = CASE WHEN $4::boolean THEN NULLIF(BTRIM($5::text), '') ELSE email END,
+       phone = $6,
+       title = CASE WHEN $7::boolean THEN NULLIF(BTRIM($8::text), '') ELSE title END,
+       country_code = COALESCE(NULLIF($9, ''), country_code),
+       updated_by = $10
+ WHERE id = $2 AND company_id = $1 AND is_active = TRUE
 RETURNING id, company_id, name, email, phone, title, country_code,
           is_active, created_at, updated_at;
 

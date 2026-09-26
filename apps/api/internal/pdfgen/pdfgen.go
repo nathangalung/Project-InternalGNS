@@ -13,11 +13,13 @@ import (
 	"strings"
 	"text/template"
 	"time"
+	"unicode"
 )
 
-// Bound concurrent xelatex processes so a burst of exports cannot exhaust the
-// host. Sized to half the CPU budget, clamped to [2, 8]. Shared across
-// renderers. PDF_RENDER_CONCURRENCY overrides the computed value.
+// renderSem bounds concurrent xelatex runs.
+// A burst of exports cannot then exhaust the host. Sized to half the CPU
+// budget, clamped to [2, 8]. Shared across renderers.
+// PDF_RENDER_CONCURRENCY overrides the computed value.
 var renderSem = make(chan struct{}, renderConcurrency())
 
 // renderConcurrency sizes the xelatex semaphore.
@@ -42,14 +44,15 @@ func renderConcurrency() int {
 	}
 }
 
-// Renderer compiles LaTeX templates to PDF bytes via xelatex.
+// Renderer compiles LaTeX to PDF.
+// It runs xelatex over the templates.
 type Renderer struct {
 	templatesRoot string
 	xelatexBinary string
 	timeout       time.Duration
 }
 
-// NewRenderer wires the LaTeX templates root.
+// NewRenderer wires the templates root.
 func NewRenderer(templatesRoot string) *Renderer {
 	return &Renderer{
 		templatesRoot: templatesRoot,
@@ -58,7 +61,8 @@ func NewRenderer(templatesRoot string) *Renderer {
 	}
 }
 
-// Render fills the named template and runs xelatex twice for accurate page refs.
+// Render fills and compiles templates.
+// xelatex runs twice for accurate page refs.
 func (r *Renderer) Render(ctx context.Context, name string, data any) ([]byte, error) {
 	// Bound each render by the renderer's own timeout, independent of the
 	// request deadline, and wire it (previously the field was unused).
@@ -115,7 +119,7 @@ func (r *Renderer) Render(ctx context.Context, name string, data any) ([]byte, e
 	return pdf, nil
 }
 
-// copyAssets stages shared images beside doc.tex.
+// copyAssets stages images beside doc.tex.
 func (r *Renderer) copyAssets(dir string) error {
 	assets := filepath.Join(r.templatesRoot, "..", "assets")
 	entries, err := os.ReadDir(assets)
@@ -167,7 +171,8 @@ func truncate(s string, n int) string {
 	return s[:n] + "...(truncated)"
 }
 
-// LatexEscape escapes user-provided text for safe LaTeX inclusion.
+// LatexEscape escapes user text.
+// The result is safe to include in LaTeX.
 func LatexEscape(s string) string {
 	r := strings.NewReplacer(
 		"\\", `\textbackslash{}`,
@@ -187,7 +192,44 @@ func LatexEscape(s string) string {
 	return r.Replace(s)
 }
 
-// FormatIDR renders a numeric string as Rp 1.234.567 with dot grouping.
+// breakRun caps unbroken tokens.
+// Twenty characters fit the narrowest table cell at the A5 font size.
+const breakRun = 20
+
+// LatexBreakable wraps long tokens.
+// A run of more than breakRun non-space characters, such as a part number,
+// gets an invisible break point after each character so it wraps inside a
+// p{} cell instead of running off the page. Shorter text is LatexEscape.
+func LatexBreakable(s string) string {
+	var b strings.Builder
+	run := make([]rune, 0, len(s))
+	flush := func() {
+		if len(run) <= breakRun {
+			b.WriteString(LatexEscape(string(run)))
+		} else {
+			for i, r := range run {
+				if i > 0 {
+					b.WriteString(`\discretionary{}{}{}`)
+				}
+				b.WriteString(LatexEscape(string(r)))
+			}
+		}
+		run = run[:0]
+	}
+	for _, r := range s {
+		if unicode.IsSpace(r) {
+			flush()
+			b.WriteRune(r)
+			continue
+		}
+		run = append(run, r)
+	}
+	flush()
+	return b.String()
+}
+
+// FormatIDR renders Rupiah amounts.
+// The format is Rp 1.234.567, with dot grouping.
 func FormatIDR(numericStr string) string {
 	if numericStr == "" {
 		return "Rp~--"
@@ -219,7 +261,40 @@ func FormatIDR(numericStr string) string {
 	return prefix + b.String()
 }
 
-// FormatQty trims trailing zeros from a numeric string.
+// FormatIDRCents keeps the cents.
+func FormatIDRCents(numericStr string) string {
+	// FormatIDR truncates, and filed invoices must not be restated.
+	s := strings.TrimSpace(numericStr)
+	if s == "" {
+		return "Rp~--"
+	}
+	prefix := "Rp~"
+	if strings.HasPrefix(s, "-") {
+		prefix = "-Rp~"
+		s = s[1:]
+	}
+	intPart, fracPart := s, "00"
+	if dot := strings.IndexByte(s, '.'); dot >= 0 {
+		intPart, fracPart = s[:dot], s[dot+1:]
+	}
+	if _, err := strconv.ParseInt(intPart, 10, 64); err != nil {
+		return "Rp~--"
+	}
+	fracPart = (fracPart + "00")[:2]
+	var b strings.Builder
+	b.WriteString(prefix)
+	for i, c := range intPart {
+		if i > 0 && (len(intPart)-i)%3 == 0 {
+			b.WriteByte('.')
+		}
+		b.WriteRune(c)
+	}
+	b.WriteByte(',')
+	b.WriteString(fracPart)
+	return b.String()
+}
+
+// FormatQty trims trailing zeros.
 // e.g. "5.00" -> "5", "1.500" -> "1.5", "" -> "0".
 func FormatQty(numericStr string) string {
 	s := strings.TrimSpace(numericStr)
@@ -236,7 +311,8 @@ func FormatQty(numericStr string) string {
 	return s
 }
 
-// JakartaDateLine returns "Jakarta, D Month YYYY" in English.
+// JakartaDateLine formats the date line.
+// It returns "Jakarta, D Month YYYY" in English.
 func JakartaDateLine(t time.Time) string {
 	months := []string{"January", "February", "March", "April", "May", "June",
 		"July", "August", "September", "October", "November", "December"}

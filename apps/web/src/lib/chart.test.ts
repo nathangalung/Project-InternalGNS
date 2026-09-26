@@ -78,3 +78,26 @@ describe("yearRange / monthRange", () => {
     expect(monthRange(2026, 11)).toEqual({ from: "2026-12-01", to: "2027-01-01" })
   })
 })
+
+describe("buildDailySeries edges", () => {
+  it("returns a zeroed month when there are no points", () => {
+    expect(buildDailySeries(undefined, 2026, 1)).toEqual(new Array(28).fill(0))
+  })
+
+  it("drops a day the month does not have", () => {
+    const s = buildDailySeries(
+      [
+        { month: "2026-02-30", value: "7" },
+        { month: "2026-02-00", value: "7" },
+      ],
+      2026,
+      1,
+    )
+    expect(s).toHaveLength(28)
+    expect(s.every((v) => v === 0)).toBe(true)
+  })
+
+  it("reads a non-numeric value as zero", () => {
+    expect(buildDailySeries([{ month: "2026-04-02", value: "abc" }], 2026, 3)[1]).toBe(0)
+  })
+})

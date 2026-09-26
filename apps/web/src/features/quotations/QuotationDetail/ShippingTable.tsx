@@ -16,18 +16,10 @@ export default function ShippingTable({ shipping }: ShippingTableProps) {
         <table className="w-full min-w-full table-auto border-collapse lg:table-fixed">
           <thead>
             <tr className={ui.theadRow}>
-              <th className={ui.thCenter} style={{ width: 200 }}>
-                Nama
-              </th>
-              <th className={ui.thCenter} style={{ width: 200 }}>
-                Waktu Pengiriman (Hari Kerja)
-              </th>
-              <th className={ui.thCenter} style={{ width: 160 }}>
-                Harga Jual Satuan
-              </th>
-              <th className={ui.thCenter} style={{ width: 160 }}>
-                Total (Rp)
-              </th>
+              <th className={`${ui.thCenter} w-[200px]`}>Nama</th>
+              <th className={`${ui.thCenter} w-[200px]`}>Waktu Pengiriman (Hari Kerja)</th>
+              <th className={`${ui.thCenter} w-[160px]`}>Harga Jual Satuan</th>
+              <th className={`${ui.thCenter} w-[160px]`}>Total (Rp)</th>
             </tr>
           </thead>
           <tbody>

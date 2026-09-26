@@ -109,15 +109,18 @@ func (r *Repo) CreateItemRequest(ctx context.Context, quotationID int64, req Ite
 	return pgx.CollectOneRow(rows, pgx.RowToStructByName[ItemRequestRow])
 }
 
-// UpdateItemRequest full replace + bump version.
-// Sets reviewed_by/at on first pending→non-pending only.
-func (r *Repo) UpdateItemRequest(ctx context.Context, id int64, req ItemRequestUpdate, userID int64) (ItemRequestRow, error) {
+// UpdateItemRequest replaces and bumps version.
+// Sets reviewed_by/at on first pending→non-pending only. A request that
+// belongs to another quotation is ErrNotFound.
+func (r *Repo) UpdateItemRequest(
+	ctx context.Context, quotationID, id int64, req ItemRequestUpdate, userID int64,
+) (ItemRequestRow, error) {
 	var row ItemRequestRow
 	rows, err := r.db.Query(ctx, r.store.Get("quotations.qir_update"),
 		id, req.LineNo, req.RequestText, req.RequestImpa,
 		req.RequestedQty, req.RequestedUom,
 		req.MatchedItemID, req.MatchStatus, req.SourceType,
-		req.SourceRef, req.Notes, userID,
+		req.SourceRef, req.Notes, userID, quotationID,
 	)
 	if err != nil {
 		return row, err
@@ -130,9 +133,10 @@ func (r *Repo) UpdateItemRequest(ctx context.Context, id int64, req ItemRequestU
 }
 
 // DeleteItemRequest removes row.
-func (r *Repo) DeleteItemRequest(ctx context.Context, id int64) error {
+// A request that belongs to another quotation is ErrNotFound.
+func (r *Repo) DeleteItemRequest(ctx context.Context, quotationID, id int64) error {
 	var deleted int64
-	err := r.db.QueryRow(ctx, r.store.Get("quotations.qir_delete"), id).Scan(&deleted)
+	err := r.db.QueryRow(ctx, r.store.Get("quotations.qir_delete"), id, quotationID).Scan(&deleted)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ErrNotFound
 	}
@@ -178,6 +182,11 @@ func (h *Handler) CreateItemRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateItemRequest(w http.ResponseWriter, r *http.Request) {
+	qid, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
 	rid, err := strconv.ParseInt(chi.URLParam(r, "rid"), 10, 64)
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest("invalid rid"))
@@ -193,7 +202,7 @@ func (h *Handler) UpdateItemRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userID := deps.CurrentUserID(r.Context())
-	out, err := h.repo.UpdateItemRequest(r.Context(), rid, req, userID)
+	out, err := h.repo.UpdateItemRequest(r.Context(), qid, rid, req, userID)
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("request not found"))
 		return
@@ -206,12 +215,17 @@ func (h *Handler) UpdateItemRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteItemRequest(w http.ResponseWriter, r *http.Request) {
+	qid, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
 	rid, err := strconv.ParseInt(chi.URLParam(r, "rid"), 10, 64)
 	if err != nil {
 		httperr.Render(w, httperr.BadRequest("invalid rid"))
 		return
 	}
-	err = h.repo.DeleteItemRequest(r.Context(), rid)
+	err = h.repo.DeleteItemRequest(r.Context(), qid, rid)
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("request not found"))
 		return

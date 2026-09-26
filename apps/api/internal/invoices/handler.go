@@ -3,6 +3,7 @@ package invoices
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -16,17 +17,21 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
+	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
 type Handler struct {
 	repo *Repo
+	// proofs may be nil.
+	// It is nil when storage is not configured.
+	proofs ProofStore
 }
 
-func NewHandler(repo *Repo) *Handler {
-	return &Handler{repo: repo}
+func NewHandler(repo *Repo, proofs ProofStore) *Handler {
+	return &Handler{repo: repo, proofs: proofs}
 }
 
-// parseListFilter reads the shared invoice list filters (no pagination).
+// parseListFilter reads unpaged list filters.
 func parseListFilter(r *http.Request) ListFilter {
 	q := r.URL.Query()
 	f := ListFilter{
@@ -74,7 +79,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
 }
 
-// Export streams the filtered invoice list as an XLSX table.
+// Export streams the filtered list.
+// The list goes out as an XLSX table.
 func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	f := parseListFilter(r)
 	f.Limit, f.Offset = listq.Unbounded, 0
@@ -129,7 +135,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid id"))
 		return
 	}
-	inv, err := h.repo.GetByID(r.Context(), id)
+	inv, err := h.repo.GetDetail(r.Context(), id)
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("invoice not found"))
 		return
@@ -147,7 +153,7 @@ func (h *Handler) GetByQuotation(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid quotation id"))
 		return
 	}
-	inv, err := h.repo.GetByQuotation(r.Context(), id)
+	inv, err := h.repo.GetDetailByQuotation(r.Context(), id)
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("invoice not found"))
 		return
@@ -185,19 +191,51 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !isValidStatus(req.Status) {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "invalid status"}))
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"status": "Status invoice tidak dikenal."}))
+		return
+	}
+	if msg := proofKeyProblem(id, req); msg != "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"paymentProofKey": msg}))
+		return
+	}
+	if !h.proofUploaded(w, r, req) {
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())
-	if err := h.repo.ChangeStatus(r.Context(), id, req.Status, actor); err != nil {
+	if err := h.repo.ChangeStatus(r.Context(), id, req, actor); err != nil {
 		if errors.Is(err, ErrNotFound) {
 			httperr.Render(w, httperr.NotFound("invoice not found"))
+			return
+		}
+		if errors.Is(err, ErrOverdueDerived) {
+			httperr.Render(w, httperr.UnprocessableDetail(
+				"Status Terlambat ditentukan otomatis dari tanggal jatuh tempo.", nil))
 			return
 		}
 		httperr.RenderDBErr(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// Replace issues a Pengganti invoice.
+func (h *Handler) Replace(w http.ResponseWriter, r *http.Request) {
+	id, ok := httpx.PathID(w, r, "id", "invalid id")
+	if !ok {
+		return
+	}
+	actor := deps.CurrentUserID(r.Context())
+	det, err := h.repo.Replace(r.Context(), id, actor)
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("invoice not found"))
+		return
+	}
+	if err != nil {
+		// P0012 not cancelled: 422. P0013 already replaced or live: 409.
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusCreated, det)
 }
 
 func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
@@ -226,6 +264,13 @@ func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, ErrNotFound):
 			httperr.Render(w, httperr.NotFound("invoice not found"))
+		case errors.Is(err, ErrDatesLocked):
+			httperr.Render(w, httperr.UnprocessableDetail(
+				"Invoice yang sudah dibayar atau dibatalkan tidak dapat diubah tanggalnya.", nil))
+		case errors.Is(err, ErrDueBeforeInvoice):
+			httperr.Render(w, httperr.Unprocessable(map[string]string{
+				"dueDate": "Tanggal jatuh tempo tidak boleh sebelum tanggal invoice.",
+			}))
 		case errors.Is(err, ErrVersionMismatch):
 			// Use 409 per round3_plan optimistic-lock contract (not RFC 7232 412).
 			httperr.Render(w, httperr.Conflict("invoice row_version mismatch"))
@@ -237,10 +282,53 @@ func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]int32{"rowVersion": newVersion})
 }
 
+// proofKeyProblem vets the proof key.
+// The key must address an upload made for this invoice, never any object in
+// the bucket or a traversal path, and it only accompanies a payment.
+func proofKeyProblem(id int64, req ChangeStatusRequest) string {
+	if req.PaymentProofKey == nil || strings.TrimSpace(*req.PaymentProofKey) == "" {
+		return ""
+	}
+	if req.Status != StatusPaid {
+		return "Bukti pembayaran hanya dapat dilampirkan saat invoice ditandai Dibayar."
+	}
+	key := strings.TrimSpace(*req.PaymentProofKey)
+	if err := storage.ValidateFolderKey(storage.BucketInvoiceAttachments, proofFolder(id), key); err != nil {
+		return "Berkas bukti pembayaran tidak dikenali. Unggah ulang berkasnya lalu simpan kembali."
+	}
+	return ""
+}
+
 func isValidStatus(s Status) bool {
 	switch s {
 	case StatusDraft, StatusSent, StatusPaid, StatusOverdue, StatusCancelled:
 		return true
 	}
 	return false
+}
+
+// proofUploaded confirms the proof exists.
+// A valid key only says where an upload would land; a payment must never
+// point at a file that never arrived.
+func (h *Handler) proofUploaded(w http.ResponseWriter, r *http.Request, req ChangeStatusRequest) bool {
+	if req.PaymentProofKey == nil || strings.TrimSpace(*req.PaymentProofKey) == "" {
+		return true
+	}
+	if h.proofs == nil {
+		httperr.Render(w, httperr.ServiceUnavailable("Penyimpanan berkas belum dikonfigurasi."))
+		return false
+	}
+	key := strings.TrimSpace(*req.PaymentProofKey)
+	ok, err := h.proofs.ObjectExists(r.Context(), storage.BucketInvoiceAttachments, key)
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, fmt.Errorf("invoice payment proof stat: %w", err))
+		return false
+	}
+	if !ok {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{
+			"paymentProofKey": "Berkas bukti pembayaran belum terunggah. Unggah ulang berkasnya lalu simpan kembali.",
+		}))
+		return false
+	}
+	return true
 }

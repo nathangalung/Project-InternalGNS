@@ -1,23 +1,25 @@
-import type { CSSProperties } from "react"
+import { useId } from "react"
+import { optionalAddressError, optionalCls } from "@/features/clients/ClientAdd/helpers"
+import { ui } from "@/lib/ui"
 import { qe, qep } from "./wizard-styles"
 
-interface Step3ShippingProps {
+type Step3ShippingProps = {
   shippingAddress: string
   setShippingAddress: (s: string) => void
   shippingTime: string
   setShippingTime: (s: string) => void
   shippingCost: string
   setShippingCost: (s: string) => void
-  isAlamatFilled: boolean
+  // Empty or valid; the address is optional
+  isAlamatOk: boolean
+  // The PO asks for the address
+  addressRequired?: boolean
   isWaktuFilled: boolean
-  // Accepted for legacy callers; the disabled look now comes from utilities.
-  disabledStyle?: CSSProperties
   formatRp: (n: number) => string
 }
 
 const fieldLabel = "mb-2 block text-[11px] font-bold uppercase tracking-[0.5px] text-[#4B5563]"
-const fieldInput =
-  "box-border w-full rounded-md bg-dark-200 p-4 text-sm text-[#111827] outline-none disabled:cursor-not-allowed disabled:bg-[#F7F7F8] disabled:opacity-60"
+const fieldInput = `box-border w-full rounded-md border border-transparent bg-dark-200 p-4 text-sm text-[#111827] outline-none ${ui.fieldFocus} disabled:cursor-not-allowed disabled:bg-[#F7F7F8] disabled:opacity-60`
 
 export default function Step3Shipping({
   shippingAddress,
@@ -26,15 +28,13 @@ export default function Step3Shipping({
   setShippingTime,
   shippingCost,
   setShippingCost,
-  isAlamatFilled,
+  isAlamatOk,
   isWaktuFilled,
   formatRp,
+  addressRequired = false,
 }: Step3ShippingProps) {
-  const addressError =
-    shippingAddress.trim().length > 0 &&
-    (shippingAddress.trim().length < 20 || !/[a-zA-Z]/.test(shippingAddress))
-      ? "Alamat harus minimal 20 karakter dan mengandung huruf."
-      : null
+  const id = useId()
+  const addressError = optionalAddressError(shippingAddress)
 
   return (
     <div className={qe.stepContent}>
@@ -47,38 +47,58 @@ export default function Step3Shipping({
 
       <div className="flex flex-col gap-6">
         <div>
-          <label className={fieldLabel}>
-            Alamat Lengkap <span className="text-error">*</span>
+          <label htmlFor={`${id}-alamat`} className={fieldLabel}>
+            Alamat Lengkap{" "}
+            {addressRequired ? (
+              <span className="text-error">*</span>
+            ) : (
+              <span className={optionalCls}>(Opsional)</span>
+            )}
           </label>
           <textarea
+            id={`${id}-alamat`}
+            aria-invalid={addressError ? true : undefined}
+            aria-describedby={addressError || !addressRequired ? `${id}-alamat-hint` : undefined}
             placeholder="Masukkan alamat pengiriman secara detail (min. 20 karakter)..."
             value={shippingAddress}
             onChange={(e) => setShippingAddress(e.target.value)}
-            className={`${fieldInput} min-h-[100px] resize-y`}
+            className={`${fieldInput} min-h-[100px] resize-y font-sans`}
           />
-          {addressError && <span className="mt-1 block text-xs text-error">{addressError}</span>}
+          {addressError ? (
+            <span id={`${id}-alamat-hint`} className="mt-1 block text-xs text-error">
+              {addressError}
+            </span>
+          ) : (
+            !addressRequired && (
+              <span id={`${id}-alamat-hint`} className="mt-1 block text-xs text-dark-600">
+                Wajib diisi sebelum PO diproses
+              </span>
+            )
+          )}
         </div>
 
-        <div className={`transition-opacity duration-200 ${isAlamatFilled ? "" : "opacity-60"}`}>
-          <label className={fieldLabel}>
+        <div className={`transition-opacity duration-200 ${isAlamatOk ? "" : "opacity-60"}`}>
+          <label htmlFor={`${id}-waktu`} className={fieldLabel}>
             Waktu Pengiriman (Hari) <span className="text-error">*</span>
           </label>
           <input
+            id={`${id}-waktu`}
             type="number"
             min={1}
             placeholder="Masukkan jumlah hari kerja setelah PO diterima..."
             value={shippingTime}
             onChange={(e) => setShippingTime(e.target.value)}
-            disabled={!isAlamatFilled}
+            disabled={!isAlamatOk}
             className={fieldInput}
           />
         </div>
 
         <div className={`transition-opacity duration-200 ${isWaktuFilled ? "" : "opacity-60"}`}>
-          <label className={fieldLabel}>
+          <label htmlFor={`${id}-biaya`} className={fieldLabel}>
             Biaya Pengiriman <span className="text-error">*</span>
           </label>
           <input
+            id={`${id}-biaya`}
             type="number"
             placeholder="3570000 (Isi hanya dengan angka)"
             value={shippingCost}

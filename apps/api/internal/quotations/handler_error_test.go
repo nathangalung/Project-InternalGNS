@@ -13,6 +13,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -52,6 +53,18 @@ func TestHandler_ErrorPaths(t *testing.T) {
 		{"status", http.MethodPatch, "/quotations/1/status",
 			quotations.ChangeStatusRequest{Status: "sent"}, nil, http.StatusInternalServerError},
 		{"send", http.MethodPost, "/quotations/1/send", nil, nil, http.StatusInternalServerError},
+		{"export xlsx", http.MethodGet, "/quotations/export.xlsx", nil, nil, http.StatusInternalServerError},
+		{"revisions", http.MethodGet, "/quotations/1/revisions", nil, nil, http.StatusInternalServerError},
+		{"contact", http.MethodPatch, "/quotations/1/contact",
+			quotations.ChangeContactRequest{ContactID: 1}, nil, http.StatusInternalServerError},
+		{"revise", http.MethodPost, "/quotations/1/revise", nil, nil, http.StatusInternalServerError},
+		{"requests list", http.MethodGet, "/quotations/1/requests", nil, nil, http.StatusInternalServerError},
+		{"requests create", http.MethodPost, "/quotations/1/requests",
+			quotations.ItemRequestCreate{LineNo: 1, RequestText: "X"}, nil, http.StatusInternalServerError},
+		{"requests update", http.MethodPut, "/quotations/1/requests/1", quotations.ItemRequestUpdate{
+			LineNo: 1, RequestText: "X", MatchStatus: "pending", SourceType: "manual",
+		}, nil, http.StatusInternalServerError},
+		{"requests delete", http.MethodDelete, "/quotations/1/requests/1", nil, nil, http.StatusInternalServerError},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -76,6 +89,10 @@ func TestHandler_ErrorPaths(t *testing.T) {
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.Equal(t, c.want, res.StatusCode)
+			// The raw driver error never reaches the client.
+			var e httperr.Error
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&e))
+			assert.Equal(t, "internal server error", e.Detail)
 		})
 	}
 }

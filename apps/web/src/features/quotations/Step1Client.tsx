@@ -1,3 +1,4 @@
+import { ui } from "@/lib/ui"
 import type { ContactRow } from "@/types/api"
 import { qe } from "./wizard-styles"
 
@@ -5,8 +6,7 @@ const searchWrapper = "relative w-full"
 const searchIcon = "pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-dark-500"
 const searchInput =
   "w-full rounded-lg bg-dark-200 py-[14px] pl-[52px] pr-6 text-sm font-normal text-dark-900 outline-none transition-colors duration-150 placeholder:text-dark-500 placeholder:opacity-70 focus:bg-dark-300"
-const clientItemBase =
-  "flex w-full cursor-pointer items-center gap-6 rounded-lg border p-5 text-left transition-[border-color,background] duration-200"
+const clientItemBase = `flex w-full cursor-pointer items-center gap-6 rounded-lg border p-5 text-left transition-[border-color,background] duration-200 max-sm:gap-3 max-sm:p-4 ${ui.focusRing}`
 const clientItemIdle = "border-[rgba(203,213,225,0.15)] bg-white"
 const clientItemSelected = "border-[rgba(124,58,237,0.4)] bg-dark-100"
 const radioBase =
@@ -29,7 +29,7 @@ export interface Client {
   lokasi?: string
 }
 
-interface Step1ClientProps {
+type Step1ClientProps = {
   search: string
   setSearch: (s: string) => void
   filteredClients: Client[]
@@ -39,6 +39,8 @@ interface Step1ClientProps {
   contacts?: ContactRow[]
   selectedContactId?: number | undefined
   setSelectedContactId?: (id: number | undefined) => void
+  // Edit mode: the client is fixed
+  lockClient?: boolean
 }
 
 export default function Step1Client({
@@ -51,22 +53,50 @@ export default function Step1Client({
   contacts = [],
   selectedContactId,
   setSelectedContactId,
+  lockClient = false,
 }: Step1ClientProps) {
   return (
     <div className={qe.stepContent}>
       <div className={qe.sectionHeader}>
         <div>
           <h2 className={qe.sectionTitle}>Pilih Klien Strategis</h2>
-          <p className={qe.sectionDesc}>Tentukan mitra bisnis untuk penawaran harga ini.</p>
+          <p className={qe.sectionDesc}>
+            {lockClient
+              ? "Klien tidak dapat diganti setelah quotation dibuat. Narahubung masih dapat diubah."
+              : "Tentukan mitra bisnis untuk penawaran harga ini."}
+          </p>
         </div>
-        <button
-          type="button"
-          className={`${qe.addBtn} w-[210px] justify-center`}
-          onClick={() => setShowClientAdd(true)}
-        >
+        {!lockClient && (
+          <button
+            type="button"
+            className={`${qe.addBtn} w-[210px] justify-center`}
+            onClick={() => setShowClientAdd(true)}
+          >
+            <svg
+              aria-hidden="true"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Tambah Klien Baru
+          </button>
+        )}
+      </div>
+
+      {!lockClient && (
+        <div className={searchWrapper}>
           <svg
-            width="16"
-            height="16"
+            aria-hidden="true"
+            className={searchIcon}
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -74,35 +104,19 @@ export default function Step1Client({
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <path d="M12 5v14M5 12h14" />
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
           </svg>
-          Tambah Klien Baru
-        </button>
-      </div>
-
-      <div className={searchWrapper}>
-        <svg
-          className={searchIcon}
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.35-4.35" />
-        </svg>
-        <input
-          className={searchInput}
-          type="text"
-          placeholder="Cari nama perusahaan atau nama narahubung..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+          <input
+            className={searchInput}
+            type="text"
+            placeholder="Cari nama perusahaan atau nama narahubung..."
+            aria-label="Cari klien"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      )}
 
       <div className="flex flex-col gap-3">
         {filteredClients.map((client) => {
@@ -110,7 +124,10 @@ export default function Step1Client({
           return (
             <button
               key={client.id}
-              className={`${clientItemBase} ${isSelected ? clientItemSelected : clientItemIdle}`}
+              type="button"
+              aria-pressed={isSelected}
+              disabled={lockClient}
+              className={`${clientItemBase} ${isSelected ? clientItemSelected : clientItemIdle}${lockClient ? " cursor-default" : ""}`}
               onClick={() => setSelectedClient(client.id)}
             >
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-[rgba(203,213,225,0.15)] bg-white">
@@ -121,7 +138,7 @@ export default function Step1Client({
                   {client.name} - {client.narahubung}
                 </span>
                 <span className="flex items-center gap-1 text-[0.6875rem] font-normal leading-4 text-dark-600">
-                  <svg width="9" height="12" viewBox="0 0 9 12" fill="none">
+                  <svg aria-hidden="true" width="9" height="12" viewBox="0 0 9 12" fill="none">
                     <path
                       d="M4.5 0C2.015 0 0 2.015 0 4.5C0 7.875 4.5 12 4.5 12C4.5 12 9 7.875 9 4.5C9 2.015 6.985 0 4.5 0ZM4.5 6C3.672 6 3 5.328 3 4.5C3 3.672 3.672 3 4.5 3C5.328 3 6 3.672 6 4.5C6 5.328 5.328 6 4.5 6Z"
                       fill="currentColor"
@@ -149,7 +166,8 @@ export default function Step1Client({
                   key={c.id}
                   type="button"
                   onClick={() => setSelectedContactId?.(c.id)}
-                  className={`flex w-full items-center gap-3 rounded-md border-[1.5px] px-4 py-3 text-left ${
+                  aria-pressed={isSelected}
+                  className={`flex w-full items-center gap-3 rounded-md border-[1.5px] px-4 py-3 text-left ${ui.focusRing} ${
                     isSelected
                       ? "border-primary-700 bg-[#F5F0FF]"
                       : "border-transparent bg-[#F2F4F6]"

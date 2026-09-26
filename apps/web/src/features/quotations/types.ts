@@ -1,8 +1,8 @@
-import type { DisplayStatus } from "@/lib/status"
+import type { QuotationStatusLabel } from "./status"
 
-export type Status = DisplayStatus
+export type Status = QuotationStatusLabel
 
-export interface ClientInfo {
+export type ClientInfo = {
   narahubung?: string
   phone?: string
   email?: string
@@ -12,7 +12,11 @@ export interface ClientInfo {
   lokasi?: string
 }
 
-export interface ProductRow {
+export type ProductRow = {
+  // Offered or requested catalog item
+  itemId?: number
+  // Stable line key
+  lineId?: number
   kode: string
   nama: string
   requestedKode?: string
@@ -24,7 +28,7 @@ export interface ProductRow {
   vendor?: string
 }
 
-export interface ShippingRow {
+export type ShippingRow = {
   nama: string
   deadline: string
   hargaSatuan: number
@@ -32,15 +36,16 @@ export interface ShippingRow {
   hari?: number
 }
 
-interface HistoryEntry {
+type HistoryEntry = {
   date: string
   action: string
 }
 
-export interface QuotationData {
+export type QuotationData = {
   id: string
   version: number
   client: string
+  clientId?: number
   clientInfo?: ClientInfo
   createdAt: string
   status: Status

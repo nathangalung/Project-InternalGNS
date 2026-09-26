@@ -6,6 +6,7 @@ interface EyeIconProps {
 export default function EyeIcon({ size = 20, strokeWidth = 2 }: EyeIconProps) {
   return (
     <svg
+      aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 24 24"

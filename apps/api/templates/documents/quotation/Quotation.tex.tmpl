@@ -11,7 +11,7 @@
   BoldItalicFont = Plus Jakarta Sans Bold Italic,
 ]
 
-[[if .UseA4]]\usepackage[a4paper, landscape, includehead, top=1.5cm, bottom=1.8cm, left=1.5cm, right=1.5cm]{geometry}[[else]]\usepackage[a5paper, landscape, includehead, top=1.0cm, bottom=1.2cm, left=1.0cm, right=1.0cm]{geometry}[[end]]
+[[if .UseA4]]\usepackage[a4paper, landscape, includehead, top=1.5cm, bottom=1.8cm, left=1.5cm, right=1.5cm]{geometry}[[else]]\usepackage[a5paper, landscape, includehead, includefoot, headheight=10pt, headsep=3pt, footskip=10pt, top=0.3cm, bottom=0.3cm, left=0.8cm, right=0.8cm]{geometry}[[end]]
 \usepackage{graphicx}
 \usepackage{longtable}
 \usepackage{array}
@@ -28,21 +28,57 @@
 
 \hypersetup{colorlinks=true, urlcolor=blue, linkcolor=black}
 
+% Paper-dependent sizes. A5 must hold five lines on one sheet.
+[[if .UseA4]]
+\newcommand{\QLogoWidth}{5.6cm}
+\newcommand{\QTop}{}
+\newcommand{\QHeadEnd}{}
+\newcommand{\QSigHeight}{2.0cm}
+\newcommand{\QHeadSize}{\fontsize{7.5}{9.5}\selectfont}
+\newcommand{\QPartySize}{\small}
+\newcommand{\QTitleSize}{\large}
+\newcommand{\QRowStretch}{1.2}
+\newcommand{\QCellSize}{\footnotesize}
+\newlength{\QGapRule}\setlength{\QGapRule}{0.3cm}
+\newlength{\QGapParty}\setlength{\QGapParty}{0.5cm}
+\newlength{\QGapIntro}\setlength{\QGapIntro}{0.3cm}
+\newlength{\QGapFoot}\setlength{\QGapFoot}{0.5cm}
+\newlength{\QFootRowGap}\setlength{\QFootRowGap}{3pt}
+[[else]]
+\newcommand{\QLogoWidth}{2.6cm}
+% Align letterhead tops; end the paragraph at size.
+\newcommand{\QTop}{\vspace{0pt}}
+\newcommand{\QHeadEnd}{\par}
+\newcommand{\QSigHeight}{0.6cm}
+\newcommand{\QHeadSize}{\fontsize{6}{7}\selectfont}
+\newcommand{\QPartySize}{\scriptsize}
+\newcommand{\QTitleSize}{\normalsize}
+\newcommand{\QRowStretch}{0.85}
+\newcommand{\QCellSize}{\scriptsize}
+\newlength{\QGapRule}\setlength{\QGapRule}{0.08cm}
+\newlength{\QGapParty}\setlength{\QGapParty}{0.12cm}
+\newlength{\QGapIntro}\setlength{\QGapIntro}{0.08cm}
+\newlength{\QGapFoot}\setlength{\QGapFoot}{0.08cm}
+\newlength{\QFootRowGap}\setlength{\QFootRowGap}{1pt}
+\setlength{\LTpre}{0pt}
+\setlength{\LTpost}{0pt}
+[[end]]
+
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{2pt}
 \setlength{\emergencystretch}{2em}
 \hfuzz=2pt
 \hbadness=2000
 
-\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\footnotesize}p{#1}}
-\newcolumntype{C}[1]{>{\centering\arraybackslash\footnotesize}p{#1}}
-\newcolumntype{R}[1]{>{\RaggedLeft\arraybackslash\footnotesize}p{#1}}
-\renewcommand{\arraystretch}{1.2}
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash\QCellSize}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash\QCellSize}p{#1}}
+\newcolumntype{R}[1]{>{\RaggedLeft\arraybackslash\QCellSize}p{#1}}
+\renewcommand{\arraystretch}{\QRowStretch}
 
 \fancypagestyle{firstpage}{%
   \fancyhf{}
   \renewcommand{\headrulewidth}{0pt}
-  \fancyfoot[C]{\footnotesize \thepage\ of \pageref{LastPage}}
+  \fancyfoot[C]{\QCellSize \thepage\ of \pageref{LastPage}}
 }
 
 \fancypagestyle{mainpages}{%
@@ -50,7 +86,7 @@
   \renewcommand{\headrulewidth}{0.4pt}
   \fancyhead[L]{\footnotesize\textbf{PT. GLOBAL NIAGA SAKTI} -- QUOTATION}
   \fancyhead[R]{\footnotesize [[.QuotationNo]] \quad|\quad [[.ClientRefNo]]}
-  \fancyfoot[C]{\footnotesize \thepage\ of \pageref{LastPage}}
+  \fancyfoot[C]{\QCellSize \thepage\ of \pageref{LastPage}}
 }
 \pagestyle{mainpages}
 
@@ -59,37 +95,40 @@
 
 \noindent
 \begin{minipage}[t]{0.28\textwidth}
-  {\fontsize{7.5}{9.5}\selectfont
+  \QTop
+  {\QHeadSize
   Gedung Wirausaha Lt 1, Unit 104\\
   Jl. HR. Rasuna Said Kav. C5\\
   Kuningan, Setiabudi\\
-  Jakarta Selatan 12920
+  Jakarta Selatan 12920\QHeadEnd
   }
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.40\textwidth}
+  \QTop
   \centering
   % Wide lockup carries company name.
-  \includegraphics[width=5.6cm]{Logo_Vertical.png}
+  \includegraphics[width=\QLogoWidth]{Logo_Vertical.png}
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.28\textwidth}
+  \QTop
   \raggedleft
-  {\fontsize{7.5}{9.5}\selectfont
+  {\QHeadSize
   Telp. 021-5099 6969 (ext. 1249)\\
   WA. 0811-980-982/0811-999-0991\\
   Email: sales@globalsakti.com\\
-  Website: www.globalsakti.com
+  Website: www.globalsakti.com\QHeadEnd
   }
 \end{minipage}
 
-\vspace{0.3cm}
+\vspace{\QGapRule}
 \noindent\rule{\textwidth}{0.8pt}
-\vspace{0.2cm}
+\vspace{\QGapRule}
 
 \noindent
 \begin{minipage}[t]{0.52\textwidth}
-  {\small
+  {\QPartySize
   \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
     To           & : & [[.CompanyName]] \\[1pt]
     Attn         & : & [[.AttnName]] \\[1pt]
@@ -101,7 +140,7 @@
 \hfill
 \begin{minipage}[t]{0.44\textwidth}
   \raggedleft
-  {\small
+  {\QPartySize
   \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
     No           & : & [[.QuotationNo]] \\[1pt]
     Your Ref No. & : & [[.ClientRefNo]] \\[1pt]
@@ -111,14 +150,15 @@
   }
 \end{minipage}
 
-\vspace{0.5cm}
-\begin{center}
-  {\large\bfseries\underline{QUOTATION}}
+\vspace{\QGapParty}
+[[if .UseA4]]\begin{center}
+  {\QTitleSize\bfseries\underline{QUOTATION}}
 \end{center}
-\vspace{0.1cm}
-
+[[else]]{\centering\QTitleSize\bfseries\underline{QUOTATION}\par}
+\vspace{\QGapIntro}
+[[end]]
 \noindent\textbf{We are pleased to quote as follow\,:}
-\vspace{0.3cm}
+\vspace{\QGapIntro}
 
 \setlength{\tabcolsep}{2pt}
 
@@ -133,31 +173,31 @@
 \newlength{\QNcol}\setlength{\QNcol}{0.4cm}
 \newlength{\QQcol}\setlength{\QQcol}{0.4cm}
 \newlength{\QUcol}\setlength{\QUcol}{0.8cm}
-\newlength{\QLcol}\setlength{\QLcol}{4.8cm}
+\newlength{\QLcol}\setlength{\QLcol}{6.2cm}
 \newlength{\QDcol}\setlength{\QDcol}{6.2cm}
-\newlength{\QMcol}\setlength{\QMcol}{2.3cm}
+\newlength{\QMcol}\setlength{\QMcol}{2.1cm}
 [[end]]
 
 \begin{longtable}{|C{\QNcol}|C{\QQcol}|C{\QUcol}|L{\QLcol}|L{\QDcol}|R{\QMcol}|R{\QMcol}|}
 \hline
-\multicolumn{1}{|c|}{\footnotesize\bfseries No.} &
-\multicolumn{1}{c|}{\footnotesize\bfseries Qty} &
-\multicolumn{1}{c|}{\footnotesize\bfseries Unit} &
-\multicolumn{1}{c|}{\footnotesize\bfseries Request} &
-\multicolumn{1}{c|}{\footnotesize\bfseries Offer Description} &
-\multicolumn{1}{c|}{\footnotesize\bfseries Unit Price} &
-\multicolumn{1}{c|}{\footnotesize\bfseries Amount} \\
+\multicolumn{1}{|c|}{\QCellSize\bfseries No.} &
+\multicolumn{1}{c|}{\QCellSize\bfseries Qty} &
+\multicolumn{1}{c|}{\QCellSize\bfseries Unit} &
+\multicolumn{1}{c|}{\QCellSize\bfseries Request} &
+\multicolumn{1}{c|}{\QCellSize\bfseries Offer Description} &
+\multicolumn{1}{c|}{\QCellSize\bfseries Unit Price} &
+\multicolumn{1}{c|}{\QCellSize\bfseries Amount} \\
 \hline
 \endfirsthead
 
 \hline
-\multicolumn{1}{|c|}{\footnotesize\bfseries No.} &
-\multicolumn{1}{c|}{\footnotesize\bfseries Qty} &
-\multicolumn{1}{c|}{\footnotesize\bfseries Unit} &
-\multicolumn{1}{c|}{\footnotesize\bfseries Request} &
-\multicolumn{1}{c|}{\footnotesize\bfseries Offer Description} &
-\multicolumn{1}{c|}{\footnotesize\bfseries Unit Price} &
-\multicolumn{1}{c|}{\footnotesize\bfseries Amount} \\
+\multicolumn{1}{|c|}{\QCellSize\bfseries No.} &
+\multicolumn{1}{c|}{\QCellSize\bfseries Qty} &
+\multicolumn{1}{c|}{\QCellSize\bfseries Unit} &
+\multicolumn{1}{c|}{\QCellSize\bfseries Request} &
+\multicolumn{1}{c|}{\QCellSize\bfseries Offer Description} &
+\multicolumn{1}{c|}{\QCellSize\bfseries Unit Price} &
+\multicolumn{1}{c|}{\QCellSize\bfseries Amount} \\
 \hline
 \endhead
 
@@ -176,41 +216,43 @@
 \hline
 [[end]]
 
-\multicolumn{5}{|r|}{\footnotesize Total} &
-  \multicolumn{2}{r|}{\footnotesize [[.TotalProduk]]} \\
-\multicolumn{5}{|r|}{\footnotesize Diskon [[.DiscountPct]]\%} &
-  \multicolumn{2}{r|}{\footnotesize -[[.TotalDiscount]]} \\
-\multicolumn{5}{|r|}{\footnotesize Sub Total} &
-  \multicolumn{2}{r|}{\footnotesize [[.Subtotal]]} \\
-\multicolumn{5}{|r|}{\footnotesize DPP Nilai Lain} &
-  \multicolumn{2}{r|}{\footnotesize [[.DPP]]} \\
-\multicolumn{5}{|r|}{\footnotesize PPN 12\%} &
-  \multicolumn{2}{r|}{\footnotesize [[.PPN]]} \\
+\multicolumn{5}{|r|}{\QCellSize Total Produk} &
+  \multicolumn{2}{r|}{\QCellSize [[.TotalProduk]]} \\
+\multicolumn{5}{|r|}{\QCellSize Diskon [[.DiscountPct]]\%} &
+  \multicolumn{2}{r|}{\QCellSize -[[.TotalDiscount]]} \\
+[[if .HasShipping]]\multicolumn{5}{|r|}{\QCellSize Pengiriman} &
+  \multicolumn{2}{r|}{\QCellSize [[.Shipping]]} \\
+[[end]]\multicolumn{5}{|r|}{\QCellSize Sub Total} &
+  \multicolumn{2}{r|}{\QCellSize [[.Subtotal]]} \\
+\multicolumn{5}{|r|}{\QCellSize DPP Nilai Lain} &
+  \multicolumn{2}{r|}{\QCellSize [[.DPP]]} \\
+\multicolumn{5}{|r|}{\QCellSize PPN 12\%} &
+  \multicolumn{2}{r|}{\QCellSize [[.PPN]]} \\
 \hline
-\multicolumn{5}{|r|}{\footnotesize\bfseries Grand Total} &
-  \multicolumn{2}{r|}{\footnotesize\bfseries [[.GrandTotal]]} \\
+\multicolumn{5}{|r|}{\QCellSize\bfseries Grand Total} &
+  \multicolumn{2}{r|}{\QCellSize\bfseries [[.GrandTotal]]} \\
 \hline
 
 \end{longtable}
 
-\vspace{0.5cm}
+\vspace{\QGapFoot}
 \noindent
 \begin{minipage}[t]{0.55\textwidth}
-  \small
-  \begin{tabular}{@{}l@{\;}l@{\;}l@{}}
-    DELIVERY PLACE & : & [[.DeliveryPlace]] \\[3pt]
-    DELIVERY TIME  & : & [[.DeliveryTime]] \\[3pt]
-    PAYMENT        & : & [[.Payment]] \\[3pt]
+  \QPartySize
+  \begin{tabular}[t]{@{}l@{\;}l@{\;}l@{}}
+    DELIVERY PLACE & : & [[.DeliveryPlace]] \\[\QFootRowGap]
+    DELIVERY TIME  & : & [[.DeliveryTime]] \\[\QFootRowGap]
+    PAYMENT        & : & [[.Payment]] \\[\QFootRowGap]
     VALIDITY       & : & [[.Validity]] \\
   \end{tabular}
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.40\textwidth}
   \raggedleft
-  \small
-  [[.DateLine]]\\[6pt]
+  \QPartySize
+  [[.DateLine]]\\[4pt]
   % Signed digitally on quotations only.
-  \includegraphics[height=2.0cm]{Signature.jpg}\\[2pt]
+  \includegraphics[height=\QSigHeight]{Signature.jpg}\\[2pt]
   \textbf{[[.SignerName]]}
 \end{minipage}
 

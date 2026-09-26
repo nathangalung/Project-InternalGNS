@@ -1,7 +1,9 @@
 // Pagination row size options.
 export const PAGE_SIZE_OPTIONS = [5, 10, 15]
 
-// Build page-number list with ellipsis placeholders (null).
+// Page numbers with ellipsis gaps.
+//
+// A null entry is an ellipsis placeholder.
 export function getPageNumbers(current: number, total: number): (number | null)[] {
   if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1)
   const set = new Set(

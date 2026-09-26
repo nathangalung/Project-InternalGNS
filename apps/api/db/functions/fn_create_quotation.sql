@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_quotation (deployed by migration 00036).
+-- Canonical current body of fn_create_quotation (deployed by migration 00069).
 CREATE OR REPLACE FUNCTION public.fn_create_quotation(p_company_client_id bigint, p_contact_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_created_by bigint, p_notes text DEFAULT NULL::text, p_status text DEFAULT 'draft'::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -109,7 +109,7 @@ BEGIN
   END LOOP;
 
   -- 7. INSERT shipping line
-  IF p_shipping_cost IS NOT NULL AND p_shipping_cost > 0 THEN
+  IF NULLIF(TRIM(p_shipping_address), '') IS NOT NULL OR COALESCE(p_shipping_cost, 0) > 0 THEN
     v_line_no := v_line_no + 1;
     INSERT INTO quotation_items (
       quotation_id, line_number, item_type,
@@ -124,7 +124,7 @@ BEGIN
       'SHIPPING' || COALESCE(' — ' || p_shipping_address, ''),
       1,
       (SELECT id FROM units WHERE code = 'UNIT' LIMIT 1),
-      p_shipping_cost,
+      COALESCE(p_shipping_cost, 0),
       p_shipping_address,
       p_shipping_days,
       p_created_by, p_created_by

@@ -28,7 +28,7 @@ func main() {
 
 	cfg, err := app.LoadConfig()
 	if err != nil {
-		logger.Error("load config", "err", err)
+		logger.Error("load config", "error", err)
 		os.Exit(1)
 	}
 
@@ -41,9 +41,13 @@ func main() {
 
 	srv, err := app.NewServer(ctx, cfg)
 	if err != nil {
-		logger.Error("build server", "err", err)
+		logger.Error("build server", "error", err)
 		os.Exit(1)
 	}
+	// Released after Shutdown returns, so draining handlers keep their
+	// connections. RegisterOnShutdown would close it at the start of the
+	// drain instead, failing every in-flight request on each deploy.
+	defer srv.Close()
 
 	if *bootstrap {
 		logger.Info("bootstrap done")
@@ -52,8 +56,8 @@ func main() {
 
 	go func() {
 		logger.Info("listening", "addr", cfg.HTTPAddr)
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Error("serve", "err", err)
+		if err := srv.HTTP.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Error("serve", "error", err)
 			stop()
 		}
 	}()
@@ -65,12 +69,13 @@ func main() {
 	// See compose.prod.yml api service and app/middleware.go.
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 70*time.Second)
 	defer cancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		logger.Error("shutdown", "err", err)
+	if err := srv.HTTP.Shutdown(shutdownCtx); err != nil {
+		logger.Error("shutdown", "error", err)
 	}
 }
 
-// probeReadyz GETs the local readiness endpoint for the container healthcheck.
+// probeReadyz backs the container healthcheck.
+// It GETs the local readiness endpoint.
 // Returns 0 when ready, 1 otherwise, without loading config or the DB.
 func probeReadyz() int {
 	addr := os.Getenv("HTTP_ADDR")

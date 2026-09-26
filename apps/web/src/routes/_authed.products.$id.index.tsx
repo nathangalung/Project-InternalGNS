@@ -1,6 +1,10 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
+import LoadingState from "@/components/shared/LoadingState"
+import NotFoundState from "@/components/shared/NotFoundState"
+import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
 import { useItem } from "@/features/items/hooks"
 import ProductDetail from "@/features/items/ProductDetail"
+import { isMissing } from "@/lib/errors"
 
 export const Route = createFileRoute("/_authed/products/$id/")({
   component: ProductDetailRoute,
@@ -10,13 +14,19 @@ function ProductDetailRoute() {
   const navigate = useNavigate()
   const { id } = useParams({ from: "/_authed/products/$id/" })
   const numericId = Number(id)
-  const { data, isLoading } = useItem(numericId)
+  const { data, isLoading, error, refetch } = useItem(numericId)
 
   if (!data) {
+    if (isLoading) return <LoadingState label="Memuat data produk…" />
+    if (error && !isMissing(error)) {
+      return <RouteErrorFallback error={error} reset={() => void refetch()} />
+    }
     return (
-      <div style={{ padding: "48px", fontFamily: "'Inter', sans-serif", color: "#64748B" }}>
-        {isLoading ? "Memuat data produk…" : "Produk tidak ditemukan."}
-      </div>
+      <NotFoundState
+        title="Produk tidak ditemukan"
+        size="page"
+        backTo={{ to: "/products", label: "Kembali ke Katalog Produk" }}
+      />
     )
   }
 

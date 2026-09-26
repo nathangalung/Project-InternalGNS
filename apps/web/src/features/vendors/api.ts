@@ -36,8 +36,18 @@ export async function get(id: number): Promise<VendorRow> {
   return apiRequest<VendorRow>({ path: `/vendors/${id}` })
 }
 
-export async function listItems(vendorId: number): Promise<VendorItemRow[]> {
-  return apiRequest<VendorItemRow[]>({ path: `/vendors/${vendorId}/items` })
+export type VendorItemsPage = {
+  limit: number
+  offset: number
+}
+
+// One page, total from header.
+export async function listItems(
+  vendorId: number,
+  page: VendorItemsPage,
+): Promise<PaginatedList<VendorItemRow>> {
+  const qs = buildQuery({ limit: page.limit, offset: page.offset })
+  return apiList<VendorItemRow>({ path: `/vendors/${vendorId}/items?${qs}` })
 }
 
 type CreateVendorInput = {

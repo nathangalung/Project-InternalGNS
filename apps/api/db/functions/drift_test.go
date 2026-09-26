@@ -1,6 +1,6 @@
 package functions
 
-// Drift check for canonical function bodies.
+// Canonical function body drift check.
 
 import (
 	"context"
@@ -18,7 +18,8 @@ import (
 // Regenerate the checked-in bodies.
 const updateEnv = "GNS_UPDATE_FUNCTIONS"
 
-// Every project function, extension ones excluded.
+// liveFunctionsSQL lists project functions.
+// Extension functions are excluded.
 const liveFunctionsSQL = `
 SELECT p.proname, pg_get_functiondef(p.oid)
 FROM pg_proc p
@@ -34,7 +35,7 @@ ORDER BY p.proname`
 
 const regenHint = "regenerate with: make db-functions-dump"
 
-// TestFunctionBodiesMatchDatabase is the guard that keeps db/functions honest.
+// TestFunctionBodiesMatchDatabase keeps db/functions honest.
 // Editing a function in a migration without refreshing the canonical body here
 // fails this test, so the directory can never drift into stale documentation.
 // testutil.Pool migrates to head first, so a stale database cannot mask drift.
@@ -157,7 +158,7 @@ func normalize(s string) string {
 	return strings.Trim(strings.Join(lines, "\n"), "\n")
 }
 
-// splitHeader separates leading comments from the definition.
+// splitHeader splits comments from definition.
 func splitHeader(content string) ([]string, string) {
 	lines := strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n")
 	i := 0
@@ -172,7 +173,7 @@ func splitHeader(content string) ([]string, string) {
 	return lines[:i], strings.Join(lines[i:], "\n")
 }
 
-// render rebuilds a file, keeping hand-written prose.
+// render rebuilds, keeping hand-written prose.
 func render(header []string, name, migDir, def string) string {
 	var b strings.Builder
 	b.WriteString("-- Canonical current body of " + name)
@@ -193,7 +194,7 @@ var (
 	gooseDown = regexp.MustCompile(`(?m)^--\s*\+goose\s+Down\b`)
 )
 
-// migrationFor finds the newest migration defining name.
+// migrationFor finds name's newest migration.
 func migrationFor(migDir, name string) string {
 	re := regexp.MustCompile(`(?is)CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+(?:public\.)?` +
 		regexp.QuoteMeta(name) + `\s*\(`)
@@ -221,7 +222,7 @@ func migrationFor(migDir, name string) string {
 	return strings.SplitN(last, "_", 2)[0]
 }
 
-// upSection keeps the goose Up half.
+// upSection keeps goose's Up half.
 func upSection(src string) string {
 	if loc := gooseUp.FindStringIndex(src); loc != nil {
 		src = src[loc[1]:]
@@ -232,7 +233,7 @@ func upSection(src string) string {
 	return src
 }
 
-// firstDiff reports the first differing line.
+// firstDiff reports the first difference.
 func firstDiff(got, want string) string {
 	g := strings.Split(got, "\n")
 	w := strings.Split(want, "\n")

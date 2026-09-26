@@ -24,7 +24,7 @@ func TestRepo_ErrorPaths(t *testing.T) {
 	_, err = r.GetByQuotation(ctx, 1)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
-	err = r.ChangeStatus(ctx, 1, invoices.StatusSent, 1)
+	err = r.ChangeStatus(ctx, 1, invoices.ChangeStatusRequest{Status: invoices.StatusSent}, 1)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
 	_, err = r.UpdateDates(ctx, 1, invoices.UpdateDatesRequest{}, 1, nil)

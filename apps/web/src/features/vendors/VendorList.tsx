@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import EntityLink from "@/components/shared/EntityLink"
 import EntityLogo from "@/components/shared/EntityLogo"
 import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
@@ -6,26 +7,32 @@ import Pagination from "@/components/shared/Pagination"
 import SearchInput from "@/components/shared/SearchInput"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
+import { useMe } from "@/features/auth/hooks"
 import { useVendors } from "@/features/vendors/hooks"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
 import VendorFilter, { type VendorFilterValues } from "@/features/vendors/VendorFilter"
 import { formatRupiah } from "@/lib/format"
+import { canWriteCatalog } from "@/lib/rbac"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen } from "@/lib/useListScreen"
 import type { VendorRow } from "@/types/api"
 
-interface VendorListProps {
+type VendorListProps = {
   onViewDetail?: (id: number) => void
 }
 
 type SortKey = "totalPembelian" | "productCount"
+
+const sortBtnCls = `inline-flex w-full items-center justify-center rounded-sm uppercase ${ui.focusRing}`
 
 export default function VendorList({ onViewDetail }: VendorListProps) {
   const [showAdd, setShowAdd] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
+  const { data: me } = useMe()
+  const canWrite = canWriteCatalog(me?.role)
 
   const list = useListScreen<VendorFilterValues>({
     status: "all",
@@ -33,6 +40,11 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
     minTotal: "",
   })
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
+
+  function ariaSort(k: SortKey): "ascending" | "descending" | undefined {
+    if (sortKey !== k) return undefined
+    return sortDir === "asc" ? "ascending" : "descending"
+  }
 
   function toggleSort(k: SortKey) {
     if (sortKey === k) {
@@ -69,33 +81,36 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
 
   return (
     <>
-      <div className="page-content" style={{ gap: "29px" }}>
-        <div className="page-header">
-          <h1 className="page-title">Daftar Vendor</h1>
-          <div className="page-actions">
-            <button
-              className={`${ui.btnPrimary} w-[200px]`}
-              type="button"
-              onClick={() => setShowAdd(true)}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
+      <div className={ui.pageContent}>
+        <div className={ui.pageHeader}>
+          <h1 className={ui.pageTitle}>Daftar Vendor</h1>
+          {canWrite && (
+            <div className={ui.pageActions}>
+              <button
+                className={`${ui.btnPrimary} w-[200px]`}
+                type="button"
+                onClick={() => setShowAdd(true)}
               >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              Tambah Vendor
-            </button>
-          </div>
+                <svg
+                  width="14"
+                  height="14"
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Tambah Vendor
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-4 pt-2">
+        <div className="flex items-center gap-4">
           <SearchInput
             value={list.search}
             onChange={list.setSearch}
@@ -108,32 +123,28 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
           <table className="w-full border-collapse">
             <thead>
               <tr className={ui.theadRow}>
-                <th className={ui.thCenter} style={{ width: 240 }}>
-                  Nama Vendor
+                <th className={`${ui.thCenter} w-[240px]`}>Nama Vendor</th>
+                <th className={`${ui.thCenter} w-[160px]`}>Negara</th>
+                <th className={`${ui.thCenter} w-[140px]`}>Status</th>
+                <th className={`${ui.thCenter} w-[180px]`} aria-sort={ariaSort("totalPembelian")}>
+                  <button
+                    type="button"
+                    className={sortBtnCls}
+                    onClick={() => toggleSort("totalPembelian")}
+                  >
+                    Total Pembelian
+                  </button>
                 </th>
-                <th className={ui.thCenter} style={{ width: 160 }}>
-                  Negara
+                <th className={`${ui.thCenter} w-[160px]`} aria-sort={ariaSort("productCount")}>
+                  <button
+                    type="button"
+                    className={sortBtnCls}
+                    onClick={() => toggleSort("productCount")}
+                  >
+                    Jumlah Produk
+                  </button>
                 </th>
-                <th className={ui.thCenter} style={{ width: 140 }}>
-                  Status
-                </th>
-                <th
-                  className={`${ui.thCenter} cursor-pointer`}
-                  style={{ width: 180 }}
-                  onClick={() => toggleSort("totalPembelian")}
-                >
-                  Total Pembelian
-                </th>
-                <th
-                  className={`${ui.thCenter} cursor-pointer`}
-                  style={{ width: 160 }}
-                  onClick={() => toggleSort("productCount")}
-                >
-                  Jumlah Produk
-                </th>
-                <th className={ui.thCenter} style={{ width: 80 }}>
-                  Aksi
-                </th>
+                <th className={`${ui.thCenter} w-[80px]`}>Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -150,7 +161,9 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
                         <div className="flex items-center gap-4 pl-3">
                           <EntityLogo name={v.name} />
                           <span className="min-w-0 flex-1 break-words text-sm font-bold leading-[1.35] text-[#191C1E]">
-                            {v.name}
+                            <EntityLink kind="vendor" id={v.id} tone="name">
+                              {v.name}
+                            </EntityLink>
                           </span>
                         </div>
                       </td>
@@ -173,6 +186,7 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
                           type="button"
                           className={ui.iconAction}
                           title="Lihat detail"
+                          aria-label={`Lihat detail ${v.name}`}
                           onClick={() => onViewDetail?.(v.id)}
                         >
                           <EyeIcon />
@@ -191,13 +205,14 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
             currentPage={list.currentPage}
             totalPages={totalPages}
             resourceLabel="Vendor"
+            isLoading={isLoading}
             onItemsPerPage={list.setItemsPerPage}
             onPage={list.setCurrentPage}
           />
         </div>
       </div>
 
-      <VendorAddModal open={showAdd} onOpenChange={setShowAdd} />
+      {canWrite && <VendorAddModal open={showAdd} onOpenChange={setShowAdd} />}
 
       {showFilter && (
         <VendorFilter

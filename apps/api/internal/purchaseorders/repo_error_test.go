@@ -27,7 +27,7 @@ func TestRepo_ErrorPaths(t *testing.T) {
 	err = r.ChangeStatus(ctx, 1, purchaseorders.StatusUploaded, 1)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
-	err = r.UpdateNotes(ctx, 1, "x", 1)
+	err = r.UpdateNotes(ctx, 1, "x", 1, nil)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
 	err = r.UpdateFile(ctx, 1, purchaseorders.UpdateFileRequest{

@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_quotation_status (deployed by migration 00040).
+-- Canonical current body of fn_change_quotation_status (deployed by migration 00059).
 -- Validates the transition under a FOR UPDATE lock, blocks finalizing a
 -- quotation with unpriced products (ERRCODE P0100), records history, and
 -- creates the purchase order on acceptance.
@@ -16,23 +16,40 @@ BEGIN
   FOR UPDATE;
 
   IF v_old_status IS NULL THEN
-    RAISE EXCEPTION 'Quotation % not found', p_quotation_id;
+    RAISE EXCEPTION 'Quotation % tidak ditemukan.', p_quotation_id
+      USING ERRCODE = 'P0011';
   END IF;
 
   IF v_old_status = p_new_status THEN
     RETURN;
   END IF;
 
+  -- Mirrored by quotations.Transitions in Go.
   v_valid := CASE
-    WHEN v_old_status = 'draft'    AND p_new_status IN ('sent','expired') THEN TRUE
-    WHEN v_old_status = 'sent'     AND p_new_status IN ('accepted','rejected','revision','expired') THEN TRUE
-    WHEN v_old_status = 'revision' AND p_new_status IN ('sent','rejected') THEN TRUE
+    WHEN v_old_status = 'draft'    AND p_new_status IN ('sent','cancelled') THEN TRUE
+    WHEN v_old_status = 'sent'     AND p_new_status IN ('accepted','rejected','cancelled') THEN TRUE
+    WHEN v_old_status = 'revision' AND p_new_status IN ('rejected','cancelled') THEN TRUE
     ELSE FALSE
   END;
 
   IF NOT v_valid THEN
-    RAISE EXCEPTION 'Invalid status transition: % -> % (terminal: accepted/rejected/expired cannot exit)',
-      v_old_status, p_new_status;
+    IF p_new_status = 'revision' AND v_old_status = 'sent' THEN
+      RAISE EXCEPTION 'Gunakan tombol Buat Revisi untuk merevisi quotation yang sudah dikirim.'
+        USING ERRCODE = 'P0012';
+    END IF;
+    IF p_new_status = 'expired' THEN
+      RAISE EXCEPTION 'Status Kedaluwarsa diberikan otomatis setelah masa berlaku quotation habis.'
+        USING ERRCODE = 'P0012';
+    END IF;
+    RAISE EXCEPTION 'Status quotation tidak dapat diubah dari % ke %.',
+      fn_quotation_status_label(v_old_status), fn_quotation_status_label(p_new_status)
+      USING ERRCODE = 'P0012';
+  END IF;
+
+  IF p_new_status IN ('rejected','cancelled') AND NULLIF(BTRIM(p_note), '') IS NULL THEN
+    RAISE EXCEPTION 'Alasan wajib diisi untuk mengubah status menjadi %.',
+      fn_quotation_status_label(p_new_status)
+      USING ERRCODE = 'P0014';
   END IF;
 
   IF p_new_status IN ('sent','accepted') THEN

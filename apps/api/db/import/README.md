@@ -38,12 +38,23 @@ truncate-and-rebuild seed. No live database is needed to generate it, and
    `fn_next_doc_no` continues from the right `last_seq`.
 7. `status='draft'` for files where every line has `selling_price <= 0`, so
    users can finish them in the UI.
+8. Product lines with `selling_price <= 0` are dropped when the file has at
+   least one priced line. These are the Excel "No Offer" rows: GNS could not
+   source the item, so it never reached the customer. Keeping them made
+   `fn_change_quotation_status` raise `P0100` (unpriced products) when
+   `04_quotation_states.sql` promoted the quotation to `sent`/`accepted`, and
+   that aborted `make seed-dev` before the PO and invoice seeds ran. The
+   dropped lines are zero-valued, so no quotation total moves. A file where
+   every line is unpriced is pricing-not-yet-entered rather than No Offer: it
+   keeps all its lines and stays a draft, which is why a fully unpriced
+   quotation must not appear in the real-PO lists of seeds 04, 05, and 06.
 
 ## Decisions baked in
 
 | Topic | Behaviour |
 |---|---|
 | Status | `'sent'` by default; `'draft'` for files with no positive selling price |
+| Unpriced lines | Dropped when the file has at least one priced line (Excel `No Offer`); kept when every line is unpriced, and the quotation stays a draft |
 | Discount source | The PRINT sheet's `Diskon X%` label, else 0 |
 | Vessel name | PRINT sheet hint, or the second-slash entity when the first is not a canonical customer (broker pattern: `MBSS / Aman Maritim Nusantara` gives customer Aman Maritim) |
 | Date format | `Jakarta, 06 January 2026`, `Sept 2024`, and `09/07/2024` are all supported |
@@ -82,3 +93,7 @@ PGCLIENTENCODING=UTF8 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 < apps/api/db/seed
 - `unit_map.py` — raw unit string to canonical `units.code` mapping
 - `generate_seed.py` — emits `apps/api/db/seeds/03_historical.sql`
 - `staged.json` — output of `parse.py`
+- `cleanup_junk.sql` — one-shot, idempotent cleanup of parser artifacts the
+  initial historical load left (header residue loaded as items, template
+  text loaded as vendors). Run it by hand with `psql`; `make seed-dev` does
+  not load it.

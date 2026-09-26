@@ -43,6 +43,8 @@ type QuotationItem struct {
 	RequestedImpa   *string `db:"requested_impa"      json:"requestedImpa,omitempty"`
 	RequestedName   string  `db:"requested_name"      json:"requestedName"`
 	OfferedItemID   *int64  `db:"offered_item_id"     json:"offeredItemId,omitempty"`
+	OfferedName     *string `db:"offered_name"        json:"offeredName,omitempty"`
+	OfferedImpa     *string `db:"offered_impa"        json:"offeredImpa,omitempty"`
 	VendorProductID *int64  `db:"vendor_product_id"   json:"vendorProductId,omitempty"`
 	Qty             string  `db:"qty"                 json:"qty"`
 	UnitID          *int16  `db:"unit_id"             json:"unitId,omitempty"`
@@ -63,18 +65,21 @@ type StatusHistoryEntry struct {
 	FromStatus *string   `db:"from_status"  json:"fromStatus,omitempty"`
 	ToStatus   string    `db:"to_status"    json:"toStatus"`
 	Note       *string   `db:"note"         json:"note,omitempty"`
-	ChangedBy  int64     `db:"changed_by"   json:"changedBy"`
+	ChangedBy  *int64    `db:"changed_by"   json:"changedBy"` // nil: expiry job
 	ChangedAt  time.Time `db:"changed_at"   json:"changedAt"`
 }
 
 // Quotation detail response.
 type QuotationDetail struct {
 	Quotation
-	Items   []QuotationItem      `json:"items"`
-	History []StatusHistoryEntry `json:"history"`
+	Items              []QuotationItem      `json:"items"`
+	History            []StatusHistoryEntry `json:"history"`
+	AllowedTransitions []Transition         `json:"allowedTransitions"`
+	CanRevise          bool                 `json:"canRevise"`
 }
 
-// Revision row in the parent/child chain.
+// RevisionRow is one chain link.
+// The chain runs parent to child.
 type RevisionRow struct {
 	ID          int64     `db:"id"            json:"id"`
 	ParentID    *int64    `db:"parent_id"     json:"parentId,omitempty"`
@@ -98,10 +103,11 @@ type ListRow struct {
 	Subtotal       string    `db:"subtotal"         json:"subtotal"`
 	TotalDiscount  string    `db:"total_discount"   json:"totalDiscount"`
 	TotalHargaBeli string    `db:"total_harga_beli" json:"totalHargaBeli"`
+	ProductCount   int64     `db:"product_count"    json:"productCount"`
 	CreatedAt      time.Time `db:"created_at"       json:"createdAt"`
 }
 
-// ListResult wraps rows with total count.
+// ListResult wraps rows with total.
 type ListResult struct {
 	Rows  []ListRow `json:"rows"`
 	Total int64     `json:"total"`
@@ -110,6 +116,7 @@ type ListResult struct {
 // Stats counts per status.
 type StatusCount struct {
 	Status string `db:"status" json:"status"`
+	Label  string `db:"-"      json:"label"`
 	Count  int64  `db:"count"  json:"count"`
 }
 
@@ -162,8 +169,13 @@ type UpdateRequest struct {
 
 // Change status body.
 type ChangeStatusRequest struct {
-	Status string  `json:"status"` // draft | sent | accepted | rejected | revision | expired
+	Status string  `json:"status"` // a key of Transitions
 	Note   *string `json:"note,omitempty"`
+}
+
+// ReviseRequest carries an optional note.
+type ReviseRequest struct {
+	Note *string `json:"note,omitempty"`
 }
 
 // Change contact body.

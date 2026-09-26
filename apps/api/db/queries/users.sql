@@ -10,34 +10,46 @@ SELECT id, email, name, password_hash, role,
 FROM users
 WHERE id = $1 AND is_active = TRUE;
 
+-- name: users.auth_context
+-- Live account state behind an access token. No is_active filter: a
+-- deactivated account must be told apart from an unknown id.
+SELECT role, is_active, session_version
+FROM users
+WHERE id = $1;
+
+-- name: users.get_by_id_admin
+-- Admin detail read. Unlike users.get_by_id this keeps inactive accounts
+-- visible, which is what makes reactivation reachable.
+SELECT id, email, name, password_hash, role,
+       is_active, created_at, updated_at
+FROM users
+WHERE id = $1;
+
 -- name: users.lock_status
 SELECT failed_login_attempts, locked_until
 FROM users
 WHERE LOWER(email) = LOWER($1) AND is_active = TRUE;
 
 -- name: users.record_failed_login
--- An elapsed lockout opens a new window: the miss counts as the first of a
--- fresh five rather than re-locking off the old, never-reset counter. Kept in
--- one UPDATE so concurrent misses cannot both read the same count.
+-- Counts the miss. The total sets the escalating delay the next attempt
+-- pays. No hard lock: one that refuses the correct password lets anyone lock
+-- a known address out on purpose.
 UPDATE users
-   SET failed_login_attempts = CASE
-         WHEN locked_until IS NOT NULL AND locked_until <= now()
-         THEN 1
-         ELSE failed_login_attempts + 1
-       END,
-       locked_until = CASE
-         WHEN locked_until IS NOT NULL AND locked_until <= now()
-         THEN NULL
-         WHEN failed_login_attempts + 1 >= 5
-         THEN now() + interval '15 minutes'
-         ELSE locked_until
-       END
+   SET failed_login_attempts = failed_login_attempts + 1,
+       locked_until = NULL
  WHERE LOWER(email) = LOWER($1) AND is_active = TRUE;
 
 -- name: users.reset_login_attempts
+-- Clears the counter after a verified password and row-locks the account
+-- until the login's transaction ends. Matching the hash that was verified
+-- makes it 0 rows when a password change landed in between, and the row
+-- lock makes a later change wait until this login's session exists. The
+-- version it returns is read under that lock, so the session minted from it
+-- is the one a later bump ends.
 UPDATE users
    SET failed_login_attempts = 0, locked_until = NULL
- WHERE LOWER(email) = LOWER($1) AND is_active = TRUE;
+ WHERE id = $1 AND is_active = TRUE AND password_hash = $2
+RETURNING session_version;
 
 -- name: users.create
 INSERT INTO users (email, name, password_hash, role, is_active, created_by, updated_by)
@@ -46,8 +58,15 @@ RETURNING id, email, name, password_hash, role,
           is_active, created_at, updated_at;
 
 -- name: users.update_password
+-- One statement, three effects: the new hash, a cleared lockout counter so a
+-- reset unsticks a throttled account, and a bumped session version that
+-- refuses every token minted before it.
 UPDATE users
-SET password_hash = $1, updated_by = $2
+SET password_hash = $1,
+    updated_by = $2,
+    failed_login_attempts = 0,
+    locked_until = NULL,
+    session_version = session_version + 1
 WHERE id = $3;
 
 -- name: users.list_count_base
@@ -87,3 +106,16 @@ WHERE id = $1;
 SELECT COUNT(*)
 FROM users
 WHERE LOWER(email) = LOWER($1) AND id <> $2;
+
+-- name: users.superadmin_guard_lock
+-- Serialises every user update behind one transaction-scoped lock, so the
+-- last-superadmin precheck and the write it guards cannot interleave with a
+-- concurrent demotion or deactivation. Released on commit or rollback.
+SELECT pg_advisory_xact_lock(hashtext('users_superadmin_guard')::bigint);
+
+-- name: users.bump_session_version
+-- Ends every session: access and refresh tokens minted under the old
+-- version are refused from now on.
+UPDATE users
+   SET session_version = session_version + 1
+ WHERE id = $1;

@@ -126,11 +126,12 @@ func TestRepo_SearchVendorOffers(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
 
-	hits, err := repo.SearchVendorOffers(ctx, "bearing", 5)
+	hits, err := repo.SearchVendorOffers(ctx, "bearing", 5, nil)
 	require.NoError(t, err)
 	_ = hits
 }
 
+// Deactivated offer hits read false.
 // Advanced search reads is_active from the catalog, so a deactivated item
 // surfaced by the vendor-offer layer must come back false.
 func TestRepo_ItemMetaByIDs(t *testing.T) {
@@ -154,9 +155,10 @@ func TestRepo_ItemMetaByIDs(t *testing.T) {
 	assert.NotContains(t, meta, int64(99999999), "absent row must not be reported")
 }
 
-// Root cause of the fabricated badge: the vendor-offer layer has no item-level
-// is_active filter, so a deactivated item is reachable through it and must be
-// reported as inactive rather than assumed active.
+// Unset filter surfaces inactive offers.
+//
+// With isActive unset the vendor-offer layer still reaches a deactivated
+// item, which must be reported as inactive rather than assumed active.
 func TestRepo_SearchVendorOffers_SurfacesInactiveItem(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
@@ -176,7 +178,7 @@ func TestRepo_SearchVendorOffers_SurfacesInactiveItem(t *testing.T) {
 	}, seedUserID)
 	require.NoError(t, err)
 
-	hits, err := repo.SearchVendorOffers(ctx, sku, 10)
+	hits, err := repo.SearchVendorOffers(ctx, sku, 10, nil)
 	require.NoError(t, err)
 	found := false
 	for _, h := range hits {
@@ -206,7 +208,7 @@ func TestRepo_SearchRequestHistory(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
 
-	hits, err := repo.SearchRequestHistory(ctx, "bearing", 5)
+	hits, err := repo.SearchRequestHistory(ctx, "bearing", 5, nil)
 	require.NoError(t, err)
 	_ = hits
 }
