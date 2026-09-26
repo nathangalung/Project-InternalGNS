@@ -56,7 +56,7 @@ Makefile              every task; `make help` lists them
 | psql | 14+ | seeds are loaded as raw SQL (`postgresql-client`) |
 | xelatex | TeX Live | only for PDF export and the PDF layout tests |
 
-`make setup` installs `goose` v3.27.1 with `go install` when it is missing.
+`make setup` installs `goose` v3.28.0 with `go install` when it is missing.
 
 ### 2. First-time setup
 
@@ -172,7 +172,7 @@ make reset && make seed-dev   # wipes the dev volumes
 WSL2) or `brew install libpq && brew link --force libpq` (macOS).
 
 **`goose: command not found`:** `go install
-github.com/pressly/goose/v3/cmd/goose@v3.27.1` and put `$(go env GOPATH)/bin`
+github.com/pressly/goose/v3/cmd/goose@v3.28.0` and put `$(go env GOPATH)/bin`
 on `PATH`.
 
 **Native Windows:** not supported. Use WSL2.

@@ -9,11 +9,11 @@ matching `go.mod`, `package.json`, `Dockerfile`, or compose file.
 |---|---|---|
 | Go | 1.26.8 | `go.mod`, `apps/api/Dockerfile` (`golang:1.26.8-alpine`) |
 | Postgres | 18.3-alpine | `compose.dev.yml`, `compose.prod.yml` |
-| chi router | v5.2.5 | `go.mod` |
-| pgx | v5.9.2 | `go.mod` |
-| goose (embedded, and the CLI `make setup` installs) | v3.27.1 | `go.mod`, `Makefile` |
+| chi router | v5.3.2 | `go.mod` |
+| pgx | v5.11.0 | `go.mod` |
+| goose (embedded, and the CLI `make setup` installs) | v3.28.0 | `go.mod`, `Makefile` |
 | golang-jwt | v5.3.1 | `go.mod` |
-| minio-go | v7.1.0 | `go.mod` |
+| minio-go | v7.3.0 | `go.mod` |
 | excelize | v2.11.0 | `go.mod` |
 | shopspring/decimal | v1.4.0 | `go.mod` |
 | bcrypt | `golang.org/x/crypto` | `go.mod` |

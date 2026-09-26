@@ -45,7 +45,7 @@ setup: ## Prep env, deps, tools
 	@test -f $(WEB_DIR)/.env || cp $(WEB_DIR)/.env.example $(WEB_DIR)/.env
 	@command -v goose >/dev/null 2>&1 || { \
 	  echo "installing goose..."; \
-	  go install github.com/pressly/goose/v3/cmd/goose@v3.27.1; \
+	  go install github.com/pressly/goose/v3/cmd/goose@v3.28.0; \
 	}
 	cd $(API_DIR) && go mod tidy
 	cd $(WEB_DIR) && bun install
