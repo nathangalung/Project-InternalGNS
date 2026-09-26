@@ -38,9 +38,6 @@ apps/api/tmp/
 *.out
 coverage.*
 
-# sqlc caches
-apps/api/.sqlc-cache/
-
 # Docker local
 docker-data/
 
