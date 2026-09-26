@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_quotation (deployed by migration 00069).
+-- Canonical current body of fn_update_quotation (deployed by migration 00070).
 CREATE OR REPLACE FUNCTION public.fn_update_quotation(p_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_user_id bigint, p_notes text DEFAULT NULL::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -16,6 +16,7 @@ DECLARE
   v_known         JSONB;
   v_key           TEXT;
   v_left          INT;
+  v_pct           NUMERIC(5,2);
 BEGIN
   -- 1. Lock + verify status='draft'
   SELECT status INTO v_status
@@ -44,13 +45,18 @@ BEGIN
       USING ERRCODE = 'P0014';
   END IF;
 
-  -- 3. Pre-calculate totals
+  -- 3. Pre-calculate totals. The discount is gross minus net per line at
+  -- the pct the lines inherit, as quotation_items.subtotal and v_po_totals
+  -- round them, so the header subtotal is the sum of the line subtotals.
+  v_pct := p_discount_pct;
   FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
     v_qty := (v_item->>'qty')::NUMERIC(12,2);
     v_selling_price := (v_item->>'selling_price')::NUMERIC(15,2);
     v_total        := v_total + (v_qty * v_selling_price);
     v_total_produk := v_total_produk + (v_qty * v_selling_price);
-    v_total_disc   := v_total_disc + (v_qty * v_selling_price * (p_discount_pct / 100));
+    v_total_disc   := v_total_disc
+                      + ROUND(v_qty * v_selling_price, 2)
+                      - ROUND(v_qty * v_selling_price * (1 - v_pct / 100), 2);
   END LOOP;
 
   IF p_shipping_cost IS NOT NULL AND p_shipping_cost > 0 THEN
