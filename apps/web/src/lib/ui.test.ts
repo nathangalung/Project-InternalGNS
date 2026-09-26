@@ -26,7 +26,7 @@ function current(key: string): string {
   return ui[key as keyof typeof ui]
 }
 
-// Every class of `part` is present.
+// All classes of part present.
 function containsAll(value: string, part: string): boolean {
   const have = new Set(classSet(value))
   return classSet(part).every((c) => have.has(c))

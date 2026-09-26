@@ -9,7 +9,7 @@ import { scrollLockCount } from "./scrollLock"
 let root: Root | null = null
 let main: HTMLElement
 
-// App shell with a scrolling main.
+// App shell, scrolling main.
 async function mount(node: ReactNode) {
   main = document.createElement("main")
   const opener = document.createElement("button")
@@ -36,7 +36,7 @@ async function press(key: string, target: EventTarget = document.activeElement ?
   })
 }
 
-// Base UI moves focus on a frame.
+// Let Base UI move focus.
 async function nextFrame() {
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 32))
