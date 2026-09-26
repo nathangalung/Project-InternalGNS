@@ -1,4 +1,6 @@
+import type * as clientsApi from "@/features/clients/api"
 import { ui } from "@/lib/ui"
+import type { ClientRow } from "@/types/api"
 
 export { CheckIcon as CheckmarkIcon } from "@/components/document/icons"
 
@@ -57,7 +59,50 @@ export function isValidEmail(s: string): boolean {
   return s.includes("@") && s.split("@").length === 2 && s.split("@")[1].includes(".")
 }
 
+// Matches company_contacts_phone_check.
+export const PHONE_ERROR = "Nomor telepon harus 9–12 digit angka."
+
 export function isValidPhone(s: string): boolean {
   const digits = s.replace(/[^0-9]/g, "")
-  return digits.length >= 9 && digits.length <= 13
+  return digits.length >= 9 && digits.length <= 12
+}
+
+type SaveClientDeps = {
+  createClient: (input: Parameters<typeof clientsApi.create>[0]) => Promise<ClientRow>
+  createContact: (
+    companyId: number,
+    input: Parameters<typeof clientsApi.createContact>[1],
+  ) => Promise<unknown>
+  onCreated: (created: ClientRow) => void
+}
+
+// Client, then its first contact.
+//
+// onCreated fires before the contact call, so a caller that keeps the row
+// retries only the contact instead of creating a second client.
+export async function saveClientWithContact(
+  form: ClientAddFormData,
+  existing: ClientRow | null,
+  deps: SaveClientDeps,
+): Promise<ClientRow> {
+  const countryCode = form.kodeNegara || "IDN"
+  let client = existing
+  if (!client) {
+    client = await deps.createClient({
+      name: form.namaPerusahaan.trim(),
+      countryCode,
+      address: form.alamat.trim() || undefined,
+      email: form.email.trim() || undefined,
+      npwp: form.npwp.trim() || undefined,
+      tkuId: form.tku.trim() || undefined,
+    })
+    deps.onCreated(client)
+  }
+  await deps.createContact(client.id, {
+    name: form.namaKontak.trim(),
+    phone: form.nomorTelepon.trim() || undefined,
+    email: form.email.trim() || undefined,
+    countryCode,
+  })
+  return client
 }
