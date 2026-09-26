@@ -139,7 +139,7 @@ jobs:
           load: true
           tags: internalgns-api:pdf
           cache-from: type=gha,scope=api
-          cache-to: type=gha,scope=api,mode=max
+          cache-to: type=gha,scope=api,mode=max,ignore-error=true
 
       # Runner Go, image TeX.
       # The go binary is static, so the runner's toolchain runs in the image.
@@ -541,7 +541,7 @@ jobs:
           push: false
           tags: internalgns-api:ci
           cache-from: type=gha,scope=api
-          cache-to: type=gha,scope=api,mode=max
+          cache-to: type=gha,scope=api,mode=max,ignore-error=true
 
       - name: build web image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -552,4 +552,4 @@ jobs:
             VITE_API_URL=/api/v1
           tags: internalgns-web:ci
           cache-from: type=gha,scope=web
-          cache-to: type=gha,scope=web,mode=max
+          cache-to: type=gha,scope=web,mode=max,ignore-error=true

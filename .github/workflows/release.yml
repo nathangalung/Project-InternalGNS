@@ -106,7 +106,7 @@ jobs:
             VERSION=${{ steps.tag.outputs.value }}
             VITE_API_URL=${{ vars.VITE_API_URL }}
           cache-from: type=gha,scope=${{ matrix.service }}
-          cache-to: type=gha,scope=${{ matrix.service }},mode=max
+          cache-to: type=gha,scope=${{ matrix.service }},mode=max,ignore-error=true
 
       - name: scan image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
@@ -130,6 +130,6 @@ jobs:
             VERSION=${{ steps.tag.outputs.value }}
             VITE_API_URL=${{ vars.VITE_API_URL }}
           cache-from: type=gha,scope=${{ matrix.service }}
-          cache-to: type=gha,scope=${{ matrix.service }},mode=max
+          cache-to: type=gha,scope=${{ matrix.service }},mode=max,ignore-error=true
           provenance: mode=max
           sbom: true
