@@ -21,9 +21,27 @@ if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   exit 2
 fi
 
+# Read unset values from .deploy.local.
+# That file sits at the repo root, is gitignored, and holds KEY=value lines;
+# only DEPLOY_SSH and DEPLOY_SSH_PORT are read, and nothing is executed.
+local_env="$(cd "$(dirname "$0")/.." && pwd)/.deploy.local"
+if [[ -f "$local_env" ]]; then
+  while IFS='=' read -r key value; do
+    value="${value%$'\r'}"
+    case "$key" in
+      DEPLOY_SSH) [[ -z "${DEPLOY_SSH:-}" ]] && DEPLOY_SSH="$value" ;;
+      DEPLOY_SSH_PORT) [[ -z "${DEPLOY_SSH_PORT:-}" ]] && DEPLOY_SSH_PORT="$value" ;;
+    esac
+  done <"$local_env"
+fi
+
 host="${DEPLOY_SSH:-}"
 if [[ -z "$host" ]]; then
-  echo "DEPLOY_SSH is not set; export the VPS login, e.g. DEPLOY_SSH=user@host" >&2
+  echo "DEPLOY_SSH is not set; export the VPS login or put DEPLOY_SSH=user@host in .deploy.local" >&2
+  exit 2
+fi
+if [[ ! "$host" =~ ^[A-Za-z0-9._-]+(@[A-Za-z0-9._-]+)?$ || ! "${DEPLOY_SSH_PORT:-22}" =~ ^[0-9]+$ ]]; then
+  echo "invalid DEPLOY_SSH or DEPLOY_SSH_PORT" >&2
   exit 2
 fi
 # Pass -p only when set, so an ssh config alias keeps its Port.

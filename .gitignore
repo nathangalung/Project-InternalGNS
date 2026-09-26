@@ -60,3 +60,6 @@ apps/api/api
 
 # Playwright MCP session output
 .playwright-mcp/
+
+# Local deploy login for scripts/dokploy-set-tag.sh.
+.deploy.local

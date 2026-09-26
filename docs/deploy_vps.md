@@ -377,6 +377,11 @@ environment over SSH, without opening the Dokploy UI. It deploys nothing.
    # add DEPLOY_SSH_PORT=<port> when sshd is not on 22 and no alias sets Port
    ```
 
+   To avoid typing it each time, put `DEPLOY_SSH=<user>@<vps>` (and
+   `DEPLOY_SSH_PORT=<port>` if needed) in `.deploy.local` at the repo root.
+   The file is gitignored, the script only reads those two keys from it, and
+   values already in the environment win.
+
 4. After the section 13 checks, click **Deploy** in Dokploy, or merge to
    `main` when the section 15 webhook redeploy is on.
 
