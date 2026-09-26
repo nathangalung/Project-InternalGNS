@@ -6,7 +6,7 @@ Indonesian Coretax.
 
 ## Stack
 
-- **Frontend**: React 19, strict TypeScript, Vite 7, Tailwind CSS v4,
+- **Frontend**: React 19, strict TypeScript, Vite 8, Tailwind CSS v4,
   TanStack Router (file-based) and TanStack Query. Bun, Biome, Vitest,
   Playwright.
 - **Backend**: Go 1.26 modular monolith with chi v5, pgx v5, goose v3

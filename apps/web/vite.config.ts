@@ -1,5 +1,5 @@
 import { defineConfig } from "vite"
-import react from "@vitejs/plugin-react-swc"
+import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 import { tanstackRouter } from "@tanstack/router-plugin/vite"
 import path from "node:path"
@@ -17,14 +17,14 @@ const plugins = [
 ]
 
 if (process.env.ANALYZE === "true") {
-  plugins.push(visualizer({ open: true, gzipSize: true, brotliSize: true }) as never)
+  plugins.push(visualizer({ open: true, gzipSize: true, brotliSize: true }))
 }
 
 export default defineConfig({
   plugins,
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
   server: {
@@ -42,15 +42,15 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          "tanstack-vendor": [
-            "react",
-            "react-dom",
-            "react-dom/client",
-            "@tanstack/react-query",
-            "@tanstack/react-router",
+        // Groups pull in their dependencies, as manualChunks did.
+        codeSplitting: {
+          groups: [
+            {
+              name: "tanstack-vendor",
+              test: /[\\/]node_modules[\\/](react|react-dom|@tanstack[\\/]react-query|@tanstack[\\/]react-router)[\\/]/,
+            },
           ],
         },
       },

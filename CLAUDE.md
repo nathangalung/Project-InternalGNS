@@ -12,7 +12,7 @@ Bun-managed monorepo.
   Goose migrations, JWT auth with role-based access, slog logging. SQL is
   hand-written in `.sql` files that are embedded and parsed at startup
   (`apps/api/db/queries`); there is no ORM or code generator.
-- Frontend (`apps/web`): React 19 with strict TypeScript, Vite 7, TanStack
+- Frontend (`apps/web`): React 19 with strict TypeScript, Vite 8, TanStack
   Router and Query, Bun runtime, Biome for lint and format. Tables are plain
   markup; there is no table library.
 - Styling is Tailwind CSS v4 only. `src/styles/tailwind.css` is the only

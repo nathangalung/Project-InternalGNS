@@ -33,7 +33,7 @@ SQL is hand-written in `db/queries`; there is no code generator.
 | Node (CI) | 24 (LTS line) | `.github/workflows/ci.yml` `setup-node` |
 | TypeScript | ^5.9.3 | `package.json` |
 | React / react-dom | ^19.3.0 | `package.json` |
-| Vite | ^7.3.6 | `package.json` |
+| Vite | ^8.3.1 | `package.json` |
 | Tailwind CSS | ^4.3.3 | `package.json` |
 | TanStack Router | ^1.170.39 | `package.json` |
 | TanStack Query | ^5.103.3 | `package.json` |

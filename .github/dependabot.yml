@@ -39,7 +39,7 @@ updates:
       tanstack:
         patterns:
           - "@tanstack/*"
-    # Majors (TypeScript 7, Vite 8, @types/node 26) need a planned migration.
+    # Majors (TypeScript 7, @types/node 26) need a planned migration.
     ignore:
       - dependency-name: "*"
         update-types:
