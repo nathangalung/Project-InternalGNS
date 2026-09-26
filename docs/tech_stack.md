@@ -38,7 +38,7 @@ SQL is hand-written in `db/queries`; there is no code generator.
 | TanStack Router | ^1.170.39 | `package.json` |
 | TanStack Query | ^5.103.3 | `package.json` |
 | Biome | ^2.5.14 | `package.json` |
-| Vitest | ^4.1.11 | `package.json` |
+| Vitest | ^5.0.2 | `package.json` |
 | Playwright | ^1.63.0 | `package.json` |
 | exceljs (RFQ import) | ^4.4.0 | `package.json` |
 
