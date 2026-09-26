@@ -64,6 +64,9 @@ the build from `nginx:1.30.5-alpine` (the stable branch).
 | pre-commit (installed by `make hooks-install`) | 4.6.2 | `Makefile` |
 | pre-commit-hooks | v6.0.0 | `.pre-commit-config.yaml` |
 | tbls (installed by `make db-erd`) | v1.96.0 | `Makefile` |
+| uv (db/import tool) | >=0.12.19 | `apps/api/db/import/pyproject.toml` (`required-version`) |
+| Python (db/import tool) | 3.14 | `apps/api/db/import/.python-version` |
+| openpyxl | 3.1.5 | `apps/api/db/import/uv.lock` |
 
 GitHub Actions in `.github/workflows` are pinned by full commit SHA with the
 release as a trailing comment (`@<sha> # v7.0.1`); Dependabot's

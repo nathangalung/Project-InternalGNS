@@ -66,6 +66,9 @@ truncate-and-rebuild seed. No live database is needed to generate it, and
 
 ## Usage
 
+The tool runs on Python 3.14 (`.python-version`) and needs uv 0.12.19 or
+newer (`[tool.uv] required-version`); `uv self update` upgrades an older uv.
+
 ```bash
 cd apps/api/db/import
 uv sync                  # install dependencies from pyproject.toml
