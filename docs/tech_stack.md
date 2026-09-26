@@ -30,6 +30,7 @@ SQL is hand-written in `db/queries`; there is no code generator.
 |---|---|---|
 | Bun (package manager) | 1.4.2 | `package.json` `packageManager`, `apps/web/Dockerfile` |
 | Node (runtime floor) | >=22.0.0 | `package.json` `engines.node` |
+| Node (CI) | 24 (LTS line) | `.github/workflows/ci.yml` `setup-node` |
 | TypeScript | ^5.9.3 | `package.json` |
 | React / react-dom | ^19.3.0 | `package.json` |
 | Vite | ^7.3.6 | `package.json` |
@@ -54,6 +55,10 @@ the build from `nginx:1.30.5-alpine` (the stable branch).
 | pgweb (dev only) | `sosedoff/pgweb:0.17.0` | `compose.dev.yml` |
 | Dokploy | follow upstream stable | external |
 | Traefik | provided by Dokploy | external |
+
+GitHub Actions in `.github/workflows` are pinned by full commit SHA with the
+release as a trailing comment (`@<sha> # v7.0.1`); Dependabot's
+`github-actions` ecosystem bumps both together.
 
 ## Bumping policy
 
