@@ -60,7 +60,7 @@ jobs:
           docker run -d --name minio -p 9000:9000 \
             -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
             pgsty/silo:RELEASE.2026-09-16T00-00-00Z server /data
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             curl -fsS http://127.0.0.1:9000/minio/health/live && exit 0
             sleep 1
           done
@@ -292,7 +292,7 @@ jobs:
           docker run -d --name minio -p 9000:9000 \
             -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
             pgsty/silo:RELEASE.2026-09-16T00-00-00Z server /data
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             curl -fsS http://127.0.0.1:9000/minio/health/live && exit 0
             sleep 1
           done
@@ -315,7 +315,7 @@ jobs:
         run: |
           ./bin/api > /tmp/api.log 2>&1 &
           echo "API_PID=$!" >> "$GITHUB_ENV"
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8080/healthz > /dev/null; then
               echo "api ready"
               exit 0
@@ -342,7 +342,7 @@ jobs:
         run: |
           bun run build
           bun run preview --port 4173 --strictPort --host 127.0.0.1 > /tmp/preview.log 2>&1 &
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             curl -fsS http://127.0.0.1:4173/login > /dev/null && exit 0
             sleep 1
           done
@@ -361,7 +361,7 @@ jobs:
 
       - name: stop api
         if: always()
-        run: kill $API_PID 2>/dev/null || true
+        run: kill "$API_PID" 2>/dev/null || true
 
       - name: upload playwright report
         if: failure()
@@ -422,7 +422,7 @@ jobs:
         run: |
           go run ./cmd/api > /tmp/api.log 2>&1 &
           echo "API_PID=$!" >> "$GITHUB_ENV"
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8080/healthz > /dev/null; then
               echo "api ready"
               exit 0
@@ -464,7 +464,7 @@ jobs:
 
       - name: stop api
         if: always()
-        run: kill $API_PID 2>/dev/null || true
+        run: kill "$API_PID" 2>/dev/null || true
 
       - name: upload lhci report
         if: always()
