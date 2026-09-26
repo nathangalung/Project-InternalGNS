@@ -66,6 +66,15 @@ export function uniquePrefix(): string {
   return `E2E${randomBytes(4).toString("hex").toUpperCase()}`
 }
 
+// IMPA code no real item holds.
+//
+// Active codes are unique and the master data holds real six-digit ones, so
+// a random six-digit code collides now and then. Twelve digits cannot hit
+// a real one and stay numeric, as the product forms require.
+export function uniqueImpa(): string {
+  return String(10 ** 11 + Math.floor(Math.random() * 9 * 10 ** 11))
+}
+
 export async function api<T>(
   method: Method,
   path: string,
@@ -206,7 +215,7 @@ export class SalesSeed {
   // Catalog item, optionally vendor-linked.
   async item(opts: { vendor?: SeedVendor; cost?: number; label?: string } = {}): Promise<SeedItem> {
     const name = this.name(opts.label ?? "Produk")
-    const impaCode = String(100000 + Math.floor(Math.random() * 899999))
+    const impaCode = uniqueImpa()
     const created = await api<{ id: number }>("POST", "/items", {
       name,
       impaCode,

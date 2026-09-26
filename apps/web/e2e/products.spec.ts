@@ -1,4 +1,4 @@
-import { api, deactivate } from "./support/sales"
+import { api, deactivate, uniqueImpa } from "./support/sales"
 import { expect, test } from "./support/seed"
 
 // Katalog Produk flows.
@@ -9,7 +9,7 @@ type ItemVendor = { vendorId: number; costPrice?: string }
 
 test("Tambah Produk adds an item the Katalog search finds", async ({ page, seed }) => {
   const name = seed.name("Produk Baru")
-  const impa = String(200000 + Math.floor(Math.random() * 700000))
+  const impa = uniqueImpa()
   await page.goto("/products")
   await page.getByRole("button", { name: "Tambah Produk" }).click()
   const modal = page.getByRole("dialog", { name: "Tambah Produk Baru" })
