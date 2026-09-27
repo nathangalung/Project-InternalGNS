@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState } from "react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import type { Status } from "@/features/quotations/types"
 import { ui } from "@/lib/ui"
 import type { QuotationTransition } from "@/types/api"
@@ -32,27 +39,8 @@ export default function StatusBar({
   onPick,
   onRevise,
 }: StatusBarProps) {
-  const [open, setOpen] = useState(false)
-  const wrapRef = useRef<HTMLDivElement>(null)
   const badge = quotationBadge[status]
   const hasMoves = moves.length > 0
-
-  // Close on outside click, Escape.
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false)
-    }
-    document.addEventListener("mousedown", onDown)
-    document.addEventListener("keydown", onKey)
-    return () => {
-      document.removeEventListener("mousedown", onDown)
-      document.removeEventListener("keydown", onKey)
-    }
-  }, [open])
 
   return (
     <div className={ui.statusBar}>
@@ -61,15 +49,11 @@ export default function StatusBar({
         <div className="mt-0.5 text-caption font-normal text-[#4A4455]">{hint}</div>
       </div>
       <div className="flex items-center gap-3">
-        <div ref={wrapRef} className="relative">
-          <button
-            type="button"
+        <DropdownMenu>
+          <DropdownMenuTrigger
             className={`${ui.statusTrigger} border border-transparent${hasMoves ? "" : " cursor-default"}`}
             style={{ background: badge.bg, color: badge.color }}
-            onClick={hasMoves ? () => setOpen((o) => !o) : undefined}
             disabled={!hasMoves}
-            aria-haspopup={hasMoves ? "menu" : undefined}
-            aria-expanded={hasMoves ? open : undefined}
             aria-label={hasMoves ? `Status ${status}, ubah status` : `Status ${status}`}
           >
             {status}
@@ -87,29 +71,18 @@ export default function StatusBar({
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             )}
-          </button>
-          {open && (
-            <div className={`${ui.statusDropdown} z-[100]`} role="menu">
-              <div className="px-5 pb-1 text-overline font-bold uppercase tracking-[0.06em] text-dark-500">
-                Ubah ke
-              </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Ubah ke</DropdownMenuLabel>
               {moves.map((t) => (
-                <button
-                  key={t.to}
-                  type="button"
-                  role="menuitem"
-                  className={ui.statusOption}
-                  onClick={() => {
-                    setOpen(false)
-                    onPick(t)
-                  }}
-                >
+                <DropdownMenuItem key={t.to} onClick={() => onPick(t)}>
                   <span className="text-caption font-normal text-[#4A4455]">{t.label}</span>
-                </button>
+                </DropdownMenuItem>
               ))}
-            </div>
-          )}
-        </div>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
         {canRevise && (
           <button type="button" className={ui.btnOutline} onClick={onRevise}>
             Buat Revisi
