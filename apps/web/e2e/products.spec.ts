@@ -18,7 +18,7 @@ test("Tambah Produk adds an item the Katalog search finds", async ({ page, seed 
   await modal.getByLabel("Nama Produk *").fill(name)
   await modal.getByLabel("Kode IMPA").fill(impa)
   await modal.getByLabel("Satuan Default").fill("PCS")
-  await modal.getByRole("button", { name: /^PCS/ }).first().click()
+  await page.getByRole("option", { name: /^PCS/ }).first().click()
   await add.click()
   await expect(modal).toBeHidden()
   const id = await seed.adopt("item", name)
@@ -55,9 +55,9 @@ test("Tambah Vendor searches the server for active vendors and links one", async
   const response = await searched
   expect(new URL(response.url()).searchParams.get("isActive")).toBe("true")
   // MD-11: an inactive vendor is never offered.
-  await expect(modal.getByRole("button", { name: new RegExp(active.name) })).toBeVisible()
-  await expect(modal.getByRole("button", { name: new RegExp(inactive.name) })).toHaveCount(0)
-  await modal.getByRole("button", { name: new RegExp(active.name) }).click()
+  await expect(page.getByRole("option", { name: new RegExp(active.name) })).toBeVisible()
+  await expect(page.getByRole("option", { name: new RegExp(inactive.name) })).toHaveCount(0)
+  await page.getByRole("option", { name: new RegExp(active.name) }).click()
   await expect(add).toBeDisabled()
   await modal.getByLabel("Harga Beli *").fill("125000")
   await add.click()

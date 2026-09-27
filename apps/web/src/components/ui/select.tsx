@@ -52,9 +52,16 @@ function SelectTrigger({
   )
 }
 
+// Panel stays under its field.
+//
+// The hand-built panels always opened downward; without this Base UI flips a
+// panel above the field when the viewport runs short (a 320px phone). The
+// panel shrinks to the room below and scrolls instead.
+const stayBelow = { side: "none" } as const
+
 type PositionProps = Pick<
   SelectPrimitive.Positioner.Props,
-  "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
+  "align" | "alignOffset" | "side" | "sideOffset" | "collisionAvoidance" | "alignItemWithTrigger"
 >
 
 function SelectContent({
@@ -64,6 +71,7 @@ function SelectContent({
   alignOffset = 0,
   side = "bottom",
   sideOffset = 4,
+  collisionAvoidance = stayBelow,
   alignItemWithTrigger = false,
   ...props
 }: WithClassName<SelectPrimitive.Popup.Props> & PositionProps) {
@@ -74,6 +82,7 @@ function SelectContent({
         alignOffset={alignOffset}
         side={side}
         sideOffset={sideOffset}
+        collisionAvoidance={collisionAvoidance}
         alignItemWithTrigger={alignItemWithTrigger}
         className="z-[110]"
       >

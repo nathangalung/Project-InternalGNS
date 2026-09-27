@@ -1,5 +1,4 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
-import { CheckIcon } from "@/components/document/icons"
 import EntityLink from "@/components/shared/EntityLink"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
@@ -12,13 +11,14 @@ import {
   useUploadItemImage,
 } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
+import UnitCombobox from "@/features/units/UnitCombobox"
 import { fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
 import { errorMessage } from "@/lib/errors"
 import { formatRupiah } from "@/lib/format"
 import { canWriteCatalog } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
-import { dropdownLabel, ui } from "@/lib/ui"
+import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
 import type { ItemRow } from "@/types/api"
 
@@ -58,7 +58,6 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
   const [impa, setImpa] = useState(product.impaCode ?? "")
   const [unitCode, setUnitCode] = useState<string>(initialUnitCode)
   const [unitQuery, setUnitQuery] = useState<string>(initialUnitCode)
-  const [showUnitSuggestions, setShowUnitSuggestions] = useState(false)
   const [description, setDescription] = useState(product.description ?? "")
   const [isActive, setIsActive] = useState(product.isActive)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -142,14 +141,6 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
     unitCode !== initialUnitCode ||
     description !== (product.description ?? "") ||
     isActive !== product.isActive
-
-  const filteredUnits = useMemo(() => {
-    const q = unitQuery.trim().toLowerCase()
-    if (!q) return []
-    return (units ?? [])
-      .filter((u) => u.code.toLowerCase().includes(q) || (u.name ?? "").toLowerCase().includes(q))
-      .slice(0, 5)
-  }, [units, unitQuery])
 
   const logoBg = logoBackground(product.name)
 
@@ -361,83 +352,17 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                 <label htmlFor={unitId} className={labelCls}>
                   Satuan Default
                 </label>
-                <div className="relative">
-                  <input
-                    id={unitId}
-                    type="text"
-                    readOnly={!canWrite}
-                    autoComplete="off"
-                    placeholder={canWrite ? "Ketik nama satuan..." : ""}
-                    value={unitQuery}
-                    onChange={(e) => {
-                      setUnitQuery(e.target.value)
-                      setShowUnitSuggestions(true)
-                      if (unitCode) setUnitCode("")
-                    }}
-                    onFocus={() => {
-                      if (canWrite && unitQuery.length > 0 && !unitCode) {
-                        setShowUnitSuggestions(true)
-                      }
-                    }}
-                    className={`${inputBase} border-transparent ${unitQuery ? "pr-9" : ""}`}
-                  />
-                  {canWrite && unitQuery && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUnitQuery("")
-                        setUnitCode("")
-                        setShowUnitSuggestions(false)
-                      }}
-                      title="Bersihkan"
-                      aria-label="Bersihkan satuan"
-                      className={`absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center rounded-sm p-1 text-[#94A3B8] ${ui.focusRing}`}
-                    >
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 14 14"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        aria-hidden="true"
-                      >
-                        <line x1="1" y1="1" x2="13" y2="13" />
-                        <line x1="13" y1="1" x2="1" y2="13" />
-                      </svg>
-                    </button>
-                  )}
-                  {showUnitSuggestions && unitQuery.length > 0 && (
-                    <div className={ui.dropdownPanelCompact}>
-                      {filteredUnits.length === 0 ? (
-                        <div className="px-5 py-3 text-center text-[13px] text-[#94A3B8]">
-                          Tidak ada hasil
-                        </div>
-                      ) : (
-                        filteredUnits.map((u) => {
-                          const active = unitCode === u.code
-                          const label = u.name ? `${u.code} — ${u.name}` : u.code
-                          return (
-                            <button
-                              key={u.id}
-                              type="button"
-                              className={ui.dropdownItem}
-                              onClick={() => {
-                                setUnitCode(u.code)
-                                setUnitQuery(u.code)
-                                setShowUnitSuggestions(false)
-                              }}
-                            >
-                              <span className={dropdownLabel(active)}>{label}</span>
-                              {active && <CheckIcon />}
-                            </button>
-                          )
-                        })
-                      )}
-                    </div>
-                  )}
-                </div>
+                <UnitCombobox
+                  code={unitCode}
+                  onCodeChange={setUnitCode}
+                  query={unitQuery}
+                  onQueryChange={setUnitQuery}
+                  inputId={unitId}
+                  readOnly={!canWrite}
+                  placeholder={canWrite ? "Ketik nama satuan..." : ""}
+                  inputClassName={`${inputBase} border-transparent ${unitQuery ? "pr-9" : ""}`}
+                  panelClassName="border-[rgba(204,195,216,0.4)] py-1"
+                />
               </div>
 
               <div>

@@ -1,13 +1,12 @@
 import { useId, useState } from "react"
-import { CheckIcon } from "@/components/document/icons"
 import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
-import { useUnits } from "@/features/units/hooks"
+import UnitCombobox from "@/features/units/UnitCombobox"
 import {
   STATUS_FILTER_OPTIONS as STATUS_OPTIONS,
   type StatusFilterValue,
 } from "@/lib/filter-options"
-import { chip, dropdownLabel, ui } from "@/lib/ui"
+import { chip, ui } from "@/lib/ui"
 
 export type ProductStatusFilter = StatusFilterValue
 
@@ -28,18 +27,8 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
   const [status, setStatus] = useState<ProductStatusFilter>(initialValues?.status ?? "all")
   const [unitCode, setUnitCode] = useState<string>(initialValues?.unitCode ?? "")
   const [unitQuery, setUnitQuery] = useState<string>(initialValues?.unitCode ?? "")
-  const [showUnitSuggestions, setShowUnitSuggestions] = useState(false)
 
-  const { data: units } = useUnits()
   const unitHeadingId = useId()
-
-  const filteredUnits = (units ?? [])
-    .filter((u) => {
-      if (!unitQuery) return true
-      const q = unitQuery.toLowerCase()
-      return u.code.toLowerCase().includes(q) || (u.name ?? "").toLowerCase().includes(q)
-    })
-    .slice(0, 5)
 
   const dirty = status !== DEFAULTS.status || unitCode !== DEFAULTS.unitCode
 
@@ -47,7 +36,6 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
     setStatus("all")
     setUnitCode("")
     setUnitQuery("")
-    setShowUnitSuggestions(false)
   }
 
   const handleApply = () => {
@@ -91,94 +79,33 @@ export default function ProductFilter({ onClose, onApply, initialValues }: Produ
           Satuan
         </div>
         <div className={ui.field}>
-          <div className="relative">
-            <svg
-              aria-hidden="true"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#94A3B8"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Ketik nama satuan..."
-              aria-labelledby={unitHeadingId}
-              value={unitQuery}
-              onChange={(e) => {
-                setUnitQuery(e.target.value)
-                setShowUnitSuggestions(true)
-                if (unitCode) setUnitCode("")
-              }}
-              onFocus={() => {
-                if (unitQuery.length > 0 && !unitCode) setShowUnitSuggestions(true)
-              }}
-              className={`h-11 w-full rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-9 py-2.5 font-sans text-sm text-[#191C1E] outline-none transition ${ui.fieldFocus}`}
-            />
-            {unitQuery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setUnitQuery("")
-                  setUnitCode("")
-                  setShowUnitSuggestions(false)
-                }}
-                title="Bersihkan"
-                aria-label="Bersihkan satuan"
-                className={`absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center rounded-sm p-1 text-[#94A3B8] ${ui.focusRing}`}
+          <UnitCombobox
+            code={unitCode}
+            onCodeChange={setUnitCode}
+            query={unitQuery}
+            onQueryChange={setUnitQuery}
+            placeholder="Ketik nama satuan..."
+            aria-labelledby={unitHeadingId}
+            inputClassName={`h-11 w-full rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-9 py-2.5 font-sans text-sm text-[#191C1E] outline-none transition ${ui.fieldFocus}`}
+            panelClassName="max-h-60 border-[rgba(204,195,216,0.4)] py-1"
+            leading={
+              <svg
+                aria-hidden="true"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#94A3B8"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
               >
-                <svg
-                  aria-hidden="true"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
-                  <line x1="1" y1="1" x2="13" y2="13" />
-                  <line x1="13" y1="1" x2="1" y2="13" />
-                </svg>
-              </button>
-            )}
-            {showUnitSuggestions && unitQuery.length > 0 && (
-              <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 max-h-60 overflow-y-auto rounded-md border border-[rgba(204,195,216,0.4)] bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
-                {filteredUnits.length === 0 ? (
-                  <div className="px-5 py-3 text-center text-[13px] text-[#94A3B8]">
-                    Tidak ada hasil
-                  </div>
-                ) : (
-                  filteredUnits.map((u) => {
-                    const active = unitCode === u.code
-                    const label = u.name ? `${u.code} — ${u.name}` : u.code
-                    return (
-                      <button
-                        key={u.id}
-                        type="button"
-                        className={ui.dropdownItem}
-                        onClick={() => {
-                          setUnitCode(u.code)
-                          setUnitQuery(u.code)
-                          setShowUnitSuggestions(false)
-                        }}
-                      >
-                        <span className={dropdownLabel(active)}>{label}</span>
-                        {active && <CheckIcon />}
-                      </button>
-                    )
-                  })
-                )}
-              </div>
-            )}
-          </div>
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            }
+          />
         </div>
       </div>
     </Modal>

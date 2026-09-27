@@ -1,10 +1,10 @@
-import { useId, useMemo, useState } from "react"
-import { CheckIcon } from "@/components/document/icons"
+import { useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { useCreateItem } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
+import UnitCombobox from "@/features/units/UnitCombobox"
 import { errorMessage } from "@/lib/errors"
-import { dropdownLabel, ui } from "@/lib/ui"
+import { ui } from "@/lib/ui"
 
 type ProductCreateModalData = {
   id: number
@@ -29,18 +29,10 @@ export default function ProductCreateModal({
   const [kode, setKode] = useState("")
   const [satuan, setSatuan] = useState("")
   const [satuanQuery, setSatuanQuery] = useState("")
-  const [showSatuanSuggestions, setShowSatuanSuggestions] = useState(false)
   const [aktif, setAktif] = useState(true)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const { data: units } = useUnits()
-  const filteredUnits = useMemo(() => {
-    const q = satuanQuery.trim().toLowerCase()
-    if (!q) return []
-    return (units ?? [])
-      .filter((u) => u.code.toLowerCase().includes(q) || (u.name ?? "").toLowerCase().includes(q))
-      .slice(0, 5)
-  }, [units, satuanQuery])
   const createItem = useCreateItem()
   const nameId = useId()
   const impaId = useId()
@@ -80,7 +72,6 @@ export default function ProductCreateModal({
     setKode("")
     setSatuan("")
     setSatuanQuery("")
-    setShowSatuanSuggestions(false)
     setAktif(true)
     setSubmitError(null)
   }
@@ -151,80 +142,15 @@ export default function ProductCreateModal({
           <label htmlFor={unitId} className={ui.fieldLabel}>
             Satuan Default
           </label>
-          <div className="relative">
-            <input
-              id={unitId}
-              autoComplete="off"
-              className={`${ui.fieldInput} font-sans ${satuanQuery ? "pr-9" : ""}`}
-              type="text"
-              placeholder="Ketik nama satuan..."
-              value={satuanQuery}
-              onChange={(e) => {
-                setSatuanQuery(e.target.value)
-                setShowSatuanSuggestions(true)
-                if (satuan) setSatuan("")
-              }}
-              onFocus={() => {
-                if (satuanQuery.length > 0 && !satuan) setShowSatuanSuggestions(true)
-              }}
-            />
-            {satuanQuery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSatuanQuery("")
-                  setSatuan("")
-                  setShowSatuanSuggestions(false)
-                }}
-                title="Bersihkan"
-                aria-label="Bersihkan satuan"
-                className={`absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center rounded-sm p-1 text-[#94A3B8] ${ui.focusRing}`}
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  aria-hidden="true"
-                >
-                  <line x1="1" y1="1" x2="13" y2="13" />
-                  <line x1="13" y1="1" x2="1" y2="13" />
-                </svg>
-              </button>
-            )}
-            {showSatuanSuggestions && satuanQuery.length > 0 && (
-              <div className={ui.dropdownPanel}>
-                {filteredUnits.length === 0 ? (
-                  <div className="px-5 py-3 text-center text-[13px] text-[#94A3B8]">
-                    Tidak ada hasil
-                  </div>
-                ) : (
-                  filteredUnits.map((u) => {
-                    const active = satuan === u.code
-                    const label = u.name ? `${u.code} — ${u.name}` : u.code
-                    return (
-                      <button
-                        key={u.id}
-                        type="button"
-                        className={ui.dropdownItem}
-                        onClick={() => {
-                          setSatuan(u.code)
-                          setSatuanQuery(u.code)
-                          setShowSatuanSuggestions(false)
-                        }}
-                      >
-                        <span className={dropdownLabel(active)}>{label}</span>
-                        {active && <CheckIcon />}
-                      </button>
-                    )
-                  })
-                )}
-              </div>
-            )}
-          </div>
+          <UnitCombobox
+            code={satuan}
+            onCodeChange={setSatuan}
+            query={satuanQuery}
+            onQueryChange={setSatuanQuery}
+            inputId={unitId}
+            placeholder="Ketik nama satuan..."
+            inputClassName={`${ui.fieldInput} font-sans ${satuanQuery ? "pr-9" : ""}`}
+          />
         </div>
 
         <div className="flex flex-row items-center justify-between gap-2">

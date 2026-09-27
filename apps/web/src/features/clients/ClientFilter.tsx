@@ -1,13 +1,15 @@
 import { useState } from "react"
-import { CheckIcon } from "@/components/document/icons"
 import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
+import SearchCombobox, { messageCls } from "@/components/shared/SearchCombobox"
 import { useCountries } from "@/features/countries/hooks"
+import { matchCountries } from "@/features/countries/match"
 import {
   STATUS_FILTER_OPTIONS as STATUS_OPTIONS,
   type StatusFilterValue,
 } from "@/lib/filter-options"
-import { chip, dropdownLabel, ui } from "@/lib/ui"
+import { chip, ui } from "@/lib/ui"
+import type { CountryRow } from "@/types/api"
 
 export type ClientStatusFilter = StatusFilterValue
 
@@ -30,15 +32,10 @@ export default function ClientFilter({ onClose, onApply, initialValues }: Client
   const [countryCode, setCountryCode] = useState<string>(initialValues?.countryCode ?? "")
   const [minTotal, setMinTotal] = useState<string>(initialValues?.minTotal ?? "")
   const [countryQuery, setCountryQuery] = useState("")
-  const [showCountrySuggestions, setShowCountrySuggestions] = useState(false)
 
   const { data: countries } = useCountries()
 
-  const filteredCountries = (countries ?? []).filter((c) => {
-    if (!countryQuery) return true
-    const q = countryQuery.toLowerCase()
-    return c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q)
-  })
+  const allCountries = countries ?? []
 
   const dirty =
     status !== DEFAULTS.status ||
@@ -50,7 +47,6 @@ export default function ClientFilter({ onClose, onApply, initialValues }: Client
     setCountryCode("")
     setMinTotal("")
     setCountryQuery("")
-    setShowCountrySuggestions(false)
   }
 
   const handleApply = () => {
@@ -100,93 +96,38 @@ export default function ClientFilter({ onClose, onApply, initialValues }: Client
       <div className={ui.modalSection}>
         <div className={ui.modalSectionHeading}>Negara Asal</div>
         <div className={ui.field}>
-          <div className="relative">
-            <svg
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#94A3B8"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Ketik nama negara..."
-              aria-label="Negara asal"
-              value={countryQuery}
-              onChange={(e) => {
-                setCountryQuery(e.target.value)
-                setShowCountrySuggestions(true)
-                if (countryCode) setCountryCode("")
-              }}
-              onFocus={() => {
-                if (countryQuery.length > 0 && !countryCode) setShowCountrySuggestions(true)
-              }}
-              className={`h-11 w-full rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-9 py-2.5 text-sm text-[#191C1E] outline-none transition ${ui.fieldFocus}`}
-            />
-            {countryQuery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCountryQuery("")
-                  setCountryCode("")
-                  setShowCountrySuggestions(false)
-                }}
-                title="Bersihkan"
-                aria-label="Bersihkan negara"
-                className={`absolute right-2.5 top-1/2 flex -translate-y-1/2 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent p-1 text-[#94A3B8] ${ui.focusRing}`}
+          <SearchCombobox<CountryRow>
+            items={matchCountries(allCountries, countryQuery)}
+            value={allCountries.find((c) => c.code === countryCode) ?? null}
+            onValueChange={(c) => setCountryCode(c?.code ?? "")}
+            query={countryQuery}
+            onQueryChange={setCountryQuery}
+            itemKey={(c) => c.code}
+            itemToString={(c) => c.name}
+            placeholder="Ketik nama negara..."
+            aria-label="Negara asal"
+            clearLabel="Bersihkan negara"
+            inputClassName={`h-11 w-full rounded-md border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-9 py-2.5 text-sm text-[#191C1E] outline-none transition ${ui.fieldFocus}`}
+            panelClassName="max-h-[200px] border-[rgba(204,195,216,0.4)] py-1"
+            empty={<div className={messageCls}>Tidak ada hasil</div>}
+            leading={
+              <svg
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#94A3B8"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
               >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  aria-hidden="true"
-                >
-                  <line x1="1" y1="1" x2="13" y2="13" />
-                  <line x1="13" y1="1" x2="1" y2="13" />
-                </svg>
-              </button>
-            )}
-            {showCountrySuggestions && countryQuery.length > 0 && (
-              <div className="absolute inset-x-0 top-[calc(100%+4px)] z-50 max-h-[200px] overflow-y-auto rounded-md border border-[rgba(204,195,216,0.4)] bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
-                {filteredCountries.length === 0 ? (
-                  <div className="px-5 py-3 text-center text-[13px] text-[#94A3B8]">
-                    Tidak ada hasil
-                  </div>
-                ) : (
-                  filteredCountries.slice(0, 5).map((c) => {
-                    const active = countryCode === c.code
-                    return (
-                      <button
-                        key={c.code}
-                        type="button"
-                        className={ui.dropdownItem}
-                        onClick={() => {
-                          setCountryCode(c.code)
-                          setCountryQuery(c.name)
-                          setShowCountrySuggestions(false)
-                        }}
-                      >
-                        <span className={dropdownLabel(active)}>{c.name}</span>
-                        {active && <CheckIcon />}
-                      </button>
-                    )
-                  })
-                )}
-              </div>
-            )}
-          </div>
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            }
+          />
         </div>
       </div>
 
