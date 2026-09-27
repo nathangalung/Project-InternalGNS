@@ -62,7 +62,6 @@ var allowlist = []pkg{
 	}},
 	{"internal/items", []entry{
 		{Go: "Item", TS: "ItemRow"},
-		{Go: "SearchResult", TS: "ItemSearchHit"},
 		{Go: "VendorForItem", TS: "ItemVendorRow"},
 		{Go: "PriceHistory", TS: "ItemPriceHistoryRow"},
 		{Go: "CreateItemRequest", TS: "CreateItemInput", Input: true},

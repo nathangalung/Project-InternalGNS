@@ -341,16 +341,6 @@ export type ItemRow = {
 };
 
 // From items/dto.go
-export type ItemSearchHit = {
-    id: number;
-    name: string;
-    impaCode?: string;
-    defaultUnitId?: number;
-    score: number;
-    matchTier: string;
-};
-
-// From items/dto.go
 export type ItemVendorRow = {
     vendorProductId: number;
     vendorId: number;

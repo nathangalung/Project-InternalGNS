@@ -23,6 +23,7 @@ var skipped = map[string]string{
 	"internal/quotations.StatusInfo":            "display order; stats answer with StatusCount",
 	"internal/items.VendorOfferHit":             "repo row merged into AdvancedSearchHit",
 	"internal/items.RequestHistoryHit":          "repo row merged into AdvancedSearchHit",
+	"internal/items.SearchResult":               "repo row merged into AdvancedSearchHit",
 	"internal/clients.UpdateLogoRequest":        "test fixture of assetproxy.KeyRequest",
 	"internal/vendors.UpdateLogoRequest":        "test fixture of assetproxy.KeyRequest",
 	"internal/items.UpdateImageRequest":         "test fixture of assetproxy.KeyRequest",
