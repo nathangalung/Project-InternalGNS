@@ -33,7 +33,10 @@ describe("quotation StatusBar menu", () => {
   })
 
   it("hands the picked move to onPick from the keyboard", async () => {
-    const onPick = vi.fn()
+    let focusedAtPick: Element | null = null
+    const onPick = vi.fn(() => {
+      focusedAtPick = document.activeElement
+    })
     await mountBar({ onPick })
     button("Status Dikirim, ubah status").focus()
     await press("ArrowDown")
@@ -41,6 +44,8 @@ describe("quotation StatusBar menu", () => {
     await press("Enter")
     expect(onPick).toHaveBeenCalledWith(moves[1])
     expect(byRole("menu")).toHaveLength(0)
+    // The dialog records the badge as its opener
+    expect(focusedAtPick).toBe(button("Status Dikirim, ubah status"))
   })
 
   it("disables the badge when no move is allowed", async () => {

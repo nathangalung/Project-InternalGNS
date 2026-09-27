@@ -369,6 +369,31 @@ test.describe("quotation status", () => {
     await expect.poll(async () => (await seed.getQuotation(q.id)).validityDays).toBe(45)
   })
 
+  test("a move picked from the menu hands focus back to the badge", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const q = await seed.quotation({ client, lines: [{ item, qty: 1, price: 50_000 }] })
+    await seed.send(q.id)
+    await page.goto(`/quotations/${q.id}`)
+    const badge = page.getByRole("button", { name: "Status Dikirim, ubah status" })
+
+    // Pointer pick, then Batal
+    const menu = await openStatusMenu(page, "Dikirim")
+    await menu.getByRole("menuitem", { name: "Ditolak" }).click()
+    const dialog = page.getByRole("dialog", { name: "Ubah Status ke Ditolak" })
+    await dialog.getByRole("button", { name: "Batal" }).click()
+    await expect(dialog).toBeHidden()
+    await expect(badge).toBeFocused()
+
+    // Keyboard pick, then Escape
+    await page.keyboard.press("ArrowDown")
+    await page.keyboard.press("Enter")
+    await expect(page.getByRole("dialog", { name: "Ubah Status ke Disetujui" })).toBeVisible()
+    await page.keyboard.press("Escape")
+    await expect(page.getByRole("dialog")).toHaveCount(0)
+    await expect(badge).toBeFocused()
+  })
+
   test("Ditolak waits for a reason and is final", async ({ page, seed }) => {
     const client = await seed.client()
     const item = await seed.item()

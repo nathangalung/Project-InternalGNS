@@ -1,3 +1,4 @@
+import { useRef } from "react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +30,9 @@ const cancelBtn = `inline-flex items-center justify-center gap-2 rounded-md bord
 //
 // The menu lists only the moves the server allows for the saved status, so
 // the badge never shows an unsaved choice. Picking a move opens a confirm
-// dialog; nothing changes until it is submitted.
+// dialog; nothing changes until it is submitted. The dialog opens only
+// once the menu has closed and handed focus back to the badge, so the
+// dialog returns focus there too.
 export default function StatusBar({
   status,
   hint,
@@ -41,6 +44,17 @@ export default function StatusBar({
 }: StatusBarProps) {
   const badge = quotationBadge[status]
   const hasMoves = moves.length > 0
+  const picked = useRef<QuotationTransition | null>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  // Refocus badge, then open dialog.
+  const onOpenChangeComplete = (open: boolean) => {
+    const t = picked.current
+    if (open || !t) return
+    picked.current = null
+    triggerRef.current?.focus()
+    onPick(t)
+  }
 
   return (
     <div className={ui.statusBar}>
@@ -49,8 +63,9 @@ export default function StatusBar({
         <div className="mt-0.5 text-caption font-normal text-[#4A4455]">{hint}</div>
       </div>
       <div className="flex items-center gap-3">
-        <DropdownMenu>
+        <DropdownMenu onOpenChangeComplete={onOpenChangeComplete}>
           <DropdownMenuTrigger
+            ref={triggerRef}
             className={`${ui.statusTrigger} border border-transparent${hasMoves ? "" : " cursor-default"}`}
             style={{ background: badge.bg, color: badge.color }}
             disabled={!hasMoves}
@@ -76,7 +91,12 @@ export default function StatusBar({
             <DropdownMenuGroup>
               <DropdownMenuLabel>Ubah ke</DropdownMenuLabel>
               {moves.map((t) => (
-                <DropdownMenuItem key={t.to} onClick={() => onPick(t)}>
+                <DropdownMenuItem
+                  key={t.to}
+                  onClick={() => {
+                    picked.current = t
+                  }}
+                >
                   <span className="text-caption font-normal text-[#4A4455]">{t.label}</span>
                 </DropdownMenuItem>
               ))}
