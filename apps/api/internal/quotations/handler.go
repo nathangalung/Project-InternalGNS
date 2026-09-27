@@ -85,7 +85,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 			q.QuotationNo,
 			q.CreatedAt.In(tz.Jakarta()).Format("2006-01-02"),
 			q.CompanyName,
-			q.Status,
+			string(q.Status),
 			q.Subtotal,
 			q.TotalDiscount,
 			q.GrandTotal,
@@ -147,8 +147,11 @@ func (h *Handler) Revisions(w http.ResponseWriter, r *http.Request) {
 // Every later state is reached through fn_change_quotation_status, which owns
 // the transition table, the unpriced guard and PO creation. Returns nil when
 // the payload is acceptable.
-func validateCreateStatus(status *string) map[string]string {
-	if status == nil || strings.TrimSpace(*status) == "" || strings.TrimSpace(*status) == "draft" {
+func validateCreateStatus(status *Status) map[string]string {
+	if status == nil {
+		return nil
+	}
+	if s := strings.TrimSpace(string(*status)); s == "" || s == string(StatusDraft) {
 		return nil
 	}
 	return map[string]string{
@@ -297,7 +300,7 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 // validateChangeStatus checks the body shape.
 // The transition itself is judged by the database under its row lock.
 func validateChangeStatus(req ChangeStatusRequest) map[string]string {
-	if strings.TrimSpace(req.Status) == "" {
+	if strings.TrimSpace(string(req.Status)) == "" {
 		return map[string]string{"status": "Status wajib diisi."}
 	}
 	if noteRequired(req.Status) && (req.Note == nil || strings.TrimSpace(*req.Note) == "") {

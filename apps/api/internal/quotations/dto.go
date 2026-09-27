@@ -16,7 +16,7 @@ type Quotation struct {
 	ContactName       *string   `db:"contact_name"        json:"contactName,omitempty"`
 	ClientRefNo       *string   `db:"client_ref_no"       json:"clientRefNo,omitempty"`
 	VesselName        *string   `db:"vessel_name"         json:"vesselName,omitempty"`
-	Status            string    `db:"status"              json:"status"`
+	Status            Status    `db:"status"              json:"status"`
 	PaymentTerms      *string   `db:"payment_terms"       json:"paymentTerms,omitempty"`
 	ValidityDays      *int      `db:"validity_days"       json:"validityDays,omitempty"`
 	DiscountPct       string    `db:"discount_pct"        json:"discountPct"`
@@ -62,8 +62,8 @@ type QuotationItem struct {
 // StatusHistoryEntry mirrors quotation_status_history.
 type StatusHistoryEntry struct {
 	ID         int64     `db:"id"           json:"id"`
-	FromStatus *string   `db:"from_status"  json:"fromStatus,omitempty"`
-	ToStatus   string    `db:"to_status"    json:"toStatus"`
+	FromStatus *Status   `db:"from_status"  json:"fromStatus,omitempty"`
+	ToStatus   Status    `db:"to_status"    json:"toStatus"`
 	Note       *string   `db:"note"         json:"note,omitempty"`
 	ChangedBy  *int64    `db:"changed_by"   json:"changedBy"` // nil: expiry job
 	ChangedAt  time.Time `db:"changed_at"   json:"changedAt"`
@@ -85,7 +85,7 @@ type RevisionRow struct {
 	ParentID    *int64    `db:"parent_id"     json:"parentId,omitempty"`
 	QuotationNo string    `db:"quotation_no"  json:"quotationNo"`
 	Version     int16     `db:"version"       json:"version"`
-	Status      string    `db:"status"        json:"status"`
+	Status      Status    `db:"status"        json:"status"`
 	GrandTotal  string    `db:"grand_total"   json:"grandTotal"`
 	TotalProduk string    `db:"total_produk"  json:"totalProduk"`
 	CreatedAt   time.Time `db:"created_at"    json:"createdAt"`
@@ -98,7 +98,7 @@ type ListRow struct {
 	QuotationNo    string    `db:"quotation_no"     json:"quotationNo"`
 	Version        int16     `db:"version"          json:"version"`
 	CompanyName    string    `db:"company_name"     json:"companyName"`
-	Status         string    `db:"status"           json:"status"`
+	Status         Status    `db:"status"           json:"status"`
 	GrandTotal     string    `db:"grand_total"      json:"grandTotal"`
 	Subtotal       string    `db:"subtotal"         json:"subtotal"`
 	TotalDiscount  string    `db:"total_discount"   json:"totalDiscount"`
@@ -115,7 +115,7 @@ type ListResult struct {
 
 // Stats counts per status.
 type StatusCount struct {
-	Status string `db:"status" json:"status"`
+	Status Status `db:"status" json:"status"`
 	Label  string `db:"-"      json:"label"`
 	Count  int64  `db:"count"  json:"count"`
 }
@@ -150,7 +150,7 @@ type CreateRequest struct {
 	ShippingCost    *string      `json:"shippingCost,omitempty"` // numeric as string
 	Items           []CreateItem `json:"items"`
 	Notes           *string      `json:"notes,omitempty"`
-	Status          *string      `json:"status,omitempty"` // defaults to draft
+	Status          *Status      `json:"status,omitempty"` // defaults to draft
 }
 
 // Update quotation body.
@@ -169,7 +169,7 @@ type UpdateRequest struct {
 
 // Change status body.
 type ChangeStatusRequest struct {
-	Status string  `json:"status"` // a key of Transitions
+	Status Status  `json:"status"` // a key of Transitions
 	Note   *string `json:"note,omitempty"`
 }
 

@@ -76,7 +76,7 @@ func TestHandler_Create_RejectsNonDraftStatus(t *testing.T) {
 				}
 				require.NoError(t, json.NewDecoder(res.Body).Decode(&body))
 				d := readDetail(t, srv, body.ID)
-				assert.Equal(t, "draft", d.Status)
+				assert.Equal(t, quotations.StatusDraft, d.Status)
 				return
 			}
 			assert.Equal(t, before, after, "rejected create must insert no row")

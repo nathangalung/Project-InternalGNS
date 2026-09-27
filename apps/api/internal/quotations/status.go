@@ -8,20 +8,23 @@ package quotations
 // clones the draft in the same transaction, and sent -> expired only through
 // fn_expire_quotations, the daily job.
 
+// Status is a stored key.
+type Status string
+
 // Status keys as stored.
 const (
-	StatusDraft     = "draft"
-	StatusSent      = "sent"
-	StatusRevision  = "revision"
-	StatusAccepted  = "accepted"
-	StatusRejected  = "rejected"
-	StatusCancelled = "cancelled"
-	StatusExpired   = "expired"
+	StatusDraft     Status = "draft"
+	StatusSent      Status = "sent"
+	StatusRevision  Status = "revision"
+	StatusAccepted  Status = "accepted"
+	StatusRejected  Status = "rejected"
+	StatusCancelled Status = "cancelled"
+	StatusExpired   Status = "expired"
 )
 
 // StatusInfo pairs status and label.
 type StatusInfo struct {
-	Status string `json:"status"`
+	Status Status `json:"status"`
 	Label  string `json:"label"`
 }
 
@@ -38,18 +41,18 @@ var Statuses = []StatusInfo{
 
 // Transition is one manual move.
 type Transition struct {
-	To           string `json:"to"`
+	To           Status `json:"to"`
 	Label        string `json:"label"`
 	RequiresNote bool   `json:"requiresNote"`
 }
 
-func move(to string, requiresNote bool) Transition {
+func move(to Status, requiresNote bool) Transition {
 	return Transition{To: to, Label: StatusLabel(to), RequiresNote: requiresNote}
 }
 
 // Transitions lists manual moves.
 // Terminal statuses map to no moves.
-var Transitions = map[string][]Transition{
+var Transitions = map[Status][]Transition{
 	StatusDraft:     {move(StatusSent, false), move(StatusCancelled, true)},
 	StatusSent:      {move(StatusAccepted, false), move(StatusRejected, true), move(StatusCancelled, true)},
 	StatusRevision:  {move(StatusRejected, true), move(StatusCancelled, true)},
@@ -61,28 +64,28 @@ var Transitions = map[string][]Transition{
 
 // AllowedTransitions copies the offered moves.
 // Never nil, so JSON encodes [].
-func AllowedTransitions(status string) []Transition {
+func AllowedTransitions(status Status) []Transition {
 	out := make([]Transition, len(Transitions[status]))
 	copy(out, Transitions[status])
 	return out
 }
 
 // CanRevise gates Buat Revisi.
-func CanRevise(status string) bool { return status == StatusSent }
+func CanRevise(status Status) bool { return status == StatusSent }
 
 // StatusLabel defaults to the key.
-func StatusLabel(status string) string {
+func StatusLabel(status Status) string {
 	for _, s := range Statuses {
 		if s.Status == status {
 			return s.Label
 		}
 	}
-	return status
+	return string(status)
 }
 
 // noteRequired reports a mandatory reason.
 // Every move into the target shares the rule.
-func noteRequired(to string) bool {
+func noteRequired(to Status) bool {
 	for _, ts := range Transitions {
 		for _, t := range ts {
 			if t.To == to {

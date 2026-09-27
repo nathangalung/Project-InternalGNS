@@ -31,7 +31,7 @@ func sqlState(err error) string {
 }
 
 // forceStatus bypasses the state machine.
-func forceStatus(t *testing.T, ctx context.Context, tx pgx.Tx, id int64, status string) {
+func forceStatus(t *testing.T, ctx context.Context, tx pgx.Tx, id int64, status quotations.Status) {
 	t.Helper()
 	_, err := tx.Exec(ctx, `UPDATE quotations SET status = $2 WHERE id = $1`, id, status)
 	require.NoError(t, err)
@@ -42,7 +42,7 @@ func forceStatus(t *testing.T, ctx context.Context, tx pgx.Tx, id int64, status 
 func TestChangeStatus_MirrorsTransitions(t *testing.T) {
 	note := "alasan pengujian"
 	for _, from := range quotations.Statuses {
-		allowed := map[string]bool{}
+		allowed := map[quotations.Status]bool{}
 		for _, tr := range quotations.AllowedTransitions(from.Status) {
 			allowed[tr.To] = true
 		}
@@ -50,7 +50,7 @@ func TestChangeStatus_MirrorsTransitions(t *testing.T) {
 			if to.Status == from.Status {
 				continue
 			}
-			t.Run(from.Status+"_to_"+to.Status, func(t *testing.T) {
+			t.Run(string(from.Status)+"_to_"+string(to.Status), func(t *testing.T) {
 				ctx, repo, tx := newRepo(t)
 				id, err := repo.Create(ctx, sampleCreate(), seedUserID)
 				require.NoError(t, err)
@@ -87,8 +87,8 @@ func TestChangeStatus_RequiresNote(t *testing.T) {
 	reason := "Klien memilih pemasok lain"
 	tests := []struct {
 		name string
-		from string
-		to   string
+		from quotations.Status
+		to   quotations.Status
 		note *string
 		code string
 	}{
@@ -180,7 +180,7 @@ func TestExpireDue_Boundaries(t *testing.T) {
 		validity *int
 		sent     time.Time
 		asOf     time.Time
-		want     string
+		want     quotations.Status
 	}{
 		{"within validity", &seven, sentAt, wib(time.March, 5, 12, 0), quotations.StatusSent},
 		{"last valid day, last minute", &seven, sentAt, wib(time.March, 8, 23, 59), quotations.StatusSent},
@@ -218,12 +218,12 @@ func TestExpireDue_Boundaries(t *testing.T) {
 // Expiry moves only sent rows.
 // Even a long-lapsed window leaves other statuses alone.
 func TestExpireDue_OnlyTouchesSent(t *testing.T) {
-	for _, status := range []string{
+	for _, status := range []quotations.Status{
 		quotations.StatusDraft, quotations.StatusRevision,
 		quotations.StatusAccepted, quotations.StatusRejected,
 		quotations.StatusCancelled, quotations.StatusExpired,
 	} {
-		t.Run(status, func(t *testing.T) {
+		t.Run(string(status), func(t *testing.T) {
 			seven := 7
 			ctx, repo, tx := newRepo(t)
 			id := sentWithValidity(t, ctx, repo, &seven)
@@ -499,7 +499,7 @@ func TestRevise_RefusesOtherStatuses(t *testing.T) {
 		if s.Status == quotations.StatusSent {
 			continue
 		}
-		t.Run(s.Status, func(t *testing.T) {
+		t.Run(string(s.Status), func(t *testing.T) {
 			ctx, repo, tx := newRepo(t)
 			id, err := repo.Create(ctx, sampleCreate(), seedUserID)
 			require.NoError(t, err)

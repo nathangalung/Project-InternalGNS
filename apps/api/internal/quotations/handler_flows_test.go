@@ -246,7 +246,7 @@ func TestHandler_Revisions(t *testing.T) {
 		decodeBody(t, res, &revs)
 		require.Len(t, revs, 2)
 		assert.Equal(t, id, revs[0].ID)
-		assert.Equal(t, "revision", revs[0].Status)
+		assert.Equal(t, quotations.StatusRevision, revs[0].Status)
 		assert.Equal(t, created["id"], revs[1].ID)
 		require.NotNil(t, revs[1].ParentID)
 		assert.Equal(t, id, *revs[1].ParentID)
@@ -315,9 +315,9 @@ func TestHandler_Send_KeepsTheNote(t *testing.T) {
 
 			var d quotations.QuotationDetail
 			getJSON(t, srv, idPath(id, ""), &d)
-			assert.Equal(t, "sent", d.Status)
+			assert.Equal(t, quotations.StatusSent, d.Status)
 			last := d.History[len(d.History)-1]
-			assert.Equal(t, "sent", last.ToStatus)
+			assert.Equal(t, quotations.StatusSent, last.ToStatus)
 			require.NotNil(t, last.Note)
 			assert.Equal(t, c.wantNote, *last.Note)
 		})

@@ -247,7 +247,7 @@ func (s *scenarioState) latestHistoryReason(to string) error {
 		return err
 	}
 	last := d.History[len(d.History)-1]
-	if last.ToStatus != to || last.Note == nil || *last.Note != testReason {
+	if string(last.ToStatus) != to || last.Note == nil || *last.Note != testReason {
 		return fmt.Errorf("latest history %+v, want %s with %q", last, to, testReason)
 	}
 	return nil
@@ -275,7 +275,7 @@ func (s *scenarioState) allowedAre(want string) error {
 	}
 	got := make([]string, 0, len(d.AllowedTransitions))
 	for _, tr := range d.AllowedTransitions {
-		got = append(got, tr.To)
+		got = append(got, string(tr.To))
 	}
 	if want == "none" {
 		want = ""
@@ -350,7 +350,7 @@ func (s *scenarioState) originalIs(want string) error {
 	if err != nil {
 		return err
 	}
-	if orig.Status != want {
+	if string(orig.Status) != want {
 		return fmt.Errorf("original status %s, want %s", orig.Status, want)
 	}
 	return nil
@@ -428,7 +428,7 @@ func (s *scenarioState) statsList(want string) error {
 	}
 	got := make([]string, 0, len(st))
 	for _, c := range st {
-		got = append(got, c.Status)
+		got = append(got, string(c.Status))
 	}
 	if strings.Join(got, ",") != want {
 		return fmt.Errorf("stats order %v, want %s", got, want)
@@ -458,7 +458,7 @@ func (s *scenarioState) statsCount(a int64, sa string, b int64, sb string) error
 	}
 	by := map[string]int64{}
 	for _, c := range st {
-		by[c.Status] = c.Count
+		by[string(c.Status)] = c.Count
 	}
 	if by[sa] != a || by[sb] != b {
 		return fmt.Errorf("stats %s=%d %s=%d, want %d and %d", sa, by[sa], sb, by[sb], a, b)

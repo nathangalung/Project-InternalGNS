@@ -129,7 +129,7 @@ func (r *Repo) Stats(ctx context.Context) ([]StatusCount, error) {
 	if err != nil {
 		return nil, fmt.Errorf("quotation stats: %w", err)
 	}
-	by := make(map[string]int64, len(counted))
+	by := make(map[Status]int64, len(counted))
 	for _, c := range counted {
 		by[c.Status] = c.Count
 	}
@@ -255,7 +255,7 @@ func (r *Repo) Update(
 // ChangeStatus calls fn_change_quotation_status atomically. Finalizing
 // (sent/accepted) requires every product priced; that guard runs inside the
 // function under its row lock and surfaces as SQLSTATE P0100.
-func (r *Repo) ChangeStatus(ctx context.Context, id int64, status string, note *string, userID int64) error {
+func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, note *string, userID int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("quotations.fn_change_status"),
 		id, status, userID, note,
 	)
