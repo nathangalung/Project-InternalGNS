@@ -410,30 +410,72 @@ func TestParseRFQ_XLSXCells(t *testing.T) {
 
 // Category row spans the table.
 func TestParseRFQ_CategoryRows(t *testing.T) {
-	data := buildXLSX(t, func(f *excelize.File) {
-		setRows(t, f, "A1",
-			[]any{"Kode", "Nama", "Jumlah", "Satuan"},
-			[]any{"ENGINE STORES"},
-			[]any{"370115", "Marine Radio", 2, "PCS"},
-			[]any{nil, "DECK"},
-			[]any{"210101", "Tali Tambang", 5, "MTR"},
-			// A name merged down two rows fills both, as before.
-			[]any{"232001", "Sarung Tangan", 12, "PSG"},
-		)
-		require.NoError(t, f.MergeCell("Sheet1", "A2", "D2"))
-		require.NoError(t, f.MergeCell("Sheet1", "B4", "C4"))
-		require.NoError(t, f.MergeCell("Sheet1", "B6", "B7"))
-		// A merge far outside the column cap is ignored.
-		require.NoError(t, f.MergeCell("Sheet1", "ZZ1", "ZZ2"))
-	})
-	got, err := ParseRFQ("rfq.xlsx", data)
-	require.NoError(t, err)
-	assert.Equal(t, []rfqRow{
-		rfqRadio,
-		rfqRope,
-		{IMPACode: "232001", Name: "Sarung Tangan", Qty: 12, Unit: "PSG"},
-		{Name: "Sarung Tangan"},
-	}, got)
+	cases := []struct {
+		name   string
+		row    []any
+		merges [][2]string
+		want   []rfqRow
+	}{
+		{
+			name:   "a category across the table is skipped",
+			row:    []any{"ENGINE STORES"},
+			merges: [][2]string{{"A2", "D2"}},
+			want:   []rfqRow{rfqRadio},
+		},
+		{
+			name:   "a name merged into the quantity is skipped",
+			row:    []any{nil, "DECK"},
+			merges: [][2]string{{"B2", "C2"}},
+			want:   []rfqRow{rfqRadio},
+		},
+		{
+			name:   "merged code+name with a quantity stays a product",
+			row:    []any{"Marine Radio tanpa kode", nil, 2, "PCS"},
+			merges: [][2]string{{"A2", "B2"}},
+			want: []rfqRow{
+				{IMPACode: "Marine Radio tanpa kode", Name: "Marine Radio tanpa kode", Qty: 2, Unit: "PCS"},
+				rfqRadio,
+			},
+		},
+		{
+			name:   "merged code+name without a quantity is skipped",
+			row:    []any{"DECK STORES", nil, nil, "PCS"},
+			merges: [][2]string{{"A2", "B2"}},
+			want:   []rfqRow{rfqRadio},
+		},
+		{
+			name:   "a name merged down fills both rows",
+			row:    []any{"232001", "Sarung Tangan", 12, "PSG"},
+			merges: [][2]string{{"B2", "B3"}},
+			want: []rfqRow{
+				{IMPACode: "232001", Name: "Sarung Tangan", Qty: 12, Unit: "PSG"},
+				{IMPACode: "370115", Name: "Sarung Tangan", Qty: 2, Unit: "PCS"},
+			},
+		},
+		{
+			name:   "a merge past the column cap is ignored",
+			row:    []any{"210101", "Tali Tambang", 5, "MTR"},
+			merges: [][2]string{{"ZZ1", "ZZ2"}},
+			want:   []rfqRow{rfqRope, rfqRadio},
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			data := buildXLSX(t, func(f *excelize.File) {
+				setRows(t, f, "A1",
+					[]any{"Kode", "Nama", "Jumlah", "Satuan"},
+					c.row,
+					[]any{"370115", "Marine Radio", 2, "PCS"},
+				)
+				for _, m := range c.merges {
+					require.NoError(t, f.MergeCell("Sheet1", m[0], m[1]))
+				}
+			})
+			got, err := ParseRFQ("rfq.xlsx", data)
+			require.NoError(t, err)
+			assert.Equal(t, c.want, got)
+		})
+	}
 }
 
 func TestNumericQty(t *testing.T) {

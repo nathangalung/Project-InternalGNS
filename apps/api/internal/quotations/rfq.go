@@ -455,8 +455,12 @@ func (s rfqSheet) products() ([]items.MatchRowInput, bool) {
 
 // isCategory spots a section row.
 // A category such as DECK STORES is one merged cell running from the name
-// column across another mapped column, not a product.
+// column across another mapped column, not a product. A row with its own
+// quantity outside every merge is a product whatever else is merged.
 func (s rfqSheet) isCategory(i int, cols rfqColumns) bool {
+	if cols.qty >= 0 && strings.TrimSpace(cellAt(s.rows[i], cols.qty)) != "" && !s.inSpan(i, cols.qty) {
+		return false
+	}
 	for _, sp := range s.spans[i] {
 		if cols.name < sp[0] || cols.name > sp[1] {
 			continue
@@ -468,6 +472,10 @@ func (s rfqSheet) isCategory(i int, cols rfqColumns) bool {
 		}
 	}
 	return false
+}
+
+func (s rfqSheet) inSpan(i, col int) bool {
+	return slices.ContainsFunc(s.spans[i], func(sp [2]int) bool { return col >= sp[0] && col <= sp[1] })
 }
 
 func (s rfqSheet) qty(i, col int) float64 {
