@@ -141,7 +141,46 @@ func (s *scenarioState) summaryGrewBy(n int64) error {
 	return nil
 }
 
+// Contact field steps.
+func (s *scenarioState) addContactWith(field, value string) error {
+	return s.sendRequest(http.MethodPost, "/clients/"+strconv.FormatInt(s.clientID, 10)+"/contacts",
+		map[string]any{"name": "Kontak ATDD", field: value})
+}
+
+func (s *scenarioState) setContactPhone(phone string) error {
+	return s.sendRequest(http.MethodPatch, s.contactPath(),
+		map[string]any{"name": s.contact.Name, "phone": phone})
+}
+
+func (s *scenarioState) fieldErrorReads(field, want string) error {
+	var p struct {
+		Fields map[string]string `json:"fields"`
+	}
+	if err := json.Unmarshal(s.body, &p); err != nil {
+		return err
+	}
+	if got := p.Fields[field]; got != want {
+		return fmt.Errorf("field %s: want %q got %q body=%s", field, want, got, s.body)
+	}
+	return nil
+}
+
+func (s *scenarioState) noContacts() error {
+	var rows []clients.Contact
+	if err := json.Unmarshal(s.body, &rows); err != nil {
+		return err
+	}
+	if len(rows) != 0 {
+		return fmt.Errorf("want no contacts, got %d", len(rows))
+	}
+	return nil
+}
+
 func registerRuleSteps(sc *godog.ScenarioContext, state *scenarioState) {
+	sc.Step(`^the user adds a contact with (phone|email) "([^"]*)"$`, state.addContactWith)
+	sc.Step(`^the user sets the contact phone to "([^"]*)"$`, state.setContactPhone)
+	sc.Step(`^the (phone|email) field error reads "([^"]+)"$`, state.fieldErrorReads)
+	sc.Step(`^the client has no contacts$`, state.noContacts)
 	sc.Step(`^the user creates a client named with only (spaces|a tab|newlines)$`, state.createClientBlank)
 	sc.Step(`^the user renames the client to only (spaces|a tab|newlines)$`, state.renameClientBlank)
 	sc.Step(`^a client named with "([^"]+)" and a decoy without it$`, state.seedWildcardPair)
