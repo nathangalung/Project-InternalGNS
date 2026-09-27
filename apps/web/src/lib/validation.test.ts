@@ -20,7 +20,7 @@ type RuleTable = {
   email: RuleCase[]
 }
 
-// The API's table, read in place.
+// The API's rule table.
 //
 // A glob rather than an import: the web image builds with only apps/web in
 // its context, and tsc would fail to resolve a path into apps/api.

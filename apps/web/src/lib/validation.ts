@@ -15,7 +15,7 @@ export const ADDRESS_ERROR = "Alamat harus minimal 20 karakter dan mengandung hu
 const PHONE_MIN_DIGITS = 9
 const PHONE_MAX_DIGITS = 12
 
-// Same pattern as the Go rule.
+// The Go rule, verbatim.
 const EMAIL_PATTERN =
   /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@([A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/
 

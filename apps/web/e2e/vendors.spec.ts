@@ -100,7 +100,7 @@ test("a vendor with many products pages its list", async ({ page, seed }) => {
   await expect(table.getByRole("row", { name: new RegExp(seed.prefix) })).toHaveCount(2)
 })
 
-// Phone is 9-12 digits, as the API's company_contacts rule.
+// Phone takes 9-12 digits.
 const PHONE_ERROR = "Nomor telepon harus 9–12 digit angka."
 
 test("Tambah Vendor refuses a 13-digit phone inline", async ({ page, seed }) => {

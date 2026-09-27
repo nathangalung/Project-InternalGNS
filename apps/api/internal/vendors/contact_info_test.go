@@ -80,7 +80,7 @@ func TestHandler_ContactInfo_ValidSaves(t *testing.T) {
 	}
 }
 
-// Contact info must be an object.
+// Contact info is an object.
 func TestHandler_ContactInfo_NotObjectIsBadRequest(t *testing.T) {
 	srv := newSrv(t)
 	for _, raw := range []string{`"toko@maju.com"`, `[1]`, `{"phone":81234567890}`} {

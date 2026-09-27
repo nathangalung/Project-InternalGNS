@@ -158,7 +158,7 @@ test("a logo over 2 MB is refused and a small one is saved", async ({ page, seed
     .toMatch(new RegExp(`^clients/${client.id}/.*logo\\.png$`))
 })
 
-// Phone is 9-12 digits, as company_contacts_phone_check.
+// Phone takes 9-12 digits.
 const PHONE_ERROR = "Nomor telepon harus 9–12 digit angka."
 
 test("Tambah Klien refuses a 13-digit phone inline", async ({ page, seed }) => {
