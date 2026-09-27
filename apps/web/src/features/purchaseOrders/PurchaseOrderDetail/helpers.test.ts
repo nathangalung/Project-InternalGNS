@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api-client"
 import { isVersionConflict } from "@/lib/errors"
 import { problem } from "@/test/problem"
-import type { PurchaseOrderRow } from "@/types/api"
+import type { PoCompletenessIssue, PoIncompleteProblem, PurchaseOrderRow } from "@/types/api"
 import {
   canDownloadDeliveryNote,
+  completenessIssues,
   deliveryNoteFileName,
   isInvoiceFiled,
   isPoLocked,
@@ -14,7 +15,6 @@ import {
   PO_LOCKED_CODE,
   PO_STATUS_CONFIG,
   PO_STATUS_ORDER,
-  parseCompletenessIssues,
   poBreakdown,
   poErrorMessage,
   shortDocNo,
@@ -198,73 +198,39 @@ describe("poBreakdown", () => {
   })
 })
 
-describe("parseCompletenessIssues", () => {
-  it("reads client and vendor gaps with their ids", () => {
-    const body = {
-      detail: "…",
-      fields: {
-        "vendor:9": "Data vendor PT Laut belum lengkap: Lokasi",
-        "klien:4": "Data klien PT Samudra, Tbk belum lengkap: NPWP, Alamat",
-      },
-    }
-    expect(parseCompletenessIssues(body)).toEqual([
-      {
-        kind: "client",
-        id: 4,
-        name: "PT Samudra, Tbk",
-        missing: ["NPWP", "Alamat"],
-        message: "Data klien PT Samudra, Tbk belum lengkap: NPWP, Alamat",
-      },
-      {
-        kind: "vendor",
-        id: 9,
-        name: "PT Laut",
-        missing: ["Lokasi"],
-        message: "Data vendor PT Laut belum lengkap: Lokasi",
-      },
-    ])
+describe("completenessIssues", () => {
+  const issues: PoCompletenessIssue[] = [
+    {
+      kind: "client",
+      id: 4,
+      name: "PT Samudra, Tbk",
+      message: "Data klien PT Samudra, Tbk belum lengkap: Narahubung aktif",
+      missing: [{ code: "contact_inactive", label: "Narahubung aktif" }],
+    },
+    {
+      kind: "shipping",
+      id: 57,
+      message: "Alamat pengiriman belum diisi",
+      missing: [{ code: "shipping_address", label: "Alamat Pengiriman" }],
+    },
+  ]
+  const gate = problem(422, { code: "po_incomplete", detail: "…" })
+  const body: PoIncompleteProblem = { ...gate, issues }
+
+  it("reads the gate's typed issues in server order", () => {
+    const err = new ApiError(422, body, "…")
+    expect(completenessIssues(err)).toEqual(issues)
   })
 
-  it("keeps the raw sentence when it cannot be split", () => {
-    const issues = parseCompletenessIssues({ fields: { "klien:4": "Klien belum siap." } })
-    expect(issues).toEqual([
-      { kind: "client", id: 4, name: undefined, missing: [], message: "Klien belum siap." },
-    ])
-  })
-
-  it("reads the PO shipping address gap", () => {
-    const issues = parseCompletenessIssues({
-      fields: { "pengiriman:57": "Alamat pengiriman belum diisi" },
-    })
-    expect(issues).toEqual([
-      {
-        kind: "shipping",
-        id: 57,
-        name: undefined,
-        missing: ["Alamat Pengiriman"],
-        message: "Alamat pengiriman belum diisi",
-      },
-    ])
-  })
-
-  it("keeps the raw sentence of an unreadable shipping gap", () => {
-    const issues = parseCompletenessIssues({
-      fields: { "pengiriman:57": "Pengiriman belum siap." },
-    })
-    expect(issues).toEqual([
-      { kind: "shipping", id: 57, name: undefined, missing: [], message: "Pengiriman belum siap." },
-    ])
-  })
-
-  it("ignores the retired per-line key", () => {
-    const body = { fields: { "baris:731": "Alamat pengiriman baris 2 belum diisi" } }
-    expect(parseCompletenessIssues(body)).toBeNull()
-  })
-
-  it("returns null for other 422 bodies", () => {
-    expect(parseCompletenessIssues({ fields: { status: "Perubahan tidak diizinkan." } })).toBeNull()
-    expect(parseCompletenessIssues(null)).toBeNull()
-    expect(parseCompletenessIssues("text")).toBeNull()
+  it.each<[string, unknown]>([
+    ["another 422", new ApiError(422, problem(422, { fields: { status: "x" } }), "x")],
+    ["the code without issues", new ApiError(422, gate, "…")],
+    ["the gate code on another status", new ApiError(409, body, "…")],
+    ["no body", new ApiError(422, null, "x")],
+    ["an empty issue list", new ApiError(422, { ...body, issues: [] } as PoIncompleteProblem, "…")],
+    ["a plain Error", new Error("x")],
+  ])("ignores %s", (_name, err) => {
+    expect(completenessIssues(err)).toBeNull()
   })
 })
 
@@ -275,44 +241,5 @@ describe("shortDocNo", () => {
     ["/GNS", "…"],
   ])("%s -> %s", (no, want) => {
     expect(shortDocNo(no)).toBe(want)
-  })
-})
-
-describe("parseCompletenessIssues ordering", () => {
-  it("puts the client first, then vendors by id", () => {
-    const issues = parseCompletenessIssues({
-      fields: {
-        "vendor:12": "Data vendor B belum lengkap: Lokasi",
-        "vendor:3": "Data vendor A belum lengkap: Lokasi",
-        "klien:9": "Data klien K belum lengkap: NPWP",
-      },
-    })
-    expect(issues?.map((i) => `${i.kind}:${i.id}`)).toEqual(["client:9", "vendor:3", "vendor:12"])
-  })
-
-  it("keeps the client first when it already leads", () => {
-    const issues = parseCompletenessIssues({
-      fields: {
-        "klien:9": "Data klien K belum lengkap: NPWP",
-        "vendor:3": "Data vendor A belum lengkap: Lokasi",
-      },
-    })
-    expect(issues?.map((i) => `${i.kind}:${i.id}`)).toEqual(["client:9", "vendor:3"])
-  })
-
-  it("puts the shipping gap last", () => {
-    const issues = parseCompletenessIssues({
-      fields: {
-        "pengiriman:57": "Alamat pengiriman belum diisi",
-        "vendor:3": "Data vendor A belum lengkap: Lokasi",
-        "klien:9": "Data klien K belum lengkap: NPWP",
-      },
-    })
-    expect(issues?.map((i) => `${i.kind}:${i.id}`)).toEqual(["client:9", "vendor:3", "shipping:57"])
-  })
-
-  it("returns null when fields is not an object", () => {
-    expect(parseCompletenessIssues({ fields: "klien:1" })).toBeNull()
-    expect(parseCompletenessIssues({ detail: "x" })).toBeNull()
   })
 })

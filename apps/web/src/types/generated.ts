@@ -454,6 +454,21 @@ export type ObjectKeyInput = {
 // From purchaseorders/dto.go
 export type PoBackendStatus = "CANCELLED" | "DELIVERED" | "ON_PROGRESS" | "PENDING" | "UPLOADED";
 
+// From purchaseorders/completeness.go
+export type PoCompletenessGap = {
+    code: PoGapCode;
+    label: string;
+};
+
+// From purchaseorders/completeness.go
+export type PoCompletenessIssue = {
+    kind: PoIssueKind;
+    id: number;
+    name?: string;
+    message: string;
+    missing: PoCompletenessGap[];
+};
+
 // From purchaseorders/dto.go
 export type PoDetailsInput = {
     poNumber: string;
@@ -466,6 +481,17 @@ export type PoFileInput = {
     fileSize: number;
     objectKey: string;
 };
+
+// From purchaseorders/completeness.go
+export type PoGapCode = "client_address" | "client_npwp" | "client_number" | "contact_inactive" | "contact_name" | "contact_reach" | "shipping_address" | "vendor_location" | "vendor_reach";
+
+// From purchaseorders/completeness.go
+export type PoIncompleteProblem = ProblemDetail & {
+    issues: PoCompletenessIssue[];
+};
+
+// From purchaseorders/completeness.go
+export type PoIssueKind = "client" | "shipping" | "vendor";
 
 // From purchaseorders/dto.go
 export type PoItemInput = {

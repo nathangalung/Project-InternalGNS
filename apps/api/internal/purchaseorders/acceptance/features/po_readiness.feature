@@ -14,9 +14,9 @@ Feature: PO readiness before work starts
     And the PO has reached "UPLOADED"
     When the user tries to transition the PO to "ON_PROGRESS"
     Then the gate lists exactly these gaps:
-      | klien      | belum lengkap: Alamat         |
-      | vendor     | belum lengkap: Lokasi         |
-      | pengiriman | Alamat pengiriman belum diisi |
+      | klien      | client_address   | belum lengkap: Alamat         |
+      | vendor     | vendor_location  | belum lengkap: Lokasi         |
+      | pengiriman | shipping_address | Alamat pengiriman belum diisi |
 
   Scenario: Each filled address clears its gap until work can start
     Given an accepted quotation for a new client and vendor without addresses
@@ -24,12 +24,12 @@ Feature: PO readiness before work starts
     When the user fills the client address
     And the user tries to transition the PO to "ON_PROGRESS"
     Then the gate lists exactly these gaps:
-      | vendor     | belum lengkap: Lokasi         |
-      | pengiriman | Alamat pengiriman belum diisi |
+      | vendor     | vendor_location  | belum lengkap: Lokasi         |
+      | pengiriman | shipping_address | Alamat pengiriman belum diisi |
     When the user fills the vendor location
     And the user tries to transition the PO to "ON_PROGRESS"
     Then the gate lists exactly these gaps:
-      | pengiriman | Alamat pengiriman belum diisi |
+      | pengiriman | shipping_address | Alamat pengiriman belum diisi |
     When the user fills the PO shipping address
     And the user tries to transition the PO to "ON_PROGRESS"
     Then every PO transition succeeds
@@ -42,7 +42,7 @@ Feature: PO readiness before work starts
     When the quotation's chosen contact is deactivated
     And the user tries to transition the PO to "ON_PROGRESS"
     Then the gate lists exactly these gaps:
-      | klien | belum lengkap: Narahubung aktif |
+      | klien | contact_inactive | belum lengkap: Narahubung aktif |
     When the user chooses the client's other contact on the quotation
     And the user tries to transition the PO to "ON_PROGRESS"
     Then every PO transition succeeds

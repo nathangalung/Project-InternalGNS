@@ -419,7 +419,8 @@ func (h *Handler) allowOnProgress(w http.ResponseWriter, r *http.Request, id int
 	if len(issues) == 0 {
 		return true
 	}
-	httperr.Render(w, httperr.Unprocessable(completenessFields(issues)))
+	p := incompleteProblem(issues)
+	httperr.RenderAs(w, p.Status, p)
 	return false
 }
 

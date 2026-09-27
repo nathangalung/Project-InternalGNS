@@ -2,19 +2,16 @@ import { Link } from "@tanstack/react-router"
 import EntityLink from "@/components/shared/EntityLink"
 import Modal from "@/components/shared/Modal"
 import { ui } from "@/lib/ui"
-import type { CompletenessIssue } from "./helpers"
+import type { PoCompletenessIssue, PoIssueKind } from "@/types/api"
 
 type CompletenessModalProps = {
-  issues: CompletenessIssue[]
+  issues: PoCompletenessIssue[]
   // Route key of the PO and its quotation
   quotationId: number
   onClose: () => void
 }
 
-// Deactivated narahubung server gap
-const INACTIVE_CONTACT = "Narahubung aktif"
-
-const SCOPE: Record<CompletenessIssue["kind"], string> = {
+const SCOPE: Record<PoIssueKind, string> = {
   client: "Klien",
   vendor: "Vendor",
   shipping: "Pengiriman",
@@ -66,11 +63,11 @@ export default function CompletenessModal({
             </div>
             {issue.missing.length > 0 ? (
               <ul className="m-0 list-disc pl-5 text-xs leading-[1.6] text-accent-900">
-                {issue.missing.map((field) => (
-                  <li key={field}>
-                    {field}
+                {issue.missing.map((gap) => (
+                  <li key={gap.code}>
+                    {gap.label}
                     {/* A deactivated narahubung is re-picked on the quotation. */}
-                    {issue.kind === "client" && field === INACTIVE_CONTACT && (
+                    {gap.code === "contact_inactive" && (
                       <>
                         {" — "}
                         <Link

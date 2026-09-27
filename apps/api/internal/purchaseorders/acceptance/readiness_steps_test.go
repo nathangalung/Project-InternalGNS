@@ -175,24 +175,28 @@ func (s *scenarioState) fillEveryAddress() error {
 }
 
 // Gate lists exactly the table.
-// Rows are "klien", "vendor" or "pengiriman" against text the message carries.
+// Rows are "klien", "vendor" or "pengiriman", the gap code the typed issue
+// carries, and text its message holds; the prose fields must agree.
 func (s *scenarioState) gateListsExactly(table *godog.Table) error {
 	if s.last.StatusCode != http.StatusUnprocessableEntity {
 		return fmt.Errorf("want 422 got %d body=%s", s.last.StatusCode, s.body)
 	}
-	var problem struct {
-		Fields map[string]string `json:"fields"`
-	}
+	var problem purchaseorders.IncompleteProblem
 	if err := json.Unmarshal(s.body, &problem); err != nil {
 		return fmt.Errorf("decode problem: %w body=%s", err, s.body)
 	}
+	if problem.Code != purchaseorders.IncompleteCode {
+		return fmt.Errorf("want code %s got %q", purchaseorders.IncompleteCode, problem.Code)
+	}
 	want := make(map[string]string, len(table.Rows))
+	wantCodes := make(map[string]string, len(table.Rows))
 	for _, row := range table.Rows {
 		key, err := s.gateKey(row.Cells[0].Value)
 		if err != nil {
 			return err
 		}
-		want[key] = row.Cells[1].Value
+		wantCodes[key] = row.Cells[1].Value
+		want[key] = row.Cells[2].Value
 	}
 	if got, exp := sortedKeys(problem.Fields), sortedKeys(want); strings.Join(got, ",") != strings.Join(exp, ",") {
 		return fmt.Errorf("want gaps %v got %v", exp, problem.Fields)
@@ -202,7 +206,32 @@ func (s *scenarioState) gateListsExactly(table *godog.Table) error {
 			return fmt.Errorf("want %s to mention %q got %q", key, text, problem.Fields[key])
 		}
 	}
+	gotCodes := make(map[string]string, len(problem.Issues))
+	for _, is := range problem.Issues {
+		key := issueKey(is)
+		codes := make([]string, 0, len(is.Missing))
+		for _, g := range is.Missing {
+			codes = append(codes, string(g.Code))
+		}
+		gotCodes[key] = strings.Join(codes, ",")
+		if is.Message != problem.Fields[key] {
+			return fmt.Errorf("issue %s says %q, fields say %q", key, is.Message, problem.Fields[key])
+		}
+	}
+	if fmt.Sprint(gotCodes) != fmt.Sprint(wantCodes) {
+		return fmt.Errorf("want gap codes %v got %v", wantCodes, gotCodes)
+	}
 	return nil
+}
+
+// issueKey is the issue's fields key.
+func issueKey(is purchaseorders.CompletenessIssue) string {
+	scope := map[purchaseorders.IssueKind]string{
+		purchaseorders.KindClient:   "klien",
+		purchaseorders.KindVendor:   "vendor",
+		purchaseorders.KindShipping: "pengiriman",
+	}[is.Kind]
+	return scope + ":" + strconv.FormatInt(is.ID, 10)
 }
 
 // gateKey resolves a table label.

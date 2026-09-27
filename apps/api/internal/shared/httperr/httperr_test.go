@@ -362,3 +362,22 @@ func TestRender_OmitsEmptyCode(t *testing.T) {
 	require.NoError(t, json.NewDecoder(rec.Body).Decode(&body))
 	assert.NotContains(t, body, "code")
 }
+
+// Extension members reach the wire.
+func TestRenderAs(t *testing.T) {
+	type extended struct {
+		Error
+		Issues []string `json:"issues"`
+	}
+	rec := httptest.NewRecorder()
+	RenderAs(rec, http.StatusUnprocessableEntity, extended{Error: Unprocessable(map[string]string{"a": "b"}), Issues: []string{"x"}})
+	res := rec.Result()
+	defer res.Body.Close()
+
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	assert.Equal(t, "application/problem+json", res.Header.Get("Content-Type"))
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&body))
+	assert.Equal(t, "b", body["detail"])
+	assert.Equal(t, []any{"x"}, body["issues"])
+}

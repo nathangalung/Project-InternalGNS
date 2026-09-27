@@ -30,9 +30,16 @@ func (e Error) Error() string { return e.Title + ": " + e.Detail }
 
 // Write error as JSON.
 func Render(w http.ResponseWriter, e Error) {
+	RenderAs(w, e.Status, e)
+}
+
+// RenderAs writes an extended problem.
+// body embeds Error and adds members of its own (RFC 7807 extensions), such
+// as the structured gaps of the PO readiness gate.
+func RenderAs(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/problem+json")
-	w.WriteHeader(e.Status)
-	_ = json.NewEncoder(w).Encode(e)
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(body)
 }
 
 func BadRequest(detail string) Error {

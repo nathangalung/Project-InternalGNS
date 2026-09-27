@@ -8,7 +8,7 @@ import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
 import { problem } from "@/test/problem"
 import { invalidated, renderQueryHook, seed, settle, until } from "@/test/query"
-import type { Role } from "@/types/api"
+import type { PoIncompleteProblem, Role } from "@/types/api"
 import * as api from "./api"
 import {
   useActorNames,
@@ -189,13 +189,20 @@ describe("useChangePoStatus", () => {
   })
 
   it("leaves the completeness 422 to its modal", async () => {
-    m.changeStatus.mockRejectedValue(
-      new ApiError(
-        422,
-        problem(422, { fields: { "klien:1": "Data klien PT A belum lengkap: NPWP" } }),
-        "Data belum lengkap.",
-      ),
-    )
+    const message = "Data klien PT A belum lengkap: NPWP"
+    const body: PoIncompleteProblem = {
+      ...problem(422, { code: "po_incomplete", detail: message, fields: { "klien:1": message } }),
+      issues: [
+        {
+          kind: "client",
+          id: 1,
+          name: "PT A",
+          message,
+          missing: [{ code: "client_npwp", label: "NPWP" }],
+        },
+      ],
+    }
+    m.changeStatus.mockRejectedValue(new ApiError(422, body, message))
     const { result } = renderQueryHook(() => useChangePoStatus())
     await settle(() => result.current.mutateAsync({ id: 3, status: "ON_PROGRESS" }))
     expect(toast.error).not.toHaveBeenCalled()

@@ -240,15 +240,11 @@ func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssu
 
 	var issues []CompletenessIssue
 	if missing := missingClientFields(client); len(missing) > 0 {
-		issues = append(issues, CompletenessIssue{
-			Scope: scopeClient, ID: client.ID, Name: client.Name, Missing: missing,
-		})
+		issues = append(issues, recordIssue(KindClient, client.ID, client.Name, missing))
 	}
 	for _, v := range vendors {
 		if missing := missingVendorFields(v); len(missing) > 0 {
-			issues = append(issues, CompletenessIssue{
-				Scope: scopeVendor, ID: v.ID, Name: v.Name, Missing: missing,
-			})
+			issues = append(issues, recordIssue(KindVendor, v.ID, v.Name, missing))
 		}
 	}
 	return append(issues, shippingIssues(poID, lines)...), nil

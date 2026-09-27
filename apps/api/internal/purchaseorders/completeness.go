@@ -3,6 +3,8 @@ package purchaseorders
 import (
 	"strconv"
 	"strings"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 )
 
 // Master data gating PO work.
@@ -40,19 +42,69 @@ type LineCompleteness struct {
 	ShipDestination *string `db:"ship_destination"`
 }
 
-// CompletenessIssue lists a record's gaps.
-type CompletenessIssue struct {
-	Scope   string   `json:"scope"`
-	ID      int64    `json:"id"`
-	Name    string   `json:"name"`
-	Missing []string `json:"missing"`
+// CompletenessGap is one missing field.
+// Code is the stable tag the web branches on; Label is the Indonesian field
+// name shown to the user.
+type CompletenessGap struct {
+	Code  GapCode `json:"code"`
+	Label string  `json:"label"`
 }
 
+// CompletenessIssue is one record's gaps.
+// Kind and ID name the record to open (the PO itself for shipping), and
+// Message is the Indonesian sentence the problem's fields carry for it.
+type CompletenessIssue struct {
+	Kind    IssueKind         `json:"kind"`
+	ID      int64             `json:"id"`
+	Name    string            `json:"name,omitempty"`
+	Message string            `json:"message"`
+	Missing []CompletenessGap `json:"missing"`
+}
+
+// IncompleteProblem is the gate's 422.
+// It is the RFC 7807 body plus the structured gaps, so the web renders the
+// issues without parsing the prose in Fields.
+type IncompleteProblem struct {
+	httperr.Error
+	Issues []CompletenessIssue `json:"issues"`
+}
+
+// IncompleteCode tags the gate's refusal.
+const IncompleteCode = "po_incomplete"
+
+// IssueKind names the record.
+type IssueKind string
+
 const (
-	scopeClient   = "klien"
-	scopeVendor   = "vendor"
-	scopeShipping = "pengiriman"
+	KindClient   IssueKind = "client"
+	KindVendor   IssueKind = "vendor"
+	KindShipping IssueKind = "shipping"
 )
+
+// GapCode tags one missing field.
+type GapCode string
+
+const (
+	GapClientNumber    GapCode = "client_number"
+	GapClientNpwp      GapCode = "client_npwp"
+	GapClientAddress   GapCode = "client_address"
+	GapContactInactive GapCode = "contact_inactive"
+	GapContactName     GapCode = "contact_name"
+	GapContactReach    GapCode = "contact_reach"
+	GapVendorLocation  GapCode = "vendor_location"
+	GapVendorReach     GapCode = "vendor_reach"
+	GapShippingAddress GapCode = "shipping_address"
+)
+
+// scopeWord names a kind in Indonesian.
+// It keys the legacy fields ("klien:<id>") and starts each sentence.
+var scopeWord = map[IssueKind]string{
+	KindClient:   "klien",
+	KindVendor:   "vendor",
+	KindShipping: "pengiriman",
+}
+
+const shippingMessage = "Alamat pengiriman belum diisi"
 
 func filled(v *string) bool {
 	return v != nil && strings.TrimSpace(*v) != ""
@@ -62,29 +114,53 @@ func filled(v *string) bool {
 // Nomor TKU is absent on purpose: the Coretax export derives it from the
 // NPWP when the client has none recorded, so the NPWP is the real
 // requirement.
-func missingClientFields(c ClientCompleteness) []string {
-	var missing []string
+func missingClientFields(c ClientCompleteness) []CompletenessGap {
+	var missing []CompletenessGap
 	if !filled(c.Number) {
-		missing = append(missing, "Nomor Klien")
+		missing = append(missing, CompletenessGap{GapClientNumber, "Nomor Klien"})
 	}
 	if !filled(c.Npwp) {
-		missing = append(missing, "NPWP")
+		missing = append(missing, CompletenessGap{GapClientNpwp, "NPWP"})
 	}
 	if !filled(c.Address) {
-		missing = append(missing, "Alamat")
+		missing = append(missing, CompletenessGap{GapClientAddress, "Alamat"})
 	}
 	// A deactivated contact cannot be edited, so the quotation must pick
 	// another one; its own fields are moot until then.
 	if c.ContactInactive {
-		return append(missing, "Narahubung aktif")
+		return append(missing, CompletenessGap{GapContactInactive, "Narahubung aktif"})
 	}
 	if !filled(c.ContactName) {
-		missing = append(missing, "Nama Narahubung")
+		missing = append(missing, CompletenessGap{GapContactName, "Nama Narahubung"})
 	}
 	if !filled(c.ContactEmail) && !filled(c.ContactPhone) {
-		missing = append(missing, "Email atau Nomor Telepon Narahubung")
+		missing = append(missing, CompletenessGap{GapContactReach, "Email atau Nomor Telepon Narahubung"})
 	}
 	return missing
+}
+
+// missingVendorFields lists vendor gaps.
+func missingVendorFields(v VendorCompleteness) []CompletenessGap {
+	var missing []CompletenessGap
+	if !filled(v.Location) {
+		missing = append(missing, CompletenessGap{GapVendorLocation, "Lokasi"})
+	}
+	if !filled(v.ContactEmail) && !filled(v.ContactPhone) {
+		missing = append(missing, CompletenessGap{GapVendorReach, "Email atau Nomor Telepon"})
+	}
+	return missing
+}
+
+// recordIssue builds a client or vendor issue.
+func recordIssue(kind IssueKind, id int64, name string, missing []CompletenessGap) CompletenessIssue {
+	labels := make([]string, len(missing))
+	for i, g := range missing {
+		labels[i] = g.Label
+	}
+	return CompletenessIssue{
+		Kind: kind, ID: id, Name: name, Missing: missing,
+		Message: "Data " + scopeWord[kind] + " " + name + " belum lengkap: " + strings.Join(labels, ", "),
+	}
 }
 
 // shippingIssues flags unaddressed goods.
@@ -105,32 +181,24 @@ func shippingIssues(poID int64, lines []LineCompleteness) []CompletenessIssue {
 	if !blankProduct {
 		return nil
 	}
-	return []CompletenessIssue{{Scope: scopeShipping, ID: poID, Missing: []string{"Alamat Pengiriman"}}}
+	return []CompletenessIssue{{
+		Kind: KindShipping, ID: poID, Message: shippingMessage,
+		Missing: []CompletenessGap{{GapShippingAddress, "Alamat Pengiriman"}},
+	}}
 }
 
-// missingVendorFields lists vendor gaps.
-func missingVendorFields(v VendorCompleteness) []string {
-	var missing []string
-	if !filled(v.Location) {
-		missing = append(missing, "Lokasi")
-	}
-	if !filled(v.ContactEmail) && !filled(v.ContactPhone) {
-		missing = append(missing, "Email atau Nomor Telepon")
-	}
-	return missing
-}
-
-// completenessFields renders problem field errors.
+// completenessFields keys sentences per record.
 func completenessFields(issues []CompletenessIssue) map[string]string {
 	fields := make(map[string]string, len(issues))
 	for _, is := range issues {
-		key := is.Scope + ":" + strconv.FormatInt(is.ID, 10)
-		if is.Scope == scopeShipping {
-			fields[key] = "Alamat pengiriman belum diisi"
-			continue
-		}
-		fields[key] = "Data " + is.Scope + " " + is.Name +
-			" belum lengkap: " + strings.Join(is.Missing, ", ")
+		fields[scopeWord[is.Kind]+":"+strconv.FormatInt(is.ID, 10)] = is.Message
 	}
 	return fields
+}
+
+// incompleteProblem builds the gate refusal.
+func incompleteProblem(issues []CompletenessIssue) IncompleteProblem {
+	e := httperr.Unprocessable(completenessFields(issues))
+	e.Code = IncompleteCode
+	return IncompleteProblem{Error: e, Issues: issues}
 }

@@ -12,7 +12,6 @@ import { useMe } from "@/features/auth/hooks"
 import * as invoicesApi from "@/features/invoices/api"
 import * as poApi from "@/features/purchaseOrders/api"
 import * as usersApi from "@/features/users/api"
-import { ApiError } from "@/lib/api-client"
 import { errorMessage, isVersionConflict } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { roleCanAccess } from "@/lib/rbac"
@@ -22,9 +21,9 @@ import { validateAsset } from "@/lib/upload-validation"
 import type { PoBackendStatus, PoUpdateItemsInput } from "@/types/api"
 import { detailsChanged } from "./adapters"
 import {
+  completenessIssues,
   isInvoiceFiled,
   isPoLockRefusal,
-  parseCompletenessIssues,
   poErrorMessage,
 } from "./PurchaseOrderDetail/helpers"
 import type { PoRow } from "./types"
@@ -129,7 +128,7 @@ export function useChangePoStatus() {
       qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
     },
     onError: (err) => {
-      if (err instanceof ApiError && parseCompletenessIssues(err.body)) return
+      if (completenessIssues(err)) return
       toast.error(errorMessage(err, "Gagal mengubah status PO."))
     },
   })

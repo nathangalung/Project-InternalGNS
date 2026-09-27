@@ -115,6 +115,11 @@ var allowlist = []pkg{
 		{Go: "UpdateItemsRequest", TS: "PoUpdateItemsInput", Input: true},
 		{Go: "UpdateItemsLine", TS: "PoItemInput", Input: true},
 		{Go: "UpdatedResponse", TS: "PoSaved"},
+		{Go: "IssueKind", TS: "PoIssueKind"},
+		{Go: "GapCode", TS: "PoGapCode"},
+		{Go: "CompletenessGap", TS: "PoCompletenessGap"},
+		{Go: "CompletenessIssue", TS: "PoCompletenessIssue"},
+		{Go: "IncompleteProblem", TS: "PoIncompleteProblem"},
 	}},
 	{"internal/invoices", []entry{
 		{Go: "Status", TS: "InvoiceBackendStatus"},

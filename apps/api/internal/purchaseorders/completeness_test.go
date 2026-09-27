@@ -8,6 +8,15 @@ import (
 
 func s(v string) *string { return &v }
 
+// codes lists gap codes.
+func codes(gaps []CompletenessGap) []GapCode {
+	var out []GapCode
+	for _, g := range gaps {
+		out = append(out, g.Code)
+	}
+	return out
+}
+
 func TestMissingClientFields(t *testing.T) {
 	complete := ClientCompleteness{
 		ID: 1, Name: "PT. IMC Ship Management",
@@ -18,13 +27,13 @@ func TestMissingClientFields(t *testing.T) {
 	cases := []struct {
 		name  string
 		input ClientCompleteness
-		want  []string
+		want  []GapCode
 	}{
 		{name: "complete", input: complete},
 		{
 			name:  "blank strings count as missing",
 			input: ClientCompleteness{ID: 1, Name: "X", Number: s("  "), Npwp: s(""), Address: nil, ContactName: s("A"), ContactPhone: s("08")},
-			want:  []string{"Nomor Klien", "NPWP", "Alamat"},
+			want:  []GapCode{GapClientNumber, GapClientNpwp, GapClientAddress},
 		},
 		{
 			name:  "phone alone satisfies the contact channel",
@@ -33,7 +42,7 @@ func TestMissingClientFields(t *testing.T) {
 		{
 			name:  "no contact at all",
 			input: ClientCompleteness{ID: 1, Name: "X", Number: s("1"), Npwp: s("2"), Address: s("3")},
-			want:  []string{"Nama Narahubung", "Email atau Nomor Telepon Narahubung"},
+			want:  []GapCode{GapContactName, GapContactReach},
 		},
 		{
 			// A deactivated contact cannot be edited, so its own fields are
@@ -43,7 +52,7 @@ func TestMissingClientFields(t *testing.T) {
 				ID: 1, Name: "X", Number: s("1"), Npwp: s("2"),
 				ContactName: s("A"), ContactEmail: s("a@b.c"), ContactInactive: true,
 			},
-			want: []string{"Alamat", "Narahubung aktif"},
+			want: []GapCode{GapClientAddress, GapContactInactive},
 		},
 		{
 			// TKU is derived from the NPWP when it is not recorded, the same
@@ -54,7 +63,7 @@ func TestMissingClientFields(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.want, missingClientFields(tc.input))
+			assert.Equal(t, tc.want, codes(missingClientFields(tc.input)))
 		})
 	}
 }
@@ -63,7 +72,7 @@ func TestMissingVendorFields(t *testing.T) {
 	cases := []struct {
 		name  string
 		input VendorCompleteness
-		want  []string
+		want  []GapCode
 	}{
 		{
 			name:  "complete",
@@ -72,32 +81,74 @@ func TestMissingVendorFields(t *testing.T) {
 		{
 			name:  "whatsapp only is not a channel",
 			input: VendorCompleteness{ID: 2, Name: "CV Marine", Location: s("Surabaya")},
-			want:  []string{"Email atau Nomor Telepon"},
+			want:  []GapCode{GapVendorReach},
 		},
 		{
 			name:  "nothing filled",
 			input: VendorCompleteness{ID: 3, Name: "PT X"},
-			want:  []string{"Lokasi", "Email atau Nomor Telepon"},
+			want:  []GapCode{GapVendorLocation, GapVendorReach},
 		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.want, missingVendorFields(tc.input))
+			assert.Equal(t, tc.want, codes(missingVendorFields(tc.input)))
 		})
 	}
 }
 
+// Every code has its label.
+func TestGapLabels(t *testing.T) {
+	assert.Equal(t, []CompletenessGap{
+		{Code: GapClientNumber, Label: "Nomor Klien"},
+		{Code: GapClientNpwp, Label: "NPWP"},
+		{Code: GapClientAddress, Label: "Alamat"},
+		{Code: GapContactName, Label: "Nama Narahubung"},
+		{Code: GapContactReach, Label: "Email atau Nomor Telepon Narahubung"},
+	}, missingClientFields(ClientCompleteness{}))
+	assert.Equal(t, []CompletenessGap{{Code: GapContactInactive, Label: "Narahubung aktif"}},
+		missingClientFields(ClientCompleteness{
+			Number: s("1"), Npwp: s("2"), Address: s("3"), ContactInactive: true,
+		}))
+	assert.Equal(t, []CompletenessGap{
+		{Code: GapVendorLocation, Label: "Lokasi"},
+		{Code: GapVendorReach, Label: "Email atau Nomor Telepon"},
+	}, missingVendorFields(VendorCompleteness{}))
+}
+
+func TestRecordIssue(t *testing.T) {
+	gaps := []CompletenessGap{{Code: GapClientNpwp, Label: "NPWP"}, {Code: GapClientAddress, Label: "Alamat"}}
+	assert.Equal(t, CompletenessIssue{
+		Kind: KindClient, ID: 7, Name: "PT X", Missing: gaps,
+		Message: "Data klien PT X belum lengkap: NPWP, Alamat",
+	}, recordIssue(KindClient, 7, "PT X", gaps))
+	assert.Equal(t, "Data vendor CV Y belum lengkap: Lokasi",
+		recordIssue(KindVendor, 3, "CV Y", []CompletenessGap{{Code: GapVendorLocation, Label: "Lokasi"}}).Message)
+}
+
 func TestCompletenessFields(t *testing.T) {
 	issues := []CompletenessIssue{
-		{Scope: "klien", ID: 7, Name: "PT X", Missing: []string{"NPWP", "Alamat"}},
-		{Scope: "vendor", ID: 3, Name: "CV Y", Missing: []string{"Lokasi"}},
-		{Scope: "pengiriman", ID: 41, Missing: []string{"Alamat Pengiriman"}},
+		recordIssue(KindClient, 7, "PT X", []CompletenessGap{{Code: GapClientNpwp, Label: "NPWP"}}),
+		recordIssue(KindVendor, 3, "CV Y", []CompletenessGap{{Code: GapVendorLocation, Label: "Lokasi"}}),
+		shippingIssues(41, []LineCompleteness{{ItemType: "product"}})[0],
 	}
 	assert.Equal(t, map[string]string{
-		"klien:7":       "Data klien PT X belum lengkap: NPWP, Alamat",
+		"klien:7":       "Data klien PT X belum lengkap: NPWP",
 		"vendor:3":      "Data vendor CV Y belum lengkap: Lokasi",
 		"pengiriman:41": "Alamat pengiriman belum diisi",
 	}, completenessFields(issues))
+}
+
+// The gate's typed 422.
+func TestIncompleteProblem(t *testing.T) {
+	issues := []CompletenessIssue{
+		recordIssue(KindClient, 7, "PT X", []CompletenessGap{{Code: GapClientNpwp, Label: "NPWP"}}),
+	}
+	p := incompleteProblem(issues)
+	assert.Equal(t, 422, p.Status)
+	assert.Equal(t, IncompleteCode, p.Code)
+	assert.Equal(t, "Data klien PT X belum lengkap: NPWP", p.Detail)
+	assert.Equal(t, map[string]string{"klien:7": "Data klien PT X belum lengkap: NPWP"}, p.Fields)
+	assert.Equal(t, issues, p.Issues)
 }
 
 // One gap for the PO's address.
@@ -108,7 +159,10 @@ func TestShippingIssues(t *testing.T) {
 	shipping := func(dest *string) LineCompleteness {
 		return LineCompleteness{ItemType: "shipping", ShipDestination: dest}
 	}
-	gap := []CompletenessIssue{{Scope: "pengiriman", ID: 9, Missing: []string{"Alamat Pengiriman"}}}
+	gap := []CompletenessIssue{{
+		Kind: KindShipping, ID: 9, Message: "Alamat pengiriman belum diisi",
+		Missing: []CompletenessGap{{Code: GapShippingAddress, Label: "Alamat Pengiriman"}},
+	}}
 
 	cases := []struct {
 		name  string
