@@ -7,7 +7,7 @@ import { byRole, click, mount, press, settle, type, unmount } from "@/test/dom"
 import { testQueryClient } from "@/test/query"
 import AddVendorToItemModal from "./AddVendorToItemModal"
 
-// Same params the vendor search sends.
+// Params the vendor search sends.
 const noHits: VendorListParams = { q: "zzz", isActive: true, limit: 10 }
 
 // Outer modal, no vendor hits.
