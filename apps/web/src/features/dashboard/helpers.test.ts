@@ -196,7 +196,11 @@ describe("toRecentInvoices", () => {
 
   const cases = [
     { name: "paid", over: { status: "paid" as const }, want: "DIBAYAR" },
-    { name: "server-derived overdue", over: { effectiveStatus: "overdue" as const }, want: "TERLAMBAT" },
+    {
+      name: "server-derived overdue",
+      over: { effectiveStatus: "overdue" as const },
+      want: "TERLAMBAT",
+    },
     { name: "draft", over: { status: "draft" as const }, want: "DRAF" },
   ]
   for (const c of cases) {
