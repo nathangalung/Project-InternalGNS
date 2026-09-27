@@ -84,7 +84,13 @@ export default function SearchCombobox<T>({
         if (value !== null) onValueChange(null)
         setOpen(true)
       }}
-      onValueChange={(item) => {
+      onValueChange={(item, details) => {
+        // Escape on a closed list clears; keep the pick and let the modal close.
+        if (details.reason === "escape-key") {
+          details.cancel()
+          details.allowPropagation()
+          return
+        }
         onValueChange(item)
         if (item !== null) onQueryChange(itemToString(item))
         setOpen(false)

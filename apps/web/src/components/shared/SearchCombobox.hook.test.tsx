@@ -152,6 +152,22 @@ describe("SearchCombobox in a modal", () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
+  it("keeps a picked value on Escape and lets the modal close", async () => {
+    const onPick = vi.fn()
+    const onClose = vi.fn()
+    await mount(<Harness onPick={onPick} onClose={onClose} />)
+    await type(input(), "sura")
+    await press("ArrowDown")
+    await press("Enter")
+    expect(onPick).toHaveBeenLastCalledWith(CITIES[2])
+    expect(input().getAttribute("aria-expanded")).toBe("false")
+
+    await press("Escape")
+    expect(onPick).toHaveBeenCalledTimes(1)
+    expect(input().value).toBe("Surabaya")
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
   it("marks a read-only field read-only and never opens", async () => {
     await mount(
       <SearchCombobox<City>
