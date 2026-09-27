@@ -16,6 +16,7 @@ func TestDeliveryNoteItems(t *testing.T) {
 	pcs, box := "PCS", "BOX"
 	deck, hold, blank := "Deck & Hold #2", "Gudang 50%", "  "
 	longPart := "GNS" + strings.Repeat("7X4Q", 14) + "Z"
+	longDest := "GUDANG" + strings.Repeat("TANJUNGPRIOK", 4) + "BLOKC7"
 	product := func(name, qty string, unit, ship *string) PurchaseOrderItem {
 		return PurchaseOrderItem{ItemType: "product", ItemName: name, Qty: qty, UnitCode: unit, ShipDestination: ship}
 	}
@@ -81,6 +82,11 @@ func TestDeliveryNoteItems(t *testing.T) {
 			"a long part number gets break points",
 			[]PurchaseOrderItem{product(longPart, "1", &pcs, &hold)},
 			[]dnItem{{No: 1, Qty: "1", Unit: "PCS", Name: pdfgen.LatexBreakable(longPart), ShipDestination: `Gudang 50\%`}},
+		},
+		{
+			"a long destination gets break points",
+			[]PurchaseOrderItem{product("A", "1", &pcs, &longDest)},
+			[]dnItem{{No: 1, Qty: "1", Unit: "PCS", Name: "A", ShipDestination: pdfgen.LatexBreakable(longDest)}},
 		},
 		{"only a shipping charge", []PurchaseOrderItem{shipping}, []dnItem{}},
 	}

@@ -76,3 +76,41 @@ func TestLatexExports_LongPartNumberWraps(t *testing.T) {
 		})
 	}
 }
+
+// Destinations wrap in cells.
+// The invoice Description and delivery-note Tujuan cells print the ship
+// destination, which can be one long unbroken token; the escaped control
+// proves the check bites.
+func TestLatexExports_LongDestinationWraps(t *testing.T) {
+	dest := "GUDANG" + strings.Repeat("TANJUNGPRIOK", 4) + "BLOKC7"
+	docs := []struct {
+		name, tmpl, field string
+		data              func(items []map[string]any) map[string]any
+	}{
+		{"invoice A5", "invoice/Invoice.tex.tmpl", "Description", invoiceData},
+		{"invoice A4", "invoice/Invoice.tex.tmpl", "Description", func(items []map[string]any) map[string]any {
+			d := invoiceData(items)
+			d["UseA4"] = true
+			return d
+		}},
+		{"delivery note", "delivery_note/DeliveryNote.tex.tmpl", "ShipDestination", deliveryNoteData},
+	}
+	for _, d := range docs {
+		t.Run(d.name, func(t *testing.T) {
+			items := sampleItems(2)
+			items[0][d.field] = LatexBreakable(dest)
+			log := compileLog(t, d.tmpl, d.data(items))
+			if !producedOutput(log) {
+				t.Skip("xelatex produced no output")
+			}
+			if over, under, warn := badBoxes(log); over != 0 || under != 0 || warn != 0 {
+				t.Errorf("breakable: overfull=%d underfull=%d warnings=%d, want all 0", over, under, warn)
+			}
+
+			items[0][d.field] = LatexEscape(dest)
+			if over, _, _ := badBoxes(compileLog(t, d.tmpl, d.data(items))); over == 0 {
+				t.Error("escaped control: no overfull box, so the check cannot catch an overflow")
+			}
+		})
+	}
+}

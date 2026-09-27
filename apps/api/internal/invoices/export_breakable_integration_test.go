@@ -28,3 +28,21 @@ func TestExport_LineNamesBreakLongTokens(t *testing.T) {
 
 	assert.Equal(t, []string{pdfgen.LatexBreakable(part), `Tali\_Tambang`}, got)
 }
+
+// Long destinations get breaks.
+// The Description cell prints the ship destination, which overflows its
+// cell as one unbroken token unless the line carries break points.
+func TestExport_LineDescriptionsBreakLongTokens(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	dest := "GUDANG" + strings.Repeat("TANJUNGPRIOK", 4) + "BLOKC7"
+	short := "Deck & Hold #2"
+	items := []invoices.InvoiceItem{
+		{LineType: "product", ItemName: "Tali", Qty: "1", UnitPrice: "100000", ShipDestination: &dest},
+		{LineType: "product", ItemName: "Cat", Qty: "2", UnitPrice: "5000", ShipDestination: &short},
+		{LineType: "product", ItemName: "Lampu", Qty: "1", UnitPrice: "5000"},
+	}
+
+	got := newExportHandler(t, tx).PDFTotalsForTest(ctx, invoices.Invoice{}, items).LineDescriptions
+
+	assert.Equal(t, []string{pdfgen.LatexBreakable(dest), `Deck \& Hold \#2`, ""}, got)
+}
