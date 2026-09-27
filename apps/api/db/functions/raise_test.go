@@ -38,7 +38,7 @@ func raises(body string) []string {
 	}
 }
 
-// Every raise is typed and Indonesian.
+// Raises are typed, Indonesian.
 // httperr maps the SQLSTATE to a status; an untyped raise (P0001) or an
 // English message would reach the user as it is.
 func TestRaises_TypedAndIndonesian(t *testing.T) {

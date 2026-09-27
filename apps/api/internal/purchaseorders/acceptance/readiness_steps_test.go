@@ -224,7 +224,7 @@ func (s *scenarioState) gateListsExactly(table *godog.Table) error {
 	return nil
 }
 
-// issueKey is the issue's fields key.
+// issueKey is its fields key.
 func issueKey(is purchaseorders.CompletenessIssue) string {
 	scope := map[purchaseorders.IssueKind]string{
 		purchaseorders.KindClient:   "klien",

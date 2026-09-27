@@ -284,7 +284,7 @@ test("a cancelled invoice without a Pengganti offers one (INV-10)", async ({
 test.describe("in a browser west of Jakarta", () => {
   test.use({ timezoneId: "America/Los_Angeles" })
 
-  // WIB day as the list prints it.
+  // WIB day, as listed.
   function printed(day: string): string {
     return new Date(`${day}T12:00:00Z`).toLocaleDateString("id-ID", {
       day: "2-digit",

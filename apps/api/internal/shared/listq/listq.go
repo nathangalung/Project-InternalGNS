@@ -179,7 +179,7 @@ func (c *Conditions) cloneArgs() []any {
 // unescaped one in user input would consume the character after it.
 var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
 
-// Contains builds a literal ILIKE pattern.
+// Contains builds literal ILIKE patterns.
 // Search text matches as typed, so a % or _ is not a wildcard.
 func Contains(s string) string {
 	return "%" + likeEscaper.Replace(s) + "%"

@@ -356,7 +356,7 @@ func gapCodes(is purchaseorders.CompletenessIssue) []purchaseorders.GapCode {
 	return out
 }
 
-// fieldKey is the legacy fields key.
+// fieldKey is the legacy key.
 func fieldKey(is purchaseorders.CompletenessIssue) string {
 	scope := map[purchaseorders.IssueKind]string{
 		purchaseorders.KindClient:   "klien",

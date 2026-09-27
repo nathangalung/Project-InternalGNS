@@ -96,7 +96,7 @@ const (
 	GapShippingAddress GapCode = "shipping_address"
 )
 
-// scopeWord names a kind in Indonesian.
+// scopeWord names kinds in Indonesian.
 // It keys the legacy fields ("klien:<id>") and starts each sentence.
 var scopeWord = map[IssueKind]string{
 	KindClient:   "klien",
@@ -151,7 +151,7 @@ func missingVendorFields(v VendorCompleteness) []CompletenessGap {
 	return missing
 }
 
-// recordIssue builds a client or vendor issue.
+// recordIssue builds a party issue.
 func recordIssue(kind IssueKind, id int64, name string, missing []CompletenessGap) CompletenessIssue {
 	labels := make([]string, len(missing))
 	for i, g := range missing {

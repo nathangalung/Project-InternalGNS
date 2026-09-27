@@ -13,7 +13,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// A query the client cancels is 499.
+// A cancelled query is 499.
 // pgx wraps the cancel, so the check must see through its error.
 func TestRenderDBErrCtx_CancelledQuery(t *testing.T) {
 	pool := testutil.Pool(t)

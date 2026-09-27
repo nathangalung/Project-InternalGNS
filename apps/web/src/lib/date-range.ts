@@ -20,7 +20,7 @@ function minusDays(day: string, n: number): string {
   return d.toISOString().slice(0, 10)
 }
 
-// Kustom opens on the last 30 days.
+// Kustom opens on 30 days.
 const PRESET_DAYS: Record<string, number> = { "7-hari": 7, "30-hari": 30, kustom: 30 }
 
 // Preset to WIB days.
@@ -34,7 +34,7 @@ export function presetRange(preset: string): { start: string; end: string } {
   return { start: minusDays(end, PRESET_DAYS[preset] ?? 0), end }
 }
 
-// Filter bounds for a list query.
+// List query filter bounds.
 //
 // Kustom keeps the dates the user typed; every other preset is recomputed
 // from today, so a saved preset never goes stale.

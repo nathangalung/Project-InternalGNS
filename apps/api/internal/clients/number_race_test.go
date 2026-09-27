@@ -14,7 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// blockWait is how long a blocked call must stay blocked.
+// blockWait bounds a blocked call.
 const blockWait = 300 * time.Millisecond
 
 // quoteFor is one priced line.

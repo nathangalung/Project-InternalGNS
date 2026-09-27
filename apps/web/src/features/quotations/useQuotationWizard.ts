@@ -68,7 +68,7 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
     setEditingProduct(null)
   }
 
-  // Closing the form drops the edited line.
+  // Closing drops the edited line.
   function setProductAddOpen(open: boolean) {
     setShowProductAdd(open)
     if (!open) setEditingProduct(null)
