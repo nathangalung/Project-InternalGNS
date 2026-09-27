@@ -1,4 +1,4 @@
-// Command rfqfixtures writes the RFQ upload fixtures.
+// Rfqfixtures writes RFQ upload fixtures.
 //
 // The web RFQ parser (apps/web/src/features/quotations/uploadParser.ts) is
 // tested against these real .xlsx files, so a change of reading library is
@@ -26,7 +26,7 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-// fixture is one workbook to write.
+// fixture is one workbook.
 type fixture struct {
 	name  string
 	build func(f *excelize.File) error
@@ -58,7 +58,7 @@ func run(out string) error {
 	return nil
 }
 
-// render builds, writes and patches one workbook.
+// render builds one workbook.
 func render(fx fixture) ([]byte, error) {
 	f := excelize.NewFile()
 	defer func() { _ = f.Close() }()
@@ -75,7 +75,7 @@ func render(fx fixture) ([]byte, error) {
 	return patchSheet(buf.Bytes(), fx.patch)
 }
 
-// patchSheet swaps cells in the first sheet.
+// patchSheet swaps first-sheet cells.
 func patchSheet(xlsx []byte, cells map[string]string) ([]byte, error) {
 	const part = "xl/worksheets/sheet1.xml"
 	zr, err := zip.NewReader(bytes.NewReader(xlsx), int64(len(xlsx)))
@@ -126,7 +126,7 @@ func readPart(zf *zip.File) ([]byte, error) {
 	return body, nil
 }
 
-// replaceCells swaps each placeholder cell once.
+// replaceCells swaps placeholder cells.
 func replaceCells(sheet []byte, cells map[string]string) ([]byte, error) {
 	for ref, raw := range cells {
 		re := regexp.MustCompile(`<c r="` + regexp.QuoteMeta(ref) + `"[^>]*?(/>|>.*?</c>)`)
@@ -138,7 +138,7 @@ func replaceCells(sheet []byte, cells map[string]string) ([]byte, error) {
 	return sheet, nil
 }
 
-// rows writes rows from a top-left cell.
+// rows writes from topLeft.
 func rows(f *excelize.File, sheet, topLeft string, data ...[]any) error {
 	col, row, err := excelize.CellNameToCoordinates(topLeft)
 	if err != nil {
@@ -189,7 +189,7 @@ func fixtures() []fixture {
 	}
 }
 
-// multiSheet: first sheet with products wins.
+// multiSheet: first product sheet.
 func multiSheet(f *excelize.File) error {
 	if err := first(f, "Kosong"); err != nil {
 		return err
@@ -210,7 +210,7 @@ func multiSheet(f *excelize.File) error {
 	)
 }
 
-// displayValues: formula, link, rich text, date.
+// displayValues: formula, link, richtext.
 func displayValues(f *excelize.File) error {
 	const s = "Produk"
 	if err := first(f, s); err != nil {
@@ -229,7 +229,7 @@ func displayValues(f *excelize.File) error {
 	)
 }
 
-// errorCells: error values read as blank.
+// errorCells: errors read blank.
 func errorCells(f *excelize.File) error {
 	const s = "Produk"
 	if err := first(f, s); err != nil {
@@ -241,7 +241,7 @@ func errorCells(f *excelize.File) error {
 		[]any{"370115", 0, 2, "PCS"})
 }
 
-// uncachedFormula: no cached result reads blank.
+// uncachedFormula: uncached reads blank.
 func uncachedFormula(f *excelize.File) error {
 	const s = "Produk"
 	if err := first(f, s); err != nil {
@@ -273,7 +273,7 @@ func noProducts(f *excelize.File) error {
 	return rows(f, s, "A1", []any{"Tidak ada produk"})
 }
 
-// mergedCells: banner, two-row header, category row.
+// mergedCells: banner, header, category.
 func mergedCells(f *excelize.File) error {
 	const s = "RFQ"
 	if err := first(f, s); err != nil {
@@ -296,7 +296,7 @@ func mergedCells(f *excelize.File) error {
 	)
 }
 
-// emptyRows: blank rows before and between.
+// emptyRows: blank rows skipped.
 func emptyRows(f *excelize.File) error {
 	const s = "RFQ"
 	if err := first(f, s); err != nil {

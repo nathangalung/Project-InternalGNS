@@ -228,7 +228,7 @@ const cases: Case[] = [
     why: "skips blank and styled-empty rows before and between products",
     want: [radio, rope],
   },
-  // Leading zeros survive only as text.
+  // Leading zeros survive as text.
   //
   // A numeric IMPA code shown as 012345 by a 000000 format reads as 12345.
   {
