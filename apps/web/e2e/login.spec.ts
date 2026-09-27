@@ -53,6 +53,19 @@ test("a malformed email is caught before any request", async ({ page }) => {
   expect(sent).toBe(false)
 })
 
+// Sign-in is a lookup.
+//
+// Accounts made under the older rule can hold an address the shared write
+// rule refuses, such as a one-letter top-level label. The form must still
+// send it and show the server's answer.
+test("an address the write rule refuses still reaches the server", async ({ page }) => {
+  const email = `${uniqueTag().toLowerCase()}@x.c`
+  await page.getByLabel("Surel").fill(email)
+  await expect(page.getByText("Format surel tidak valid")).toHaveCount(0)
+  expect((await submitLogin(page, email, "Sembarang1!")).status()).toBe(401)
+  await expect(page.getByText(WRONG)).toBeVisible()
+})
+
 test("the sixth attempt in a minute is throttled with a readable message (AU-7)", async ({
   page,
 }) => {
