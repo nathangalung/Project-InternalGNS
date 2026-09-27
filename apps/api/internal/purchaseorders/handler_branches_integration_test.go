@@ -246,3 +246,46 @@ func TestHandler_SecondQueryFaults(t *testing.T) {
 		})
 	}
 }
+
+// A charge needs its address.
+// The shipping line is kept only with an address, so a charge sent without
+// one would vanish; the edit is refused on the field instead.
+func TestHandler_UpdateItems_ShippingChargeNeedsAddress(t *testing.T) {
+	tests := []struct {
+		name    string
+		address *string
+		cost    *string
+		want    int
+	}{
+		{"charge without address", nil, strPtr("75000"), http.StatusUnprocessableEntity},
+		{"charge with blank address", strPtr("   "), strPtr("75000"), http.StatusUnprocessableEntity},
+		{"zero charge without address", nil, strPtr("0"), http.StatusOK},
+		{"no charge without address", nil, nil, http.StatusOK},
+		{"charge with address", strPtr("Kapal Uji, Dermaga 3, Tanjung Priok"), strPtr("75000"), http.StatusOK},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, tx, srv := txServer(t)
+			_, poID := acceptedQuotationWithPO(t, tx)
+			repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+			before, err := repo.GetByID(ctx, poID)
+			require.NoError(t, err)
+
+			req := itemsAt("125000")
+			req.ShippingAddress, req.ShippingCost = tc.address, tc.cost
+			res := doJSONWithHeaders(t, srv, http.MethodPut, fmt.Sprintf("/purchase-orders/%d/items", poID),
+				req, map[string]string{"If-Match": strconv.Itoa(int(before.RowVersion))})
+			defer res.Body.Close()
+			require.Equal(t, tc.want, res.StatusCode)
+			if tc.want != http.StatusUnprocessableEntity {
+				return
+			}
+			assert.Equal(t, map[string]string{
+				"shippingAddress": "Alamat pengiriman wajib diisi bila ada biaya pengiriman.",
+			}, readProblem(t, res).Fields)
+			after, err := repo.GetByID(ctx, poID)
+			require.NoError(t, err)
+			assert.Equal(t, before.RowVersion, after.RowVersion, "refused edit writes nothing")
+		})
+	}
+}
