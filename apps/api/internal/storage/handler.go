@@ -176,6 +176,9 @@ func renderTooLarge(w http.ResponseWriter, limit int64) {
 // The body stays generic; the log line names the operation and object under
 // the request context, so request_id joins it to its access-log line.
 func renderStoreErr(ctx context.Context, w http.ResponseWriter, op, bucket, key string, err error, detail string) {
+	if httperr.RenderCanceled(ctx, w, err) {
+		return
+	}
 	slog.ErrorContext(ctx, "object store failed",
 		"op", op, "bucket", bucket, "key", key,
 		"error", fmt.Errorf("storage: %s %s/%s: %w", op, bucket, key, err).Error())

@@ -189,6 +189,9 @@ func RenderDBErr(w http.ResponseWriter, err error) {
 // The slog handler in app/logging.go stamps request_id from this context, so
 // passing the request context is what puts a 500 line next to its request.
 func RenderDBErrCtx(ctx context.Context, w http.ResponseWriter, err error) {
+	if RenderCanceled(ctx, w, err) {
+		return
+	}
 	// A deadline is backpressure, not a crash: 503 + Retry-After is retryable
 	// and must not page a 5xx alert. Logged Warn, never Error.
 	if errors.Is(err, context.DeadlineExceeded) {
@@ -202,4 +205,22 @@ func RenderDBErrCtx(ctx context.Context, w http.ResponseWriter, err error) {
 		slog.ErrorContext(ctx, "unhandled server error", "error", err.Error())
 	}
 	Render(w, e)
+}
+
+// StatusClientClosedRequest is nginx's 499.
+// The client went away before the answer; no standard code names that.
+const StatusClientClosedRequest = 499
+
+// RenderCanceled handles a client cancel.
+// A navigation or a closed tab cancels the request context and the query
+// fails with context.Canceled. Nothing broke on the server, so it is logged
+// at Info with its own status instead of as an unhandled 500. It reports
+// whether err was a cancel and the response is written.
+func RenderCanceled(ctx context.Context, w http.ResponseWriter, err error) bool {
+	if !errors.Is(err, context.Canceled) {
+		return false
+	}
+	slog.InfoContext(ctx, "request canceled by client", "error", err.Error())
+	w.WriteHeader(StatusClientClosedRequest)
+	return true
 }

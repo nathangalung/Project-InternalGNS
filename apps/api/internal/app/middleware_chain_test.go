@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -99,6 +100,7 @@ func TestAccessLog_LevelByStatus(t *testing.T) {
 		{"client error", "/api/v1/units", http.StatusNotFound, []slog.Level{slog.LevelWarn}},
 		{"server fault", "/api/v1/units", http.StatusInternalServerError, []slog.Level{slog.LevelError}},
 		{"backpressure", "/api/v1/units", http.StatusServiceUnavailable, []slog.Level{slog.LevelWarn}},
+		{"client closed", "/api/v1/units", httperr.StatusClientClosedRequest, []slog.Level{slog.LevelInfo}},
 		{"liveness probe unlogged", "/healthz", http.StatusOK, nil},
 		{"readiness probe unlogged", "/readyz", http.StatusServiceUnavailable, nil},
 	}
