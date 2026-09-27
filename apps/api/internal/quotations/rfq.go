@@ -331,13 +331,18 @@ func (b *xlsxBudget) charge(n int) error {
 	return nil
 }
 
+// attrOf reads as excelize does.
+// encoding/xml matches any prefix and keeps the last duplicate, so this
+// does too; reading the first would count a different cell than excelize
+// loads.
 func attrOf(e xml.StartElement, name string) string {
+	v := ""
 	for _, a := range e.Attr {
 		if a.Name.Local == name {
-			return a.Value
+			v = a.Value
 		}
 	}
-	return ""
+	return v
 }
 
 // readSheet builds one sheet's grid.

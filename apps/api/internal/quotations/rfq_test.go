@@ -398,6 +398,10 @@ func TestParseRFQ_XLSXExpansion(t *testing.T) {
 		{name: "an unnumbered row holding a far cell", data: extraRows(fmt.Sprintf(`<row><c r="A%d" s="1"/></row>`, rfqMaxRows+1))},
 		{name: "unnumbered rows past the row cap", data: extraRows(strings.Repeat("<row/>", rfqMaxRows))},
 		{name: "styled empty rows past the row cap", data: extraRows(sheetRows(5, rfqMaxRows, `<row r="{r}"><c r="A{r}" s="1"/></row>`))},
+		// encoding/xml keeps the last duplicate attribute, prefix or not.
+		{name: "a duplicate cell r", data: extraRows(sheetRows(5, rfqMaxUnits/excelize.MaxColumns+1, `<row r="{r}"><c r="A{r}" r="XFD{r}" s="1"/></row>`))},
+		{name: "a namespaced cell r", data: extraRows(sheetRows(5, rfqMaxUnits/excelize.MaxColumns+1, `<row r="{r}"><c r="A{r}" x:r="XFD{r}" xmlns:x="u" s="1"/></row>`))},
+		{name: "a duplicate row r", data: extraRows(`<row r="5" r="1048000"><c s="1"/></row>`)},
 		{name: "styles past the budget", data: patchPart(t, base, "xl/styles.xml", `</cellXfs>`, strings.Repeat("<xf/>", rfqMaxUnits)+`</cellXfs>`)},
 	}
 	for _, c := range cases {
