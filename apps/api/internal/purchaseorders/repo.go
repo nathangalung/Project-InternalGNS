@@ -59,7 +59,7 @@ var tiebreak = listq.Column{Expr: "po.id", Dir: listq.Desc}
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
-		p := c.Arg("%" + f.Q + "%")
+		p := c.Arg(listq.Contains(f.Q))
 		c.And("(po.po_number ILIKE " + p + " OR q.quotation_no ILIKE " + p + " OR cc.name ILIKE " + p + ")")
 	}
 	if len(f.Statuses) > 0 {
