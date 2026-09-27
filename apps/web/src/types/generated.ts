@@ -172,7 +172,7 @@ export type CreateUserInput = {
 export type CreateVendorInput = {
     name: string;
     location?: string | null;
-    contactInfo?: unknown;
+    contactInfo?: VendorContactInfo | null;
     isActive?: boolean | null;
 };
 
@@ -921,7 +921,7 @@ export type UpdateUserInput = {
 export type UpdateVendorInput = {
     name: string;
     location?: string | null;
-    contactInfo?: unknown;
+    contactInfo?: VendorContactInfo | null;
     isActive: boolean;
 };
 
@@ -934,6 +934,13 @@ export type UserRow = {
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
+};
+
+// From vendors/dto.go
+export type VendorContactInfo = {
+    email?: string;
+    phone?: string;
+    sku?: string;
 };
 
 // From vendors/dto.go
@@ -952,7 +959,7 @@ export type VendorRow = {
     id: number;
     name: string;
     location?: string;
-    contactInfo?: unknown;
+    contactInfo?: VendorContactInfo;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
@@ -966,7 +973,7 @@ export type VendorSearchHit = {
     vendorId: number;
     vendorName: string;
     location?: string;
-    contactInfo?: unknown;
+    contactInfo?: VendorContactInfo;
     score: number;
     matchTier: string;
 };

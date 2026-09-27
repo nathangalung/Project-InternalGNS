@@ -21,6 +21,7 @@ export type {
   CreateContactInput,
   CreateItemInput,
   CreateUserInput,
+  CreateVendorInput,
   DashboardStatusCount,
   DashboardSummary,
   DashboardTimeseriesPoint,
@@ -81,30 +82,17 @@ export type {
   UpdateInvoiceDatesInput,
   UpdateItemInput,
   UpdateUserInput,
+  UpdateVendorInput,
   UserRow,
+  VendorContactInfo,
   VendorItemRow,
+  VendorRow,
 } from "./generated"
 
 // Replaces plain-string fields.
 type Narrow<T, N> = Omit<T, keyof N> & N
 
 export type RefreshResponse = G.LoginResponse
-
-// Vendor contact JSONB.
-//
-// Go stores it as raw JSON with no server shape, and a stored JSON null
-// reaches the web as null.
-export type VendorContactInfo = {
-  email?: string
-  phone?: string
-  sku?: string
-}
-
-export type VendorRow = Narrow<G.VendorRow, { contactInfo?: VendorContactInfo | null }>
-
-export type CreateVendorInput = Narrow<G.CreateVendorInput, { contactInfo?: VendorContactInfo }>
-
-export type UpdateVendorInput = Narrow<G.UpdateVendorInput, { contactInfo?: VendorContactInfo }>
 
 // Tier labels from items/merge.go.
 export type AdvancedSearchTier =

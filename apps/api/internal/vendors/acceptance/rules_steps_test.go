@@ -134,7 +134,62 @@ func (s *scenarioState) pageHolds(rows, total int) error {
 	return nil
 }
 
+// Contact info steps.
+// createVendor seeds an email and no phone.
+var seededContact = map[string]string{"email": "atdd@vendor.com", "phone": ""}
+
+func contactWith(field, value string) *vendors.ContactInfo {
+	if field == "phone" {
+		return &vendors.ContactInfo{Phone: value}
+	}
+	return &vendors.ContactInfo{Email: value}
+}
+
+func (s *scenarioState) createVendorWithContact(field, value string) error {
+	return s.sendRequest(http.MethodPost, "/vendors/", vendors.CreateVendorRequest{
+		Name: s.uniqueName("ATDD KONTAK"), ContactInfo: contactWith(field, value),
+	})
+}
+
+func (s *scenarioState) setVendorContact(field, value string) error {
+	return s.sendRequest(http.MethodPut, s.vendorPath(""), vendors.UpdateVendorRequest{
+		Name: s.name, ContactInfo: contactWith(field, value), IsActive: true,
+	})
+}
+
+func (s *scenarioState) fieldErrorReads(field, want string) error {
+	var p struct {
+		Fields map[string]string `json:"fields"`
+	}
+	if err := json.Unmarshal(s.body, &p); err != nil {
+		return err
+	}
+	if got := p.Fields[field]; got != want {
+		return fmt.Errorf("field %s: want %q got %q body=%s", field, want, got, s.body)
+	}
+	return nil
+}
+
+func (s *scenarioState) vendorContactUnchanged(field string) error {
+	var v vendors.Vendor
+	if err := json.Unmarshal(s.body, &v); err != nil {
+		return err
+	}
+	got := ""
+	if v.ContactInfo != nil {
+		got = map[string]string{"email": v.ContactInfo.Email, "phone": v.ContactInfo.Phone}[field]
+	}
+	if got != seededContact[field] {
+		return fmt.Errorf("contact %s: want %q got %q", field, seededContact[field], got)
+	}
+	return nil
+}
+
 func registerRuleSteps(sc *godog.ScenarioContext, state *scenarioState) {
+	sc.Step(`^the user creates a vendor with contact (phone|email) "([^"]*)"$`, state.createVendorWithContact)
+	sc.Step(`^the user sets the vendor contact (phone|email) to "([^"]*)"$`, state.setVendorContact)
+	sc.Step(`^the (contactInfo\.phone|contactInfo\.email) field error reads "([^"]+)"$`, state.fieldErrorReads)
+	sc.Step(`^the vendor contact (phone|email) is unchanged$`, state.vendorContactUnchanged)
 	sc.Step(`^the user creates a vendor named with only (spaces|a tab|newlines)$`, state.createVendorBlank)
 	sc.Step(`^the user renames the vendor to only (spaces|a tab|newlines)$`, state.renameVendorBlank)
 	sc.Step(`^a vendor named with "([^"]+)" and a decoy without it$`, state.seedWildcardPair)

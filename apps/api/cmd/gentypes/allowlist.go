@@ -59,6 +59,7 @@ var allowlist = []pkg{
 		{Go: "ItemByVendor", TS: "VendorItemRow"},
 		{Go: "CreateVendorRequest", TS: "CreateVendorInput", Input: true},
 		{Go: "UpdateVendorRequest", TS: "UpdateVendorInput", Input: true},
+		{Go: "ContactInfo", TS: "VendorContactInfo"},
 	}},
 	{"internal/items", []entry{
 		{Go: "Item", TS: "ItemRow"},

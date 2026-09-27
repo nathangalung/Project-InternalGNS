@@ -73,7 +73,7 @@ func (s *scenarioState) uniqueName(prefix string) string {
 func (s *scenarioState) createVendor() error {
 	s.name = s.uniqueName("ATDD VENDOR")
 	loc := "Jakarta"
-	body := vendors.CreateVendorRequest{Name: s.name, Location: &loc, ContactInfo: json.RawMessage(`{"email":"atdd@vendor.com"}`)}
+	body := vendors.CreateVendorRequest{Name: s.name, Location: &loc, ContactInfo: &vendors.ContactInfo{Email: "atdd@vendor.com"}}
 	if err := s.sendRequest(http.MethodPost, "/vendors/", body); err != nil {
 		return err
 	}

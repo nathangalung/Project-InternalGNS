@@ -92,6 +92,10 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
 	}
+	if fields := contactInfoFields(req.ContactInfo); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
 
 	userID := deps.CurrentUserID(r.Context())
 	v, err := h.repo.Create(r.Context(), req, userID)
@@ -117,6 +121,10 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
+		return
+	}
+	if fields := contactInfoFields(req.ContactInfo); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
 

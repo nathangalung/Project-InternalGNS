@@ -1,7 +1,6 @@
 package vendors_test
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -51,7 +50,7 @@ func TestRepo_Create(t *testing.T) {
 	req := vendors.CreateVendorRequest{
 		Name:        "PT Test Vendor",
 		Location:    ptr("Bali"),
-		ContactInfo: json.RawMessage(`{"email":"test@vendor.local"}`),
+		ContactInfo: &vendors.ContactInfo{Email: "test@vendor.local"},
 	}
 	v, err := repo.Create(ctx, req, seedUserID)
 	require.NoError(t, err)

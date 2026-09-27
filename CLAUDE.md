@@ -218,8 +218,8 @@ Server state is TanStack Query; `lib/api-client.ts` attaches the JWT and maps
 errors. The API contract is `types/generated.ts`, written by `make gen-types`
 from the Go DTOs allowlisted in `apps/api/cmd/gentypes`; CI regenerates it and
 fails on any diff. `types/api.ts` re-exports it under the app's names and adds
-only what Go does not carry: narrowed unions for text the database fixes, the
-vendor `contactInfo` shape, and query-only types. There is no OpenAPI spec.
+only what Go does not carry: narrowed unions for text the database fixes and
+query-only types. There is no OpenAPI spec.
 
 The app shell lives in the layout route. `routes/_authed.tsx` renders
 the shell with the `Sidebar` and a scrolling `<main>` around the `Outlet`, so page

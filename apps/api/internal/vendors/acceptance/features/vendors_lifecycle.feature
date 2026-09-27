@@ -95,3 +95,20 @@ Feature: Vendor lifecycle
     When the user lists the vendor's products with ""
     Then the response status is 200
     And the page holds 50 products of 51
+
+  Scenario Outline: Vendor contact info with a bad phone or email gets a field error
+    Given an existing vendor
+    When the user creates a vendor with contact <field> "<value>"
+    Then the response status is 422
+    And the contactInfo.<field> field error reads "<message>"
+    When the user sets the vendor contact <field> to "<value>"
+    Then the response status is 422
+    And the contactInfo.<field> field error reads "<message>"
+    When the user reads the vendor
+    Then the vendor contact <field> is unchanged
+
+    Examples:
+      | field | value         | message                               |
+      | phone | 8123456789012 | Nomor telepon harus 9–12 digit angka. |
+      | phone | 81234567      | Nomor telepon harus 9–12 digit angka. |
+      | email | toko@maju     | Format email tidak valid.             |
