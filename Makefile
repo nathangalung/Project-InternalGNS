@@ -228,14 +228,14 @@ e2e: ## Playwright e2e against the dev stack
 
 lint: ## Lint api and web
 	cd $(API_DIR) && go vet ./...
-	@command -v golangci-lint >/dev/null 2>&1 && (cd $(API_DIR) && golangci-lint run) || echo "golangci-lint not installed, skipping"
+	@if command -v golangci-lint >/dev/null 2>&1; then cd $(API_DIR) && golangci-lint run; else echo "golangci-lint not installed, skipping"; fi
 	cd $(WEB_DIR) && bun run lint
 
 # Auto-fix every fixable lint + format violation. golangci-lint --fix applies
 # the formatters + simple rewrites; biome check --write does the same for FE.
 lint-fix: ## Auto-fix lint + format issues (api + web)
 	cd $(API_DIR) && gofmt -w -s .
-	@command -v golangci-lint >/dev/null 2>&1 && (cd $(API_DIR) && golangci-lint run --fix) || echo "golangci-lint not installed, skipping --fix"
+	@if command -v golangci-lint >/dev/null 2>&1; then cd $(API_DIR) && golangci-lint run --fix; else echo "golangci-lint not installed, skipping --fix"; fi
 	cd $(WEB_DIR) && bun x @biomejs/biome check --write src
 
 fmt: ## Format api and web

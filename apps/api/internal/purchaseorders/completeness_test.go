@@ -10,7 +10,7 @@ func s(v string) *string { return &v }
 
 // codes lists gap codes.
 func codes(gaps []CompletenessGap) []GapCode {
-	var out []GapCode
+	out := make([]GapCode, 0, len(gaps))
 	for _, g := range gaps {
 		out = append(out, g.Code)
 	}
@@ -29,7 +29,7 @@ func TestMissingClientFields(t *testing.T) {
 		input ClientCompleteness
 		want  []GapCode
 	}{
-		{name: "complete", input: complete},
+		{name: "complete", input: complete, want: []GapCode{}},
 		{
 			name:  "blank strings count as missing",
 			input: ClientCompleteness{ID: 1, Name: "X", Number: s("  "), Npwp: s(""), Address: nil, ContactName: s("A"), ContactPhone: s("08")},
@@ -38,6 +38,7 @@ func TestMissingClientFields(t *testing.T) {
 		{
 			name:  "phone alone satisfies the contact channel",
 			input: ClientCompleteness{ID: 1, Name: "X", Number: s("1"), Npwp: s("2"), Address: s("3"), ContactName: s("A"), ContactPhone: s("08")},
+			want:  []GapCode{},
 		},
 		{
 			name:  "no contact at all",
@@ -59,6 +60,7 @@ func TestMissingClientFields(t *testing.T) {
 			// fallback the Coretax export uses, so it is not required here.
 			name:  "missing TKU is not an issue",
 			input: complete,
+			want:  []GapCode{},
 		},
 	}
 	for _, tc := range cases {
@@ -77,6 +79,7 @@ func TestMissingVendorFields(t *testing.T) {
 		{
 			name:  "complete",
 			input: VendorCompleteness{ID: 1, Name: "Toko ABC", Location: s("Jakarta"), ContactEmail: s("a@b.c")},
+			want:  []GapCode{},
 		},
 		{
 			name:  "whatsapp only is not a channel",
