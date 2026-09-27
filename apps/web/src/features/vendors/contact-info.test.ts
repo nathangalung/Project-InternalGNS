@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api-client"
 import { EMAIL_ERROR, PHONE_ERROR } from "@/lib/validation"
+import { problem } from "@/test/problem"
 import { buildContactInfo, vendorFormErrors } from "./contact-info"
 
 describe("buildContactInfo", () => {
@@ -53,7 +54,9 @@ describe("vendorFormErrors", () => {
   it("maps nested contactInfo keys", () => {
     const err = new ApiError(
       422,
-      { fields: { "contactInfo.phone": PHONE_ERROR, "contactInfo.email": EMAIL_ERROR } },
+      problem(422, {
+        fields: { "contactInfo.phone": PHONE_ERROR, "contactInfo.email": EMAIL_ERROR },
+      }),
       `${EMAIL_ERROR}; ${PHONE_ERROR}`,
     )
     expect(vendorFormErrors(err, "gagal")).toEqual({
@@ -63,7 +66,11 @@ describe("vendorFormErrors", () => {
   })
 
   it("keeps name and sends the rest to the banner", () => {
-    const err = new ApiError(422, { fields: { name: "required", location: "Lain." } }, "x")
+    const err = new ApiError(
+      422,
+      problem(422, { fields: { name: "required", location: "Lain." } }),
+      "x",
+    )
     expect(vendorFormErrors(err, "gagal")).toEqual({
       fields: { name: "required" },
       banner: "Lain.",

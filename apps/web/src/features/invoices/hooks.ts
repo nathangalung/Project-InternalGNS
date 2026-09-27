@@ -12,7 +12,6 @@ import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
 import type { InvoiceDetail } from "@/types/api"
-import { failureMessage } from "./download"
 import type { UpdateInvoiceDatesInput } from "./types"
 
 export function useInvoices(params: invApi.ListParams = {}) {
@@ -96,7 +95,7 @@ export function useMarkInvoicePaid() {
       await invalidate()
       toast.success("Invoice ditandai Dibayar.")
     },
-    onError: (err) => toast.error(failureMessage(err, "Gagal menandai invoice dibayar.")),
+    onError: (err) => toast.error(errorMessage(err, "Gagal menandai invoice dibayar.")),
   })
 }
 
@@ -181,7 +180,7 @@ export function useUploadInvoiceAttachment() {
       await invApi.updateAttachment(id, objectKey)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.invoices.all }),
-    onError: (err) => toast.error(failureMessage(err, "Gagal mengunggah lampiran.")),
+    onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah lampiran.")),
   })
 }
 

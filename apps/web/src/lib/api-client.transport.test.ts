@@ -121,7 +121,12 @@ describe("apiRequest", () => {
   })
 
   it("keeps the problem body on the error", async () => {
-    const problem = { title: "Conflict", detail: "Nomor PO sudah dipakai." }
+    const problem = {
+      type: "about:blank",
+      title: "Conflict",
+      status: 409,
+      detail: "Nomor PO sudah dipakai.",
+    }
     serve(() => json(problem, { status: 409 }))
     const err = await apiRequest({ path: "/x", authed: false }).catch((e: unknown) => e)
     expect(err).toMatchObject({ status: 409, body: problem, message: "Nomor PO sudah dipakai." })
@@ -183,7 +188,12 @@ describe("session refresh", () => {
     setTokens({ token: "old", refreshToken: "r1" })
     const expired = vi.fn()
     setOnAuthExpired(expired)
-    const calls = serve(() => json({ detail: "Token tidak valid." }, { status: 401 }))
+    const calls = serve(() =>
+      json(
+        { type: "about:blank", title: "Unauthorized", status: 401, detail: "Token tidak valid." },
+        { status: 401 },
+      ),
+    )
     const err = await apiRequest({ path: "/auth/refresh", method: "POST" }).catch((e: unknown) => e)
     expect(err).toMatchObject({ status: 401, message: "Token tidak valid." })
     expect(calls).toHaveLength(1)
@@ -210,7 +220,12 @@ describe("apiList", () => {
   })
 
   it("throws the problem detail on failure", async () => {
-    serve(() => json({ detail: "Akses ditolak." }, { status: 403 }))
+    serve(() =>
+      json(
+        { type: "about:blank", title: "Forbidden", status: 403, detail: "Akses ditolak." },
+        { status: 403 },
+      ),
+    )
     await expect(apiList({ path: "/users" })).rejects.toMatchObject({
       status: 403,
       message: "Akses ditolak.",
@@ -330,7 +345,17 @@ describe("downloads", () => {
 
   it("surfaces a 409 detail written for the user", async () => {
     stubPicker()
-    serve(() => json({ detail: "Surat jalan belum terbit." }, { status: 409 }))
+    serve(() =>
+      json(
+        {
+          type: "about:blank",
+          title: "Conflict",
+          status: 409,
+          detail: "Surat jalan belum terbit.",
+        },
+        { status: 409 },
+      ),
+    )
     await expect(downloadPdf("/po/1/dn", "a.pdf")).rejects.toMatchObject({
       status: 409,
       message: "Surat jalan belum terbit.",

@@ -32,18 +32,18 @@ export function formErrors<K extends string>(
   const fields: Partial<Record<K, string>> = {}
   if (!(err instanceof ApiError)) return { fields, banner: errorMessage(err, fallback) }
 
-  const body = (err.body ?? {}) as { detail?: unknown; fields?: unknown }
+  const body = err.body
   const known = new Set<string>(keys)
 
-  if (err.status === 409 && body.detail === EMAIL_TAKEN_MESSAGE && known.has("email")) {
+  if (err.status === 409 && body?.detail === EMAIL_TAKEN_MESSAGE && known.has("email")) {
     fields["email" as K] = EMAIL_TAKEN_MESSAGE
     return { fields, banner: null }
   }
 
-  if (err.status === 422 && body.fields && typeof body.fields === "object") {
+  if (err.status === 422 && body?.fields) {
     const rest: string[] = []
     for (const [key, value] of Object.entries(body.fields)) {
-      const msg = String(value).trim()
+      const msg = value.trim()
       if (!msg) continue
       if (known.has(key)) fields[key as K] = msg
       else rest.push(msg)

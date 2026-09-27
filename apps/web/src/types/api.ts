@@ -56,6 +56,7 @@ export type {
   PresignDownload,
   PresignFileDownload,
   PresignUpload,
+  ProblemDetail,
   PurchaseOrderItemRow,
   PurchaseOrderRow,
   QuotationContactInput,

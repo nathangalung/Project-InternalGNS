@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api-client"
+import { problem } from "@/test/problem"
+import type { ProblemDetail } from "@/types/api"
 import {
   countInvalidQty,
   isValidQty,
@@ -36,13 +38,13 @@ describe("isValidQty rule", () => {
 describe("qtyErrorIndexes mapping", () => {
   const err = new ApiError(
     422,
-    {
+    problem(422, {
       fields: {
         "items[2].qty": "jumlah harus lebih besar dari 0",
         "items[0].sellingPrice": "x",
         status: "y",
       },
-    },
+    }),
     "x",
   )
 
@@ -59,9 +61,10 @@ describe("qtyErrorIndexes mapping", () => {
 
   it("ignores non-422 errors", () => {
     expect(qtyErrorIndexes(new Error("x")).size).toBe(0)
-    expect(qtyErrorIndexes(new ApiError(409, { fields: { "items[0].qty": "x" } }, "x")).size).toBe(
-      0,
-    )
+    expect(
+      qtyErrorIndexes(new ApiError(409, problem(409, { fields: { "items[0].qty": "x" } }), "x"))
+        .size,
+    ).toBe(0)
   })
 })
 
@@ -115,12 +118,9 @@ describe("request code and difference", () => {
 })
 
 describe("qtyErrorIndexes odd 422 bodies", () => {
-  it.each<[string, unknown]>([
+  it.each<[string, ProblemDetail | null]>([
     ["no body", null],
-    ["text body", "Validasi gagal."],
-    ["no fields", { detail: "Validasi gagal." }],
-    ["fields not an object", { fields: "items[0].qty" }],
-    ["non-string message", { fields: { "items[0].qty": 5 } }],
+    ["no fields", problem(422, { detail: "Validasi gagal." })],
   ])("finds no line for %s", (_name, body) => {
     expect(qtyErrorIndexes(new ApiError(422, body, "x")).size).toBe(0)
   })

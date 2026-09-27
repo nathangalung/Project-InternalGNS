@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api-client"
+import { problem } from "@/test/problem"
+import type { ProblemDetail } from "@/types/api"
 import { EMAIL_TAKEN_MESSAGE, formErrors, isInlineFormError } from "./form-errors"
 
 const KEYS = ["name", "email", "password", "role"] as const
 
-function apiErr(status: number, body: unknown, message = "pesan server") {
-  return new ApiError(status, body, message)
+function apiErr(status: number, body: Partial<ProblemDetail> | null, message = "pesan server") {
+  return new ApiError(status, body && problem(status, body), message)
 }
 
 describe("isInlineFormError", () => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api-client"
 import { isVersionConflict } from "@/lib/errors"
+import { problem } from "@/test/problem"
 import type { PurchaseOrderRow } from "@/types/api"
 import {
   canDownloadDeliveryNote,
@@ -99,10 +100,10 @@ describe("poErrorMessage", () => {
   it("translates the optimistic-lock 409", () => {
     const err = new ApiError(
       409,
-      {
+      problem(409, {
         code: "version_conflict",
         detail: "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
-      },
+      }),
       "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
     )
     expect(poErrorMessage(err, "x")).toBe(PO_CONFLICT_MESSAGE)
@@ -110,7 +111,7 @@ describe("poErrorMessage", () => {
 
   it("keeps the lock 409 prose", () => {
     const msg = "Nomor dan tanggal PO tidak dapat diubah setelah invoice dikirim."
-    const body = { status: 409, detail: msg, code: "po_locked" }
+    const body = problem(409, { detail: msg, code: "po_locked" })
     expect(poErrorMessage(new ApiError(409, body, msg), "x")).toBe(msg)
   })
 
@@ -120,15 +121,14 @@ describe("poErrorMessage", () => {
 })
 
 describe("409 classification", () => {
-  const lockBody = { status: 409, detail: "Berkas PO tidak dapat diubah.", code: "po_locked" }
-  const versionBody = {
-    status: 409,
+  const lockBody = problem(409, { detail: "Berkas PO tidak dapat diubah.", code: "po_locked" })
+  const versionBody = problem(409, {
     detail: "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
     code: "version_conflict",
-  }
+  })
   it.each([
     ["lock with code", new ApiError(409, lockBody, "Berkas PO tidak dapat diubah."), true, false],
-    ["stale version", new ApiError(409, versionBody, versionBody.detail), false, true],
+    ["stale version", new ApiError(409, versionBody, "x"), false, true],
     [
       "untagged 409 naming row_version",
       new ApiError(409, null, "row_version mismatch"),
@@ -136,7 +136,7 @@ describe("409 classification", () => {
       false,
     ],
     ["409 without code or version", new ApiError(409, null, "Konflik."), false, false],
-    ["other code", new ApiError(409, { code: "other" }, "Konflik."), false, false],
+    ["other code", new ApiError(409, problem(409, { code: "other" }), "Konflik."), false, false],
     ["422 with the lock code", new ApiError(422, lockBody, "x"), false, false],
     ["plain Error", new Error("row_version"), false, false],
   ] as const)("%s", (_, err, lock, version) => {

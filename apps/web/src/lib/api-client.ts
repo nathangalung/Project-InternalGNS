@@ -1,3 +1,5 @@
+import type { ProblemDetail } from "@/types/api"
+
 const BASE_URL = (import.meta.env.VITE_API_URL ?? "/api/v1").replace(/\/+$/, "")
 
 const TOKEN_KEY = "gns_token"
@@ -7,7 +9,7 @@ const REFRESH_PATH = "/auth/refresh"
 export class ApiError extends Error {
   constructor(
     readonly status: number,
-    readonly body: unknown,
+    readonly body: ProblemDetail | null,
     message: string,
   ) {
     super(message)
@@ -145,15 +147,34 @@ async function parseResponse(res: Response): Promise<unknown> {
 
 // Problem body, or null.
 //
-// Error bodies are read leniently: a proxy's HTML error page or an empty body
-// becomes null instead of a SyntaxError reaching the toast.
-export function parseProblem(text: string): unknown {
+// Error bodies are read leniently: a proxy's HTML error page, an empty body
+// or JSON that is not RFC 7807 becomes null instead of reaching the toast.
+export function parseProblem(text: string): ProblemDetail | null {
   if (!text) return null
   try {
-    return JSON.parse(text)
+    const parsed: unknown = JSON.parse(text)
+    return isProblem(parsed) ? parsed : null
   } catch {
     return null
   }
+}
+
+function optionalString(v: unknown): boolean {
+  return v === undefined || typeof v === "string"
+}
+
+// RFC 7807 shape check.
+function isProblem(v: unknown): v is ProblemDetail {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return false
+  const p = v as Record<string, unknown>
+  if (typeof p.status !== "number" || typeof p.title !== "string") return false
+  if (![p.type, p.detail, p.instance, p.code].every(optionalString)) return false
+  if (p.fields === undefined) return true
+  return (
+    !!p.fields &&
+    typeof p.fields === "object" &&
+    Object.values(p.fields).every((f) => typeof f === "string")
+  )
 }
 
 // Error from a failed response.
@@ -224,18 +245,14 @@ export async function apiList<T>(input: RequestInput): Promise<PaginatedList<T>>
 // API field name, which is an identifier and not Indonesian, so only its
 // values are shown -- never `key: value`, which reads as debug output in a
 // toast.
-export function extractErrorMessage(parsed: unknown, fallback: string): string {
-  if (!parsed || typeof parsed !== "object") return fallback
-  const body = parsed as { detail?: unknown; fields?: Record<string, unknown>; title?: unknown }
-  if (typeof body.detail === "string" && body.detail.length > 0) return body.detail
-  if (body.fields && typeof body.fields === "object") {
-    const parts = Object.values(body.fields)
-      .map((v) => String(v).trim())
-      .filter((v) => v.length > 0)
-    if (parts.length > 0) return parts.join("; ")
-  }
-  if (typeof body.title === "string" && body.title.length > 0) return body.title
-  return fallback
+export function extractErrorMessage(problem: ProblemDetail | null, fallback: string): string {
+  if (!problem) return fallback
+  if (problem.detail) return problem.detail
+  const parts = Object.values(problem.fields ?? {})
+    .map((v) => v.trim())
+    .filter((v) => v.length > 0)
+  if (parts.length > 0) return parts.join("; ")
+  return problem.title || fallback
 }
 
 export type TransferKind = "upload" | "download"
@@ -253,7 +270,7 @@ const TRANSFER_FALLBACK: Record<TransferKind, string> = {
 export function transferFailureMessage(
   kind: TransferKind,
   status: number,
-  problem: unknown,
+  problem: ProblemDetail | null,
 ): string {
   const fallback = TRANSFER_FALLBACK[kind]
   if (kind === "upload") {

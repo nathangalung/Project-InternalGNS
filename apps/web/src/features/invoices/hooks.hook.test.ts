@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ApiError } from "@/lib/api-client"
 import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
+import { problem } from "@/test/problem"
 import { invalidated, renderQueryHook, seed, settle, until } from "@/test/query"
 import type { InvoiceDetail } from "@/types/api"
 import * as api from "./api"
@@ -149,13 +150,13 @@ describe("useMarkInvoicePaid", () => {
     expect(toast.error).toHaveBeenCalledWith("File bukti pembayaran kosong.")
   })
 
-  it("hides the storage proxy's English detail", async () => {
+  it("shows the Indonesian transfer failure, not the proxy detail", async () => {
     m.presignPaymentProofUpload.mockRejectedValue(
-      new ApiError(502, '{"detail":"upload failed"}', "Bad Gateway"),
+      new ApiError(502, problem(502, { detail: "upload failed" }), "Gagal mengunggah berkas."),
     )
     const { result } = renderQueryHook(() => useMarkInvoicePaid())
     await settle(() => result.current.mutateAsync({ id: 4, proof: pdf() }))
-    expect(toast.error).toHaveBeenCalledWith("Gagal menandai invoice dibayar.")
+    expect(toast.error).toHaveBeenCalledWith("Gagal mengunggah berkas.")
   })
 })
 
@@ -229,10 +230,10 @@ describe("useUpdateInvoiceDates", () => {
     m.updateDates.mockRejectedValue(
       new ApiError(
         409,
-        {
+        problem(409, {
           code: "version_conflict",
           detail: "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
-        },
+        }),
         "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
       ),
     )
@@ -246,7 +247,9 @@ describe("useUpdateInvoiceDates", () => {
   })
 
   it("shows an untagged conflict without reloading", async () => {
-    m.updateDates.mockRejectedValue(new ApiError(409, { detail: "Konflik lain." }, "Konflik lain."))
+    m.updateDates.mockRejectedValue(
+      new ApiError(409, problem(409, { detail: "Konflik lain." }), "Konflik lain."),
+    )
     const { qc, result } = renderQueryHook(() => useUpdateInvoiceDates())
     seed(qc, views)
     await settle(() => result.current.mutateAsync(vars))
@@ -288,7 +291,11 @@ describe("useUploadInvoiceAttachment", () => {
 
   it("passes a 409 written for the user through", async () => {
     m.presignAttachmentUpload.mockRejectedValue(
-      new ApiError(409, '{"detail":"Invoice sudah dibayar."}', "Conflict"),
+      new ApiError(
+        409,
+        problem(409, { detail: "Invoice sudah dibayar." }),
+        "Invoice sudah dibayar.",
+      ),
     )
     const { result } = renderQueryHook(() => useUploadInvoiceAttachment())
     await settle(() => result.current.mutateAsync({ id: 4, file: pdf() }))
