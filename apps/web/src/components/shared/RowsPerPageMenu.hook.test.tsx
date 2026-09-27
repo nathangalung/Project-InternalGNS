@@ -55,3 +55,29 @@ describe("RowsPerPageMenu", () => {
     expect(document.body.getAttribute("style")).toBeNull()
   })
 })
+
+describe("RowsPerPageMenu controlled", () => {
+  it("reports open changes and follows the open prop", async () => {
+    const onOpenChange = vi.fn()
+    const menu = (open: boolean) => (
+      <RowsPerPageMenu
+        value={5}
+        options={[5, 10]}
+        onChange={() => {}}
+        triggerClassName=""
+        open={open}
+        onOpenChange={onOpenChange}
+      />
+    )
+    await mount(menu(false))
+    await click(trigger())
+    expect(onOpenChange).toHaveBeenLastCalledWith(true, expect.anything())
+    expect(byRole("menu")).toHaveLength(0)
+
+    await unmount()
+    await mount(menu(true))
+    expect(byRole("menuitemradio")).toHaveLength(2)
+    await press("Escape", byRole("menu")[0])
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, expect.anything())
+  })
+})
