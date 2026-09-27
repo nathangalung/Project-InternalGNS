@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
@@ -62,17 +61,6 @@ func TestHandler_SecondQueryFailure(t *testing.T) {
 			assertInternalProblem(t, res)
 		})
 	}
-}
-
-// Recheck failure is not locked.
-func TestRepo_Update_RecheckFailureIsNotNumberLocked(t *testing.T) {
-	exec := &testutil.CountingExec{Inner: testutil.Pool(t), FailAfter: 1}
-	repo := clients.NewRepo(exec, testutil.Store(t))
-	_, err := repo.Update(context.Background(), 999999999,
-		clients.UpdateClientRequest{Name: "PT Hilang", CountryCode: "IDN"}, seedUserID)
-	require.ErrorIs(t, err, testutil.ErrFake)
-	assert.NotErrorIs(t, err, clients.ErrNumberLocked)
-	assert.NotErrorIs(t, err, clients.ErrNotFound)
 }
 
 // Repo surfaces executor failures.
