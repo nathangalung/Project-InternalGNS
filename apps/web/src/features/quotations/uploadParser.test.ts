@@ -142,15 +142,17 @@ describe("rowsFromAOA rows", () => {
 // Fixture workbooks as data URLs.
 //
 // Written by apps/api/scripts/rfqfixtures (make rfq-fixtures) with excelize,
-// so the reader is checked against bytes it did not write itself.
-const fixtures = import.meta.glob<string>("./testdata/*.xlsx", {
+// so the reader is checked against bytes it did not write itself. The API
+// parser reads the same files from its testdata.
+const fixtureDir = "../../../../api/internal/quotations/testdata"
+const fixtures = import.meta.glob<string>("../../../../api/internal/quotations/testdata/*.xlsx", {
   query: "?inline",
   import: "default",
   eager: true,
 })
 
 async function fixtureFile(name: string): Promise<File> {
-  const url = fixtures[`./testdata/${name}`]
+  const url = fixtures[`${fixtureDir}/${name}`]
   if (!url) throw new Error(`fixture ${name} missing`)
   const buf = await (await fetch(url)).arrayBuffer()
   // Upper-case extension: detection ignores case.
@@ -262,7 +264,7 @@ describe("parseProductFile", () => {
   })
 
   it("has a case for every fixture", () => {
-    expect(Object.keys(fixtures).sort()).toEqual(cases.map((c) => `./testdata/${c.file}`).sort())
+    expect(Object.keys(fixtures).sort()).toEqual(cases.map((c) => `${fixtureDir}/${c.file}`).sort())
   })
 
   it.each(cases)("$file $why", async ({ file, want }) => {

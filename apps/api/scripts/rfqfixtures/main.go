@@ -1,13 +1,14 @@
 // Rfqfixtures writes RFQ upload fixtures.
 //
-// The web RFQ parser (apps/web/src/features/quotations/uploadParser.ts) is
-// tested against these real .xlsx files, so a change of reading library is
-// checked against the same bytes. Workbooks are built with excelize; cells
-// excelize cannot write (error values, formulas with or without a cached
-// result) are patched into the sheet XML afterwards, as Excel stores them.
+// The server RFQ parser (internal/quotations/rfq.go) is tested against
+// these real .xlsx files, which pinned the browser parser before it, so the
+// move to excelize was checked against the same bytes. Workbooks are built
+// with excelize; cells excelize cannot write (error values, formulas with
+// or without a cached result) are patched into the sheet XML afterwards,
+// as Excel stores them.
 // The output is deterministic: rerunning it rewrites identical bytes.
 //
-//	cd apps/api && go run ./scripts/rfqfixtures -out ../web/src/features/quotations/testdata
+//	cd apps/api && go run ./scripts/rfqfixtures -out internal/quotations/testdata
 package main
 
 import (
@@ -35,7 +36,7 @@ type fixture struct {
 }
 
 func main() {
-	out := flag.String("out", "../web/src/features/quotations/testdata", "output directory")
+	out := flag.String("out", "internal/quotations/testdata", "output directory")
 	flag.Parse()
 	if err := run(*out); err != nil {
 		log.Fatal(err)

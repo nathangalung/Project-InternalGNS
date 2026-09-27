@@ -250,7 +250,7 @@ gen-types: ## Generate web API types from Go DTOs
 	cd $(API_DIR) && go run ./cmd/gentypes -out ../web/src/types/generated.ts
 
 rfq-fixtures: ## Regenerate the RFQ upload .xlsx test fixtures
-	cd $(API_DIR) && go run ./scripts/rfqfixtures -out ../web/src/features/quotations/testdata
+	cd $(API_DIR) && go run ./scripts/rfqfixtures -out internal/quotations/testdata
 
 # Pre-commit hooks (.pre-commit-config.yaml). Uses `uv tool` to manage
 # the pre-commit binary so the repo stays python-toolchain-free.

@@ -99,6 +99,7 @@ Feature: Quotation edges and access
       | finance     | POST   | /quotations/{id}/send          | 403  |
       | finance     | PATCH  | /quotations/{id}/contact       | 403  |
       | finance     | GET    | /quotations/{id}/pdf           | 403  |
+      | finance     | POST   | /quotations/rfq                | 403  |
       | operational | GET    | /quotations                    | 200  |
       | operational | GET    | /quotations/{id}               | 200  |
       | superadmin  | GET    | /quotations/{id}/requests      | 200  |

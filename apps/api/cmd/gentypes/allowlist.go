@@ -98,6 +98,7 @@ var allowlist = []pkg{
 		{Go: "ItemRequestRow", TS: "QuotationItemRequestRow"},
 		{Go: "ItemRequestCreate", TS: "QuotationItemRequestCreateInput", Input: true},
 		{Go: "ItemRequestUpdate", TS: "QuotationItemRequestUpdateInput", Input: true},
+		{Go: "RFQRows", TS: "QuotationRfqRows"},
 	}},
 	{"internal/purchaseorders", []entry{
 		{Go: "Status", TS: "PoBackendStatus"},

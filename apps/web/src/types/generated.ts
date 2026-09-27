@@ -811,6 +811,11 @@ export type QuotationRevisionRow = {
     updatedAt: string;
 };
 
+// From quotations/rfq.go
+export type QuotationRfqRows = {
+    rows: MatchRowInput[];
+};
+
 // From quotations/dto.go
 export type QuotationSaved = {
     id: number;

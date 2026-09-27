@@ -18,6 +18,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.Post("/", h.Create)
 	r.Get("/stats", h.Stats)
 	r.Get("/export.xlsx", h.Export)
+	r.Post("/rfq", h.UploadRFQ)
 	r.Get("/{id}", h.Get)
 	r.Put("/{id}", h.Update)
 	r.Patch("/{id}/status", h.ChangeStatus)

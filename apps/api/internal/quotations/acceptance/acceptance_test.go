@@ -33,6 +33,7 @@ type scenarioState struct {
 	userID  int64
 	docNos  [2]string
 	pdfPath string
+	rfq     rfqState
 	// Revision fixtures.
 	origID int64
 	newID  int64
@@ -350,6 +351,7 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		})
 		registerStatusSteps(sc, state)
 		registerEdgeSteps(sc, state)
+		registerRFQSteps(sc, state)
 
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
 		sc.Step(`^the quotation domain is empty$`, state.emptyDomain)
