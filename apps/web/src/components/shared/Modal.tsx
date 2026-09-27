@@ -64,7 +64,7 @@ export default function Modal({ title, onClose, children, footer, className }: M
     if (decision === "close") onCloseRef.current()
   }
 
-  // A child that autofocused keeps focus; otherwise the panel takes it.
+  // Autofocused child wins, else panel.
   const initialFocus = () => {
     const popup = popupRef.current
     return popup?.contains(document.activeElement) ? false : popup

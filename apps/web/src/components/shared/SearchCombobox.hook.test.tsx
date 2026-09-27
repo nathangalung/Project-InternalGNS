@@ -17,7 +17,7 @@ type HarnessProps = {
   loading?: boolean
 }
 
-// Picker in a modal, filtering locally.
+// Modal picker, local filtering.
 function Harness({ onClose = () => {}, onPick = () => {}, loading = false }: HarnessProps) {
   const [value, setValue] = useState<City | null>(null)
   const [query, setQuery] = useState("")

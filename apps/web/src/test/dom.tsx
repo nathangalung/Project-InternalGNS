@@ -73,7 +73,7 @@ export function byRole(role: string, name?: string | RegExp): HTMLElement[] {
   })
 }
 
-// Name from labelledby, label, or text.
+// Name from aria, label, text.
 export function accessibleName(el: HTMLElement): string {
   const ids = el.getAttribute("aria-labelledby")
   if (ids) {

@@ -70,7 +70,7 @@ export default function IdentityCard({
   const qtyId = useId()
   const canCopy = form.requestedKodeImpaNama.trim().length > 0
   const activeRequestLabel = form.requestedKodeImpaNama.trim()
-  // Open on focus, close unless another took over.
+  // Per-field open and close.
   const openProps = (key: DropdownKey) => ({
     onOpenChange: (open: boolean) => (open ? setOpenDropdown(key) : closeIfMatch(key)),
   })

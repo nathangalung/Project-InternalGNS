@@ -33,7 +33,7 @@ type SearchComboboxProps<T> = {
   status?: ReactNode
 }
 
-// Typed search picker, Base UI combobox.
+// Search picker on Base UI.
 //
 // The field the unit, country and vendor pickers share: the value is one of
 // the listed items, typing drops it and searches again, and the list opens
