@@ -237,9 +237,6 @@ SUPERADMIN2_PASSWORD=<another long passphrase, also change after first login>
 MINIO_USER=gns-<openssl rand -hex 6>
 MINIO_PASSWORD=<from openssl rand>
 
-# Web app origin for the MinIO CORS allowance, no trailing slash.
-WEB_ORIGIN=https://internalgns.yourdomain.id
-
 CORETAX_SELLER_TIN=<16-digit NPWP, no separators>
 CORETAX_SELLER_IDTKU=<NPWP + 6-digit branch, e.g. ...000000>
 

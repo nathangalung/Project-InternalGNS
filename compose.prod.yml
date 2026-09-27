@@ -68,8 +68,6 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
-      # Browser PUTs presigned URLs cross-origin; allow the web app origin.
-      MINIO_API_CORS_ALLOW_ORIGIN: ${WEB_ORIGIN}
     command: server /data --console-address ":9001"
     volumes:
       - internalgns_minio:/data
