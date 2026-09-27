@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto"
 import { readFileSync } from "node:fs"
+import type { InvoiceDetail, PurchaseOrderRow, QuotationDetail } from "../../src/types/generated"
 import type { Tokens } from "./api"
 import { apiURL, authFile } from "./env"
 
@@ -21,38 +22,11 @@ export type SeedClient = {
 export type SeedVendor = { id: number; name: string }
 export type SeedItem = { id: number; name: string; impaCode: string; vendorProductId?: number }
 export type SeedLine = { item: SeedItem; qty: number; price: number; cost?: number }
-export type SeedQuotation = { id: number; quotationNo: string; version: number; status: string }
+export type SeedQuotation = Pick<QuotationDetail, "id" | "quotationNo" | "version" | "status">
 
-export type Transition = { to: string; label: string; requiresNote: boolean }
+export type { QuotationDetail }
 
-export type QuotationDetail = SeedQuotation & {
-  contactId?: number
-  companyClientId: number
-  grandTotal: string
-  notes?: string
-  vesselName?: string
-  validityDays?: number
-  rowVersion: number
-  allowedTransitions: Transition[]
-  canRevise: boolean
-}
-
-export type PurchaseOrder = {
-  id: number
-  poNumber: string
-  quotationId: number
-  quotationNo: string
-  companyClientId: number
-  status: string
-  fileName?: string
-  notes?: string
-  discountPct: string
-  poTotalProduk: string
-  poGrandTotal: string
-  deliveryNoteNumber?: string
-  rowVersion: number
-  allowedTransitions: Transition[]
-}
+export type PurchaseOrder = PurchaseOrderRow
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
 
@@ -318,7 +292,7 @@ export class SalesSeed {
   // Deliver a PO fully.
   //
   // File, work, delivery; the server files a draft invoice.
-  async deliver(po: PurchaseOrder): Promise<{ id: number; status: string }> {
+  async deliver(po: PurchaseOrder): Promise<InvoiceDetail> {
     await this.attachPoFile(po)
     await this.setPoStatus(po.id, "ON_PROGRESS")
     await this.setPoStatus(po.id, "DELIVERED")

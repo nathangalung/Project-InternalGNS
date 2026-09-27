@@ -1,9 +1,11 @@
 import { randomBytes } from "node:crypto"
+import type { LoginResponse, UserRow } from "../../src/types/generated"
 import { apiURL } from "./env"
 
-export type Tokens = { token: string; refreshToken?: string }
+// Saved session tokens.
+export type Tokens = Pick<LoginResponse, "token"> & Partial<Pick<LoginResponse, "refreshToken">>
 
-export type User = { id: number; email: string; name: string; role: string; isActive: boolean }
+export type User = UserRow
 
 export type CallInit = RequestInit & { token?: string; ip?: string }
 

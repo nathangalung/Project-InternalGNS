@@ -1,4 +1,10 @@
 import { randomBytes } from "node:crypto"
+import type {
+  InvoiceDetail,
+  PurchaseOrderRow,
+  QuotationCreated,
+  UnitRow,
+} from "../../src/types/generated"
 import { call, expectOk, generatePassword, type User } from "./api"
 import { uploadPoFile } from "./sales"
 
@@ -58,24 +64,18 @@ export async function deactivateClient(token: string, id: number): Promise<void>
   await send(token, "PUT", `/clients/${id}`, { ...c, isActive: false })
 }
 
-export type SeedInvoice = {
-  id: number
-  quotationId: number
-  quotationNo: string
-  invoiceNo: string
-  poNumber?: string
-  status: string
-}
-
-type InvoiceRow = SeedInvoice & { rowVersion: number }
+export type SeedInvoice = Pick<
+  InvoiceDetail,
+  "id" | "quotationId" | "quotationNo" | "invoiceNo" | "poNumber" | "status"
+>
 
 // Quotation to delivered PO.
 //
 // Delivering the PO files the draft invoice, the only way one is made. The
 // line carries its address, which the ON_PROGRESS gate requires.
 export async function deliveredInvoice(token: string, client: SeedClient): Promise<SeedInvoice> {
-  const units = await json<{ id: number }[]>(call("/units", { token }), "list units")
-  const q = await json<{ id: number }>(
+  const units = await json<UnitRow[]>(call("/units", { token }), "list units")
+  const q = await json<QuotationCreated>(
     call("/quotations", {
       method: "POST",
       token,
@@ -98,7 +98,7 @@ export async function deliveredInvoice(token: string, client: SeedClient): Promi
   )
   await send(token, "POST", `/quotations/${q.id}/send`)
   await send(token, "PATCH", `/quotations/${q.id}/status`, { status: "accepted" })
-  const po = await json<{ id: number }>(
+  const po = await json<PurchaseOrderRow>(
     call(`/purchase-orders/by-quotation/${q.id}`, { token }),
     "get PO",
   )
@@ -111,7 +111,7 @@ export async function deliveredInvoice(token: string, client: SeedClient): Promi
 
 // Newest invoice of a quotation.
 export async function invoiceOfQuotation(token: string, quotationId: number): Promise<SeedInvoice> {
-  const inv = await json<InvoiceRow>(
+  const inv = await json<InvoiceDetail>(
     call(`/invoices/by-quotation/${quotationId}`, { token }),
     "get invoice",
   )
@@ -143,7 +143,7 @@ export async function patchInvoiceDates(
   invoiceDate: string,
   dueDate: string,
 ): Promise<Response> {
-  const inv = await json<InvoiceRow>(call(`/invoices/${id}`, { token }), `get invoice ${id}`)
+  const inv = await json<InvoiceDetail>(call(`/invoices/${id}`, { token }), `get invoice ${id}`)
   return call(`/invoices/${id}/dates`, {
     method: "PATCH",
     token,
