@@ -162,7 +162,7 @@ func deliveryNoteItems(items []PurchaseOrderItem) []dnItem {
 			No:              len(out) + 1,
 			Qty:             pdfgen.FormatQty(it.Qty),
 			Unit:            pdfgen.LatexEscape(unit),
-			Name:            pdfgen.LatexEscape(it.ItemName),
+			Name:            pdfgen.LatexBreakable(it.ItemName),
 			ShipDestination: pdfgen.LatexEscape(ship),
 		})
 	}

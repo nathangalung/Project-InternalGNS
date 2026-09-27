@@ -2,7 +2,10 @@ package purchaseorders
 
 import (
 	"reflect"
+	"strings"
 	"testing"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 )
 
 // Goods only, without gaps (PO-12).
@@ -12,6 +15,7 @@ import (
 func TestDeliveryNoteItems(t *testing.T) {
 	pcs, box := "PCS", "BOX"
 	deck, hold, blank := "Deck & Hold #2", "Gudang 50%", "  "
+	longPart := "GNS" + strings.Repeat("7X4Q", 14) + "Z"
 	product := func(name, qty string, unit, ship *string) PurchaseOrderItem {
 		return PurchaseOrderItem{ItemType: "product", ItemName: name, Qty: qty, UnitCode: unit, ShipDestination: ship}
 	}
@@ -72,6 +76,11 @@ func TestDeliveryNoteItems(t *testing.T) {
 			"a blank shipping address leaves goods blank",
 			[]PurchaseOrderItem{product("A", "1", &pcs, nil), {ItemType: "shipping", ItemName: "Pengiriman", Qty: "1.00", ShipDestination: &blank}},
 			[]dnItem{{No: 1, Qty: "1", Unit: "PCS", Name: "A"}},
+		},
+		{
+			"a long part number gets break points",
+			[]PurchaseOrderItem{product(longPart, "1", &pcs, &hold)},
+			[]dnItem{{No: 1, Qty: "1", Unit: "PCS", Name: pdfgen.LatexBreakable(longPart), ShipDestination: `Gudang 50\%`}},
 		},
 		{"only a shipping charge", []PurchaseOrderItem{shipping}, []dnItem{}},
 	}
