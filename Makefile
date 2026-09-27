@@ -8,7 +8,7 @@
         build build-api build-web \
         test test-db-reset test-api test-api-ci test-web \
         cover cover-api cover-web e2e \
-        lint lint-fix fmt types \
+        lint lint-fix fmt types gen-types \
         hooks-install hooks-run \
         docker-build docker-build-api docker-build-web \
         orphan-blobs-dry orphan-blobs-purge \
@@ -244,6 +244,10 @@ fmt: ## Format api and web
 
 types: ## TypeScript typecheck (FE)
 	cd $(WEB_DIR) && bun run typecheck
+
+# Web API types from the Go DTOs. CI reruns this and fails on any diff.
+gen-types: ## Generate web API types from Go DTOs
+	cd $(API_DIR) && go run ./cmd/gentypes -out ../web/src/types/generated.ts
 
 # Pre-commit hooks (.pre-commit-config.yaml). Uses `uv tool` to manage
 # the pre-commit binary so the repo stays python-toolchain-free.

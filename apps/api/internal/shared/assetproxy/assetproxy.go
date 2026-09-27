@@ -41,6 +41,11 @@ type PresignDownload struct {
 	ExpiresAt   int64  `json:"expiresAt"`
 }
 
+// KeyRequest attaches an upload.
+type KeyRequest struct {
+	ObjectKey string `json:"objectKey"`
+}
+
 // PresignFileDownload adds the name.
 // FileName is null when the record never stored one.
 type PresignFileDownload struct {
@@ -155,9 +160,7 @@ func UpdateKey(d Descriptor) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		var req struct {
-			ObjectKey string `json:"objectKey"`
-		}
+		var req KeyRequest
 		if !httpx.DecodeJSON(w, r, &req) {
 			return
 		}
