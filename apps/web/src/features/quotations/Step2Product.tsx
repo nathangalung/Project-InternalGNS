@@ -1,5 +1,6 @@
 import type React from "react"
 import { useRef, useState } from "react"
+import RowsPerPageMenu from "@/components/shared/RowsPerPageMenu"
 import { matchRows } from "@/features/items/api"
 import { getPageNumbers } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
@@ -250,74 +251,19 @@ export default function Step2Product({
           }`}
         >
           <div className="flex flex-wrap items-center gap-3">
-            <div className="relative inline-block">
-              <button
-                type="button"
-                onClick={() => setIsRowDropdownOpen(!isRowDropdownOpen)}
-                aria-haspopup="listbox"
-                aria-expanded={isRowDropdownOpen}
-                className={`flex items-center gap-2 rounded-sm border border-dark-200 bg-white px-2.5 py-[5px] text-[13px] text-[#4A4455] ${ui.focusRing}`}
-              >
-                {prodPageSize} Baris
-                <svg aria-hidden="true" width="10" height="6" viewBox="0 0 10 6" fill="none">
-                  <path
-                    d="M1 1L5 5L9 1"
-                    stroke="#4A4455"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-              {isRowDropdownOpen && (
-                <div className="absolute bottom-[calc(100%+8px)] left-0 z-50 flex w-[140px] flex-col rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-2 shadow-[0px_4px_16px_rgba(0,0,0,0.08)]">
-                  {[5, 10, 15].map((val) => {
-                    const isActive = prodPageSize === val
-                    return (
-                      <button
-                        key={val}
-                        type="button"
-                        onClick={() => {
-                          setProdPageSize(val)
-                          setProdPage(1)
-                          setIsRowDropdownOpen(false)
-                        }}
-                        className={`flex h-8 w-full items-center px-4 py-1 ${ui.focusRingInset} ${
-                          isActive ? "justify-between" : "justify-start"
-                        }`}
-                      >
-                        <span
-                          className={`text-xs ${
-                            isActive
-                              ? "font-semibold text-primary-700"
-                              : "font-normal text-[#4A4455]"
-                          }`}
-                        >
-                          {val} Baris
-                        </span>
-                        {isActive && (
-                          <svg
-                            aria-hidden="true"
-                            width="14"
-                            height="11"
-                            viewBox="0 0 14 11"
-                            fill="none"
-                          >
-                            <path
-                              d="M1 5.5L4.5 9L13 1"
-                              stroke="#630ED4"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
+            <RowsPerPageMenu
+              value={prodPageSize}
+              options={[5, 10, 15]}
+              onChange={(n) => {
+                setProdPageSize(n)
+                setProdPage(1)
+              }}
+              open={isRowDropdownOpen}
+              onOpenChange={setIsRowDropdownOpen}
+              triggerClassName={`flex items-center gap-2 rounded-sm border border-dark-200 bg-white px-2.5 py-[5px] text-[13px] text-[#4A4455] ${ui.focusRing}`}
+              panelClassName="w-[140px] shadow-[0px_4px_16px_rgba(0,0,0,0.08)]"
+              rowClassName="px-4"
+            />
             <span className="text-xs font-medium text-[#6B7280]">
               Menampilkan {totalProds === 0 ? 0 : start + 1}–
               {Math.min(start + prodPageSize, totalProds)} dari {totalProds} produk

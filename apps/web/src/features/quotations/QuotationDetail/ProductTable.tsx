@@ -1,5 +1,6 @@
 import { useState } from "react"
 import EntityLink from "@/components/shared/EntityLink"
+import RowsPerPageMenu from "@/components/shared/RowsPerPageMenu"
 import type { ProductRow } from "@/features/quotations/types"
 import { formatRupiah as formatRp } from "@/lib/format"
 import { ui } from "@/lib/ui"
@@ -29,7 +30,6 @@ const tdProfit =
 export default function ProductTable({ products, showProfit = true }: ProductTableProps) {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(5)
-  const [isRowDropdownOpen, setIsRowDropdownOpen] = useState(false)
   const [expanded, setExpanded] = useState(true)
 
   if (products.length === 0) return null
@@ -51,72 +51,15 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
           <span className="text-[13px] font-semibold text-[#374151]">{products.length} produk</span>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsRowDropdownOpen((o) => !o)}
-              aria-haspopup="listbox"
-              aria-expanded={isRowDropdownOpen}
-              className={`flex items-center gap-1.5 rounded-sm border border-dark-200 bg-white px-2.5 py-[5px] text-xs text-[#4A4455] ${ui.focusRing}`}
-            >
-              {pageSize} Baris
-              <svg aria-hidden="true" width="10" height="6" viewBox="0 0 10 6" fill="none">
-                <path
-                  d="M1 1L5 5L9 1"
-                  stroke="#4A4455"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-            {isRowDropdownOpen && (
-              <div className="absolute bottom-[calc(100%+8px)] left-0 z-50 flex w-[162px] flex-col rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-2 shadow-[0px_0px_0px_1px_rgba(0,0,0,0.05)]">
-                {PAGE_SIZE_OPTIONS.map((val) => {
-                  const isActive = pageSize === val
-                  return (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => {
-                        setPageSize(val)
-                        setPage(1)
-                        setIsRowDropdownOpen(false)
-                      }}
-                      className={`flex h-8 w-full items-center px-5 py-1 ${ui.focusRingInset} ${
-                        isActive ? "justify-between" : "justify-start"
-                      }`}
-                    >
-                      <span
-                        className={`text-xs ${
-                          isActive ? "font-semibold text-primary-700" : "font-normal text-[#4A4455]"
-                        }`}
-                      >
-                        {val} Baris
-                      </span>
-                      {isActive && (
-                        <svg
-                          aria-hidden="true"
-                          width="14"
-                          height="11"
-                          viewBox="0 0 14 11"
-                          fill="none"
-                        >
-                          <path
-                            d="M1 5.5L4.5 9L13 1"
-                            stroke="#630ED4"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+          <RowsPerPageMenu
+            value={pageSize}
+            options={PAGE_SIZE_OPTIONS}
+            onChange={(n) => {
+              setPageSize(n)
+              setPage(1)
+            }}
+            triggerClassName={`flex items-center gap-1.5 rounded-sm border border-dark-200 bg-white px-2.5 py-[5px] text-xs text-[#4A4455] ${ui.focusRing}`}
+          />
           <div className="flex items-center gap-1">
             <button
               type="button"
