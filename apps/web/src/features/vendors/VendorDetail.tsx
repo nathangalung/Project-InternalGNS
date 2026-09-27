@@ -38,7 +38,7 @@ function vendorInitials(name: string): string {
 }
 
 function getContactField(
-  contactInfo: VendorContactInfo | undefined,
+  contactInfo: VendorContactInfo | null | undefined,
   key: "email" | "phone",
 ): string {
   return contactInfo?.[key] ?? ""

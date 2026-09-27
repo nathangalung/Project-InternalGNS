@@ -1,14 +1,21 @@
 import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
 import type {
+  AddVendorToItemInput,
   AdvancedSearchResponse,
+  CreateItemInput,
   ItemPriceHistoryRow,
   ItemRow,
   ItemVendorRow,
   MatchRowInput,
+  MatchRowsInput,
   MatchRowsResponse,
+  ObjectKeyInput,
   PresignDownload,
   PresignUpload,
+  UpdateItemInput,
 } from "@/types/api"
+
+export type { AddVendorToItemInput, UpdateItemInput } from "@/types/api"
 
 export type ItemListParams = {
   q?: string
@@ -35,14 +42,6 @@ export async function list(params: ItemListParams = {}): Promise<PaginatedList<I
 
 export async function get(id: number): Promise<ItemRow> {
   return apiRequest<ItemRow>({ path: `/items/${id}` })
-}
-
-export type UpdateItemInput = {
-  name: string
-  impaCode?: string
-  defaultUnitId?: number
-  description?: string
-  isActive: boolean
 }
 
 export async function update(id: number, input: UpdateItemInput): Promise<ItemRow> {
@@ -86,19 +85,16 @@ export async function matchRows(
   return apiRequest<MatchRowsResponse>({
     path: "/items/match-rows",
     method: "POST",
-    body: { rows, minScore: options.minScore, autoCreate: options.autoCreate },
+    body: {
+      rows,
+      minScore: options.minScore,
+      autoCreate: options.autoCreate,
+    } satisfies MatchRowsInput,
   })
 }
 
 export async function listVendors(itemId: number): Promise<ItemVendorRow[]> {
   return apiRequest<ItemVendorRow[]>({ path: `/items/${itemId}/vendors` })
-}
-
-export type AddVendorToItemInput = {
-  vendorId: number
-  vendorSku?: string
-  costPrice?: string
-  productUrl?: string
 }
 
 export async function addVendor(
@@ -122,14 +118,6 @@ export async function priceHistory(
   })
 }
 
-type CreateItemInput = {
-  name: string
-  impaCode?: string
-  defaultUnitId?: number
-  description?: string
-  isActive?: boolean
-}
-
 export async function create(input: CreateItemInput): Promise<ItemRow> {
   return apiRequest<ItemRow>({
     path: "/items",
@@ -151,6 +139,6 @@ export async function updateImage(id: number, objectKey: string): Promise<void> 
   await apiRequest<void>({
     path: `/items/${id}/image`,
     method: "PATCH",
-    body: { objectKey },
+    body: { objectKey } satisfies ObjectKeyInput,
   })
 }

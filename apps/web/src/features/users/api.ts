@@ -1,5 +1,11 @@
 import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
-import type { Role, UserRow } from "@/types/api"
+import type {
+  ChangeUserPasswordInput,
+  CreateUserInput,
+  Role,
+  UpdateUserInput as UserProfileInput,
+  UserRow,
+} from "@/types/api"
 
 export type ListParams = {
   q?: string
@@ -20,14 +26,6 @@ export async function get(id: number): Promise<UserRow> {
   return apiRequest<UserRow>({ path: `/users/${id}` })
 }
 
-export type CreateUserInput = {
-  name: string
-  email: string
-  password: string
-  role: Role
-  isActive?: boolean
-}
-
 export async function create(input: CreateUserInput): Promise<UserRow> {
   return apiRequest<UserRow>({
     path: "/users",
@@ -36,13 +34,10 @@ export async function create(input: CreateUserInput): Promise<UserRow> {
   })
 }
 
-export type UpdateUserInput = {
-  name: string
-  email: string
-  role: Role
-  isActive: boolean
-  password?: string
-}
+// Profile plus optional password.
+//
+// The password goes to its own PATCH after the PUT.
+export type UpdateUserInput = UserProfileInput & { password?: string }
 
 // Profile saved, password PATCH failed.
 export class PartialUserUpdateError extends Error {
@@ -65,7 +60,7 @@ export async function update(id: number, input: UpdateUserInput): Promise<UserRo
       await apiRequest<void>({
         path: `/users/${id}/password`,
         method: "PATCH",
-        body: { password },
+        body: { password } satisfies ChangeUserPasswordInput,
       })
     } catch (err) {
       throw new PartialUserUpdateError(err)

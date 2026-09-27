@@ -7,6 +7,8 @@ import {
   type PaginatedList,
 } from "@/lib/api-client"
 import type {
+  QuotationContactInput,
+  QuotationCreated,
   QuotationCreateInput,
   QuotationDetail,
   QuotationItemRequestCreateInput,
@@ -14,9 +16,13 @@ import type {
   QuotationItemRequestUpdateInput,
   QuotationListParams,
   QuotationListRow,
+  QuotationReviseInput,
   QuotationRevisionRow,
+  QuotationSaved,
+  QuotationSendInput,
   QuotationStatus,
   QuotationStatusCount,
+  QuotationStatusInput,
   QuotationUpdateInput,
 } from "@/types/api"
 
@@ -54,8 +60,8 @@ export async function get(id: number): Promise<QuotationDetail> {
   return apiRequest<QuotationDetail>({ path: `/quotations/${id}` })
 }
 
-export async function create(input: QuotationCreateInput): Promise<{ id: number }> {
-  return apiRequest<{ id: number }>({
+export async function create(input: QuotationCreateInput): Promise<QuotationCreated> {
+  return apiRequest<QuotationCreated>({
     path: "/quotations",
     method: "POST",
     body: input,
@@ -66,8 +72,8 @@ export async function update(
   id: number,
   input: QuotationUpdateInput,
   rowVersion: number,
-): Promise<{ id: number; rowVersion: number }> {
-  return apiRequest<{ id: number; rowVersion: number }>({
+): Promise<QuotationSaved> {
+  return apiRequest<QuotationSaved>({
     path: `/quotations/${id}`,
     method: "PUT",
     body: input,
@@ -83,7 +89,7 @@ export async function changeStatus(
   await apiRequest<void>({
     path: `/quotations/${id}/status`,
     method: "PATCH",
-    body: { status, note },
+    body: { status, note } satisfies QuotationStatusInput,
   })
 }
 
@@ -91,18 +97,18 @@ export async function send(id: number, note?: string): Promise<void> {
   await apiRequest<void>({
     path: `/quotations/${id}/send`,
     method: "POST",
-    body: note ? { note } : undefined,
+    body: note ? ({ note } satisfies QuotationSendInput) : undefined,
   })
 }
 
 // Clone as a new draft.
 //
 // Only a sent quotation can be revised. The original moves to Revisi and is frozen; the reply carries the new id.
-export async function revise(id: number, note?: string): Promise<{ id: number }> {
-  return apiRequest<{ id: number }>({
+export async function revise(id: number, note?: string): Promise<QuotationCreated> {
+  return apiRequest<QuotationCreated>({
     path: `/quotations/${id}/revise`,
     method: "POST",
-    body: note ? { note } : {},
+    body: (note ? { note } : {}) satisfies QuotationReviseInput,
   })
 }
 
@@ -110,7 +116,7 @@ export async function updateQuotationContact(id: number, contactId: number): Pro
   await apiRequest<void>({
     path: `/quotations/${id}/contact`,
     method: "PATCH",
-    body: { contactId },
+    body: { contactId } satisfies QuotationContactInput,
   })
 }
 
