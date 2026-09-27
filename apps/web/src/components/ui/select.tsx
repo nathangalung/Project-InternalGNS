@@ -11,6 +11,13 @@ import { cn, type WithClassName } from "@/lib/utils"
 
 const Select = SelectPrimitive.Root
 
+// Focus look kept while open.
+//
+// Base UI moves focus into the list, so the trigger's focus border would
+// drop the moment it opens; the hand-built trigger kept it.
+const openRing =
+  "data-popup-open:border-primary-600 data-popup-open:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
+
 function SelectValue({ className, ...props }: WithClassName<SelectPrimitive.Value.Props>) {
   return (
     <SelectPrimitive.Value
@@ -29,7 +36,12 @@ function SelectTrigger({
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
-      className={cn(field().selectTrigger(), "gap-2 data-placeholder:text-dark-500", className)}
+      className={cn(
+        field().selectTrigger(),
+        "gap-2 data-placeholder:text-dark-500",
+        openRing,
+        className,
+      )}
       {...props}
     >
       {children}
