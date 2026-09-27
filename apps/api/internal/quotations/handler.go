@@ -359,7 +359,7 @@ func (h *Handler) ChangeContact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.ContactID == 0 {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"contactId": "required"}))
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"contactId": "Pilih narahubung."}))
 		return
 	}
 
@@ -371,8 +371,13 @@ func (h *Handler) ChangeContact(w http.ResponseWriter, r *http.Request) {
 		}
 		if errors.Is(err, ErrContactNotAllowed) {
 			httperr.Render(w, httperr.Unprocessable(map[string]string{
-				"contactId": "contact not found or does not belong to this client",
+				"contactId": "Narahubung tidak ditemukan, sudah nonaktif, atau bukan milik klien ini.",
 			}))
+			return
+		}
+		if errors.Is(err, ErrContactLocked) {
+			httperr.Render(w, httperr.UnprocessableDetail(
+				"Narahubung hanya dapat diganti saat quotation berstatus Draf atau Disetujui.", nil))
 			return
 		}
 		httperr.RenderDBErr(w, err)

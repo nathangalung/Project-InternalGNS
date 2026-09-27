@@ -630,3 +630,53 @@ func TestRepo_List_ProductCount(t *testing.T) {
 		})
 	}
 }
+
+// Contact changes follow status.
+// Only a draft (edited in the wizard) and an accepted quotation (the PO
+// gate's Ganti Narahubung) may take another contact.
+func TestRepo_UpdateContact_StatusGate(t *testing.T) {
+	cases := []struct {
+		status  string
+		allowed bool
+	}{
+		{"draft", true},
+		{"accepted", true},
+		{"sent", false},
+		{"revision", false},
+		{"rejected", false},
+		{"cancelled", false},
+		{"expired", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.status, func(t *testing.T) {
+			ctx, repo, tx := newRepo(t)
+			id, err := repo.Create(ctx, sampleCreate(), seedUserID)
+			require.NoError(t, err)
+			var altContactID int64
+			require.NoError(t, tx.QueryRow(ctx, `
+				INSERT INTO company_contacts (company_id, name, country_code, created_by, updated_by)
+				VALUES ($1, 'Alt Contact', 'IDN', $2, $2)
+				RETURNING id`, seedCompanyID, seedUserID).Scan(&altContactID))
+			_, err = tx.Exec(ctx, `UPDATE quotations SET status = $2 WHERE id = $1`, id, tc.status)
+			require.NoError(t, err)
+
+			err = repo.UpdateContact(ctx, id, altContactID, seedUserID)
+			d, getErr := repo.GetDetail(ctx, id)
+			require.NoError(t, getErr)
+			if tc.allowed {
+				require.NoError(t, err)
+				assert.Equal(t, altContactID, *d.ContactID)
+				return
+			}
+			assert.ErrorIs(t, err, quotations.ErrContactLocked)
+			assert.NotEqual(t, altContactID, derefOr(d.ContactID, 0), "refused change writes nothing")
+		})
+	}
+}
+
+func derefOr(p *int64, v int64) int64 {
+	if p == nil {
+		return v
+	}
+	return *p
+}

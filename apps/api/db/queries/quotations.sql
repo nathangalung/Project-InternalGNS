@@ -183,8 +183,11 @@ RETURNING id;
 
 
 -- name: quotations.update_contact
+-- Only a draft or an accepted quotation takes another contact: the draft in
+-- the wizard, the accepted one when the PO gate asks for an active contact.
+-- The status test sits on the updated row, so a concurrent move re-checks it.
 WITH q AS (
-    SELECT id, company_client_id FROM quotations WHERE id = $1
+    SELECT id, company_client_id, status FROM quotations WHERE id = $1
 ),
 upd AS (
     UPDATE quotations
@@ -197,11 +200,13 @@ upd AS (
                                 AND cc.company_id = q.company_client_id
                                 AND cc.is_active = TRUE
      WHERE quotations.id = q.id
+       AND quotations.status IN ('draft', 'accepted')
     RETURNING quotations.id
 )
 SELECT
     CASE
         WHEN NOT EXISTS(SELECT 1 FROM q)   THEN 'not_found'
-        WHEN NOT EXISTS(SELECT 1 FROM upd) THEN 'contact_invalid'
-        ELSE 'ok'
+        WHEN EXISTS(SELECT 1 FROM upd)     THEN 'ok'
+        WHEN (SELECT status FROM q) NOT IN ('draft', 'accepted') THEN 'status_locked'
+        ELSE 'contact_invalid'
     END AS result;

@@ -75,6 +75,10 @@ func TestHandler_ChangeContact(t *testing.T) {
 	srv, _ := resetServer(t)
 	id := mustCreate(t, srv)
 	sibling := insertContact(t, seedCompanyID, "Kontak Pengganti")
+	sent := mustCreate(t, srv)
+	res := doRaw(t, http.MethodPost, srv.URL+idPath(sent, "/send"), `{}`, nil)
+	res.Body.Close()
+	require.Equal(t, http.StatusNoContent, res.StatusCode)
 	foreign := insertContact(t, 2, "Kontak Klien Lain")
 
 	cases := []struct {
@@ -87,6 +91,8 @@ func TestHandler_ChangeContact(t *testing.T) {
 		{"bad id", "/quotations/abc/contact", `{"contactId":1}`, http.StatusBadRequest, ""},
 		{"bad json", idPath(id, "/contact"), `{`, http.StatusBadRequest, ""},
 		{"missing contact", idPath(id, "/contact"), `{"contactId":0}`, http.StatusUnprocessableEntity, "contactId"},
+		{"sent quotation", idPath(sent, "/contact"),
+			`{"contactId":` + strconv.FormatInt(sibling, 10) + `}`, http.StatusUnprocessableEntity, ""},
 		{"unknown quotation", "/quotations/9999999/contact",
 			`{"contactId":` + strconv.FormatInt(sibling, 10) + `}`, http.StatusNotFound, ""},
 		{"contact of another client", idPath(id, "/contact"),
@@ -376,4 +382,40 @@ func TestHandler_List_EmptyIsArray(t *testing.T) {
 	raw, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 	assert.JSONEq(t, `[]`, string(raw))
+}
+
+// Refusals read in Indonesian.
+func TestHandler_ChangeContact_Messages(t *testing.T) {
+	srv, _ := resetServer(t)
+	id := mustCreate(t, srv)
+	foreign := insertContact(t, 2, "Kontak Klien Lain")
+	sibling := insertContact(t, seedCompanyID, "Kontak Pengganti")
+	sent := mustCreate(t, srv)
+	sres := doJSON(t, srv, http.MethodPost, idPath(sent, "/send"), nil)
+	sres.Body.Close()
+
+	cases := []struct {
+		name   string
+		path   string
+		body   string
+		fields map[string]string
+		detail string
+	}{
+		{"missing contact", idPath(id, "/contact"), `{"contactId":0}`,
+			map[string]string{"contactId": "Pilih narahubung."}, "Pilih narahubung."},
+		{"contact of another client", idPath(id, "/contact"), `{"contactId":` + strconv.FormatInt(foreign, 10) + `}`,
+			map[string]string{"contactId": "Narahubung tidak ditemukan, sudah nonaktif, atau bukan milik klien ini."},
+			"Narahubung tidak ditemukan, sudah nonaktif, atau bukan milik klien ini."},
+		{"sent quotation", idPath(sent, "/contact"), `{"contactId":` + strconv.FormatInt(sibling, 10) + `}`,
+			nil, "Narahubung hanya dapat diganti saat quotation berstatus Draf atau Disetujui."},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			res := doRaw(t, http.MethodPatch, srv.URL+c.path, c.body, nil)
+			e := problemOf(t, res)
+			require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+			assert.Equal(t, c.fields, e.Fields)
+			assert.Equal(t, c.detail, e.Detail)
+		})
+	}
 }

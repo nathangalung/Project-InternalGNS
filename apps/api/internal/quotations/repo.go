@@ -32,6 +32,7 @@ var (
 	ErrVersionMismatch   = errors.New("quotation version mismatch")
 	ErrUnpricedProducts  = errors.New("product lines without a selling price")
 	ErrContactNotAllowed = errors.New("contact not allowed")
+	ErrContactLocked     = errors.New("contact locked by status")
 )
 
 // Filter and sort params.
@@ -280,6 +281,8 @@ func (r *Repo) UpdateContact(ctx context.Context, id, contactID, userID int64) e
 		return ErrNotFound
 	case "contact_invalid":
 		return ErrContactNotAllowed
+	case "status_locked":
+		return ErrContactLocked
 	}
 	return nil
 }
