@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { apiList, apiRequest, downloadPdf, downloadXlsx } from "@/lib/api-client"
+import { apiList, apiRequest, downloadPdf, downloadXlsx, postForm } from "@/lib/api-client"
 import * as api from "./api"
 
 vi.mock("@/lib/api-client", async (importOriginal) => ({
@@ -8,6 +8,7 @@ vi.mock("@/lib/api-client", async (importOriginal) => ({
   apiList: vi.fn(async () => ({ rows: [], total: 0 })),
   downloadPdf: vi.fn(async () => {}),
   downloadXlsx: vi.fn(async () => {}),
+  postForm: vi.fn(async () => ({ rows: [{ impaCode: "", name: "Baut", qty: 2, unit: "PCS" }] })),
   getRefreshToken: vi.fn(() => null),
 }))
 
@@ -32,6 +33,16 @@ describe("quotations api", () => {
   ])("exports %s", async (_name, params, path) => {
     await api.exportXlsx(params)
     expect(downloadXlsx).toHaveBeenCalledWith(path, "quotation-export.xlsx")
+  })
+
+  it("sends an RFQ file and returns its rows", async () => {
+    const file = new File(["x"], "permintaan.xlsx")
+    await expect(api.parseRfq(file)).resolves.toEqual([
+      { impaCode: "", name: "Baut", qty: 2, unit: "PCS" },
+    ])
+    const [path, form] = vi.mocked(postForm).mock.calls[0]
+    expect(path).toBe("/quotations/rfq")
+    expect((form as FormData).get("file")).toBe(file)
   })
 
   it("names the PDF after a filesystem-safe number", async () => {

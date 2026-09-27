@@ -5,8 +5,10 @@ import {
   downloadPdf,
   downloadXlsx,
   type PaginatedList,
+  postForm,
 } from "@/lib/api-client"
 import type {
+  MatchRowInput,
   QuotationContactInput,
   QuotationCreated,
   QuotationCreateInput,
@@ -18,6 +20,7 @@ import type {
   QuotationListRow,
   QuotationReviseInput,
   QuotationRevisionRow,
+  QuotationRfqRows,
   QuotationSaved,
   QuotationSendInput,
   QuotationStatus,
@@ -50,6 +53,16 @@ export function exportXlsx(params: QuotationListParams = {}): Promise<void> {
 export function downloadPdfFile(id: number, quotationNo: string): Promise<void> {
   const safe = quotationNo.replace(/[^A-Za-z0-9._-]/g, "_")
   return downloadPdf(`/quotations/${id}/pdf`, `${safe}.pdf`)
+}
+
+// Product rows of an RFQ file.
+//
+// The API reads the .xlsx or .csv and returns rows for match-rows.
+export async function parseRfq(file: File): Promise<MatchRowInput[]> {
+  const form = new FormData()
+  form.append("file", file)
+  const res = await postForm<QuotationRfqRows>("/quotations/rfq", form)
+  return res.rows
 }
 
 export async function stats(): Promise<QuotationStatusCount[]> {

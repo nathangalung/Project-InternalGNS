@@ -33,7 +33,7 @@ them to `apps/web/src/types/generated.ts`.
 | 1 | Client form | Load countries | `GET /countries` | `countries.list_all` |
 | 1 | Client form | Save a new client | `POST /clients` | `clients.create` (number from `fn_next_client_number` when blank) |
 | 2 | Step2Product | Search the catalog | `GET /items/search-advanced?q=` | `fn_search_items` + vendor offers + request history, merged in Go |
-| 2 | Step2Product | Import an RFQ spreadsheet | `POST /items/match-rows` | `fn_match_request` per row, in one statement |
+| 2 | Step2Product | Upload an RFQ (.xlsx or .csv) | `POST /quotations/rfq` (multipart), then `POST /items/match-rows` | none to parse (excelize); `fn_match_request` per row, in one statement |
 | 2 | Step2Product | Vendors for an item | `GET /items/{id}/vendors` | `items.list_vendors_for_item` |
 | 2 | Step2Product | Selling-price history | `GET /items/{id}/price-history` | `fn_suggest_selling_prices` |
 | 2 | Step2Product | Units | `GET /units` | `units.list_all` |
@@ -88,6 +88,7 @@ list.
 | POST | `/quotations` | `Create` | `fn_create_quotation` |
 | GET | `/quotations` | `List` | `quotations.list_base` + `list_count_base` |
 | GET | `/quotations/stats` | `Stats` | `quotations.stats` |
+| POST | `/quotations/rfq` | `UploadRFQ` | none: multipart `file` (.xlsx or .csv, 1 MB) parsed with excelize into `{"rows": [...]}` for `/items/match-rows` |
 | GET | `/quotations/{id}` | `Get` | header, items and history queries |
 | PUT | `/quotations/{id}` | `Update` | `fn_update_quotation_versioned` with `If-Match`, else `fn_update_quotation` (draft only) |
 | PATCH | `/quotations/{id}/status` | `ChangeStatus` | `fn_change_quotation_status` |

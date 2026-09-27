@@ -13,6 +13,7 @@ import {
   fetchObjectUrl,
   getRefreshToken,
   nullOn404,
+  postForm,
   saveBlob,
   setOnAuthExpired,
   setTokens,
@@ -421,6 +422,32 @@ describe("uploadAsset", () => {
     await expect(uploadAsset("/storage/x", new File(["x"], "a.exe"))).rejects.toMatchObject({
       status: 400,
       message: "Jenis berkas tidak diizinkan.",
+    })
+  })
+})
+
+describe("postForm", () => {
+  it("POSTs the form and lets the browser set the boundary", async () => {
+    const calls = serve(() => json({ rows: [] }))
+    const form = new FormData()
+    form.append("file", new File(["x"], "a.xlsx"))
+    await expect(postForm("/quotations/rfq", form)).resolves.toEqual({ rows: [] })
+    expect(calls[0].path).toBe("/quotations/rfq")
+    expect(calls[0].init.method).toBe("POST")
+    expect(calls[0].init.body).toBe(form)
+    expect(header(calls[0], "content-type")).toBeNull()
+  })
+
+  it("surfaces the server detail", async () => {
+    serve(() =>
+      json(
+        { status: 422, title: "Unprocessable Entity", detail: "Berkas kosong." },
+        { status: 422 },
+      ),
+    )
+    await expect(postForm("/quotations/rfq", new FormData())).rejects.toMatchObject({
+      status: 422,
+      message: "Berkas kosong.",
     })
   })
 })

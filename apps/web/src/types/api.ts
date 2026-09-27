@@ -71,6 +71,7 @@ export type {
   QuotationListRow,
   QuotationReviseInput,
   QuotationRevisionRow,
+  QuotationRfqRows,
   QuotationSaved,
   QuotationSendInput,
   QuotationStatus,

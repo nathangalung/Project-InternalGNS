@@ -191,6 +191,15 @@ export async function apiRequest<T>(input: RequestInput): Promise<T> {
   return (await parseResponse(res)) as T
 }
 
+// Authed multipart POST.
+//
+// No content type is set, so the browser writes the multipart boundary.
+export async function postForm<T>(path: string, form: FormData): Promise<T> {
+  const res = await fetchAuthed(path, { method: "POST", body: form })
+  if (!res.ok) throw await failure(res)
+  return (await parseResponse(res)) as T
+}
+
 // Null on 404, else rethrow.
 export async function nullOn404<T>(fn: () => Promise<T>): Promise<T | null> {
   try {

@@ -15,8 +15,6 @@ const hookTests = "src/**/*.hook.test.{ts,tsx}"
 // Two projects: pure logic in node, hooks in happy-dom. No app plugins, so
 // the run stays fast and isolated from the vite plugin chain.
 export default defineConfig({
-  // Fixture workbooks import as assets.
-  assetsInclude: ["**/*.xlsx"],
   resolve: {
     alias: { "@": path.resolve(import.meta.dirname, "./src") },
   },

@@ -41,7 +41,6 @@ SQL is hand-written in `db/queries`; there is no code generator.
 | Biome | ^2.5.14 | `package.json` |
 | Vitest | ^5.0.2 | `package.json` |
 | Playwright | ^1.63.0 | `package.json` |
-| exceljs (RFQ import) | ^4.4.0 | `package.json` |
 
 Caret ranges are intentional; exact versions are pinned by `bun.lock`. CI runs
 `bun install --frozen-lockfile` to refuse drift. The production image serves
