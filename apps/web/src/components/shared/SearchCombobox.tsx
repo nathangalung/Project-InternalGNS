@@ -31,6 +31,9 @@ type SearchComboboxProps<T> = {
   empty: ReactNode
   // Loading content, announced politely
   status?: ReactNode
+  // List open state, when the caller owns it
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 // Search picker on Base UI.
@@ -58,9 +61,16 @@ export default function SearchCombobox<T>({
   panelClassName,
   empty,
   status,
+  open: openProp,
+  onOpenChange,
   ...aria
 }: SearchComboboxProps<T>) {
-  const [open, setOpen] = useState(false)
+  const [ownOpen, setOwnOpen] = useState(false)
+  const open = openProp ?? ownOpen
+  const setOpen = (next: boolean) => {
+    if (openProp === undefined) setOwnOpen(next)
+    onOpenChange?.(next)
+  }
   const shown = open && !readOnly && query.length > 0
 
   return (

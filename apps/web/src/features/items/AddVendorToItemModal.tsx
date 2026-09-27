@@ -27,6 +27,7 @@ export default function AddVendorToItemModal({
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [vendorError, setVendorError] = useState<string | null>(null)
   const [showCreateVendor, setShowCreateVendor] = useState(false)
+  const [vendorListOpen, setVendorListOpen] = useState(false)
   const vendorInputId = useId()
   const vendorErrorId = useId()
   const priceInputId = useId()
@@ -48,6 +49,7 @@ export default function AddVendorToItemModal({
   const reset = () => {
     setVendor(null)
     setVendorQuery("")
+    setVendorListOpen(false)
     setCostPrice("")
     setProductUrl("")
     setSubmitError(null)
@@ -135,6 +137,8 @@ export default function AddVendorToItemModal({
                 setVendor(v)
                 setVendorError(null)
               }}
+              open={vendorListOpen}
+              onOpenChange={setVendorListOpen}
               query={vendorQuery}
               onQueryChange={(q) => {
                 setVendorQuery(q)
@@ -176,7 +180,12 @@ export default function AddVendorToItemModal({
                   </div>
                   <button
                     type="button"
-                    onClick={() => setShowCreateVendor(true)}
+                    onClick={() => {
+                      // Nested modal returns focus to the field.
+                      document.getElementById(vendorInputId)?.focus()
+                      setVendorListOpen(false)
+                      setShowCreateVendor(true)
+                    }}
                     className={`flex items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed border-[rgba(99,14,212,0.4)] bg-[rgba(99,14,212,0.04)] px-3.5 py-2.5 text-[13px] font-bold text-primary-700 ${ui.focusRing}`}
                   >
                     <svg
