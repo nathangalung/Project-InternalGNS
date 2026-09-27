@@ -1,5 +1,4 @@
-import { todayInJakarta } from "@/lib/date-range"
-import type { InvoiceBackendRow, QuotationStatus } from "@/types/api"
+import type { InvoiceBackendRow, InvoiceBackendStatus, QuotationStatus } from "@/types/api"
 
 // Quotation status labels.
 //
@@ -68,7 +67,17 @@ export const BADGE_NONAKTIF = { label: "NONAKTIF", bg: "#FEE2E2", color: "#B91C1
 // Displayed invoice statuses.
 export type InvoiceStatus = "DRAF" | "DIKIRIM" | "DIBAYAR" | "TERLAMBAT"
 
-// Backend status, overdue from due.
+const INVOICE_DISPLAY: Record<Exclude<InvoiceBackendStatus, "cancelled">, InvoiceStatus> = {
+  draft: "DRAF",
+  sent: "DIKIRIM",
+  paid: "DIBAYAR",
+  overdue: "TERLAMBAT",
+}
+
+// Display status from the server.
+//
+// Terlambat is the API's effectiveStatus (fn_invoice_effective_status on the
+// WIB-pinned session); the web never recomputes it from the due date.
 export function deriveInvoiceStatus(
   inv: InvoiceBackendRow | null | undefined,
   opts: { cancelledAsNull: true },
@@ -82,23 +91,6 @@ export function deriveInvoiceStatus(
   opts?: { cancelledAsNull?: boolean },
 ): InvoiceStatus | null {
   if (!inv) return "DRAF"
-  if (opts?.cancelledAsNull && inv.status === "cancelled") return null
-  if (inv.status === "paid") return "DIBAYAR"
-  if (inv.status === "overdue") return "TERLAMBAT"
-  const base: InvoiceStatus = inv.status === "sent" ? "DIKIRIM" : "DRAF"
-  if (inv.dueDate && isPastDueInJakarta(inv.dueDate)) return "TERLAMBAT"
-  return base
-}
-
-// Overdue after the due date.
-//
-// The server decides this with due_date < CURRENT_DATE on a session pinned to
-// WIB. Comparing Date objects instead would parse the date-only string as UTC
-// midnight, which is 07:00 WIB, so from 07:00 until midnight the client would
-// call an invoice overdue while the server still reports it as sent. Comparing
-// YYYY-MM-DD strings in Jakarta reproduces the server rule exactly.
-function isPastDueInJakarta(dueDate: string): boolean {
-  const due = dueDate.slice(0, 10)
-  if (due.length !== 10) return false
-  return due < todayInJakarta()
+  if (inv.effectiveStatus === "cancelled") return opts?.cancelledAsNull ? null : "DRAF"
+  return INVOICE_DISPLAY[inv.effectiveStatus]
 }

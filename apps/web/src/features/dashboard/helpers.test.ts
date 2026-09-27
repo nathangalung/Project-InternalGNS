@@ -152,6 +152,7 @@ describe("toRecentQuotation", () => {
 })
 
 function invoice(id: number, over: Partial<InvoiceBackendRow> = {}): InvoiceBackendRow {
+  const status = over.status ?? "sent"
   return {
     id,
     invoiceNo: `INV-${id}`,
@@ -162,7 +163,8 @@ function invoice(id: number, over: Partial<InvoiceBackendRow> = {}): InvoiceBack
     invoiceDate: "2026-09-01",
     dueDate: "2099-01-01",
     total: "2000000",
-    status: "sent",
+    status,
+    effectiveStatus: status,
     rowVersion: 1,
     createdAt: "2026-09-01T03:00:00Z",
     updatedAt: "2026-09-01T03:00:00Z",
@@ -194,7 +196,7 @@ describe("toRecentInvoices", () => {
 
   const cases = [
     { name: "paid", over: { status: "paid" as const }, want: "DIBAYAR" },
-    { name: "past due sent", over: { dueDate: "2000-01-01" }, want: "TERLAMBAT" },
+    { name: "server-derived overdue", over: { effectiveStatus: "overdue" as const }, want: "TERLAMBAT" },
     { name: "draft", over: { status: "draft" as const }, want: "DRAF" },
   ]
   for (const c of cases) {

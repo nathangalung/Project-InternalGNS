@@ -20,8 +20,11 @@ import {
   toInputDate,
 } from "./helpers"
 
-function row(status: InvoiceBackendStatus, dueDate?: string): InvoiceBackendRow {
-  return { status, dueDate } as InvoiceBackendRow
+function row(
+  status: InvoiceBackendStatus,
+  effectiveStatus: InvoiceBackendStatus = status,
+): InvoiceBackendRow {
+  return { status, effectiveStatus } as InvoiceBackendRow
 }
 
 function move(to: InvoiceBackendStatus, requiresNote = false): InvoiceTransition {
@@ -38,14 +41,14 @@ function event(
 }
 
 describe("invoiceDisplayStatus", () => {
-  it.each<[string, InvoiceBackendStatus, string | undefined, string]>([
-    ["cancelled stays visible", "cancelled", "2020-01-01", "DIBATALKAN"],
-    ["paid past due stays paid", "paid", "2020-01-01", "DIBAYAR"],
-    ["past-due draft is derived late", "draft", "2020-01-01", "TERLAMBAT"],
-    ["future sent stays sent", "sent", "2999-01-01", "DIKIRIM"],
-    ["stored overdue", "overdue", undefined, "TERLAMBAT"],
-  ])("%s", (_name, status, due, want) => {
-    expect(invoiceDisplayStatus(row(status, due))).toBe(want)
+  it.each<[string, InvoiceBackendStatus, InvoiceBackendStatus, string]>([
+    ["cancelled stays visible", "cancelled", "cancelled", "DIBATALKAN"],
+    ["paid stays paid", "paid", "paid", "DIBAYAR"],
+    ["draft the server calls overdue", "draft", "overdue", "TERLAMBAT"],
+    ["sent the server calls sent", "sent", "sent", "DIKIRIM"],
+    ["stored overdue", "overdue", "overdue", "TERLAMBAT"],
+  ])("%s", (_name, status, effective, want) => {
+    expect(invoiceDisplayStatus(row(status, effective))).toBe(want)
   })
 })
 

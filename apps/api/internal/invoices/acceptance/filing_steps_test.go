@@ -196,4 +196,30 @@ func (s *scenarioState) registerFilingSteps(sc *godog.ScenarioContext) {
 	sc.Step(`^the user lists invoices with effective status "([a-z]+)"$`, s.listByEffectiveStatus)
 	sc.Step(`^the invoice list is exactly the invoice$`, s.invoiceListIsTheInvoice)
 	sc.Step(`^the invoice list is empty$`, s.invoiceListIsEmpty)
+	sc.Step(`^the invoice reads effective status "([a-z]+)"$`, s.invoiceEffectiveStatus)
+	sc.Step(`^the listed invoice reads effective status "([a-z]+)"$`, s.listedEffectiveStatus)
+}
+
+// invoiceEffectiveStatus reads the detail body.
+func (s *scenarioState) invoiceEffectiveStatus(want string) error {
+	var inv invoices.Invoice
+	if err := json.Unmarshal(s.body, &inv); err != nil {
+		return err
+	}
+	if string(inv.EffectiveStatus) != want {
+		return fmt.Errorf("want effective status %s got %s body=%s", want, inv.EffectiveStatus, s.body)
+	}
+	return nil
+}
+
+// listedEffectiveStatus reads the one row.
+func (s *scenarioState) listedEffectiveStatus(want string) error {
+	var rows []invoices.Invoice
+	if err := json.Unmarshal(s.body, &rows); err != nil {
+		return err
+	}
+	if len(rows) != 1 || string(rows[0].EffectiveStatus) != want {
+		return fmt.Errorf("want one row with effective status %s body=%s", want, s.body)
+	}
+	return nil
 }

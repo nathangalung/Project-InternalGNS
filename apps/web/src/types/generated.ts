@@ -225,6 +225,7 @@ export type InvoiceBackendRow = {
     ppnAmount?: string;
     total?: string;
     status: InvoiceBackendStatus;
+    effectiveStatus: InvoiceBackendStatus;
     taxTransactionCode?: string;
     fakturType?: string;
     rowVersion: number;
