@@ -49,6 +49,8 @@ func TestHandler_Create_PasswordAndEmailPolicy(t *testing.T) {
 		{"over 72 bytes", "", "A1!" + strings.Repeat("a", 70), http.StatusUnprocessableEntity},
 		{"malformed email", "SCOUT-not-an-email", validPassword, http.StatusUnprocessableEntity},
 		{"display name email", "Staff <staff@test.local>", validPassword, http.StatusUnprocessableEntity},
+		{"dotless domain", "staff@local", validPassword, http.StatusUnprocessableEntity},
+		{"domain literal", "staff@[10.0.0.1]", validPassword, http.StatusUnprocessableEntity},
 	}
 	c := testutil.NewCleaner(t)
 	srv := newUsersServer(t)

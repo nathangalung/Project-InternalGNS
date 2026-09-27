@@ -171,7 +171,7 @@ func TestHandler_Update_ValidationErrors(t *testing.T) {
 func TestHandler_Update_NotFound(t *testing.T) {
 	srv := newUsersServer(t)
 	res := doJSON(t, srv, http.MethodPut, "/users/99999999", map[string]any{
-		"email": "x@y.z", "name": "X", "role": "operational", "isActive": true,
+		"email": "x@y.id", "name": "X", "role": "operational", "isActive": true,
 	})
 	defer res.Body.Close()
 	require.Equal(t, http.StatusNotFound, res.StatusCode)

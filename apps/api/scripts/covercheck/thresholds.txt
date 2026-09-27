@@ -33,6 +33,7 @@ internal/shared/listq        95
 internal/shared/paginate     95
 internal/shared/sheet        95
 internal/shared/tz           95
+internal/shared/validate     95
 
 # Object storage, with MinIO running: 90.
 internal/storage             90
