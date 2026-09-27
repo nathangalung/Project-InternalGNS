@@ -21,7 +21,7 @@ export type SeedClient = {
 }
 export type SeedVendor = { id: number; name: string }
 export type SeedItem = { id: number; name: string; impaCode: string; vendorProductId?: number }
-// A catalog item, or free text naming none.
+// Catalog item or free text.
 export type SeedLine = ({ item: SeedItem } | { freeText: string }) & {
   qty: number
   price: number

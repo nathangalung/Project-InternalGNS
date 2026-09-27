@@ -2,14 +2,14 @@ import type { Page } from "@playwright/test"
 import type { SalesSeed, SeedItem } from "./support/sales"
 import { expect, test } from "./support/seed"
 
-// Product lines link to the catalog.
+// Product links on every document.
 //
 // Every document's product table links a catalog line to its product page.
 // A free-text line names no catalog item, so it stays plain text.
 
 type Seeded = { item: SeedItem; freeText: string; quotationId: number }
 
-// Draft with both kinds of line.
+// Draft with both line kinds.
 async function mixedQuotation(seed: SalesSeed): Promise<Seeded> {
   const client = await seed.client()
   const vendor = await seed.vendor()
