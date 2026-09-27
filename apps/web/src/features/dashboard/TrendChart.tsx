@@ -1,4 +1,11 @@
-import { type MouseEvent as ReactMouseEvent, useMemo, useState } from "react"
+import {
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 const W = 1000
 const H = 300
@@ -49,6 +56,11 @@ export default function TrendChart({
   computeMax = defaultComputeMax,
 }: TrendChartProps) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null)
+  const [focusIdx, setFocusIdx] = useState<number | null>(null)
+  const [rovingIdx, setRovingIdx] = useState(0)
+  const [dismissed, setDismissed] = useState(false)
+  const pointRefs = useRef<(SVGGElement | null)[]>([])
+  const hintId = useId()
 
   const activeData = series[activeKey] ?? []
   const comparisonData = comparisonKey ? (series[comparisonKey] ?? []) : []
@@ -66,6 +78,48 @@ export default function TrendChart({
     data.map((v, i) => `${i === 0 ? "M" : "L"} ${gx(i).toFixed(1)} ${gy(v).toFixed(1)}`).join(" ")
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => maxVal * f)
 
+  // Tooltip index and labels.
+  //
+  // The pointer wins over keyboard focus, and Escape hides the focus
+  // tooltip until the next move. A point's name repeats its tooltip.
+  const shownIdx = hoverIdx ?? (dismissed ? null : focusIdx)
+  const tabIdx = Math.min(rovingIdx, Math.max(activeData.length - 1, 0))
+  const comparisonAt = (i: number) =>
+    comparisonKey && comparisonData[i] !== undefined ? formatValue(comparisonData[i]) : undefined
+  const pointLabel = (i: number) => {
+    const comparison = comparisonAt(i)
+    return `${monthLabels[i]}, ${activeKey}: ${formatValue(activeData[i])}${
+      comparison !== undefined ? `, ${comparisonKey}: ${comparison}` : ""
+    }`
+  }
+
+  // Roving focus across points.
+  function handlePointKey(e: ReactKeyboardEvent<SVGGElement>, i: number) {
+    const last = activeData.length - 1
+    const next: Record<string, number> = {
+      ArrowRight: Math.min(i + 1, last),
+      ArrowDown: Math.min(i + 1, last),
+      ArrowLeft: Math.max(i - 1, 0),
+      ArrowUp: Math.max(i - 1, 0),
+      Home: 0,
+      End: last,
+    }
+    if (e.key === "Escape") {
+      if (shownIdx === null) return
+      e.preventDefault()
+      e.stopPropagation()
+      setDismissed(true)
+      setHoverIdx(null)
+      return
+    }
+    const target = next[e.key]
+    if (target === undefined) return
+    e.preventDefault()
+    setRovingIdx(target)
+    setDismissed(false)
+    pointRefs.current[target]?.focus()
+  }
+
   // Hovered month from pointer.
   function handleMouseMove(e: ReactMouseEvent<SVGSVGElement>) {
     const box = e.currentTarget.getBoundingClientRect()
@@ -79,97 +133,163 @@ export default function TrendChart({
     setHoverIdx(Math.max(0, Math.min(monthLabels.length - 1, idx)))
   }
 
+  const chartLabel = `Grafik ${activeKey}${comparisonKey ? ` dibanding ${comparisonKey}` : ""} per periode`
+
+  // Positioned for the table.
+  //
+  // Without a positioned parent the absolute sr-only wrapper escapes main's
+  // scroll box and grows the document.
   return (
-    <svg
-      viewBox={`0 0 ${W} ${H}`}
-      className="block h-auto w-full"
-      role="img"
-      aria-label={`Grafik ${activeKey}${comparisonKey ? ` dibanding ${comparisonKey}` : ""} per periode`}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => setHoverIdx(null)}
-    >
-      {yTicks.map((tick, i) => (
-        <g key={i}>
-          <line
-            x1={PAD.left}
-            y1={gy(tick)}
-            x2={W - PAD.right}
-            y2={gy(tick)}
-            stroke="#F1F5F9"
-            strokeWidth="1"
-          />
-          {i > 0 && (
+    <div className="relative">
+      {/* biome-ignore lint/a11y/useSemanticElements: an SVG cannot be a fieldset */}
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="block h-auto w-full"
+        role="group"
+        aria-label={chartLabel}
+        aria-describedby={hintId}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHoverIdx(null)}
+      >
+        <desc id={hintId}>
+          Tekan panah kiri atau kanan untuk berpindah periode, Home atau End untuk periode pertama
+          atau terakhir. Data lengkap ada di tabel setelah grafik.
+        </desc>
+        {/* biome-ignore lint/a11y/noAriaHiddenOnFocusable: nothing in this group takes focus */}
+        <g aria-hidden="true">
+          {yTicks.map((tick, i) => (
+            <g key={i}>
+              <line
+                x1={PAD.left}
+                y1={gy(tick)}
+                x2={W - PAD.right}
+                y2={gy(tick)}
+                stroke="#F1F5F9"
+                strokeWidth="1"
+              />
+              {i > 0 && (
+                <text
+                  x={PAD.left - 8}
+                  y={gy(tick) + 4}
+                  textAnchor="end"
+                  fontSize="11"
+                  fontWeight="700"
+                  fill="#94A3B8"
+                >
+                  {formatAxisTick ? formatAxisTick(tick) : Math.round(tick).toLocaleString("id-ID")}
+                </text>
+              )}
+            </g>
+          ))}
+
+          {monthLabels.map((m, i) => (
             <text
-              x={PAD.left - 8}
-              y={gy(tick) + 4}
-              textAnchor="end"
+              key={m}
+              x={gx(i)}
+              y={H - 12}
+              textAnchor="middle"
               fontSize="11"
               fontWeight="700"
-              fill="#94A3B8"
+              fill="#64748B"
             >
-              {formatAxisTick ? formatAxisTick(tick) : Math.round(tick).toLocaleString("id-ID")}
+              {m}
             </text>
+          ))}
+
+          {comparisonData.length > 0 && (
+            <path
+              d={makePath(comparisonData)}
+              fill="none"
+              stroke={DASHED_COLOR}
+              strokeWidth="2"
+              strokeDasharray="6 5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           )}
+
+          <path
+            d={makePath(activeData)}
+            fill="none"
+            stroke={LINE_COLOR}
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </g>
-      ))}
 
-      {monthLabels.map((m, i) => (
-        <text
-          key={m}
-          x={gx(i)}
-          y={H - 12}
-          textAnchor="middle"
-          fontSize="11"
-          fontWeight="700"
-          fill="#64748B"
-        >
-          {m}
-        </text>
-      ))}
+        {activeData.map((v, i) => (
+          // biome-ignore lint/a11y/noInteractiveElementToNoninteractiveRole: a focusable data point reads as an image
+          <g
+            key={i}
+            ref={(el) => {
+              pointRefs.current[i] = el
+            }}
+            role="img"
+            aria-label={pointLabel(i)}
+            tabIndex={i === tabIdx ? 0 : -1}
+            className="group outline-none"
+            pointerEvents="none"
+            onFocus={() => {
+              setFocusIdx(i)
+              setRovingIdx(i)
+              setDismissed(false)
+            }}
+            onBlur={() => setFocusIdx(null)}
+            onKeyDown={(e) => handlePointKey(e, i)}
+          >
+            <circle
+              cx={gx(i)}
+              cy={gy(v)}
+              r={11}
+              fill="none"
+              strokeWidth={2}
+              vectorEffect="non-scaling-stroke"
+              className="stroke-primary-600 opacity-0 group-focus-visible:opacity-100"
+            />
+            <circle cx={gx(i)} cy={gy(v)} r={4} fill={LINE_COLOR} />
+          </g>
+        ))}
 
-      {comparisonData.length > 0 && (
-        <path
-          d={makePath(comparisonData)}
-          fill="none"
-          stroke={DASHED_COLOR}
-          strokeWidth="2"
-          strokeDasharray="6 5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <rect x={PAD.left} y={PAD.top} width={cW} height={cH} fill="transparent" />
+
+        {shownIdx !== null && activeData[shownIdx] !== undefined && (
+          <Tooltip
+            monthLabel={monthLabels[shownIdx]}
+            activeLabel={activeKey}
+            activeValue={formatValue(activeData[shownIdx])}
+            comparisonLabel={comparisonKey}
+            comparisonValue={comparisonAt(shownIdx)}
+            x={gx(shownIdx)}
+            y={gy(activeData[shownIdx])}
+          />
+        )}
+      </svg>
+      {activeData.length > 0 && (
+        // A table ignores sr-only sizing, so a div wraps it.
+        <div className="sr-only">
+          <table>
+            <caption>Data {chartLabel}</caption>
+            <thead>
+              <tr>
+                <th scope="col">Periode</th>
+                <th scope="col">{activeKey}</th>
+                {comparisonKey && <th scope="col">{comparisonKey}</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {activeData.map((v, i) => (
+                <tr key={i}>
+                  <th scope="row">{monthLabels[i]}</th>
+                  <td>{formatValue(v)}</td>
+                  {comparisonKey && <td>{comparisonAt(i) ?? "-"}</td>}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-
-      <path
-        d={makePath(activeData)}
-        fill="none"
-        stroke={LINE_COLOR}
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-
-      {activeData.map((v, i) => (
-        <circle key={i} cx={gx(i)} cy={gy(v)} r={4} fill={LINE_COLOR} />
-      ))}
-
-      <rect x={PAD.left} y={PAD.top} width={cW} height={cH} fill="transparent" />
-
-      {hoverIdx !== null && activeData[hoverIdx] !== undefined && (
-        <Tooltip
-          monthLabel={monthLabels[hoverIdx]}
-          activeLabel={activeKey}
-          activeValue={formatValue(activeData[hoverIdx])}
-          comparisonLabel={comparisonKey}
-          comparisonValue={
-            comparisonKey && comparisonData[hoverIdx] !== undefined
-              ? formatValue(comparisonData[hoverIdx])
-              : undefined
-          }
-          x={gx(hoverIdx)}
-          y={gy(activeData[hoverIdx])}
-        />
-      )}
-    </svg>
+    </div>
   )
 }
 
@@ -222,7 +342,8 @@ function Tooltip({
   const comparisonY = cursorY + rowHeight
 
   return (
-    <g pointerEvents="none">
+    // biome-ignore lint/a11y/noAriaHiddenOnFocusable: the tooltip takes no focus
+    <g data-slot="chart-tooltip" pointerEvents="none" aria-hidden="true">
       <line
         x1={x}
         y1={PAD.top}

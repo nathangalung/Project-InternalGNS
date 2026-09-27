@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router"
 import { useEffect, useId, useRef, useState } from "react"
-import { CheckIcon } from "@/components/document/icons"
 import Modal from "@/components/shared/Modal"
 import * as clientsApi from "@/features/clients/api"
 import { contactUpdateBody, getCompanyInitials } from "@/features/clients/helpers"
@@ -13,11 +12,12 @@ import {
   useUpdateContact,
   useUploadClientLogo,
 } from "@/features/clients/hooks"
+import CountryCombobox from "@/features/countries/CountryCombobox"
 import { useCountries } from "@/features/countries/hooks"
 import { ApiError, fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
 import { toast } from "@/lib/toast"
-import { dropdownLabel, ui } from "@/lib/ui"
+import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
 import type { ClientRow } from "@/types/api"
 
@@ -43,9 +43,6 @@ const inputBaseNoColor = `w-full border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans
 // Responsive two column track sizing.
 const grid2 = "grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))]"
 
-const dropdownPanelCls =
-  "absolute left-0 right-0 top-[calc(100%+4px)] z-50 flex max-h-[260px] flex-col overflow-y-auto rounded-md border border-[rgba(204,195,216,0.2)] bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
-
 const contactCancelCls = `rounded-md px-4 py-2 text-[13px] font-semibold text-primary-700 ${ui.focusRing}`
 
 // Brand gradient from legacy inline.
@@ -69,8 +66,6 @@ export default function ClientDetail({ client }: ClientDetailProps) {
   const [isActive, setIsActive] = useState(client.isActive)
   const [logoDataUrl, setLogoDataUrl] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [countryOpen, setCountryOpen] = useState(false)
-  const [countryQuery, setCountryQuery] = useState("")
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
@@ -436,86 +431,15 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                 <label htmlFor={`${fid}-country`} className={labelCls}>
                   Kode Negara
                 </label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    id={`${fid}-country`}
-                    aria-haspopup="listbox"
-                    aria-expanded={countryOpen}
-                    onClick={() => setCountryOpen((o) => !o)}
-                    className={`${inputBase} flex h-11 items-center justify-between rounded-md border-transparent text-left`}
-                  >
-                    <span>
-                      {countryOption
-                        ? `${countryOption.code} - ${countryOption.name}`
-                        : countryCode}
-                    </span>
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#94A3B8"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      aria-hidden="true"
-                    >
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </button>
-                  {countryOpen && (
-                    <div className={dropdownPanelCls}>
-                      <div className="px-3 pb-2">
-                        <input
-                          type="text"
-                          placeholder="Cari negara..."
-                          aria-label="Cari negara"
-                          value={countryQuery}
-                          onChange={(e) => setCountryQuery(e.target.value)}
-                          className={`w-full rounded-sm border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-3 py-2 font-sans text-[13px] text-[#191C1E] outline-none transition ${ui.fieldFocus}`}
-                        />
-                      </div>
-                      {(() => {
-                        const q = countryQuery.trim().toLowerCase()
-                        const filtered = (countries ?? [])
-                          .filter(
-                            (c) =>
-                              !q ||
-                              c.name.toLowerCase().includes(q) ||
-                              c.code.toLowerCase().includes(q),
-                          )
-                          .slice(0, 5)
-                        if (filtered.length === 0) {
-                          return (
-                            <div className="px-5 py-3 text-center text-[13px] text-[#94A3B8]">
-                              Tidak ada hasil
-                            </div>
-                          )
-                        }
-                        return filtered.map((c) => {
-                          const active = countryCode === c.code
-                          return (
-                            <button
-                              key={c.code}
-                              type="button"
-                              className={ui.dropdownItem}
-                              onClick={() => {
-                                setCountryCode(c.code)
-                                setCountryQuery("")
-                                setCountryOpen(false)
-                              }}
-                            >
-                              <span className={dropdownLabel(active)}>
-                                {c.code} - {c.name}
-                              </span>
-                              {active && <CheckIcon />}
-                            </button>
-                          )
-                        })
-                      })()}
-                    </div>
-                  )}
-                </div>
+                <CountryCombobox
+                  code={countryCode}
+                  onCodeChange={setCountryCode}
+                  triggerId={`${fid}-country`}
+                  triggerClassName={`${inputBase} flex h-11 items-center justify-between rounded-md border-transparent text-left`}
+                  fallback={countryCode}
+                  chevronColor="#94A3B8"
+                  panelClassName="max-h-[260px] py-1"
+                />
               </div>
             </div>
 

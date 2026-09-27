@@ -203,10 +203,10 @@ test("a role change ends the open session and the next sign-in carries it (AU-2)
   await expect(nav.getByRole("link", { name: "Quotation", exact: true })).toBeVisible()
 
   await openUser(page, victim.user.id)
-  await page.getByRole("button", { name: /^Peran/ }).click()
-  await page.getByRole("button", { name: "Finance", exact: true }).click()
+  await page.getByRole("combobox", { name: /^Peran/ }).click()
+  await page.getByRole("option", { name: "Finance", exact: true }).click()
   await save(page)
-  await expect(page.getByRole("button", { name: /^Peran/ })).toContainText("Finance")
+  await expect(page.getByRole("combobox", { name: /^Peran/ })).toContainText("Finance")
 
   // The change bumps the session version, so the open access token and its
   // refresh token both stop working at once.

@@ -1,7 +1,14 @@
 import { Link, useNavigate } from "@tanstack/react-router"
-import { type FocusEvent, type KeyboardEvent, useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 import ActiveFilters from "@/components/shared/ActiveFilters"
 import StatCard from "@/components/shared/StatCard"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useMe } from "@/features/auth/hooks"
 import {
   useDashboardExport,
@@ -31,6 +38,15 @@ const chartTabs: { label: string; metric: DashboardMetric }[] = [
   { label: "PPN", metric: "ppn" },
 ]
 
+// Year menu card look.
+const yearPanel = "w-auto min-w-[130px] overflow-hidden rounded-lg border-dark-200 py-0 shadow-lg"
+
+function yearRow(active: boolean): string {
+  return `block h-auto px-3.5 py-2 text-[13px] transition-colors ${
+    active ? "bg-primary-50 font-semibold text-primary-700" : "font-medium text-dark-600"
+  }`
+}
+
 const RP_METRICS: ReadonlyArray<string> = [REVENUE_LABEL, "Laba Bersih", "PPN"]
 
 export default function Dashboard() {
@@ -50,20 +66,6 @@ export default function Dashboard() {
 
   const thisYear = new Date().getFullYear()
   const [baseYear, setBaseYear] = useState(thisYear)
-  const [showYearMenu, setShowYearMenu] = useState(false)
-  // Close when focus leaves
-  const yearMenuRef = useRef<HTMLDivElement>(null)
-  const yearTriggerRef = useRef<HTMLButtonElement>(null)
-  // Close once focus leaves.
-  const closeYearMenuOnBlur = (e: FocusEvent<HTMLButtonElement>) => {
-    if (!yearMenuRef.current?.contains(e.relatedTarget)) setShowYearMenu(false)
-  }
-  // Escape refocuses the trigger.
-  const yearMenuKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key !== "Escape" || !showYearMenu) return
-    setShowYearMenu(false)
-    yearTriggerRef.current?.focus()
-  }
   const yearOptions = YEAR_OPTIONS
   const { from, to } = yearRange(baseYear)
 
@@ -129,16 +131,8 @@ export default function Dashboard() {
               Ekspor Excel
             </button>
           )}
-          <div ref={yearMenuRef} className="relative">
-            <button
-              ref={yearTriggerRef}
-              type="button"
-              className={ui.btnPrimary}
-              aria-expanded={showYearMenu}
-              onClick={() => setShowYearMenu((v) => !v)}
-              onBlur={closeYearMenuOnBlur}
-              onKeyDown={yearMenuKeyDown}
-            >
+          <DropdownMenu>
+            <DropdownMenuTrigger className={ui.btnPrimary}>
               <svg
                 viewBox="0 0 24 24"
                 width="16"
@@ -155,34 +149,23 @@ export default function Dashboard() {
                 <line x1="10" y1="18" x2="14" y2="18" />
               </svg>
               Grafik: {baseYear}
-            </button>
-            {showYearMenu && (
-              <div className="absolute right-0 top-[calc(100%+4px)] z-20 min-w-[130px] overflow-hidden rounded-lg border border-dark-200 bg-white shadow-lg">
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" sideOffset={4} className={yearPanel}>
+              <DropdownMenuRadioGroup value={baseYear}>
                 {yearOptions.map((y) => (
-                  <button
+                  <DropdownMenuRadioItem
                     key={y}
-                    type="button"
-                    onClick={() => {
-                      setBaseYear(y)
-                      setShowYearMenu(false)
-                    }}
-                    // Keeps focus on the trigger, so Safari's blur never closes first
-                    onMouseDown={(e) => e.preventDefault()}
-                    onBlur={closeYearMenuOnBlur}
-                    onKeyDown={yearMenuKeyDown}
-                    aria-current={y === baseYear ? "true" : undefined}
-                    className={`block w-full px-3.5 py-2 text-left text-[13px] transition-colors hover:bg-dark-100 ${ui.focusRingInset} ${
-                      y === baseYear
-                        ? "bg-primary-50 font-semibold text-primary-700"
-                        : "font-medium text-dark-600"
-                    }`}
+                    value={y}
+                    indicator={false}
+                    onClick={() => setBaseYear(y)}
+                    className={yearRow(y === baseYear)}
                   >
                     Tahun {y}
-                  </button>
+                  </DropdownMenuRadioItem>
                 ))}
-              </div>
-            )}
-          </div>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       <SummaryError show={summaryError} />

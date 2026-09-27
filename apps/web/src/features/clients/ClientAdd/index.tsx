@@ -29,7 +29,6 @@ type ClientAddProps = {
 export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddProps) {
   const [form, setForm] = useState<ClientAddFormData>(INITIAL_FORM)
   const [logoFile, setLogoFile] = useState<File | null>(null)
-  const [negaraOpen, setNegaraOpen] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   // Saved before a failed contact call.
   const [createdClient, setCreatedClient] = useState<ClientRow | null>(null)
@@ -133,9 +132,6 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
           onLogoFile={setLogoFile}
           isNamaPerusahaanFilled={isNamaPerusahaanFilled}
           alamatError={alamatError}
-          negaraOpen={negaraOpen}
-          setNegaraOpen={(fn) => setNegaraOpen(fn)}
-          closeNegara={() => setNegaraOpen(false)}
         />
       </fieldset>
       {isClientSaved && (

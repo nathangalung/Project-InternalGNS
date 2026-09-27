@@ -1,4 +1,11 @@
-import { useEffect, useId, useRef, useState } from "react"
+import { useEffect, useId, useState } from "react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useMe } from "@/features/auth/hooks"
 import { PartialUserUpdateError } from "@/features/users/api"
 import ChangeOwnPasswordModal from "@/features/users/ChangeOwnPasswordModal"
@@ -48,7 +55,6 @@ export default function UserDetail({ user, onBack }: UserDetailProps) {
   const [password, setPassword] = useState("")
   const [role, setRole] = useState<Role>(user.role)
   const [isActive, setIsActive] = useState(user.isActive)
-  const [roleOpen, setRoleOpen] = useState(false)
   const [showChangeOwn, setShowChangeOwn] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<Field, string>>>({})
@@ -60,8 +66,6 @@ export default function UserDetail({ user, onBack }: UserDetailProps) {
   const roleId = useId()
   const statusId = useId()
   const statusHintId = useId()
-
-  const roleRef = useRef<HTMLDivElement>(null)
 
   const { data: me } = useMe()
   const isSelf = me?.id === user.id
@@ -75,23 +79,6 @@ export default function UserDetail({ user, onBack }: UserDetailProps) {
     setRole(user.role)
     setIsActive(user.isActive)
   }, [user.name, user.email, user.role, user.isActive])
-
-  // Escape or outside click closes.
-  useEffect(() => {
-    if (!roleOpen) return
-    const onPointer = (e: PointerEvent) => {
-      if (roleRef.current && !roleRef.current.contains(e.target as Node)) setRoleOpen(false)
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setRoleOpen(false)
-    }
-    document.addEventListener("pointerdown", onPointer)
-    document.addEventListener("keydown", onKey)
-    return () => {
-      document.removeEventListener("pointerdown", onPointer)
-      document.removeEventListener("keydown", onKey)
-    }
-  }, [roleOpen])
 
   const dirty =
     name !== user.name ||
@@ -345,77 +332,27 @@ export default function UserDetail({ user, onBack }: UserDetailProps) {
               <label id={`${roleId}-label`} htmlFor={roleId} className={labelClass}>
                 Peran
               </label>
-              <div ref={roleRef} className="relative">
-                <button
-                  id={roleId}
-                  type="button"
-                  className={ui.selectBtn}
-                  aria-haspopup="true"
-                  // Label plus current value.
-                  aria-labelledby={`${roleId}-label ${roleId}-value`}
-                  aria-expanded={roleOpen}
-                  onClick={() => setRoleOpen((o) => !o)}
-                >
-                  <span id={`${roleId}-value`}>{ROLE_LABEL[role]}</span>
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    aria-hidden="true"
-                  >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-                {roleOpen && (
-                  <div className={ui.dropdownPanel}>
-                    {ROLE_OPTIONS.map((opt) => {
-                      const active = role === opt.value
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          className={ui.dropdownItem}
-                          aria-pressed={active}
-                          onClick={() => {
-                            setRole(opt.value)
-                            clearField("role")
-                            setRoleOpen(false)
-                          }}
-                        >
-                          <span
-                            className={`text-[14px] ${
-                              active ? "font-bold text-primary-700" : "font-medium text-[#4A4455]"
-                            }`}
-                          >
-                            {opt.label}
-                          </span>
-                          {active && (
-                            <svg
-                              width="14"
-                              height="11"
-                              viewBox="0 0 14 11"
-                              fill="none"
-                              aria-hidden="true"
-                            >
-                              <path
-                                d="M1 5.5L4.5 9L13 1"
-                                stroke="#630ED4"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
+              <Select
+                modal={false}
+                items={ROLE_LABEL}
+                value={role}
+                onValueChange={(next) => {
+                  if (next === null) return
+                  setRole(next)
+                  clearField("role")
+                }}
+              >
+                <SelectTrigger id={roleId} aria-labelledby={`${roleId}-label ${roleId}-value`}>
+                  <SelectValue id={`${roleId}-value`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {fieldErrors.role && <div className={fieldErrorClass}>{fieldErrors.role}</div>}
             </div>
           </div>

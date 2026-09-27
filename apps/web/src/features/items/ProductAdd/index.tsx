@@ -173,9 +173,7 @@ export default function ProductAdd({
 
   const productOpen = openDropdown === "product"
   const productRequestOpen = openDropdown === "productRequest"
-  const satuanOpen = openDropdown === "satuan"
   const vendorOpen = openDropdown === "vendor"
-  const historisOpen = openDropdown === "historis"
 
   const hargaBeliVal = parseRp(form.hargaBeli)
   const profit = parseRp(form.hargaJual) - hargaBeliVal
@@ -196,10 +194,6 @@ export default function ProductAdd({
       return
     }
     setForm((prev) => ({ ...prev, [field]: value }))
-  }
-
-  function toggleDropdown(key: DropdownKey) {
-    setOpenDropdown((d) => (d === key ? null : key))
   }
 
   function closeIfMatch(key: DropdownKey) {
@@ -364,11 +358,9 @@ export default function ProductAdd({
             activeProductLabel={activeProductLabel}
             productOpen={productOpen}
             productRequestOpen={productRequestOpen}
-            satuanOpen={satuanOpen}
             satuanOptions={satuanOptions}
             setOpenDropdown={setOpenDropdown}
             closeIfMatch={closeIfMatch}
-            toggleDropdown={toggleDropdown}
             isProductFilled={isProductFilled}
             isSatuanFilled={isSatuanFilled}
             onAddProductNew={() => {
@@ -410,11 +402,9 @@ export default function ProductAdd({
             vendorMatches={vendorMatches}
             exactVendor={exactVendor}
             vendorOpen={vendorOpen}
-            historisOpen={historisOpen}
             historisOptions={historisOptions}
             setOpenDropdown={setOpenDropdown}
             closeIfMatch={closeIfMatch}
-            toggleDropdown={toggleDropdown}
             isJumlahFilled={isJumlahFilled}
             isVendorFilled={isVendorFilled}
             profit={profit}

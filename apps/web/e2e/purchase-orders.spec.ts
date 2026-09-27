@@ -29,7 +29,7 @@ async function acceptedPo(
 // Pick and save a move.
 async function choosePoStatus(page: Page, current: string, next: string): Promise<void> {
   await page.getByRole("button", { name: current, exact: true }).click()
-  await page.getByRole("button", { name: next, exact: true }).click()
+  await page.getByRole("menuitemradio", { name: next, exact: true }).click()
   await page.getByRole("button", { name: "Simpan Data" }).click()
 }
 
@@ -220,8 +220,8 @@ test.describe("purchase order status", () => {
     await expect(page.getByRole("button", { name: "Unduh Surat Jalan" })).toBeEnabled()
     const menu = page.getByRole("button", { name: "Dalam Progres", exact: true })
     await menu.click()
-    await expect(page.getByRole("button", { name: "Dikirim", exact: true })).toBeVisible()
-    await expect(page.getByRole("button", { name: "Dibatalkan", exact: true })).toBeVisible()
+    await expect(page.getByRole("menuitemradio", { name: "Dikirim", exact: true })).toBeVisible()
+    await expect(page.getByRole("menuitemradio", { name: "Dibatalkan", exact: true })).toBeVisible()
   })
 
   test("Dikirim delivers the PO and locks its lines", async ({ page, seed }) => {
@@ -252,8 +252,8 @@ test.describe("purchase order status", () => {
     await page.goto(`/purchase-orders/${q.id}`)
     // Pending follows the file; the only manual move is cancelling.
     await page.getByRole("button", { name: "Pending", exact: true }).click()
-    await expect(page.getByRole("button", { name: "PO Diunggah", exact: true })).toHaveCount(0)
-    await page.getByRole("button", { name: "Dibatalkan", exact: true }).click()
+    await expect(page.getByRole("menuitemradio")).toHaveText(["Pending", "Dibatalkan"])
+    await page.getByRole("menuitemradio", { name: "Dibatalkan", exact: true }).click()
     await page.getByRole("button", { name: "Simpan Data" }).click()
 
     const modal = page.getByRole("dialog", { name: "Ubah status menjadi Dibatalkan" })
@@ -345,12 +345,12 @@ async function addresslessQuotation(page: Page, seed: SalesSeed): Promise<number
   await page.getByRole("button", { name: "Tambah Produk" }).click()
   const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
   await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
-  await product.getByRole("button", { name: `${item.impaCode} - ${item.name}` }).click()
+  await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
   await product.getByLabel("Kode IMPA/Nama Produk *", { exact: true }).fill(item.name)
-  await product.getByRole("button", { name: `${item.impaCode} - ${item.name}` }).click()
+  await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
   await product.getByLabel("Jumlah Produk *").fill("2")
   await product.getByLabel("Nama Vendor *").click()
-  await product.getByRole("button", { name: new RegExp(vendor.name) }).click()
+  await page.getByRole("option", { name: new RegExp(vendor.name) }).click()
   await product.getByLabel("Harga Jual Satuan *").fill("60000")
   await product.getByRole("button", { name: "Simpan Data" }).click()
   await expect(product).toBeHidden()

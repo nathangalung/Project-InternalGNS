@@ -57,7 +57,7 @@ export type NewVendorForm = {
   harga: string
 }
 
-export type DropdownKey = "product" | "productRequest" | "satuan" | "vendor" | "historis"
+export type DropdownKey = "product" | "productRequest" | "vendor"
 
 // IMPA-name label, drops missing kode.
 export function formatKodeNama(kode: string | undefined | null, nama: string): string {

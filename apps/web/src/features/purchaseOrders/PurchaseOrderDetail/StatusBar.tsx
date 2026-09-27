@@ -1,3 +1,10 @@
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { ui } from "@/lib/ui"
 import type { PoTransition } from "@/types/api"
 import type { PoStatus } from "../types"
@@ -9,25 +16,9 @@ type StatusBarProps = {
   // Pending choice, null keeps the saved one
   selected: PoTransition | null
   transitions: PoTransition[]
-  isOpen: boolean
   saving: boolean
-  onToggle: () => void
   onSelect: (t: PoTransition | null) => void
   onSave: () => void
-}
-
-function Check() {
-  return (
-    <svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true">
-      <path
-        d="M1 5.5L4.5 9L13 1"
-        stroke="#630ED4"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
 }
 
 function optionLabel(active: boolean): string {
@@ -45,9 +36,7 @@ export default function StatusBar({
   status,
   selected,
   transitions,
-  isOpen,
   saving,
-  onToggle,
   onSelect,
   onSave,
 }: StatusBarProps) {
@@ -66,15 +55,11 @@ export default function StatusBar({
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <div className="relative">
-          <button
-            type="button"
+        <DropdownMenu>
+          <DropdownMenuTrigger
             className={`${ui.statusTrigger} whitespace-nowrap${locked ? " cursor-default" : ""}`}
             style={{ background: badge.bg, color: badge.color }}
-            onClick={locked ? undefined : onToggle}
             disabled={locked}
-            aria-haspopup="true"
-            aria-expanded={isOpen && !locked}
           >
             {selected?.label ?? PO_LABEL[status]}
             {!locked && (
@@ -91,30 +76,20 @@ export default function StatusBar({
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             )}
-          </button>
-          {isOpen && !locked && (
-            <div className={`${ui.statusDropdown} z-[100]`}>
-              <button type="button" className={ui.statusOption} onClick={() => onSelect(null)}>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuRadioGroup value={selected?.to ?? status}>
+              <DropdownMenuRadioItem value={status} onClick={() => onSelect(null)}>
                 <span className={optionLabel(selected === null)}>{PO_LABEL[status]}</span>
-                {selected === null && <Check />}
-              </button>
-              {transitions.map((t) => {
-                const isActive = selected?.to === t.to
-                return (
-                  <button
-                    key={t.to}
-                    type="button"
-                    className={ui.statusOption}
-                    onClick={() => onSelect(t)}
-                  >
-                    <span className={optionLabel(isActive)}>{t.label}</span>
-                    {isActive && <Check />}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
+              </DropdownMenuRadioItem>
+              {transitions.map((t) => (
+                <DropdownMenuRadioItem key={t.to} value={t.to} onClick={() => onSelect(t)}>
+                  <span className={optionLabel(selected?.to === t.to)}>{t.label}</span>
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <button type="button" className={ui.btnPrimary} onClick={onSave} disabled={saving}>
           {saving ? "Menyimpan..." : "Simpan Data"}
         </button>

@@ -64,7 +64,6 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
 
   // Pending choice, tied to the status it was made from
   const [choice, setChoice] = useState<{ from: PoStatus; t: PoTransition } | null>(null)
-  const [isStatusOpen, setIsStatusOpen] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
   const [showReason, setShowReason] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
@@ -173,13 +172,8 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           status={po.status}
           selected={selected}
           transitions={po.allowedTransitions}
-          isOpen={isStatusOpen}
           saving={changeStatus.isPending}
-          onToggle={() => setIsStatusOpen((o) => !o)}
-          onSelect={(t) => {
-            setChoice(t ? { from: po.status, t } : null)
-            setIsStatusOpen(false)
-          }}
+          onSelect={(t) => setChoice(t ? { from: po.status, t } : null)}
           onSave={handleSave}
         />
         <FileCard

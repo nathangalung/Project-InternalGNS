@@ -54,13 +54,13 @@ test.describe("quotation wizard", () => {
     await page.getByRole("button", { name: "Tambah Produk" }).click()
     const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
     await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
-    await product.getByRole("button", { name: `${item.impaCode} - ${item.name}` }).click()
+    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
     await product.getByLabel("Kode IMPA/Nama Produk *", { exact: true }).fill(item.name)
-    await product.getByRole("button", { name: `${item.impaCode} - ${item.name}` }).click()
-    await expect(product.getByRole("button", { name: "Satuan *" })).toHaveText(/PCS/)
+    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
+    await expect(product.getByRole("combobox", { name: "Satuan *" })).toHaveText(/PCS/)
     await product.getByLabel("Jumlah Produk *").fill("4")
     await product.getByLabel("Nama Vendor *").click()
-    await product.getByRole("button", { name: new RegExp(vendor.name) }).click()
+    await page.getByRole("option", { name: new RegExp(vendor.name) }).click()
     await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("100000")
     await product.getByLabel("Harga Jual Satuan *").fill("150000")
     await product.getByRole("button", { name: "Simpan Data" }).click()
@@ -167,17 +167,17 @@ test.describe("quotation wizard", () => {
 
     const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
     await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
-    await product.getByRole("button", { name: `${item.impaCode} - ${item.name}` }).click()
+    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
     await product.getByRole("button", { name: "Salin ke Offer" }).click()
     await expect(product.getByLabel("Kode IMPA/Nama Produk *", { exact: true })).toHaveValue(
       `${item.impaCode} - ${item.name}`,
     )
     // The copied offer is the same catalog item, so its linked vendor and
     // default unit apply exactly as when the offer is picked directly.
-    await expect(product.getByRole("button", { name: "Satuan *" })).toHaveText(/PCS/)
+    await expect(product.getByRole("combobox", { name: "Satuan *" })).toHaveText(/PCS/)
     await product.getByLabel("Jumlah Produk *").fill("2")
     await product.getByLabel("Nama Vendor *").click()
-    await product.getByRole("button", { name: new RegExp(vendor.name) }).click()
+    await page.getByRole("option", { name: new RegExp(vendor.name) }).click()
     await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("75000")
   })
 })
@@ -367,6 +367,31 @@ test.describe("quotation status", () => {
     await page.getByRole("button", { name: "Simpan" }).click()
     await expect(page).toHaveURL(new RegExp(`/quotations/${q.id}$`))
     await expect.poll(async () => (await seed.getQuotation(q.id)).validityDays).toBe(45)
+  })
+
+  test("a move picked from the menu hands focus back to the badge", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const q = await seed.quotation({ client, lines: [{ item, qty: 1, price: 50_000 }] })
+    await seed.send(q.id)
+    await page.goto(`/quotations/${q.id}`)
+    const badge = page.getByRole("button", { name: "Status Dikirim, ubah status" })
+
+    // Pointer pick, then Batal
+    const menu = await openStatusMenu(page, "Dikirim")
+    await menu.getByRole("menuitem", { name: "Ditolak" }).click()
+    const dialog = page.getByRole("dialog", { name: "Ubah Status ke Ditolak" })
+    await dialog.getByRole("button", { name: "Batal" }).click()
+    await expect(dialog).toBeHidden()
+    await expect(badge).toBeFocused()
+
+    // Keyboard pick, then Escape
+    await page.keyboard.press("ArrowDown")
+    await page.keyboard.press("Enter")
+    await expect(page.getByRole("dialog", { name: "Ubah Status ke Disetujui" })).toBeVisible()
+    await page.keyboard.press("Escape")
+    await expect(page.getByRole("dialog")).toHaveCount(0)
+    await expect(badge).toBeFocused()
   })
 
   test("Ditolak waits for a reason and is final", async ({ page, seed }) => {

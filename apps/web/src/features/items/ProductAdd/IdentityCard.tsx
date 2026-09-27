@@ -1,4 +1,20 @@
 import { useId } from "react"
+import {
+  Autocomplete,
+  AutocompleteContent,
+  AutocompleteGroup,
+  AutocompleteGroupLabel,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteList,
+} from "@/components/ui/autocomplete"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { dropdownLabel, ui } from "@/lib/ui"
 import {
   AddNewButton,
@@ -18,11 +34,9 @@ type IdentityCardProps = {
   activeProductLabel?: string
   productOpen: boolean
   productRequestOpen: boolean
-  satuanOpen: boolean
   satuanOptions: string[]
   setOpenDropdown: (key: DropdownKey | null) => void
   closeIfMatch: (key: DropdownKey) => void
-  toggleDropdown: (key: DropdownKey) => void
   isProductFilled: boolean
   isSatuanFilled: boolean
   onAddProductNew: () => void
@@ -40,11 +54,9 @@ export default function IdentityCard({
   activeProductLabel,
   productOpen,
   productRequestOpen,
-  satuanOpen,
   satuanOptions,
   setOpenDropdown,
   closeIfMatch,
-  toggleDropdown,
   isProductFilled,
   isSatuanFilled,
   onAddProductNew,
@@ -58,6 +70,10 @@ export default function IdentityCard({
   const qtyId = useId()
   const canCopy = form.requestedKodeImpaNama.trim().length > 0
   const activeRequestLabel = form.requestedKodeImpaNama.trim()
+  // Per-field open and close.
+  const openProps = (key: DropdownKey) => ({
+    onOpenChange: (open: boolean) => (open ? setOpenDropdown(key) : closeIfMatch(key)),
+  })
   return (
     <>
       <div className={ui.modalSection}>
@@ -66,41 +82,36 @@ export default function IdentityCard({
           <label htmlFor={requestId} className={ui.fieldLabel}>
             Kode IMPA/Nama Produk Request <span className="text-primary-700">*</span>
           </label>
-          <div className="relative">
-            <input
+          <Autocomplete
+            value={form.requestedKodeImpaNama}
+            onValueChange={(v, d) => {
+              if (d.reason === "input-change") onChange("requestedKodeImpaNama", v)
+            }}
+            open={productRequestOpen}
+            {...openProps("productRequest")}
+          >
+            <AutocompleteInput
               id={requestId}
-              autoComplete="off"
-              className={`${ui.fieldInput} font-sans`}
-              type="text"
+              className="font-sans"
               placeholder="Cari produk atau ketik permintaan klien"
-              value={form.requestedKodeImpaNama}
-              onChange={(e) => {
-                onChange("requestedKodeImpaNama", e.target.value)
-                setOpenDropdown("productRequest")
-              }}
               onFocus={() => setOpenDropdown("productRequest")}
-              onBlur={() => setTimeout(() => closeIfMatch("productRequest"), 150)}
             />
-            {productRequestOpen && (
-              <div className={ui.dropdownPanel}>
-                {requestMatches.length === 0 ? (
-                  <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
-                    Tidak ada rekomendasi — input akan disimpan apa adanya.
-                  </div>
-                ) : (
-                  <>
-                    <div className="px-5 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-[0.6px] text-[#9CA3AF]">
-                      Rekomendasi dari katalog
-                    </div>
+            <AutocompleteContent>
+              {requestMatches.length === 0 ? (
+                <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
+                  Tidak ada rekomendasi — input akan disimpan apa adanya.
+                </div>
+              ) : (
+                <AutocompleteList>
+                  <AutocompleteGroup>
+                    <AutocompleteGroupLabel>Rekomendasi dari katalog</AutocompleteGroupLabel>
                     {requestMatches.map((p) => {
                       const label = formatKodeNama(p.kode, p.nama)
                       const isActive = label === activeRequestLabel
                       return (
-                        <button
+                        <AutocompleteItem
                           key={p.id ?? label}
-                          type="button"
-                          className={ui.dropdownItem}
-                          onMouseDown={(e) => e.preventDefault()}
+                          value={label}
                           onClick={() => {
                             onChange("requestedKodeImpaNama", label)
                             onPickRequestSuggestion?.(p)
@@ -109,14 +120,14 @@ export default function IdentityCard({
                         >
                           <span className={dropdownLabel(isActive)}>{label}</span>
                           {isActive && <CheckmarkIcon />}
-                        </button>
+                        </AutocompleteItem>
                       )
                     })}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+                  </AutocompleteGroup>
+                </AutocompleteList>
+              )}
+            </AutocompleteContent>
+          </Autocomplete>
         </div>
       </div>
 
@@ -183,35 +194,32 @@ export default function IdentityCard({
           <label htmlFor={offerId} className={ui.fieldLabel}>
             Kode IMPA/Nama Produk <span className="text-primary-700">*</span>
           </label>
-          <div className="relative">
-            <input
+          <Autocomplete
+            value={form.kodeImpaNama}
+            onValueChange={(v, d) => {
+              if (d.reason === "input-change") onChange("kodeImpaNama", v)
+            }}
+            open={productOpen}
+            {...openProps("product")}
+          >
+            <AutocompleteInput
               id={offerId}
-              autoComplete="off"
-              className={`${ui.fieldInput} font-sans`}
-              type="text"
+              className="font-sans"
               placeholder="Masukkan nama atau kode IMPA"
-              value={form.kodeImpaNama}
-              onChange={(e) => {
-                onChange("kodeImpaNama", e.target.value)
-                setOpenDropdown("product")
-              }}
               onFocus={() => setOpenDropdown("product")}
-              onBlur={() => setTimeout(() => closeIfMatch("product"), 150)}
             />
-            {productOpen && (
-              <div className={ui.dropdownPanel}>
-                {productMatches.length === 0 ? (
-                  <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>Tidak ada hasil</div>
-                ) : (
-                  productMatches.map((p) => {
+            <AutocompleteContent>
+              {productMatches.length === 0 ? (
+                <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>Tidak ada hasil</div>
+              ) : (
+                <AutocompleteList>
+                  {productMatches.map((p) => {
                     const label = formatKodeNama(p.kode, p.nama)
                     const isActive = label === activeProductLabel
                     return (
-                      <button
+                      <AutocompleteItem
                         key={p.id ?? label}
-                        type="button"
-                        className={ui.dropdownItem}
-                        onMouseDown={(e) => e.preventDefault()}
+                        value={label}
                         onClick={() => {
                           onChange("kodeImpaNama", label)
                           onPickProduct?.(p)
@@ -220,14 +228,14 @@ export default function IdentityCard({
                       >
                         <span className={dropdownLabel(isActive)}>{label}</span>
                         {isActive && <CheckmarkIcon />}
-                      </button>
+                      </AutocompleteItem>
                     )
-                  })
-                )}
-                <AddNewButton label="Tambah Produk Baru" onClick={onAddProductNew} />
-              </div>
-            )}
-          </div>
+                  })}
+                </AutocompleteList>
+              )}
+              <AddNewButton label="Tambah Produk Baru" onClick={onAddProductNew} />
+            </AutocompleteContent>
+          </Autocomplete>
         </div>
 
         <div className={ui.row2}>
@@ -235,53 +243,29 @@ export default function IdentityCard({
             <label htmlFor={unitId} className={ui.fieldLabel}>
               Satuan <span className="text-primary-700">*</span>
             </label>
-            <div className="relative">
-              <button
+            <Select
+              modal={false}
+              value={form.satuan || null}
+              onValueChange={(v) => {
+                if (v !== null) onChange("satuan", v)
+              }}
+              disabled={!isProductFilled}
+            >
+              <SelectTrigger
                 id={unitId}
-                type="button"
-                className={`flex w-full items-center justify-between rounded-md border-[1.5px] border-transparent bg-dark-200 px-4 py-3 text-sm font-normal ${!form.satuan && isProductFilled ? "text-dark-500" : "text-dark-900"} outline-none transition focus:border-primary-600 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)] ${ui.disabledField}`}
-                onClick={() => {
-                  if (isProductFilled) toggleDropdown("satuan")
-                }}
-                onBlur={() => setTimeout(() => closeIfMatch("satuan"), 150)}
-                disabled={!isProductFilled}
+                // Disabled and empty keeps the dark placeholder.
+                className={isProductFilled ? undefined : "data-placeholder:text-dark-900"}
               >
-                <span>{form.satuan || "Pilih satuan"}</span>
-                <svg
-                  aria-hidden="true"
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                >
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </button>
-              {satuanOpen && isProductFilled && (
-                <div className={ui.dropdownPanel}>
-                  {satuanOptions.map((opt) => {
-                    const isActive = form.satuan === opt
-                    return (
-                      <button
-                        key={opt}
-                        type="button"
-                        className={ui.dropdownItem}
-                        onClick={() => {
-                          onChange("satuan", opt)
-                          setOpenDropdown(null)
-                        }}
-                      >
-                        <span className={dropdownLabel(isActive)}>{opt}</span>
-                        {isActive && <CheckmarkIcon />}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
+                <SelectValue placeholder="Pilih satuan" />
+              </SelectTrigger>
+              <SelectContent>
+                {satuanOptions.map((opt) => (
+                  <SelectItem key={opt} value={opt}>
+                    {opt}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className={ui.field}>
             <label htmlFor={qtyId} className={ui.fieldLabel}>

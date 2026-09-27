@@ -1,9 +1,8 @@
-import { useId, useMemo, useRef, useState } from "react"
-import { useCountries } from "@/features/countries/hooks"
-import { dropdownLabel, ui } from "@/lib/ui"
+import { useId, useRef, useState } from "react"
+import CountryCombobox from "@/features/countries/CountryCombobox"
+import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
 import {
-  CheckmarkIcon,
   type ClientAddFormData,
   fieldErrorCls,
   fieldHintCls,
@@ -18,9 +17,6 @@ type CompanyCardProps = {
   onLogoFile: (file: File | null) => void
   isNamaPerusahaanFilled: boolean
   alamatError: string | null
-  negaraOpen: boolean
-  setNegaraOpen: (fn: (o: boolean) => boolean) => void
-  closeNegara: () => void
 }
 
 // Company identity card.
@@ -30,23 +26,7 @@ export default function CompanyCard({
   onLogoFile,
   isNamaPerusahaanFilled,
   alamatError,
-  negaraOpen,
-  setNegaraOpen,
-  closeNegara,
 }: CompanyCardProps) {
-  const { data: countries } = useCountries()
-  const [negaraQuery, setNegaraQuery] = useState("")
-  const negaraOptions = useMemo(
-    () => (countries ?? []).map((c) => ({ value: c.code, label: `${c.code} - ${c.name}` })),
-    [countries],
-  )
-  const filteredNegaraOptions = useMemo(() => {
-    const q = negaraQuery.trim().toLowerCase()
-    if (!q) return negaraOptions.slice(0, 5)
-    return negaraOptions.filter((o) => o.label.toLowerCase().includes(q)).slice(0, 5)
-  }, [negaraOptions, negaraQuery])
-  const selectedNegara = negaraOptions.find((n) => n.value === form.kodeNegara)
-
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [logoError, setLogoError] = useState<string | null>(null)
   const id = useId()
@@ -92,70 +72,14 @@ export default function CompanyCard({
           <label htmlFor={`${id}-country`} className={ui.fieldLabel}>
             Kode Negara <span className="text-primary-700">*</span>
           </label>
-          <div className="relative">
-            <button
-              type="button"
-              id={`${id}-country`}
-              aria-haspopup="listbox"
-              aria-expanded={negaraOpen && isNamaPerusahaanFilled}
-              className={ui.selectBtn}
-              onClick={() => {
-                if (isNamaPerusahaanFilled) setNegaraOpen((o) => !o)
-              }}
-              disabled={!isNamaPerusahaanFilled}
-            >
-              <span>{selectedNegara?.label ?? "Pilih Negara"}</span>
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                aria-hidden="true"
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
-            {negaraOpen && isNamaPerusahaanFilled && (
-              <div className={ui.dropdownPanel}>
-                <div className="px-3 pb-2">
-                  <input
-                    type="text"
-                    placeholder="Cari negara..."
-                    aria-label="Cari negara"
-                    value={negaraQuery}
-                    onChange={(e) => setNegaraQuery(e.target.value)}
-                    className={`w-full rounded-sm border border-[rgba(204,195,216,0.4)] bg-[#F7F7F8] px-3 py-2 font-sans text-[13px] text-[#191C1E] outline-none transition ${ui.fieldFocus}`}
-                  />
-                </div>
-                {filteredNegaraOptions.length === 0 && (
-                  <div className="px-5 py-3 text-center font-sans text-[13px] text-[#94A3B8]">
-                    Tidak ada hasil
-                  </div>
-                )}
-                {filteredNegaraOptions.map((opt) => {
-                  const isActive = form.kodeNegara === opt.value
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      className={ui.dropdownItem}
-                      onClick={() => {
-                        onChange("kodeNegara", opt.value)
-                        setNegaraQuery("")
-                        closeNegara()
-                      }}
-                    >
-                      <span className={dropdownLabel(isActive)}>{opt.label}</span>
-                      {isActive && <CheckmarkIcon />}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+          <CountryCombobox
+            code={form.kodeNegara}
+            onCodeChange={(code) => onChange("kodeNegara", code)}
+            triggerId={`${id}-country`}
+            triggerClassName={ui.selectBtn}
+            fallback="Pilih Negara"
+            disabled={!isNamaPerusahaanFilled}
+          />
         </div>
       </div>
       <div className={ui.field}>

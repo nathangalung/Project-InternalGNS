@@ -1,5 +1,14 @@
+import { Menu } from "@base-ui/react/menu"
 import { useId } from "react"
-import { dropdownLabel, ui } from "@/lib/ui"
+import {
+  Autocomplete,
+  AutocompleteContent,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteList,
+} from "@/components/ui/autocomplete"
+import { dropdown, dropdownLabel, ui } from "@/lib/ui"
+import { cn } from "@/lib/utils"
 import {
   AddNewButton,
   CheckmarkIcon,
@@ -18,11 +27,9 @@ type VendorPriceCardProps = {
   vendorMatches: VendorOption[]
   exactVendor?: VendorOption
   vendorOpen: boolean
-  historisOpen: boolean
   historisOptions: HistorisOption[]
   setOpenDropdown: (key: DropdownKey | null) => void
   closeIfMatch: (key: DropdownKey) => void
-  toggleDropdown: (key: DropdownKey) => void
   isJumlahFilled: boolean
   isVendorFilled: boolean
   profit: number
@@ -39,11 +46,9 @@ export default function VendorPriceCard({
   vendorMatches,
   exactVendor,
   vendorOpen,
-  historisOpen,
   historisOptions,
   setOpenDropdown,
   closeIfMatch,
-  toggleDropdown,
   isJumlahFilled,
   isVendorFilled,
   profit,
@@ -65,61 +70,48 @@ export default function VendorPriceCard({
         <label htmlFor={vendorId} className={ui.fieldLabel}>
           Nama Vendor <span className="text-primary-700">*</span>
         </label>
-        <div className="relative">
-          <input
+        <Autocomplete
+          value={form.namaVendor}
+          onValueChange={(v, d) => {
+            if (d.reason === "input-change") onChange("namaVendor", v)
+          }}
+          open={vendorOpen && isJumlahFilled}
+          onOpenChange={(open) => (open ? setOpenDropdown("vendor") : closeIfMatch("vendor"))}
+          disabled={!isJumlahFilled}
+        >
+          <AutocompleteInput
             id={vendorId}
-            autoComplete="off"
-            className={`${ui.fieldInput} font-sans ${ui.disabledField}`}
-            type="text"
+            className={`font-sans ${ui.disabledField}`}
             placeholder="Ketik atau pilih vendor"
-            value={form.namaVendor}
-            disabled={!isJumlahFilled}
-            onChange={(e) => {
-              onChange("namaVendor", e.target.value)
-              setOpenDropdown("vendor")
-            }}
             onFocus={() => {
               if (isJumlahFilled) setOpenDropdown("vendor")
             }}
-            onBlur={() => setTimeout(() => closeIfMatch("vendor"), 150)}
           />
-          {vendorOpen && isJumlahFilled && (
-            <div className={ui.dropdownPanel}>
-              {vendorMatches.length === 0 ? (
-                <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
-                  Tidak ada hasil. Silahkan tambahkan vendor baru.
-                </div>
-              ) : (
-                vendorMatches.map((v) => {
+          <AutocompleteContent>
+            {vendorMatches.length === 0 ? (
+              <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
+                Tidak ada hasil. Silahkan tambahkan vendor baru.
+              </div>
+            ) : (
+              <AutocompleteList>
+                {vendorMatches.map((v) => {
                   const isActive = exactVendor?.nama === v.nama
                   return (
-                    <button
-                      key={v.nama}
-                      type="button"
-                      className={ui.dropdownItem}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => onPickVendor(v)}
-                    >
+                    <AutocompleteItem key={v.nama} value={v.nama} onClick={() => onPickVendor(v)}>
                       <span className={dropdownLabel(isActive)}>{v.nama}</span>
                       {v.harga > 0 ? (
-                        <span
-                          className={`text-caption leading-6 ${
-                            isActive ? "font-bold text-primary-700" : "font-normal text-[#4A4455]"
-                          }`}
-                        >
-                          Rp {formatRp(v.harga)}
-                        </span>
+                        <span className={priceCls(isActive)}>Rp {formatRp(v.harga)}</span>
                       ) : isActive ? (
                         <CheckmarkIcon />
                       ) : null}
-                    </button>
+                    </AutocompleteItem>
                   )
-                })
-              )}
-              <AddNewButton label="Tambah Vendor Baru" onClick={onAddVendorNew} />
-            </div>
-          )}
-        </div>
+                })}
+              </AutocompleteList>
+            )}
+            <AddNewButton label="Tambah Vendor Baru" onClick={onAddVendorNew} />
+          </AutocompleteContent>
+        </Autocomplete>
       </div>
 
       <div className={ui.row2}>
@@ -155,16 +147,10 @@ export default function VendorPriceCard({
         </div>
       </div>
 
-      <div className="relative w-full">
-        <button
-          type="button"
+      <Menu.Root modal={false}>
+        <Menu.Trigger
           disabled={!isVendorFilled}
-          onClick={(e) => {
-            e.preventDefault()
-            if (isVendorFilled) toggleDropdown("historis")
-          }}
-          onBlur={() => setTimeout(() => closeIfMatch("historis"), 150)}
-          className={`flex w-full items-center justify-center rounded-md border px-6 py-[11px] text-sm font-bold ${ui.focusRing} ${
+          className={`relative flex w-full items-center justify-center rounded-md border px-6 py-[11px] text-sm font-bold ${ui.focusRing} ${
             isVendorFilled
               ? "cursor-pointer border-[rgba(99,14,212,0.2)] bg-transparent text-primary-700"
               : "cursor-not-allowed border-[rgba(99,14,212,0.1)] bg-[#F7F7F8] text-[#A386D6]"
@@ -184,39 +170,42 @@ export default function VendorPriceCard({
           >
             <polyline points="6 9 12 15 18 9" />
           </svg>
-        </button>
-
-        {historisOpen && isVendorFilled && (
-          <div className={`${ui.dropdownPanel} z-[999]`}>
-            {historisOptions.length === 0 ? (
-              <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>Belum ada riwayat harga.</div>
-            ) : null}
-            {historisOptions.map((h, i) => {
-              const isActive = form.hargaJual === String(h.harga)
-              return (
-                <button
-                  key={i}
-                  type="button"
-                  className={ui.dropdownItem}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    onPickHistoris(h.harga)
-                  }}
-                >
-                  <span className={dropdownLabel(isActive)}>{h.keterangan}</span>
-                  <span
-                    className={`text-caption leading-6 ${
-                      isActive ? "font-bold text-primary-700" : "font-normal text-[#4A4455]"
-                    }`}
+        </Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner
+            align="start"
+            sideOffset={4}
+            collisionAvoidance={{ side: "none" }}
+            className="z-[110]"
+          >
+            <Menu.Popup
+              className={cn(
+                dropdown({ placement: "floating" }).panel(),
+                "max-h-(--available-height) w-(--anchor-width) overflow-y-auto outline-none",
+              )}
+            >
+              {historisOptions.length === 0 && (
+                <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
+                  Belum ada riwayat harga.
+                </div>
+              )}
+              {historisOptions.map((h, i) => {
+                const isActive = form.hargaJual === String(h.harga)
+                return (
+                  <Menu.Item
+                    key={i}
+                    className={cn(dropdown().item(), "outline-none data-highlighted:bg-dark-100")}
+                    onClick={() => onPickHistoris(h.harga)}
                   >
-                    Rp {formatRp(h.harga)}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        )}
-      </div>
+                    <span className={dropdownLabel(isActive)}>{h.keterangan}</span>
+                    <span className={priceCls(isActive)}>Rp {formatRp(h.harga)}</span>
+                  </Menu.Item>
+                )
+              })}
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
 
       <div className={ui.field}>
         <span className={ui.fieldLabel}>Profit</span>
@@ -230,4 +219,9 @@ export default function VendorPriceCard({
       </div>
     </div>
   )
+}
+
+// Price beside a row label.
+function priceCls(active: boolean): string {
+  return `text-caption leading-6 ${active ? "font-bold text-primary-700" : "font-normal text-[#4A4455]"}`
 }

@@ -26,3 +26,17 @@ export function isTopModal(token: symbol): boolean {
 export function modalStackDepth(): number {
   return stack.length
 }
+
+// What a close request does.
+//
+// Escape and an outside click belong to the topmost modal only: a lower
+// modal sees a click on the upper one as outside itself, and both hear the
+// same keydown, so a lower one cancels them. The close button and any other
+// request close the modal that raised it, as the hand-built shell did.
+export type CloseDecision = "ignore" | "cancel" | "close"
+
+export function closeDecision(open: boolean, reason: string, isTop: boolean): CloseDecision {
+  if (open) return "ignore"
+  if (!isTop && (reason === "escape-key" || reason === "outside-press")) return "cancel"
+  return "close"
+}

@@ -1,8 +1,14 @@
-import { type FocusEvent, type KeyboardEvent, useId, useRef, useState } from "react"
-import { CheckIcon } from "@/components/document/icons"
+import { useId, useState } from "react"
 import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
-import { dropdownLabel, ui } from "@/lib/ui"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { ui } from "@/lib/ui"
 
 export type DashboardFilterValues = {
   year: number
@@ -64,23 +70,7 @@ export default function DashboardFinancialFilter({
 }: DashboardFinancialFilterProps) {
   const [year, setYear] = useState<number>(initialValues?.year ?? DEFAULTS.year)
   const [month, setMonth] = useState<number | null>(initialValues?.month ?? DEFAULTS.month)
-  const [yearOpen, setYearOpen] = useState(false)
   const yearHeadingId = useId()
-  // Close when focus leaves
-  const yearRef = useRef<HTMLDivElement>(null)
-  const yearTriggerRef = useRef<HTMLButtonElement>(null)
-  const closeYearOnBlur = (e: FocusEvent<HTMLButtonElement>) => {
-    if (!yearRef.current?.contains(e.relatedTarget)) setYearOpen(false)
-  }
-  // Escape closes list only.
-  //
-  // Stopping the event keeps the surrounding modal open.
-  const yearKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key !== "Escape" || !yearOpen) return
-    e.stopPropagation()
-    setYearOpen(false)
-    yearTriggerRef.current?.focus()
-  }
 
   const dirty = year !== DEFAULTS.year || month !== DEFAULTS.month
 
@@ -121,56 +111,24 @@ export default function DashboardFinancialFilter({
           Pilih Tahun
         </div>
         <div className={ui.field}>
-          <div ref={yearRef} className="relative">
-            <button
-              ref={yearTriggerRef}
-              type="button"
-              className={ui.selectBtn}
-              onBlur={closeYearOnBlur}
-              onKeyDown={yearKeyDown}
-              aria-labelledby={`${yearHeadingId} ${yearHeadingId}-value`}
-              aria-expanded={yearOpen}
-              onClick={() => setYearOpen((o) => !o)}
-            >
-              <span id={`${yearHeadingId}-value`}>{year}</span>
-              <svg
-                aria-hidden="true"
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
-            {yearOpen && (
-              <div className={ui.dropdownPanel}>
-                {YEAR_OPTIONS.map((y) => {
-                  const isActive = year === y
-                  return (
-                    <button
-                      key={y}
-                      type="button"
-                      className={ui.dropdownItem}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        setYear(y)
-                        setYearOpen(false)
-                      }}
-                      onBlur={closeYearOnBlur}
-                      onKeyDown={yearKeyDown}
-                    >
-                      <span className={dropdownLabel(isActive)}>{y}</span>
-                      {isActive && <CheckIcon />}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+          <Select
+            modal={false}
+            value={year}
+            onValueChange={(y) => {
+              if (y !== null) setYear(y)
+            }}
+          >
+            <SelectTrigger aria-labelledby={`${yearHeadingId} ${yearHeadingId}-value`}>
+              <SelectValue id={`${yearHeadingId}-value`} />
+            </SelectTrigger>
+            <SelectContent>
+              {YEAR_OPTIONS.map((y) => (
+                <SelectItem key={y} value={y}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
