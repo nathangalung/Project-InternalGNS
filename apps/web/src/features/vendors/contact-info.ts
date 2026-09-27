@@ -1,3 +1,4 @@
+import { type FormErrors, formErrors } from "@/lib/form-errors"
 import type { VendorContactInfo } from "@/types/api"
 
 // Next contact_info for an update.
@@ -18,4 +19,27 @@ export function buildContactInfo(
   if (p) next.phone = p
   else delete next.phone
   return next
+}
+
+export type VendorFormField = "name" | "phone" | "email"
+
+// API field keys by input.
+const SERVER_KEYS = {
+  name: "name",
+  phone: "contactInfo.phone",
+  email: "contactInfo.email",
+} as const
+
+// Split a vendor save error.
+//
+// The API names contact fields by their request path, so they are moved
+// onto the phone and email inputs; anything else goes to the banner.
+export function vendorFormErrors(err: unknown, fallback: string): FormErrors<VendorFormField> {
+  const split = formErrors(err, Object.values(SERVER_KEYS), fallback)
+  const fields: Partial<Record<VendorFormField, string>> = {}
+  for (const field of Object.keys(SERVER_KEYS) as VendorFormField[]) {
+    const msg = split.fields[SERVER_KEYS[field]]
+    if (msg) fields[field] = msg
+  }
+  return { fields, banner: split.banner }
 }

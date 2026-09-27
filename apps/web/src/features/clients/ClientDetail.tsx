@@ -14,11 +14,13 @@ import {
 } from "@/features/clients/hooks"
 import CountryCombobox from "@/features/countries/CountryCombobox"
 import { useCountries } from "@/features/countries/hooks"
-import { ApiError, fetchObjectUrl } from "@/lib/api-client"
+import { fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
+import { formErrors } from "@/lib/form-errors"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
+import { digitsOnly, optionalEmailError, optionalPhoneError } from "@/lib/validation"
 import type { ClientRow } from "@/types/api"
 
 type ClientDetailProps = {
@@ -55,6 +57,21 @@ function contactSaveCls(enabled: boolean): string {
   }`
 }
 
+// Inputs the API can refuse.
+const CLIENT_FIELDS = ["name", "phone", "email"] as const
+
+type ClientField = (typeof CLIENT_FIELDS)[number]
+
+// Inline field message.
+function FieldError({ id, message }: { id: string; message: string | null | undefined }) {
+  if (!message) return null
+  return (
+    <div id={id} className="mt-1.5 text-xs text-[#DC2626]">
+      {message}
+    </div>
+  )
+}
+
 export default function ClientDetail({ client }: ClientDetailProps) {
   const [name, setName] = useState(client.name)
   const [tkuId, setTkuId] = useState(client.tkuId ?? "")
@@ -67,7 +84,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
   const [logoDataUrl, setLogoDataUrl] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<ClientField, string>>>({})
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
   const fid = useId()
 
@@ -141,6 +158,16 @@ export default function ClientDetail({ client }: ClientDetailProps) {
     phone !== (client.contactPhone ?? "") ||
     isActive !== client.isActive
 
+  // A server message wins until the input changes.
+  const phoneError = fieldErrors.phone || optionalPhoneError(phone)
+  const emailError = fieldErrors.email || optionalEmailError(email)
+  const newPhoneError = optionalPhoneError(newContactPhone)
+  const newEmailError = optionalEmailError(newContactEmail)
+  const canAddContact = Boolean(newContactName.trim()) && !newPhoneError && !newEmailError
+  const editPhoneError = optionalPhoneError(editPhone)
+  const editEmailError = optionalEmailError(editEmail)
+  const canSaveContact = Boolean(editName.trim()) && !editPhoneError && !editEmailError
+
   const countryOption = countries?.find((c) => c.code === countryCode)
   const dialCode = countryOption?.dialCode ?? ""
 
@@ -159,8 +186,10 @@ export default function ClientDetail({ client }: ClientDetailProps) {
 
   const handleSubmit = async () => {
     setSubmitError(null)
-    const errs: Record<string, string> = {}
+    const errs: Partial<Record<ClientField, string>> = {}
     if (!name.trim()) errs.name = "Wajib diisi"
+    if (phoneError) errs.phone = phoneError
+    if (emailError) errs.email = emailError
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs)
       return
@@ -197,11 +226,9 @@ export default function ClientDetail({ client }: ClientDetailProps) {
       })
       setFieldErrors({})
     } catch (err) {
-      if (err instanceof ApiError) {
-        setSubmitError(err.message || "Gagal menyimpan perubahan")
-      } else {
-        setSubmitError("Gagal menyimpan perubahan")
-      }
+      const split = formErrors(err, CLIENT_FIELDS, "Gagal menyimpan perubahan")
+      setFieldErrors(split.fields)
+      setSubmitError(split.banner)
     }
   }
 
@@ -457,7 +484,12 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                     type="text"
                     inputMode="numeric"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                    aria-invalid={phoneError ? true : undefined}
+                    aria-describedby={phoneError ? `${fid}-phone-error` : undefined}
+                    onChange={(e) => {
+                      setPhone(digitsOnly(e.target.value))
+                      setFieldErrors((p) => ({ ...p, phone: "" }))
+                    }}
                     placeholder="-"
                     className={`${inputBaseNoColor} h-full min-w-0 flex-1 rounded-none border-transparent ${
                       phone ? "text-[#191C1E]" : "text-[#94A3B8]"
@@ -465,6 +497,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                     title="Nomor kontak utama klien"
                   />
                 </div>
+                <FieldError id={`${fid}-phone-error`} message={phoneError} />
               </div>
               <div>
                 <label htmlFor={`${fid}-email`} className={labelCls}>
@@ -475,9 +508,15 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                   type="email"
                   value={email}
                   placeholder="contact@nusantara.com"
-                  onChange={(e) => setEmail(e.target.value)}
+                  aria-invalid={emailError ? true : undefined}
+                  aria-describedby={emailError ? `${fid}-email-error` : undefined}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    setFieldErrors((p) => ({ ...p, email: "" }))
+                  }}
                   className={inputCls}
                 />
+                <FieldError id={`${fid}-email-error`} message={emailError} />
               </div>
             </div>
 
@@ -615,9 +654,12 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                         type="text"
                         inputMode="numeric"
                         value={editPhone}
-                        onChange={(e) => setEditPhone(e.target.value.replace(/\D/g, ""))}
+                        aria-invalid={editPhoneError ? true : undefined}
+                        aria-describedby={editPhoneError ? `${fid}-edit-phone-error` : undefined}
+                        onChange={(e) => setEditPhone(digitsOnly(e.target.value))}
                         className={inputCls}
                       />
+                      <FieldError id={`${fid}-edit-phone-error`} message={editPhoneError} />
                     </div>
                     <div>
                       <label htmlFor={`${fid}-edit-email`} className={labelCls}>
@@ -627,9 +669,12 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                         id={`${fid}-edit-email`}
                         type="email"
                         value={editEmail}
+                        aria-invalid={editEmailError ? true : undefined}
+                        aria-describedby={editEmailError ? `${fid}-edit-email-error` : undefined}
                         onChange={(e) => setEditEmail(e.target.value)}
                         className={inputCls}
                       />
+                      <FieldError id={`${fid}-edit-email-error`} message={editEmailError} />
                     </div>
                   </div>
                   <div className="flex justify-end gap-2">
@@ -642,9 +687,9 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                     </button>
                     <button
                       type="button"
-                      disabled={!editName.trim() || updateContact.isPending}
+                      disabled={!canSaveContact || updateContact.isPending}
                       onClick={() => {
-                        if (!editName.trim()) return
+                        if (!canSaveContact) return
                         updateContact.mutate(
                           {
                             companyId: client.id,
@@ -662,7 +707,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                           { onSuccess: () => setEditingContactId(null) },
                         )
                       }}
-                      className={contactSaveCls(Boolean(editName.trim()))}
+                      className={contactSaveCls(canSaveContact)}
                     >
                       {updateContact.isPending ? "Menyimpan..." : "Simpan"}
                     </button>
@@ -749,10 +794,13 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                   type="text"
                   inputMode="numeric"
                   value={newContactPhone}
-                  onChange={(e) => setNewContactPhone(e.target.value.replace(/\D/g, ""))}
+                  aria-invalid={newPhoneError ? true : undefined}
+                  aria-describedby={newPhoneError ? `${fid}-new-phone-error` : undefined}
+                  onChange={(e) => setNewContactPhone(digitsOnly(e.target.value))}
                   placeholder="-"
                   className={inputCls}
                 />
+                <FieldError id={`${fid}-new-phone-error`} message={newPhoneError} />
               </div>
               <div>
                 <label htmlFor={`${fid}-new-email`} className={labelCls}>
@@ -762,10 +810,13 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                   id={`${fid}-new-email`}
                   type="email"
                   value={newContactEmail}
+                  aria-invalid={newEmailError ? true : undefined}
+                  aria-describedby={newEmailError ? `${fid}-new-email-error` : undefined}
                   onChange={(e) => setNewContactEmail(e.target.value)}
                   placeholder="email@perusahaan.com"
                   className={inputCls}
                 />
+                <FieldError id={`${fid}-new-email-error`} message={newEmailError} />
               </div>
             </div>
             <div className="flex justify-end gap-2">
@@ -774,9 +825,9 @@ export default function ClientDetail({ client }: ClientDetailProps) {
               </button>
               <button
                 type="button"
-                disabled={!newContactName.trim() || createContact.isPending}
+                disabled={!canAddContact || createContact.isPending}
                 onClick={() => {
-                  if (!newContactName.trim()) return
+                  if (!canAddContact) return
                   createContact.mutate(
                     {
                       companyId: client.id,
@@ -790,7 +841,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                     { onSuccess: closeAddContactForm },
                   )
                 }}
-                className={contactSaveCls(Boolean(newContactName.trim()))}
+                className={contactSaveCls(canAddContact)}
               >
                 {createContact.isPending ? "Menyimpan..." : "Simpan"}
               </button>

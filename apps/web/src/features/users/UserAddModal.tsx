@@ -1,11 +1,12 @@
 import { useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
-import { formErrors, isInlineFormError } from "@/features/users/form-errors"
 import { useCreateUser } from "@/features/users/hooks"
 import PasswordChecklist from "@/features/users/PasswordChecklist"
 import PasswordInput from "@/features/users/PasswordInput"
 import { passwordIsValid } from "@/features/users/password"
+import { formErrors, isInlineFormError } from "@/lib/form-errors"
 import { ui } from "@/lib/ui"
+import { EMAIL_ERROR, isValidEmail } from "@/lib/validation"
 import type { Role } from "@/types/api"
 
 type UserAddModalProps = {
@@ -33,10 +34,6 @@ type Field = (typeof FIELDS)[number]
 
 const errorText = "text-[12px] text-[#B91C1C]"
 
-function isValidEmail(s: string): boolean {
-  return s.includes("@") && s.split("@").length === 2 && s.split("@")[1].includes(".")
-}
-
 export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -60,11 +57,10 @@ export default function UserAddModal({ open, onOpenChange }: UserAddModalProps) 
   if (!open) return null
 
   const isNameFilled = name.trim().length > 0
-  const isEmailValid = email.trim().length > 0 && isValidEmail(email)
+  const isEmailValid = isValidEmail(email.trim())
   const isPasswordValid = passwordIsValid(password)
   const emailError =
-    serverErrors.email ??
-    (email.trim().length > 0 && !isValidEmail(email) ? "Format email tidak valid." : undefined)
+    serverErrors.email ?? (email.trim().length > 0 && !isEmailValid ? EMAIL_ERROR : undefined)
   const canSubmit = isNameFilled && isEmailValid && isPasswordValid
 
   const clearServer = (field: Field) => {

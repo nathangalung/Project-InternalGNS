@@ -112,7 +112,8 @@ internal/
   shared/           deps, db helpers, httperr (RFC 7807), httpx, paginate,
                     listq (list query builder), sheet (XLSX), assetproxy
                     (descriptor-driven presign handlers, one set reused by
-                    every slice), money, tz
+                    every slice), money, tz, validate (phone and email
+                    rules the web mirrors)
   testutil/         Test server, pool, and seed helpers
 db/
   migrations/       Goose SQL migrations
@@ -208,7 +209,8 @@ src/
   components/shared/ Sidebar, Modal, tables, pagination, states, links
   hooks/             Cross-feature hooks
   lib/               api-client, rbac, format, status, entity-link, chart
-                     helpers, ui (tailwind class primitives), useListScreen
+                     helpers, ui (tailwind class primitives), useListScreen,
+                     validation (form field rules), form-errors (422 to inputs)
   styles/            tailwind.css (entry, @theme tokens, base layer)
   test/              renderHook and query helpers for hook tests
   types/             generated.ts (from Go DTOs) and api.ts

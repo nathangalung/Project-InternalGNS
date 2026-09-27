@@ -19,7 +19,7 @@ export function isInlineFormError(err: unknown): boolean {
   return err instanceof ApiError && (err.status === 422 || err.status === 409)
 }
 
-// Split a user form error.
+// Split a form error.
 //
 // Known fields land on their inputs; unknown fields and prose go to the
 // banner. A 409 whose detail is the duplicate-email copy is shown on the

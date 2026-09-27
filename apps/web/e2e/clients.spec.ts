@@ -157,3 +157,40 @@ test("a logo over 2 MB is refused and a small one is saved", async ({ page, seed
     )
     .toMatch(new RegExp(`^clients/${client.id}/.*logo\\.png$`))
 })
+
+// Phone is 9-12 digits, as company_contacts_phone_check.
+const PHONE_ERROR = "Nomor telepon harus 9–12 digit angka."
+
+test("Tambah Klien refuses a 13-digit phone inline", async ({ page, seed }) => {
+  await page.goto("/clients")
+  await page.getByRole("button", { name: "Tambah Klien" }).click()
+  const modal = page.getByRole("dialog", { name: "Tambah Klien" })
+  const save = modal.getByRole("button", { name: "Simpan Data" })
+  await modal.getByLabel("Nama Perusahaan *").fill(seed.name("Klien Telepon"))
+  await modal.getByLabel("Nama Narahubung *").fill(`${seed.prefix} Rina`)
+  await modal.getByLabel("Nomor Telepon (Opsional)").fill("8123456789012")
+  await expect(modal.getByText(PHONE_ERROR)).toBeVisible()
+  await expect(save).toBeDisabled()
+  await modal.getByLabel("Nomor Telepon (Opsional)").fill("812345678901")
+  await expect(modal.getByText(PHONE_ERROR)).toBeHidden()
+  await expect(save).toBeEnabled()
+  await modal.getByRole("button", { name: "Batal" }).click()
+  await expect(modal).toBeHidden()
+})
+
+test("a contact edit refuses a 13-digit phone", async ({ page, seed }) => {
+  const client = await seed.client()
+  await page.goto(`/clients/${client.id}`)
+  const card = contactsCard(page)
+  await card.getByRole("button", { name: `Ubah narahubung ${seed.prefix} Narahubung` }).click()
+  await card.getByLabel("No HP").fill("8123456789012")
+  await expect(card.getByText(PHONE_ERROR)).toBeVisible()
+  await expect(card.getByRole("button", { name: "Simpan", exact: true })).toBeDisabled()
+  await card.getByLabel("No HP").fill("812345678901")
+  await expect(card.getByText(PHONE_ERROR)).toBeHidden()
+  await card.getByRole("button", { name: "Simpan", exact: true }).click()
+
+  await expect
+    .poll(async () => (await api<Contact[]>("GET", `/clients/${client.id}/contacts`))[0].phone)
+    .toBe("812345678901")
+})

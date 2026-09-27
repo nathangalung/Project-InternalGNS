@@ -1,6 +1,7 @@
 import { useId } from "react"
-import { optionalAddressError, optionalCls } from "@/features/clients/ClientAdd/helpers"
+import { optionalCls } from "@/features/clients/ClientAdd/helpers"
 import { ui } from "@/lib/ui"
+import { optionalAddressError } from "@/lib/validation"
 import { qe, qep } from "./wizard-styles"
 
 type Step3ShippingProps = {

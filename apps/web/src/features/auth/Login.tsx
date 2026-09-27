@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react"
 import EyeIcon from "@/components/shared/EyeIcon"
 import { errorMessage } from "@/lib/errors"
+import { isValidEmail } from "@/lib/validation"
 
 const logoImg = "/logo.png"
 
@@ -26,8 +27,7 @@ export default function Login({ onLogin }: LoginProps) {
       setEmailError("")
       return false
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(value)) {
+    if (!isValidEmail(value)) {
       setEmailError("Format surel tidak valid")
       return false
     }
