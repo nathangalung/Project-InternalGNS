@@ -1,4 +1,4 @@
-import type { ProblemDetail } from "@/types/api"
+import type { ProblemDetail, RefreshResponse } from "@/types/api"
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? "/api/v1").replace(/\/+$/, "")
 
@@ -74,7 +74,7 @@ async function performRefresh(): Promise<boolean> {
     clearTokens()
     return false
   }
-  const parsed = (await res.json()) as { token: string; refreshToken: string }
+  const parsed = (await res.json()) as RefreshResponse
   sessionStorage.setItem(TOKEN_KEY, parsed.token)
   sessionStorage.setItem(REFRESH_KEY, parsed.refreshToken)
   return true
