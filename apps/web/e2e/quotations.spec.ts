@@ -54,13 +54,13 @@ test.describe("quotation wizard", () => {
     await page.getByRole("button", { name: "Tambah Produk" }).click()
     const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
     await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
-    await product.getByRole("button", { name: `${item.impaCode} - ${item.name}` }).click()
+    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
     await product.getByLabel("Kode IMPA/Nama Produk *", { exact: true }).fill(item.name)
-    await product.getByRole("button", { name: `${item.impaCode} - ${item.name}` }).click()
-    await expect(product.getByRole("button", { name: "Satuan *" })).toHaveText(/PCS/)
+    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
+    await expect(product.getByRole("combobox", { name: "Satuan *" })).toHaveText(/PCS/)
     await product.getByLabel("Jumlah Produk *").fill("4")
     await product.getByLabel("Nama Vendor *").click()
-    await product.getByRole("button", { name: new RegExp(vendor.name) }).click()
+    await page.getByRole("option", { name: new RegExp(vendor.name) }).click()
     await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("100000")
     await product.getByLabel("Harga Jual Satuan *").fill("150000")
     await product.getByRole("button", { name: "Simpan Data" }).click()
@@ -167,17 +167,17 @@ test.describe("quotation wizard", () => {
 
     const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
     await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
-    await product.getByRole("button", { name: `${item.impaCode} - ${item.name}` }).click()
+    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
     await product.getByRole("button", { name: "Salin ke Offer" }).click()
     await expect(product.getByLabel("Kode IMPA/Nama Produk *", { exact: true })).toHaveValue(
       `${item.impaCode} - ${item.name}`,
     )
     // The copied offer is the same catalog item, so its linked vendor and
     // default unit apply exactly as when the offer is picked directly.
-    await expect(product.getByRole("button", { name: "Satuan *" })).toHaveText(/PCS/)
+    await expect(product.getByRole("combobox", { name: "Satuan *" })).toHaveText(/PCS/)
     await product.getByLabel("Jumlah Produk *").fill("2")
     await product.getByLabel("Nama Vendor *").click()
-    await product.getByRole("button", { name: new RegExp(vendor.name) }).click()
+    await page.getByRole("option", { name: new RegExp(vendor.name) }).click()
     await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("75000")
   })
 })
