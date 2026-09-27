@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -113,4 +114,42 @@ func TestHandler_ContactInfo_UnknownKeysDrop(t *testing.T) {
 		`UPDATE vendors SET contact_info = '{"phone":"0811111111","fax":"021555"}' WHERE id = $1`, v.ID)
 	require.NoError(t, err)
 	assert.Equal(t, &vendors.ContactInfo{Phone: "0811111111"}, getVendor(t, srv, v.ID).ContactInfo)
+}
+
+// Stored contact info keeps shape.
+// A row the read path cannot decode is refused by the database, so one bad
+// row cannot turn the vendor list and detail into a 500.
+func TestDB_ContactInfo_ShapeCheck(t *testing.T) {
+	cases := []struct {
+		name    string
+		value   string
+		refused bool
+	}{
+		{"number phone", `'{"phone":123}'::jsonb`, true},
+		{"boolean email", `'{"email":true}'::jsonb`, true},
+		{"array sku", `'{"sku":[1]}'::jsonb`, true},
+		{"bare string", `'"0812"'::jsonb`, true},
+		{"array", `'["a"]'::jsonb`, true},
+		{"json null", `'null'::jsonb`, true},
+		{"sql null", `NULL`, false},
+		{"empty object", `'{}'::jsonb`, false},
+		{"null phone", `'{"phone":null}'::jsonb`, false},
+		{"unknown key", `'{"fax":1}'::jsonb`, false},
+		{"strings", `'{"email":"a@b.id","phone":"0811","sku":"S1"}'::jsonb`, false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			ctx, tx := testutil.BeginTx(t)
+			_, err := tx.Exec(ctx, `INSERT INTO vendors (name, contact_info, created_by)
+				VALUES ('CV Bentuk Kontak', `+c.value+`, $1)`, seedUserID)
+			if !c.refused {
+				require.NoError(t, err)
+				return
+			}
+			var pgErr *pgconn.PgError
+			require.ErrorAs(t, err, &pgErr)
+			assert.Equal(t, "23514", pgErr.Code)
+			assert.Equal(t, "vendors_contact_info_shape", pgErr.ConstraintName)
+		})
+	}
 }
