@@ -55,7 +55,6 @@ var allowlist = []pkg{
 	}},
 	{"internal/vendors", []entry{
 		{Go: "Vendor", TS: "VendorRow"},
-		{Go: "SearchResult", TS: "VendorSearchHit"},
 		{Go: "ItemByVendor", TS: "VendorItemRow"},
 		{Go: "CreateVendorRequest", TS: "CreateVendorInput", Input: true},
 		{Go: "UpdateVendorRequest", TS: "UpdateVendorInput", Input: true},
@@ -64,13 +63,11 @@ var allowlist = []pkg{
 	{"internal/items", []entry{
 		{Go: "Item", TS: "ItemRow"},
 		{Go: "SearchResult", TS: "ItemSearchHit"},
-		{Go: "MatchResult", TS: "ItemMatch"},
 		{Go: "VendorForItem", TS: "ItemVendorRow"},
 		{Go: "PriceHistory", TS: "ItemPriceHistoryRow"},
 		{Go: "CreateItemRequest", TS: "CreateItemInput", Input: true},
 		{Go: "UpdateItemRequest", TS: "UpdateItemInput", Input: true},
 		{Go: "AddVendorToItemRequest", TS: "AddVendorToItemInput", Input: true},
-		{Go: "MatchRequest", TS: "MatchRequestInput", Input: true},
 		{Go: "MatchedItemWithVendor", TS: "MatchedItemWithVendor"},
 		{Go: "MatchRowInput", TS: "MatchRowInput", Input: true},
 		{Go: "MatchRowResult", TS: "MatchRowResult"},

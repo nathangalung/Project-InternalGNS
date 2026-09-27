@@ -85,15 +85,6 @@ func TestRepo_Create_NullContactInfo(t *testing.T) {
 	assert.Greater(t, v.ID, int64(0))
 }
 
-func TestRepo_Search(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
-	repo := vendors.NewRepo(tx, testutil.Store(t))
-
-	results, err := repo.Search(ctx, "Toko", 0.05, 5)
-	require.NoError(t, err)
-	assert.NotEmpty(t, results)
-}
-
 func TestRepo_ListItems(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := vendors.NewRepo(tx, testutil.Store(t))

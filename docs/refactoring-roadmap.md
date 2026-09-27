@@ -156,9 +156,9 @@ tables, so they would never be chosen) and removing the PO count LATERAL
   off-box copy and the first production run.
 - **Limit clamp.** Done: `paginate.ParseLimit` clamps to `paginate.MaxLimit`
   (200), the same bound `listq.Page` uses.
-- **Dead endpoints.** `/items/search`, `/vendors/search` and
-  `/items/match-request` have no client. Delete them? (`/invoices/{id}/dates`
-  is used by the invoice dates card.)
+- **Dead endpoints.** Done: `/items/search`, `/vendors/search` and
+  `/items/match-request` had no client and are removed. `fn_search_vendors`
+  now has no caller; dropping it needs a migration.
 - **Import batch size.** `/items/match-rows` advertises 500 rows but the
   matcher needs roughly 50s for that against a 30s deadline, then rolls the
   whole batch back. Lower the cap to something honest, or invest in the

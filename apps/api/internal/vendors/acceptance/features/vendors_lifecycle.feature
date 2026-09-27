@@ -28,12 +28,6 @@ Feature: Vendor lifecycle
     Then the response status is 200
     And the vendor name reflects the update
 
-  Scenario: Search returns the seeded vendor
-    Given an existing vendor
-    When the user searches vendors by the seeded name
-    Then the response status is 200
-    And the vendor search results contain the seeded vendor
-
   Scenario: List items for seeded vendor
     When the user lists items for vendor 1
     Then the response status is 200
@@ -72,7 +66,6 @@ Feature: Vendor lifecycle
     Examples:
       | path                           |
       | /vendors/?q=cv%00maju          |
-      | /vendors/search?q=cv%00        |
       | /vendors/?countryName=%ff%fe   |
 
   Scenario: Products of a missing vendor return 404

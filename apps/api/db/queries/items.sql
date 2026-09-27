@@ -73,9 +73,6 @@ SELECT ins.id              AS vendor_product_id,
 FROM ins
 JOIN vendors v ON v.id = ins.vendor_id;
 
--- name: items.search
-SELECT * FROM fn_search_items($1, $2, $3);
-
 -- name: items.search_catalog
 -- Name layer of search-advanced. $4 is the isActive filter; NULL keeps
 -- active and inactive items alike.
@@ -90,9 +87,6 @@ SELECT * FROM fn_search_items($1, $2, $3, $4::boolean);
 SELECT id, is_active, name, impa_code, default_unit_id
 FROM items
 WHERE id = ANY($1);
-
--- name: items.match_request
-SELECT * FROM fn_match_request($1, $2);
 
 -- name: items.match_request_batch
 -- Best match per import row in one statement. Called row by row the import

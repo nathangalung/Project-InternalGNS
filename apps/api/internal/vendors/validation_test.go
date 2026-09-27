@@ -20,7 +20,6 @@ func TestHandler_QueryParamTextIsValidated(t *testing.T) {
 	}{
 		{"nul byte in list q", "/vendors/?q=%00"},
 		{"invalid utf8 in list q", "/vendors/?q=%ff%fe"},
-		{"nul byte in search q", "/vendors/search?q=ab%00"},
 		{"nul byte in countryName", "/vendors/?countryName=ab%00"},
 	}
 	for _, tt := range tests {

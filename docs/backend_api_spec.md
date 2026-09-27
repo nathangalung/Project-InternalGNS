@@ -71,9 +71,6 @@ list.
 | POST | `/items` | `Create` | `items.create` |
 | PUT | `/items/{id}` | `Update` | `items.update` |
 
-`/items/search` and `/items/match-request` are older single-tier endpoints
-with no caller in the web app.
-
 ### vendors
 
 | Method | Path | Handler | DB |

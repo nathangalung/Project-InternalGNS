@@ -27,22 +27,6 @@ Feature: Item lifecycle
     When the user reads the item
     And the item name reflects the update
 
-  Scenario: Search returns the seeded item
-    Given an existing item
-    When the user searches items by the seeded name
-    Then the response status is 200
-    And the item search results contain the seeded item
-
-  Scenario: Match request fuzzy resolves item
-    Given an existing item
-    When the user matches a request that mentions the seeded name
-    Then the response status is 200
-    And the match results contain at least 1 candidate
-
-  Scenario: Reject match request with empty text
-    When the user matches a request with empty text
-    Then the response status is 422
-
   Scenario: Link vendor to item
     Given an existing item
     When the user links vendor 1 to the item

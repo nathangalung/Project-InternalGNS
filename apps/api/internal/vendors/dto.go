@@ -50,16 +50,6 @@ type UpdateLogoRequest struct {
 	ObjectKey string `json:"objectKey"`
 }
 
-// SearchResult mirrors fn_search_vendors return shape.
-type SearchResult struct {
-	VendorID    int64        `db:"vendor_id"     json:"vendorId"`
-	VendorName  string       `db:"vendor_name"   json:"vendorName"`
-	Location    *string      `db:"location"      json:"location,omitempty"`
-	ContactInfo *ContactInfo `db:"contact_info"  json:"contactInfo,omitempty"`
-	Score       float32      `db:"score"         json:"score"`
-	MatchTier   string       `db:"match_tier"    json:"matchTier"`
-}
-
 // ItemByVendor is a vendor's item.
 // It joins vendor_products with items.
 type ItemByVendor struct {

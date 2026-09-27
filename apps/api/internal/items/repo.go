@@ -173,14 +173,6 @@ func (r *Repo) vendorLinkErr(ctx context.Context, vendorID int64) error {
 	return ErrVendorInactive
 }
 
-func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int) ([]SearchResult, error) {
-	rows, err := r.db.Query(ctx, r.store.Get("items.search"), q, minScore, limit)
-	if err != nil {
-		return nil, err
-	}
-	return pgx.CollectRows(rows, pgx.RowToStructByName[SearchResult])
-}
-
 // SearchCatalog runs the name layer.
 //
 // A nil isActive keeps active and inactive items alike.
@@ -224,14 +216,6 @@ func (r *Repo) ItemMetaByIDs(ctx context.Context, ids []int64) (map[int64]ItemMe
 		out[id] = m
 	}
 	return out, rows.Err()
-}
-
-func (r *Repo) MatchRequest(ctx context.Context, reqText string, limit int) ([]MatchResult, error) {
-	rows, err := r.db.Query(ctx, r.store.Get("items.match_request"), reqText, limit)
-	if err != nil {
-		return nil, err
-	}
-	return pgx.CollectRows(rows, pgx.RowToStructByName[MatchResult])
 }
 
 // ListVendorsForItem joins vendor_products and vendors.

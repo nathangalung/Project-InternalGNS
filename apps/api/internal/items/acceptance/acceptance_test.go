@@ -150,44 +150,6 @@ func (s *scenarioState) updateItemName() error {
 	return s.sendRequest(http.MethodPut, "/items/"+strconv.FormatInt(s.itemID, 10), body)
 }
 
-func (s *scenarioState) searchByName() error {
-	return s.sendRequest(http.MethodGet, "/items/search?q="+url.QueryEscape(s.name), nil)
-}
-
-func (s *scenarioState) searchContainsItem() error {
-	var rows []items.SearchResult
-	if err := json.Unmarshal(s.body, &rows); err != nil {
-		return err
-	}
-	for _, r := range rows {
-		if r.ID == s.itemID {
-			return nil
-		}
-	}
-	return fmt.Errorf("item %d not in search results", s.itemID)
-}
-
-func (s *scenarioState) matchRequestSeeded() error {
-	body := items.MatchRequest{ReqText: strings.ToLower(s.name), Limit: 5}
-	return s.sendRequest(http.MethodPost, "/items/match-request", body)
-}
-
-func (s *scenarioState) matchRequestEmpty() error {
-	body := items.MatchRequest{ReqText: "", Limit: 5}
-	return s.sendRequest(http.MethodPost, "/items/match-request", body)
-}
-
-func (s *scenarioState) matchAtLeast(min int) error {
-	var rows []items.MatchResult
-	if err := json.Unmarshal(s.body, &rows); err != nil {
-		return err
-	}
-	if len(rows) < min {
-		return fmt.Errorf("want >=%d got %d", min, len(rows))
-	}
-	return nil
-}
-
 func (s *scenarioState) linkVendor(vendorID int64) error {
 	cost := "100000"
 	sku := "ATDD-SKU"
@@ -458,11 +420,6 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the item name matches the seeded value$`, state.itemNameMatches)
 		sc.Step(`^the user updates the item name$`, state.updateItemName)
 		sc.Step(`^the item name reflects the update$`, state.itemNameMatches)
-		sc.Step(`^the user searches items by the seeded name$`, state.searchByName)
-		sc.Step(`^the item search results contain the seeded item$`, state.searchContainsItem)
-		sc.Step(`^the user matches a request that mentions the seeded name$`, state.matchRequestSeeded)
-		sc.Step(`^the user matches a request with empty text$`, state.matchRequestEmpty)
-		sc.Step(`^the match results contain at least (\d+) candidate(?:s)?$`, state.matchAtLeast)
 		sc.Step(`^the user links vendor (\d+) to the item$`, state.linkVendor)
 		sc.Step(`^the user lists vendors for the item$`, state.listVendorsForItem)
 		sc.Step(`^the vendor list contains at least (\d+) row(?:s)?$`, state.vendorListAtLeast)

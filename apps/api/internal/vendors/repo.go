@@ -142,15 +142,6 @@ func (r *Repo) UpdateLogo(ctx context.Context, id int64, objectKey string, userI
 	return nil
 }
 
-// Search calls fn_search_vendors.
-func (r *Repo) Search(ctx context.Context, q string, minScore float32, limit int) ([]SearchResult, error) {
-	rows, err := r.db.Query(ctx, r.store.Get("vendors.search"), q, minScore, limit)
-	if err != nil {
-		return nil, err
-	}
-	return pgx.CollectRows(rows, pgx.RowToStructByName[SearchResult])
-}
-
 // ListItems pages vendor items.
 func (r *Repo) ListItems(ctx context.Context, vendorID int64, limit, offset int) (ItemListResult, error) {
 	var out ItemListResult

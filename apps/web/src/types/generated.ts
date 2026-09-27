@@ -317,15 +317,6 @@ export type InvoiceTransition = {
 };
 
 // From items/dto.go
-export type ItemMatch = {
-    itemId: number;
-    itemName: string;
-    impaCode?: string;
-    confidence: number;
-    source: string;
-};
-
-// From items/dto.go
 export type ItemPriceHistoryRow = {
     quotationNo: string;
     quotationDate: string;
@@ -388,12 +379,6 @@ export type LoginResponse = {
 // From auth/dto.go
 export type LogoutInput = {
     refreshToken: string;
-};
-
-// From items/dto.go
-export type MatchRequestInput = {
-    reqText: string;
-    limit?: number;
 };
 
 // From items/dto.go
@@ -993,14 +978,4 @@ export type VendorRow = {
     productCount: number;
     totalPurchase: string;
     logoObjectKey?: string;
-};
-
-// From vendors/dto.go
-export type VendorSearchHit = {
-    vendorId: number;
-    vendorName: string;
-    location?: string;
-    contactInfo?: VendorContactInfo;
-    score: number;
-    matchTier: string;
 };

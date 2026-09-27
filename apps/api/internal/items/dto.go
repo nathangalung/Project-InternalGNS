@@ -45,15 +45,6 @@ type SearchResult struct {
 	MatchTier     string  `db:"match_tier"       json:"matchTier"`
 }
 
-// Mirrors fn_match_request return.
-type MatchResult struct {
-	ItemID     int64   `db:"item_id"     json:"itemId"`
-	ItemName   string  `db:"item_name"   json:"itemName"`
-	IMPACode   *string `db:"impa_code"   json:"impaCode,omitempty"`
-	Confidence float32 `db:"confidence"  json:"confidence"`
-	Source     string  `db:"source"      json:"source"` // cache | fuzzy | impa
-}
-
 // vendor_product joined with vendor.
 type VendorForItem struct {
 	VendorProductID int64   `db:"vendor_product_id"  json:"vendorProductId"`
@@ -97,12 +88,6 @@ type AddVendorToItemRequest struct {
 	VendorSKU  *string `json:"vendorSku"`
 	CostPrice  *string `json:"costPrice"`
 	ProductURL *string `json:"productUrl"`
-}
-
-// POST /items/match-request body.
-type MatchRequest struct {
-	ReqText string `json:"reqText"`         // raw text from PDF
-	Limit   int    `json:"limit,omitempty"` // defaults to 5
 }
 
 // Result row from items.match_with_vendor_by_id.

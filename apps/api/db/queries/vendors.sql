@@ -74,9 +74,6 @@ UPDATE vendors
  WHERE id = $1
 RETURNING id;
 
--- name: vendors.search
-SELECT * FROM fn_search_vendors($1, $2, $3);
-
 -- name: vendors.list_items_count
 -- Same rows as vendors.list_items, so X-Total-Count matches the pages.
 SELECT COUNT(*)

@@ -141,33 +141,6 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, v)
 }
 
-func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
-	if key := badQueryParam(r.URL.Query()); key != "" {
-		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
-		return
-	}
-	q := r.URL.Query().Get("q")
-	if q == "" {
-		httperr.Render(w, httperr.BadRequest("q is required"))
-		return
-	}
-
-	minScore := float32(0.3)
-	if s := r.URL.Query().Get("minScore"); s != "" {
-		if v, err := strconv.ParseFloat(s, 32); err == nil {
-			minScore = float32(v)
-		}
-	}
-	limit := paginate.ParseLimit(r, 10)
-
-	results, err := h.repo.Search(r.Context(), q, minScore, limit)
-	if err != nil {
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, results)
-}
-
 func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {

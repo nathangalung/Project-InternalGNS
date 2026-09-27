@@ -178,33 +178,6 @@ func (h *Handler) AddVendor(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusCreated, row)
 }
 
-func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
-	if key := badQueryParam(r.URL.Query()); key != "" {
-		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
-		return
-	}
-	q := r.URL.Query().Get("q")
-	if q == "" {
-		httperr.Render(w, httperr.BadRequest("q is required"))
-		return
-	}
-
-	minScore := float32(0.3)
-	if s := r.URL.Query().Get("minScore"); s != "" {
-		if v, err := strconv.ParseFloat(s, 32); err == nil {
-			minScore = float32(v)
-		}
-	}
-	limit := paginate.ParseLimit(r, 10)
-
-	results, err := h.repo.Search(r.Context(), q, minScore, limit)
-	if err != nil {
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, results)
-}
-
 // SearchAdvanced merges three search layers.
 // They are item name, vendor offer and request history.
 // Tier weight: ITEM_AUTO > VENDOR_OFFER > ITEM_SUGGESTED > REQUEST_HISTORY > ITEM_FUZZY.
@@ -278,28 +251,6 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 	resp := mergeAdvanced(q, items, offers, requests, meta, onlyActive, limit, offset)
 	w.Header().Set("X-Total-Count", strconv.Itoa(resp.Total))
 	httpx.WriteJSON(w, http.StatusOK, resp)
-}
-
-func (h *Handler) MatchRequest(w http.ResponseWriter, r *http.Request) {
-	var req MatchRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
-		return
-	}
-	if req.ReqText == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"reqText": "required"}))
-		return
-	}
-	if req.Limit <= 0 {
-		req.Limit = 5
-	}
-
-	matches, err := h.repo.MatchRequest(r.Context(), req.ReqText, req.Limit)
-	if err != nil {
-		httperr.RenderDBErr(w, err)
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, matches)
 }
 
 // MatchRows batch-matches imported xlsx rows.

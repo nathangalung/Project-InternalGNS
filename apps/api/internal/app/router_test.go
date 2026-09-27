@@ -381,7 +381,7 @@ func TestRouter_FinanceReadOnlyOnItemsAndVendors(t *testing.T) {
 		{"finance", http.MethodGet, "/api/v1/vendors/1/logo/upload-url?fileName=x.png", true},
 		{"finance", http.MethodGet, "/api/v1/items/", false},
 		{"finance", http.MethodGet, "/api/v1/items/1", false},
-		{"finance", http.MethodGet, "/api/v1/items/search?q=bolt", false},
+		{"finance", http.MethodGet, "/api/v1/items/search-advanced?q=bolt", false},
 		{"finance", http.MethodGet, "/api/v1/items/1/vendors", false},
 		{"finance", http.MethodGet, "/api/v1/vendors/", false},
 		{"finance", http.MethodGet, "/api/v1/vendors/1", false},
