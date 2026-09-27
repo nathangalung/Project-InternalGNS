@@ -150,6 +150,7 @@ keeps its password.
 | `make cover` | Go and web coverage gates |
 | `make lint` / `make lint-fix` | go vet, golangci-lint, Biome / auto-fix |
 | `make fmt` / `make types` | Format / web typecheck |
+| `make gen-types` | Regenerate `apps/web/src/types/generated.ts` from the Go DTOs |
 | `make hooks-install` / `hooks-run` | pre-commit hooks |
 | `make docker-build` | API and web images |
 | `make orphan-blobs-dry` / `orphan-blobs-purge` | Find / delete unreferenced MinIO objects |

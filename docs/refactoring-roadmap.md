@@ -241,6 +241,8 @@ Answers unblock Phase 1/3. Full context in the audit §7.
 
 - **Q1** Keep hand-maintained `types/api.ts` (verdict: yes; codegen scaffolding
   already deleted) — or generate TS from the Go json tags later?
+  *Answered 2026-09: generate. `openapi.yaml` is retired and
+  `types/generated.ts` comes from the Go DTOs via `make gen-types`.*
 - **Q2** Should the invoice show a discount line at all? Blocks #2.
 - **Q3** Is dashboard revenue/profit meant to be VAT-inclusive? Is `cost_price`
   ex-VAT? Determines whether the daily profit figure is overstated ~11%.

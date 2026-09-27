@@ -7,8 +7,8 @@ the database call: a named query from `apps/api/db/queries`, or a database
 function reached through one.
 
 Request and response shapes are not repeated here. The Go DTOs
-(`internal/<feature>/dto.go`) and `apps/web/src/types/api.ts` are the
-contract.
+(`internal/<feature>/dto.go`) are the contract, and `make gen-types` writes
+them to `apps/web/src/types/generated.ts`.
 
 ## 1. Conventions
 
