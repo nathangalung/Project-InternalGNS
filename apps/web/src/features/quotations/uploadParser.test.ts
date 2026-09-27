@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import type { MatchRowInput } from "@/types/api"
 import { parseCsv, parseProductFile, parseQty, rowsFromAOA } from "./uploadParser"
 
 describe("parseQty id-ID number format", () => {
@@ -138,14 +139,119 @@ describe("rowsFromAOA rows", () => {
   })
 })
 
-// Real ExcelJS workbook round-trip.
-async function workbookFile(build: (wb: import("exceljs").Workbook) => void): Promise<File> {
-  const { default: ExcelJS } = await import("exceljs")
-  const wb = new ExcelJS.Workbook()
-  build(wb)
-  const buf = await wb.xlsx.writeBuffer()
-  return new File([buf], "Daftar.XLSX")
+// Fixture workbooks as data URLs.
+//
+// Written by apps/api/scripts/rfqfixtures (make rfq-fixtures) with excelize,
+// so the reader is checked against bytes it did not write itself.
+const fixtures = import.meta.glob<string>("./testdata/*.xlsx", {
+  query: "?inline",
+  import: "default",
+  eager: true,
+})
+
+async function fixtureFile(name: string): Promise<File> {
+  const url = fixtures[`./testdata/${name}`]
+  if (!url) throw new Error(`fixture ${name} missing`)
+  const buf = await (await fetch(url)).arrayBuffer()
+  // Upper-case extension: detection ignores case.
+  return new File([buf], name.replace(".xlsx", ".XLSX"))
 }
+
+type Case = { file: string; why: string; want: MatchRowInput[] }
+
+const radio = { impaCode: "370115", name: "Marine Radio", qty: 2, unit: "PCS" }
+const rope = { impaCode: "210101", name: "Tali Tambang", qty: 5, unit: "MTR" }
+
+const cases: Case[] = [
+  {
+    file: "multi-sheet.xlsx",
+    why: "takes the first sheet that has product rows",
+    want: [radio],
+  },
+  {
+    file: "display-values.xlsx",
+    why: "reads cached formula results, links and rich text as display text",
+    want: [{ impaCode: "370115", name: "Tali Nylon", qty: 6, unit: "ROLL" }],
+  },
+  // Regression: error cell text.
+  //
+  // An error cell, such as a failed VLOOKUP, was sent as the text
+  // "[object Object]" and matched or created a product by that name.
+  {
+    file: "error-cells.xlsx",
+    why: "reads error cells, plain or cached, as blank",
+    want: [{ impaCode: "", name: "Mur", qty: 0, unit: "PCS" }],
+  },
+  // Regression: uncached formula result.
+  //
+  // A formula saved without a cached result, as generated workbooks do, was
+  // sent as the name "[object Object]".
+  {
+    file: "uncached-formula.xlsx",
+    why: "reads a formula without a cached result as blank",
+    want: [{ impaCode: "370115", name: "Mur", qty: 2, unit: "" }],
+  },
+  // Regression: table past column A.
+  //
+  // Empty leading cells left holes, and a table starting at column B
+  // crashed the header scan with a TypeError.
+  {
+    file: "offset-table.xlsx",
+    why: "reads a table that starts at B3",
+    want: [{ impaCode: "", name: "Baut", qty: 2, unit: "" }],
+  },
+  {
+    file: "no-products.xlsx",
+    why: "returns nothing for a workbook without product rows",
+    want: [],
+  },
+  // Merged cells: current behaviour.
+  //
+  // A merged cell's value fills every cell it covers. That lets the
+  // two-row header resolve Kode IMPA and Nama under the merged Produk, and
+  // it also turns the merged DECK STORES category row into a product row.
+  {
+    file: "merged-cells.xlsx",
+    why: "fills merged cells from their top-left value",
+    want: [
+      { impaCode: "DECK STORES", name: "DECK STORES", qty: 0, unit: "DECK STORES" },
+      radio,
+      rope,
+    ],
+  },
+  // Blank rows do not count.
+  //
+  // The header sits on row 22 behind 20 blank or styled-empty rows, past
+  // the 15-row header scan, and is still found.
+  {
+    file: "empty-rows.xlsx",
+    why: "skips blank and styled-empty rows before and between products",
+    want: [radio, rope],
+  },
+  // Leading zeros survive only as text.
+  //
+  // A numeric IMPA code shown as 012345 by a 000000 format reads as 12345.
+  {
+    file: "numbers-as-text.xlsx",
+    why: "reads text numbers in id-ID format and keeps text leading zeros",
+    want: [
+      { impaCode: "012345", name: "Cat Kapal", qty: 1000, unit: "KG" },
+      { impaCode: "12345", name: "Kuas", qty: 2.5, unit: "PCS" },
+      { impaCode: "370115", name: "Marine Radio", qty: 4, unit: "SET" },
+      { impaCode: "370116", name: "Lampu", qty: 7, unit: "pcs" },
+    ],
+  },
+  {
+    file: "headers-nomor.xlsx",
+    why: "accepts Nomor, Deskripsi and Kuantitas under a title row",
+    want: [{ impaCode: "232001", name: "Sarung Tangan", qty: 12, unit: "PSG" }],
+  },
+  {
+    file: "headers-kode.xlsx",
+    why: "accepts padded upper-case Kode, Produk and Unit",
+    want: [{ impaCode: "150101", name: "Baut M10", qty: 1500, unit: "PCS" }],
+  },
+]
 
 describe("parseProductFile", () => {
   it("reads a CSV upload", async () => {
@@ -155,90 +261,11 @@ describe("parseProductFile", () => {
     ])
   })
 
-  it("takes the first sheet that has product rows", async () => {
-    const file = await workbookFile((wb) => {
-      wb.addWorksheet("Kosong")
-      wb.addWorksheet("Catatan").addRow(["Dikirim ke Batam"])
-      const ws = wb.addWorksheet("Produk")
-      ws.addRow(["Kode IMPA", "Nama Produk", "Jumlah", "Satuan"])
-      ws.addRow(["370115", "Marine Radio", 2, "PCS"])
-    })
-    await expect(parseProductFile(file)).resolves.toEqual([
-      { impaCode: "370115", name: "Marine Radio", qty: 2, unit: "PCS" },
-    ])
+  it("has a case for every fixture", () => {
+    expect(Object.keys(fixtures).sort()).toEqual(cases.map((c) => `./testdata/${c.file}`).sort())
   })
 
-  it("reads formula results, links, rich text and dates as their display value", async () => {
-    const shipped = new Date(Date.UTC(2026, 8, 24))
-    const file = await workbookFile((wb) => {
-      const ws = wb.addWorksheet("Produk")
-      ws.addRow(["Kode", "Nama", "Jumlah", "Satuan", "Tanggal"])
-      ws.addRow([
-        { formula: "1+1", result: 370115 },
-        { text: "Tali Nylon", hyperlink: "https://gns.id/tali" },
-        { formula: "2*3", result: 6 },
-        { richText: [{ text: "RO" }, { text: "LL" }] },
-        shipped,
-      ])
-    })
-    await expect(parseProductFile(file)).resolves.toEqual([
-      { impaCode: "370115", name: "Tali Nylon", qty: 6, unit: "ROLL" },
-    ])
-  })
-
-  // Regression: error cell text.
-  //
-  // An error cell, such as a failed VLOOKUP, was sent as the text
-  // "[object Object]" and matched or created a product by that name.
-  it("reads an error cell as blank", async () => {
-    const file = await workbookFile((wb) => {
-      const ws = wb.addWorksheet("Produk")
-      ws.addRow(["Kode", "Nama", "Jumlah", "Satuan"])
-      ws.addRow([{ error: "#N/A" }, "Mur", { formula: "1/0", result: { error: "#DIV/0!" } }, "PCS"])
-      ws.addRow(["370115", { formula: "VLOOKUP(A3,K:L,2,0)", result: { error: "#N/A" } }, 2, "PCS"])
-    })
-    await expect(parseProductFile(file)).resolves.toEqual([
-      { impaCode: "", name: "Mur", qty: 0, unit: "PCS" },
-    ])
-  })
-
-  // Regression: uncached formula result.
-  //
-  // A formula saved without a cached result, as generated workbooks do, was
-  // sent as the name "[object Object]".
-  it("reads a formula without a cached result as blank", async () => {
-    const file = await workbookFile((wb) => {
-      const ws = wb.addWorksheet("Produk")
-      ws.addRow(["Kode", "Nama", "Jumlah"])
-      ws.addRow([{ formula: "K1" }, { formula: "VLOOKUP(A2,K:L,2,0)" }, 1])
-      ws.addRow(["370115", "Mur", 2])
-    })
-    await expect(parseProductFile(file)).resolves.toEqual([
-      { impaCode: "370115", name: "Mur", qty: 2, unit: "" },
-    ])
-  })
-
-  // Regression: table past column A.
-  //
-  // ExcelJS leaves holes for empty cells, and a table starting at column B
-  // crashed the header scan with a TypeError.
-  it("reads a table that starts past column A", async () => {
-    const file = await workbookFile((wb) => {
-      const ws = wb.addWorksheet("Produk")
-      ws.getCell("B1").value = "Nama"
-      ws.getCell("C1").value = "Jumlah"
-      ws.getCell("B2").value = "Baut"
-      ws.getCell("C2").value = 2
-    })
-    await expect(parseProductFile(file)).resolves.toEqual([
-      { impaCode: "", name: "Baut", qty: 2, unit: "" },
-    ])
-  })
-
-  it("returns nothing for a workbook without product rows", async () => {
-    const file = await workbookFile((wb) => {
-      wb.addWorksheet("Catatan").addRow(["Tidak ada produk"])
-    })
-    await expect(parseProductFile(file)).resolves.toEqual([])
+  it.each(cases)("$file $why", async ({ file, want }) => {
+    await expect(parseProductFile(await fixtureFile(file))).resolves.toEqual(want)
   })
 })
