@@ -1,5 +1,5 @@
 import { ApiError } from "@/lib/api-client"
-import type { ProductItem } from "./QuotationEdit"
+import type { ProductItem } from "./wizard"
 
 // Wizard line quantity rules.
 //

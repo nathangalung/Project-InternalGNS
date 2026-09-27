@@ -8,9 +8,9 @@ import type {
   QuotationItemInput,
 } from "@/types/api"
 import { parseQty, requestedCode } from "./lines"
-import type { ProductItem } from "./QuotationEdit"
 import type { QuotationRow } from "./QuotationList/helpers"
 import { quotationStatusLabel } from "./status"
+import type { ProductItem } from "./wizard"
 
 // Expiry job note prefix.
 const EXPIRY_PREFIX = "Kedaluwarsa otomatis: "

@@ -1,5 +1,5 @@
-import type { ProductItem } from "@/features/quotations/QuotationEdit"
 import type { ProductRow, ShippingRow } from "@/features/quotations/types"
+import type { ProductItem } from "@/features/quotations/wizard"
 import { formatDateTime, formatRupiah, toNum } from "@/lib/format"
 import type {
   PoItemInput,

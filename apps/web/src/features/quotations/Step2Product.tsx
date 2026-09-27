@@ -5,9 +5,9 @@ import { matchRows } from "@/features/items/api"
 import { getPageNumbers } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { isValidQty, QTY_ERROR, requestDiffers, requestedCode } from "./lines"
-import type { ProductItem } from "./QuotationEdit"
 import QuotationReviewCard from "./QuotationReviewCard"
 import { parseProductFile } from "./uploadParser"
+import type { ProductItem } from "./wizard"
 import { qe, qep } from "./wizard-styles"
 
 const pageBtn = `flex h-8 w-8 items-center justify-center rounded-sm text-sm transition ${ui.focusRing}`
