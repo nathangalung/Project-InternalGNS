@@ -103,9 +103,17 @@ func validateCreate(req CreateUserRequest) map[string]string {
 }
 
 // validateUpdate enforces the update payload.
-func validateUpdate(req UpdateUserRequest) map[string]string {
+// stored reads the account's current address, only when the new one fails
+// the format rule. An unchanged address is kept: accounts made under the
+// older net/mail rule stay editable, and a changed address must pass.
+func validateUpdate(req UpdateUserRequest, stored func() (string, error)) map[string]string {
 	errs := map[string]string{}
 	put(errs, "email", validateEmail(req.Email))
+	if errs["email"] == validate.EmailMessage {
+		if prior, err := stored(); err == nil && normalizeEmail(prior) == normalizeEmail(req.Email) {
+			delete(errs, "email")
+		}
+	}
 	put(errs, "name", validateName(req.Name))
 	put(errs, "role", validateRole(req.Role))
 	if len(errs) == 0 {

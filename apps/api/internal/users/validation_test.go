@@ -1,6 +1,7 @@
 package users_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -178,4 +179,48 @@ func TestHandler_Create_TrimsName(t *testing.T) {
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&u))
 	c.User(u.ID)
 	assert.Equal(t, "Nama Berspasi", u.Name)
+}
+
+// Legacy email stays editable.
+// Accounts made under the older net/mail rule can hold an address the shared
+// rule refuses. An admin must still rename, re-role or deactivate them while
+// the address is unchanged; only a new address has to pass the rule.
+func TestHandler_Update_KeepsLegacyEmail(t *testing.T) {
+	c := testutil.NewCleaner(t)
+	srv := newUsersServer(t)
+	u := newStaff(t, c, srv, fmt.Sprintf("legacy-%d@test.local", randSuffix()))
+	legacy := fmt.Sprintf("legacy-%d@x.c", u.ID)
+	_, err := testutil.Pool(t).Exec(context.Background(),
+		`UPDATE users SET email = $1 WHERE id = $2`, legacy, u.ID)
+	require.NoError(t, err)
+
+	tests := []struct {
+		name  string
+		email string
+		want  int
+	}{
+		{"unchanged", legacy, http.StatusOK},
+		{"unchanged, other case and padding", "  " + strings.ToUpper(legacy) + " ", http.StatusOK},
+		{"changed to another invalid address", fmt.Sprintf("baru-%d@x.c", u.ID), http.StatusUnprocessableEntity},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			res := doJSON(t, srv, http.MethodPut, fmt.Sprintf("/users/%d", u.ID), map[string]any{
+				"email": tc.email, "name": "Legacy", "role": "finance", "isActive": false,
+			})
+			defer res.Body.Close()
+			assert.Equal(t, tc.want, res.StatusCode)
+		})
+	}
+}
+
+// Unknown user keeps the 422.
+// The stored-address lookup finds nothing, so the format error stands.
+func TestHandler_Update_InvalidEmailUnknownUser(t *testing.T) {
+	srv := newUsersServer(t)
+	res := doJSON(t, srv, http.MethodPut, "/users/99999999", map[string]any{
+		"email": "x@y.z", "name": "X", "role": "operational", "isActive": true,
+	})
+	defer res.Body.Close()
+	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 }

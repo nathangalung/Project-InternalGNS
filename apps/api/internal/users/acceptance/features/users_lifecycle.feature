@@ -93,6 +93,14 @@ Feature: User management lifecycle
     Then the response status is 200
     And the staff account is active
 
+  Scenario: An address kept from the older email rule stays editable
+    Given an existing staff account
+    And its email was stored under the older rule
+    When the user deactivates the staff account
+    Then the response status is 200
+    When the user changes the staff email to one the rule refuses
+    Then the response status is 422
+
   Scenario: Names are stored trimmed
     When the user creates a staff account with a padded name
     Then the response status is 201
