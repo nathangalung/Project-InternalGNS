@@ -419,3 +419,41 @@ func TestHandler_ChangeContact_Messages(t *testing.T) {
 		})
 	}
 }
+
+// Create refusals read in Indonesian.
+// The client and contact checks live in fn_create_quotation, so their typed
+// raises are what the user reads.
+func TestHandler_Create_DatabaseRefusals(t *testing.T) {
+	srv, ctx := resetServer(t)
+	pool := testutil.Pool(t)
+	var inactive int64
+	require.NoError(t, pool.QueryRow(ctx, `
+		INSERT INTO company_client (number, name, country_code, is_active, created_by, updated_by)
+		SELECT lpad(n::text, 4, '0'), 'PT Nonaktif', 'IDN', FALSE, 1, 1
+		FROM generate_series(1000, 9999) n
+		WHERE NOT EXISTS (SELECT 1 FROM company_client WHERE number = lpad(n::text, 4, '0'))
+		LIMIT 1 RETURNING id`).Scan(&inactive))
+	t.Cleanup(func() { _, _ = pool.Exec(ctx, `DELETE FROM company_client WHERE id = $1`, inactive) })
+	foreign := insertContact(t, 2, "Kontak Klien Lain")
+
+	cases := []struct {
+		name   string
+		edit   func(*quotations.CreateRequest)
+		detail string
+	}{
+		{"inactive client", func(r *quotations.CreateRequest) { r.CompanyClientID = inactive; r.ContactID = nil },
+			"Klien tidak ditemukan atau sudah nonaktif. Pilih klien lain."},
+		{"contact of another client", func(r *quotations.CreateRequest) { r.ContactID = &foreign },
+			"Narahubung tidak ditemukan, sudah nonaktif, atau bukan milik klien ini."},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			req := sampleCreate()
+			c.edit(&req)
+			res := doJSON(t, srv, http.MethodPost, "/quotations/", req)
+			e := problemOf(t, res)
+			require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+			assert.Equal(t, c.detail, e.Detail)
+		})
+	}
+}

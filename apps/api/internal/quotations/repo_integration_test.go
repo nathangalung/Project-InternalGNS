@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -86,7 +87,7 @@ func TestRepo_Create_RejectsEmptyItems(t *testing.T) {
 	req.Items = nil
 	_, err := repo.Create(ctx, req, seedUserID)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "at least 1 item")
+	assert.Contains(t, err.Error(), "Quotation harus memiliki minimal satu baris.")
 }
 
 func TestRepo_Create_RejectsBadDiscount(t *testing.T) {
@@ -95,7 +96,7 @@ func TestRepo_Create_RejectsBadDiscount(t *testing.T) {
 	req.DiscountPct = "120"
 	_, err := repo.Create(ctx, req, seedUserID)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "discount_pct")
+	assert.Contains(t, err.Error(), "Diskon harus antara 0 dan 100; nilai yang dikirim 120.")
 }
 
 func TestRepo_Create_RejectsUnknownClient(t *testing.T) {
@@ -103,8 +104,10 @@ func TestRepo_Create_RejectsUnknownClient(t *testing.T) {
 	req := sampleCreate()
 	req.CompanyClientID = 99999
 	_, err := repo.Create(ctx, req, seedUserID)
-	require.Error(t, err)
-	assert.Contains(t, strings.ToLower(err.Error()), "company_client_id")
+	var pgErr *pgconn.PgError
+	require.ErrorAs(t, err, &pgErr)
+	assert.Equal(t, "P0014", pgErr.Code)
+	assert.Equal(t, "Klien tidak ditemukan atau sudah nonaktif. Pilih klien lain.", pgErr.Message)
 }
 
 func TestRepo_GetDetail_NotFound(t *testing.T) {

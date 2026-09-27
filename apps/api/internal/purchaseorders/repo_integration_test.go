@@ -202,7 +202,7 @@ func TestRepo_UpdateItems_DiscountOutOfRangeIsUnprocessable(t *testing.T) {
 	e := httperr.FromDBErr(err)
 	assert.Equal(t, http.StatusUnprocessableEntity, e.Status)
 	// Prose, so it rides in Detail; a "db" field key would toast as a label.
-	assert.Equal(t, "discount_pct must be between 0 and 100", e.Detail)
+	assert.Equal(t, "Diskon harus antara 0 dan 100.", e.Detail)
 }
 
 func TestRepo_ChangeStatus_DeliveredSnapshotsGoodsOrService(t *testing.T) {

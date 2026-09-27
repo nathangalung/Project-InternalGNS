@@ -92,7 +92,7 @@ func TestHandler_UpdateItems_DiscountOutOfRange(t *testing.T) {
 		req, map[string]string{"If-Match": strconv.Itoa(int(po.RowVersion))})
 	defer res.Body.Close()
 	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
-	assert.Contains(t, readProblem(t, res).Detail, "discount_pct")
+	assert.Equal(t, "Diskon harus antara 0 dan 100.", readProblem(t, res).Detail)
 }
 
 // Saved edit returns the version.

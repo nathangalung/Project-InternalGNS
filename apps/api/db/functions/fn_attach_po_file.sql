@@ -1,4 +1,4 @@
--- Canonical current body of fn_attach_po_file (deployed by migration 00064).
+-- Canonical current body of fn_attach_po_file (deployed by migration 00073).
 CREATE OR REPLACE FUNCTION public.fn_attach_po_file(p_po_id bigint, p_file_name text, p_file_size bigint, p_file_url text, p_user_id bigint)
  RETURNS void
  LANGUAGE plpgsql
@@ -10,7 +10,7 @@ BEGIN
     FROM purchase_orders WHERE id = p_po_id FOR UPDATE;
 
   IF v_old IS NULL THEN
-    RAISE EXCEPTION 'Purchase order % not found', p_po_id
+    RAISE EXCEPTION 'PO % tidak ditemukan.', p_po_id
       USING ERRCODE = 'P0011';
   END IF;
 
