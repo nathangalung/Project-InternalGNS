@@ -213,7 +213,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErr(w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusCreated, map[string]int64{"id": id})
+	httpx.WriteJSON(w, http.StatusCreated, CreatedResponse{ID: id})
 }
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
@@ -266,10 +266,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErr(w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"id":         id,
-		"rowVersion": newVersion,
-	})
+	httpx.WriteJSON(w, http.StatusOK, UpdatedResponse{ID: id, RowVersion: newVersion})
 }
 
 func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
@@ -343,7 +340,7 @@ func (h *Handler) Revise(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusCreated, map[string]int64{"id": newID})
+	httpx.WriteJSON(w, http.StatusCreated, CreatedResponse{ID: newID})
 }
 
 func (h *Handler) ChangeContact(w http.ResponseWriter, r *http.Request) {

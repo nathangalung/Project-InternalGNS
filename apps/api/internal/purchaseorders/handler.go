@@ -388,10 +388,7 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"id":         id,
-		"rowVersion": newVersion,
-	})
+	httpx.WriteJSON(w, http.StatusOK, UpdatedResponse{ID: id, RowVersion: newVersion})
 }
 
 // allowOnProgress requires complete master data.

@@ -19,12 +19,33 @@ import (
 // ErrNotFound signals missing owners.
 var ErrNotFound = errors.New("assetproxy: not found")
 
-// Asset is key plus extras.
-// Extra is merged into the download response; purchase orders use it to
-// return the original file name alongside the URL.
+// Asset is key plus name.
+// FileName reaches the download response only when the descriptor sets
+// NamedFile; purchase orders use it to return the original file name.
 type Asset struct {
-	Key   string
-	Extra map[string]any
+	Key      string
+	FileName *string
+}
+
+// PresignUpload is a presigned PUT.
+// Fields stay alphabetical, the order the old map encoded.
+type PresignUpload struct {
+	ExpiresAt int64  `json:"expiresAt"`
+	ObjectKey string `json:"objectKey"`
+	UploadURL string `json:"uploadUrl"`
+}
+
+// PresignDownload is a presigned GET.
+type PresignDownload struct {
+	DownloadURL string `json:"downloadUrl"`
+	ExpiresAt   int64  `json:"expiresAt"`
+}
+
+// PresignFileDownload adds the name.
+// FileName is null when the record never stored one.
+type PresignFileDownload struct {
+	PresignDownload
+	FileName *string `json:"fileName"`
 }
 
 // Descriptor configures one route set.
@@ -38,7 +59,9 @@ type Descriptor struct {
 	// KeySub names a sub-folder.
 	// It sits under KeyPrefix/<id>/, so two assets of one record never share
 	// a folder and one cannot be attached as the other.
-	KeySub      string
+	KeySub string
+	// NamedFile adds fileName to downloads.
+	NamedFile   bool
 	NotFoundMsg string
 	NoAssetMsg  string
 	UploadTTL   time.Duration
@@ -85,10 +108,10 @@ func Upload(d Descriptor) http.HandlerFunc {
 			return
 		}
 		objectKey := storage.BuildFolderKey(d.folder(id), fileName)
-		httpx.WriteJSON(w, http.StatusOK, map[string]any{
-			"uploadUrl": d.Storage.PresignPut(r.Context(), d.Bucket, objectKey, d.UploadTTL),
-			"objectKey": objectKey,
-			"expiresAt": time.Now().UTC().Add(d.UploadTTL).Unix(),
+		httpx.WriteJSON(w, http.StatusOK, PresignUpload{
+			ExpiresAt: time.Now().UTC().Add(d.UploadTTL).Unix(),
+			ObjectKey: objectKey,
+			UploadURL: d.Storage.PresignPut(r.Context(), d.Bucket, objectKey, d.UploadTTL),
 		})
 	}
 }
@@ -113,12 +136,13 @@ func Download(d Descriptor) http.HandlerFunc {
 			httperr.Render(w, httperr.NotFound(d.NoAssetMsg))
 			return
 		}
-		out := map[string]any{
-			"downloadUrl": d.Storage.PresignGet(r.Context(), d.Bucket, asset.Key, d.DownloadTTL),
-			"expiresAt":   time.Now().UTC().Add(d.DownloadTTL).Unix(),
+		out := PresignDownload{
+			DownloadURL: d.Storage.PresignGet(r.Context(), d.Bucket, asset.Key, d.DownloadTTL),
+			ExpiresAt:   time.Now().UTC().Add(d.DownloadTTL).Unix(),
 		}
-		for k, v := range asset.Extra {
-			out[k] = v
+		if d.NamedFile {
+			httpx.WriteJSON(w, http.StatusOK, PresignFileDownload{PresignDownload: out, FileName: asset.FileName})
+			return
 		}
 		httpx.WriteJSON(w, http.StatusOK, out)
 	}

@@ -46,3 +46,24 @@ func TestItemsToJSONB_Empty(t *testing.T) {
 
 func int64Ptr(v int64) *int64    { return &v }
 func stringPtr(v string) *string { return &v }
+
+// Named responses keep map bytes.
+func TestWriteResponses_MatchLegacyMaps(t *testing.T) {
+	tests := []struct {
+		name string
+		got  any
+		want any
+	}{
+		{"create and revise", CreatedResponse{ID: 7}, map[string]int64{"id": 7}},
+		{"update", UpdatedResponse{ID: 7, RowVersion: 3}, map[string]any{"id": int64(7), "rowVersion": int32(3)}},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := json.Marshal(tc.got)
+			require.NoError(t, err)
+			want, err := json.Marshal(tc.want)
+			require.NoError(t, err)
+			assert.Equal(t, string(want), string(got))
+		})
+	}
+}

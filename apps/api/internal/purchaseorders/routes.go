@@ -62,6 +62,7 @@ func docAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
 		Storage:     sc,
 		Bucket:      storage.BucketPODocs,
 		KeyPrefix:   "po",
+		NamedFile:   true,
 		NotFoundMsg: "purchase order not found",
 		NoAssetMsg:  "no file attached",
 		UploadTTL:   uploadURLExpiry,
@@ -80,8 +81,8 @@ func docAsset(sc *storage.Client, repo *Repo) assetproxy.Descriptor {
 				key = *po.FileURL
 			}
 			return assetproxy.Asset{
-				Key:   key,
-				Extra: map[string]any{"fileName": po.FileName},
+				Key:      key,
+				FileName: po.FileName,
 			}, nil
 		},
 	}

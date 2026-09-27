@@ -207,3 +207,15 @@ func itemsToJSONB(items []CreateItem) ([]byte, error) {
 	}
 	return json.Marshal(out)
 }
+
+// CreatedResponse names the new quotation.
+// Create and Revise both answer with it.
+type CreatedResponse struct {
+	ID int64 `json:"id"`
+}
+
+// UpdatedResponse carries the new version.
+type UpdatedResponse struct {
+	ID         int64 `json:"id"`
+	RowVersion int32 `json:"rowVersion"`
+}

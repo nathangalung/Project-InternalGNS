@@ -152,3 +152,9 @@ type ListResult struct {
 	Rows  []PurchaseOrder
 	Total int64
 }
+
+// UpdatedResponse carries the new version.
+type UpdatedResponse struct {
+	ID         int64 `json:"id"`
+	RowVersion int32 `json:"rowVersion"`
+}

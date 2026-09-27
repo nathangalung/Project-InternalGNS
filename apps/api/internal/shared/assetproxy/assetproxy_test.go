@@ -228,16 +228,17 @@ func TestDownload(t *testing.T) {
 	})
 }
 
-// Extra fields reach the download.
+// Named files report the name.
 // Purchase orders return the original file name alongside the URL.
-func TestDownload_ExtraFields(t *testing.T) {
+func TestDownload_NamedFile(t *testing.T) {
 	name := "scan.pdf"
 	tests := map[string]*string{"present": &name, "null": nil}
 	for label, val := range tests {
 		t.Run(label, func(t *testing.T) {
 			d := base("")
+			d.NamedFile = true
 			d.CurrentAsset = func(context.Context, int64) (assetproxy.Asset, error) {
-				return assetproxy.Asset{Key: "po/1/a.pdf", Extra: map[string]any{"fileName": val}}, nil
+				return assetproxy.Asset{Key: "po/1/a.pdf", FileName: val}, nil
 			}
 			rec := serve(t, http.MethodGet, "/{id}/download-url", "/1/download-url", assetproxy.Download(d), "")
 			require.Equal(t, http.StatusOK, rec.Code)
@@ -248,6 +249,69 @@ func TestDownload_ExtraFields(t *testing.T) {
 			} else {
 				assert.Equal(t, name, body["fileName"])
 			}
+		})
+	}
+}
+
+// Bodies keep the map bytes.
+// The responses were maps, which encode keys sorted; the named structs
+// must emit the same keys in the same order.
+func TestPresignBodies_KeepLegacyBytes(t *testing.T) {
+	named := "scan.pdf"
+	tests := []struct {
+		name   string
+		mutate func(*assetproxy.Descriptor)
+		target string
+		h      func(assetproxy.Descriptor) http.HandlerFunc
+		want   string
+	}{
+		{
+			name:   "upload",
+			target: "/42/upload-url?fileName=photo.png",
+			h:      assetproxy.Upload,
+			want:   `^\{"expiresAt":\d+,"objectKey":"items/42/[^"]+-photo\.png","uploadUrl":"[^"]+"\}\n$`,
+		},
+		{
+			name:   "download",
+			target: "/1/download-url",
+			h:      assetproxy.Download,
+			want:   `^\{"downloadUrl":"[^"]+","expiresAt":\d+\}\n$`,
+		},
+		{
+			name: "named download",
+			mutate: func(d *assetproxy.Descriptor) {
+				d.NamedFile = true
+				d.CurrentAsset = func(context.Context, int64) (assetproxy.Asset, error) {
+					return assetproxy.Asset{Key: "items/1/a.png", FileName: &named}, nil
+				}
+			},
+			target: "/1/download-url",
+			h:      assetproxy.Download,
+			want:   `^\{"downloadUrl":"[^"]+","expiresAt":\d+,"fileName":"scan\.pdf"\}\n$`,
+		},
+		{
+			name: "named download without name",
+			mutate: func(d *assetproxy.Descriptor) {
+				d.NamedFile = true
+			},
+			target: "/1/download-url",
+			h:      assetproxy.Download,
+			want:   `^\{"downloadUrl":"[^"]+","expiresAt":\d+,"fileName":null\}\n$`,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			d := base("items/1/a.png")
+			if tc.mutate != nil {
+				tc.mutate(&d)
+			}
+			pattern := "/{id}/download-url"
+			if strings.Contains(tc.target, "upload-url") {
+				pattern = "/{id}/upload-url"
+			}
+			rec := serve(t, http.MethodGet, pattern, tc.target, tc.h(d), "")
+			require.Equal(t, http.StatusOK, rec.Code)
+			assert.Regexp(t, tc.want, rec.Body.String())
 		})
 	}
 }

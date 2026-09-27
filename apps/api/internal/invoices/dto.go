@@ -150,3 +150,8 @@ type ListResult struct {
 	Rows  []Invoice
 	Total int64
 }
+
+// DatesUpdatedResponse carries the new version.
+type DatesUpdatedResponse struct {
+	RowVersion int32 `json:"rowVersion"`
+}
