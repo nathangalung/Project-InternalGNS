@@ -19,7 +19,7 @@ import (
 
 const commaMigration = "00075_contact_email_trailing_comma.sql"
 
-// upSQL is the migration's Up half.
+// upSQL reads the Up half.
 func upSQL(t *testing.T, name string) string {
 	t.Helper()
 	raw, err := migrations.FS.ReadFile(name)
