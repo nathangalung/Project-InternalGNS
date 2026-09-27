@@ -206,7 +206,7 @@ var tiebreak = listq.Column{Expr: "id", Dir: listq.Desc}
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
-		p := c.Arg(likeContains(f.Q))
+		p := c.Arg(listq.Contains(f.Q))
 		c.And("(LOWER(name) LIKE LOWER(" + p +
 			") OR LOWER(email) LIKE LOWER(" + p + "))")
 	}

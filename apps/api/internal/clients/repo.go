@@ -60,7 +60,7 @@ var tiebreak = listq.Column{Expr: "cc.id", Dir: listq.Desc}
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
-		p := c.Arg(likeContains(f.Q))
+		p := c.Arg(listq.Contains(f.Q))
 		c.And("(cc.name ILIKE " + p +
 			" OR cc.number ILIKE " + p +
 			" OR cc.npwp ILIKE " + p +

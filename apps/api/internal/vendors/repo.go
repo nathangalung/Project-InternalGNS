@@ -54,7 +54,7 @@ var tiebreak = listq.Column{Expr: "v.id", Dir: listq.Desc}
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
-		p := c.Arg(likeContains(f.Q))
+		p := c.Arg(listq.Contains(f.Q))
 		c.And("(v.name ILIKE " + p + " OR v.location ILIKE " + p + ")")
 	}
 	if f.IsActive != nil {
@@ -62,7 +62,7 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 		c.And("v.is_active = " + p)
 	}
 	if f.CountryName != "" {
-		p := c.Arg(likeContains(f.CountryName))
+		p := c.Arg(listq.Contains(f.CountryName))
 		c.And("v.location ILIKE " + p)
 	}
 	if f.MinTotal != nil {
