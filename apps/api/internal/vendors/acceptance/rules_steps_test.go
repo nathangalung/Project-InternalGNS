@@ -190,6 +190,8 @@ func registerRuleSteps(sc *godog.ScenarioContext, state *scenarioState) {
 	sc.Step(`^the user sets the vendor contact (phone|email) to "([^"]*)"$`, state.setVendorContact)
 	sc.Step(`^the (contactInfo\.phone|contactInfo\.email) field error reads "([^"]+)"$`, state.fieldErrorReads)
 	sc.Step(`^the vendor contact (phone|email) is unchanged$`, state.vendorContactUnchanged)
+	sc.Step(`^the user (creates a vendor|updates the vendor) with contact email wrapped in (spaces|a tab|newlines)$`, state.sendPaddedContactEmail)
+	sc.Step(`^the vendor contact email is the bare address$`, state.contactEmailIsBare)
 	sc.Step(`^the user creates a vendor named with only (spaces|a tab|newlines)$`, state.createVendorBlank)
 	sc.Step(`^the user renames the vendor to only (spaces|a tab|newlines)$`, state.renameVendorBlank)
 	sc.Step(`^a vendor named with "([^"]+)" and a decoy without it$`, state.seedWildcardPair)
@@ -200,4 +202,34 @@ func registerRuleSteps(sc *godog.ScenarioContext, state *scenarioState) {
 	sc.Step(`^a vendor offering (\d+) products$`, state.seedVendorOffering)
 	sc.Step(`^the user lists the vendor's products with "([^"]*)"$`, state.listProducts)
 	sc.Step(`^the page holds (\d+) products? of (\d+)$`, state.pageHolds)
+}
+
+// Padded contact email steps.
+func (s *scenarioState) sendPaddedContactEmail(action, padding string) error {
+	s.email = fmt.Sprintf("atdd.pad.%d@vendor.com", time.Now().UnixNano())
+	ci := &vendors.ContactInfo{Email: blanks[padding] + s.email + blanks[padding]}
+	if action == "updates the vendor" {
+		return s.sendRequest(http.MethodPut, s.vendorPath(""), vendors.UpdateVendorRequest{
+			Name: s.name, ContactInfo: ci, IsActive: true,
+		})
+	}
+	s.name = s.uniqueName("ATDD KONTAK PAD")
+	if err := s.sendRequest(http.MethodPost, "/vendors/", vendors.CreateVendorRequest{Name: s.name, ContactInfo: ci}); err != nil {
+		return err
+	}
+	if s.last.StatusCode == http.StatusCreated {
+		return s.captureID()
+	}
+	return nil
+}
+
+func (s *scenarioState) contactEmailIsBare() error {
+	var v vendors.Vendor
+	if err := json.Unmarshal(s.body, &v); err != nil {
+		return err
+	}
+	if v.ContactInfo == nil || v.ContactInfo.Email != s.email {
+		return fmt.Errorf("want contact email %q body=%s", s.email, s.body)
+	}
+	return nil
 }

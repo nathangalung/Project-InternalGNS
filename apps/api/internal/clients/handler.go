@@ -98,6 +98,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
 	}
+	trimText(req.Email)
 	if fields := contactFields(nil, req.Email); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
@@ -139,6 +140,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
 	}
+	trimText(req.Email)
 	if fields := contactFields(nil, req.Email); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
@@ -244,6 +246,7 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
 	}
+	trimText(req.Email)
 	if fields := contactFields(req.Phone, req.Email); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
@@ -282,6 +285,7 @@ func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
 	}
+	trimText(req.Email.Value)
 	// An absent email key is kept, so only a sent one is checked.
 	if fields := contactFields(req.Phone, req.Email.Value); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))

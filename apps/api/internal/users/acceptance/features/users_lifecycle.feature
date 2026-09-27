@@ -106,6 +106,19 @@ Feature: User management lifecycle
     Then the response status is 201
     And the user name has no padding
 
+  Scenario Outline: Emails are stored without their padding
+    Given an existing staff account
+    When the user <action> with the email wrapped in <padding>
+    Then the response status is <status>
+    And the user email matches the seeded value
+    When the user reads the staff account
+    Then the user email matches the seeded value
+
+    Examples:
+      | action                    | padding  | status |
+      | creates a staff account   | a tab    | 201    |
+      | updates the staff account | newlines | 200    |
+
   Scenario Outline: The last active superadmin cannot be demoted or deactivated
     Given the only active superadmin account
     When the user sets that superadmin to role "<role>" and active <active>

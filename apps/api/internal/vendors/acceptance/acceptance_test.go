@@ -28,6 +28,7 @@ type scenarioState struct {
 	body     []byte
 	vendorID int64
 	name     string
+	email    string
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {

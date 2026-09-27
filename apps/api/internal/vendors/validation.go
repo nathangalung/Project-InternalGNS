@@ -1,6 +1,19 @@
 package vendors
 
-import "github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
+import (
+	"strings"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
+)
+
+// trimContactEmail trims in place.
+// Handlers call it right after decode, so the address validated is the
+// address stored.
+func trimContactEmail(ci *ContactInfo) {
+	if ci != nil {
+		ci.Email = strings.TrimSpace(ci.Email)
+	}
+}
 
 // contactInfoFields checks email and phone.
 // Keys are the request paths, so the web can mark the input. A blank field

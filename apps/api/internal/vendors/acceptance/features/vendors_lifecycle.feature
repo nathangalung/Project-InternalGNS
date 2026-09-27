@@ -105,3 +105,16 @@ Feature: Vendor lifecycle
       | phone | 8123456789012 | Nomor telepon harus 9–12 digit angka. |
       | phone | 81234567      | Nomor telepon harus 9–12 digit angka. |
       | email | toko@maju     | Format email tidak valid.             |
+
+  Scenario Outline: A padded contact email is stored without its padding
+    Given an existing vendor
+    When the user <action> with contact email wrapped in <padding>
+    Then the response status is <status>
+    And the vendor contact email is the bare address
+    When the user reads the vendor
+    Then the vendor contact email is the bare address
+
+    Examples:
+      | action             | padding  | status |
+      | creates a vendor   | a tab    | 201    |
+      | updates the vendor | newlines | 200    |

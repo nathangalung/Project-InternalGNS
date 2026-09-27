@@ -501,6 +501,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the user creates a staff account with an oversized password$`, state.createStaffOversizedPassword)
 		sc.Step(`^the user creates a staff account with a padded name$`, state.createStaffPaddedName)
 		sc.Step(`^the user name has no padding$`, state.nameHasNoPadding)
+		sc.Step(`^the user (creates a staff account|updates the staff account) with the email wrapped in (a tab|newlines)$`, state.sendPaddedEmail)
 		sc.Step(`^a second staff account$`, state.seedSecondStaff)
 		sc.Step(`^the user updates the second account to the first email$`, state.updateSecondToFirstEmail)
 		sc.Step(`^the user deactivates the staff account$`, func() error { return state.setStaffActive(false) })
@@ -542,4 +543,27 @@ func TestUsersFeatures(t *testing.T) {
 		t.Fatalf("godog suite failed status=%d", status)
 	}
 	_ = defaultUserID
+}
+
+// Named whitespace paddings.
+var paddings = map[string]string{"a tab": "\t", "newlines": "\n\r\n "}
+
+func (s *scenarioState) sendPaddedEmail(action, padding string) error {
+	s.email = s.uniqueEmail()
+	padded := paddings[padding] + s.email + paddings[padding]
+	if action == "updates the staff account" {
+		return s.sendRequest(http.MethodPut, "/users/"+strconv.FormatInt(s.userID, 10), users.UpdateUserRequest{
+			Email: padded, Name: s.name, Role: users.RoleOperational, IsActive: true,
+		})
+	}
+	body := users.CreateUserRequest{
+		Email: padded, Name: "ATDD Pad", Password: "Secret123!", Role: users.RoleOperational,
+	}
+	if err := s.sendRequest(http.MethodPost, "/users/", body); err != nil {
+		return err
+	}
+	if s.last.StatusCode == http.StatusCreated {
+		return s.captureID()
+	}
+	return nil
 }

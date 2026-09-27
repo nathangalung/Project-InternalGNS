@@ -92,6 +92,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
 	}
+	trimContactEmail(req.ContactInfo)
 	if fields := contactInfoFields(req.ContactInfo); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
@@ -123,6 +124,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"name": "required"}))
 		return
 	}
+	trimContactEmail(req.ContactInfo)
 	if fields := contactInfoFields(req.ContactInfo); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
