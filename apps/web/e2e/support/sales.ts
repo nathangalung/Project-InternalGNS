@@ -21,7 +21,12 @@ export type SeedClient = {
 }
 export type SeedVendor = { id: number; name: string }
 export type SeedItem = { id: number; name: string; impaCode: string; vendorProductId?: number }
-export type SeedLine = { item: SeedItem; qty: number; price: number; cost?: number }
+// A catalog item, or free text naming none.
+export type SeedLine = ({ item: SeedItem } | { freeText: string }) & {
+  qty: number
+  price: number
+  cost?: number
+}
 export type SeedQuotation = Pick<QuotationDetail, "id" | "quotationNo" | "version" | "status">
 
 export type { QuotationDetail }
@@ -110,11 +115,15 @@ async function quotationBody(opts: QuotationOpts): Promise<Record<string, unknow
     notes: opts.notes,
     vesselName: opts.vesselName,
     items: opts.lines.map((l) => ({
-      requestedItemId: l.item.id,
-      requestedImpa: l.item.impaCode,
-      requestedName: l.item.name,
-      offeredItemId: l.item.id,
-      vendorProductId: l.item.vendorProductId,
+      ...("item" in l
+        ? {
+            requestedItemId: l.item.id,
+            requestedImpa: l.item.impaCode,
+            requestedName: l.item.name,
+            offeredItemId: l.item.id,
+            vendorProductId: l.item.vendorProductId,
+          }
+        : { requestedName: l.freeText }),
       qty: String(l.qty),
       unitId: pcs,
       sellingPrice: String(l.price),
