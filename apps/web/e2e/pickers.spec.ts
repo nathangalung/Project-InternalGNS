@@ -48,8 +48,11 @@ test("the year select in the dashboard filter opens, picks and closes", async ({
   await expect(year).toBeFocused()
 
   await page.keyboard.press("ArrowDown")
+  await expect(page.getByRole("option", { name: current })).toBeFocused()
   await page.keyboard.press("End")
+  await expect(page.getByRole("option", { name: "2024" })).toBeFocused()
   await page.keyboard.press("Enter")
+  await expect(page.getByRole("listbox")).toHaveCount(0)
   await expect(year).toContainText("2024")
 })
 
