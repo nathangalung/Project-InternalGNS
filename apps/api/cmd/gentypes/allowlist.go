@@ -19,7 +19,7 @@ type pkg struct {
 }
 
 // allowlist names every wire type.
-// A DTO reaches the web only through this list; TestAllowlist_CoversDTOFiles
+// A DTO reaches the web only through this list; TestAllowlist_CoversJSONTypes
 // fails when an exported json-tagged type is neither here nor in skipped.
 var allowlist = []pkg{
 	{"internal/auth", []entry{
