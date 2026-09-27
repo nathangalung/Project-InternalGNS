@@ -140,3 +140,38 @@ describe("SearchCombobox", () => {
     expect(onPick).toHaveBeenLastCalledWith(null)
   })
 })
+
+describe("SearchCombobox in a modal", () => {
+  it("lets a second Escape close the modal once the list is shut", async () => {
+    const onClose = vi.fn()
+    await mount(<Harness onClose={onClose} />)
+    await type(input(), "ja")
+    await press("Escape")
+    expect(onClose).not.toHaveBeenCalled()
+    await press("Escape")
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it("marks a read-only field read-only and never opens", async () => {
+    await mount(
+      <SearchCombobox<City>
+        items={CITIES}
+        value={CITIES[0]}
+        onValueChange={() => {}}
+        query="Jakarta"
+        onQueryChange={() => {}}
+        itemKey={(c) => c.id}
+        itemToString={(c) => c.name}
+        aria-label="Kota"
+        clearLabel="Bersihkan kota"
+        inputClassName="kota-input"
+        readOnly
+        empty={null}
+      />,
+    )
+    expect(input().readOnly).toBe(true)
+    expect(document.querySelector('[aria-label="Bersihkan kota"]')).toBeNull()
+    await press("ArrowDown", input())
+    expect(byRole("option")).toHaveLength(0)
+  })
+})

@@ -52,3 +52,16 @@ describe("DashboardFinancialFilter year select", () => {
     expect(byRole("dialog")).toHaveLength(1)
   })
 })
+
+describe("DashboardFinancialFilter Escape", () => {
+  it("closes the modal on a second Escape after the list shuts", async () => {
+    const onClose = vi.fn()
+    await mount(<DashboardFinancialFilter onClose={onClose} onApply={() => {}} />)
+    yearTrigger().focus()
+    await press("ArrowDown")
+    await press("Escape")
+    expect(onClose).not.toHaveBeenCalled()
+    await press("Escape")
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+})

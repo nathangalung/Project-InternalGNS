@@ -90,3 +90,15 @@ describe("CountryCombobox", () => {
     expect(onClose).not.toHaveBeenCalled()
   })
 })
+
+describe("CountryCombobox Escape", () => {
+  it("returns focus to the trigger so a second Escape closes the modal", async () => {
+    const onClose = vi.fn()
+    await mountHarness(onClose)
+    await click(trigger())
+    await press("Escape", search())
+    expect(onClose).not.toHaveBeenCalled()
+    await press("Escape")
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+})
