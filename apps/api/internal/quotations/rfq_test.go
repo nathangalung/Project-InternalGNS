@@ -371,6 +371,63 @@ func TestParseRFQ_XLSXRefusals(t *testing.T) {
 	}
 }
 
+// sheetRows repeats one row template.
+func sheetRows(from, n int, tmpl string) string {
+	var b strings.Builder
+	for r := from; r < from+n; r++ {
+		b.WriteString(strings.ReplaceAll(tmpl, "{r}", fmt.Sprint(r)))
+	}
+	return b.String()
+}
+
+// Small uploads that expand in memory.
+func TestParseRFQ_XLSXExpansion(t *testing.T) {
+	base, err := os.ReadFile(filepath.Join("testdata", "offset-table.xlsx"))
+	require.NoError(t, err)
+	const sheet = "xl/worksheets/sheet1.xml"
+	extraRows := func(rows string) []byte {
+		return patchPart(t, base, sheet, `</sheetData>`, rows+`</sheetData>`)
+	}
+	cases := []struct {
+		name string
+		data []byte
+	}{
+		{name: "bare cells past the budget", data: extraRows(`<row r="5">` + strings.Repeat("<c/>", rfqMaxUnits) + `</row>`)},
+		{name: "rows padded out to the last column", data: extraRows(sheetRows(5, rfqMaxUnits/excelize.MaxColumns+1, `<row r="{r}"><c r="XFD{r}" s="1"/></row>`))},
+		{name: "a row numbered past the row cap", data: extraRows(fmt.Sprintf(`<row r="%d"><c r="A%[1]d" s="1"/></row>`, rfqMaxRows+1))},
+		{name: "an unnumbered row holding a far cell", data: extraRows(fmt.Sprintf(`<row><c r="A%d" s="1"/></row>`, rfqMaxRows+1))},
+		{name: "unnumbered rows past the row cap", data: extraRows(strings.Repeat("<row/>", rfqMaxRows))},
+		{name: "styled empty rows past the row cap", data: extraRows(sheetRows(5, rfqMaxRows, `<row r="{r}"><c r="A{r}" s="1"/></row>`))},
+		{name: "styles past the budget", data: patchPart(t, base, "xl/styles.xml", `</cellXfs>`, strings.Repeat("<xf/>", rfqMaxUnits)+`</cellXfs>`)},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			require.Less(t, len(c.data), rfqMaxBytes)
+			_, err := ParseRFQ("rfq.xlsx", c.data)
+			require.ErrorIs(t, err, errRFQTooBig)
+		})
+	}
+}
+
+// The largest real RFQ fits.
+func TestParseRFQ_LargestSheet(t *testing.T) {
+	header := []any{"No", "Kode IMPA", "Nama Produk", "Jumlah", "Satuan", "Merek", "Tipe", "Ukuran", "Warna", "Catatan"}
+	data := buildXLSX(t, func(f *excelize.File) {
+		sw, err := f.NewStreamWriter("Sheet1")
+		require.NoError(t, err)
+		require.NoError(t, sw.SetRow("A1", header))
+		for i := 2; i <= rfqMaxRows; i++ {
+			cell, _ := excelize.CoordinatesToCellName(1, i)
+			require.NoError(t, sw.SetRow(cell, []any{i, fmt.Sprintf("%06d", i), fmt.Sprintf("Produk %d", i), i % 50, "PCS", "Merek", "Tipe", "10 mm", "Hitam", "Catatan"}))
+		}
+		require.NoError(t, sw.Flush())
+	})
+	got, err := ParseRFQ("rfq.xlsx", data)
+	require.NoError(t, err)
+	require.Len(t, got, rfqMaxRows-1)
+	assert.Equal(t, rfqRow{IMPACode: "005000", Name: "Produk 5000", Qty: 0, Unit: "PCS"}, got[len(got)-1])
+}
+
 func TestParseRFQ_UnsupportedExtension(t *testing.T) {
 	for _, name := range []string{"rfq.xls", "rfq.pdf", "rfq", ""} {
 		_, err := ParseRFQ(name, []byte("x"))

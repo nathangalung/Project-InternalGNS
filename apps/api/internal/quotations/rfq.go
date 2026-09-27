@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/csv"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -16,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/xuri/excelize/v2"
+	"golang.org/x/net/html/charset"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
@@ -31,16 +33,18 @@ type RFQRows struct {
 // RFQ upload limits.
 //
 // The byte cap sits well under the router's 2 MB body limit so multipart
-// framing never trips that one first. The unzip, row, column and merge caps
-// bound what a small file can expand into: the declared part sizes are
-// checked before excelize opens anything, rows are counted while the sheet
-// streams, and each row keeps only its leading columns.
+// framing never trips that one first. Before excelize opens anything, the
+// declared part sizes are held to the unzip cap and one XML pass holds
+// each part to the row cap and the workbook to the merge and unit caps
+// (xlsxBudget), which bound the memory a small file can expand into. The
+// column cap only trims what each row keeps.
 const (
 	rfqMaxBytes   = 1 << 20
-	rfqMaxUnzip   = 16 << 20
+	rfqMaxUnzip   = 4 << 20
 	rfqMaxRows    = 5000
 	rfqMaxCols    = 64
 	rfqMaxMerges  = 1000
+	rfqMaxUnits   = 400_000
 	rfqHeaderScan = 15
 	// rfqFormSlack covers multipart framing.
 	rfqFormSlack = 64 << 10
@@ -191,8 +195,8 @@ func parseXLSX(data []byte) ([]items.MatchRowInput, error) {
 
 // checkZip bounds the archive.
 // Go's zip reader refuses a part that inflates past its declared size, so
-// the declared sizes are a hard bound. Each "mergeCell" in any part counts
-// toward the merge cap, an upper bound on what excelize will load.
+// the declared sizes are a hard bound. Every part is then tallied against
+// the row, merge and unit caps.
 func checkZip(data []byte) error {
 	zr, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
@@ -205,30 +209,135 @@ func checkZip(data []byte) error {
 		}
 		total += zf.UncompressedSize64
 	}
-	merges := 0
+	var b xlsxBudget
 	for _, zf := range zr.File {
-		n, err := countMerges(zf)
-		if err != nil {
-			return fmt.Errorf("%w: %w", errRFQFormat, err)
-		}
-		if merges += n; merges > rfqMaxMerges {
-			return errRFQTooBig
+		if err := b.scan(zf); err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
-func countMerges(zf *zip.File) (int, error) {
+// xlsxBudget tallies what excelize allocates.
+// Loading a sheet builds one struct per element, pads the row list out to
+// the highest row number and pads every row out to its last cell's column.
+// Units count elements, padded cells and rows; each part is also held to
+// the row cap by element count and by any row number it names.
+type xlsxBudget struct {
+	units, merges int
+}
+
+// errRecorder keeps the reader's failure.
+type errRecorder struct {
+	r   io.Reader
+	err error
+}
+
+func (e *errRecorder) Read(p []byte) (int, error) {
+	n, err := e.r.Read(p)
+	if err != nil && !errors.Is(err, io.EOF) {
+		e.err = err
+	}
+	return n, err
+}
+
+// scan tallies one zip part.
+// Any part may hold a sheet, so every part is read as XML with excelize's
+// charset handling. A part that stops parsing ends its tally there, since
+// excelize stops no later; a broken archive is a format error.
+func (b *xlsxBudget) scan(zf *zip.File) error {
 	rc, err := zf.Open()
 	if err != nil {
-		return 0, err
+		return fmt.Errorf("%w: %w", errRFQFormat, err)
 	}
 	defer func() { _ = rc.Close() }()
-	body, err := io.ReadAll(rc)
-	if err != nil {
-		return 0, err
+	src := &errRecorder{r: rc}
+	d := xml.NewDecoder(src)
+	d.CharsetReader = charset.NewReaderLabel
+	var p partTally
+	for {
+		tok, err := d.RawToken()
+		if err != nil {
+			break
+		}
+		if err := b.add(&p, tok); err != nil {
+			return err
+		}
 	}
-	return bytes.Count(body, []byte("mergeCell")), nil
+	if src.err != nil {
+		return fmt.Errorf("%w: %w", errRFQFormat, src.err)
+	}
+	return b.charge(p.rows + p.maxRow)
+}
+
+// partTally tracks one part's rows.
+type partTally struct {
+	rows, maxRow, col, width int
+}
+
+func (b *xlsxBudget) add(p *partTally, tok xml.Token) error {
+	switch t := tok.(type) {
+	case xml.StartElement:
+		if err := b.charge(1); err != nil {
+			return err
+		}
+		switch t.Name.Local {
+		case "mergeCell":
+			if b.merges++; b.merges > rfqMaxMerges {
+				return errRFQTooBig
+			}
+		case "row":
+			if p.rows++; p.rows > rfqMaxRows {
+				return errRFQTooBig
+			}
+			p.col, p.width = 0, 0
+			if n, err := strconv.Atoi(attrOf(t, "r")); err == nil {
+				return p.seeRow(n)
+			}
+		case "c":
+			p.col++
+			if c, r, err := excelize.CellNameToCoordinates(attrOf(t, "r")); err == nil {
+				p.col = max(p.col, c)
+				if err := p.seeRow(r); err != nil {
+					return err
+				}
+			}
+			// Padding grows with the row's widest cell.
+			grow := max(p.col-p.width, 0)
+			p.width += grow
+			return b.charge(grow)
+		}
+	}
+	return nil
+}
+
+// seeRow checks a named row number.
+// A number past the sheet's last row is malformed; excelize refuses it.
+func (p *partTally) seeRow(n int) error {
+	switch {
+	case n > excelize.TotalRows:
+		return nil
+	case n > rfqMaxRows:
+		return errRFQTooBig
+	}
+	p.maxRow = max(p.maxRow, n)
+	return nil
+}
+
+func (b *xlsxBudget) charge(n int) error {
+	if b.units += n; b.units > rfqMaxUnits {
+		return errRFQTooBig
+	}
+	return nil
+}
+
+func attrOf(e xml.StartElement, name string) string {
+	for _, a := range e.Attr {
+		if a.Name.Local == name {
+			return a.Value
+		}
+	}
+	return ""
 }
 
 // readSheet builds one sheet's grid.
@@ -264,8 +373,9 @@ func readSheet(f *excelize.File, name string) (rfqSheet, error) {
 	return s, nil
 }
 
-// streamRows reads capped rows.
-// Keyed by sheet row number; only the leading columns are kept.
+// streamRows reads the sheet rows.
+// Keyed by sheet row number; only the leading columns are kept. checkZip
+// already held the sheet to the row cap.
 func streamRows(f *excelize.File, name string) (map[int][]string, error) {
 	it, err := f.Rows(name)
 	if err != nil {
@@ -280,9 +390,6 @@ func streamRows(f *excelize.File, name string) (map[int][]string, error) {
 		}
 		if len(row) == 0 {
 			continue
-		}
-		if len(cells) == rfqMaxRows {
-			return nil, errRFQTooBig
 		}
 		cells[n] = slices.Clone(row[:min(len(row), rfqMaxCols)])
 	}
@@ -542,8 +649,8 @@ func findColumn(headers, keys []string) int {
 var rfqDetails = map[error]string{
 	errRFQMissing: "Pilih berkas permintaan (.xlsx atau .csv) untuk diunggah.",
 	errRFQFormat:  "Format berkas tidak didukung. Gunakan .xlsx atau .csv (simpan ulang file .xls sebagai .xlsx).",
-	errRFQTooBig: fmt.Sprintf("Isi berkas terlalu besar: paling banyak %d baris, %d sel gabungan, dan %d MB setelah diekstrak.",
-		rfqMaxRows, rfqMaxMerges, rfqMaxUnzip>>20),
+	errRFQTooBig: fmt.Sprintf("Isi berkas terlalu besar: paling banyak %d baris per lembar, %d sel gabungan, dan %d MB setelah diekstrak. "+
+		"Hapus baris, kolom, atau format yang tidak terpakai.", rfqMaxRows, rfqMaxMerges, rfqMaxUnzip>>20),
 	errRFQEmpty:    "Berkas kosong: tidak ada sel yang berisi data.",
 	errRFQNoHeader: fmt.Sprintf("Baris judul kolom tidak ditemukan. Pastikan kolom Nama Produk ada di %d baris pertama.", rfqHeaderScan),
 	errRFQNoRows:   "Tidak ada baris produk di bawah judul kolom.",
