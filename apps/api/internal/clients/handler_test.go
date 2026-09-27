@@ -188,6 +188,27 @@ func TestHandler_CreateContact(t *testing.T) {
 	assert.Equal(t, "API Contact", c.Name)
 }
 
+// Absent country defaults to IDN.
+// The web types mark countryCode optional on both creates; this pins it.
+func TestHandler_Create_AbsentCountryDefaultsIDN(t *testing.T) {
+	srv := newSrv(t)
+	res := doJSON(t, srv, http.MethodPost, "/clients/", map[string]any{"name": "PT Tanpa Negara"})
+	defer res.Body.Close()
+	require.Equal(t, http.StatusCreated, res.StatusCode)
+	var c clients.Client
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&c))
+	testutil.NewCleaner(t).Client(c.ID)
+	assert.Equal(t, "IDN", c.CountryCode)
+
+	path := "/clients/" + strconv.FormatInt(c.ID, 10) + "/contacts"
+	cres := doJSON(t, srv, http.MethodPost, path, map[string]any{"name": "Tanpa Negara"})
+	defer cres.Body.Close()
+	require.Equal(t, http.StatusCreated, cres.StatusCode)
+	var ct clients.Contact
+	require.NoError(t, json.NewDecoder(cres.Body).Decode(&ct))
+	assert.Equal(t, "IDN", ct.CountryCode)
+}
+
 func TestHandler_UpdateContact(t *testing.T) {
 	srv := newSrv(t)
 	clientID := strconv.FormatInt(newClient(t), 10)

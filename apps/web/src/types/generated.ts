@@ -137,7 +137,7 @@ export type CreateClientInput = {
     npwp?: string | null;
     address?: string | null;
     email?: string | null;
-    countryCode: string;
+    countryCode?: string;
     tkuId?: string | null;
 };
 
@@ -147,7 +147,7 @@ export type CreateContactInput = {
     email?: string | null;
     phone?: string | null;
     title?: string | null;
-    countryCode: string;
+    countryCode?: string;
 };
 
 // From items/dto.go
@@ -392,7 +392,7 @@ export type LogoutInput = {
 // From items/dto.go
 export type MatchRequestInput = {
     reqText: string;
-    limit: number;
+    limit?: number;
 };
 
 // From items/dto.go
@@ -415,8 +415,8 @@ export type MatchRowResult = {
 // From items/dto.go
 export type MatchRowsInput = {
     rows: MatchRowInput[];
-    minScore: number;
-    autoCreate: boolean;
+    minScore?: number;
+    autoCreate?: boolean;
 };
 
 // From items/dto.go
@@ -803,6 +803,11 @@ export type QuotationRevisionRow = {
 export type QuotationSaved = {
     id: number;
     rowVersion: number;
+};
+
+// From quotations/dto.go
+export type QuotationSendInput = {
+    note?: string;
 };
 
 // From quotations/status.go

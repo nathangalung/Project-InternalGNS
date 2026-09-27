@@ -92,6 +92,7 @@ var allowlist = []pkg{
 		{Go: "CreateRequest", TS: "QuotationCreateInput", Input: true},
 		{Go: "UpdateRequest", TS: "QuotationUpdateInput", Input: true},
 		{Go: "ChangeStatusRequest", TS: "QuotationStatusInput", Input: true},
+		{Go: "SendRequest", TS: "QuotationSendInput", Input: true},
 		{Go: "ReviseRequest", TS: "QuotationReviseInput", Input: true},
 		{Go: "ChangeContactRequest", TS: "QuotationContactInput", Input: true},
 		{Go: "CreatedResponse", TS: "QuotationCreated"},

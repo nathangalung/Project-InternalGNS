@@ -173,6 +173,11 @@ type ChangeStatusRequest struct {
 	Note   *string `json:"note,omitempty"`
 }
 
+// SendRequest carries an optional note.
+type SendRequest struct {
+	Note *string `json:"note,omitempty"`
+}
+
 // ReviseRequest carries an optional note.
 type ReviseRequest struct {
 	Note *string `json:"note,omitempty"`

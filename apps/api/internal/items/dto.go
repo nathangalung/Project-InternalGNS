@@ -101,8 +101,8 @@ type AddVendorToItemRequest struct {
 
 // POST /items/match-request body.
 type MatchRequest struct {
-	ReqText string `json:"reqText"` // raw text from PDF
-	Limit   int    `json:"limit"`   // defaults to 5
+	ReqText string `json:"reqText"`         // raw text from PDF
+	Limit   int    `json:"limit,omitempty"` // defaults to 5
 }
 
 // Result row from items.match_with_vendor_by_id.
@@ -138,8 +138,8 @@ type MatchRowResult struct {
 
 type MatchRowsRequest struct {
 	Rows       []MatchRowInput `json:"rows"`
-	MinScore   float32         `json:"minScore"`   // default 0.5
-	AutoCreate bool            `json:"autoCreate"` // create catalog item for no-match rows
+	MinScore   float32         `json:"minScore,omitempty"`   // default 0.5
+	AutoCreate bool            `json:"autoCreate,omitempty"` // create catalog item for no-match rows
 }
 
 type MatchRowsResponse struct {

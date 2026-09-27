@@ -91,7 +91,7 @@ type CreateClientRequest struct {
 	NPWP        *string `json:"npwp"`
 	Address     *string `json:"address"`
 	Email       *string `json:"email"`
-	CountryCode string  `json:"countryCode"` // defaults to IDN
+	CountryCode string  `json:"countryCode,omitempty"` // defaults to IDN
 	TkuID       *string `json:"tkuId"`
 }
 
@@ -122,7 +122,7 @@ type CreateContactRequest struct {
 	Email       *string `json:"email"`
 	Phone       *string `json:"phone"` // 9 to 12 digits
 	Title       *string `json:"title"`
-	CountryCode string  `json:"countryCode"` // defaults to IDN
+	CountryCode string  `json:"countryCode,omitempty"` // defaults to IDN
 }
 
 // Update contact body, PATCH semantics.

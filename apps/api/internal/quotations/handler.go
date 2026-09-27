@@ -391,9 +391,7 @@ func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 	}
 	note := "Quotation dikirim ke klien"
 	if r.Body != nil {
-		var body struct {
-			Note *string `json:"note,omitempty"`
-		}
+		var body SendRequest
 		_ = json.NewDecoder(r.Body).Decode(&body)
 		if body.Note != nil && strings.TrimSpace(*body.Note) != "" {
 			note = *body.Note
