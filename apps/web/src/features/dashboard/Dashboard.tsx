@@ -38,7 +38,7 @@ const chartTabs: { label: string; metric: DashboardMetric }[] = [
   { label: "PPN", metric: "ppn" },
 ]
 
-// Year menu, its own card look.
+// Year menu card look.
 const yearPanel = "w-auto min-w-[130px] overflow-hidden rounded-lg border-dark-200 py-0 shadow-lg"
 
 function yearRow(active: boolean): string {

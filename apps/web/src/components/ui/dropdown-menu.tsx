@@ -81,7 +81,7 @@ function DropdownMenuItem({ className, ...props }: WithClassName<MenuPrimitive.I
   )
 }
 
-// Choice row, purple check when chosen.
+// Choice row with check.
 function DropdownMenuRadioItem({
   className,
   children,
