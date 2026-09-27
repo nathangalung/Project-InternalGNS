@@ -14,6 +14,7 @@ import {
 import { useInvoices } from "@/features/invoices/hooks"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "@/features/invoices/types"
 import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
+import { yearInJakarta } from "@/lib/date-range"
 import {
   formatDate,
   formatNumber as formatId,
@@ -63,7 +64,7 @@ export default function DashboardFinancial() {
     isError: invoicesError,
   } = useInvoices(RECENT_INVOICE_PARAMS)
 
-  const baseYear = filters?.year ?? new Date().getFullYear()
+  const baseYear = filters?.year ?? yearInJakarta()
   const selectedMonth = filters?.month ?? null // null = whole year
   const interval: "month" | "day" = selectedMonth === null ? "month" : "day"
   const { from, to } =

@@ -1,13 +1,9 @@
 import { useId, useState } from "react"
 import { IconCalendar } from "@/components/document/icons"
-import {
-  DATE_PRESETS,
-  DateInput,
-  type DatePreset,
-  presetToIsoRange,
-} from "@/components/shared/DateRangeField"
+import { DATE_PRESETS, DateInput } from "@/components/shared/DateRangeField"
 import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
+import { type DatePreset, presetRange } from "@/lib/date-range"
 import { chip, presetChip, ui } from "@/lib/ui"
 import type { InvoiceStatus } from "./types"
 import { INVOICE_LABEL } from "./types"
@@ -32,7 +28,7 @@ type InvoiceFilterProps = {
   initialValues?: InvoiceFilterValues
 }
 
-const seed = presetToIsoRange("30-hari")
+const seed = presetRange("30-hari")
 const DEFAULTS: InvoiceFilterValues = {
   createdPreset: "semua",
   createdStart: seed.start,
@@ -61,7 +57,7 @@ function DateRangeBlock({ heading, preset, startDate, endDate, onChange }: DateR
       onChange({ preset: "kustom", startDate, endDate })
       return
     }
-    const r = presetToIsoRange(p)
+    const r = presetRange(p)
     onChange({ preset: p, startDate: r.start, endDate: r.end })
   }
 

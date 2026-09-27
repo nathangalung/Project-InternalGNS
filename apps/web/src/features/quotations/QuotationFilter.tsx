@@ -1,13 +1,9 @@
 import { useId, useState } from "react"
 import { IconCalendar } from "@/components/document/icons"
-import {
-  DATE_PRESETS,
-  DateInput,
-  type DatePreset,
-  presetToIsoRange,
-} from "@/components/shared/DateRangeField"
+import { DATE_PRESETS, DateInput } from "@/components/shared/DateRangeField"
 import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
+import { type DatePreset, presetRange } from "@/lib/date-range"
 import { chip, presetChip, ui } from "@/lib/ui"
 import { QUOTATION_STATUS_LABELS, type QuotationStatusLabel } from "./status"
 
@@ -45,7 +41,7 @@ const amountInput =
   "min-w-0 flex-1 border-none bg-transparent px-3 text-sm text-dark-900 outline-none placeholder:text-dark-500"
 
 export default function QuotationFilter({ onClose, onApply, initialValues }: QuotationFilterProps) {
-  const seed = presetToIsoRange("30-hari")
+  const seed = presetRange("30-hari")
   const [preset, setPreset] = useState<DatePreset>(initialValues?.preset ?? "semua")
   const [startDate, setStartDate] = useState<string>(initialValues?.startDate ?? seed.start)
   const [endDate, setEndDate] = useState<string>(initialValues?.endDate ?? seed.end)
@@ -58,7 +54,7 @@ export default function QuotationFilter({ onClose, onApply, initialValues }: Quo
   function pickPreset(p: DatePreset) {
     setPreset(p)
     if (p !== "kustom") {
-      const r = presetToIsoRange(p)
+      const r = presetRange(p)
       setStartDate(r.start)
       setEndDate(r.end)
     }

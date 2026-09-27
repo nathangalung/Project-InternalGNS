@@ -15,7 +15,7 @@ import UnitCombobox from "@/features/units/UnitCombobox"
 import { fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
 import { errorMessage } from "@/lib/errors"
-import { formatRupiah } from "@/lib/format"
+import { formatDate, formatRupiah } from "@/lib/format"
 import { canWriteCatalog } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
@@ -512,13 +512,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                   (itemVendors ?? []).map((v) => {
                     const initials = vendorInitials(v.vendorName)
                     const formattedPrice = formatRupiah(v.costPrice, "-")
-                    const formattedDate = v.lastQuotedAt
-                      ? new Date(v.lastQuotedAt).toLocaleDateString("id-ID", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })
-                      : "-"
+                    const formattedDate = formatDate(v.lastQuotedAt) || "-"
                     return (
                       <tr key={v.vendorProductId} className={ui.tr}>
                         <td className={ui.td}>

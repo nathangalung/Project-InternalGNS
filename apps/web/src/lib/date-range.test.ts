@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
-import { resolveRange } from "./date-range"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { type DatePreset, presetRange, resolveRange, yearInJakarta } from "./date-range"
 
 describe("resolveRange", () => {
   afterEach(() => vi.useRealTimers())
@@ -42,5 +42,37 @@ describe("resolveRange", () => {
   it("crosses a month and a year boundary in WIB", () => {
     vi.useFakeTimers({ now: new Date("2027-01-03T00:15:00+07:00") })
     expect(resolveRange("7-hari", "", "")).toEqual({ start: "2026-12-27", end: "2027-01-03" })
+  })
+})
+
+// Filter seeds from any zone.
+//
+// The filter modal fills its date inputs from the preset; the days are WIB
+// days even when the browser's own date is still yesterday.
+describe("presetRange", () => {
+  beforeEach(() => {
+    vi.stubEnv("TZ", "America/Los_Angeles")
+    // 02:30 WIB on the 24th is 12:30 on the 23rd in Los Angeles.
+    vi.useFakeTimers({ now: new Date("2026-09-24T02:30:00+07:00") })
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllEnvs()
+  })
+
+  it.each<[DatePreset, string, string]>([
+    ["hari-ini", "2026-09-24", "2026-09-24"],
+    ["7-hari", "2026-09-17", "2026-09-24"],
+    ["30-hari", "2026-08-25", "2026-09-24"],
+    // Kustom opens on the last 30 days.
+    ["kustom", "2026-08-25", "2026-09-24"],
+    ["semua", "", ""],
+  ])("%s", (preset, start, end) => {
+    expect(presetRange(preset)).toEqual({ start, end })
+  })
+
+  it("reads the WIB year", () => {
+    vi.setSystemTime(new Date("2027-01-01T00:30:00+07:00"))
+    expect(yearInJakarta()).toBe(2027)
   })
 })

@@ -1,13 +1,9 @@
 import { useState } from "react"
 import { IconCalendar } from "@/components/document/icons"
-import {
-  DATE_PRESETS,
-  DateInput,
-  type DatePreset,
-  presetToIsoRange,
-} from "@/components/shared/DateRangeField"
+import { DATE_PRESETS, DateInput } from "@/components/shared/DateRangeField"
 import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
+import { type DatePreset, presetRange } from "@/lib/date-range"
 import { chip, presetChip, ui } from "@/lib/ui"
 import { PO_LABEL, PO_STATUS_ORDER } from "./PurchaseOrderDetail/helpers"
 import type { PoStatus } from "./types"
@@ -29,7 +25,7 @@ type PurchaseOrderFilterProps = {
   initialValues?: PoFilterValues
 }
 
-const seed = presetToIsoRange("30-hari")
+const seed = presetRange("30-hari")
 const DEFAULTS: PoFilterValues = {
   preset: "semua",
   startDate: seed.start,
@@ -70,7 +66,7 @@ export default function PurchaseOrderFilter({
   function handlePresetClick(next: DatePreset) {
     setPreset(next)
     if (next !== "kustom") {
-      const range = presetToIsoRange(next)
+      const range = presetRange(next)
       setStartDate(range.start)
       setEndDate(range.end)
     }

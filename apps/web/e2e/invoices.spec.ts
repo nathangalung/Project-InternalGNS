@@ -279,3 +279,29 @@ test("a cancelled invoice without a Pengganti offers one (INV-10)", async ({
   await expect(page.getByRole("heading", { name: `Invoice ${invoice.invoiceNo}` })).toHaveCount(0)
   await expectActions(page, ["Tandai Dikirim", "Batalkan & Terbitkan Pengganti"])
 })
+
+// A browser outside Jakarta.
+test.describe("in a browser west of Jakarta", () => {
+  test.use({ timezoneId: "America/Los_Angeles" })
+
+  // WIB day as the list prints it.
+  function printed(day: string): string {
+    return new Date(`${day}T12:00:00Z`).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      timeZone: "UTC",
+    })
+  }
+
+  test("invoice dates read as their WIB days", async ({ page, admin, client, invoice }) => {
+    const issued = wibDay(-5)
+    const due = wibDay(25)
+    await setInvoiceDates(admin, invoice.id, issued, due)
+    await page.goto("/invoices")
+    await page.getByPlaceholder("Cari invoice, klien, atau nomor...").fill(client.name)
+    const row = page.getByRole("row").filter({ hasText: invoice.invoiceNo })
+    await expect(row).toContainText(printed(issued))
+    await expect(row).toContainText(printed(due))
+  })
+})
