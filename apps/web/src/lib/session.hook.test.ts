@@ -16,6 +16,7 @@ beforeEach(() => {
   localStorage.clear()
 })
 afterEach(() => {
+  vi.useRealTimers()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })
@@ -111,6 +112,43 @@ describe("refresh", () => {
     vi.stubGlobal("fetch", vi.fn(answer))
     const tab = await openTab()
     await expect(tab.refreshSession(null)).resolves.toBeNull()
+    expect(tab.isSignedIn()).toBe(false)
+  })
+
+  it.each([
+    ["seconds", "2", 2_000],
+    ["zero", "0", 0],
+    ["capped", "3600", 60_000],
+    ["missing", null, 1_000],
+    ["an HTTP date", "Wed, 21 Oct 2026 07:28:00 GMT", 1_000],
+    ["negative", "-5", 1_000],
+  ])("waits out a rate limit (%s) once, then retries", async (_name, retryAfter, waitMs) => {
+    installBrowser()
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(json429(retryAfter))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ token: "a5" }), { status: 200 }))
+    vi.stubGlobal("fetch", fetchMock)
+    const tab = await openTab()
+    vi.useFakeTimers({ toFake: ["setTimeout"] })
+    const out = tab.refreshSession(null)
+    if (waitMs > 0) {
+      await vi.advanceTimersByTimeAsync(waitMs - 1)
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+    }
+    await vi.advanceTimersByTimeAsync(1)
+    await expect(out).resolves.toBe("a5")
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(tab.getAccessToken()).toBe("a5")
+  })
+
+  it("answers null when the retry is rate limited too", async () => {
+    installBrowser()
+    const fetchMock = vi.fn(() => Promise.resolve(json429("0")))
+    vi.stubGlobal("fetch", fetchMock)
+    const tab = await openTab()
+    await expect(tab.refreshSession(null)).resolves.toBeNull()
+    expect(fetchMock).toHaveBeenCalledTimes(2)
     expect(tab.isSignedIn()).toBe(false)
   })
 
@@ -299,4 +337,10 @@ describe("restore", () => {
 
 function json401(): Promise<Response> {
   return Promise.resolve(new Response('{"status":401,"title":"Unauthorized"}', { status: 401 }))
+}
+
+function json429(retryAfter: string | null): Response {
+  const headers: Record<string, string> = { "content-type": "application/problem+json" }
+  if (retryAfter !== null) headers["Retry-After"] = retryAfter
+  return new Response('{"status":429,"title":"Too Many Requests"}', { status: 429, headers })
 }

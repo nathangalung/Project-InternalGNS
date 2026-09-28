@@ -17,6 +17,9 @@ const CHANNEL_NAME = "gns-session"
 const LEGACY_KEYS = ["gns_token", "gns_refresh_token", "gns_auth"]
 // The API refuses refresh and logout without it.
 export const CSRF_HEADER = "X-GNS-CSRF"
+// A rate-limited refresh waits once.
+const DEFAULT_RETRY_WAIT_MS = 1_000
+const MAX_RETRY_WAIT_MS = 60_000
 
 type TabMessage = { type: "rotated"; token: string } | { type: "ended" }
 
@@ -110,9 +113,23 @@ function postAuth(path: string): Promise<Response> {
   })
 }
 
+// Rate-limit wait from Retry-After.
+//
+// Only delta-seconds, as the API sends; anything else waits a second.
+function retryWait(res: Response): number {
+  const value = res.headers.get("Retry-After")?.trim()
+  if (!value || !/^\d+$/.test(value)) return DEFAULT_RETRY_WAIT_MS
+  return Math.min(Number(value) * 1000, MAX_RETRY_WAIT_MS)
+}
+
 async function requestToken(): Promise<string | null> {
   try {
-    const res = await postAuth("/auth/refresh")
+    let res = await postAuth("/auth/refresh")
+    // The limiter refuses before the cookie is read, so it is still good.
+    if (res.status === 429) {
+      await new Promise((resolve) => setTimeout(resolve, retryWait(res)))
+      res = await postAuth("/auth/refresh")
+    }
     if (!res.ok) return null
     return ((await res.json()) as RefreshResponse).token
   } catch {
