@@ -94,6 +94,7 @@ make db-ui          # pgweb database browser (:8081)
 make test           # Go tests, web typecheck, and Vitest
 make test-api       # Go tests on a throwaway database, as CI runs them
 make e2e            # Playwright against the running dev stack
+make e2e-csp        # The suite under the enforced production CSP
 make cover          # Both coverage gates
 make lint           # go vet, golangci-lint when installed, and Biome
 make fmt            # gofmt and Biome format
@@ -308,7 +309,9 @@ query call.
   deactivates the users, since users cannot be deleted. `fixtures.ts` signs
   every test context in for real and starts it from that login's
   storageState, on its own `x-forwarded-for` address
-  (`test.use({ session: "finance" })`). Never share one saved refresh cookie
+  (`test.use({ session: "finance" })`). The address is added by a route on
+  API requests, not as an extra header, which a cross-origin API would refuse
+  in CORS. Never share one saved refresh cookie
   between contexts: the first page load rotates it, and the API answers the
   next context's replay by revoking every session of that user. Every page
   load spends one refresh (20 per minute per address), so the own address
@@ -317,6 +320,13 @@ query call.
   `apps/api/.env`; `E2E_BASE_URL` and `E2E_API_URL` point it elsewhere.
   Login allows 5 attempts per minute per IP, so a rerun inside a minute waits
   out the window.
+- The SPA content policy is enforced (the web label in `compose.prod.yml`),
+  so every test fails on a violation its browser reports. `make e2e-csp` (and
+  the CI e2e job) builds the SPA against a separate API origin, serves `dist`
+  with that policy, and runs the whole suite against the throwaway
+  `gns_csp_test`; `e2e/csp.spec.ts` proves the header is live. A new
+  dependency that injects an inline `<style>` or loads from another host
+  fails there: fix the cause, never add `unsafe-inline` or `unsafe-eval`.
 
 Coverage gates fail CI below their tier; `make cover` runs both locally.
 
