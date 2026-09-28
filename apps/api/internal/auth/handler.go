@@ -19,6 +19,9 @@ const (
 	DetailInvalidToken   = "Token akses tidak valid atau sudah kedaluwarsa. Silakan masuk kembali."
 )
 
+// DetailJSONOnly refuses non-JSON logins.
+const DetailJSONOnly = "Permintaan masuk harus berformat JSON."
+
 // Refresh refusal details.
 var refreshDetails = []struct {
 	err    error

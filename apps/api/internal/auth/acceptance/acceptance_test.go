@@ -528,6 +528,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the refresh cookie is cleared$`, state.cookieCleared)
 		sc.Step(`^the refresh cookie is left alone$`, state.cookieLeftAlone)
 		sc.Step(`^the account sends its refresh token in the body instead of the cookie$`, state.refreshInBody)
+		sc.Step(`^the account logs in from the origin "([^"]+)" as "([^"]+)"$`, state.logInFrom)
 		sc.Step(`^the account posts to "([^"]+)" from the origin "([^"]+)"$`, state.postFromOrigin)
 		sc.Step(`^the account posts to "([^"]+)" without an Origin$`, state.postWithoutOrigin)
 		sc.Step(`^the account posts to "([^"]+)" without the CSRF header$`, state.postWithoutCSRF)
@@ -647,6 +648,16 @@ func (s *scenarioState) refreshInBody() error {
 		map[string]string{"refreshToken": s.refresh}, func(r *http.Request) {
 			r.Header.Set("Origin", spaOrigin)
 			r.Header.Set(session.CSRFHeader, "1")
+		})
+}
+
+// logInFrom shapes a login request.
+// It sends the right password with the given Origin and Content-Type.
+func (s *scenarioState) logInFrom(origin, contentType string) error {
+	return s.sendWith(http.MethodPost, "/api/v1/auth/login", "", "",
+		auth.LoginRequest{Email: s.account.Email, Password: s.password}, func(r *http.Request) {
+			r.Header.Set("Origin", origin)
+			r.Header.Set("Content-Type", contentType)
 		})
 }
 

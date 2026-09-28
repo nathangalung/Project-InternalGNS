@@ -216,6 +216,25 @@ Feature: Login, session refresh and session revocation
       | /api/v1/auth/logout  | from the origin "https://evil.example" | Permintaan ditolak karena asal halaman tidak diizinkan. |
       | /api/v1/auth/logout  | without the CSRF header               | Permintaan ditolak karena header keamanan tidak ada.    |
 
+  Scenario Outline: Login refuses what a foreign page could send
+    When the account logs in from the origin "<origin>" as "<type>"
+    Then the response status is <status>
+    And the problem detail is "<detail>"
+    And the refresh cookie is left alone
+
+    Examples:
+      | origin               | type                              | status | detail                                                  |
+      | https://evil.example | application/json                  | 403    | Permintaan ditolak karena asal halaman tidak diizinkan. |
+      | https://evil.example | text/plain                        | 403    | Permintaan ditolak karena asal halaman tidak diizinkan. |
+      | null                 | application/json                  | 403    | Permintaan ditolak karena asal halaman tidak diizinkan. |
+      | http://spa.test      | text/plain                        | 415    | Permintaan masuk harus berformat JSON.                  |
+      | http://spa.test      | application/x-www-form-urlencoded | 415    | Permintaan masuk harus berformat JSON.                  |
+
+  Scenario: Login from the listed origin sets the refresh cookie
+    When the account logs in from the origin "http://spa.test" as "application/json"
+    Then the response status is 200
+    And the refresh cookie is HttpOnly, Secure, SameSite=Strict and scoped to "/api/v1/auth"
+
   Scenario: Only the listed origin gets credentialed CORS
     When a page at "https://evil.example" preflights "/api/v1/auth/refresh"
     Then the response grants no credentials

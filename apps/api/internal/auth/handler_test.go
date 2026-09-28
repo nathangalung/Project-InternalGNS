@@ -306,6 +306,79 @@ func TestHandler_Refresh_ReuseInsideGraceKeepsCookie(t *testing.T) {
 	assert.Equal(t, http.StatusOK, ok.StatusCode, "the winner's session survives the race")
 }
 
+// loginFrom posts a shaped login.
+func loginFrom(t *testing.T, srv *httptest.Server, email, origin, contentType string) *http.Response {
+	t.Helper()
+	body, _ := json.Marshal(auth.LoginRequest{Email: email, Password: "hpass-123"})
+	req, err := http.NewRequest(http.MethodPost, srv.URL+"/auth/login", bytes.NewReader(body))
+	require.NoError(t, err)
+	if origin != "" {
+		req.Header.Set("Origin", origin)
+	}
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
+	res, err := srv.Client().Do(req)
+	require.NoError(t, err)
+	return res
+}
+
+// Login refuses foreign pages.
+// A browser always sends Origin on a POST, so a cross-site form or a sibling
+// subdomain cannot plant a cookie; a client without Origin still signs in.
+// Only JSON is read, which a plain form cannot send.
+func TestHandler_Login_RefusesForeignPage(t *testing.T) {
+	cases := []struct {
+		name        string
+		origin      string
+		contentType string
+		status      int
+		detail      string
+	}{
+		{"listed origin", testOrigin, "application/json", http.StatusOK, ""},
+		{"no origin", "", "application/json", http.StatusOK, ""},
+		{"json with charset", testOrigin, "application/json; charset=utf-8", http.StatusOK, ""},
+		{"foreign origin", "https://evil.example", "application/json", http.StatusForbidden, session.DetailOriginRefused},
+		{"null origin", "null", "application/json", http.StatusForbidden, session.DetailOriginRefused},
+		{"foreign form", "https://evil.example", "text/plain", http.StatusForbidden, session.DetailOriginRefused},
+		{"plain text", testOrigin, "text/plain", http.StatusUnsupportedMediaType, auth.DetailJSONOnly},
+		{"form encoded", "", "application/x-www-form-urlencoded", http.StatusUnsupportedMediaType, auth.DetailJSONOnly},
+		{"no content type", testOrigin, "", http.StatusUnsupportedMediaType, auth.DetailJSONOnly},
+		{"unparsable content type", testOrigin, "application/json; =", http.StatusUnsupportedMediaType, auth.DetailJSONOnly},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			srv, u := mkAuthServerWithRefresh(t)
+			res := loginFrom(t, srv, u.Email, tc.origin, tc.contentType)
+			defer res.Body.Close()
+			require.Equal(t, tc.status, res.StatusCode)
+			if tc.status == http.StatusOK {
+				assertIssued(t, res)
+				return
+			}
+			assert.Equal(t, tc.detail, problemDetail(t, res))
+			assertNoCookie(t, res)
+		})
+	}
+}
+
+// Refused logins spend no budget.
+// A foreign page must not exhaust the victim's per-address login limit.
+func TestHandler_Login_RefusalSkipsLimiter(t *testing.T) {
+	srv, u, _ := mkAuthServer(t)
+	for range 6 {
+		res := loginFrom(t, srv, u.Email, "https://evil.example", "application/json")
+		res.Body.Close()
+		require.Equal(t, http.StatusForbidden, res.StatusCode)
+		res = loginFrom(t, srv, u.Email, testOrigin, "text/plain")
+		res.Body.Close()
+		require.Equal(t, http.StatusUnsupportedMediaType, res.StatusCode)
+	}
+	res := loginFrom(t, srv, u.Email, testOrigin, "application/json")
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+}
+
 // Cookie routes demand Origin, header.
 // A refused request spends nothing: the cookie still refreshes afterwards.
 func TestHandler_CookieRoutes_CSRFGuard(t *testing.T) {
