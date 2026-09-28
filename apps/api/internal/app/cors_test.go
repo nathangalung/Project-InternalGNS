@@ -83,6 +83,20 @@ func TestRouter_CORSCredentials(t *testing.T) {
 	}
 }
 
+// The SPA reads Retry-After.
+// It is not a safelisted response header, and the SPA waits it out on a
+// refused refresh instead of signing the reader out.
+func TestRouter_CORSExposesRetryAfter(t *testing.T) {
+	const listed = "https://internal.globalsakti.com"
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	req.Header.Set("Origin", listed)
+	rec := httptest.NewRecorder()
+	corsRouter(t, []string{listed}).ServeHTTP(rec, req)
+	exposed := strings.ToLower(rec.Result().Header.Get("Access-Control-Expose-Headers"))
+	assert.Contains(t, exposed, "retry-after")
+	assert.Contains(t, exposed, "x-total-count")
+}
+
 // Only development drops Secure.
 // The router derives the cookie rule from ENV: a development API reached
 // over plain-http loopback (make dev) issues a cookie without Secure, and

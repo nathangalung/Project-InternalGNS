@@ -47,7 +47,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 		AllowOriginFunc:  origins.AllowFunc,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "If-Match", "X-Request-Id", session.CSRFHeader},
-		ExposedHeaders:   []string{"ETag", "Link", "X-Request-Id", "X-Total-Count"},
+		ExposedHeaders:   []string{"ETag", "Link", "Retry-After", "X-Request-Id", "X-Total-Count"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))

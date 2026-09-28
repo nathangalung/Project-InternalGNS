@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"mime"
 	"net/http"
 	"time"
@@ -27,6 +29,43 @@ func clientIPKey(r *http.Request) (string, error) {
 func limitBy(requestLimit int) func(http.Handler) http.Handler {
 	return httprate.LimitBy(requestLimit, time.Minute, clientIPKey,
 		httprate.WithLimitCounter(newMonotonicCounter(time.Now)))
+}
+
+// Refresh limits per minute.
+// Every page load and new tab rotates the cookie, and an office reaches the
+// API from one public address, so the address only carries a flood ceiling.
+// A 256-bit token needs no brute-force throttle; the per-cookie limit only
+// stops one cookie being hammered.
+const (
+	refreshPerIP     = 300
+	refreshPerCookie = 20
+)
+
+// refreshCookieKey keys by cookie hash.
+// The limiter's map holds a digest, never a live token.
+func refreshCookieKey(r *http.Request) (string, error) {
+	sum := sha256.Sum256([]byte(session.Read(r)))
+	return hex.EncodeToString(sum[:]), nil
+}
+
+// refreshLimit limits refresh calls.
+// A request without a cookie is answered 401 before any database work, so
+// it spends only the address ceiling: a signed-out office must reach the
+// login page at once, not after a 429.
+func refreshLimit(perIP, perCookie int) func(http.Handler) http.Handler {
+	byIP := limitBy(perIP)
+	byCookie := httprate.LimitBy(perCookie, time.Minute, refreshCookieKey,
+		httprate.WithLimitCounter(newMonotonicCounter(time.Now)))
+	return func(next http.Handler) http.Handler {
+		limited := byCookie(next)
+		return byIP(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if session.Read(r) == "" {
+				next.ServeHTTP(w, r)
+				return
+			}
+			limited.ServeHTTP(w, r)
+		}))
+	}
 }
 
 // loginGuard stops login CSRF.
@@ -62,7 +101,7 @@ func Routes(h *Handler, requireAuth func(http.Handler) http.Handler) chi.Router 
 	// Origin or CSRF header.
 	r.With(loginGuard(h.origins), limitBy(5)).Post("/login", h.Login)
 	guard := session.Guard(h.origins)
-	r.With(guard, limitBy(20)).Post("/refresh", h.Refresh)
+	r.With(guard, refreshLimit(refreshPerIP, refreshPerCookie)).Post("/refresh", h.Refresh)
 	r.With(guard).Post("/logout", h.Logout)
 
 	r.Group(func(r chi.Router) {

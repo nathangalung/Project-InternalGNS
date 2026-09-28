@@ -207,6 +207,20 @@ func TestHandler_Refresh_RotatesCookie(t *testing.T) {
 	assert.Equal(t, http.StatusOK, again.StatusCode)
 }
 
+// Page loads never exhaust refresh.
+// Every page load and new tab rotates the cookie, all from one office
+// address; 25 rotations in a minute must all pass.
+func TestHandler_Refresh_ManyPageLoads(t *testing.T) {
+	srv, u := mkAuthServerWithRefresh(t)
+	token := loginCookie(t, srv, u.Email)
+	for i := range 25 {
+		res := cookieCall(t, srv, "/auth/refresh", token, nil)
+		require.Equal(t, http.StatusOK, res.StatusCode, "refresh %d", i+1)
+		token = assertIssued(t, res)
+		res.Body.Close()
+	}
+}
+
 // Refresh reads only the cookie.
 // A token in the body, the old contract, is ignored and left unspent.
 func TestHandler_Refresh_IgnoresBodyToken(t *testing.T) {
