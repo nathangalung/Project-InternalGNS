@@ -39,17 +39,29 @@ function credentials(role: Role): { email: string; password: string } {
 // Every context also records content-policy violations, and a test fails on
 // any. Without a policy header nothing is refused, so this bites only under
 // the CSP preview (playwright.csp.config.ts). A canary opts out with
-// test.use({ cspGuard: false }) and reads the violations itself.
-export const test = base.extend<{ session: Session; clientIp: string; cspGuard: boolean }>({
+// test.use({ cspGuard: false }) and reads the violations itself. The check
+// is an auto fixture, so a test that builds its own context through
+// signedInContext is held to it too.
+export const test = base.extend<{
+  session: Session
+  clientIp: string
+  cspGuard: boolean
+  cspCheck: undefined
+}>({
   session: ["superadmin", { option: true }],
   cspGuard: [true, { option: true }],
-  context: async ({ context, clientIp, cspGuard }, use) => {
+  cspCheck: [
+    async ({ cspGuard }, use) => {
+      takeViolations()
+      await use(undefined)
+      if (cspGuard) expect(takeViolations(), "content-policy violations").toEqual([])
+    },
+    { auto: true },
+  ],
+  context: async ({ context, clientIp }, use) => {
     await routeClientIp(context, clientIp)
-    takeViolations()
     await guardCsp(context)
     await use(context)
-    const found = takeViolations()
-    if (cspGuard) expect(found, "content-policy violations").toEqual([])
   },
   // biome-ignore lint/correctness/noEmptyPattern: Playwright needs the destructured argument
   clientIp: async ({}, use) => use(ownIp()),

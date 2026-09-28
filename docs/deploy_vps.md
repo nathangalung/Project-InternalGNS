@@ -450,11 +450,11 @@ origin in `connect-src`: the local API instead of `https://${API_HOST}`.
 the enforcing one with that exact policy, unless a planted inline script is
 refused and reported, and unless this label is the enforcing key.
 
-On 2026-09-28 the suite ran green under the policy: 193 tests over every
-route, modal, upload, RFQ import and PDF export, with no violation. The one
-refusal the run found, before the fix, was the `<style>` element Base UI's
-Select injects to hide its scrollbar; `main.tsx` turns those elements off
-with `CSPProvider` and the rule lives in `tailwind.css`.
+On 2026-09-28 the full 193-test suite, which covers every route and flow,
+uploads, RFQ imports and PDF exports included, ran green under the policy.
+The one refusal the run found, before the fix, was the `<style>` element
+Base UI's Select injects to hide its scrollbar; `main.tsx` turns those
+elements off with `CSPProvider` and the rule lives in `tailwind.css`.
 
 A violation is no longer a console line; it breaks the feature, since the
 browser refuses the script, style, image or request. So:
@@ -470,8 +470,11 @@ browser refuses the script, style, image or request. So:
    `Content-Security-Policy-Report-Only` on `main` and redeploy. Dokploy reads
    `compose.prod.yml` from `main` (section 3), so it is a commit, not a UI edit.
 
-`API_HOST` must be the exact API hostname: `connect-src` names it, so a wrong
-value refuses every API call from the browser, login included.
+Two settings must now agree. `connect-src` names `https://${API_HOST}` from the
+Dokploy environment, and the SPA calls the origin baked in from the
+`VITE_API_URL` repository variable at release (section 1), which must be
+exactly `https://<API_HOST>/api/v1`. A mismatch refuses every API call from
+the browser, login included.
 
 ## 13. Pre-deploy checks
 
@@ -502,7 +505,9 @@ changes how a browser holds its session, with no migration.
   reads `compose.prod.yml` from `main`, so the enforcing label ships with
   the merge, not with `TAG`: merge and set the new `TAG` together, since
   only this release's SPA was proven under the enforced policy. `API_HOST`
-  must be the exact API hostname, because `connect-src` names it.
+  must be the exact API hostname and the `VITE_API_URL` repository variable
+  exactly `https://<API_HOST>/api/v1`, because `connect-src` names that host
+  and the SPA calls that URL.
 
 ### Migration order
 
