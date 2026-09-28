@@ -20,6 +20,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
@@ -37,12 +38,17 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 	r.Use(securityHeadersMiddleware)
 	r.Use(bodyLimitMiddleware(2 * 1024 * 1024))
 
+	// One matcher serves CORS and the cookie routes' Origin check. It
+	// matches listed origins exactly; AllowedOrigins stays unset because
+	// go-chi/cors reads an empty list or "*" there as any origin, which with
+	// credentials would expose the refresh cookie's routes to every site.
+	origins := session.NewOrigins(cfg.CORSAllowedOrigins)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   cfg.CORSAllowedOrigins,
+		AllowOriginFunc:  origins.AllowFunc,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "If-Match", "X-Request-Id"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "If-Match", "X-Request-Id", session.CSRFHeader},
 		ExposedHeaders:   []string{"ETag", "Link", "X-Request-Id", "X-Total-Count"},
-		AllowCredentials: false,
+		AllowCredentials: true,
 		MaxAge:           300,
 	}))
 

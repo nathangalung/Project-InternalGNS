@@ -31,6 +31,7 @@ internal/shared/httperr      95
 internal/shared/httpx        95
 internal/shared/listq        95
 internal/shared/paginate     95
+internal/shared/session      95
 internal/shared/sheet        95
 internal/shared/tz           95
 internal/shared/validate     95
