@@ -266,6 +266,18 @@ test.describe("quotation wizard import and requests", () => {
       buffer: Buffer.from("bukan workbook"),
     })
     await expect(page.getByText(/Gagal memproses file: Format berkas tidak didukung/)).toBeVisible()
+
+    // More products than one match call takes is refused before matching.
+    await input.setInputFiles({
+      name: "besar.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(`Nama,Jumlah\n${"Baut,2\n".repeat(501)}`),
+    })
+    await expect(
+      page.getByText(
+        "Gagal memproses file: Berkas berisi 501 baris produk; paling banyak 500 per unggahan. Bagi berkas lalu unggah ulang.",
+      ),
+    ).toBeVisible()
   })
 
   test("a draft's client requests are added, reviewed and removed", async ({ page, seed }) => {

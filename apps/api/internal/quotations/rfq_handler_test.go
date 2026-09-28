@@ -80,6 +80,42 @@ func TestUploadRFQ_ReturnsRows(t *testing.T) {
 	}, got.Rows)
 }
 
+// Upload holds the match cap.
+func TestUploadRFQ_ProductCap(t *testing.T) {
+	cases := []struct {
+		name   string
+		rows   int
+		status int
+		detail string
+	}{
+		{name: "at the cap", rows: items.MaxMatchRows, status: http.StatusOK},
+		{
+			name:   "one over the cap",
+			rows:   items.MaxMatchRows + 1,
+			status: http.StatusUnprocessableEntity,
+			detail: "Berkas berisi 501 baris produk; paling banyak 500 per unggahan. Bagi berkas lalu unggah ulang.",
+		},
+	}
+	srv := rfqServer(t)
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			body, ct := rfqForm(t, "file", "permintaan.csv",
+				[]byte("Nama,Jumlah\n"+strings.Repeat("Baut,2\n", c.rows)))
+			status, raw := postRFQ(t, srv, body, ct)
+			require.Equal(t, c.status, status, string(raw[:min(len(raw), 200)]))
+			if c.status == http.StatusOK {
+				var got quotations.RFQRows
+				require.NoError(t, json.Unmarshal(raw, &got))
+				assert.Len(t, got.Rows, c.rows)
+				return
+			}
+			var p rfqProblem
+			require.NoError(t, json.Unmarshal(raw, &p))
+			assert.Equal(t, c.detail, p.Detail)
+		})
+	}
+}
+
 func TestUploadRFQ_Refusals(t *testing.T) {
 	big := bytes.Repeat([]byte("x"), 1<<20+1)
 	file := func(name, text string) func(t *testing.T) (io.Reader, string) {

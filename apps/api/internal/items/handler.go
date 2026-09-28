@@ -253,6 +253,12 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, resp)
 }
 
+// MaxMatchRows bounds one match batch.
+// The whole import holds one transaction and one pool connection, so an
+// unbounded batch would hold them indefinitely. POST /quotations/rfq holds
+// an upload to the same cap, since the wizard matches it in one call.
+const MaxMatchRows = 500
+
 // MatchRows batch-matches imported xlsx rows.
 // IMPA exact wins; else fuzzy.
 // No-match rows return Matched=nil so FE keeps row empty.
@@ -266,12 +272,9 @@ func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteJSON(w, http.StatusOK, MatchRowsResponse{Rows: []MatchRowResult{}})
 		return
 	}
-	// Bound the batch: the whole import holds one transaction and one pool
-	// connection, so an unbounded batch would hold them indefinitely.
-	const maxMatchRows = 500
-	if len(req.Rows) > maxMatchRows {
+	if len(req.Rows) > MaxMatchRows {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{
-			"rows": fmt.Sprintf("too many rows in one request; split into batches of %d", maxMatchRows),
+			"rows": fmt.Sprintf("Terlalu banyak baris dalam satu permintaan: paling banyak %d. Bagi menjadi beberapa kelompok.", MaxMatchRows),
 		}))
 		return
 	}

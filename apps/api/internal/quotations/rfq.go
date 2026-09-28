@@ -828,7 +828,8 @@ var rfqDetails = map[error]string{
 // UploadRFQ parses an uploaded RFQ.
 // POST /quotations/rfq takes multipart/form-data with the workbook in the
 // "file" field. A file over the byte cap is a 413, as asset uploads are;
-// every other refusal is a 422.
+// every other refusal is a 422, including more product rows than
+// items.MaxMatchRows, the batch the wizard sends on to match-rows.
 func (h *Handler) UploadRFQ(w http.ResponseWriter, r *http.Request) {
 	const limit = rfqMaxBytes + rfqFormSlack
 	if r.ContentLength > limit {
@@ -844,6 +845,13 @@ func (h *Handler) UploadRFQ(w http.ResponseWriter, r *http.Request) {
 	rows, err := ParseRFQ(name, data)
 	if err != nil {
 		renderRFQErr(w, err)
+		return
+	}
+	// The wizard matches the rows in one match-rows call.
+	if len(rows) > items.MaxMatchRows {
+		httperr.Render(w, httperr.UnprocessableDetail(fmt.Sprintf(
+			"Berkas berisi %d baris produk; paling banyak %d per unggahan. Bagi berkas lalu unggah ulang.",
+			len(rows), items.MaxMatchRows), nil))
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, RFQRows{Rows: rows})

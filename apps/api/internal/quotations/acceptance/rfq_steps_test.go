@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"mime/multipart"
 	"net/http"
+	"strings"
 
 	"github.com/cucumber/godog"
 	"github.com/xuri/excelize/v2"
@@ -140,6 +141,10 @@ func (s *scenarioState) uploadTextAs(name string) error {
 	return s.uploadRFQ(name, []byte("Nama,Jumlah\nBaut,2\n"))
 }
 
+func (s *scenarioState) uploadManyRows(n int) error {
+	return s.uploadRFQ("permintaan.csv", []byte("Nama,Jumlah\n"+strings.Repeat("Baut,2\n", n)))
+}
+
 func (s *scenarioState) uploadReturnsRows() error {
 	var got quotations.RFQRows
 	if err := json.Unmarshal(s.body, &got); err != nil {
@@ -182,6 +187,7 @@ func registerRFQSteps(sc *godog.ScenarioContext, s *scenarioState) {
 	sc.Step(`^a catalog item with a fresh IMPA code$`, s.seedRFQItem)
 	sc.Step(`^the user uploads an RFQ listing that item and an unknown product under a category row$`, s.uploadRFQWorkbook)
 	sc.Step(`^the user uploads a text file named "([^"]+)"$`, s.uploadTextAs)
+	sc.Step(`^the user uploads an RFQ with (\d+) product rows$`, s.uploadManyRows)
 	sc.Step(`^the upload returns the item and the unknown product$`, s.uploadReturnsRows)
 	sc.Step(`^the user matches the uploaded rows against the catalog$`, s.matchUploadedRows)
 	sc.Step(`^the item matches by IMPA code and the unknown product matches nothing$`, s.uploadMatched)

@@ -19,3 +19,8 @@ Feature: RFQ upload
     When the user uploads a text file named "permintaan.xlsx"
     Then the response status is 422
     And the problem detail mentions "Format berkas tidak didukung."
+
+  Scenario: An RFQ with more product rows than one match takes is refused
+    When the user uploads an RFQ with 501 product rows
+    Then the response status is 422
+    And the problem detail mentions "Berkas berisi 501 baris produk; paling banyak 500 per unggahan."

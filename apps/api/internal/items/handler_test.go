@@ -332,13 +332,21 @@ func TestHandler_MatchRows_Empty(t *testing.T) {
 
 func TestHandler_MatchRows_TooManyRows(t *testing.T) {
 	srv := newSrv(t)
-	rows := make([]items.MatchRowInput, 501)
+	rows := make([]items.MatchRowInput, items.MaxMatchRows+1)
 	for i := range rows {
 		rows[i] = items.MatchRowInput{Name: "x"}
 	}
 	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", items.MatchRowsRequest{Rows: rows})
 	defer res.Body.Close()
-	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	var p struct {
+		Detail string            `json:"detail"`
+		Fields map[string]string `json:"fields"`
+	}
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&p))
+	want := "Terlalu banyak baris dalam satu permintaan: paling banyak 500. Bagi menjadi beberapa kelompok."
+	assert.Equal(t, want, p.Detail)
+	assert.Equal(t, want, p.Fields["rows"])
 }
 
 func TestHandler_MatchRows_IMPAExact(t *testing.T) {
