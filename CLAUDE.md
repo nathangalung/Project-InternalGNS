@@ -69,6 +69,17 @@ refresh. CORS grants credentials to exactly the listed origins, and config
 refuses `*`, an empty list, or a malformed origin in every environment.
 Details: `docs/backend_dev_guide.md` (Sessions and CORS).
 
+The web keeps the access token in memory only (`lib/session.ts`) and never
+writes a token to web storage; tokens an older build left in
+`sessionStorage` are removed unread. Every page load, `/login` included,
+restores the session with a credentialed refresh, and a refused restore is
+not retried until the session changes. The tabs of a browser share the one
+cookie, so every rotation and the logout run under one Web Lock, and the
+rotating tab hands the new access token to the others on a
+BroadcastChannel; a logout or a login in one tab ends the session in the
+others. A 401 refreshes once and replays the request once; a failed refresh
+ends the session and the authed shell leaves for `/login`.
+
 ## Essential Commands
 
 Run from the repo root. `make help` lists every target.
@@ -221,18 +232,20 @@ src/
   features/          One folder per feature: api.ts, hooks.ts, components
   components/shared/ Sidebar, Modal, tables, pagination, states, links
   hooks/             Cross-feature hooks
-  lib/               api-client, rbac, format, status, entity-link, chart
-                     helpers, ui (tailwind class primitives), useListScreen,
-                     validation (form field rules), form-errors (422 to inputs)
+  lib/               api-client, session (in-memory token), rbac, format,
+                     status, entity-link, chart helpers, ui (tailwind class
+                     primitives), useListScreen, validation (form field
+                     rules), form-errors (422 to inputs)
   styles/            tailwind.css (entry, @theme tokens, base layer)
-  test/              renderHook and query helpers for hook tests
+  test/              renderHook, query and browser-tab fakes for hook tests
   types/             generated.ts (from Go DTOs) and api.ts
 ```
 
-Server state is TanStack Query; `lib/api-client.ts` attaches the JWT and maps
-errors. The API contract is `types/generated.ts`, written by `make gen-types`
-from the Go DTOs allowlisted in `apps/api/cmd/gentypes`; CI regenerates it and
-fails on any diff. `types/api.ts` re-exports it under the app's names and adds
+Server state is TanStack Query; `lib/api-client.ts` attaches the in-memory
+JWT from `lib/session.ts` and maps errors. The API contract is
+`types/generated.ts`, written by `make gen-types` from the Go DTOs
+allowlisted in `apps/api/cmd/gentypes`; CI regenerates it and fails on any
+diff. `types/api.ts` re-exports it under the app's names and adds
 only what Go does not carry: narrowed unions for text the database fixes and
 query-only types. There is no OpenAPI spec.
 
@@ -290,13 +303,20 @@ query call.
   `src/test/renderHook.tsx`. `bun run test` runs both projects.
 - Components and routes are covered by Playwright in `apps/web/e2e`: one
   scenario per main or alternative flow, plus the role matrix. The setup
-  project signs each role in once through the API and `fixtures.ts` seeds the
-  tokens into sessionStorage (`test.use({ session: "finance" })`). It creates
-  or reactivates the `e2e.*@globalsakti.com` users, and the teardown project
-  deactivates them, since users cannot be deleted. `make e2e` runs against the
-  dev stack from `make dev`, with admin credentials from `apps/api/.env`;
-  `E2E_BASE_URL` and `E2E_API_URL` point it elsewhere. Login allows 5 attempts
-  per minute per IP, so a rerun inside a minute waits out the window.
+  project creates or reactivates the `e2e.*@globalsakti.com` users and saves
+  an access token per role for the specs' API calls; the teardown project
+  deactivates the users, since users cannot be deleted. `fixtures.ts` signs
+  every test context in for real and starts it from that login's
+  storageState, on its own `x-forwarded-for` address
+  (`test.use({ session: "finance" })`). Never share one saved refresh cookie
+  between contexts: the first page load rotates it, and the API answers the
+  next context's replay by revoking every session of that user. Every page
+  load spends one refresh (20 per minute per address), so the own address
+  also keeps parallel tests from throttling each other. `make e2e` runs
+  against the dev stack from `make dev`, with admin credentials from
+  `apps/api/.env`; `E2E_BASE_URL` and `E2E_API_URL` point it elsewhere.
+  Login allows 5 attempts per minute per IP, so a rerun inside a minute waits
+  out the window.
 
 Coverage gates fail CI below their tier; `make cover` runs both locally.
 
