@@ -4,6 +4,7 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 
 import { queryClient } from "@/lib/query-client"
+import { startSession } from "@/lib/session"
 import { routeTree } from "./routeTree.gen"
 // Self-hosted Inter font.
 //
@@ -13,6 +14,9 @@ import "@fontsource/inter/500.css"
 import "@fontsource/inter/600.css"
 import "@fontsource/inter/700.css"
 import "./styles/tailwind.css"
+
+// Before the first route restores.
+startSession()
 
 const router = createRouter({
   routeTree,

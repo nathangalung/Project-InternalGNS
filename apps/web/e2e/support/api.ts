@@ -2,8 +2,11 @@ import { randomBytes } from "node:crypto"
 import type { LoginResponse, UserRow } from "../../src/types/generated"
 import { apiURL } from "./env"
 
-// Saved session tokens.
-export type Tokens = Pick<LoginResponse, "token"> & Partial<Pick<LoginResponse, "refreshToken">>
+// Access token for API calls.
+//
+// The refresh token never reaches a body; it is a cookie only a browser
+// context or a Playwright request context holds.
+export type Tokens = Pick<LoginResponse, "token">
 
 export type User = UserRow
 

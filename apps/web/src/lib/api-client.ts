@@ -1,10 +1,6 @@
-import type { ProblemDetail, RefreshResponse } from "@/types/api"
-
-const BASE_URL = (import.meta.env.VITE_API_URL ?? "/api/v1").replace(/\/+$/, "")
-
-const TOKEN_KEY = "gns_token"
-const REFRESH_KEY = "gns_refresh_token"
-const REFRESH_PATH = "/auth/refresh"
+import { API_BASE } from "@/lib/api-base"
+import { endSession, getAccessToken, refreshSession } from "@/lib/session"
+import type { ProblemDetail } from "@/types/api"
 
 export class ApiError extends Error {
   constructor(
@@ -27,99 +23,37 @@ type RequestInput = {
   authed?: boolean
 }
 
-type TokenPair = { token: string; refreshToken?: string }
+type FetchInit = RequestInit & { authed?: boolean }
 
-// Token storage in sessionStorage.
+// One request, one token.
 //
-// sessionStorage means refresh-on-tab-close. The trade-off vs httpOnly cookies
-// is accepted (no CSRF surface, XSS surface in exchange); document that
-// decision in the auth section of round3_plan.md.
-export function setTokens(pair: TokenPair): void {
-  sessionStorage.setItem(TOKEN_KEY, pair.token)
-  if (pair.refreshToken) {
-    sessionStorage.setItem(REFRESH_KEY, pair.refreshToken)
-  }
-}
-
-export function clearTokens(): void {
-  sessionStorage.removeItem(TOKEN_KEY)
-  sessionStorage.removeItem(REFRESH_KEY)
-}
-
-export function getRefreshToken(): string | null {
-  return sessionStorage.getItem(REFRESH_KEY)
-}
-
-async function rawFetch(path: string, init: RequestInit & { authed?: boolean }): Promise<Response> {
-  const token = init.authed === false ? null : sessionStorage.getItem(TOKEN_KEY)
+// Credentialed, so a response that revokes the session can expire the
+// refresh cookie cross-origin; the cookie itself only travels to the auth
+// routes.
+function send(path: string, init: FetchInit, token: string | null): Promise<Response> {
   const headers = new Headers(init.headers)
   if (token) headers.set("authorization", `Bearer ${token}`)
-  return fetch(`${BASE_URL}${path}`, { ...init, headers })
-}
-
-// In-flight refresh dedupe.
-//
-// Simultaneous 401s share one /auth/refresh round-trip.
-let refreshInFlight: Promise<boolean> | null = null
-
-async function performRefresh(): Promise<boolean> {
-  const refreshToken = getRefreshToken()
-  if (!refreshToken) return false
-  const res = await fetch(`${BASE_URL}${REFRESH_PATH}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
-  })
-  if (!res.ok) {
-    clearTokens()
-    return false
-  }
-  const parsed = (await res.json()) as RefreshResponse
-  sessionStorage.setItem(TOKEN_KEY, parsed.token)
-  sessionStorage.setItem(REFRESH_KEY, parsed.refreshToken)
-  return true
-}
-
-function tryRefresh(): Promise<boolean> {
-  if (!refreshInFlight) {
-    refreshInFlight = performRefresh().finally(() => {
-      refreshInFlight = null
-    })
-  }
-  return refreshInFlight
-}
-
-// Final refresh failure hook.
-//
-// Notifies the auth layer once refresh definitively fails.
-let onAuthExpired: (() => void) | null = null
-
-export function setOnAuthExpired(fn: () => void): void {
-  onAuthExpired = fn
+  return fetch(`${API_BASE}${path}`, { ...init, headers, credentials: "include" })
 }
 
 // fetchAuthed: API call with JWT.
 //
-// On 401 it transparently refreshes and retries the original request once. The
-// refresh path itself bypasses this to avoid recursion.
-async function fetchAuthed(
-  path: string,
-  init: RequestInit & { authed?: boolean },
-): Promise<Response> {
-  const res = await rawFetch(path, init)
-  if (res.status !== 401 || path === REFRESH_PATH || init.authed === false) {
-    return res
-  }
+// The access token comes from memory. On a 401 it refreshes once and replays
+// the request once; a second 401 is the answer. A failed refresh ends the
+// session. Credential calls (authed: false) never refresh.
+async function fetchAuthed(path: string, init: FetchInit): Promise<Response> {
+  const sent = init.authed === false ? null : getAccessToken()
+  const res = await send(path, init, sent)
+  if (res.status !== 401 || init.authed === false) return res
   // Drain the first response body so the connection can be reused.
   void res.body?.cancel()
-  const refreshed = await tryRefresh()
-  if (!refreshed) {
-    clearTokens()
-    onAuthExpired?.()
+  const token = await refreshSession(sent)
+  if (!token) {
+    endSession()
     // The drained body cannot be re-read, so surface a typed error.
     throw new ApiError(401, null, "Sesi berakhir, silakan masuk kembali.")
   }
-  return rawFetch(path, init)
+  return send(path, init, token)
 }
 
 async function doFetch({

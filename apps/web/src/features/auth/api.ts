@@ -1,11 +1,5 @@
-import { apiRequest, getRefreshToken } from "@/lib/api-client"
-import type {
-  ChangeOwnPasswordInput,
-  LoginInput,
-  LoginResponse,
-  LogoutInput,
-  MeUser,
-} from "@/types/api"
+import { apiRequest } from "@/lib/api-client"
+import type { ChangeOwnPasswordInput, LoginInput, LoginResponse, MeUser } from "@/types/api"
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
   return apiRequest<LoginResponse>({
@@ -19,15 +13,6 @@ export async function login(email: string, password: string): Promise<LoginRespo
 
 export async function me(): Promise<MeUser> {
   return apiRequest<MeUser>({ path: "/auth/me" })
-}
-
-export async function logout(): Promise<void> {
-  const refreshToken = getRefreshToken()
-  await apiRequest<void>({
-    path: "/auth/logout",
-    method: "POST",
-    body: refreshToken ? ({ refreshToken } satisfies LogoutInput) : undefined,
-  })
 }
 
 // Self-service password change.

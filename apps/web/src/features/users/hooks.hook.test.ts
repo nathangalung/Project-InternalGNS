@@ -137,11 +137,15 @@ describe("own session", () => {
     ["success", "success"],
     ["error", "error"],
   ])("signs out locally with a %s notice and goes to login", (tone, shown) => {
+    const fetchSpy = vi.fn()
+    vi.stubGlobal("fetch", fetchSpy)
     const { result } = renderQueryHook(() => useEndOwnSession())
     act(() => result.current("Kata sandi diubah. Silakan masuk kembali.", tone))
     expect(clearAuthState).toHaveBeenCalledTimes(1)
     expect(toast[shown]).toHaveBeenCalledWith("Kata sandi diubah. Silakan masuk kembali.")
     expect(navigate).toHaveBeenCalledWith({ to: "/login" })
-    expect(authApi.logout).not.toHaveBeenCalled()
+    // The server already ended every session: no logout request.
+    expect(fetchSpy).not.toHaveBeenCalled()
+    vi.unstubAllGlobals()
   })
 })

@@ -1,15 +1,17 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
-import type { ReactNode } from "react"
+import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router"
+import { type ReactNode, useEffect } from "react"
 import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
 import Sidebar from "@/components/shared/Sidebar"
 import * as authApi from "@/features/auth/api"
-import { clearAuthState, isAuthenticatedSync } from "@/features/auth/hooks"
+import { clearAuthState, useAuth } from "@/features/auth/hooks"
 import { queryKeys } from "@/lib/query-keys"
 import { roleCanAccess, sectionFromPathname } from "@/lib/rbac"
+import { restoreSession } from "@/lib/session"
 
 export const Route = createFileRoute("/_authed")({
+  // A page load restores from the refresh cookie.
   beforeLoad: async ({ context, location }) => {
-    if (!isAuthenticatedSync()) throw redirect({ to: "/login" })
+    if (!(await restoreSession())) throw redirect({ to: "/login" })
     let me: Awaited<ReturnType<typeof authApi.me>>
     try {
       me = await context.queryClient.fetchQuery({
@@ -48,7 +50,16 @@ function AppShell({ children }: { children: ReactNode }) {
 }
 
 // Shell for authenticated routes.
+//
+// A session that ends while the shell is open (logout in another tab, a
+// refused refresh) leaves for the login page at once, rendering nothing.
 function AuthedLayout() {
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (!isAuthenticated) void navigate({ to: "/login" })
+  }, [isAuthenticated, navigate])
+  if (!isAuthenticated) return null
   return (
     <AppShell>
       <Outlet />

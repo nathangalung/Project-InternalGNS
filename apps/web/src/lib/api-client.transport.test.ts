@@ -5,20 +5,17 @@ import {
   apiList,
   apiRequest,
   buildQuery,
-  clearTokens,
   downloadFile,
   downloadPdf,
   downloadXlsx,
   downloadXml,
   fetchObjectUrl,
-  getRefreshToken,
   nullOn404,
   postForm,
   saveBlob,
-  setOnAuthExpired,
-  setTokens,
   uploadAsset,
 } from "./api-client"
+import { endSession, getAccessToken, isSignedIn, signIn } from "./session"
 
 type Call = { path: string; init: RequestInit }
 type Handler = (path: string, init: RequestInit) => Response | Promise<Response>
@@ -43,35 +40,19 @@ const json = (body: unknown, init: ResponseInit = {}) =>
 
 const header = (c: Call, name: string) => new Headers(c.init.headers).get(name)
 
-beforeEach(() => sessionStorage.clear())
+beforeEach(() => {
+  sessionStorage.clear()
+  endSession()
+})
 afterEach(() => {
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
   vi.useRealTimers()
-  setOnAuthExpired(() => {})
-})
-
-describe("token storage", () => {
-  it("stores both tokens and clears them together", () => {
-    setTokens({ token: "a", refreshToken: "r" })
-    expect(sessionStorage.getItem("gns_token")).toBe("a")
-    expect(getRefreshToken()).toBe("r")
-    clearTokens()
-    expect(sessionStorage.getItem("gns_token")).toBeNull()
-    expect(getRefreshToken()).toBeNull()
-  })
-
-  it("keeps the refresh token when only the access token changes", () => {
-    setTokens({ token: "a", refreshToken: "r" })
-    setTokens({ token: "b" })
-    expect(sessionStorage.getItem("gns_token")).toBe("b")
-    expect(getRefreshToken()).toBe("r")
-  })
 })
 
 describe("apiRequest", () => {
-  it("sends the bearer token, JSON body and extra headers", async () => {
-    setTokens({ token: "tok" })
+  it("sends the in-memory bearer token, JSON body and extra headers", async () => {
+    signIn("tok")
     const calls = serve(() => json({ id: 1 }))
     const out = await apiRequest<{ id: number }>({
       path: "/quotations/1",
@@ -87,6 +68,9 @@ describe("apiRequest", () => {
     expect(header(calls[0], "authorization")).toBe("Bearer tok")
     expect(header(calls[0], "content-type")).toBe("application/json")
     expect(header(calls[0], "if-match")).toBe("3")
+    // Credentialed, so a revocation's Set-Cookie lands cross-origin.
+    expect(calls[0].init.credentials).toBe("include")
+    expect(sessionStorage.length).toBe(0)
   })
 
   it("defaults to GET with no body and no token", async () => {
@@ -99,7 +83,7 @@ describe("apiRequest", () => {
 
   // AU-4: credentials skip stale tokens.
   it("leaves the token off a credential call", async () => {
-    setTokens({ token: "stale" })
+    signIn("stale")
     const calls = serve(() => json({ token: "new" }))
     await apiRequest({ path: "/auth/login", method: "POST", body: {}, authed: false })
     expect(header(calls[0], "authorization")).toBeNull()
@@ -135,70 +119,84 @@ describe("apiRequest", () => {
 })
 
 describe("session refresh", () => {
+  const refused = () => new Response("", { status: 401 })
+
   it("refreshes once on a 401 and replays the request with the new token", async () => {
-    setTokens({ token: "old", refreshToken: "r1" })
+    signIn("old")
     const calls = serve((path, init) => {
-      if (path === "/auth/refresh") return json({ token: "new", refreshToken: "r2" })
-      const auth = new Headers(init.headers).get("authorization")
-      return auth === "Bearer new" ? json({ ok: true }) : new Response("", { status: 401 })
+      if (path === "/auth/refresh") return json({ token: "new", expiresAt: 0 })
+      return new Headers(init.headers).get("authorization") === "Bearer new"
+        ? json({ ok: true })
+        : refused()
     })
     await expect(apiRequest({ path: "/users" })).resolves.toEqual({ ok: true })
     expect(calls.map((c) => c.path)).toEqual(["/users", "/auth/refresh", "/users"])
-    expect(JSON.parse(String(calls[1].init.body))).toEqual({ refreshToken: "r1" })
-    expect(sessionStorage.getItem("gns_token")).toBe("new")
-    expect(getRefreshToken()).toBe("r2")
+    expect(calls[1].init.credentials).toBe("include")
+    expect(header(calls[1], "X-GNS-CSRF")).toBe("1")
+    expect(calls[1].init.body).toBeUndefined()
+    expect(getAccessToken()).toBe("new")
+  })
+
+  it("retries only once: a second 401 is the answer", async () => {
+    signIn("old")
+    const calls = serve((path) =>
+      path === "/auth/refresh" ? json({ token: "new", expiresAt: 0 }) : refused(),
+    )
+    const err = await apiRequest({ path: "/users" }).catch((e: unknown) => e)
+    expect(err).toMatchObject({ status: 401 })
+    expect(calls.map((c) => c.path)).toEqual(["/users", "/auth/refresh", "/users"])
   })
 
   it("shares one refresh between parallel 401s", async () => {
-    setTokens({ token: "old", refreshToken: "r1" })
+    signIn("old")
     const calls = serve((path, init) => {
-      if (path === "/auth/refresh") return json({ token: "new", refreshToken: "r2" })
+      if (path === "/auth/refresh") return json({ token: "new", expiresAt: 0 })
       const auth = new Headers(init.headers).get("authorization")
-      return auth === "Bearer new" ? json(path) : new Response("", { status: 401 })
+      return auth === "Bearer new" ? json(path) : refused()
     })
     const out = await Promise.all([apiRequest({ path: "/a" }), apiRequest({ path: "/b" })])
     expect(out).toEqual(["/a", "/b"])
     expect(calls.filter((c) => c.path === "/auth/refresh")).toHaveLength(1)
   })
 
-  it.each<[string, string | null, Handler]>([
-    ["no refresh token", null, () => new Response("", { status: 401 })],
+  it("replays with a newer token another request already fetched", async () => {
+    signIn("old")
+    const calls = serve((path, init) => {
+      if (new Headers(init.headers).get("authorization") === "Bearer old") {
+        // The session rotates while this request is refused.
+        signIn("peer")
+        return refused()
+      }
+      return json(path)
+    })
+    await expect(apiRequest({ path: "/a" })).resolves.toBe("/a")
+    expect(calls.map((c) => c.path)).toEqual(["/a", "/a"])
+    expect(header(calls[1], "authorization")).toBe("Bearer peer")
+  })
+
+  it.each<[string, Handler]>([
+    ["the cookie is refused", (path) => (path === "/auth/refresh" ? refused() : refused())],
     [
-      "the refresh is refused",
-      "r1",
-      (path) =>
-        path === "/auth/refresh"
-          ? json({ detail: "revoked" }, { status: 401 })
-          : new Response("", { status: 401 }),
+      "the API is unreachable",
+      (path) => (path === "/auth/refresh" ? Promise.reject(new TypeError("offline")) : refused()),
     ],
-  ])("ends the session when %s", async (_name, refresh, handler) => {
-    setTokens(refresh ? { token: "old", refreshToken: refresh } : { token: "old" })
-    const expired = vi.fn()
-    setOnAuthExpired(expired)
+  ])("ends the session when %s", async (_name, handler) => {
+    signIn("old")
     const calls = serve(handler)
     const err = await apiRequest({ path: "/users" }).catch((e: unknown) => e)
     expect(err).toBeInstanceOf(ApiError)
     expect(err).toMatchObject({ status: 401, message: "Sesi berakhir, silakan masuk kembali." })
-    expect(expired).toHaveBeenCalledTimes(1)
-    expect(sessionStorage.getItem("gns_token")).toBeNull()
-    expect(getRefreshToken()).toBeNull()
+    expect(isSignedIn()).toBe(false)
     expect(calls.filter((c) => c.path === "/users")).toHaveLength(1)
   })
 
-  it("never refreshes a 401 from the refresh route itself", async () => {
-    setTokens({ token: "old", refreshToken: "r1" })
-    const expired = vi.fn()
-    setOnAuthExpired(expired)
-    const calls = serve(() =>
-      json(
-        { type: "about:blank", title: "Unauthorized", status: 401, detail: "Token tidak valid." },
-        { status: 401 },
-      ),
+  it("never refreshes a credential call's 401", async () => {
+    const calls = serve(() => refused())
+    const err = await apiRequest({ path: "/auth/login", method: "POST", authed: false }).catch(
+      (e: unknown) => e,
     )
-    const err = await apiRequest({ path: "/auth/refresh", method: "POST" }).catch((e: unknown) => e)
-    expect(err).toMatchObject({ status: 401, message: "Token tidak valid." })
+    expect(err).toMatchObject({ status: 401 })
     expect(calls).toHaveLength(1)
-    expect(expired).not.toHaveBeenCalled()
   })
 })
 
@@ -317,7 +315,7 @@ describe("downloads", () => {
     ],
   ])("%s saves through the picker with its own filter", async (_n, fn, name, mime) => {
     const saved = stubPicker()
-    setTokens({ token: "tok" })
+    signIn("tok")
     const calls = serve(() => new Response("isi", { status: 200 }))
     await fn("/files/1", name)
     expect(header(calls[0], "authorization")).toBe("Bearer tok")
