@@ -86,24 +86,6 @@ func TestRepo_Create_Inactive(t *testing.T) {
 	assert.False(t, it.IsActive)
 }
 
-func TestRepo_Search(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
-	repo := items.NewRepo(tx, testutil.Store(t))
-
-	hits, err := repo.Search(ctx, "PUNCHING", 0.05, 5)
-	require.NoError(t, err)
-	_ = hits
-}
-
-func TestRepo_MatchRequest(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
-	repo := items.NewRepo(tx, testutil.Store(t))
-
-	matches, err := repo.MatchRequest(ctx, "PUNCHING TOOL", 5)
-	require.NoError(t, err)
-	_ = matches
-}
-
 func TestRepo_ListVendorsForItem(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))

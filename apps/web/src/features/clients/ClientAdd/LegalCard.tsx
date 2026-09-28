@@ -1,5 +1,6 @@
 import { useId } from "react"
 import { ui } from "@/lib/ui"
+import { digitsOnly } from "@/lib/validation"
 import { type ClientAddFormData, inputCls, optionalCls } from "./helpers"
 
 type LegalCardProps = {
@@ -30,7 +31,7 @@ export default function LegalCard({ form, onChange, isNamaKontakFilled }: LegalC
             inputMode="numeric"
             placeholder="Masukkan NPWP"
             value={form.npwp}
-            onChange={(e) => onChange("npwp", e.target.value.replace(/\D/g, ""))}
+            onChange={(e) => onChange("npwp", digitsOnly(e.target.value))}
             disabled={!isNamaKontakFilled}
           />
         </div>
@@ -45,7 +46,7 @@ export default function LegalCard({ form, onChange, isNamaKontakFilled }: LegalC
             inputMode="numeric"
             placeholder="Masukkan ID Teknis atau TKU"
             value={form.tku}
-            onChange={(e) => onChange("tku", e.target.value.replace(/\D/g, ""))}
+            onChange={(e) => onChange("tku", digitsOnly(e.target.value))}
             disabled={!isNamaKontakFilled}
           />
         </div>

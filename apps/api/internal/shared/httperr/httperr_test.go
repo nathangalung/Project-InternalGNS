@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -186,11 +187,15 @@ func TestRenderDBErr(t *testing.T) {
 // ctxCapture records handler contexts.
 type ctxCapture struct {
 	slog.Handler
-	seen []context.Context
+	seen   []context.Context
+	levels []slog.Level
+	msgs   []string
 }
 
 func (h *ctxCapture) Handle(ctx context.Context, r slog.Record) error {
 	h.seen = append(h.seen, ctx)
+	h.levels = append(h.levels, r.Level)
+	h.msgs = append(h.msgs, r.Message)
 	return nil
 }
 
@@ -203,9 +208,14 @@ func TestRenderDBErrCtx_LogsWithRequestContext(t *testing.T) {
 		name       string
 		err        error
 		wantStatus int
+		wantLevel  slog.Level
+		wantMsg    string
 	}{
-		{"server error", errors.New("boom"), http.StatusInternalServerError},
-		{"deadline exceeded", context.DeadlineExceeded, http.StatusServiceUnavailable},
+		{"server error", errors.New("boom"), http.StatusInternalServerError, slog.LevelError, "unhandled server error"},
+		{"deadline exceeded", context.DeadlineExceeded, http.StatusServiceUnavailable, slog.LevelWarn, "request deadline exceeded"},
+		// The client left; nothing failed on our side.
+		{"client cancelled", fmt.Errorf("list quotations: %w", context.Canceled),
+			StatusClientClosedRequest, slog.LevelInfo, "request canceled by client"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -222,6 +232,8 @@ func TestRenderDBErrCtx_LogsWithRequestContext(t *testing.T) {
 			defer res.Body.Close()
 			assert.Equal(t, c.wantStatus, res.StatusCode)
 			require.Len(t, cap.seen, 1, "expected exactly one log record")
+			assert.Equal(t, c.wantLevel, cap.levels[0])
+			assert.Equal(t, c.wantMsg, cap.msgs[0])
 			assert.Equal(t, "req-1", cap.seen[0].Value(ctxProbeKey{}),
 				"log record must carry the request context so request_id is stamped")
 		})
@@ -361,4 +373,23 @@ func TestRender_OmitsEmptyCode(t *testing.T) {
 	var body map[string]any
 	require.NoError(t, json.NewDecoder(rec.Body).Decode(&body))
 	assert.NotContains(t, body, "code")
+}
+
+// Extension members reach the wire.
+func TestRenderAs(t *testing.T) {
+	type extended struct {
+		Error
+		Issues []string `json:"issues"`
+	}
+	rec := httptest.NewRecorder()
+	RenderAs(rec, http.StatusUnprocessableEntity, extended{Error: Unprocessable(map[string]string{"a": "b"}), Issues: []string{"x"}})
+	res := rec.Result()
+	defer res.Body.Close()
+
+	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	assert.Equal(t, "application/problem+json", res.Header.Get("Content-Type"))
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&body))
+	assert.Equal(t, "b", body["detail"])
+	assert.Equal(t, []any{"x"}, body["issues"])
 }

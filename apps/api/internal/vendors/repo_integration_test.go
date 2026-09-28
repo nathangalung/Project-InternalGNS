@@ -1,7 +1,6 @@
 package vendors_test
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -51,7 +50,7 @@ func TestRepo_Create(t *testing.T) {
 	req := vendors.CreateVendorRequest{
 		Name:        "PT Test Vendor",
 		Location:    ptr("Bali"),
-		ContactInfo: json.RawMessage(`{"email":"test@vendor.local"}`),
+		ContactInfo: &vendors.ContactInfo{Email: "test@vendor.local"},
 	}
 	v, err := repo.Create(ctx, req, seedUserID)
 	require.NoError(t, err)
@@ -84,15 +83,6 @@ func TestRepo_Create_NullContactInfo(t *testing.T) {
 	v, err := repo.Create(ctx, req, seedUserID)
 	require.NoError(t, err)
 	assert.Greater(t, v.ID, int64(0))
-}
-
-func TestRepo_Search(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
-	repo := vendors.NewRepo(tx, testutil.Store(t))
-
-	results, err := repo.Search(ctx, "Toko", 0.05, 5)
-	require.NoError(t, err)
-	assert.NotEmpty(t, results)
 }
 
 func TestRepo_ListItems(t *testing.T) {

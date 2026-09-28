@@ -99,3 +99,43 @@ test("a vendor with many products pages its list", async ({ page, seed }) => {
   await expect(page.getByText("Menampilkan 11-12 dari 12 Produk")).toBeVisible()
   await expect(table.getByRole("row", { name: new RegExp(seed.prefix) })).toHaveCount(2)
 })
+
+// Phone takes 9-12 digits.
+const PHONE_ERROR = "Nomor telepon harus 9–12 digit angka."
+
+test("Tambah Vendor refuses a 13-digit phone inline", async ({ page, seed }) => {
+  await page.goto("/vendors")
+  await page.getByRole("button", { name: "Tambah Vendor" }).click()
+  const modal = page.getByRole("dialog", { name: "Tambah Vendor Baru" })
+  const save = modal.getByRole("button", { name: "Simpan Vendor" })
+  await modal.getByLabel("Nama Vendor *").fill(seed.name("Vendor Telepon"))
+  await modal.getByLabel("Nomor Telepon (Opsional)").fill("8123456789012")
+  await expect(modal.getByText(PHONE_ERROR)).toBeVisible()
+  await expect(save).toBeDisabled()
+  // A valid email does not let the bad phone through.
+  await modal.getByLabel("Email (Opsional)").fill(`${seed.prefix.toLowerCase()}@vendor.example`)
+  await expect(save).toBeDisabled()
+  await modal.getByLabel("Nomor Telepon (Opsional)").fill("812345678901")
+  await expect(modal.getByText(PHONE_ERROR)).toBeHidden()
+  await expect(save).toBeEnabled()
+  await modal.getByRole("button", { name: "Batal" }).click()
+  await expect(modal).toBeHidden()
+})
+
+test("vendor detail refuses a 13-digit phone and a bad email", async ({ page, seed }) => {
+  const vendor = await seed.vendor()
+  await page.goto(`/vendors/${vendor.id}`)
+  await page.getByLabel("No HP").fill("8123456789012")
+  await expect(page.getByText(PHONE_ERROR)).toBeVisible()
+  await expect(page.getByLabel("No HP")).toHaveAttribute("aria-invalid", "true")
+  await page.getByLabel("Email").fill("toko@maju")
+  await expect(page.getByText("Format email tidak valid.")).toBeVisible()
+  await page.getByRole("button", { name: "Simpan Perubahan" }).click()
+
+  // Nothing reached the API.
+  const v = await api<Vendor>("GET", `/vendors/${vendor.id}`)
+  expect([v.contactInfo?.email, v.contactInfo?.phone]).toEqual([
+    "vendor@example.com",
+    "81298765432",
+  ])
+})

@@ -9,9 +9,11 @@ import {
 import type {
   InvoiceBackendRow,
   InvoiceBackendStatus,
+  InvoiceDatesSaved,
   InvoiceDetail,
   InvoiceItemRow,
   InvoiceSummary,
+  ObjectKeyInput,
   PresignDownload,
   PresignUpload,
 } from "@/types/api"
@@ -95,8 +97,8 @@ export async function updateDates(
   id: number,
   input: UpdateInvoiceDatesInput,
   rowVersion: number,
-): Promise<{ rowVersion: number }> {
-  return apiRequest<{ rowVersion: number }>({
+): Promise<InvoiceDatesSaved> {
+  return apiRequest<InvoiceDatesSaved>({
     path: `/invoices/${id}/dates`,
     method: "PATCH",
     body: input,
@@ -134,6 +136,6 @@ export async function updateAttachment(id: number, objectKey: string): Promise<v
   await apiRequest<void>({
     path: `/invoices/${id}/attachment`,
     method: "PATCH",
-    body: { objectKey },
+    body: { objectKey } satisfies ObjectKeyInput,
   })
 }

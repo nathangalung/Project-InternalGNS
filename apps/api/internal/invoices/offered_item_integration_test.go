@@ -120,7 +120,8 @@ func pdfLineNames(t *testing.T, tx pgx.Tx, invID int64) []string {
 
 func TestInvoice_SnapshotsOfferedItem(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
-	invID := offeredItemPOWithInvoice(t, tx, createOfferedItem(t, tx))
+	itemID := createOfferedItem(t, tx)
+	invID := offeredItemPOWithInvoice(t, tx, itemID)
 
 	items, err := invoices.NewRepo(tx, testutil.Store(t)).ListItems(ctx, invID)
 	require.NoError(t, err)
@@ -128,6 +129,9 @@ func TestInvoice_SnapshotsOfferedItem(t *testing.T) {
 	assert.Equal(t, offeredName, items[0].ItemName)
 	require.NotNil(t, items[0].ItemCode)
 	assert.Equal(t, offeredCode, *items[0].ItemCode)
+	// The detail links the line to this product.
+	require.NotNil(t, items[0].OfferedItemID)
+	assert.Equal(t, itemID, *items[0].OfferedItemID)
 }
 
 // Filed invoices never restate.

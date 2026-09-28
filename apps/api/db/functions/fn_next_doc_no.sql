@@ -1,4 +1,4 @@
--- Canonical current body of fn_next_doc_no (deployed by migration 00007).
+-- Canonical current body of fn_next_doc_no (deployed by migration 00072).
 CREATE OR REPLACE FUNCTION public.fn_next_doc_no(p_doc_type character varying, p_company_id bigint)
  RETURNS text
  LANGUAGE plpgsql
@@ -10,12 +10,14 @@ DECLARE
   v_yy             VARCHAR(2);
   v_month          INT := EXTRACT(MONTH FROM NOW());
 BEGIN
-  -- Get company number for formatting
+  -- The share lock holds the number until this document commits.
   SELECT number INTO v_company_no
-  FROM company_client WHERE id = p_company_id;
+  FROM company_client WHERE id = p_company_id
+  FOR SHARE;
 
   IF v_company_no IS NULL OR v_company_no = '' THEN
-    RAISE EXCEPTION 'Company % does not have number set — required for doc_no generation', p_company_id;
+    RAISE EXCEPTION 'Klien belum memiliki nomor. Isi Nomor Klien lalu coba lagi.'
+      USING ERRCODE = 'P0014';
   END IF;
 
   -- UPSERT atomic: increment seq or insert new row

@@ -121,9 +121,9 @@ SELECT ins.id, ins.number, ins.name, ins.npwp, ins.address, ins.email, ins.count
 FROM ins;
 
 -- name: clients.update
--- A NULL $10 keeps the number. A different one is refused once any
--- quotation references the client, since its document numbers embed it; no
--- row comes back and the caller tells that apart from a missing client.
+-- A NULL $10 keeps the number. trg_company_client_number_lock refuses a
+-- different one (P0013) once any quotation references the client, since its
+-- document numbers embed it.
 UPDATE company_client
    SET number       = COALESCE($10::text, number),
        name         = $2,
@@ -136,9 +136,6 @@ UPDATE company_client
        updated_by   = $9,
        updated_at   = NOW()
  WHERE id = $1
-   AND ($10::text IS NULL
-        OR $10::text = number
-        OR NOT EXISTS (SELECT 1 FROM quotations q WHERE q.company_client_id = $1))
 RETURNING id, number, name, npwp, address, email, country_code,
           tku_id, is_active, created_at, updated_at,
           NULL::BIGINT AS contact_id,

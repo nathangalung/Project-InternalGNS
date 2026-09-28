@@ -263,8 +263,14 @@ Feature: Invoice lifecycle
     Then the response status is 200
     When the user lists invoices with effective status "overdue"
     Then the invoice list is exactly the invoice
+    And the listed invoice reads effective status "overdue"
+    When the user reads the invoice by quotation
+    Then the invoice status is "sent"
+    And the invoice reads effective status "overdue"
     When the user transitions the invoice through "paid"
     Then the invoice history is "draft>sent,sent>paid"
+    When the user reads the invoice by quotation
+    Then the invoice reads effective status "paid"
     When the user lists invoices with effective status "overdue"
     Then the invoice list is empty
 

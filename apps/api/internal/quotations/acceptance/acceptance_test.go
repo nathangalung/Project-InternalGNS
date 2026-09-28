@@ -33,6 +33,7 @@ type scenarioState struct {
 	userID  int64
 	docNos  [2]string
 	pdfPath string
+	rfq     rfqState
 	// Revision fixtures.
 	origID int64
 	newID  int64
@@ -120,7 +121,8 @@ func (s *scenarioState) createWithoutItems() error {
 
 func (s *scenarioState) createWithStatus(status string) error {
 	req := s.buildCreate("0", 1)
-	req.Status = &status
+	st := quotations.Status(status)
+	req.Status = &st
 	return s.sendRequest(http.MethodPost, "/quotations/", req)
 }
 
@@ -270,7 +272,7 @@ func (s *scenarioState) detailStatusEquals(want string) error {
 	if err := json.Unmarshal(s.body, &d); err != nil {
 		return err
 	}
-	if d.Status != want {
+	if string(d.Status) != want {
 		return fmt.Errorf("want %s got %s", want, d.Status)
 	}
 	return nil
@@ -312,7 +314,7 @@ func (s *scenarioState) walk(path string, note *string) error {
 func (s *scenarioState) transitionTo(target string) error { return s.transitionWith(target, nil) }
 
 func (s *scenarioState) transitionWith(target string, note *string) error {
-	body := quotations.ChangeStatusRequest{Status: target, Note: note}
+	body := quotations.ChangeStatusRequest{Status: quotations.Status(target), Note: note}
 	return s.sendRequest(http.MethodPatch, "/quotations/"+strconv.FormatInt(s.lastID, 10)+"/status", body)
 }
 
@@ -349,6 +351,7 @@ func initScenario(t *testing.T) func(*godog.ScenarioContext) {
 		})
 		registerStatusSteps(sc, state)
 		registerEdgeSteps(sc, state)
+		registerRFQSteps(sc, state)
 
 		sc.Step(`^an authenticated user with id (\d+)$`, func(id int64) error { return state.authenticatedUser(id) })
 		sc.Step(`^the quotation domain is empty$`, state.emptyDomain)

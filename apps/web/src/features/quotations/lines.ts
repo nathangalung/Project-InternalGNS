@@ -1,5 +1,5 @@
 import { ApiError } from "@/lib/api-client"
-import type { ProductItem } from "./QuotationEdit"
+import type { ProductItem } from "./wizard"
 
 // Wizard line quantity rules.
 //
@@ -28,13 +28,9 @@ export function countInvalidQty(lines: { jumlah: number }[]): number {
 export function qtyErrorIndexes(err: unknown): Map<number, string> {
   const out = new Map<number, string>()
   if (!(err instanceof ApiError) || err.status !== 422) return out
-  const body = err.body
-  if (!body || typeof body !== "object" || !("fields" in body)) return out
-  const fields = body.fields
-  if (!fields || typeof fields !== "object") return out
-  for (const [key, value] of Object.entries(fields)) {
+  for (const [key, value] of Object.entries(err.body?.fields ?? {})) {
     const m = /^items\[(\d+)\]\.qty$/.exec(key)
-    if (m && typeof value === "string") out.set(Number(m[1]), value)
+    if (m) out.set(Number(m[1]), value)
   }
   return out
 }

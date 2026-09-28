@@ -2,18 +2,11 @@ import { useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { useCreateClient, useCreateContact, useUploadClientLogo } from "@/features/clients/hooks"
 import { ui } from "@/lib/ui"
+import { optionalAddressError, optionalEmailError, optionalPhoneError } from "@/lib/validation"
 import type { ClientRow } from "@/types/api"
 import CompanyCard from "./CompanyCard"
 import ContactCard from "./ContactCard"
-import {
-  type ClientAddFormData,
-  INITIAL_FORM,
-  isValidEmail,
-  isValidPhone,
-  optionalAddressError,
-  PHONE_ERROR,
-  saveClientWithContact,
-} from "./helpers"
+import { type ClientAddFormData, INITIAL_FORM, saveClientWithContact } from "./helpers"
 import LegalCard from "./LegalCard"
 
 export type { ClientAddFormData } from "./helpers"
@@ -48,18 +41,12 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
 
   const isNamaKontakFilled = isCompanyReady && form.namaKontak.trim().length > 0
 
-  const phoneFilledAndValid = form.nomorTelepon.trim().length > 0 && isValidPhone(form.nomorTelepon)
-  const emailFilledAndValid = form.email.trim().length > 0 && isValidEmail(form.email)
-  const phoneError =
-    isNamaKontakFilled && form.nomorTelepon.trim().length > 0 && !isValidPhone(form.nomorTelepon)
-      ? PHONE_ERROR
-      : null
-  const emailError =
-    isNamaKontakFilled && form.email.trim().length > 0 && !isValidEmail(form.email)
-      ? "Format email tidak valid."
-      : null
-
-  const isContactValid = isNamaKontakFilled && (phoneFilledAndValid || emailFilledAndValid)
+  const phoneError = isNamaKontakFilled ? optionalPhoneError(form.nomorTelepon) : null
+  const emailError = isNamaKontakFilled ? optionalEmailError(form.email) : null
+  // One way to reach them, and no filled field the API would refuse.
+  const hasContactWay = form.nomorTelepon.trim() !== "" || form.email.trim() !== ""
+  const isContactValid =
+    isNamaKontakFilled && hasContactWay && phoneError === null && emailError === null
 
   function handleChange(field: keyof ClientAddFormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -101,7 +88,7 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
       footer={
         <>
           {submitError && <span className="flex-1 text-xs text-[#EF4444]">{submitError}</span>}
-          {!submitError && isNamaKontakFilled && !isContactValid && (
+          {!submitError && isNamaKontakFilled && !hasContactWay && (
             <span className="flex-1 text-xs text-[#EF4444]">
               Isi minimal nomor telepon atau email.
             </span>

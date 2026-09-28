@@ -279,7 +279,7 @@ func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]int32{"rowVersion": newVersion})
+	httpx.WriteJSON(w, http.StatusOK, DatesUpdatedResponse{RowVersion: newVersion})
 }
 
 // proofKeyProblem vets the proof key.

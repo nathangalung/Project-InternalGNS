@@ -2,9 +2,10 @@ package users
 
 import (
 	"fmt"
-	"net/mail"
 	"strings"
 	"unicode"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 )
 
 // Password length bounds.
@@ -53,19 +54,15 @@ func ValidatePassword(pw string) string {
 	return "Kata sandi harus memuat " + strings.Join(missing, ", ") + "."
 }
 
-// validateEmail requires a single mailbox.
-// It rejects anything the address column cannot resolve to one mailbox,
-// including the "Nama <a@b>" display form net/mail also parses.
+// validateEmail requires one mailbox.
+// The format rule is shared/validate, the one clients, contacts, vendors
+// and the web forms use.
 func validateEmail(email string) string {
 	trimmed := strings.TrimSpace(email)
 	if trimmed == "" {
 		return "Email wajib diisi."
 	}
-	addr, err := mail.ParseAddress(trimmed)
-	if err != nil || addr.Address != trimmed || addr.Name != "" {
-		return "Format email tidak valid."
-	}
-	return ""
+	return validate.Email(trimmed)
 }
 
 // validateName rejects whitespace-only names.
@@ -106,9 +103,17 @@ func validateCreate(req CreateUserRequest) map[string]string {
 }
 
 // validateUpdate enforces the update payload.
-func validateUpdate(req UpdateUserRequest) map[string]string {
+// stored reads the account's current address, only when the new one fails
+// the format rule. An unchanged address is kept: accounts made under the
+// older net/mail rule stay editable, and a changed address must pass.
+func validateUpdate(req UpdateUserRequest, stored func() (string, error)) map[string]string {
 	errs := map[string]string{}
 	put(errs, "email", validateEmail(req.Email))
+	if errs["email"] == validate.EmailMessage {
+		if prior, err := stored(); err == nil && normalizeEmail(prior) == normalizeEmail(req.Email) {
+			delete(errs, "email")
+		}
+	}
 	put(errs, "name", validateName(req.Name))
 	put(errs, "role", validateRole(req.Role))
 	if len(errs) == 0 {

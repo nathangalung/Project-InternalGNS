@@ -8,15 +8,19 @@ import {
 } from "@/lib/api-client"
 import type {
   PoBackendStatus,
+  PoDetailsInput,
+  PoFileInput,
+  PoSaved,
   PoStatusEvent,
+  PoStatusInput,
   PoUpdateItemsInput,
-  PresignDownload,
+  PresignFileDownload,
   PresignUpload,
   PurchaseOrderItemRow,
   PurchaseOrderRow,
 } from "@/types/api"
 
-export type { PresignDownload, PresignUpload } from "@/types/api"
+export type { PresignFileDownload, PresignUpload } from "@/types/api"
 
 export type ListParams = {
   q?: string
@@ -70,7 +74,7 @@ export async function changeStatus(
   await apiRequest<void>({
     path: `/purchase-orders/${id}/status`,
     method: "PATCH",
-    body: note ? { status, note } : { status },
+    body: (note ? { status, note } : { status }) satisfies PoStatusInput,
   })
 }
 
@@ -86,10 +90,7 @@ export async function removeFile(id: number): Promise<void> {
   await apiRequest<void>({ path: `/purchase-orders/${id}/file`, method: "DELETE" })
 }
 
-export async function updateFile(
-  id: number,
-  payload: { fileName: string; fileSize: number; objectKey: string },
-): Promise<void> {
+export async function updateFile(id: number, payload: PoFileInput): Promise<void> {
   await apiRequest<void>({
     path: `/purchase-orders/${id}/file`,
     method: "PATCH",
@@ -104,15 +105,15 @@ export async function presignUpload(id: number, fileName: string): Promise<Presi
   })
 }
 
-export async function presignDownload(id: number): Promise<PresignDownload> {
-  return apiRequest<PresignDownload>({
+export async function presignDownload(id: number): Promise<PresignFileDownload> {
+  return apiRequest<PresignFileDownload>({
     path: `/purchase-orders/${id}/download-url`,
   })
 }
 
 export async function updateDetails(
   id: number,
-  payload: { poNumber: string; poDate: string },
+  payload: PoDetailsInput,
   rowVersion: number,
 ): Promise<void> {
   await apiRequest<void>({
@@ -127,8 +128,8 @@ export async function updateItems(
   id: number,
   input: PoUpdateItemsInput,
   rowVersion: number,
-): Promise<{ id: number; rowVersion: number }> {
-  return apiRequest<{ id: number; rowVersion: number }>({
+): Promise<PoSaved> {
+  return apiRequest<PoSaved>({
     path: `/purchase-orders/${id}/items`,
     method: "PUT",
     body: input,

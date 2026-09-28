@@ -1,3 +1,5 @@
+import { JAKARTA_TZ } from "@/lib/date-range"
+
 // NaN-safe string/null → number coercion.
 export function toNum(v: string | number | null | undefined): number {
   if (v == null || v === "") return 0
@@ -32,33 +34,53 @@ export function formatRupiahAxis(v: number): string {
   return `Rp ${v}`
 }
 
-// Indonesian short date display.
+// Parsed instant, or null.
+function parseDate(iso: string): Date | null {
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
+// Indonesian short date, in WIB.
+//
+// Document dates are WIB days. A date-only value parses as UTC midnight,
+// which is 07:00 WIB on the same day, so formatting in Jakarta keeps its day
+// in any browser zone; a timestamp lands on its WIB calendar day.
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return ""
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return iso
+  const d = parseDate(iso)
+  if (!d) return iso
   return d.toLocaleDateString("id-ID", {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: JAKARTA_TZ,
   })
 }
 
-// Date plus hh:mm time.
-export function formatDateTime(iso: string | null | undefined): string {
+// Unpadded day, in WIB.
+export function formatDateShort(iso: string | null | undefined): string {
   if (!iso) return ""
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return iso
-  const date = d.toLocaleDateString("id-ID", {
-    day: "2-digit",
+  const d = parseDate(iso)
+  if (!d) return iso
+  return d.toLocaleDateString("id-ID", {
+    day: "numeric",
     month: "short",
     year: "numeric",
+    timeZone: JAKARTA_TZ,
   })
+}
+
+// Date plus hh:mm, in WIB.
+export function formatDateTime(iso: string | null | undefined): string {
+  if (!iso) return ""
+  const d = parseDate(iso)
+  if (!d) return iso
   const time = d.toLocaleTimeString("id-ID", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: JAKARTA_TZ,
   })
-  return `${date}, ${time}`
+  return `${formatDate(iso)}, ${time}`
 }
 
 // Indonesian tax math.

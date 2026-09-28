@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ApiError } from "@/lib/api-client"
 import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
+import { problem } from "@/test/problem"
 import { invalidated, renderQueryHook, seed, settle, until } from "@/test/query"
 import * as api from "./api"
 import {
@@ -164,10 +165,10 @@ describe("quotation writes", () => {
     m.update.mockRejectedValue(
       new ApiError(
         409,
-        {
+        problem(409, {
           code: "version_conflict",
           detail: "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
-        },
+        }),
         "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
       ),
     )
@@ -207,7 +208,11 @@ describe("useChangeQuotationStatus", () => {
 
   it("stays quiet when the note is rejected, since the modal shows it", async () => {
     m.changeStatus.mockRejectedValue(
-      new ApiError(422, { fields: { note: "Alasan wajib diisi." } }, "Alasan wajib diisi."),
+      new ApiError(
+        422,
+        problem(422, { fields: { note: "Alasan wajib diisi." } }),
+        "Alasan wajib diisi.",
+      ),
     )
     const { result } = renderQueryHook(() => useChangeQuotationStatus())
     await settle(() => result.current.mutateAsync({ id: 5, status: "rejected" }))

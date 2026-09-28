@@ -1,91 +1,84 @@
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useMemo, useState } from "react"
 import ClientAdd from "@/features/clients/ClientAdd"
-import { isValidAddress, optionalAddressError } from "@/features/clients/ClientAdd/helpers"
 import { dedupeByCompany, fromClientHit, fromClientRow } from "@/features/clients/helpers"
 import { useClient, useClientContacts, useClientSearch, useClients } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
 import { useCreateQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
-import { computeTaxBreakdown, formatNumber as formatRp } from "@/lib/format"
+import { formatNumber as formatRp } from "@/lib/format"
 import { ui } from "@/lib/ui"
 import type { QuotationCreateInput, QuotationItemInput } from "@/types/api"
 import { toItemInput } from "./adapters"
 import DiscountModal from "./DiscountModal"
-import { countInvalidQty, parseQty, qtyErrorIndexes, qtyErrorsById } from "./lines"
-import type { ProductItem } from "./QuotationEdit"
 import Step1Client from "./Step1Client"
 import Step2Product from "./Step2Product"
 import Step3Shipping from "./Step3Shipping"
 import Step4Summary from "./Step4Summary"
+import { useQuotationWizard } from "./useQuotationWizard"
+import { WIZARD_STEPS as steps } from "./wizard"
 import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
 import { type PickClient, resolveClient, visibleClients } from "./wizardClient"
 
-const steps = [
-  { n: 1, label: "KLIEN" },
-  { n: 2, label: "PRODUK" },
-  { n: 3, label: "PENGIRIMAN" },
-  { n: 4, label: "RINGKASAN" },
-]
-
 export default function QuotationAdd() {
   const navigate = useNavigate()
-  const [step, setStep] = useState(1)
+  const { data: unitsData } = useUnits()
+  const {
+    step,
+    setStep,
+    isNextDisabled,
+    selectedClient,
+    setSelectedClient,
+    selectedContactId,
+    setSelectedContactId,
+    showProductAdd,
+    setShowProductAdd,
+    setProductAddOpen,
+    editingProduct,
+    setEditingProduct,
+    showDiscountModal,
+    setShowDiscountModal,
+    discountPct,
+    setDiscountPct,
+    products,
+    setProducts,
+    deleteProduct,
+    saveProduct,
+    prodPageSize,
+    setProdPageSize,
+    prodPage,
+    setProdPage,
+    isRowDropdownOpen,
+    setIsRowDropdownOpen,
+    shippingAddress,
+    setShippingAddress,
+    shippingTime,
+    setShippingTime,
+    shippingCost,
+    setShippingCost,
+    jatuhTempo,
+    setJatuhTempo,
+    berlakuSampai,
+    setBerlakuSampai,
+    gates: { isAlamatOk, isWaktuFilled, isTenggatWaktuFilled, hasContent },
+    summary,
+    unitIdByCode,
+    unitsOk,
+    invalidQty,
+    qtyErrors,
+    recordQtyFailure,
+  } = useQuotationWizard(unitsData)
 
-  // Empty client for add mode.
-  const [selectedClient, setSelectedClient] = useState("")
+  // Client picking, add mode only.
   const [search, setSearch] = useState("")
   const [showClientAdd, setShowClientAdd] = useState(false)
-  const [selectedContactId, setSelectedContactId] = useState<number | undefined>(undefined)
-
-  // ProductAdd form state.
-  const [showProductAdd, setShowProductAdd] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null)
-  const [showDiscountModal, setShowDiscountModal] = useState(false)
-  const [discountPct, setDiscountPct] = useState<number>(0)
-
-  // Empty products.
-  const [products, setProducts] = useState<ProductItem[]>([])
-  const [prodPageSize, setProdPageSize] = useState(5)
-  const [prodPage, setProdPage] = useState(1)
-  const [isRowDropdownOpen, setIsRowDropdownOpen] = useState(false)
-
-  // Empty shipping.
-  const [shippingAddress, setShippingAddress] = useState("")
-  const [shippingTime, setShippingTime] = useState("")
-  const [shippingCost, setShippingCost] = useState("")
-
-  // Deadline state.
-  const [jatuhTempo, setJatuhTempo] = useState("")
-  const [berlakuSampai, setBerlakuSampai] = useState("")
-
-  // Step gating logic.
-  // The address is optional here and required at the PO.
-  const isAlamatOk = optionalAddressError(shippingAddress) === null
-  const isWaktuFilled = isAlamatOk && shippingTime.trim().length > 0
-  const isTenggatWaktuFilled = jatuhTempo.trim().length > 0 && berlakuSampai.trim().length > 0
-  const hasContent = products.length > 0 || isValidAddress(shippingAddress)
-
-  // Cost follows the days only; typing an address must not wipe them.
-  const hasShippingTime = shippingTime.trim().length > 0
-  useEffect(() => {
-    if (!hasShippingTime) setShippingCost("")
-  }, [hasShippingTime])
-
-  let isNextDisabled = false
-  if (step === 1) isNextDisabled = selectedClient === ""
-
-  function deleteProduct(id: number) {
-    setProducts((prev) => prev.filter((p) => p.id !== id))
-  }
 
   const trimmedSearch = search.trim()
   const debouncedSearch = useDebouncedValue(trimmedSearch, 250)
   // Search hits are active only; the first page must match.
   const { data: clientsData } = useClients({ limit: 50, isActive: true })
   const { data: searchHits } = useClientSearch(debouncedSearch, { limit: 30 })
-  const { data: unitsData } = useUnits()
   const createQuotation = useCreateQuotation()
 
   const numericClientId = Number(selectedClient)
@@ -129,28 +122,14 @@ export default function QuotationAdd() {
     } else {
       setSelectedContactId(clientContactId)
     }
-  }, [selectedClient, contacts, clientContactId])
+  }, [selectedClient, contacts, clientContactId, setSelectedContactId])
 
-  const unitIdByCode = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const u of unitsData ?? []) m.set(u.code.toUpperCase(), u.id)
-    return m
-  }, [unitsData])
-
-  const [qtyFail, setQtyFail] = useState<{
-    lines: ProductItem[]
-    byId: Record<number, string>
-  } | null>(null)
-  // Server errors apply to the lines they were raised for.
-  const qtyErrors = qtyFail?.lines === products ? qtyFail.byId : {}
-
-  const invalidQty = countInvalidQty(products)
   const canSubmit =
     Number.isFinite(numericClientId) &&
     numericClientId > 0 &&
     products.length > 0 &&
     invalidQty === 0 &&
-    products.every((p) => unitIdByCode.has(p.satuan.toUpperCase())) &&
+    unitsOk &&
     isTenggatWaktuFilled &&
     hasContent &&
     isAlamatOk
@@ -177,28 +156,22 @@ export default function QuotationAdd() {
     }
     createQuotation.mutate(input, {
       onSuccess: () => void navigate({ to: "/quotations" }),
-      onError: (err) =>
-        setQtyFail({ lines: products, byId: qtyErrorsById(products, qtyErrorIndexes(err)) }),
+      onError: recordQtyFailure,
     })
   }
 
-  // Summary computation.
-  const summaryTotalProdukQty = products.reduce((sum, p) => sum + p.jumlah, 0)
-  const summaryTotalHargaBeli = products.reduce((sum, p) => sum + p.hargaBeli * p.jumlah, 0)
-  const summaryTotalHargaJual = products.reduce((sum, p) => sum + p.hargaJual * p.jumlah, 0)
-  const nominalDiskon = summaryTotalHargaJual * (discountPct / 100)
-  const summarySubTotal = summaryTotalHargaJual - nominalDiskon
-  const summaryShippingCost = Number(shippingCost) || 0
-  const hasProducts = products.length > 0
   const {
-    dppNilaiLain: summaryDpp,
-    ppnAmount: summaryPpn,
+    totalProdukQty: summaryTotalProdukQty,
+    totalHargaBeli: summaryTotalHargaBeli,
+    totalHargaJual: summaryTotalHargaJual,
+    nominalDiskon,
+    subTotal: summarySubTotal,
+    shippingCost: summaryShippingCost,
+    dpp: summaryDpp,
+    ppn: summaryPpn,
     grandTotal: summaryGrandTotal,
-  } = computeTaxBreakdown({
-    subtotal: summarySubTotal,
-    shipping: summaryShippingCost,
-  })
-  const summaryProfit = hasProducts ? summarySubTotal - summaryTotalHargaBeli : 0
+    profit: summaryProfit,
+  } = summary
 
   return (
     <>
@@ -399,74 +372,8 @@ export default function QuotationAdd() {
       <ProductAdd
         open={showProductAdd}
         initialData={editingProduct}
-        onOpenChange={(open) => {
-          setShowProductAdd(open)
-          if (!open) setEditingProduct(null)
-        }}
-        onSuccess={(data) => {
-          const splitOffer = (s: string): { kode: string; nama: string } => {
-            const trimmed = s.trim()
-            if (!trimmed) return { kode: "", nama: "" }
-            const [first, ...rest] = trimmed.split(/\s*-\s*/)
-            if (rest.length > 0 && /^\d+$/.test(first)) {
-              return { kode: first, nama: rest.join(" - ") }
-            }
-            return { kode: "", nama: trimmed }
-          }
-          const offer = splitOffer(data.kodeImpaNama)
-          const nama = offer.nama
-          const kodeImpa = offer.kode
-          const reqSplit = splitOffer(data.requestedKodeImpaNama)
-          const requestedNama = reqSplit.nama || nama
-          const requestedKodeImpa = reqSplit.kode
-
-          if (editingProduct) {
-            setProducts((prev) =>
-              prev.map((p) =>
-                p.id === editingProduct.id
-                  ? {
-                      ...p,
-                      itemId: data.itemId,
-                      requestedItemId: data.requestedItemId,
-                      vendorId: data.vendorId,
-                      vendorProductId: data.vendorProductId,
-                      nama,
-                      kodeImpa,
-                      requestedNama,
-                      requestedKodeImpa,
-                      vendor: data.namaVendor,
-                      jumlah: parseQty(data.jumlahProduk),
-                      satuan: data.satuan,
-                      hargaBeli: Number(data.hargaBeli) || 0,
-                      hargaJual: Number(data.hargaJual) || 0,
-                    }
-                  : p,
-              ),
-            )
-          } else {
-            const nextId = products.reduce((m, p) => Math.max(m, p.id), 0) + 1
-            setProducts((prev) => [
-              ...prev,
-              {
-                id: nextId,
-                itemId: data.itemId,
-                requestedItemId: data.requestedItemId,
-                vendorId: data.vendorId,
-                vendorProductId: data.vendorProductId,
-                nama,
-                kodeImpa,
-                requestedNama,
-                requestedKodeImpa,
-                vendor: data.namaVendor,
-                jumlah: parseQty(data.jumlahProduk),
-                satuan: data.satuan,
-                hargaBeli: Number(data.hargaBeli) || 0,
-                hargaJual: Number(data.hargaJual) || 0,
-              },
-            ])
-          }
-          setEditingProduct(null)
-        }}
+        onOpenChange={setProductAddOpen}
+        onSuccess={saveProduct}
       />
     </>
   )

@@ -296,6 +296,22 @@ func (s *scenarioState) staffActiveIs(want bool) error {
 	return nil
 }
 
+// storeLegacyEmail mimics a net/mail-era row.
+// The older rule took a one-letter top-level label; the shared rule does not.
+func (s *scenarioState) storeLegacyEmail() error {
+	s.email = fmt.Sprintf("legacy-%d@x.c", s.userID)
+	_, err := testutil.Pool(s.t).Exec(context.Background(),
+		`UPDATE users SET email = $1 WHERE id = $2`, s.email, s.userID)
+	return err
+}
+
+func (s *scenarioState) updateStaffToRefusedEmail() error {
+	body := users.UpdateUserRequest{
+		Email: fmt.Sprintf("baru-%d@x.c", s.userID), Name: s.name, Role: users.RoleOperational,
+	}
+	return s.sendRequest(http.MethodPut, "/users/"+strconv.FormatInt(s.userID, 10), body)
+}
+
 // soleSuperadmin leaves one active superadmin.
 // It parks every active superadmin, then creates the only one.
 // restoreParked undoes the parking after the scenario.
@@ -485,12 +501,15 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the user creates a staff account with an oversized password$`, state.createStaffOversizedPassword)
 		sc.Step(`^the user creates a staff account with a padded name$`, state.createStaffPaddedName)
 		sc.Step(`^the user name has no padding$`, state.nameHasNoPadding)
+		sc.Step(`^the user (creates a staff account|updates the staff account) with the email wrapped in (a tab|newlines)$`, state.sendPaddedEmail)
 		sc.Step(`^a second staff account$`, state.seedSecondStaff)
 		sc.Step(`^the user updates the second account to the first email$`, state.updateSecondToFirstEmail)
 		sc.Step(`^the user deactivates the staff account$`, func() error { return state.setStaffActive(false) })
 		sc.Step(`^the user reactivates the staff account$`, func() error { return state.setStaffActive(true) })
 		sc.Step(`^the staff account is inactive$`, func() error { return state.staffActiveIs(false) })
 		sc.Step(`^the staff account is active$`, func() error { return state.staffActiveIs(true) })
+		sc.Step(`^its email was stored under the older rule$`, state.storeLegacyEmail)
+		sc.Step(`^the user changes the staff email to one the rule refuses$`, state.updateStaffToRefusedEmail)
 		sc.Step(`^the only active superadmin account$`, state.soleSuperadmin)
 		sc.Step(`^the user sets that superadmin to role "([^"]+)" and active (true|false)$`, func(role, active string) error {
 			return state.setSuperadmin(role, active == "true")
@@ -524,4 +543,27 @@ func TestUsersFeatures(t *testing.T) {
 		t.Fatalf("godog suite failed status=%d", status)
 	}
 	_ = defaultUserID
+}
+
+// Named whitespace paddings.
+var paddings = map[string]string{"a tab": "\t", "newlines": "\n\r\n "}
+
+func (s *scenarioState) sendPaddedEmail(action, padding string) error {
+	s.email = s.uniqueEmail()
+	padded := paddings[padding] + s.email + paddings[padding]
+	if action == "updates the staff account" {
+		return s.sendRequest(http.MethodPut, "/users/"+strconv.FormatInt(s.userID, 10), users.UpdateUserRequest{
+			Email: padded, Name: s.name, Role: users.RoleOperational, IsActive: true,
+		})
+	}
+	body := users.CreateUserRequest{
+		Email: padded, Name: "ATDD Pad", Password: "Secret123!", Role: users.RoleOperational,
+	}
+	if err := s.sendRequest(http.MethodPost, "/users/", body); err != nil {
+		return err
+	}
+	if s.last.StatusCode == http.StatusCreated {
+		return s.captureID()
+	}
+	return nil
 }

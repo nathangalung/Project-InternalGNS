@@ -102,27 +102,6 @@ func TestHandler_Create_EmptyName(t *testing.T) {
 	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 }
 
-func TestHandler_Search(t *testing.T) {
-	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodGet, "/vendors/search?q=Toko&minScore=0.05&limit=5", nil)
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-}
-
-func TestHandler_Search_MissingQ(t *testing.T) {
-	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodGet, "/vendors/search", nil)
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-}
-
-func TestHandler_Search_BadParams(t *testing.T) {
-	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodGet, "/vendors/search?q=Toko&minScore=junk&limit=zero", nil)
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-}
-
 func TestHandler_ListItems(t *testing.T) {
 	srv := newSrv(t)
 	res := doJSON(t, srv, http.MethodGet, "/vendors/1/items?limit=10", nil)

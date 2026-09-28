@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_po_items (deployed by migration 00071).
+-- Canonical current body of fn_update_po_items (deployed by migration 00073).
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -14,7 +14,7 @@ BEGIN
   FOR UPDATE;
 
   IF v_status IS NULL THEN
-    RAISE EXCEPTION 'Purchase order % not found', p_po_id
+    RAISE EXCEPTION 'PO % tidak ditemukan.', p_po_id
       USING ERRCODE = 'P0011';
   END IF;
 
@@ -24,12 +24,12 @@ BEGIN
   END IF;
 
   IF p_discount_pct IS NULL OR p_discount_pct < 0 OR p_discount_pct > 100 THEN
-    RAISE EXCEPTION 'discount_pct must be between 0 and 100'
+    RAISE EXCEPTION 'Diskon harus antara 0 dan 100.'
       USING ERRCODE = 'P0014';
   END IF;
 
   IF p_items IS NULL OR jsonb_typeof(p_items) <> 'array' THEN
-    RAISE EXCEPTION 'items must be a JSON array'
+    RAISE EXCEPTION 'Daftar baris PO tidak valid.'
       USING ERRCODE = 'P0014';
   END IF;
 

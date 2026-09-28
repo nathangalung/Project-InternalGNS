@@ -59,7 +59,7 @@ var tiebreak = listq.Column{Expr: "po.id", Dir: listq.Desc}
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
-		p := c.Arg("%" + f.Q + "%")
+		p := c.Arg(listq.Contains(f.Q))
 		c.And("(po.po_number ILIKE " + p + " OR q.quotation_no ILIKE " + p + " OR cc.name ILIKE " + p + ")")
 	}
 	if len(f.Statuses) > 0 {
@@ -240,15 +240,11 @@ func (r *Repo) Completeness(ctx context.Context, poID int64) ([]CompletenessIssu
 
 	var issues []CompletenessIssue
 	if missing := missingClientFields(client); len(missing) > 0 {
-		issues = append(issues, CompletenessIssue{
-			Scope: scopeClient, ID: client.ID, Name: client.Name, Missing: missing,
-		})
+		issues = append(issues, recordIssue(KindClient, client.ID, client.Name, missing))
 	}
 	for _, v := range vendors {
 		if missing := missingVendorFields(v); len(missing) > 0 {
-			issues = append(issues, CompletenessIssue{
-				Scope: scopeVendor, ID: v.ID, Name: v.Name, Missing: missing,
-			})
+			issues = append(issues, recordIssue(KindVendor, v.ID, v.Name, missing))
 		}
 	}
 	return append(issues, shippingIssues(poID, lines)...), nil

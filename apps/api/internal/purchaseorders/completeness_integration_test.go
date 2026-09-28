@@ -94,9 +94,9 @@ func TestRepo_Completeness(t *testing.T) {
 		issues, err := purchaseorders.NewRepo(tx, testutil.Store(t)).Completeness(ctx, poID)
 		require.NoError(t, err)
 		require.Len(t, issues, 1)
-		assert.Equal(t, "vendor", issues[0].Scope)
+		assert.Equal(t, purchaseorders.KindVendor, issues[0].Kind)
 		assert.Equal(t, incompleteVendorID, issues[0].ID)
-		assert.Equal(t, []string{"Email atau Nomor Telepon"}, issues[0].Missing)
+		assert.Equal(t, []purchaseorders.GapCode{purchaseorders.GapVendorReach}, gapCodes(issues[0]))
 	})
 
 	t.Run("incomplete client is reported", func(t *testing.T) {
@@ -106,11 +106,12 @@ func TestRepo_Completeness(t *testing.T) {
 		issues, err := purchaseorders.NewRepo(tx, testutil.Store(t)).Completeness(ctx, poID)
 		require.NoError(t, err)
 		require.Len(t, issues, 1)
-		assert.Equal(t, "klien", issues[0].Scope)
+		assert.Equal(t, purchaseorders.KindClient, issues[0].Kind)
 		assert.Equal(t, secondCompanyID, issues[0].ID)
-		assert.Equal(t, []string{
-			"NPWP", "Alamat", "Nama Narahubung", "Email atau Nomor Telepon Narahubung",
-		}, issues[0].Missing)
+		assert.Equal(t, []purchaseorders.GapCode{
+			purchaseorders.GapClientNpwp, purchaseorders.GapClientAddress,
+			purchaseorders.GapContactName, purchaseorders.GapContactReach,
+		}, gapCodes(issues[0]))
 	})
 
 	t.Run("unknown PO is not found", func(t *testing.T) {
@@ -146,11 +147,11 @@ func TestRepo_Completeness_ChosenContact(t *testing.T) {
 		name       string
 		email      *string
 		deactivate bool
-		want       []string
+		want       []purchaseorders.GapCode
 	}{
-		{"chosen contact without a channel", nil, false, []string{"Email atau Nomor Telepon Narahubung"}},
+		{"chosen contact without a channel", nil, false, []purchaseorders.GapCode{purchaseorders.GapContactReach}},
 		{"chosen contact complete", strPtr("pilihan@gns.test"), false, nil},
-		{"chosen contact deactivated", strPtr("pilihan@gns.test"), true, []string{"Narahubung aktif"}},
+		{"chosen contact deactivated", strPtr("pilihan@gns.test"), true, []purchaseorders.GapCode{purchaseorders.GapContactInactive}},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -172,8 +173,8 @@ func TestRepo_Completeness_ChosenContact(t *testing.T) {
 				return
 			}
 			require.Len(t, issues, 1)
-			assert.Equal(t, "klien", issues[0].Scope)
-			assert.Equal(t, tc.want, issues[0].Missing)
+			assert.Equal(t, purchaseorders.KindClient, issues[0].Kind)
+			assert.Equal(t, tc.want, gapCodes(issues[0]))
 		})
 	}
 }
@@ -224,9 +225,10 @@ func TestRepo_Completeness_ShipDestination(t *testing.T) {
 				assert.Empty(t, issues)
 				return
 			}
-			assert.Equal(t, []purchaseorders.CompletenessIssue{
-				{Scope: "pengiriman", ID: poID, Missing: []string{"Alamat Pengiriman"}},
-			}, issues)
+			require.Len(t, issues, 1)
+			assert.Equal(t, purchaseorders.KindShipping, issues[0].Kind)
+			assert.Equal(t, poID, issues[0].ID)
+			assert.Equal(t, []purchaseorders.GapCode{purchaseorders.GapShippingAddress}, gapCodes(issues[0]))
 		})
 	}
 }
@@ -279,7 +281,17 @@ func TestHandler_OnProgressGate_FillsAddresses(t *testing.T) {
 		res := promote()
 		defer res.Body.Close()
 		require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
-		assert.Equal(t, want, readProblem(t, res).Fields)
+		require.Contains(t, res.Header.Get("Content-Type"), "application/problem+json")
+		var p purchaseorders.IncompleteProblem
+		readJSON(t, res, &p)
+		assert.Equal(t, want, p.Fields)
+		assert.Equal(t, purchaseorders.IncompleteCode, p.Code)
+		// Each issue carries the sentence its field key holds.
+		byKey := map[string]string{}
+		for _, is := range p.Issues {
+			byKey[fieldKey(is)] = is.Message
+		}
+		assert.Equal(t, want, byKey)
 	}
 
 	refused(map[string]string{
@@ -333,4 +345,23 @@ func TestHandler_OnProgressGate_FillsAddresses(t *testing.T) {
 	assert.Equal(t, "shipping", items[1].ItemType)
 	assert.Equal(t, "75000.00", items[1].SellingPrice)
 	assert.Equal(t, &days, items[1].ShippingDays)
+}
+
+// gapCodes lists an issue's codes.
+func gapCodes(is purchaseorders.CompletenessIssue) []purchaseorders.GapCode {
+	out := make([]purchaseorders.GapCode, 0, len(is.Missing))
+	for _, g := range is.Missing {
+		out = append(out, g.Code)
+	}
+	return out
+}
+
+// fieldKey is the legacy key.
+func fieldKey(is purchaseorders.CompletenessIssue) string {
+	scope := map[purchaseorders.IssueKind]string{
+		purchaseorders.KindClient:   "klien",
+		purchaseorders.KindVendor:   "vendor",
+		purchaseorders.KindShipping: "pengiriman",
+	}[is.Kind]
+	return fmt.Sprintf("%s:%d", scope, is.ID)
 }

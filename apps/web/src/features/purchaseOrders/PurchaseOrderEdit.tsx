@@ -13,6 +13,7 @@ import { isVersionConflict } from "@/lib/errors"
 import { computeTaxBreakdown, formatNumber as formatRp, toNum } from "@/lib/format"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
+import { isValidAddress } from "@/lib/validation"
 import type { PoUpdateItemsInput, PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
 import {
   linesMissingUnit,
@@ -37,10 +38,6 @@ const steps = [
   { n: 2, label: "PENGIRIMAN" },
   { n: 3, label: "RINGKASAN" },
 ]
-
-function isAddressValid(v: string): boolean {
-  return v.trim().length >= 20 && /[a-zA-Z]/.test(v)
-}
 
 // Split "123456 - Name" parts.
 function splitOffer(s: string): { kode: string; nama: string } {
@@ -162,7 +159,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
     if (v.trim() === "") setShippingCost("")
   }
 
-  const isAlamatFilled = isAddressValid(shippingAddress)
+  const isAlamatFilled = isValidAddress(shippingAddress)
   const isWaktuFilled = isAlamatFilled && shippingTime.trim().length > 0
   const hasContent = products.length > 0 || isAlamatFilled
 

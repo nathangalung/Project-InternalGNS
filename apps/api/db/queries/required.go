@@ -60,10 +60,8 @@ var RequiredKeys = []string{
 	"items.list_base",
 	"items.list_count_base",
 	"items.list_vendors_for_item",
-	"items.match_request",
 	"items.match_request_batch",
 	"items.match_with_vendor_by_id",
-	"items.search",
 	"items.search_catalog",
 	"items.search_request_history",
 	"items.search_vendor_offers",
@@ -131,7 +129,6 @@ var RequiredKeys = []string{
 	"vendors.list_count_base",
 	"vendors.list_items",
 	"vendors.list_items_count",
-	"vendors.search",
 	"vendors.update",
 	"vendors.update_logo",
 }

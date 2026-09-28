@@ -1,12 +1,12 @@
 import { type FormEvent, useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
-import { formErrors } from "@/features/users/form-errors"
 import { useChangeOwnPassword, useEndOwnSession } from "@/features/users/hooks"
 import PasswordChecklist from "@/features/users/PasswordChecklist"
 import PasswordInput from "@/features/users/PasswordInput"
 import { passwordIsValid } from "@/features/users/password"
 import { ApiError } from "@/lib/api-client"
 import { errorMessage } from "@/lib/errors"
+import { formErrors } from "@/lib/form-errors"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 

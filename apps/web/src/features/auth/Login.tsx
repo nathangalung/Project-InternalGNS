@@ -4,6 +4,12 @@ import { errorMessage } from "@/lib/errors"
 
 const logoImg = "/logo.png"
 
+// Loose shape check only.
+// Sign-in is a lookup, so the server's 401 is the verdict. The shared write
+// rule would lock out accounts made under the older, looser one.
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const EMAIL_SHAPE_ERROR = "Format surel tidak valid"
+
 type LoginProps = {
   onLogin: (email: string, password: string) => Promise<void>
 }
@@ -26,9 +32,8 @@ export default function Login({ onLogin }: LoginProps) {
       setEmailError("")
       return false
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(value)) {
-      setEmailError("Format surel tidak valid")
+    if (!EMAIL_SHAPE.test(value)) {
+      setEmailError(EMAIL_SHAPE_ERROR)
       return false
     }
     setEmailError("")
@@ -44,9 +49,6 @@ export default function Login({ onLogin }: LoginProps) {
   const handlePasswordChange = (value: string) => {
     setPassword(value)
     setPasswordError("")
-    if (emailError && emailError !== "Format surel tidak valid") {
-      setEmailError("")
-    }
   }
 
   const handleSubmit = async (e: FormEvent) => {

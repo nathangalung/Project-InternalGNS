@@ -16,6 +16,7 @@ matching `go.mod`, `package.json`, `Dockerfile`, or compose file.
 | golang-jwt | v5.3.1 | `go.mod` |
 | minio-go | v7.3.0 | `go.mod` |
 | excelize | v2.11.0 | `go.mod` |
+| coder/guts (web API type generator, `cmd/gentypes`) | v1.7.1 | `go.mod` |
 | shopspring/decimal | v1.4.0 | `go.mod` |
 | bcrypt | `golang.org/x/crypto` | `go.mod` |
 
@@ -41,7 +42,6 @@ SQL is hand-written in `db/queries`; there is no code generator.
 | Biome | ^2.5.14 | `package.json` |
 | Vitest | ^5.0.2 | `package.json` |
 | Playwright | ^1.63.0 | `package.json` |
-| exceljs (RFQ import) | ^4.4.0 | `package.json` |
 
 Caret ranges are intentional; exact versions are pinned by `bun.lock`. CI runs
 `bun install --frozen-lockfile` to refuse drift. The production image serves

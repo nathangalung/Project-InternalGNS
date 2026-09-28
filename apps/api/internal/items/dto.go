@@ -45,15 +45,6 @@ type SearchResult struct {
 	MatchTier     string  `db:"match_tier"       json:"matchTier"`
 }
 
-// Mirrors fn_match_request return.
-type MatchResult struct {
-	ItemID     int64   `db:"item_id"     json:"itemId"`
-	ItemName   string  `db:"item_name"   json:"itemName"`
-	IMPACode   *string `db:"impa_code"   json:"impaCode,omitempty"`
-	Confidence float32 `db:"confidence"  json:"confidence"`
-	Source     string  `db:"source"      json:"source"` // cache | fuzzy | impa
-}
-
 // vendor_product joined with vendor.
 type VendorForItem struct {
 	VendorProductID int64   `db:"vendor_product_id"  json:"vendorProductId"`
@@ -99,12 +90,6 @@ type AddVendorToItemRequest struct {
 	ProductURL *string `json:"productUrl"`
 }
 
-// POST /items/match-request body.
-type MatchRequest struct {
-	ReqText string `json:"reqText"` // raw text from PDF
-	Limit   int    `json:"limit"`   // defaults to 5
-}
-
 // Result row from items.match_with_vendor_by_id.
 type MatchedItemWithVendor struct {
 	ItemID          int64   `db:"item_id"            json:"itemId"`
@@ -138,8 +123,8 @@ type MatchRowResult struct {
 
 type MatchRowsRequest struct {
 	Rows       []MatchRowInput `json:"rows"`
-	MinScore   float32         `json:"minScore"`   // default 0.5
-	AutoCreate bool            `json:"autoCreate"` // create catalog item for no-match rows
+	MinScore   float32         `json:"minScore,omitempty"`   // default 0.5
+	AutoCreate bool            `json:"autoCreate,omitempty"` // create catalog item for no-match rows
 }
 
 type MatchRowsResponse struct {

@@ -33,6 +33,7 @@ type scenarioState struct {
 	contact  clients.Contact
 	number   string
 	summary  clients.Summary
+	email    string
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {

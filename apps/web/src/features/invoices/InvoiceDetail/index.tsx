@@ -6,13 +6,14 @@ import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
 import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import { downloadPdf, fetchObjectUrl } from "@/lib/api-client"
+import { errorMessage } from "@/lib/errors"
 import { computeTaxBreakdown, toNum } from "@/lib/format"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import type { InvoiceDetail as InvoiceDetailData } from "@/types/api"
 import { invoiceItemsToProducts, invoiceItemsToShipping } from "../adapters"
 import * as invApi from "../api"
-import { failureMessage, runDownload, safeFileName } from "../download"
+import { runDownload, safeFileName } from "../download"
 import {
   useCancelAndReplaceInvoice,
   useInvoiceAttachmentDownloadUrl,
@@ -121,7 +122,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
       const { downloadUrl } = await invApi.presignPaymentProofDownload(inv.id)
       await openPresigned(downloadUrl)
     } catch (err) {
-      toast.error(failureMessage(err, "Gagal membuka bukti pembayaran."))
+      toast.error(errorMessage(err, "Gagal membuka bukti pembayaran."))
     }
   }
 
@@ -130,7 +131,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
     try {
       await openPresigned(attachmentDownload.downloadUrl)
     } catch (err) {
-      toast.error(failureMessage(err, "Gagal membuka lampiran."))
+      toast.error(errorMessage(err, "Gagal membuka lampiran."))
     }
   }
 

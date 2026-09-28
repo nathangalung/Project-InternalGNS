@@ -28,12 +28,6 @@ Feature: Vendor lifecycle
     Then the response status is 200
     And the vendor name reflects the update
 
-  Scenario: Search returns the seeded vendor
-    Given an existing vendor
-    When the user searches vendors by the seeded name
-    Then the response status is 200
-    And the vendor search results contain the seeded vendor
-
   Scenario: List items for seeded vendor
     When the user lists items for vendor 1
     Then the response status is 200
@@ -72,7 +66,6 @@ Feature: Vendor lifecycle
     Examples:
       | path                           |
       | /vendors/?q=cv%00maju          |
-      | /vendors/search?q=cv%00        |
       | /vendors/?countryName=%ff%fe   |
 
   Scenario: Products of a missing vendor return 404
@@ -95,3 +88,33 @@ Feature: Vendor lifecycle
     When the user lists the vendor's products with ""
     Then the response status is 200
     And the page holds 50 products of 51
+
+  Scenario Outline: Vendor contact info with a bad phone or email gets a field error
+    Given an existing vendor
+    When the user creates a vendor with contact <field> "<value>"
+    Then the response status is 422
+    And the contactInfo.<field> field error reads "<message>"
+    When the user sets the vendor contact <field> to "<value>"
+    Then the response status is 422
+    And the contactInfo.<field> field error reads "<message>"
+    When the user reads the vendor
+    Then the vendor contact <field> is unchanged
+
+    Examples:
+      | field | value         | message                               |
+      | phone | 8123456789012 | Nomor telepon harus 9–12 digit angka. |
+      | phone | 81234567      | Nomor telepon harus 9–12 digit angka. |
+      | email | toko@maju     | Format email tidak valid.             |
+
+  Scenario Outline: A padded contact email is stored without its padding
+    Given an existing vendor
+    When the user <action> with contact email wrapped in <padding>
+    Then the response status is <status>
+    And the vendor contact email is the bare address
+    When the user reads the vendor
+    Then the vendor contact email is the bare address
+
+    Examples:
+      | action             | padding  | status |
+      | creates a vendor   | a tab    | 201    |
+      | updates the vendor | newlines | 200    |

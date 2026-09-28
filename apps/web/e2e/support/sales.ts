@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto"
 import { readFileSync } from "node:fs"
+import type { InvoiceDetail, PurchaseOrderRow, QuotationDetail } from "../../src/types/generated"
 import type { Tokens } from "./api"
 import { apiURL, authFile } from "./env"
 
@@ -20,39 +21,17 @@ export type SeedClient = {
 }
 export type SeedVendor = { id: number; name: string }
 export type SeedItem = { id: number; name: string; impaCode: string; vendorProductId?: number }
-export type SeedLine = { item: SeedItem; qty: number; price: number; cost?: number }
-export type SeedQuotation = { id: number; quotationNo: string; version: number; status: string }
-
-export type Transition = { to: string; label: string; requiresNote: boolean }
-
-export type QuotationDetail = SeedQuotation & {
-  contactId?: number
-  companyClientId: number
-  grandTotal: string
-  notes?: string
-  vesselName?: string
-  validityDays?: number
-  rowVersion: number
-  allowedTransitions: Transition[]
-  canRevise: boolean
+// Catalog item or free text.
+export type SeedLine = ({ item: SeedItem } | { freeText: string }) & {
+  qty: number
+  price: number
+  cost?: number
 }
+export type SeedQuotation = Pick<QuotationDetail, "id" | "quotationNo" | "version" | "status">
 
-export type PurchaseOrder = {
-  id: number
-  poNumber: string
-  quotationId: number
-  quotationNo: string
-  companyClientId: number
-  status: string
-  fileName?: string
-  notes?: string
-  discountPct: string
-  poTotalProduk: string
-  poGrandTotal: string
-  deliveryNoteNumber?: string
-  rowVersion: number
-  allowedTransitions: Transition[]
-}
+export type { QuotationDetail }
+
+export type PurchaseOrder = PurchaseOrderRow
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
 
@@ -136,11 +115,15 @@ async function quotationBody(opts: QuotationOpts): Promise<Record<string, unknow
     notes: opts.notes,
     vesselName: opts.vesselName,
     items: opts.lines.map((l) => ({
-      requestedItemId: l.item.id,
-      requestedImpa: l.item.impaCode,
-      requestedName: l.item.name,
-      offeredItemId: l.item.id,
-      vendorProductId: l.item.vendorProductId,
+      ...("item" in l
+        ? {
+            requestedItemId: l.item.id,
+            requestedImpa: l.item.impaCode,
+            requestedName: l.item.name,
+            offeredItemId: l.item.id,
+            vendorProductId: l.item.vendorProductId,
+          }
+        : { requestedName: l.freeText }),
       qty: String(l.qty),
       unitId: pcs,
       sellingPrice: String(l.price),
@@ -318,7 +301,7 @@ export class SalesSeed {
   // Deliver a PO fully.
   //
   // File, work, delivery; the server files a draft invoice.
-  async deliver(po: PurchaseOrder): Promise<{ id: number; status: string }> {
+  async deliver(po: PurchaseOrder): Promise<InvoiceDetail> {
     await this.attachPoFile(po)
     await this.setPoStatus(po.id, "ON_PROGRESS")
     await this.setPoStatus(po.id, "DELIVERED")

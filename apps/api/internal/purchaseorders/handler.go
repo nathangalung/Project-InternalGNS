@@ -372,6 +372,10 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"discountPct": "required"}))
 		return
 	}
+	if chargeWithoutAddress(req) {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"shippingAddress": shippingAddressRequired}))
+		return
+	}
 	actor := deps.CurrentUserID(r.Context())
 	newVersion, err := h.repo.UpdateItems(r.Context(), id, req, actor, ifMatch)
 	if err != nil {
@@ -388,10 +392,7 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"id":         id,
-		"rowVersion": newVersion,
-	})
+	httpx.WriteJSON(w, http.StatusOK, UpdatedResponse{ID: id, RowVersion: newVersion})
 }
 
 // allowOnProgress requires complete master data.
@@ -422,7 +423,8 @@ func (h *Handler) allowOnProgress(w http.ResponseWriter, r *http.Request, id int
 	if len(issues) == 0 {
 		return true
 	}
-	httperr.Render(w, httperr.Unprocessable(completenessFields(issues)))
+	p := incompleteProblem(issues)
+	httperr.RenderAs(w, p.Status, p)
 	return false
 }
 
@@ -497,4 +499,20 @@ func validateFile(req UpdateFileRequest) map[string]string {
 		fields["objectKey"] = "Berkas PO wajib diunggah."
 	}
 	return fields
+}
+
+const shippingAddressRequired = "Alamat pengiriman wajib diisi bila ada biaya pengiriman."
+
+// chargeWithoutAddress spots a dropped charge.
+// fn_update_po_items writes the shipping line only with an address, so a
+// positive cost sent without one would be lost silently.
+func chargeWithoutAddress(req UpdateItemsRequest) bool {
+	if req.ShippingCost == nil {
+		return false
+	}
+	cost, err := strconv.ParseFloat(strings.TrimSpace(*req.ShippingCost), 64)
+	if err != nil || cost <= 0 {
+		return false
+	}
+	return req.ShippingAddress == nil || strings.TrimSpace(*req.ShippingAddress) == ""
 }

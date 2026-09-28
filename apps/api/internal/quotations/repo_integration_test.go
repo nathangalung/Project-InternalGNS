@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -73,7 +74,7 @@ func TestRepo_CreateAndGetDetail(t *testing.T) {
 	d, err := repo.GetDetail(ctx, id)
 	require.NoError(t, err)
 	assert.Equal(t, id, d.ID)
-	assert.Equal(t, "draft", d.Status)
+	assert.Equal(t, quotations.StatusDraft, d.Status)
 	assert.Equal(t, "10.00", d.DiscountPct)
 	require.Len(t, d.Items, 2, "1 product + 1 shipping")
 	assert.Equal(t, "product", d.Items[0].ItemType)
@@ -86,7 +87,7 @@ func TestRepo_Create_RejectsEmptyItems(t *testing.T) {
 	req.Items = nil
 	_, err := repo.Create(ctx, req, seedUserID)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "at least 1 item")
+	assert.Contains(t, err.Error(), "Quotation harus memiliki minimal satu baris.")
 }
 
 func TestRepo_Create_RejectsBadDiscount(t *testing.T) {
@@ -95,7 +96,7 @@ func TestRepo_Create_RejectsBadDiscount(t *testing.T) {
 	req.DiscountPct = "120"
 	_, err := repo.Create(ctx, req, seedUserID)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "discount_pct")
+	assert.Contains(t, err.Error(), "Diskon harus antara 0 dan 100; nilai yang dikirim 120.")
 }
 
 func TestRepo_Create_RejectsUnknownClient(t *testing.T) {
@@ -103,8 +104,10 @@ func TestRepo_Create_RejectsUnknownClient(t *testing.T) {
 	req := sampleCreate()
 	req.CompanyClientID = 99999
 	_, err := repo.Create(ctx, req, seedUserID)
-	require.Error(t, err)
-	assert.Contains(t, strings.ToLower(err.Error()), "company_client_id")
+	var pgErr *pgconn.PgError
+	require.ErrorAs(t, err, &pgErr)
+	assert.Equal(t, "P0014", pgErr.Code)
+	assert.Equal(t, "Klien tidak ditemukan atau sudah nonaktif. Pilih klien lain.", pgErr.Message)
 }
 
 func TestRepo_GetDetail_NotFound(t *testing.T) {
@@ -296,7 +299,7 @@ func TestRepo_ChangeStatus_AllValidTransitions(t *testing.T) {
 					require.NoError(t, err, "revise")
 					continue
 				}
-				require.NoErrorf(t, repo.ChangeStatus(ctx, id, s, &note, seedUserID), "step to %s", s)
+				require.NoErrorf(t, repo.ChangeStatus(ctx, id, quotations.Status(s), &note, seedUserID), "step to %s", s)
 			}
 		})
 	}
@@ -336,7 +339,7 @@ func TestRepo_ChangeStatus_RejectsInvalid(t *testing.T) {
 				require.NoError(t, repo.ChangeStatus(ctx, id, "sent", nil, seedUserID))
 				require.NoError(t, repo.ChangeStatus(ctx, id, "accepted", nil, seedUserID))
 			}
-			err = repo.ChangeStatus(ctx, id, tc.to, &note, seedUserID)
+			err = repo.ChangeStatus(ctx, id, quotations.Status(tc.to), &note, seedUserID)
 			require.Error(t, err)
 		})
 	}
@@ -357,7 +360,7 @@ func TestRepo_List_FiltersAndSort(t *testing.T) {
 	res2, err := repo.List(ctx, quotations.ListFilter{Statuses: []string{"draft"}, Limit: 10})
 	require.NoError(t, err)
 	for _, r := range res2.Rows {
-		assert.Equal(t, "draft", r.Status)
+		assert.Equal(t, quotations.StatusDraft, r.Status)
 	}
 
 	resSearch, err := repo.List(ctx, quotations.ListFilter{Q: "IMC", Limit: 10})
@@ -629,4 +632,54 @@ func TestRepo_List_ProductCount(t *testing.T) {
 			assert.Equal(t, int64(tc.products), got.ProductCount)
 		})
 	}
+}
+
+// Contact changes follow status.
+// Only a draft (edited in the wizard) and an accepted quotation (the PO
+// gate's Ganti Narahubung) may take another contact.
+func TestRepo_UpdateContact_StatusGate(t *testing.T) {
+	cases := []struct {
+		status  string
+		allowed bool
+	}{
+		{"draft", true},
+		{"accepted", true},
+		{"sent", false},
+		{"revision", false},
+		{"rejected", false},
+		{"cancelled", false},
+		{"expired", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.status, func(t *testing.T) {
+			ctx, repo, tx := newRepo(t)
+			id, err := repo.Create(ctx, sampleCreate(), seedUserID)
+			require.NoError(t, err)
+			var altContactID int64
+			require.NoError(t, tx.QueryRow(ctx, `
+				INSERT INTO company_contacts (company_id, name, country_code, created_by, updated_by)
+				VALUES ($1, 'Alt Contact', 'IDN', $2, $2)
+				RETURNING id`, seedCompanyID, seedUserID).Scan(&altContactID))
+			_, err = tx.Exec(ctx, `UPDATE quotations SET status = $2 WHERE id = $1`, id, tc.status)
+			require.NoError(t, err)
+
+			err = repo.UpdateContact(ctx, id, altContactID, seedUserID)
+			d, getErr := repo.GetDetail(ctx, id)
+			require.NoError(t, getErr)
+			if tc.allowed {
+				require.NoError(t, err)
+				assert.Equal(t, altContactID, *d.ContactID)
+				return
+			}
+			assert.ErrorIs(t, err, quotations.ErrContactLocked)
+			assert.NotEqual(t, altContactID, derefOr(d.ContactID, 0), "refused change writes nothing")
+		})
+	}
+}
+
+func derefOr(p *int64, v int64) int64 {
+	if p == nil {
+		return v
+	}
+	return *p
 }

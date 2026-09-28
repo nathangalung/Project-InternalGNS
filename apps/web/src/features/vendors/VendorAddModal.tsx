@@ -3,6 +3,12 @@ import Modal from "@/components/shared/Modal"
 import { useCreateVendor } from "@/features/vendors/hooks"
 import { ApiError } from "@/lib/api-client"
 import { ui } from "@/lib/ui"
+import {
+  digitsOnly,
+  optionalAddressError,
+  optionalEmailError,
+  optionalPhoneError,
+} from "@/lib/validation"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
 
 const fieldErrorCls = "mt-1 block text-xs text-error"
@@ -22,22 +28,6 @@ type VendorAddModalProps = {
   onSuccess?: (vendor: VendorRow) => void
   // No dimming when stacked on another modal
   nested?: boolean
-}
-
-function isValidEmail(s: string): boolean {
-  return s.includes("@") && s.split("@").length === 2 && s.split("@")[1].includes(".")
-}
-
-function isValidPhone(s: string): boolean {
-  const digits = s.replace(/\D/g, "")
-  return digits.length >= 9 && digits.length <= 13
-}
-
-// Optional address, checked once filled.
-function addressErrorOf(s: string): string | null {
-  const t = s.trim()
-  if (t === "" || (t.length >= 20 && /[a-zA-Z]/.test(t))) return null
-  return "Alamat harus minimal 20 karakter dan mengandung huruf."
 }
 
 export default function VendorAddModal({
@@ -61,22 +51,16 @@ export default function VendorAddModal({
   if (!open) return null
 
   const isNameFilled = name.trim().length > 0
-  const addressError = isNameFilled ? addressErrorOf(address) : null
+  const addressError = isNameFilled ? optionalAddressError(address) : null
   // Alamat is optional; a filled one must still be valid.
   const isVendorReady = isNameFilled && addressError === null
 
-  const phoneFilledAndValid = phone.trim().length > 0 && isValidPhone(phone)
-  const emailFilledAndValid = email.trim().length > 0 && isValidEmail(email)
-  const phoneError =
-    isVendorReady && phone.trim().length > 0 && !isValidPhone(phone)
-      ? "Nomor telepon harus 9–13 digit angka."
-      : null
-  const emailError =
-    isVendorReady && email.trim().length > 0 && !isValidEmail(email)
-      ? "Format email tidak valid."
-      : null
-
-  const isContactValid = isVendorReady && (phoneFilledAndValid || emailFilledAndValid)
+  const phoneError = isVendorReady ? optionalPhoneError(phone) : null
+  const emailError = isVendorReady ? optionalEmailError(email) : null
+  // One way to reach them, and no filled field the API would refuse.
+  const hasContactWay = phone.trim() !== "" || email.trim() !== ""
+  const isContactValid =
+    isVendorReady && hasContactWay && phoneError === null && emailError === null
   const canSubmit = isContactValid
 
   const reset = () => {
@@ -136,7 +120,7 @@ export default function VendorAddModal({
         footer={
           <>
             {submitError && <span className="flex-1 text-xs text-error">{submitError}</span>}
-            {!submitError && isVendorReady && !isContactValid && (
+            {!submitError && isVendorReady && !hasContactWay && (
               <span className="flex-1 text-xs text-error">
                 Isi minimal email atau nomor telepon.
               </span>
@@ -250,7 +234,7 @@ export default function VendorAddModal({
                   id={`${fid}-phone`}
                   placeholder="812xxxx"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                  onChange={(e) => setPhone(digitsOnly(e.target.value))}
                   disabled={!isVendorReady}
                 />
               </div>

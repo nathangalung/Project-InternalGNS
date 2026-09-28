@@ -60,7 +60,7 @@ var tiebreak = listq.Column{Expr: "cc.id", Dir: listq.Desc}
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
-		p := c.Arg(likeContains(f.Q))
+		p := c.Arg(listq.Contains(f.Q))
 		c.And("(cc.name ILIKE " + p +
 			" OR cc.number ILIKE " + p +
 			" OR cc.npwp ILIKE " + p +
@@ -152,7 +152,7 @@ func (r *Repo) Create(ctx context.Context, req CreateClientRequest, userID int64
 }
 
 // Update edits a client row.
-// No row back means missing, or a number change on a quoted client.
+// No row back means the client is missing.
 func (r *Repo) Update(ctx context.Context, id int64, req UpdateClientRequest, userID int64) (Client, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("clients.update"),
 		id, req.Name, req.NPWP, req.Address, req.Email,
@@ -163,18 +163,19 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateClientRequest, us
 	}
 	c, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Client])
 	if errors.Is(err, pgx.ErrNoRows) {
-		if _, err := r.GetByID(ctx, id); err != nil {
-			return Client{}, fmt.Errorf("recheck client %d: %w", id, err)
-		}
-		return Client{}, ErrNumberLocked
+		return Client{}, ErrNotFound
 	}
 	return c, numberErr(err)
 }
 
-// numberErr maps number constraint violations.
+// numberErr maps number refusals.
+// P0013 comes only from trg_company_client_number_lock.
 func numberErr(err error) error {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
+		if pgErr.Code == db.SQLStateBlockedByRelated {
+			return ErrNumberLocked
+		}
 		switch pgErr.ConstraintName {
 		case "uq_company_client_number", "company_client_number_format_check":
 			return fmt.Errorf("%w: %s", ErrNumberInvalid, pgErr.ConstraintName)

@@ -116,11 +116,9 @@ export function vendorInitials(name: string): string {
 
 // One problem-body field error.
 export function apiFieldError(err: unknown, key: string): string | undefined {
-  if (!(err instanceof ApiError) || !err.body || typeof err.body !== "object") return undefined
-  const fields = (err.body as { fields?: unknown }).fields
-  if (!fields || typeof fields !== "object") return undefined
-  const v = (fields as Record<string, unknown>)[key]
-  return typeof v === "string" && v.trim().length > 0 ? v.trim() : undefined
+  if (!(err instanceof ApiError)) return undefined
+  const v = err.body?.fields?.[key]?.trim()
+  return v ? v : undefined
 }
 
 export type AddVendorError = { field?: string; form?: string }

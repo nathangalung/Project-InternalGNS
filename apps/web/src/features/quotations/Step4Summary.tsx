@@ -1,10 +1,10 @@
 import { useId, useState } from "react"
-import { isValidAddress, optionalAddressError } from "@/features/clients/ClientAdd/helpers"
 import { getPageNumbers } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
+import { isValidAddress, optionalAddressError } from "@/lib/validation"
 import { requestDiffers, requestedCode } from "./lines"
-import type { ProductItem } from "./QuotationEdit"
 import type { Client } from "./Step1Client"
+import type { ProductItem } from "./wizard"
 import { qe, qep } from "./wizard-styles"
 
 type Step4SummaryProps = {

@@ -93,10 +93,31 @@ Feature: User management lifecycle
     Then the response status is 200
     And the staff account is active
 
+  Scenario: An address kept from the older email rule stays editable
+    Given an existing staff account
+    And its email was stored under the older rule
+    When the user deactivates the staff account
+    Then the response status is 200
+    When the user changes the staff email to one the rule refuses
+    Then the response status is 422
+
   Scenario: Names are stored trimmed
     When the user creates a staff account with a padded name
     Then the response status is 201
     And the user name has no padding
+
+  Scenario Outline: Emails are stored without their padding
+    Given an existing staff account
+    When the user <action> with the email wrapped in <padding>
+    Then the response status is <status>
+    And the user email matches the seeded value
+    When the user reads the staff account
+    Then the user email matches the seeded value
+
+    Examples:
+      | action                    | padding  | status |
+      | creates a staff account   | a tab    | 201    |
+      | updates the staff account | newlines | 200    |
 
   Scenario Outline: The last active superadmin cannot be demoted or deactivated
     Given the only active superadmin account

@@ -51,7 +51,7 @@ func TestRepo_List_EscapesLikeWildcards(t *testing.T) {
 
 // Lone wildcards sweep nothing.
 // They must not pull the whole catalog into fuzzy search.
-func TestRepo_Search_EscapesLikeWildcards(t *testing.T) {
+func TestRepo_SearchCatalog_EscapesLikeWildcards(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
 
@@ -65,7 +65,7 @@ func TestRepo_Search_EscapesLikeWildcards(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			hits, err := repo.Search(ctx, tt.query, 0.3, 50)
+			hits, err := repo.SearchCatalog(ctx, tt.query, 0.3, 50, nil)
 			require.NoError(t, err)
 			assert.Empty(t, hits)
 		})
@@ -74,7 +74,7 @@ func TestRepo_Search_EscapesLikeWildcards(t *testing.T) {
 
 // Import matching escapes wildcards.
 // A wildcard is never a catalog-wide match.
-func TestRepo_MatchRequest_EscapesLikeWildcards(t *testing.T) {
+func TestRepo_MatchRows_EscapesLikeWildcards(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := items.NewRepo(tx, testutil.Store(t))
 
@@ -88,9 +88,10 @@ func TestRepo_MatchRequest_EscapesLikeWildcards(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			hits, err := repo.MatchRequest(ctx, tt.query, 5)
+			out, err := repo.MatchRows(ctx, items.MatchRowsRequest{Rows: []items.MatchRowInput{{Name: tt.query}}}, 0.3, seedUserID)
 			require.NoError(t, err)
-			assert.Empty(t, hits)
+			require.Len(t, out, 1)
+			assert.Nil(t, out[0].Matched)
 		})
 	}
 }

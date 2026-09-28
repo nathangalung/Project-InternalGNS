@@ -1,11 +1,15 @@
 import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
 import type {
+  CreateVendorInput,
+  ObjectKeyInput,
   PresignDownload,
   PresignUpload,
-  VendorContactInfo,
+  UpdateVendorInput,
   VendorItemRow,
   VendorRow,
 } from "@/types/api"
+
+export type { UpdateVendorInput } from "@/types/api"
 
 export type VendorListParams = {
   q?: string
@@ -50,26 +54,12 @@ export async function listItems(
   return apiList<VendorItemRow>({ path: `/vendors/${vendorId}/items?${qs}` })
 }
 
-type CreateVendorInput = {
-  name: string
-  location?: string
-  contactInfo?: VendorContactInfo
-  isActive?: boolean
-}
-
 export async function create(input: CreateVendorInput): Promise<VendorRow> {
   return apiRequest<VendorRow>({
     path: "/vendors",
     method: "POST",
     body: input,
   })
-}
-
-export type UpdateVendorInput = {
-  name: string
-  location?: string
-  contactInfo?: VendorContactInfo
-  isActive: boolean
 }
 
 export async function update(id: number, input: UpdateVendorInput): Promise<VendorRow> {
@@ -93,6 +83,6 @@ export async function updateLogo(id: number, objectKey: string): Promise<void> {
   await apiRequest<void>({
     path: `/vendors/${id}/logo`,
     method: "PATCH",
-    body: { objectKey },
+    body: { objectKey } satisfies ObjectKeyInput,
   })
 }

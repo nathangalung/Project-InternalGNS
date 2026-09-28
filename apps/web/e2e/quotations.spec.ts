@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 import { api, deactivate, idFrom, rupiah } from "./support/sales"
 import { expect, test } from "./support/seed"
+import { xlsx } from "./support/xlsx"
 
 // Quotation flows through the UI.
 //
@@ -219,6 +220,64 @@ test.describe("quotation wizard import and requests", () => {
     await expect(main).toContainText(active.name)
     await expect(main).not.toContainText(cheap.name)
     await expect(main).toContainText("Rp 90.000")
+  })
+
+  // The API parses the workbook: the merged banner and DECK STORES rows
+  // are not products, and the two-row header still maps every column.
+  test("an Excel RFQ with merged rows imports only its products", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const fresh = `Qzvx ${seed.prefix.slice(3).toLowerCase()} xlsq`
+    const file = xlsx({
+      rows: [
+        ["PERMINTAAN KAPAL MV SINAR BAHARI"],
+        ["No", "Produk", null, "Jumlah", "Satuan"],
+        [null, "Kode IMPA", "Nama"],
+        ["DECK STORES"],
+        [1, item.impaCode, item.name, 3, "PCS"],
+        [2, null, fresh, 2, "PCS"],
+      ],
+      merges: ["A1:E1", "B2:C2", "A2:A3", "D2:D3", "E2:E3", "A4:E4"],
+    })
+
+    await page.goto("/quotations/add")
+    await page.getByLabel("Cari klien").fill(seed.prefix)
+    await page.getByRole("button", { name: new RegExp(client.name) }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    const input = page.locator('input[type="file"][accept=".csv,.xlsx"]')
+    await input.setInputFiles({
+      name: "permintaan.xlsx",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      buffer: file,
+    })
+    await expect(
+      page.getByText("2 produk diimport (1 cocok katalog, 1 produk baru, harga kosong)."),
+    ).toBeVisible()
+    await seed.adopt("item", fresh)
+    const main = page.locator("main")
+    await expect(main).toContainText(`KODE IMPA: ${item.impaCode}`)
+    await expect(main).toContainText(fresh)
+    await expect(main).not.toContainText("DECK STORES")
+
+    // A file the API cannot read shows its Indonesian reason.
+    await input.setInputFiles({
+      name: "rusak.xlsx",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      buffer: Buffer.from("bukan workbook"),
+    })
+    await expect(page.getByText(/Gagal memproses file: Format berkas tidak didukung/)).toBeVisible()
+
+    // More products than one match call takes is refused before matching.
+    await input.setInputFiles({
+      name: "besar.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(`Nama,Jumlah\n${"Baut,2\n".repeat(501)}`),
+    })
+    await expect(
+      page.getByText(
+        "Gagal memproses file: Berkas berisi 501 baris produk; paling banyak 500 per unggahan. Bagi berkas lalu unggah ulang.",
+      ),
+    ).toBeVisible()
   })
 
   test("a draft's client requests are added, reviewed and removed", async ({ page, seed }) => {

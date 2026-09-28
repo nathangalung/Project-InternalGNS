@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cucumber/godog"
@@ -141,7 +142,46 @@ func (s *scenarioState) summaryGrewBy(n int64) error {
 	return nil
 }
 
+// Contact field steps.
+func (s *scenarioState) addContactWith(field, value string) error {
+	return s.sendRequest(http.MethodPost, "/clients/"+strconv.FormatInt(s.clientID, 10)+"/contacts",
+		map[string]any{"name": "Kontak ATDD", field: value})
+}
+
+func (s *scenarioState) setContactPhone(phone string) error {
+	return s.sendRequest(http.MethodPatch, s.contactPath(),
+		map[string]any{"name": s.contact.Name, "phone": phone})
+}
+
+func (s *scenarioState) fieldErrorReads(field, want string) error {
+	var p struct {
+		Fields map[string]string `json:"fields"`
+	}
+	if err := json.Unmarshal(s.body, &p); err != nil {
+		return err
+	}
+	if got := p.Fields[field]; got != want {
+		return fmt.Errorf("field %s: want %q got %q body=%s", field, want, got, s.body)
+	}
+	return nil
+}
+
+func (s *scenarioState) noContacts() error {
+	var rows []clients.Contact
+	if err := json.Unmarshal(s.body, &rows); err != nil {
+		return err
+	}
+	if len(rows) != 0 {
+		return fmt.Errorf("want no contacts, got %d", len(rows))
+	}
+	return nil
+}
+
 func registerRuleSteps(sc *godog.ScenarioContext, state *scenarioState) {
+	sc.Step(`^the user adds a contact with (phone|email) "([^"]*)"$`, state.addContactWith)
+	sc.Step(`^the user sets the contact phone to "([^"]*)"$`, state.setContactPhone)
+	sc.Step(`^the (phone|email) field error reads "([^"]+)"$`, state.fieldErrorReads)
+	sc.Step(`^the client has no contacts$`, state.noContacts)
 	sc.Step(`^the user creates a client named with only (spaces|a tab|newlines)$`, state.createClientBlank)
 	sc.Step(`^the user renames the client to only (spaces|a tab|newlines)$`, state.renameClientBlank)
 	sc.Step(`^a client named with "([^"]+)" and a decoy without it$`, state.seedWildcardPair)
@@ -151,5 +191,76 @@ func registerRuleSteps(sc *godog.ScenarioContext, state *scenarioState) {
 	sc.Step(`^another client (PATCH|DELETE)s the contact$`, state.otherClientTouchesContact)
 	sc.Step(`^the contact is still listed unchanged$`, state.contactListedUnchanged)
 	sc.Step(`^the client summary is noted$`, state.noteSummary)
+	sc.Step(`^the user sends the (client create|client update|contact create|contact update) email wrapped in (spaces|a tab|newlines)$`, state.sendPaddedEmail)
+	sc.Step(`^the user reads the (client create|client update|contact create|contact update) back$`, state.readBack)
+	sc.Step(`^the returned email is the bare address$`, state.returnedEmailIsBare)
 	sc.Step(`^the summary grew by (\d+) active client(?:s)? this month$`, state.summaryGrewBy)
+}
+
+// Padded email steps.
+func (s *scenarioState) sendPaddedEmail(target, padding string) error {
+	s.email = fmt.Sprintf("atdd.pad.%d@uji.local", time.Now().UnixNano())
+	padded := blanks[padding] + s.email + blanks[padding]
+	switch target {
+	case "client create":
+		number, err := s.freeNumber()
+		if err != nil {
+			return err
+		}
+		s.name = s.uniqueName("ATDD CLIENT PAD")
+		body := clients.CreateClientRequest{Name: s.name, Number: &number, CountryCode: "IDN", Email: &padded}
+		if err := s.sendRequest(http.MethodPost, "/clients/", body); err != nil {
+			return err
+		}
+		if s.last.StatusCode == http.StatusCreated {
+			if err := s.captureID(); err != nil {
+				return err
+			}
+		}
+		return nil
+	case "client update":
+		return s.sendRequest(http.MethodPut, "/clients/"+strconv.FormatInt(s.clientID, 10),
+			clients.UpdateClientRequest{Name: s.name, CountryCode: "IDN", IsActive: true, Email: &padded})
+	case "contact create":
+		return s.sendRequest(http.MethodPost, "/clients/"+strconv.FormatInt(s.clientID, 10)+"/contacts",
+			map[string]any{"name": "Kontak Pad", "email": padded})
+	default:
+		return s.sendRequest(http.MethodPatch, s.contactPath(),
+			map[string]any{"name": s.contact.Name, "email": padded})
+	}
+}
+
+// Reads the stored row.
+func (s *scenarioState) readBack(target string) error {
+	if target == "client create" || target == "client update" {
+		return s.readClient()
+	}
+	if err := s.listContacts(); err != nil {
+		return err
+	}
+	var rows []clients.Contact
+	if err := json.Unmarshal(s.body, &rows); err != nil {
+		return err
+	}
+	for _, c := range rows {
+		if c.Email != nil && strings.TrimSpace(*c.Email) == s.email {
+			raw, err := json.Marshal(c)
+			s.body = raw
+			return err
+		}
+	}
+	return fmt.Errorf("no contact holds %s body=%s", s.email, s.body)
+}
+
+func (s *scenarioState) returnedEmailIsBare() error {
+	var got struct {
+		Email *string `json:"email"`
+	}
+	if err := json.Unmarshal(s.body, &got); err != nil {
+		return err
+	}
+	if got.Email == nil || *got.Email != s.email {
+		return fmt.Errorf("want email %q body=%s", s.email, s.body)
+	}
+	return nil
 }

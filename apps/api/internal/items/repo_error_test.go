@@ -24,12 +24,6 @@ func TestRepo_ErrorPaths(t *testing.T) {
 	_, err = r.Create(ctx, items.CreateItemRequest{Name: "x"}, 1)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 
-	_, err = r.Search(ctx, "x", 0.1, 5)
-	assert.ErrorIs(t, err, testutil.ErrFake)
-
-	_, err = r.MatchRequest(ctx, "x", 5)
-	assert.ErrorIs(t, err, testutil.ErrFake)
-
 	_, err = r.ListVendorsForItem(ctx, 1)
 	assert.ErrorIs(t, err, testutil.ErrFake)
 

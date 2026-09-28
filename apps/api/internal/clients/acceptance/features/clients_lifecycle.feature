@@ -171,3 +171,42 @@ Feature: Client lifecycle
     Then the response status is 201
     When the user reads client summary
     Then the summary grew by 1 active client this month
+
+  Scenario Outline: A contact with a bad phone or email gets a field error
+    Given an existing client
+    When the user adds a contact with <field> "<value>"
+    Then the response status is 422
+    And the <field> field error reads "<message>"
+    When the user lists client contacts
+    Then the client has no contacts
+
+    Examples:
+      | field | value         | message                               |
+      | phone | 8123456789012 | Nomor telepon harus 9–12 digit angka. |
+      | phone | 81234567      | Nomor telepon harus 9–12 digit angka. |
+      | email | budi@kantor   | Format email tidak valid.             |
+
+  Scenario: Editing a contact to a 13 digit phone gets a field error
+    Given an existing client
+    And the client has a contact with an email and a title
+    When the user sets the contact phone to "8123456789012"
+    Then the response status is 422
+    And the phone field error reads "Nomor telepon harus 9–12 digit angka."
+    When the user sets the contact phone to "812345678901"
+    Then the response status is 200
+
+  Scenario Outline: A padded email is stored without its padding
+    Given an existing client
+    And the client has a contact with an email and a title
+    When the user sends the <target> email wrapped in <padding>
+    Then the response status is <status>
+    And the returned email is the bare address
+    When the user reads the <target> back
+    Then the returned email is the bare address
+
+    Examples:
+      | target         | padding  | status |
+      | client create  | a tab    | 201    |
+      | client update  | newlines | 200    |
+      | contact create | a tab    | 201    |
+      | contact update | newlines | 200    |

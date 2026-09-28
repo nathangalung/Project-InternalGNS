@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_quotation (deployed by migration 00070).
+-- Canonical current body of fn_create_quotation (deployed by migration 00073).
 CREATE OR REPLACE FUNCTION public.fn_create_quotation(p_company_client_id bigint, p_contact_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_created_by bigint, p_notes text DEFAULT NULL::text, p_status text DEFAULT 'draft'::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -19,11 +19,13 @@ DECLARE
 BEGIN
   -- 1. Validation
   IF p_items IS NULL OR jsonb_array_length(p_items) = 0 THEN
-    RAISE EXCEPTION 'Quotation must have at least 1 item';
+    RAISE EXCEPTION 'Quotation harus memiliki minimal satu baris.'
+      USING ERRCODE = 'P0014';
   END IF;
 
   IF p_discount_pct < 0 OR p_discount_pct > 100 THEN
-    RAISE EXCEPTION 'discount_pct must be 0..100, got %', p_discount_pct;
+    RAISE EXCEPTION 'Diskon harus antara 0 dan 100; nilai yang dikirim %.', p_discount_pct
+      USING ERRCODE = 'P0014';
   END IF;
 
   -- The pct the lines inherit, at column scale.
@@ -34,7 +36,8 @@ BEGIN
   FROM company_client WHERE id = p_company_client_id AND is_active = TRUE;
 
   IF v_company_name IS NULL THEN
-    RAISE EXCEPTION 'company_client_id % not found or inactive', p_company_client_id;
+    RAISE EXCEPTION 'Klien tidak ditemukan atau sudah nonaktif. Pilih klien lain.'
+      USING ERRCODE = 'P0014';
   END IF;
 
   IF p_contact_id IS NOT NULL THEN
@@ -43,7 +46,8 @@ BEGIN
     WHERE id = p_contact_id AND company_id = p_company_client_id AND is_active = TRUE;
 
     IF v_contact_name IS NULL THEN
-      RAISE EXCEPTION 'contact_id % not found or not belong to company %', p_contact_id, p_company_client_id;
+      RAISE EXCEPTION 'Narahubung tidak ditemukan, sudah nonaktif, atau bukan milik klien ini.'
+        USING ERRCODE = 'P0014';
     END IF;
   END IF;
 

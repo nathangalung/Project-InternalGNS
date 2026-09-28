@@ -1,9 +1,6 @@
 package vendors
 
-import (
-	"encoding/json"
-	"time"
-)
+import "time"
 
 // ListFilter for vendors.list query.
 type ListFilter struct {
@@ -25,32 +22,32 @@ type ListResult struct {
 
 // Vendor mirrors vendors table.
 type Vendor struct {
-	ID            int64           `db:"id"             json:"id"`
-	Name          string          `db:"name"           json:"name"`
-	Location      *string         `db:"location"       json:"location,omitempty"`
-	ContactInfo   json.RawMessage `db:"contact_info"   json:"contactInfo,omitempty"` // JSONB
-	IsActive      bool            `db:"is_active"      json:"isActive"`
-	CreatedAt     time.Time       `db:"created_at"     json:"createdAt"`
-	UpdatedAt     time.Time       `db:"updated_at"     json:"updatedAt"`
-	ProductCount  int64           `db:"product_count"  json:"productCount"`
-	TotalPurchase string          `db:"total_purchase" json:"totalPurchase"`
-	LogoObjectKey *string         `db:"logo_object_key" json:"logoObjectKey,omitempty"`
+	ID            int64        `db:"id"             json:"id"`
+	Name          string       `db:"name"           json:"name"`
+	Location      *string      `db:"location"       json:"location,omitempty"`
+	ContactInfo   *ContactInfo `db:"contact_info"   json:"contactInfo,omitempty"` // JSONB
+	IsActive      bool         `db:"is_active"      json:"isActive"`
+	CreatedAt     time.Time    `db:"created_at"     json:"createdAt"`
+	UpdatedAt     time.Time    `db:"updated_at"     json:"updatedAt"`
+	ProductCount  int64        `db:"product_count"  json:"productCount"`
+	TotalPurchase string       `db:"total_purchase" json:"totalPurchase"`
+	LogoObjectKey *string      `db:"logo_object_key" json:"logoObjectKey,omitempty"`
+}
+
+// ContactInfo is vendors.contact_info.
+// The JSONB column holds these keys only; any other key is dropped on read
+// and, since a write replaces the object, on write too. A blank field is
+// left out of the stored object.
+type ContactInfo struct {
+	Email string `json:"email,omitempty"`
+	Phone string `json:"phone,omitempty"`
+	SKU   string `json:"sku,omitempty"`
 }
 
 // UpdateLogoRequest carries a logo key.
 // It persists the MinIO object key of a vendor logo.
 type UpdateLogoRequest struct {
 	ObjectKey string `json:"objectKey"`
-}
-
-// SearchResult mirrors fn_search_vendors return shape.
-type SearchResult struct {
-	VendorID    int64           `db:"vendor_id"     json:"vendorId"`
-	VendorName  string          `db:"vendor_name"   json:"vendorName"`
-	Location    *string         `db:"location"      json:"location,omitempty"`
-	ContactInfo json.RawMessage `db:"contact_info"  json:"contactInfo,omitempty"`
-	Score       float32         `db:"score"         json:"score"`
-	MatchTier   string          `db:"match_tier"    json:"matchTier"`
 }
 
 // ItemByVendor is a vendor's item.
@@ -72,15 +69,15 @@ type ItemListResult struct {
 }
 
 type CreateVendorRequest struct {
-	Name        string          `json:"name"`
-	Location    *string         `json:"location"`
-	ContactInfo json.RawMessage `json:"contactInfo"` // optional JSONB blob
-	IsActive    *bool           `json:"isActive"`    // nil defaults to true
+	Name        string       `json:"name"`
+	Location    *string      `json:"location"`
+	ContactInfo *ContactInfo `json:"contactInfo"` // nil stores NULL
+	IsActive    *bool        `json:"isActive"`    // nil defaults to true
 }
 
 type UpdateVendorRequest struct {
-	Name        string          `json:"name"`
-	Location    *string         `json:"location"`
-	ContactInfo json.RawMessage `json:"contactInfo"`
-	IsActive    bool            `json:"isActive"`
+	Name        string       `json:"name"`
+	Location    *string      `json:"location"`
+	ContactInfo *ContactInfo `json:"contactInfo"`
+	IsActive    bool         `json:"isActive"`
 }

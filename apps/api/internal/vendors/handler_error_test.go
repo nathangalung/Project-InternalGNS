@@ -33,7 +33,6 @@ func TestHandler_ErrorPaths(t *testing.T) {
 	}{
 		{"list", http.MethodGet, "/vendors/", nil},
 		{"get", http.MethodGet, "/vendors/1", nil},
-		{"search", http.MethodGet, "/vendors/search?q=x", nil},
 		{"items", http.MethodGet, "/vendors/1/items", nil},
 		{"create", http.MethodPost, "/vendors/", vendors.CreateVendorRequest{Name: "X"}},
 	}

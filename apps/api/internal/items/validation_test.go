@@ -23,7 +23,6 @@ func TestHandler_QueryParamTextIsValidated(t *testing.T) {
 		{"nul byte in list q", "/items/?q=%00"},
 		{"nul byte inside list q", "/items/?q=ab%00cd"},
 		{"invalid utf8 in list q", "/items/?q=%ff%fe"},
-		{"nul byte in search q", "/items/search?q=ab%00"},
 		{"nul byte in advanced search q", "/items/search-advanced?q=ab%00"},
 		{"nul byte in sortBy", "/items/?sortBy=name%00"},
 	}

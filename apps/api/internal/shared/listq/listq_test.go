@@ -219,3 +219,19 @@ func TestPage_UnboundedSkipsClampAndLimitClause(t *testing.T) {
 		t.Errorf("args = %v, want only the filter arg", args)
 	}
 }
+
+// Wildcards become literal text.
+func TestContains(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"acme", "%acme%"},
+		{"100%", `%100\%%`},
+		{"a_b", `%a\_b%`},
+		{`c:\x`, `%c:\\x%`},
+		{`\%`, `%\\\%%`},
+	}
+	for _, tc := range cases {
+		if got := Contains(tc.in); got != tc.want {
+			t.Errorf("Contains(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}

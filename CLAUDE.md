@@ -73,6 +73,7 @@ make e2e            # Playwright against the running dev stack
 make cover          # Both coverage gates
 make lint           # go vet, golangci-lint when installed, and Biome
 make fmt            # gofmt and Biome format
+make gen-types      # Regenerate web API types from the Go DTOs
 ```
 
 Migrations use Goose with SQL under `apps/api/db/migrations`:
@@ -98,6 +99,7 @@ Feature-sliced, one package per resource, each self-contained:
 cmd/api/            Entry point, server wiring, graceful shutdown
 cmd/orphan-blobs/   Unreferenced MinIO object sweeper
 cmd/pdfsmoke/       PDF render smoke check
+cmd/gentypes/       Web API types from the DTO allowlist
 internal/
   app/              Router, middleware (auth, RBAC, logging, CORS, body limit),
                     background loops (refresh purge, quotation expiry)
@@ -110,7 +112,8 @@ internal/
   shared/           deps, db helpers, httperr (RFC 7807), httpx, paginate,
                     listq (list query builder), sheet (XLSX), assetproxy
                     (descriptor-driven presign handlers, one set reused by
-                    every slice), money, tz
+                    every slice), money, tz, validate (phone and email
+                    rules the web mirrors)
   testutil/         Test server, pool, and seed helpers
 db/
   migrations/       Goose SQL migrations
@@ -130,6 +133,13 @@ code through `lib/errors.ts`, never on the detail text.
 Every query key a repo reads is listed in `db/queries/required.go`, and
 `Load()` fails at startup when one is missing; add the key in the same commit
 as the query.
+
+Every type that crosses the wire is named (no map or anonymous struct
+responses) and listed in `cmd/gentypes/allowlist.go` with its TS name; a test
+there fails when a json-tagged struct is neither listed nor skipped with a
+reason. After changing a DTO run `make gen-types` and commit
+`apps/web/src/types/generated.ts` with it. A request field the server defaults
+when absent carries `omitempty`, so the web type marks it optional.
 
 `db/functions` holds the current body of each database function, since a
 migration only records one edit. It is generated from the live DB and a test
@@ -199,15 +209,19 @@ src/
   components/shared/ Sidebar, Modal, tables, pagination, states, links
   hooks/             Cross-feature hooks
   lib/               api-client, rbac, format, status, entity-link, chart
-                     helpers, ui (tailwind class primitives), useListScreen
+                     helpers, ui (tailwind class primitives), useListScreen,
+                     validation (form field rules), form-errors (422 to inputs)
   styles/            tailwind.css (entry, @theme tokens, base layer)
   test/              renderHook and query helpers for hook tests
-  types/             Hand-maintained API types
+  types/             generated.ts (from Go DTOs) and api.ts
 ```
 
 Server state is TanStack Query; `lib/api-client.ts` attaches the JWT and maps
-errors. `types/api.ts` is the effective API contract, since `openapi.yaml` only
-documents part of the surface.
+errors. The API contract is `types/generated.ts`, written by `make gen-types`
+from the Go DTOs allowlisted in `apps/api/cmd/gentypes`; CI regenerates it and
+fails on any diff. `types/api.ts` re-exports it under the app's names and adds
+only what Go does not carry: narrowed unions for text the database fixes and
+query-only types. There is no OpenAPI spec.
 
 The app shell lives in the layout route. `routes/_authed.tsx` renders
 the shell with the `Sidebar` and a scrolling `<main>` around the `Outlet`, so page

@@ -9,13 +9,14 @@ import {
 import { useMe } from "@/features/auth/hooks"
 import { PartialUserUpdateError } from "@/features/users/api"
 import ChangeOwnPasswordModal from "@/features/users/ChangeOwnPasswordModal"
-import { formErrors, isInlineFormError } from "@/features/users/form-errors"
 import { endsSessions } from "@/features/users/helpers"
 import { useEndOwnSession, useUpdateUser } from "@/features/users/hooks"
 import PasswordChecklist from "@/features/users/PasswordChecklist"
 import PasswordInput from "@/features/users/PasswordInput"
 import { passwordIsValid } from "@/features/users/password"
+import { formErrors, isInlineFormError } from "@/lib/form-errors"
 import { ui } from "@/lib/ui"
+import { EMAIL_ERROR, isValidEmail } from "@/lib/validation"
 import type { Role, UserRow } from "@/types/api"
 
 type UserDetailProps = {
@@ -108,6 +109,7 @@ export default function UserDetail({ user, onBack }: UserDetailProps) {
     const errs: Partial<Record<Field, string>> = {}
     if (!name.trim()) errs.name = "Nama wajib diisi."
     if (!email.trim()) errs.email = "Email wajib diisi."
+    else if (!isValidEmail(email.trim())) errs.email = EMAIL_ERROR
     if (password.length > 0 && !passwordIsValid(password))
       errs.password = "Kata sandi belum memenuhi semua aturan."
     if (Object.keys(errs).length > 0) {

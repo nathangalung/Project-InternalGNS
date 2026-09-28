@@ -38,9 +38,8 @@ func ParseLimit(r *http.Request, def int) int {
 	return def
 }
 
-// Clamp bounds a body limit.
-// The result is in (0, MaxLimit].
-// Non-positive falls back to def; for limits carried in a request body.
+// Clamp bounds a limit.
+// The result is in (0, MaxLimit]; non-positive falls back to def.
 func Clamp(v, def int) int {
 	if v <= 0 {
 		return def

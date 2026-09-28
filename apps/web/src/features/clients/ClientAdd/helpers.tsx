@@ -40,33 +40,6 @@ export const INITIAL_FORM: ClientAddFormData = {
   tku: "",
 }
 
-export const ADDRESS_ERROR = "Alamat harus minimal 20 karakter dan mengandung huruf."
-
-export function isValidAddress(s: string): boolean {
-  const t = s.trim()
-  return t.length >= 20 && /[a-zA-Z]/.test(t)
-}
-
-// Optional address, checked once filled.
-//
-// The quotation may go out without one; the PO gate asks for it before the
-// work starts.
-export function optionalAddressError(s: string): string | null {
-  return s.trim() === "" || isValidAddress(s) ? null : ADDRESS_ERROR
-}
-
-export function isValidEmail(s: string): boolean {
-  return s.includes("@") && s.split("@").length === 2 && s.split("@")[1].includes(".")
-}
-
-// Matches company_contacts_phone_check.
-export const PHONE_ERROR = "Nomor telepon harus 9–12 digit angka."
-
-export function isValidPhone(s: string): boolean {
-  const digits = s.replace(/[^0-9]/g, "")
-  return digits.length >= 9 && digits.length <= 12
-}
-
 type SaveClientDeps = {
   createClient: (input: Parameters<typeof clientsApi.create>[0]) => Promise<ClientRow>
   createContact: (

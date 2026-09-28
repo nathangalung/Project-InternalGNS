@@ -8,11 +8,11 @@ import CostBreakdown from "@/features/quotations/QuotationDetail/CostBreakdown"
 import ProductTable from "@/features/quotations/QuotationDetail/ProductTable"
 import ShippingTable from "@/features/quotations/QuotationDetail/ShippingTable"
 import type { QuotationData } from "@/features/quotations/types"
-import { ApiError, downloadFile, downloadPdf } from "@/lib/api-client"
+import { downloadFile, downloadPdf } from "@/lib/api-client"
 import { formatDate, toNum } from "@/lib/format"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
-import type { PoTransition, PurchaseOrderRow } from "@/types/api"
+import type { PoCompletenessIssue, PoTransition, PurchaseOrderRow } from "@/types/api"
 import { poHistoryEntry, poItemsToProducts, poItemsToShipping, poRowFromBackend } from "../adapters"
 import * as poApi from "../api"
 import {
@@ -30,11 +30,10 @@ import FileCard from "./FileCard"
 import Header from "./Header"
 import HistoryCard from "./HistoryCard"
 import {
-  type CompletenessIssue,
   canDownloadDeliveryNote,
+  completenessIssues,
   deliveryNoteFileName,
   isPoLocked,
-  parseCompletenessIssues,
   poBreakdown,
   uploadRules,
 } from "./helpers"
@@ -67,7 +66,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
   const [showUpload, setShowUpload] = useState(false)
   const [showReason, setShowReason] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
-  const [issues, setIssues] = useState<CompletenessIssue[] | null>(null)
+  const [issues, setIssues] = useState<PoCompletenessIssue[] | null>(null)
 
   // A saved move drops a stale choice.
   const selected = choice?.from === po.status ? choice.t : null
@@ -97,7 +96,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
       void navigate({ to: "/purchase-orders" })
     } catch (err) {
       // The hook toasts everything but the completeness gate.
-      const found = err instanceof ApiError ? parseCompletenessIssues(err.body) : null
+      const found = completenessIssues(err)
       if (found) {
         setShowReason(false)
         setIssues(found)

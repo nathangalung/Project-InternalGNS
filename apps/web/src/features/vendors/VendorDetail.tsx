@@ -9,7 +9,7 @@ import {
   useVendorItems,
   useVendorLogoDownloadUrl,
 } from "@/features/vendors/hooks"
-import { ApiError, fetchObjectUrl } from "@/lib/api-client"
+import { fetchObjectUrl } from "@/lib/api-client"
 import { logoBackground } from "@/lib/avatar"
 import { errorMessage } from "@/lib/errors"
 import { formatRupiah } from "@/lib/format"
@@ -18,8 +18,9 @@ import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
 import { useListScreen } from "@/lib/useListScreen"
+import { digitsOnly, optionalEmailError, optionalPhoneError } from "@/lib/validation"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
-import { buildContactInfo } from "./contact-info"
+import { buildContactInfo, vendorFormErrors } from "./contact-info"
 
 type VendorDetailProps = {
   vendor: VendorRow
@@ -38,7 +39,7 @@ function vendorInitials(name: string): string {
 }
 
 function getContactField(
-  contactInfo: VendorContactInfo | undefined,
+  contactInfo: VendorContactInfo | null | undefined,
   key: "email" | "phone",
 ): string {
   return contactInfo?.[key] ?? ""
@@ -74,7 +75,9 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   const nameId = useId()
   const nameErrorId = useId()
   const phoneId = useId()
+  const phoneErrorId = useId()
   const emailId = useId()
+  const emailErrorId = useId()
   const addressId = useId()
   const statusLabelId = useId()
   const statusHintId = useId()
@@ -133,6 +136,10 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
     address !== (vendor.location ?? "") ||
     isActive !== vendor.isActive
 
+  // A server message wins until the input changes.
+  const phoneError = fieldErrors.phone || (canWrite ? optionalPhoneError(phone) : null)
+  const emailError = fieldErrors.email || (canWrite ? optionalEmailError(email) : null)
+
   const logoBg = logoBackground(vendor.name)
 
   // Validate first, revert on failure.
@@ -176,6 +183,8 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
     setSubmitError(null)
     const errs: Record<string, string> = {}
     if (!name.trim()) errs.name = "Wajib diisi"
+    if (phoneError) errs.phone = phoneError
+    if (emailError) errs.email = emailError
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs)
       return
@@ -192,11 +201,9 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
       })
       setFieldErrors({})
     } catch (err) {
-      const msg =
-        err instanceof ApiError
-          ? err.message || "Gagal menyimpan perubahan"
-          : "Gagal menyimpan perubahan"
-      setSubmitError(msg)
+      const split = vendorFormErrors(err, "Gagal menyimpan perubahan")
+      setFieldErrors(split.fields)
+      setSubmitError(split.banner)
     }
   }
 
@@ -400,10 +407,20 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                     value={phone}
                     placeholder={canWrite ? "81234567890" : "-"}
                     readOnly={!canWrite}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                    aria-invalid={phoneError ? true : undefined}
+                    aria-describedby={phoneError ? phoneErrorId : undefined}
+                    onChange={(e) => {
+                      setPhone(digitsOnly(e.target.value))
+                      setFieldErrors((p) => ({ ...p, phone: "" }))
+                    }}
                     className={`${inputBase} h-full min-w-0 flex-1 rounded-none border-transparent`}
                   />
                 </div>
+                {phoneError && (
+                  <div id={phoneErrorId} className="mt-1.5 text-xs text-[#DC2626]">
+                    {phoneError}
+                  </div>
+                )}
               </div>
               <div>
                 <label htmlFor={emailId} className={labelCls}>
@@ -415,9 +432,19 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
                   value={email}
                   placeholder={canWrite ? "contact@vendor.com" : "-"}
                   readOnly={!canWrite}
-                  onChange={(e) => setEmail(e.target.value)}
+                  aria-invalid={emailError ? true : undefined}
+                  aria-describedby={emailError ? emailErrorId : undefined}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    setFieldErrors((p) => ({ ...p, email: "" }))
+                  }}
                   className={inputCls}
                 />
+                {emailError && (
+                  <div id={emailErrorId} className="mt-1.5 text-xs text-[#DC2626]">
+                    {emailError}
+                  </div>
+                )}
               </div>
             </div>
 

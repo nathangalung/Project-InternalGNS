@@ -5,8 +5,12 @@ import {
   downloadPdf,
   downloadXlsx,
   type PaginatedList,
+  postForm,
 } from "@/lib/api-client"
 import type {
+  MatchRowInput,
+  QuotationContactInput,
+  QuotationCreated,
   QuotationCreateInput,
   QuotationDetail,
   QuotationItemRequestCreateInput,
@@ -14,9 +18,14 @@ import type {
   QuotationItemRequestUpdateInput,
   QuotationListParams,
   QuotationListRow,
+  QuotationReviseInput,
   QuotationRevisionRow,
+  QuotationRfqRows,
+  QuotationSaved,
+  QuotationSendInput,
   QuotationStatus,
   QuotationStatusCount,
+  QuotationStatusInput,
   QuotationUpdateInput,
 } from "@/types/api"
 
@@ -46,6 +55,16 @@ export function downloadPdfFile(id: number, quotationNo: string): Promise<void> 
   return downloadPdf(`/quotations/${id}/pdf`, `${safe}.pdf`)
 }
 
+// Product rows of an RFQ file.
+//
+// The API reads the .xlsx or .csv and returns rows for match-rows.
+export async function parseRfq(file: File): Promise<MatchRowInput[]> {
+  const form = new FormData()
+  form.append("file", file)
+  const res = await postForm<QuotationRfqRows>("/quotations/rfq", form)
+  return res.rows
+}
+
 export async function stats(): Promise<QuotationStatusCount[]> {
   return apiRequest<QuotationStatusCount[]>({ path: "/quotations/stats" })
 }
@@ -54,8 +73,8 @@ export async function get(id: number): Promise<QuotationDetail> {
   return apiRequest<QuotationDetail>({ path: `/quotations/${id}` })
 }
 
-export async function create(input: QuotationCreateInput): Promise<{ id: number }> {
-  return apiRequest<{ id: number }>({
+export async function create(input: QuotationCreateInput): Promise<QuotationCreated> {
+  return apiRequest<QuotationCreated>({
     path: "/quotations",
     method: "POST",
     body: input,
@@ -66,8 +85,8 @@ export async function update(
   id: number,
   input: QuotationUpdateInput,
   rowVersion: number,
-): Promise<{ id: number; rowVersion: number }> {
-  return apiRequest<{ id: number; rowVersion: number }>({
+): Promise<QuotationSaved> {
+  return apiRequest<QuotationSaved>({
     path: `/quotations/${id}`,
     method: "PUT",
     body: input,
@@ -83,7 +102,7 @@ export async function changeStatus(
   await apiRequest<void>({
     path: `/quotations/${id}/status`,
     method: "PATCH",
-    body: { status, note },
+    body: { status, note } satisfies QuotationStatusInput,
   })
 }
 
@@ -91,18 +110,18 @@ export async function send(id: number, note?: string): Promise<void> {
   await apiRequest<void>({
     path: `/quotations/${id}/send`,
     method: "POST",
-    body: note ? { note } : undefined,
+    body: note ? ({ note } satisfies QuotationSendInput) : undefined,
   })
 }
 
 // Clone as a new draft.
 //
 // Only a sent quotation can be revised. The original moves to Revisi and is frozen; the reply carries the new id.
-export async function revise(id: number, note?: string): Promise<{ id: number }> {
-  return apiRequest<{ id: number }>({
+export async function revise(id: number, note?: string): Promise<QuotationCreated> {
+  return apiRequest<QuotationCreated>({
     path: `/quotations/${id}/revise`,
     method: "POST",
-    body: note ? { note } : {},
+    body: (note ? { note } : {}) satisfies QuotationReviseInput,
   })
 }
 
@@ -110,7 +129,7 @@ export async function updateQuotationContact(id: number, contactId: number): Pro
   await apiRequest<void>({
     path: `/quotations/${id}/contact`,
     method: "PATCH",
-    body: { contactId },
+    body: { contactId } satisfies QuotationContactInput,
   })
 }
 

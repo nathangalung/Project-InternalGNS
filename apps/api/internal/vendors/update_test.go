@@ -19,13 +19,13 @@ import (
 func TestHandler_Update_ReplacesContactInfo(t *testing.T) {
 	cases := []struct {
 		name        string
-		contactInfo json.RawMessage
+		contactInfo *vendors.ContactInfo
 		location    *string
-		wantContact string
+		wantContact *vendors.ContactInfo
 	}{
-		{"empty object clears email and phone", json.RawMessage(`{}`), ptr("Surabaya"), `{}`},
-		{"phone only drops email", json.RawMessage(`{"phone":"0822222222"}`), ptr("Surabaya"), `{"phone":"0822222222"}`},
-		{"omitted clears contact and location", nil, nil, `null`},
+		{"empty object clears email and phone", &vendors.ContactInfo{}, ptr("Surabaya"), &vendors.ContactInfo{}},
+		{"phone only drops email", &vendors.ContactInfo{Phone: "0822222222"}, ptr("Surabaya"), &vendors.ContactInfo{Phone: "0822222222"}},
+		{"omitted clears contact and location", nil, nil, nil},
 	}
 	srv := newSrv(t)
 	for _, c := range cases {
@@ -39,7 +39,7 @@ func TestHandler_Update_ReplacesContactInfo(t *testing.T) {
 
 			got := getVendor(t, srv, id)
 			assert.Equal(t, c.location, got.Location)
-			assert.JSONEq(t, c.wantContact, string(got.ContactInfo))
+			assert.Equal(t, c.wantContact, got.ContactInfo)
 		})
 	}
 }

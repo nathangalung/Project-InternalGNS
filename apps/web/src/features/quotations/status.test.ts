@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api-client"
-import type { QuotationTransition } from "@/types/api"
+import { problem } from "@/test/problem"
+import type { ProblemDetail, QuotationTransition } from "@/types/api"
 import {
   fieldError,
   isEditable,
@@ -112,7 +113,7 @@ describe("statTiles order", () => {
 })
 
 describe("fieldError lookup", () => {
-  const err = new ApiError(422, { fields: { note: "Alasan wajib diisi." } }, "x")
+  const err = new ApiError(422, problem(422, { fields: { note: "Alasan wajib diisi." } }), "x")
 
   it("reads a 422 field", () => {
     expect(fieldError(err, "note")).toBe("Alasan wajib diisi.")
@@ -120,34 +121,43 @@ describe("fieldError lookup", () => {
 
   it("ignores other fields and statuses", () => {
     expect(fieldError(err, "status")).toBeUndefined()
-    expect(fieldError(new ApiError(409, { fields: { note: "x" } }, "x"), "note")).toBeUndefined()
+    expect(
+      fieldError(new ApiError(409, problem(409, { fields: { note: "x" } }), "x"), "note"),
+    ).toBeUndefined()
     expect(fieldError(new Error("x"), "note")).toBeUndefined()
   })
 })
 
 describe("statusChangeToast", () => {
   it("stays quiet for a note the modal shows inline", () => {
-    const err = new ApiError(422, { fields: { note: "Alasan wajib diisi." } }, "Validasi gagal.")
+    const err = new ApiError(
+      422,
+      problem(422, { fields: { note: "Alasan wajib diisi." } }),
+      "Validasi gagal.",
+    )
     expect(statusChangeToast(err)).toBeUndefined()
   })
 
   it("toasts any other failure", () => {
-    const conflict = new ApiError(409, {}, "Status sudah berubah.")
+    const conflict = new ApiError(409, problem(409, {}), "Status sudah berubah.")
     expect(statusChangeToast(conflict)).toBe("Status sudah berubah.")
-    const other = new ApiError(422, { fields: { status: "x" } }, "Status tidak valid.")
+    const other = new ApiError(
+      422,
+      problem(422, { fields: { status: "x" } }),
+      "Status tidak valid.",
+    )
     expect(statusChangeToast(other)).toBe("Status tidak valid.")
-    expect(statusChangeToast(new ApiError(500, {}, ""))).toBe("Gagal mengubah status quotation.")
+    expect(statusChangeToast(new ApiError(500, problem(500, {}), ""))).toBe(
+      "Gagal mengubah status quotation.",
+    )
   })
 })
 
 describe("fieldError odd 422 bodies", () => {
-  it.each<[string, unknown]>([
+  it.each<[string, ProblemDetail | null]>([
     ["no body", null],
-    ["text body", "Validasi gagal."],
-    ["no fields", { detail: "Validasi gagal." }],
-    ["fields not an object", { fields: "note" }],
-    ["blank message", { fields: { note: "   " } }],
-    ["non-string message", { fields: { note: 1 } }],
+    ["no fields", problem(422, { detail: "Validasi gagal." })],
+    ["blank message", problem(422, { fields: { note: "   " } })],
   ])("reads nothing from %s", (_name, body) => {
     expect(fieldError(new ApiError(422, body, "x"), "note")).toBeUndefined()
   })

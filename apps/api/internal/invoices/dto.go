@@ -29,6 +29,7 @@ type Invoice struct {
 	PpnAmount           *string    `db:"ppn_amount"            json:"ppnAmount,omitempty"`
 	Total               *string    `db:"total"                 json:"total,omitempty"`
 	Status              Status     `db:"status"                json:"status"`
+	EffectiveStatus     Status     `db:"effective_status"      json:"effectiveStatus"` // fn_invoice_effective_status
 	TaxTransactionCode  *string    `db:"tax_transaction_code"  json:"taxTransactionCode,omitempty"`
 	FakturType          *string    `db:"faktur_type"           json:"fakturType,omitempty"`
 	RowVersion          int32      `db:"row_version"             json:"rowVersion"`
@@ -149,4 +150,9 @@ type ListFilter struct {
 type ListResult struct {
 	Rows  []Invoice
 	Total int64
+}
+
+// DatesUpdatedResponse carries the new version.
+type DatesUpdatedResponse struct {
+	RowVersion int32 `json:"rowVersion"`
 }

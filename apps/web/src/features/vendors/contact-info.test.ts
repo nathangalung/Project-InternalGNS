@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest"
-import { buildContactInfo } from "./contact-info"
+import { ApiError } from "@/lib/api-client"
+import { EMAIL_ERROR, PHONE_ERROR } from "@/lib/validation"
+import { problem } from "@/test/problem"
+import { buildContactInfo, vendorFormErrors } from "./contact-info"
 
 describe("buildContactInfo", () => {
   const cases = [
@@ -44,4 +47,40 @@ describe("buildContactInfo", () => {
       expect(buildContactInfo(c.prev, c.email, c.phone)).toEqual(c.want)
     })
   }
+})
+
+// Server keys onto form inputs.
+describe("vendorFormErrors", () => {
+  it("maps nested contactInfo keys", () => {
+    const err = new ApiError(
+      422,
+      problem(422, {
+        fields: { "contactInfo.phone": PHONE_ERROR, "contactInfo.email": EMAIL_ERROR },
+      }),
+      `${EMAIL_ERROR}; ${PHONE_ERROR}`,
+    )
+    expect(vendorFormErrors(err, "gagal")).toEqual({
+      fields: { phone: PHONE_ERROR, email: EMAIL_ERROR },
+      banner: null,
+    })
+  })
+
+  it("keeps name and sends the rest to the banner", () => {
+    const err = new ApiError(
+      422,
+      problem(422, { fields: { name: "required", location: "Lain." } }),
+      "x",
+    )
+    expect(vendorFormErrors(err, "gagal")).toEqual({
+      fields: { name: "required" },
+      banner: "Lain.",
+    })
+  })
+
+  it("falls back for non-field errors", () => {
+    expect(vendorFormErrors(new ApiError(500, null, "Server error"), "gagal")).toEqual({
+      fields: {},
+      banner: "Server error",
+    })
+  })
 })

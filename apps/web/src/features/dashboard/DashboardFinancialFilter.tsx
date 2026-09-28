@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { yearInJakarta } from "@/lib/date-range"
 import { ui } from "@/lib/ui"
 
 export type DashboardFilterValues = {
@@ -23,7 +24,7 @@ type DashboardFinancialFilterProps = {
 }
 
 const EARLIEST_YEAR = 2024
-const CURRENT_YEAR = new Date().getFullYear()
+const CURRENT_YEAR = yearInJakarta()
 // Year options, newest first.
 //
 // The earliest year is fixed at 2024; the latest extends with the current year

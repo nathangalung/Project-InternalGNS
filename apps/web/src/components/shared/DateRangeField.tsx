@@ -1,7 +1,6 @@
 import { useId } from "react"
+import type { DatePreset } from "@/lib/date-range"
 import { ui } from "@/lib/ui"
-
-export type DatePreset = "semua" | "hari-ini" | "7-hari" | "30-hari" | "kustom"
 
 export const DATE_PRESETS: { key: DatePreset; label: string }[] = [
   { key: "semua", label: "Semua" },
@@ -10,27 +9,6 @@ export const DATE_PRESETS: { key: DatePreset; label: string }[] = [
   { key: "30-hari", label: "30 Hari Terakhir" },
   { key: "kustom", label: "Kustom" },
 ]
-
-// Date to local YYYY-MM-DD.
-function toIsoDate(d: Date): string {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, "0")
-  const dd = String(d.getDate()).padStart(2, "0")
-  return `${y}-${m}-${dd}`
-}
-
-export function presetToIsoRange(preset: DatePreset): { start: string; end: string } {
-  if (preset === "semua") return { start: "", end: "" }
-  const today = new Date()
-  const end = toIsoDate(today)
-  if (preset === "hari-ini") return { start: end, end }
-  const start = new Date(today)
-  if (preset === "7-hari") start.setDate(today.getDate() - 7)
-  if (preset === "30-hari") start.setDate(today.getDate() - 30)
-  // Kustom defaults to 30-day window.
-  if (preset === "kustom") start.setDate(today.getDate() - 30)
-  return { start: toIsoDate(start), end }
-}
 
 type DateInputProps = {
   value: string

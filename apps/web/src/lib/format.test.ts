@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   computeTaxBreakdown,
   formatDate,
+  formatDateShort,
   formatDateTime,
   formatNumber,
   formatRupiah,
@@ -146,5 +147,34 @@ describe("formatDate and formatDateTime", () => {
 
   it.each([formatDate, formatDateTime])("returns an unparseable value as given", (fn) => {
     expect(fn("bukan tanggal")).toBe("bukan tanggal")
+  })
+})
+
+// A browser outside Jakarta.
+//
+// Document dates are WIB days: a date-only value keeps its day, and a
+// timestamp lands on the WIB calendar, whatever zone the browser runs in.
+describe("dates read in WIB from any browser zone", () => {
+  beforeEach(() => vi.stubEnv("TZ", "America/Los_Angeles"))
+  afterEach(() => vi.unstubAllEnvs())
+
+  it.each<[string, string]>([
+    ["a date-only value keeps its day", "2026-09-27"],
+    ["a DATE column at UTC midnight keeps its day", "2026-09-27T00:00:00Z"],
+    ["a WIB midnight keeps its day", "2026-09-27T00:00:00+07:00"],
+  ])("%s", (_name, iso) => {
+    expect(formatDate(iso)).toBe("27 Sep 2026")
+  })
+
+  it("puts a UTC evening on the next WIB day", () => {
+    expect(formatDate("2026-09-27T20:00:00Z")).toBe("28 Sep 2026")
+    expect(formatDateTime("2026-09-27T20:05:00Z")).toBe("28 Sep 2026, 03.05")
+  })
+
+  it("prints the unpadded day in WIB", () => {
+    expect(formatDateShort("2026-09-04T20:00:00Z")).toBe("5 Sep 2026")
+    expect(formatDateShort("2026-08-04T12:00:00Z")).toBe("4 Agu 2026")
+    expect(formatDateShort("")).toBe("")
+    expect(formatDateShort("bukan tanggal")).toBe("bukan tanggal")
   })
 })

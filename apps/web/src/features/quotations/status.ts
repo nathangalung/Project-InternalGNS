@@ -40,12 +40,8 @@ export function isEditable(status: QuotationStatus): boolean {
 // the input the server rejected.
 export function fieldError(err: unknown, key: string): string | undefined {
   if (!(err instanceof ApiError) || err.status !== 422) return undefined
-  const body = err.body
-  if (!body || typeof body !== "object" || !("fields" in body)) return undefined
-  const fields = body.fields
-  if (!fields || typeof fields !== "object") return undefined
-  const value = (fields as Record<string, unknown>)[key]
-  return typeof value === "string" && value.trim() ? value : undefined
+  const value = err.body?.fields?.[key]
+  return value?.trim() ? value : undefined
 }
 
 // Status change failure toast.

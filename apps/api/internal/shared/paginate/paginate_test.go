@@ -63,8 +63,7 @@ func TestParseLimit(t *testing.T) {
 	}
 }
 
-// Body limits clamp like ?limit.
-// That covers match-request.
+// Limits clamp to MaxLimit.
 func TestClamp(t *testing.T) {
 	cases := []struct {
 		name string

@@ -6,8 +6,9 @@ import * as usersApi from "@/features/users/api"
 import { ApiError } from "@/lib/api-client"
 import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
+import { problem } from "@/test/problem"
 import { invalidated, renderQueryHook, seed, settle, until } from "@/test/query"
-import type { Role } from "@/types/api"
+import type { PoIncompleteProblem, Role } from "@/types/api"
 import * as api from "./api"
 import {
   useActorNames,
@@ -56,14 +57,18 @@ const quotations = queryKeys.quotations.list()
 const versionConflict = () =>
   new ApiError(
     409,
-    {
+    problem(409, {
       code: "version_conflict",
       detail: "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
-    },
+    }),
     "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
   )
 const lockRefusal = () =>
-  new ApiError(409, { code: "po_locked", detail: "Invoice sudah terbit." }, "Invoice sudah terbit.")
+  new ApiError(
+    409,
+    problem(409, { code: "po_locked", detail: "Invoice sudah terbit." }),
+    "Invoice sudah terbit.",
+  )
 const pdf = () => new File(["x"], "po.pdf", { type: "application/pdf" })
 
 beforeEach(() => {
@@ -184,20 +189,29 @@ describe("useChangePoStatus", () => {
   })
 
   it("leaves the completeness 422 to its modal", async () => {
-    m.changeStatus.mockRejectedValue(
-      new ApiError(
-        422,
-        { fields: { "klien:1": "Data klien PT A belum lengkap: NPWP" } },
-        "Data belum lengkap.",
-      ),
-    )
+    const message = "Data klien PT A belum lengkap: NPWP"
+    const body: PoIncompleteProblem = {
+      ...problem(422, { code: "po_incomplete", detail: message, fields: { "klien:1": message } }),
+      issues: [
+        {
+          kind: "client",
+          id: 1,
+          name: "PT A",
+          message,
+          missing: [{ code: "client_npwp", label: "NPWP" }],
+        },
+      ],
+    }
+    m.changeStatus.mockRejectedValue(new ApiError(422, body, message))
     const { result } = renderQueryHook(() => useChangePoStatus())
     await settle(() => result.current.mutateAsync({ id: 3, status: "ON_PROGRESS" }))
     expect(toast.error).not.toHaveBeenCalled()
   })
 
   it("toasts any other failure", async () => {
-    m.changeStatus.mockRejectedValue(new ApiError(422, { fields: { note: "Wajib." } }, ""))
+    m.changeStatus.mockRejectedValue(
+      new ApiError(422, problem(422, { fields: { note: "Wajib." } }), ""),
+    )
     const { result } = renderQueryHook(() => useChangePoStatus())
     await settle(() => result.current.mutateAsync({ id: 3, status: "CANCELLED" }))
     expect(toast.error).toHaveBeenCalledWith("Gagal mengubah status PO.")

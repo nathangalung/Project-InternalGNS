@@ -10,29 +10,6 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/vendors"
 )
 
-// Lone wildcards match nothing extra.
-// A lone wildcard must not match every vendor.
-func TestRepo_Search_EscapesLikeWildcards(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
-	repo := vendors.NewRepo(tx, testutil.Store(t))
-
-	tests := []struct {
-		name  string
-		query string
-	}{
-		{"percent", "%"},
-		{"underscore", "_"},
-		{"backslash", `\`},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			hits, err := repo.Search(ctx, tt.query, 0.3, 50)
-			require.NoError(t, err)
-			assert.Empty(t, hits)
-		})
-	}
-}
-
 // List filters escape wildcards.
 // They treat a wildcard as literal text.
 func TestRepo_List_EscapesLikeWildcards(t *testing.T) {

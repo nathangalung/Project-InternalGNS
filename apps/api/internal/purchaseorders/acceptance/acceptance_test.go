@@ -440,6 +440,18 @@ func (s *scenarioState) poHasNoFile() error {
 }
 
 func (s *scenarioState) editPOItems(discountPct, sellingPrice string) error {
+	return s.sendPOItems(discountPct, sellingPrice, nil)
+}
+
+// editPOItemsChargeNoAddress drops the address.
+func (s *scenarioState) editPOItemsChargeNoAddress(cost string) error {
+	return s.sendPOItems("0", "100000", func(req *purchaseorders.UpdateItemsRequest) {
+		req.ShippingCost = &cost
+	})
+}
+
+// sendPOItems PUTs one edited line.
+func (s *scenarioState) sendPOItems(discountPct, sellingPrice string, edit func(*purchaseorders.UpdateItemsRequest)) error {
 	if err := s.sendRequest(http.MethodGet, "/purchase-orders/"+strconv.FormatInt(s.poID, 10), nil); err != nil {
 		return err
 	}
@@ -456,6 +468,9 @@ func (s *scenarioState) editPOItems(discountPct, sellingPrice string) error {
 			SellingPrice:    sellingPrice,
 			ShipDestination: &testShipDestination,
 		}},
+	}
+	if edit != nil {
+		edit(&body)
 	}
 	return s.sendRequestWithHeaders(
 		http.MethodPut,
@@ -636,6 +651,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the PO has no attached file$`, state.poHasNoFile)
 		sc.Step(`^the invoice status is "([^"]+)"$`, state.invoiceStatusEquals)
 		sc.Step(`^the user edits PO items with discount "([^"]*)" and selling price "([^"]*)"$`, state.editPOItems)
+		sc.Step(`^the user edits PO items with a shipping charge of "([^"]+)" and no address$`, state.editPOItemsChargeNoAddress)
 		sc.Step(`^the user lists invoice items by quotation$`, state.listInvoiceItems)
 		sc.Step(`^the user edits PO details with number "([^"]+)"$`, state.editPODetails)
 		sc.Step(`^the user edits PO details with a stale If-Match$`, state.editPODetailsStaleVersion)

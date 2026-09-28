@@ -103,27 +103,6 @@ func TestHandler_Create_EmptyName(t *testing.T) {
 	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 }
 
-func TestHandler_Search(t *testing.T) {
-	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodGet, "/items/search?q=PUNCHING&minScore=0.05&limit=5", nil)
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-}
-
-func TestHandler_Search_MissingQ(t *testing.T) {
-	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodGet, "/items/search", nil)
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-}
-
-func TestHandler_Search_BadParams(t *testing.T) {
-	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodGet, "/items/search?q=PUNCHING&minScore=junk&limit=zero", nil)
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-}
-
 func TestHandler_SearchAdvanced(t *testing.T) {
 	srv := newSrv(t)
 	res := doJSON(t, srv, http.MethodGet, "/items/search-advanced?q=bearing&limit=5", nil)
@@ -208,39 +187,6 @@ func tierGE(a, b string) bool {
 		"ITEM_FUZZY":      1,
 	}
 	return rank[a] >= rank[b]
-}
-
-func TestHandler_MatchRequest(t *testing.T) {
-	srv := newSrv(t)
-	body := items.MatchRequest{ReqText: "PUNCHING TOOL", Limit: 5}
-	res := doJSON(t, srv, http.MethodPost, "/items/match-request", body)
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-}
-
-func TestHandler_MatchRequest_BadJSON(t *testing.T) {
-	srv := newSrv(t)
-	req, _ := http.NewRequest(http.MethodPost, srv.URL+"/items/match-request", strings.NewReader("?"))
-	req.Header.Set("Content-Type", "application/json")
-	res, err := srv.Client().Do(req)
-	require.NoError(t, err)
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-}
-
-func TestHandler_MatchRequest_EmptyReqText(t *testing.T) {
-	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodPost, "/items/match-request", items.MatchRequest{})
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
-}
-
-func TestHandler_MatchRequest_DefaultLimit(t *testing.T) {
-	srv := newSrv(t)
-	body := items.MatchRequest{ReqText: "ITEM"}
-	res := doJSON(t, srv, http.MethodPost, "/items/match-request", body)
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
 
 func TestHandler_ListVendorsForItem(t *testing.T) {
@@ -386,13 +332,21 @@ func TestHandler_MatchRows_Empty(t *testing.T) {
 
 func TestHandler_MatchRows_TooManyRows(t *testing.T) {
 	srv := newSrv(t)
-	rows := make([]items.MatchRowInput, 501)
+	rows := make([]items.MatchRowInput, items.MaxMatchRows+1)
 	for i := range rows {
 		rows[i] = items.MatchRowInput{Name: "x"}
 	}
 	res := doJSON(t, srv, http.MethodPost, "/items/match-rows", items.MatchRowsRequest{Rows: rows})
 	defer res.Body.Close()
-	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	var p struct {
+		Detail string            `json:"detail"`
+		Fields map[string]string `json:"fields"`
+	}
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&p))
+	want := "Terlalu banyak baris dalam satu permintaan: paling banyak 500. Bagi menjadi beberapa kelompok."
+	assert.Equal(t, want, p.Detail)
+	assert.Equal(t, want, p.Fields["rows"])
 }
 
 func TestHandler_MatchRows_IMPAExact(t *testing.T) {

@@ -173,3 +173,14 @@ func (c *Conditions) cloneArgs() []any {
 	copy(out, c.args)
 	return out
 }
+
+// likeEscaper neutralises LIKE metacharacters.
+// The backslash goes first: it is the default LIKE escape character, so an
+// unescaped one in user input would consume the character after it.
+var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
+
+// Contains builds literal ILIKE patterns.
+// Search text matches as typed, so a % or _ is not a wildcard.
+func Contains(s string) string {
+	return "%" + likeEscaper.Replace(s) + "%"
+}

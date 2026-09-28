@@ -117,7 +117,11 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validateUpdate(req); err != nil {
+	stored := func() (string, error) {
+		u, err := h.repo.GetByIDAdmin(r.Context(), id)
+		return u.Email, err
+	}
+	if err := validateUpdate(req, stored); err != nil {
 		httperr.Render(w, httperr.Unprocessable(err))
 		return
 	}

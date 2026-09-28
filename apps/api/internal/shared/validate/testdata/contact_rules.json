@@ -1,0 +1,53 @@
+{
+  "comment": "Shared phone and email rules. validate_test.go and apps/web/src/lib/validation.test.ts both run every case, so the Go and TS validators cannot drift. Inputs are checked as given: callers trim first and skip blank optional fields.",
+  "messages": {
+    "phone": "Nomor telepon harus 9–12 digit angka.",
+    "email": "Format email tidak valid."
+  },
+  "phone": [
+    { "input": "812345678", "valid": true, "note": "9 digits, the minimum" },
+    { "input": "812345678901", "valid": true, "note": "12 digits, the maximum" },
+    { "input": "81298765432", "valid": true },
+    { "input": "0812-9876-5432", "valid": true, "note": "separators are not counted" },
+    { "input": "+62 812 9876", "valid": true, "note": "the dial code digits count" },
+    { "input": "81234567", "valid": false, "note": "8 digits" },
+    { "input": "8123456789012", "valid": false, "note": "13 digits, one over company_contacts_phone_check" },
+    { "input": "", "valid": false, "note": "blank fails the CHECK too" },
+    { "input": "   ", "valid": false },
+    { "input": "phone", "valid": false },
+    { "input": "٨١٢٣٤٥٦٧٨٩", "valid": false, "note": "only ASCII digits count" }
+  ],
+  "email": [
+    { "input": "a@b.co", "valid": true },
+    { "input": "admin@globalsakti.com", "valid": true },
+    { "input": "a+tag@x.co.id", "valid": true },
+    { "input": "A.B-c_d@Sub-Domain.Example.COM", "valid": true },
+    { "input": "!#$%&'*+/=?^_`{|}~-@x.com", "valid": true, "note": "every RFC 5322 atext symbol" },
+    { "input": "a@b", "valid": false, "note": "net/mail accepts a dotless domain; the rule does not" },
+    { "input": "a@x.c", "valid": false, "note": "top-level label is two letters or more" },
+    { "input": "a@1.2", "valid": false },
+    { "input": "a@[1.2.3.4]", "valid": false, "note": "no domain literals" },
+    { "input": "a@x_y.com", "valid": false, "note": "no underscore in a host label" },
+    { "input": "a@-x.com", "valid": false, "note": "labels do not start with a hyphen" },
+    { "input": "a@x-.com", "valid": false, "note": "labels do not end with a hyphen" },
+    { "input": "ü@x.com", "valid": false, "note": "ASCII only" },
+    { "input": "a@x.com ", "valid": false, "note": "net/mail takes a trailing NBSP as text" },
+    { "input": "a..b@x.com", "valid": false },
+    { "input": ".a@x.com", "valid": false },
+    { "input": "a.@x.com", "valid": false },
+    { "input": "a@x..com", "valid": false },
+    { "input": "a@x.com.", "valid": false },
+    { "input": "\"a b\"@x.com", "valid": false, "note": "no quoted local part" },
+    { "input": "a b@x.com", "valid": false },
+    { "input": "a@b@c.com", "valid": false },
+    { "input": "Nama <a@x.com>", "valid": false, "note": "a single mailbox, not a display form" },
+    { "input": "a@x.com (c)", "valid": false },
+    { "input": " a@x.com", "valid": false, "note": "callers trim before checking" },
+    { "input": "a@x.com\n", "valid": false },
+    { "input": "riza.chair@pelitaglobal.com,", "valid": false },
+    { "input": "SCOUT-not-an-email", "valid": false },
+    { "input": "@x.com", "valid": false },
+    { "input": "a@", "valid": false },
+    { "input": "", "valid": false }
+  ]
+}

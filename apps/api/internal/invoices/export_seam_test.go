@@ -6,12 +6,13 @@ import "context"
 // exportData is unexported and testutil imports this package, so the
 // integration assertions live in invoices_test and reach buildData here.
 type PDFTotalsForTest struct {
-	TotalProduk    string
-	Diskon         string
-	DPP            string
-	LineNames      []string
-	LineUnitPrices []string
-	LineAmounts    []string
+	TotalProduk      string
+	Diskon           string
+	DPP              string
+	LineNames        []string
+	LineDescriptions []string
+	LineUnitPrices   []string
+	LineAmounts      []string
 }
 
 // Totals block as printed.
@@ -22,6 +23,7 @@ func (h *ExportHandler) PDFTotalsForTest(
 	out := PDFTotalsForTest{TotalProduk: d.TotalProduk, Diskon: d.Diskon, DPP: d.DPP}
 	for _, it := range d.Items {
 		out.LineNames = append(out.LineNames, it.Name)
+		out.LineDescriptions = append(out.LineDescriptions, it.Description)
 		out.LineUnitPrices = append(out.LineUnitPrices, it.UnitPrice)
 		out.LineAmounts = append(out.LineAmounts, it.Amount)
 	}

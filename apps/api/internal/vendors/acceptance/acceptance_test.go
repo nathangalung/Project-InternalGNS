@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"strconv"
 	"testing"
 	"time"
@@ -29,6 +28,7 @@ type scenarioState struct {
 	body     []byte
 	vendorID int64
 	name     string
+	email    string
 }
 
 func (s *scenarioState) sendRequest(method, path string, body any) error {
@@ -73,7 +73,7 @@ func (s *scenarioState) uniqueName(prefix string) string {
 func (s *scenarioState) createVendor() error {
 	s.name = s.uniqueName("ATDD VENDOR")
 	loc := "Jakarta"
-	body := vendors.CreateVendorRequest{Name: s.name, Location: &loc, ContactInfo: json.RawMessage(`{"email":"atdd@vendor.com"}`)}
+	body := vendors.CreateVendorRequest{Name: s.name, Location: &loc, ContactInfo: &vendors.ContactInfo{Email: "atdd@vendor.com"}}
 	if err := s.sendRequest(http.MethodPost, "/vendors/", body); err != nil {
 		return err
 	}
@@ -143,23 +143,6 @@ func (s *scenarioState) updateVendorName() error {
 	return s.sendRequest(http.MethodPut, "/vendors/"+strconv.FormatInt(s.vendorID, 10), body)
 }
 
-func (s *scenarioState) searchByName() error {
-	return s.sendRequest(http.MethodGet, "/vendors/search?q="+url.QueryEscape(s.name), nil)
-}
-
-func (s *scenarioState) searchContainsVendor() error {
-	var rows []vendors.SearchResult
-	if err := json.Unmarshal(s.body, &rows); err != nil {
-		return err
-	}
-	for _, r := range rows {
-		if r.VendorID == s.vendorID {
-			return nil
-		}
-	}
-	return fmt.Errorf("vendor %d not in search results", s.vendorID)
-}
-
 func (s *scenarioState) listItemsForVendor(vendorID int64) error {
 	return s.sendRequest(http.MethodGet, "/vendors/"+strconv.FormatInt(vendorID, 10)+"/items", nil)
 }
@@ -196,8 +179,6 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the vendor name matches the seeded value$`, state.vendorNameMatches)
 		sc.Step(`^the user updates the vendor name$`, state.updateVendorName)
 		sc.Step(`^the vendor name reflects the update$`, state.vendorNameMatches)
-		sc.Step(`^the user searches vendors by the seeded name$`, state.searchByName)
-		sc.Step(`^the vendor search results contain the seeded vendor$`, state.searchContainsVendor)
 		sc.Step(`^the user lists items for vendor (\d+)$`, state.listItemsForVendor)
 		sc.Step(`^the items list contains at least (\d+) row(?:s)?$`, state.itemsListAtLeast)
 		registerRuleSteps(sc, state)

@@ -81,6 +81,8 @@ func TestPurchaseOrder_SnapshotsLineIdentity(t *testing.T) {
 			require.NotEmpty(t, items)
 			assert.Equal(t, tc.wantName(t, tx, offered), items[0].ItemName)
 			assert.Equal(t, tc.wantCode(t, tx, offered), items[0].ItemCode)
+			// The detail links the line to this product.
+			assert.Equal(t, offered, items[0].OfferedItemID)
 		})
 	}
 }

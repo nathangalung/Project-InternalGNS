@@ -67,7 +67,10 @@ db/migrations/        goose migrations
    `internal/app/router.go` already carries its role gate; a mixed-access
    rule goes in the handler, with a negative test.
 6. Add table-driven unit tests and an integration test that creates the rows
-   it asserts on. Mirror the type in `apps/web/src/types/api.ts`.
+   it asserts on. Name every request and response type (no map or anonymous
+   struct bodies), add it to `cmd/gentypes/allowlist.go`, and run
+   `make gen-types`; commit the regenerated `apps/web/src/types/generated.ts`
+   with the change. CI fails when it is stale.
 
 ## 4. Errors
 

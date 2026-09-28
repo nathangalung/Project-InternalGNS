@@ -27,6 +27,7 @@ func TestEffectiveStatus_OneRuleEverywhere(t *testing.T) {
 		{name: "sent due today", status: "sent", dueDays: 0, want: invoices.StatusSent},
 		{name: "draft due ahead", status: "draft", dueDays: 5, want: invoices.StatusDraft},
 		{name: "paid past due", status: "paid", dueDays: -1, want: invoices.StatusPaid},
+		{name: "cancelled past due", status: "cancelled", dueDays: -1, want: invoices.StatusCancelled},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -61,6 +62,20 @@ func TestEffectiveStatus_OneRuleEverywhere(t *testing.T) {
 
 			inv, err := repo.GetByID(ctx, invID)
 			require.NoError(t, err)
+			assert.Equal(t, tc.want, inv.EffectiveStatus, "GetByID row")
+			byQuotation, err := repo.GetByQuotation(ctx, inv.QuotationID)
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, byQuotation.EffectiveStatus, "GetByQuotation row")
+			det, err := repo.GetDetail(ctx, invID)
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, det.EffectiveStatus, "GetDetail row")
+			det, err = repo.GetDetailByQuotation(ctx, inv.QuotationID)
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, det.EffectiveStatus, "GetDetailByQuotation row")
+			listed, err := repo.List(ctx, invoices.ListFilter{Q: inv.InvoiceNo, Limit: 10})
+			require.NoError(t, err)
+			require.Len(t, listed.Rows, 1)
+			assert.Equal(t, tc.want, listed.Rows[0].EffectiveStatus, "List row")
 			for _, s := range []invoices.Status{invoices.StatusDraft, invoices.StatusSent, invoices.StatusPaid, invoices.StatusOverdue} {
 				res, err := repo.List(ctx, invoices.ListFilter{Q: inv.InvoiceNo, EffectiveStatuses: []string{string(s)}, Limit: 10})
 				require.NoError(t, err)

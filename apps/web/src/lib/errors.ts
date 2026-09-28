@@ -27,11 +27,7 @@ export function isMissing(err: unknown): boolean {
 // A stable tag the server adds for conditions the web must branch on, such
 // as a stale version or a PO lock, so no caller matches on detail text.
 export function problemCode(err: unknown): string | undefined {
-  if (!(err instanceof ApiError)) return undefined
-  const body = err.body
-  if (typeof body !== "object" || body === null) return undefined
-  const code = (body as { code?: unknown }).code
-  return typeof code === "string" ? code : undefined
+  return err instanceof ApiError ? err.body?.code : undefined
 }
 
 export const VERSION_CONFLICT_CODE = "version_conflict"

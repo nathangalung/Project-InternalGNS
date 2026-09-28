@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_quotation_status (deployed by migration 00059).
+-- Canonical current body of fn_change_quotation_status (deployed by migration 00073).
 -- Validates the transition under a FOR UPDATE lock, blocks finalizing a
 -- quotation with unpriced products (ERRCODE P0100), records history, and
 -- creates the purchase order on acceptance.
@@ -59,7 +59,7 @@ BEGIN
         AND item_type = 'product'
         AND (selling_price IS NULL OR selling_price <= 0)
     ) THEN
-      RAISE EXCEPTION 'Quotation % has unpriced products', p_quotation_id
+      RAISE EXCEPTION 'Quotation % masih memiliki baris produk tanpa harga jual.', p_quotation_id
         USING ERRCODE = 'P0100';
     END IF;
   END IF;

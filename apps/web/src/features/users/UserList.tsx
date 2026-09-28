@@ -9,6 +9,7 @@ import SortIcon from "@/components/shared/SortIcon"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useUsers } from "@/features/users/hooks"
+import { formatDateShort } from "@/lib/format"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen } from "@/lib/useListScreen"
@@ -28,27 +29,6 @@ const ROLE_BADGE: Record<Role, { label: string; bg: string; color: string }> = {
   // Text darkened from #DA6900 (2.3:1) to 6.7:1.
   operational: { label: "OPERASIONAL", bg: "#FFE16D", color: "#92400E" },
   finance: { label: "FINANCE", bg: "#DBEAFE", color: "#1D4ED8" },
-}
-
-const MONTHS_ID = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "Mei",
-  "Jun",
-  "Jul",
-  "Agu",
-  "Sep",
-  "Okt",
-  "Nov",
-  "Des",
-]
-
-function formatDateID(iso: string): string {
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return iso
-  return `${d.getDate()} ${MONTHS_ID[d.getMonth()]} ${d.getFullYear()}`
 }
 
 export default function UserList() {
@@ -182,7 +162,7 @@ export default function UserList() {
                           {status.label}
                         </StatusBadge>
                       </td>
-                      <td className={ui.tdCenter}>{formatDateID(u.createdAt)}</td>
+                      <td className={ui.tdCenter}>{formatDateShort(u.createdAt)}</td>
                       <td className={ui.tdCenter}>
                         <Link
                           to="/users/$id"

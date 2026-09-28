@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_quotation (deployed by migration 00070).
+-- Canonical current body of fn_update_quotation (deployed by migration 00073).
 CREATE OR REPLACE FUNCTION public.fn_update_quotation(p_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_user_id bigint, p_notes text DEFAULT NULL::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -37,7 +37,8 @@ BEGIN
 
   -- 2. Validation
   IF p_items IS NULL OR jsonb_array_length(p_items) = 0 THEN
-    RAISE EXCEPTION 'Quotation must have at least 1 item';
+    RAISE EXCEPTION 'Quotation harus memiliki minimal satu baris.'
+      USING ERRCODE = 'P0014';
   END IF;
 
   IF p_discount_pct < 0 OR p_discount_pct > 100 THEN

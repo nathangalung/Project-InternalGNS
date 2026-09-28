@@ -130,3 +130,13 @@ func TestHandler_RefusalsRenderProblem(t *testing.T) {
 		})
 	}
 }
+
+// A client cancel is 499.
+func TestRenderStoreErr_ClientCancelIs499(t *testing.T) {
+	rec := httptest.NewRecorder()
+	renderStoreErr(context.Background(), rec, "put", "b", "k",
+		errors.Join(errors.New("put object"), context.Canceled), "upload failed")
+	if rec.Code != 499 {
+		t.Fatalf("status = %d, want 499", rec.Code)
+	}
+}

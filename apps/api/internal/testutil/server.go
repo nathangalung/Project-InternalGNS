@@ -55,6 +55,7 @@ func withRole(role string) func(http.Handler) http.Handler {
 }
 
 // QuotationServer wires routes for ATDD.
+// Items ride along, so an RFQ upload can go on to match its rows.
 func QuotationServer(t testing.TB, userID int64) *httptest.Server {
 	t.Helper()
 	pool := Pool(t)
@@ -63,6 +64,7 @@ func QuotationServer(t testing.TB, userID int64) *httptest.Server {
 	r := chi.NewRouter()
 	r.Use(withUserID(userID))
 	r.Mount("/quotations", quotations.Routes(deps.Deps{Pool: pool, Queries: store}))
+	r.Mount("/items", items.Routes(deps.Deps{Pool: pool, Tx: pool, Queries: store}))
 
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)

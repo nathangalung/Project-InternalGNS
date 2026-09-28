@@ -1,7 +1,12 @@
 import { ApiError } from "@/lib/api-client"
 import { errorMessage, isVersionConflict, problemCode } from "@/lib/errors"
 import { toNum } from "@/lib/format"
-import type { InvoiceBackendStatus, PurchaseOrderRow } from "@/types/api"
+import type {
+  InvoiceBackendStatus,
+  PoCompletenessIssue,
+  PoIncompleteProblem,
+  PurchaseOrderRow,
+} from "@/types/api"
 import type { PoStatus } from "../types"
 
 // PO status -> Indonesian label.
@@ -142,70 +147,17 @@ export function poBreakdown(po: PurchaseOrderRow): PoBreakdown {
   }
 }
 
-// One gap the server reported.
-export type CompletenessIssue = {
-  kind: "client" | "vendor" | "shipping"
-  // Client, vendor or PO id
-  id: number
-  // Parsed from the sentence when possible
-  name?: string
-  missing: string[]
-  // Server sentence, shown when parsing fails
-  message: string
-}
+// Readiness gate problem code.
+export const PO_INCOMPLETE_CODE = "po_incomplete"
 
-const ISSUE_KEY = /^(klien|vendor|pengiriman):(\d+)$/
-const ISSUE_TEXT = /^Data (?:klien|vendor) (.+) belum lengkap: (.+)$/
-const SHIPPING_TEXT = "Alamat pengiriman belum diisi"
-
-const KIND: Record<string, CompletenessIssue["kind"]> = {
-  klien: "client",
-  vendor: "vendor",
-  pengiriman: "shipping",
-}
-const KIND_ORDER: CompletenessIssue["kind"][] = ["client", "vendor", "shipping"]
-
-function recordIssue(kind: "client" | "vendor", id: number, message: string): CompletenessIssue {
-  const t = ISSUE_TEXT.exec(message)
-  return {
-    kind,
-    id,
-    name: t?.[1],
-    missing: t ? t[2].split(",").map((m) => m.trim()) : [],
-    message,
-  }
-}
-
-// The PO's shipping address gap.
-function shippingIssue(poId: number, message: string): CompletenessIssue {
-  const missing = message === SHIPPING_TEXT ? ["Alamat Pengiriman"] : []
-  return { kind: "shipping", id: poId, name: undefined, missing, message }
-}
-
-// Completeness 422 into issues.
+// Typed gaps of the gate.
 //
-// The ON_PROGRESS gate answers 422 with fields keyed klien:<id>,
-// vendor:<id> or pengiriman:<po id>. Returns null for any other body, so the
-// caller falls back to the plain error toast.
-export function parseCompletenessIssues(body: unknown): CompletenessIssue[] | null {
-  if (!body || typeof body !== "object") return null
-  const fields = (body as { fields?: unknown }).fields
-  if (!fields || typeof fields !== "object") return null
-  const issues: CompletenessIssue[] = []
-  for (const [key, value] of Object.entries(fields)) {
-    const k = ISSUE_KEY.exec(key)
-    if (!k) continue
-    const kind = KIND[k[1]]
-    const message = String(value).trim()
-    issues.push(
-      kind === "shipping"
-        ? shippingIssue(Number(k[2]), message)
-        : recordIssue(kind, Number(k[2]), message),
-    )
-  }
-  if (issues.length === 0) return null
-  // Client, vendors by id, then shipping.
-  return issues.sort(
-    (a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || a.id - b.id,
-  )
+// The ON_PROGRESS gate answers 422 with code po_incomplete and the gaps as
+// typed issues (client, vendors, then the PO's shipping address). Returns
+// null for any other failure, so the caller falls back to the plain toast.
+export function completenessIssues(err: unknown): PoCompletenessIssue[] | null {
+  if (!(err instanceof ApiError) || err.status !== 422) return null
+  const body: Partial<PoIncompleteProblem> | null = err.body
+  if (body?.code !== PO_INCOMPLETE_CODE || !Array.isArray(body.issues)) return null
+  return body.issues.length > 0 ? body.issues : null
 }

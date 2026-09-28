@@ -85,7 +85,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 			q.QuotationNo,
 			q.CreatedAt.In(tz.Jakarta()).Format("2006-01-02"),
 			q.CompanyName,
-			q.Status,
+			string(q.Status),
 			q.Subtotal,
 			q.TotalDiscount,
 			q.GrandTotal,
@@ -147,8 +147,11 @@ func (h *Handler) Revisions(w http.ResponseWriter, r *http.Request) {
 // Every later state is reached through fn_change_quotation_status, which owns
 // the transition table, the unpriced guard and PO creation. Returns nil when
 // the payload is acceptable.
-func validateCreateStatus(status *string) map[string]string {
-	if status == nil || strings.TrimSpace(*status) == "" || strings.TrimSpace(*status) == "draft" {
+func validateCreateStatus(status *Status) map[string]string {
+	if status == nil {
+		return nil
+	}
+	if s := strings.TrimSpace(string(*status)); s == "" || s == string(StatusDraft) {
 		return nil
 	}
 	return map[string]string{
@@ -213,7 +216,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErr(w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusCreated, map[string]int64{"id": id})
+	httpx.WriteJSON(w, http.StatusCreated, CreatedResponse{ID: id})
 }
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
@@ -266,10 +269,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErr(w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{
-		"id":         id,
-		"rowVersion": newVersion,
-	})
+	httpx.WriteJSON(w, http.StatusOK, UpdatedResponse{ID: id, RowVersion: newVersion})
 }
 
 func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
@@ -300,7 +300,7 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 // validateChangeStatus checks the body shape.
 // The transition itself is judged by the database under its row lock.
 func validateChangeStatus(req ChangeStatusRequest) map[string]string {
-	if strings.TrimSpace(req.Status) == "" {
+	if strings.TrimSpace(string(req.Status)) == "" {
 		return map[string]string{"status": "Status wajib diisi."}
 	}
 	if noteRequired(req.Status) && (req.Note == nil || strings.TrimSpace(*req.Note) == "") {
@@ -343,7 +343,7 @@ func (h *Handler) Revise(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusCreated, map[string]int64{"id": newID})
+	httpx.WriteJSON(w, http.StatusCreated, CreatedResponse{ID: newID})
 }
 
 func (h *Handler) ChangeContact(w http.ResponseWriter, r *http.Request) {
@@ -359,7 +359,7 @@ func (h *Handler) ChangeContact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.ContactID == 0 {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"contactId": "required"}))
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"contactId": "Pilih narahubung."}))
 		return
 	}
 
@@ -371,8 +371,13 @@ func (h *Handler) ChangeContact(w http.ResponseWriter, r *http.Request) {
 		}
 		if errors.Is(err, ErrContactNotAllowed) {
 			httperr.Render(w, httperr.Unprocessable(map[string]string{
-				"contactId": "contact not found or does not belong to this client",
+				"contactId": "Narahubung tidak ditemukan, sudah nonaktif, atau bukan milik klien ini.",
 			}))
+			return
+		}
+		if errors.Is(err, ErrContactLocked) {
+			httperr.Render(w, httperr.UnprocessableDetail(
+				"Narahubung hanya dapat diganti saat quotation berstatus Draf atau Disetujui.", nil))
 			return
 		}
 		httperr.RenderDBErr(w, err)
@@ -391,9 +396,7 @@ func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 	}
 	note := "Quotation dikirim ke klien"
 	if r.Body != nil {
-		var body struct {
-			Note *string `json:"note,omitempty"`
-		}
+		var body SendRequest
 		_ = json.NewDecoder(r.Body).Decode(&body)
 		if body.Note != nil && strings.TrimSpace(*body.Note) != "" {
 			note = *body.Note

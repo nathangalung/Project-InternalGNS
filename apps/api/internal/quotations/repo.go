@@ -32,6 +32,7 @@ var (
 	ErrVersionMismatch   = errors.New("quotation version mismatch")
 	ErrUnpricedProducts  = errors.New("product lines without a selling price")
 	ErrContactNotAllowed = errors.New("contact not allowed")
+	ErrContactLocked     = errors.New("contact locked by status")
 )
 
 // Filter and sort params.
@@ -71,7 +72,7 @@ var tiebreak = listq.Column{Expr: "q.id", Dir: listq.Desc}
 func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
-		p := c.Arg("%" + f.Q + "%")
+		p := c.Arg(listq.Contains(f.Q))
 		c.And("(q.quotation_no ILIKE " + p + " OR q.company_client_name ILIKE " + p + ")")
 	}
 	if len(f.Statuses) > 0 {
@@ -129,7 +130,7 @@ func (r *Repo) Stats(ctx context.Context) ([]StatusCount, error) {
 	if err != nil {
 		return nil, fmt.Errorf("quotation stats: %w", err)
 	}
-	by := make(map[string]int64, len(counted))
+	by := make(map[Status]int64, len(counted))
 	for _, c := range counted {
 		by[c.Status] = c.Count
 	}
@@ -255,7 +256,7 @@ func (r *Repo) Update(
 // ChangeStatus calls fn_change_quotation_status atomically. Finalizing
 // (sent/accepted) requires every product priced; that guard runs inside the
 // function under its row lock and surfaces as SQLSTATE P0100.
-func (r *Repo) ChangeStatus(ctx context.Context, id int64, status string, note *string, userID int64) error {
+func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, note *string, userID int64) error {
 	_, err := r.db.Exec(ctx, r.store.Get("quotations.fn_change_status"),
 		id, status, userID, note,
 	)
@@ -280,6 +281,8 @@ func (r *Repo) UpdateContact(ctx context.Context, id, contactID, userID int64) e
 		return ErrNotFound
 	case "contact_invalid":
 		return ErrContactNotAllowed
+	case "status_locked":
+		return ErrContactLocked
 	}
 	return nil
 }

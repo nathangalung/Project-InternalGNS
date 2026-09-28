@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "@/lib/api-client"
+import { problem } from "@/test/problem"
 import type { AdvancedSearchHit, AdvancedSearchResponse, AdvancedSearchTier } from "@/types/api"
 import {
   addVendorError,
@@ -150,9 +151,13 @@ describe("apiFieldError", () => {
   const inactive = "Vendor sudah nonaktif. Aktifkan vendor itu atau pilih vendor lain."
 
   it.each([
-    ["422 field", new ApiError(422, { fields: { vendorId: inactive } }, inactive), inactive],
-    ["other field", new ApiError(422, { fields: { name: "x" } }, "x"), undefined],
-    ["blank value", new ApiError(422, { fields: { vendorId: "  " } }, ""), undefined],
+    [
+      "422 field",
+      new ApiError(422, problem(422, { fields: { vendorId: inactive } }), inactive),
+      inactive,
+    ],
+    ["other field", new ApiError(422, problem(422, { fields: { name: "x" } }), "x"), undefined],
+    ["blank value", new ApiError(422, problem(422, { fields: { vendorId: "  " } }), ""), undefined],
     ["no body", new ApiError(500, null, "boom"), undefined],
     ["plain error", new Error("x"), undefined],
   ])("%s", (_name, err, want) => {
@@ -163,21 +168,25 @@ describe("apiFieldError", () => {
 describe("addVendorError", () => {
   it("puts an inactive vendor on the field", () => {
     const msg = "Vendor sudah nonaktif."
-    expect(addVendorError(new ApiError(422, { fields: { vendorId: msg } }, msg))).toEqual({
+    expect(
+      addVendorError(new ApiError(422, problem(422, { fields: { vendorId: msg } }), msg)),
+    ).toEqual({
       field: msg,
     })
   })
 
   it("puts an unknown vendor on the field", () => {
     expect(
-      addVendorError(new ApiError(404, { detail: "vendor not found" }, "vendor not found")),
+      addVendorError(
+        new ApiError(404, problem(404, { detail: "vendor not found" }), "vendor not found"),
+      ),
     ).toEqual({ field: "Vendor tidak ditemukan. Pilih vendor lain." })
   })
 
   it.each([
     [
       "api detail",
-      new ApiError(409, { detail: "Sudah terkait." }, "Sudah terkait."),
+      new ApiError(409, problem(409, { detail: "Sudah terkait." }), "Sudah terkait."),
       "Sudah terkait.",
     ],
     ["empty message", new ApiError(500, null, ""), "Gagal menambah vendor."],

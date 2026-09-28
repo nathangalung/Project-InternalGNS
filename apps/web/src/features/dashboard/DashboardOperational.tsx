@@ -9,6 +9,7 @@ import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboard/hooks"
 import { useQuotations } from "@/features/quotations/hooks"
 import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
+import { yearInJakarta } from "@/lib/date-range"
 import { formatNumber as formatId } from "@/lib/format"
 import { pill, ui } from "@/lib/ui"
 import DashboardFinancialFilter, {
@@ -34,7 +35,7 @@ export default function DashboardOperational() {
     isError: quotationsError,
   } = useQuotations({ limit: 5 })
 
-  const baseYear = filters?.year ?? new Date().getFullYear()
+  const baseYear = filters?.year ?? yearInJakarta()
   const selectedMonth = filters?.month ?? null // null = whole year
   const interval: "month" | "day" = selectedMonth === null ? "month" : "day"
   const { from, to } =

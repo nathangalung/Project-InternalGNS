@@ -107,6 +107,8 @@ middleware chain; the feature-slice import rule in the SPA (one violation).
   concrete `*clients.Repo` pointers, not ports.
 - **The declared API contract is fiction** — `openapi.yaml` documents 2 of 93 routes;
   `openapi.gen.ts` is imported by zero files.
+  *Status 2026-09: `openapi.yaml` is retired, and the web types are generated
+  from the Go DTOs (`apps/api/cmd/gentypes`, `make gen-types`, CI diff check).*
 - **Storage bytes bypass the resource layer** — presign authorizes a record; the byte
   proxy takes free-form `bucket`+`key` and authorizes nothing.
 
@@ -272,7 +274,7 @@ take `users.Role`. Frontend: render Sidebar once in `_authed.tsx`, delete `lib/p
 `page-nav.ts`, one `useListSearchState`, server-side product search paging [#20].
 
 **Phase 9 — Decide & delete.** Remove tailwind (3 incidental classes; CLAUDE.md says plain
-CSS). Delete or fix `openapi.yaml`. Reconcile `design-tokens.css` to the `#630ED4`
+CSS). Delete or fix `openapi.yaml` (done 2026-09: deleted). Reconcile `design-tokens.css` to the `#630ED4`
 actually shipping and migrate the ~100 lines of shared chip/dropdown styles to `var(--)`
 (not all 880 literals).
 

@@ -61,6 +61,11 @@ jobs:
       - name: go vet
         run: go vet ./...
 
+      - name: web types match the Go DTOs
+        run: |
+          go run ./cmd/gentypes -out ../web/src/types/generated.ts
+          git diff --exit-code -- ../web/src/types/generated.ts
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
@@ -189,9 +194,8 @@ jobs:
       - name: install deps
         run: bun install --frozen-lockfile
 
-      # Ignore uuid GHSA: exceljs/lhci use v4 only, no buf param, not exploitable.
       - name: audit deps
-        run: bun audit --prod --ignore GHSA-w5hq-g745-h8pq
+        run: bun audit --prod
 
       - name: lint
         run: bun run lint

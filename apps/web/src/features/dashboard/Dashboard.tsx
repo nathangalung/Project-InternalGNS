@@ -16,6 +16,7 @@ import {
   useDashboardTimeseries,
 } from "@/features/dashboard/hooks"
 import { buildSeries, yearRange } from "@/lib/chart"
+import { yearInJakarta } from "@/lib/date-range"
 import {
   formatNumber as formatId,
   formatRupiah as formatRp,
@@ -64,7 +65,7 @@ export default function Dashboard() {
     return to ? () => void navigate({ to }) : undefined
   }
 
-  const thisYear = new Date().getFullYear()
+  const thisYear = yearInJakarta()
   const [baseYear, setBaseYear] = useState(thisYear)
   const yearOptions = YEAR_OPTIONS
   const { from, to } = yearRange(baseYear)

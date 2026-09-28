@@ -4,10 +4,10 @@ import RowsPerPageMenu from "@/components/shared/RowsPerPageMenu"
 import { matchRows } from "@/features/items/api"
 import { getPageNumbers } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
+import { parseRfq } from "./api"
 import { isValidQty, QTY_ERROR, requestDiffers, requestedCode } from "./lines"
-import type { ProductItem } from "./QuotationEdit"
 import QuotationReviewCard from "./QuotationReviewCard"
-import { parseProductFile } from "./uploadParser"
+import type { ProductItem } from "./wizard"
 import { qe, qep } from "./wizard-styles"
 
 const pageBtn = `flex h-8 w-8 items-center justify-center rounded-sm text-sm transition ${ui.focusRing}`
@@ -79,29 +79,10 @@ export default function Step2Product({
     if (!file) return
     e.target.value = ""
 
-    const lower = file.name.toLowerCase()
-    const supported = lower.endsWith(".xlsx") || lower.endsWith(".csv")
-    if (!supported) {
-      setImportMsg({
-        text: "Format file tidak didukung. Gunakan .csv atau .xlsx (simpan ulang file .xls sebagai .xlsx).",
-        ok: false,
-      })
-      setTimeout(() => setImportMsg(null), 4000)
-      return
-    }
-
+    // The API checks the format and refuses a file without product rows.
     setImporting(true)
     try {
-      const rows = await parseProductFile(file)
-      if (rows.length === 0) {
-        setImportMsg({
-          text: "Tidak ada produk valid dalam file. Pastikan kolom 'Nama Produk' tersedia.",
-          ok: false,
-        })
-        setTimeout(() => setImportMsg(null), 4000)
-        return
-      }
-
+      const rows = await parseRfq(file)
       const resp = await matchRows(rows, { autoCreate: true })
       const baseId = products.reduce((m, p) => Math.max(m, p.id), 0)
       const built: ProductItem[] = resp.rows.map((r, i) => {

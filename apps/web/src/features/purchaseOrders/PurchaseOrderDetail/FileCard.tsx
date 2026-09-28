@@ -1,3 +1,4 @@
+import { JAKARTA_TZ } from "@/lib/date-range"
 import { ui } from "@/lib/ui"
 
 type FileCardProps = {
@@ -32,6 +33,7 @@ function formatUploadedAt(iso?: string): string {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: JAKARTA_TZ,
   })
 }
 

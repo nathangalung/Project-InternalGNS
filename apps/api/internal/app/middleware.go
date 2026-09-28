@@ -93,6 +93,8 @@ func accessLogMiddleware(next http.Handler) http.Handler {
 		}
 		level := slog.LevelInfo
 		switch {
+		case status == httperr.StatusClientClosedRequest:
+			// The client left first; nothing to fix on either side.
 		case status == http.StatusServiceUnavailable:
 			// Backpressure (timeout, storage disabled) is not a crash; keep it
 			// off the Error stream so 5xx alerts do not page on load.

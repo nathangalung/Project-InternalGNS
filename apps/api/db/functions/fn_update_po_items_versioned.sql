@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_po_items_versioned (deployed by migration 00029).
+-- Canonical current body of fn_update_po_items_versioned (deployed by migration 00073).
 CREATE OR REPLACE FUNCTION public.fn_update_po_items_versioned(p_po_id bigint, p_if_match integer, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS integer
  LANGUAGE plpgsql
@@ -13,11 +13,11 @@ BEGIN
   FOR UPDATE;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'purchase order % not found', p_po_id USING ERRCODE = 'P0011';
+    RAISE EXCEPTION 'PO % tidak ditemukan.', p_po_id USING ERRCODE = 'P0011';
   END IF;
 
   IF v_current <> p_if_match THEN
-    RAISE EXCEPTION 'row_version mismatch (expected %, got %)', v_current, p_if_match
+    RAISE EXCEPTION 'Data sudah diubah pengguna lain (versi %, dikirim %).', v_current, p_if_match
       USING ERRCODE = 'P0010';
   END IF;
 

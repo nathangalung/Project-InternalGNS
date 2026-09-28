@@ -13,6 +13,7 @@ import {
   fetchObjectUrl,
   getRefreshToken,
   nullOn404,
+  postForm,
   saveBlob,
   setOnAuthExpired,
   setTokens,
@@ -121,7 +122,12 @@ describe("apiRequest", () => {
   })
 
   it("keeps the problem body on the error", async () => {
-    const problem = { title: "Conflict", detail: "Nomor PO sudah dipakai." }
+    const problem = {
+      type: "about:blank",
+      title: "Conflict",
+      status: 409,
+      detail: "Nomor PO sudah dipakai.",
+    }
     serve(() => json(problem, { status: 409 }))
     const err = await apiRequest({ path: "/x", authed: false }).catch((e: unknown) => e)
     expect(err).toMatchObject({ status: 409, body: problem, message: "Nomor PO sudah dipakai." })
@@ -183,7 +189,12 @@ describe("session refresh", () => {
     setTokens({ token: "old", refreshToken: "r1" })
     const expired = vi.fn()
     setOnAuthExpired(expired)
-    const calls = serve(() => json({ detail: "Token tidak valid." }, { status: 401 }))
+    const calls = serve(() =>
+      json(
+        { type: "about:blank", title: "Unauthorized", status: 401, detail: "Token tidak valid." },
+        { status: 401 },
+      ),
+    )
     const err = await apiRequest({ path: "/auth/refresh", method: "POST" }).catch((e: unknown) => e)
     expect(err).toMatchObject({ status: 401, message: "Token tidak valid." })
     expect(calls).toHaveLength(1)
@@ -210,7 +221,12 @@ describe("apiList", () => {
   })
 
   it("throws the problem detail on failure", async () => {
-    serve(() => json({ detail: "Akses ditolak." }, { status: 403 }))
+    serve(() =>
+      json(
+        { type: "about:blank", title: "Forbidden", status: 403, detail: "Akses ditolak." },
+        { status: 403 },
+      ),
+    )
     await expect(apiList({ path: "/users" })).rejects.toMatchObject({
       status: 403,
       message: "Akses ditolak.",
@@ -330,7 +346,17 @@ describe("downloads", () => {
 
   it("surfaces a 409 detail written for the user", async () => {
     stubPicker()
-    serve(() => json({ detail: "Surat jalan belum terbit." }, { status: 409 }))
+    serve(() =>
+      json(
+        {
+          type: "about:blank",
+          title: "Conflict",
+          status: 409,
+          detail: "Surat jalan belum terbit.",
+        },
+        { status: 409 },
+      ),
+    )
     await expect(downloadPdf("/po/1/dn", "a.pdf")).rejects.toMatchObject({
       status: 409,
       message: "Surat jalan belum terbit.",
@@ -396,6 +422,32 @@ describe("uploadAsset", () => {
     await expect(uploadAsset("/storage/x", new File(["x"], "a.exe"))).rejects.toMatchObject({
       status: 400,
       message: "Jenis berkas tidak diizinkan.",
+    })
+  })
+})
+
+describe("postForm", () => {
+  it("POSTs the form and lets the browser set the boundary", async () => {
+    const calls = serve(() => json({ rows: [] }))
+    const form = new FormData()
+    form.append("file", new File(["x"], "a.xlsx"))
+    await expect(postForm("/quotations/rfq", form)).resolves.toEqual({ rows: [] })
+    expect(calls[0].path).toBe("/quotations/rfq")
+    expect(calls[0].init.method).toBe("POST")
+    expect(calls[0].init.body).toBe(form)
+    expect(header(calls[0], "content-type")).toBeNull()
+  })
+
+  it("surfaces the server detail", async () => {
+    serve(() =>
+      json(
+        { status: 422, title: "Unprocessable Entity", detail: "Berkas kosong." },
+        { status: 422 },
+      ),
+    )
+    await expect(postForm("/quotations/rfq", new FormData())).rejects.toMatchObject({
+      status: 422,
+      message: "Berkas kosong.",
     })
   })
 })

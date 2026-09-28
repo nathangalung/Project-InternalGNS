@@ -4,9 +4,16 @@ import type {
   ClientSearchHit,
   ClientSummary,
   ContactRow,
+  CreateClientInput,
+  CreateContactInput,
+  ObjectKeyInput,
   PresignDownload,
   PresignUpload,
+  UpdateClientInput,
+  UpdateContactInput,
 } from "@/types/api"
+
+export type { UpdateClientInput, UpdateContactInput } from "@/types/api"
 
 export async function summary(): Promise<ClientSummary> {
   return apiRequest<ClientSummary>({ path: "/clients/summary" })
@@ -49,15 +56,6 @@ export async function search(
   return apiRequest<ClientSearchHit[]>({ path: `/clients/search?${qs}` })
 }
 
-type CreateClientInput = {
-  name: string
-  npwp?: string
-  address?: string
-  email?: string
-  countryCode?: string
-  tkuId?: string
-}
-
 export async function create(input: CreateClientInput): Promise<ClientRow> {
   return apiRequest<ClientRow>({
     path: "/clients",
@@ -66,41 +64,12 @@ export async function create(input: CreateClientInput): Promise<ClientRow> {
   })
 }
 
-export type UpdateClientInput = {
-  name: string
-  npwp?: string
-  address?: string
-  email?: string
-  countryCode: string
-  tkuId?: string
-  isActive: boolean
-}
-
 export async function update(id: number, input: UpdateClientInput): Promise<ClientRow> {
   return apiRequest<ClientRow>({
     path: `/clients/${id}`,
     method: "PUT",
     body: input,
   })
-}
-
-type CreateContactInput = {
-  name: string
-  email?: string
-  phone?: string
-  title?: string
-  countryCode?: string
-}
-
-// Absent keeps; empty clears.
-//
-// An absent field keeps its value; "" or null clears it.
-export type UpdateContactInput = {
-  name: string
-  email?: string | null
-  phone?: string
-  title?: string | null
-  countryCode: string
 }
 
 export async function listContacts(companyId: number): Promise<ContactRow[]> {
@@ -150,6 +119,6 @@ export async function updateLogo(id: number, objectKey: string): Promise<void> {
   await apiRequest<void>({
     path: `/clients/${id}/logo`,
     method: "PATCH",
-    body: { objectKey },
+    body: { objectKey } satisfies ObjectKeyInput,
   })
 }

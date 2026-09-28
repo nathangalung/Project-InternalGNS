@@ -74,6 +74,13 @@ Feature: Quotation edges and access
     Then the response status is 204
     And the quotation contact is that contact
 
+  Scenario: A sent quotation keeps its contact
+    Given an existing draft quotation
+    When the user sends the quotation
+    And the user changes the contact to another contact of the same client
+    Then the response status is 422
+    And the problem detail mentions "hanya dapat diganti saat quotation berstatus Draf atau Disetujui"
+
   Scenario Outline: Finance is refused every quotation endpoint
     Given an existing draft quotation
     When a "<role>" user calls <method> "<path>" through the API
@@ -92,6 +99,7 @@ Feature: Quotation edges and access
       | finance     | POST   | /quotations/{id}/send          | 403  |
       | finance     | PATCH  | /quotations/{id}/contact       | 403  |
       | finance     | GET    | /quotations/{id}/pdf           | 403  |
+      | finance     | POST   | /quotations/rfq                | 403  |
       | operational | GET    | /quotations                    | 200  |
       | operational | GET    | /quotations/{id}               | 200  |
       | superadmin  | GET    | /quotations/{id}/requests      | 200  |

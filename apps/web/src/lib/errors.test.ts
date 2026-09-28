@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { problem } from "@/test/problem"
 import { ApiError } from "./api-client"
 import {
   errorMessage,
@@ -40,9 +41,8 @@ describe("errorMessage", () => {
 
 describe("problemCode", () => {
   it.each<[string, unknown, string | undefined]>([
-    ["tagged", new ApiError(409, { code: "po_locked" }, "x"), "po_locked"],
-    ["no code", new ApiError(409, { detail: "x" }, "x"), undefined],
-    ["non-string code", new ApiError(409, { code: 7 }, "x"), undefined],
+    ["tagged", new ApiError(409, problem(409, { code: "po_locked" }), "x"), "po_locked"],
+    ["no code", new ApiError(409, problem(409, { detail: "x" }), "x"), undefined],
     ["null body", new ApiError(409, null, "x"), undefined],
     ["plain Error", new Error("x"), undefined],
   ])("%s", (_name, err, want) => {
@@ -51,12 +51,16 @@ describe("problemCode", () => {
 })
 
 describe("isVersionConflict", () => {
-  const body = { status: 409, code: VERSION_CONFLICT_CODE, detail: "Data ini baru saja diubah." }
+  const body = problem(409, { code: VERSION_CONFLICT_CODE, detail: "Data ini baru saja diubah." })
   it.each<[string, unknown, boolean]>([
-    ["tagged 409", new ApiError(409, body, body.detail), true],
-    ["lock 409", new ApiError(409, { code: "po_locked" }, "Invoice sudah terbit."), false],
+    ["tagged 409", new ApiError(409, body, "x"), true],
+    [
+      "lock 409",
+      new ApiError(409, problem(409, { code: "po_locked" }), "Invoice sudah terbit."),
+      false,
+    ],
     ["untagged 409 naming row_version", new ApiError(409, null, "row_version mismatch"), false],
-    ["tag outside a 409", new ApiError(422, body, body.detail), false],
+    ["tag outside a 409", new ApiError(422, body, "x"), false],
     ["plain Error", new Error("version_conflict"), false],
   ])("%s", (_name, err, want) => {
     expect(isVersionConflict(err)).toBe(want)
