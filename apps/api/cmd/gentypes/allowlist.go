@@ -25,8 +25,6 @@ var allowlist = []pkg{
 	{"internal/auth", []entry{
 		{Go: "LoginRequest", TS: "LoginInput", Input: true},
 		{Go: "LoginResponse", TS: "LoginResponse"},
-		{Go: "RefreshRequest", TS: "RefreshInput", Input: true},
-		{Go: "LogoutRequest", TS: "LogoutInput", Input: true},
 		{Go: "MeUser", TS: "MeUser"},
 		{Go: "ChangeOwnPasswordRequest", TS: "ChangeOwnPasswordInput", Input: true},
 	}},

@@ -172,6 +172,8 @@ func TestHandler_Login_SetsRefreshCookie(t *testing.T) {
 	var body map[string]any
 	require.NoError(t, json.Unmarshal(raw, &body))
 	assert.NotEmpty(t, body["token"])
+	assert.NotContains(t, body, "refreshToken")
+	assert.NotContains(t, body, "refreshExpiresAt")
 }
 
 // Refresh rotates the cookie.

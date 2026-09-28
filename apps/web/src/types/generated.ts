@@ -361,14 +361,7 @@ export type LoginInput = {
 export type LoginResponse = {
     token: string;
     expiresAt: number;
-    refreshToken: string;
-    refreshExpiresAt: number;
     user: MeUser;
-};
-
-// From auth/dto.go
-export type LogoutInput = {
-    refreshToken: string;
 };
 
 // From items/dto.go
@@ -862,11 +855,6 @@ export type QuotationUpdateInput = {
     shippingCost?: string;
     items: QuotationItemInput[];
     notes?: string;
-};
-
-// From auth/dto.go
-export type RefreshInput = {
-    refreshToken: string;
 };
 
 // From users/dto.go

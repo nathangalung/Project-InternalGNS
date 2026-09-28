@@ -7,12 +7,12 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+// LoginResponse is the session body.
+// It never carries the refresh token, which travels only in the cookie.
 type LoginResponse struct {
-	Token            string `json:"token"`
-	ExpiresAt        int64  `json:"expiresAt"`
-	RefreshToken     string `json:"refreshToken"`
-	RefreshExpiresAt int64  `json:"refreshExpiresAt"`
-	User             MeUser `json:"user"`
+	Token     string `json:"token"`
+	ExpiresAt int64  `json:"expiresAt"`
+	User      MeUser `json:"user"`
 }
 
 // Session is a minted session.
@@ -22,14 +22,6 @@ type Session struct {
 	LoginResponse
 	RefreshToken     string
 	RefreshExpiresAt int64
-}
-
-type RefreshRequest struct {
-	RefreshToken string `json:"refreshToken"`
-}
-
-type LogoutRequest struct {
-	RefreshToken string `json:"refreshToken"`
 }
 
 type MeUser struct {

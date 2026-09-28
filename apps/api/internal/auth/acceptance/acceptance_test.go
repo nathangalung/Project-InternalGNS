@@ -234,6 +234,9 @@ func (s *scenarioState) tokensIssued() error {
 	if tok, _ := resp["token"].(string); tok == "" {
 		return fmt.Errorf("want an access token body=%s", s.body)
 	}
+	if _, ok := resp["refreshToken"]; ok {
+		return fmt.Errorf("want no refreshToken member body=%s", s.body)
+	}
 	c := s.refreshCookie()
 	if c == nil || c.Value == "" {
 		return fmt.Errorf("want a refresh cookie got %v", s.last.Header.Values("Set-Cookie"))
