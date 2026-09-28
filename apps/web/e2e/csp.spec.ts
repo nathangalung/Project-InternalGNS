@@ -11,6 +11,10 @@ import { apiURL } from "./support/env"
 const underPolicy = process.env.E2E_CSP === "enforce"
 const policy = sitePolicy(new URL(apiURL).origin)
 
+test("compose.prod.yml enforces the content policy", () => {
+  expect(policy.enforced).toBe(true)
+})
+
 test.describe("served under the production policy", () => {
   test.skip(!underPolicy, "needs the CSP preview: bun run e2e:csp")
   test.use({ session: "anonymous", cspGuard: false })

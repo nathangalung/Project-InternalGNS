@@ -337,7 +337,7 @@ docker exec "$P-gns-minio-1" sh -c \
 | `curl https://api…/healthz`                    | `200 ok` (process up)                                      |
 | `curl https://api…/readyz`                     | `200` (database reachable)                                 |
 | `curl -sI https://api…/healthz`                | `strict-transport-security: max-age=31536000`              |
-| `curl -sI https://internalgns…/login`          | `strict-transport-security` and `content-security-policy-report-only` |
+| `curl -sI https://internalgns…/login`          | `strict-transport-security` and `content-security-policy` (not `-report-only`) |
 | Login with superadmin                          | redirects to dashboard                                     |
 | Create a client                                | success, X-Total-Count increments                          |
 | Upload a logo                                  | object appears in MinIO `client-logos`                     |
@@ -361,7 +361,7 @@ curl -si -X POST https://api…/api/v1/auth/refresh \
 | Task             | How                                                                                |
 | ---------------- | ---------------------------------------------------------------------------------- |
 | Redeploy         | bump `TAG=` in env (UI, or the script below), then **Deploy** in Dokploy UI        |
-| Rollback         | restore the pre-deploy snapshot, then set `TAG=` back (section 14; a tag alone breaks login from 00066) |
+| Rollback         | restore the pre-deploy snapshot, then set `TAG=` back (section 14; a tag alone breaks login from 00066; to v0.5.0 the CSP label goes back to report-only) |
 | Logs             | Dokploy UI → Logs tab (per-service)                                                |
 | Backup, restore  | `docs/backup_restore.md`: nightly host timer, restore rehearsal, disaster restore  |
 | DB shell         | `docker exec -it "$P-gns-postgres-1" sh -c 'psql -U "$POSTGRES_USER" "$POSTGRES_DB"'` |
@@ -433,28 +433,45 @@ TLS. They are set in the `compose.prod.yml` labels:
 - `Strict-Transport-Security: max-age=31536000` on both hosts. There is no
   `includeSubDomains` or `preload` until every sibling host is known to be
   HTTPS-only.
-- `Content-Security-Policy-Report-Only` on the web host. It allows exactly what
+- `Content-Security-Policy` on the web host, enforced. It allows exactly what
   the SPA loads: its own scripts, styles and fonts, `blob:` and `data:` images
   (logos and upload previews), and `https://<API_HOST>` for API calls. The API
-  already sends its own `default-src 'none'` policy on its responses.
+  already sends its own `default-src 'none'` policy on its responses. The label
+  is the only copy: `nginx.conf` and `index.html` carry no policy, since two
+  layers setting one intersect.
 
-On 2026-09-25 this policy was checked through a local Traefik v3.6.7 in front of
-the production images. Every screen, a logo upload, an RFQ `.xlsx` import (which
-loads exceljs) and a PDF opened in a `blob:` tab produced no report. A planted
-inline script, inline style and remote image did produce reports, so the check
-was live.
+The policy is enforced because the whole Playwright suite runs under it.
+`make e2e-csp` (and the CI e2e job, as `bun run e2e:csp`) builds the SPA
+against a separate API origin, as a release does, serves `dist` through
+`vite preview` with the policy read from this label, and fails any test whose
+browser reports a violation. The one difference from production is the API
+origin in `connect-src`: the local API instead of `https://${API_HOST}`.
+`e2e/csp.spec.ts` keeps the check honest: it fails unless the served header is
+the enforcing one with that exact policy, unless a planted inline script is
+refused and reported, and unless this label is the enforcing key.
 
-There is no report endpoint, so violations only appear in the browser console
-as `[Report Only] Refused to ...`. To enforce the policy:
+On 2026-09-28 the suite ran green under the policy: 193 tests over every
+route, modal, upload, RFQ import and PDF export, with no violation. The one
+refusal the run found, before the fix, was the `<style>` element Base UI's
+Select injects to hide its scrollbar; `main.tsx` turns those elements off
+with `CSPProvider` and the rule lives in `tailwind.css`.
 
-1. After a release ships, have a superadmin, a finance user and an operational
-   user each go through their daily screens with DevTools open, including a
-   PDF export, an upload and an RFQ import.
-2. If two weeks pass with no `[Report Only]` line, rename the label key from
-   `Content-Security-Policy-Report-Only` to `Content-Security-Policy` and
-   redeploy.
-3. If a line appears, fix the cause or widen the one directive it names. Never
-   add `'unsafe-inline'` or `'unsafe-eval'` to `script-src`.
+A violation is no longer a console line; it breaks the feature, since the
+browser refuses the script, style, image or request. So:
+
+1. A change that loads something new (a font from a CDN, an inline `<style>`
+   from a dependency, a new API host) fails `make e2e-csp` before it ships.
+   Fix the cause, or widen the one directive the failure names. Never add
+   `'unsafe-inline'` or `'unsafe-eval'` to `script-src`.
+2. If users report a screen that renders unstyled or does nothing after a
+   deploy, open DevTools: an enforced refusal reads `Refused to ... because
+   it violates the following Content Security Policy directive`.
+3. To stop enforcing in an emergency, rename the label key back to
+   `Content-Security-Policy-Report-Only` on `main` and redeploy. Dokploy reads
+   `compose.prod.yml` from `main` (section 3), so it is a commit, not a UI edit.
+
+`API_HOST` must be the exact API hostname: `connect-src` names it, so a wrong
+value refuses every API call from the browser, login included.
 
 ## 13. Pre-deploy checks
 
@@ -481,6 +498,11 @@ changes how a browser holds its session, with no migration.
   answers 403, and the API would ignore its body token anyway), and
   a new SPA against an old API gets no cookie, so both mixes sign users out
   whenever the access token expires or the page reloads.
+- The same release enforces the SPA content policy (section 12). Dokploy
+  reads `compose.prod.yml` from `main`, so the enforcing label ships with
+  the merge, not with `TAG`: merge and set the new `TAG` together, since
+  only this release's SPA was proven under the enforced policy. `API_HOST`
+  must be the exact API hostname, because `connect-src` names it.
 
 ### Migration order
 
@@ -632,12 +654,19 @@ invoices included. Step 2 keeps a copy of that work; operations decides how
 each document written after the deploy is handled, since a filed invoice is
 never restated.
 
-Rolling back across the cookie sessions release (section 13) signs everyone
-out once more: the older images return the refresh token in the body and the
-older SPA keeps it in `sessionStorage`. A `gns_refresh` cookie left in a
-browser is harmless, since the older API never reads it and it ends with the
-browser session. The older API still accepts the exact
-`CORS_ALLOWED_ORIGINS` value, so the environment needs no change.
+Rolling back across the cookie sessions release (section 13), to v0.5.0 or
+older, takes two more things:
+
+- Everyone logs in again: the older images return the refresh token in the
+  body and the older SPA keeps it in `sessionStorage`. A `gns_refresh`
+  cookie left in a browser is harmless, since the older API never reads it
+  and it ends with the browser session. The older API still accepts the exact
+  `CORS_ALLOWED_ORIGINS` value, so the environment needs no change.
+- The content policy goes back to report-only. Only this release's SPA was
+  proven under the enforced policy, so before step 7 rename the label key in
+  `compose.prod.yml` back to `Content-Security-Policy-Report-Only` and
+  merge that to `main`, where Dokploy reads it. Setting `TAG` alone keeps
+  the enforcing label on the older SPA.
 
 That decision comes too late to protect the numbers. A document number is
 the client number plus a counter in `doc_sequences`, and new clients draw
@@ -723,7 +752,8 @@ raise
 ```
 
 7. In Dokploy set `TAG` to the tag noted in section 13 and **Deploy**. The
-   restored schema is the one that image last ran, so nothing migrates.
+   restored schema is the one that image last ran, so nothing migrates. For
+   v0.5.0 or older, the report-only label is on `main` first (above).
 8. Check `https://<API_HOST>/readyz`, log in, and open a quotation PDF and a
    client logo. Login writes a refresh token, the insert a tag-only rollback
    breaks.
