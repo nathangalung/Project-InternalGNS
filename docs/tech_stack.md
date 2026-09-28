@@ -16,6 +16,7 @@ matching `go.mod`, `package.json`, `Dockerfile`, or compose file.
 | golang-jwt | v5.3.1 | `go.mod` |
 | minio-go | v7.3.0 | `go.mod` |
 | excelize | v2.11.0 | `go.mod` |
+| coder/guts (web API type generator, `cmd/gentypes`) | v1.7.1 | `go.mod` |
 | shopspring/decimal | v1.4.0 | `go.mod` |
 | bcrypt | `golang.org/x/crypto` | `go.mod` |
 
