@@ -485,13 +485,16 @@ migration in v0.3.1 (00047) to the last one in the new release.
 ### Cookie sessions release
 
 The first release that keeps the refresh token in the `gns_refresh` cookie
-changes how a browser holds its session, with no migration.
+changes how a browser holds its session, and ships one migration (00076).
 
 - Everyone signs in once more after the deploy. The new SPA keeps the access
   token in memory only and ignores, then deletes, the tokens older releases
   left in `sessionStorage`; with no cookie yet, a reload lands on the login
-  page. The old refresh tokens stay valid in `refresh_tokens` until they
-  expire or the purge removes them, but no client presents them any more.
+  page. Migration 00076 revokes every refresh token issued before the
+  deploy (`revoked_reason = 'cookie_migration'`): those sat in
+  `sessionStorage` where any script could read them, and a copied one would
+  otherwise refresh from outside a browser until it expired. Presenting one
+  is a 401 that clears the cookie, not a reuse blast.
 - `CORS_ALLOWED_ORIGINS` must be the exact SPA origin
   (`https://internal.globalsakti.com`). The API refuses to start on `*` or an
   empty value, and a wrong entry makes every refresh a 403, which signs
@@ -660,13 +663,17 @@ each document written after the deploy is handled, since a filed invoice is
 never restated.
 
 Rolling back across the cookie sessions release (section 13), to v0.5.0 or
-older, takes two more things:
+older, takes three more things:
 
 - Everyone logs in again: the older images return the refresh token in the
   body and the older SPA keeps it in `sessionStorage`. A `gns_refresh`
   cookie left in a browser is harmless, since the older API never reads it
   and it ends with the browser session. The older API still accepts the exact
   `CORS_ALLOWED_ORIGINS` value, so the environment needs no change.
+- The restored snapshot predates 00076, so the refresh tokens it revoked are
+  live again. After step 5 and before step 7, end them the same way:
+  `q -c "UPDATE refresh_tokens SET revoked_at = now(), revoked_reason =
+  'cookie_migration' WHERE revoked_at IS NULL;"` (the `q` helper below).
 - The content policy goes back to report-only. Only this release's SPA was
   proven under the enforced policy, so before step 7 rename the label key in
   `compose.prod.yml` back to `Content-Security-Policy-Report-Only` and
