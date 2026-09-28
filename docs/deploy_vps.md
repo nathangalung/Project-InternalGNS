@@ -1,6 +1,4 @@
-| Reload a signed-in page                        | stays signed in (the refresh cookie restores the session) |
-| Refresh from a foreign origin (below)          | `403`, no `set-cookie`                                     |
-MinIO on `:9000/:9001`. CORS allows only the dev SPA, `http://localhost:5174`. |# Deploy to VPS (shared with other Dokploy projects)
+# Deploy to VPS (shared with other Dokploy projects)
 
 Step-by-step guide for deploying InternalGNS onto a single VPS that
 **already** runs Dokploy + Traefik + Postgres + other projects (e.g.
@@ -22,7 +20,7 @@ Source files referenced:
 
 | File | Purpose |
 |---|---|
-| `compose.dev.yml` | Local development. Builds `api` from source, exposes Postgres on `:5432`, pgweb on `:8081`, MinIO on `:9000/:9001`. CORS open. |
+| `compose.dev.yml` | Local development. Builds `api` from source, exposes Postgres on `:5432`, pgweb on `:8081`, MinIO on `:9000/:9001`. CORS allows only the dev SPA, `http://localhost:5174`. |
 | `compose.prod.yml` | Production on the VPS via Dokploy. Pulls prebuilt images from GHCR, publishes no host ports, Traefik handles ingress. |
 
 They stay separate because dev needs host-port access and a writable source
@@ -346,6 +344,8 @@ docker exec "$P-gns-minio-1" sh -c \
 | Create + export a quotation PDF                | PDF downloads, signer + bank fields present                |
 | Create a PO with delivery note                 | success, delivery_note_number sequenced                    |
 | Token refresh (idle ~25h)                      | UI stays logged in (refresh-token rotation works)          |
+| Reload a signed-in page                        | stays signed in (the refresh cookie restores the session) |
+| Refresh from a foreign origin (below)          | `403`, no `set-cookie`                                     |
 
 `/healthz` and `/readyz` sit at the API host root, not under `/api/v1`.
 
