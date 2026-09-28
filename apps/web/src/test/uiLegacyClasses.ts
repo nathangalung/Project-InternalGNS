@@ -1,7 +1,9 @@
 // Pre-recipe class strings.
 //
 // Dumped from the string-based ui.ts at 8846416, the last commit before the
-// tv() recipes. The recipes must produce exactly these class sets.
+// tv() recipes. The recipes must produce exactly these class sets. Since
+// then only pill(false) changed, from text-dark-500 (4.34:1 on dark-100)
+// to text-dark-600 for 4.5:1 contrast.
 export const legacyClasses: Record<string, string> = {
   focusRing:
     "focus-visible:outline-none focus-visible:transition-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
@@ -86,7 +88,7 @@ export const legacyClasses: Record<string, string> = {
   "pill(true)":
     "whitespace-nowrap rounded-full border px-3 py-1 text-caption font-medium transition focus-visible:outline-none focus-visible:transition-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white border-primary-600 bg-primary-600 text-white hover:bg-primary-700",
   "pill(false)":
-    "whitespace-nowrap rounded-full border px-3 py-1 text-caption font-medium transition focus-visible:outline-none focus-visible:transition-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white border-dark-200 bg-dark-100 text-dark-500 hover:bg-dark-200",
+    "whitespace-nowrap rounded-full border px-3 py-1 text-caption font-medium transition focus-visible:outline-none focus-visible:transition-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white border-dark-200 bg-dark-100 text-dark-600 hover:bg-dark-200",
   "chip(true)":
     "rounded-[999px] px-[18px] py-2 cursor-pointer font-[Inter,sans-serif] text-[13px] transition-all duration-150 ease-[ease] focus-visible:outline-none focus-visible:transition-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white border-[1.5px] border-primary-700 bg-[rgba(99,14,212,0.06)] font-semibold text-primary-700",
   "chip(false)":

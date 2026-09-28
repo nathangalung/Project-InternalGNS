@@ -245,7 +245,7 @@ export default function Dashboard() {
       />
       <div className={ui.panel}>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h3 className={ui.sectionTitle}>Tren Performa</h3>
+          <h2 className={ui.sectionTitle}>Tren Performa</h2>
           <div className="flex flex-wrap gap-2">
             {visibleTabs.map((tab) => (
               <button
@@ -278,9 +278,9 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex items-center justify-between gap-4 rounded-xl border border-warning/30 bg-warning/10 px-6 py-6">
             <div>
-              <h3 className="text-xl font-bold text-accent-900">
+              <h2 className="text-xl font-bold text-accent-900">
                 {fig(formatId(dueSoon))} Invoice
-              </h3>
+              </h2>
               <p className="mt-1 text-overline font-semibold uppercase tracking-[0.05em] text-accent-800/70">
                 Invoice segera jatuh tempo
               </p>
@@ -291,7 +291,7 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center justify-between gap-4 rounded-xl border border-error/30 bg-error/10 px-6 py-6">
             <div>
-              <h3 className="text-xl font-bold text-red-800">{fig(formatId(overdue))} Invoice</h3>
+              <h2 className="text-xl font-bold text-red-800">{fig(formatId(overdue))} Invoice</h2>
               <p className="mt-1 text-overline font-semibold uppercase tracking-[0.05em] text-red-700/70">
                 Invoice terlambat
               </p>

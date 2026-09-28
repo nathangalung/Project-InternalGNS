@@ -96,12 +96,12 @@ export default function DashboardOperational() {
           <StatCard label="Total Purchase Order Aktif" value={fig(formatId(totalPo))} />
         </div>
 
-        <StatusTiles title="Status Quotation" items={summary?.quotationStatuses} />
-        <StatusTiles title="Status Purchase Order" items={summary?.poStatuses} />
+        <StatusTiles title="Status Quotation" items={summary?.quotationStatuses} slots={7} />
+        <StatusTiles title="Status Purchase Order" items={summary?.poStatuses} slots={5} />
 
         <div className={ui.panel}>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h3 className={ui.sectionTitle}>Tren Performa Operasional</h3>
+            <h2 className={ui.sectionTitle}>Tren Performa Operasional</h2>
             <div className="flex flex-wrap gap-2">
               {chartTabs.map((tab) => (
                 <button
@@ -121,9 +121,9 @@ export default function DashboardOperational() {
 
         <div className={ui.tableWrap}>
           <div className="flex items-center justify-between border-b border-[#F1F5F9] bg-[rgba(242,244,246,0.3)] px-8 py-5">
-            <h3 className="text-lg font-bold leading-7 tracking-[-0.45px] text-[#191C1E]">
+            <h2 className="text-lg font-bold leading-7 tracking-[-0.45px] text-[#191C1E]">
               Quotation Terkini
-            </h3>
+            </h2>
             <Link to="/quotations" className={`${ui.btnPrimary} no-underline`}>
               Lihat Semua
             </Link>
