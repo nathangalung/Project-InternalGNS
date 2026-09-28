@@ -12,6 +12,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -129,7 +130,7 @@ func TestParseQtyText(t *testing.T) {
 }
 
 // gridRows parses a plain grid.
-func gridRows(rows [][]string) ([]rfqRow, bool) {
+func gridRows(rows [][]string) ([]rfqRow, bool, error) {
 	return textSheet(rows).products()
 }
 
@@ -212,7 +213,8 @@ func TestProducts_HeaderDetection(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			got, found := gridRows(c.rows)
+			got, found, err := gridRows(c.rows)
+			require.NoError(t, err)
 			assert.Equal(t, c.found, found)
 			if c.found {
 				assert.Equal(t, c.want, got)
@@ -674,4 +676,210 @@ func TestParseRFQ_MergedQuantity(t *testing.T) {
 	got, err := ParseRFQ("rfq.xlsx", data)
 	require.NoError(t, err)
 	assert.Equal(t, []rfqRow{{Name: "Baut", Qty: 1500}, {Name: "Mur", Qty: 1500}}, got)
+}
+
+// Text that multiplies by reference.
+func TestParseRFQ_TextExpansion(t *testing.T) {
+	huge := strings.Repeat("x", 3<<20)
+	cell := strings.Repeat("x", excelize.TotalCellChars)
+	// shared swaps the "Baut" string's body.
+	shared := func(body string, build func(f *excelize.File)) []byte {
+		return patchPart(t, buildXLSX(t, build), "xl/sharedStrings.xml", `<si><t>Baut</t></si>`, `<si>`+body+`</si>`)
+	}
+	named := func(n int) func(f *excelize.File) {
+		return func(f *excelize.File) {
+			setRows(t, f, "A1", []any{"Nama"})
+			for r := 2; r <= n+1; r++ {
+				require.NoError(t, f.SetCellValue("Sheet1", fmt.Sprintf("A%d", r), "Baut"))
+			}
+		}
+	}
+	// spare puts the string outside every mapped column.
+	spare := func(cols int) func(f *excelize.File) {
+		return func(f *excelize.File) {
+			setRows(t, f, "A1", []any{"Nama"}, append([]any{"Mur"}, slices.Repeat([]any{"Baut"}, cols)...))
+		}
+	}
+	base, err := os.ReadFile(filepath.Join("testdata", "offset-table.xlsx"))
+	require.NoError(t, err)
+	extraRow := func(c string) []byte {
+		return patchPart(t, base, "xl/worksheets/sheet1.xml", `</sheetData>`, `<row r="5">`+c+`</row></sheetData>`)
+	}
+	// Every column past the name reads string 2, "Baut".
+	fullRow := func(data []byte) []byte {
+		return patchPart(t, data, "xl/worksheets/sheet1.xml", `</sheetData>`,
+			`<row r="3"><c r="B3" t="s"><v>2</v></c>`+strings.Repeat(`<c t="s"><v>2</v></c>`, excelize.MaxColumns-2)+`</row></sheetData>`)
+	}
+	wide := fullRow(shared("<t>"+cell+"</t>", spare(1)))
+	// excelize folds part-name case, and the later table wins.
+	twoTables := zipParts(t, fullRow(buildXLSX(t, spare(1))))
+	twoTables["xl/sharedstrings.xml"] = strings.Replace(twoTables["xl/sharedStrings.xml"], `<t>Baut</t>`, `<t>`+cell+`</t>`, 1)
+	// formatted styles one long string.
+	formatted := func(code string) []byte {
+		return shared("<t>"+cell+"</t>", func(f *excelize.File) {
+			spare(1)(f)
+			style, err := f.NewStyle(&excelize.Style{CustomNumFmt: &code})
+			require.NoError(t, err)
+			require.NoError(t, f.SetCellStyle("Sheet1", "B2", "B2", style))
+		})
+	}
+	cases := []struct {
+		name string
+		data []byte
+	}{
+		{name: "one shared string named by every row", data: shared("<t>"+huge+"</t>", named(300))},
+		{name: "a merge repeating one cell down the sheet", data: shared("<t>"+huge+"</t>", func(f *excelize.File) {
+			setRows(t, f, "A1", []any{"Nama"}, []any{"Baut"})
+			require.NoError(t, f.MergeCell("Sheet1", "A2", "A4001"))
+		})},
+		{name: "a shared string over the cell limit", data: shared("<t>"+cell+"x</t>", spare(1))},
+		{name: "a rich string whose runs pass the cell limit", data: shared(strings.Repeat("<r><t>"+cell+"</t></r>", 90), spare(1))},
+		{name: "an inline string over the cell limit", data: extraRow(`<c r="A5" t="inlineStr"><is><t>` + cell + `x</t></is></c>`)},
+		{name: "a value over the cell limit", data: extraRow(`<c r="A5" t="str"><v>` + cell + `x</v></c>`)},
+		{name: "a long string in every spare column", data: shared("<t>"+cell+"</t>", func(f *excelize.File) {
+			row := append([]any{"Mur"}, slices.Repeat([]any{"Baut"}, rfqMaxCols-1)...)
+			setRows(t, f, "A1", append([][]any{{"Nama"}}, slices.Repeat([][]any{row}, 100)...)...)
+		})},
+		{name: "one long string across a full row", data: wide},
+		{name: "one long string across a full row, strings first", data: partsSorted(t, wide)},
+		{name: "one long string from a second table", data: zipOf(t, twoTables)},
+		{name: "a text format repeating a long string", data: formatted("@@")},
+		{name: "a text format with a zero placeholder", data: formatted("@0")},
+		{name: "a format past Excel's length", data: formatted(`"` + strings.Repeat("x", 253) + `"@`)},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			require.Less(t, len(c.data), rfqMaxBytes)
+			start := time.Now()
+			_, err := ParseRFQ("rfq.xlsx", c.data)
+			require.ErrorIs(t, err, errRFQTooBig)
+			assert.Less(t, time.Since(start), 5*time.Second)
+		})
+	}
+}
+
+// Non-cell text has no cap.
+func TestParseRFQ_LongTextThatFits(t *testing.T) {
+	cell := strings.Repeat("x", excelize.TotalCellChars)
+	data := buildXLSX(t, func(f *excelize.File) {
+		setRows(t, f, "A1", []any{"Nama", "Catatan"}, []any{"Baut", "catatan"})
+		require.NoError(t, f.AddComment("Sheet1", excelize.Comment{Cell: "A2", Author: "a", Text: "komentar"}))
+	})
+	data = patchPart(t, data, "xl/sharedStrings.xml", `<t>catatan</t>`, `<t>`+cell+`</t>`)
+	// Comments are not cell values, so their text has no cell limit.
+	data = patchPart(t, data, "xl/comments1.xml", `<t>komentar</t>`, strings.Repeat(`<t>`+cell+`</t>`, 3))
+	got, err := ParseRFQ("rfq.xlsx", data)
+	require.NoError(t, err)
+	assert.Equal(t, []rfqRow{{Name: "Baut"}}, got)
+}
+
+// Kept text fits the catalog.
+func TestProducts_TextLimits(t *testing.T) {
+	long := strings.Repeat("é", rfqMaxField)
+	wide := strings.Repeat("𝔸", rfqMaxField)
+	header := []string{"Kode", "Nama", "Satuan"}
+	cases := []struct {
+		name string
+		rows [][]string
+		err  error
+	}{
+		{name: "fields at the limit", rows: [][]string{header, {long, long, long}}},
+		{name: "a name past the limit", rows: [][]string{header, {"", long + "x", ""}}, err: errRFQTooBig},
+		{name: "a code past the limit", rows: [][]string{header, {long + "x", "Baut", ""}}, err: errRFQTooBig},
+		{name: "a unit past the limit", rows: [][]string{header, {"", "Baut", long + "x"}}, err: errRFQTooBig},
+		{name: "kept text past the budget", rows: append([][]string{header}, slices.Repeat([][]string{{"", wide, ""}}, rfqMaxUnzip/len(wide)+1)...), err: errRFQTooBig},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			_, _, err := gridRows(c.rows)
+			if c.err != nil {
+				require.ErrorIs(t, err, c.err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+// partsSorted rewrites parts by name.
+// Shared strings then precede the sheet, the reverse of excelize's order.
+func partsSorted(t *testing.T, data []byte) []byte {
+	t.Helper()
+	return zipOf(t, zipParts(t, data))
+}
+
+// zipParts reads every part.
+func zipParts(t *testing.T, data []byte) map[string]string {
+	t.Helper()
+	zr, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	require.NoError(t, err)
+	parts := map[string]string{}
+	for _, zf := range zr.File {
+		rc, err := zf.Open()
+		require.NoError(t, err)
+		body, err := io.ReadAll(rc)
+		require.NoError(t, err)
+		require.NoError(t, rc.Close())
+		parts[zf.Name] = string(body)
+	}
+	return parts
+}
+
+// Formats and strings that fit.
+func TestParseRFQ_TextThatFits(t *testing.T) {
+	label := `"` + strings.Repeat("x", 252) + `"@`
+	cases := []struct {
+		name  string
+		build func(f *excelize.File)
+		want  []rfqRow
+	}{
+		{
+			name: "a labelled text format",
+			build: func(f *excelize.File) {
+				code := `"Kode: "@`
+				style, err := f.NewStyle(&excelize.Style{CustomNumFmt: &code})
+				require.NoError(t, err)
+				setRows(t, f, "A1", []any{"Nama"}, []any{"Baut"})
+				require.NoError(t, f.SetCellStyle("Sheet1", "A2", "A2", style))
+			},
+			want: []rfqRow{{Name: "Kode: Baut"}},
+		},
+		{
+			name: "a format at Excel's length",
+			build: func(f *excelize.File) {
+				style, err := f.NewStyle(&excelize.Style{CustomNumFmt: &label})
+				require.NoError(t, err)
+				setRows(t, f, "A1", []any{"Nama"}, []any{"Baut"})
+				require.NoError(t, f.SetCellStyle("Sheet1", "A2", "A2", style))
+			},
+			want: []rfqRow{{Name: strings.Repeat("x", 252) + "Baut"}},
+		},
+		{
+			name: "one placeholder per text section",
+			build: func(f *excelize.File) {
+				code := `@;@`
+				style, err := f.NewStyle(&excelize.Style{CustomNumFmt: &code})
+				require.NoError(t, err)
+				setRows(t, f, "A1", []any{"Nama"}, []any{"Baut"})
+				require.NoError(t, f.SetCellStyle("Sheet1", "A2", "A2", style))
+			},
+			want: []rfqRow{{Name: "Baut"}},
+		},
+		{
+			name: "a long shared string on every row",
+			build: func(f *excelize.File) {
+				row := slices.Repeat([]any{strings.Repeat("x", 100)}, 10)
+				setRows(t, f, "A1", append([][]any{{"Nama"}}, slices.Repeat([][]any{row}, 3000)...)...)
+			},
+			want: slices.Repeat([]rfqRow{{Name: strings.Repeat("x", 100)}}, 3000),
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			data := partsSorted(t, buildXLSX(t, c.build))
+			got, err := ParseRFQ("rfq.xlsx", data)
+			require.NoError(t, err)
+			assert.Equal(t, c.want, got)
+		})
+	}
 }

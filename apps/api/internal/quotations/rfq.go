@@ -15,8 +15,10 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/xuri/excelize/v2"
+	"github.com/xuri/nfp"
 	"golang.org/x/net/html/charset"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
@@ -36,8 +38,13 @@ type RFQRows struct {
 // framing never trips that one first. Before excelize opens anything, the
 // declared part sizes are held to the unzip cap and one XML pass holds
 // each part to the row cap and the workbook to the merge and unit caps
-// (xlsxBudget), which bound the memory a small file can expand into. The
-// column cap only trims what each row keeps.
+// (xlsxBudget), which bound the memory a small file can expand into; each
+// cell value is also held to Excel's character and number-format limits
+// there, and the text excelize builds from shared strings to eight times
+// the unzip cap: room for several sheets that each fill the kept-text cap
+// (streamRows). The column cap only trims what each row keeps, and the
+// field cap follows items.name (VARCHAR(500)), the widest catalog column
+// a row can fill.
 const (
 	rfqMaxBytes   = 1 << 20
 	rfqMaxUnzip   = 4 << 20
@@ -45,6 +52,9 @@ const (
 	rfqMaxCols    = 64
 	rfqMaxMerges  = 1000
 	rfqMaxUnits   = 400_000
+	rfqMaxField   = 500
+	rfqMaxFmt     = 255
+	rfqMaxText    = 8 * rfqMaxUnzip
 	rfqHeaderScan = 15
 	// rfqFormSlack covers multipart framing.
 	rfqFormSlack = 64 << 10
@@ -99,8 +109,8 @@ func ParseRFQ(name string, data []byte) ([]items.MatchRowInput, error) {
 			return nil, err
 		}
 		var sc rfqScan
-		if rows := sc.try(s); len(rows) > 0 {
-			return rows, nil
+		if rows, err := sc.try(s); err != nil || len(rows) > 0 {
+			return rows, err
 		}
 		return nil, sc.err()
 	case ".xlsx":
@@ -115,14 +125,14 @@ type rfqScan struct {
 	data, header bool
 }
 
-func (sc *rfqScan) try(s rfqSheet) []items.MatchRowInput {
+func (sc *rfqScan) try(s rfqSheet) ([]items.MatchRowInput, error) {
 	if len(s.rows) == 0 {
-		return nil
+		return nil, nil
 	}
 	sc.data = true
-	rows, found := s.products()
+	rows, found, err := s.products()
 	sc.header = sc.header || found
-	return rows
+	return rows, err
 }
 
 func (sc rfqScan) err() error {
@@ -186,8 +196,8 @@ func parseXLSX(data []byte) ([]items.MatchRowInput, error) {
 		if err != nil {
 			return nil, err
 		}
-		if rows := sc.try(s); len(rows) > 0 {
-			return rows, nil
+		if rows, err := sc.try(s); err != nil || len(rows) > 0 {
+			return rows, err
 		}
 	}
 	return nil, sc.err()
@@ -209,13 +219,13 @@ func checkZip(data []byte) error {
 		}
 		total += zf.UncompressedSize64
 	}
-	var b xlsxBudget
+	b := xlsxBudget{refs: map[int]int{}}
 	for _, zf := range zr.File {
 		if err := b.scan(zf); err != nil {
 			return err
 		}
 	}
-	return nil
+	return b.checkShared()
 }
 
 // xlsxBudget tallies what excelize allocates.
@@ -225,6 +235,28 @@ func checkZip(data []byte) error {
 // the row cap by element count and by any row number it names.
 type xlsxBudget struct {
 	units, merges int
+	// siLen is each shared string's length, the longest any part gives
+	// that index: excelize folds part-name case and keeps the last of
+	// several tables, so no one part is trusted to be the one it reads.
+	siLen []int
+	// refs counts the cells naming each index.
+	refs map[int]int
+}
+
+// checkShared sums shared-string reads.
+// excelize builds a fresh copy of a shared string for every cell naming
+// it, so the lengths times their references bound that text.
+func (b *xlsxBudget) checkShared() error {
+	total := 0
+	for i, n := range b.refs {
+		if i >= 0 && i < len(b.siLen) {
+			total += n * b.siLen[i]
+		}
+	}
+	if total > rfqMaxText {
+		return errRFQTooBig
+	}
+	return nil
 }
 
 // errRecorder keeps the reader's failure.
@@ -271,17 +303,33 @@ func (b *xlsxBudget) scan(zf *zip.File) error {
 }
 
 // partTally tracks one part's rows.
+// It also sums the text of the current cell value: a shared or inline
+// string item with every run inside it, or a <v> element.
 type partTally struct {
 	rows, maxRow, col, width int
+	// item, inT and inV count open elements.
+	item, inT, inV, text int
+	// si counts the part's shared strings.
+	si int
+	// shared marks a shared-string cell; ref is its <v> text.
+	shared bool
+	ref    []byte
 }
 
 func (b *xlsxBudget) add(p *partTally, tok xml.Token) error {
 	switch t := tok.(type) {
+	case xml.CharData:
+		return p.seeText(t)
+	case xml.EndElement:
+		b.closeText(p, t.Name.Local)
 	case xml.StartElement:
 		if err := b.charge(1); err != nil {
 			return err
 		}
+		p.openText(t.Name.Local)
 		switch t.Name.Local {
+		case "numFmt":
+			return checkNumFmt(attrOf(t, "formatCode"))
 		case "mergeCell":
 			if b.merges++; b.merges > rfqMaxMerges {
 				return errRFQTooBig
@@ -295,6 +343,7 @@ func (b *xlsxBudget) add(p *partTally, tok xml.Token) error {
 				return p.seeRow(n)
 			}
 		case "c":
+			p.shared = attrOf(t, "t") == "s"
 			p.col++
 			if c, r, err := excelize.CellNameToCoordinates(attrOf(t, "r")); err == nil {
 				p.col = max(p.col, c)
@@ -306,6 +355,100 @@ func (b *xlsxBudget) add(p *partTally, tok xml.Token) error {
 			grow := max(p.col-p.width, 0)
 			p.width += grow
 			return b.charge(grow)
+		}
+	}
+	return nil
+}
+
+// openText enters a cell value.
+// An item, or a <v> outside one, starts a new sum. Text elsewhere, such as
+// a comment, is no cell value and is not counted.
+func (p *partTally) openText(name string) {
+	switch name {
+	case "si", "is":
+		if p.item == 0 {
+			p.text = 0
+		}
+		p.item++
+	case "v":
+		if p.item == 0 {
+			p.text = 0
+		}
+		p.inV++
+		p.ref = p.ref[:0]
+	case "t":
+		p.inT++
+	}
+}
+
+// closeText leaves an element.
+// A closed shared string records its length and a shared-string cell's
+// value its index, read as excelize reads it: a value that is no number
+// names the first string. A stray end tag changes nothing.
+func (b *xlsxBudget) closeText(p *partTally, name string) {
+	switch name {
+	case "si", "is":
+		if p.item == 0 {
+			return
+		}
+		if p.item--; p.item == 0 && name == "si" {
+			if p.si == len(b.siLen) {
+				b.siLen = append(b.siLen, p.text)
+			} else {
+				b.siLen[p.si] = max(b.siLen[p.si], p.text)
+			}
+			p.si++
+		}
+	case "v":
+		p.inV = max(p.inV-1, 0)
+		if p.shared && len(p.ref) > 0 {
+			i, _ := strconv.Atoi(strings.TrimSpace(string(p.ref)))
+			b.refs[i]++
+		}
+	case "t":
+		p.inT = max(p.inT-1, 0)
+	case "c":
+		p.shared = false
+	}
+}
+
+// seeText holds values to Excel's limit.
+// excelize reads a shared string anew for every cell naming it, so one
+// item past the cell limit multiplies before any sheet cap applies.
+func (p *partTally) seeText(text []byte) error {
+	if p.inV == 0 && (p.inT == 0 || p.item == 0) {
+		return nil
+	}
+	if p.text += utf8.RuneCount(text); p.text > excelize.TotalCellChars {
+		return errRFQTooBig
+	}
+	if p.shared && p.inV > 0 {
+		p.ref = append(p.ref, text...)
+	}
+	return nil
+}
+
+// checkNumFmt bounds a number format.
+// Excel caps a format at 255 characters. excelize's text section appends
+// the cell text once per text or zero placeholder, so each text section
+// may hold one.
+func checkNumFmt(code string) error {
+	if utf8.RuneCountInString(code) > rfqMaxFmt {
+		return errRFQTooBig
+	}
+	p := nfp.NumberFormatParser()
+	for _, s := range p.Parse(code) {
+		if s.Type != nfp.TokenSectionText {
+			continue
+		}
+		n := 0
+		for _, tk := range s.Items {
+			if tk.TType == nfp.TokenTypeTextPlaceHolder || tk.TType == nfp.TokenTypeZeroPlaceHolder {
+				n++
+			}
+		}
+		if n > 1 {
+			return errRFQTooBig
 		}
 	}
 	return nil
@@ -380,7 +523,8 @@ func readSheet(f *excelize.File, name string) (rfqSheet, error) {
 
 // streamRows reads the sheet rows.
 // Keyed by sheet row number; only the leading columns are kept. checkZip
-// already held the sheet to the row cap.
+// already held the sheet to the row cap; the kept text is held to the
+// unzip cap, since every cell reads its shared string anew.
 func streamRows(f *excelize.File, name string) (map[int][]string, error) {
 	it, err := f.Rows(name)
 	if err != nil {
@@ -388,6 +532,7 @@ func streamRows(f *excelize.File, name string) (map[int][]string, error) {
 	}
 	defer func() { _ = it.Close() }()
 	cells := map[int][]string{}
+	kept := 0
 	for n := 1; it.Next(); n++ {
 		row, err := it.Columns()
 		if err != nil {
@@ -396,7 +541,14 @@ func streamRows(f *excelize.File, name string) (map[int][]string, error) {
 		if len(row) == 0 {
 			continue
 		}
-		cells[n] = slices.Clone(row[:min(len(row), rfqMaxCols)])
+		row = row[:min(len(row), rfqMaxCols)]
+		for _, v := range row {
+			kept += len(v)
+		}
+		if kept > rfqMaxUnzip {
+			return nil, errRFQTooBig
+		}
+		cells[n] = slices.Clone(row)
 	}
 	if err := it.Error(); err != nil {
 		return nil, fmt.Errorf("%w: %w", errRFQFormat, err)
@@ -542,27 +694,36 @@ func cellAt(row []string, c int) string {
 }
 
 // products maps rows under the header.
-// found is false when no header row appears in the leading rows.
-func (s rfqSheet) products() ([]items.MatchRowInput, bool) {
+// found is false when no header row appears in the leading rows. A merge
+// repeats one cell's text down the sheet, so each kept field is held to
+// the catalog's name length and all of them together to the unzip cap.
+func (s rfqSheet) products() ([]items.MatchRowInput, bool, error) {
 	hdr, cols, found := findHeaderRow(s.rows)
 	if !found {
-		return nil, false
+		return nil, false, nil
 	}
 	out := []items.MatchRowInput{}
+	kept := 0
 	for i := hdr + 1; i < len(s.rows); i++ {
 		row := s.rows[i]
 		name := strings.TrimSpace(cellAt(row, cols.name))
 		if name == "" || s.isCategory(i, cols) {
 			continue
 		}
-		out = append(out, items.MatchRowInput{
+		r := items.MatchRowInput{
 			IMPACode: strings.TrimSpace(cellAt(row, cols.impa)),
 			Name:     name,
 			Qty:      s.qty(i, cols.qty),
 			Unit:     strings.TrimSpace(cellAt(row, cols.unit)),
-		})
+		}
+		for _, v := range []string{r.IMPACode, r.Name, r.Unit} {
+			if kept += len(v); kept > rfqMaxUnzip || utf8.RuneCountInString(v) > rfqMaxField {
+				return nil, true, errRFQTooBig
+			}
+		}
+		out = append(out, r)
 	}
-	return out, true
+	return out, true, nil
 }
 
 // isCategory spots a section row.
@@ -654,8 +815,11 @@ func findColumn(headers, keys []string) int {
 var rfqDetails = map[error]string{
 	errRFQMissing: "Pilih berkas permintaan (.xlsx atau .csv) untuk diunggah.",
 	errRFQFormat:  "Format berkas tidak didukung. Gunakan .xlsx atau .csv (simpan ulang file .xls sebagai .xlsx).",
-	errRFQTooBig: fmt.Sprintf("Isi berkas terlalu besar: paling banyak %d baris per lembar, %d sel gabungan, dan %d MB setelah diekstrak. "+
-		"Hapus baris, kolom, atau format yang tidak terpakai.", rfqMaxRows, rfqMaxMerges, rfqMaxUnzip>>20),
+	errRFQTooBig: fmt.Sprintf("Isi berkas terlalu besar: paling banyak %d baris per lembar, %d sel gabungan, %d karakter per sel, "+
+		"%d karakter untuk nama produk, kode IMPA, dan satuan, serta %d MB setelah diekstrak. "+
+		"Format angka paling panjang %d karakter dengan satu tempat teks (@) per bagian. "+
+		"Hapus baris, kolom, atau format yang tidak terpakai, dan perpendek teks yang terlalu panjang.",
+		rfqMaxRows, rfqMaxMerges, excelize.TotalCellChars, rfqMaxField, rfqMaxUnzip>>20, rfqMaxFmt),
 	errRFQEmpty:    "Berkas kosong: tidak ada sel yang berisi data.",
 	errRFQNoHeader: fmt.Sprintf("Baris judul kolom tidak ditemukan. Pastikan kolom Nama Produk ada di %d baris pertama.", rfqHeaderScan),
 	errRFQNoRows:   "Tidak ada baris produk di bawah judul kolom.",
