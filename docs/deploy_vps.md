@@ -477,7 +477,8 @@ changes how a browser holds its session, with no migration.
   empty value, and a wrong entry makes every refresh a 403, which signs
   everyone out on each reload.
 - Deploy the web and API images from the same `TAG`. An old SPA against the
-  new API cannot refresh (it posts the token in a body the API ignores), and
+  new API cannot refresh (it sends no `X-GNS-CSRF` header, so the guard
+  answers 403, and the API would ignore its body token anyway), and
   a new SPA against an old API gets no cookie, so both mixes sign users out
   whenever the access token expires or the page reloads.
 
