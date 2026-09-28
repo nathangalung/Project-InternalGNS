@@ -301,6 +301,7 @@ jobs:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
       E2E_BASE_URL: http://127.0.0.1:4173
+      E2E_API_URL: http://127.0.0.1:8080/api/v1
       E2E_ADMIN_EMAIL: admin@globalsakti.com
       E2E_ADMIN_PASSWORD: AdminGNS123!
     steps:
@@ -366,26 +367,14 @@ jobs:
         working-directory: apps/web
         run: bunx playwright install --with-deps chromium
 
-      # Same-origin build; vite preview proxies /api to :8080 like the dev server.
-      - name: build and serve web
-        working-directory: apps/web
-        env:
-          VITE_API_URL: /api/v1
-        run: |
-          bun run build
-          bun run preview --port 4173 --strictPort --host 127.0.0.1 > /tmp/preview.log 2>&1 &
-          for _ in $(seq 1 30); do
-            curl -fsS http://127.0.0.1:4173/login > /dev/null && exit 0
-            sleep 1
-          done
-          cat /tmp/preview.log
-          exit 1
-
-      - name: playwright
+      # Cross-origin, as a release builds it: the SPA on :4173 calls the API
+      # on :8080. The config builds dist and serves it with the enforcing
+      # policy from compose.prod.yml; any violation fails the test.
+      - name: playwright under the production CSP
         working-directory: apps/web
         env:
           CI: "true"
-        run: bun run e2e
+        run: bun run e2e:csp
 
       - name: dump api log on failure
         if: failure()
