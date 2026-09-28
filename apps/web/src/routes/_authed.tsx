@@ -4,6 +4,7 @@ import RouteErrorFallback from "@/components/shared/RouteErrorFallback"
 import Sidebar from "@/components/shared/Sidebar"
 import * as authApi from "@/features/auth/api"
 import { clearAuthState, useAuth } from "@/features/auth/hooks"
+import { ApiError } from "@/lib/api-client"
 import { queryKeys } from "@/lib/query-keys"
 import { roleCanAccess, sectionFromPathname } from "@/lib/rbac"
 import { restoreSession } from "@/lib/session"
@@ -19,7 +20,9 @@ export const Route = createFileRoute("/_authed")({
         queryFn: authApi.me,
         staleTime: 5 * 60 * 1000,
       })
-    } catch {
+    } catch (err) {
+      // Only a 401 ends the session; other failures render the error.
+      if (!(err instanceof ApiError && err.status === 401)) throw err
       clearAuthState()
       throw redirect({ to: "/login" })
     }

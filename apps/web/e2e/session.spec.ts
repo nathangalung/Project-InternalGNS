@@ -109,3 +109,36 @@ test("the refresh token is never readable by the page", async ({ page, context }
     expect(seen.storage.some((v) => v.includes(secret))).toBe(false)
   }
 })
+
+// A /auth/me outage keeps the session.
+//
+// Only a 401 means signed out. Any other failure shows the error state; ending
+// the session instead would bounce through /login, whose restore rotates the
+// cookie and lands back on the failing route, over and over.
+for (const [name, fail] of [
+  ["a server error", { status: 500 }],
+  ["a network failure", "abort"],
+] as const) {
+  test(`${name} from /auth/me shows an error, not a refresh loop`, async ({ page }) => {
+    const refreshes: string[] = []
+    page.on("request", (r) => {
+      if (r.url().endsWith("/auth/refresh")) refreshes.push(r.url())
+    })
+    await page.route("**/api/v1/auth/me", (route) =>
+      fail === "abort"
+        ? route.abort("connectionrefused")
+        : route.fulfill({
+            status: fail.status,
+            contentType: "application/problem+json",
+            body: JSON.stringify({ type: "about:blank", title: "Galat", status: fail.status }),
+          }),
+    )
+    await page.goto("/")
+    await expect(page.getByText("Terjadi kesalahan")).toBeVisible()
+    // Long enough for the old loop to spin several times.
+    await page.waitForTimeout(3_000)
+    expect(refreshes).toHaveLength(1)
+    await expect(page).not.toHaveURL(/\/login$/)
+    await expect(page.getByText("Terjadi kesalahan")).toBeVisible()
+  })
+}
