@@ -65,6 +65,16 @@ Feature: Login, session refresh and session revocation
     When the account refreshes its session
     Then the response status is 401
 
+  Scenario: A second tab losing the rotation race keeps the session
+    Given the account is logged in
+    And the account refreshed its session
+    When the account replays the first refresh token
+    Then the response status is 401
+    And the problem detail is "Token penyegar sudah pernah dipakai. Silakan masuk kembali."
+    And the refresh cookie is left alone
+    When the account refreshes its session
+    Then the response status is 200
+
   Scenario: A refresh token an admin revoked does not end a newer session
     Given the account is logged in
     And a superadmin changed the account role to "finance"

@@ -101,9 +101,11 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 // Refresh rotates the cookie's token.
-// Only the cookie is read; a body is ignored. Every refusal expires the
-// cookie, since the token it holds will never work again. An outage does
-// not, so the client can retry.
+// Only the cookie is read; a body is ignored. A refusal expires the cookie,
+// since the token it holds will never work again, except a reuse inside the
+// grace window: that is a second tab or a retry losing a rotation race, and
+// the browser's one cookie jar may already hold the winner's fresh token.
+// An outage does not expire it either, so the client can retry.
 func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 	raw := session.Read(r)
 	if raw == "" {
@@ -115,7 +117,10 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.svc.Refresh(r.Context(), raw)
 	for _, rd := range refreshDetails {
 		if errors.Is(err, rd.err) {
-			h.cookies.Clear(w, r)
+			// A lost race: the jar may already hold the winner's cookie.
+			if !errors.Is(err, ErrRacedRefresh) {
+				h.cookies.Clear(w, r)
+			}
 			httperr.Render(w, httperr.Unauthorized(rd.detail))
 			return
 		}

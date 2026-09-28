@@ -526,6 +526,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the response carries an access token and no refresh token$`, state.tokensIssued)
 		sc.Step(`^the refresh cookie is HttpOnly, Secure, SameSite=Strict and scoped to "([^"]+)"$`, state.cookieAttributes)
 		sc.Step(`^the refresh cookie is cleared$`, state.cookieCleared)
+		sc.Step(`^the refresh cookie is left alone$`, state.cookieLeftAlone)
 		sc.Step(`^the account sends its refresh token in the body instead of the cookie$`, state.refreshInBody)
 		sc.Step(`^the account posts to "([^"]+)" from the origin "([^"]+)"$`, state.postFromOrigin)
 		sc.Step(`^the account posts to "([^"]+)" without an Origin$`, state.postWithoutOrigin)
@@ -629,6 +630,13 @@ func (s *scenarioState) cookieCleared() error {
 	c := s.refreshCookie()
 	if c == nil || c.Value != "" || c.MaxAge >= 0 || c.Path != session.CookiePath || !c.Secure {
 		return fmt.Errorf("want the refresh cookie expired got %v", s.last.Header.Values("Set-Cookie"))
+	}
+	return nil
+}
+
+func (s *scenarioState) cookieLeftAlone() error {
+	if c := s.refreshCookie(); c != nil {
+		return fmt.Errorf("want no refresh Set-Cookie got %v", s.last.Header.Values("Set-Cookie"))
 	}
 	return nil
 }

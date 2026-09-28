@@ -72,6 +72,7 @@ func TestService_Refresh_RecentReuseSpareSiblings(t *testing.T) {
 	// Replay the original immediately — flagged, but within grace.
 	_, err = svc.Refresh(ctx, first.RefreshToken)
 	assert.ErrorIs(t, err, auth.ErrReusedRefresh)
+	assert.ErrorIs(t, err, auth.ErrRacedRefresh, "inside grace the verdict is a race")
 
 	// The rotated token is still valid because the replay was a recent race.
 	_, err = svc.Refresh(ctx, rotated.RefreshToken)
@@ -104,6 +105,7 @@ func TestService_Refresh_OldReuseBlastsAllSessions(t *testing.T) {
 
 	_, err = svc.Refresh(ctx, first.RefreshToken)
 	assert.ErrorIs(t, err, auth.ErrReusedRefresh)
+	assert.NotErrorIs(t, err, auth.ErrRacedRefresh, "past grace it is a replay, not a race")
 
 	// An old replay blasts every session, so the rotated token is revoked too.
 	_, err = svc.Refresh(ctx, rotated.RefreshToken)

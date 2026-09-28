@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -120,6 +121,13 @@ func TestHandler_Login_WithoutRefreshSetsNoCookie(t *testing.T) {
 // DB tx.
 func mkAuthServerWithRefresh(t *testing.T) (*httptest.Server, users.User) {
 	t.Helper()
+	srv, u, _ := mkRefreshServerTx(t)
+	return srv, u
+}
+
+// mkRefreshServerTx also returns the tx.
+func mkRefreshServerTx(t *testing.T) (*httptest.Server, users.User, pgx.Tx) {
+	t.Helper()
 	ctx, tx := testutil.BeginTx(t)
 	store := testutil.Store(t)
 	repo := users.NewRepo(tx, store)
@@ -138,7 +146,7 @@ func mkAuthServerWithRefresh(t *testing.T) (*httptest.Server, users.User) {
 	r.Mount("/auth", auth.Routes(h, func(next http.Handler) http.Handler { return next }))
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)
-	return srv, u
+	return srv, u, tx
 }
 
 func postHandlerLogin(t *testing.T, srv *httptest.Server, email string) *http.Response {
@@ -231,13 +239,6 @@ func TestHandler_Refresh_Refusals(t *testing.T) {
 			auth.DetailNotSignedIn},
 		{"unknown token", func(*testing.T, *httptest.Server, string) string { return "not-a-token" },
 			"Token penyegar tidak valid. Silakan masuk kembali."},
-		{"reused token", func(t *testing.T, srv *httptest.Server, email string) string {
-			first := loginCookie(t, srv, email)
-			res := cookieCall(t, srv, "/auth/refresh", first, nil)
-			res.Body.Close()
-			require.Equal(t, http.StatusOK, res.StatusCode)
-			return first
-		}, "Token penyegar sudah pernah dipakai. Silakan masuk kembali."},
 		{"revoked by logout", func(t *testing.T, srv *httptest.Server, email string) string {
 			token := loginCookie(t, srv, email)
 			res := cookieCall(t, srv, "/auth/logout", token, nil)
@@ -256,6 +257,53 @@ func TestHandler_Refresh_Refusals(t *testing.T) {
 			assert.Equal(t, tc.detail, problemDetail(t, res))
 		})
 	}
+}
+
+// Rotate once, return both tokens.
+func rotateCookie(t *testing.T, srv *httptest.Server, email string) (string, string) {
+	t.Helper()
+	first := loginCookie(t, srv, email)
+	res := cookieCall(t, srv, "/auth/refresh", first, nil)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	return first, assertIssued(t, res)
+}
+
+// Replay past grace clears cookie.
+func TestHandler_Refresh_ReplayPastGraceClears(t *testing.T) {
+	srv, u, tx := mkRefreshServerTx(t)
+	first, rotated := rotateCookie(t, srv, u.Email)
+	_, err := tx.Exec(t.Context(), `UPDATE refresh_tokens SET revoked_at = now() - interval '30 seconds'
+		WHERE user_id = $1 AND revoked_at IS NOT NULL`, u.ID)
+	require.NoError(t, err)
+
+	res := cookieCall(t, srv, "/auth/refresh", first, nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+	assert.Equal(t, "Token penyegar sudah pernah dipakai. Silakan masuk kembali.", problemDetail(t, res))
+	assertCleared(t, res)
+
+	ended := cookieCall(t, srv, "/auth/refresh", rotated, nil)
+	defer ended.Body.Close()
+	assert.Equal(t, http.StatusUnauthorized, ended.StatusCode, "a replay ends every session")
+}
+
+// Reuse inside grace keeps cookie.
+// Two tabs share one cookie jar: the loser of a concurrent rotation must not
+// expire the winner's fresh cookie, since the service judged it a race.
+func TestHandler_Refresh_ReuseInsideGraceKeepsCookie(t *testing.T) {
+	srv, u := mkAuthServerWithRefresh(t)
+	first, rotated := rotateCookie(t, srv, u.Email)
+
+	res := cookieCall(t, srv, "/auth/refresh", first, nil)
+	defer res.Body.Close()
+	assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+	assert.Equal(t, "Token penyegar sudah pernah dipakai. Silakan masuk kembali.", problemDetail(t, res))
+	assertNoCookie(t, res)
+
+	ok := cookieCall(t, srv, "/auth/refresh", rotated, nil)
+	defer ok.Body.Close()
+	assert.Equal(t, http.StatusOK, ok.StatusCode, "the winner's session survives the race")
 }
 
 // Cookie routes demand Origin, header.

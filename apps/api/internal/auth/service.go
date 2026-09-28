@@ -304,11 +304,13 @@ func (s *Service) refusal(ctx context.Context, rr *RefreshRepo, hash []byte) (er
 		// revokes the token moments before the loser looks it up. Only a
 		// token revoked longer ago than the grace window is treated as a
 		// genuine replay worth revoking every session; a very recent
-		// revocation is a benign race, so the other sessions survive.
-		if st.pastGrace {
-			if err := rr.revokeAllForUser(ctx, st.userID); err != nil {
-				return nil, err
-			}
+		// revocation is a benign race, so the other sessions survive and
+		// the verdict says so, letting the handler keep the cookie.
+		if !st.pastGrace {
+			return ErrRacedRefresh, nil
+		}
+		if err := rr.revokeAllForUser(ctx, st.userID); err != nil {
+			return nil, err
 		}
 		return ErrReusedRefresh, nil
 	}

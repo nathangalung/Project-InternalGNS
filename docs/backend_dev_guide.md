@@ -48,7 +48,17 @@ The refresh token lives only in a cookie; no response body carries it.
 - `POST /auth/refresh` reads only the cookie and ignores any body. A missing
   cookie is a 401 (`Anda belum masuk…`); every other refusal (unknown,
   expired, revoked, reused) is a 401 with its own detail. Rotation, reuse
-  detection and `session_version` are unchanged.
+  detection and `session_version` are unchanged. A rotated token presented
+  again within 10 seconds of its rotation (`refreshReuseGrace`) is a race,
+  such as a second tab or a retried request, not a replay: it is the same
+  401 `reused` detail, but it keeps the user's other sessions and leaves the
+  cookie alone (`ErrRacedRefresh`), because the browser's one cookie jar may
+  already hold the winner's fresh token. Past that window it is a replay:
+  every session of the user is revoked and the cookie is expired. The cost
+  of keeping the cookie: when the winner's response itself is lost, the jar
+  still holds the rotated token, and an attempt past the window counts as a
+  replay. The web makes refresh single-flight across tabs (Web Locks), so
+  two tabs of one browser do not race in the first place.
 - Refresh and logout are the only routes that authenticate by cookie, so
   `session.Guard` sits in front of both, before the rate limiter. It answers
   403 with an Indonesian detail when `Origin` is missing, `null` or not in
@@ -56,8 +66,8 @@ The refresh token lives only in a cookie; no response body carries it.
   cross-origin page cannot add that header without a preflight, and the
   preflight passes only for a listed origin.
 - The cookie is expired (`Max-Age=0`, same name, path and Secure) by logout,
-  by every refresh refusal, by a successful or session-ending
-  `PATCH /auth/me/password`, and by a users edit that ends the caller's own
+  by every refresh refusal except a race inside the grace window, by a
+  successful or session-ending `PATCH /auth/me/password`, and by a users edit that ends the caller's own
   session (own role change, own deactivation, own password reset). When an
   admin revokes someone else, that user's cookie is expired by their next
   refresh, which the revoked token fails. An outage (5xx) or a 429 leaves
