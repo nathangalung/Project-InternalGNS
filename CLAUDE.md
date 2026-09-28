@@ -327,6 +327,12 @@ query call.
   `gns_csp_test`; `e2e/csp.spec.ts` proves the header is live. A new
   dependency that injects an inline `<style>` or loads from another host
   fails there: fix the cause, never add `unsafe-inline` or `unsafe-eval`.
+- Lighthouse CI (`bun run lighthouse`, the CI `lighthouse` job) audits 12
+  pages three times each and fails any category below 0.95.
+  `lighthouse/login-fixture.cjs` signs in inside Chrome, so every page
+  restores its session from the refresh cookie and is scored as itself, not
+  as `/login`. Fix a failing audit at its cause; never lower a threshold or
+  drop a URL.
 
 Coverage gates fail CI below their tier; `make cover` runs both locally.
 
