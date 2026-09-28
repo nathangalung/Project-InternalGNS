@@ -3,6 +3,7 @@ package auth_test
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/auth"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
@@ -32,7 +34,7 @@ func mkAuthServer(t *testing.T) (*httptest.Server, users.User, *auth.Service) {
 	require.NoError(t, err)
 
 	svc := auth.NewService(repo, testSecret, time.Hour)
-	h := auth.NewHandler(svc)
+	h := newHandler(svc)
 
 	requireAuth := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -96,12 +98,21 @@ func TestHandler_Login_InvalidCredentials(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
 }
 
-func TestHandler_Logout(t *testing.T) {
+func TestHandler_Logout_WithoutCookie(t *testing.T) {
 	srv, _, _ := mkAuthServer(t)
-	res, err := srv.Client().Post(srv.URL+"/auth/logout", "application/json", nil)
-	require.NoError(t, err)
+	res := cookieCall(t, srv, "/auth/logout", "", nil)
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNoContent, res.StatusCode)
+	assertCleared(t, res)
+}
+
+// No refresh store, no cookie.
+func TestHandler_Login_WithoutRefreshSetsNoCookie(t *testing.T) {
+	srv, u, _ := mkAuthServer(t)
+	res := postHandlerLogin(t, srv, u.Email)
+	defer res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	assertNoCookie(t, res)
 }
 
 // mkAuthServerWithRefresh wires refresh too.
@@ -122,7 +133,7 @@ func mkAuthServerWithRefresh(t *testing.T) (*httptest.Server, users.User) {
 
 	svc := auth.NewService(repo, testSecret, time.Hour).
 		WithRefresh(auth.NewRefreshRepo(tx, store), time.Hour)
-	h := auth.NewHandler(svc)
+	h := newHandler(svc)
 	r := chi.NewRouter()
 	r.Mount("/auth", auth.Routes(h, func(next http.Handler) http.Handler { return next }))
 	srv := httptest.NewServer(r)
@@ -130,79 +141,166 @@ func mkAuthServerWithRefresh(t *testing.T) (*httptest.Server, users.User) {
 	return srv, u
 }
 
-func TestHandler_Refresh_HappyPath(t *testing.T) {
-	srv, u := mkAuthServerWithRefresh(t)
-
-	// Login to mint a refresh token.
-	body, _ := json.Marshal(auth.LoginRequest{Email: u.Email, Password: "hpass-123"})
+func postHandlerLogin(t *testing.T, srv *httptest.Server, email string) *http.Response {
+	t.Helper()
+	body, _ := json.Marshal(auth.LoginRequest{Email: email, Password: "hpass-123"})
 	res, err := srv.Client().Post(srv.URL+"/auth/login", "application/json", bytes.NewReader(body))
 	require.NoError(t, err)
-	var login auth.LoginResponse
-	require.NoError(t, json.NewDecoder(res.Body).Decode(&login))
-	res.Body.Close()
-	require.NotEmpty(t, login.RefreshToken)
+	return res
+}
 
-	// Now refresh it.
-	body, _ = json.Marshal(auth.RefreshRequest{RefreshToken: login.RefreshToken})
-	res, err = srv.Client().Post(srv.URL+"/auth/refresh", "application/json", bytes.NewReader(body))
-	require.NoError(t, err)
+// loginCookie signs in, returns the cookie.
+func loginCookie(t *testing.T, srv *httptest.Server, email string) string {
+	t.Helper()
+	res := postHandlerLogin(t, srv, email)
 	defer res.Body.Close()
 	require.Equal(t, http.StatusOK, res.StatusCode)
-
-	var rotated auth.LoginResponse
-	require.NoError(t, json.NewDecoder(res.Body).Decode(&rotated))
-	assert.NotEqual(t, login.RefreshToken, rotated.RefreshToken)
-	assert.NotEmpty(t, rotated.Token)
+	return assertIssued(t, res)
 }
 
-func TestHandler_Refresh_BadJSON(t *testing.T) {
-	srv, _ := mkAuthServerWithRefresh(t)
-	res, err := srv.Client().Post(srv.URL+"/auth/refresh", "application/json", strings.NewReader("?"))
-	require.NoError(t, err)
+// Login issues the cookie only.
+func TestHandler_Login_SetsRefreshCookie(t *testing.T) {
+	srv, u := mkAuthServerWithRefresh(t)
+	res := postHandlerLogin(t, srv, u.Email)
 	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	token := assertIssued(t, res)
+
+	raw, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+	assertTokenNotInBody(t, raw, token)
+	var body map[string]any
+	require.NoError(t, json.Unmarshal(raw, &body))
+	assert.NotEmpty(t, body["token"])
 }
 
-func TestHandler_Refresh_Missing(t *testing.T) {
-	srv, _ := mkAuthServerWithRefresh(t)
-	body, _ := json.Marshal(auth.RefreshRequest{})
-	res, err := srv.Client().Post(srv.URL+"/auth/refresh", "application/json", bytes.NewReader(body))
-	require.NoError(t, err)
+// Refresh rotates the cookie.
+func TestHandler_Refresh_RotatesCookie(t *testing.T) {
+	srv, u := mkAuthServerWithRefresh(t)
+	first := loginCookie(t, srv, u.Email)
+
+	res := cookieCall(t, srv, "/auth/refresh", first, nil)
 	defer res.Body.Close()
-	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	next := assertIssued(t, res)
+	assert.NotEqual(t, first, next)
+
+	raw, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+	assertTokenNotInBody(t, raw, next)
+	var body auth.LoginResponse
+	require.NoError(t, json.Unmarshal(raw, &body))
+	assert.NotEmpty(t, body.Token)
+
+	again := cookieCall(t, srv, "/auth/refresh", next, nil)
+	defer again.Body.Close()
+	assert.Equal(t, http.StatusOK, again.StatusCode)
 }
 
-func TestHandler_Refresh_Unknown(t *testing.T) {
-	srv, _ := mkAuthServerWithRefresh(t)
-	body, _ := json.Marshal(auth.RefreshRequest{RefreshToken: "not-a-token"})
-	res, err := srv.Client().Post(srv.URL+"/auth/refresh", "application/json", bytes.NewReader(body))
-	require.NoError(t, err)
+// Refresh reads only the cookie.
+// A token in the body, the old contract, is ignored and left unspent.
+func TestHandler_Refresh_IgnoresBodyToken(t *testing.T) {
+	srv, u := mkAuthServerWithRefresh(t)
+	token := loginCookie(t, srv, u.Email)
+
+	body, _ := json.Marshal(map[string]string{"refreshToken": token})
+	res := cookieCall(t, srv, "/auth/refresh", "", func(r *http.Request) {
+		r.Body = io.NopCloser(bytes.NewReader(body))
+		r.ContentLength = int64(len(body))
+		r.Header.Set("Content-Type", "application/json")
+	})
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
-	assert.Equal(t, "Token penyegar tidak valid. Silakan masuk kembali.", problemDetail(t, res))
+	assert.Equal(t, auth.DetailNotSignedIn, problemDetail(t, res))
+
+	ok := cookieCall(t, srv, "/auth/refresh", token, nil)
+	defer ok.Body.Close()
+	assert.Equal(t, http.StatusOK, ok.StatusCode, "the body token must not have been spent")
 }
 
-func TestHandler_Logout_WithRefreshToken(t *testing.T) {
-	srv, u := mkAuthServerWithRefresh(t)
-	body, _ := json.Marshal(auth.LoginRequest{Email: u.Email, Password: "hpass-123"})
-	res, err := srv.Client().Post(srv.URL+"/auth/login", "application/json", bytes.NewReader(body))
-	require.NoError(t, err)
-	var login auth.LoginResponse
-	require.NoError(t, json.NewDecoder(res.Body).Decode(&login))
-	res.Body.Close()
+// Refused refresh clears the cookie.
+func TestHandler_Refresh_Refusals(t *testing.T) {
+	cases := []struct {
+		name   string
+		token  func(t *testing.T, srv *httptest.Server, email string) string
+		detail string
+	}{
+		{"no cookie", func(*testing.T, *httptest.Server, string) string { return "" },
+			auth.DetailNotSignedIn},
+		{"unknown token", func(*testing.T, *httptest.Server, string) string { return "not-a-token" },
+			"Token penyegar tidak valid. Silakan masuk kembali."},
+		{"reused token", func(t *testing.T, srv *httptest.Server, email string) string {
+			first := loginCookie(t, srv, email)
+			res := cookieCall(t, srv, "/auth/refresh", first, nil)
+			res.Body.Close()
+			require.Equal(t, http.StatusOK, res.StatusCode)
+			return first
+		}, "Token penyegar sudah pernah dipakai. Silakan masuk kembali."},
+		{"revoked by logout", func(t *testing.T, srv *httptest.Server, email string) string {
+			token := loginCookie(t, srv, email)
+			res := cookieCall(t, srv, "/auth/logout", token, nil)
+			res.Body.Close()
+			require.Equal(t, http.StatusNoContent, res.StatusCode)
+			return token
+		}, "Sesi Anda sudah diakhiri. Silakan masuk kembali."},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			srv, u := mkAuthServerWithRefresh(t)
+			res := cookieCall(t, srv, "/auth/refresh", tc.token(t, srv, u.Email), nil)
+			defer res.Body.Close()
+			assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+			assertCleared(t, res)
+			assert.Equal(t, tc.detail, problemDetail(t, res))
+		})
+	}
+}
 
-	body, _ = json.Marshal(auth.LogoutRequest{RefreshToken: login.RefreshToken})
-	res, err = srv.Client().Post(srv.URL+"/auth/logout", "application/json", bytes.NewReader(body))
-	require.NoError(t, err)
+// Cookie routes demand Origin, header.
+// A refused request spends nothing: the cookie still refreshes afterwards.
+func TestHandler_CookieRoutes_CSRFGuard(t *testing.T) {
+	cases := []struct {
+		name   string
+		mutate func(*http.Request)
+		detail string
+	}{
+		{"missing csrf header", func(r *http.Request) { r.Header.Del(session.CSRFHeader) }, session.DetailCSRFMissing},
+		{"foreign origin", func(r *http.Request) { r.Header.Set("Origin", "https://evil.example") }, session.DetailOriginRefused},
+		{"missing origin", func(r *http.Request) { r.Header.Del("Origin") }, session.DetailOriginRefused},
+	}
+	for _, path := range []string{"/auth/refresh", "/auth/logout"} {
+		for _, tc := range cases {
+			t.Run(path+"/"+tc.name, func(t *testing.T) {
+				srv, u := mkAuthServerWithRefresh(t)
+				token := loginCookie(t, srv, u.Email)
+
+				res := cookieCall(t, srv, path, token, tc.mutate)
+				defer res.Body.Close()
+				assert.Equal(t, http.StatusForbidden, res.StatusCode)
+				assert.Equal(t, tc.detail, problemDetail(t, res))
+				assertNoCookie(t, res)
+
+				ok := cookieCall(t, srv, "/auth/refresh", token, nil)
+				defer ok.Body.Close()
+				assert.Equal(t, http.StatusOK, ok.StatusCode)
+			})
+		}
+	}
+}
+
+// Logout revokes and clears the cookie.
+func TestHandler_Logout_RevokesCookieToken(t *testing.T) {
+	srv, u := mkAuthServerWithRefresh(t)
+	token := loginCookie(t, srv, u.Email)
+
+	res := cookieCall(t, srv, "/auth/logout", token, nil)
 	defer res.Body.Close()
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
+	assertCleared(t, res)
 
-	// The revoked token should no longer refresh — reuse is detected.
-	body, _ = json.Marshal(auth.RefreshRequest{RefreshToken: login.RefreshToken})
-	res, err = srv.Client().Post(srv.URL+"/auth/refresh", "application/json", bytes.NewReader(body))
-	require.NoError(t, err)
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+	after := cookieCall(t, srv, "/auth/refresh", token, nil)
+	defer after.Body.Close()
+	assert.Equal(t, http.StatusUnauthorized, after.StatusCode)
 }
 
 func TestHandler_Me(t *testing.T) {
@@ -223,7 +321,7 @@ func TestHandler_Me_NoUserID(t *testing.T) {
 	_, tx := testutil.BeginTx(t)
 	repo := users.NewRepo(tx, testutil.Store(t))
 	svc := auth.NewService(repo, testSecret, time.Hour)
-	h := auth.NewHandler(svc)
+	h := newHandler(svc)
 
 	bypass := func(next http.Handler) http.Handler { return next }
 
@@ -242,7 +340,7 @@ func TestHandler_Me_NoUserID(t *testing.T) {
 func TestHandler_Login_DBError(t *testing.T) {
 	repo := users.NewRepo(testutil.FakeExec{}, testutil.Store(t))
 	svc := auth.NewService(repo, testSecret, time.Hour)
-	h := auth.NewHandler(svc)
+	h := newHandler(svc)
 
 	r := chi.NewRouter()
 	r.Mount("/auth", auth.Routes(h, func(next http.Handler) http.Handler { return next }))
@@ -259,7 +357,7 @@ func TestHandler_Login_DBError(t *testing.T) {
 func TestHandler_Me_DBError(t *testing.T) {
 	repo := users.NewRepo(testutil.FakeExec{}, testutil.Store(t))
 	svc := auth.NewService(repo, testSecret, time.Hour)
-	h := auth.NewHandler(svc)
+	h := newHandler(svc)
 
 	requireAuth := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -284,7 +382,7 @@ func TestHandler_Me_UserGone(t *testing.T) {
 	_, tx := testutil.BeginTx(t)
 	repo := users.NewRepo(tx, testutil.Store(t))
 	svc := auth.NewService(repo, testSecret, time.Hour)
-	h := auth.NewHandler(svc)
+	h := newHandler(svc)
 
 	requireAuth := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -1,6 +1,10 @@
 package app
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,6 +15,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
+	"github.com/nathangalung/internalgns/apps/api/internal/auth"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
+	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
+	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
 // corsRouter needs no database.
@@ -71,6 +79,61 @@ func TestRouter_CORSCredentials(t *testing.T) {
 			if c.method == http.MethodOptions {
 				assert.Contains(t, strings.ToLower(h.Get("Access-Control-Allow-Headers")), "x-gns-csrf")
 			}
+		})
+	}
+}
+
+// Only development drops Secure.
+// The router derives the cookie rule from ENV: a development API reached
+// over plain-http loopback (make dev) issues a cookie without Secure, and
+// every other environment marks it Secure even on loopback.
+func TestRouter_RefreshCookieSecurePerEnv(t *testing.T) {
+	pool := testutil.Pool(t)
+	store := testutil.Store(t)
+	cleaner := testutil.NewCleaner(t)
+	repo := users.NewRepo(pool, store)
+	u, err := repo.Create(context.Background(), users.CreateUserRequest{
+		Email:    fmt.Sprintf("cookie-env-%d@test.local", time.Now().UnixNano()),
+		Name:     "Cookie Env",
+		Password: "Cookie-env-pw1!",
+		Role:     users.RoleOperational,
+	}, 1)
+	require.NoError(t, err)
+	cleaner.User(u.ID)
+
+	cases := []struct {
+		env    string
+		secure bool
+	}{
+		{"development", false},
+		{"test", true},
+		{"production", true},
+	}
+	for _, c := range cases {
+		t.Run(c.env, func(t *testing.T) {
+			srv := httptest.NewServer(NewRouter(Config{
+				Env:                c.env,
+				JWTSecret:          "cookie-env-secret",
+				JWTExpiry:          time.Hour,
+				RefreshTokenExpiry: time.Hour,
+				CORSAllowedOrigins: []string{"http://localhost:5174"},
+			}, pool, store, nil))
+			t.Cleanup(srv.Close)
+
+			body, _ := json.Marshal(auth.LoginRequest{Email: u.Email, Password: "Cookie-env-pw1!"})
+			res, err := srv.Client().Post(srv.URL+"/api/v1/auth/login", "application/json", bytes.NewReader(body))
+			require.NoError(t, err)
+			defer res.Body.Close()
+			require.Equal(t, http.StatusOK, res.StatusCode)
+			var got *http.Cookie
+			for _, ck := range res.Cookies() {
+				if ck.Name == session.CookieName {
+					got = ck
+				}
+			}
+			require.NotNil(t, got)
+			assert.Equal(t, c.secure, got.Secure, got.Raw)
+			assert.True(t, got.HttpOnly)
 		})
 	}
 }

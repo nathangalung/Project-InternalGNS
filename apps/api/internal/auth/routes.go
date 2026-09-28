@@ -7,6 +7,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 )
 
 // clientIPKey keys limits by client.
@@ -29,8 +31,11 @@ func Routes(h *Handler, requireAuth func(http.Handler) http.Handler) chi.Router 
 	r := chi.NewRouter()
 
 	r.With(limitBy(5)).Post("/login", h.Login)
-	r.With(limitBy(20)).Post("/refresh", h.Refresh)
-	r.Post("/logout", h.Logout)
+	// The cookie routes refuse a foreign Origin or a missing CSRF header
+	// before the limiter counts them.
+	guard := session.Guard(h.origins)
+	r.With(guard, limitBy(20)).Post("/refresh", h.Refresh)
+	r.With(guard).Post("/logout", h.Logout)
 
 	r.Group(func(r chi.Router) {
 		r.Use(requireAuth)

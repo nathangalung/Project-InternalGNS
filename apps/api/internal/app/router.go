@@ -71,6 +71,10 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 		_, _ = w.Write([]byte(`{"status":"ready"}`))
 	})
 
+	// Only a development API may drop Secure, and only for plain-http
+	// loopback requests; see session.Cookies.
+	cookies := session.Cookies{Development: cfg.Env == "development"}
+
 	d := deps.Deps{
 		Pool:          pool,
 		Tx:            pool,
@@ -88,6 +92,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 			SellerIDTKU: cfg.CoretaxSellerIDTKU,
 		},
 		Storage: storageClient,
+		Cookies: cookies,
 	}
 	// A nil client must stay a nil interface.
 	if storageClient != nil {
@@ -96,7 +101,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 
 	authSvc := auth.NewService(users.NewRepo(pool, store), cfg.JWTSecret, cfg.JWTExpiry).
 		WithRefresh(auth.NewRefreshRepo(pool, store), cfg.RefreshTokenExpiry)
-	authHandler := auth.NewHandler(authSvc)
+	authHandler := auth.NewHandler(authSvc, cookies, origins)
 	requireAuth := authMiddleware(authSvc)
 
 	r.Route("/api/v1", func(r chi.Router) {

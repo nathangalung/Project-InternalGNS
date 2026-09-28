@@ -19,9 +19,13 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/app"
 	"github.com/nathangalung/internalgns/apps/api/internal/auth"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
+
+// spaOrigin is the listed origin.
+const spaOrigin = "http://spa.test"
 
 const (
 	rightPassword = "Benar-pw1!"
@@ -64,7 +68,8 @@ func (s *scenarioState) newServer() {
 		JWTSecret:          "auth-acceptance-secret",
 		JWTExpiry:          time.Hour,
 		RefreshTokenExpiry: 24 * time.Hour,
-		CORSAllowedOrigins: []string{"*"},
+		Env:                "test",
+		CORSAllowedOrigins: []string{spaOrigin},
 	}
 	pool := testutil.Pool(s.t)
 	store := testutil.Store(s.t)
@@ -73,6 +78,11 @@ func (s *scenarioState) newServer() {
 }
 
 func (s *scenarioState) send(method, path, bearer, ip string, body any) error {
+	return s.sendWith(method, path, bearer, ip, body, nil)
+}
+
+// sendWith lets a step shape headers.
+func (s *scenarioState) sendWith(method, path, bearer, ip string, body any, shape func(*http.Request)) error {
 	var rdr io.Reader
 	if body != nil {
 		raw, err := json.Marshal(body)
@@ -95,6 +105,9 @@ func (s *scenarioState) send(method, path, bearer, ip string, body any) error {
 		ip = nextIP()
 	}
 	req.Header.Set("X-Forwarded-For", ip)
+	if shape != nil {
+		shape(req)
+	}
 	res, err := s.srv.Client().Do(req)
 	if err != nil {
 		return err
@@ -150,7 +163,9 @@ func (s *scenarioState) captureTokens() error {
 		return fmt.Errorf("decode session: %w body=%s", err, s.body)
 	}
 	s.access = resp.Token
-	s.refresh = resp.RefreshToken
+	if c := s.refreshCookie(); c != nil && c.Value != "" {
+		s.refresh = c.Value
+	}
 	return nil
 }
 
@@ -212,12 +227,19 @@ func (s *scenarioState) failLoginsFromOneAddress(n int) error {
 }
 
 func (s *scenarioState) tokensIssued() error {
-	var resp auth.LoginResponse
+	var resp map[string]any
 	if err := json.Unmarshal(s.body, &resp); err != nil {
 		return err
 	}
-	if resp.Token == "" || resp.RefreshToken == "" {
-		return fmt.Errorf("want access and refresh token body=%s", s.body)
+	if tok, _ := resp["token"].(string); tok == "" {
+		return fmt.Errorf("want an access token body=%s", s.body)
+	}
+	c := s.refreshCookie()
+	if c == nil || c.Value == "" {
+		return fmt.Errorf("want a refresh cookie got %v", s.last.Header.Values("Set-Cookie"))
+	}
+	if strings.Contains(string(s.body), c.Value) {
+		return fmt.Errorf("the refresh token leaked into the body=%s", s.body)
 	}
 	return nil
 }
@@ -227,8 +249,7 @@ func (s *scenarioState) calls(path string) error {
 }
 
 func (s *scenarioState) refreshSession() error {
-	if err := s.send(http.MethodPost, "/api/v1/auth/refresh", "", "",
-		auth.RefreshRequest{RefreshToken: s.refresh}); err != nil {
+	if err := s.cookiePost("/api/v1/auth/refresh", s.refresh, nil); err != nil {
 		return err
 	}
 	return s.captureTokens()
@@ -242,8 +263,7 @@ func (s *scenarioState) refreshedSession() error {
 }
 
 func (s *scenarioState) replayFirstRefresh() error {
-	return s.send(http.MethodPost, "/api/v1/auth/refresh", "", "",
-		auth.RefreshRequest{RefreshToken: s.firstRefresh})
+	return s.cookiePost("/api/v1/auth/refresh", s.firstRefresh, nil)
 }
 
 func (s *scenarioState) refreshRotated() error {
@@ -394,8 +414,7 @@ func (s *scenarioState) waitBlockedOn(ctx context.Context, pid int, done <-chan 
 }
 
 func (s *scenarioState) logOut() error {
-	return s.send(http.MethodPost, "/api/v1/auth/logout", "", "",
-		auth.LogoutRequest{RefreshToken: s.refresh})
+	return s.cookiePost("/api/v1/auth/logout", s.refresh, nil)
 }
 
 // expireRefresh backdates token expiry.
@@ -406,7 +425,7 @@ func (s *scenarioState) expireRefresh() error {
 }
 
 func (s *scenarioState) refreshWith(token string) error {
-	return s.send(http.MethodPost, "/api/v1/auth/refresh", "", "", auth.RefreshRequest{RefreshToken: token})
+	return s.cookiePost("/api/v1/auth/refresh", token, nil)
 }
 
 // callsForged re-signs with another key.
@@ -501,7 +520,16 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the account has failed to log in (\d+) times$`, state.failLogins)
 		sc.Step(`^the account logs in with a wrong password (\d+) times from one address$`, state.failLoginsFromOneAddress)
 		sc.Step(`^the account is logged in$`, state.loggedIn)
-		sc.Step(`^the response carries an access and a refresh token$`, state.tokensIssued)
+		sc.Step(`^the response carries an access token and no refresh token$`, state.tokensIssued)
+		sc.Step(`^the refresh cookie is HttpOnly, Secure, SameSite=Strict and scoped to "([^"]+)"$`, state.cookieAttributes)
+		sc.Step(`^the refresh cookie is cleared$`, state.cookieCleared)
+		sc.Step(`^the account sends its refresh token in the body instead of the cookie$`, state.refreshInBody)
+		sc.Step(`^the account posts to "([^"]+)" from the origin "([^"]+)"$`, state.postFromOrigin)
+		sc.Step(`^the account posts to "([^"]+)" without an Origin$`, state.postWithoutOrigin)
+		sc.Step(`^the account posts to "([^"]+)" without the CSRF header$`, state.postWithoutCSRF)
+		sc.Step(`^a page at "([^"]+)" preflights "([^"]+)"$`, state.preflight)
+		sc.Step(`^the response grants no credentials$`, state.grantsNoCredentials)
+		sc.Step(`^the response grants credentials to "([^"]+)"$`, state.grantsCredentialsTo)
 		sc.Step(`^the account calls "([^"]+)"$`, state.calls)
 		sc.Step(`^someone calls "([^"]+)" without a token$`, func(path string) error {
 			return state.send(http.MethodGet, path, "", "", nil)
@@ -551,4 +579,105 @@ func TestAuthFeatures(t *testing.T) {
 	if status := suite.Run(); status != 0 {
 		t.Fatalf("godog suite failed status=%d", status)
 	}
+}
+
+// cookiePost calls a cookie route.
+// It sends what the SPA sends: the listed Origin, the CSRF header and, when
+// token is set, the refresh cookie. shape may then strip or alter any of it.
+func (s *scenarioState) cookiePost(path, token string, shape func(*http.Request)) error {
+	return s.sendWith(http.MethodPost, path, "", "", nil, func(r *http.Request) {
+		r.Header.Set("Origin", spaOrigin)
+		r.Header.Set(session.CSRFHeader, "1")
+		if token != "" {
+			r.AddCookie(&http.Cookie{Name: session.CookieName, Value: token})
+		}
+		if shape != nil {
+			shape(r)
+		}
+	})
+}
+
+// refreshCookie reads the last Set-Cookie.
+func (s *scenarioState) refreshCookie() *http.Cookie {
+	for _, c := range s.last.Cookies() {
+		if c.Name == session.CookieName {
+			return c
+		}
+	}
+	return nil
+}
+
+func (s *scenarioState) cookieAttributes(path string) error {
+	c := s.refreshCookie()
+	switch {
+	case c == nil || c.Value == "":
+		return fmt.Errorf("no refresh cookie in %v", s.last.Header.Values("Set-Cookie"))
+	case !c.HttpOnly || !c.Secure || c.SameSite != http.SameSiteStrictMode:
+		return fmt.Errorf("want HttpOnly, Secure, SameSite=Strict got %q", c.Raw)
+	case c.Path != path || c.Domain != "":
+		return fmt.Errorf("want host-only Path=%s got %q", path, c.Raw)
+	case c.MaxAge != 0 || !c.Expires.IsZero():
+		return fmt.Errorf("want a session cookie without Max-Age or Expires got %q", c.Raw)
+	}
+	return nil
+}
+
+func (s *scenarioState) cookieCleared() error {
+	c := s.refreshCookie()
+	if c == nil || c.Value != "" || c.MaxAge >= 0 || c.Path != session.CookiePath || !c.Secure {
+		return fmt.Errorf("want the refresh cookie expired got %v", s.last.Header.Values("Set-Cookie"))
+	}
+	return nil
+}
+
+// refreshInBody uses the old contract.
+func (s *scenarioState) refreshInBody() error {
+	return s.sendWith(http.MethodPost, "/api/v1/auth/refresh", "", "",
+		map[string]string{"refreshToken": s.refresh}, func(r *http.Request) {
+			r.Header.Set("Origin", spaOrigin)
+			r.Header.Set(session.CSRFHeader, "1")
+		})
+}
+
+func (s *scenarioState) postFromOrigin(path, origin string) error {
+	return s.cookiePost(path, s.refresh, func(r *http.Request) { r.Header.Set("Origin", origin) })
+}
+
+func (s *scenarioState) postWithoutOrigin(path string) error {
+	return s.cookiePost(path, s.refresh, func(r *http.Request) { r.Header.Del("Origin") })
+}
+
+func (s *scenarioState) postWithoutCSRF(path string) error {
+	return s.cookiePost(path, s.refresh, func(r *http.Request) { r.Header.Del(session.CSRFHeader) })
+}
+
+func (s *scenarioState) preflight(origin, path string) error {
+	s.newServerIfMissing()
+	return s.sendWith(http.MethodOptions, path, "", "", nil, func(r *http.Request) {
+		r.Header.Set("Origin", origin)
+		r.Header.Set("Access-Control-Request-Method", http.MethodPost)
+		r.Header.Set("Access-Control-Request-Headers", "x-gns-csrf")
+	})
+}
+
+func (s *scenarioState) newServerIfMissing() {
+	if s.srv == nil {
+		s.newServer()
+	}
+}
+
+func (s *scenarioState) grantsNoCredentials() error {
+	h := s.last.Header
+	if h.Get("Access-Control-Allow-Origin") != "" || h.Get("Access-Control-Allow-Credentials") != "" {
+		return fmt.Errorf("want no CORS grant got %v", h)
+	}
+	return nil
+}
+
+func (s *scenarioState) grantsCredentialsTo(origin string) error {
+	h := s.last.Header
+	if h.Get("Access-Control-Allow-Origin") != origin || h.Get("Access-Control-Allow-Credentials") != "true" {
+		return fmt.Errorf("want a credentialed grant to %s got %v", origin, h)
+	}
+	return nil
 }

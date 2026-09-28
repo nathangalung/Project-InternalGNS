@@ -8,6 +8,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
 )
 
@@ -30,11 +31,25 @@ var refreshDetails = []struct {
 }
 
 type Handler struct {
-	svc *Service
+	svc     *Service
+	cookies session.Cookies
+	origins session.Origins
 }
 
-func NewHandler(svc *Service) *Handler {
-	return &Handler{svc: svc}
+// NewHandler wires cookie rules.
+// origins gates the cookie routes and must be the set CORS uses.
+func NewHandler(svc *Service, cookies session.Cookies, origins session.Origins) *Handler {
+	return &Handler{svc: svc, cookies: cookies, origins: origins}
+}
+
+// respond sets the cookie, writes the body.
+// The refresh token never enters the body. A service without a refresh
+// store mints none, so no cookie is set.
+func (h *Handler) respond(w http.ResponseWriter, r *http.Request, s Session) {
+	if s.RefreshToken != "" {
+		h.cookies.Set(w, r, s.RefreshToken)
+	}
+	httpx.WriteJSON(w, http.StatusOK, s.LoginResponse)
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
@@ -68,37 +83,39 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErr(w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, resp)
+	h.respond(w, r, resp)
 }
 
+// Logout ends the cookie's session.
+// It revokes the token the cookie carries, if any, and expires the cookie.
+// A stale tab without one still logs out.
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	var req LogoutRequest
-	// Body is optional — old clients that haven't been redeployed still send
-	// nothing. Best-effort decode then revoke.
-	_ = json.NewDecoder(r.Body).Decode(&req)
-	if req.RefreshToken != "" {
-		if err := h.svc.RevokeRefresh(r.Context(), req.RefreshToken); err != nil {
+	if raw := session.Read(r); raw != "" {
+		if err := h.svc.RevokeRefresh(r.Context(), raw); err != nil {
 			httperr.RenderDBErr(w, err)
 			return
 		}
 	}
+	h.cookies.Clear(w, r)
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// Refresh rotates the cookie's token.
+// Only the cookie is read; a body is ignored. Every refusal expires the
+// cookie, since the token it holds will never work again. An outage does
+// not, so the client can retry.
 func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
-	var req RefreshRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
-		return
-	}
-	if req.RefreshToken == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"refreshToken": "Token penyegar wajib diisi."}))
+	raw := session.Read(r)
+	if raw == "" {
+		h.cookies.Clear(w, r)
+		httperr.Render(w, httperr.Unauthorized(DetailNotSignedIn))
 		return
 	}
 
-	resp, err := h.svc.Refresh(r.Context(), req.RefreshToken)
+	resp, err := h.svc.Refresh(r.Context(), raw)
 	for _, rd := range refreshDetails {
 		if errors.Is(err, rd.err) {
+			h.cookies.Clear(w, r)
 			httperr.Render(w, httperr.Unauthorized(rd.detail))
 			return
 		}
@@ -107,7 +124,7 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErr(w, err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, resp)
+	h.respond(w, r, resp)
 }
 
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
@@ -169,6 +186,7 @@ func (h *Handler) ChangeOwnPassword(w http.ResponseWriter, r *http.Request) {
 			"Kata sandi akun ini baru saja diubah di tempat lain. Masuk kembali dengan kata sandi terbaru."))
 		return
 	case errors.Is(err, ErrSessionRevoked):
+		h.cookies.Clear(w, r)
 		httperr.Render(w, httperr.Unauthorized(DetailSessionRevoked))
 		return
 	case err != nil:
@@ -176,5 +194,6 @@ func (h *Handler) ChangeOwnPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Every session ended, this one too; the client signs in again.
+	h.cookies.Clear(w, r)
 	w.WriteHeader(http.StatusNoContent)
 }

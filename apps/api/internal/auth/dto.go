@@ -15,6 +15,15 @@ type LoginResponse struct {
 	User             MeUser `json:"user"`
 }
 
+// Session is a minted session.
+// The body goes to the client; the refresh token only ever travels in the
+// HttpOnly cookie the handler sets from it.
+type Session struct {
+	LoginResponse
+	RefreshToken     string
+	RefreshExpiresAt int64
+}
+
 type RefreshRequest struct {
 	RefreshToken string `json:"refreshToken"`
 }
