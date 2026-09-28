@@ -56,6 +56,19 @@ refuses any other. A role change, a deactivation, or a password change bumps
 the version and revokes refresh tokens, so every open session of that user
 ends on its next request.
 
+The refresh token travels only in the `gns_refresh` cookie, never in a
+response body: HttpOnly, Secure, SameSite=Strict, `Path=/api/v1/auth`,
+host-only on the API host, with no Max-Age (only a development API on
+plain-http loopback drops Secure; `shared/session`). Refresh reads the cookie
+and nothing else. Refresh and logout are the only cookie-authenticated
+routes, so `session.Guard` refuses them with a 403 unless `Origin` is listed
+in `CORS_ALLOWED_ORIGINS` and `X-GNS-CSRF: 1` is sent. Logout, every refused
+refresh, and any change that ends the caller's own session answer with a
+Set-Cookie that expires the cookie; another user's cookie dies on its next
+refresh. CORS grants credentials to exactly the listed origins, and config
+refuses `*`, an empty list, or a malformed origin in every environment.
+Details: `docs/backend_dev_guide.md` (Sessions and CORS).
+
 ## Essential Commands
 
 Run from the repo root. `make help` lists every target.

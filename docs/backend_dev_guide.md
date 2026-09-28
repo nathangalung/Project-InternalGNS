@@ -12,7 +12,8 @@ HTTP request
 chi router (internal/app/router.go): request id, logging, recover, timeouts,
     security headers, 2 MiB body limit, CORS, then /api/v1
     ↓
-authMiddleware (all of /api/v1 except /auth/login, /refresh, /logout):
+authMiddleware (all of /api/v1 except /auth/login, /refresh, /logout;
+    refresh and logout sit behind session.Guard instead):
     verifies the JWT, loads role, is_active and session_version
     ↓
 requireRole / readOnlyFor at the subtree mount
@@ -32,6 +33,46 @@ PostgreSQL: tables, triggers, plpgsql functions
   that lock the row they change. Go mirrors their tables for display
   (`Transitions`, `StatusLabel`) and a test keeps the two equal.
 
+### Sessions and CORS
+
+The refresh token lives only in a cookie; no response body carries it.
+
+- Login and refresh set `gns_refresh`: HttpOnly, Secure, SameSite=Strict,
+  `Path=/api/v1/auth`, no `Domain` (host-only on the API host) and no
+  `Max-Age` or `Expires`: a browser-session cookie, with the server-side
+  `REFRESH_TOKEN_EXPIRY` as the real limit.
+  `shared/session.Cookies` builds it; it drops Secure only when `ENV` is
+  `development` and the request reached the API over plain http on a
+  loopback host, which is `make dev`. Production sits behind Traefik, where
+  the request is plain http too, so the environment alone keeps Secure on.
+- `POST /auth/refresh` reads only the cookie and ignores any body. A missing
+  cookie is a 401 (`Anda belum masuk…`); every other refusal (unknown,
+  expired, revoked, reused) is a 401 with its own detail. Rotation, reuse
+  detection and `session_version` are unchanged.
+- Refresh and logout are the only routes that authenticate by cookie, so
+  `session.Guard` sits in front of both, before the rate limiter. It answers
+  403 with an Indonesian detail when `Origin` is missing, `null` or not in
+  `CORS_ALLOWED_ORIGINS`, and when the `X-GNS-CSRF: 1` header is absent. A
+  cross-origin page cannot add that header without a preflight, and the
+  preflight passes only for a listed origin.
+- The cookie is expired (`Max-Age=0`, same name, path and Secure) by logout,
+  by every refresh refusal, by a successful or session-ending
+  `PATCH /auth/me/password`, and by a users edit that ends the caller's own
+  session (own role change, own deactivation, own password reset). When an
+  admin revokes someone else, that user's cookie is expired by their next
+  refresh, which the revoked token fails. An outage (5xx) or a 429 leaves
+  the cookie alone, so the client can retry.
+- CORS (`go-chi/cors`) sends `Access-Control-Allow-Credentials: true` and
+  reflects the origin only for an exact entry of `CORS_ALLOWED_ORIGINS`,
+  through the same matcher the guard uses. `AllowedOrigins` stays unset
+  because the library reads an empty list or `*` there as any origin. Config
+  refuses `*`, an empty list, or any entry that is not
+  `scheme://host[:port]` in every environment; the default is the dev SPA,
+  `http://localhost:5174`.
+- Browsers apply a `Set-Cookie` on a cross-origin response only when the
+  request was sent with credentials, so the SPA calls the auth routes with
+  `credentials: "include"`.
+
 ## 2. Layout
 
 ```
@@ -44,7 +85,7 @@ internal/app/         config, router, middleware, background loops
 internal/<feature>/   routes.go, handler.go, repo.go, dto.go, tests,
                       acceptance/ (godog)
 internal/shared/      db, httperr, httpx, paginate, listq, assetproxy,
-                      sheet, money, tz, deps
+                      sheet, money, tz, deps, session
 db/queries/           <feature>.sql named queries, required.go
 db/functions/         current body of every database function
 db/migrations/        goose migrations

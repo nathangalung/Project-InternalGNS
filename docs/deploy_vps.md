@@ -1,4 +1,6 @@
-# Deploy to VPS (shared with other Dokploy projects)
+| Reload a signed-in page                        | stays signed in (the refresh cookie restores the session) |
+| Refresh from a foreign origin (below)          | `403`, no `set-cookie`                                     |
+MinIO on `:9000/:9001`. CORS allows only the dev SPA, `http://localhost:5174`. |# Deploy to VPS (shared with other Dokploy projects)
 
 Step-by-step guide for deploying InternalGNS onto a single VPS that
 **already** runs Dokploy + Traefik + Postgres + other projects (e.g.
@@ -205,7 +207,11 @@ still a template. It refuses:
 
 - a `JWT_SECRET` shorter than 32 bytes, the template value, or the dev value;
 - a missing, template or dev `SUPERADMIN_PASSWORD`;
-- `CORS_ALLOWED_ORIGINS=*`;
+- a `CORS_ALLOWED_ORIGINS` that is empty, contains `*`, or holds anything
+  but exact origins (`https://host`, no path, no trailing slash). The API
+  sends credentials to every listed origin, so this check runs in every
+  environment, not only production. List the SPA origin, which is
+  `https://internal.globalsakti.com` in production;
 - `minioadmin` or any `CHANGE_ME` as the MinIO user or password;
 - an empty or `-` `PDF_BANK_ACCOUNT_NO`, or a template `PDF_SIGNER_NAME`.
 
@@ -343,6 +349,13 @@ docker exec "$P-gns-minio-1" sh -c \
 
 `/healthz` and `/readyz` sit at the API host root, not under `/api/v1`.
 
+The foreign-origin check, which must be refused before it reaches a token:
+
+```bash
+curl -si -X POST https://api…/api/v1/auth/refresh \
+  -H 'Origin: https://evil.example' -H 'X-GNS-CSRF: 1' | head -1
+```
+
 ## 10. Operations
 
 | Task             | How                                                                                |
@@ -448,6 +461,25 @@ as `[Report Only] Refused to ...`. To enforce the policy:
 Run these before every deploy that carries migrations, and before the first
 deploy of this branch. Its first deploy moves the database from the last
 migration in v0.3.1 (00047) to the last one in the new release.
+
+### Cookie sessions release
+
+The first release that keeps the refresh token in the `gns_refresh` cookie
+changes how a browser holds its session, with no migration.
+
+- Everyone signs in once more after the deploy. The new SPA keeps the access
+  token in memory only and ignores, then deletes, the tokens older releases
+  left in `sessionStorage`; with no cookie yet, a reload lands on the login
+  page. The old refresh tokens stay valid in `refresh_tokens` until they
+  expire or the purge removes them, but no client presents them any more.
+- `CORS_ALLOWED_ORIGINS` must be the exact SPA origin
+  (`https://internal.globalsakti.com`). The API refuses to start on `*` or an
+  empty value, and a wrong entry makes every refresh a 403, which signs
+  everyone out on each reload.
+- Deploy the web and API images from the same `TAG`. An old SPA against the
+  new API cannot refresh (it posts the token in a body the API ignores), and
+  a new SPA against an old API gets no cookie, so both mixes sign users out
+  whenever the access token expires or the page reloads.
 
 ### Migration order
 
@@ -598,6 +630,13 @@ that database, so it discards everything written since that backup, filed
 invoices included. Step 2 keeps a copy of that work; operations decides how
 each document written after the deploy is handled, since a filed invoice is
 never restated.
+
+Rolling back across the cookie sessions release (section 13) signs everyone
+out once more: the older images return the refresh token in the body and the
+older SPA keeps it in `sessionStorage`. A `gns_refresh` cookie left in a
+browser is harmless, since the older API never reads it and it ends with the
+browser session. The older API still accepts the exact
+`CORS_ALLOWED_ORIGINS` value, so the environment needs no change.
 
 That decision comes too late to protect the numbers. A document number is
 the client number plus a counter in `doc_sequences`, and new clients draw
