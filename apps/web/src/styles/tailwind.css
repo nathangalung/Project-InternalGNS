@@ -59,6 +59,17 @@
     }
   }
 
+  /* Base UI scrollbar hiding */
+  /* Base UI would inject this as an inline <style>, which the enforced
+     style-src 'self' refuses; main.tsx turns that off (CSPProvider). */
+  .base-ui-disable-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .base-ui-disable-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Status colors, read by lib/status.ts */
   :root {
     --status-disetujui-bg: #d1fae5;

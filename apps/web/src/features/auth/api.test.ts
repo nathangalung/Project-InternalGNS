@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { apiRequest, getRefreshToken } from "@/lib/api-client"
-import { changeOwnPassword, login, logout, me } from "./api"
+import { apiRequest } from "@/lib/api-client"
+import { changeOwnPassword, login, me } from "./api"
 
 vi.mock("@/lib/api-client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api-client")>()),
@@ -8,7 +8,6 @@ vi.mock("@/lib/api-client", async (importOriginal) => ({
   apiList: vi.fn(async () => ({ rows: [], total: 0 })),
   downloadPdf: vi.fn(async () => {}),
   downloadXlsx: vi.fn(async () => {}),
-  getRefreshToken: vi.fn(() => null),
 }))
 
 const request = vi.mocked(apiRequest)
@@ -32,15 +31,6 @@ describe("auth api", () => {
   it("reads the signed-in user", async () => {
     await me()
     expect(request).toHaveBeenCalledWith({ path: "/auth/me" })
-  })
-
-  it.each<[string, string | null, unknown]>([
-    ["revokes the refresh token it holds", "r1", { refreshToken: "r1" }],
-    ["sends no body without one", null, undefined],
-  ])("logout %s", async (_name, token, body) => {
-    vi.mocked(getRefreshToken).mockReturnValue(token)
-    await logout()
-    expect(request).toHaveBeenCalledWith({ path: "/auth/logout", method: "POST", body })
   })
 
   it("changes the own password with a PATCH", async () => {

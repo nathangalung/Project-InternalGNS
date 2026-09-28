@@ -194,12 +194,12 @@ services:
       - "traefik.http.routers.internalgns-web.tls.certresolver=letsencrypt"
       - "traefik.http.routers.internalgns-web.middlewares=internalgns-web-headers"
       - "traefik.http.middlewares.internalgns-web-headers.headers.stsSeconds=31536000"
-      # Report-only SPA content policy.
-      # Enforce it once a release shows no violations in the browser console
-      # (docs/deploy_vps.md). It lists exactly what the SPA loads: its own
-      # bundle and fonts, blob: and data: images for logos and previews, and
-      # the API host. The API sets its own stricter policy on its responses.
-      - "traefik.http.middlewares.internalgns-web-headers.headers.customResponseHeaders.Content-Security-Policy-Report-Only=default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self' https://${API_HOST}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+      # Enforced SPA content policy.
+      # It lists exactly what the SPA loads: its own bundle and fonts, blob:
+      # and data: images for logos and previews, and the API host. The whole
+      # e2e suite runs under it (make e2e-csp, docs/deploy_vps.md section 12).
+      # The API sets its own stricter policy on its responses.
+      - "traefik.http.middlewares.internalgns-web-headers.headers.customResponseHeaders.Content-Security-Policy=default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self' https://${API_HOST}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
       - "traefik.http.services.internalgns-web.loadbalancer.server.port=80"
     restart: unless-stopped
     networks: [dokploy-network]

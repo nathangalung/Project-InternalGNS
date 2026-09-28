@@ -10,6 +10,8 @@ import (
 
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 )
 
 type Config struct {
@@ -21,7 +23,10 @@ type Config struct {
 	JWTExpiry          time.Duration `env:"JWT_EXPIRY"           envDefault:"24h"`
 	RefreshTokenExpiry time.Duration `env:"REFRESH_TOKEN_EXPIRY" envDefault:"720h"`
 
-	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envDefault:"*" envSeparator:","`
+	// CORSAllowedOrigins lists credentialed origins.
+	// Each one receives credentialed CORS and may call the cookie-authenticated
+	// auth routes, so validate refuses a wildcard or an empty list.
+	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envDefault:"http://localhost:5174" envSeparator:","`
 
 	SuperadminEmail    string `env:"SUPERADMIN_EMAIL"    envDefault:"admin@globalsakti.com"`
 	SuperadminName     string `env:"SUPERADMIN_NAME"     envDefault:"Administrator"`
@@ -93,6 +98,9 @@ func (c Config) validate() error {
 	if isPlaceholder(c.JWTSecret) {
 		return errors.New("JWT_SECRET is still the placeholder from .env.prod.example; generate one with openssl rand -hex 32")
 	}
+	if err := validateOrigins(c.CORSAllowedOrigins); err != nil {
+		return err
+	}
 	if c.Env == "production" {
 		// compose.dev.yml is committed, so every secret it sets is public.
 		// They are well-formed and clear every check above, which is exactly
@@ -109,11 +117,6 @@ func (c Config) validate() error {
 		}
 		if isCommittedDevSecret(c.SuperadminPassword) || isCommittedDevSecret(c.Superadmin2Password) {
 			return errors.New("SUPERADMIN_PASSWORD/SUPERADMIN2_PASSWORD is the dev value published in compose.dev.yml")
-		}
-		for _, o := range c.CORSAllowedOrigins {
-			if o == "*" {
-				return errors.New("CORS_ALLOWED_ORIGINS must not be * in production")
-			}
 		}
 		// Fail closed on shipped placeholder / vendor-default credentials.
 		// Empty is left alone: it is the deliberate "storage disabled" signal
@@ -208,4 +211,19 @@ func (c Config) SlogLevel() slog.Level {
 	default:
 		return slog.LevelInfo
 	}
+}
+
+// validateOrigins refuses open CORS.
+// go-chi/cors reads an empty list or a "*" entry as "any origin", which with
+// credentials would hand every site the refresh cookie's routes.
+func validateOrigins(origins []string) error {
+	if len(origins) == 0 {
+		return errors.New("CORS_ALLOWED_ORIGINS must list at least one origin, such as http://localhost:5174")
+	}
+	for _, o := range origins {
+		if _, err := session.ParseOrigin(o); err != nil {
+			return fmt.Errorf("CORS_ALLOWED_ORIGINS entry %w; list exact origins such as https://internal.globalsakti.com", err)
+		}
+	}
+	return nil
 }

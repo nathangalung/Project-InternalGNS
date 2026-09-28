@@ -220,6 +220,7 @@ func TestConfig_DevelopmentAcceptsCommittedDevSecrets(t *testing.T) {
 		Env:                "development",
 		JWTSecret:          "local_dev_only_jwt_signing_key_0123456789abcdef",
 		DatabaseURL:        "postgres://gns_app:gns_app@postgres:5432/gns_quotation",
+		CORSAllowedOrigins: []string{"http://localhost:5174"},
 		SuperadminPassword: "AdminGNS123!",
 	}
 	assert.NoError(t, c.validate())
@@ -329,4 +330,59 @@ func TestConfig_ProductionRefusesPlaceholderSigner(t *testing.T) {
 	// Outside production the same value is tolerated.
 	c.Env = "development"
 	require.NoError(t, c.validate())
+}
+
+// CORS origins fail closed.
+// The API sends credentials to every listed origin, so an empty list or a
+// wildcard (both of which go-chi/cors reads as "any origin") refuses to boot
+// in every environment, and so does an entry no browser would ever send.
+func TestConfig_CORSOrigins(t *testing.T) {
+	cases := []struct {
+		name    string
+		origins []string
+		wantErr bool
+	}{
+		{"explicit origins", []string{"http://localhost:5174", "http://127.0.0.1:4173"}, false},
+		{"production origin", []string{"https://internal.globalsakti.com"}, false},
+		{"empty list", nil, true},
+		{"wildcard", []string{"*"}, true},
+		{"wildcard among others", []string{"http://localhost:5174", "*"}, true},
+		{"subdomain wildcard", []string{"https://*.globalsakti.com"}, true},
+		{"trailing slash", []string{"https://internal.globalsakti.com/"}, true},
+		{"path", []string{"https://internal.globalsakti.com/app"}, true},
+		{"bare host", []string{"internal.globalsakti.com"}, true},
+		{"blank entry", []string{""}, true},
+	}
+	for _, env := range []string{"development", "test", "production"} {
+		for _, tc := range cases {
+			t.Run(env+"/"+tc.name, func(t *testing.T) {
+				c := Config{
+					Env:                env,
+					JWTSecret:          testSecret,
+					DatabaseURL:        "postgres://u:p@db:5432/gns",
+					CORSAllowedOrigins: tc.origins,
+					SuperadminPassword: "a-real-generated-password",
+					PdfBankAccountNo:   "1234567890",
+					PdfSignerName:      "Budi",
+				}
+				err := c.validate()
+				if tc.wantErr {
+					require.ErrorContains(t, err, "CORS_ALLOWED_ORIGINS")
+					return
+				}
+				assert.NoError(t, err)
+			})
+		}
+	}
+}
+
+// The default origin is the dev SPA.
+func TestLoadConfig_DefaultCORSOrigin(t *testing.T) {
+	t.Chdir(t.TempDir())
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("JWT_SECRET", testSecret)
+	unsetForTest(t, "CORS_ALLOWED_ORIGINS")
+	c, err := LoadConfig()
+	require.NoError(t, err)
+	assert.Equal(t, []string{"http://localhost:5174"}, c.CORSAllowedOrigins)
 }

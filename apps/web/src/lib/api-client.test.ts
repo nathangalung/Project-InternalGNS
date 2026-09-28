@@ -176,7 +176,6 @@ describe("failed responses", () => {
   })
 
   it("never shows the proxy's English upload detail", async () => {
-    vi.stubGlobal("sessionStorage", { getItem: () => null })
     respond(409, JSON.stringify(problem(409, { detail: "object already exists" })))
     const file = new File(["x"], "a.pdf", { type: "application/pdf" })
     const err = await uploadAsset("/storage/po-docs/po/1/a.pdf", file).catch((e: unknown) => e)

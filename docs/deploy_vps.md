@@ -20,7 +20,7 @@ Source files referenced:
 
 | File | Purpose |
 |---|---|
-| `compose.dev.yml` | Local development. Builds `api` from source, exposes Postgres on `:5432`, pgweb on `:8081`, MinIO on `:9000/:9001`. CORS open. |
+| `compose.dev.yml` | Local development. Builds `api` from source, exposes Postgres on `:5432`, pgweb on `:8081`, MinIO on `:9000/:9001`. CORS allows only the dev SPA, `http://localhost:5174`. |
 | `compose.prod.yml` | Production on the VPS via Dokploy. Pulls prebuilt images from GHCR, publishes no host ports, Traefik handles ingress. |
 
 They stay separate because dev needs host-port access and a writable source
@@ -205,7 +205,11 @@ still a template. It refuses:
 
 - a `JWT_SECRET` shorter than 32 bytes, the template value, or the dev value;
 - a missing, template or dev `SUPERADMIN_PASSWORD`;
-- `CORS_ALLOWED_ORIGINS=*`;
+- a `CORS_ALLOWED_ORIGINS` that is empty, contains `*`, or holds anything
+  but exact origins (`https://host`, no path, no trailing slash). The API
+  sends credentials to every listed origin, so this check runs in every
+  environment, not only production. List the SPA origin, which is
+  `https://internal.globalsakti.com` in production;
 - `minioadmin` or any `CHANGE_ME` as the MinIO user or password;
 - an empty or `-` `PDF_BANK_ACCOUNT_NO`, or a template `PDF_SIGNER_NAME`.
 
@@ -333,22 +337,31 @@ docker exec "$P-gns-minio-1" sh -c \
 | `curl https://api…/healthz`                    | `200 ok` (process up)                                      |
 | `curl https://api…/readyz`                     | `200` (database reachable)                                 |
 | `curl -sI https://api…/healthz`                | `strict-transport-security: max-age=31536000`              |
-| `curl -sI https://internalgns…/login`          | `strict-transport-security` and `content-security-policy-report-only` |
+| `curl -sI https://internalgns…/login`          | `strict-transport-security` and `content-security-policy` (not `-report-only`) |
 | Login with superadmin                          | redirects to dashboard                                     |
 | Create a client                                | success, X-Total-Count increments                          |
 | Upload a logo                                  | object appears in MinIO `client-logos`                     |
 | Create + export a quotation PDF                | PDF downloads, signer + bank fields present                |
 | Create a PO with delivery note                 | success, delivery_note_number sequenced                    |
 | Token refresh (idle ~25h)                      | UI stays logged in (refresh-token rotation works)          |
+| Reload a signed-in page                        | stays signed in (the refresh cookie restores the session) |
+| Refresh from a foreign origin (below)          | `403`, no `set-cookie`                                     |
 
 `/healthz` and `/readyz` sit at the API host root, not under `/api/v1`.
+
+The foreign-origin check, which must be refused before it reaches a token:
+
+```bash
+curl -si -X POST https://api…/api/v1/auth/refresh \
+  -H 'Origin: https://evil.example' -H 'X-GNS-CSRF: 1' | head -1
+```
 
 ## 10. Operations
 
 | Task             | How                                                                                |
 | ---------------- | ---------------------------------------------------------------------------------- |
 | Redeploy         | bump `TAG=` in env (UI, or the script below), then **Deploy** in Dokploy UI        |
-| Rollback         | restore the pre-deploy snapshot, then set `TAG=` back (section 14; a tag alone breaks login from 00066) |
+| Rollback         | restore the pre-deploy snapshot, then set `TAG=` back (section 14; a tag alone breaks login from 00066; to v0.5.0 the CSP label goes back to report-only) |
 | Logs             | Dokploy UI → Logs tab (per-service)                                                |
 | Backup, restore  | `docs/backup_restore.md`: nightly host timer, restore rehearsal, disaster restore  |
 | DB shell         | `docker exec -it "$P-gns-postgres-1" sh -c 'psql -U "$POSTGRES_USER" "$POSTGRES_DB"'` |
@@ -420,34 +433,84 @@ TLS. They are set in the `compose.prod.yml` labels:
 - `Strict-Transport-Security: max-age=31536000` on both hosts. There is no
   `includeSubDomains` or `preload` until every sibling host is known to be
   HTTPS-only.
-- `Content-Security-Policy-Report-Only` on the web host. It allows exactly what
+- `Content-Security-Policy` on the web host, enforced. It allows exactly what
   the SPA loads: its own scripts, styles and fonts, `blob:` and `data:` images
   (logos and upload previews), and `https://<API_HOST>` for API calls. The API
-  already sends its own `default-src 'none'` policy on its responses.
+  already sends its own `default-src 'none'` policy on its responses. The label
+  is the only copy: `nginx.conf` and `index.html` carry no policy, since two
+  layers setting one intersect.
 
-On 2026-09-25 this policy was checked through a local Traefik v3.6.7 in front of
-the production images. Every screen, a logo upload, an RFQ `.xlsx` import (which
-loads exceljs) and a PDF opened in a `blob:` tab produced no report. A planted
-inline script, inline style and remote image did produce reports, so the check
-was live.
+The policy is enforced because the whole Playwright suite runs under it.
+`make e2e-csp` (and the CI e2e job, as `bun run e2e:csp`) builds the SPA
+against a separate API origin, as a release does, serves `dist` through
+`vite preview` with the policy read from this label, and fails any test whose
+browser reports a violation. The one difference from production is the API
+origin in `connect-src`: the local API instead of `https://${API_HOST}`.
+`e2e/csp.spec.ts` keeps the check honest: it fails unless the served header is
+the enforcing one with that exact policy, unless a planted inline script is
+refused and reported, and unless this label is the enforcing key.
 
-There is no report endpoint, so violations only appear in the browser console
-as `[Report Only] Refused to ...`. To enforce the policy:
+On 2026-09-28 the full 193-test suite, which covers every route and flow,
+uploads, RFQ imports and PDF exports included, ran green under the policy.
+The one refusal the run found, before the fix, was the `<style>` element
+Base UI's Select injects to hide its scrollbar; `main.tsx` turns those
+elements off with `CSPProvider` and the rule lives in `tailwind.css`.
 
-1. After a release ships, have a superadmin, a finance user and an operational
-   user each go through their daily screens with DevTools open, including a
-   PDF export, an upload and an RFQ import.
-2. If two weeks pass with no `[Report Only]` line, rename the label key from
-   `Content-Security-Policy-Report-Only` to `Content-Security-Policy` and
-   redeploy.
-3. If a line appears, fix the cause or widen the one directive it names. Never
-   add `'unsafe-inline'` or `'unsafe-eval'` to `script-src`.
+A violation is no longer a console line; it breaks the feature, since the
+browser refuses the script, style, image or request. So:
+
+1. A change that loads something new (a font from a CDN, an inline `<style>`
+   from a dependency, a new API host) fails `make e2e-csp` before it ships.
+   Fix the cause, or widen the one directive the failure names. Never add
+   `'unsafe-inline'` or `'unsafe-eval'` to `script-src`.
+2. If users report a screen that renders unstyled or does nothing after a
+   deploy, open DevTools: an enforced refusal reads `Refused to ... because
+   it violates the following Content Security Policy directive`.
+3. To stop enforcing in an emergency, rename the label key back to
+   `Content-Security-Policy-Report-Only` on `main` and redeploy. Dokploy reads
+   `compose.prod.yml` from `main` (section 3), so it is a commit, not a UI edit.
+
+Two settings must now agree. `connect-src` names `https://${API_HOST}` from the
+Dokploy environment, and the SPA calls the origin baked in from the
+`VITE_API_URL` repository variable at release (section 1), which must be
+exactly `https://<API_HOST>/api/v1`. A mismatch refuses every API call from
+the browser, login included.
 
 ## 13. Pre-deploy checks
 
 Run these before every deploy that carries migrations, and before the first
 deploy of this branch. Its first deploy moves the database from the last
 migration in v0.3.1 (00047) to the last one in the new release.
+
+### Cookie sessions release
+
+The first release that keeps the refresh token in the `gns_refresh` cookie
+changes how a browser holds its session, and ships one migration (00076).
+
+- Everyone signs in once more after the deploy. The new SPA keeps the access
+  token in memory only and ignores, then deletes, the tokens older releases
+  left in `sessionStorage`; with no cookie yet, a reload lands on the login
+  page. Migration 00076 revokes every refresh token issued before the
+  deploy (`revoked_reason = 'cookie_migration'`): those sat in
+  `sessionStorage` where any script could read them, and a copied one would
+  otherwise refresh from outside a browser until it expired. Presenting one
+  is a 401 that clears the cookie, not a reuse blast.
+- `CORS_ALLOWED_ORIGINS` must be the exact SPA origin
+  (`https://internal.globalsakti.com`). The API refuses to start on `*` or an
+  empty value, and a wrong entry makes every refresh a 403, which signs
+  everyone out on each reload.
+- Deploy the web and API images from the same `TAG`. An old SPA against the
+  new API cannot refresh (it sends no `X-GNS-CSRF` header, so the guard
+  answers 403, and the API would ignore its body token anyway), and
+  a new SPA against an old API gets no cookie, so both mixes sign users out
+  whenever the access token expires or the page reloads.
+- The same release enforces the SPA content policy (section 12). Dokploy
+  reads `compose.prod.yml` from `main`, so the enforcing label ships with
+  the merge, not with `TAG`: merge and set the new `TAG` together, since
+  only this release's SPA was proven under the enforced policy. `API_HOST`
+  must be the exact API hostname and the `VITE_API_URL` repository variable
+  exactly `https://<API_HOST>/api/v1`, because `connect-src` names that host
+  and the SPA calls that URL.
 
 ### Migration order
 
@@ -599,6 +662,26 @@ invoices included. Step 2 keeps a copy of that work; operations decides how
 each document written after the deploy is handled, since a filed invoice is
 never restated.
 
+Rolling back across the cookie sessions release (section 13), to v0.5.0 or
+older, takes three more things:
+
+- Everyone logs in again: the older images return the refresh token in the
+  body and the older SPA keeps it in `sessionStorage`. A `gns_refresh`
+  cookie left in a browser is harmless, since the older API never reads it
+  and it ends with the browser session. The older API still accepts the exact
+  `CORS_ALLOWED_ORIGINS` value, so the environment needs no change.
+- The restored snapshot predates 00076, so the refresh tokens it revoked are
+  live again. After step 5 and before step 7, delete them:
+  `q -c "DELETE FROM refresh_tokens WHERE revoked_at IS NULL;"` (the `q`
+  helper below). This works on every target: a 00047 snapshot has no
+  `revoked_reason`, and the older APIs treat a revoked token presented later
+  as reuse and end that user's sessions, while an unknown one is a plain 401.
+- The content policy goes back to report-only. Only this release's SPA was
+  proven under the enforced policy, so before step 7 rename the label key in
+  `compose.prod.yml` back to `Content-Security-Policy-Report-Only` and
+  merge that to `main`, where Dokploy reads it. Setting `TAG` alone keeps
+  the enforcing label on the older SPA.
+
 That decision comes too late to protect the numbers. A document number is
 the client number plus a counter in `doc_sequences`, and new clients draw
 their number from `company_client_number_seq`. The restore rewinds both, so
@@ -683,7 +766,8 @@ raise
 ```
 
 7. In Dokploy set `TAG` to the tag noted in section 13 and **Deploy**. The
-   restored schema is the one that image last ran, so nothing migrates.
+   restored schema is the one that image last ran, so nothing migrates. For
+   v0.5.0 or older, the report-only label is on `main` first (above).
 8. Check `https://<API_HOST>/readyz`, log in, and open a quotation PDF and a
    client logo. Login writes a refresh token, the insert a tag-only rollback
    breaks.

@@ -166,12 +166,12 @@ export default function DashboardFinancial() {
           <StatCard label="Total Invoice" value={fig(formatId(totalInvoice))} />
         </div>
 
-        <StatusTiles title="Status Invoice" items={summary?.invoiceStatuses} />
+        <StatusTiles title="Status Invoice" items={summary?.invoiceStatuses} slots={5} />
 
         {/* Chart */}
         <div className={ui.panel}>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h3 className={ui.sectionTitle}>Tren Performa Finansial</h3>
+            <h2 className={ui.sectionTitle}>Tren Performa Finansial</h2>
             <div className="flex flex-wrap gap-2">
               {chartTabs.map((tab) => (
                 <button
@@ -200,9 +200,9 @@ export default function DashboardFinancial() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex items-center justify-between gap-4 rounded-xl border border-warning/30 bg-warning/10 px-6 py-6">
             <div>
-              <h3 className="text-xl font-bold text-accent-900">
+              <h2 className="text-xl font-bold text-accent-900">
                 {fig(formatId(dueSoon))} Invoice
-              </h3>
+              </h2>
               <p className="mt-1 text-overline font-semibold uppercase tracking-[0.05em] text-accent-800/70">
                 Invoice segera jatuh tempo
               </p>
@@ -213,7 +213,7 @@ export default function DashboardFinancial() {
           </div>
           <div className="flex items-center justify-between gap-4 rounded-xl border border-error/30 bg-error/10 px-6 py-6">
             <div>
-              <h3 className="text-xl font-bold text-red-800">{fig(formatId(overdue))} Invoice</h3>
+              <h2 className="text-xl font-bold text-red-800">{fig(formatId(overdue))} Invoice</h2>
               <p className="mt-1 text-overline font-semibold uppercase tracking-[0.05em] text-red-700/70">
                 Invoice terlambat
               </p>
@@ -227,9 +227,9 @@ export default function DashboardFinancial() {
         {/* Recent invoices */}
         <div className={ui.tableWrap}>
           <div className="flex items-center justify-between border-b border-[#F1F5F9] bg-[rgba(242,244,246,0.3)] px-8 py-5">
-            <h3 className="text-lg font-bold leading-7 tracking-[-0.45px] text-[#191C1E]">
+            <h2 className="text-lg font-bold leading-7 tracking-[-0.45px] text-[#191C1E]">
               Invoice Terkini
-            </h3>
+            </h2>
             <Link to="/invoices" className={`${ui.btnPrimary} no-underline`}>
               Lihat Semua
             </Link>

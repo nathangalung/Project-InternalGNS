@@ -20,6 +20,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
@@ -37,12 +38,17 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 	r.Use(securityHeadersMiddleware)
 	r.Use(bodyLimitMiddleware(2 * 1024 * 1024))
 
+	// One matcher serves CORS and the cookie routes' Origin check. It
+	// matches listed origins exactly; AllowedOrigins stays unset because
+	// go-chi/cors reads an empty list or "*" there as any origin, which with
+	// credentials would expose the refresh cookie's routes to every site.
+	origins := session.NewOrigins(cfg.CORSAllowedOrigins)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   cfg.CORSAllowedOrigins,
+		AllowOriginFunc:  origins.AllowFunc,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "If-Match", "X-Request-Id"},
-		ExposedHeaders:   []string{"ETag", "Link", "X-Request-Id", "X-Total-Count"},
-		AllowCredentials: false,
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "If-Match", "X-Request-Id", session.CSRFHeader},
+		ExposedHeaders:   []string{"ETag", "Link", "Retry-After", "X-Request-Id", "X-Total-Count"},
+		AllowCredentials: true,
 		MaxAge:           300,
 	}))
 
@@ -65,6 +71,10 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 		_, _ = w.Write([]byte(`{"status":"ready"}`))
 	})
 
+	// Only a development API may drop Secure, and only for plain-http
+	// loopback requests; see session.Cookies.
+	cookies := session.Cookies{Development: cfg.Env == "development"}
+
 	d := deps.Deps{
 		Pool:          pool,
 		Tx:            pool,
@@ -82,6 +92,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 			SellerIDTKU: cfg.CoretaxSellerIDTKU,
 		},
 		Storage: storageClient,
+		Cookies: cookies,
 	}
 	// A nil client must stay a nil interface.
 	if storageClient != nil {
@@ -90,7 +101,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 
 	authSvc := auth.NewService(users.NewRepo(pool, store), cfg.JWTSecret, cfg.JWTExpiry).
 		WithRefresh(auth.NewRefreshRepo(pool, store), cfg.RefreshTokenExpiry)
-	authHandler := auth.NewHandler(authSvc)
+	authHandler := auth.NewHandler(authSvc, cookies, origins)
 	requireAuth := authMiddleware(authSvc)
 
 	r.Route("/api/v1", func(r chi.Router) {

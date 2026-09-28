@@ -9,7 +9,7 @@ import (
 // Routes mounts user endpoints.
 func Routes(d deps.Deps) chi.Router {
 	r := chi.NewRouter()
-	h := NewHandler(NewRepo(d.Pool, d.Queries))
+	h := NewHandler(NewRepo(d.Pool, d.Queries), d.Cookies)
 
 	r.Get("/", h.List)
 	r.Post("/", h.Create)

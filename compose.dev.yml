@@ -62,7 +62,7 @@ services:
       # deploy that forgets ENV=production would otherwise skip every guard.
       JWT_SECRET: local_dev_only_jwt_signing_key_0123456789abcdef
       JWT_EXPIRY: 24h
-      CORS_ALLOWED_ORIGINS: "*"
+      CORS_ALLOWED_ORIGINS: "http://localhost:5174"
       SUPERADMIN_EMAIL: admin@globalsakti.com
       SUPERADMIN_NAME: Administrator
       SUPERADMIN_PASSWORD: AdminGNS123!

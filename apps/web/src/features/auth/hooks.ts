@@ -1,70 +1,45 @@
 import { useQuery } from "@tanstack/react-query"
 import { useCallback, useSyncExternalStore } from "react"
 import * as auth from "@/features/auth/api"
-import { clearTokens, getRefreshToken, setOnAuthExpired, setTokens } from "@/lib/api-client"
 import { queryClient } from "@/lib/query-client"
 import { queryKeys } from "@/lib/query-keys"
-
-const AUTH_KEY = "gns_auth"
-const EVENT_NAME = "gns:auth-change"
-
-function read(): boolean {
-  return sessionStorage.getItem(AUTH_KEY) === "true"
-}
-
-function subscribe(listener: () => void): () => void {
-  const handler = () => listener()
-  window.addEventListener("storage", handler)
-  window.addEventListener(EVENT_NAME, handler)
-  return () => {
-    window.removeEventListener("storage", handler)
-    window.removeEventListener(EVENT_NAME, handler)
-  }
-}
-
-type Tokens = { token: string; refreshToken?: string }
+import { endSession, isSignedIn, signIn, signOut, subscribeSession } from "@/lib/session"
 
 export function useAuth() {
-  const isAuthenticated = useSyncExternalStore(subscribe, read, () => false)
+  const isAuthenticated = useSyncExternalStore(subscribeSession, isSignedIn, () => false)
 
-  const login = useCallback((tokens: Tokens) => {
-    sessionStorage.setItem(AUTH_KEY, "true")
-    setTokens(tokens)
-    window.dispatchEvent(new Event(EVENT_NAME))
-  }, [])
+  const login = useCallback((token: string) => signIn(token), [])
 
+  // Local state clears at once; the server revoke runs behind any refresh.
   const logout = useCallback(() => {
-    // Fire-and-forget server revoke. We don't block on it: if the network is
-    // down or the token is already revoked, local state still clears.
-    if (getRefreshToken()) {
-      void auth.logout().catch(() => {})
-    }
-    clearAuthState()
+    void signOut()
   }, [])
 
   return { isAuthenticated, login, logout }
 }
 
 export function isAuthenticatedSync(): boolean {
-  return read()
+  return isSignedIn()
 }
 
+// Local sign-out, server untouched.
 export function clearAuthState(): void {
-  sessionStorage.removeItem(AUTH_KEY)
-  clearTokens()
-  // Drop the previous user's cached data so the next login never renders it.
-  queryClient.clear()
-  window.dispatchEvent(new Event(EVENT_NAME))
+  endSession()
 }
 
-// Expiry drops auth state immediately.
-setOnAuthExpired(clearAuthState)
+// A signed-out tab keeps no data.
+//
+// Whatever ended the session (logout, expiry, another tab), the previous
+// user's cache goes with it so the next login never renders it.
+subscribeSession(() => {
+  if (!isSignedIn()) queryClient.clear()
+})
 
 export function useMe() {
   return useQuery({
     queryKey: queryKeys.auth.me(),
     queryFn: auth.me,
     staleTime: 5 * 60 * 1000,
-    enabled: read(),
+    enabled: isSignedIn(),
   })
 }

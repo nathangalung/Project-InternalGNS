@@ -56,6 +56,30 @@ refuses any other. A role change, a deactivation, or a password change bumps
 the version and revokes refresh tokens, so every open session of that user
 ends on its next request.
 
+The refresh token travels only in the `gns_refresh` cookie, never in a
+response body: HttpOnly, Secure, SameSite=Strict, `Path=/api/v1/auth`,
+host-only on the API host, with no Max-Age (only a development API on
+plain-http loopback drops Secure; `shared/session`). Refresh reads the cookie
+and nothing else. Refresh and logout are the only cookie-authenticated
+routes, so `session.Guard` refuses them with a 403 unless `Origin` is listed
+in `CORS_ALLOWED_ORIGINS` and `X-GNS-CSRF: 1` is sent. Logout, every refused
+refresh, and any change that ends the caller's own session answer with a
+Set-Cookie that expires the cookie; another user's cookie dies on its next
+refresh. CORS grants credentials to exactly the listed origins, and config
+refuses `*`, an empty list, or a malformed origin in every environment.
+Details: `docs/backend_dev_guide.md` (Sessions and CORS).
+
+The web keeps the access token in memory only (`lib/session.ts`) and never
+writes a token to web storage; tokens an older build left in
+`sessionStorage` are removed unread. Every page load, `/login` included,
+restores the session with a credentialed refresh, and a refused restore is
+not retried until the session changes. The tabs of a browser share the one
+cookie, so every rotation and the logout run under one Web Lock, and the
+rotating tab hands the new access token to the others on a
+BroadcastChannel; a logout or a login in one tab ends the session in the
+others. A 401 refreshes once and replays the request once; a failed refresh
+ends the session and the authed shell leaves for `/login`.
+
 ## Essential Commands
 
 Run from the repo root. `make help` lists every target.
@@ -70,6 +94,7 @@ make db-ui          # pgweb database browser (:8081)
 make test           # Go tests, web typecheck, and Vitest
 make test-api       # Go tests on a throwaway database, as CI runs them
 make e2e            # Playwright against the running dev stack
+make e2e-csp        # The suite under the enforced production CSP
 make cover          # Both coverage gates
 make lint           # go vet, golangci-lint when installed, and Biome
 make fmt            # gofmt and Biome format
@@ -208,18 +233,20 @@ src/
   features/          One folder per feature: api.ts, hooks.ts, components
   components/shared/ Sidebar, Modal, tables, pagination, states, links
   hooks/             Cross-feature hooks
-  lib/               api-client, rbac, format, status, entity-link, chart
-                     helpers, ui (tailwind class primitives), useListScreen,
-                     validation (form field rules), form-errors (422 to inputs)
+  lib/               api-client, session (in-memory token), rbac, format,
+                     status, entity-link, chart helpers, ui (tailwind class
+                     primitives), useListScreen, validation (form field
+                     rules), form-errors (422 to inputs)
   styles/            tailwind.css (entry, @theme tokens, base layer)
-  test/              renderHook and query helpers for hook tests
+  test/              renderHook, query and browser-tab fakes for hook tests
   types/             generated.ts (from Go DTOs) and api.ts
 ```
 
-Server state is TanStack Query; `lib/api-client.ts` attaches the JWT and maps
-errors. The API contract is `types/generated.ts`, written by `make gen-types`
-from the Go DTOs allowlisted in `apps/api/cmd/gentypes`; CI regenerates it and
-fails on any diff. `types/api.ts` re-exports it under the app's names and adds
+Server state is TanStack Query; `lib/api-client.ts` attaches the in-memory
+JWT from `lib/session.ts` and maps errors. The API contract is
+`types/generated.ts`, written by `make gen-types` from the Go DTOs
+allowlisted in `apps/api/cmd/gentypes`; CI regenerates it and fails on any
+diff. `types/api.ts` re-exports it under the app's names and adds
 only what Go does not carry: narrowed unions for text the database fixes and
 query-only types. There is no OpenAPI spec.
 
@@ -277,13 +304,35 @@ query call.
   `src/test/renderHook.tsx`. `bun run test` runs both projects.
 - Components and routes are covered by Playwright in `apps/web/e2e`: one
   scenario per main or alternative flow, plus the role matrix. The setup
-  project signs each role in once through the API and `fixtures.ts` seeds the
-  tokens into sessionStorage (`test.use({ session: "finance" })`). It creates
-  or reactivates the `e2e.*@globalsakti.com` users, and the teardown project
-  deactivates them, since users cannot be deleted. `make e2e` runs against the
-  dev stack from `make dev`, with admin credentials from `apps/api/.env`;
-  `E2E_BASE_URL` and `E2E_API_URL` point it elsewhere. Login allows 5 attempts
-  per minute per IP, so a rerun inside a minute waits out the window.
+  project creates or reactivates the `e2e.*@globalsakti.com` users and saves
+  an access token per role for the specs' API calls; the teardown project
+  deactivates the users, since users cannot be deleted. `fixtures.ts` signs
+  every test context in for real and starts it from that login's
+  storageState, on its own `x-forwarded-for` address
+  (`test.use({ session: "finance" })`). The address is added by a route on
+  API requests, not as an extra header, which a cross-origin API would refuse
+  in CORS. Never share one saved refresh cookie
+  between contexts: the first page load rotates it, and the API answers the
+  next context's replay by revoking every session of that user. Every page
+  load spends one refresh (20 per minute per address), so the own address
+  also keeps parallel tests from throttling each other. `make e2e` runs
+  against the dev stack from `make dev`, with admin credentials from
+  `apps/api/.env`; `E2E_BASE_URL` and `E2E_API_URL` point it elsewhere.
+  Login allows 5 attempts per minute per IP, so a rerun inside a minute waits
+  out the window.
+- The SPA content policy is enforced (the web label in `compose.prod.yml`),
+  so every test fails on a violation its browser reports. `make e2e-csp` (and
+  the CI e2e job) builds the SPA against a separate API origin, serves `dist`
+  with that policy, and runs the whole suite against the throwaway
+  `gns_csp_test`; `e2e/csp.spec.ts` proves the header is live. A new
+  dependency that injects an inline `<style>` or loads from another host
+  fails there: fix the cause, never add `unsafe-inline` or `unsafe-eval`.
+- Lighthouse CI (`bun run lighthouse`, the CI `lighthouse` job) audits 12
+  pages three times each and fails any category below 0.95.
+  `lighthouse/login-fixture.cjs` signs in inside Chrome, so every page
+  restores its session from the refresh cookie and is scored as itself, not
+  as `/login`. Fix a failing audit at its cause; never lower a threshold or
+  drop a URL.
 
 Coverage gates fail CI below their tier; `make cover` runs both locally.
 

@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test"
-import { test as base, expect, savedTokens, seedSession } from "./fixtures"
-import { call, generatePassword, login, ownIp } from "./support/api"
+import { test as base, expect, savedTokens } from "./fixtures"
+import { call, generatePassword, ownIp } from "./support/api"
 import { baseURL } from "./support/env"
 import { createUser, resetPassword, type SeedUser, setUser, uniqueTag } from "./support/finance"
 import { isolateIp, signedInContext, submitLogin } from "./support/session"
@@ -134,45 +134,68 @@ test("an admin password reset clears the miss count (AU-8)", async ({ page, admi
   await expect(page).toHaveURL(/\/$/)
 })
 
+// Pathname only, API side.
+const apiPath = (url: string) => new URL(url).pathname.match(/\/api\/v1(\/.*)$/)?.[1]
+
 test("an expired access token is renewed without a trip to the login page", async ({
   browser,
   user,
 }) => {
-  const context = await browser.newContext({ baseURL, locale: "id-ID", timezoneId: "Asia/Jakarta" })
+  const { context, page } = await signedInContext(browser, user)
   try {
-    const ip = await isolateIp(context)
-    const { refreshToken } = await login(user.email, user.password, ip)
-    await seedSession(context, { token: "kedaluwarsa", refreshToken })
-    const page = await context.newPage()
-    const refreshed = page.waitForResponse((r) => r.url().endsWith("/auth/refresh"))
+    // The first invoice list goes out with a token the API refuses.
+    let forged = false
+    await page.route(
+      (url) => apiPath(url.href) === "/invoices",
+      async (route) => {
+        if (forged) return route.continue()
+        forged = true
+        const headers = { ...route.request().headers(), authorization: "Bearer kedaluwarsa" }
+        await route.continue({ headers })
+      },
+    )
+    const refused = page.waitForResponse(
+      (r) => apiPath(r.url()) === "/invoices" && r.status() === 401,
+    )
+    const replayed = page.waitForResponse(
+      (r) => apiPath(r.url()) === "/invoices" && r.status() === 200,
+    )
     await page.goto("/invoices")
-    expect((await refreshed).status()).toBe(200)
+    await refused
+    await replayed
     await expect(page.getByRole("heading", { name: "Daftar Invoice" })).toBeVisible()
-    const token = await page.evaluate(() => sessionStorage.getItem("gns_token"))
-    expect(token).toBeTruthy()
-    expect(token).not.toBe("kedaluwarsa")
+    await expect(page).toHaveURL(/\/invoices$/)
   } finally {
     await context.close()
   }
 })
 
-test("signing out ends the session and its refresh token", async ({ browser, user }) => {
+test("signing out ends the session and its refresh cookie", async ({ browser, user }) => {
   const { context, page } = await signedInContext(browser, user)
   try {
     await page.goto("/")
     await expect(page.getByRole("heading", { name: "Dashboard Utama" })).toBeVisible()
-    const refreshToken = await page.evaluate(() => sessionStorage.getItem("gns_refresh_token"))
-    expect(refreshToken).toBeTruthy()
+    const cookie = (await context.cookies()).find((c) => c.name === "gns_refresh")
+    expect(cookie).toBeTruthy()
 
     await page.getByRole("button", { name: "Keluar" }).click()
     await expect(page).toHaveURL(/\/login$/)
+    // The logout answer expires the cookie in the browser.
+    await expect
+      .poll(async () => (await context.cookies()).some((c) => c.name === "gns_refresh"))
+      .toBe(false)
     await page.goto("/invoices")
     await expect(page).toHaveURL(/\/login$/)
 
+    // Replayed by hand, the old cookie is dead on the server too.
     const res = await call("/auth/refresh", {
       method: "POST",
       ip: ownIp(),
-      body: JSON.stringify({ refreshToken }),
+      headers: {
+        cookie: `gns_refresh=${cookie?.value}`,
+        origin: new URL(baseURL).origin,
+        "X-GNS-CSRF": "1",
+      },
     })
     expect(res.status).toBe(401)
   } finally {

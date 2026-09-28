@@ -13,16 +13,20 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 )
 
 // Handler exposes user endpoints.
 type Handler struct {
-	repo *Repo
+	repo    *Repo
+	cookies session.Cookies
 }
 
 // NewHandler builds the handler.
-func NewHandler(repo *Repo) *Handler {
-	return &Handler{repo: repo}
+// cookies expires the caller's refresh cookie when an edit ends their own
+// session.
+func NewHandler(repo *Repo, cookies session.Cookies) *Handler {
+	return &Handler{repo: repo, cookies: cookies}
 }
 
 // List pages users with X-Total-Count.
@@ -144,6 +148,11 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.RenderDBErr(w, err)
 		return
 	}
+	// The caller's live role is in the context, so a changed role or a
+	// deactivation here means the repo just ended the caller's own sessions.
+	if actor == id && (string(u.Role) != deps.CurrentUserRole(r.Context()) || !u.IsActive) {
+		h.cookies.Clear(w, r)
+	}
 	httpx.WriteJSON(w, http.StatusOK, u)
 }
 
@@ -173,6 +182,10 @@ func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		}
 		httperr.RenderDBErr(w, err)
 		return
+	}
+	// A reset ends every session of the account, the caller's own included.
+	if actor == id {
+		h.cookies.Clear(w, r)
 	}
 	w.WriteHeader(http.StatusNoContent)
 }

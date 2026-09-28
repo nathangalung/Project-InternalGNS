@@ -6,6 +6,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
@@ -38,6 +39,9 @@ type Deps struct {
 	// Objects stats uploads before attach.
 	// Nil when storage is not configured, never a nil client.
 	Objects ObjectStore
+	// Cookies issues the refresh cookie.
+	// Handlers that end the caller's own session expire it.
+	Cookies session.Cookies
 }
 
 // ObjectStore confirms uploaded objects.

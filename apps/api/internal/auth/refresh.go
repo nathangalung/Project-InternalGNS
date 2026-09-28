@@ -19,6 +19,11 @@ var (
 	ErrInvalidRefresh = errors.New("invalid refresh token")
 	ErrExpiredRefresh = errors.New("refresh token expired")
 	ErrReusedRefresh  = errors.New("refresh token reused")
+	// ErrRacedRefresh is reuse inside grace.
+	// It still matches ErrReusedRefresh, but the service judged it a benign
+	// race (a second tab, a retried request), so the session behind the
+	// rotated successor is live and its cookie must survive.
+	ErrRacedRefresh = fmt.Errorf("%w inside the grace window", ErrReusedRefresh)
 	// ErrRevokedRefresh marks deliberately ended tokens.
 	// The end was on purpose (logout, admin change, an earlier reuse blast),
 	// so replaying such a token is not evidence of theft.

@@ -1,7 +1,6 @@
 package auth_test
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -123,7 +122,7 @@ func authServerOn(t *testing.T, store queries.Store, userID func() int64) *httpt
 		})
 	}
 	r := chi.NewRouter()
-	r.Mount("/auth", auth.Routes(auth.NewHandler(svc), requireAuth))
+	r.Mount("/auth", auth.Routes(newHandler(svc), requireAuth))
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)
 	return srv
@@ -157,15 +156,16 @@ func TestHandler_ChangeOwnPassword_Refusals(t *testing.T) {
 		body       string
 		wantStatus int
 		wantDetail string
+		wantClear  bool
 	}{
 		{"anonymous", func(t *testing.T) queries.Store { return testutil.Store(t) }, anonymous,
-			ownChangeBody(t, faultPassword), http.StatusUnauthorized, auth.DetailNotSignedIn},
+			ownChangeBody(t, faultPassword), http.StatusUnauthorized, auth.DetailNotSignedIn, false},
 		{"malformed json", func(t *testing.T) queries.Store { return testutil.Store(t) }, nil,
-			`{"currentPassword":`, http.StatusBadRequest, "invalid json"},
+			`{"currentPassword":`, http.StatusBadRequest, "invalid json", false},
 		{"account gone", func(t *testing.T) queries.Store { return testutil.Store(t) }, gone,
-			ownChangeBody(t, faultPassword), http.StatusUnauthorized, auth.DetailSessionRevoked},
+			ownChangeBody(t, faultPassword), http.StatusUnauthorized, auth.DetailSessionRevoked, true},
 		{"storage failure", func(t *testing.T) queries.Store { return failing(t, "users.reset_login_attempts") }, nil,
-			ownChangeBody(t, faultPassword), http.StatusInternalServerError, "internal server error"},
+			ownChangeBody(t, faultPassword), http.StatusInternalServerError, "internal server error", false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -175,6 +175,11 @@ func TestHandler_ChangeOwnPassword_Refusals(t *testing.T) {
 			assert.Equal(t, tc.wantStatus, res.StatusCode)
 			assert.Equal(t, "application/problem+json", res.Header.Get("Content-Type"))
 			assert.Equal(t, tc.wantDetail, problemDetail(t, res))
+			if tc.wantClear {
+				assertCleared(t, res)
+			} else {
+				assertNoCookie(t, res)
+			}
 		})
 	}
 }
@@ -197,17 +202,16 @@ func TestHandler_SessionEndpoints_StorageFailure(t *testing.T) {
 			require.NoError(t, err)
 
 			r := chi.NewRouter()
-			r.Mount("/auth", auth.Routes(auth.NewHandler(svcOn(tx, failing(t, tc.key))),
+			r.Mount("/auth", auth.Routes(newHandler(svcOn(tx, failing(t, tc.key))),
 				func(next http.Handler) http.Handler { return next }))
 			srv := httptest.NewServer(r)
 			t.Cleanup(srv.Close)
 
-			body, err := json.Marshal(auth.RefreshRequest{RefreshToken: sess.RefreshToken})
-			require.NoError(t, err)
-			res, err := srv.Client().Post(srv.URL+tc.path, "application/json", bytes.NewReader(body))
-			require.NoError(t, err)
+			res := cookieCall(t, srv, tc.path, sess.RefreshToken, nil)
 			defer res.Body.Close()
 			assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
+			// An outage is no verdict: the cookie stays for a retry.
+			assertNoCookie(t, res)
 			assert.Equal(t, "internal server error", problemDetail(t, res))
 		})
 	}

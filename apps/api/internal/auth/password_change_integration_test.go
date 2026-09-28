@@ -24,7 +24,7 @@ const ownPassword = "Right-pw1!"
 
 // mkOwnSession logs in a user.
 // The fresh user has refresh enabled.
-func mkOwnSession(t *testing.T) (context.Context, pgx.Tx, *auth.Service, users.User, auth.LoginResponse) {
+func mkOwnSession(t *testing.T) (context.Context, pgx.Tx, *auth.Service, users.User, auth.Session) {
 	t.Helper()
 	ctx, tx := testutil.BeginTx(t)
 	store := testutil.Store(t)
@@ -92,7 +92,7 @@ func mkPasswordServer(t *testing.T) *httptest.Server {
 		})
 	}
 	r := chi.NewRouter()
-	r.Mount("/auth", auth.Routes(auth.NewHandler(svc), requireAuth))
+	r.Mount("/auth", auth.Routes(newHandler(svc), requireAuth))
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)
 	return srv
@@ -124,8 +124,11 @@ func TestHandler_ChangeOwnPassword(t *testing.T) {
 			defer res.Body.Close()
 			require.Equal(t, tc.wantCode, res.StatusCode)
 			if tc.wantField == "" {
+				// Every session just ended, this one too.
+				assertCleared(t, res)
 				return
 			}
+			assertNoCookie(t, res)
 			var problem struct {
 				Fields map[string]string `json:"fields"`
 			}

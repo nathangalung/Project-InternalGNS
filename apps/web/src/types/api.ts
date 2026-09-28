@@ -38,7 +38,6 @@ export type {
   ItemVendorRow,
   LoginInput,
   LoginResponse,
-  LogoutInput,
   MatchRowInput,
   MatchRowsInput,
   MatchRowsResponse,

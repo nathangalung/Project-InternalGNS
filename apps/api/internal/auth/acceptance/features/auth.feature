@@ -1,15 +1,17 @@
 Feature: Login, session refresh and session revocation
   Every role signs in with email and password, keeps its session alive with
-  a rotating refresh token, and loses it the moment an administrator changes
-  the account behind it.
+  a rotating refresh token held in an HttpOnly cookie, and loses it the
+  moment an administrator changes the account behind it. The cookie routes
+  answer only the listed SPA origin, and only with the CSRF header.
 
   Background:
     Given an active "operational" account
 
-  Scenario: Login with valid credentials returns an access and refresh token
+  Scenario: Login returns an access token and sets the refresh cookie
     When the account logs in with the right password
     Then the response status is 200
-    And the response carries an access and a refresh token
+    And the response carries an access token and no refresh token
+    And the refresh cookie is HttpOnly, Secure, SameSite=Strict and scoped to "/api/v1/auth"
     When the account calls "/api/v1/auth/me"
     Then the response status is 200
 
@@ -47,6 +49,8 @@ Feature: Login, session refresh and session revocation
     When the account refreshes its session
     Then the response status is 200
     And the refresh token was rotated
+    And the response carries an access token and no refresh token
+    And the refresh cookie is HttpOnly, Secure, SameSite=Strict and scoped to "/api/v1/auth"
     When the account refreshes its session
     Then the response status is 200
 
@@ -57,8 +61,19 @@ Feature: Login, session refresh and session revocation
     When the account replays the first refresh token
     Then the response status is 401
     And the problem detail is "Token penyegar sudah pernah dipakai. Silakan masuk kembali."
+    And the refresh cookie is cleared
     When the account refreshes its session
     Then the response status is 401
+
+  Scenario: A second tab losing the rotation race keeps the session
+    Given the account is logged in
+    And the account refreshed its session
+    When the account replays the first refresh token
+    Then the response status is 401
+    And the problem detail is "Token penyegar sudah pernah dipakai. Silakan masuk kembali."
+    And the refresh cookie is left alone
+    When the account refreshes its session
+    Then the response status is 200
 
   Scenario: A refresh token an admin revoked does not end a newer session
     Given the account is logged in
@@ -124,6 +139,7 @@ Feature: Login, session refresh and session revocation
     Given the account is logged in
     When the account changes its own password to "Baru-pw2@"
     Then the response status is 204
+    And the refresh cookie is cleared
     When the account calls "/api/v1/auth/me"
     Then the response status is 401
     When the account logs in with the password "Baru-pw2@"
@@ -152,6 +168,7 @@ Feature: Login, session refresh and session revocation
     Given the account is logged in
     When the account logs out
     Then the response status is 204
+    And the refresh cookie is cleared
     When the account refreshes its session
     Then the response status is 401
     And the problem detail is "Sesi Anda sudah diakhiri. Silakan masuk kembali."
@@ -162,16 +179,67 @@ Feature: Login, session refresh and session revocation
     When the account refreshes its session
     Then the response status is 401
     And the problem detail is "Sesi Anda sudah berakhir. Silakan masuk kembali."
+    And the refresh cookie is cleared
 
   Scenario: An unknown refresh token is refused
     When someone refreshes with the token "not-a-real-token"
     Then the response status is 401
     And the problem detail is "Token penyegar tidak valid. Silakan masuk kembali."
+    And the refresh cookie is cleared
 
-  Scenario: A refresh without a token names the missing field
+  Scenario: A refresh without the cookie is told to sign in
     When someone refreshes with the token ""
-    Then the response status is 422
-    And the problem detail is "Token penyegar wajib diisi."
+    Then the response status is 401
+    And the problem detail is "Anda belum masuk. Silakan masuk terlebih dahulu."
+
+  Scenario: A refresh token in the body is ignored
+    Given the account is logged in
+    When the account sends its refresh token in the body instead of the cookie
+    Then the response status is 401
+    And the problem detail is "Anda belum masuk. Silakan masuk terlebih dahulu."
+    When the account refreshes its session
+    Then the response status is 200
+
+  Scenario Outline: A cookie route refuses what a foreign page could send
+    Given the account is logged in
+    When the account posts to "<route>" <how>
+    Then the response status is 403
+    And the problem detail is "<detail>"
+    When the account refreshes its session
+    Then the response status is 200
+
+    Examples:
+      | route                | how                                   | detail                                                  |
+      | /api/v1/auth/refresh | from the origin "https://evil.example" | Permintaan ditolak karena asal halaman tidak diizinkan. |
+      | /api/v1/auth/refresh | without an Origin                     | Permintaan ditolak karena asal halaman tidak diizinkan. |
+      | /api/v1/auth/refresh | without the CSRF header               | Permintaan ditolak karena header keamanan tidak ada.    |
+      | /api/v1/auth/logout  | from the origin "https://evil.example" | Permintaan ditolak karena asal halaman tidak diizinkan. |
+      | /api/v1/auth/logout  | without the CSRF header               | Permintaan ditolak karena header keamanan tidak ada.    |
+
+  Scenario Outline: Login refuses what a foreign page could send
+    When the account logs in from the origin "<origin>" as "<type>"
+    Then the response status is <status>
+    And the problem detail is "<detail>"
+    And the refresh cookie is left alone
+
+    Examples:
+      | origin               | type                              | status | detail                                                  |
+      | https://evil.example | application/json                  | 403    | Permintaan ditolak karena asal halaman tidak diizinkan. |
+      | https://evil.example | text/plain                        | 403    | Permintaan ditolak karena asal halaman tidak diizinkan. |
+      | null                 | application/json                  | 403    | Permintaan ditolak karena asal halaman tidak diizinkan. |
+      | http://spa.test      | text/plain                        | 415    | Permintaan masuk harus berformat JSON.                  |
+      | http://spa.test      | application/x-www-form-urlencoded | 415    | Permintaan masuk harus berformat JSON.                  |
+
+  Scenario: Login from the listed origin sets the refresh cookie
+    When the account logs in from the origin "http://spa.test" as "application/json"
+    Then the response status is 200
+    And the refresh cookie is HttpOnly, Secure, SameSite=Strict and scoped to "/api/v1/auth"
+
+  Scenario: Only the listed origin gets credentialed CORS
+    When a page at "https://evil.example" preflights "/api/v1/auth/refresh"
+    Then the response grants no credentials
+    When a page at "http://spa.test" preflights "/api/v1/auth/refresh"
+    Then the response grants credentials to "http://spa.test"
 
   Scenario: A forged access token is refused
     Given the account is logged in

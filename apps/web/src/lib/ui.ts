@@ -277,7 +277,7 @@ export const pillRecipe = tv({
   variants: {
     active: {
       true: "border-primary-600 bg-primary-600 text-white hover:bg-primary-700",
-      false: "border-dark-200 bg-dark-100 text-dark-500 hover:bg-dark-200",
+      false: "border-dark-200 bg-dark-100 text-dark-600 hover:bg-dark-200",
     },
   },
   defaultVariants: { active: false },

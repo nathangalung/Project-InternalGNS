@@ -1,9 +1,11 @@
 import { act } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { apiRequest, getRefreshToken } from "@/lib/api-client"
+import { apiRequest } from "@/lib/api-client"
 import { queryClient } from "@/lib/query-client"
+import { endSession, getAccessToken, signIn } from "@/lib/session"
 import { renderQueryHook, until } from "@/test/query"
 import { renderHook } from "@/test/renderHook"
+import { fakeAuthServer, header, installBrowser } from "@/test/tabs"
 import * as api from "./api"
 import { clearAuthState, isAuthenticatedSync, useAuth, useMe } from "./hooks"
 
@@ -13,7 +15,8 @@ const m = vi.mocked(api)
 
 beforeEach(() => {
   vi.clearAllMocks()
-  sessionStorage.clear()
+  installBrowser()
+  endSession()
   queryClient.clear()
 })
 afterEach(() => vi.unstubAllGlobals())
@@ -25,84 +28,79 @@ describe("useAuth", () => {
     expect(isAuthenticatedSync()).toBe(false)
   })
 
-  it("signs in: stores the tokens and re-renders", () => {
+  it("signs in: holds the token in memory only and re-renders", () => {
     const { result } = renderHook(() => useAuth(), undefined)
-    act(() => result.current.login({ token: "t", refreshToken: "r" }))
+    act(() => result.current.login("t"))
     expect(result.current.isAuthenticated).toBe(true)
     expect(isAuthenticatedSync()).toBe(true)
-    expect(sessionStorage.getItem("gns_token")).toBe("t")
-    expect(getRefreshToken()).toBe("r")
+    expect(getAccessToken()).toBe("t")
+    expect(sessionStorage.length).toBe(0)
+    expect(localStorage.length).toBe(0)
   })
 
-  it("signs out: revokes on the server, clears tokens and the previous user's cache", () => {
-    m.logout.mockResolvedValue(undefined)
+  it("signs out: revokes the cookie on the server and drops the previous user's cache", async () => {
+    const server = fakeAuthServer()
     const { result } = renderHook(() => useAuth(), undefined)
-    act(() => result.current.login({ token: "t", refreshToken: "r" }))
+    act(() => result.current.login("t"))
     queryClient.setQueryData(["invoices", "list", {}], { rows: [1] })
-    act(() => result.current.logout())
-    expect(m.logout).toHaveBeenCalledTimes(1)
+    await act(async () => result.current.logout())
+    await until(() => expect(server.calls.map((c) => c.path)).toEqual(["/auth/logout"]))
+    const [call] = server.calls
+    expect(call.init.credentials).toBe("include")
+    expect(header(call.init, "X-GNS-CSRF")).toBe("1")
     expect(result.current.isAuthenticated).toBe(false)
-    expect(sessionStorage.getItem("gns_token")).toBeNull()
-    expect(getRefreshToken()).toBeNull()
+    expect(getAccessToken()).toBeNull()
     expect(queryClient.getQueryCache().getAll()).toHaveLength(0)
   })
 
   it("still signs out locally when the server revoke fails", async () => {
-    m.logout.mockRejectedValue(new TypeError("Failed to fetch"))
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new TypeError("Failed to fetch")
+      }),
+    )
     const { result } = renderHook(() => useAuth(), undefined)
-    act(() => result.current.login({ token: "t", refreshToken: "r" }))
+    act(() => result.current.login("t"))
     await act(async () => result.current.logout())
     expect(result.current.isAuthenticated).toBe(false)
   })
 
-  it("skips the server revoke without a refresh token", () => {
+  it("follows a session that ends elsewhere", () => {
     const { result } = renderHook(() => useAuth(), undefined)
-    act(() => result.current.login({ token: "t" }))
-    act(() => result.current.logout())
-    expect(m.logout).not.toHaveBeenCalled()
+    act(() => signIn("t"))
+    expect(result.current.isAuthenticated).toBe(true)
+    act(() => endSession())
     expect(result.current.isAuthenticated).toBe(false)
   })
 
-  it("follows a sign-out from another tab", () => {
+  it("clearAuthState signs every mounted hook out and empties the cache", () => {
     const { result } = renderHook(() => useAuth(), undefined)
-    act(() => result.current.login({ token: "t" }))
-    act(() => {
-      sessionStorage.removeItem("gns_auth")
-      window.dispatchEvent(new Event("storage"))
-    })
-    expect(result.current.isAuthenticated).toBe(false)
-  })
-
-  it("stops listening once unmounted", () => {
-    const remove = vi.spyOn(window, "removeEventListener")
-    const { unmount } = renderHook(() => useAuth(), undefined)
-    unmount()
-    const events = remove.mock.calls.map(([name]) => name)
-    expect(events).toEqual(expect.arrayContaining(["storage", "gns:auth-change"]))
-    remove.mockRestore()
-  })
-
-  it("clearAuthState signs every mounted hook out", () => {
-    const { result } = renderHook(() => useAuth(), undefined)
-    act(() => result.current.login({ token: "t" }))
+    act(() => result.current.login("t"))
+    queryClient.setQueryData(["clients"], [1])
     act(() => clearAuthState())
     expect(result.current.isAuthenticated).toBe(false)
+    expect(queryClient.getQueryCache().getAll()).toHaveLength(0)
+  })
+
+  it("keeps the cache across a token rotation", () => {
+    signIn("t")
+    queryClient.setQueryData(["clients"], [1])
+    signIn("t2")
+    expect(queryClient.getQueryData(["clients"])).toEqual([1])
   })
 })
 
 describe("expired session", () => {
   it("drops auth state when the refresh cannot renew the session", async () => {
     const { result } = renderHook(() => useAuth(), undefined)
-    act(() => result.current.login({ token: "t" }))
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => new Response("", { status: 401 })),
-    )
+    act(() => result.current.login("t"))
+    fakeAuthServer(() => new Response("", { status: 401 })).state.cookie = null
     await act(async () => {
       await apiRequest({ path: "/users" }).catch(() => {})
     })
     expect(result.current.isAuthenticated).toBe(false)
-    expect(sessionStorage.getItem("gns_token")).toBeNull()
+    expect(getAccessToken()).toBeNull()
   })
 })
 
@@ -114,7 +112,7 @@ describe("useMe", () => {
   })
 
   it("loads the signed-in user", async () => {
-    sessionStorage.setItem("gns_auth", "true")
+    signIn("t")
     m.me.mockResolvedValue({ id: 1, email: "a@gns.id", name: "Ani", role: "finance" })
     const { result } = renderQueryHook(() => useMe())
     await until(() => expect(result.current.data?.role).toBe("finance"))

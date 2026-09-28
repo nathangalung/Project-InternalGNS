@@ -54,7 +54,7 @@ func TestHandler_Login_ThrottledAccountAnswersUnauthorized(t *testing.T) {
 	// Mounted without the per-IP limiter, whose own 429 would mask the
 	// verdict this test is about after five attempts.
 	r := chi.NewRouter()
-	r.Post("/auth/login", auth.NewHandler(svc).Login)
+	r.Post("/auth/login", newHandler(svc).Login)
 	srv := httptest.NewServer(r)
 	t.Cleanup(srv.Close)
 

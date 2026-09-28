@@ -135,18 +135,18 @@ func throttle(ctx context.Context, d time.Duration) {
 	}
 }
 
-func (s *Service) Login(ctx context.Context, email, password string) (LoginResponse, error) {
+func (s *Service) Login(ctx context.Context, email, password string) (Session, error) {
 	u, err := s.users.GetByEmail(ctx, email)
 	if errors.Is(err, users.ErrNotFound) {
 		// Burn the same bcrypt work a real account would, then give the same
 		// verdict, so neither the response nor its timing tells an attacker
 		// whether the address is registered.
 		_ = bcrypt.CompareHashAndPassword(dummyPasswordHash, []byte(password))
-		return LoginResponse{}, ErrInvalidCredentials
+		return Session{}, ErrInvalidCredentials
 	}
 	if err != nil {
 		// A database outage is not a credential verdict; let it surface.
-		return LoginResponse{}, err
+		return Session{}, err
 	}
 
 	// Guessing is throttled, never refused: the delay is paid before the
@@ -155,10 +155,10 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 	lock, err := s.users.LockStatus(ctx, email)
 	if errors.Is(err, users.ErrNotFound) {
 		// Deactivated or removed between the two reads: same verdict.
-		return LoginResponse{}, ErrInvalidCredentials
+		return Session{}, ErrInvalidCredentials
 	}
 	if err != nil {
-		return LoginResponse{}, err
+		return Session{}, err
 	}
 	throttle(ctx, loginBackoff(lock.FailedLoginAttempts))
 
@@ -168,12 +168,12 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 		if rerr := s.users.RecordFailedLogin(ctx, email); rerr != nil {
 			slog.ErrorContext(ctx, "record failed login", "error", rerr, "user_id", u.ID)
 		}
-		return LoginResponse{}, ErrInvalidCredentials
+		return Session{}, ErrInvalidCredentials
 	}
 	// Claim and issue in one transaction. The claim row-locks the account,
 	// so a concurrent password change either lands first and fails the
 	// claim, or waits and then revokes the session issued here.
-	var resp LoginResponse
+	var resp Session
 	err = s.users.InTx(ctx, func(q *users.Repo, tx db.Executor) error {
 		version, err := q.ClaimLogin(ctx, u.ID, u.PasswordHash)
 		if err != nil {
@@ -183,10 +183,10 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 		return err
 	})
 	if errors.Is(err, users.ErrNotFound) {
-		return LoginResponse{}, ErrInvalidCredentials
+		return Session{}, ErrInvalidCredentials
 	}
 	if err != nil {
-		return LoginResponse{}, err
+		return Session{}, err
 	}
 	return resp, nil
 }
@@ -194,7 +194,7 @@ func (s *Service) Login(ctx context.Context, email, password string) (LoginRespo
 // issue mints a bound session.
 // It signs an access token and, when refresh is wired, stores a refresh
 // token through rr, both bound to the session version.
-func (s *Service) issue(ctx context.Context, rr *RefreshRepo, u users.User, version int64) (LoginResponse, error) {
+func (s *Service) issue(ctx context.Context, rr *RefreshRepo, u users.User, version int64) (Session, error) {
 	now := s.now()
 	expiresAt := now.Add(s.expiry)
 	claims := Claims{
@@ -210,24 +210,24 @@ func (s *Service) issue(ctx context.Context, rr *RefreshRepo, u users.User, vers
 	}
 	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(s.secret)
 	if err != nil {
-		return LoginResponse{}, fmt.Errorf("sign access token: %w", err)
+		return Session{}, fmt.Errorf("sign access token: %w", err)
 	}
 
-	resp := LoginResponse{
+	resp := Session{LoginResponse: LoginResponse{
 		Token:     signed,
 		ExpiresAt: expiresAt.Unix(),
 		User:      toMeUser(u),
-	}
+	}}
 	if rr == nil {
 		return resp, nil
 	}
 	raw, hash, err := generateRefreshToken()
 	if err != nil {
-		return LoginResponse{}, fmt.Errorf("generate refresh token: %w", err)
+		return Session{}, fmt.Errorf("generate refresh token: %w", err)
 	}
 	refreshExpiresAt := now.Add(s.refreshExpiry)
 	if err := rr.insert(ctx, u.ID, hash, refreshExpiresAt, version); err != nil {
-		return LoginResponse{}, fmt.Errorf("store refresh token: %w", err)
+		return Session{}, fmt.Errorf("store refresh token: %w", err)
 	}
 	resp.RefreshToken = raw
 	resp.RefreshExpiresAt = refreshExpiresAt.Unix()
@@ -238,9 +238,9 @@ func (s *Service) issue(ctx context.Context, rr *RefreshRepo, u users.User, vers
 // It re-issues the JWT plus a fresh refresh token. Reuse of an
 // already-redeemed token triggers revocation of every active refresh token
 // for that user.
-func (s *Service) Refresh(ctx context.Context, raw string) (LoginResponse, error) {
+func (s *Service) Refresh(ctx context.Context, raw string) (Session, error) {
 	if s.refresh == nil || raw == "" {
-		return LoginResponse{}, ErrInvalidRefresh
+		return Session{}, ErrInvalidRefresh
 	}
 	hash := hashRefreshToken(raw)
 
@@ -249,7 +249,7 @@ func (s *Service) Refresh(ctx context.Context, raw string) (LoginResponse, error
 	// revoked, or waits and then revokes the successor issued here. The
 	// verdict is returned after commit so a reuse blast still lands.
 	var (
-		resp    LoginResponse
+		resp    Session
 		verdict error
 	)
 	err := s.users.InTx(ctx, func(q *users.Repo, tx db.Executor) error {
@@ -277,10 +277,10 @@ func (s *Service) Refresh(ctx context.Context, raw string) (LoginResponse, error
 		return err
 	})
 	if err != nil {
-		return LoginResponse{}, err
+		return Session{}, err
 	}
 	if verdict != nil {
-		return LoginResponse{}, verdict
+		return Session{}, verdict
 	}
 	return resp, nil
 }
@@ -304,11 +304,13 @@ func (s *Service) refusal(ctx context.Context, rr *RefreshRepo, hash []byte) (er
 		// revokes the token moments before the loser looks it up. Only a
 		// token revoked longer ago than the grace window is treated as a
 		// genuine replay worth revoking every session; a very recent
-		// revocation is a benign race, so the other sessions survive.
-		if st.pastGrace {
-			if err := rr.revokeAllForUser(ctx, st.userID); err != nil {
-				return nil, err
-			}
+		// revocation is a benign race, so the other sessions survive and
+		// the verdict says so, letting the handler keep the cookie.
+		if !st.pastGrace {
+			return ErrRacedRefresh, nil
+		}
+		if err := rr.revokeAllForUser(ctx, st.userID); err != nil {
+			return nil, err
 		}
 		return ErrReusedRefresh, nil
 	}
