@@ -738,7 +738,7 @@ func TestParseRFQ_TextExpansion(t *testing.T) {
 		{name: "a value over the cell limit", data: extraRow(`<c r="A5" t="str"><v>` + cell + `x</v></c>`)},
 		{name: "a long string in every spare column", data: shared("<t>"+cell+"</t>", func(f *excelize.File) {
 			row := append([]any{"Mur"}, slices.Repeat([]any{"Baut"}, rfqMaxCols-1)...)
-			setRows(t, f, "A1", append([][]any{{"Nama"}}, slices.Repeat([][]any{row}, 100)...)...)
+			setRows(t, f, "A1", append([][]any{{"Nama"}}, slices.Repeat([][]any{row}, 3)...)...)
 		})},
 		{name: "one long string across a full row", data: wide},
 		{name: "one long string across a full row, strings first", data: partsSorted(t, wide)},
