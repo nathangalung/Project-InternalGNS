@@ -1,3 +1,4 @@
+import { CSPProvider } from "@base-ui/react/csp-provider"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { createRouter, RouterProvider } from "@tanstack/react-router"
 import { StrictMode } from "react"
@@ -30,10 +31,16 @@ declare module "@tanstack/react-router" {
   }
 }
 
+// No inline Base UI styles.
+//
+// The enforced style-src 'self' refuses a <style> element; the one rule
+// Base UI would inject lives in tailwind.css instead.
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <CSPProvider disableStyleElements>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </CSPProvider>
   </StrictMode>,
 )
