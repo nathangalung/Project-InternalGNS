@@ -671,9 +671,11 @@ older, takes three more things:
   and it ends with the browser session. The older API still accepts the exact
   `CORS_ALLOWED_ORIGINS` value, so the environment needs no change.
 - The restored snapshot predates 00076, so the refresh tokens it revoked are
-  live again. After step 5 and before step 7, end them the same way:
-  `q -c "UPDATE refresh_tokens SET revoked_at = now(), revoked_reason =
-  'cookie_migration' WHERE revoked_at IS NULL;"` (the `q` helper below).
+  live again. After step 5 and before step 7, delete them:
+  `q -c "DELETE FROM refresh_tokens WHERE revoked_at IS NULL;"` (the `q`
+  helper below). This works on every target: a 00047 snapshot has no
+  `revoked_reason`, and the older APIs treat a revoked token presented later
+  as reuse and end that user's sessions, while an unknown one is a plain 401.
 - The content policy goes back to report-only. Only this release's SPA was
   proven under the enforced policy, so before step 7 rename the label key in
   `compose.prod.yml` back to `Content-Security-Policy-Report-Only` and
