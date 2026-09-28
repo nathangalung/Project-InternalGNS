@@ -7,6 +7,7 @@ import {
   request,
 } from "@playwright/test"
 import { ownIp } from "./api"
+import { guardCsp } from "./csp"
 import { apiURL, baseURL } from "./env"
 
 // Throwaway-user browser sessions.
@@ -17,10 +18,22 @@ import { apiURL, baseURL } from "./env"
 
 export type StorageState = Awaited<ReturnType<APIRequestContext["storageState"]>>
 
+// Client address on API requests.
+//
+// Added by interception, not as an extra header: a header the page itself
+// sends to a cross-origin API has to pass CORS, and the API never allows
+// X-Forwarded-For, which only its proxy writes. The newest route wins.
+export async function routeClientIp(context: BrowserContext, ip: string): Promise<void> {
+  await context.route(
+    (url) => url.href.startsWith(apiURL),
+    (route) => route.continue({ headers: { ...route.request().headers(), "x-forwarded-for": ip } }),
+  )
+}
+
 // Own address for every request.
 export async function isolateIp(context: BrowserContext): Promise<string> {
   const ip = ownIp()
-  await context.setExtraHTTPHeaders({ "x-forwarded-for": ip })
+  await routeClientIp(context, ip)
   return ip
 }
 
@@ -72,8 +85,10 @@ export async function signedInContext(
     baseURL,
     locale: "id-ID",
     timezoneId: "Asia/Jakarta",
-    extraHTTPHeaders: { "x-forwarded-for": ip },
     storageState: await loginState(user.email, user.password, ip),
   })
+  await routeClientIp(context, ip)
+  // The test's fixture asserts these.
+  await guardCsp(context)
   return { context, page: await context.newPage() }
 }

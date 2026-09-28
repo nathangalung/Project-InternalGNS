@@ -7,7 +7,7 @@
         tidy \
         build build-api build-web \
         test test-db-reset test-api test-api-ci test-web \
-        cover cover-api cover-web e2e \
+        cover cover-api cover-web e2e e2e-csp \
         lint lint-fix fmt types gen-types rfq-fixtures \
         hooks-install hooks-run \
         docker-build docker-build-api docker-build-web \
@@ -225,6 +225,23 @@ e2e: ## Playwright e2e against the dev stack
 	@set -a; if [ -f $(API_DIR)/.env ]; then . $(API_DIR)/.env; fi; set +a; \
 	cd $(WEB_DIR) && E2E_ADMIN_EMAIL=$${E2E_ADMIN_EMAIL:-$$SUPERADMIN_EMAIL} \
 	  E2E_ADMIN_PASSWORD=$${E2E_ADMIN_PASSWORD:-$$SUPERADMIN_PASSWORD} bun run e2e
+
+# Suite under the production CSP.
+# The built SPA on :4173 with the enforcing policy from compose.prod.yml,
+# against its own API on :8091 and the throwaway gns_csp_test, cross-origin
+# as in production. Needs MinIO from `make deps-up` or `make dev`.
+e2e-csp: deps-up ## Playwright suite under the enforcing production CSP
+	$(MAKE) test-db-reset CI_TEST_DB=gns_csp_test
+	cd $(API_DIR) && go build -o bin/api-csp ./cmd/api
+	@set -a; if [ -f $(API_DIR)/.env ]; then . $(API_DIR)/.env; fi; set +a; \
+	export DATABASE_URL=postgres://gns_app:gns_app@localhost:5432/gns_csp_test?sslmode=disable \
+	  HTTP_ADDR=:8091 CORS_ALLOWED_ORIGINS=http://localhost:4173; \
+	cd $(API_DIR) && ./bin/api-csp -bootstrap >/dev/null && \
+	PGCLIENTENCODING=UTF8 psql "$$DATABASE_URL" -q -v ON_ERROR_STOP=1 < db/seeds/01_master.sql >/dev/null && \
+	{ ./bin/api-csp > bin/api-csp.log 2>&1 & pid=$$!; trap 'kill $$pid' EXIT; \
+	  for _ in $$(seq 1 30); do curl -fsS http://localhost:8091/readyz >/dev/null 2>&1 && break; sleep 1; done; \
+	  cd ../web && E2E_ADMIN_EMAIL=$$SUPERADMIN_EMAIL E2E_ADMIN_PASSWORD=$$SUPERADMIN_PASSWORD \
+	    E2E_BASE_URL=http://localhost:4173 E2E_API_URL=http://localhost:8091/api/v1 bun run e2e:csp; }
 
 lint: ## Lint api and web
 	cd $(API_DIR) && go vet ./...

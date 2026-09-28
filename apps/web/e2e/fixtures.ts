@@ -1,10 +1,11 @@
 import { readFileSync } from "node:fs"
-import { test as base } from "@playwright/test"
+import { test as base, expect } from "@playwright/test"
 import { ownIp, type Tokens } from "./support/api"
+import { guardCsp, takeViolations } from "./support/csp"
 import { adminCredentials, authFile, type Role } from "./support/env"
-import { loginState } from "./support/session"
+import { loginState, routeClientIp } from "./support/session"
 
-export { expect } from "@playwright/test"
+export { expect }
 
 export type Session = Role | "anonymous"
 
@@ -34,12 +35,24 @@ function credentials(role: Role): { email: string; password: string } {
 // a replay the API answers by revoking every session of that user. The
 // context also gets its own client address, since login and refresh are
 // limited per address and every page load now spends one refresh.
-export const test = base.extend<{ session: Session; clientIp: string }>({
+//
+// Every context also records content-policy violations, and a test fails on
+// any. Without a policy header nothing is refused, so this bites only under
+// the CSP preview (playwright.csp.config.ts). A canary opts out with
+// test.use({ cspGuard: false }) and reads the violations itself.
+export const test = base.extend<{ session: Session; clientIp: string; cspGuard: boolean }>({
   session: ["superadmin", { option: true }],
+  cspGuard: [true, { option: true }],
+  context: async ({ context, clientIp, cspGuard }, use) => {
+    await routeClientIp(context, clientIp)
+    takeViolations()
+    await guardCsp(context)
+    await use(context)
+    const found = takeViolations()
+    if (cspGuard) expect(found, "content-policy violations").toEqual([])
+  },
   // biome-ignore lint/correctness/noEmptyPattern: Playwright needs the destructured argument
   clientIp: async ({}, use) => use(ownIp()),
-  extraHTTPHeaders: async ({ extraHTTPHeaders, clientIp }, use) =>
-    use({ ...extraHTTPHeaders, "x-forwarded-for": clientIp }),
   storageState: async ({ session, clientIp }, use) => {
     if (session === "anonymous") return use(undefined)
     const { email, password } = credentials(session)
