@@ -31,6 +31,7 @@ export type AdvancedSearchHit = {
     vendorName?: string;
     vendorSku?: string;
     requestText?: string;
+    imageObjectKey?: string;
 };
 
 // From items/dto.go

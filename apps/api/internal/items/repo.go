@@ -200,10 +200,11 @@ func (r *Repo) SearchCatalog(ctx context.Context, q string, minScore float32, li
 // It supplies the true is_active flag and backfills name/impa/unit for hits
 // that came only from the vendor-offer or request-history layers.
 type ItemMeta struct {
-	Active        bool
-	Name          string
-	IMPACode      *string
-	DefaultUnitID *int16
+	Active         bool
+	Name           string
+	IMPACode       *string
+	DefaultUnitID  *int16
+	ImageObjectKey *string
 }
 
 // ItemMetaByIDs maps ids to identity.
@@ -222,7 +223,7 @@ func (r *Repo) ItemMetaByIDs(ctx context.Context, ids []int64) (map[int64]ItemMe
 	for rows.Next() {
 		var id int64
 		var m ItemMeta
-		if err := rows.Scan(&id, &m.Active, &m.Name, &m.IMPACode, &m.DefaultUnitID); err != nil {
+		if err := rows.Scan(&id, &m.Active, &m.Name, &m.IMPACode, &m.DefaultUnitID, &m.ImageObjectKey); err != nil {
 			return nil, err
 		}
 		out[id] = m

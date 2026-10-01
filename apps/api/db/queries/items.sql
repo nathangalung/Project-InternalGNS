@@ -90,9 +90,10 @@ SELECT * FROM fn_search_items($1, $2, $3, $4::boolean);
 -- name: items.active_flags_by_ids
 -- Advanced-search enrichment: real is_active plus catalog identity per merged
 -- hit. The vendor-offer and request-history layers carry no item name, so we
--- backfill name/impa/unit for hits those layers produced.
+-- backfill name/impa/unit for hits those layers produced. Every hit takes
+-- its image key from here, so search results show the same thumbnails.
 -- $1=item ids
-SELECT id, is_active, name, impa_code, default_unit_id
+SELECT id, is_active, name, impa_code, default_unit_id, image_object_key
 FROM items
 WHERE id = ANY($1);
 
