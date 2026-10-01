@@ -103,9 +103,11 @@ export default function Step2Product({
     try {
       const rows = await parseRfq(file)
       const resp = await matchRows(rows, { autoCreate: true })
-      // One call prices every matched line for this client.
+      // One call prices every matched line for this client. The rows are
+      // already matched (and new products created), so a failed call still
+      // imports them, just unfilled.
       const itemIds = [...new Set(resp.rows.flatMap((r) => (r.matched ? [r.matched.itemId] : [])))]
-      const recs = itemIds.length ? await recommend(itemIds, clientId) : []
+      const recs = itemIds.length ? await recommend(itemIds, clientId).catch(() => []) : []
       const baseId = products.reduce((m, p) => Math.max(m, p.id), 0)
       const built = importedLines(resp.rows, recs, baseId)
       onImportProducts(built)
@@ -351,7 +353,8 @@ export default function Step2Product({
                 const isDifferent = requestDiffers(p)
                 const qtyError = qtyErrors[p.id] ?? (isValidQty(p.jumlah) ? undefined : QTY_ERROR)
                 const unitError = unitsReady ? unitIssue(p.satuan, unitIdByCode) : null
-                const gaps = lineGaps(p)
+                // Only a quotation has a send rule to fill in for
+                const gaps = toggleNoOffer ? lineGaps(p) : []
                 return (
                   <div key={p.id} className={`${qep.card} mb-0`}>
                     <div className={qep.cardHeader}>

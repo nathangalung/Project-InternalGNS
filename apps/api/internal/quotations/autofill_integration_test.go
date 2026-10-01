@@ -202,3 +202,36 @@ func TestAccept_RefusesWhenNothingIsOffered(t *testing.T) {
 		"Tidak ada produk yang ditawarkan di quotation ini, jadi tidak ada yang bisa disetujui.",
 		detailError(t, err))
 }
+
+// A zero-cost link takes the price.
+// A link saved before its harga beli was known is filled in by the first
+// line that names the vendor with a price; a priced link keeps its own.
+func TestCreate_FillsAnUnpricedLink(t *testing.T) {
+	cases := []struct {
+		name     string
+		existing string
+		want     string
+	}{
+		{"unpriced link", "0", "1000000.00"},
+		{"priced link", "750000", "750000.00"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, repo, tx := newRepo(t)
+			vendor := newVendor(t, ctx, tx, true)
+			_, err := tx.Exec(ctx, `
+				INSERT INTO vendor_products (vendor_id, item_id, cost_price, created_by, updated_by)
+				VALUES ($1, $2, $3::numeric, 1, 1)`, vendor, seedItemID, tc.existing)
+			require.NoError(t, err)
+			line := offered()
+			line.VendorProductID, line.VendorID = nil, &vendor
+			createWith(t, ctx, repo, line)
+
+			var cost string
+			require.NoError(t, tx.QueryRow(ctx,
+				`SELECT cost_price::text FROM vendor_products WHERE vendor_id = $1 AND item_id = $2`,
+				vendor, seedItemID).Scan(&cost))
+			assert.Equal(t, tc.want, cost)
+		})
+	}
+}

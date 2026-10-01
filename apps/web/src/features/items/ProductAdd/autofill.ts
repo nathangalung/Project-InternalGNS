@@ -45,3 +45,31 @@ export function recommendationFields(rec: LineRecommendation): Partial<ProductAd
   if (rec.sellingPrice) out.hargaJual = rupiah(rec.sellingPrice)
   return out
 }
+
+// Form fields at pick time.
+export type AutofillBase = Pick<ProductAddFormData, "namaVendor" | "hargaBeli" | "hargaJual">
+
+// Fill only untouched fields.
+//
+// A recommendation can land after the user already chose a vendor or typed
+// a price (a slow request, or retries). Each field it brings is applied only
+// while it still holds the value it had when the product was picked; the
+// vendor's ids move with its name. applied says which prices were set, so
+// only those change the price-confirmation baseline.
+export function applyUntouched(
+  form: ProductAddFormData,
+  base: AutofillBase,
+  fields: Partial<ProductAddFormData>,
+): { form: ProductAddFormData; applied: { beli: boolean; jual: boolean } } {
+  const next = { ...form }
+  if (fields.namaVendor !== undefined && form.namaVendor === base.namaVendor) {
+    next.namaVendor = fields.namaVendor
+    next.vendorId = fields.vendorId
+    next.vendorProductId = fields.vendorProductId
+  }
+  const beli = form.hargaBeli === base.hargaBeli ? fields.hargaBeli : undefined
+  const jual = form.hargaJual === base.hargaJual ? fields.hargaJual : undefined
+  if (beli !== undefined) next.hargaBeli = beli
+  if (jual !== undefined) next.hargaJual = jual
+  return { form: next, applied: { beli: beli !== undefined, jual: jual !== undefined } }
+}

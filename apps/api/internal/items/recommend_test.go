@@ -227,3 +227,36 @@ func TestHandler_Recommendations(t *testing.T) {
 	assert.Equal(t, it.ID, got[0].ItemID)
 	assert.Nil(t, got[0].SellingPrice)
 }
+
+// Unpriced links lose to priced ones.
+// A link saved before its harga beli was known sits at cost 0; it must not
+// beat a priced vendor, for the cheapest pick or as the client's own.
+func TestRepo_Recommend_PrefersPricedLinks(t *testing.T) {
+	ctx, f := newRecFixture(t)
+	free := insertVendor(t, ctx, f.tx, uniqueItemName("REC FREE VENDOR"))
+	zero := "0"
+	link, err := f.repo.AddVendor(ctx, f.item, items.AddVendorToItemRequest{VendorID: free, CostPrice: &zero}, seedUserID)
+	require.NoError(t, err)
+	// The client's newest deal used the unpriced link.
+	quote(t, ctx, f.tx, f.clientA, f.item, link.VendorProductID, "160000", "sent",
+		time.Date(2026, 9, 1, 9, 0, 0, 0, time.UTC))
+
+	cases := []struct {
+		name     string
+		client   *int64
+		want     int64
+		wantCost string
+	}{
+		{"cheapest skips the unpriced link", i64p(f.clientC), f.cheap, "100000.00"},
+		{"the client keeps its newest priced vendor", i64p(f.clientA), f.pricey, "120000.00"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			recs, err := f.repo.Recommend(ctx, tc.client, []int64{f.item})
+			require.NoError(t, err)
+			require.Len(t, recs, 1)
+			assert.Equal(t, &tc.want, recs[0].VendorID)
+			assert.Equal(t, &tc.wantCost, recs[0].CostPrice)
+		})
+	}
+}

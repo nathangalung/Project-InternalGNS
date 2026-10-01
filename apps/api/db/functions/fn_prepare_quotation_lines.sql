@@ -37,6 +37,10 @@ BEGIN
               NOW(), p_user_id, p_user_id)
       ON CONFLICT (vendor_id, item_id) DO UPDATE
          SET is_active  = TRUE,
+             -- A link still at 0 takes its first real price.
+             cost_price = CASE WHEN vendor_products.cost_price = 0
+                               THEN EXCLUDED.cost_price
+                               ELSE vendor_products.cost_price END,
              updated_by = EXCLUDED.updated_by,
              updated_at = NOW()
       RETURNING id INTO v_link;

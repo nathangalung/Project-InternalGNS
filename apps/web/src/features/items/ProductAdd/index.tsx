@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { findVendorByName } from "@/features/items/helpers"
 import {
@@ -16,7 +16,12 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { errorMessage } from "@/lib/errors"
 import { ui } from "@/lib/ui"
 import ProductCreateModal from "../ProductCreateModal"
-import { mergeVendorOptions, recommendationFields } from "./autofill"
+import {
+  type AutofillBase,
+  applyUntouched,
+  mergeVendorOptions,
+  recommendationFields,
+} from "./autofill"
 import {
   type CatalogItem,
   type DropdownKey,
@@ -68,6 +73,8 @@ export default function ProductAdd({
   const [pickedItemId, setPickedItemId] = useState<number | null>(null)
   // Item whose defaults are still to apply
   const [autofillFor, setAutofillFor] = useState<number | null>(null)
+  // Vendor and prices as they were at the pick
+  const autofillBase = useRef<AutofillBase>({ namaVendor: "", hargaBeli: "", hargaJual: "" })
   // Catalog item picked as the request
   const [requestedItem, setRequestedItem] = useState<CatalogItem | null>(null)
   const [extraVendors, setExtraVendors] = useState<VendorOption[]>([])
@@ -150,14 +157,15 @@ export default function ProductAdd({
     if (autofillFor === null || recommendation === undefined) return
     if (recommendation && recommendation.itemId === autofillFor) {
       const fields = recommendationFields(recommendation)
-      setForm((prev) => ({ ...prev, ...fields }))
-      setInitialPrices({
-        beli: fields.hargaBeli ? Number(fields.hargaBeli) : null,
-        jual: fields.hargaJual ? Number(fields.hargaJual) : null,
-      })
+      const { form: next, applied } = applyUntouched(form, autofillBase.current, fields)
+      setForm(next)
+      setInitialPrices((prev) => ({
+        beli: applied.beli ? Number(next.hargaBeli) : prev.beli,
+        jual: applied.jual ? Number(next.hargaJual) : prev.jual,
+      }))
     }
     setAutofillFor(null)
-  }, [autofillFor, recommendation])
+  }, [autofillFor, recommendation, form])
 
   const { data: priceHistoryRows } = useItemPriceHistory(pickedItemId ?? undefined, 10)
   const historisOptions: HistorisOption[] = useMemo(
@@ -268,8 +276,9 @@ export default function ProductAdd({
   }
 
   function executeSubmit() {
+    // The ids follow the vendor the name matches, not an earlier pick.
     const data = exactVendor
-      ? form
+      ? { ...form, vendorId: exactVendor.vendorId, vendorProductId: exactVendor.vendorProductId }
       : { ...form, namaVendor: "", vendorId: undefined, vendorProductId: undefined }
     onSuccess?.({ ...data, profit })
     setForm(INITIAL_FORM)
@@ -359,6 +368,9 @@ export default function ProductAdd({
   function pickProduct(item: CatalogItem) {
     setPickedItemId(item.id ?? null)
     setAutofillFor(item.id ?? null)
+    // The pick clears the vendor; prices stay until the user or the
+    // recommendation changes them.
+    autofillBase.current = { namaVendor: "", hargaBeli: form.hargaBeli, hargaJual: form.hargaJual }
     const unit =
       item.defaultUnitId && units ? units.find((u) => u.id === item.defaultUnitId) : undefined
     setForm((prev) => ({

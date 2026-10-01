@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { mergeVendorOptions, recommendationFields } from "./autofill"
+import { applyUntouched, mergeVendorOptions, recommendationFields } from "./autofill"
 import type { VendorOption } from "./helpers"
 
 describe("mergeVendorOptions", () => {
@@ -69,5 +69,50 @@ describe("recommendationFields with unreadable prices", () => {
       hargaBeli: "",
       hargaJual: "",
     })
+  })
+})
+
+describe("applyUntouched", () => {
+  const base = { namaVendor: "", hargaBeli: "", hargaJual: "" }
+  const form = {
+    requestedKodeImpaNama: "A",
+    kodeImpaNama: "A",
+    jumlahProduk: "1",
+    satuan: "PCS",
+    namaVendor: "",
+    hargaBeli: "",
+    hargaJual: "",
+  }
+  const fields = {
+    namaVendor: "Vendor Rekomendasi",
+    vendorId: 4,
+    vendorProductId: 40,
+    hargaBeli: "100",
+    hargaJual: "150",
+  }
+
+  it("fills every field the user has not touched since the pick", () => {
+    const out = applyUntouched(form, base, fields)
+    expect(out.form).toMatchObject(fields)
+    expect(out.applied).toEqual({ beli: true, jual: true })
+  })
+
+  it("keeps a vendor and prices the user set before the recommendation arrived", () => {
+    const typed = {
+      ...form,
+      namaVendor: "Vendor Pilihan",
+      vendorId: 9,
+      hargaBeli: "90",
+      hargaJual: "140",
+    }
+    const out = applyUntouched(typed, base, fields)
+    expect(out.form).toEqual(typed)
+    expect(out.applied).toEqual({ beli: false, jual: false })
+  })
+
+  it("fills only what the recommendation knows", () => {
+    const out = applyUntouched(form, base, { hargaBeli: "100" })
+    expect([out.form.namaVendor, out.form.hargaBeli, out.form.hargaJual]).toEqual(["", "100", ""])
+    expect(out.applied).toEqual({ beli: true, jual: false })
   })
 })

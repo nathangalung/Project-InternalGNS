@@ -8,7 +8,8 @@
 -- prices a new line starts from. Only quotations a client was sent or
 -- accepted count as a deal; drafts and rejected offers do not.
 --   Vendor: the one on this client's newest deal for the item while that
---   vendor and its link are still active, else the cheapest active link.
+--   vendor and its link are active and priced, else the cheapest active
+--   link, priced links before ones still at 0.
 --   Harga beli: that link's current cost_price.
 --   Harga jual: this client's newest deal price, else any client's newest
 --   deal price, else NULL (set by hand).
@@ -20,7 +21,8 @@
 --   vendor or harga beli, whatever the caller sent.
 --   A line naming vendor_id without vendor_product_id gets that item-vendor
 --   link, created or reactivated, so a vendor the item was never linked to
---   can still be picked. vendor_id itself is dropped.
+--   can still be picked; a link still at cost 0 takes the line's harga
+--   beli. vendor_id itself is dropped.
 --
 -- fn_change_quotation_status refuses sending while any offered product
 -- line lacks its product, unit, vendor, harga beli or harga jual (P0014 with
@@ -43,6 +45,7 @@ RETURNS TABLE (
 LANGUAGE sql
 STABLE
 AS $$
+  -- Each pick is one row per item, so the cost stays linear in the deals.
   WITH deals AS (
     SELECT qi.id AS line_id, qi.offered_item_id AS item_id, q.company_client_id,
            qi.vendor_product_id, qi.selling_price, q.created_at
@@ -51,38 +54,44 @@ AS $$
     WHERE qi.item_type = 'product'
       AND qi.offered_item_id = ANY(p_item_ids)
       AND q.status IN ('sent', 'accepted')
+  ),
+  own_price AS (
+    SELECT DISTINCT ON (d.item_id) d.item_id, d.selling_price
+    FROM deals d
+    WHERE d.company_client_id = p_client_id AND d.selling_price > 0
+    ORDER BY d.item_id, d.created_at DESC, d.line_id DESC
+  ),
+  any_price AS (
+    SELECT DISTINCT ON (d.item_id) d.item_id, d.selling_price
+    FROM deals d
+    WHERE d.selling_price > 0
+    ORDER BY d.item_id, d.created_at DESC, d.line_id DESC
+  ),
+  -- The client's vendor counts only while it still has a price.
+  own_vendor AS (
+    SELECT DISTINCT ON (d.item_id) d.item_id, ov.id
+    FROM deals d
+    JOIN vendor_products ov ON ov.id = d.vendor_product_id AND ov.is_active AND ov.cost_price > 0
+    JOIN vendors ovv ON ovv.id = ov.vendor_id AND ovv.is_active
+    WHERE d.company_client_id = p_client_id
+    ORDER BY d.item_id, d.created_at DESC, d.line_id DESC
+  ),
+  -- A link saved before its price was known sits at 0; priced links win.
+  cheapest AS (
+    SELECT DISTINCT ON (cv.item_id) cv.item_id, cv.id
+    FROM vendor_products cv
+    JOIN vendors cvv ON cvv.id = cv.vendor_id AND cvv.is_active
+    WHERE cv.item_id = ANY(p_item_ids) AND cv.is_active
+    ORDER BY cv.item_id, (cv.cost_price > 0) DESC, cv.cost_price ASC, cv.id ASC
   )
   SELECT i.id, vp.id, v.id, v.name, vp.cost_price,
-         COALESCE(own_price.selling_price, any_price.selling_price)
+         COALESCE(op.selling_price, ap.selling_price)
   FROM items i
-  LEFT JOIN LATERAL (
-    SELECT d.selling_price FROM deals d
-    WHERE d.item_id = i.id AND d.company_client_id = p_client_id AND d.selling_price > 0
-    ORDER BY d.created_at DESC, d.line_id DESC
-    LIMIT 1
-  ) own_price ON TRUE
-  LEFT JOIN LATERAL (
-    SELECT d.selling_price FROM deals d
-    WHERE d.item_id = i.id AND d.selling_price > 0
-    ORDER BY d.created_at DESC, d.line_id DESC
-    LIMIT 1
-  ) any_price ON TRUE
-  LEFT JOIN LATERAL (
-    SELECT ov.id FROM deals d
-    JOIN vendor_products ov ON ov.id = d.vendor_product_id AND ov.is_active
-    JOIN vendors ovv ON ovv.id = ov.vendor_id AND ovv.is_active
-    WHERE d.item_id = i.id AND d.company_client_id = p_client_id
-    ORDER BY d.created_at DESC, d.line_id DESC
-    LIMIT 1
-  ) own_vendor ON TRUE
-  LEFT JOIN LATERAL (
-    SELECT cv.id FROM vendor_products cv
-    JOIN vendors cvv ON cvv.id = cv.vendor_id AND cvv.is_active
-    WHERE cv.item_id = i.id AND cv.is_active
-    ORDER BY cv.cost_price ASC NULLS LAST, cv.id ASC
-    LIMIT 1
-  ) cheapest ON TRUE
-  LEFT JOIN vendor_products vp ON vp.id = COALESCE(own_vendor.id, cheapest.id)
+  LEFT JOIN own_price op ON op.item_id = i.id
+  LEFT JOIN any_price ap ON ap.item_id = i.id
+  LEFT JOIN own_vendor ow ON ow.item_id = i.id
+  LEFT JOIN cheapest ch ON ch.item_id = i.id
+  LEFT JOIN vendor_products vp ON vp.id = COALESCE(ow.id, ch.id)
   LEFT JOIN vendors v ON v.id = vp.vendor_id
   WHERE i.id = ANY(p_item_ids) AND i.is_active
   ORDER BY i.id;
@@ -128,6 +137,10 @@ BEGIN
               NOW(), p_user_id, p_user_id)
       ON CONFLICT (vendor_id, item_id) DO UPDATE
          SET is_active  = TRUE,
+             -- A link still at 0 takes its first real price.
+             cost_price = CASE WHEN vendor_products.cost_price = 0
+                               THEN EXCLUDED.cost_price
+                               ELSE vendor_products.cost_price END,
              updated_by = EXCLUDED.updated_by,
              updated_at = NOW()
       RETURNING id INTO v_link;
