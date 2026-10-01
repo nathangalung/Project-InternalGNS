@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -87,7 +88,14 @@ func (h *Handler) Unlock(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if err := h.repo.Unlock(r.Context(), id, chi.URLParam(r, "part"), deps.CurrentUserID(r.Context())); err != nil {
+	// chi hands back the segment as sent, and a browser escapes the colon of
+	// "line:<id>"; left escaped it would match no claim.
+	// net/http has already refused a malformed escape.
+	part := chi.URLParam(r, "part")
+	if p, err := url.PathUnescape(part); err == nil {
+		part = p
+	}
+	if err := h.repo.Unlock(r.Context(), id, part, deps.CurrentUserID(r.Context())); err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}

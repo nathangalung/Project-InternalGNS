@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"strings"
 	"testing"
@@ -122,7 +123,8 @@ func TestHandler_LiveLineFlow(t *testing.T) {
 	res.Body.Close()
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 
-	res = doJSON(t, srv, http.MethodDelete, base+"/locks/"+line0, nil)
+	// The web escapes the part, as encodeURIComponent does.
+	res = doJSON(t, srv, http.MethodDelete, base+"/locks/"+url.QueryEscape(line0), nil)
 	res.Body.Close()
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 
