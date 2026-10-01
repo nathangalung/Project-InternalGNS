@@ -18,6 +18,7 @@ import {
 import { useItemSearchAdvanced, useItems } from "@/features/items/hooks"
 import ProductCreateModal from "@/features/items/ProductCreateModal"
 import ProductFilter, { type ProductFilterValues } from "@/features/items/ProductFilter"
+import ProductThumb from "@/features/items/ProductThumb"
 import { useUnits } from "@/features/units/hooks"
 import { canWriteCatalog } from "@/lib/rbac"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
@@ -216,19 +217,26 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
                       <td className={`${ui.tdCenter} font-bold text-primary-700`}>
                         {it.impaCode ?? "-"}
                       </td>
-                      <td
-                        className={`${ui.tdCenter} break-words font-bold leading-5 text-dark-900`}
-                      >
-                        <EntityLink kind="product" id={it.id} tone="name">
-                          {it.name}
-                        </EntityLink>
-                        {tierBadge && (
-                          <span
-                            className={`ml-1.5 inline-block rounded-[4px] px-1.5 py-px align-middle text-[10px] font-bold tracking-[0.3px] ${tierBadge.cls}`}
-                          >
-                            {tierBadge.label}
+                      <td className={ui.td}>
+                        <div className="flex items-center gap-4 pl-3">
+                          <ProductThumb
+                            id={it.id}
+                            name={it.name}
+                            imageObjectKey={it.imageObjectKey}
+                          />
+                          <span className="min-w-0 flex-1 break-words font-bold leading-5 text-dark-900">
+                            <EntityLink kind="product" id={it.id} tone="name">
+                              {it.name}
+                            </EntityLink>
+                            {tierBadge && (
+                              <span
+                                className={`ml-1.5 inline-block rounded-[4px] px-1.5 py-px align-middle text-[10px] font-bold tracking-[0.3px] ${tierBadge.cls}`}
+                              >
+                                {tierBadge.label}
+                              </span>
+                            )}
                           </span>
-                        )}
+                        </div>
                       </td>
                       <td className={`${ui.tdCenter} font-medium`}>{unitOf(it.defaultUnitId)}</td>
                       <td className={ui.tdCenter}>

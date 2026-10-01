@@ -97,6 +97,7 @@ describe("items api", () => {
       () => api.updateImage(9, "k"),
       { path: "/items/9/image", method: "PATCH", body: { objectKey: "k" } },
     ],
+    ["remove image", () => api.removeImage(9), { path: "/items/9/image", method: "DELETE" }],
   ])("%s", async (_name, call, want) => {
     await call()
     expect(apiRequest).toHaveBeenCalledWith(want)

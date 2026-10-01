@@ -13,7 +13,10 @@ import type {
 export const KATALOG_UNIT_SCAN_LIMIT = 200
 
 // Fields the katalog table shows.
-export type KatalogRow = Pick<ItemRow, "id" | "name" | "impaCode" | "defaultUnitId" | "isActive">
+export type KatalogRow = Pick<
+  ItemRow,
+  "id" | "name" | "impaCode" | "defaultUnitId" | "isActive" | "imageObjectKey"
+>
 
 // Search hits as table rows.
 export function katalogRowsFromHits(hits: AdvancedSearchHit[]): KatalogRow[] {
@@ -23,6 +26,7 @@ export function katalogRowsFromHits(hits: AdvancedSearchHit[]): KatalogRow[] {
     impaCode: h.impaCode,
     defaultUnitId: h.defaultUnitId,
     isActive: h.isActive,
+    imageObjectKey: h.imageObjectKey,
   }))
 }
 

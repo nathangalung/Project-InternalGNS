@@ -396,6 +396,10 @@ export const ui = {
   dropdownItem: dd.item(),
 }
 
+// Red text remove button.
+// Detaching a file or photo; the confirm dialog carries the weight.
+export const btnRemove = `inline-flex items-center justify-center gap-2 rounded-md border border-transparent px-3 py-2 text-sm font-medium text-[#B91C1C] transition hover:bg-[#FEE2E2] disabled:cursor-not-allowed disabled:opacity-50 ${ui.focusRing}`
+
 // Pill toggle classes.
 export function pill(active: boolean): string {
   return pillRecipe({ active })
