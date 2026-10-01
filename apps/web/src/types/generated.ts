@@ -715,7 +715,7 @@ export type QuotationItemInput = {
     vendorProductId?: number;
     vendorId?: number;
     qty: string;
-    unitId: number;
+    unitId?: number;
     sellingPrice: string;
     costPrice?: string;
     updateVendorPrice?: boolean;

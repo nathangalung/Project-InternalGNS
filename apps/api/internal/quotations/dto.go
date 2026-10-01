@@ -132,9 +132,10 @@ type CreateItem struct {
 	OfferedItemID   *int64  `json:"offeredItemId,omitempty"`
 	VendorProductID *int64  `json:"vendorProductId,omitempty"`
 	// VendorID names a vendor not linked yet
-	VendorID          *int64  `json:"vendorId,omitempty"`
-	Qty               string  `json:"qty"` // numeric as string
-	UnitID            int16   `json:"unitId"`
+	VendorID *int64 `json:"vendorId,omitempty"`
+	Qty      string `json:"qty"` // numeric as string
+	// UnitID 0 (absent) stores no unit; the send rule asks for one
+	UnitID            int16   `json:"unitId,omitempty"`
 	SellingPrice      string  `json:"sellingPrice"`
 	CostPrice         *string `json:"costPrice,omitempty"`
 	UpdateVendorPrice bool    `json:"updateVendorPrice,omitempty"`
@@ -205,7 +206,7 @@ type dbItem struct {
 	VendorProductID   *int64  `json:"vendor_product_id,omitempty"`
 	VendorID          *int64  `json:"vendor_id,omitempty"`
 	Qty               string  `json:"qty"`
-	UnitID            int16   `json:"unit_id"`
+	UnitID            int16   `json:"unit_id,omitempty"`
 	SellingPrice      string  `json:"selling_price"`
 	CostPrice         *string `json:"cost_price,omitempty"`
 	UpdateVendorPrice bool    `json:"update_vendor_price"`

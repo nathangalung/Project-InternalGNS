@@ -3,6 +3,7 @@ import { savedTokens } from "./fixtures"
 import { e2eUsers } from "./support/env"
 import { expect, test } from "./support/seed"
 import { signedInContext } from "./support/session"
+import { xlsx } from "./support/xlsx"
 
 // Live editing of one draft.
 //
@@ -117,6 +118,50 @@ test.describe("live quotation editing", () => {
     } finally {
       await other.close()
     }
+  })
+
+  // An import lands at once.
+  // A row whose unit the catalog does not know is stored without one and
+  // fixed through its edit, as in the add wizard.
+  test("an imported line without a known unit is fixed through its edit", async ({
+    page,
+    seed,
+  }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const q = await seed.quotation({ client, lines: [{ item, qty: 1, price: 25_000 }] })
+    const fresh = `Qzvx ${seed.prefix.slice(3).toLowerCase()} impor`
+    const file = xlsx({
+      rows: [
+        ["No", "Kode IMPA", "Nama", "Jumlah", "Satuan"],
+        [1, null, fresh, 2, "PC"],
+      ],
+    })
+
+    await page.goto(`/quotations/${q.id}/edit`)
+    await toStep(page, 2)
+    await page.locator('input[type="file"][accept=".csv,.xlsx"]').setInputFiles({
+      name: "permintaan.xlsx",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      buffer: file,
+    })
+    await expect(page.getByText("Satuan belum diisi.")).toBeVisible()
+    await seed.adopt("item", fresh)
+
+    await page.getByRole("button", { name: "Edit produk 2" }).click()
+    const product = page.getByRole("dialog", { name: "Edit Produk Quotation" })
+    await product.getByRole("combobox", { name: "Satuan *" }).click()
+    await page.getByRole("option", { name: /^PCS/ }).click()
+    await product.getByRole("button", { name: "Simpan Perubahan" }).click()
+    await expect(product).toBeHidden()
+    await expect(page.getByText("Satuan belum diisi.")).toHaveCount(0)
+    await expect
+      .poll(async () =>
+        (await seed.getQuotation(q.id)).items
+          .filter((it) => it.itemType === "product")
+          .map((it) => it.unitId !== undefined),
+      )
+      .toEqual([true, true])
   })
 
   test("a change saved elsewhere shows up without a reload", async ({ page, seed }) => {

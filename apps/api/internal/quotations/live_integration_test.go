@@ -205,6 +205,27 @@ func TestAddLines(t *testing.T) {
 	assert.Equal(t, 422, status)
 }
 
+// An imported line may lack its unit.
+// The unit is then filled through the line edit, before sending.
+func TestAddLines_WithoutUnit(t *testing.T) {
+	ctx, repo, _ := newRepo(t)
+	q := newLiveDraft(t, ctx, repo)
+	bare := offered()
+	bare.UnitID = 0
+	ids, err := repo.AddLines(ctx, q.id, []quotations.CreateItem{bare}, seedUserID)
+	require.NoError(t, err)
+
+	d, err := repo.GetDetail(ctx, q.id)
+	require.NoError(t, err)
+	for _, it := range d.Items {
+		if it.ID == ids[0] {
+			assert.Nil(t, it.UnitID)
+			return
+		}
+	}
+	t.Fatalf("line %d not stored", ids[0])
+}
+
 // Tidak Ditawarkan by toggle.
 func TestSetLineOffer(t *testing.T) {
 	ctx, repo, tx := newRepo(t)
