@@ -217,6 +217,8 @@ export function useEditLocks(id: number | undefined) {
   const held = useRef(new Set<string>())
   const [heldParts, setHeldParts] = useState<ReadonlySet<string>>(() => new Set())
   const sync = useCallback(() => setHeldParts(new Set(held.current)), [])
+  // False once the page has left; a claim granted after that is freed.
+  const active = useRef(false)
 
   const acquire = useCallback(
     async (part: string, opts: { quiet?: boolean } = {}): Promise<boolean> => {
@@ -225,6 +227,10 @@ export function useEditLocks(id: number | undefined) {
         await quotationsApi.lockPart(id, part)
       } catch (err) {
         if (!opts.quiet) toast.error(errorMessage(err, "Bagian ini tidak dapat dibuka."))
+        return false
+      }
+      if (!active.current) {
+        void quotationsApi.unlockPart(id, part).catch(() => undefined)
         return false
       }
       held.current.add(part)
@@ -247,6 +253,7 @@ export function useEditLocks(id: number | undefined) {
   useEffect(() => {
     if (id === undefined) return
     const parts = held.current
+    active.current = true
     const timer = setInterval(() => {
       for (const part of parts) {
         quotationsApi.lockPart(id, part).catch(() => {
@@ -269,6 +276,7 @@ export function useEditLocks(id: number | undefined) {
     window.addEventListener("pagehide", onPageHide)
     return () => {
       clearInterval(timer)
+      active.current = false
       window.removeEventListener("pagehide", onPageHide)
       releaseAll(false)
     }

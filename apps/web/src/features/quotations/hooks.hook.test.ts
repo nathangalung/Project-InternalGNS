@@ -359,6 +359,22 @@ describe("useEditLocks", () => {
     vi.useRealTimers()
   })
 
+  it("frees a claim granted after the page has left", async () => {
+    let grant: (v: { part: string; expiresAt: string }) => void = () => undefined
+    m.lockPart.mockReturnValue(new Promise((resolve) => (grant = resolve)))
+    m.unlockPart.mockResolvedValue(undefined)
+    const { result, unmount } = renderQueryHook(() => useEditLocks(5))
+    const pending = result.current.acquire("header")
+    unmount()
+    let ok = true
+    await act(async () => {
+      grant({ part: "header", expiresAt: "" })
+      ok = await pending
+    })
+    expect(ok).toBe(false)
+    expect(m.unlockPart).toHaveBeenCalledWith(5, "header")
+  })
+
   it("frees every part when the page goes away", async () => {
     m.lockPart.mockResolvedValue({ part: "header", expiresAt: "" })
     m.unlockPart.mockResolvedValue(undefined)

@@ -183,8 +183,10 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   // and the claim is tried again once their hold ends.
   const onHeaderStep = step >= 3
   const { acquire, release } = locks
+  // Set by Simpan, so the header freed on the way out is not claimed again.
+  const leaving = useRef(false)
   useEffect(() => {
-    if (!editable || !onHeaderStep || holdsHeader || owners.header) return
+    if (!editable || !onHeaderStep || holdsHeader || owners.header || leaving.current) return
     void acquire(HEADER_PART, { quiet: true })
   }, [editable, onHeaderStep, holdsHeader, owners.header, acquire])
 
@@ -316,6 +318,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
       } catch {
         return
       }
+      leaving.current = true
       // Leaving releases it too; this only frees it sooner.
       void release(HEADER_PART)
     }
