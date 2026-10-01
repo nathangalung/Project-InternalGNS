@@ -155,13 +155,17 @@ test.describe("live quotation editing", () => {
     await product.getByRole("button", { name: "Simpan Perubahan" }).click()
     await expect(product).toBeHidden()
     await expect(page.getByText("Satuan belum diisi.")).toHaveCount(0)
+    // Deleting is saved at once, so it asks first.
+    page.once("dialog", (d) => void d.accept())
+    await page.getByRole("button", { name: "Hapus produk 1" }).click()
+    await expect(page.locator("main")).not.toContainText("PRODUK 2")
     await expect
       .poll(async () =>
         (await seed.getQuotation(q.id)).items
           .filter((it) => it.itemType === "product")
-          .map((it) => it.unitId !== undefined),
+          .map((it) => [it.requestedName, it.unitId !== undefined]),
       )
-      .toEqual([true, true])
+      .toEqual([[fresh, true]])
   })
 
   test("a change saved elsewhere shows up without a reload", async ({ page, seed }) => {

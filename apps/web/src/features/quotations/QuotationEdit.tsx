@@ -292,8 +292,9 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     void change(() => quotationsApi.setLineOffer(qid, id, Boolean(p.noOffer)))
   }
 
+  // Saved at once, so it asks first.
   function deleteLine(id: number) {
-    if (qid === undefined) return
+    if (qid === undefined || !confirm("Hapus produk ini dari quotation?")) return
     void change(() => quotationsApi.deleteLine(qid, id))
   }
 
