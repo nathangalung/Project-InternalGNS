@@ -136,6 +136,18 @@ func (r *Repo) UpdateImage(ctx context.Context, id int64, objectKey string, user
 	return nil
 }
 
+// ClearImage detaches the image.
+func (r *Repo) ClearImage(ctx context.Context, id int64, userID int64) error {
+	tag, err := r.db.Exec(ctx, r.store.Get("items.clear_image"), id, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // Upsert vendor_products row.
 func (r *Repo) AddVendor(ctx context.Context, itemID int64, req AddVendorToItemRequest, userID int64) (VendorForItem, error) {
 	cost := "0"
@@ -188,10 +200,11 @@ func (r *Repo) SearchCatalog(ctx context.Context, q string, minScore float32, li
 // It supplies the true is_active flag and backfills name/impa/unit for hits
 // that came only from the vendor-offer or request-history layers.
 type ItemMeta struct {
-	Active        bool
-	Name          string
-	IMPACode      *string
-	DefaultUnitID *int16
+	Active         bool
+	Name           string
+	IMPACode       *string
+	DefaultUnitID  *int16
+	ImageObjectKey *string
 }
 
 // ItemMetaByIDs maps ids to identity.
@@ -210,7 +223,7 @@ func (r *Repo) ItemMetaByIDs(ctx context.Context, ids []int64) (map[int64]ItemMe
 	for rows.Next() {
 		var id int64
 		var m ItemMeta
-		if err := rows.Scan(&id, &m.Active, &m.Name, &m.IMPACode, &m.DefaultUnitID); err != nil {
+		if err := rows.Scan(&id, &m.Active, &m.Name, &m.IMPACode, &m.DefaultUnitID, &m.ImageObjectKey); err != nil {
 			return nil, err
 		}
 		out[id] = m

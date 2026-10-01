@@ -151,18 +151,19 @@ type RequestHistoryHit struct {
 // AdvancedSearchHit is one merged hit.
 // It is the tier-labelled row /items/search-advanced serves.
 type AdvancedSearchHit struct {
-	ID            int64    `json:"id"`
-	Name          string   `json:"name"`
-	IMPACode      *string  `json:"impaCode,omitempty"`
-	DefaultUnitID *int16   `json:"defaultUnitId,omitempty"`
-	IsActive      bool     `json:"isActive"` // real catalog flag, not derived from the filter
-	Score         float32  `json:"score"`
-	Tier          string   `json:"tier"`  // ITEM_AUTO | VENDOR_OFFER | ITEM_SUGGESTED | REQUEST_HISTORY | ITEM_FUZZY
-	Tiers         []string `json:"tiers"` // all tiers that contributed to this hit
-	VendorID      *int64   `json:"vendorId,omitempty"`
-	VendorName    *string  `json:"vendorName,omitempty"`
-	VendorSKU     *string  `json:"vendorSku,omitempty"`
-	RequestText   *string  `json:"requestText,omitempty"`
+	ID             int64    `json:"id"`
+	Name           string   `json:"name"`
+	IMPACode       *string  `json:"impaCode,omitempty"`
+	DefaultUnitID  *int16   `json:"defaultUnitId,omitempty"`
+	IsActive       bool     `json:"isActive"` // real catalog flag, not derived from the filter
+	Score          float32  `json:"score"`
+	Tier           string   `json:"tier"`  // ITEM_AUTO | VENDOR_OFFER | ITEM_SUGGESTED | REQUEST_HISTORY | ITEM_FUZZY
+	Tiers          []string `json:"tiers"` // all tiers that contributed to this hit
+	VendorID       *int64   `json:"vendorId,omitempty"`
+	VendorName     *string  `json:"vendorName,omitempty"`
+	VendorSKU      *string  `json:"vendorSku,omitempty"`
+	RequestText    *string  `json:"requestText,omitempty"`
+	ImageObjectKey *string  `json:"imageObjectKey,omitempty"`
 }
 
 // AdvancedSearchResponse wraps hits and counts.

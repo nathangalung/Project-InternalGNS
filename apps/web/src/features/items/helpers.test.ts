@@ -36,9 +36,24 @@ function resp(hits: AdvancedSearchHit[], total: number): AdvancedSearchResponse 
 
 describe("katalogRowsFromHits", () => {
   it("keeps only table fields", () => {
-    expect(katalogRowsFromHits([hit(1, 7), hit(2)])).toEqual([
-      { id: 1, name: "Item 1", impaCode: "100001", defaultUnitId: 7, isActive: false },
-      { id: 2, name: "Item 2", impaCode: "100002", defaultUnitId: undefined, isActive: true },
+    const withImage = { ...hit(1, 7), imageObjectKey: "items/1/a.webp" }
+    expect(katalogRowsFromHits([withImage, hit(2)])).toEqual([
+      {
+        id: 1,
+        name: "Item 1",
+        impaCode: "100001",
+        defaultUnitId: 7,
+        isActive: false,
+        imageObjectKey: "items/1/a.webp",
+      },
+      {
+        id: 2,
+        name: "Item 2",
+        impaCode: "100002",
+        defaultUnitId: undefined,
+        isActive: true,
+        imageObjectKey: undefined,
+      },
     ])
   })
 })

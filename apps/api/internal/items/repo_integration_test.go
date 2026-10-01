@@ -1,6 +1,7 @@
 package items_test
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -134,6 +135,14 @@ func TestRepo_ItemMetaByIDs(t *testing.T) {
 	assert.True(t, meta[on.ID].Active)
 	assert.False(t, meta[off.ID].Active)
 	assert.Equal(t, "FLAG TEST ACTIVE", meta[on.ID].Name, "meta must carry the catalog name")
+	assert.Nil(t, meta[on.ID].ImageObjectKey, "no image yet")
+
+	key := "items/" + strconv.FormatInt(on.ID, 10) + "/foto.webp"
+	require.NoError(t, repo.UpdateImage(ctx, on.ID, key, seedUserID))
+	meta, err = repo.ItemMetaByIDs(ctx, []int64{on.ID})
+	require.NoError(t, err)
+	require.NotNil(t, meta[on.ID].ImageObjectKey)
+	assert.Equal(t, key, *meta[on.ID].ImageObjectKey, "meta must carry the image key")
 	assert.NotContains(t, meta, int64(99999999), "absent row must not be reported")
 }
 

@@ -142,3 +142,7 @@ export async function updateImage(id: number, objectKey: string): Promise<void> 
     body: { objectKey } satisfies ObjectKeyInput,
   })
 }
+
+export async function removeImage(id: number): Promise<void> {
+  await apiRequest<void>({ path: `/items/${id}/image`, method: "DELETE" })
+}

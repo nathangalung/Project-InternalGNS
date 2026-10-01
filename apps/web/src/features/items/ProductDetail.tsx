@@ -3,23 +3,15 @@ import EntityLink from "@/components/shared/EntityLink"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
 import AddVendorToItemModal from "@/features/items/AddVendorToItemModal"
-import { apiFieldError, productInitials, vendorInitials } from "@/features/items/helpers"
-import {
-  useItemImageDownloadUrl,
-  useItemVendors,
-  useUpdateItem,
-  useUploadItemImage,
-} from "@/features/items/hooks"
+import { apiFieldError, vendorInitials } from "@/features/items/helpers"
+import { useItemVendors, useUpdateItem } from "@/features/items/hooks"
+import ProductPhoto from "@/features/items/ProductPhoto"
 import { useUnits } from "@/features/units/hooks"
 import UnitCombobox from "@/features/units/UnitCombobox"
-import { fetchObjectUrl } from "@/lib/api-client"
-import { logoBackground } from "@/lib/avatar"
 import { errorMessage } from "@/lib/errors"
 import { formatDate, formatRupiah } from "@/lib/format"
 import { canWriteCatalog } from "@/lib/rbac"
-import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
-import { validateAsset } from "@/lib/upload-validation"
 import type { ItemRow } from "@/types/api"
 
 type ProductDetailProps = {
@@ -33,9 +25,6 @@ const labelCls =
 const inputBase = `h-11 w-full rounded-md border-[1.5px] bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150 read-only:cursor-default ${ui.fieldFocus}`
 
 const textareaCls = `min-h-24 w-full resize-y rounded-md border-[1.5px] border-transparent bg-[#F2F4F6] px-4 py-3 font-sans text-sm font-medium text-[#191C1E] outline-none transition-[border-color] duration-150 read-only:resize-none read-only:cursor-default ${ui.fieldFocus}`
-
-// Accepted image extensions.
-const IMAGE_ACCEPT = ".png,.jpg,.jpeg,.webp,.gif"
 
 export default function ProductDetail({ product, onBack }: ProductDetailProps) {
   const { data: units } = useUnits()
@@ -63,66 +52,9 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [showAddVendor, setShowAddVendor] = useState(false)
-  const [imageDataUrl, setImageDataUrl] = useState<string>("")
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const updateItem = useUpdateItem()
-  const uploadImage = useUploadItemImage()
-  const { data: imageDownload } = useItemImageDownloadUrl(product.id, product.imageObjectKey)
   const { data: itemVendors, isLoading: vendorsLoading } = useItemVendors(product.id)
-
-  useEffect(() => {
-    const path = imageDownload?.downloadUrl
-    if (!path) {
-      if (!product.imageObjectKey) setImageDataUrl("")
-      return
-    }
-    let active = true
-    let objectUrl = ""
-    fetchObjectUrl(path)
-      .then((u) => {
-        if (active) {
-          objectUrl = u
-          setImageDataUrl(u)
-        } else {
-          URL.revokeObjectURL(u)
-        }
-      })
-      .catch(() => {})
-    return () => {
-      active = false
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
-    }
-  }, [imageDownload?.downloadUrl, product.imageObjectKey])
-
-  // Preview, revert on failure.
-  //
-  // Only a valid file reaches the preview.
-  function handleImageSelect(file: File | undefined) {
-    if (!file) return
-    try {
-      validateAsset("itemImage", file)
-    } catch (err) {
-      toast.error(errorMessage(err, "Gambar produk tidak valid."))
-      return
-    }
-    const previous = imageDataUrl
-    let failed = false
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (!failed && typeof reader.result === "string") setImageDataUrl(reader.result)
-    }
-    reader.readAsDataURL(file)
-    uploadImage.mutate(
-      { id: product.id, file },
-      {
-        onError: () => {
-          failed = true
-          setImageDataUrl(previous)
-        },
-      },
-    )
-  }
 
   // Every field but the unit hydrates once from the state initializers above.
   // The unit code resolves only after the units list arrives, so seed it once
@@ -141,8 +73,6 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
     unitCode !== initialUnitCode ||
     description !== (product.description ?? "") ||
     isActive !== product.isActive
-
-  const logoBg = logoBackground(product.name)
 
   const handleCancel = () => {
     setName(product.name)
@@ -223,58 +153,14 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
 
         <div className="flex flex-col gap-5">
           <div className="flex items-center gap-5 rounded-lg bg-white px-6 py-5 max-sm:flex-wrap max-sm:gap-4 max-sm:px-5">
-            {canWrite ? (
-              <>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept={IMAGE_ACCEPT}
-                  className="hidden"
-                  onChange={(e) => {
-                    handleImageSelect(e.target.files?.[0])
-                    e.target.value = ""
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadImage.isPending}
-                  title="Klik untuk ganti gambar produk"
-                  aria-label="Ganti gambar produk"
-                  className={`flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg p-0 text-xl font-extrabold tracking-[0.5px] text-white disabled:cursor-wait disabled:opacity-70 ${ui.focusRing}`}
-                  style={{ background: imageDataUrl ? "#FFFFFF" : logoBg }}
-                >
-                  {imageDataUrl ? (
-                    <img src={imageDataUrl} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    productInitials(product.name)
-                  )}
-                </button>
-              </>
-            ) : (
-              <div
-                className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg text-xl font-extrabold tracking-[0.5px] text-white"
-                style={{ background: imageDataUrl ? "#FFFFFF" : logoBg }}
-              >
-                {imageDataUrl ? (
-                  <img
-                    src={imageDataUrl}
-                    alt="Gambar produk"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span aria-hidden="true">{productInitials(product.name)}</span>
-                )}
-              </div>
-            )}
-            <div className="min-w-0 flex-1 max-sm:basis-[160px]">
+            <ProductPhoto product={product} canWrite={canWrite}>
               <h2 className="break-words text-lg font-bold leading-6 tracking-[-0.4px] text-[#191C1E]">
                 {product.name}
               </h2>
               <span className="text-[13px] font-bold leading-[18px] tracking-[0.3px] text-primary-700">
                 {product.impaCode ? `IMPA ${product.impaCode}` : "Produk"}
               </span>
-            </div>
+            </ProductPhoto>
             <div
               className={`flex flex-shrink-0 flex-col gap-0.5 rounded-[10px] border px-4 py-2.5 ${
                 product.isActive ? "border-[#BBF7D0] bg-[#F0FDF4]" : "border-[#FECACA] bg-[#FEF2F2]"

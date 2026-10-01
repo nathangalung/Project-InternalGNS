@@ -7,7 +7,9 @@ import {
 } from "@tanstack/react-query"
 import * as itemsApi from "@/features/items/api"
 import * as vendorsApi from "@/features/vendors/api"
+import { useObjectUrl } from "@/hooks/useObjectUrl"
 import { errorMessage } from "@/lib/errors"
+import { shrinkImage } from "@/lib/image-shrink"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
@@ -120,11 +122,13 @@ export function useAddVendorToItem() {
 export function useUploadItemImage() {
   const qc = useQueryClient()
   return useMutation({
+    // Shrink first, so a large phone photo that fits once shrunk is let in.
     mutationFn: async ({ id, file }: { id: number; file: File }) => {
-      validateAsset("itemImage", file)
+      const ready = await shrinkImage(file)
+      validateAsset("itemImage", ready)
       const objectKey = await uploadWithFreshKey(
-        () => itemsApi.presignImageUpload(id, file.name),
-        file,
+        () => itemsApi.presignImageUpload(id, ready.name),
+        ready,
       )
       await itemsApi.updateImage(id, objectKey)
     },
@@ -132,7 +136,7 @@ export function useUploadItemImage() {
       qc.invalidateQueries({ queryKey: queryKeys.items.detail(id) })
       qc.invalidateQueries({ queryKey: queryKeys.items.all })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah gambar produk.")),
+    onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah foto produk.")),
   })
 }
 
@@ -143,4 +147,25 @@ export function useItemImageDownloadUrl(id: number | undefined, objectKey?: stri
       id !== undefined && id > 0 && objectKey ? () => itemsApi.presignImageDownload(id) : skipToken,
     staleTime: 4 * 60 * 1000,
   })
+}
+
+export function useRemoveItemImage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => itemsApi.removeImage(id),
+    // Settle after the refetch, so the removed photo never shows again.
+    onSuccess: (_, id) =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: queryKeys.items.detail(id) }),
+        qc.invalidateQueries({ queryKey: queryKeys.items.all }),
+      ]),
+    onError: (err) => toast.error(errorMessage(err, "Gagal menghapus foto produk.")),
+  })
+}
+
+// Product image as blob URL.
+// Empty while loading or when the product has none.
+export function useItemImage(id: number, objectKey: string | undefined): string {
+  const { data } = useItemImageDownloadUrl(id, objectKey)
+  return useObjectUrl(objectKey ? data?.downloadUrl : undefined)
 }

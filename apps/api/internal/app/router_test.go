@@ -374,6 +374,7 @@ func TestRouter_FinanceReadOnlyOnItemsAndVendors(t *testing.T) {
 		{"finance", http.MethodPost, "/api/v1/items/1/vendors", true},
 		{"finance", http.MethodPost, "/api/v1/items/match-rows", true},
 		{"finance", http.MethodPatch, "/api/v1/items/1/image", true},
+		{"finance", http.MethodDelete, "/api/v1/items/1/image", true},
 		{"finance", http.MethodGet, "/api/v1/items/1/image/upload-url?fileName=x.png", true},
 		{"finance", http.MethodPost, "/api/v1/vendors/", true},
 		{"finance", http.MethodPut, "/api/v1/vendors/1", true},
@@ -390,6 +391,7 @@ func TestRouter_FinanceReadOnlyOnItemsAndVendors(t *testing.T) {
 		{"operational", http.MethodPost, "/api/v1/items/", false},
 		{"operational", http.MethodPut, "/api/v1/vendors/1", false},
 		{"operational", http.MethodGet, "/api/v1/items/1/image/upload-url?fileName=x.png", false},
+		{"operational", http.MethodDelete, "/api/v1/items/999999/image", false},
 		{"superadmin", http.MethodPost, "/api/v1/vendors/", false},
 	}
 	for _, c := range cases {

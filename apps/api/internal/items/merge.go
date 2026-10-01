@@ -127,6 +127,7 @@ func mergeAdvanced(q string, items []SearchResult, offers []VendorOfferHit, requ
 		// stale vendor-offer or request-history hit never claims to be active.
 		m := meta[h.ID]
 		h.IsActive = m.Active
+		h.ImageObjectKey = m.ImageObjectKey
 		// The item loop only enriches fuzzy/suggested/auto hits, so a
 		// vendor-offer- or history-only hit reaches here nameless; backfill its
 		// catalog identity from meta.

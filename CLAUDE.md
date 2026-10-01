@@ -272,6 +272,16 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
 - Page states: `LoadingState`, `NotFoundState`, `RouteErrorFallback` and
   `RouteNotFound`, all built on `StateMessage`; table rows use `TableStates`.
 - `StatCard` is the summary tile on list screens and dashboards.
+- `EntityLogo` is the list avatar: initials, or an image when given `src`.
+
+Stored files (logos, product photos, attachments) come through the
+authenticated API proxy, and the enforced CSP allows images only from self,
+`blob:` and `data:`, so show one through `hooks/useObjectUrl` (a blob URL it
+revokes) and never point an `<img>` at an API URL. Product photos are shrunk
+in the browser before upload (`lib/image-shrink`, WebP within 1600px); add,
+replace and remove live in `features/items/ProductPhoto`, and
+`DELETE /items/{id}/image` only clears the key, leaving the object to
+`cmd/orphan-blobs`.
 
 List screens share one state machine, `lib/useListScreen.ts`: search with
 debounce, filters, page, per-page, and the reset-to-page-1 invariant. Note which

@@ -46,7 +46,7 @@ const POLICIES: Record<AssetKind, Policy> = {
     maxBytes: 5 * MB,
     mimeTypes: IMAGE_MIMES,
     extensions: IMAGE_EXTS,
-    label: "gambar produk",
+    label: "foto produk",
   },
   invoiceAttachment: {
     maxBytes: 20 * MB,

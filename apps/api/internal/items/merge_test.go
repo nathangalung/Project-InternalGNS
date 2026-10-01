@@ -158,3 +158,26 @@ func TestCandidateItemIDs_DedupsAcrossLayers(t *testing.T) {
 		t.Fatalf("ids = %v, want 4 distinct", ids)
 	}
 }
+
+// Hits carry the catalog image.
+// Every layer's hit takes the key from the catalog row, so the list shows
+// the same thumbnail whether or not a search is active.
+func TestMergeAdvanced_ImageFromCatalog(t *testing.T) {
+	key := "items/10/foto.webp"
+	offers := []VendorOfferHit{{ItemID: 10, VendorID: 1, VendorName: "Acme", Score: 0.9}}
+	requests := []RequestHistoryHit{{ItemID: 11, RequestText: "acme", Score: 0.7}}
+	meta := map[int64]ItemMeta{10: {Active: true, ImageObjectKey: &key}, 11: {Active: true}}
+
+	resp := mergeAdvanced("acme", nil, offers, requests, meta, nil, 20, 0)
+
+	got := map[int64]*string{}
+	for _, h := range resp.Hits {
+		got[h.ID] = h.ImageObjectKey
+	}
+	if got[10] == nil || *got[10] != key {
+		t.Errorf("hit 10 ImageObjectKey = %v, want %q", got[10], key)
+	}
+	if got[11] != nil {
+		t.Errorf("hit 11 ImageObjectKey = %q, want nil", *got[11])
+	}
+}

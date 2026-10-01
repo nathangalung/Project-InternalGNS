@@ -51,7 +51,7 @@ describe("validateAsset per kind", () => {
   it.each<[AssetKind, string, number]>([
     ["clientLogo", "logo klien", 2],
     ["vendorLogo", "logo vendor", 2],
-    ["itemImage", "gambar produk", 5],
+    ["itemImage", "foto produk", 5],
     ["poDoc", "dokumen PO", 20],
   ])("%s caps at its own size", (kind, label, mb) => {
     const ext = kind === "poDoc" ? "a.pdf" : "a.png"

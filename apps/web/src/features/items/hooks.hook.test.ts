@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import * as vendorsApi from "@/features/vendors/api"
+import { shrinkImage } from "@/lib/image-shrink"
 import { queryKeys } from "@/lib/query-keys"
+import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { invalidated, renderQueryHook, seed, settle, until } from "@/test/query"
 import * as api from "./api"
@@ -9,11 +11,13 @@ import {
   useAddVendorToItem,
   useCreateItem,
   useItem,
+  useItemImage,
   useItemImageDownloadUrl,
   useItemPriceHistory,
   useItemSearchAdvanced,
   useItems,
   useItemVendors,
+  useRemoveItemImage,
   useUpdateItem,
   useUploadItemImage,
 } from "./hooks"
@@ -25,6 +29,10 @@ vi.mock("@/lib/storage-upload", () => ({
   uploadWithFreshKey: vi.fn(async (presign: () => Promise<{ objectKey: string }>) => {
     return (await presign()).objectKey
   }),
+}))
+vi.mock("@/lib/image-shrink", () => ({ shrinkImage: vi.fn(async (f: File) => f) }))
+vi.mock("@/hooks/useObjectUrl", () => ({
+  useObjectUrl: (path?: string) => (path ? `blob:${path}` : ""),
 }))
 
 const m = vi.mocked(api)
@@ -176,18 +184,91 @@ describe("useUploadItemImage", () => {
     expect(invalidated(qc, [detail, list])).toEqual([detail, list])
   })
 
+  it("uploads the shrunk copy, so a large photo that shrinks under the cap passes", async () => {
+    const big = img(8 * 1024 * 1024)
+    const small = new File([new Uint8Array(10)], "foto-kecil.webp", { type: "image/webp" })
+    vi.mocked(shrinkImage).mockResolvedValueOnce(small)
+    m.presignImageUpload.mockResolvedValue({
+      uploadUrl: "/u",
+      objectKey: "items/9/k.webp",
+      expiresAt: 1,
+    })
+    m.updateImage.mockResolvedValue(undefined)
+    const { result } = renderQueryHook(() => useUploadItemImage())
+    await settle(() => result.current.mutateAsync({ id: 9, file: big }))
+    expect(shrinkImage).toHaveBeenCalledWith(big)
+    expect(m.presignImageUpload).toHaveBeenCalledWith(9, "foto-kecil.webp")
+    expect(vi.mocked(uploadWithFreshKey).mock.calls[0][1]).toBe(small)
+  })
+
   // MD-13: refused files skip storage.
   it("refuses an oversize image before asking for an upload URL", async () => {
     const { result } = renderQueryHook(() => useUploadItemImage())
     await settle(() => result.current.mutateAsync({ id: 9, file: img(5 * 1024 * 1024 + 1) }))
     expect(m.presignImageUpload).not.toHaveBeenCalled()
-    expect(toast.error).toHaveBeenCalledWith("Ukuran gambar produk melebihi 5 MB.")
+    expect(toast.error).toHaveBeenCalledWith("Ukuran foto produk melebihi 5 MB.")
   })
 
   it("falls back to Indonesian copy when the upload fails without a reason", async () => {
     m.presignImageUpload.mockRejectedValue(new Error(""))
     const { result } = renderQueryHook(() => useUploadItemImage())
     await settle(() => result.current.mutateAsync({ id: 9, file: img() }))
-    expect(toast.error).toHaveBeenCalledWith("Gagal mengunggah gambar produk.")
+    expect(toast.error).toHaveBeenCalledWith("Gagal mengunggah foto produk.")
+  })
+})
+
+describe("useRemoveItemImage", () => {
+  it("removes the image and refreshes item views", async () => {
+    m.removeImage.mockResolvedValue(undefined)
+    const { qc, result } = renderQueryHook(() => useRemoveItemImage())
+    seed(qc, [detail, list])
+    await settle(() => result.current.mutateAsync(9))
+    expect(m.removeImage).toHaveBeenCalledWith(9)
+    expect(invalidated(qc, [detail, list])).toEqual([detail, list])
+  })
+
+  it("shows Indonesian copy when the removal fails without a reason", async () => {
+    m.removeImage.mockRejectedValue(new Error(""))
+    const { result } = renderQueryHook(() => useRemoveItemImage())
+    await settle(() => result.current.mutateAsync(9))
+    expect(toast.error).toHaveBeenCalledWith("Gagal menghapus foto produk.")
+  })
+})
+
+describe("useItemImage", () => {
+  it("is empty for a product without an image", async () => {
+    const { result } = renderQueryHook(() => useItemImage(9, undefined))
+    await until(() => expect(result.current).toBe(""))
+    expect(m.presignImageDownload).not.toHaveBeenCalled()
+  })
+
+  it("resolves the stored image to a blob URL", async () => {
+    m.presignImageDownload.mockResolvedValue({ downloadUrl: "/storage/object?k=1", expiresAt: 1 })
+    const { result } = renderQueryHook(() => useItemImage(9, "items/9/a.webp"))
+    await until(() => expect(result.current).toBe("blob:/storage/object?k=1"))
+    expect(m.presignImageDownload).toHaveBeenCalledWith(9)
+  })
+})
+
+describe("useRemoveItemImage settling", () => {
+  it("stays pending until the item views have refetched", async () => {
+    m.removeImage.mockResolvedValue(undefined)
+    const { qc, result } = renderQueryHook(() => useRemoveItemImage())
+    let refetched: () => void = () => {}
+    vi.spyOn(qc, "invalidateQueries").mockReturnValue(
+      new Promise<void>((r) => {
+        refetched = r
+      }),
+    )
+    let settled = false
+    const run = result.current.mutateAsync(9).then(() => {
+      settled = true
+    })
+    await until(() => expect(qc.invalidateQueries).toHaveBeenCalledTimes(2))
+    await new Promise((r) => setTimeout(r, 20))
+    expect(settled).toBe(false)
+    refetched()
+    await run
+    expect(settled).toBe(true)
   })
 })

@@ -1,5 +1,5 @@
 import { JAKARTA_TZ } from "@/lib/date-range"
-import { ui } from "@/lib/ui"
+import { btnRemove, ui } from "@/lib/ui"
 
 type FileCardProps = {
   fileName?: string
@@ -13,9 +13,6 @@ type FileCardProps = {
   // Only while PENDING or UPLOADED
   onRemove?: () => void
 }
-
-// Ghost button, destructive tone.
-const removeBtn = `inline-flex items-center justify-center gap-2 rounded-md border border-transparent px-3 py-2 text-sm font-medium text-[#B91C1C] transition hover:bg-[#FEE2E2] ${ui.focusRing}`
 
 function formatSize(bytes?: number): string {
   if (!bytes) return ""
@@ -118,7 +115,7 @@ export default function FileCard({
             </button>
           )}
           {hasFile && onRemove && (
-            <button type="button" onClick={onRemove} className={removeBtn}>
+            <button type="button" onClick={onRemove} className={btnRemove}>
               Hapus Berkas
             </button>
           )}

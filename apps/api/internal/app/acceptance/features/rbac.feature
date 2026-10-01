@@ -55,6 +55,7 @@ Feature: Role gates at the router mounts
       | finance | PUT    | /api/v1/items/999999                               |
       | finance | POST   | /api/v1/items/match-rows                           |
       | finance | GET    | /api/v1/items/999999/image/upload-url?fileName=a.png |
+      | finance | DELETE | /api/v1/items/999999/image                         |
       | finance | POST   | /api/v1/vendors/                                   |
       | finance | PATCH  | /api/v1/vendors/999999/logo                        |
 
