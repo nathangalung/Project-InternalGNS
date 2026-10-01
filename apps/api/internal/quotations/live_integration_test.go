@@ -336,12 +336,9 @@ func TestRecompute_MatchesWholeSave(t *testing.T) {
 	require.NoError(t, err)
 
 	whole := createWith(t, ctx, repo, offered(), offered(), offered(), frac)
-	req := sampleCreate()
-	req.Items = []quotations.CreateItem{offered(), offered(), offered(), frac}
-	req.DiscountPct = "7.5"
-	req.ShippingAddress, req.ShippingCost, req.ShippingDays = nil, nil, nil
 	_, err = repo.Update(ctx, whole, quotations.UpdateRequest{
-		DiscountPct: req.DiscountPct, Items: req.Items,
+		DiscountPct: "7.5",
+		Items:       []quotations.CreateItem{offered(), offered(), offered(), frac},
 	}, seedUserID, nil)
 	require.NoError(t, err)
 	saved, err := repo.GetDetail(ctx, whole)
