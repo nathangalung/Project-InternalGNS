@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_quotation (deployed by migration 00073).
+-- Canonical current body of fn_update_quotation (deployed by migration 00078).
 CREATE OR REPLACE FUNCTION public.fn_update_quotation(p_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_user_id bigint, p_notes text DEFAULT NULL::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -34,6 +34,9 @@ BEGIN
       fn_quotation_status_label(v_status)
       USING ERRCODE = 'P0013';
   END IF;
+
+  -- A whole save rewrites every line, so nobody else may be mid-edit.
+  PERFORM fn_quotation_no_other_editors(p_id, p_user_id);
 
   -- 2. Validation
   IF p_items IS NULL OR jsonb_array_length(p_items) = 0 THEN
@@ -169,6 +172,10 @@ BEGIN
       p_user_id, p_user_id
     );
   END IF;
+
+  -- Line ids changed: line locks point at lines that are gone.
+  DELETE FROM quotation_edit_locks WHERE quotation_id = p_id AND part <> 'header';
+  PERFORM fn_quotation_notify(p_id, 'lines', NULL, p_user_id);
 
   RETURN p_id;
 END;

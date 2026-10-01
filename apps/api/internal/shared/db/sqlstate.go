@@ -18,6 +18,8 @@ const (
 	SQLStateBlockedByRelated = "P0013"
 	// SQLStateValidation is rejected function input.
 	SQLStateValidation = "P0014"
+	// SQLStateEditLocked is another editor's lock.
+	SQLStateEditLocked = "P0015"
 	// SQLStateUnpricedLine flags unpriced finalisation.
 	SQLStateUnpricedLine = "P0100"
 

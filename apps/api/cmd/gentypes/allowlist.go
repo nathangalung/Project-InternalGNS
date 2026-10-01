@@ -97,6 +97,13 @@ var allowlist = []pkg{
 		{Go: "ItemRequestCreate", TS: "QuotationItemRequestCreateInput", Input: true},
 		{Go: "ItemRequestUpdate", TS: "QuotationItemRequestUpdateInput", Input: true},
 		{Go: "RFQRows", TS: "QuotationRfqRows"},
+		{Go: "EditLock", TS: "QuotationEditLock"},
+		{Go: "LockRequest", TS: "QuotationLockInput", Input: true},
+		{Go: "LockResponse", TS: "QuotationLockGranted"},
+		{Go: "AddLinesRequest", TS: "QuotationAddLinesInput", Input: true},
+		{Go: "AddLinesResponse", TS: "QuotationLinesAdded"},
+		{Go: "LineOfferRequest", TS: "QuotationLineOfferInput", Input: true},
+		{Go: "HeaderRequest", TS: "QuotationHeaderInput", Input: true},
 	}},
 	{"internal/purchaseorders", []entry{
 		{Go: "Status", TS: "PoBackendStatus"},
@@ -142,5 +149,8 @@ var allowlist = []pkg{
 	}},
 	{"internal/shared/httperr", []entry{
 		{Go: "Error", TS: "ProblemDetail"},
+	}},
+	{"internal/shared/live", []entry{
+		{Go: "Event", TS: "QuotationLiveEvent"},
 	}},
 }

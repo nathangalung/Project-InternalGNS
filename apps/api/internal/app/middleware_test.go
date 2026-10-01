@@ -467,3 +467,14 @@ func TestAuthMiddleware_UnauthorizedDetailIsIndonesian(t *testing.T) {
 		})
 	}
 }
+
+// The editor stream has no deadline.
+// It is a long-lived response with its own clocks.
+func TestRequestTimeout_StreamHasNoDeadline(t *testing.T) {
+	var has bool
+	h := requestTimeout(time.Second, time.Second, time.Second)(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		_, has = r.Context().Deadline()
+	}))
+	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/api/v1/quotations/7/events", nil))
+	assert.False(t, has)
+}

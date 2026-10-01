@@ -147,6 +147,11 @@ func requestTimeout(def, render, upload time.Duration) func(http.Handler) http.H
 				}
 			case isRenderRoute(r.URL.Path):
 				d = render
+			case isStreamRoute(r.URL.Path):
+				// A stream runs its own clocks (quotations.Events); a
+				// handler deadline would cut it every 30s.
+				next.ServeHTTP(w, r)
+				return
 			}
 			ctx, cancel := context.WithTimeout(r.Context(), d)
 			defer cancel()
@@ -160,6 +165,17 @@ func requestTimeout(def, render, upload time.Duration) func(http.Handler) http.H
 // deadline is extended.
 func isStorageRoute(path string) bool {
 	return strings.HasPrefix(path, "/api/v1/storage/")
+}
+
+// isStreamRoute spots the editor stream.
+// TestRouter_StreamRoutesClassified pins it to the one route.
+func isStreamRoute(path string) bool {
+	rest, ok := strings.CutPrefix(path, "/api/v1/quotations/")
+	if !ok {
+		return false
+	}
+	id, ok := strings.CutSuffix(rest, "/events")
+	return ok && id != "" && !strings.Contains(id, "/")
 }
 
 // isRenderRoute spots workbook, PDF routes.

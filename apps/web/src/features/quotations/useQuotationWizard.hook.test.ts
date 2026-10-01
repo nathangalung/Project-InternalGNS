@@ -175,6 +175,45 @@ describe("useQuotationWizard seed", () => {
     })
     expect(result.current.gates.isWaktuFilled).toBe(true)
   })
+
+  it("follows the server without moving the page or the user's header", () => {
+    const { result } = wizard()
+    const stored = {
+      selectedClient: "3",
+      selectedContactId: 8,
+      discountPct: 5,
+      products: [],
+      shippingAddress: "Jl. Pelabuhan No. 1, Jakarta Utara",
+      shippingTime: "4",
+      shippingCost: "75000",
+      berlakuSampai: "14",
+      jatuhTempo: "30",
+    }
+    act(() => result.current.saveProduct(FORM))
+    act(() => result.current.setProdPage(2))
+    act(() => result.current.setShippingTime("9"))
+
+    // Editing the header: only the lines follow.
+    act(() => result.current.syncFromServer(stored, false))
+    expect(result.current).toMatchObject({
+      products: [],
+      prodPage: 2,
+      shippingTime: "9",
+      selectedClient: "",
+    })
+
+    act(() => result.current.syncFromServer(stored, true))
+    expect(result.current).toMatchObject({
+      prodPage: 2,
+      selectedClient: "",
+      discountPct: 5,
+      shippingAddress: "Jl. Pelabuhan No. 1, Jakarta Utara",
+      shippingTime: "4",
+      shippingCost: "75000",
+      berlakuSampai: "14",
+      jatuhTempo: "30",
+    })
+  })
 })
 
 describe("no-offer lines", () => {

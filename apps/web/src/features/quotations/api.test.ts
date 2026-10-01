@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { apiList, apiRequest, downloadPdf, downloadXlsx, postForm } from "@/lib/api-client"
+import {
+  apiList,
+  apiRequest,
+  downloadPdf,
+  downloadXlsx,
+  openStream,
+  postForm,
+} from "@/lib/api-client"
 import * as api from "./api"
 
 vi.mock("@/lib/api-client", async (importOriginal) => ({
@@ -9,6 +16,7 @@ vi.mock("@/lib/api-client", async (importOriginal) => ({
   downloadPdf: vi.fn(async () => {}),
   downloadXlsx: vi.fn(async () => {}),
   postForm: vi.fn(async () => ({ rows: [{ impaCode: "", name: "Baut", qty: 2, unit: "PCS" }] })),
+  openStream: vi.fn(async () => new Response("")),
   getRefreshToken: vi.fn(() => null),
 }))
 
@@ -59,9 +67,39 @@ describe("quotations api", () => {
       { path: "/quotations", method: "POST", body: { companyId: 1 } },
     ],
     [
-      "update guards the row version",
-      () => api.update(5, { notes: "x" } as never, 4),
-      { path: "/quotations/5", method: "PUT", body: { notes: "x" }, headers: { "If-Match": "4" } },
+      "lock a part",
+      () => api.lockPart(5, "line:7"),
+      { path: "/quotations/5/locks", method: "POST", body: { part: "line:7" } },
+    ],
+    [
+      "unlock a part",
+      () => api.unlockPart(5, "line:7"),
+      { path: "/quotations/5/locks/line%3A7", method: "DELETE" },
+    ],
+    [
+      "unlock on pagehide",
+      () => api.unlockPart(5, "header", true),
+      { path: "/quotations/5/locks/header", method: "DELETE", keepalive: true },
+    ],
+    [
+      "update a line",
+      () => api.updateLine(5, 7, { qty: "2" } as never),
+      { path: "/quotations/5/lines/7", method: "PUT", body: { qty: "2" } },
+    ],
+    [
+      "set a line on offer",
+      () => api.setLineOffer(5, 7, false),
+      { path: "/quotations/5/lines/7/offer", method: "PATCH", body: { isAvailable: false } },
+    ],
+    [
+      "delete a line",
+      () => api.deleteLine(5, 7),
+      { path: "/quotations/5/lines/7", method: "DELETE" },
+    ],
+    [
+      "save the header",
+      () => api.updateHeader(5, { discountPct: "2" }),
+      { path: "/quotations/5/header", method: "PUT", body: { discountPct: "2" } },
     ],
     [
       "change status",
@@ -117,5 +155,25 @@ describe("quotations api", () => {
   ])("%s", async (_name, call, want) => {
     await call()
     expect(apiRequest).toHaveBeenCalledWith(want)
+  })
+})
+
+describe("quotation live api", () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it("adds lines and returns their ids", async () => {
+    vi.mocked(apiRequest).mockResolvedValueOnce({ ids: [8, 9] })
+    await expect(api.addLines(5, [{ qty: "1" } as never])).resolves.toEqual([8, 9])
+    expect(apiRequest).toHaveBeenCalledWith({
+      path: "/quotations/5/lines",
+      method: "POST",
+      body: { items: [{ qty: "1" }] },
+    })
+  })
+
+  it("opens the change stream", async () => {
+    const signal = new AbortController().signal
+    await api.openEvents(5, signal)
+    expect(openStream).toHaveBeenCalledWith("/quotations/5/events", signal)
   })
 })

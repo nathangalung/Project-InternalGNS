@@ -13,6 +13,7 @@ func Routes(d deps.Deps) chi.Router {
 	r := chi.NewRouter()
 	repo := NewRepo(d.Pool, d.Queries)
 	h := NewHandler(repo)
+	h.live = d.Live
 
 	r.Get("/", h.List)
 	r.Post("/", h.Create)
@@ -26,6 +27,16 @@ func Routes(d deps.Deps) chi.Router {
 	r.Post("/{id}/send", h.Send)
 	r.Post("/{id}/revise", h.Revise)
 	r.Get("/{id}/revisions", h.Revisions)
+
+	// Live editing of a draft
+	r.Get("/{id}/events", h.Events)
+	r.Post("/{id}/locks", h.Lock)
+	r.Delete("/{id}/locks/{part}", h.Unlock)
+	r.Post("/{id}/lines", h.AddLines)
+	r.Put("/{id}/lines/{lineId}", h.UpdateLine)
+	r.Patch("/{id}/lines/{lineId}/offer", h.SetLineOffer)
+	r.Delete("/{id}/lines/{lineId}", h.DeleteLine)
+	r.Put("/{id}/header", h.UpdateHeader)
 
 	r.Get("/{id}/requests", h.ListItemRequests)
 	r.Post("/{id}/requests", h.CreateItemRequest)

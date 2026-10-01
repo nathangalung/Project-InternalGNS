@@ -138,7 +138,8 @@ internal/
                     listq (list query builder), sheet (XLSX), assetproxy
                     (descriptor-driven presign handlers, one set reused by
                     every slice), money, tz, validate (phone and email
-                    rules the web mirrors)
+                    rules the web mirrors), live (quotation change
+                    notices, LISTEN and fan-out)
   testutil/         Test server, pool, and seed helpers
 db/
   migrations/       Goose SQL migrations
@@ -207,6 +208,22 @@ document's status history table.
   quotations past `validity_days` from the last send, by WIB date. The API
   runs it at startup and then hourly (`quotations.RunExpiryLoop`), and
   `pg_try_advisory_xact_lock` keeps two replicas from both doing a run.
+  A saved draft is edited live, by several users at once, one part each.
+  The parts are the header (shipping, terms, discount) and each line
+  (`line:<id>`); `POST /quotations/{id}/locks` claims one for two minutes
+  (`EditLockTTL`, renewed every 30 s by `useEditLocks`), and a part someone
+  else holds is a 409 `edit_locked` whose detail names them. A line save
+  and the header save need the caller's claim; add, delete and the
+  Tidak Ditawarkan toggle need the part free. The full-draft `PUT` and
+  leaving draft are refused while another user holds a part. Every change
+  calls `fn_quotation_notify`, which `pg_notify`s `quotation_events`; one
+  pooled connection LISTENs (`shared/live`) and fans the notices out to
+  `GET /quotations/{id}/events`, a server-sent event stream the web reads
+  with fetch (`lib/event-stream.ts`, since EventSource cannot send the
+  token). The stream ends after five minutes and on shutdown; the web
+  reconnects and reloads the draft on every notice and reconnect. The
+  edit page shows another user's line or header read-only with their name
+  and frees its claims on leave, including on pagehide.
 - Purchase order: PENDING, UPLOADED, ON_PROGRESS, DELIVERED, CANCELLED.
   PENDING and UPLOADED follow the PO file: attaching it moves PENDING to
   UPLOADED and removing it moves back, and neither is a manual move. Every
@@ -249,7 +266,8 @@ src/
   lib/               api-client, session (in-memory token), rbac, format,
                      status, entity-link, chart helpers, ui (tailwind class
                      primitives), useListScreen, validation (form field
-                     rules), form-errors (422 to inputs)
+                     rules), form-errors (422 to inputs), event-stream
+                     (server-sent events over fetch)
   styles/            tailwind.css (entry, @theme tokens, base layer)
   test/              renderHook, query and browser-tab fakes for hook tests
   types/             generated.ts (from Go DTOs) and api.ts

@@ -71,6 +71,11 @@ func VersionConflict() Error {
 	return e
 }
 
+// EditLockedCode tags another editor's lock.
+// The web shows that part read-only instead of matching the detail text,
+// which names the editor.
+const EditLockedCode = "edit_locked"
+
 // genericInvalidPayload is the fallback detail.
 // It shows when no field carries a message.
 const genericInvalidPayload = "Data yang dikirim tidak valid. Periksa kembali isian Anda."
@@ -144,6 +149,10 @@ func FromDBErr(err error) Error {
 			return UnprocessableDetail(pgErr.Message, nil)
 		case db.SQLStateNotFound:
 			return NotFound(pgErr.Message)
+		case db.SQLStateEditLocked:
+			e := Conflict(pgErr.Message)
+			e.Code = EditLockedCode
+			return e
 		case db.SQLStateBlockedByRelated:
 			// Blocked by the state of a related record.
 			return Conflict(pgErr.Message)

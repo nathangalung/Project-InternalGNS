@@ -177,6 +177,12 @@ func (r *Repo) GetDetail(ctx context.Context, id int64) (QuotationDetail, error)
 		return d, err
 	}
 	d.History = hist
+	locks, err := r.EditLocks(ctx, id)
+	if err != nil {
+		return d, err
+	}
+	// Always a list, so the web never reads null.
+	d.Locks = append([]EditLock{}, locks...)
 	d.AllowedTransitions = AllowedTransitions(q.Status)
 	d.CanRevise = CanRevise(q.Status)
 

@@ -14,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/listq"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/live"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
@@ -21,6 +22,8 @@ import (
 
 type Handler struct {
 	repo *Repo
+	// live feeds the editor stream
+	live *live.Hub
 }
 
 func NewHandler(repo *Repo) *Handler {

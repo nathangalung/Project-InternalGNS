@@ -287,6 +287,7 @@ func TestSQLStateValues(t *testing.T) {
 		{"invalid transition", db.SQLStateInvalidTransition, "P0012"},
 		{"blocked by related", db.SQLStateBlockedByRelated, "P0013"},
 		{"validation", db.SQLStateValidation, "P0014"},
+		{"edit locked", db.SQLStateEditLocked, "P0015"},
 		{"unpriced line", db.SQLStateUnpricedLine, "P0100"},
 	}
 	for _, tc := range cases {
@@ -392,4 +393,15 @@ func TestRenderAs(t *testing.T) {
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&body))
 	assert.Equal(t, "b", body["detail"])
 	assert.Equal(t, []any{"x"}, body["issues"])
+}
+
+// Another editor's lock is tagged.
+// The web shows the part as read-only on the code; the detail names who
+// holds it.
+func TestFromDBErr_EditLocked(t *testing.T) {
+	got := FromDBErr(&pgconn.PgError{Code: "P0015", Message: "Sedang diubah oleh Budi."})
+	assert.Equal(t, http.StatusConflict, got.Status)
+	assert.Equal(t, EditLockedCode, got.Code)
+	assert.Equal(t, "edit_locked", got.Code)
+	assert.Equal(t, "Sedang diubah oleh Budi.", got.Detail)
 }

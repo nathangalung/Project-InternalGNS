@@ -1,3 +1,4 @@
+import { act } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ApiError } from "@/lib/api-client"
 import { queryKeys } from "@/lib/query-keys"
@@ -8,20 +9,22 @@ import * as api from "./api"
 import {
   downloadQuotationPdf,
   exportQuotationsXlsx,
+  LOCK_HEARTBEAT_MS,
   useChangeQuotationStatus,
   useCreateQuotation,
   useDeleteQuotationRequest,
+  useEditLocks,
+  useLiveChange,
   useQuotation,
+  useQuotationLive,
   useQuotationRequests,
   useQuotationRevisions,
   useQuotationStats,
   useQuotations,
   useReviseQuotation,
-  useUpdateQuotation,
   useUpdateQuotationContact,
   useUpsertQuotationRequest,
 } from "./hooks"
-import { QUOTATION_CONFLICT_MESSAGE } from "./status"
 
 vi.mock("./api")
 vi.mock("@/lib/toast", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }))
@@ -91,15 +94,6 @@ describe("quotation writes", () => {
     expect(invalidated(qc, [...deps, poList])).toEqual(deps)
   })
 
-  it("update sends the row version and refreshes the same caches", async () => {
-    m.update.mockResolvedValue({ id: 5, rowVersion: 3 })
-    const { qc, result } = renderQueryHook(() => useUpdateQuotation())
-    seed(qc, [...deps, poList])
-    await settle(() => result.current.mutateAsync({ id: 5, input: {} as never, rowVersion: 2 }))
-    expect(m.update).toHaveBeenCalledWith(5, {}, 2)
-    expect(invalidated(qc, [...deps, poList])).toEqual(deps)
-  })
-
   it("revise refreshes the same caches", async () => {
     m.revise.mockResolvedValue({ id: 6 })
     const { qc, result } = renderQueryHook(() => useReviseQuotation())
@@ -118,13 +112,6 @@ describe("quotation writes", () => {
       () => m.create.mockRejectedValue(new Error("")),
       {},
       "Gagal menyimpan quotation.",
-    ],
-    [
-      "update",
-      useUpdateQuotation,
-      () => m.update.mockRejectedValue(new Error("")),
-      { id: 5, input: {}, rowVersion: 1 },
-      "Gagal memperbarui quotation.",
     ],
     [
       "revise",
@@ -159,22 +146,6 @@ describe("quotation writes", () => {
     const { result } = renderQueryHook(hook)
     await settle(() => result.current.mutateAsync(vars as never))
     expect(toast.error).toHaveBeenCalledWith(msg)
-  })
-
-  it("update toasts Indonesian copy when another save won the race", async () => {
-    m.update.mockRejectedValue(
-      new ApiError(
-        409,
-        problem(409, {
-          code: "version_conflict",
-          detail: "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
-        }),
-        "Data ini baru saja diubah pengguna lain. Muat ulang lalu coba lagi.",
-      ),
-    )
-    const { result } = renderQueryHook(() => useUpdateQuotation())
-    await settle(() => result.current.mutateAsync({ id: 5, input: {} as never, rowVersion: 1 }))
-    expect(toast.error).toHaveBeenCalledWith(QUOTATION_CONFLICT_MESSAGE)
   })
 
   it("contact change refreshes only that quotation", async () => {
@@ -292,5 +263,189 @@ describe("downloads", () => {
     m.exportXlsx.mockRejectedValue(new Error("Forbidden"))
     await exportQuotationsXlsx({})
     expect(toast.error).toHaveBeenCalledWith("Gagal mengekspor daftar quotation. Coba lagi.")
+  })
+})
+
+describe("useQuotationLive", () => {
+  // Stream body that ends after the given frames.
+  const stream = (text: string) => new Response(text)
+
+  it("reloads the quotation on every notice and stops on leave", async () => {
+    let aborted: AbortSignal | undefined
+    m.openEvents.mockImplementation((_id, signal) => {
+      aborted = signal
+      return Promise.resolve(stream("event: ready\ndata: {}\n\nevent: line\ndata: {}\n\n"))
+    })
+    const { qc, unmount } = renderQueryHook(() => useQuotationLive(5, [], 1))
+    const spy = vi.spyOn(qc, "invalidateQueries")
+    await until(() => expect(spy).toHaveBeenCalledTimes(2))
+    expect(spy).toHaveBeenCalledWith({ queryKey: qDetail })
+    expect(m.openEvents).toHaveBeenCalledWith(5, expect.any(AbortSignal))
+    unmount()
+    expect(aborted?.aborted).toBe(true)
+  })
+
+  it("follows nothing without an id", async () => {
+    renderQueryHook(() => useQuotationLive(undefined, undefined, undefined))
+    await act(async () => {})
+    expect(m.openEvents).not.toHaveBeenCalled()
+  })
+
+  it("reloads when another user's claim lapses", async () => {
+    vi.useFakeTimers()
+    m.openEvents.mockReturnValue(new Promise<Response>(() => {}))
+    const at = new Date(Date.now() + 5000).toISOString()
+    const { qc, unmount } = renderQueryHook(() =>
+      useQuotationLive(5, [{ part: "line:1", userId: 2, userName: "Budi", expiresAt: at }], 1),
+    )
+    const spy = vi.spyOn(qc, "invalidateQueries")
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5999)
+    })
+    expect(spy).not.toHaveBeenCalled()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2)
+    })
+    expect(spy).toHaveBeenCalledWith({ queryKey: qDetail })
+    unmount()
+    vi.useRealTimers()
+  })
+})
+
+describe("useEditLocks", () => {
+  it("claims, renews and releases parts", async () => {
+    vi.useFakeTimers()
+    m.lockPart.mockResolvedValue({ part: "line:1", expiresAt: "" })
+    m.unlockPart.mockResolvedValue(undefined)
+    const { result, unmount } = renderQueryHook(() => useEditLocks(5))
+    let ok = false
+    await act(async () => {
+      ok = await result.current.acquire("line:1")
+    })
+    expect(ok).toBe(true)
+    expect(result.current.holds("line:1")).toBe(true)
+    await act(async () => {
+      await result.current.acquire("header")
+    })
+
+    // A renewal the server refuses drops the part.
+    m.lockPart.mockImplementation((_id, part) =>
+      part === "header"
+        ? Promise.reject(new Error("habis"))
+        : Promise.resolve({ part, expiresAt: "" }),
+    )
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(LOCK_HEARTBEAT_MS)
+    })
+    expect(m.lockPart).toHaveBeenCalledTimes(4)
+    expect(result.current.holds("header")).toBe(false)
+
+    await act(async () => {
+      await result.current.release("line:1")
+    })
+    expect(m.unlockPart).toHaveBeenCalledWith(5, "line:1")
+    expect(result.current.holds("line:1")).toBe(false)
+    // Releasing a part not held sends nothing.
+    await act(async () => {
+      await result.current.release("line:1")
+    })
+    expect(m.unlockPart).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      await result.current.acquire("line:2")
+    })
+    unmount()
+    expect(m.unlockPart).toHaveBeenLastCalledWith(5, "line:2", false)
+    vi.useRealTimers()
+  })
+
+  it("frees a claim granted after the page has left", async () => {
+    let grant: (v: { part: string; expiresAt: string }) => void = () => undefined
+    m.lockPart.mockReturnValue(new Promise((resolve) => (grant = resolve)))
+    m.unlockPart.mockResolvedValue(undefined)
+    const { result, unmount } = renderQueryHook(() => useEditLocks(5))
+    const pending = result.current.acquire("header")
+    unmount()
+    let ok = true
+    await act(async () => {
+      grant({ part: "header", expiresAt: "" })
+      ok = await pending
+    })
+    expect(ok).toBe(false)
+    expect(m.unlockPart).toHaveBeenCalledWith(5, "header")
+  })
+
+  it("frees every part when the page goes away", async () => {
+    m.lockPart.mockResolvedValue({ part: "header", expiresAt: "" })
+    m.unlockPart.mockResolvedValue(undefined)
+    const { result, unmount } = renderQueryHook(() => useEditLocks(5))
+    await act(async () => {
+      await result.current.acquire("header")
+    })
+    act(() => {
+      window.dispatchEvent(new Event("pagehide"))
+    })
+    expect(m.unlockPart).toHaveBeenCalledWith(5, "header", true)
+    expect(result.current.holds("header")).toBe(false)
+    unmount()
+    expect(m.unlockPart).toHaveBeenCalledTimes(1)
+  })
+
+  it("toasts the refusal unless quiet", async () => {
+    m.lockPart.mockRejectedValue(
+      new ApiError(409, problem(409, { code: "edit_locked" }), "Sedang diubah oleh Budi."),
+    )
+    const { result } = renderQueryHook(() => useEditLocks(5))
+    let ok = true
+    await act(async () => {
+      ok = await result.current.acquire("line:1")
+    })
+    expect(ok).toBe(false)
+    expect(toast.error).toHaveBeenCalledWith("Sedang diubah oleh Budi.")
+    vi.mocked(toast.error).mockClear()
+    await act(async () => {
+      await result.current.acquire("header", { quiet: true })
+    })
+    expect(toast.error).not.toHaveBeenCalled()
+  })
+
+  it("claims nothing without an id", async () => {
+    const { result } = renderQueryHook(() => useEditLocks(undefined))
+    let ok = true
+    await act(async () => {
+      ok = await result.current.acquire("line:1")
+      await result.current.release("line:1")
+    })
+    expect(ok).toBe(false)
+    expect(m.lockPart).not.toHaveBeenCalled()
+    expect(m.unlockPart).not.toHaveBeenCalled()
+  })
+})
+
+describe("useLiveChange", () => {
+  it("runs the change and reloads the quotation", async () => {
+    const { qc, result } = renderQueryHook(() => useLiveChange(5))
+    seed(qc, [qDetail, qList])
+    const change = vi.fn(async () => undefined)
+    await settle(() => result.current.mutateAsync(change))
+    expect(change).toHaveBeenCalled()
+    expect(invalidated(qc, [qDetail, qList])).toEqual([qDetail])
+  })
+
+  it("toasts a refusal and still reloads", async () => {
+    const { qc, result } = renderQueryHook(() => useLiveChange(5))
+    seed(qc, [qDetail])
+    await settle(() =>
+      result.current.mutateAsync(() => Promise.reject(new Error("Sedang diubah oleh Budi."))),
+    )
+    expect(toast.error).toHaveBeenCalledWith("Sedang diubah oleh Budi.")
+    expect(invalidated(qc, [qDetail])).toEqual([qDetail])
+  })
+
+  it("reloads nothing without an id", async () => {
+    const { qc, result } = renderQueryHook(() => useLiveChange(undefined))
+    seed(qc, [qDetail])
+    await settle(() => result.current.mutateAsync(async () => undefined))
+    expect(invalidated(qc, [qDetail])).toEqual([])
   })
 })

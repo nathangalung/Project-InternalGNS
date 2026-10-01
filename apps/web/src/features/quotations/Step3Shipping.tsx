@@ -17,6 +17,8 @@ type Step3ShippingProps = {
   addressRequired?: boolean
   isWaktuFilled: boolean
   formatRp: (n: number) => string
+  // Another user holds the header
+  readOnly?: boolean
 }
 
 const fieldLabel = "mb-2 block text-[11px] font-bold uppercase tracking-[0.5px] text-[#4B5563]"
@@ -33,6 +35,7 @@ export default function Step3Shipping({
   isWaktuFilled,
   formatRp,
   addressRequired = false,
+  readOnly = false,
 }: Step3ShippingProps) {
   const id = useId()
   const addressError = optionalAddressError(shippingAddress)
@@ -63,6 +66,7 @@ export default function Step3Shipping({
             placeholder="Masukkan alamat pengiriman secara detail (min. 20 karakter)..."
             value={shippingAddress}
             onChange={(e) => setShippingAddress(e.target.value)}
+            disabled={readOnly}
             className={`${fieldInput} min-h-[100px] resize-y font-sans`}
           />
           {addressError ? (
@@ -89,7 +93,7 @@ export default function Step3Shipping({
             placeholder="Masukkan jumlah hari kerja setelah PO diterima..."
             value={shippingTime}
             onChange={(e) => setShippingTime(e.target.value)}
-            disabled={!isAlamatOk}
+            disabled={readOnly || !isAlamatOk}
             className={fieldInput}
           />
         </div>
@@ -104,7 +108,7 @@ export default function Step3Shipping({
             placeholder="3570000 (Isi hanya dengan angka)"
             value={shippingCost}
             onChange={(e) => setShippingCost(e.target.value)}
-            disabled={!isWaktuFilled}
+            disabled={readOnly || !isWaktuFilled}
             className={fieldInput}
           />
         </div>

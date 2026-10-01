@@ -21,6 +21,8 @@ type RequestInput = {
   headers?: Record<string, string>
   // False for credential calls: a 401 is an answer, not an expired session
   authed?: boolean
+  // Outlives the page, for a send on pagehide
+  keepalive?: boolean
 }
 
 type FetchInit = RequestInit & { authed?: boolean }
@@ -63,11 +65,13 @@ async function doFetch({
   signal,
   headers,
   authed,
+  keepalive,
 }: RequestInput): Promise<Response> {
   return fetchAuthed(path, {
     method,
     signal,
     authed,
+    keepalive,
     headers: { "content-type": "application/json", ...headers },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
@@ -123,6 +127,16 @@ export async function apiRequest<T>(input: RequestInput): Promise<T> {
   if (!res.ok) throw await failure(res)
   if (res.status === 204) return undefined as T
   return (await parseResponse(res)) as T
+}
+
+// Authed event stream.
+//
+// The open response, for lib/event-stream to read; a refusal throws like
+// any request.
+export async function openStream(path: string, signal: AbortSignal): Promise<Response> {
+  const res = await fetchAuthed(path, { signal, headers: { accept: "text/event-stream" } })
+  if (!res.ok) throw await failure(res)
+  return res
 }
 
 // Authed multipart POST.
