@@ -114,3 +114,42 @@ func TestRepo_UpdateImage_MissingItem(t *testing.T) {
 	err := items.NewRepo(tx, testutil.Store(t)).UpdateImage(ctx, 999999999, "items/999999999/a.jpg", seedUserID)
 	assert.ErrorIs(t, err, items.ErrNotFound)
 }
+
+// Remove detaches, then stays idempotent.
+func TestHandler_Image_Remove(t *testing.T) {
+	srv := mountedSrv(t, testutil.Pool(t))
+	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("IMAGE REMOVE")})
+	base := "/items/" + itoa(it.ID)
+	key := "items/" + itoa(it.ID) + "/foto.webp"
+
+	attach := doJSON(t, srv, http.MethodPatch, base+"/image", items.UpdateImageRequest{ObjectKey: key})
+	attach.Body.Close()
+	require.Equal(t, http.StatusNoContent, attach.StatusCode)
+
+	for _, attempt := range []string{"first", "repeat"} {
+		res := doJSON(t, srv, http.MethodDelete, base+"/image", nil)
+		res.Body.Close()
+		require.Equal(t, http.StatusNoContent, res.StatusCode, attempt)
+	}
+
+	got := doJSON(t, srv, http.MethodGet, base, nil)
+	defer got.Body.Close()
+	var item items.Item
+	require.NoError(t, json.NewDecoder(got.Body).Decode(&item))
+	assert.Nil(t, item.ImageObjectKey, "key cleared")
+
+	down := doJSON(t, srv, http.MethodGet, base+"/image/download-url", nil)
+	down.Body.Close()
+	assert.Equal(t, http.StatusNotFound, down.StatusCode, "nothing left to download")
+
+	missing := doJSON(t, srv, http.MethodDelete, "/items/999999999/image", nil)
+	missing.Body.Close()
+	assert.Equal(t, http.StatusNotFound, missing.StatusCode)
+}
+
+// Clearing a missing row is not found.
+func TestRepo_ClearImage_MissingItem(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	err := items.NewRepo(tx, testutil.Store(t)).ClearImage(ctx, 999999999, seedUserID)
+	assert.ErrorIs(t, err, items.ErrNotFound)
+}

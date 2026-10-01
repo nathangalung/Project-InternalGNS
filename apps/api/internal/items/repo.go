@@ -136,6 +136,18 @@ func (r *Repo) UpdateImage(ctx context.Context, id int64, objectKey string, user
 	return nil
 }
 
+// ClearImage detaches the image.
+func (r *Repo) ClearImage(ctx context.Context, id int64, userID int64) error {
+	tag, err := r.db.Exec(ctx, r.store.Get("items.clear_image"), id, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // Upsert vendor_products row.
 func (r *Repo) AddVendor(ctx context.Context, itemID int64, req AddVendorToItemRequest, userID int64) (VendorForItem, error) {
 	cost := "0"

@@ -44,6 +44,14 @@ UPDATE items
  WHERE id = $1
 RETURNING id;
 
+-- name: items.clear_image
+UPDATE items
+   SET image_object_key = NULL,
+       updated_by       = $2,
+       updated_at       = NOW()
+ WHERE id = $1
+RETURNING id;
+
 -- name: items.add_vendor
 -- Links only an active vendor: an inactive one is filtered out of every
 -- vendor list, so the link would be saved but never shown. No row back means

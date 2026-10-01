@@ -54,6 +54,7 @@ var RequiredKeys = []string{
 	"invoices.update_dates",
 	"items.active_flags_by_ids",
 	"items.add_vendor",
+	"items.clear_image",
 	"items.create",
 	"items.find_by_impa",
 	"items.get_by_id",

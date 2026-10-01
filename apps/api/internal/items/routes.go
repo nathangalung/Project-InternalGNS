@@ -36,6 +36,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.Get("/{id}/image/upload-url", assetproxy.Upload(image))
 	r.Get("/{id}/image/download-url", assetproxy.Download(image))
 	r.Patch("/{id}/image", assetproxy.UpdateKey(image))
+	r.Delete("/{id}/image", assetproxy.RemoveKey(image))
 
 	return r
 }
@@ -68,6 +69,9 @@ func imageAsset(sc *storage.Client, objects deps.ObjectStore, repo *Repo) assetp
 		},
 		SetKey: func(ctx context.Context, id int64, key string, actor int64) error {
 			return assetErr(repo.UpdateImage(ctx, id, key, actor))
+		},
+		ClearKey: func(ctx context.Context, id, actor int64) error {
+			return assetErr(repo.ClearImage(ctx, id, actor))
 		},
 	}
 }

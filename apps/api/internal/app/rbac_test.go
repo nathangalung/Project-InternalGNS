@@ -56,8 +56,10 @@ func TestReadOnlyFor(t *testing.T) {
 		{"finance", http.MethodPut, "/items/1", http.StatusForbidden},
 		{"finance", http.MethodPatch, "/items/1/image", http.StatusForbidden},
 		{"finance", http.MethodDelete, "/items/1", http.StatusForbidden},
+		{"finance", http.MethodDelete, "/items/1/image", http.StatusForbidden},
 		{"operational", http.MethodPost, "/items/", http.StatusOK},
 		{"operational", http.MethodGet, "/items/1/image/upload-url", http.StatusOK},
+		{"operational", http.MethodDelete, "/items/1/image", http.StatusOK},
 		{"superadmin", http.MethodPut, "/items/1", http.StatusOK},
 	}
 	for _, c := range cases {
