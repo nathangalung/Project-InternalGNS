@@ -52,6 +52,7 @@ describe("useQuotationWizard", () => {
     expect(result.current.products).toHaveLength(1)
     expect(result.current.summary.totalHargaJual).toBe(200)
     expect(result.current.unitsOk).toBe(true)
+    expect(result.current.unknownUnits).toBe(0)
 
     act(() => result.current.setEditingProduct(result.current.products[0]))
     act(() => result.current.saveProduct({ ...FORM, jumlahProduk: "5" }))
@@ -88,6 +89,7 @@ describe("useQuotationWizard", () => {
     const { result, rerender } = wizard()
     act(() => result.current.saveProduct({ ...FORM, satuan: "BOX" }))
     expect(result.current.unitsOk).toBe(false)
+    expect(result.current.unknownUnits).toBe(1)
     rerender(undefined)
     expect(result.current.unitIdByCode.size).toBe(0)
   })
@@ -172,5 +174,23 @@ describe("useQuotationWizard seed", () => {
       jatuhTempo: "30",
     })
     expect(result.current.gates.isWaktuFilled).toBe(true)
+  })
+})
+
+describe("no-offer lines", () => {
+  it("toggles a line out of the offer and back, keeping its prices", () => {
+    const { result } = wizard()
+    act(() => result.current.saveProduct(FORM))
+    const id = result.current.products[0].id
+    expect(result.current.incompleteLines).toBe(1)
+
+    act(() => result.current.toggleNoOffer(id))
+    expect(result.current.products[0].noOffer).toBe(true)
+    expect(result.current.summary.totalHargaJual).toBe(0)
+    expect(result.current.incompleteLines).toBe(0)
+
+    act(() => result.current.toggleNoOffer(id))
+    expect(result.current.products[0].noOffer).toBe(false)
+    expect(result.current.summary.totalHargaJual).toBe(200)
   })
 })

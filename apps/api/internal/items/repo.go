@@ -148,6 +148,20 @@ func (r *Repo) ClearImage(ctx context.Context, id int64, userID int64) error {
 	return nil
 }
 
+// Recommend picks line defaults.
+// The rules live in fn_recommend_lines; a nil client takes no client's
+// history into account.
+func (r *Repo) Recommend(ctx context.Context, clientID *int64, itemIDs []int64) ([]Recommendation, error) {
+	if len(itemIDs) == 0 {
+		return []Recommendation{}, nil
+	}
+	rows, err := r.db.Query(ctx, r.store.Get("items.recommend"), clientID, itemIDs)
+	if err != nil {
+		return nil, fmt.Errorf("recommend lines: %w", err)
+	}
+	return pgx.CollectRows(rows, pgx.RowToStructByName[Recommendation])
+}
+
 // Upsert vendor_products row.
 func (r *Repo) AddVendor(ctx context.Context, itemID int64, req AddVendorToItemRequest, userID int64) (VendorForItem, error) {
 	cost := "0"

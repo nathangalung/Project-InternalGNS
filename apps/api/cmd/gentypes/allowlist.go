@@ -66,6 +66,7 @@ var allowlist = []pkg{
 		{Go: "UpdateItemRequest", TS: "UpdateItemInput", Input: true},
 		{Go: "AddVendorToItemRequest", TS: "AddVendorToItemInput", Input: true},
 		{Go: "MatchedItemWithVendor", TS: "MatchedItemWithVendor"},
+		{Go: "Recommendation", TS: "LineRecommendation"},
 		{Go: "MatchRowInput", TS: "MatchRowInput", Input: true},
 		{Go: "MatchRowResult", TS: "MatchRowResult"},
 		{Go: "MatchRowsRequest", TS: "MatchRowsInput", Input: true},

@@ -30,12 +30,12 @@ func deliveredPOWithVessel(t *testing.T, tx pgx.Tx) (int64, int64) {
 		ContactID:       &contactID,
 		VesselName:      &vessel,
 		DiscountPct:     "0",
-		Items: []quotations.CreateItem{{
+		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{
 			RequestedName: "Test Product",
 			Qty:           "2",
 			UnitID:        seedUnitID,
 			SellingPrice:  "100000",
-		}},
+		}}),
 	}, seedUserID)
 	require.NoError(t, err)
 	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "sent", nil, seedUserID))

@@ -46,6 +46,8 @@ type QuotationItem struct {
 	OfferedName     *string `db:"offered_name"        json:"offeredName,omitempty"`
 	OfferedImpa     *string `db:"offered_impa"        json:"offeredImpa,omitempty"`
 	VendorProductID *int64  `db:"vendor_product_id"   json:"vendorProductId,omitempty"`
+	VendorID        *int64  `db:"vendor_id"           json:"vendorId,omitempty"`
+	VendorName      *string `db:"vendor_name"         json:"vendorName,omitempty"`
 	Qty             string  `db:"qty"                 json:"qty"`
 	UnitID          *int16  `db:"unit_id"             json:"unitId,omitempty"`
 	SellingPrice    string  `db:"selling_price"       json:"sellingPrice"`
@@ -122,11 +124,13 @@ type StatusCount struct {
 
 // One line item input.
 type CreateItem struct {
-	RequestedItemID   *int64  `json:"requestedItemId,omitempty"`
-	RequestedImpa     *string `json:"requestedImpa,omitempty"`
-	RequestedName     string  `json:"requestedName"`
-	OfferedItemID     *int64  `json:"offeredItemId,omitempty"`
-	VendorProductID   *int64  `json:"vendorProductId,omitempty"`
+	RequestedItemID *int64  `json:"requestedItemId,omitempty"`
+	RequestedImpa   *string `json:"requestedImpa,omitempty"`
+	RequestedName   string  `json:"requestedName"`
+	OfferedItemID   *int64  `json:"offeredItemId,omitempty"`
+	VendorProductID *int64  `json:"vendorProductId,omitempty"`
+	// VendorID names a vendor not linked yet
+	VendorID          *int64  `json:"vendorId,omitempty"`
 	Qty               string  `json:"qty"` // numeric as string
 	UnitID            int16   `json:"unitId"`
 	SellingPrice      string  `json:"sellingPrice"`
@@ -134,6 +138,8 @@ type CreateItem struct {
 	UpdateVendorPrice bool    `json:"updateVendorPrice,omitempty"`
 	ShipDestination   *string `json:"shipDestination,omitempty"`
 	DueDate           *string `json:"dueDate,omitempty"` // YYYY-MM-DD
+	// IsAvailable false marks Tidak Ditawarkan
+	IsAvailable *bool `json:"isAvailable,omitempty"`
 }
 
 // Create quotation body.
@@ -195,6 +201,7 @@ type dbItem struct {
 	RequestedName     string  `json:"requested_name"`
 	OfferedItemID     *int64  `json:"offered_item_id,omitempty"`
 	VendorProductID   *int64  `json:"vendor_product_id,omitempty"`
+	VendorID          *int64  `json:"vendor_id,omitempty"`
 	Qty               string  `json:"qty"`
 	UnitID            int16   `json:"unit_id"`
 	SellingPrice      string  `json:"selling_price"`
@@ -202,6 +209,7 @@ type dbItem struct {
 	UpdateVendorPrice bool    `json:"update_vendor_price"`
 	ShipDestination   *string `json:"ship_destination,omitempty"`
 	DueDate           *string `json:"due_date,omitempty"`
+	IsAvailable       *bool   `json:"is_available,omitempty"`
 }
 
 // itemsToJSONB serializes items for fn_create_quotation.

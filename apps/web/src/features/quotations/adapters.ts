@@ -62,32 +62,41 @@ export function toWizardProduct(
     id: it.id ?? fallbackId,
     itemId: it.offeredItemId ?? it.requestedItemId,
     requestedItemId: it.requestedItemId,
+    vendorId: it.vendorId,
     vendorProductId: it.vendorProductId,
     nama,
     kodeImpa: kode,
     requestedNama: it.requestedName,
     requestedKodeImpa: it.requestedImpa ?? "",
-    vendor: "",
+    vendor: it.vendorName ?? "",
     jumlah: parseQty(it.qty),
     satuan: unitName,
     hargaBeli: Number.isFinite(cost) ? cost : 0,
     hargaJual: Number.isFinite(sell) ? sell : 0,
+    noOffer: it.itemType === "product" && !it.isAvailable ? true : undefined,
   }
 }
 
 // Wizard line to API.
 //
 // Add and edit share it, so a stored request round-trips unchanged and the
-// IMPA saved is the one the request block shows (see requestedCode).
+// IMPA saved is the one the request block shows (see requestedCode). A
+// vendor picked without a link travels as vendorId and the server links it
+// (fn_prepare_quotation_lines); a Tidak Ditawarkan line goes out unpriced.
 export function toItemInput(p: ProductItem, unitId: number): QuotationItemInput {
-  return {
+  const base = {
     requestedItemId: p.requestedItemId,
     requestedImpa: requestedCode(p) || undefined,
     requestedName: p.requestedNama || p.nama,
     offeredItemId: p.itemId,
-    vendorProductId: p.vendorProductId,
     qty: String(p.jumlah),
     unitId,
+  }
+  if (p.noOffer) return { ...base, sellingPrice: "0", isAvailable: false }
+  return {
+    ...base,
+    vendorProductId: p.vendorProductId,
+    vendorId: p.vendorProductId === undefined ? p.vendorId : undefined,
     sellingPrice: String(p.hargaJual),
     costPrice: String(p.hargaBeli),
   }
@@ -108,6 +117,8 @@ function toProductRow(it: ApiQuotationItem, unitName: string): ProductRow {
     satuan: unitName,
     hargaSatuan: Number.isFinite(sell) ? sell : 0,
     profitSatuan: Number.isFinite(sell) && Number.isFinite(cost) ? sell - cost : 0,
+    vendor: it.vendorName,
+    noOffer: !it.isAvailable,
   }
 }
 

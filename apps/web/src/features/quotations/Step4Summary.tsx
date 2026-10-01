@@ -31,6 +31,10 @@ type Step4SummaryProps = {
   summaryGrandTotal: number
   // Lines with qty not above zero
   invalidQtyCount?: number
+  // Lines with an unknown unit
+  unknownUnitCount?: number
+  // Lines not ready to send
+  incompleteCount?: number
 }
 
 const PAGE_SIZE = 5
@@ -47,6 +51,9 @@ const formLabel = "mb-2 block text-[11px] font-bold uppercase tracking-[0.5px] t
 const formInput = `box-border w-full rounded-md border border-[rgba(204,195,216,0.2)] bg-dark-50 px-4 py-3 text-sm text-[#111827] outline-none ${ui.fieldFocus}`
 const alertBox =
   "rounded-md border border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.06)] px-3.5 py-2.5 text-xs font-medium text-[#DC2626]"
+// Amber: saving still works
+const noticeBox =
+  "rounded-md border border-[rgba(245,158,11,0.3)] bg-[rgba(245,158,11,0.08)] px-3.5 py-2.5 text-xs font-medium text-[#92400E]"
 const pageBtn = `flex h-8 w-8 items-center justify-center rounded-sm text-sm transition ${ui.focusRing}`
 const pageBtnIdle = "font-medium text-[#4A4455] hover:bg-dark-100"
 const pageBtnActive = "bg-primary-700 font-bold text-white"
@@ -77,6 +84,8 @@ export default function Step4Summary({
   summaryProfit,
   summaryGrandTotal,
   invalidQtyCount = 0,
+  unknownUnitCount = 0,
+  incompleteCount = 0,
 }: Step4SummaryProps) {
   const id = useId()
   const [prodPage, setProdPage] = useState(1)
@@ -128,6 +137,18 @@ export default function Step4Summary({
           <div role="alert" className={`${alertBox} mt-2.5`}>
             {invalidQtyCount} produk memiliki jumlah 0 atau kurang. Perbaiki di langkah Produk
             sebelum menyimpan.
+          </div>
+        )}
+        {incompleteCount > 0 && (
+          <div role="status" className={`${noticeBox} mt-2.5`}>
+            {incompleteCount} produk belum lengkap (vendor atau harga). Quotation tetap tersimpan
+            sebagai Draf; lengkapi sebelum dikirim.
+          </div>
+        )}
+        {unknownUnitCount > 0 && (
+          <div role="alert" className={`${alertBox} mt-2.5`}>
+            {unknownUnitCount} produk memiliki satuan yang tidak dikenal. Pilih satuannya di langkah
+            Produk sebelum menyimpan.
           </div>
         )}
         {!isTenggatWaktuFilled && (

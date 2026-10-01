@@ -136,6 +136,13 @@ func (s *scenarioState) acceptedQuotationWith(companyID int64, item quotations.C
 
 // acceptedQuotationFrom creates and accepts.
 func (s *scenarioState) acceptedQuotationFrom(create quotations.CreateRequest) error {
+	lines := testutil.OfferLines(s.t, context.Background(), testutil.Pool(s.t), create.Items)
+	for i, l := range lines {
+		if create.Items[i].OfferedItemID == nil && l.OfferedItemID != nil {
+			s.cleaner.Item(*l.OfferedItemID)
+		}
+	}
+	create.Items = lines
 	if err := s.sendRequest(http.MethodPost, "/quotations/", create); err != nil {
 		return err
 	}

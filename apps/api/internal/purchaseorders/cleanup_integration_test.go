@@ -20,13 +20,15 @@ func TestCleaner_QuotationRemovesPOAndInvoice(t *testing.T) {
 	t.Run("tracked scope", func(t *testing.T) {
 		c := testutil.NewCleaner(t)
 		qrepo := quotations.NewRepo(pool, testutil.Store(t))
+		lines := testutil.OfferLines(t, ctx, pool, []quotations.CreateItem{{
+			RequestedName: "Cleaner Product", Qty: "1", UnitID: seedUnitID, SellingPrice: "1000",
+		}})
+		c.Item(*lines[0].OfferedItemID)
 		var err error
 		qid, err = qrepo.Create(ctx, quotations.CreateRequest{
 			CompanyClientID: seedCompanyID,
 			DiscountPct:     "0",
-			Items: []quotations.CreateItem{{
-				RequestedName: "Cleaner Product", Qty: "1", UnitID: seedUnitID, SellingPrice: "1000",
-			}},
+			Items:           lines,
 		}, seedUserID)
 		require.NoError(t, err)
 		c.Quotation(qid)

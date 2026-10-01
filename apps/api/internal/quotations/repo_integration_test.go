@@ -56,10 +56,12 @@ func sampleCreate() quotations.CreateRequest {
 			{
 				RequestedItemID: int64Ptr(seedItemID),
 				RequestedName:   "PUNCHING TOOL SET",
+				OfferedItemID:   int64Ptr(seedItemID),
 				VendorProductID: int64Ptr(seedVendorProd),
 				Qty:             "2",
 				UnitID:          seedUnitID,
 				SellingPrice:    "1500000",
+				CostPrice:       strPtr("1000000"),
 			},
 		},
 	}

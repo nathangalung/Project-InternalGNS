@@ -55,6 +55,8 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     products,
     setProducts,
     deleteProduct,
+    toggleNoOffer,
+    incompleteLines,
     saveProduct,
     prodPageSize,
     setProdPageSize,
@@ -76,6 +78,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     summary,
     unitIdByCode,
     unitsOk,
+    unknownUnits,
     invalidQty,
     qtyErrors,
     recordQtyFailure,
@@ -381,7 +384,10 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         {step === 2 && (
           <Step2Product
             products={products}
+            unitIdByCode={unitIdByCode}
+            clientId={detail?.companyClientId}
             deleteProduct={deleteProduct}
+            toggleNoOffer={toggleNoOffer}
             setEditingProduct={setEditingProduct}
             setShowProductAdd={setShowProductAdd}
             prodPageSize={prodPageSize}
@@ -441,6 +447,8 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             summaryProfit={summaryProfit}
             summaryGrandTotal={summaryGrandTotal}
             invalidQtyCount={invalidQty}
+            unknownUnitCount={unknownUnits}
+            incompleteCount={incompleteLines}
           />
         )}
       </div>
@@ -460,6 +468,8 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         initialData={editingProduct}
         onOpenChange={setProductAddOpen}
         onSuccess={saveProduct}
+        clientId={detail?.companyClientId}
+        allowIncomplete
       />
     </>
   )

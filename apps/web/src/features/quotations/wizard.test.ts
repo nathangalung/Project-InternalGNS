@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest"
 import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
 import type { QuotationDetail } from "@/types/api"
 import {
+  countUnknownUnits,
   type ProductItem,
   seedFromDetail,
   splitOffer,
   unitIdIndex,
-  unitsKnown,
+  unitIssue,
   upsertProduct,
   wizardGates,
   wizardSummary,
@@ -74,6 +75,16 @@ describe("wizardGates", () => {
 })
 
 describe("wizardSummary", () => {
+  it("leaves no-offer lines out of every total", () => {
+    const offeredOnly = wizardSummary([product(1)], 10, "")
+    const withNoOffer = wizardSummary(
+      [product(1), product(2, { noOffer: true, hargaBeli: 30, hargaJual: 50 })],
+      10,
+      "",
+    )
+    expect(withNoOffer).toEqual(offeredOnly)
+  })
+
   it("adds up products, discount, shipping and tax", () => {
     const s = wizardSummary(
       [product(1), product(2, { jumlah: 1, hargaBeli: 30, hargaJual: 50 })],
@@ -182,9 +193,24 @@ describe("units", () => {
     expect(unitIdIndex(undefined).size).toBe(0)
   })
 
-  it("knows every line's unit, whatever its case", () => {
-    expect(unitsKnown([product(1, { satuan: "pcs" })], index)).toBe(true)
-    expect(unitsKnown([product(1, { satuan: "BOX" })], index)).toBe(false)
+  it("counts lines whose unit is not a known code, whatever its case", () => {
+    const lines = [
+      product(1, { satuan: "pcs" }),
+      product(2, { satuan: "BOX" }),
+      product(3, { satuan: "" }),
+      product(4, { satuan: "set" }),
+    ]
+    expect(countUnknownUnits(lines, index)).toBe(2)
+    expect(countUnknownUnits([product(1, { satuan: "PCS" })], index)).toBe(0)
+  })
+
+  it.each([
+    ["a known code", "Pcs", null],
+    ["an unknown code", "pc", 'Satuan "pc" tidak dikenal.'],
+    ["a blank unit", "  ", "Satuan belum diisi."],
+    ["a padded known code", " PCS ", 'Satuan "PCS" tidak dikenal.'],
+  ])("explains %s", (_name, satuan, want) => {
+    expect(unitIssue(satuan, index)).toBe(want)
   })
 })
 

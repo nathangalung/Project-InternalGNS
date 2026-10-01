@@ -17,6 +17,7 @@ import {
   useItemSearchAdvanced,
   useItems,
   useItemVendors,
+  useLineRecommendation,
   useRemoveItemImage,
   useUpdateItem,
   useUploadItemImage,
@@ -270,5 +271,27 @@ describe("useRemoveItemImage settling", () => {
     refetched()
     await run
     expect(settled).toBe(true)
+  })
+})
+
+describe("useLineRecommendation", () => {
+  it("waits for an item", async () => {
+    const { result } = renderQueryHook(() => useLineRecommendation(undefined, 3))
+    await until(() => expect(result.current.fetchStatus).toBe("idle"))
+    expect(m.recommend).not.toHaveBeenCalled()
+  })
+
+  it("returns the item's row for the client", async () => {
+    m.recommend.mockResolvedValue([{ itemId: 9, vendorName: "V", vendorId: 1, vendorProductId: 2 }])
+    const { result } = renderQueryHook(() => useLineRecommendation(9, 3))
+    await until(() => expect(result.current.data?.vendorName).toBe("V"))
+    expect(m.recommend).toHaveBeenCalledWith([9], 3)
+  })
+
+  it("is empty when the item has no row", async () => {
+    m.recommend.mockResolvedValue([])
+    const { result } = renderQueryHook(() => useLineRecommendation(9))
+    await until(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data).toBeNull()
   })
 })

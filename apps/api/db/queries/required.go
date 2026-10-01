@@ -63,6 +63,7 @@ var RequiredKeys = []string{
 	"items.list_vendors_for_item",
 	"items.match_request_batch",
 	"items.match_with_vendor_by_id",
+	"items.recommend",
 	"items.search_catalog",
 	"items.search_request_history",
 	"items.search_vendor_offers",

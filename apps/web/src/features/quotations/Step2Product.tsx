@@ -1,13 +1,14 @@
 import type React from "react"
 import { useRef, useState } from "react"
 import RowsPerPageMenu from "@/components/shared/RowsPerPageMenu"
-import { matchRows } from "@/features/items/api"
+import { matchRows, recommend } from "@/features/items/api"
 import { getPageNumbers } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { parseRfq } from "./api"
-import { isValidQty, QTY_ERROR, requestDiffers, requestedCode } from "./lines"
+import { importedLines, importSummary } from "./import"
+import { isValidQty, lineGaps, QTY_ERROR, requestDiffers, requestedCode } from "./lines"
 import QuotationReviewCard from "./QuotationReviewCard"
-import type { ProductItem } from "./wizard"
+import { countUnknownUnits, type ProductItem, unitIssue } from "./wizard"
 import { qe, qep } from "./wizard-styles"
 
 const pageBtn = `flex h-8 w-8 items-center justify-center rounded-sm text-sm transition ${ui.focusRing}`
@@ -17,6 +18,13 @@ const pageBtnNav = `flex items-center justify-center rounded-sm border border-[#
 const costRow = "flex justify-between text-xs text-[#4B5563]"
 const costValue = "font-semibold text-[#111827]"
 const cardIconBtn = `rounded-sm p-0.5 ${ui.focusRing}`
+
+// Line state badges and toggle
+const noOfferBadge =
+  "mt-1 inline-block w-fit rounded-[4px] bg-[#F3F4F6] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.4px] text-[#374151]"
+const gapBadge =
+  "mt-1 inline-block w-fit rounded-[4px] bg-[rgba(245,158,11,0.15)] px-1.5 py-0.5 text-[11px] font-semibold text-[#92400E]"
+const noOfferToggle = `rounded-md border border-dark-200 px-2 py-1 text-xs font-medium text-dark-700 transition hover:bg-dark-100 aria-pressed:border-dark-700 ${ui.focusRing}`
 
 type Step2ProductProps = {
   products: ProductItem[]
@@ -42,6 +50,12 @@ type Step2ProductProps = {
   quotationId?: number
   // Server qty errors by card id
   qtyErrors?: Record<number, string>
+  // Known unit ids by code
+  unitIdByCode: Map<string, number>
+  // Client whose history prices imports
+  clientId?: number
+  // Marks a line Tidak Ditawarkan
+  toggleNoOffer?: (id: number) => void
 }
 
 export default function Step2Product({
@@ -67,7 +81,12 @@ export default function Step2Product({
   onImportProducts,
   quotationId,
   qtyErrors = {},
+  unitIdByCode,
+  clientId,
+  toggleNoOffer,
 }: Step2ProductProps) {
+  // No unit warnings before the list loads
+  const unitsReady = unitIdByCode.size > 0
   const importFileRef = useRef<HTMLInputElement>(null)
   const [importMsg, setImportMsg] = useState<{ text: string; ok: boolean } | null>(null)
   const [prodExpanded, setProdExpanded] = useState(true)
@@ -84,39 +103,21 @@ export default function Step2Product({
     try {
       const rows = await parseRfq(file)
       const resp = await matchRows(rows, { autoCreate: true })
+      // One call prices every matched line for this client. The rows are
+      // already matched (and new products created), so a failed call still
+      // imports them, just unfilled.
+      const itemIds = [...new Set(resp.rows.flatMap((r) => (r.matched ? [r.matched.itemId] : [])))]
+      const recs = itemIds.length ? await recommend(itemIds, clientId).catch(() => []) : []
       const baseId = products.reduce((m, p) => Math.max(m, p.id), 0)
-      const built: ProductItem[] = resp.rows.map((r, i) => {
-        const m = r.matched
-        const fallbackUnit = (r.requested.unit || "").toUpperCase()
-        const fallbackImpa = (r.requested.impaCode || "").toUpperCase()
-        return {
-          id: baseId + i + 1,
-          itemId: m?.itemId,
-          vendorId: m?.vendorId ?? undefined,
-          vendorProductId: m?.vendorProductId ?? undefined,
-          nama: m?.itemName ?? r.requested.name,
-          kodeImpa: (m?.impaCode ?? fallbackImpa) || "",
-          requestedNama: r.requested.name,
-          requestedKodeImpa: fallbackImpa,
-          vendor: m?.vendorName ?? "",
-          jumlah: r.requested.qty || 0,
-          satuan: m?.defaultUnitCode ?? fallbackUnit,
-          hargaBeli: m?.costPrice ? Number(m.costPrice) || 0 : 0,
-          hargaJual: 0,
-        }
-      })
+      const built = importedLines(resp.rows, recs, baseId)
       onImportProducts(built)
-      const createdCount = resp.rows.filter((r) => r.source === "CREATED").length
-      const matchedCount = resp.rows.filter((r) => r.matched && r.source !== "CREATED").length
-      setImportMsg({
-        text: `${built.length} produk diimport (${matchedCount} cocok katalog, ${createdCount} produk baru, harga kosong).`,
-        ok: true,
-      })
+      const unknownUnits = unitsReady ? countUnknownUnits(built, unitIdByCode) : 0
+      // Stays up: it says which lines still need work.
+      setImportMsg({ text: importSummary(built, resp.rows, unknownUnits), ok: true })
     } catch (err) {
       setImportMsg({ text: `Gagal memproses file: ${(err as Error).message}`, ok: false })
     } finally {
       setImporting(false)
-      setTimeout(() => setImportMsg(null), 5000)
     }
   }
 
@@ -351,6 +352,9 @@ export default function Step2Product({
                 const requestKode = requestedCode(p)
                 const isDifferent = requestDiffers(p)
                 const qtyError = qtyErrors[p.id] ?? (isValidQty(p.jumlah) ? undefined : QTY_ERROR)
+                const unitError = unitsReady ? unitIssue(p.satuan, unitIdByCode) : null
+                // Only a quotation has a send rule to fill in for
+                const gaps = toggleNoOffer ? lineGaps(p) : []
                 return (
                   <div key={p.id} className={`${qep.card} mb-0`}>
                     <div className={qep.cardHeader}>
@@ -360,8 +364,26 @@ export default function Step2Product({
                         {p.kodeImpa && (
                           <span className={qep.cardCode}>KODE IMPA: {p.kodeImpa}</span>
                         )}
+                        {p.noOffer ? (
+                          <span className={noOfferBadge}>Tidak Ditawarkan</span>
+                        ) : (
+                          gaps.length > 0 && (
+                            <span className={gapBadge}>Belum lengkap: {gaps.join(", ")}</span>
+                          )
+                        )}
                       </div>
                       <div className="flex items-center gap-3">
+                        {toggleNoOffer && (
+                          <button
+                            type="button"
+                            onClick={() => toggleNoOffer(p.id)}
+                            aria-pressed={Boolean(p.noOffer)}
+                            aria-label={`${p.noOffer ? "Tawarkan" : "Tidak Ditawarkan"} produk ${globalIndex}`}
+                            className={noOfferToggle}
+                          >
+                            {p.noOffer ? "Tawarkan" : "Tidak Ditawarkan"}
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => {
@@ -461,30 +483,48 @@ export default function Step2Product({
                         </div>
                         <div className={qep.field}>
                           <span className={qep.fieldLabel}>SATUAN</span>
-                          <div className={qep.fieldInput}>{p.satuan}</div>
+                          <div
+                            className={`${qep.fieldInput}${unitError ? " ring-1 ring-[#DC2626]" : ""}`}
+                          >
+                            {p.satuan || "-"}
+                          </div>
+                          {unitError && (
+                            <span role="alert" className="text-xs text-[#DC2626]">
+                              {unitError} Pilih satuan lewat tombol edit sebelum menyimpan.
+                            </span>
+                          )}
                         </div>
                       </div>
-                      <div className={qep.col}>
-                        <div className={qep.field}>
-                          <span className={qep.fieldLabel}>HARGA BELI SATUAN</span>
-                          <div className={qep.fieldInput}>
-                            <span className={qep.rp}>Rp</span> {formatRp(p.hargaBeli)}
+                      {p.noOffer ? (
+                        <div className={qep.col}>
+                          <p className="m-0 text-sm leading-6 text-dark-600">
+                            Tidak ditawarkan ke klien. Harga jual Rp 0, dan baris ini tidak masuk ke
+                            PO.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className={qep.col}>
+                          <div className={qep.field}>
+                            <span className={qep.fieldLabel}>HARGA BELI SATUAN</span>
+                            <div className={qep.fieldInput}>
+                              <span className={qep.rp}>Rp</span> {formatRp(p.hargaBeli)}
+                            </div>
+                          </div>
+                          <div className={qep.field}>
+                            <span className={qep.fieldLabel}>HARGA JUAL SATUAN</span>
+                            <div className={qep.fieldInput}>
+                              <span className={qep.rp}>Rp</span> {formatRp(p.hargaJual)}
+                            </div>
+                          </div>
+                          <div className={qep.field}>
+                            <span className={qep.fieldLabel}>PROFIT</span>
+                            <div className={qep.fieldInput}>
+                              <span className={qep.rp}>Rp</span> {formatRp(profit)}{" "}
+                              <span className={qep.profitPct}>({profitPct}%)</span>
+                            </div>
                           </div>
                         </div>
-                        <div className={qep.field}>
-                          <span className={qep.fieldLabel}>HARGA JUAL SATUAN</span>
-                          <div className={qep.fieldInput}>
-                            <span className={qep.rp}>Rp</span> {formatRp(p.hargaJual)}
-                          </div>
-                        </div>
-                        <div className={qep.field}>
-                          <span className={qep.fieldLabel}>PROFIT</span>
-                          <div className={qep.fieldInput}>
-                            <span className={qep.rp}>Rp</span> {formatRp(profit)}{" "}
-                            <span className={qep.profitPct}>({profitPct}%)</span>
-                          </div>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 )

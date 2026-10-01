@@ -20,12 +20,21 @@ export type SeedClient = {
   contactEmail?: string
 }
 export type SeedVendor = { id: number; name: string }
-export type SeedItem = { id: number; name: string; impaCode: string; vendorProductId?: number }
+// cost is the vendor link's harga beli, when linked.
+export type SeedItem = {
+  id: number
+  name: string
+  impaCode: string
+  vendorProductId?: number
+  cost?: number
+}
 // Catalog item or free text.
 export type SeedLine = ({ item: SeedItem } | { freeText: string }) & {
   qty: number
   price: number
   cost?: number
+  // Tidak Ditawarkan: sent unpriced, left out of the PO
+  noOffer?: boolean
 }
 export type SeedQuotation = Pick<QuotationDetail, "id" | "quotationNo" | "version" | "status">
 
@@ -103,7 +112,13 @@ type QuotationOpts = {
 }
 
 // Create and update body.
-async function quotationBody(opts: QuotationOpts): Promise<Record<string, unknown>> {
+//
+// A catalog line goes out sendable: its link's harga beli, or, for an item
+// with no vendor link, fallbackVendor, which the server links on save.
+async function quotationBody(
+  opts: QuotationOpts,
+  fallbackVendor?: number,
+): Promise<Record<string, unknown>> {
   const pcs = await unitId("PCS")
   return {
     paymentTerms: "30 days",
@@ -122,13 +137,17 @@ async function quotationBody(opts: QuotationOpts): Promise<Record<string, unknow
             requestedName: l.item.name,
             offeredItemId: l.item.id,
             vendorProductId: l.item.vendorProductId,
+            vendorId: l.item.vendorProductId === undefined ? fallbackVendor : undefined,
           }
         : { requestedName: l.freeText }),
       qty: String(l.qty),
       unitId: pcs,
       sellingPrice: String(l.price),
-      costPrice: l.cost === undefined ? undefined : String(l.cost),
+      costPrice: String(
+        l.cost ?? ("item" in l ? (l.item.cost ?? Math.max(1, Math.round(l.price / 2))) : 0),
+      ),
       shipDestination: "Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara",
+      isAvailable: l.noOffer ? false : undefined,
     })),
   }
 }
@@ -220,7 +239,8 @@ export class SalesSeed {
       )
       vendorProductId = link.vendorProductId ?? link.id
     }
-    return { id: created.id, name, impaCode, vendorProductId }
+    const cost = opts.vendor ? (opts.cost ?? 100000) : undefined
+    return { id: created.id, name, impaCode, vendorProductId, cost }
   }
 
   // Extra contact for a client.
@@ -246,11 +266,22 @@ export class SalesSeed {
   //
   // The shipping address stores a line even at a zero charge, and each line
   // carries the address too, so the ON_PROGRESS gate passes either way.
+  private fallbackVendor?: SeedVendor
+
+  // Vendor for unlinked catalog lines.
+  // Created once per test, and only when a line needs it.
+  private async fallbackVendorFor(opts: QuotationOpts): Promise<number | undefined> {
+    const needed = opts.lines.some((l) => "item" in l && l.item.vendorProductId === undefined)
+    if (!needed) return undefined
+    this.fallbackVendor ??= await this.vendor({ label: "Vendor Cadangan" })
+    return this.fallbackVendor.id
+  }
+
   async quotation(opts: QuotationOpts): Promise<QuotationDetail> {
     const created = await api<{ id: number }>("POST", "/quotations", {
       companyClientId: opts.client.id,
       contactId: opts.client.contactId,
-      ...(await quotationBody(opts)),
+      ...(await quotationBody(opts, await this.fallbackVendorFor(opts))),
     })
     this.quotations.push(created.id)
     return this.getQuotation(created.id)
@@ -260,9 +291,14 @@ export class SalesSeed {
   //
   // Bumps rowVersion, so an editor opened earlier holds a stale version.
   async updateQuotation(q: QuotationDetail, opts: QuotationOpts): Promise<void> {
-    await api("PUT", `/quotations/${q.id}`, await quotationBody(opts), {
-      "If-Match": String(q.rowVersion),
-    })
+    await api(
+      "PUT",
+      `/quotations/${q.id}`,
+      await quotationBody(opts, await this.fallbackVendorFor(opts)),
+      {
+        "If-Match": String(q.rowVersion),
+      },
+    )
   }
 
   getQuotation(id: number): Promise<QuotationDetail> {
@@ -350,6 +386,20 @@ export class SalesSeed {
   // Track a UI-created row.
   //
   // Found through the list search by its exact name.
+  // Newest quotation a page made.
+  // Tracked so it is cleaned up like a seeded one.
+  async adoptNewestQuotation(client: SeedClient): Promise<number> {
+    const rows = await api<{ id: number; companyName: string }[]>(
+      "GET",
+      `/quotations?q=${encodeURIComponent(client.name)}`,
+    )
+    const ids = rows.filter((r) => r.companyName === client.name).map((r) => r.id)
+    if (ids.length === 0) throw new Error(`no quotation for ${client.name}`)
+    const id = Math.max(...ids)
+    if (!this.quotations.includes(id)) this.quotations.push(id)
+    return id
+  }
+
   async adopt(kind: "client" | "vendor" | "item", name: string): Promise<number> {
     const path = { client: "/clients", vendor: "/vendors", item: "/items" }[kind]
     const rows = await api<{ id: number; name: string }[]>(

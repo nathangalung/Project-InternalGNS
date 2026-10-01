@@ -174,3 +174,15 @@ type AdvancedSearchResponse struct {
 	Hits   []AdvancedSearchHit `json:"hits"`
 	Counts map[string]int      `json:"counts"` // tier → count
 }
+
+// Recommendation starts a quotation line.
+// Every field but ItemID is absent when there is nothing to recommend: no
+// active vendor link, or no sent or accepted deal to take a price from.
+type Recommendation struct {
+	ItemID          int64   `db:"item_id"           json:"itemId"`
+	VendorProductID *int64  `db:"vendor_product_id" json:"vendorProductId,omitempty"`
+	VendorID        *int64  `db:"vendor_id"         json:"vendorId,omitempty"`
+	VendorName      *string `db:"vendor_name"       json:"vendorName,omitempty"`
+	CostPrice       *string `db:"cost_price"        json:"costPrice,omitempty"`
+	SellingPrice    *string `db:"selling_price"     json:"sellingPrice,omitempty"`
+}

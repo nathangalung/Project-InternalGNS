@@ -26,6 +26,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.Post("/", h.Create)
 	r.Get("/search-advanced", h.SearchAdvanced)
 	r.Post("/match-rows", h.MatchRows)
+	r.Get("/recommendations", h.Recommendations)
 	r.Get("/{id}", h.Get)
 	r.Put("/{id}", h.Update)
 	r.Get("/{id}/vendors", h.ListVendorsForItem)

@@ -86,15 +86,23 @@ func (s *scenarioState) sendRequestWith(method, path string, body any, headers m
 	return nil
 }
 
+// seedVendorProduct links the seeded item.
+const seedVendorProduct int64 = 9000001
+
+// offeredLine is one sendable line.
+// Sending needs a product, unit, vendor, harga beli and harga jual.
+func offeredLine(name, qty, sell string) quotations.CreateItem {
+	offered, link, cost := offeredItemID, seedVendorProduct, "5000"
+	return quotations.CreateItem{
+		RequestedName: name, OfferedItemID: &offered, VendorProductID: &link,
+		Qty: qty, UnitID: defaultUnit, SellingPrice: sell, CostPrice: &cost,
+	}
+}
+
 func (s *scenarioState) buildCreate(discount string, lines int) quotations.CreateRequest {
 	items := make([]quotations.CreateItem, 0, lines)
 	for i := 0; i < lines; i++ {
-		items = append(items, quotations.CreateItem{
-			RequestedName: fmt.Sprintf("ITEM %d", i+1),
-			Qty:           "1",
-			UnitID:        defaultUnit,
-			SellingPrice:  "10000",
-		})
+		items = append(items, offeredLine(fmt.Sprintf("ITEM %d", i+1), "1", "10000"))
 	}
 	return quotations.CreateRequest{
 		CompanyClientID: defaultCompany,

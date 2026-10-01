@@ -43,6 +43,7 @@ func deliveredPOWithInvoice(t *testing.T, tx pgx.Tx) (int64, int64, int64) {
 func deliverQuotation(t *testing.T, tx pgx.Tx, req quotations.CreateRequest) (int64, int64, int64) {
 	t.Helper()
 	ctx := context.Background()
+	req.Items = testutil.OfferLines(t, ctx, tx, req.Items)
 	store := testutil.Store(t)
 
 	qrepo := quotations.NewRepo(tx, store)
@@ -156,10 +157,10 @@ func TestRepo_InvoiceHeaderEqualsLineSums(t *testing.T) {
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
-		Items: []quotations.CreateItem{
+		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{
 			{RequestedName: "Product A", Qty: "1", UnitID: seedUnitID, SellingPrice: "100000"},
 			{RequestedName: "Product B", Qty: "1", UnitID: seedUnitID, SellingPrice: "100000"},
-		},
+		}),
 	}, seedUserID)
 	require.NoError(t, err)
 	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "sent", nil, seedUserID))

@@ -98,6 +98,16 @@ describe("items api", () => {
       { path: "/items/9/image", method: "PATCH", body: { objectKey: "k" } },
     ],
     ["remove image", () => api.removeImage(9), { path: "/items/9/image", method: "DELETE" }],
+    [
+      "recommend for a client",
+      () => api.recommend([3, 4], 7),
+      { path: "/items/recommendations?itemIds=3%2C4&clientId=7" },
+    ],
+    [
+      "recommend without a client",
+      () => api.recommend([3]),
+      { path: "/items/recommendations?itemIds=3" },
+    ],
   ])("%s", async (_name, call, want) => {
     await call()
     expect(apiRequest).toHaveBeenCalledWith(want)

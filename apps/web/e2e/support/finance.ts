@@ -75,6 +75,27 @@ export type SeedInvoice = Pick<
 // line carries its address, which the ON_PROGRESS gate requires.
 export async function deliveredInvoice(token: string, client: SeedClient): Promise<SeedInvoice> {
   const units = await json<UnitRow[]>(call("/units", { token }), "list units")
+  // A sent line needs a product and a vendor; the server links the two.
+  const item = await json<{ id: number }>(
+    call("/items", {
+      method: "POST",
+      token,
+      body: JSON.stringify({ name: "Tali Tambat E2E", defaultUnitId: units[0].id }),
+    }),
+    "create item",
+  )
+  const vendor = await json<{ id: number }>(
+    call("/vendors", {
+      method: "POST",
+      token,
+      body: JSON.stringify({
+        name: `Vendor Tali ${client.id}`,
+        location: "Surabaya",
+        contactInfo: { email: "vendor@example.com", phone: "81298765432" },
+      }),
+    }),
+    "create vendor",
+  )
   const q = await json<QuotationCreated>(
     call("/quotations", {
       method: "POST",
@@ -85,6 +106,8 @@ export async function deliveredInvoice(token: string, client: SeedClient): Promi
         items: [
           {
             requestedName: "Tali Tambat E2E",
+            offeredItemId: item.id,
+            vendorId: vendor.id,
             qty: "2",
             unitId: units[0].id,
             sellingPrice: "100000",

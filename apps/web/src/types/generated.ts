@@ -352,6 +352,16 @@ export type ItemVendorRow = {
     lastQuotedAt?: string;
 };
 
+// From items/dto.go
+export type LineRecommendation = {
+    itemId: number;
+    vendorProductId?: number;
+    vendorId?: number;
+    vendorName?: string;
+    costPrice?: string;
+    sellingPrice?: string;
+};
+
 // From auth/dto.go
 export type LoginInput = {
     email: string;
@@ -676,6 +686,7 @@ export type QuotationItemInput = {
     requestedName: string;
     offeredItemId?: number;
     vendorProductId?: number;
+    vendorId?: number;
     qty: string;
     unitId: number;
     sellingPrice: string;
@@ -683,6 +694,7 @@ export type QuotationItemInput = {
     updateVendorPrice?: boolean;
     shipDestination?: string;
     dueDate?: string;
+    isAvailable?: boolean;
 };
 
 // From quotations/qir.go
@@ -749,6 +761,8 @@ export type QuotationItemRow = {
     offeredName?: string;
     offeredImpa?: string;
     vendorProductId?: number;
+    vendorId?: number;
+    vendorName?: string;
     qty: string;
     unitId?: number;
     sellingPrice: string;

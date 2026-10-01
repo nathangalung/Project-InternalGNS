@@ -35,13 +35,13 @@ func acceptedQuotationWithPO(t *testing.T, tx pgx.Tx) (int64, int64) {
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
-		Items: []quotations.CreateItem{{
+		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{
 			RequestedName:   "Test Product",
 			Qty:             "2",
 			UnitID:          seedUnitID,
 			SellingPrice:    "100000",
 			ShipDestination: strPtr("Kapal Uji"),
-		}},
+		}}),
 	}, seedUserID)
 	require.NoError(t, err)
 	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "sent", nil, seedUserID))
@@ -449,12 +449,12 @@ func acceptedQuotationWithShipping(t *testing.T, tx pgx.Tx, days int) int64 {
 		ShippingAddress: &addr,
 		ShippingDays:    &days,
 		ShippingCost:    &cost,
-		Items: []quotations.CreateItem{{
+		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{
 			RequestedName: "Test Product",
 			Qty:           "2",
 			UnitID:        seedUnitID,
 			SellingPrice:  "100000",
-		}},
+		}}),
 	}, seedUserID)
 	require.NoError(t, err)
 	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "sent", nil, seedUserID))

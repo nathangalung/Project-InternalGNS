@@ -71,3 +71,22 @@ export function requestDiffers(p: RequestLine): boolean {
   const nama = p.requestedNama || p.nama
   return nama !== p.nama || (kode !== "" && kode !== p.kodeImpa)
 }
+
+// What a line still lacks.
+// Mirrors the server's send rule (fn_change_quotation_status): a product, a
+// vendor (linked, or picked to be linked on save), harga beli and harga
+// jual. A Tidak Ditawarkan line needs none of them.
+export function lineGaps(p: ProductItem): string[] {
+  if (p.noOffer) return []
+  const gaps: string[] = []
+  if (p.itemId === undefined) gaps.push("produk")
+  if (p.vendorProductId === undefined && p.vendorId === undefined) gaps.push("vendor")
+  if (!(p.hargaBeli > 0)) gaps.push("harga beli")
+  if (!(p.hargaJual > 0)) gaps.push("harga jual")
+  return gaps
+}
+
+// Ready to be sent.
+export function isLineComplete(p: ProductItem): boolean {
+  return lineGaps(p).length === 0
+}

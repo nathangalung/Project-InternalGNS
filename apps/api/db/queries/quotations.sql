@@ -20,6 +20,8 @@ SELECT qi.id, qi.quotation_id, qi.line_number, qi.item_type,
        qi.offered_item_id, qi.vendor_product_id,
        oi.name       AS offered_name,
        oi.impa_code  AS offered_impa,
+       v.id          AS vendor_id,
+       v.name        AS vendor_name,
        qi.qty::text, qi.unit_id,
        qi.selling_price::text, qi.cost_price::text,
        qi.discount_pct::text, qi.total_selling::text,
@@ -27,6 +29,8 @@ SELECT qi.id, qi.quotation_id, qi.line_number, qi.item_type,
        qi.is_available, qi.ship_destination, qi.shipping_days
 FROM quotation_items qi
 LEFT JOIN items oi ON oi.id = qi.offered_item_id
+LEFT JOIN vendor_products vp ON vp.id = qi.vendor_product_id
+LEFT JOIN vendors v ON v.id = vp.vendor_id
 WHERE qi.quotation_id = $1
 ORDER BY qi.line_number;
 
@@ -62,24 +66,26 @@ WHERE 1=1;
 SELECT COUNT(*) FROM quotations q WHERE 1=1;
 
 -- name: quotations.fn_create
+-- Lines pass through fn_prepare_quotation_lines first (no-offer lines,
+-- vendor links); see migration 00077.
 SELECT fn_create_quotation(
     $1, $2, $3, $4, $5, $6, $7::numeric(5,2),
     $8, $9, $10::numeric(15,2),
-    $11::jsonb, $12, $13, $14
+    fn_prepare_quotation_lines($11::jsonb, $12::bigint), $12, $13, $14
 );
 
 -- name: quotations.fn_update
 SELECT fn_update_quotation(
     $1, $2, $3, $4, $5, $6::numeric(5,2),
     $7, $8, $9::numeric(15,2),
-    $10::jsonb, $11, $12
+    fn_prepare_quotation_lines($10::jsonb, $11::bigint), $11, $12
 );
 
 -- name: quotations.fn_update_versioned
 SELECT fn_update_quotation_versioned(
     $1, $2, $3, $4, $5, $6, $7::numeric(5,2),
     $8, $9, $10::numeric(15,2),
-    $11::jsonb, $12, $13
+    fn_prepare_quotation_lines($11::jsonb, $12::bigint), $12, $13
 );
 
 -- name: quotations.row_version

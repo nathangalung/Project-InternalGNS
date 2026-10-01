@@ -60,6 +60,12 @@ func TestRouter_FinanceWorksTheInvoicePage(t *testing.T) {
 
 	cleaner := testutil.NewCleaner(t)
 	cleaner.Quotation(qid)
+	// The fixture's offered product goes too.
+	var offered int64
+	require.NoError(t, pool.QueryRow(ctx,
+		`SELECT offered_item_id FROM quotation_items WHERE quotation_id = $1 AND item_type = 'product'`,
+		qid).Scan(&offered))
+	cleaner.Item(offered)
 	userRepo := users.NewRepo(pool, store)
 	ids := map[users.Role]int64{}
 	for _, role := range []users.Role{users.RoleFinance, users.RoleOperational} {

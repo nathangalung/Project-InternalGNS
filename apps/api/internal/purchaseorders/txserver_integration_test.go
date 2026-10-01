@@ -123,6 +123,7 @@ func ownedPOFile(poID int64) purchaseorders.UpdateFileRequest {
 func createQuotation(t *testing.T, tx pgx.Tx, req quotations.CreateRequest) (int64, int64) {
 	t.Helper()
 	ctx := context.Background()
+	req.Items = testutil.OfferLines(t, ctx, tx, req.Items)
 	qrepo := quotations.NewRepo(tx, testutil.Store(t))
 	qID, err := qrepo.Create(ctx, req, seedUserID)
 	require.NoError(t, err)

@@ -145,6 +145,9 @@ func TestBuildExportData_NoOfferIsUnpriced(t *testing.T) {
 	linkedUnpriced := productLine(2, "FIRE HOSE COUPLING", "1.00", "0.00", "0.00")
 	pricedUnlinked := productLine(3, "KABEL NYM 3x2.5", "1.00", "500.00", "500.00")
 	pricedUnlinked.OfferedItemID = nil
+	// A Tidak Ditawarkan line never prints a price, even one left on it.
+	notOffered := productLine(4, "TALI TAMBANG", "1.00", "700.00", "0.00")
+	notOffered.IsAvailable = false
 
 	d := QuotationDetail{
 		Quotation: header("1500.00", "1500.00", "0.00", "1500.00", "1375.00", "165.00", "1665.00"),
@@ -152,6 +155,7 @@ func TestBuildExportData_NoOfferIsUnpriced(t *testing.T) {
 			productLine(1, "PUNCHING TOOL SET", "1.00", "1000.00", "1000.00"),
 			linkedUnpriced,
 			pricedUnlinked,
+			notOffered,
 		},
 	}
 
@@ -160,7 +164,7 @@ func TestBuildExportData_NoOfferIsUnpriced(t *testing.T) {
 	cases := []struct {
 		line     int
 		hasOffer bool
-	}{{0, true}, {1, false}, {2, true}}
+	}{{0, true}, {1, false}, {2, true}, {3, false}}
 	for _, c := range cases {
 		if got.Items[c.line].HasOffer != c.hasOffer {
 			t.Errorf("line %d: HasOffer = %v, want %v", c.line+1, got.Items[c.line].HasOffer, c.hasOffer)

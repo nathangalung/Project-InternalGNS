@@ -187,6 +187,19 @@ document's status history table.
   Draft goes to sent or cancelled; sent to accepted, rejected or cancelled;
   revision to rejected or cancelled. Rejected and cancelled need a reason.
   Accepted creates the PO in the same transaction. Only drafts are editable.
+  A draft may keep unfinished product lines, but sending refuses (with the
+  count) while any offered product line lacks its product, unit, vendor,
+  harga beli or harga jual. A line marked Tidak Ditawarkan (`is_available`
+  false, `noOffer` in the wizard) is a request the company cannot offer:
+  `fn_prepare_quotation_lines` stores it at harga jual 0 with no vendor, the
+  PDF prints No Offer, it never blocks sending, `fn_create_purchase_order`
+  leaves it out of the PO, and accepting needs at least one offered line.
+  The same function links a vendor a line names by `vendorId` when the item
+  has no link to it yet. New lines, from the RFQ import or picked by hand,
+  start from `fn_recommend_lines` (`GET /items/recommendations`): the vendor
+  on this client's newest sent or accepted deal for the item at its current
+  harga beli, else the cheapest active vendor, and the harga jual of this
+  client's newest deal, else any client's; an item never sold starts at 0.
   Revisi is not a manual move: Buat Revisi (`POST /quotations/{id}/revise`,
   offered when `canRevise`, i.e. from sent) clones a new draft version with
   `parent_id` and a `Rev.n` number and moves the original to revision.

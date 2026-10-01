@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { findVendorByName } from "@/features/items/helpers"
 import {
+  useActiveVendorOptions,
   useItemPriceHistory,
   useItemSearchAdvanced,
   useItems,
   useItemVendors,
+  useLineRecommendation,
 } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
 import * as vendorsApi from "@/features/vendors/api"
@@ -14,6 +16,12 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { errorMessage } from "@/lib/errors"
 import { ui } from "@/lib/ui"
 import ProductCreateModal from "../ProductCreateModal"
+import {
+  type AutofillBase,
+  applyUntouched,
+  mergeVendorOptions,
+  recommendationFields,
+} from "./autofill"
 import {
   type CatalogItem,
   type DropdownKey,
@@ -38,6 +46,10 @@ type ProductAddProps = {
   onOpenChange: (open: boolean) => void
   onSuccess?: (data: ProductAddFormData & { profit: number }) => void
   initialData?: ProductAddInitialData | null
+  // Client whose history picks the defaults
+  clientId?: number
+  // A quotation draft may stay unpriced
+  allowIncomplete?: boolean
 }
 
 // Product creation orchestrator.
@@ -46,6 +58,8 @@ export default function ProductAdd({
   onOpenChange,
   onSuccess,
   initialData,
+  clientId,
+  allowIncomplete = false,
 }: ProductAddProps) {
   const [form, setForm] = useState<ProductAddFormData>(INITIAL_FORM)
   const [openDropdown, setOpenDropdown] = useState<DropdownKey | null>(null)
@@ -57,6 +71,10 @@ export default function ProductAdd({
   const [showConfirm, setShowConfirm] = useState(false)
 
   const [pickedItemId, setPickedItemId] = useState<number | null>(null)
+  // Item whose defaults are still to apply
+  const [autofillFor, setAutofillFor] = useState<number | null>(null)
+  // Vendor and prices as they were at the pick
+  const autofillBase = useRef<AutofillBase>({ namaVendor: "", hargaBeli: "", hargaJual: "" })
   // Catalog item picked as the request
   const [requestedItem, setRequestedItem] = useState<CatalogItem | null>(null)
   const [extraVendors, setExtraVendors] = useState<VendorOption[]>([])
@@ -118,6 +136,9 @@ export default function ProductAdd({
   }, [requestQueryDebounced, requestSearchResp, itemsAll])
 
   const { data: vendorRows } = useItemVendors(pickedItemId ?? undefined)
+  // Every active vendor is searchable, not only the item's own.
+  const vendorQueryDebounced = useDebouncedValue(form.namaVendor.trim(), 250)
+  const { data: vendorSearch } = useActiveVendorOptions(vendorQueryDebounced)
   const vendorOptions: VendorOption[] = useMemo(() => {
     const remote = (vendorRows ?? []).map((r) => ({
       nama: r.vendorName,
@@ -125,8 +146,26 @@ export default function ProductAdd({
       vendorId: r.vendorId,
       vendorProductId: r.vendorProductId,
     }))
-    return [...remote, ...extraVendors]
-  }, [vendorRows, extraVendors])
+    const known = new Set<number | undefined>(remote.map((v) => v.vendorId))
+    const extra = extraVendors.filter((v) => !known.has(v.vendorId))
+    return mergeVendorOptions([...remote, ...extra], vendorSearch?.rows ?? [])
+  }, [vendorRows, extraVendors, vendorSearch])
+
+  // A picked product starts from its recommendation, once.
+  const { data: recommendation } = useLineRecommendation(autofillFor ?? undefined, clientId)
+  useEffect(() => {
+    if (autofillFor === null || recommendation === undefined) return
+    if (recommendation && recommendation.itemId === autofillFor) {
+      const fields = recommendationFields(recommendation)
+      const { form: next, applied } = applyUntouched(form, autofillBase.current, fields)
+      setForm(next)
+      setInitialPrices((prev) => ({
+        beli: applied.beli ? Number(next.hargaBeli) : prev.beli,
+        jual: applied.jual ? Number(next.hargaJual) : prev.jual,
+      }))
+    }
+    setAutofillFor(null)
+  }, [autofillFor, recommendation, form])
 
   const { data: priceHistoryRows } = useItemPriceHistory(pickedItemId ?? undefined, 10)
   const historisOptions: HistorisOption[] = useMemo(
@@ -142,7 +181,20 @@ export default function ProductAdd({
 
   useEffect(() => {
     if (open) {
-      setExtraVendors([])
+      setAutofillFor(null)
+      // The saved vendor stays pickable before the lists load.
+      setExtraVendors(
+        initialData?.vendor && initialData.vendorId !== undefined
+          ? [
+              {
+                nama: initialData.vendor,
+                harga: initialData.hargaBeli,
+                vendorId: initialData.vendorId,
+                vendorProductId: initialData.vendorProductId,
+              },
+            ]
+          : [],
+      )
       if (initialData) {
         const reqKode = initialData.requestedKodeImpa ?? initialData.kodeImpa ?? ""
         const reqNama = initialData.requestedNama ?? initialData.nama ?? ""
@@ -186,7 +238,14 @@ export default function ProductAdd({
   const exactVendor = vendorOptions.find((v) => v.nama === form.namaVendor)
   const isVendorFilled = isJumlahFilled && exactVendor !== undefined
   const isHargaJualValid = parseRp(form.hargaJual) > 0
-  const canSubmit = isRequestFilled && isVendorFilled && isHargaJualValid
+  // A draft line may lack its vendor and prices, but a typed vendor must be
+  // one of the options.
+  const vendorTyped = form.namaVendor.trim().length > 0
+  const isLineIncomplete = !exactVendor || !isHargaJualValid
+  const canSubmit = allowIncomplete
+    ? isRequestFilled && isJumlahFilled && (!vendorTyped || exactVendor !== undefined)
+    : isRequestFilled && isVendorFilled && isHargaJualValid
+  const pricesUnlocked = allowIncomplete ? isJumlahFilled : isVendorFilled
 
   function handleChange(field: keyof ProductAddFormData, value: string) {
     if (field === "requestedKodeImpaNama") {
@@ -217,7 +276,11 @@ export default function ProductAdd({
   }
 
   function executeSubmit() {
-    onSuccess?.({ ...form, profit })
+    // The ids follow the vendor the name matches, not an earlier pick.
+    const data = exactVendor
+      ? { ...form, vendorId: exactVendor.vendorId, vendorProductId: exactVendor.vendorProductId }
+      : { ...form, namaVendor: "", vendorId: undefined, vendorProductId: undefined }
+    onSuccess?.({ ...data, profit })
     setForm(INITIAL_FORM)
     setInitialPrices({ beli: null, jual: null })
     setOpenDropdown(null)
@@ -244,15 +307,9 @@ export default function ProductAdd({
       : undefined
 
   const vendorQuery = form.namaVendor.trim().toLowerCase()
-  const sortedVendors = [...vendorOptions].sort((a, b) => {
-    if (a.harga > 0 && b.harga > 0) return a.harga - b.harga
-    if (a.harga > 0) return -1
-    if (b.harga > 0) return 1
-    return 0
-  })
   const vendorMatches = vendorQuery
-    ? sortedVendors.filter((v) => v.nama.toLowerCase().includes(vendorQuery))
-    : sortedVendors
+    ? vendorOptions.filter((v) => v.nama.toLowerCase().includes(vendorQuery))
+    : vendorOptions
 
   const currentBeli = parseRp(form.hargaBeli)
   const currentJual = parseRp(form.hargaJual)
@@ -310,6 +367,10 @@ export default function ProductAdd({
 
   function pickProduct(item: CatalogItem) {
     setPickedItemId(item.id ?? null)
+    setAutofillFor(item.id ?? null)
+    // The pick clears the vendor; prices stay until the user or the
+    // recommendation changes them.
+    autofillBase.current = { namaVendor: "", hargaBeli: form.hargaBeli, hargaJual: form.hargaJual }
     const unit =
       item.defaultUnitId && units ? units.find((u) => u.id === item.defaultUnitId) : undefined
     setForm((prev) => ({
@@ -330,9 +391,19 @@ export default function ProductAdd({
           onClose={handleCancel}
           footer={
             <>
-              {isVendorFilled && !isHargaJualValid && (
-                <span className="flex-1 text-[12px] text-error">Harga jual harus lebih dari 0</span>
-              )}
+              {allowIncomplete
+                ? isJumlahFilled &&
+                  isLineIncomplete && (
+                    <span className="flex-1 text-[12px] text-dark-600">
+                      Belum lengkap; tetap tersimpan di Draf dan dilengkapi sebelum dikirim.
+                    </span>
+                  )
+                : isVendorFilled &&
+                  !isHargaJualValid && (
+                    <span className="flex-1 text-[12px] text-error">
+                      Harga jual harus lebih dari 0
+                    </span>
+                  )}
               <div className="flex gap-4 max-sm:w-full max-sm:*:flex-1 max-sm:*:px-4">
                 <button type="button" className={ui.modalCancel} onClick={handleCancel}>
                   Batal
@@ -406,7 +477,7 @@ export default function ProductAdd({
             setOpenDropdown={setOpenDropdown}
             closeIfMatch={closeIfMatch}
             isJumlahFilled={isJumlahFilled}
-            isVendorFilled={isVendorFilled}
+            isVendorFilled={pricesUnlocked}
             profit={profit}
             profitPct={profitPct}
             onAddVendorNew={() => {
