@@ -96,6 +96,14 @@ list.
 | POST | `/quotations/{id}/revise` | `Revise` | `fn_revise_quotation` |
 | GET | `/quotations/{id}/revisions` | `Revisions` | `quotations.list_revisions` |
 | GET | `/quotations/{id}/pdf` | `ExportPDF` | header and items, rendered by xelatex |
+| POST | `/quotations/{id}/locks` | `Lock` | `fn_quotation_lock` (claim or renew `header` or `line:<id>`) |
+| DELETE | `/quotations/{id}/locks/{part}` | `Unlock` | `fn_quotation_unlock` |
+| POST | `/quotations/{id}/lines` | `AddLines` | `fn_quotation_add_lines` |
+| PUT | `/quotations/{id}/lines/{lineId}` | `UpdateLine` | `fn_quotation_update_line` (claim held) |
+| PATCH | `/quotations/{id}/lines/{lineId}/offer` | `SetLineOffer` | `fn_quotation_set_line_offer` |
+| DELETE | `/quotations/{id}/lines/{lineId}` | `DeleteLine` | `fn_quotation_delete_line` |
+| PUT | `/quotations/{id}/header` | `UpdateHeader` | `fn_quotation_update_header` (claim held; replaces every header field) |
+| GET | `/quotations/{id}/events` | `Events` | server-sent events fed by `LISTEN quotation_events` |
 
 `POST /quotations` answers `201` with `{"id": <quotation id>}`. The allowed
 status moves are in the detail response (`allowedTransitions`, `canRevise`);
