@@ -21,11 +21,12 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 # Runtime needs a XeLaTeX engine for PDF export, so distroless is not viable.
 # debian-slim + minimal TeX Live covers the templates' packages and fontspec.
-FROM debian:bookworm-slim@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251
+FROM debian:bookworm-slim@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251 AS runtime
 WORKDIR /app
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Upgrade first, so packages the base shipped get their Debian fixes too.
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
         texlive-xetex \
         texlive-latex-recommended \
         texlive-latex-extra \
