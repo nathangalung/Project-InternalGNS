@@ -74,6 +74,21 @@ export function useActiveVendorOptions(q: string, limit = 10) {
   })
 }
 
+// Line defaults for one item.
+// Null when the item has no recommendation row.
+export function useLineRecommendation(itemId: number | undefined, clientId?: number) {
+  return useQuery({
+    queryKey: itemId
+      ? [...queryKeys.items.detail(itemId), "recommendation", clientId ?? 0]
+      : queryKeys.items.all,
+    queryFn:
+      itemId !== undefined
+        ? async () => (await itemsApi.recommend([itemId], clientId))[0] ?? null
+        : skipToken,
+    staleTime: 30_000,
+  })
+}
+
 export function useItemPriceHistory(itemId: number | undefined, limit?: number) {
   return useQuery({
     queryKey: itemId ? queryKeys.items.priceHistory(itemId, limit) : queryKeys.items.all,

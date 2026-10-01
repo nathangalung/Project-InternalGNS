@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
-import { countInvalidQty, qtyErrorIndexes, qtyErrorsById } from "./lines"
+import { countInvalidQty, isLineComplete, qtyErrorIndexes, qtyErrorsById } from "./lines"
 import {
+  countUnknownUnits,
   type ProductItem,
   unitIdIndex,
-  unitsKnown,
   upsertProduct,
   type WizardSeed,
   wizardGates,
@@ -63,6 +63,12 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
     setProducts((prev) => prev.filter((p) => p.id !== id))
   }
 
+  // Mark or unmark Tidak Ditawarkan.
+  // Prices stay on the line, so marking it back restores them.
+  function toggleNoOffer(id: number) {
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, noOffer: !p.noOffer } : p)))
+  }
+
   function saveProduct(data: ProductAddFormData) {
     setProducts((prev) => upsertProduct(prev, editingProduct, data))
     setEditingProduct(null)
@@ -94,6 +100,8 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
     setQtyFail({ lines: products, byId: qtyErrorsById(products, qtyErrorIndexes(err)) })
   }
 
+  const unknownUnits = countUnknownUnits(products, unitIdByCode)
+
   return {
     step,
     setStep,
@@ -114,6 +122,7 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
     products,
     setProducts,
     deleteProduct,
+    toggleNoOffer,
     saveProduct,
     prodPageSize,
     setProdPageSize,
@@ -134,8 +143,11 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
     gates,
     summary,
     unitIdByCode,
-    unitsOk: unitsKnown(products, unitIdByCode),
+    unknownUnits,
+    unitsOk: unknownUnits === 0,
     invalidQty: countInvalidQty(products),
+    // Lines not yet ready to be sent
+    incompleteLines: products.filter((p) => !isLineComplete(p)).length,
     // Server errors apply to the lines they were raised for.
     qtyErrors: qtyFail?.lines === products ? qtyFail.byId : {},
     recordQtyFailure,

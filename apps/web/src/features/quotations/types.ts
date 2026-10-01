@@ -26,6 +26,8 @@ export type ProductRow = {
   hargaSatuan: number
   profitSatuan: number
   vendor?: string
+  // Requested but not offered
+  noOffer?: boolean
 }
 
 export type ShippingRow = {

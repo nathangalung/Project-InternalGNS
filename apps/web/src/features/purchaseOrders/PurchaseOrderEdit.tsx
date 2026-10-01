@@ -341,6 +341,8 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
             {step === 1 && (
               <Step2Product
                 products={products}
+                unitIdByCode={unitIdByCode}
+                clientId={po.companyClientId}
                 deleteProduct={(id) => setProducts((prev) => prev.filter((p) => p.id !== id))}
                 setEditingProduct={(p) => setEditingId(p?.id ?? null)}
                 setShowProductAdd={setShowProductAdd}
@@ -417,6 +419,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
       <ProductAdd
         open={showProductAdd}
         initialData={editingProduct}
+        clientId={po.companyClientId}
         onOpenChange={(open) => {
           setShowProductAdd(open)
           if (!open) setEditingId(null)

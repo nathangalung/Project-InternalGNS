@@ -21,6 +21,8 @@ export type ProductItem = {
   satuan: string
   hargaBeli: number
   hargaJual: number
+  // Requested but not offered (Tidak Ditawarkan)
+  noOffer?: boolean
 }
 
 export const WIZARD_STEPS = [
@@ -79,14 +81,16 @@ export function wizardSummary(
   discountPct: number,
   shippingCost: string,
 ): WizardSummary {
-  const totalHargaBeli = products.reduce((sum, p) => sum + p.hargaBeli * p.jumlah, 0)
-  const totalHargaJual = products.reduce((sum, p) => sum + p.hargaJual * p.jumlah, 0)
+  // A Tidak Ditawarkan line is not sold, so it adds nothing.
+  const offered = products.filter((p) => !p.noOffer)
+  const totalHargaBeli = offered.reduce((sum, p) => sum + p.hargaBeli * p.jumlah, 0)
+  const totalHargaJual = offered.reduce((sum, p) => sum + p.hargaJual * p.jumlah, 0)
   const nominalDiskon = totalHargaJual * (discountPct / 100)
   const subTotal = totalHargaJual - nominalDiskon
   const shipping = Number(shippingCost) || 0
   const tax = computeTaxBreakdown({ subtotal: subTotal, shipping })
   return {
-    totalProdukQty: products.reduce((sum, p) => sum + p.jumlah, 0),
+    totalProdukQty: offered.reduce((sum, p) => sum + p.jumlah, 0),
     totalHargaBeli,
     totalHargaJual,
     nominalDiskon,
@@ -95,7 +99,7 @@ export function wizardSummary(
     dpp: tax.dppNilaiLain,
     ppn: tax.ppnAmount,
     grandTotal: tax.grandTotal,
-    profit: products.length > 0 ? subTotal - totalHargaBeli : 0,
+    profit: offered.length > 0 ? subTotal - totalHargaBeli : 0,
   }
 }
 
@@ -153,9 +157,23 @@ export function unitIdIndex(
   return m
 }
 
-// Every line's unit is known.
-export function unitsKnown(products: ProductItem[], unitIdByCode: Map<string, number>): boolean {
-  return products.every((p) => unitIdByCode.has(p.satuan.toUpperCase()))
+// Why a line's unit fails.
+// Null when the unit is a known code. An RFQ often carries units the
+// catalog does not use (PC, EA, ROLL), and such a line cannot be saved
+// until a known unit is picked for it.
+export function unitIssue(satuan: string, unitIdByCode: Map<string, number>): string | null {
+  // Same lookup as the submit, so a passing line always sends a unit id.
+  if (unitIdByCode.has(satuan.toUpperCase())) return null
+  const code = satuan.trim()
+  return code ? `Satuan "${code}" tidak dikenal.` : "Satuan belum diisi."
+}
+
+// Lines with an unknown unit.
+export function countUnknownUnits(
+  products: ProductItem[],
+  unitIdByCode: Map<string, number>,
+): number {
+  return products.filter((p) => unitIssue(p.satuan, unitIdByCode) !== null).length
 }
 
 // Values the wizard edits.

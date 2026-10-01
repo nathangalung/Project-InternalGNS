@@ -380,3 +380,56 @@ describe("wizard line identity", () => {
     expect(toItemInput(wiz, 3).requestedName).toBe("Tali")
   })
 })
+
+describe("vendor and no-offer round trip", () => {
+  it("loads the vendor and the no-offer flag from a stored line", () => {
+    const p = toWizardProduct(
+      item({ vendorProductId: 5, vendorId: 9, vendorName: "Vendor Lama", isAvailable: false }),
+      1,
+      "PCS",
+    )
+    expect([p.vendor, p.vendorId, p.vendorProductId, p.noOffer]).toEqual([
+      "Vendor Lama",
+      9,
+      5,
+      true,
+    ])
+  })
+
+  it("sends a picked vendor that is not linked yet", () => {
+    const p = toWizardProduct(item({ isAvailable: true }), 1, "PCS")
+    const input = toItemInput({ ...p, vendorProductId: undefined, vendorId: 9 }, 3)
+    expect([input.vendorId, input.vendorProductId, input.isAvailable]).toEqual([
+      9,
+      undefined,
+      undefined,
+    ])
+  })
+
+  it("does not send the vendor id once the link exists", () => {
+    const p = toWizardProduct(item({ vendorProductId: 5, vendorId: 9 }), 1, "PCS")
+    expect(toItemInput(p, 3).vendorId).toBeUndefined()
+  })
+
+  it("sends a no-offer line unpriced and without a vendor", () => {
+    const p = toWizardProduct(item({ vendorProductId: 5, vendorId: 9 }), 1, "PCS")
+    const input = toItemInput({ ...p, noOffer: true, hargaJual: 150, hargaBeli: 90 }, 3)
+    expect(input).toMatchObject({ isAvailable: false, sellingPrice: "0" })
+    expect(input.costPrice).toBeUndefined()
+    expect([input.vendorId, input.vendorProductId]).toEqual([undefined, undefined])
+  })
+})
+
+describe("detail rows", () => {
+  it("carry the vendor and the no-offer flag", () => {
+    const [offered, notOffered] = toQuotationData(
+      detail([
+        item({ vendorName: "Vendor Lama" }),
+        item({ id: 2, lineNumber: 2, isAvailable: false }),
+      ]),
+      () => "",
+    ).products
+    expect([offered.vendor, offered.noOffer]).toEqual(["Vendor Lama", false])
+    expect(notOffered.noOffer).toBe(true)
+  })
+})

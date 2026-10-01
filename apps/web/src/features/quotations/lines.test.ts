@@ -4,13 +4,16 @@ import { problem } from "@/test/problem"
 import type { ProblemDetail } from "@/types/api"
 import {
   countInvalidQty,
+  isLineComplete,
   isValidQty,
+  lineGaps,
   parseQty,
   qtyErrorIndexes,
   qtyErrorsById,
   requestDiffers,
   requestedCode,
 } from "./lines"
+import type { ProductItem } from "./wizard"
 
 describe("parseQty value", () => {
   it("keeps zero and negatives so they can be flagged", () => {
@@ -128,5 +131,35 @@ describe("qtyErrorIndexes odd 422 bodies", () => {
   it("drops an index past the last card", () => {
     const byIndex = new Map([[5, "Jumlah harus lebih dari 0."]])
     expect(qtyErrorsById([{ id: 1 }], byIndex)).toEqual({})
+  })
+})
+
+describe("line completeness", () => {
+  const base: ProductItem = {
+    id: 1,
+    itemId: 3,
+    vendorProductId: 7,
+    nama: "A",
+    kodeImpa: "",
+    requestedNama: "A",
+    requestedKodeImpa: "",
+    vendor: "V",
+    jumlah: 1,
+    satuan: "PCS",
+    hargaBeli: 10,
+    hargaJual: 20,
+  }
+
+  it.each<[string, Partial<ProductItem>, string[]]>([
+    ["a complete line", {}, []],
+    ["a vendor picked but not linked yet", { vendorProductId: undefined, vendorId: 4 }, []],
+    ["no product", { itemId: undefined }, ["produk"]],
+    ["no vendor", { vendorProductId: undefined, vendor: "" }, ["vendor"]],
+    ["nothing priced", { hargaBeli: 0, hargaJual: 0 }, ["harga beli", "harga jual"]],
+    ["no offer, nothing priced", { noOffer: true, hargaJual: 0, hargaBeli: 0, vendor: "" }, []],
+  ])("%s", (_name, over, want) => {
+    const line = { ...base, ...over }
+    expect(lineGaps(line)).toEqual(want)
+    expect(isLineComplete(line)).toBe(want.length === 0)
   })
 })

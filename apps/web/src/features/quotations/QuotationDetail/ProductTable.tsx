@@ -184,6 +184,11 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
                             Diminta: {reqNama}
                           </div>
                         )}
+                        {p.noOffer && (
+                          <span className="mt-1 inline-block rounded-[4px] bg-[#F3F4F6] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.4px] text-[#374151]">
+                            Tidak Ditawarkan
+                          </span>
+                        )}
                       </td>
                       <td className={`${ui.tdCenter} truncate`}>{p.qty}</td>
                       <td className={`${ui.tdCenter} truncate`}>{p.satuan}</td>

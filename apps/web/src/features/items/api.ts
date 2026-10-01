@@ -6,6 +6,7 @@ import type {
   ItemPriceHistoryRow,
   ItemRow,
   ItemVendorRow,
+  LineRecommendation,
   MatchRowInput,
   MatchRowsInput,
   MatchRowsResponse,
@@ -145,4 +146,16 @@ export async function updateImage(id: number, objectKey: string): Promise<void> 
 
 export async function removeImage(id: number): Promise<void> {
   await apiRequest<void>({ path: `/items/${id}/image`, method: "DELETE" })
+}
+
+// Line defaults per item.
+// Vendor, harga beli and harga jual a quotation line starts from; see
+// fn_recommend_lines. A client id prefers that client's own history.
+export async function recommend(
+  itemIds: number[],
+  clientId?: number,
+): Promise<LineRecommendation[]> {
+  const qs = new URLSearchParams({ itemIds: itemIds.join(",") })
+  if (clientId) qs.set("clientId", String(clientId))
+  return apiRequest<LineRecommendation[]>({ path: `/items/recommendations?${qs}` })
 }
