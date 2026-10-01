@@ -32,12 +32,12 @@ func discountedPOWithInvoice(t *testing.T, tx pgx.Tx) int64 {
 		DiscountPct:     "10",
 		ShippingAddress: &addr,
 		ShippingCost:    &cost,
-		Items: []quotations.CreateItem{{
+		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{
 			RequestedName: "Discounted Product",
 			Qty:           "3",
 			UnitID:        seedUnitID,
 			SellingPrice:  "100000",
-		}},
+		}}),
 	}, seedUserID)
 	require.NoError(t, err)
 	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "sent", nil, seedUserID))

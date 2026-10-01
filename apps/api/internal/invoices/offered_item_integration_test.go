@@ -51,13 +51,13 @@ func offeredItemPOWithInvoice(t *testing.T, tx pgx.Tx, offered int64) int64 {
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
-		Items: []quotations.CreateItem{{
+		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{
 			RequestedName: requestText,
 			OfferedItemID: &offered,
 			Qty:           "1",
 			UnitID:        seedUnitID,
 			SellingPrice:  "100000",
-		}},
+		}}),
 	}, seedUserID)
 	require.NoError(t, err)
 	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "sent", nil, seedUserID))

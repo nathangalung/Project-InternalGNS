@@ -35,7 +35,15 @@ func TestRepo_TotalPurchase_ExcludesCancelledPO(t *testing.T) {
 		VALUES ($1, $2, $3, 0, 10000, 10000, 0, 'sent', $4, $4)
 		RETURNING id, grand_total::text`,
 		"SQ-BATAL-"+name, clientID, name, seedUserID).Scan(&quotationID, &grandTotal))
-	_, err := tx.Exec(ctx, `SELECT fn_change_quotation_status($1, 'accepted', $2)`, quotationID, seedUserID)
+	// Accepting needs one offered line.
+	_, err := tx.Exec(ctx, `
+		INSERT INTO quotation_items (quotation_id, line_number, item_type, requested_name,
+		                             offered_item_id, vendor_product_id, qty, unit_id,
+		                             selling_price, cost_price, discount_pct, created_by)
+		VALUES ($1, 1, 'product', 'Test Fixture Item', 9000001, 9000001, 1, 19, 10000, 5000, 0, $2)`,
+		quotationID, seedUserID)
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx, `SELECT fn_change_quotation_status($1, 'accepted', $2)`, quotationID, seedUserID)
 	require.NoError(t, err)
 
 	update := clients.UpdateClientRequest{Name: name, CountryCode: "IDN", IsActive: true}

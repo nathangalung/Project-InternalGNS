@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_quotation_status (deployed by migration 00073).
+-- Canonical current body of fn_change_quotation_status (deployed by migration 00077).
 -- Validates the transition under a FOR UPDATE lock, blocks finalizing a
 -- quotation with unpriced products (ERRCODE P0100), records history, and
 -- creates the purchase order on acceptance.
@@ -9,6 +9,7 @@ AS $function$
 DECLARE
   v_old_status VARCHAR(20);
   v_valid      BOOLEAN;
+  v_incomplete INTEGER;
 BEGIN
   SELECT status INTO v_old_status
   FROM quotations
@@ -52,11 +53,39 @@ BEGIN
       USING ERRCODE = 'P0014';
   END IF;
 
-  IF p_new_status IN ('sent','accepted') THEN
+  -- A draft may hold unfinished lines; what is sent must be complete.
+  IF p_new_status = 'sent' THEN
+    SELECT count(*) INTO v_incomplete
+    FROM quotation_items
+    WHERE quotation_id = p_quotation_id
+      AND item_type = 'product'
+      AND is_available
+      AND (offered_item_id IS NULL
+           OR unit_id IS NULL
+           OR vendor_product_id IS NULL
+           OR COALESCE(cost_price, 0) <= 0
+           OR selling_price IS NULL OR selling_price <= 0);
+    IF v_incomplete > 0 THEN
+      RAISE EXCEPTION '% baris produk belum lengkap. Isi produk, satuan, vendor, harga beli, dan harga jual sebelum quotation dikirim.', v_incomplete
+        USING ERRCODE = 'P0014';
+    END IF;
+  END IF;
+
+  IF p_new_status = 'accepted' THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM quotation_items
+      WHERE quotation_id = p_quotation_id
+        AND item_type = 'product'
+        AND is_available
+    ) THEN
+      RAISE EXCEPTION 'Tidak ada produk yang ditawarkan di quotation ini, jadi tidak ada yang bisa disetujui.'
+        USING ERRCODE = 'P0014';
+    END IF;
     IF EXISTS (
       SELECT 1 FROM quotation_items
       WHERE quotation_id = p_quotation_id
         AND item_type = 'product'
+        AND is_available
         AND (selling_price IS NULL OR selling_price <= 0)
     ) THEN
       RAISE EXCEPTION 'Quotation % masih memiliki baris produk tanpa harga jual.', p_quotation_id

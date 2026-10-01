@@ -22,14 +22,14 @@ func acceptedQuotationWithOffer(t *testing.T, tx pgx.Tx, requested string, offer
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
-		Items: []quotations.CreateItem{{
+		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{
 			RequestedName: requested,
 			RequestedImpa: strPtr("999999"),
 			OfferedItemID: offered,
 			Qty:           "2",
 			UnitID:        seedUnitID,
 			SellingPrice:  "100000",
-		}},
+		}}),
 	}, seedUserID)
 	require.NoError(t, err)
 	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "sent", nil, seedUserID))
@@ -62,12 +62,6 @@ func TestPurchaseOrder_SnapshotsLineIdentity(t *testing.T) {
 			offered:  insertUncodedItem,
 			wantName: catalogName,
 			wantCode: func(*testing.T, pgx.Tx, *int64) *string { return nil },
-		},
-		{
-			name:     "unmatched request",
-			offered:  func(*testing.T, pgx.Tx) *int64 { return nil },
-			wantName: func(*testing.T, pgx.Tx, *int64) string { return "tolong carikan punching tool" },
-			wantCode: func(*testing.T, pgx.Tx, *int64) *string { return strPtr("999999") },
 		},
 	}
 	for _, tc := range cases {

@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_purchase_order (deployed by migration 00073).
+-- Canonical current body of fn_create_purchase_order (deployed by migration 00077).
 CREATE OR REPLACE FUNCTION public.fn_create_purchase_order(p_quotation_id bigint, p_user_id bigint)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -49,6 +49,8 @@ BEGIN
   FROM quotation_items qi
   LEFT JOIN items oi ON oi.id = qi.offered_item_id
   WHERE qi.quotation_id = p_quotation_id
+    -- A Tidak Ditawarkan request is never ordered.
+    AND (qi.item_type <> 'product' OR qi.is_available)
   ORDER BY qi.line_number;
 
   RETURN v_po_id;

@@ -49,10 +49,12 @@ type scenarioState struct {
 	invoiceID   int64
 	cleaner     *testutil.Cleaner
 	itemID      int64
-	roles       *roleUsers
-	prefix      string
-	bearer      string
-	actedAs     bool
+	// offered marks items OfferLines created.
+	offered bool
+	roles   *roleUsers
+	prefix  string
+	bearer  string
+	actedAs bool
 }
 
 func (s *scenarioState) reset() error {
@@ -158,6 +160,14 @@ func (s *scenarioState) deliverQuotation(create quotations.CreateRequest) error 
 			create.Items[i].ShipDestination = &ship
 		}
 	}
+	lines := testutil.OfferLines(s.t, context.Background(), testutil.Pool(s.t), create.Items)
+	for i, l := range lines {
+		if create.Items[i].OfferedItemID == nil && l.OfferedItemID != nil {
+			s.cleaner.Item(*l.OfferedItemID)
+			s.offered = true
+		}
+	}
+	create.Items = lines
 	if err := s.sendRequest(http.MethodPost, "/quotations/", create); err != nil {
 		return err
 	}
@@ -767,6 +777,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner, roles *roleUsers) fun
 			state.poID = 0
 			state.invoiceID = 0
 			state.itemID = 0
+			state.offered = false
 			state.prefix = ""
 			state.bearer = ""
 			state.actedAs = false
@@ -774,7 +785,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner, roles *roleUsers) fun
 		})
 		// Free rows for the cleaner.
 		sc.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
-			if state.itemID == 0 && !state.actedAs {
+			if state.itemID == 0 && !state.offered && !state.actedAs {
 				return ctx, nil
 			}
 			if err := state.reset(); err != nil {

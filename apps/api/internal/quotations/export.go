@@ -120,8 +120,9 @@ func buildExportData(
 	d QuotationDetail, unitsByID map[int16]string, contactEmail, contactPhone, signerName string,
 ) exportData {
 	// Every total is the stored header, so the app, the PDF and the
-	// invoice agree. An unpriced line is No Offer: it adds nothing to
-	// total_produk and P0100 refuses to send it.
+	// invoice agree. A Tidak Ditawarkan line, or any unpriced one, prints
+	// No Offer and adds nothing to total_produk; an unpriced offered line
+	// cannot be sent (fn_change_quotation_status).
 	items := make([]exportItem, 0, len(d.Items))
 	productCount := 0
 	hasShipping := false
@@ -153,7 +154,7 @@ func buildExportData(
 			Unit:      pdfgen.LatexEscape(unitCode),
 			Request:   withCode(it.RequestedName, it.RequestedImpa),
 			Offer:     offerText(it),
-			HasOffer:  shipping || isPriced(it.SellingPrice),
+			HasOffer:  shipping || (it.IsAvailable && isPriced(it.SellingPrice)),
 			UnitPrice: pdfgen.FormatIDRCents(it.SellingPrice),
 			Amount:    pdfgen.FormatIDRCents(it.TotalSelling),
 		})

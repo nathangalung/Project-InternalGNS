@@ -30,13 +30,13 @@ func acceptedQuotationForCompany(t *testing.T, tx pgx.Tx, companyID int64) int64
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
 		CompanyClientID: companyID,
 		DiscountPct:     "0",
-		Items: []quotations.CreateItem{{
+		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{
 			RequestedName:   "Test Product",
 			Qty:             "2",
 			UnitID:          seedUnitID,
 			SellingPrice:    "100000",
 			ShipDestination: strPtr("Kapal Uji"),
-		}},
+		}}),
 	}, seedUserID)
 	require.NoError(t, err)
 	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "sent", nil, seedUserID))

@@ -251,3 +251,10 @@ WHERE irm.matched_item_id IS NOT NULL
   )
 ORDER BY score DESC, irm.match_count DESC
 LIMIT $2;
+
+-- name: items.recommend
+-- Line defaults per item: vendor, harga beli and harga jual. The rules are
+-- in fn_recommend_lines. $1=client id or NULL, $2=item ids.
+SELECT item_id, vendor_product_id, vendor_id, vendor_name,
+       cost_price::text, selling_price::text
+FROM fn_recommend_lines($1, $2);

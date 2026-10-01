@@ -24,9 +24,7 @@ func idPath(id int64, suffix string) string {
 
 // deliveryLine is the fixture product.
 func deliveryLine() []quotations.CreateItem {
-	return []quotations.CreateItem{{
-		RequestedName: "ITEM 1", Qty: "1", UnitID: defaultUnit, SellingPrice: "10000",
-	}}
+	return []quotations.CreateItem{offeredLine("ITEM 1", "1", "10000")}
 }
 
 func (s *scenarioState) createForVessel(vessel string, days int) error {

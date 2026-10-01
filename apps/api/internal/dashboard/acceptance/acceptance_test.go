@@ -29,6 +29,9 @@ const (
 	defaultUserID  int64 = 1
 	defaultCompany int64 = 1
 	defaultUnit    int16 = 19
+	// The seeded fixture item and its link.
+	seedItem       int64 = 9000001
+	seedVendorLink int64 = 9000001
 )
 
 type scenarioState struct {
@@ -93,11 +96,15 @@ func (s *scenarioState) emptyDomain() error {
 func (s *scenarioState) invoiceFor(qty, price, cost string) error {
 	// Work cannot start on a line without a shipping address.
 	ship := "Pelabuhan Tanjung Priok, Jakarta Utara"
+	// Sending needs a product and a vendor link.
+	offered, link := seedItem, seedVendorLink
 	create := quotations.CreateRequest{
 		CompanyClientID: defaultCompany,
 		DiscountPct:     "0",
 		Items: []quotations.CreateItem{{
 			RequestedName:   "Dashboard Product",
+			OfferedItemID:   &offered,
+			VendorProductID: &link,
 			Qty:             qty,
 			UnitID:          defaultUnit,
 			SellingPrice:    price,

@@ -348,3 +348,58 @@ func renderItemErr(w http.ResponseWriter, err error) {
 	}
 	httperr.RenderDBErr(w, err)
 }
+
+// maxRecommendIDs caps one request.
+// It matches the RFQ import's row cap, so one import is one call.
+const maxRecommendIDs = 500
+
+// Recommendations returns line defaults.
+// GET /items/recommendations?itemIds=1,2&clientId=3. clientId is optional;
+// without it no client's own history is preferred.
+func (h *Handler) Recommendations(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	ids, ok := parseIDList(q.Get("itemIds"))
+	if !ok || len(ids) == 0 || len(ids) > maxRecommendIDs {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{
+			"itemIds": "Isi 1 sampai 500 id produk, dipisah koma.",
+		}))
+		return
+	}
+	var clientID *int64
+	if raw := q.Get("clientId"); raw != "" {
+		id, err := strconv.ParseInt(raw, 10, 64)
+		if err != nil || id <= 0 {
+			httperr.Render(w, httperr.Unprocessable(map[string]string{"clientId": "id klien tidak valid"}))
+			return
+		}
+		clientID = &id
+	}
+	recs, err := h.repo.Recommend(r.Context(), clientID, ids)
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, recs)
+}
+
+// parseIDList reads comma-separated ids.
+// Every entry must be a positive integer; duplicates are kept once.
+func parseIDList(raw string) ([]int64, bool) {
+	if strings.TrimSpace(raw) == "" {
+		return nil, true
+	}
+	parts := strings.Split(raw, ",")
+	seen := make(map[int64]struct{}, len(parts))
+	out := make([]int64, 0, len(parts))
+	for _, p := range parts {
+		id, err := strconv.ParseInt(strings.TrimSpace(p), 10, 64)
+		if err != nil || id <= 0 {
+			return nil, false
+		}
+		if _, dup := seen[id]; !dup {
+			seen[id] = struct{}{}
+			out = append(out, id)
+		}
+	}
+	return out, true
+}

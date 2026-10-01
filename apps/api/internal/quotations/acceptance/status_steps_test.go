@@ -378,9 +378,7 @@ func (s *scenarioState) editRevision() error {
 	req, err := http.NewRequest(http.MethodPut, s.srv.URL+"/quotations/"+strconv.FormatInt(s.newID, 10),
 		bytes.NewReader(mustJSON(quotations.UpdateRequest{
 			DiscountPct: "5",
-			Items: []quotations.CreateItem{{
-				RequestedName: "BOLT M8", Qty: "10", UnitID: defaultUnit, SellingPrice: "20000",
-			}},
+			Items:       []quotations.CreateItem{offeredLine("BOLT M8", "10", "20000")},
 		})))
 	if err != nil {
 		return err
