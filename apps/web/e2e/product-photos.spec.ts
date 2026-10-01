@@ -46,7 +46,7 @@ function png(width: number, height: number, rgb: [number, number, number]): Buff
   ])
 }
 
-// Stored key, polled from the API.
+// Stored key from the API.
 const storedKey = (id: number) => async () =>
   (await api<Item>("GET", `/items/${id}`)).imageObjectKey ?? ""
 
@@ -106,7 +106,7 @@ test("a product photo is added, viewed, replaced and removed", async ({ page, se
   const confirm = page.getByRole("dialog", { name: "Hapus foto produk?" })
   await confirm.getByRole("button", { name: "Hapus Foto" }).click()
   await expect(confirm).toBeHidden()
-  await expect(page.getByRole("button", { name: "Tambah Foto" })).toBeVisible()
+  await expect(page.getByRole("button", { name: "Tambah Foto" })).toBeFocused()
   await expect(page.getByRole("button", { name: `Lihat foto ${item.name}` })).toHaveCount(0)
   await expect.poll(storedKey(item.id)).toBe("")
 })

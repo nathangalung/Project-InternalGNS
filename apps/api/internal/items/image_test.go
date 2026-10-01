@@ -147,7 +147,7 @@ func TestHandler_Image_Remove(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, missing.StatusCode)
 }
 
-// Clearing a missing row is not found.
+// Missing item clear fails.
 func TestRepo_ClearImage_MissingItem(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	err := items.NewRepo(tx, testutil.Store(t)).ClearImage(ctx, 999999999, seedUserID)

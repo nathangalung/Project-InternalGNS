@@ -4,7 +4,7 @@ export const MAX_IMAGE_EDGE = 1600
 // WebP quality for re-encoding.
 const QUALITY = 0.85
 
-// Light images inside the edge stay.
+// Light images inside edge stay.
 const KEEP_BYTES = 300 * 1024
 
 // Size within a square edge.

@@ -249,3 +249,26 @@ describe("useItemImage", () => {
     expect(m.presignImageDownload).toHaveBeenCalledWith(9)
   })
 })
+
+describe("useRemoveItemImage settling", () => {
+  it("stays pending until the item views have refetched", async () => {
+    m.removeImage.mockResolvedValue(undefined)
+    const { qc, result } = renderQueryHook(() => useRemoveItemImage())
+    let refetched: () => void = () => {}
+    vi.spyOn(qc, "invalidateQueries").mockReturnValue(
+      new Promise<void>((r) => {
+        refetched = r
+      }),
+    )
+    let settled = false
+    const run = result.current.mutateAsync(9).then(() => {
+      settled = true
+    })
+    await until(() => expect(qc.invalidateQueries).toHaveBeenCalledTimes(2))
+    await new Promise((r) => setTimeout(r, 20))
+    expect(settled).toBe(false)
+    refetched()
+    await run
+    expect(settled).toBe(true)
+  })
+})

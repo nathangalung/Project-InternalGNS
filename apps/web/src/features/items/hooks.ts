@@ -153,15 +153,17 @@ export function useRemoveItemImage() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => itemsApi.removeImage(id),
-    onSuccess: (_, id) => {
-      qc.invalidateQueries({ queryKey: queryKeys.items.detail(id) })
-      qc.invalidateQueries({ queryKey: queryKeys.items.all })
-    },
+    // Settle after the refetch, so the removed photo never shows again.
+    onSuccess: (_, id) =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: queryKeys.items.detail(id) }),
+        qc.invalidateQueries({ queryKey: queryKeys.items.all }),
+      ]),
     onError: (err) => toast.error(errorMessage(err, "Gagal menghapus foto produk.")),
   })
 }
 
-// Product image as a blob URL.
+// Product image as blob URL.
 // Empty while loading or when the product has none.
 export function useItemImage(id: number, objectKey: string | undefined): string {
   const { data } = useItemImageDownloadUrl(id, objectKey)

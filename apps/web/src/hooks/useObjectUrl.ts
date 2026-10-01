@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { fetchObjectUrl } from "@/lib/api-client"
 
-// Blob URL for a stored object.
+// Blob URL for stored object.
 //
 // Objects come through the authenticated API proxy, and the enforced CSP
 // allows images only from self, blob: and data:, so an image is fetched with

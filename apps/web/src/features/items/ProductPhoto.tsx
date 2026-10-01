@@ -29,15 +29,26 @@ export default function ProductPhoto({ product, canWrite, children }: ProductPho
   const upload = useUploadItemImage()
   const remove = useRemoveItemImage()
   const inputRef = useRef<HTMLInputElement>(null)
+  const pickRef = useRef<HTMLButtonElement>(null)
   const [local, setLocal] = useState("")
   const [viewing, setViewing] = useState(false)
   const [confirming, setConfirming] = useState(false)
+  const [refocus, setRefocus] = useState(false)
 
   // Revoke a replaced local copy.
   useEffect(() => {
     if (!local) return
     return () => URL.revokeObjectURL(local)
   }, [local])
+
+  // Focus survives a removal.
+  // The Hapus Foto button that opened the dialog is gone once the photo is,
+  // so focus moves to the add button after the dialog has let go.
+  useEffect(() => {
+    if (!refocus || confirming) return
+    pickRef.current?.focus()
+    setRefocus(false)
+  }, [refocus, confirming])
 
   const photo = local || (product.imageObjectKey ? stored : "")
   const hasPhoto = Boolean(product.imageObjectKey) || Boolean(local)
@@ -55,6 +66,7 @@ export default function ProductPhoto({ product, canWrite, children }: ProductPho
       onSuccess: () => {
         setLocal("")
         setConfirming(false)
+        setRefocus(true)
       },
     })
   }
@@ -102,6 +114,7 @@ export default function ProductPhoto({ product, canWrite, children }: ProductPho
               }}
             />
             <button
+              ref={pickRef}
               type="button"
               className={smallOutline}
               disabled={busy}
