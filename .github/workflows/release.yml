@@ -107,6 +107,11 @@ jobs:
             VITE_API_URL=${{ vars.VITE_API_URL }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,scope=${{ matrix.service }},mode=max,ignore-error=true
+          # The runtime stage installs OS packages, and its cached layer keys only
+          # on the Dockerfile line, so a cache hit would ship patches as old as
+          # the first build. A release always rebuilds it; build stages stay
+          # cached.
+          no-cache-filters: runtime
 
       - name: scan image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
@@ -131,5 +136,10 @@ jobs:
             VITE_API_URL=${{ vars.VITE_API_URL }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,scope=${{ matrix.service }},mode=max,ignore-error=true
+          # The runtime stage installs OS packages, and its cached layer keys only
+          # on the Dockerfile line, so a cache hit would ship patches as old as
+          # the first build. A release always rebuilds it; build stages stay
+          # cached.
+          no-cache-filters: runtime
           provenance: mode=max
           sbom: true
