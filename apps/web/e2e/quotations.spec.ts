@@ -209,7 +209,9 @@ test.describe("quotation wizard import and requests", () => {
       buffer: Buffer.from(csv),
     })
     await expect(
-      page.getByText("2 produk diimport (1 cocok katalog, 1 produk baru, harga kosong)."),
+      page.getByText(
+        "2 produk diimport (1 cocok katalog, 1 produk baru). 0 terisi otomatis; 2 perlu vendor dan harga sebelum dikirim.",
+      ),
     ).toBeVisible()
     await seed.adopt("item", fresh)
 
@@ -251,7 +253,9 @@ test.describe("quotation wizard import and requests", () => {
       buffer: file,
     })
     await expect(
-      page.getByText("2 produk diimport (1 cocok katalog, 1 produk baru, harga kosong)."),
+      page.getByText(
+        "2 produk diimport (1 cocok katalog, 1 produk baru). 0 terisi otomatis; 2 perlu vendor dan harga sebelum dikirim.",
+      ),
     ).toBeVisible()
     await seed.adopt("item", fresh)
     const main = page.locator("main")
@@ -278,6 +282,151 @@ test.describe("quotation wizard import and requests", () => {
         "Gagal memproses file: Berkas berisi 501 baris produk; paling banyak 500 per unggahan. Bagi berkas lalu unggah ulang.",
       ),
     ).toBeVisible()
+  })
+
+  // Import fills lines; drafts save unfinished.
+  // A matched line starts from this client's last deal: its vendor at the
+  // vendor's current harga beli, and the harga jual that was sent. A new
+  // product starts empty, and the draft still saves; it only has to be
+  // complete, or marked Tidak Ditawarkan, before it is sent.
+  test("an Excel RFQ fills lines from the last deal and sends once complete", async ({
+    page,
+    seed,
+  }) => {
+    const client = await seed.client()
+    const vendor = await seed.vendor()
+    const item = await seed.item({ vendor, cost: 100_000 })
+    const deal = await seed.quotation({ client, lines: [{ item, qty: 1, price: 150_000 }] })
+    await seed.send(deal.id)
+    const fresh = `Qzvx ${seed.prefix.slice(3).toLowerCase()} baru`
+    const file = xlsx({
+      rows: [
+        ["No", "Kode IMPA", "Nama", "Jumlah", "Satuan"],
+        [1, item.impaCode, item.name, 3, "PCS"],
+        [2, null, fresh, 2, "PC"],
+      ],
+    })
+
+    await page.goto("/quotations/add")
+    await page.getByLabel("Cari klien").fill(seed.prefix)
+    await page.getByRole("button", { name: new RegExp(client.name) }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.locator('input[type="file"][accept=".csv,.xlsx"]').setInputFiles({
+      name: "permintaan.xlsx",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      buffer: file,
+    })
+    await expect(
+      page.getByText(
+        "2 produk diimport (1 cocok katalog, 1 produk baru). 1 terisi otomatis; 1 perlu vendor dan harga sebelum dikirim. 1 produk perlu satuan yang dikenal; pilih lewat tombol edit.",
+      ),
+    ).toBeVisible()
+    await seed.adopt("item", fresh)
+
+    const main = page.locator("main")
+    await expect(main).toContainText(vendor.name)
+    await expect(main).toContainText("Rp 100.000")
+    await expect(main).toContainText("Rp 150.000")
+    await expect(main).toContainText("Belum lengkap: vendor, harga beli, harga jual")
+    await expect(
+      page.getByRole("alert").filter({ hasText: 'Satuan "PC" tidak dikenal.' }),
+    ).toBeVisible()
+
+    // A known unit is the one thing a draft cannot do without.
+    await page.getByRole("button", { name: "Edit produk 2" }).click()
+    const product = page.getByRole("dialog", { name: "Edit Produk Quotation" })
+    await product.getByRole("combobox", { name: "Satuan *" }).click()
+    await page.getByRole("option", { name: /^PCS/ }).click()
+    await product.getByRole("button", { name: "Simpan Perubahan" }).click()
+    await expect(product).toBeHidden()
+    await expect(page.getByText('Satuan "PC" tidak dikenal.')).toHaveCount(0)
+    await page.getByRole("button", { name: "Tidak Ditawarkan produk 2" }).click()
+    await expect(main).toContainText("Tidak ditawarkan ke klien.")
+
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByLabel("Waktu Pengiriman (Hari) *").fill("7")
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByLabel("JATUH TEMPO PEMBAYARAN (HARI) *").fill("30")
+    await page.getByLabel("BERLAKU SAMPAI (HARI) *").fill("14")
+    await page.getByRole("button", { name: "Buat Penawaran" }).click()
+    await expect(page).toHaveURL(/\/quotations$/)
+    await page.getByPlaceholder("Cari penawaran, klien, atau nomor...").fill(seed.prefix)
+    const rows = page.getByRole("row", { name: new RegExp(client.name) })
+    await expect(rows).toHaveCount(2)
+    const created = await seed.adoptNewestQuotation(client)
+
+    await page.goto(`/quotations/${created}`)
+    await expect(page.getByText("Tidak Ditawarkan", { exact: true })).toBeVisible()
+    const menu = await openStatusMenu(page, "Draf")
+    await menu.getByRole("menuitem", { name: "Dikirim" }).click()
+    await page
+      .getByRole("dialog", { name: "Ubah Status ke Dikirim" })
+      .getByRole("button", { name: "Simpan Status" })
+      .click()
+    await expectStatus(page, "Dikirim")
+    const sent = await seed.getQuotation(created)
+    const [offered, notOffered] = sent.items.filter((l) => l.itemType === "product")
+    expect([offered.vendorName, offered.costPrice, offered.sellingPrice]).toEqual([
+      vendor.name,
+      "100000.00",
+      "150000.00",
+    ])
+    expect([notOffered.isAvailable, notOffered.sellingPrice]).toEqual([false, "0.00"])
+  })
+
+  // An unfinished line blocks sending.
+  test("a draft with an unpriced line is refused at Dikirim", async ({ page, seed }) => {
+    const client = await seed.client()
+    const q = await seed.quotation({
+      client,
+      lines: [{ freeText: seed.name("Permintaan bebas"), qty: 1, price: 0 }],
+    })
+    await page.goto(`/quotations/${q.id}`)
+    const menu = await openStatusMenu(page, "Draf")
+    await menu.getByRole("menuitem", { name: "Dikirim" }).click()
+    await page
+      .getByRole("dialog", { name: "Ubah Status ke Dikirim" })
+      .getByRole("button", { name: "Simpan Status" })
+      .click()
+    await expect(
+      page.getByText(
+        "1 baris produk belum lengkap. Isi produk, satuan, vendor, harga beli, dan harga jual sebelum quotation dikirim.",
+      ),
+    ).toBeVisible()
+    await page
+      .getByRole("dialog", { name: "Ubah Status ke Dikirim" })
+      .getByRole("button", { name: "Batal" })
+      .click()
+    await expectStatus(page, "Draf")
+  })
+
+  // Picking a product fills it in.
+  // Any active vendor is searchable, not only the product's own.
+  test("a product picked by hand starts from its recommendation", async ({ page, seed }) => {
+    const client = await seed.client()
+    const vendor = await seed.vendor()
+    const other = await seed.vendor({ label: "Vendor Lain" })
+    const item = await seed.item({ vendor, cost: 80_000 })
+    const deal = await seed.quotation({ client, lines: [{ item, qty: 1, price: 125_000 }] })
+    await seed.send(deal.id)
+
+    await page.goto("/quotations/add")
+    await page.getByLabel("Cari klien").fill(seed.prefix)
+    await page.getByRole("button", { name: new RegExp(client.name) }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Tambah Produk" }).click()
+    const product = page.getByRole("dialog", { name: "Tambah Produk ke Quotation" })
+    await product.getByLabel("Kode IMPA/Nama Produk Request *").fill(item.name)
+    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
+    await product.getByLabel("Kode IMPA/Nama Produk *", { exact: true }).fill(item.name)
+    await page.getByRole("option", { name: `${item.impaCode} - ${item.name}` }).click()
+    await expect(product.getByLabel("Nama Vendor *")).toHaveValue(vendor.name)
+    await expect(product.getByLabel("Harga Beli Satuan *")).toHaveValue("80000")
+    await expect(product.getByLabel("Harga Jual Satuan *")).toHaveValue("125000")
+
+    await product.getByLabel("Jumlah Produk *").fill("2")
+    await product.getByLabel("Nama Vendor *").fill(other.name)
+    await expect(page.getByRole("option", { name: new RegExp(other.name) })).toBeVisible()
   })
 
   test("a draft's client requests are added, reviewed and removed", async ({ page, seed }) => {
