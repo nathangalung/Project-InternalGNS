@@ -5,6 +5,7 @@ import {
   ApiError,
   apiRequest,
   extractErrorMessage,
+  openStream,
   parseProblem,
   transferFailureMessage,
   uploadAsset,
@@ -165,6 +166,27 @@ describe("failed responses", () => {
     expect(err).toBeInstanceOf(ApiError)
     expect((err as ApiError).message).toBe("Email atau kata sandi salah.")
     expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("opens an event stream and refuses like any request", async () => {
+    const fetchMock = respond(200, "event: ready\n\n")
+    const signal = new AbortController().signal
+    const res = await openStream("/quotations/1/events", signal)
+    await expect(res.text()).resolves.toBe("event: ready\n\n")
+    const init = (fetchMock.mock.calls[0] as unknown[] | undefined)?.[1] as RequestInit | undefined
+    expect(init?.signal).toBe(signal)
+    expect(new Headers(init?.headers).get("accept")).toBe("text/event-stream")
+
+    respond(404, JSON.stringify(problem(404, { detail: "quotation not found" })))
+    const err = await openStream("/quotations/2/events", signal).catch((e: unknown) => e)
+    expect((err as ApiError).status).toBe(404)
+  })
+
+  it("keeps a request alive past the page when asked", async () => {
+    const fetchMock = respond(200, "")
+    await apiRequest({ path: "/x", method: "DELETE", authed: false, keepalive: true })
+    const init = (fetchMock.mock.calls[0] as unknown[] | undefined)?.[1] as RequestInit | undefined
+    expect(init?.keepalive).toBe(true)
   })
 
   it("turns a non-JSON error page into a typed error", async () => {

@@ -4,29 +4,35 @@ import {
   buildQuery,
   downloadPdf,
   downloadXlsx,
+  openStream,
   type PaginatedList,
   postForm,
 } from "@/lib/api-client"
 import type {
   MatchRowInput,
+  QuotationAddLinesInput,
   QuotationContactInput,
   QuotationCreated,
   QuotationCreateInput,
   QuotationDetail,
+  QuotationHeaderInput,
+  QuotationItemInput,
   QuotationItemRequestCreateInput,
   QuotationItemRequestRow,
   QuotationItemRequestUpdateInput,
+  QuotationLineOfferInput,
+  QuotationLinesAdded,
   QuotationListParams,
   QuotationListRow,
+  QuotationLockGranted,
+  QuotationLockInput,
   QuotationReviseInput,
   QuotationRevisionRow,
   QuotationRfqRows,
-  QuotationSaved,
   QuotationSendInput,
   QuotationStatus,
   QuotationStatusCount,
   QuotationStatusInput,
-  QuotationUpdateInput,
 } from "@/types/api"
 
 function buildListQuery(params: QuotationListParams): string {
@@ -81,17 +87,75 @@ export async function create(input: QuotationCreateInput): Promise<QuotationCrea
   })
 }
 
-export async function update(
-  id: number,
-  input: QuotationUpdateInput,
-  rowVersion: number,
-): Promise<QuotationSaved> {
-  return apiRequest<QuotationSaved>({
-    path: `/quotations/${id}`,
-    method: "PUT",
-    body: input,
-    headers: { "If-Match": String(rowVersion) },
+// Live edit of a draft.
+//
+// Each part (the header, or one line) is claimed before it is edited, and a
+// save needs the claim. The server refuses a part someone else holds with a
+// 409 edit_locked whose detail names the editor.
+
+// Claim or renew a part.
+export async function lockPart(id: number, part: string): Promise<QuotationLockGranted> {
+  return apiRequest<QuotationLockGranted>({
+    path: `/quotations/${id}/locks`,
+    method: "POST",
+    body: { part } satisfies QuotationLockInput,
   })
+}
+
+// Free a claim.
+//
+// On pagehide it is sent keepalive, so a closed tab frees its parts at once.
+export async function unlockPart(id: number, part: string, keepalive = false): Promise<void> {
+  await apiRequest<void>({
+    path: `/quotations/${id}/locks/${encodeURIComponent(part)}`,
+    method: "DELETE",
+    ...(keepalive && { keepalive }),
+  })
+}
+
+export async function addLines(id: number, items: QuotationItemInput[]): Promise<number[]> {
+  const res = await apiRequest<QuotationLinesAdded>({
+    path: `/quotations/${id}/lines`,
+    method: "POST",
+    body: { items } satisfies QuotationAddLinesInput,
+  })
+  return res.ids
+}
+
+export async function updateLine(
+  id: number,
+  lineId: number,
+  item: QuotationItemInput,
+): Promise<void> {
+  await apiRequest<void>({ path: `/quotations/${id}/lines/${lineId}`, method: "PUT", body: item })
+}
+
+export async function setLineOffer(
+  id: number,
+  lineId: number,
+  isAvailable: boolean,
+): Promise<void> {
+  await apiRequest<void>({
+    path: `/quotations/${id}/lines/${lineId}/offer`,
+    method: "PATCH",
+    body: { isAvailable } satisfies QuotationLineOfferInput,
+  })
+}
+
+export async function deleteLine(id: number, lineId: number): Promise<void> {
+  await apiRequest<void>({ path: `/quotations/${id}/lines/${lineId}`, method: "DELETE" })
+}
+
+// Save the claimed header.
+//
+// It replaces every header field, so callers build it with headerInput.
+export async function updateHeader(id: number, input: QuotationHeaderInput): Promise<void> {
+  await apiRequest<void>({ path: `/quotations/${id}/header`, method: "PUT", body: input })
+}
+
+// Change notices for one draft.
+export function openEvents(id: number, signal: AbortSignal): Promise<Response> {
+  return openStream(`/quotations/${id}/events`, signal)
 }
 
 export async function changeStatus(

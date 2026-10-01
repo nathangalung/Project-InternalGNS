@@ -3,35 +3,53 @@ import { useCallback, useEffect, useMemo, useRef } from "react"
 import LoadingState from "@/components/shared/LoadingState"
 import NotFoundState from "@/components/shared/NotFoundState"
 import StateMessage from "@/components/shared/StateMessage"
+import { useMe } from "@/features/auth/hooks"
 import { clientCardInfo } from "@/features/clients/clientCard"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import { useClient, useClientContacts } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
+import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
+import * as quotationsApi from "@/features/quotations/api"
 import {
+  useEditLocks,
+  useLiveChange,
   useQuotation,
-  useUpdateQuotation,
+  useQuotationLive,
   useUpdateQuotationContact,
 } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
-import { isVersionConflict } from "@/lib/errors"
 import { formatNumber as formatRp } from "@/lib/format"
 import { ui } from "@/lib/ui"
-import type { QuotationDetail, QuotationItemInput, QuotationUpdateInput } from "@/types/api"
+import type { QuotationDetail } from "@/types/api"
 import { toItemInput } from "./adapters"
 import DiscountModal from "./DiscountModal"
+import { HEADER_PART, headerInput, linePart, lockOwners } from "./live"
 import Step1Client, { type Client } from "./Step1Client"
 import Step2Product from "./Step2Product"
 import Step3Shipping from "./Step3Shipping"
 import Step4Summary from "./Step4Summary"
 import { isEditable, quotationStatusLabel } from "./status"
 import { useQuotationWizard } from "./useQuotationWizard"
-import { seedFromDetail, WIZARD_STEPS as steps } from "./wizard"
+import { type ProductItem, seedFromDetail, WIZARD_STEPS as steps, upsertProduct } from "./wizard"
 import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
 
 type QuotationEditProps = {
   quotationId: string
 }
 
+// Who else holds the header
+const headerNotice =
+  "rounded-md border border-[rgba(245,158,11,0.3)] bg-[rgba(245,158,11,0.08)] px-3.5 py-2.5 text-xs font-medium text-[#92400E]"
+
+const ignore = () => undefined
+
+// Live edit of a saved draft.
+//
+// Every change is saved as it is made, so several users can work on one
+// draft: a line or the header is claimed before it is edited, and a part
+// another user holds is shown read-only with their name. The page follows
+// the stored draft through the change stream; Simpan saves the header and
+// the contact, then returns to the detail page.
 export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   const navigate = useNavigate()
   const { data: unitsData } = useUnits()
@@ -53,11 +71,6 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     discountPct,
     setDiscountPct,
     products,
-    setProducts,
-    deleteProduct,
-    toggleNoOffer,
-    incompleteLines,
-    saveProduct,
     prodPageSize,
     setProdPageSize,
     prodPage,
@@ -74,35 +87,37 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     setJatuhTempo,
     berlakuSampai,
     setBerlakuSampai,
-    gates: { isAlamatOk, isWaktuFilled, isTenggatWaktuFilled, hasContent },
+    gates: { isAlamatOk, isWaktuFilled, isTenggatWaktuFilled },
     summary,
     unitIdByCode,
-    unitsOk,
     unknownUnits,
     invalidQty,
-    qtyErrors,
-    recordQtyFailure,
+    incompleteLines,
     seed,
+    syncFromServer,
   } = useQuotationWizard(unitsData)
 
   const numericQuotationId = Number(quotationId)
   const hasNumericQuotationId = Number.isInteger(numericQuotationId) && numericQuotationId > 0
-  const {
-    data: detail,
-    isPending: isDetailPending,
-    refetch: refetchDetail,
-  } = useQuotation(hasNumericQuotationId ? numericQuotationId : undefined)
-  const updateMutation = useUpdateQuotation()
+  const qid = hasNumericQuotationId ? numericQuotationId : undefined
+  const { data: detail, isPending: isDetailPending } = useQuotation(qid)
   const updateContactMutation = useUpdateQuotationContact()
+  const live = useLiveChange(qid)
+  const locks = useEditLocks(qid)
+  const { data: me } = useMe()
+  const editable = detail ? isEditable(detail.status) : false
+  useQuotationLive(editable ? qid : undefined, detail?.locks, me?.id)
+  const owners = useMemo(() => lockOwners(detail?.locks ?? [], me?.id), [detail?.locks, me?.id])
+  const holdsHeader = locks.holds(HEADER_PART)
   // Fetch contacts by quotation's own company, not selected client.
   const { data: contacts = [] } = useClientContacts(detail?.companyClientId)
   const { data: clientRow } = useClient(detail?.companyClientId)
 
   // The client is fixed on edit.
   //
-  // PUT /quotations/{id} has no client field, so a different pick would be
-  // dropped silently. Step 1 shows the quotation's own client only; the
-  // summary reads its live data and the contact picked in step 1.
+  // The draft has no client edit, so a different pick would be dropped
+  // silently. Step 1 shows the quotation's own client only; the summary
+  // reads its live data and the contact picked in step 1.
   const lockedClient: Client | undefined = useMemo(() => {
     if (!detail) return undefined
     const contactId = selectedContactId ?? detail.contactId
@@ -138,27 +153,49 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     return m
   }, [unitsData])
 
-  // Blocks save on units, qty, address.
-  const canSave = products.length > 0 && invalidQty === 0 && unitsOk && isAlamatOk
-
-  // Seed steps from a quotation.
-  // A reseed after a save conflict also drops what the other user removed.
-  const hydrate = useCallback(
-    (d: QuotationDetail) => seed(seedFromDetail(d, unitNameById)),
-    [seed, unitNameById],
+  const toSeed = useCallback(
+    (d: QuotationDetail) => seedFromDetail(d, unitNameById),
+    [unitNameById],
   )
 
-  // Wizard state is seeded once, after both the quotation and the units it
-  // needs to resolve unit codes have arrived. Any later refetch of the same
-  // quotation leaves entered steps alone; the route keys this component by id,
-  // so a different quotation remounts and seeds again. A save conflict reseeds
-  // explicitly.
+  // Seed once, then follow the server.
+  //
+  // The first load fills every step. Each later load (a change by anyone)
+  // replaces the lines, and the header fields unless this user is editing
+  // them; read through a ref so that releasing the header does not resync
+  // from a load older than the save.
   const hydrated = useRef(false)
+  const holdsHeaderRef = useRef(holdsHeader)
+  holdsHeaderRef.current = holdsHeader
   useEffect(() => {
-    if (hydrated.current || !detail || !unitsData) return
-    hydrated.current = true
-    hydrate(detail)
-  }, [detail, unitsData, hydrate])
+    if (!detail || !unitsData) return
+    if (!hydrated.current) {
+      hydrated.current = true
+      seed(toSeed(detail))
+      return
+    }
+    syncFromServer(toSeed(detail), !holdsHeaderRef.current)
+  }, [detail, unitsData, seed, syncFromServer, toSeed])
+
+  // The header steps claim the header.
+  //
+  // Quietly: when another user holds it the steps show their name instead,
+  // and the claim is tried again once their hold ends.
+  const onHeaderStep = step >= 3
+  const { acquire, release } = locks
+  useEffect(() => {
+    if (!editable || !onHeaderStep || holdsHeader || owners.header) return
+    void acquire(HEADER_PART, { quiet: true })
+  }, [editable, onHeaderStep, holdsHeader, owners.header, acquire])
+
+  const headerFields = {
+    discountPct,
+    shippingAddress,
+    shippingTime,
+    shippingCost,
+    jatuhTempo,
+    berlakuSampai,
+  }
 
   const {
     totalProdukQty: summaryTotalProdukQty,
@@ -177,59 +214,118 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     void navigate({ to: "/quotations/$id", params: { id: quotationId } })
   }
 
-  // Someone saved first: reload theirs.
-  //
-  // Saving the stale wizard with the fresh rowVersion would silently
-  // overwrite their change, so every step is reseeded from the stored row.
-  async function reloadAfterConflict() {
-    const fresh = await refetchDetail()
-    if (!fresh.data) return
-    hydrate(fresh.data)
-    setStep(1)
+  // One live change; refusals toast in the hook.
+  function change(run: () => Promise<unknown>): Promise<void> {
+    return live.mutateAsync(run).then(ignore, ignore)
   }
 
-  function handleSave() {
-    if (!hasNumericQuotationId || !detail || !canSave) return
-    const items: QuotationItemInput[] = products.map((p) =>
-      toItemInput(p, unitIdByCode.get(p.satuan.toUpperCase()) ?? 0),
-    )
-    const shipDays = Number(shippingTime)
-    // PUT replaces the row, so fields the wizard does not edit are sent back.
-    const input: QuotationUpdateInput = {
-      clientRefNo: detail.clientRefNo ?? undefined,
-      vesselName: detail.vesselName ?? undefined,
-      notes: detail.notes ?? undefined,
-      paymentTerms: jatuhTempo.trim() ? `${jatuhTempo.trim()} days` : undefined,
-      validityDays: Number(berlakuSampai) > 0 ? Number(berlakuSampai) : undefined,
-      discountPct: String(discountPct),
-      shippingAddress: shippingAddress || undefined,
-      shippingDays: Number.isFinite(shipDays) && shipDays > 0 ? shipDays : undefined,
-      shippingCost: shippingCost || undefined,
-      items,
+  function lineInput(p: ProductItem) {
+    return toItemInput(p, unitIdByCode.get(p.satuan.toUpperCase()) ?? 0)
+  }
+
+  // Claim a line, then open it.
+  async function openLine(p: ProductItem) {
+    if (!(await acquire(linePart(p.id)))) return
+    setEditingProduct(p)
+    setShowProductAdd(true)
+  }
+
+  // The line being saved keeps its claim until the save lands.
+  const savingLine = useRef<number | null>(null)
+
+  function saveLine(data: ProductAddFormData) {
+    if (qid === undefined) return
+    const editing = editingProduct
+    const [line] = upsertProduct(editing ? [editing] : [], editing, data)
+    if (!editing) {
+      void change(() => quotationsApi.addLines(qid, [lineInput(line)]))
+      return
     }
-    updateMutation.mutate(
-      { id: numericQuotationId, input, rowVersion: detail.rowVersion },
-      {
-        onSuccess: () => {
-          // Chain contact update when selection changed.
-          if (selectedContactId !== undefined && selectedContactId !== detail.contactId) {
-            updateContactMutation.mutate(
-              { id: numericQuotationId, contactId: selectedContactId },
-              { onSuccess: goToDetail },
-            )
-          } else {
-            goToDetail()
-          }
-        },
-        onError: (err) => {
-          if (isVersionConflict(err)) {
-            void reloadAfterConflict()
-            return
-          }
-          recordQtyFailure(err)
-        },
-      },
-    )
+    savingLine.current = editing.id
+    void change(() => quotationsApi.updateLine(qid, editing.id, lineInput(line))).finally(() => {
+      savingLine.current = null
+      void release(linePart(editing.id))
+    })
+  }
+
+  // Closing unsaved frees the line.
+  function setLineOpen(open: boolean) {
+    if (!open && editingProduct && savingLine.current !== editingProduct.id) {
+      void release(linePart(editingProduct.id))
+    }
+    setProductAddOpen(open)
+  }
+
+  // A discount opened from the product step claims the header for itself.
+  const discountClaim = useRef(false)
+
+  async function openDiscount() {
+    if (!holdsHeader) {
+      if (!(await acquire(HEADER_PART))) return
+      discountClaim.current = true
+    }
+    setShowDiscountModal(true)
+  }
+
+  function closeDiscount(open: boolean) {
+    setShowDiscountModal(open)
+    if (open || !discountClaim.current) return
+    discountClaim.current = false
+    void release(HEADER_PART)
+  }
+
+  function saveDiscount(val: number) {
+    const own = discountClaim.current
+    discountClaim.current = false
+    setShowDiscountModal(false)
+    if (!detail || qid === undefined) return
+    setDiscountPct(val)
+    const input = headerInput(detail, { ...headerFields, discountPct: val })
+    void change(() => quotationsApi.updateHeader(qid, input)).finally(() => {
+      if (own) void release(HEADER_PART)
+    })
+  }
+
+  function toggleLine(id: number) {
+    const p = products.find((x) => x.id === id)
+    if (!p || qid === undefined) return
+    void change(() => quotationsApi.setLineOffer(qid, id, Boolean(p.noOffer)))
+  }
+
+  function deleteLine(id: number) {
+    if (qid === undefined) return
+    void change(() => quotationsApi.deleteLine(qid, id))
+  }
+
+  function importLines(lines: ProductItem[]) {
+    if (qid === undefined || lines.length === 0) return
+    void change(() => quotationsApi.addLines(qid, lines.map(lineInput)))
+  }
+
+  // The header needs a valid address and both terms before it is saved.
+  const headerReady = isAlamatOk && isTenggatWaktuFilled
+  const saving = live.isPending || updateContactMutation.isPending
+
+  async function handleSave() {
+    if (!detail || qid === undefined) return
+    if (holdsHeader) {
+      const input = headerInput(detail, headerFields)
+      try {
+        await live.mutateAsync(() => quotationsApi.updateHeader(qid, input))
+      } catch {
+        return
+      }
+      // Leaving releases it too; this only frees it sooner.
+      void release(HEADER_PART)
+    }
+    if (selectedContactId !== undefined && selectedContactId !== detail.contactId) {
+      updateContactMutation.mutate(
+        { id: qid, contactId: selectedContactId },
+        { onSuccess: goToDetail },
+      )
+      return
+    }
+    goToDetail()
   }
 
   if (!hasNumericQuotationId || (!detail && !isDetailPending)) {
@@ -241,7 +337,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     )
   }
   if (!detail) return <LoadingState label="Memuat quotation…" />
-  if (!isEditable(detail.status)) {
+  if (!editable) {
     return (
       <StateMessage
         title="Quotation tidak dapat diubah"
@@ -335,18 +431,10 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
               <button
                 type="button"
                 className={`${qe.submit} w-[148px]`}
-                disabled={
-                  !isTenggatWaktuFilled ||
-                  !hasContent ||
-                  !canSave ||
-                  updateMutation.isPending ||
-                  updateContactMutation.isPending
-                }
-                onClick={handleSave}
+                disabled={(holdsHeader && !headerReady) || saving}
+                onClick={() => void handleSave()}
               >
-                {updateMutation.isPending || updateContactMutation.isPending
-                  ? "Menyimpan..."
-                  : "Simpan"}
+                {saving ? "Menyimpan..." : "Simpan"}
               </button>
             )}
           </div>
@@ -367,6 +455,12 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         </div>
 
         {/* Render Step Components */}
+        {onHeaderStep && owners.header && (
+          <div role="status" className={headerNotice}>
+            Pengiriman, tenggat waktu dan diskon sedang diubah oleh {owners.header}. Bagian ini
+            dapat diubah lagi setelah selesai.
+          </div>
+        )}
         {step === 1 && (
           <Step1Client
             search=""
@@ -386,8 +480,10 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             products={products}
             unitIdByCode={unitIdByCode}
             clientId={detail?.companyClientId}
-            deleteProduct={deleteProduct}
-            toggleNoOffer={toggleNoOffer}
+            deleteProduct={deleteLine}
+            toggleNoOffer={toggleLine}
+            editProduct={(p) => void openLine(p)}
+            lockedBy={owners.lines}
             setEditingProduct={setEditingProduct}
             setShowProductAdd={setShowProductAdd}
             prodPageSize={prodPageSize}
@@ -396,7 +492,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             setProdPage={setProdPage}
             isRowDropdownOpen={isRowDropdownOpen}
             setIsRowDropdownOpen={setIsRowDropdownOpen}
-            setShowDiscountModal={setShowDiscountModal}
+            setShowDiscountModal={(show) => (show ? void openDiscount() : closeDiscount(false))}
             discountPct={discountPct}
             formatRp={formatRp}
             summaryTotalHargaBeli={summaryTotalHargaBeli}
@@ -405,9 +501,8 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             summarySubTotal={summarySubTotal}
             summaryDpp={summaryDpp}
             summaryPpn={summaryPpn}
-            onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
+            onImportProducts={importLines}
             quotationId={numericQuotationId}
-            qtyErrors={qtyErrors}
           />
         )}
         {step === 3 && (
@@ -421,6 +516,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             isAlamatOk={isAlamatOk}
             isWaktuFilled={isWaktuFilled}
             formatRp={formatRp}
+            readOnly={!holdsHeader}
           />
         )}
         {step === 4 && (
@@ -449,6 +545,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             invalidQtyCount={invalidQty}
             unknownUnitCount={unknownUnits}
             incompleteCount={incompleteLines}
+            readOnly={!holdsHeader}
           />
         )}
       </div>
@@ -456,18 +553,15 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
       {/* Modals */}
       <DiscountModal
         open={showDiscountModal}
-        onOpenChange={setShowDiscountModal}
+        onOpenChange={closeDiscount}
         initialDiscount={discountPct}
-        onSuccess={(val) => {
-          setDiscountPct(val)
-          setShowDiscountModal(false)
-        }}
+        onSuccess={saveDiscount}
       />
       <ProductAdd
         open={showProductAdd}
         initialData={editingProduct}
-        onOpenChange={setProductAddOpen}
-        onSuccess={saveProduct}
+        onOpenChange={setLineOpen}
+        onSuccess={saveLine}
         clientId={detail?.companyClientId}
         allowIncomplete
       />

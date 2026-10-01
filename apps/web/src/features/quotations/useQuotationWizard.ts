@@ -95,6 +95,20 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
     setJatuhTempo(s.jatuhTempo)
   }, [])
 
+  // Follow the stored draft live.
+  // Lines always follow the server; the header fields only when the caller
+  // is not editing them. Page, client and contact stay as the user left them.
+  const syncFromServer = useCallback((s: WizardSeed, header: boolean) => {
+    setProducts(s.products)
+    if (!header) return
+    setDiscountPct(s.discountPct)
+    setShippingAddress(s.shippingAddress)
+    setShippingTime(s.shippingTime)
+    setShippingCost(s.shippingCost)
+    setBerlakuSampai(s.berlakuSampai)
+    setJatuhTempo(s.jatuhTempo)
+  }, [])
+
   // Server qty errors, per line.
   function recordQtyFailure(err: unknown) {
     setQtyFail({ lines: products, byId: qtyErrorsById(products, qtyErrorIndexes(err)) })
@@ -152,5 +166,6 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
     qtyErrors: qtyFail?.lines === products ? qtyFail.byId : {},
     recordQtyFailure,
     seed,
+    syncFromServer,
   }
 }

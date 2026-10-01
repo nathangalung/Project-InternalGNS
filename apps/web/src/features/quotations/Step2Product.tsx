@@ -17,14 +17,16 @@ const pageBtnActive = "bg-primary-700 font-bold text-white"
 const pageBtnNav = `flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100 disabled:cursor-not-allowed disabled:opacity-40 ${ui.focusRing}`
 const costRow = "flex justify-between text-xs text-[#4B5563]"
 const costValue = "font-semibold text-[#111827]"
-const cardIconBtn = `rounded-sm p-0.5 ${ui.focusRing}`
+const cardIconBtn = `rounded-sm p-0.5 disabled:cursor-not-allowed disabled:opacity-40 ${ui.focusRing}`
 
 // Line state badges and toggle
 const noOfferBadge =
   "mt-1 inline-block w-fit rounded-[4px] bg-[#F3F4F6] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.4px] text-[#374151]"
 const gapBadge =
   "mt-1 inline-block w-fit rounded-[4px] bg-[rgba(245,158,11,0.15)] px-1.5 py-0.5 text-[11px] font-semibold text-[#92400E]"
-const noOfferToggle = `rounded-md border border-dark-200 px-2 py-1 text-xs font-medium text-dark-700 transition hover:bg-dark-100 aria-pressed:border-dark-700 ${ui.focusRing}`
+const noOfferToggle = `rounded-md border border-dark-200 px-2 py-1 text-xs font-medium text-dark-700 transition hover:bg-dark-100 aria-pressed:border-dark-700 disabled:cursor-not-allowed disabled:opacity-40 ${ui.focusRing}`
+const editorBadge =
+  "mt-1 inline-block w-fit rounded-[4px] bg-primary-50 px-1.5 py-0.5 text-[11px] font-semibold text-primary-700"
 
 type Step2ProductProps = {
   products: ProductItem[]
@@ -56,6 +58,10 @@ type Step2ProductProps = {
   clientId?: number
   // Marks a line Tidak Ditawarkan
   toggleNoOffer?: (id: number) => void
+  // Opens a line for editing, when claiming it first
+  editProduct?: (p: ProductItem) => void
+  // Editor names of lines other users hold
+  lockedBy?: Record<number, string>
 }
 
 export default function Step2Product({
@@ -84,6 +90,8 @@ export default function Step2Product({
   unitIdByCode,
   clientId,
   toggleNoOffer,
+  editProduct,
+  lockedBy = {},
 }: Step2ProductProps) {
   // No unit warnings before the list loads
   const unitsReady = unitIdByCode.size > 0
@@ -355,6 +363,7 @@ export default function Step2Product({
                 const unitError = unitsReady ? unitIssue(p.satuan, unitIdByCode) : null
                 // Only a quotation has a send rule to fill in for
                 const gaps = toggleNoOffer ? lineGaps(p) : []
+                const editor = lockedBy[p.id]
                 return (
                   <div key={p.id} className={`${qep.card} mb-0`}>
                     <div className={qep.cardHeader}>
@@ -371,12 +380,14 @@ export default function Step2Product({
                             <span className={gapBadge}>Belum lengkap: {gaps.join(", ")}</span>
                           )
                         )}
+                        {editor && <span className={editorBadge}>Sedang diedit oleh {editor}</span>}
                       </div>
                       <div className="flex items-center gap-3">
                         {toggleNoOffer && (
                           <button
                             type="button"
                             onClick={() => toggleNoOffer(p.id)}
+                            disabled={Boolean(editor)}
                             aria-pressed={Boolean(p.noOffer)}
                             aria-label={`${p.noOffer ? "Tawarkan" : "Tidak Ditawarkan"} produk ${globalIndex}`}
                             className={noOfferToggle}
@@ -387,9 +398,11 @@ export default function Step2Product({
                         <button
                           type="button"
                           onClick={() => {
+                            if (editProduct) return editProduct(p)
                             setEditingProduct(p)
                             setShowProductAdd(true)
                           }}
+                          disabled={Boolean(editor)}
                           className={`${cardIconBtn} text-primary-700`}
                           title="Edit Produk"
                           aria-label={`Edit produk ${globalIndex}`}
@@ -412,6 +425,7 @@ export default function Step2Product({
                         <button
                           type="button"
                           onClick={() => deleteProduct(p.id)}
+                          disabled={Boolean(editor)}
                           className={`${cardIconBtn} text-error`}
                           title="Hapus Produk"
                           aria-label={`Hapus produk ${globalIndex}`}

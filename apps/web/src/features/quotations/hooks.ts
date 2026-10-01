@@ -6,12 +6,16 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query"
+import { useCallback, useEffect, useRef, useState } from "react"
 import * as quotationsApi from "@/features/quotations/api"
-import { QUOTATION_CONFLICT_MESSAGE, statusChangeToast } from "@/features/quotations/status"
-import { errorMessage, isVersionConflict } from "@/lib/errors"
+import { nextExpiry } from "@/features/quotations/live"
+import { statusChangeToast } from "@/features/quotations/status"
+import { errorMessage } from "@/lib/errors"
+import { followEventStream } from "@/lib/event-stream"
 import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
 import type {
+  QuotationEditLock,
   QuotationItemRequestCreateInput,
   QuotationItemRequestUpdateInput,
   QuotationListParams,
@@ -56,28 +60,6 @@ export function useCreateQuotation() {
     mutationFn: quotationsApi.create,
     onSuccess: () => invalidateQuotationDeps(qc),
     onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan quotation.")),
-  })
-}
-
-export function useUpdateQuotation() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({
-      id,
-      input,
-      rowVersion,
-    }: {
-      id: number
-      input: Parameters<typeof quotationsApi.update>[1]
-      rowVersion: number
-    }) => quotationsApi.update(id, input, rowVersion),
-    onSuccess: () => invalidateQuotationDeps(qc),
-    onError: (err) =>
-      toast.error(
-        isVersionConflict(err)
-          ? QUOTATION_CONFLICT_MESSAGE
-          : errorMessage(err, "Gagal memperbarui quotation."),
-      ),
   })
 }
 
@@ -187,4 +169,126 @@ export async function exportQuotationsXlsx(params: QuotationListParams): Promise
   } catch {
     toast.error("Gagal mengekspor daftar quotation. Coba lagi.")
   }
+}
+
+// Claim renewal period
+export const LOCK_HEARTBEAT_MS = 30_000
+
+// Follow a draft live.
+//
+// Every change notice, and every reconnect (the stream keeps no backlog),
+// reloads the quotation. An expired claim sends no notice, so the page also
+// reloads when another user's claim lapses.
+export function useQuotationLive(
+  id: number | undefined,
+  locks: QuotationEditLock[] | undefined,
+  meId: number | undefined,
+) {
+  const qc = useQueryClient()
+  useEffect(() => {
+    if (id === undefined) return
+    const ctl = new AbortController()
+    void followEventStream({
+      open: (signal) => quotationsApi.openEvents(id, signal),
+      onEvent: () => qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) }),
+      signal: ctl.signal,
+    })
+    return () => ctl.abort()
+  }, [id, qc])
+
+  const expiry = locks ? nextExpiry(locks, meId) : undefined
+  useEffect(() => {
+    if (id === undefined || expiry === undefined) return
+    const timer = setTimeout(
+      () => qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) }),
+      Math.max(expiry - Date.now(), 0) + 1000,
+    )
+    return () => clearTimeout(timer)
+  }, [id, expiry, qc])
+}
+
+// The caller's claims on a draft.
+//
+// acquire claims a part and toasts the server's refusal, which names the
+// editor holding it. Held parts are renewed on a heartbeat; one the server
+// no longer grants is dropped. Leaving the page releases them all, and a
+// closed tab's claims lapse on the server.
+export function useEditLocks(id: number | undefined) {
+  const held = useRef(new Set<string>())
+  const [heldParts, setHeldParts] = useState<ReadonlySet<string>>(() => new Set())
+  const sync = useCallback(() => setHeldParts(new Set(held.current)), [])
+
+  const acquire = useCallback(
+    async (part: string, opts: { quiet?: boolean } = {}): Promise<boolean> => {
+      if (id === undefined) return false
+      try {
+        await quotationsApi.lockPart(id, part)
+      } catch (err) {
+        if (!opts.quiet) toast.error(errorMessage(err, "Bagian ini tidak dapat dibuka."))
+        return false
+      }
+      held.current.add(part)
+      sync()
+      return true
+    },
+    [id, sync],
+  )
+
+  const release = useCallback(
+    async (part: string): Promise<void> => {
+      if (id === undefined || !held.current.delete(part)) return
+      sync()
+      // A failed release lapses on the server.
+      await quotationsApi.unlockPart(id, part).catch(() => undefined)
+    },
+    [id, sync],
+  )
+
+  useEffect(() => {
+    if (id === undefined) return
+    const parts = held.current
+    const timer = setInterval(() => {
+      for (const part of parts) {
+        quotationsApi.lockPart(id, part).catch(() => {
+          parts.delete(part)
+          sync()
+        })
+      }
+    }, LOCK_HEARTBEAT_MS)
+    // Leaving the page or the tab frees every part.
+    const releaseAll = (keepalive: boolean) => {
+      for (const part of parts) {
+        void quotationsApi.unlockPart(id, part, keepalive).catch(() => undefined)
+      }
+      parts.clear()
+    }
+    const onPageHide = () => {
+      releaseAll(true)
+      sync()
+    }
+    window.addEventListener("pagehide", onPageHide)
+    return () => {
+      clearInterval(timer)
+      window.removeEventListener("pagehide", onPageHide)
+      releaseAll(false)
+    }
+  }, [id, sync])
+
+  return { acquire, release, holds: (part: string) => heldParts.has(part) }
+}
+
+// One live change to a draft.
+//
+// The change is a thunk over the api, so one mutation serves every line and
+// header save. The quotation reloads after it either way: a refusal may mean
+// the draft changed underneath.
+export function useLiveChange(id: number | undefined) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (change: () => Promise<unknown>) => change(),
+    onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan perubahan.")),
+    onSettled: () => {
+      if (id !== undefined) qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) })
+    },
+  })
 }

@@ -35,6 +35,8 @@ type Step4SummaryProps = {
   unknownUnitCount?: number
   // Lines not ready to send
   incompleteCount?: number
+  // Another user holds the header
+  readOnly?: boolean
 }
 
 const PAGE_SIZE = 5
@@ -48,7 +50,7 @@ const fieldValueSemibold = "text-sm font-semibold text-[#111827]"
 const fieldValueBold = "text-sm font-bold text-[#111827]"
 const emptyValue = "text-sm font-medium italic text-[#9CA3AF]"
 const formLabel = "mb-2 block text-[11px] font-bold uppercase tracking-[0.5px] text-[#6B7280]"
-const formInput = `box-border w-full rounded-md border border-[rgba(204,195,216,0.2)] bg-dark-50 px-4 py-3 text-sm text-[#111827] outline-none ${ui.fieldFocus}`
+const formInput = `box-border w-full rounded-md border border-[rgba(204,195,216,0.2)] bg-dark-50 px-4 py-3 text-sm text-[#111827] outline-none disabled:cursor-not-allowed disabled:opacity-60 ${ui.fieldFocus}`
 const alertBox =
   "rounded-md border border-[rgba(239,68,68,0.18)] bg-[rgba(239,68,68,0.06)] px-3.5 py-2.5 text-xs font-medium text-[#DC2626]"
 // Amber: saving still works
@@ -86,6 +88,7 @@ export default function Step4Summary({
   invalidQtyCount = 0,
   unknownUnitCount = 0,
   incompleteCount = 0,
+  readOnly = false,
 }: Step4SummaryProps) {
   const id = useId()
   const [prodPage, setProdPage] = useState(1)
@@ -115,6 +118,7 @@ export default function Step4Summary({
               placeholder="Masukkan hari sampai jatuh tempo"
               value={jatuhTempo}
               onChange={(e) => setJatuhTempo(e.target.value)}
+              disabled={readOnly}
               className={formInput}
             />
           </div>
@@ -129,6 +133,7 @@ export default function Step4Summary({
               placeholder="Masukkan jumlah hari"
               value={berlakuSampai}
               onChange={(e) => setBerlakuSampai(e.target.value)}
+              disabled={readOnly}
               className={formInput}
             />
           </div>
