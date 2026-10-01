@@ -216,3 +216,33 @@ SELECT
         WHEN (SELECT status FROM q) NOT IN ('draft', 'accepted') THEN 'status_locked'
         ELSE 'contact_invalid'
     END AS result;
+
+-- name: quotations.lock
+SELECT fn_quotation_lock($1, $2, $3, $4);
+
+-- name: quotations.unlock
+SELECT fn_quotation_unlock($1, $2, $3);
+
+-- name: quotations.edit_locks
+SELECT l.part, l.user_id, u.name AS user_name, l.expires_at
+FROM quotation_edit_locks l
+JOIN users u ON u.id = l.user_id
+WHERE l.quotation_id = $1 AND l.expires_at > NOW()
+ORDER BY l.part;
+
+-- name: quotations.add_lines
+SELECT fn_quotation_add_lines($1, $2::jsonb, $3);
+
+-- name: quotations.update_line
+SELECT fn_quotation_update_line($1, $2, $3::jsonb, $4);
+
+-- name: quotations.set_line_offer
+SELECT fn_quotation_set_line_offer($1, $2, $3, $4);
+
+-- name: quotations.delete_line
+SELECT fn_quotation_delete_line($1, $2, $3);
+
+-- name: quotations.update_header
+SELECT fn_quotation_update_header(
+    $1, $2, $3, $4, $5, $6::numeric(5,2), $7, $8, $9::numeric(15,2), $10, $11
+);

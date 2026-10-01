@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_quotation_status (deployed by migration 00077).
+-- Canonical current body of fn_change_quotation_status (deployed by migration 00078).
 -- Validates the transition under a FOR UPDATE lock, blocks finalizing a
 -- quotation with unpriced products (ERRCODE P0100), records history, and
 -- creates the purchase order on acceptance.
@@ -45,6 +45,11 @@ BEGIN
     RAISE EXCEPTION 'Status quotation tidak dapat diubah dari % ke %.',
       fn_quotation_status_label(v_old_status), fn_quotation_status_label(p_new_status)
       USING ERRCODE = 'P0012';
+  END IF;
+
+  -- Leaving the draft ends every edit; wait for the other editors.
+  IF v_old_status = 'draft' THEN
+    PERFORM fn_quotation_no_other_editors(p_quotation_id, p_user_id);
   END IF;
 
   IF p_new_status IN ('rejected','cancelled') AND NULLIF(BTRIM(p_note), '') IS NULL THEN
@@ -106,5 +111,10 @@ BEGIN
   IF p_new_status = 'accepted' THEN
     PERFORM fn_create_purchase_order(p_quotation_id, p_user_id);
   END IF;
+
+  IF v_old_status = 'draft' THEN
+    DELETE FROM quotation_edit_locks WHERE quotation_id = p_quotation_id;
+  END IF;
+  PERFORM fn_quotation_notify(p_quotation_id, 'status', NULL, p_user_id);
 END;
 $function$

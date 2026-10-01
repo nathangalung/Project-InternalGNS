@@ -51,6 +51,7 @@ function detail(items: QuotationItemRow[]): QuotationDetail {
     history: [],
     allowedTransitions: [],
     canRevise: false,
+    locks: [],
   }
 }
 

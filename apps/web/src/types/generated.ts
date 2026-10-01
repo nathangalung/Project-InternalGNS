@@ -617,6 +617,11 @@ export type PurchaseOrderRow = {
 };
 
 // From quotations/dto.go
+export type QuotationAddLinesInput = {
+    items: QuotationItemInput[];
+};
+
+// From quotations/dto.go
 export type QuotationContactInput = {
     contactId: number;
 };
@@ -649,6 +654,15 @@ export type QuotationDetail = QuotationHeader & {
     history: QuotationStatusEvent[];
     allowedTransitions: QuotationTransition[];
     canRevise: boolean;
+    locks: QuotationEditLock[];
+};
+
+// From quotations/dto.go
+export type QuotationEditLock = {
+    part: string;
+    userId: number;
+    userName: string;
+    expiresAt: string;
 };
 
 // From quotations/dto.go
@@ -677,6 +691,19 @@ export type QuotationHeader = {
     rowVersion: number;
     createdAt: string;
     updatedAt: string;
+};
+
+// From quotations/dto.go
+export type QuotationHeaderInput = {
+    clientRefNo?: string;
+    vesselName?: string;
+    paymentTerms?: string;
+    validityDays?: number;
+    discountPct: string;
+    shippingAddress?: string;
+    shippingDays?: number;
+    shippingCost?: string;
+    notes?: string;
 };
 
 // From quotations/dto.go
@@ -777,6 +804,16 @@ export type QuotationItemRow = {
 };
 
 // From quotations/dto.go
+export type QuotationLineOfferInput = {
+    isAvailable: boolean;
+};
+
+// From quotations/dto.go
+export type QuotationLinesAdded = {
+    ids: number[];
+};
+
+// From quotations/dto.go
 export type QuotationListRow = {
     id: number;
     quotationNo: string;
@@ -789,6 +826,25 @@ export type QuotationListRow = {
     totalHargaBeli: string;
     productCount: number;
     createdAt: string;
+};
+
+// From live/hub.go
+export type QuotationLiveEvent = {
+    quotationId: number;
+    kind: string;
+    part?: string;
+    userId: number;
+};
+
+// From quotations/dto.go
+export type QuotationLockGranted = {
+    part: string;
+    expiresAt: string;
+};
+
+// From quotations/dto.go
+export type QuotationLockInput = {
+    part: string;
 };
 
 // From quotations/dto.go

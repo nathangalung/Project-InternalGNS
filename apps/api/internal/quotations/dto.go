@@ -78,6 +78,8 @@ type QuotationDetail struct {
 	History            []StatusHistoryEntry `json:"history"`
 	AllowedTransitions []Transition         `json:"allowedTransitions"`
 	CanRevise          bool                 `json:"canRevise"`
+	// Parts other users are editing now
+	Locks []EditLock `json:"locks"`
 }
 
 // RevisionRow is one chain link.
@@ -231,4 +233,52 @@ type CreatedResponse struct {
 type UpdatedResponse struct {
 	ID         int64 `json:"id"`
 	RowVersion int32 `json:"rowVersion"`
+}
+
+// EditLock is one claimed part.
+// Part is "header" or "line:<quotation_items.id>".
+type EditLock struct {
+	Part      string    `db:"part"       json:"part"`
+	UserID    int64     `db:"user_id"    json:"userId"`
+	UserName  string    `db:"user_name"  json:"userName"`
+	ExpiresAt time.Time `db:"expires_at" json:"expiresAt"`
+}
+
+// LockRequest claims a part.
+type LockRequest struct {
+	Part string `json:"part"`
+}
+
+// LockResponse says until when.
+type LockResponse struct {
+	Part      string    `json:"part"`
+	ExpiresAt time.Time `json:"expiresAt"`
+}
+
+// AddLinesRequest adds product lines.
+type AddLinesRequest struct {
+	Items []CreateItem `json:"items"`
+}
+
+// AddLinesResponse names the new lines.
+type AddLinesResponse struct {
+	IDs []int64 `json:"ids"`
+}
+
+// LineOfferRequest toggles Tidak Ditawarkan.
+type LineOfferRequest struct {
+	IsAvailable bool `json:"isAvailable"`
+}
+
+// HeaderRequest saves the header part.
+type HeaderRequest struct {
+	ClientRefNo     *string `json:"clientRefNo,omitempty"`
+	VesselName      *string `json:"vesselName,omitempty"`
+	PaymentTerms    *string `json:"paymentTerms,omitempty"`
+	ValidityDays    *int    `json:"validityDays,omitempty"`
+	DiscountPct     string  `json:"discountPct"`
+	ShippingAddress *string `json:"shippingAddress,omitempty"`
+	ShippingDays    *int    `json:"shippingDays,omitempty"`
+	ShippingCost    *string `json:"shippingCost,omitempty"`
+	Notes           *string `json:"notes,omitempty"`
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/auth"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/live"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 	"github.com/nathangalung/internalgns/apps/api/internal/users"
@@ -56,11 +57,15 @@ func NewServer(ctx context.Context, cfg Config) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open pool: %w", err)
 	}
-	httpSrv, store, err := buildServer(ctx, cfg, pool)
+	hub := live.NewHub()
+	httpSrv, store, err := buildServer(ctx, cfg, pool, WithLive(hub))
 	if err != nil {
 		pool.Close()
 		return nil, err
 	}
+	// Editor streams never go idle, so they end when the drain starts;
+	// every other request still drains normally.
+	httpSrv.RegisterOnShutdown(hub.Close)
 	s := &Server{HTTP: httpSrv, pool: pool, purgeDone: make(chan struct{})}
 	// A child of ctx, so SIGTERM still stops the sweep, while Close can stop
 	// and join it before the pool goes away.
@@ -74,15 +79,22 @@ func NewServer(ctx context.Context, cfg Config) (*Server, error) {
 			defer close(expiryDone)
 			quotations.RunExpiryLoop(purgeCtx, quotations.NewRepo(pool, store), quotations.ExpiryInterval, tz.Now)
 		}()
+		// The listener holds a pool connection, so it shares this lifetime.
+		listenDone := make(chan struct{})
+		go func() {
+			defer close(listenDone)
+			live.Listen(purgeCtx, pool, hub, time.Second)
+		}()
 		runRefreshPurgeLoop(purgeCtx, auth.NewRefreshRepo(pool, store), refreshPurgeInterval)
 		<-expiryDone
+		<-listenDone
 	}()
 	return s, nil
 }
 
 // buildServer wires migrations, seeds, routes.
 // The store is returned for the purge NewServer starts.
-func buildServer(ctx context.Context, cfg Config, pool *pgxpool.Pool) (*http.Server, queries.Store, error) {
+func buildServer(ctx context.Context, cfg Config, pool *pgxpool.Pool, opts ...RouterOption) (*http.Server, queries.Store, error) {
 	// Fail fast if the session zone did not take: every date-derived value
 	// (invoice_date, document numbers) depends on it.
 	if cfg.TZ != "" {
@@ -134,7 +146,7 @@ func buildServer(ctx context.Context, cfg Config, pool *pgxpool.Pool) (*http.Ser
 		}
 	}
 
-	r := NewRouter(cfg, pool, store, storageClient)
+	r := NewRouter(cfg, pool, store, storageClient, opts...)
 
 	return &http.Server{
 		Addr:              cfg.HTTPAddr,

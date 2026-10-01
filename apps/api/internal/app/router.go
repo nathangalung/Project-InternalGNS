@@ -20,6 +20,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/live"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 	"github.com/nathangalung/internalgns/apps/api/internal/units"
@@ -27,7 +28,24 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/vendors"
 )
 
-func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClient *storage.Client) *chi.Mux {
+// RouterOption tunes NewRouter.
+type RouterOption func(*routerOptions)
+
+type routerOptions struct {
+	live *live.Hub
+}
+
+// WithLive turns on live editing.
+// Without it the quotation event stream answers 503.
+func WithLive(h *live.Hub) RouterOption {
+	return func(o *routerOptions) { o.live = h }
+}
+
+func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClient *storage.Client, opts ...RouterOption) *chi.Mux {
+	var o routerOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(requestIDResponseMiddleware)
@@ -93,6 +111,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 		},
 		Storage: storageClient,
 		Cookies: cookies,
+		Live:    o.live,
 	}
 	// A nil client must stay a nil interface.
 	if storageClient != nil {

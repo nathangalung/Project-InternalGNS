@@ -29,6 +29,7 @@ internal/shared/db           95
 internal/shared/deps         95
 internal/shared/httperr      95
 internal/shared/httpx        95
+internal/shared/live         95
 internal/shared/listq        95
 internal/shared/paginate     95
 internal/shared/session      95

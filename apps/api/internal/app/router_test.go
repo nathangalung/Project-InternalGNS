@@ -418,3 +418,25 @@ func TestRouter_FinanceReadOnlyOnItemsAndVendors(t *testing.T) {
 		})
 	}
 }
+
+// Only the editor stream is a stream.
+// It skips the request deadline, so the classifier must not catch any other
+// route.
+func TestRouter_StreamRoutesClassified(t *testing.T) {
+	store, err := queries.Load()
+	require.NoError(t, err)
+	cfg := Config{Env: "test", HTTPAddr: ":0", JWTSecret: "stream-route-secret", JWTExpiry: time.Hour}
+	r := NewRouter(cfg, nil, store, nil)
+
+	var streams []string
+	err = chi.Walk(r, func(_, route string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
+		if isStreamRoute(route) {
+			streams = append(streams, route)
+		}
+		return nil
+	})
+	require.NoError(t, err)
+	assert.Equal(t, []string{"/api/v1/quotations/{id}/events"}, streams)
+	assert.True(t, isStreamRoute("/api/v1/quotations/42/events"))
+	assert.False(t, isStreamRoute("/api/v1/quotations/42/events/x"))
+}

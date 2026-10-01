@@ -6,6 +6,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/live"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
@@ -42,6 +43,9 @@ type Deps struct {
 	// Cookies issues the refresh cookie.
 	// Handlers that end the caller's own session expire it.
 	Cookies session.Cookies
+	// Live fans out quotation changes.
+	// Nil when live updates are off; the stream route then answers 503.
+	Live *live.Hub
 }
 
 // ObjectStore confirms uploaded objects.
