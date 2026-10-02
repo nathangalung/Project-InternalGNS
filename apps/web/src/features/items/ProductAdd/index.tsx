@@ -21,6 +21,7 @@ import {
   applyUntouched,
   mergeVendorOptions,
   recommendationFields,
+  withSavedVendors,
 } from "./autofill"
 import {
   type CatalogItem,
@@ -146,13 +147,11 @@ export default function ProductAdd({
       vendorId: r.vendorId,
       vendorProductId: r.vendorProductId,
     }))
-    const known = new Set<number | undefined>(remote.map((v) => v.vendorId))
-    // A saved link names the saved product only; another goes by vendorId.
     const sameItem = pickedItemId === (initialData?.itemId ?? null)
-    const extra = extraVendors
-      .filter((v) => !known.has(v.vendorId))
-      .map((v) => (sameItem ? v : { ...v, vendorProductId: undefined }))
-    return mergeVendorOptions([...remote, ...extra], vendorSearch?.rows ?? [])
+    return mergeVendorOptions(
+      withSavedVendors(remote, extraVendors, sameItem),
+      vendorSearch?.rows ?? [],
+    )
   }, [vendorRows, extraVendors, vendorSearch, pickedItemId, initialData])
 
   // A picked product starts from its recommendation, once.

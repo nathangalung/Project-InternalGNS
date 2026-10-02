@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
-import { applyUntouched, mergeVendorOptions, recommendationFields } from "./autofill"
+import {
+  applyUntouched,
+  mergeVendorOptions,
+  recommendationFields,
+  withSavedVendors,
+} from "./autofill"
 import type { VendorOption } from "./helpers"
 
 describe("mergeVendorOptions", () => {
@@ -23,6 +28,38 @@ describe("mergeVendorOptions", () => {
   it("puts an unpriced link after the priced ones", () => {
     const out = mergeVendorOptions([{ nama: "Tanpa Harga", harga: 0, vendorId: 5 }, ...linked], [])
     expect(out.map((v) => v.nama)).toEqual(["Vendor Murah", "Vendor Mahal", "Tanpa Harga"])
+  })
+})
+
+describe("withSavedVendors", () => {
+  const linked: VendorOption[] = [
+    { nama: "Vendor Tertaut", harga: 90, vendorId: 1, vendorProductId: 10 },
+  ]
+  const saved: VendorOption = {
+    nama: "Vendor Tersimpan",
+    harga: 80,
+    vendorId: 2,
+    vendorProductId: 20,
+  }
+
+  it("keeps the saved link while the product is the saved one", () => {
+    expect(withSavedVendors(linked, [saved], true)).toEqual([...linked, saved])
+  })
+
+  it("drops the saved link once the product changes, keeping the vendor", () => {
+    const out = withSavedVendors(linked, [saved], false)
+    expect(out).toEqual([...linked, { nama: "Vendor Tersimpan", harga: 80, vendorId: 2 }])
+    expect(out[1]?.vendorProductId).toBeUndefined()
+  })
+
+  it("lets a linked vendor win over the saved copy", () => {
+    const stale: VendorOption = {
+      nama: "Vendor Tertaut",
+      harga: 70,
+      vendorId: 1,
+      vendorProductId: 99,
+    }
+    expect(withSavedVendors(linked, [stale], false)).toEqual(linked)
   })
 })
 

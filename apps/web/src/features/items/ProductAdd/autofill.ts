@@ -25,6 +25,24 @@ export function mergeVendorOptions(
   return [...priced, ...others]
 }
 
+// Linked vendors plus saved ones.
+//
+// The line's saved vendor stays pickable before the item's vendors load. A
+// vendor the item links wins over its saved copy. A saved link names the
+// saved product only, so once the product changes the saved vendor goes by
+// vendorId and the server links it to the new product.
+export function withSavedVendors(
+  linked: VendorOption[],
+  saved: VendorOption[],
+  sameItem: boolean,
+): VendorOption[] {
+  const known = new Set(linked.map((v) => v.vendorId))
+  const extra = saved
+    .filter((v) => !known.has(v.vendorId))
+    .map((v) => (sameItem ? v : { nama: v.nama, harga: v.harga, vendorId: v.vendorId }))
+  return [...linked, ...extra]
+}
+
 // Whole rupiah from a decimal.
 function rupiah(v: string): string {
   const n = Number(v)
