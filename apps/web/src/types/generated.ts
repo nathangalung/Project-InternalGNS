@@ -526,6 +526,8 @@ export type PoItemInput = {
     costPrice?: string;
     isAvailable?: boolean;
     shipDestination?: string;
+    vendorProductId?: number;
+    vendorId?: number;
 };
 
 // From purchaseorders/dto.go
@@ -622,6 +624,7 @@ export type PurchaseOrderItemRow = {
     shipDestination?: string;
     shippingDays?: number;
     isAvailable: boolean;
+    vendorProductId?: number;
     vendorId?: number;
     vendorName?: string;
 };

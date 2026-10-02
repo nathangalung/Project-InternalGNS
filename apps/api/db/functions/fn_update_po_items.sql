@@ -1,14 +1,18 @@
--- Canonical current body of fn_update_po_items (deployed by migration 00073).
+-- Canonical current body of fn_update_po_items (deployed by migration 00083).
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
  LANGUAGE plpgsql
 AS $function$
 DECLARE
-  v_status VARCHAR(20);
-  v_line   INT := 0;
-  it       JSONB;
+  v_status    VARCHAR(20);
+  v_quotation BIGINT;
+  v_line      INT := 0;
+  v_offered   BIGINT;
+  v_vendor    BIGINT;
+  v_link      BIGINT;
+  it          JSONB;
 BEGIN
-  SELECT status INTO v_status
+  SELECT status, quotation_id INTO v_status, v_quotation
   FROM purchase_orders
   WHERE id = p_po_id
   FOR UPDATE;
@@ -47,6 +51,20 @@ BEGIN
       USING ERRCODE = 'P0014';
   END IF;
 
+  -- A line links only this quotation.
+  IF EXISTS (
+    SELECT 1 FROM jsonb_array_elements(p_items) AS e
+    WHERE NULLIF(e->>'quotationItemId', '') IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM quotation_items qi
+        WHERE qi.id = (e->>'quotationItemId')::BIGINT
+          AND qi.quotation_id = v_quotation
+      )
+  ) THEN
+    RAISE EXCEPTION 'Baris quotation tidak termasuk dalam quotation PO ini.'
+      USING ERRCODE = 'P0014';
+  END IF;
+
   UPDATE purchase_orders
   SET discount_pct = p_discount_pct,
       notes        = p_notes,
@@ -57,10 +75,31 @@ BEGIN
 
   FOR it IN SELECT * FROM jsonb_array_elements(p_items)
   LOOP
-    v_line := v_line + 1;
+    v_line    := v_line + 1;
+    v_offered := NULLIF(it->>'offeredItemId','')::BIGINT;
+    v_link    := NULLIF(it->>'vendorProductId','')::BIGINT;
+    v_vendor  := NULLIF(it->>'vendorId','')::BIGINT;
+
+    -- The supplier offers this product.
+    IF (v_link IS NOT NULL OR v_vendor IS NOT NULL) AND v_offered IS NULL THEN
+      RAISE EXCEPTION 'Pilih produk yang ditawarkan sebelum memilih vendor.'
+        USING ERRCODE = 'P0014';
+    END IF;
+    IF v_link IS NOT NULL THEN
+      IF NOT EXISTS (
+        SELECT 1 FROM vendor_products WHERE id = v_link AND item_id = v_offered
+      ) THEN
+        RAISE EXCEPTION 'Vendor ini tidak menyediakan produk tersebut. Pilih vendor lain.'
+          USING ERRCODE = 'P0014';
+      END IF;
+    ELSIF v_vendor IS NOT NULL THEN
+      v_link := fn_link_vendor_item(
+        v_vendor, v_offered, NULLIF(it->>'costPrice','')::NUMERIC, p_user_id);
+    END IF;
+
     INSERT INTO purchase_order_items (
       po_id, quotation_item_id, line_number, item_type,
-      offered_item_id, item_name, item_code,
+      offered_item_id, vendor_product_id, item_name, item_code,
       qty, unit_id, selling_price, cost_price,
       discount_pct, is_available, ship_destination,
       created_by, updated_by
@@ -69,7 +108,8 @@ BEGIN
       NULLIF(it->>'quotationItemId','')::BIGINT,
       v_line,
       'product',
-      NULLIF(it->>'offeredItemId','')::BIGINT,
+      v_offered,
+      v_link,
       COALESCE(it->>'itemName',''),
       NULLIF(it->>'itemCode',''),
       COALESCE(NULLIF(it->>'qty','')::NUMERIC, 0),
