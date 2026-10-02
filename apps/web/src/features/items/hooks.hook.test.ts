@@ -161,7 +161,7 @@ describe("item writes", () => {
     m.update.mockRejectedValue(new Error(""))
     const { result } = renderQueryHook(() => useUpdateItem())
     await settle(() => result.current.mutateAsync({ id: 9, input: { name: "B", isActive: true } }))
-    expect(result.current.isError).toBe(true)
+    await until(() => expect(result.current.isError).toBe(true))
     expect(toast.error).not.toHaveBeenCalled()
   })
 

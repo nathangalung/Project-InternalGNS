@@ -124,6 +124,10 @@ describe("rowFromBackend", () => {
       } as Partial<InvoiceBackendRow>),
     )
     expect(row).toMatchObject({ totalNumber: 0, dueDate: "2026-09-01" })
+    const blank = rowFromBackend(
+      invoice({ total: undefined, subtotal: undefined } as Partial<InvoiceBackendRow>),
+    )
+    expect(blank.totalNumber).toBe(0)
   })
 })
 
