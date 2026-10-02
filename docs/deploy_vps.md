@@ -93,8 +93,11 @@ collisions:
   its own project name instead; see "Find the project name" below.
 - **Volumes** are prefixed `internalgns_pgdata` and `internalgns_minio`, so
   `docker volume ls` never matches another project's names.
-- **Traefik routers** use `internalgns-api` and `internalgns-web`, and the
-  middlewares `internalgns-api-headers` and `internalgns-web-headers`. Router
+- **Traefik routers** use `internalgns-api` and `internalgns-web` on
+  `websecure`, `internalgns-api-http` and `internalgns-web-http` on `web`
+  (the http redirect, section 12), and the middlewares
+  `internalgns-api-headers`, `internalgns-web-headers`,
+  `internalgns-api-redirect` and `internalgns-web-redirect`. Router
   and middleware name collisions across projects are a common failure mode;
   keep these unique.
 - **Hostnames** come from `${API_HOST}` and `${WEB_HOST}`. Traefik routes by
@@ -172,7 +175,15 @@ docker network ls | grep dokploy-network
 
 # Confirm Traefik is on it and Let's Encrypt is configured.
 docker inspect dokploy-traefik 2>/dev/null | grep -i certresolver
+
+# Confirm the entrypoint names the labels use: web on :80, websecure on :443.
+# A default Dokploy install keeps its static config here.
+sudo grep -A8 entryPoints /etc/dokploy/traefik/traefik.yml
 ```
+
+The routers in `compose.prod.yml` name the entrypoints `web` and
+`websecure`. If this Traefik calls them anything else, the routers never
+match and both hosts answer 404; rename the `entrypoints=` labels to match.
 
 The compose creates its own private `internal` network for Postgres, MinIO
 and the API; only the API and the web container sit on `dokploy-network`, so
@@ -338,6 +349,8 @@ docker exec "$P-gns-minio-1" sh -c \
 | `curl https://api…/readyz`                     | `200` (database reachable)                                 |
 | `curl -sI https://api…/healthz`                | `strict-transport-security: max-age=31536000`              |
 | `curl -sI https://internalgns…/login`          | `strict-transport-security` and `content-security-policy` (not `-report-only`) |
+| `curl -sI http://internalgns…/login`           | `301` or `308`, `location: https://internalgns…/login`     |
+| `curl -sI http://api…/healthz`                 | `301` or `308`, `location: https://api…/healthz`           |
 | Login with superadmin                          | redirects to dashboard                                     |
 | Create a client                                | success, X-Total-Count increments                          |
 | Upload a logo                                  | object appears in MinIO `client-logos`                     |
@@ -433,6 +446,16 @@ TLS. They are set in the `compose.prod.yml` labels:
 - `Strict-Transport-Security: max-age=31536000` on both hosts. There is no
   `includeSubDomains` or `preload` until every sibling host is known to be
   HTTPS-only.
+- A permanent redirect from `http://` to `https://` on both hosts, path and
+  query kept. HSTS only takes effect after a first https visit, and Dokploy's
+  Traefik has no global redirect on `web` (:80): before these routers,
+  `http://internal.globalsakti.com/` and `http://api.internal.globalsakti.com/`
+  answered 404, so a typed or old http link made the app look down. The
+  `internalgns-*-http` routers and `internalgns-*-redirect` middlewares are
+  the whole change; delete those ten labels to undo it. Traefik v3.6 answers
+  `301` (checked locally against these labels); the smoke check accepts `308`
+  too. The ACME http challenge is unaffected, since Traefik serves
+  `/.well-known/acme-challenge/` ahead of every router.
 - `Content-Security-Policy` on the web host, enforced. It allows exactly what
   the SPA loads: its own scripts, styles and fonts, `blob:` and `data:` images
   (logos and upload previews), and `https://<API_HOST>` for API calls. The API
