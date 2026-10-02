@@ -1,6 +1,6 @@
 import { useId } from "react"
 import StatCard from "@/components/shared/StatCard"
-import { formatNumber } from "@/lib/format"
+import { formatNumber, PENDING_FIGURE } from "@/lib/format"
 import type { DashboardStatusCount } from "@/types/api"
 
 type StatusTilesProps = {
@@ -34,7 +34,9 @@ export default function StatusTiles({ title, items, slots }: StatusTilesProps) {
           ? items.map((s) => (
               <StatCard key={s.status} label={s.label} value={formatNumber(s.count)} />
             ))
-          : Array.from({ length: slots }, (_, i) => <StatCard key={i} label="&nbsp;" value="–" />)}
+          : Array.from({ length: slots }, (_, i) => (
+              <StatCard key={i} label="&nbsp;" value={PENDING_FIGURE} />
+            ))}
       </div>
     </section>
   )

@@ -10,7 +10,7 @@ import { useDashboardSummary, useDashboardTimeseries } from "@/features/dashboar
 import { useQuotations } from "@/features/quotations/hooks"
 import { buildDailySeries, buildSeries, dayLabels, monthRange, yearRange } from "@/lib/chart"
 import { yearInJakarta } from "@/lib/date-range"
-import { formatNumber as formatId } from "@/lib/format"
+import { formatNumber as formatId, PENDING_FIGURE } from "@/lib/format"
 import { pill, ui } from "@/lib/ui"
 import DashboardFinancialFilter, {
   type DashboardFilterValues,
@@ -58,7 +58,7 @@ export default function DashboardOperational() {
   const totalRejected = summary?.totalQuotationsRejected ?? 0
   const totalPo = summary?.totalPo ?? 0
   // Dash until the summary arrives
-  const fig = (text: string) => (summary ? text : "–")
+  const fig = (text: string) => (summary ? text : PENDING_FIGURE)
 
   const statusLabels = summary?.quotationStatuses
   const recentQuotations = useMemo(

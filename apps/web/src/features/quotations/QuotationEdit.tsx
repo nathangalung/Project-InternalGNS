@@ -384,7 +384,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         {/* Header & Stepper */}
         <div className={qe.headerSection}>
           <div className={qe.headerLeft}>
-            <nav className={`${ui.breadcrumb} flex-wrap`}>
+            <nav className={`${ui.breadcrumb} flex-wrap`} aria-label="Breadcrumb">
               <button
                 type="button"
                 className={ui.breadcrumbLink}
@@ -392,7 +392,9 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
               >
                 Daftar Quotation
               </button>
-              <span className={ui.breadcrumbSep}>&rsaquo;</span>
+              <span className={ui.breadcrumbSep} aria-hidden="true">
+                &rsaquo;
+              </span>
               <Link
                 to="/quotations/$id"
                 params={{ id: quotationId }}
@@ -400,8 +402,12 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
               >
                 Detail {detail.quotationNo}
               </Link>
-              <span className={ui.breadcrumbSep}>&rsaquo;</span>
-              <span className={ui.breadcrumbCurrent}>Edit</span>
+              <span className={ui.breadcrumbSep} aria-hidden="true">
+                &rsaquo;
+              </span>
+              <span className={ui.breadcrumbCurrent} aria-current="page">
+                Edit
+              </span>
             </nav>
             <div className={qe.titleRow}>
               <h1 className={qe.title}>Edit Quotation {detail.quotationNo}</h1>

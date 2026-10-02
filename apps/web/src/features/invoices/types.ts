@@ -2,8 +2,6 @@ import type { InvoiceStatus } from "@/lib/status"
 
 export type { ChangeInvoiceStatusInput, UpdateInvoiceDatesInput } from "@/types/api"
 
-export type { InvoiceStatus }
-
 // Displayed status, cancelled included.
 export type InvoiceDisplayStatus = InvoiceStatus | "DIBATALKAN"
 
