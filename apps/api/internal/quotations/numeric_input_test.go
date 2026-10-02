@@ -77,7 +77,7 @@ type writeCall struct {
 	headers map[string]string
 }
 
-// assertRefused sends each call and expects one 422 field.
+// assertRefused expects one 422 field.
 func assertRefused(t *testing.T, srv *httptest.Server, calls []writeCall, field, msg string) {
 	t.Helper()
 	for _, c := range calls {
@@ -91,7 +91,7 @@ func assertRefused(t *testing.T, srv *httptest.Server, calls []writeCall, field,
 	}
 }
 
-// Line numbers refuse NaN, infinities and negatives.
+// Line numbers refuse bad values.
 // Every write path is checked before the database, which sorts NaN above
 // every number and so lets it through a >= 0 CHECK.
 func TestHandler_LineNumbersRefused(t *testing.T) {
@@ -145,7 +145,7 @@ func TestHandler_TermNumbersRefused(t *testing.T) {
 	}
 }
 
-// A blank cost price stays allowed.
+// Blank cost prices stay allowed.
 // A draft may keep a line without harga beli; the send rule asks for it.
 func TestHandler_BlankCostPriceAllowed(t *testing.T) {
 	srv := liveServer(t, live.NewHub())

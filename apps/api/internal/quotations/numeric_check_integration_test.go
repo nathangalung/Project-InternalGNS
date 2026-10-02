@@ -20,7 +20,7 @@ func requireCheckViolation(t *testing.T, err error) {
 	assert.Equal(t, db.SQLStateCheckViolation, pgErr.Code, pgErr.Message)
 }
 
-// The database refuses NaN and negative costs.
+// Database refuses NaN, negative costs.
 // The handler screens these first; the CHECKs keep any other writer out,
 // since Postgres sorts NaN above every number and >= 0 lets it through.
 func TestDB_LineNumbersChecked(t *testing.T) {
@@ -68,7 +68,7 @@ func TestDB_DayCountsChecked(t *testing.T) {
 	}
 }
 
-// A vendor price cannot be NaN.
+// Vendor prices refuse NaN.
 // fn_prepare_quotation_lines writes a line's harga beli into vendor_products.
 func TestDB_VendorCostChecked(t *testing.T) {
 	ctx, _, tx := newRepo(t)

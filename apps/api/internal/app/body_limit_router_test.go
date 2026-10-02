@@ -13,7 +13,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 )
 
-// An oversized JSON body is a 413.
+// Oversized JSON is a 413.
 // The 2 MiB body limit used to surface as 400 "invalid json", which told
 // the user the request was malformed instead of too large.
 func TestRouter_OversizedJSONIs413(t *testing.T) {

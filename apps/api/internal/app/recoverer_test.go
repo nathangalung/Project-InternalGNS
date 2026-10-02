@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// A panic is logged as JSON.
+// Panics log as JSON.
 // chi's Recoverer printed a coloured stack to stderr with no request_id and
 // answered a bare 500; the log pipeline could not join it to its request.
 func TestRecoverer_LogsAndRendersProblem(t *testing.T) {

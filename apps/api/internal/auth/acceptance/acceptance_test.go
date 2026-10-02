@@ -217,7 +217,7 @@ func (s *scenarioState) logInUnknownFromOneAddress(n int) error {
 	return nil
 }
 
-// colleaguesLogIn signs in n accounts from one office address.
+// colleaguesLogIn shares one office address.
 func (s *scenarioState) colleaguesLogIn(n int) error {
 	ip := nextIP()
 	for i := range n {

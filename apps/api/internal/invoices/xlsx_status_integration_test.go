@@ -14,7 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-// The sheet prints the shown status.
+// Sheet prints the shown status.
 // An invoice past its due date is Terlambat on screen and in the tiles, so
 // the export must not print the stored "sent" key.
 func TestExportXLSX_EffectiveStatusLabel(t *testing.T) {

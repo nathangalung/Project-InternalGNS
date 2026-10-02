@@ -93,7 +93,7 @@ func TestDecodeJSON(t *testing.T) {
 	}
 }
 
-// An oversized body is a 413.
+// Oversized bodies are 413.
 // The body limit middleware wraps every body in http.MaxBytesReader; its
 // overflow is the caller's size, not malformed JSON.
 func TestDecodeJSON_TooLarge(t *testing.T) {

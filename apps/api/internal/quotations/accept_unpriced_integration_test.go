@@ -33,7 +33,7 @@ func TestChangeStatus_AcceptRefusesUnpricedLine(t *testing.T) {
 	require.ErrorIs(t, err, quotations.ErrUnpricedProducts)
 }
 
-// The handler answers on the items field.
+// Refusal names the items field.
 func TestHandler_AcceptUnpricedIsItemsField(t *testing.T) {
 	srv, _ := resetServer(t)
 	id := mustCreate(t, srv)

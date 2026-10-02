@@ -71,7 +71,7 @@ func requestIDResponseMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// recoverer turns a panic into 500.
+// recoverer renders panics as 500.
 // It logs through slog, so the line is JSON and carries request_id like
 // every other server error; chi's Recoverer printed a coloured stack to
 // stderr instead. http.ErrAbortHandler is net/http's deliberate abort and

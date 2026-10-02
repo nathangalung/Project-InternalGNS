@@ -81,7 +81,7 @@ func TestProblemJSON429(t *testing.T) {
 	})
 }
 
-// loginAttempts passes the per-account login limit.
+// loginAttempts exceeds one account's budget.
 // auth allows 10 a minute per address and email.
 const loginAttempts = 11
 

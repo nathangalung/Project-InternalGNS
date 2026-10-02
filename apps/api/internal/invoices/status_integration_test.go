@@ -156,7 +156,7 @@ func TestChangeStatus_PaidWithoutProof(t *testing.T) {
 	assert.Nil(t, det.PaymentProofKey)
 }
 
-// A second payment keeps no proof.
+// Repaying refuses a proof.
 // Another tab may mark the invoice paid first; a proof sent with the second
 // mark used to vanish behind a 204. It is refused instead, while a repeat
 // without proof stays a no-op.

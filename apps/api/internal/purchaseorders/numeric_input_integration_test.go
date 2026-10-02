@@ -24,7 +24,7 @@ func requireCheckViolation(t *testing.T, err error) {
 	assert.Equal(t, db.SQLStateCheckViolation, pgErr.Code, pgErr.Message)
 }
 
-// The database refuses NaN and negative costs.
+// Database refuses NaN, negative costs.
 // NaN also slips past the priced-line guard, since NaN <= 0 is false.
 func TestDB_POLineNumbersChecked(t *testing.T) {
 	cases := []struct {
@@ -48,7 +48,7 @@ func TestDB_POLineNumbersChecked(t *testing.T) {
 	}
 }
 
-// Invoice lines refuse NaN and negative costs.
+// Invoice lines refuse bad numbers.
 func TestDB_InvoiceLineNumbersChecked(t *testing.T) {
 	sets := []string{
 		"qty = 'NaN'",
@@ -79,7 +79,7 @@ func putItems(t *testing.T, req purchaseorders.UpdateItemsRequest) *http.Respons
 		req, map[string]string{"If-Match": strconv.Itoa(int(po.RowVersion))})
 }
 
-// Edit numbers refuse NaN and negatives.
+// Line edits refuse bad numbers.
 // NaN passes the >= 0 CHECKs and the priced-line guard, and a negative harga
 // beli books a profit nobody made.
 func TestHandler_UpdateItems_RefusesBadNumbers(t *testing.T) {
@@ -127,7 +127,7 @@ func TestHandler_UpdateItems_RefusesBadNumbers(t *testing.T) {
 	}
 }
 
-// A qty 0 line stays allowed.
+// Qty 0 lines stay allowed.
 // CLAUDE.md keeps it: a line can be zeroed while another carries the order.
 func TestHandler_UpdateItems_AllowsZeroQtyLine(t *testing.T) {
 	req := itemsWith(purchaseorders.UpdateItemsLine{})

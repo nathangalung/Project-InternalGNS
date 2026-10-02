@@ -186,7 +186,7 @@ func TestClient_PutDefaultsContentType(t *testing.T) {
 	assert.True(t, exists)
 }
 
-// An unknown length never reaches MinIO.
+// Unknown lengths never reach MinIO.
 // minio-go would buffer a ~512 MiB part for it. The refused upload must
 // leave nothing behind, or the retry with a known length would hit the
 // overwrite guard.
