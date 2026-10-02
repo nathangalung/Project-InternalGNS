@@ -10,7 +10,7 @@ import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { downloadPdf, downloadXml } from "@/lib/api-client"
 import { resolveRange } from "@/lib/date-range"
-import { formatDate, formatNumber, formatRupiah } from "@/lib/format"
+import { formatDate, formatNumber, formatRupiah, PENDING_FIGURE } from "@/lib/format"
 import { deriveInvoiceStatus } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
@@ -122,11 +122,11 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
   const totalPages = list.totalPagesOf(totalItems)
 
   const counts = {
-    total: summaryData?.total ?? 0,
-    DRAF: summaryData?.draft ?? 0,
-    DIKIRIM: summaryData?.sent ?? 0,
-    DIBAYAR: summaryData?.paid ?? 0,
-    TERLAMBAT: summaryData?.overdue ?? 0,
+    total: summaryData?.total,
+    DRAF: summaryData?.draft,
+    DIKIRIM: summaryData?.sent,
+    DIBAYAR: summaryData?.paid,
+    TERLAMBAT: summaryData?.overdue,
   }
 
   // Active-filter chips shown above the table.
@@ -232,11 +232,27 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
         </div>
 
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
-          <StatCard tone="violet" label="Total Invoice" value={formatNumber(counts.total)} />
-          <StatCard tone="gold" label="Draf" value={formatNumber(counts.DRAF)} />
-          <StatCard tone="blue" label="Dikirim" value={formatNumber(counts.DIKIRIM)} />
-          <StatCard tone="green" label="Dibayar" value={formatNumber(counts.DIBAYAR)} />
-          <StatCard tone="red" label="Terlambat" value={formatNumber(counts.TERLAMBAT)} />
+          <StatCard
+            tone="violet"
+            label="Total Invoice"
+            value={formatNumber(counts.total, PENDING_FIGURE)}
+          />
+          <StatCard tone="gold" label="Draf" value={formatNumber(counts.DRAF, PENDING_FIGURE)} />
+          <StatCard
+            tone="blue"
+            label="Dikirim"
+            value={formatNumber(counts.DIKIRIM, PENDING_FIGURE)}
+          />
+          <StatCard
+            tone="green"
+            label="Dibayar"
+            value={formatNumber(counts.DIBAYAR, PENDING_FIGURE)}
+          />
+          <StatCard
+            tone="red"
+            label="Terlambat"
+            value={formatNumber(counts.TERLAMBAT, PENDING_FIGURE)}
+          />
         </div>
 
         <div className="flex items-center gap-4 pt-2">

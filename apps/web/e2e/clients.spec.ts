@@ -198,3 +198,18 @@ test("a contact edit refuses a 13-digit phone", async ({ page, seed }) => {
     .poll(async () => (await api<Contact[]>("GET", `/clients/${client.id}/contacts`))[0].phone)
     .toBe("812345678901")
 })
+
+// Zero is data; a failed summary is not.
+test("the KPI cards show a dash, not zero, without a summary", async ({ page }) => {
+  await page.route("**/api/v1/clients/summary", (route) =>
+    route.fulfill({
+      status: 404,
+      contentType: "application/problem+json",
+      body: JSON.stringify({ type: "about:blank", title: "Tidak ditemukan", status: 404 }),
+    }),
+  )
+  await page.goto("/clients")
+  const card = page.getByText("Total Klien", { exact: true }).locator("xpath=..")
+  await expect(card).toContainText("–")
+  await expect(card).not.toContainText("0")
+})

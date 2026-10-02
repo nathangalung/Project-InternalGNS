@@ -1,6 +1,6 @@
 import StatCard, { type StatTone } from "@/components/shared/StatCard"
 import { useQuotationStats } from "@/features/quotations/hooks"
-import { formatNumber } from "@/lib/format"
+import { formatNumber, PENDING_FIGURE } from "@/lib/format"
 import { statTiles } from "../status"
 
 // Tile colour per status.
@@ -21,13 +21,13 @@ export default function SummaryCards() {
 
   return (
     <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-      <StatCard tone="violet" label="Total Quotation" value={formatNumber(total)} />
+      <StatCard tone="violet" label="Total Quotation" value={formatNumber(total, PENDING_FIGURE)} />
       {tiles.map((t) => (
         <StatCard
           key={t.status}
           tone={TONE[t.status] ?? "neutral"}
           label={t.label}
-          value={formatNumber(t.count)}
+          value={formatNumber(t.count, PENDING_FIGURE)}
         />
       ))}
     </div>

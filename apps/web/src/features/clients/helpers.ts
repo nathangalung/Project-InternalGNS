@@ -1,5 +1,6 @@
 import type { UpdateContactInput } from "@/features/clients/api"
 import type { Client } from "@/features/quotations/Step1Client"
+import { PENDING_FIGURE } from "@/lib/format"
 import type { ClientRow, ClientSearchHit, ClientSummary } from "@/types/api"
 
 // Two-letter avatar initials.
@@ -69,11 +70,12 @@ function pctText(num: number, den: number, signed: boolean): string {
   return `${signed && pct >= 0 ? "+" : ""}${pct}%`
 }
 
+// Undefined counts are not loaded.
 export type ClientKpis = {
-  total: number
+  total: number | undefined
   // Base growth since 1 January.
   growth: string
-  newThisMonth: number
+  newThisMonth: number | undefined
   // Active clients over all clients.
   activeShare: string
 }
@@ -84,12 +86,19 @@ export type ClientKpis = {
 // by newThisYear over it. A true year-over-year figure needs a dated count
 // from the API.
 export function clientKpis(s: ClientSummary | undefined): ClientKpis {
-  const total = s?.total ?? 0
+  if (!s) {
+    return {
+      total: undefined,
+      growth: PENDING_FIGURE,
+      newThisMonth: undefined,
+      activeShare: PENDING_FIGURE,
+    }
+  }
   return {
-    total,
-    growth: pctText(s?.newThisYear ?? 0, s?.prevYearTotal ?? 0, true),
-    newThisMonth: s?.newThisMonth ?? 0,
-    activeShare: pctText(s?.activeCount ?? 0, total, false),
+    total: s.total,
+    growth: pctText(s.newThisYear, s.prevYearTotal, true),
+    newThisMonth: s.newThisMonth,
+    activeShare: pctText(s.activeCount, s.total, false),
   }
 }
 
