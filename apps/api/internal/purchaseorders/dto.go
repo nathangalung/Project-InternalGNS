@@ -74,10 +74,11 @@ type PurchaseOrderItem struct {
 	ShippingDays    *int    `db:"shipping_days"      json:"shippingDays,omitempty"`
 	IsAvailable     bool    `db:"is_available"       json:"isAvailable"`
 	// Supplying vendor of the line.
-	// Resolved through the quotation line it came from, so the detail screen
-	// does not fetch one vendor per item.
-	VendorID   *int64  `db:"vendor_id"   json:"vendorId,omitempty"`
-	VendorName *string `db:"vendor_name" json:"vendorName,omitempty"`
+	// Read from the line's own vendor link, so a vendor picked in the edit
+	// shows, and the detail screen does not fetch one vendor per item.
+	VendorProductID *int64  `db:"vendor_product_id" json:"vendorProductId,omitempty"`
+	VendorID        *int64  `db:"vendor_id"         json:"vendorId,omitempty"`
+	VendorName      *string `db:"vendor_name"       json:"vendorName,omitempty"`
 }
 
 type ChangeStatusRequest struct {
@@ -133,6 +134,13 @@ type UpdateItemsLine struct {
 	CostPrice       *string `json:"costPrice,omitempty"`
 	IsAvailable     *bool   `json:"isAvailable,omitempty"`
 	ShipDestination *string `json:"shipDestination,omitempty"`
+	// Supplier of the line.
+	// VendorProductID must be a link for OfferedItemID. A link the PO
+	// already stores is kept as is; any other needs an active vendor.
+	// VendorID is read only without it, and links a vendor the item has
+	// none to yet.
+	VendorProductID *int64 `json:"vendorProductId,omitempty"`
+	VendorID        *int64 `json:"vendorId,omitempty"`
 }
 
 type ListFilter struct {

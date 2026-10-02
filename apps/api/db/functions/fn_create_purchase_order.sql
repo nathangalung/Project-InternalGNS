@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_purchase_order (deployed by migration 00077).
+-- Canonical current body of fn_create_purchase_order (deployed by migration 00084).
 CREATE OR REPLACE FUNCTION public.fn_create_purchase_order(p_quotation_id bigint, p_user_id bigint)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -35,19 +35,22 @@ BEGIN
 
   INSERT INTO purchase_order_items (
     po_id, quotation_item_id, line_number, item_type,
-    offered_item_id, qty, unit_id, selling_price, cost_price,
+    offered_item_id, vendor_product_id, qty, unit_id, selling_price, cost_price,
     item_name, item_code, ship_destination, shipping_days,
     is_available, created_by, updated_by
   )
   SELECT
     v_po_id, qi.id, qi.line_number, qi.item_type,
-    qi.offered_item_id, qi.qty, qi.unit_id, qi.selling_price, qi.cost_price,
+    qi.offered_item_id, vp.id, qi.qty, qi.unit_id, qi.selling_price, qi.cost_price,
     COALESCE(NULLIF(oi.name, ''), qi.requested_name, ''),
     CASE WHEN oi.id IS NOT NULL THEN NULLIF(oi.impa_code, '') ELSE qi.requested_impa END,
     qi.ship_destination, qi.shipping_days,
     qi.is_available, p_user_id, p_user_id
   FROM quotation_items qi
   LEFT JOIN items oi ON oi.id = qi.offered_item_id
+  -- Only a link for the offered product is the line's supplier.
+  LEFT JOIN vendor_products vp
+    ON vp.id = qi.vendor_product_id AND vp.item_id = qi.offered_item_id
   WHERE qi.quotation_id = p_quotation_id
     -- A Tidak Ditawarkan request is never ordered.
     AND (qi.item_type <> 'product' OR qi.is_available)

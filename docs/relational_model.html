@@ -1155,6 +1155,7 @@ a:hover{text-decoration:underline}
           <tr><td class="col-nm">item_type <span class="cbadge cbadge-nn">NOT NULL</span> <span class="cbadge cbadge-chk">CHECK</span></td><td class="col-tp">VARCHAR(20)</td><td>Dropdown: product | shipping</td><td>product</td></tr>
           <tr class="section-divider"><td colspan="4">Item Detail</td></tr>
           <tr><td class="col-nm fk">offered_item_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Item yang di-order → items.id</td><td>42</td></tr>
+          <tr><td class="col-nm fk">vendor_product_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Vendor baris PO → vendor_products.id, harus untuk offered_item_id (nullable jika belum ada vendor)</td><td>15</td></tr>
           <tr><td class="col-nm">qty <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">NUMERIC(12,2)</td><td>Kuantitas (bisa beda dari quotation)</td><td>1.00</td></tr>
           <tr><td class="col-nm fk">unit_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">SMALLINT</td><td>Satuan → units.id</td><td>1</td></tr>
           <tr class="section-divider"><td colspan="4">Pricing</td></tr>

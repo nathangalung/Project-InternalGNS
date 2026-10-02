@@ -128,13 +128,13 @@ SELECT poi.id,
        poi.ship_destination,
        poi.shipping_days,
        poi.is_available,
+       poi.vendor_product_id,
        v.id   AS vendor_id,
        v.name AS vendor_name
 FROM purchase_order_items poi
 LEFT JOIN items i ON i.id = poi.offered_item_id
 LEFT JOIN units u ON u.id = poi.unit_id
-LEFT JOIN quotation_items qi ON qi.id = poi.quotation_item_id
-LEFT JOIN vendor_products vp ON vp.id = qi.vendor_product_id
+LEFT JOIN vendor_products vp ON vp.id = poi.vendor_product_id
 LEFT JOIN vendors v ON v.id = vp.vendor_id
 WHERE poi.po_id = $1
 ORDER BY poi.line_number;
@@ -183,8 +183,7 @@ SELECT DISTINCT
        v.contact_info->>'email' AS contact_email,
        v.contact_info->>'phone' AS contact_phone
 FROM purchase_order_items poi
-JOIN quotation_items qi ON qi.id = poi.quotation_item_id
-JOIN vendor_products vp ON vp.id = qi.vendor_product_id
+JOIN vendor_products vp ON vp.id = poi.vendor_product_id
 JOIN vendors v ON v.id = vp.vendor_id
 WHERE poi.po_id = $1
 ORDER BY v.id;

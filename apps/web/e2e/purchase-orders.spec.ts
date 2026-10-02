@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test"
+import type { PurchaseOrderItemRow } from "../src/types/generated"
 import { api, idFrom, pdfFile, rupiah, type SalesSeed, type SeedClient } from "./support/sales"
 import { expect, test } from "./support/seed"
 
@@ -126,6 +127,40 @@ test.describe("purchase order detail", () => {
     await expect(
       breakdown.getByText("Grand Total", { exact: true }).locator("xpath=following-sibling::*[1]"),
     ).toHaveText(rupiah(Number(saved.poGrandTotal)))
+  })
+
+  test("a vendor changed in the PO editor is saved on the line", async ({ page, seed }) => {
+    const { vendor, item, q, po } = await acceptedPo(seed)
+    const other = await seed.vendor({ label: "Vendor Pengganti" })
+    await seed.linkVendor(item, other, 50_000)
+
+    await page.goto(`/purchase-orders/${q.id}/edit`)
+    await expect(page.locator("main")).toContainText(vendor.name)
+    await page.getByRole("button", { name: "Edit produk 1" }).click()
+    const modal = page.getByRole("dialog", { name: "Edit Produk Quotation" })
+    await modal.getByLabel("Nama Vendor *").click()
+    await modal.getByLabel("Nama Vendor *").fill(other.name)
+    await page.getByRole("option", { name: new RegExp(other.name) }).click()
+    // The pick brings the vendor's own harga beli, so no price prompt.
+    await expect(modal.getByLabel("Harga Beli Satuan *")).toHaveValue("50000")
+    await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
+    await expect(modal).toBeHidden()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Simpan", exact: true }).click()
+
+    await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}$`))
+    await expect
+      .poll(async () => {
+        const items = await api<PurchaseOrderItemRow[]>("GET", `/purchase-orders/${po.id}/items`)
+        const line = items.find((it) => it.itemType === "product")
+        return [line?.vendorId, line?.costPrice]
+      })
+      .toEqual([other.id, "50000.00"])
+    // The editor reopens on the vendor saved, not the quoted one.
+    await page.goto(`/purchase-orders/${q.id}/edit`)
+    await expect(page.locator("main")).toContainText(other.name)
+    await expect(page.locator("main")).not.toContainText(vendor.name)
   })
 })
 

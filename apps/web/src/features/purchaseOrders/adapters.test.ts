@@ -99,6 +99,9 @@ describe("edit wizard round trip", () => {
     unitCode: "MTR",
     shipDestination: "Gudang B",
     isAvailable: false,
+    vendorProductId: 700,
+    vendorId: 7,
+    vendorName: "PT Laut",
     // costPrice absent: unknown cost
   })
   const unitCode = () => ""
@@ -112,6 +115,9 @@ describe("edit wizard round trip", () => {
       jumlah: 2,
       hargaBeli: 0,
       hargaJual: 100,
+      vendorId: 7,
+      vendorProductId: 700,
+      vendor: "PT Laut",
     })
   })
 
@@ -127,10 +133,11 @@ describe("edit wizard round trip", () => {
       costPrice: undefined,
       isAvailable: false,
       shipDestination: "Gudang B",
+      vendorProductId: 700,
     })
   })
 
-  it("keeps stored flags and unknown cost on an edited quantity", () => {
+  it("keeps stored flags, vendor and unknown cost on an edited quantity", () => {
     const edited: PoEditLine = { ...hydrated, jumlah: 5, touched: true }
     expect(lineToInput(edited, units)).toEqual({
       quotationItemId: 70,
@@ -143,6 +150,44 @@ describe("edit wizard round trip", () => {
       costPrice: undefined,
       isAvailable: false,
       shipDestination: "Gudang B",
+      vendorProductId: 700,
+      vendorId: undefined,
+    })
+  })
+
+  it("sends the vendor picked in the edit", () => {
+    const edited: PoEditLine = { ...hydrated, vendorId: 8, vendorProductId: 800, touched: true }
+    expect(lineToInput(edited, units)).toMatchObject({ vendorProductId: 800, vendorId: undefined })
+  })
+
+  it("sends a vendor picked without a link by its id", () => {
+    const edited: PoEditLine = {
+      ...hydrated,
+      vendorId: 9,
+      vendorProductId: undefined,
+      touched: true,
+    }
+    expect(lineToInput(edited, units)).toMatchObject({ vendorProductId: undefined, vendorId: 9 })
+  })
+
+  it("sends no vendor once it is cleared", () => {
+    const edited: PoEditLine = {
+      ...hydrated,
+      vendorId: undefined,
+      vendorProductId: undefined,
+      touched: true,
+    }
+    expect(lineToInput(edited, units)).toMatchObject({
+      vendorProductId: undefined,
+      vendorId: undefined,
+    })
+  })
+
+  it("drops the quotation line once the product is swapped", () => {
+    const edited: PoEditLine = { ...hydrated, itemId: 43, touched: true }
+    expect(lineToInput(edited, units)).toMatchObject({
+      quotationItemId: undefined,
+      offeredItemId: 43,
     })
   })
 
@@ -165,6 +210,8 @@ describe("edit wizard round trip", () => {
       requestedNama: "Shackle",
       requestedKodeImpa: "",
       vendor: "PT Laut",
+      vendorId: 7,
+      vendorProductId: 500,
       jumlah: 1,
       satuan: "pcs",
       hargaBeli: 0,
@@ -181,6 +228,8 @@ describe("edit wizard round trip", () => {
       costPrice: "0",
       isAvailable: undefined,
       shipDestination: undefined,
+      vendorProductId: 500,
+      vendorId: undefined,
     })
   })
 })
