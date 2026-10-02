@@ -53,10 +53,11 @@ export function useUpdateVendor() {
       vendorsApi.update(id, input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
-      // PO lines and item vendor lists carry the vendor name.
+      // PO lines, item vendor lists and Quotation Terakhir carry the vendor name.
       qc.invalidateQueries({
         predicate: (q) =>
-          (q.queryKey[0] === "items" && q.queryKey[2] === "vendors") ||
+          (q.queryKey[0] === "items" &&
+            (q.queryKey[2] === "vendors" || q.queryKey[2] === "quotations")) ||
           (q.queryKey[0] === "purchase-orders" && q.queryKey[2] === "items"),
       })
     },

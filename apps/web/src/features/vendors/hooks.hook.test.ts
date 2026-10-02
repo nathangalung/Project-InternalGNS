@@ -82,20 +82,21 @@ describe("vendor writes", () => {
 
   // Lists printing the vendor name.
   //
-  // PO lines and item vendor lists carry the vendor name.
+  // PO lines, item vendor lists and Quotation Terakhir carry the vendor name.
   it("refreshes the lists that print the vendor name, and nothing else", async () => {
     m.update.mockResolvedValue({ id: 4 } as never)
     const { qc, result } = renderQueryHook(() => useUpdateVendor())
     const itemVendors = queryKeys.items.vendors(9)
     const poItems = queryKeys.purchaseOrders.items(3)
+    const itemQuotations = queryKeys.items.quotations(9)
     const itemDetail = queryKeys.items.detail(9)
     const poDetail = queryKeys.purchaseOrders.detail(3)
-    const keys = [detail, itemVendors, poItems, itemDetail, poDetail]
+    const keys = [detail, itemVendors, poItems, itemQuotations, itemDetail, poDetail]
     seed(qc, keys)
     await settle(() =>
       result.current.mutateAsync({ id: 4, input: { name: "CV B", isActive: true } }),
     )
-    expect(invalidated(qc, keys)).toEqual([detail, itemVendors, poItems])
+    expect(invalidated(qc, keys)).toEqual([detail, itemVendors, poItems, itemQuotations])
   })
 
   it("toasts the server reason when an update fails", async () => {

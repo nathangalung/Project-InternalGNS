@@ -175,17 +175,17 @@ describe("useInvoiceFiled", () => {
 })
 
 describe("useChangePoStatus", () => {
-  it("refreshes POs, invoices and dashboard", async () => {
+  // A cancel changes Total Pembelian.
+  it("refreshes POs, invoices, dashboard and the client and vendor totals", async () => {
     m.changeStatus.mockResolvedValue(undefined)
     const { qc, result } = renderQueryHook(() => useChangePoStatus())
-    seed(qc, [poDetail, invList, dash, quotations])
+    const clientList = queryKeys.clients.list()
+    const vendorList = queryKeys.vendors.list()
+    const keys = [poDetail, invList, dash, clientList, vendorList, quotations]
+    seed(qc, keys)
     await settle(() => result.current.mutateAsync({ id: 3, status: "CANCELLED", note: "Batal" }))
     expect(m.changeStatus).toHaveBeenCalledWith(3, "CANCELLED", "Batal")
-    expect(invalidated(qc, [poDetail, invList, dash, quotations])).toEqual([
-      poDetail,
-      invList,
-      dash,
-    ])
+    expect(invalidated(qc, keys)).toEqual([poDetail, invList, dash, clientList, vendorList])
   })
 
   it("leaves the completeness 422 to its modal", async () => {

@@ -24,12 +24,27 @@ import type {
 
 // Caches a quotation write touches.
 //
-// Client and vendor pages show quotation counts.
+// Client and vendor lists show counts and totals, and the product, client
+// and vendor pages list the newest quotations with their status and
+// contact. New lines start from the items' sent and accepted history.
 function invalidateQuotationDeps(qc: QueryClient) {
   qc.invalidateQueries({ queryKey: queryKeys.quotations.all })
   qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
   qc.invalidateQueries({ queryKey: queryKeys.clients.all })
   qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
+  qc.invalidateQueries({ queryKey: queryKeys.items.all })
+}
+
+// Caches a draft line save touches.
+//
+// The list total and product count move, and a line naming a new vendor
+// links it to the product. A draft is on no recent list and the client is
+// fixed, so client pages stay put.
+function invalidateDraftDeps(qc: QueryClient) {
+  qc.invalidateQueries({ queryKey: queryKeys.quotations.all })
+  qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+  qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
+  qc.invalidateQueries({ queryKey: queryKeys.items.all })
 }
 
 export function useQuotations(params: QuotationListParams = {}) {
@@ -97,9 +112,7 @@ export function useUpdateQuotationContact() {
   return useMutation({
     mutationFn: ({ id, contactId }: { id: number; contactId: number }) =>
       quotationsApi.updateQuotationContact(id, contactId),
-    onSuccess: (_, { id }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) })
-    },
+    onSuccess: () => invalidateQuotationDeps(qc),
     onError: (err) => toast.error(errorMessage(err, "Gagal mengubah narahubung quotation.")),
   })
 }
@@ -296,7 +309,7 @@ export function useLiveChange(id: number | undefined) {
     mutationFn: (change: () => Promise<unknown>) => change(),
     onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan perubahan.")),
     onSettled: () => {
-      if (id !== undefined) qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) })
+      if (id !== undefined) invalidateDraftDeps(qc)
     },
   })
 }

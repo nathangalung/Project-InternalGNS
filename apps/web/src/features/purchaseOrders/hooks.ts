@@ -117,6 +117,8 @@ export function useInvoiceFiled(quotationId: number | undefined, enabled: boolea
 }
 
 // Completeness 422: modal, not toast.
+//
+// Total Pembelian on the client and vendor pages leaves out a cancelled PO.
 export function useChangePoStatus() {
   const qc = useQueryClient()
   return useMutation({
@@ -126,6 +128,8 @@ export function useChangePoStatus() {
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
       qc.invalidateQueries({ queryKey: queryKeys.invoices.all })
       qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+      qc.invalidateQueries({ queryKey: queryKeys.clients.all })
+      qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
     },
     onError: (err) => {
       if (completenessIssues(err)) return

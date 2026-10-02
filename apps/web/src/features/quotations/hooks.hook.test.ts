@@ -38,7 +38,9 @@ const client = queryKeys.clients.detail(1)
 const vendor = queryKeys.vendors.detail(1)
 const poList = queryKeys.purchaseOrders.list()
 const invoices = queryKeys.invoices.list()
-const deps = [qDetail, qList, dash, client, vendor]
+// Product, client and vendor pages list the newest quotations.
+const itemQuotations = queryKeys.items.quotations(9)
+const deps = [qDetail, qList, dash, client, vendor, itemQuotations]
 
 beforeEach(() => vi.clearAllMocks())
 
@@ -148,13 +150,14 @@ describe("quotation writes", () => {
     expect(toast.error).toHaveBeenCalledWith(msg)
   })
 
-  it("contact change refreshes only that quotation", async () => {
+  // The recent lists print the contact.
+  it("contact change refreshes the quotation caches", async () => {
     m.updateQuotationContact.mockResolvedValue(undefined)
     const { qc, result } = renderQueryHook(() => useUpdateQuotationContact())
-    seed(qc, [qDetail, qList])
+    seed(qc, [...deps, poList])
     await settle(() => result.current.mutateAsync({ id: 5, contactId: 2 }))
     expect(m.updateQuotationContact).toHaveBeenCalledWith(5, 2)
-    expect(invalidated(qc, [qDetail, qList])).toEqual([qDetail])
+    expect(invalidated(qc, [...deps, poList])).toEqual(deps)
   })
 })
 
@@ -423,13 +426,20 @@ describe("useEditLocks", () => {
 })
 
 describe("useLiveChange", () => {
-  it("runs the change and reloads the quotation", async () => {
+  // Totals, counts and vendor links.
+  //
+  // A line save moves the list total and product count, and a line naming a
+  // new vendor links it to the product. The client page stays put.
+  it("runs the change and reloads what a line save moves", async () => {
     const { qc, result } = renderQueryHook(() => useLiveChange(5))
-    seed(qc, [qDetail, qList])
+    const itemVendors = queryKeys.items.vendors(9)
+    const vendorItems = queryKeys.vendors.items(1)
+    const keys = [qDetail, qList, dash, itemVendors, vendorItems, client]
+    seed(qc, keys)
     const change = vi.fn(async () => undefined)
     await settle(() => result.current.mutateAsync(change))
     expect(change).toHaveBeenCalled()
-    expect(invalidated(qc, [qDetail, qList])).toEqual([qDetail])
+    expect(invalidated(qc, keys)).toEqual([qDetail, qList, dash, itemVendors, vendorItems])
   })
 
   it("toasts a refusal and still reloads", async () => {

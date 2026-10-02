@@ -135,16 +135,18 @@ describe("item writes", () => {
     expect(invalidated(qc, [list, vendorDetail])).toEqual([list])
   })
 
-  // Vendor tabs show item names.
+  // Vendor tabs and Quotation Terakhir show item names.
   it("refreshes items and vendors after an update", async () => {
     m.update.mockResolvedValue({ id: 9 } as never)
     const { qc, result } = renderQueryHook(() => useUpdateItem())
     const quotations = queryKeys.quotations.list()
-    seed(qc, [detail, vendorDetail, quotations])
+    const vendorQuotations = queryKeys.vendors.quotations(4)
+    const keys = [detail, vendorDetail, vendorQuotations, quotations]
+    seed(qc, keys)
     await settle(() =>
       result.current.mutateAsync({ id: 9, input: { name: "Baut", isActive: true } }),
     )
-    expect(invalidated(qc, [detail, vendorDetail, quotations])).toEqual([detail, vendorDetail])
+    expect(invalidated(qc, keys)).toEqual([detail, vendorDetail, vendorQuotations])
   })
 
   it("toasts Indonesian copy when an update fails", async () => {
