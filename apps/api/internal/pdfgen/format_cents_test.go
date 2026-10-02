@@ -26,8 +26,8 @@ func TestFormatIDRCents(t *testing.T) {
 // total - discount = subtotal.
 func TestFormatIDRCents_ColumnReconciles(t *testing.T) {
 	total, discount, subtotal := "1001.00", "75.50", "925.50"
-	if FormatIDRCents(total) == FormatIDR(total) {
-		t.Fatal("the document formatter must differ from the truncating one")
+	if got, want := FormatIDRCents(total), "Rp~1.001,00"; got != want {
+		t.Errorf("total = %q, want %q", got, want)
 	}
 	if got, want := FormatIDRCents(subtotal), "Rp~925,50"; got != want {
 		t.Errorf("subtotal = %q, want %q", got, want)
