@@ -85,9 +85,10 @@ func TestRepo_TotalPurchase_ExcludesCancelledPO(t *testing.T) {
 }
 
 // The cost follows the PO lines.
-// A PO line keeps its vendor through the quotation line it came from; its
-// edited cost is what the dashboard books, so the total, the minTotal filter
-// and the sort read it. An accepted deal with no PO counts at quotation cost.
+// A PO line stores its own vendor; its edited cost is what the dashboard
+// books, so the total, the minTotal filter and the sort read it, and a
+// vendor swapped in Ubah PO takes the cost with it. An accepted deal with no
+// PO counts at quotation cost.
 func TestRepo_TotalPurchase_FollowsPOLines(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := vendors.NewRepo(tx, testutil.Store(t))
@@ -132,11 +133,17 @@ func TestRepo_TotalPurchase_FollowsPOLines(t *testing.T) {
 	noPO, noPOItem, noPOVP := newVendor(prefix + " B")
 	deal(prefix+" B", "accepted", noPOItem, noPOVP, "1", "9000")
 
-	check := func(wantEdited string, wantOrder []int64, minRows int) {
+	// Picked for the PO line in Ubah PO.
+	swapped, _, _ := newVendor(prefix + " C")
+
+	check := func(wantEdited, wantSwapped string, wantOrder []int64, minRows int) {
 		t.Helper()
 		got, err := repo.GetByID(ctx, edited)
 		require.NoError(t, err)
 		assert.Equal(t, wantEdited, got.TotalPurchase, "vendors.get_by_id")
+		picked, err := repo.GetByID(ctx, swapped)
+		require.NoError(t, err)
+		assert.Equal(t, wantSwapped, picked.TotalPurchase, "swapped vendor")
 		other, err := repo.GetByID(ctx, noPO)
 		require.NoError(t, err)
 		assert.Equal(t, "9000.00", other.TotalPurchase, "no PO falls back to the quotation")
@@ -157,16 +164,25 @@ func TestRepo_TotalPurchase_FollowsPOLines(t *testing.T) {
 		assert.Len(t, filtered.Rows, minRows, "minTotal filter")
 	}
 
-	check("14000.00", []int64{edited, noPO}, 1)
+	check("14000.00", "0", []int64{edited, noPO, swapped}, 1)
 
 	var poID int64
 	require.NoError(t, tx.QueryRow(ctx,
 		`SELECT id FROM purchase_orders WHERE quotation_id = $1`, quotationID).Scan(&poID))
-	_, err = tx.Exec(ctx, `SELECT fn_update_po_items($1, $2, 0, NULL, NULL, NULL, NULL, $3::jsonb)`,
-		poID, seedUserID, fmt.Sprintf(
-			`[{"quotationItemId":"%d","offeredItemId":"%d","itemName":"Barang",`+
-				`"qty":"1","unitId":"19","sellingPrice":"10000","costPrice":"4000"}]`, lineID, editedItem))
-	require.NoError(t, err)
+	editLine := func(supplier string) {
+		t.Helper()
+		_, err := tx.Exec(ctx, `SELECT fn_update_po_items($1, $2, 0, NULL, NULL, NULL, NULL, $3::jsonb)`,
+			poID, seedUserID, fmt.Sprintf(
+				`[{"quotationItemId":"%d","offeredItemId":"%d","itemName":"Barang",%s,`+
+					`"qty":"1","unitId":"19","sellingPrice":"10000","costPrice":"4000"}]`,
+				lineID, editedItem, supplier))
+		require.NoError(t, err)
+	}
 
-	check("4000.00", []int64{noPO, edited}, 0)
+	editLine(fmt.Sprintf(`"vendorProductId":"%d"`, editedVP))
+	check("4000.00", "0", []int64{noPO, edited, swapped}, 0)
+
+	// The quotation line still names the old vendor; the PO line decides.
+	editLine(fmt.Sprintf(`"vendorId":"%d"`, swapped))
+	check("0", "4000.00", []int64{noPO, swapped, edited}, 0)
 }

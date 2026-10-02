@@ -6,8 +6,7 @@ SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.up
                   SELECT poi.total_cost AS cost
                   FROM purchase_order_items poi
                   JOIN purchase_orders po ON po.id = poi.po_id
-                  JOIN quotation_items qi ON qi.id = poi.quotation_item_id
-                  JOIN vendor_products vp ON vp.id = qi.vendor_product_id
+                  JOIN vendor_products vp ON vp.id = poi.vendor_product_id
                   WHERE vp.vendor_id = v.id
                     AND po.status <> 'CANCELLED'
                   UNION ALL
@@ -35,8 +34,7 @@ SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.up
                   SELECT poi.total_cost AS cost
                   FROM purchase_order_items poi
                   JOIN purchase_orders po ON po.id = poi.po_id
-                  JOIN quotation_items qi ON qi.id = poi.quotation_item_id
-                  JOIN vendor_products vp ON vp.id = qi.vendor_product_id
+                  JOIN vendor_products vp ON vp.id = poi.vendor_product_id
                   WHERE vp.vendor_id = v.id
                     AND po.status <> 'CANCELLED'
                   UNION ALL
@@ -75,8 +73,7 @@ RETURNING id, name, location, contact_info, is_active, created_at, updated_at,
                     SELECT poi.total_cost AS cost
                     FROM purchase_order_items poi
                     JOIN purchase_orders po ON po.id = poi.po_id
-                    JOIN quotation_items qi ON qi.id = poi.quotation_item_id
-                    JOIN vendor_products vp ON vp.id = qi.vendor_product_id
+                    JOIN vendor_products vp ON vp.id = poi.vendor_product_id
                     WHERE vp.vendor_id = vendors.id
                       AND po.status <> 'CANCELLED'
                     UNION ALL

@@ -25,15 +25,14 @@ var ErrNotFound = errors.New("not found")
 
 // totalPurchaseExpr sums accepted costs.
 // A deal counts at its PO line costs, since PO lines can be edited after
-// acceptance and the dashboard books them, each line reaching its vendor
-// through the quotation line it came from; a deal with no PO yet counts at
-// its quotation cost, and a cancelled PO drops it. Matches total_purchase in
-// vendors.sql.
+// acceptance and the dashboard books them, each line under the vendor it
+// stores, so a vendor swapped in Ubah PO takes the cost with it; a deal with
+// no PO yet counts at its quotation cost, and a cancelled PO drops it.
+// Matches total_purchase in vendors.sql.
 const totalPurchaseExpr = "COALESCE((SELECT SUM(c.cost) FROM (" +
 	"SELECT poi.total_cost AS cost FROM purchase_order_items poi" +
 	" JOIN purchase_orders po ON po.id = poi.po_id" +
-	" JOIN quotation_items qi ON qi.id = poi.quotation_item_id" +
-	" JOIN vendor_products vp ON vp.id = qi.vendor_product_id" +
+	" JOIN vendor_products vp ON vp.id = poi.vendor_product_id" +
 	" WHERE vp.vendor_id = v.id AND po.status <> 'CANCELLED'" +
 	" UNION ALL" +
 	" SELECT qi.total_cost FROM quotation_items qi" +
