@@ -149,6 +149,12 @@ func TestProducts_HeaderDetection(t *testing.T) {
 			found: true,
 		},
 		{
+			name:  "an English IMPA form",
+			rows:  [][]string{{"No", "IMPA", "Description", "Qty", "Unit"}, {"1", "370115", "Marine Radio", "2", "PCS"}},
+			want:  []rfqRow{rfqRadio},
+			found: true,
+		},
+		{
 			name: "title banner above the header",
 			rows: [][]string{
 				{"DAFTAR PRODUK PT GLOBAL", "", "", "", ""},
@@ -877,6 +883,72 @@ func TestParseRFQ_TextThatFits(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			data := partsSorted(t, buildXLSX(t, c.build))
+			got, err := ParseRFQ("rfq.xlsx", data)
+			require.NoError(t, err)
+			assert.Equal(t, c.want, got)
+		})
+	}
+}
+
+// A product merged down is one product.
+// Formatted RFQ forms often give each product two sheet rows by merging
+// its cells downward; the merge fills every row, which must not read as a
+// second request.
+func TestParseRFQ_ProductMergedDown(t *testing.T) {
+	cases := []struct {
+		name   string
+		rows   [][]any
+		merges [][2]string
+		want   []rfqRow
+	}{
+		{
+			name: "every cell merged over two rows",
+			rows: [][]any{
+				{"1", "Baut M10", 20, "PCS"},
+				{},
+				{"2", "Mur M10", 30, "PCS"},
+				{},
+			},
+			merges: [][2]string{
+				{"A2", "A3"}, {"B2", "B3"}, {"C2", "C3"}, {"D2", "D3"},
+				{"A4", "A5"}, {"B4", "B5"}, {"C4", "C5"}, {"D4", "D5"},
+			},
+			want: []rfqRow{
+				{IMPACode: "1", Name: "Baut M10", Qty: 20, Unit: "PCS"},
+				{IMPACode: "2", Name: "Mur M10", Qty: 30, Unit: "PCS"},
+			},
+		},
+		{
+			name: "a merge shared with another product keeps both",
+			rows: [][]any{
+				{"1", "Baut M10", 20, "PCS"},
+				{"2", "Mur M10"},
+			},
+			merges: [][2]string{{"C2", "C3"}, {"D2", "D3"}},
+			want: []rfqRow{
+				{IMPACode: "1", Name: "Baut M10", Qty: 20, Unit: "PCS"},
+				{IMPACode: "2", Name: "Mur M10", Qty: 20, Unit: "PCS"},
+			},
+		},
+		{
+			name: "three rows merged stay one product",
+			rows: [][]any{
+				{"1", "Kabel NYM 3x2.5", 100, "MTR"},
+				{},
+				{},
+			},
+			merges: [][2]string{{"A2", "A4"}, {"B2", "B4"}, {"C2", "C4"}, {"D2", "D4"}},
+			want:   []rfqRow{{IMPACode: "1", Name: "Kabel NYM 3x2.5", Qty: 100, Unit: "MTR"}},
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			data := buildXLSX(t, func(f *excelize.File) {
+				setRows(t, f, "A1", append([][]any{{"Kode", "Nama", "Jumlah", "Satuan"}}, c.rows...)...)
+				for _, m := range c.merges {
+					require.NoError(t, f.MergeCell("Sheet1", m[0], m[1]))
+				}
+			})
 			got, err := ParseRFQ("rfq.xlsx", data)
 			require.NoError(t, err)
 			assert.Equal(t, c.want, got)

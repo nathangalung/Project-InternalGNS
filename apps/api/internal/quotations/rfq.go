@@ -74,7 +74,7 @@ var (
 // Matched case-insensitively, exact first, then as a substring.
 var (
 	rfqImpaKeys = []string{"impa", "kode impa", "kode"}
-	rfqNameKeys = []string{"nama", "produk", "name", "deskripsi"}
+	rfqNameKeys = []string{"nama", "produk", "name", "deskripsi", "description"}
 	rfqQtyKeys  = []string{"kuantitas", "jumlah", "qty", "quantity"}
 	rfqUnitKeys = []string{"satuan", "unit"}
 )
@@ -91,6 +91,8 @@ type rfqSheet struct {
 	spans map[int][][2]int
 	// num reads a numeric cell's stored value.
 	num func(row, col int) (float64, bool)
+	// above reports a cell filled by a merge from an earlier row.
+	above func(row, col int) bool
 }
 
 // textSheet wraps a plain grid.
@@ -518,6 +520,10 @@ func readSheet(f *excelize.File, name string) (rfqSheet, error) {
 		}
 		return numericCell(f, name, at)
 	}
+	s.above = func(i, col int) bool {
+		from, ok := src[[2]int{rowNums[i], col + 1}]
+		return ok && from[0] < rowNums[i]
+	}
 	return s, nil
 }
 
@@ -707,6 +713,9 @@ func (s rfqSheet) products() ([]items.MatchRowInput, bool, error) {
 	for i := hdr + 1; i < len(s.rows); i++ {
 		row := s.rows[i]
 		name := strings.TrimSpace(cellAt(row, cols.name))
+		if s.continues(i, cols) {
+			continue
+		}
 		if name == "" || s.isCategory(i, cols) {
 			continue
 		}
@@ -724,6 +733,28 @@ func (s rfqSheet) products() ([]items.MatchRowInput, bool, error) {
 		out = append(out, r)
 	}
 	return out, true, nil
+}
+
+// continues spots a product's next row.
+// Formatted forms give one product several rows by merging its cells down,
+// and the merge fills every row. A row whose every filled column comes from
+// a merge above repeats that product; one with any text of its own (a
+// second product sharing a merged quantity) stays a row.
+func (s rfqSheet) continues(i int, cols rfqColumns) bool {
+	if s.above == nil {
+		return false
+	}
+	filled := false
+	for _, c := range []int{cols.impa, cols.name, cols.qty, cols.unit} {
+		if c < 0 || strings.TrimSpace(cellAt(s.rows[i], c)) == "" {
+			continue
+		}
+		if !s.above(i, c) {
+			return false
+		}
+		filled = true
+	}
+	return filled
 }
 
 // isCategory spots a section row.
