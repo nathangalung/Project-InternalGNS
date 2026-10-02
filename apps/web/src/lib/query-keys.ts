@@ -15,6 +15,7 @@ export const queryKeys = {
     detail: (id: number) => ["clients", "detail", id] as const,
     search: (q: string) => ["clients", "search", q] as const,
     contacts: (companyId: number) => ["clients", companyId, "contacts"] as const,
+    quotations: (id: number) => ["clients", id, "quotations"] as const,
   },
   countries: {
     all: ["countries"] as const,
@@ -30,6 +31,7 @@ export const queryKeys = {
     vendors: (id: number) => ["items", id, "vendors"] as const,
     priceHistory: (id: number, limit?: number) => ["items", id, "price-history", limit] as const,
     images: (id: number) => ["items", id, "images"] as const,
+    quotations: (id: number) => ["items", id, "quotations"] as const,
   },
   vendors: {
     all: ["vendors"] as const,
@@ -38,6 +40,7 @@ export const queryKeys = {
     detail: (id: number) => ["vendors", "detail", id] as const,
     search: (q: string) => ["vendors", "search", q] as const,
     items: (id: number) => ["vendors", id, "items"] as const,
+    quotations: (id: number) => ["vendors", id, "quotations"] as const,
   },
   units: {
     all: ["units"] as const,

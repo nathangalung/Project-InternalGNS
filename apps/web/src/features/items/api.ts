@@ -5,6 +5,7 @@ import type {
   CreateItemInput,
   ItemGallery,
   ItemPriceHistoryRow,
+  ItemQuotationRow,
   ItemRow,
   ItemVendorRow,
   LineRecommendation,
@@ -169,4 +170,9 @@ export async function recommend(
   const qs = new URLSearchParams({ itemIds: itemIds.join(",") })
   if (clientId) qs.set("clientId", String(clientId))
   return apiRequest<LineRecommendation[]>({ path: `/items/recommendations?${qs}` })
+}
+
+// The newest quotations, newest first.
+export async function listRecentQuotations(id: number): Promise<ItemQuotationRow[]> {
+  return apiRequest<ItemQuotationRow[]>({ path: `/items/${id}/quotations` })
 }

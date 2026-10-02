@@ -43,6 +43,7 @@ describe("vendors api", () => {
 
   it.each<[string, () => Promise<unknown>, Parameters<typeof apiRequest>[0]]>([
     ["get", () => api.get(4), { path: "/vendors/4" }],
+    ["recent quotations", () => api.listRecentQuotations(4), { path: "/vendors/4/quotations" }],
     [
       "create",
       () => api.create({ name: "CV B", contactInfo: { email: "b@x.id" } }),

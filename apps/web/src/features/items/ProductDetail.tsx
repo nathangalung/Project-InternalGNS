@@ -7,6 +7,7 @@ import { apiFieldError, vendorInitials } from "@/features/items/helpers"
 import { useItemVendors, useUpdateItem } from "@/features/items/hooks"
 import ProductGallery from "@/features/items/ProductGallery"
 import ProductPhoto from "@/features/items/ProductPhoto"
+import ProductQuotations from "@/features/items/ProductQuotations"
 import { useUnits } from "@/features/units/hooks"
 import UnitCombobox from "@/features/units/UnitCombobox"
 import { errorMessage } from "@/lib/errors"
@@ -434,6 +435,8 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
             </table>
           </div>
         </div>
+
+        <ProductQuotations itemId={product.id} />
       </div>
 
       <AddVendorToItemModal

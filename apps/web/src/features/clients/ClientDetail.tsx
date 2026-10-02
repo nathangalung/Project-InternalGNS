@@ -22,6 +22,7 @@ import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
 import { digitsOnly, optionalEmailError, optionalPhoneError } from "@/lib/validation"
 import type { ClientRow } from "@/types/api"
+import ClientQuotations from "./ClientQuotations"
 
 type ClientDetailProps = {
   client: ClientRow
@@ -884,6 +885,8 @@ export default function ClientDetail({ client }: ClientDetailProps) {
           {updateClient.isPending ? "Menyimpan…" : "Simpan Perubahan"}
         </button>
       </div>
+
+      <ClientQuotations clientId={client.id} />
 
       {pendingDeleteId !== null && (
         <Modal

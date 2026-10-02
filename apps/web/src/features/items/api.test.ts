@@ -93,6 +93,7 @@ describe("items api", () => {
       { path: "/items/9/image/download-url" },
     ],
     ["list photos", () => api.listImages(9), { path: "/items/9/images" }],
+    ["recent quotations", () => api.listRecentQuotations(9), { path: "/items/9/quotations" }],
     [
       "add a photo",
       () => api.addImage(9, "k"),

@@ -21,6 +21,7 @@ import { useListScreen } from "@/lib/useListScreen"
 import { digitsOnly, optionalEmailError, optionalPhoneError } from "@/lib/validation"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
 import { buildContactInfo, vendorFormErrors } from "./contact-info"
+import VendorQuotations from "./VendorQuotations"
 
 type VendorDetailProps = {
   vendor: VendorRow
@@ -599,6 +600,8 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
           )}
         </div>
       </div>
+
+      <VendorQuotations vendorId={vendor.id} />
     </div>
   )
 }

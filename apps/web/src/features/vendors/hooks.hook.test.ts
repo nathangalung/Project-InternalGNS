@@ -11,6 +11,7 @@ import {
   useVendor,
   useVendorItems,
   useVendorLogoDownloadUrl,
+  useVendorRecentQuotations,
   useVendors,
 } from "./hooks"
 
@@ -138,5 +139,17 @@ describe("useUploadVendorLogo", () => {
     const { result } = renderQueryHook(() => useUploadVendorLogo())
     await settle(() => result.current.mutateAsync({ id: 4, file: png() }))
     expect(toast.error).toHaveBeenCalledWith("Gagal mengunggah logo vendor.")
+  })
+})
+
+describe("useVendorRecentQuotations", () => {
+  it("loads the newest quotations only for a real record", async () => {
+    m.listRecentQuotations.mockResolvedValue([])
+    const idle = renderQueryHook(() => useVendorRecentQuotations(undefined))
+    await until(() => expect(idle.result.current.fetchStatus).toBe("idle"))
+    const { result } = renderQueryHook(() => useVendorRecentQuotations(4))
+    await until(() => expect(result.current.data).toEqual([]))
+    expect(m.listRecentQuotations).toHaveBeenCalledTimes(1)
+    expect(m.listRecentQuotations).toHaveBeenCalledWith(4)
   })
 })
