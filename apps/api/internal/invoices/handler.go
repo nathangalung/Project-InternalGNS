@@ -108,7 +108,8 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 			inv.InvoiceDate.In(tz.Jakarta()).Format("2006-01-02"),
 			due,
 			inv.CompanyName,
-			string(inv.Status),
+			// Terlambat is derived, never stored, as in the list.
+			StatusLabel(inv.EffectiveStatus),
 			total,
 		})
 	}
