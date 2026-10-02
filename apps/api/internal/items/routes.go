@@ -32,6 +32,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.Get("/{id}/vendors", h.ListVendorsForItem)
 	r.Post("/{id}/vendors", h.AddVendor)
 	r.Get("/{id}/price-history", h.PriceHistory)
+	r.Get("/{id}/quotations", h.RecentQuotations)
 
 	image := imageAsset(d.Storage, d.Objects, repo)
 	r.Get("/{id}/image/upload-url", assetproxy.Upload(image))

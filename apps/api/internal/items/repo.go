@@ -319,3 +319,19 @@ func (r *Repo) SearchRequestHistory(ctx context.Context, q string, limit int, is
 	}
 	return pgx.CollectRows(rows, pgx.RowToStructByName[RequestHistoryHit])
 }
+
+// RecentQuotations lists the newest quotations.
+// Only quotations that reached the client count (every status but draft
+// and cancelled), newest first; these are the lines offered the product.
+func (r *Repo) RecentQuotations(ctx context.Context, id int64) ([]ItemQuotation, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.recent_quotations"), id, RecentQuotationCount)
+	if err != nil {
+		return nil, fmt.Errorf("recent quotations: %w", err)
+	}
+	out, err := pgx.CollectRows(rows, pgx.RowToStructByName[ItemQuotation])
+	if err != nil {
+		return nil, fmt.Errorf("recent quotations: %w", err)
+	}
+	// Always a list, so the web never reads null.
+	return append([]ItemQuotation{}, out...), nil
+}

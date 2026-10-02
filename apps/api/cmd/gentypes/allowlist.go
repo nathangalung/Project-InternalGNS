@@ -38,6 +38,7 @@ var allowlist = []pkg{
 	{"internal/clients", []entry{
 		{Go: "Client", TS: "ClientRow"},
 		{Go: "Contact", TS: "ContactRow"},
+		{Go: "ClientQuotation", TS: "ClientQuotationRow"},
 		{Go: "SearchResult", TS: "ClientSearchHit"},
 		{Go: "Summary", TS: "ClientSummary"},
 		{Go: "CreateClientRequest", TS: "CreateClientInput", Input: true},
@@ -54,6 +55,7 @@ var allowlist = []pkg{
 	{"internal/vendors", []entry{
 		{Go: "Vendor", TS: "VendorRow"},
 		{Go: "ItemByVendor", TS: "VendorItemRow"},
+		{Go: "VendorQuotation", TS: "VendorQuotationRow"},
 		{Go: "CreateVendorRequest", TS: "CreateVendorInput", Input: true},
 		{Go: "UpdateVendorRequest", TS: "UpdateVendorInput", Input: true},
 		{Go: "ContactInfo", TS: "VendorContactInfo"},
@@ -75,6 +77,7 @@ var allowlist = []pkg{
 		{Go: "AdvancedSearchResponse", TS: "AdvancedSearchResponse"},
 		{Go: "ItemImage", TS: "ItemImage"},
 		{Go: "ItemGallery", TS: "ItemGallery"},
+		{Go: "ItemQuotation", TS: "ItemQuotationRow"},
 	}},
 	{"internal/quotations", []entry{
 		{Go: "Status", TS: "QuotationStatus"},

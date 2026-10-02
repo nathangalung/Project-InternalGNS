@@ -259,3 +259,22 @@ LIMIT $2;
 SELECT item_id, vendor_product_id, vendor_id, vendor_name,
        cost_price::text, selling_price::text
 FROM fn_recommend_lines($1, $2);
+
+-- name: items.recent_quotations
+-- The product's newest quotation lines: quotations that reached the client
+-- (every status but draft and cancelled), newest quotation first. Lines
+-- marked Tidak Ditawarkan were not offered and stay out. $2 = limit.
+SELECT q.id AS quotation_id, q.quotation_no, q.created_at AS quotation_date, q.status,
+       q.company_client_id AS client_id, q.company_client_name AS client_name, q.contact_name,
+       v.id AS vendor_id, v.name AS vendor_name,
+       qi.qty::text AS qty, qi.cost_price::text AS cost_price, qi.selling_price::text AS selling_price
+FROM quotation_items qi
+JOIN quotations q ON q.id = qi.quotation_id
+LEFT JOIN vendor_products vp ON vp.id = qi.vendor_product_id
+LEFT JOIN vendors v ON v.id = vp.vendor_id
+WHERE qi.offered_item_id = $1
+  AND qi.item_type = 'product'
+  AND qi.is_available
+  AND q.status NOT IN ('draft', 'cancelled')
+ORDER BY q.created_at DESC, q.id DESC, qi.line_number
+LIMIT $2;

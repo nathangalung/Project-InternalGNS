@@ -148,3 +148,19 @@ func (o *OptionalText) UnmarshalJSON(b []byte) error {
 	o.Set = true
 	return json.Unmarshal(b, &o.Value)
 }
+
+// RecentQuotationCount caps the client's quotation list.
+const RecentQuotationCount = 5
+
+// ClientQuotation is one quotation sent to the client.
+// Status is its status key, which the web labels; ProductCount counts the
+// product lines offered, Tidak Ditawarkan left out.
+type ClientQuotation struct {
+	ID           int64     `db:"id"            json:"id"`
+	QuotationNo  string    `db:"quotation_no"  json:"quotationNo"`
+	CreatedAt    time.Time `db:"created_at"    json:"createdAt"`
+	Status       string    `db:"status"        json:"status"`
+	ContactName  *string   `db:"contact_name"  json:"contactName,omitempty"`
+	GrandTotal   string    `db:"grand_total"   json:"grandTotal"`
+	ProductCount int       `db:"product_count" json:"productCount"`
+}

@@ -61,6 +61,17 @@ export type ChangeUserPasswordInput = {
 };
 
 // From clients/dto.go
+export type ClientQuotationRow = {
+    id: number;
+    quotationNo: string;
+    createdAt: string;
+    status: string;
+    contactName?: string;
+    grandTotal: string;
+    productCount: number;
+};
+
+// From clients/dto.go
 export type ClientRow = {
     id: number;
     number?: string;
@@ -340,6 +351,22 @@ export type ItemPriceHistoryRow = {
     costPrice?: string;
     sellingPrice: string;
     profitPct?: string;
+};
+
+// From items/dto.go
+export type ItemQuotationRow = {
+    quotationId: number;
+    quotationNo: string;
+    quotationDate: string;
+    status: string;
+    clientId: number;
+    clientName: string;
+    contactName?: string;
+    vendorId?: number;
+    vendorName?: string;
+    qty: string;
+    costPrice?: string;
+    sellingPrice: string;
 };
 
 // From items/dto.go
@@ -1032,6 +1059,20 @@ export type VendorItemRow = {
     costPrice?: string;
     lastQuotedAt?: string;
     productUrl?: string;
+};
+
+// From vendors/dto.go
+export type VendorQuotationRow = {
+    quotationId: number;
+    quotationNo: string;
+    quotationDate: string;
+    status: string;
+    clientId: number;
+    clientName: string;
+    contactName?: string;
+    itemId?: number;
+    itemName: string;
+    impaCode?: string;
 };
 
 // From vendors/dto.go

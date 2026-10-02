@@ -211,3 +211,16 @@ SELECT
   COUNT(*) FILTER (WHERE created_at >= date_trunc('year',  NOW() AT TIME ZONE 'Asia/Jakarta'))::BIGINT AS new_this_year,
   COUNT(*) FILTER (WHERE created_at <  date_trunc('year',  NOW() AT TIME ZONE 'Asia/Jakarta'))::BIGINT AS prev_year_total
 FROM company_client;
+
+-- name: clients.recent_quotations
+-- The client's newest quotations that reached it (every status but draft
+-- and cancelled), with the number of product lines offered. $2 = limit.
+SELECT q.id, q.quotation_no, q.created_at, q.status, q.contact_name,
+       q.grand_total::text AS grand_total,
+       (SELECT count(*) FROM quotation_items qi
+        WHERE qi.quotation_id = q.id AND qi.item_type = 'product' AND qi.is_available)::int AS product_count
+FROM quotations q
+WHERE q.company_client_id = $1
+  AND q.status NOT IN ('draft', 'cancelled')
+ORDER BY q.created_at DESC, q.id DESC
+LIMIT $2;

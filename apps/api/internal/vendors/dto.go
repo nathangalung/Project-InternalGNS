@@ -81,3 +81,21 @@ type UpdateVendorRequest struct {
 	ContactInfo *ContactInfo `json:"contactInfo"`
 	IsActive    bool         `json:"isActive"`
 }
+
+// RecentQuotationCount caps the vendor's quotation list.
+const RecentQuotationCount = 5
+
+// VendorQuotation is one quotation line supplied by the vendor.
+// Status is the quotation's status key; the web labels it.
+type VendorQuotation struct {
+	QuotationID   int64     `db:"quotation_id"   json:"quotationId"`
+	QuotationNo   string    `db:"quotation_no"   json:"quotationNo"`
+	QuotationDate time.Time `db:"quotation_date" json:"quotationDate"`
+	Status        string    `db:"status"         json:"status"`
+	ClientID      int64     `db:"client_id"      json:"clientId"`
+	ClientName    string    `db:"client_name"    json:"clientName"`
+	ContactName   *string   `db:"contact_name"   json:"contactName,omitempty"`
+	ItemID        *int64    `db:"item_id"        json:"itemId,omitempty"`
+	ItemName      string    `db:"item_name"      json:"itemName"`
+	IMPACode      *string   `db:"impa_code"      json:"impaCode,omitempty"`
+}
