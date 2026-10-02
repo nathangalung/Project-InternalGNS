@@ -237,6 +237,7 @@ test("Total Pembelian follows the PO lines once they are edited", async ({ page,
         {
           quotationItemId: line.quotationItemId,
           offeredItemId: line.offeredItemId,
+          vendorProductId: line.vendorProductId,
           itemName: line.itemName,
           qty: "1",
           unitId: line.unitId,
