@@ -10,20 +10,20 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
-const lineVendorMigration = "00083_po_line_vendor.sql"
+const lineVendorMigration = "00084_po_line_vendor.sql"
 
 // Backfill copies own-product links.
 // Only a link for the line's own product is copied: a line whose product
 // was swapped in the PO edit keeps no vendor rather than the old one.
-func TestMigration00083_BackfillsLineVendor(t *testing.T) {
+func TestMigration00084_BackfillsLineVendor(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	qrepo := quotations.NewRepo(tx, testutil.Store(t))
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
 		CompanyClientID: 1,
 		DiscountPct:     "0",
 		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{
-			{RequestedName: "Migrasi 00083 tetap", Qty: "1", UnitID: 19, SellingPrice: "1000"},
-			{RequestedName: "Migrasi 00083 diganti", Qty: "1", UnitID: 19, SellingPrice: "1000"},
+			{RequestedName: "Migrasi 00084 tetap", Qty: "1", UnitID: 19, SellingPrice: "1000"},
+			{RequestedName: "Migrasi 00084 diganti", Qty: "1", UnitID: 19, SellingPrice: "1000"},
 		}),
 	}, 1)
 	require.NoError(t, err)

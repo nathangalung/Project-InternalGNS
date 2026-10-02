@@ -1,4 +1,4 @@
--- Canonical current body of fn_link_vendor_item (deployed by migration 00083).
+-- Canonical current body of fn_link_vendor_item (deployed by migration 00084).
 CREATE OR REPLACE FUNCTION public.fn_link_vendor_item(p_vendor_id bigint, p_item_id bigint, p_cost numeric, p_user_id bigint)
  RETURNS bigint
  LANGUAGE plpgsql

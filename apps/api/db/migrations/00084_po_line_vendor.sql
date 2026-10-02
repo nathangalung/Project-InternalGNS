@@ -1,6 +1,6 @@
 -- +goose Up
 
--- 00083 PO LINE VENDOR
+-- 00084 PO LINE VENDOR
 -- The PO line stores its supplier. It was read through the quotation line
 -- the PO line came from, so a vendor picked in Ubah PO was dropped on save,
 -- a line added there had no vendor and skipped the work gate, and a line

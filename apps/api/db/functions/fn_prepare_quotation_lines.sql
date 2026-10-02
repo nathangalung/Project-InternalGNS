@@ -1,4 +1,4 @@
--- Canonical current body of fn_prepare_quotation_lines (deployed by migration 00083).
+-- Canonical current body of fn_prepare_quotation_lines (deployed by migration 00084).
 CREATE OR REPLACE FUNCTION public.fn_prepare_quotation_lines(p_items jsonb, p_user_id bigint)
  RETURNS jsonb
  LANGUAGE plpgsql

@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_po_items (deployed by migration 00083).
+-- Canonical current body of fn_update_po_items (deployed by migration 00084).
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
  LANGUAGE plpgsql

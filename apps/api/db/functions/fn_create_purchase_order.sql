@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_purchase_order (deployed by migration 00083).
+-- Canonical current body of fn_create_purchase_order (deployed by migration 00084).
 CREATE OR REPLACE FUNCTION public.fn_create_purchase_order(p_quotation_id bigint, p_user_id bigint)
  RETURNS bigint
  LANGUAGE plpgsql
