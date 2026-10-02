@@ -360,7 +360,7 @@ func TestHandler_EventsRefusals(t *testing.T) {
 	assert.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
 }
 
-// A contact change is a header change.
+// Contact changes are header changes.
 // Another editor's header claim refuses it with edit_locked; a saved change
 // is announced to the open editors.
 func TestHandler_ContactChangeIsLive(t *testing.T) {

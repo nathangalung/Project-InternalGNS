@@ -41,7 +41,7 @@ type Step1ClientProps = {
   setSelectedContactId?: (id: number | undefined) => void
   // Edit mode: the client is fixed
   lockClient?: boolean
-  // Edit mode: another user holds the header
+  // Edit mode: header held elsewhere
   contactReadOnly?: boolean
 }
 

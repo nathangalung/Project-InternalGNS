@@ -99,7 +99,7 @@ func (l *retryLog) snapshot() []string {
 	return append([]string(nil), l.waits...)
 }
 
-// listenerPID waits for a listening backend.
+// listenerPID waits for the listener.
 // not skips the backend that was just terminated.
 func listenerPID(t *testing.T, pool *pgxpool.Pool, not int32) int32 {
 	t.Helper()

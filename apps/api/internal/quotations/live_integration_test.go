@@ -321,7 +321,7 @@ func TestUpdateHeader(t *testing.T) {
 	assert.Equal(t, "9000000.00", d.Total)
 }
 
-// The contact belongs to the header.
+// Contact belongs to the header.
 // Another user's header claim refuses the change; the caller's own claim or
 // a free header lets it through.
 func TestUpdateContact_FollowsHeaderClaim(t *testing.T) {

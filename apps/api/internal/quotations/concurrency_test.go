@@ -47,7 +47,7 @@ func TestRepo_ConcurrentCreatesGetDistinctNumbers(t *testing.T) {
 	assert.Len(t, seen, n)
 }
 
-// A contact change racing a send.
+// Contact change racing a send.
 // The change waits for the send and then reports the status, not a bad
 // contact.
 func TestRepo_UpdateContactRacingSend(t *testing.T) {
