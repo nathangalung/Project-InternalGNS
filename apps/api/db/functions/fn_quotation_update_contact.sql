@@ -1,4 +1,4 @@
--- Canonical current body of fn_quotation_update_contact (deployed by migration 00080).
+-- Canonical current body of fn_quotation_update_contact (deployed by migration 00083).
 CREATE OR REPLACE FUNCTION public.fn_quotation_update_contact(p_quotation_id bigint, p_contact_id bigint, p_user_id bigint)
  RETURNS text
  LANGUAGE plpgsql

@@ -1,6 +1,6 @@
 -- +goose Up
 
--- 00080 QUOTATION CONTACT LIVE
+-- 00083 QUOTATION CONTACT LIVE
 -- The contact (narahubung) of a draft is part of its header. Changing it
 -- follows the live-edit contract of migration 00078: the quotation row is
 -- taken FOR UPDATE first, so the status is read after any concurrent move
