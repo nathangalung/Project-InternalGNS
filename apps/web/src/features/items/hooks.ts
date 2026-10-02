@@ -108,6 +108,7 @@ export function useCreateItem() {
   })
 }
 
+// Failures show inline in the form.
 export function useUpdateItem() {
   const qc = useQueryClient()
   return useMutation({
@@ -118,7 +119,6 @@ export function useUpdateItem() {
       qc.invalidateQueries({ queryKey: queryKeys.items.all })
       qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui produk.")),
   })
 }
 

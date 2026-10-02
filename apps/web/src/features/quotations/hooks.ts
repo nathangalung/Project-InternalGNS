@@ -138,6 +138,7 @@ type UpsertArgs =
   | { quotationId: number; requestId?: undefined; input: QuotationItemRequestCreateInput }
   | { quotationId: number; requestId: number; input: QuotationItemRequestUpdateInput }
 
+// Failures show inline in the card.
 export function useUpsertQuotationRequest() {
   const qc = useQueryClient()
   return useMutation({
@@ -150,10 +151,10 @@ export function useUpsertQuotationRequest() {
     onSuccess: (_, { quotationId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.quotations.requests(quotationId) })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan item request.")),
   })
 }
 
+// Failures show inline in the card.
 export function useDeleteQuotationRequest() {
   const qc = useQueryClient()
   return useMutation({
@@ -162,7 +163,6 @@ export function useDeleteQuotationRequest() {
     onSuccess: (_, { quotationId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.quotations.requests(quotationId) })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal menghapus item request.")),
   })
 }
 

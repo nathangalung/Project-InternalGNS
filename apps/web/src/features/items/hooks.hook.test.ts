@@ -156,11 +156,13 @@ describe("item writes", () => {
     expect(invalidated(qc, keys)).toEqual([detail, vendorDetail, vendorQuotations])
   })
 
-  it("toasts Indonesian copy when an update fails", async () => {
+  // The form shows it inline.
+  it("leaves a failed update to the form, without a toast", async () => {
     m.update.mockRejectedValue(new Error(""))
     const { result } = renderQueryHook(() => useUpdateItem())
     await settle(() => result.current.mutateAsync({ id: 9, input: { name: "B", isActive: true } }))
-    expect(toast.error).toHaveBeenCalledWith("Gagal memperbarui produk.")
+    expect(result.current.isError).toBe(true)
+    expect(toast.error).not.toHaveBeenCalled()
   })
 
   // Vendor detail, counts change too.

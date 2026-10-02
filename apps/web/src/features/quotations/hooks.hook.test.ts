@@ -129,25 +129,32 @@ describe("quotation writes", () => {
       { id: 5, contactId: 2 },
       "Gagal mengubah narahubung quotation.",
     ],
+  ])("%s toasts Indonesian copy on failure", async (_name, hook, fail, vars, msg) => {
+    fail()
+    const { result } = renderQueryHook(hook)
+    await settle(() => result.current.mutateAsync(vars as never))
+    expect(toast.error).toHaveBeenCalledWith(msg)
+  })
+
+  // The review card shows it inline.
+  it.each<[string, () => { mutateAsync: (v: never) => Promise<unknown> }, () => void, unknown]>([
     [
       "request save",
       useUpsertQuotationRequest,
       () => m.createRequest.mockRejectedValue(new Error("")),
       { quotationId: 5, input: {} },
-      "Gagal menyimpan item request.",
     ],
     [
       "request delete",
       useDeleteQuotationRequest,
       () => m.deleteRequest.mockRejectedValue(new Error("")),
       { quotationId: 5, requestId: 2 },
-      "Gagal menghapus item request.",
     ],
-  ])("%s toasts Indonesian copy on failure", async (_name, hook, fail, vars, msg) => {
+  ])("%s leaves a failure to the card, without a toast", async (_name, hook, fail, vars) => {
     fail()
     const { result } = renderQueryHook(hook)
     await settle(() => result.current.mutateAsync(vars as never))
-    expect(toast.error).toHaveBeenCalledWith(msg)
+    expect(toast.error).not.toHaveBeenCalled()
   })
 
   // The recent lists print the contact.

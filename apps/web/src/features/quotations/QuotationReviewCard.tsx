@@ -4,6 +4,7 @@ import {
   useQuotationRequests,
   useUpsertQuotationRequest,
 } from "@/features/quotations/hooks"
+import { errorMessage } from "@/lib/errors"
 import type {
   QuotationItemRequestRow,
   QuotationMatchStatus,
@@ -132,7 +133,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
       }
       setDraft(null)
     } catch (e) {
-      setErrMsg((e as Error).message)
+      setErrMsg(errorMessage(e, "Gagal menyimpan item request."))
     }
   }
 
@@ -141,7 +142,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
     try {
       await remove.mutateAsync({ quotationId, requestId: id })
     } catch (e) {
-      setErrMsg((e as Error).message)
+      setErrMsg(errorMessage(e, "Gagal menghapus item request."))
     }
   }
 
@@ -165,7 +166,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
         },
       })
     } catch (e) {
-      setErrMsg((e as Error).message)
+      setErrMsg(errorMessage(e, "Gagal menyimpan item request."))
     }
   }
 
