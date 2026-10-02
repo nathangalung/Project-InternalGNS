@@ -1,7 +1,6 @@
 package invoices
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -187,8 +186,7 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req ChangeStatusRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if !isValidStatus(req.Status) {
@@ -246,8 +244,7 @@ func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req UpdateDatesRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	ifMatch, err := httpx.ParseIfMatch(r.Header.Get("If-Match"))

@@ -92,6 +92,22 @@ func TestDecodeJSON(t *testing.T) {
 	}
 }
 
+// An oversized body is a 413.
+// The body limit middleware wraps every body in http.MaxBytesReader; its
+// overflow is the caller's size, not malformed JSON.
+func TestDecodeJSON_TooLarge(t *testing.T) {
+	body := `{"name":"` + strings.Repeat("a", 64) + `"}`
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
+	rec := httptest.NewRecorder()
+	req.Body = http.MaxBytesReader(rec, req.Body, 16)
+	var got struct {
+		Name string `json:"name"`
+	}
+	assert.False(t, DecodeJSON(rec, req, &got))
+	assert.Equal(t, http.StatusRequestEntityTooLarge, rec.Code)
+	assert.Equal(t, BodyTooLargeDetail, problemDetail(t, rec))
+}
+
 func TestWriteList(t *testing.T) {
 	cases := []struct {
 		name      string

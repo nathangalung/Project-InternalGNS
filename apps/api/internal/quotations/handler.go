@@ -63,7 +63,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
@@ -78,7 +78,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WarnIfTruncated(r.Context(), "quotations.export", res.Total, len(res.Rows))
@@ -97,7 +97,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	}
 	data, err := sheet.Write("Quotation", headers, rows)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteXLSX(w, "quotation-export", data)
@@ -106,7 +106,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Stats(w http.ResponseWriter, r *http.Request) {
 	stats, err := h.repo.Stats(r.Context())
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, stats)
@@ -125,7 +125,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, d)
@@ -140,7 +140,7 @@ func (h *Handler) Revisions(w http.ResponseWriter, r *http.Request) {
 
 	revs, err := h.repo.ListRevisions(r.Context(), id)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, revs)
@@ -209,8 +209,7 @@ func validateDiscountPct(raw string) map[string]string {
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	// DB function does rest.
@@ -242,7 +241,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	userID := deps.CurrentUserID(r.Context())
 	id, err := h.repo.Create(r.Context(), req, userID)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusCreated, CreatedResponse{ID: id})
@@ -266,8 +265,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req UpdateRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if len(req.Items) == 0 {
@@ -299,7 +297,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 			httperr.Render(w, httperr.NotFound("quotation not found"))
 			return
 		}
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, UpdatedResponse{ID: id, RowVersion: newVersion})
@@ -313,8 +311,7 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req ChangeStatusRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if fields := validateChangeStatus(req); fields != nil {
@@ -324,7 +321,7 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 
 	userID := deps.CurrentUserID(r.Context())
 	if err := h.repo.ChangeStatus(r.Context(), id, req.Status, req.Note, userID); err != nil {
-		renderStatusErr(w, err)
+		renderStatusErr(w, r, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -346,14 +343,14 @@ func validateChangeStatus(req ChangeStatusRequest) map[string]string {
 
 // renderStatusErr maps the unpriced guard.
 // That guard is a 422; anything else is a DB error.
-func renderStatusErr(w http.ResponseWriter, err error) {
+func renderStatusErr(w http.ResponseWriter, r *http.Request, err error) {
 	if errors.Is(err, ErrUnpricedProducts) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{
 			"items": "Semua baris produk harus memiliki harga jual sebelum quotation dikirim atau disetujui.",
 		}))
 		return
 	}
-	httperr.RenderDBErr(w, err)
+	httperr.RenderDBErrCtx(r.Context(), w, err)
 }
 
 // Revise clones a sent quotation.
@@ -387,8 +384,7 @@ func (h *Handler) ChangeContact(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req ChangeContactRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if req.ContactID == 0 {
@@ -413,7 +409,7 @@ func (h *Handler) ChangeContact(w http.ResponseWriter, r *http.Request) {
 				"Narahubung hanya dapat diganti saat quotation berstatus Draf atau Disetujui.", nil))
 			return
 		}
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -437,7 +433,7 @@ func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 	}
 	userID := deps.CurrentUserID(r.Context())
 	if err := h.repo.ChangeStatus(r.Context(), id, "sent", &note, userID); err != nil {
-		renderStatusErr(w, err)
+		renderStatusErr(w, r, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)

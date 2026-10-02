@@ -82,19 +82,19 @@ func (h *ExportHandler) ExportPDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 
 	data, err := h.buildData(r.Context(), d)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 
 	pdf, err := h.renderer.Render(r.Context(), "quotation/Quotation.tex.tmpl", data)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 

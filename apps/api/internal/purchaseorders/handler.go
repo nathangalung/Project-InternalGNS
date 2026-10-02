@@ -1,7 +1,6 @@
 package purchaseorders
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -164,8 +163,7 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req UpdateFileRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	req.FileName = strings.TrimSpace(req.FileName)
@@ -244,8 +242,7 @@ func (h *Handler) UpdateNotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req UpdateNotesRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())
@@ -275,8 +272,7 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req UpdateDetailsRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if strings.TrimSpace(req.PoNumber) == "" {
@@ -317,8 +313,7 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req ChangeStatusRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if !isValidStatus(req.Status) {
@@ -365,8 +360,7 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req UpdateItemsRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if strings.TrimSpace(req.DiscountPct) == "" {

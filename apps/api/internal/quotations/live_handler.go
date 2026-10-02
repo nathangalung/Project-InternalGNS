@@ -50,15 +50,6 @@ func pathIDs(w http.ResponseWriter, r *http.Request, line bool) (int64, int64, b
 	return id, lineID, true
 }
 
-// decode reads a JSON body.
-func decode(w http.ResponseWriter, r *http.Request, into any) bool {
-	if err := json.NewDecoder(r.Body).Decode(into); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
-		return false
-	}
-	return true
-}
-
 // Lock claims or renews a part.
 // The web calls it when a part opens and again as a heartbeat.
 func (h *Handler) Lock(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +58,7 @@ func (h *Handler) Lock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req LockRequest
-	if !decode(w, r, &req) {
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if strings.TrimSpace(req.Part) == "" {
@@ -109,7 +100,7 @@ func (h *Handler) AddLines(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req AddLinesRequest
-	if !decode(w, r, &req) {
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if len(req.Items) == 0 {
@@ -135,7 +126,7 @@ func (h *Handler) UpdateLine(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var item CreateItem
-	if !decode(w, r, &item) {
+	if !httpx.DecodeJSON(w, r, &item) {
 		return
 	}
 	if fields := validateLines([]CreateItem{item}); fields != nil {
@@ -156,7 +147,7 @@ func (h *Handler) SetLineOffer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req LineOfferRequest
-	if !decode(w, r, &req) {
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if err := h.repo.SetLineOffer(r.Context(), id, lineID, req.IsAvailable, deps.CurrentUserID(r.Context())); err != nil {
@@ -186,7 +177,7 @@ func (h *Handler) UpdateHeader(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req HeaderRequest
-	if !decode(w, r, &req) {
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if fields := validateDiscountPct(req.DiscountPct); fields != nil {

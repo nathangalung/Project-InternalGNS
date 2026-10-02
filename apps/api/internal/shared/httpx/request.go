@@ -2,6 +2,7 @@ package httpx
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -22,12 +23,22 @@ func PathID(w http.ResponseWriter, r *http.Request, name, msg string) (int64, bo
 	return id, true
 }
 
+// BodyTooLargeDetail explains a 413.
+const BodyTooLargeDetail = "Data yang dikirim terlalu besar. Kurangi isian lalu coba lagi."
+
 // DecodeJSON decodes bodies into dst.
-// On failure it renders 400 "invalid json" and returns false.
+// A body past the router's size limit renders 413; any other failure
+// renders 400 "invalid json". It returns false after rendering.
 func DecodeJSON(w http.ResponseWriter, r *http.Request, dst any) bool {
-	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	err := json.NewDecoder(r.Body).Decode(dst)
+	if err == nil {
+		return true
+	}
+	var tooLarge *http.MaxBytesError
+	if errors.As(err, &tooLarge) {
+		httperr.Render(w, httperr.PayloadTooLarge(BodyTooLargeDetail))
 		return false
 	}
-	return true
+	httperr.Render(w, httperr.BadRequest("invalid json"))
+	return false
 }
