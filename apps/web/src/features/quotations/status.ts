@@ -100,7 +100,7 @@ export function transitionCopy(
   }
 }
 
-// One tile; no count before data.
+// Tile, count unknown before data.
 export type StatTile = Omit<QuotationStatusCount, "count"> & { count: number | undefined }
 
 // Stats rows to tiles.

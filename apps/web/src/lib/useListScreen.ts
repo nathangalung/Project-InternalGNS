@@ -68,7 +68,7 @@ export function useListScreen<F>(initialFilters: F, initialItemsPerPage = 10): L
   }
 }
 
-// Keep the page within the total.
+// Keep the page in range.
 //
 // Removing a chip keeps the page, and rows removed elsewhere shrink the
 // total on the next fetch, so the server total can end before the page;

@@ -108,7 +108,7 @@ export function useCreateItem() {
   })
 }
 
-// Failures show inline in the form.
+// Failures show in the form.
 export function useUpdateItem() {
   const qc = useQueryClient()
   return useMutation({

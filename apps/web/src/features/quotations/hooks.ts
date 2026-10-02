@@ -35,7 +35,7 @@ function invalidateQuotationDeps(qc: QueryClient) {
   qc.invalidateQueries({ queryKey: queryKeys.items.all })
 }
 
-// Caches a draft line save touches.
+// Caches a draft save touches.
 //
 // The list total and product count move, and a line naming a new vendor
 // links it to the product. A draft is on no recent list and the client is
@@ -138,7 +138,7 @@ type UpsertArgs =
   | { quotationId: number; requestId?: undefined; input: QuotationItemRequestCreateInput }
   | { quotationId: number; requestId: number; input: QuotationItemRequestUpdateInput }
 
-// Failures show inline in the card.
+// Failures show in the card.
 export function useUpsertQuotationRequest() {
   const qc = useQueryClient()
   return useMutation({
@@ -154,7 +154,7 @@ export function useUpsertQuotationRequest() {
   })
 }
 
-// Failures show inline in the card.
+// Failures show in the card.
 export function useDeleteQuotationRequest() {
   const qc = useQueryClient()
   return useMutation({

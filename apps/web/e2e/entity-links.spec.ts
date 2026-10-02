@@ -12,7 +12,7 @@ function clientCard(page: Page) {
   return page.getByRole("heading", { name: "Ringkasan Klien" }).locator("xpath=..")
 }
 
-// A client and one offered line.
+// Client with one offered line.
 async function offered(seed: SalesSeed) {
   const client = await seed.client()
   const vendor = await seed.vendor()

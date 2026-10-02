@@ -26,7 +26,7 @@ function rupiahToDigits(s: string): string {
   return s.replace(/\D/g, "")
 }
 
-// List query from the screen state.
+// List query from screen state.
 export function invoiceListParams(
   search: string,
   filters: InvoiceFilterValues | null,
@@ -81,7 +81,7 @@ export function rowFromBackend(inv: InvoiceBackendRow): InvoiceRow {
   }
 }
 
-// Detail route search for a row.
+// Detail route search per row.
 //
 // The route keyed by quotation opens the newest invoice, which for a
 // cancelled one may be its Pengganti, so a cancelled row names itself.

@@ -347,7 +347,7 @@ func TestRepo_ChangeStatus_RejectsInvalid(t *testing.T) {
 	}
 }
 
-// List rows carry the client id.
+// List rows carry client id.
 func TestRepo_List_CarriesClientID(t *testing.T) {
 	ctx, repo, _ := newRepo(t)
 	in := sampleCreate()
