@@ -14,8 +14,10 @@ RUN bun run build
 # Serve stage uses nginx.
 FROM nginx:1.30.5-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94 AS runtime
 
-# Base ships vulnerable libexpat; tags not rebuilt yet.
-RUN apk upgrade --no-cache libexpat
+# Every release takes Alpine's current patches: the base tag is rebuilt
+# later than fixes land (libexpat, then pcre2), and the release builds this
+# stage without cache.
+RUN apk upgrade --no-cache
 
 WORKDIR /usr/share/nginx/html
 
