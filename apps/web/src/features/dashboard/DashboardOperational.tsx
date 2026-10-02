@@ -157,8 +157,11 @@ export default function DashboardOperational() {
                     </EntityLink>
                   </td>
                   <td className={ui.tdCenter}>{row.version}</td>
-                  {/* List payload has no client id */}
-                  <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>{row.client}</td>
+                  <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>
+                    <EntityLink kind="client" id={row.clientId} tone="name">
+                      {row.client}
+                    </EntityLink>
+                  </td>
                   <td className={ui.tdCenter}>{row.date}</td>
                   <td className={ui.tdCenter}>{row.productCount}</td>
                   <td className={`${ui.tdCenter} font-bold text-[#191C1E]`}>{row.total}</td>

@@ -860,6 +860,7 @@ export type QuotationListRow = {
     id: number;
     quotationNo: string;
     version: number;
+    companyClientId: number;
     companyName: string;
     status: QuotationStatus;
     grandTotal: string;

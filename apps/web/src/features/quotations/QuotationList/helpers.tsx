@@ -12,6 +12,7 @@ export type QuotationRow = {
   displayNo: string
   version: number
   client: string
+  clientId: number
   date: string
   hargaBeli: string
   total: string

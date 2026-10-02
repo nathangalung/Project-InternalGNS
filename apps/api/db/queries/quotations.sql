@@ -45,6 +45,7 @@ SELECT
     q.id,
     q.quotation_no,
     q.version,
+    q.company_client_id,
     q.company_client_name AS company_name,
     q.status,
     q.grand_total::text       AS grand_total,

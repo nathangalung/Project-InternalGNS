@@ -85,7 +85,9 @@ export default function QuotationTable({
                 </td>
                 <td className={`${ui.tdCenter} truncate`}>{row.version}</td>
                 <td className={`${ui.tdCenter} truncate font-medium text-dark-900`}>
-                  {row.client}
+                  <EntityLink kind="client" id={row.clientId} tone="name">
+                    {row.client}
+                  </EntityLink>
                 </td>
                 <td className={`${ui.tdCenter} truncate`}>{row.date}</td>
                 <td className={`${ui.tdCenter} truncate`}>{row.hargaBeli}</td>
