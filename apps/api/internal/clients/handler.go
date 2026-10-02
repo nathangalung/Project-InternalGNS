@@ -346,3 +346,23 @@ func renderClientErr(w http.ResponseWriter, err error) {
 	}
 	httperr.RenderDBErr(w, err)
 }
+
+// RecentQuotations lists the client's newest quotations.
+// GET /clients/{id}/quotations; the newest RecentQuotationCount.
+func (h *Handler) RecentQuotations(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	if err := h.requireClient(r.Context(), id); err != nil {
+		renderClientErr(w, err)
+		return
+	}
+	rows, err := h.repo.RecentQuotations(r.Context(), id)
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, rows)
+}

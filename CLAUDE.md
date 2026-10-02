@@ -304,6 +304,11 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
   `RouteNotFound`, all built on `StateMessage`; table rows use `TableStates`.
 - `StatCard` is the summary tile on list screens and dashboards.
 - `EntityLogo` is the list avatar: initials, or an image when given `src`.
+- `RecentQuotations` is the Quotation Terakhir section of the product, vendor
+  and client pages: the five newest quotations that reached the client (every
+  status but draft and cancelled) from `GET /items/{id}/quotations`,
+  `/vendors/{id}/quotations` and `/clients/{id}/quotations`, with the
+  quotation status badge; each page passes only its own columns.
 
 Stored files (logos, product photos, attachments) come through the
 authenticated API proxy, and the enforced CSP allows images only from self,

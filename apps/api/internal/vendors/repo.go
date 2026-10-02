@@ -158,3 +158,19 @@ func (r *Repo) ListItems(ctx context.Context, vendorID int64, limit, offset int)
 	}
 	return out, nil
 }
+
+// RecentQuotations lists the newest quotations.
+// Only quotations that reached the client count (every status but draft
+// and cancelled), newest first; these are the lines supplied through the vendor.
+func (r *Repo) RecentQuotations(ctx context.Context, id int64) ([]VendorQuotation, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("vendors.recent_quotations"), id, RecentQuotationCount)
+	if err != nil {
+		return nil, fmt.Errorf("recent quotations: %w", err)
+	}
+	out, err := pgx.CollectRows(rows, pgx.RowToStructByName[VendorQuotation])
+	if err != nil {
+		return nil, fmt.Errorf("recent quotations: %w", err)
+	}
+	// Always a list, so the web never reads null.
+	return append([]VendorQuotation{}, out...), nil
+}

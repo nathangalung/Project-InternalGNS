@@ -212,3 +212,11 @@ export function useItemImage(id: number, objectKey: string | undefined): string 
   const { data } = useItemImageDownloadUrl(id, objectKey)
   return useObjectUrl(objectKey ? data?.downloadUrl : undefined)
 }
+
+// The newest quotations, newest first.
+export function useItemRecentQuotations(id: number | undefined) {
+  return useQuery({
+    queryKey: id ? queryKeys.items.quotations(id) : queryKeys.items.all,
+    queryFn: id !== undefined && id > 0 ? () => itemsApi.listRecentQuotations(id) : skipToken,
+  })
+}

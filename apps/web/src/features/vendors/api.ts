@@ -6,6 +6,7 @@ import type {
   PresignUpload,
   UpdateVendorInput,
   VendorItemRow,
+  VendorQuotationRow,
   VendorRow,
 } from "@/types/api"
 
@@ -85,4 +86,9 @@ export async function updateLogo(id: number, objectKey: string): Promise<void> {
     method: "PATCH",
     body: { objectKey } satisfies ObjectKeyInput,
   })
+}
+
+// The newest quotations, newest first.
+export async function listRecentQuotations(id: number): Promise<VendorQuotationRow[]> {
+  return apiRequest<VendorQuotationRow[]>({ path: `/vendors/${id}/quotations` })
 }

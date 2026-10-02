@@ -8,6 +8,7 @@ import {
   useClient,
   useClientContacts,
   useClientLogoDownloadUrl,
+  useClientRecentQuotations,
   useClientSearch,
   useClientSummary,
   useClients,
@@ -232,5 +233,17 @@ describe("useUploadClientLogo", () => {
     await settle(() => result.current.mutateAsync({ id: 7, file: png() }))
     expect(toast.error).toHaveBeenCalledWith("Gagal mengunggah logo.")
     expect(invalidated(qc, [detail])).toEqual([])
+  })
+})
+
+describe("useClientRecentQuotations", () => {
+  it("loads the newest quotations only for a real record", async () => {
+    m.listRecentQuotations.mockResolvedValue([])
+    const idle = renderQueryHook(() => useClientRecentQuotations(undefined))
+    await until(() => expect(idle.result.current.fetchStatus).toBe("idle"))
+    const { result } = renderQueryHook(() => useClientRecentQuotations(7))
+    await until(() => expect(result.current.data).toEqual([]))
+    expect(m.listRecentQuotations).toHaveBeenCalledTimes(1)
+    expect(m.listRecentQuotations).toHaveBeenCalledWith(7)
   })
 })

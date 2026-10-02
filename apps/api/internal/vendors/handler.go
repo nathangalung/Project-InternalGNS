@@ -167,3 +167,27 @@ func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
 	httpx.WriteJSON(w, http.StatusOK, res.Rows)
 }
+
+// RecentQuotations lists the vendor's newest quotations.
+// GET /vendors/{id}/quotations; the newest RecentQuotationCount lines.
+func (h *Handler) RecentQuotations(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	if _, err := h.repo.GetByID(r.Context(), id); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			httperr.Render(w, httperr.NotFound("vendor not found"))
+			return
+		}
+		httperr.RenderDBErrCtx(r.Context(), w, fmt.Errorf("load vendor %d: %w", id, err))
+		return
+	}
+	rows, err := h.repo.RecentQuotations(r.Context(), id)
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, rows)
+}

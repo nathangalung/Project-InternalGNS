@@ -167,3 +167,11 @@ export function useClientLogoDownloadUrl(id: number | undefined, objectKey?: str
     staleTime: 4 * 60 * 1000,
   })
 }
+
+// The newest quotations, newest first.
+export function useClientRecentQuotations(id: number | undefined) {
+  return useQuery({
+    queryKey: id ? queryKeys.clients.quotations(id) : queryKeys.clients.all,
+    queryFn: id !== undefined && id > 0 ? () => clientsApi.listRecentQuotations(id) : skipToken,
+  })
+}

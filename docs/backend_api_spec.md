@@ -56,6 +56,7 @@ list.
 | POST | `/clients` | `Create` | `clients.create` |
 | PUT | `/clients/{id}` | `Update` | `clients.update` |
 | GET | `/clients/{id}/contacts` | `ListContacts` | `clients.list_contacts` |
+| GET | `/clients/{id}/quotations` | `RecentQuotations` | `clients.recent_quotations`: the five newest quotations to the client |
 | POST | `/clients/{id}/contacts` | `CreateContact` | `clients.create_contact` |
 
 ### items
@@ -76,6 +77,7 @@ list.
 | POST | `/items/{id}/images` | `assetproxy.UpdateKey` | `fn_item_image_add` (at most `MaxItemImages`) |
 | DELETE | `/items/{id}/images/{imageId}` | `gallery.Delete` | `fn_item_image_delete` |
 | PUT | `/items/{id}/images/{imageId}/cover` | `gallery.Cover` | `fn_item_image_set_cover` |
+| GET | `/items/{id}/quotations` | `RecentQuotations` | `items.recent_quotations`: the five newest quotation lines offering the product |
 
 ### vendors
 
@@ -84,6 +86,7 @@ list.
 | GET | `/vendors` | `List` | `vendors.list_base` + `list_count_base` |
 | GET | `/vendors/{id}` | `Get` | `vendors.get_by_id` |
 | GET | `/vendors/{id}/items` | `ListItems` | `vendors.list_items` + `list_items_count` |
+| GET | `/vendors/{id}/quotations` | `RecentQuotations` | `vendors.recent_quotations`: the five newest quotation lines supplied through the vendor |
 | POST | `/vendors` | `Create` | `vendors.create` |
 | PUT | `/vendors/{id}` | `Update` | `vendors.update` |
 

@@ -165,3 +165,12 @@ export type QuotationListParams = {
 }
 
 export type DashboardMetric = "quotation" | "invoice" | "revenue" | "profit" | "ppn"
+
+// Newest quotations of a record.
+//
+// The status is one of the quotation statuses; Go passes it as text.
+type QuotationStatusField = { status: G.QuotationStatus }
+
+export type ItemQuotationRow = Narrow<G.ItemQuotationRow, QuotationStatusField>
+export type VendorQuotationRow = Narrow<G.VendorQuotationRow, QuotationStatusField>
+export type ClientQuotationRow = Narrow<G.ClientQuotationRow, QuotationStatusField>

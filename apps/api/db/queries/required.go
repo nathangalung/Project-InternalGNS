@@ -23,6 +23,7 @@ var RequiredKeys = []string{
 	"clients.list_base",
 	"clients.list_contacts",
 	"clients.list_count_base",
+	"clients.recent_quotations",
 	"clients.search",
 	"clients.summary",
 	"clients.update",
@@ -66,6 +67,7 @@ var RequiredKeys = []string{
 	"items.list_vendors_for_item",
 	"items.match_request_batch",
 	"items.match_with_vendor_by_id",
+	"items.recent_quotations",
 	"items.recommend",
 	"items.search_catalog",
 	"items.search_request_history",
@@ -141,6 +143,7 @@ var RequiredKeys = []string{
 	"vendors.list_count_base",
 	"vendors.list_items",
 	"vendors.list_items_count",
+	"vendors.recent_quotations",
 	"vendors.update",
 	"vendors.update_logo",
 }

@@ -1,5 +1,6 @@
 import { apiList, apiRequest, buildQuery, type PaginatedList } from "@/lib/api-client"
 import type {
+  ClientQuotationRow,
   ClientRow,
   ClientSearchHit,
   ClientSummary,
@@ -121,4 +122,9 @@ export async function updateLogo(id: number, objectKey: string): Promise<void> {
     method: "PATCH",
     body: { objectKey } satisfies ObjectKeyInput,
   })
+}
+
+// The newest quotations, newest first.
+export async function listRecentQuotations(id: number): Promise<ClientQuotationRow[]> {
+  return apiRequest<ClientQuotationRow[]>({ path: `/clients/${id}/quotations` })
 }

@@ -59,6 +59,7 @@ describe("clients api", () => {
       },
     ],
     ["list contacts", () => api.listContacts(7), { path: "/clients/7/contacts" }],
+    ["recent quotations", () => api.listRecentQuotations(7), { path: "/clients/7/quotations" }],
     [
       "create contact",
       () => api.createContact(7, { name: "Budi" }),

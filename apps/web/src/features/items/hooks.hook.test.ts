@@ -17,6 +17,7 @@ import {
   useItemImage,
   useItemImageDownloadUrl,
   useItemPriceHistory,
+  useItemRecentQuotations,
   useItemSearchAdvanced,
   useItems,
   useItemVendors,
@@ -354,5 +355,17 @@ describe("useLineRecommendation", () => {
     const { result } = renderQueryHook(() => useLineRecommendation(9))
     await until(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toBeNull()
+  })
+})
+
+describe("useItemRecentQuotations", () => {
+  it("loads the newest quotations only for a real record", async () => {
+    m.listRecentQuotations.mockResolvedValue([])
+    const idle = renderQueryHook(() => useItemRecentQuotations(undefined))
+    await until(() => expect(idle.result.current.fetchStatus).toBe("idle"))
+    const { result } = renderQueryHook(() => useItemRecentQuotations(9))
+    await until(() => expect(result.current.data).toEqual([]))
+    expect(m.listRecentQuotations).toHaveBeenCalledTimes(1)
+    expect(m.listRecentQuotations).toHaveBeenCalledWith(9)
   })
 })

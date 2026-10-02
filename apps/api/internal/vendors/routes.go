@@ -27,6 +27,7 @@ func Routes(d deps.Deps) chi.Router {
 	r.Get("/{id}", h.Get)
 	r.Put("/{id}", h.Update)
 	r.Get("/{id}/items", h.ListItems)
+	r.Get("/{id}/quotations", h.RecentQuotations)
 
 	logo := logoAsset(d.Storage, d.Objects, repo)
 	r.Get("/{id}/logo/upload-url", assetproxy.Upload(logo))

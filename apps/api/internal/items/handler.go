@@ -403,3 +403,23 @@ func parseIDList(raw string) ([]int64, bool) {
 	}
 	return out, true
 }
+
+// RecentQuotations lists the product's newest quotations.
+// GET /items/{id}/quotations; the newest RecentQuotationCount lines.
+func (h *Handler) RecentQuotations(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest("invalid id"))
+		return
+	}
+	if err := h.requireItem(r.Context(), id); err != nil {
+		renderItemErr(w, err)
+		return
+	}
+	rows, err := h.repo.RecentQuotations(r.Context(), id)
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, rows)
+}

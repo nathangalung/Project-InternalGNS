@@ -206,3 +206,24 @@ type Recommendation struct {
 	CostPrice       *string `db:"cost_price"        json:"costPrice,omitempty"`
 	SellingPrice    *string `db:"selling_price"     json:"sellingPrice,omitempty"`
 }
+
+// RecentQuotationCount caps the product's quotation list.
+const RecentQuotationCount = 5
+
+// ItemQuotation is one quotation line offering the product.
+// Status is the quotation's status key; the web labels it.
+type ItemQuotation struct {
+	LineID        int64     `db:"line_id"        json:"lineId"`
+	QuotationID   int64     `db:"quotation_id"   json:"quotationId"`
+	QuotationNo   string    `db:"quotation_no"   json:"quotationNo"`
+	QuotationDate time.Time `db:"quotation_date" json:"quotationDate"`
+	Status        string    `db:"status"         json:"status"`
+	ClientID      int64     `db:"client_id"      json:"clientId"`
+	ClientName    string    `db:"client_name"    json:"clientName"`
+	ContactName   *string   `db:"contact_name"   json:"contactName,omitempty"`
+	VendorID      *int64    `db:"vendor_id"      json:"vendorId,omitempty"`
+	VendorName    *string   `db:"vendor_name"    json:"vendorName,omitempty"`
+	Qty           string    `db:"qty"            json:"qty"`
+	CostPrice     *string   `db:"cost_price"     json:"costPrice,omitempty"`
+	SellingPrice  string    `db:"selling_price"  json:"sellingPrice"`
+}

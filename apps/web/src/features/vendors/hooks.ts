@@ -94,3 +94,11 @@ export function useVendorLogoDownloadUrl(id: number | undefined, objectKey?: str
     staleTime: 4 * 60 * 1000,
   })
 }
+
+// The newest quotations, newest first.
+export function useVendorRecentQuotations(id: number | undefined) {
+  return useQuery({
+    queryKey: id ? queryKeys.vendors.quotations(id) : queryKeys.vendors.all,
+    queryFn: id !== undefined && id > 0 ? () => vendorsApi.listRecentQuotations(id) : skipToken,
+  })
+}
