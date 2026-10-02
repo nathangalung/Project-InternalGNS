@@ -18,6 +18,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
@@ -372,6 +373,10 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"discountPct": "required"}))
 		return
 	}
+	if fields := validateItemNumbers(req); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
 	if chargeWithoutAddress(req) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"shippingAddress": shippingAddressRequired}))
 		return
@@ -502,6 +507,34 @@ func validateFile(req UpdateFileRequest) map[string]string {
 }
 
 const shippingAddressRequired = "Alamat pengiriman wajib diisi bila ada biaya pengiriman."
+
+// validateItemNumbers checks edit numbers.
+// A qty 0 line stays allowed and a blank value keeps the database default;
+// a sent harga jual must be above zero, as fn_update_po_items demands.
+// NaN passes every >= 0 test in Postgres, so it is refused here.
+func validateItemNumbers(req UpdateItemsRequest) map[string]string {
+	f := validate.Fields{}
+	given := func(s string) bool { return strings.TrimSpace(s) != "" }
+	for i, it := range req.Items {
+		key := "items[" + strconv.Itoa(i) + "]."
+		if given(it.Qty) {
+			f.Add(key+"qty", validate.NonNegative("Jumlah", it.Qty))
+		}
+		if given(it.SellingPrice) {
+			f.Add(key+"sellingPrice", validate.Positive("Harga jual", it.SellingPrice))
+		}
+		if it.CostPrice != nil && given(*it.CostPrice) {
+			f.Add(key+"costPrice", validate.NonNegative("Harga beli", *it.CostPrice))
+		}
+	}
+	if req.ShippingDays != nil {
+		f.Add("shippingDays", validate.Days("Waktu pengiriman", *req.ShippingDays))
+	}
+	if req.ShippingCost != nil {
+		f.Add("shippingCost", validate.NonNegative("Biaya pengiriman", *req.ShippingCost))
+	}
+	return f.Result()
+}
 
 // chargeWithoutAddress spots a dropped charge.
 // fn_update_po_items writes the shipping line only with an address, so a

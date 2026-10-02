@@ -18,6 +18,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 )
 
 type Handler struct {
@@ -162,17 +163,38 @@ func validateCreateStatus(status *Status) map[string]string {
 	}
 }
 
-// validateItemQty requires line quantities.
-func validateItemQty(items []CreateItem) map[string]string {
+// validateLines checks line numbers.
+// Quantity is above zero and both prices are finite and not negative; a
+// blank harga beli is an unfinished draft line, left to the send rule.
+// Every failure is keyed items[<i>].<field>.
+func validateLines(items []CreateItem) map[string]string {
+	f := validate.Fields{}
 	for i, it := range items {
-		qty, err := strconv.ParseFloat(strings.TrimSpace(it.Qty), 64)
-		if err != nil || qty <= 0 {
-			return map[string]string{
-				"items[" + strconv.Itoa(i) + "].qty": "jumlah harus lebih besar dari 0",
-			}
+		key := "items[" + strconv.Itoa(i) + "]."
+		f.Add(key+"qty", validate.Positive("Jumlah", it.Qty))
+		f.Add(key+"sellingPrice", validate.NonNegative("Harga jual", it.SellingPrice))
+		if it.CostPrice != nil && strings.TrimSpace(*it.CostPrice) != "" {
+			f.Add(key+"costPrice", validate.NonNegative("Harga beli", *it.CostPrice))
 		}
 	}
-	return nil
+	return f.Result()
+}
+
+// validateTerms checks header numbers.
+// A validity below one day would let the expiry job end a sent quotation at
+// once. Absent values keep their defaults.
+func validateTerms(validityDays, shippingDays *int, shippingCost *string) map[string]string {
+	f := validate.Fields{}
+	if validityDays != nil {
+		f.Add("validityDays", validate.Days("Masa berlaku", *validityDays))
+	}
+	if shippingDays != nil {
+		f.Add("shippingDays", validate.Days("Waktu pengiriman", *shippingDays))
+	}
+	if shippingCost != nil {
+		f.Add("shippingCost", validate.NonNegative("Biaya pengiriman", *shippingCost))
+	}
+	return f.Result()
 }
 
 // validateDiscountPct bounds the header discount.
@@ -208,7 +230,11 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
-	if fields := validateItemQty(req.Items); fields != nil {
+	if fields := validateLines(req.Items); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
+	if fields := validateTerms(req.ValidityDays, req.ShippingDays, req.ShippingCost); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
@@ -252,7 +278,11 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
-	if fields := validateItemQty(req.Items); fields != nil {
+	if fields := validateLines(req.Items); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
+	if fields := validateTerms(req.ValidityDays, req.ShippingDays, req.ShippingCost); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}

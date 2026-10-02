@@ -43,7 +43,7 @@ describe("qtyErrorIndexes mapping", () => {
     422,
     problem(422, {
       fields: {
-        "items[2].qty": "jumlah harus lebih besar dari 0",
+        "items[2].qty": "Jumlah harus berupa angka lebih dari 0.",
         "items[0].sellingPrice": "x",
         status: "y",
       },
@@ -52,13 +52,13 @@ describe("qtyErrorIndexes mapping", () => {
   )
 
   it("reads indexed qty keys only", () => {
-    expect([...qtyErrorIndexes(err)]).toEqual([[2, "jumlah harus lebih besar dari 0"]])
+    expect([...qtyErrorIndexes(err)]).toEqual([[2, "Jumlah harus berupa angka lebih dari 0."]])
   })
 
   it("maps indexes to card ids", () => {
     const lines = [{ id: 10 }, { id: 11 }, { id: 12 }]
     expect(qtyErrorsById(lines, qtyErrorIndexes(err))).toEqual({
-      12: "jumlah harus lebih besar dari 0",
+      12: "Jumlah harus berupa angka lebih dari 0.",
     })
   })
 

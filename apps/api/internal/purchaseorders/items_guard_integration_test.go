@@ -42,9 +42,8 @@ func TestHandler_UpdateItems_RequiresPricedProduct(t *testing.T) {
 			},
 			detail: "PO harus memiliki minimal satu baris produk.",
 		},
-		{name: "zero price", req: priced("0"), detail: "Semua baris produk harus memiliki harga jual."},
 		{name: "blank price", req: priced(""), detail: "Semua baris produk harus memiliki harga jual."},
-		{name: "negative price", req: priced("-1"), detail: "Semua baris produk harus memiliki harga jual."},
+		// A zero or negative price stops at the handler; see RefusesBadNumbers.
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

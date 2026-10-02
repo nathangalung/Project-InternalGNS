@@ -116,7 +116,7 @@ func (h *Handler) AddLines(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"items": "minimal satu baris"}))
 		return
 	}
-	if fields := validateItemQty(req.Items); fields != nil {
+	if fields := validateLines(req.Items); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
@@ -138,7 +138,7 @@ func (h *Handler) UpdateLine(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, &item) {
 		return
 	}
-	if fields := validateItemQty([]CreateItem{item}); fields != nil {
+	if fields := validateLines([]CreateItem{item}); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
@@ -190,6 +190,10 @@ func (h *Handler) UpdateHeader(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if fields := validateDiscountPct(req.DiscountPct); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
+		return
+	}
+	if fields := validateTerms(req.ValidityDays, req.ShippingDays, req.ShippingCost); fields != nil {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
