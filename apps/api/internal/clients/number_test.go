@@ -51,10 +51,11 @@ func TestHandler_Create_ClientNumber(t *testing.T) {
 		wantStatus int
 		wantNumber string // empty means any four digits
 	}{
+		// First, before an assignment can take it.
+		{"free number is kept", free, http.StatusCreated, free},
 		{"omitted is assigned", nil, http.StatusCreated, ""},
 		{"empty is assigned", "", http.StatusCreated, ""},
 		{"whitespace is assigned", "   ", http.StatusCreated, ""},
-		{"free number is kept", free, http.StatusCreated, free},
 		{"free text rejected", "REF-ABC", http.StatusUnprocessableEntity, ""},
 		{"too short rejected", "12", http.StatusUnprocessableEntity, ""},
 		{"too long rejected", "12345", http.StatusUnprocessableEntity, ""},
