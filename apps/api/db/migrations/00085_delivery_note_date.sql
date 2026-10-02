@@ -5,7 +5,7 @@
 -- number carries the month it was issued (fn_next_doc_no at ON_PROGRESS),
 -- so a PO dated 28 Dec 2025 and started on 5 Jan 2026 printed a January
 -- number dated December. The note now keeps its own issue date, stamped
--- with the number, and prints the PO date on the PO No line.
+-- with the number, and prints the PO date on its own PO Date row.
 --
 -- Backfill: the WIB day of the first status move that could have issued
 -- the number (ON_PROGRESS, or DELIVERED for a PO that skipped it). A

@@ -19,7 +19,7 @@ import (
 // The note is dated when issued.
 // Its number carries the month it was issued in, so the note stamps that
 // WIB day with the number, keeps it when work is reverted and resumed, and
-// prints it as its Date; the client PO date stays on the PO No line.
+// prints it as its Date; the client PO date prints on its own PO Date row.
 func TestDeliveryNote_DatedWhenIssued(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
@@ -64,6 +64,6 @@ func TestDeliveryNote_DatedWhenIssued(t *testing.T) {
 	require.NoError(t, err)
 	text := pdfText(t, pdf)
 	assert.Contains(t, text, "Jakarta, 5 January 2026", "the note is dated when issued")
-	assert.Contains(t, text, "28 December 2025", "the PO No line keeps the client PO date")
+	assert.Contains(t, text, "28 December 2025", "the PO Date row keeps the client PO date")
 	assert.NotContains(t, text, "Jakarta, 28 December 2025")
 }

@@ -526,6 +526,7 @@ a:hover{text-decoration:underline}
           <div class="col-row"><span class="col-name">po_date</span><span class="col-type">DATE NN</span></div>
           <div class="col-row"><span class="col-name">status</span><span class="col-type">VARCHAR(20) NN CHK</span></div>
           <div class="col-row"><span class="col-name">delivery_note_number</span><span class="col-type">VARCHAR(50)</span></div>
+          <div class="col-row"><span class="col-name">delivery_note_date</span><span class="col-type">DATE</span></div>
           <div class="col-row"><span class="col-name">notes</span><span class="col-type">TEXT</span></div>
           <div class="col-row"><span class="col-name">file_url</span><span class="col-type">VARCHAR(500)</span></div>
           <div class="col-section">Audit</div>
@@ -1116,7 +1117,8 @@ a:hover{text-decoration:underline}
           <tr><td class="col-nm fk">contact_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Contact yang menandatangani PO → company_contacts.id. Nullable.</td><td>3</td></tr>
           <tr><td class="col-nm">po_date <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">DATE</td><td>Tanggal PO diterima dari client</td><td>2026-04-05</td></tr>
           <tr><td class="col-nm">status <span class="cbadge cbadge-nn">NOT NULL</span> <span class="cbadge cbadge-chk">CHECK</span></td><td class="col-tp">VARCHAR(20)</td><td>Status PO. Dropdown: PENDING | UPLOADED | ON PROGRESS | DELIVERED</td><td>UPLOADED</td></tr>
-          <tr><td class="col-nm">delivery_note_number</td><td class="col-tp">VARCHAR(50)</td><td>Nomor surat jalan / delivery note. Diisi saat status berubah ke DELIVERED.</td><td>DN-264131/GNS/IV/2026</td></tr>
+          <tr><td class="col-nm">delivery_note_number</td><td class="col-tp">VARCHAR(50)</td><td>Nomor surat jalan / delivery note. Diisi saat status berubah ke ON_PROGRESS (atau DELIVERED bila belum terisi).</td><td>DN-264131/GNS/IV/2026</td></tr>
+          <tr><td class="col-nm">delivery_note_date</td><td class="col-tp">DATE</td><td>Tanggal surat jalan: hari (WIB) nomor surat jalan diterbitkan, dicetak sebagai Date pada surat jalan. NULL pada PO lama tanpa riwayat status; PDF lalu memakai po_date.</td><td>2026-04-07</td></tr>
           <tr><td class="col-nm">notes</td><td class="col-tp">TEXT</td><td>Catatan internal (misalnya perbedaan antara PO dan quotation)</td><td>Client minta tambah qty item #3</td></tr>
           <tr><td class="col-nm">file_url</td><td class="col-tp">VARCHAR(500)</td><td>URL file PO yang di-upload ke storage (PDF/image). Nullable jika belum di-upload.</td><td>https://storage/po/PO-264129.pdf</td></tr>
           <tr class="section-divider"><td colspan="4">Audit Trail</td></tr>
