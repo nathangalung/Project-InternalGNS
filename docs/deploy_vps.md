@@ -20,7 +20,7 @@ Source files referenced:
 
 | File | Purpose |
 |---|---|
-| `compose.dev.yml` | Local development. Builds `api` from source, exposes Postgres on `:5432`, pgweb on `:8081`, MinIO on `:9000/:9001`. CORS allows only the dev SPA, `http://localhost:5174`. |
+| `compose.dev.yml` | Local development. Builds `api` from source, exposes Postgres on `:5432`, pgweb on `:8081`, MinIO on `:9000/:9001` and the API on `:8080`, all on `127.0.0.1` only, since the dev volume holds real client data. CORS allows only the dev SPA, `http://localhost:5174`. |
 | `compose.prod.yml` | Production on the VPS via Dokploy. Pulls prebuilt images from GHCR, publishes no host ports, Traefik handles ingress. |
 
 They stay separate because dev needs host-port access and a writable source
