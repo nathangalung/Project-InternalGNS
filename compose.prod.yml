@@ -168,9 +168,9 @@ services:
       # HTTPS-only.
       - "traefik.http.middlewares.internalgns-api-headers.headers.stsSeconds=31536000"
       # Plain http redirects to https.
-      # Dokploy's Traefik serves :80 as the web entrypoint with no global
-      # redirect, so without this router http:// answers 404. HSTS only helps
-      # after a first https visit.
+      # A default Dokploy Traefik serves :80 as the web entrypoint with no
+      # redirect (docs/deploy_vps.md section 2 checks), so without this router
+      # http:// answers 404. HSTS only helps after a first https visit.
       - "traefik.http.routers.internalgns-api-http.rule=Host(`${API_HOST}`)"
       - "traefik.http.routers.internalgns-api-http.entrypoints=web"
       - "traefik.http.routers.internalgns-api-http.middlewares=internalgns-api-redirect"
