@@ -12,15 +12,15 @@ import (
 
 // Tiles follow each status model.
 func TestTilesFollowStatusModels(t *testing.T) {
-	var wantQuotation []tile
+	wantQuotation := make([]tile, 0, len(quotations.Statuses))
 	for _, s := range quotations.Statuses {
 		wantQuotation = append(wantQuotation, tile{string(s.Status), s.Label})
 	}
-	var wantPo []tile
+	wantPo := make([]tile, 0, len(purchaseorders.StatusOrder))
 	for _, s := range purchaseorders.StatusOrder {
 		wantPo = append(wantPo, tile{string(s), purchaseorders.StatusLabel(s)})
 	}
-	var wantInvoice []tile
+	wantInvoice := make([]tile, 0, len(invoices.StatusOrder))
 	for _, s := range invoices.StatusOrder {
 		wantInvoice = append(wantInvoice, tile{string(s), invoices.StatusLabel(s)})
 	}
