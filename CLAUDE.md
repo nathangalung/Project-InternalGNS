@@ -247,7 +247,12 @@ document's status history table.
   ON_PROGRESS and DELIVERED need one product line with a quantity. Both
   moves also pass the completeness gate (client, vendor and shipping-address
   data), a 422 `po_incomplete`; delivery runs it again, since ON_PROGRESS
-  edits and client edits can reopen a gap.
+  edits and client edits can reopen a gap. Each PO line stores its own
+  supplier (`vendor_product_id`), copied from the quotation line only when
+  that link is for the line's product, and the items list and the gate
+  read it from the PO line. The line edit takes `vendorProductId` (a link
+  for the line's product) or `vendorId` (linked as a quotation line is),
+  and refuses a `quotationItemId` from another quotation.
 - Invoice: draft, sent, paid, cancelled; overdue is stored only on legacy
   rows. Draft goes to sent; sent or overdue to paid, which stamps `paid_at`
   and takes an optional proof stored under `invoices/<id>/payment/`; marking
