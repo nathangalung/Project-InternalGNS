@@ -38,7 +38,7 @@ module.exports = async (browser, context) => {
   try {
     await page.goto(`${new URL(context.url).origin}/login`, { waitUntil: "domcontentloaded" })
     let res = await login(page)
-    // Login allows 5 per minute per address; wait once.
+    // Login allows 10 per minute per address and account; wait once.
     if (res.status === 429) {
       await new Promise((r) => setTimeout(r, (Number(res.retryAfter || "60") + 1) * 1000))
       res = await login(page)

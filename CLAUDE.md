@@ -375,8 +375,9 @@ query call.
   also keeps parallel tests from throttling each other. `make e2e` runs
   against the dev stack from `make dev`, with admin credentials from
   `apps/api/.env`; `E2E_BASE_URL` and `E2E_API_URL` point it elsewhere.
-  Login allows 5 attempts per minute per IP, so a rerun inside a minute waits
-  out the window.
+  Login allows 10 attempts per minute per address and account under a
+  ceiling of 100 per address, so a rerun inside a minute may wait out the
+  window.
 - The SPA content policy is enforced (the web label in `compose.prod.yml`),
   so every test fails on a violation its browser reports. `make e2e-csp` (and
   the CI e2e job) builds the SPA against a separate API origin, serves `dist`

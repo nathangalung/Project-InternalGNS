@@ -204,22 +204,43 @@ func (s *scenarioState) logInUnknown() error {
 	return s.loginAs(fmt.Sprintf("nobody_%d@example.test", time.Now().UnixNano()), rightPassword, "")
 }
 
-func (s *scenarioState) failLogins(n int) error {
+// logInUnknownFromOneAddress repeats one unknown email.
+// An unknown email pays no backoff, so the limiter is all that answers.
+func (s *scenarioState) logInUnknownFromOneAddress(n int) error {
+	ip := nextIP()
+	email := fmt.Sprintf("nobody_%d@example.test", time.Now().UnixNano())
 	for range n {
-		if err := s.logInWrong(); err != nil {
-			return err
-		}
-		if err := s.statusEquals(http.StatusUnauthorized); err != nil {
+		if err := s.loginAs(email, rightPassword, ip); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (s *scenarioState) failLoginsFromOneAddress(n int) error {
+// colleaguesLogIn signs in n accounts from one office address.
+func (s *scenarioState) colleaguesLogIn(n int) error {
 	ip := nextIP()
+	for i := range n {
+		u, err := s.createUser(users.RoleOperational, rightPassword)
+		if err != nil {
+			return err
+		}
+		if err := s.loginAs(u.Email, rightPassword, ip); err != nil {
+			return err
+		}
+		if s.last.StatusCode != http.StatusOK {
+			return fmt.Errorf("colleague %d got %d body=%s", i+1, s.last.StatusCode, s.body)
+		}
+	}
+	return nil
+}
+
+func (s *scenarioState) failLogins(n int) error {
 	for range n {
-		if err := s.loginAs(s.account.Email, wrongPassword, ip); err != nil {
+		if err := s.logInWrong(); err != nil {
+			return err
+		}
+		if err := s.statusEquals(http.StatusUnauthorized); err != nil {
 			return err
 		}
 	}
@@ -520,8 +541,9 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the account logs in with the password "([^"]+)"$`, state.logIn)
 		sc.Step(`^the account logged in again$`, state.loggedInAgain)
 		sc.Step(`^someone logs in as an unknown email$`, state.logInUnknown)
+		sc.Step(`^someone logs in as one unknown email (\d+) times from one address$`, state.logInUnknownFromOneAddress)
+		sc.Step(`^(\d+) colleagues log in with the right password from one address$`, state.colleaguesLogIn)
 		sc.Step(`^the account has failed to log in (\d+) times$`, state.failLogins)
-		sc.Step(`^the account logs in with a wrong password (\d+) times from one address$`, state.failLoginsFromOneAddress)
 		sc.Step(`^the account is logged in$`, state.loggedIn)
 		sc.Step(`^the response carries an access token and no refresh token$`, state.tokensIssued)
 		sc.Step(`^the refresh cookie is HttpOnly, Secure, SameSite=Strict and scoped to "([^"]+)"$`, state.cookieAttributes)

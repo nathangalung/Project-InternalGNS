@@ -1,16 +1,22 @@
 package auth
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
+	"io"
 	"mime"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 )
@@ -68,6 +74,70 @@ func refreshLimit(perIP, perCookie int) func(http.Handler) http.Handler {
 	}
 }
 
+// Login and password limits per minute.
+// An office signs in from one public address at the start of the day, so
+// the address carries only a flood ceiling and the tight budget is per
+// account: per address and email for login, per user for a password change.
+// Keying login on the address too keeps a stranger from spending a
+// colleague's budget. loginBackoff in service.go also slows guessing.
+const (
+	loginPerIP      = 100
+	loginPerAccount = 10
+	passwordPerIP   = 100
+	passwordPerUser = 5
+)
+
+// loginBodyMax bounds the peeked body.
+// A login body is two short fields.
+const loginBodyMax = 4 << 10
+
+// loginAccountKey keys by address and email.
+// It peeks the JSON body and hands it on unread to the handler. The key
+// holds a digest of the trimmed, lower-cased email, the form the user
+// lookup matches, never the address itself. A body it cannot read keys on
+// the address alone.
+func loginAccountKey(r *http.Request) (string, error) {
+	ip, _ := clientIPKey(r)
+	raw, err := io.ReadAll(io.LimitReader(r.Body, loginBodyMax))
+	r.Body = struct {
+		io.Reader
+		io.Closer
+	}{io.MultiReader(bytes.NewReader(raw), r.Body), r.Body}
+	var body struct {
+		Email string `json:"email"`
+	}
+	if err != nil || json.Unmarshal(raw, &body) != nil {
+		return ip, nil
+	}
+	sum := sha256.Sum256([]byte(strings.ToLower(strings.TrimSpace(body.Email))))
+	return ip + "|" + hex.EncodeToString(sum[:]), nil
+}
+
+// loginLimit limits login calls.
+func loginLimit(perIP, perAccount int) func(http.Handler) http.Handler {
+	byIP := limitBy(perIP)
+	byAccount := httprate.LimitBy(perAccount, time.Minute, loginAccountKey,
+		httprate.WithLimitCounter(newMonotonicCounter(time.Now)))
+	return func(next http.Handler) http.Handler {
+		return byIP(byAccount(next))
+	}
+}
+
+// userKey keys by signed-in user.
+func userKey(r *http.Request) (string, error) {
+	return strconv.FormatInt(deps.CurrentUserID(r.Context()), 10), nil
+}
+
+// passwordLimit limits password changes.
+func passwordLimit(perIP, perUser int) func(http.Handler) http.Handler {
+	byIP := limitBy(perIP)
+	byUser := httprate.LimitBy(perUser, time.Minute, userKey,
+		httprate.WithLimitCounter(newMonotonicCounter(time.Now)))
+	return func(next http.Handler) http.Handler {
+		return byIP(byUser(next))
+	}
+}
+
 // loginGuard stops login CSRF.
 // Login sets the refresh cookie, so a cross-site form or a sibling subdomain
 // posting to it would sign the reader into another account. A browser always
@@ -99,7 +169,7 @@ func Routes(h *Handler, requireAuth func(http.Handler) http.Handler) chi.Router 
 	// Every guard refuses before the limiter counts, so a foreign page cannot
 	// spend a reader's login budget. The cookie routes also refuse a missing
 	// Origin or CSRF header.
-	r.With(loginGuard(h.origins), limitBy(5)).Post("/login", h.Login)
+	r.With(loginGuard(h.origins), loginLimit(loginPerIP, loginPerAccount)).Post("/login", h.Login)
 	guard := session.Guard(h.origins)
 	r.With(guard, refreshLimit(refreshPerIP, refreshPerCookie)).Post("/refresh", h.Refresh)
 	r.With(guard).Post("/logout", h.Logout)
@@ -107,7 +177,7 @@ func Routes(h *Handler, requireAuth func(http.Handler) http.Handler) chi.Router 
 	r.Group(func(r chi.Router) {
 		r.Use(requireAuth)
 		r.Get("/me", h.Me)
-		r.With(limitBy(5)).Patch("/me/password", h.ChangeOwnPassword)
+		r.With(passwordLimit(passwordPerIP, passwordPerUser)).Patch("/me/password", h.ChangeOwnPassword)
 	})
 	return r
 }
