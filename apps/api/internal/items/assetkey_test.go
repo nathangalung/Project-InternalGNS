@@ -11,7 +11,7 @@ import (
 
 // Attach binds keys to records.
 // It covers MD-14.
-func TestHandler_UpdateImage_RejectsForeignKey(t *testing.T) {
+func TestHandler_AddImage_RejectsForeignKey(t *testing.T) {
 	srv := newSrv(t)
 	cases := []struct {
 		name string
@@ -25,7 +25,7 @@ func TestHandler_UpdateImage_RejectsForeignKey(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			res := doJSON(t, srv, http.MethodPatch, "/items/1/image",
+			res := doJSON(t, srv, http.MethodPost, "/items/1/images",
 				items.UpdateImageRequest{ObjectKey: c.key})
 			defer res.Body.Close()
 			assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode, "item image key %q", c.key)

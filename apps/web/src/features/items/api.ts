@@ -3,6 +3,7 @@ import type {
   AddVendorToItemInput,
   AdvancedSearchResponse,
   CreateItemInput,
+  ItemGallery,
   ItemPriceHistoryRow,
   ItemRow,
   ItemVendorRow,
@@ -136,16 +137,26 @@ export async function presignImageDownload(id: number): Promise<PresignDownload>
   return apiRequest<PresignDownload>({ path: `/items/${id}/image/download-url` })
 }
 
-export async function updateImage(id: number, objectKey: string): Promise<void> {
+// The product's photos, cover first.
+export async function listImages(id: number): Promise<ItemGallery> {
+  return apiRequest<ItemGallery>({ path: `/items/${id}/images` })
+}
+
+// Add an uploaded photo.
+export async function addImage(id: number, objectKey: string): Promise<void> {
   await apiRequest<void>({
-    path: `/items/${id}/image`,
-    method: "PATCH",
+    path: `/items/${id}/images`,
+    method: "POST",
     body: { objectKey } satisfies ObjectKeyInput,
   })
 }
 
-export async function removeImage(id: number): Promise<void> {
-  await apiRequest<void>({ path: `/items/${id}/image`, method: "DELETE" })
+export async function deleteImage(id: number, imageId: number): Promise<void> {
+  await apiRequest<void>({ path: `/items/${id}/images/${imageId}`, method: "DELETE" })
+}
+
+export async function setCoverImage(id: number, imageId: number): Promise<void> {
+  await apiRequest<void>({ path: `/items/${id}/images/${imageId}/cover`, method: "PUT" })
 }
 
 // Line defaults per item.

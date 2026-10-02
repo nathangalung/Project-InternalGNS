@@ -25,7 +25,8 @@ func TestHandler_DBFailureIsGenericProblem(t *testing.T) {
 		{"add vendor", http.MethodPost, "/items/1/vendors", items.AddVendorToItemRequest{VendorID: 1}},
 		{"image upload url", http.MethodGet, "/items/1/image/upload-url?fileName=a.jpg", nil},
 		{"image download url", http.MethodGet, "/items/1/image/download-url", nil},
-		{"image attach", http.MethodPatch, "/items/1/image", items.UpdateImageRequest{ObjectKey: "items/1/a.jpg"}},
+		{"image add", http.MethodPost, "/items/1/images", items.UpdateImageRequest{ObjectKey: "items/1/a.jpg"}},
+		{"photo list", http.MethodGet, "/items/1/images", nil},
 		// The pool cannot begin, so the import refuses to run unguarded.
 		{"match rows without tx", http.MethodPost, "/items/match-rows",
 			items.MatchRowsRequest{Rows: []items.MatchRowInput{{Name: "Baut"}}}},
@@ -52,8 +53,9 @@ func TestHandler_SecondQueryFailure(t *testing.T) {
 		{"list data after count", http.MethodGet, "/items/?q=a", nil},
 		{"vendors after parent", http.MethodGet, "/items/" + id + "/vendors", nil},
 		{"price history after parent", http.MethodGet, "/items/" + id + "/price-history", nil},
-		{"image key after parent", http.MethodPatch, "/items/" + id + "/image",
+		{"image add after parent", http.MethodPost, "/items/" + id + "/images",
 			items.UpdateImageRequest{ObjectKey: "items/" + id + "/a.jpg"}},
+		{"photo list after parent", http.MethodGet, "/items/" + id + "/images", nil},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -125,7 +127,7 @@ func TestRepo_MoreErrorPaths(t *testing.T) {
 			_, err := r.Update(ctx, 1, items.UpdateItemRequest{Name: "x"}, 1)
 			return err
 		}},
-		{"update image", testutil.ErrFake, func() error { return r.UpdateImage(ctx, 1, "items/1/a.jpg", 1) }},
+		{"add image", testutil.ErrFake, func() error { _, err := r.AddImage(ctx, 1, "items/1/a.jpg", 1); return err }},
 		{"add vendor", testutil.ErrFake, func() error {
 			_, err := r.AddVendor(ctx, 1, items.AddVendorToItemRequest{VendorID: 1}, 1)
 			return err

@@ -180,7 +180,8 @@ func OwnerFolder(prefix string, id int64, sub string) string {
 
 // BuildFolderKey stamps a folder key.
 func BuildFolderKey(folder, fileName string) string {
-	return folder + fmt.Sprintf("%d-%s", time.Now().UTC().Unix(), sanitizeFileName(fileName))
+	// Nanoseconds, so names repeated within a second still get their own key.
+	return folder + fmt.Sprintf("%d-%s", time.Now().UTC().UnixNano(), sanitizeFileName(fileName))
 }
 
 func sanitizeFileName(s string) string {

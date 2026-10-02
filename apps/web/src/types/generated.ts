@@ -318,6 +318,20 @@ export type InvoiceTransition = {
 };
 
 // From items/dto.go
+export type ItemGallery = {
+    max: number;
+    images: ItemImage[];
+};
+
+// From items/dto.go
+export type ItemImage = {
+    id: number;
+    objectKey: string;
+    isCover: boolean;
+    downloadUrl: string;
+};
+
+// From items/dto.go
 export type ItemPriceHistoryRow = {
     quotationNo: string;
     quotationDate: string;

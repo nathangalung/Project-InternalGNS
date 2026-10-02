@@ -92,12 +92,22 @@ describe("items api", () => {
       () => api.presignImageDownload(9),
       { path: "/items/9/image/download-url" },
     ],
+    ["list photos", () => api.listImages(9), { path: "/items/9/images" }],
     [
-      "save image key",
-      () => api.updateImage(9, "k"),
-      { path: "/items/9/image", method: "PATCH", body: { objectKey: "k" } },
+      "add a photo",
+      () => api.addImage(9, "k"),
+      { path: "/items/9/images", method: "POST", body: { objectKey: "k" } },
     ],
-    ["remove image", () => api.removeImage(9), { path: "/items/9/image", method: "DELETE" }],
+    [
+      "delete a photo",
+      () => api.deleteImage(9, 4),
+      { path: "/items/9/images/4", method: "DELETE" },
+    ],
+    [
+      "make a photo the cover",
+      () => api.setCoverImage(9, 4),
+      { path: "/items/9/images/4/cover", method: "PUT" },
+    ],
     [
       "recommend for a client",
       () => api.recommend([3, 4], 7),

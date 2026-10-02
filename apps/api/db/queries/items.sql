@@ -36,21 +36,22 @@ UPDATE items
 RETURNING id, name, impa_code, default_unit_id, description,
           is_active, created_at, updated_at, image_object_key;
 
--- name: items.update_image
-UPDATE items
-   SET image_object_key = $2,
-       updated_by       = $3,
-       updated_at       = NOW()
- WHERE id = $1
-RETURNING id;
+-- name: items.images
+-- The cover first, then upload order.
+SELECT i.id, i.object_key, COALESCE(i.object_key = it.image_object_key, FALSE) AS is_cover
+FROM item_images i
+JOIN items it ON it.id = i.item_id
+WHERE i.item_id = $1
+ORDER BY is_cover DESC, i.id;
 
--- name: items.clear_image
-UPDATE items
-   SET image_object_key = NULL,
-       updated_by       = $2,
-       updated_at       = NOW()
- WHERE id = $1
-RETURNING id;
+-- name: items.image_add
+SELECT fn_item_image_add($1, $2, $3);
+
+-- name: items.image_delete
+SELECT fn_item_image_delete($1, $2, $3);
+
+-- name: items.image_set_cover
+SELECT fn_item_image_set_cover($1, $2, $3);
 
 -- name: items.add_vendor
 -- Links only an active vendor: an inactive one is filtered out of every

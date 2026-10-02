@@ -124,28 +124,35 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateItemRequest, user
 	return item, err
 }
 
-// UpdateImage stores the image key.
-func (r *Repo) UpdateImage(ctx context.Context, id int64, objectKey string, userID int64) error {
-	tag, err := r.db.Exec(ctx, r.store.Get("items.update_image"), id, objectKey, userID)
+// Images lists the gallery.
+// An unknown item has no photos; the handler checks it exists first.
+func (r *Repo) Images(ctx context.Context, id int64) ([]ItemImage, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("items.images"), id)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("item images: %w", err)
 	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
-	}
-	return nil
+	return pgx.CollectRows(rows, pgx.RowToStructByName[ItemImage])
 }
 
-// ClearImage detaches the image.
-func (r *Repo) ClearImage(ctx context.Context, id int64, userID int64) error {
-	tag, err := r.db.Exec(ctx, r.store.Get("items.clear_image"), id, userID)
-	if err != nil {
-		return err
-	}
-	if tag.RowsAffected() == 0 {
-		return ErrNotFound
-	}
-	return nil
+// AddImage appends a gallery photo.
+// The first photo becomes the cover; past MaxItemImages it is refused.
+func (r *Repo) AddImage(ctx context.Context, id int64, objectKey string, userID int64) (int64, error) {
+	var imageID int64
+	err := r.db.QueryRow(ctx, r.store.Get("items.image_add"), id, objectKey, userID).Scan(&imageID)
+	return imageID, err
+}
+
+// DeleteImage removes one photo.
+// A removed cover passes to the oldest photo left.
+func (r *Repo) DeleteImage(ctx context.Context, id, imageID, userID int64) error {
+	_, err := r.db.Exec(ctx, r.store.Get("items.image_delete"), id, imageID, userID)
+	return err
+}
+
+// SetCover makes a photo the cover.
+func (r *Repo) SetCover(ctx context.Context, id, imageID, userID int64) error {
+	_, err := r.db.Exec(ctx, r.store.Get("items.image_set_cover"), id, imageID, userID)
+	return err
 }
 
 // Recommend picks line defaults.

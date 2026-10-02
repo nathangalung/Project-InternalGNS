@@ -33,6 +33,8 @@ export type {
   InvoiceStatusEvent,
   InvoiceSummary,
   InvoiceTransition,
+  ItemGallery,
+  ItemImage,
   ItemPriceHistoryRow,
   ItemRow,
   ItemVendorRow,

@@ -81,10 +81,6 @@ type Descriptor struct {
 	// SetKey persists the object key.
 	// It is stored against the owner row.
 	SetKey func(ctx context.Context, id int64, key string, actor int64) error
-	// ClearKey detaches the asset.
-	// Nil on descriptors without removal. The object stays in the bucket
-	// until cmd/orphan-blobs sweeps it.
-	ClearKey func(ctx context.Context, id int64, actor int64) error
 }
 
 // folder is a record's folder.
@@ -193,27 +189,6 @@ func UpdateKey(d Descriptor) http.HandlerFunc {
 		}
 		actor := deps.CurrentUserID(r.Context())
 		if err := d.SetKey(r.Context(), id, objectKey, actor); err != nil {
-			renderOwnerErr(r.Context(), w, err, d.NotFoundMsg)
-			return
-		}
-		w.WriteHeader(http.StatusNoContent)
-	}
-}
-
-// RemoveKey detaches the asset.
-// Removing from a record with nothing attached also answers 204, so a
-// retried delete is harmless.
-func RemoveKey(d Descriptor) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id, ok := httpx.PathID(w, r, "id", "invalid id")
-		if !ok {
-			return
-		}
-		if err := d.Exists(r.Context(), id); err != nil {
-			renderOwnerErr(r.Context(), w, err, d.NotFoundMsg)
-			return
-		}
-		if err := d.ClearKey(r.Context(), id, deps.CurrentUserID(r.Context())); err != nil {
 			renderOwnerErr(r.Context(), w, err, d.NotFoundMsg)
 			return
 		}

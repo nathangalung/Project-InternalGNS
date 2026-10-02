@@ -22,6 +22,7 @@ describe("queryKeys", () => {
       [queryKeys.items.all, queryKeys.items.searchAdvanced("a")],
       [queryKeys.items.all, queryKeys.items.vendors(1)],
       [queryKeys.items.all, queryKeys.items.priceHistory(1, 5)],
+      [queryKeys.items.all, queryKeys.items.images(1)],
       [queryKeys.vendors.all, queryKeys.vendors.list()],
       [queryKeys.vendors.all, queryKeys.vendors.detail(1)],
       [queryKeys.vendors.all, queryKeys.vendors.search("a")],

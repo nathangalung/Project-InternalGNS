@@ -92,3 +92,13 @@ func TestOwnerFolder(t *testing.T) {
 		}
 	}
 }
+
+// Same name, distinct keys.
+// A gallery takes several photos in a row, often with one camera name.
+func TestBuildFolderKey_SameNameTwice(t *testing.T) {
+	a := BuildFolderKey("items/1/", "IMG_0001.webp")
+	b := BuildFolderKey("items/1/", "IMG_0001.webp")
+	if a == b {
+		t.Errorf("two uploads of one name share key %q", a)
+	}
+}

@@ -73,6 +73,8 @@ var allowlist = []pkg{
 		{Go: "MatchRowsResponse", TS: "MatchRowsResponse"},
 		{Go: "AdvancedSearchHit", TS: "AdvancedSearchHit"},
 		{Go: "AdvancedSearchResponse", TS: "AdvancedSearchResponse"},
+		{Go: "ItemImage", TS: "ItemImage"},
+		{Go: "ItemGallery", TS: "ItemGallery"},
 	}},
 	{"internal/quotations", []entry{
 		{Go: "Status", TS: "QuotationStatus"},

@@ -309,10 +309,16 @@ Stored files (logos, product photos, attachments) come through the
 authenticated API proxy, and the enforced CSP allows images only from self,
 `blob:` and `data:`, so show one through `hooks/useObjectUrl` (a blob URL it
 revokes) and never point an `<img>` at an API URL. Product photos are shrunk
-in the browser before upload (`lib/image-shrink`, WebP within 1600px); add,
-replace and remove live in `features/items/ProductPhoto`, and
-`DELETE /items/{id}/image` only clears the key, leaving the object to
-`cmd/orphan-blobs`.
+in the browser before upload (`lib/image-shrink`, WebP within 1600px). A
+product keeps up to eight (`item_images`, `MaxItemImages`, enforced by
+`fn_item_image_add`); `items.image_object_key` names the cover (Foto Utama),
+which every list, search hit and thumbnail reads. `features/items/ProductPhoto`
+shows the cover and adds photos, several at once; `ProductGallery` is the
+swipeable scroll-snap slider below it, loading only the shown photo and its
+neighbours, with Jadikan Foto Utama and Hapus Foto. Removing a photo only
+drops its row (a removed cover passes to the oldest left), leaving the object
+to `cmd/orphan-blobs`, which keeps every gallery key. Upload keys are stamped
+in nanoseconds, so repeated camera names never share one.
 
 List screens share one state machine, `lib/useListScreen.ts`: search with
 debounce, filters, page, per-page, and the reset-to-page-1 invariant. Note which

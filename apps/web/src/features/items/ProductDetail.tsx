@@ -5,6 +5,7 @@ import { useMe } from "@/features/auth/hooks"
 import AddVendorToItemModal from "@/features/items/AddVendorToItemModal"
 import { apiFieldError, vendorInitials } from "@/features/items/helpers"
 import { useItemVendors, useUpdateItem } from "@/features/items/hooks"
+import ProductGallery from "@/features/items/ProductGallery"
 import ProductPhoto from "@/features/items/ProductPhoto"
 import { useUnits } from "@/features/units/hooks"
 import UnitCombobox from "@/features/units/UnitCombobox"
@@ -178,6 +179,8 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
               </span>
             </div>
           </div>
+
+          <ProductGallery product={product} canWrite={canWrite} />
 
           <div className="flex flex-col gap-8 rounded-lg bg-white p-8 max-sm:p-5">
             <div>

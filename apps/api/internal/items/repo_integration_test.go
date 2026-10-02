@@ -138,7 +138,8 @@ func TestRepo_ItemMetaByIDs(t *testing.T) {
 	assert.Nil(t, meta[on.ID].ImageObjectKey, "no image yet")
 
 	key := "items/" + strconv.FormatInt(on.ID, 10) + "/foto.webp"
-	require.NoError(t, repo.UpdateImage(ctx, on.ID, key, seedUserID))
+	_, err = repo.AddImage(ctx, on.ID, key, seedUserID)
+	require.NoError(t, err)
 	meta, err = repo.ItemMetaByIDs(ctx, []int64{on.ID})
 	require.NoError(t, err)
 	require.NotNil(t, meta[on.ID].ImageObjectKey)

@@ -1,5 +1,6 @@
 import {
   keepPreviousData,
+  type QueryClient,
   skipToken,
   useMutation,
   useQuery,
@@ -134,24 +135,65 @@ export function useAddVendorToItem() {
   })
 }
 
-export function useUploadItemImage() {
+// The product's photos, cover first.
+export function useItemGallery(id: number | undefined) {
+  return useQuery({
+    queryKey: id ? queryKeys.items.images(id) : queryKeys.items.all,
+    queryFn: id !== undefined && id > 0 ? () => itemsApi.listImages(id) : skipToken,
+    staleTime: 4 * 60 * 1000,
+  })
+}
+
+// Refresh what shows a product photo.
+// The gallery, the item and every list thumbnail all hang off items.
+function refreshPhotos(qc: QueryClient) {
+  return qc.invalidateQueries({ queryKey: queryKeys.items.all })
+}
+
+// Add picked photos in turn.
+//
+// Each is shrunk first, so a large phone photo that fits once shrunk is let
+// in, then uploaded and added. The first failure stops the rest; the photos
+// already added stay and show.
+export function useAddItemImages() {
   const qc = useQueryClient()
   return useMutation({
-    // Shrink first, so a large phone photo that fits once shrunk is let in.
-    mutationFn: async ({ id, file }: { id: number; file: File }) => {
-      const ready = await shrinkImage(file)
-      validateAsset("itemImage", ready)
-      const objectKey = await uploadWithFreshKey(
-        () => itemsApi.presignImageUpload(id, ready.name),
-        ready,
-      )
-      await itemsApi.updateImage(id, objectKey)
+    mutationFn: async ({ id, files }: { id: number; files: File[] }) => {
+      for (const file of files) {
+        const ready = await shrinkImage(file)
+        validateAsset("itemImage", ready)
+        const objectKey = await uploadWithFreshKey(
+          () => itemsApi.presignImageUpload(id, ready.name),
+          ready,
+        )
+        await itemsApi.addImage(id, objectKey)
+      }
     },
-    onSuccess: (_, { id }) => {
-      qc.invalidateQueries({ queryKey: queryKeys.items.detail(id) })
-      qc.invalidateQueries({ queryKey: queryKeys.items.all })
-    },
+    onSettled: () => refreshPhotos(qc),
     onError: (err) => toast.error(errorMessage(err, "Gagal mengunggah foto produk.")),
+  })
+}
+
+// Remove one photo.
+// Settles after the refetch, so the removed photo never shows again.
+export function useDeleteItemImage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, imageId }: { id: number; imageId: number }) =>
+      itemsApi.deleteImage(id, imageId),
+    onSuccess: () => refreshPhotos(qc),
+    onError: (err) => toast.error(errorMessage(err, "Gagal menghapus foto produk.")),
+  })
+}
+
+// Make one photo the cover.
+export function useSetItemCover() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, imageId }: { id: number; imageId: number }) =>
+      itemsApi.setCoverImage(id, imageId),
+    onSuccess: () => refreshPhotos(qc),
+    onError: (err) => toast.error(errorMessage(err, "Gagal mengubah foto utama.")),
   })
 }
 
@@ -161,20 +203,6 @@ export function useItemImageDownloadUrl(id: number | undefined, objectKey?: stri
     queryFn:
       id !== undefined && id > 0 && objectKey ? () => itemsApi.presignImageDownload(id) : skipToken,
     staleTime: 4 * 60 * 1000,
-  })
-}
-
-export function useRemoveItemImage() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (id: number) => itemsApi.removeImage(id),
-    // Settle after the refetch, so the removed photo never shows again.
-    onSuccess: (_, id) =>
-      Promise.all([
-        qc.invalidateQueries({ queryKey: queryKeys.items.detail(id) }),
-        qc.invalidateQueries({ queryKey: queryKeys.items.all }),
-      ]),
-    onError: (err) => toast.error(errorMessage(err, "Gagal menghapus foto produk.")),
   })
 }
 

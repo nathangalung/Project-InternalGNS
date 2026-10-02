@@ -70,6 +70,12 @@ list.
 | GET | `/items/{id}` | `Get` | `items.get_by_id` |
 | POST | `/items` | `Create` | `items.create` |
 | PUT | `/items/{id}` | `Update` | `items.update` |
+| GET | `/items/{id}/image/upload-url` | `assetproxy.Upload` | presigns a key under `items/<id>/` |
+| GET | `/items/{id}/image/download-url` | `assetproxy.Download` | the cover (`items.image_object_key`) |
+| GET | `/items/{id}/images` | `gallery.List` | `items.images`, cover first, each with its download path |
+| POST | `/items/{id}/images` | `assetproxy.UpdateKey` | `fn_item_image_add` (at most `MaxItemImages`) |
+| DELETE | `/items/{id}/images/{imageId}` | `gallery.Delete` | `fn_item_image_delete` |
+| PUT | `/items/{id}/images/{imageId}/cover` | `gallery.Cover` | `fn_item_image_set_cover` |
 
 ### vendors
 
