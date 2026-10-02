@@ -8,9 +8,10 @@ import DiscountModal from "@/features/quotations/DiscountModal"
 import Step2Product from "@/features/quotations/Step2Product"
 import Step3Shipping from "@/features/quotations/Step3Shipping"
 import Step4Summary from "@/features/quotations/Step4Summary"
+import { wizardSummary } from "@/features/quotations/wizard"
 import { useUnits } from "@/features/units/hooks"
 import { isVersionConflict } from "@/lib/errors"
-import { computeTaxBreakdown, formatNumber as formatRp, toNum } from "@/lib/format"
+import { formatNumber as formatRp, toNum } from "@/lib/format"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { isValidAddress } from "@/lib/validation"
@@ -166,23 +167,19 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
   const currentClient = clientRow ? fromClientRow(clientRow) : undefined
   const editingProduct = products.find((p) => p.id === editingId) ?? null
 
-  const summaryTotalProdukQty = products.reduce((sum, p) => sum + p.jumlah, 0)
-  const summaryTotalHargaBeli = products.reduce((sum, p) => sum + p.hargaBeli * p.jumlah, 0)
-  const summaryTotalHargaJual = products.reduce((sum, p) => sum + p.hargaJual * p.jumlah, 0)
-  const nominalDiskon = summaryTotalHargaJual * (discountPct / 100)
-  const summarySubTotal = summaryTotalHargaJual - nominalDiskon
-  const summaryShippingCost = Number(shippingCost) || 0
-  const hasProducts = products.length > 0
   // Preview only; the saved PO totals come from the server.
   const {
-    dppNilaiLain: summaryDpp,
-    ppnAmount: summaryPpn,
+    totalProdukQty: summaryTotalProdukQty,
+    totalHargaBeli: summaryTotalHargaBeli,
+    totalHargaJual: summaryTotalHargaJual,
+    nominalDiskon,
+    subTotal: summarySubTotal,
+    shippingCost: summaryShippingCost,
+    dpp: summaryDpp,
+    ppn: summaryPpn,
     grandTotal: summaryGrandTotal,
-  } = computeTaxBreakdown({
-    subtotal: summarySubTotal,
-    shipping: summaryShippingCost,
-  })
-  const summaryProfit = hasProducts ? summarySubTotal - summaryTotalHargaBeli : 0
+    profit: summaryProfit,
+  } = wizardSummary(products, discountPct, shippingCost)
 
   async function handleSave() {
     const missing = linesMissingUnit(products, unitIdByCode)

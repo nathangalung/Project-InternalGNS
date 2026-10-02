@@ -7,6 +7,8 @@ import {
   formatNumber,
   formatRupiah,
   formatRupiahAxis,
+  lineNet,
+  sumRupiah,
   toNum,
 } from "./format"
 
@@ -54,31 +56,55 @@ describe("formatRupiahAxis", () => {
   })
 })
 
+describe("lineNet", () => {
+  it.each<[string, number, number, number, number]>([
+    ["no discount", 2, 1500, 0, 3000],
+    ["rounds half away from zero", 1, 0.01, 50, 0.01],
+    ["drops below half a sen", 3, 0.97, 2.5, 2.84],
+    ["fractional qty, half a sen up", 1.5, 0.33, 0, 0.5],
+    ["full discount", 4, 999.99, 100, 0],
+    ["large amount stays exact", 1000, 123_456_789.99, 2.5, 120_370_370_240.25],
+  ])("%s", (_name, qty, price, pct, want) => {
+    expect(lineNet(qty, price, pct)).toBe(want)
+  })
+})
+
+describe("sumRupiah", () => {
+  it("adds in sen without float noise", () => {
+    expect(sumRupiah([0.1, 0.2])).toBe(0.3)
+    expect(sumRupiah([])).toBe(0)
+  })
+})
+
 describe("computeTaxBreakdown", () => {
-  it("includes shipping in the taxable base (matches DB (total-discount)*1.11)", () => {
-    // products=1000, shipping=200, no discount -> base 1200 -> grand 1332.
-    const r = computeTaxBreakdown({ subtotal: 1000, shipping: 200 })
-    expect(r.dppNilaiLain).toBe(1100)
-    expect(r.ppnAmount).toBe(132)
-    expect(r.grandTotal).toBe(1332)
+  it("rounds per line, as the server stores it", () => {
+    // The Go TestQuotationTax_PerLine case: 2.5% off three lines plus 100.01
+    // shipping. The header formula would give 8115.97, 973.92 and 9827.71.
+    const nets = [lineNet(1, 333.33, 2.5), lineNet(3, 0.97, 2.5), lineNet(7, 1234.57, 2.5), 100.01]
+    expect(computeTaxBreakdown(nets)).toEqual({
+      subtotal: 8853.79,
+      dppNilaiLain: 8115.98,
+      ppnAmount: 973.91,
+      grandTotal: 9827.7,
+    })
   })
 
-  it("products only (no shipping): base 1000 -> dpp 917 -> ppn 110 -> grand 1110", () => {
-    const r = computeTaxBreakdown({ subtotal: 1000, shipping: 0 })
-    expect(r.dppNilaiLain).toBe(917)
-    expect(r.ppnAmount).toBe(110)
-    expect(r.grandTotal).toBe(1110)
+  it("taxes shipping as a line of its own", () => {
+    expect(computeTaxBreakdown([1000, 200])).toEqual({
+      subtotal: 1200,
+      dppNilaiLain: 1100,
+      ppnAmount: 132,
+      grandTotal: 1332,
+    })
   })
 
-  it("shipping only (no products) taxes the shipping cost", () => {
-    const r = computeTaxBreakdown({ subtotal: 0, shipping: 200 })
-    expect(r.dppNilaiLain).toBe(Math.round((200 * 11) / 12))
-    expect(r.grandTotal).toBe(200 + r.ppnAmount)
-  })
-
-  it("grandTotal always equals base + ppn", () => {
-    const r = computeTaxBreakdown({ subtotal: 5000, shipping: 750 })
-    expect(r.grandTotal).toBe(5000 + 750 + r.ppnAmount)
+  it("is zero without lines", () => {
+    expect(computeTaxBreakdown([])).toEqual({
+      subtotal: 0,
+      dppNilaiLain: 0,
+      ppnAmount: 0,
+      grandTotal: 0,
+    })
   })
 })
 

@@ -89,19 +89,61 @@ export function formatDateTime(iso: string | null | undefined): string {
   return `${formatDate(iso)}, ${time}`
 }
 
-// Indonesian tax math.
+// Rupiah in whole sen.
+function toSen(rp: number): number {
+  return Math.round(rp * 100)
+}
+
+// Integer division, half away from zero.
 //
-// 11/12 base, 12% PPN. The taxable base always includes shipping, matching the
-// DB GENERATED columns ((total - discount) where total folds in shipping).
-// subtotal here is products minus discount.
-export function computeTaxBreakdown(input: { subtotal: number; shipping: number }): {
+// Matches Postgres ROUND on numeric; operands are never negative here.
+function divRound(a: bigint, b: bigint): bigint {
+  const q = a / b
+  return (a % b) * BigInt(2) >= b ? q + BigInt(1) : q
+}
+
+// Sum of rupiah amounts, in sen.
+//
+// Adds whole sen so two-decimal amounts never pick up float noise.
+export function sumRupiah(values: number[]): number {
+  return values.reduce((sum, v) => sum + toSen(v), 0) / 100
+}
+
+// One line's net, in rupiah.
+//
+// qty × price less discountPct, rounded to the sen the way
+// quotation_items.subtotal and purchase_order_items.subtotal store it.
+// Exact for the two-decimal inputs the API accepts.
+export function lineNet(qty: number, price: number, discountPct = 0): number {
+  const n = BigInt(toSen(qty)) * BigInt(toSen(price)) * BigInt(10_000 - toSen(discountPct))
+  return Number(divRound(n, BigInt(1_000_000))) / 100
+}
+
+// Indonesian tax math, per line.
+//
+// Each line net (shipping is a line of its own) gives DPP Nilai Lain =
+// ROUND(net × 11/12) and PPN = ROUND(that DPP × 12%), summed over the lines,
+// as the server stores them for the quotation, the PO and the invoice.
+export function computeTaxBreakdown(lineNets: number[]): {
+  subtotal: number
   dppNilaiLain: number
   ppnAmount: number
   grandTotal: number
 } {
-  const dppBase = input.subtotal + input.shipping
-  const dppNilaiLain = Math.round((dppBase * 11) / 12)
-  const ppnAmount = Math.round(dppNilaiLain * 0.12)
-  const grandTotal = dppBase + ppnAmount
-  return { dppNilaiLain, ppnAmount, grandTotal }
+  let net = 0
+  let dpp = 0
+  let ppn = 0
+  for (const rp of lineNets) {
+    const sen = toSen(rp)
+    const lineDpp = divRound(BigInt(sen) * BigInt(11), BigInt(12))
+    net += sen
+    dpp += Number(lineDpp)
+    ppn += Number(divRound(lineDpp * BigInt(12), BigInt(100)))
+  }
+  return {
+    subtotal: net / 100,
+    dppNilaiLain: dpp / 100,
+    ppnAmount: ppn / 100,
+    grandTotal: (net + ppn) / 100,
+  }
 }

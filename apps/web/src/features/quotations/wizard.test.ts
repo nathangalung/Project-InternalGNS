@@ -98,10 +98,29 @@ describe("wizardSummary", () => {
       nominalDiskon: 25,
       subTotal: 225,
       shippingCost: 12000,
-      dpp: 11206,
-      ppn: 1345,
-      grandTotal: 13570,
+      dpp: 11206.25,
+      ppn: 1344.75,
+      grandTotal: 13569.75,
       profit: 75,
+    })
+  })
+
+  it("discounts and taxes per line, as the server stores it", () => {
+    const s = wizardSummary(
+      [
+        product(1, { jumlah: 1, hargaJual: 333.33 }),
+        product(2, { jumlah: 3, hargaJual: 0.97 }),
+        product(3, { jumlah: 7, hargaJual: 1234.57 }),
+      ],
+      2.5,
+      "100.01",
+    )
+    expect(s).toMatchObject({
+      nominalDiskon: 224.45,
+      subTotal: 8753.78,
+      dpp: 8115.98,
+      ppn: 973.91,
+      grandTotal: 9827.7,
     })
   })
 
