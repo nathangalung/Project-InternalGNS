@@ -167,6 +167,15 @@ services:
       # includeSubDomains or preload until every sibling host is known to be
       # HTTPS-only.
       - "traefik.http.middlewares.internalgns-api-headers.headers.stsSeconds=31536000"
+      # Plain http redirects to https.
+      # Dokploy's Traefik serves :80 as the web entrypoint with no global
+      # redirect, so without this router http:// answers 404. HSTS only helps
+      # after a first https visit.
+      - "traefik.http.routers.internalgns-api-http.rule=Host(`${API_HOST}`)"
+      - "traefik.http.routers.internalgns-api-http.entrypoints=web"
+      - "traefik.http.routers.internalgns-api-http.middlewares=internalgns-api-redirect"
+      - "traefik.http.middlewares.internalgns-api-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.internalgns-api-redirect.redirectscheme.permanent=true"
       - "traefik.http.services.internalgns-api.loadbalancer.server.port=8080"
     restart: unless-stopped
     networks: [internal, dokploy-network]
@@ -200,6 +209,12 @@ services:
       # e2e suite runs under it (make e2e-csp, docs/deploy_vps.md section 12).
       # The API sets its own stricter policy on its responses.
       - "traefik.http.middlewares.internalgns-web-headers.headers.customResponseHeaders.Content-Security-Policy=default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self' https://${API_HOST}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+      # Plain http redirects to https.
+      - "traefik.http.routers.internalgns-web-http.rule=Host(`${WEB_HOST}`)"
+      - "traefik.http.routers.internalgns-web-http.entrypoints=web"
+      - "traefik.http.routers.internalgns-web-http.middlewares=internalgns-web-redirect"
+      - "traefik.http.middlewares.internalgns-web-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.internalgns-web-redirect.redirectscheme.permanent=true"
       - "traefik.http.services.internalgns-web.loadbalancer.server.port=80"
     restart: unless-stopped
     networks: [dokploy-network]
