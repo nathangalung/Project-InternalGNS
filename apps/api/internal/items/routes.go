@@ -36,8 +36,11 @@ func Routes(d deps.Deps) chi.Router {
 	image := imageAsset(d.Storage, d.Objects, repo)
 	r.Get("/{id}/image/upload-url", assetproxy.Upload(image))
 	r.Get("/{id}/image/download-url", assetproxy.Download(image))
-	r.Patch("/{id}/image", assetproxy.UpdateKey(image))
-	r.Delete("/{id}/image", assetproxy.RemoveKey(image))
+	gallery := galleryHandler{repo: repo, storage: d.Storage}
+	r.Get("/{id}/images", gallery.List)
+	r.Post("/{id}/images", assetproxy.UpdateKey(image))
+	r.Delete("/{id}/images/{imageId}", gallery.Delete)
+	r.Put("/{id}/images/{imageId}/cover", gallery.Cover)
 
 	return r
 }
@@ -68,11 +71,10 @@ func imageAsset(sc *storage.Client, objects deps.ObjectStore, repo *Repo) assetp
 			}
 			return assetproxy.Asset{Key: key}, nil
 		},
+		// An attached key joins the gallery; CurrentAsset is the cover.
 		SetKey: func(ctx context.Context, id int64, key string, actor int64) error {
-			return assetErr(repo.UpdateImage(ctx, id, key, actor))
-		},
-		ClearKey: func(ctx context.Context, id, actor int64) error {
-			return assetErr(repo.ClearImage(ctx, id, actor))
+			_, err := repo.AddImage(ctx, id, key, actor)
+			return assetErr(err)
 		},
 	}
 }

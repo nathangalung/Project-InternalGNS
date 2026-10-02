@@ -426,25 +426,25 @@ func TestHandler_PresignImageDownload_StorageUnavailable(t *testing.T) {
 	assert.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
 }
 
-func TestHandler_UpdateImage_BadID(t *testing.T) {
+func TestHandler_AddImage_BadID(t *testing.T) {
 	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodPatch, "/items/abc/image",
+	res := doJSON(t, srv, http.MethodPost, "/items/abc/images",
 		items.UpdateImageRequest{ObjectKey: "x"})
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 }
 
-func TestHandler_UpdateImage_EmptyObjectKey(t *testing.T) {
+func TestHandler_AddImage_EmptyObjectKey(t *testing.T) {
 	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodPatch, "/items/1/image",
+	res := doJSON(t, srv, http.MethodPost, "/items/1/images",
 		items.UpdateImageRequest{ObjectKey: " "})
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 }
 
-func TestHandler_UpdateImage_NotFound(t *testing.T) {
+func TestHandler_AddImage_NotFound(t *testing.T) {
 	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodPatch, "/items/99999999/image",
+	res := doJSON(t, srv, http.MethodPost, "/items/99999999/images",
 		items.UpdateImageRequest{ObjectKey: "items/1/x.png"})
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)

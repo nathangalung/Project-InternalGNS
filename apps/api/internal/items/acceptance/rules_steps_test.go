@@ -29,7 +29,7 @@ func (s *scenarioState) renameItemBlank(kind string) error {
 // Image key of another item.
 func (s *scenarioState) attachForeignImage() error {
 	key := fmt.Sprintf("items/%d/foto.jpg", s.itemID+1)
-	return s.sendRequest(http.MethodPatch, "/items/"+strconv.FormatInt(s.itemID, 10)+"/image",
+	return s.sendRequest(http.MethodPost, "/items/"+strconv.FormatInt(s.itemID, 10)+"/images",
 		items.UpdateImageRequest{ObjectKey: key})
 }
 

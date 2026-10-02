@@ -30,7 +30,8 @@ var specs = []bucketSpec{
 	{storage.BucketPODocs, "SELECT file_url FROM purchase_orders WHERE file_url IS NOT NULL"},
 	{storage.BucketClientLogos, "SELECT logo_object_key FROM company_client WHERE logo_object_key IS NOT NULL"},
 	{storage.BucketVendorLogos, "SELECT logo_object_key FROM vendors WHERE logo_object_key IS NOT NULL"},
-	{storage.BucketItemImages, "SELECT image_object_key FROM items WHERE image_object_key IS NOT NULL"},
+	// The gallery holds every photo; the cover column is kept as a safety net.
+	{storage.BucketItemImages, "SELECT object_key FROM item_images UNION SELECT image_object_key FROM items WHERE image_object_key IS NOT NULL"},
 	// Payment proofs share the invoice bucket; the history keeps each one too.
 	{storage.BucketInvoiceAttachments, `SELECT attachment_object_key FROM invoices WHERE attachment_object_key IS NOT NULL
 UNION SELECT payment_proof_key FROM invoices WHERE payment_proof_key IS NOT NULL

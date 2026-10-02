@@ -20,6 +20,26 @@ type UpdateImageRequest struct {
 	ObjectKey string `json:"objectKey"`
 }
 
+// MaxItemImages caps one gallery.
+// fn_item_image_add enforces the same number.
+const MaxItemImages = 8
+
+// ItemImage is one gallery photo.
+// DownloadURL is the authenticated proxy path, fetched as a blob.
+type ItemImage struct {
+	ID          int64  `db:"id"         json:"id"`
+	ObjectKey   string `db:"object_key" json:"objectKey"`
+	IsCover     bool   `db:"is_cover"   json:"isCover"`
+	DownloadURL string `db:"-"          json:"downloadUrl"`
+}
+
+// ItemGallery lists a product's photos.
+// The cover comes first, then the rest in upload order.
+type ItemGallery struct {
+	Max    int         `json:"max"`
+	Images []ItemImage `json:"images"`
+}
+
 type ListFilter struct {
 	Q        string
 	IsActive *bool
