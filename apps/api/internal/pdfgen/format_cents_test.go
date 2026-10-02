@@ -27,12 +27,12 @@ func TestFormatIDRCents(t *testing.T) {
 func TestFormatIDRCents_ColumnReconciles(t *testing.T) {
 	total, discount, subtotal := "1001.00", "75.50", "925.50"
 	if FormatIDRCents(total) == FormatIDR(total) {
-		t.Fatal("the quotation formatter must differ from the truncating one")
+		t.Fatal("the document formatter must differ from the truncating one")
 	}
 	if got, want := FormatIDRCents(subtotal), "Rp~925,50"; got != want {
 		t.Errorf("subtotal = %q, want %q", got, want)
 	}
-	if FormatIDR(discount) != "Rp~75" {
-		t.Errorf("FormatIDR must keep truncating for invoices, got %q", FormatIDR(discount))
+	if got, want := FormatIDRCents(discount), "Rp~75,50"; got != want {
+		t.Errorf("discount = %q, want %q", got, want)
 	}
 }

@@ -170,8 +170,8 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 			Unit:        pdfgen.LatexEscape(unit),
 			Name:        pdfgen.LatexBreakable(it.ItemName),
 			Description: pdfgen.LatexBreakable(desc),
-			UnitPrice:   pdfgen.FormatIDR(gross),
-			Amount:      pdfgen.FormatIDR(amt),
+			UnitPrice:   pdfgen.FormatIDRCents(gross),
+			Amount:      pdfgen.FormatIDRCents(amt),
 		})
 	}
 
@@ -191,17 +191,17 @@ func (h *ExportHandler) buildData(ctx context.Context, inv Invoice, items []Invo
 		InvoiceDate:    inv.InvoiceDate.Format("2 January 2006"),
 		DueDate:        dueDate,
 		Items:          expItems,
-		TotalProduk:    pdfgen.FormatIDR(totalProdukStr),
+		TotalProduk:    pdfgen.FormatIDRCents(totalProdukStr),
 		Diskon: func() string {
 			if diskon == "" {
 				return ""
 			}
-			return pdfgen.FormatIDR(diskon)
+			return pdfgen.FormatIDRCents(diskon)
 		}(),
-		DPP:             pdfgen.FormatIDR(pdfgen.StrDeref(inv.Dpp)),
-		DPPNilaiLain:    pdfgen.FormatIDR(pdfgen.StrDeref(inv.DppNilaiLain)),
-		PPN:             pdfgen.FormatIDR(pdfgen.StrDeref(inv.PpnAmount)),
-		Total:           pdfgen.FormatIDR(pdfgen.StrDeref(inv.Total)),
+		DPP:             pdfgen.FormatIDRCents(pdfgen.StrDeref(inv.Dpp)),
+		DPPNilaiLain:    pdfgen.FormatIDRCents(pdfgen.StrDeref(inv.DppNilaiLain)),
+		PPN:             pdfgen.FormatIDRCents(pdfgen.StrDeref(inv.PpnAmount)),
+		Total:           pdfgen.FormatIDRCents(pdfgen.StrDeref(inv.Total)),
 		PaymentTerms:    pdfgen.LatexEscape(h.settings.PaymentTerms),
 		BankName:        pdfgen.LatexEscape(h.settings.BankName),
 		BankAccountNo:   pdfgen.LatexEscape(h.settings.BankAccountNo),

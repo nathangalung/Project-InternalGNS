@@ -18,8 +18,8 @@ func makeInvItem(n int) exportItem {
 		Unit:        "PCS",
 		Name:        "Test Item",
 		Description: "",
-		UnitPrice:   "Rp 100.000",
-		Amount:      "Rp 100.000",
+		UnitPrice:   "Rp 100.000,00",
+		Amount:      "Rp 100.000,00",
 	}
 }
 
@@ -93,9 +93,9 @@ func TestInvoiceTemplateDiscountRow(t *testing.T) {
 	var buf bytes.Buffer
 	data := exportData{
 		Items:       []exportItem{makeInvItem(1)},
-		TotalProduk: "Rp 350.000",
-		Diskon:      "Rp 30.000",
-		DPP:         "Rp 320.000",
+		TotalProduk: "Rp 350.000,00",
+		Diskon:      "Rp 30.000,00",
+		DPP:         "Rp 320.000,00",
 	}
 	if err := tmpl.ExecuteTemplate(&buf, "Invoice.tex.tmpl", data); err != nil {
 		t.Fatalf("execute with discount: %v", err)
@@ -150,12 +150,12 @@ func TestInvoicePaperSize(t *testing.T) {
 				InvoiceDate:     "8 July 2026",
 				DueDate:         "8 August 2026",
 				Items:           items,
-				TotalProduk:     "Rp 100.000",
+				TotalProduk:     "Rp 100.000,00",
 				Diskon:          "",
-				DPP:             "Rp 90.909",
-				DPPNilaiLain:    "Rp 9.091",
-				PPN:             "Rp 10.909",
-				Total:           "Rp 111.818",
+				DPP:             "Rp 90.909,09",
+				DPPNilaiLain:    "Rp 9.090,91",
+				PPN:             "Rp 10.909,09",
+				Total:           "Rp 111.818,18",
 				PaymentTerms:    "30 days",
 				BankName:        "Bank BCA",
 				BankAccountNo:   "123-456-789",

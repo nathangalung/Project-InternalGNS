@@ -229,7 +229,8 @@ func LatexBreakable(s string) string {
 }
 
 // FormatIDR renders Rupiah amounts.
-// The format is Rp 1.234.567, with dot grouping.
+// The format is Rp 1.234.567, with dot grouping. It drops the sen, so
+// document money fields use FormatIDRCents.
 func FormatIDR(numericStr string) string {
 	if numericStr == "" {
 		return "Rp~--"
@@ -263,7 +264,7 @@ func FormatIDR(numericStr string) string {
 
 // FormatIDRCents keeps the cents.
 func FormatIDRCents(numericStr string) string {
-	// FormatIDR truncates, and filed invoices must not be restated.
+	// Every document prints stored amounts with their sen, so rows add up.
 	s := strings.TrimSpace(numericStr)
 	if s == "" {
 		return "Rp~--"

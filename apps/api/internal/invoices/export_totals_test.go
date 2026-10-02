@@ -126,14 +126,14 @@ func TestExport_TotalsBlockBalances(t *testing.T) {
 		deps.PdfSettings{},
 	)
 	totals := h.PDFTotalsForTest(ctx, inv, items)
-	assert.Equal(t, pdfgen.FormatIDR(sum), totals.TotalProduk)
-	assert.Equal(t, pdfgen.FormatIDR(*inv.TotalDiscount), totals.Diskon)
-	assert.Equal(t, pdfgen.FormatIDR(*inv.Dpp), totals.DPP)
+	assert.Equal(t, pdfgen.FormatIDRCents(sum), totals.TotalProduk)
+	assert.Equal(t, pdfgen.FormatIDRCents(*inv.TotalDiscount), totals.Diskon)
+	assert.Equal(t, pdfgen.FormatIDRCents(*inv.Dpp), totals.DPP)
 	assert.NotEmpty(t, totals.Diskon, "a real discount must print a Diskon row")
 
 	// Per line the PDF shows the gross price, not the net one.
-	assert.Contains(t, totals.LineUnitPrices, pdfgen.FormatIDR("100000"))
-	assert.NotContains(t, totals.LineUnitPrices, pdfgen.FormatIDR("90000"))
+	assert.Contains(t, totals.LineUnitPrices, pdfgen.FormatIDRCents("100000"))
+	assert.NotContains(t, totals.LineUnitPrices, pdfgen.FormatIDRCents("90000"))
 }
 
 // Historical rows use net price.
@@ -162,6 +162,34 @@ func TestExport_TotalsBlock_NoDiscountHidesRow(t *testing.T) {
 	)
 	totals := h.PDFTotalsForTest(ctx, inv, items)
 	assert.Empty(t, totals.Diskon, "zero discount must not print a Diskon row")
-	assert.Equal(t, pdfgen.FormatIDR(*inv.Dpp), totals.DPP)
+	assert.Equal(t, pdfgen.FormatIDRCents(*inv.Dpp), totals.DPP)
 	assert.Equal(t, totals.DPP, totals.TotalProduk, "no discount means the two agree")
+}
+
+// The PDF prints the sen.
+// fn_create_invoice keeps sen on every figure, PPN included even on a whole
+// DPP, so a truncated print would not add up (5.000 + 550 = 5.551) and would
+// differ from the VAT filed to Coretax.
+func TestExport_PrintsSen(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	s := func(v string) *string { return &v }
+	inv := invoices.Invoice{
+		Dpp:           s("5000.95"),
+		DppNilaiLain:  s("4584.20"),
+		PpnAmount:     s("550.10"),
+		Total:         s("5551.05"),
+		TotalDiscount: s("0.00"),
+	}
+	items := []invoices.InvoiceItem{
+		{LineType: "product", ItemName: "Tali", Qty: "1", UnitPrice: "5000.95"},
+	}
+
+	got := newExportHandler(t, tx).PDFTotalsForTest(ctx, inv, items)
+	assert.Equal(t, "Rp~5.000,95", got.TotalProduk)
+	assert.Equal(t, "Rp~5.000,95", got.DPP)
+	assert.Equal(t, "Rp~4.584,20", got.DPPNilaiLain)
+	assert.Equal(t, "Rp~550,10", got.PPN)
+	assert.Equal(t, "Rp~5.551,05", got.Total)
+	assert.Equal(t, []string{"Rp~5.000,95"}, got.LineUnitPrices)
+	assert.Equal(t, []string{"Rp~5.000,95"}, got.LineAmounts)
 }
