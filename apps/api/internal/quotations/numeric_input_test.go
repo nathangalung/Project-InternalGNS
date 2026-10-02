@@ -2,6 +2,7 @@ package quotations_test
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"testing"
 
@@ -67,12 +68,27 @@ var termsCases = []termsCase{
 	{"shipping cost blank", nil, nil, strPtr(""), "shippingCost", shipCostMsg},
 }
 
-// assertField checks one 422 field.
-func assertField(t *testing.T, res *http.Response, field, msg string) {
+// writeCall is one write path.
+type writeCall struct {
+	name    string
+	method  string
+	path    string
+	body    any
+	headers map[string]string
+}
+
+// assertRefused sends each call and expects one 422 field.
+func assertRefused(t *testing.T, srv *httptest.Server, calls []writeCall, field, msg string) {
 	t.Helper()
-	e := problemOf(t, res)
-	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
-	assert.Equal(t, msg, e.Fields[field], "fields=%v", e.Fields)
+	for _, c := range calls {
+		t.Run(c.name, func(t *testing.T) {
+			res := doJSONWithHeaders(t, srv, c.method, c.path, c.body, c.headers)
+			defer res.Body.Close()
+			e := problemOf(t, res)
+			assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+			assert.Equal(t, msg, e.Fields[field], "fields=%v", e.Fields)
+		})
+	}
 }
 
 // Line numbers refuse NaN, infinities and negatives.
@@ -88,23 +104,17 @@ func TestHandler_LineNumbersRefused(t *testing.T) {
 	for _, c := range lineCases {
 		item := offered()
 		c.spoil(&item)
-		t.Run(c.name+"/create", func(t *testing.T) {
-			req := sampleCreate()
-			req.Items = []quotations.CreateItem{item}
-			assertField(t, doJSON(t, srv, http.MethodPost, "/quotations/", req), c.field, c.msg)
-		})
-		t.Run(c.name+"/update", func(t *testing.T) {
-			res := doJSONWithHeaders(t, srv, http.MethodPut, base,
-				quotations.UpdateRequest{DiscountPct: "0", Items: []quotations.CreateItem{item}}, ifMatch)
-			assertField(t, res, c.field, c.msg)
-		})
-		t.Run(c.name+"/add lines", func(t *testing.T) {
-			res := doJSON(t, srv, http.MethodPost, base+"/lines",
-				quotations.AddLinesRequest{Items: []quotations.CreateItem{item}})
-			assertField(t, res, c.field, c.msg)
-		})
-		t.Run(c.name+"/update line", func(t *testing.T) {
-			assertField(t, doJSON(t, srv, http.MethodPut, line, item), c.field, c.msg)
+		create := sampleCreate()
+		create.Items = []quotations.CreateItem{item}
+		t.Run(c.name, func(t *testing.T) {
+			assertRefused(t, srv, []writeCall{
+				{"create", http.MethodPost, "/quotations/", create, nil},
+				{"update", http.MethodPut, base,
+					quotations.UpdateRequest{DiscountPct: "0", Items: []quotations.CreateItem{item}}, ifMatch},
+				{"add lines", http.MethodPost, base + "/lines",
+					quotations.AddLinesRequest{Items: []quotations.CreateItem{item}}, nil},
+				{"update line", http.MethodPut, line, item, nil},
+			}, c.field, c.msg)
 		})
 	}
 }
@@ -118,23 +128,19 @@ func TestHandler_TermNumbersRefused(t *testing.T) {
 	ifMatch := map[string]string{"If-Match": "0"}
 
 	for _, c := range termsCases {
-		t.Run(c.name+"/create", func(t *testing.T) {
-			req := sampleCreate()
-			req.ValidityDays, req.ShippingDays, req.ShippingCost = c.validity, c.shipDays, c.shipCost
-			assertField(t, doJSON(t, srv, http.MethodPost, "/quotations/", req), c.field, c.msg)
-		})
-		t.Run(c.name+"/update", func(t *testing.T) {
-			req := quotations.UpdateRequest{
-				DiscountPct: "0", Items: []quotations.CreateItem{offered()},
-				ValidityDays: c.validity, ShippingDays: c.shipDays, ShippingCost: c.shipCost,
-			}
-			assertField(t, doJSONWithHeaders(t, srv, http.MethodPut, base, req, ifMatch), c.field, c.msg)
-		})
-		t.Run(c.name+"/header", func(t *testing.T) {
-			req := quotations.HeaderRequest{
-				DiscountPct: "0", ValidityDays: c.validity, ShippingDays: c.shipDays, ShippingCost: c.shipCost,
-			}
-			assertField(t, doJSON(t, srv, http.MethodPut, base+"/header", req), c.field, c.msg)
+		create := sampleCreate()
+		create.ValidityDays, create.ShippingDays, create.ShippingCost = c.validity, c.shipDays, c.shipCost
+		t.Run(c.name, func(t *testing.T) {
+			assertRefused(t, srv, []writeCall{
+				{"create", http.MethodPost, "/quotations/", create, nil},
+				{"update", http.MethodPut, base, quotations.UpdateRequest{
+					DiscountPct: "0", Items: []quotations.CreateItem{offered()},
+					ValidityDays: c.validity, ShippingDays: c.shipDays, ShippingCost: c.shipCost,
+				}, ifMatch},
+				{"header", http.MethodPut, base + "/header", quotations.HeaderRequest{
+					DiscountPct: "0", ValidityDays: c.validity, ShippingDays: c.shipDays, ShippingCost: c.shipCost,
+				}, nil},
+			}, c.field, c.msg)
 		})
 	}
 }

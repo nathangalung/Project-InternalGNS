@@ -106,7 +106,7 @@ func loginAccountKey(r *http.Request) (string, error) {
 	var body struct {
 		Email string `json:"email"`
 	}
-	if err != nil || json.Unmarshal(raw, &body) != nil {
+	if readable := err == nil && json.Unmarshal(raw, &body) == nil; !readable {
 		return ip, nil
 	}
 	sum := sha256.Sum256([]byte(strings.ToLower(strings.TrimSpace(body.Email))))

@@ -23,8 +23,7 @@ func TestRecoverer_LogsAndRendersProblem(t *testing.T) {
 	t.Cleanup(func() { slog.SetDefault(prev) })
 
 	h := middleware.RequestID(recoverer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
-		var m map[string]int
-		m["boom"]++
+		panic("boom")
 	})))
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/quotations/1", nil)
 	req.Header.Set(middleware.RequestIDHeader, "req-panic-1")
@@ -50,7 +49,7 @@ func TestRecoverer_LogsAndRendersProblem(t *testing.T) {
 	require.NoError(t, json.Unmarshal(bytes.TrimSpace(buf.Bytes()), &line), buf.String())
 	assert.Equal(t, "ERROR", line.Level)
 	assert.Equal(t, "panic", line.Msg)
-	assert.Equal(t, "assignment to entry in nil map", line.Panic)
+	assert.Equal(t, "boom", line.Panic)
 	assert.Contains(t, line.Stack, "recoverer_test.go")
 	assert.Equal(t, "req-panic-1", line.RequestID)
 }
