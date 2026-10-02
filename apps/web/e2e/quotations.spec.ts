@@ -757,7 +757,7 @@ test.describe("quotation list", () => {
     )
   })
 
-  // A narrower result moves the reader.
+  // Narrower result moves the reader.
   test("removing a chip past the last page lands on the new last page", async ({ page, seed }) => {
     const client = await seed.client()
     const item = await seed.item()

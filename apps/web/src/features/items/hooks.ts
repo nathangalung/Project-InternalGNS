@@ -114,7 +114,9 @@ export function useUpdateItem() {
   return useMutation({
     mutationFn: ({ id, input }: { id: number; input: itemsApi.UpdateItemInput }) =>
       itemsApi.update(id, input),
-    // Vendor tabs and Quotation Terakhir show item names.
+    // Lists printing the item name.
+    //
+    // Vendor tabs and Quotation Terakhir show it.
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.items.all })
       qc.invalidateQueries({ queryKey: queryKeys.vendors.all })

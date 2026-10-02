@@ -157,7 +157,7 @@ test("a logo over 2 MB is refused and a small one is saved", async ({ page, seed
     )
     .toMatch(new RegExp(`^clients/${client.id}/.*logo\\.png$`))
 
-  // The stored logo loads as a blob URL.
+  // Stored logo loads as blob.
   await page.reload()
   await expect(logo.locator("img")).toHaveAttribute("src", /^blob:/)
 })
@@ -199,7 +199,7 @@ test("a contact edit refuses a 13-digit phone", async ({ page, seed }) => {
     .toBe("812345678901")
 })
 
-// Zero is data; a failed summary is not.
+// Failed summary shows a dash.
 test("the KPI cards show a dash, not zero, without a summary", async ({ page }) => {
   await page.route("**/api/v1/clients/summary", (route) =>
     route.fulfill({

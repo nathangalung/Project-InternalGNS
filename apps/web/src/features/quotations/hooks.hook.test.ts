@@ -38,7 +38,7 @@ const client = queryKeys.clients.detail(1)
 const vendor = queryKeys.vendors.detail(1)
 const poList = queryKeys.purchaseOrders.list()
 const invoices = queryKeys.invoices.list()
-// Product, client and vendor pages list the newest quotations.
+// Recent quotation lists.
 const itemQuotations = queryKeys.items.quotations(9)
 const deps = [qDetail, qList, dash, client, vendor, itemQuotations]
 
@@ -136,7 +136,7 @@ describe("quotation writes", () => {
     expect(toast.error).toHaveBeenCalledWith(msg)
   })
 
-  // The review card shows it inline.
+  // Review card shows it inline.
   it.each<[string, () => { mutateAsync: (v: never) => Promise<unknown> }, () => void, unknown]>([
     [
       "request save",
@@ -157,7 +157,7 @@ describe("quotation writes", () => {
     expect(toast.error).not.toHaveBeenCalled()
   })
 
-  // The recent lists print the contact.
+  // Recent lists print the contact.
   it("contact change refreshes the quotation caches", async () => {
     m.updateQuotationContact.mockResolvedValue(undefined)
     const { qc, result } = renderQueryHook(() => useUpdateQuotationContact())

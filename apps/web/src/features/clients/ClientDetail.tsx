@@ -82,7 +82,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
   const [npwp, setNpwp] = useState(client.npwp ?? "")
   const [address, setAddress] = useState(client.address ?? "")
   const [isActive, setIsActive] = useState(client.isActive)
-  // Optimistic preview of a picked logo
+  // Picked logo preview
   const [logoPreview, setLogoPreview] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)

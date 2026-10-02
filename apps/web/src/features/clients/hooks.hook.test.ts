@@ -254,7 +254,7 @@ describe("useClientRecentQuotations", () => {
     expect(m.listRecentQuotations).toHaveBeenCalledWith(7)
   })
 
-  // The section shows its own error.
+  // Section shows its error.
   it("keeps a failure out of the route error boundary", async () => {
     m.listRecentQuotations.mockRejectedValue(new Error("502"))
     const { result } = renderQueryHook(() => useClientRecentQuotations(7), throwingQueryClient())

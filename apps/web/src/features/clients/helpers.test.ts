@@ -38,7 +38,7 @@ describe("clientKpis", () => {
     expect(k.growth.startsWith("-")).toBe(false)
   })
 
-  // Zero is data; unknown is not.
+  // Unknown shows a dash.
   it("shows a dash without a base or data", () => {
     expect(clientKpis(undefined)).toEqual({
       total: undefined,

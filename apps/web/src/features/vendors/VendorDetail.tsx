@@ -68,7 +68,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   const [email, setEmail] = useState(initialEmail)
   const [address, setAddress] = useState(vendor.location ?? "")
   const [isActive, setIsActive] = useState(vendor.isActive)
-  // Optimistic preview of a picked logo
+  // Picked logo preview
   const [logoPreview, setLogoPreview] = useState("")
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})

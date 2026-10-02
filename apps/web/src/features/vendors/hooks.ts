@@ -53,7 +53,9 @@ export function useUpdateVendor() {
       vendorsApi.update(id, input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
-      // PO lines, item vendor lists and Quotation Terakhir carry the vendor name.
+      // Lists printing the vendor name.
+      //
+      // PO lines, item vendor lists and Quotation Terakhir carry it.
       qc.invalidateQueries({
         predicate: (q) =>
           (q.queryKey[0] === "items" &&

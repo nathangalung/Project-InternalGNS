@@ -217,7 +217,7 @@ test.describe("live quotation editing", () => {
       .toEqual([[fresh, true]])
   })
 
-  // The product table keeps a page.
+  // Product table keeps a page.
   test("deleting the last line on the last page shows the page before", async ({ page, seed }) => {
     const client = await seed.client()
     const item = await seed.item()

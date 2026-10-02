@@ -128,7 +128,7 @@ export default function Step2Product({
 
   const totalProds = products.length
   const totalPages = pageCount(totalProds, prodPageSize)
-  // A removed line can leave the page past the end.
+  // Removed lines can shrink pages.
   const page = clampPage(prodPage, totalPages)
   const start = (page - 1) * prodPageSize
   const summaryProfit = summarySubTotal - summaryTotalHargaBeli

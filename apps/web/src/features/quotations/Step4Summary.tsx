@@ -92,7 +92,7 @@ export default function Step4Summary({
   const [prodExpanded, setProdExpanded] = useState(true)
 
   const totalPages = pageCount(products.length, PAGE_SIZE)
-  // A removed line can leave the page past the end.
+  // Removed lines can shrink pages.
   const page = clampPage(prodPage, totalPages)
   const pageSlice = products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 

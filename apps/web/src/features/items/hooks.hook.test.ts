@@ -142,7 +142,9 @@ describe("item writes", () => {
     expect(invalidated(qc, [list, vendorDetail])).toEqual([list])
   })
 
-  // Vendor tabs and Quotation Terakhir show item names.
+  // Lists printing the item name.
+  //
+  // Vendor tabs and Quotation Terakhir show it.
   it("refreshes items and vendors after an update", async () => {
     m.update.mockResolvedValue({ id: 9 } as never)
     const { qc, result } = renderQueryHook(() => useUpdateItem())
@@ -380,7 +382,7 @@ describe("useItemRecentQuotations", () => {
     expect(m.listRecentQuotations).toHaveBeenCalledWith(9)
   })
 
-  // The section shows its own error.
+  // Section shows its error.
   it("keeps a failure out of the route error boundary", async () => {
     m.listRecentQuotations.mockRejectedValue(new Error("502"))
     const { result } = renderQueryHook(() => useItemRecentQuotations(9), throwingQueryClient())

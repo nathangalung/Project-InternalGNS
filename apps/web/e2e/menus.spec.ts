@@ -29,7 +29,7 @@ test("the Grafik year menu picks a year by keyboard", async ({ page }) => {
   await expect(page.getByRole("main").getByRole("button", { name: "Grafik: 2024" })).toBeFocused()
 })
 
-// The closed drawer takes no focus.
+// Closed drawer takes no focus.
 test("the mobile drawer leaves the tab order closed and closes on Escape", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 700 })
   await page.goto("/quotations")
@@ -37,7 +37,7 @@ test("the mobile drawer leaves the tab order closed and closes on Escape", async
   const nav = page.getByRole("link", { name: "Katalog Produk" })
   await expect(nav).toBeHidden()
 
-  // Tab from the menu button skips the closed drawer.
+  // Tab skips the closed drawer.
   await menuBtn.focus()
   await page.keyboard.press("Tab")
   expect(await page.evaluate(() => Boolean(document.activeElement?.closest("aside")))).toBe(false)

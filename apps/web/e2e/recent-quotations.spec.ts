@@ -51,7 +51,7 @@ test("a sent quotation shows on its product, vendor and client pages", async ({ 
   await expect(page).toHaveURL(new RegExp(`/quotations/${sent.id}$`))
 })
 
-// The cached list follows a status change.
+// Cached list follows status changes.
 test("accepting a quotation updates the product's list in place", async ({ page, seed }) => {
   const client = await seed.client()
   const vendor = await seed.vendor()
@@ -76,7 +76,7 @@ test("accepting a quotation updates the product's list in place", async ({ page,
     .click()
   await expect(page.getByRole("button", { name: "Status Disetujui", exact: true })).toBeVisible()
 
-  // Back in the app, not a reload.
+  // In-app back, no reload.
   await page.goBack()
   await expect(page).toHaveURL(new RegExp(`/products/${item.id}$`))
   await expect(row).toContainText("Disetujui")

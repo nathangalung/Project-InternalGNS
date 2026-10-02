@@ -89,7 +89,7 @@ describe("useListScreen", () => {
     expect(result.current.debouncedSearch).toBe("")
   })
 
-  // A shrunk total moves the reader.
+  // Shrunk total moves the reader.
   //
   // Removing a chip keeps the page, so a narrower result can end before
   // it; the reader lands on the new last page, and an unknown total

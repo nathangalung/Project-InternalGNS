@@ -41,7 +41,7 @@ const DEFAULTS: InvoiceFilterValues = {
   maxHarga: "",
 }
 
-// Dibatalkan is off by default; picking it lists cancelled invoices.
+// Dibatalkan is off by default.
 const STATUS_OPTIONS: InvoiceDisplayStatus[] = [
   "DRAF",
   "DIKIRIM",
