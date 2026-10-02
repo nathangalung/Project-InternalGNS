@@ -3,6 +3,7 @@ package items_test
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
@@ -25,9 +26,9 @@ func proxyKey(t *testing.T, raw string) (bucket, key string) {
 }
 
 // uploadKey presigns one photo.
-func uploadKey(t *testing.T, call func(method, path string, body any) *http.Response, base, name string) string {
+func uploadKey(t *testing.T, srv *httptest.Server, base, name string) string {
 	t.Helper()
-	res := call(http.MethodGet, base+"/image/upload-url?fileName="+name, nil)
+	res := doJSON(t, srv, http.MethodGet, base+"/image/upload-url?fileName="+name, nil)
 	defer res.Body.Close()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	var presign struct {
@@ -42,9 +43,9 @@ func uploadKey(t *testing.T, call func(method, path string, body any) *http.Resp
 }
 
 // gallery reads the photo list.
-func gallery(t *testing.T, call func(method, path string, body any) *http.Response, base string) items.ItemGallery {
+func gallery(t *testing.T, srv *httptest.Server, base string) items.ItemGallery {
 	t.Helper()
-	res := call(http.MethodGet, base+"/images", nil)
+	res := doJSON(t, srv, http.MethodGet, base+"/images", nil)
 	defer res.Body.Close()
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	var g items.ItemGallery
@@ -53,18 +54,20 @@ func gallery(t *testing.T, call func(method, path string, body any) *http.Respon
 }
 
 // cover reads the item's cover key.
-func cover(t *testing.T, call func(method, path string, body any) *http.Response, base string) *string {
+func cover(t *testing.T, srv *httptest.Server, base string) *string {
 	t.Helper()
-	res := call(http.MethodGet, base, nil)
+	res := doJSON(t, srv, http.MethodGet, base, nil)
 	defer res.Body.Close()
 	var item items.Item
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&item))
 	return item.ImageObjectKey
 }
 
-func status(t *testing.T, res *http.Response) int {
+// status sends one request for its code.
+func status(t *testing.T, srv *httptest.Server, method, path string, body any) int {
 	t.Helper()
-	res.Body.Close()
+	res := doJSON(t, srv, method, path, body)
+	defer res.Body.Close()
 	return res.StatusCode
 }
 
@@ -73,67 +76,65 @@ func status(t *testing.T, res *http.Response) int {
 // cover passes it to the oldest photo left, and the last removal clears it.
 func TestHandler_Gallery_Flow(t *testing.T) {
 	srv := mountedSrv(t, testutil.Pool(t))
-	call := func(method, path string, body any) *http.Response { return doJSON(t, srv, method, path, body) }
 	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("GALLERY")})
 	base := "/items/" + itoa(it.ID)
 
-	empty := gallery(t, call, base)
+	empty := gallery(t, srv, base)
 	assert.Equal(t, items.MaxItemImages, empty.Max)
 	assert.Empty(t, empty.Images)
-	assert.Equal(t, http.StatusNotFound, status(t, call(http.MethodGet, base+"/image/download-url", nil)),
+	assert.Equal(t, http.StatusNotFound, status(t, srv, http.MethodGet, base+"/image/download-url", nil),
 		"no cover yet")
 
 	// Phone cameras repeat names; each upload still gets its own key.
-	first := uploadKey(t, call, base, "IMG_0001.jpg")
-	second := uploadKey(t, call, base, "IMG_0001.jpg")
+	first := uploadKey(t, srv, base, "IMG_0001.jpg")
+	second := uploadKey(t, srv, base, "IMG_0001.jpg")
 	require.NotEqual(t, first, second)
 	for _, k := range []string{first, second} {
 		require.Equal(t, http.StatusNoContent,
-			status(t, call(http.MethodPost, base+"/images", items.UpdateImageRequest{ObjectKey: k})))
+			status(t, srv, http.MethodPost, base+"/images", items.UpdateImageRequest{ObjectKey: k}))
 	}
 	// A retried attach adds nothing.
 	require.Equal(t, http.StatusNoContent,
-		status(t, call(http.MethodPost, base+"/images", items.UpdateImageRequest{ObjectKey: second})))
+		status(t, srv, http.MethodPost, base+"/images", items.UpdateImageRequest{ObjectKey: second}))
 
-	g := gallery(t, call, base)
+	g := gallery(t, srv, base)
 	require.Len(t, g.Images, 2)
 	assert.Equal(t, first, g.Images[0].ObjectKey, "the cover comes first")
 	assert.True(t, g.Images[0].IsCover)
 	assert.False(t, g.Images[1].IsCover)
 	_, dlKey := proxyKey(t, g.Images[1].DownloadURL)
 	assert.Equal(t, second, dlKey, "every photo carries its own download")
-	require.NotNil(t, cover(t, call, base))
-	assert.Equal(t, first, *cover(t, call, base))
+	require.NotNil(t, cover(t, srv, base))
+	assert.Equal(t, first, *cover(t, srv, base))
 
 	secondID := itoa(g.Images[1].ID)
-	require.Equal(t, http.StatusNoContent, status(t, call(http.MethodPut, base+"/images/"+secondID+"/cover", nil)))
-	g = gallery(t, call, base)
+	require.Equal(t, http.StatusNoContent, status(t, srv, http.MethodPut, base+"/images/"+secondID+"/cover", nil))
+	g = gallery(t, srv, base)
 	assert.Equal(t, second, g.Images[0].ObjectKey)
-	assert.Equal(t, second, *cover(t, call, base))
+	assert.Equal(t, second, *cover(t, srv, base))
 
-	require.Equal(t, http.StatusNoContent, status(t, call(http.MethodDelete, base+"/images/"+secondID, nil)))
-	g = gallery(t, call, base)
+	require.Equal(t, http.StatusNoContent, status(t, srv, http.MethodDelete, base+"/images/"+secondID, nil))
+	g = gallery(t, srv, base)
 	require.Len(t, g.Images, 1)
-	assert.Equal(t, first, *cover(t, call, base), "the cover passes on")
+	assert.Equal(t, first, *cover(t, srv, base), "the cover passes on")
 
-	require.Equal(t, http.StatusNoContent, status(t, call(http.MethodDelete, base+"/images/"+itoa(g.Images[0].ID), nil)))
-	assert.Empty(t, gallery(t, call, base).Images)
-	assert.Nil(t, cover(t, call, base), "no photos, no cover")
+	require.Equal(t, http.StatusNoContent, status(t, srv, http.MethodDelete, base+"/images/"+itoa(g.Images[0].ID), nil))
+	assert.Empty(t, gallery(t, srv, base).Images)
+	assert.Nil(t, cover(t, srv, base), "no photos, no cover")
 }
 
 // The gallery stops at its maximum.
 func TestHandler_Gallery_Limit(t *testing.T) {
 	srv := mountedSrv(t, testutil.Pool(t))
-	call := func(method, path string, body any) *http.Response { return doJSON(t, srv, method, path, body) }
 	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("GALLERY LIMIT")})
 	base := "/items/" + itoa(it.ID)
 	for i := 0; i < items.MaxItemImages; i++ {
-		k := uploadKey(t, call, base, "foto.webp")
+		k := uploadKey(t, srv, base, "foto.webp")
 		require.Equal(t, http.StatusNoContent,
-			status(t, call(http.MethodPost, base+"/images", items.UpdateImageRequest{ObjectKey: k})))
+			status(t, srv, http.MethodPost, base+"/images", items.UpdateImageRequest{ObjectKey: k}))
 	}
-	k := uploadKey(t, call, base, "foto.webp")
-	res := call(http.MethodPost, base+"/images", items.UpdateImageRequest{ObjectKey: k})
+	k := uploadKey(t, srv, base, "foto.webp")
+	res := doJSON(t, srv, http.MethodPost, base+"/images", items.UpdateImageRequest{ObjectKey: k})
 	defer res.Body.Close()
 	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 	var p struct {
@@ -141,21 +142,20 @@ func TestHandler_Gallery_Limit(t *testing.T) {
 	}
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&p))
 	assert.Equal(t, "Maksimal 8 foto per produk.", p.Detail)
-	assert.Len(t, gallery(t, call, base).Images, items.MaxItemImages)
+	assert.Len(t, gallery(t, srv, base).Images, items.MaxItemImages)
 }
 
 // Bad gallery input changes nothing.
 func TestHandler_Gallery_Refusals(t *testing.T) {
 	srv := mountedSrv(t, testutil.Pool(t))
-	call := func(method, path string, body any) *http.Response { return doJSON(t, srv, method, path, body) }
 	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("GALLERY BAD")})
 	other := createItem(t, items.CreateItemRequest{Name: uniqueItemName("GALLERY OTHER")})
 	base := "/items/" + itoa(it.ID)
 	otherBase := "/items/" + itoa(other.ID)
-	k := uploadKey(t, call, otherBase, "foto.png")
+	k := uploadKey(t, srv, otherBase, "foto.png")
 	require.Equal(t, http.StatusNoContent,
-		status(t, call(http.MethodPost, otherBase+"/images", items.UpdateImageRequest{ObjectKey: k})))
-	foreign := itoa(gallery(t, call, otherBase).Images[0].ID)
+		status(t, srv, http.MethodPost, otherBase+"/images", items.UpdateImageRequest{ObjectKey: k}))
+	foreign := itoa(gallery(t, srv, otherBase).Images[0].ID)
 
 	cases := []struct {
 		name   string
@@ -185,12 +185,12 @@ func TestHandler_Gallery_Refusals(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			assert.Equal(t, c.want, status(t, call(c.method, c.path, c.body)))
+			assert.Equal(t, c.want, status(t, srv, c.method, c.path, c.body))
 		})
 	}
-	assert.Empty(t, gallery(t, call, base).Images, "a refused photo is never stored")
-	assert.Nil(t, cover(t, call, base))
-	assert.Len(t, gallery(t, call, otherBase).Images, 1, "the other item keeps its photo")
+	assert.Empty(t, gallery(t, srv, base).Images, "a refused photo is never stored")
+	assert.Nil(t, cover(t, srv, base))
+	assert.Len(t, gallery(t, srv, otherBase).Images, 1, "the other item keeps its photo")
 }
 
 // The list needs storage.
