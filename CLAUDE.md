@@ -188,6 +188,9 @@ document's status history table.
   Draft goes to sent or cancelled; sent to accepted, rejected or cancelled;
   revision to rejected or cancelled. Rejected and cancelled need a reason.
   Accepted creates the PO in the same transaction. Only drafts are editable.
+  Validity and shipping days run from 1 to 365 (`validate.MaxDays`, a 422
+  on the field; the database refuses only below 1), on the PO's shipping
+  days too, and the web inputs carry the same bound.
   A draft may keep unfinished product lines, but sending refuses (with the
   count) while any offered product line lacks its product, unit, vendor,
   harga beli or harga jual. A line marked Tidak Ditawarkan (`is_available`
@@ -235,10 +238,15 @@ document's status history table.
   CANCELLED are terminal, and the file is locked in both. A PO keeps at least
   one product line and every product line priced above zero: the line edit
   (`fn_update_po_items`) refuses otherwise, and so do ON_PROGRESS and
-  DELIVERED, so no Rp 0 invoice is issued. A qty 0 line stays allowed.
+  DELIVERED, so no Rp 0 invoice is issued. A qty 0 line stays allowed, but
+  ON_PROGRESS and DELIVERED need one product line with a quantity. Both
+  moves also pass the completeness gate (client, vendor and shipping-address
+  data), a 422 `po_incomplete`; delivery runs it again, since ON_PROGRESS
+  edits and client edits can reopen a gap.
 - Invoice: draft, sent, paid, cancelled; overdue is stored only on legacy
   rows. Draft goes to sent; sent or overdue to paid, which stamps `paid_at`
-  and takes an optional proof stored under `invoices/<id>/payment/`. Draft,
+  and takes an optional proof stored under `invoices/<id>/payment/`; marking
+  a paid invoice paid again is a no-op, or a 422 when it carries a proof. Draft,
   sent or overdue go to cancelled with a reason, and only when the invoice has
   a PO; `POST /invoices/{id}/replacement` then issues a Pengganti draft for
   the same PO. Terlambat is derived, never set: `fn_invoice_effective_status`
@@ -370,8 +378,9 @@ query call.
   also keeps parallel tests from throttling each other. `make e2e` runs
   against the dev stack from `make dev`, with admin credentials from
   `apps/api/.env`; `E2E_BASE_URL` and `E2E_API_URL` point it elsewhere.
-  Login allows 5 attempts per minute per IP, so a rerun inside a minute waits
-  out the window.
+  Login allows 10 attempts per minute per address and account under a
+  ceiling of 100 per address, so a rerun inside a minute may wait out the
+  window.
 - The SPA content policy is enforced (the web label in `compose.prod.yml`),
   so every test fails on a violation its browser reports. `make e2e-csp` (and
   the CI e2e job) builds the SPA against a separate API origin, serves `dist`

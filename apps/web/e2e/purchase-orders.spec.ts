@@ -196,6 +196,31 @@ test.describe("purchase order status", () => {
     expect((await seed.poByQuotation(q.id)).status).toBe("UPLOADED")
   })
 
+  test("Dikirim is refused when client data emptied after Dalam Progres", async ({
+    page,
+    seed,
+  }) => {
+    const { client, q, po } = await acceptedPo(seed)
+    await seed.attachPoFile(po)
+    await seed.setPoStatus(po.id, "ON_PROGRESS")
+    const stored = await api<Record<string, unknown>>("GET", `/clients/${client.id}`)
+    await api("PUT", `/clients/${client.id}`, { ...stored, npwp: null })
+
+    await page.goto(`/purchase-orders/${q.id}`)
+    await choosePoStatus(page, "Dalam Progres", "Dikirim")
+    const modal = page.getByRole("dialog", { name: "Data Belum Lengkap" })
+    await expect(modal).toBeVisible()
+    await expect(modal.getByText("Dikirim", { exact: true })).toBeVisible()
+    await expect(modal.getByRole("link", { name: client.name })).toHaveAttribute(
+      "href",
+      `/clients/${client.id}`,
+    )
+    await expect(modal.getByRole("listitem").getByText("NPWP", { exact: true })).toBeVisible()
+    await modal.getByRole("button", { name: "Mengerti" }).click()
+    await expect(modal).toBeHidden()
+    expect((await seed.poByQuotation(q.id)).status).toBe("ON_PROGRESS")
+  })
+
   test("Dalam Progres issues the Surat Jalan number", async ({ page, seed }) => {
     const { client, q, po } = await acceptedPo(seed)
     await seed.attachPoFile(po)

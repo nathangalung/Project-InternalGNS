@@ -2,7 +2,6 @@ package clients
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -89,8 +88,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 // Create handles POST /clients
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req CreateClientRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	req.Name = strings.TrimSpace(req.Name)
@@ -131,8 +129,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req UpdateClientRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	req.Name = strings.TrimSpace(req.Name)
@@ -237,8 +234,7 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req CreateContactRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	req.Name = strings.TrimSpace(req.Name)
@@ -276,8 +272,7 @@ func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req UpdateContactRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	req.Name = strings.TrimSpace(req.Name)

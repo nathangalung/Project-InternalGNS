@@ -3,6 +3,7 @@ package httpx
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -88,6 +89,59 @@ func TestDecodeJSON(t *testing.T) {
 				assert.Equal(t, http.StatusBadRequest, rec.Code)
 				assert.Equal(t, "invalid json", problemDetail(t, rec))
 			}
+		})
+	}
+}
+
+// Oversized bodies are 413.
+// The body limit middleware wraps every body in http.MaxBytesReader; its
+// overflow is the caller's size, not malformed JSON.
+func TestDecodeJSON_TooLarge(t *testing.T) {
+	body := `{"name":"` + strings.Repeat("a", 64) + `"}`
+	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body))
+	rec := httptest.NewRecorder()
+	req.Body = http.MaxBytesReader(rec, req.Body, 16)
+	var got struct {
+		Name string `json:"name"`
+	}
+	assert.False(t, DecodeJSON(rec, req, &got))
+	assert.Equal(t, http.StatusRequestEntityTooLarge, rec.Code)
+	assert.Equal(t, BodyTooLargeDetail, problemDetail(t, rec))
+}
+
+// Optional bodies may be empty.
+func TestDecodeOptionalJSON(t *testing.T) {
+	type payload struct {
+		Name string `json:"name"`
+	}
+	cases := []struct {
+		name     string
+		body     io.Reader
+		limit    int64
+		wantOK   bool
+		wantCode int
+		wantName string
+	}{
+		{"valid", strings.NewReader(`{"name":"Budi"}`), 0, true, http.StatusOK, "Budi"},
+		{"empty", strings.NewReader(""), 0, true, http.StatusOK, ""},
+		{"no body", nil, 0, true, http.StatusOK, ""},
+		{"malformed", strings.NewReader(`{"name":`), 0, false, http.StatusBadRequest, ""},
+		{"too large", strings.NewReader(`{"name":"` + strings.Repeat("a", 64) + `"}`), 16, false, http.StatusRequestEntityTooLarge, ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/", tc.body)
+			rec := httptest.NewRecorder()
+			if tc.body == nil {
+				req.Body = nil
+			}
+			if tc.limit > 0 {
+				req.Body = http.MaxBytesReader(rec, req.Body, tc.limit)
+			}
+			var got payload
+			assert.Equal(t, tc.wantOK, DecodeOptionalJSON(rec, req, &got))
+			assert.Equal(t, tc.wantCode, rec.Code)
+			assert.Equal(t, tc.wantName, got.Name)
 		})
 	}
 }

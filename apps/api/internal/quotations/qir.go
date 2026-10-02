@@ -2,7 +2,6 @@ package quotations
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -151,7 +150,7 @@ func (h *Handler) ListItemRequests(w http.ResponseWriter, r *http.Request) {
 	}
 	out, err := h.repo.ListItemRequests(r.Context(), qid)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, out)
@@ -164,8 +163,7 @@ func (h *Handler) CreateItemRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req ItemRequestCreate
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if errs := validateCreateQIR(req); len(errs) > 0 {
@@ -175,7 +173,7 @@ func (h *Handler) CreateItemRequest(w http.ResponseWriter, r *http.Request) {
 	userID := deps.CurrentUserID(r.Context())
 	out, err := h.repo.CreateItemRequest(r.Context(), qid, req, userID)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusCreated, out)
@@ -193,8 +191,7 @@ func (h *Handler) UpdateItemRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req ItemRequestUpdate
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if errs := validateUpdateQIR(req); len(errs) > 0 {
@@ -208,7 +205,7 @@ func (h *Handler) UpdateItemRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, out)
@@ -231,7 +228,7 @@ func (h *Handler) DeleteItemRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)

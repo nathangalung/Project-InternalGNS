@@ -268,6 +268,7 @@ func TestHandler_Revise_BadInput(t *testing.T) {
 	}{
 		{"bad id", "/quotations/abc/revise", ""},
 		{"bad json", idPath(id, "/revise"), `{"note":`},
+		{"bad send json", idPath(id, "/send"), `{"note":`},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -346,7 +347,7 @@ func TestHandler_Update_Refusals(t *testing.T) {
 		wantMsg   string
 	}{
 		{"zero quantity line", idPath(id, ""), "0", zeroQty, http.StatusUnprocessableEntity,
-			"items[0].qty", "jumlah harus lebih besar dari 0"},
+			"items[0].qty", "Jumlah harus berupa angka lebih dari 0."},
 		{"discount above 100", idPath(id, ""), "150", sampleCreate().Items, http.StatusUnprocessableEntity,
 			"discountPct", discountMsg},
 		{"negative discount", idPath(id, ""), "-1", sampleCreate().Items, http.StatusUnprocessableEntity,

@@ -66,7 +66,8 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
   const [showUpload, setShowUpload] = useState(false)
   const [showReason, setShowReason] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
-  const [issues, setIssues] = useState<PoCompletenessIssue[] | null>(null)
+  // The gate refusal and the move it stopped
+  const [gate, setGate] = useState<{ issues: PoCompletenessIssue[]; target: string } | null>(null)
 
   // A saved move drops a stale choice.
   const selected = choice?.from === po.status ? choice.t : null
@@ -99,7 +100,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
       const found = completenessIssues(err)
       if (found) {
         setShowReason(false)
-        setIssues(found)
+        setGate({ issues: found, target: t.label })
       }
     }
   }
@@ -266,11 +267,12 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
         </Modal>
       )}
 
-      {issues && (
+      {gate && (
         <CompletenessModal
-          issues={issues}
+          issues={gate.issues}
+          target={gate.target}
           quotationId={po.quotationId}
-          onClose={() => setIssues(null)}
+          onClose={() => setGate(null)}
         />
       )}
     </>

@@ -81,22 +81,27 @@ func TestProblemJSON429(t *testing.T) {
 	})
 }
 
+// loginAttempts exceeds one account's budget.
+// auth allows 10 a minute per address and email.
+const loginAttempts = 11
+
 // Limited login answers problem+json.
-// End to end through the mounted limiter: the sixth login in a minute must
-// come back as problem+json, not as text the SPA cannot parse.
+// End to end through the mounted limiter: the eleventh login to one
+// account in a minute must come back as problem+json, not as text the SPA
+// cannot parse.
 func TestRouter_RateLimitedLoginIsProblemJSON(t *testing.T) {
 	srv := httptest.NewServer(mkRouter(t))
 	t.Cleanup(srv.Close)
 
 	var last *http.Response
-	for i := 0; i < 6; i++ {
+	for i := range loginAttempts {
 		req, err := http.NewRequest(http.MethodPost, srv.URL+"/api/v1/auth/login",
 			strings.NewReader(`{"email":"x@y.z","password":"wrong-password"}`))
 		require.NoError(t, err)
 		req.Header.Set("Content-Type", "application/json")
 		res, err := srv.Client().Do(req)
 		require.NoError(t, err)
-		if i < 5 {
+		if i < loginAttempts-1 {
 			res.Body.Close()
 			continue
 		}
@@ -118,11 +123,11 @@ func TestRouter_RateLimitedLoginIsProblemJSON(t *testing.T) {
 // Spoofed forwarding keeps the limit.
 // A peer outside the private networks is not Traefik, so its own
 // X-Forwarded-For is ignored: rotating it per request must still hit the
-// login limit on the sixth attempt, keyed by the peer address.
+// login limit on the eleventh attempt, keyed by the peer address.
 func TestRouter_SpoofedForwardedForKeepsLoginLimit(t *testing.T) {
 	router := mkRouter(t)
 	var last int
-	for i := 0; i < 6; i++ {
+	for i := range loginAttempts {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login",
 			strings.NewReader(`{"email":"x@y.z","password":"wrong-password"}`))
 		req.Header.Set("Content-Type", "application/json")

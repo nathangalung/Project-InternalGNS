@@ -37,7 +37,8 @@ export function ownIp(): string {
 
 // Login, waiting out throttling.
 //
-// Login is limited to 5 per minute per IP; wait once when throttled.
+// Login is limited to 10 per minute per address and account; wait once
+// when throttled.
 export async function login(email: string, password: string, ip?: string): Promise<Tokens> {
   const body = JSON.stringify({ email, password })
   let res = await call("/auth/login", { method: "POST", body, ip })

@@ -41,8 +41,8 @@ export async function isolateIp(context: BrowserContext): Promise<string> {
 //
 // The API answers with the refresh cookie on its own host, which is where
 // the browser sends its refresh, so the state carries that cookie and
-// nothing else. Login is limited to 5 per minute per address; wait once when
-// throttled.
+// nothing else. Login is limited to 10 per minute per address and account;
+// wait once when throttled.
 export async function loginState(
   email: string,
   password: string,

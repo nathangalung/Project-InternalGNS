@@ -411,6 +411,7 @@ func TestQuotationFeatures(t *testing.T) {
 		Options: &godog.Options{
 			Format:   "pretty",
 			Paths:    []string{"features"},
+			Strict:   true,
 			TestingT: t,
 		},
 	}

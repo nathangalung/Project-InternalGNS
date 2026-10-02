@@ -6,6 +6,8 @@ import type { PoCompletenessIssue, PoIssueKind } from "@/types/api"
 
 type CompletenessModalProps = {
   issues: PoCompletenessIssue[]
+  // Label of the refused status
+  target: string
   // Route key of the PO and its quotation
   quotationId: number
   onClose: () => void
@@ -17,9 +19,10 @@ const SCOPE: Record<PoIssueKind, string> = {
   shipping: "Pengiriman",
 }
 
-// Server-reported gaps before Dalam Progres.
+// Server-reported gaps before work or delivery.
 export default function CompletenessModal({
   issues,
+  target,
   quotationId,
   onClose,
 }: CompletenessModalProps) {
@@ -34,8 +37,8 @@ export default function CompletenessModal({
       }
     >
       <p className="m-0 text-[13px] leading-[1.5] text-[#4A4455]">
-        Sebelum mengubah status menjadi <strong className="text-[#6B21A8]">Dalam Progres</strong>,
-        data berikut harus dilengkapi terlebih dahulu. Buka nama klien atau vendor, Ganti Narahubung
+        Sebelum mengubah status menjadi <strong className="text-[#6B21A8]">{target}</strong>, data
+        berikut harus dilengkapi terlebih dahulu. Buka nama klien atau vendor, Ganti Narahubung
         untuk memilih narahubung aktif, atau Ubah PO untuk mengisi alamat pengiriman.
       </p>
 

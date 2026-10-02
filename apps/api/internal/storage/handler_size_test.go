@@ -36,15 +36,13 @@ func TestHandler_Put_OversizeIsRefused(t *testing.T) {
 	url := "/storage/object?bucket=" + BucketClientLogos + "&key=clients/7/1-logo.png"
 
 	cases := []struct {
-		name          string
-		size          int64
-		declareLength bool
-		wantStatus    int
-		wantPuts      int
+		name       string
+		size       int64
+		wantStatus int
+		wantPuts   int
 	}{
-		{"at the cap", limit, true, http.StatusNoContent, 1},
-		{"declared past the cap", limit + 1, true, http.StatusRequestEntityTooLarge, 0},
-		{"streamed past the cap", limit + 1, false, http.StatusRequestEntityTooLarge, 0},
+		{"at the cap", limit, http.StatusNoContent, 1},
+		{"declared past the cap", limit + 1, http.StatusRequestEntityTooLarge, 0},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -57,12 +55,7 @@ func TestHandler_Put_OversizeIsRefused(t *testing.T) {
 			h := newHandlerWithStore(store)
 			body := bytes.Repeat([]byte{'x'}, int(tc.size))
 			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(body))
-			if tc.declareLength {
-				req.ContentLength = tc.size
-			} else {
-				// A chunked upload announces no length.
-				req.ContentLength = -1
-			}
+			req.ContentLength = tc.size
 			rec := httptest.NewRecorder()
 			h.Put(rec, req)
 

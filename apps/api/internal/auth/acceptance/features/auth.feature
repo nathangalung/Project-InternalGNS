@@ -40,9 +40,13 @@ Feature: Login, session refresh and session revocation
     And the account has no failed login attempts
 
   Scenario: A rate-limited login answers problem+json
-    When the account logs in with a wrong password 6 times from one address
+    When someone logs in as one unknown email 11 times from one address
     Then the response status is 429
     And the response is problem+json
+
+  Scenario: An office signs in from one address
+    When 6 colleagues log in with the right password from one address
+    Then the response status is 200
 
   Scenario: Refresh rotates the token and the old one is single-use
     Given the account is logged in

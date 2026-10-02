@@ -1,7 +1,6 @@
 package users
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -84,8 +83,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 // Create makes a new user.
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req CreateUserRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 
@@ -116,8 +114,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req UpdateUserRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 
@@ -165,8 +162,7 @@ func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req ChangePasswordRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if msg := ValidatePassword(req.Password); msg != "" {

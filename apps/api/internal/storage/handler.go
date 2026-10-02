@@ -93,6 +93,15 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 	if limit <= 0 {
 		limit = maxUploadBytes
 	}
+	// An unknown length makes minio-go buffer a whole ~512 MiB part, so a
+	// few chunked uploads could exhaust memory; the browser always sends one.
+	if r.ContentLength < 0 {
+		httperr.Render(w, httperr.Error{
+			Type: "about:blank", Title: "Length Required", Status: http.StatusLengthRequired,
+			Detail: "Ukuran berkas tidak diketahui. Unggah ulang berkasnya.",
+		})
+		return
+	}
 	// A declared length past the cap is refused before any byte is read.
 	if r.ContentLength > limit {
 		renderTooLarge(w, limit)
@@ -110,16 +119,9 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Conflict("object already exists"))
 		return
 	}
-	r.Body = http.MaxBytesReader(w, r.Body, limit)
-	defer r.Body.Close()
+	// The length is now known and within the cap, and net/http stops the
+	// body at the declared length, so no read can pass the cap.
 	if err := h.store.PutObject(r.Context(), bucket, key, r.Body, r.ContentLength, r.Header.Get("Content-Type")); err != nil {
-		// A streamed body that outgrows the cap is the caller's file, not
-		// a store fault.
-		var tooLarge *http.MaxBytesError
-		if errors.As(err, &tooLarge) {
-			renderTooLarge(w, limit)
-			return
-		}
 		renderStoreErr(r.Context(), w, "put", bucket, key, err, "upload failed")
 		return
 	}

@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_po_status (deployed by migration 00073).
+-- Canonical current body of fn_change_po_status (deployed by migration 00081).
 CREATE OR REPLACE FUNCTION public.fn_change_po_status(p_po_id bigint, p_new_status text, p_user_id bigint, p_note text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql
@@ -72,6 +72,15 @@ BEGIN
     )
   ) THEN
     RAISE EXCEPTION 'PO harus memiliki minimal satu baris produk dan setiap baris produk harus memiliki harga jual. Lengkapi melalui Ubah PO.'
+      USING ERRCODE = 'P0012';
+  END IF;
+
+  -- One qty 0 line is allowed; an all-zero PO would bill Rp 0.
+  IF p_new_status IN ('ON_PROGRESS', 'DELIVERED') AND NOT EXISTS (
+    SELECT 1 FROM purchase_order_items
+    WHERE po_id = p_po_id AND item_type = 'product' AND total_selling > 0
+  ) THEN
+    RAISE EXCEPTION 'Jumlah semua baris produk masih 0. Isi jumlah minimal satu baris produk melalui Ubah PO.'
       USING ERRCODE = 'P0012';
   END IF;
 

@@ -61,13 +61,19 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 	return &Client{mc: mc}, nil
 }
 
+// putPartSize bounds one upload part.
+// minio-go allocates a whole part per upload; without a bound an unknown
+// size picks ~512 MiB. At 16 MiB the largest cap takes two parts.
+const putPartSize = 16 << 20
+
 // PutObject streams an object in.
 // It runs server-side, on the internal network.
 func (c *Client) PutObject(ctx context.Context, bucket, objectKey string, r io.Reader, size int64, contentType string) error {
 	if contentType == "" {
 		contentType = "application/octet-stream"
 	}
-	_, err := c.mc.PutObject(ctx, bucket, objectKey, r, size, minio.PutObjectOptions{ContentType: contentType})
+	_, err := c.mc.PutObject(ctx, bucket, objectKey, r, size,
+		minio.PutObjectOptions{ContentType: contentType, PartSize: putPartSize})
 	if err != nil {
 		return fmt.Errorf("storage: put object: %w", err)
 	}

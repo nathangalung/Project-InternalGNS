@@ -2,7 +2,6 @@ package items
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -92,8 +91,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req CreateItemRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	req.Name = strings.TrimSpace(req.Name)
@@ -119,8 +117,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req UpdateItemRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	req.Name = strings.TrimSpace(req.Name)
@@ -150,8 +147,7 @@ func (h *Handler) AddVendor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req AddVendorToItemRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if req.VendorID <= 0 {
@@ -264,8 +260,7 @@ const MaxMatchRows = 500
 // No-match rows return Matched=nil so FE keeps row empty.
 func (h *Handler) MatchRows(w http.ResponseWriter, r *http.Request) {
 	var req MatchRowsRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if len(req.Rows) == 0 {

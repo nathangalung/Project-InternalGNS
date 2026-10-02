@@ -1,7 +1,6 @@
 package vendors
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -83,8 +82,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req CreateVendorRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	req.Name = strings.TrimSpace(req.Name)
@@ -115,8 +113,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req UpdateVendorRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	req.Name = strings.TrimSpace(req.Name)

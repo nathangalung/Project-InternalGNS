@@ -66,12 +66,12 @@ test("an address the write rule refuses still reaches the server", async ({ page
   await expect(page.getByText(WRONG)).toBeVisible()
 })
 
-test("the sixth attempt in a minute is throttled with a readable message (AU-7)", async ({
+test("the eleventh attempt in a minute is throttled with a readable message (AU-7)", async ({
   page,
 }) => {
   // An unknown address, so the per-account backoff never takes part.
   const email = `${uniqueTag().toLowerCase()}@globalsakti.com`
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     expect((await submitLogin(page, email, "Salah123!")).status()).toBe(401)
     await expect(page.getByText(WRONG)).toBeVisible()
   }
@@ -82,8 +82,8 @@ test("the sixth attempt in a minute is throttled with a readable message (AU-7)"
 
 // Nine misses, over two addresses.
 //
-// The rate limit allows five per address per minute; the account counter
-// sees all nine, and from the fifth on each attempt pays a growing delay.
+// The rate limit allows ten per address and account per minute; the
+// account counter sees all nine, and from the fifth on each attempt pays a growing delay.
 async function missNineTimes(user: SeedUser) {
   for (const [ip, tries] of [
     [ownIp(), 5],

@@ -1,7 +1,6 @@
 package purchaseorders
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -18,6 +17,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/sheet"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
 )
 
@@ -163,8 +163,7 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req UpdateFileRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	req.FileName = strings.TrimSpace(req.FileName)
@@ -243,8 +242,7 @@ func (h *Handler) UpdateNotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req UpdateNotesRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())
@@ -274,8 +272,7 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req UpdateDetailsRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if strings.TrimSpace(req.PoNumber) == "" {
@@ -316,8 +313,7 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req ChangeStatusRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if !isValidStatus(req.Status) {
@@ -329,7 +325,7 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"note": "Alasan pembatalan wajib diisi."}))
 		return
 	}
-	if !h.allowOnProgress(w, r, id, req.Status) {
+	if !h.allowWork(w, r, id, req.Status) {
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())
@@ -364,12 +360,15 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req UpdateItemsRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
 	if strings.TrimSpace(req.DiscountPct) == "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"discountPct": "required"}))
+		return
+	}
+	if fields := validateItemNumbers(req); fields != nil {
+		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
 	if chargeWithoutAddress(req) {
@@ -395,11 +394,20 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, UpdatedResponse{ID: id, RowVersion: newVersion})
 }
 
-// allowOnProgress requires complete master data.
+// gatedMove names the gated moves.
+// Starting work and delivering both need complete master data: edits in
+// ON_PROGRESS and client edits can reopen a gap after the promotion passed.
+// The database refuses every other move into these states.
+func gatedMove(from, to Status) bool {
+	return (from == StatusUploaded && to == StatusOnProgress) ||
+		(from == StatusOnProgress && to == StatusDelivered)
+}
+
+// allowWork requires complete master data.
 // It reports whether the caller may continue; it has already written the
 // response when it returns false.
-func (h *Handler) allowOnProgress(w http.ResponseWriter, r *http.Request, id int64, target Status) bool {
-	if target != StatusOnProgress {
+func (h *Handler) allowWork(w http.ResponseWriter, r *http.Request, id int64, target Status) bool {
+	if target != StatusOnProgress && target != StatusDelivered {
 		return true
 	}
 	po, err := h.repo.GetByID(r.Context(), id)
@@ -411,8 +419,7 @@ func (h *Handler) allowOnProgress(w http.ResponseWriter, r *http.Request, id int
 		httperr.RenderDBErr(w, err)
 		return false
 	}
-	// Only the promotion from UPLOADED is gated; the DB refuses the rest.
-	if po.Status != StatusUploaded {
+	if !gatedMove(po.Status, target) {
 		return true
 	}
 	issues, err := h.repo.Completeness(r.Context(), id)
@@ -502,6 +509,34 @@ func validateFile(req UpdateFileRequest) map[string]string {
 }
 
 const shippingAddressRequired = "Alamat pengiriman wajib diisi bila ada biaya pengiriman."
+
+// validateItemNumbers checks edit numbers.
+// A qty 0 line stays allowed and a blank value keeps the database default;
+// a sent harga jual must be above zero, as fn_update_po_items demands.
+// NaN passes every >= 0 test in Postgres, so it is refused here.
+func validateItemNumbers(req UpdateItemsRequest) map[string]string {
+	f := validate.Fields{}
+	given := func(s string) bool { return strings.TrimSpace(s) != "" }
+	for i, it := range req.Items {
+		key := "items[" + strconv.Itoa(i) + "]."
+		if given(it.Qty) {
+			f.Add(key+"qty", validate.NonNegative("Jumlah", it.Qty))
+		}
+		if given(it.SellingPrice) {
+			f.Add(key+"sellingPrice", validate.Positive("Harga jual", it.SellingPrice))
+		}
+		if it.CostPrice != nil && given(*it.CostPrice) {
+			f.Add(key+"costPrice", validate.NonNegative("Harga beli", *it.CostPrice))
+		}
+	}
+	if req.ShippingDays != nil {
+		f.Add("shippingDays", validate.Days("Waktu pengiriman", *req.ShippingDays))
+	}
+	if req.ShippingCost != nil {
+		f.Add("shippingCost", validate.NonNegative("Biaya pengiriman", *req.ShippingCost))
+	}
+	return f.Result()
+}
 
 // chargeWithoutAddress spots a dropped charge.
 // fn_update_po_items writes the shipping line only with an address, so a
