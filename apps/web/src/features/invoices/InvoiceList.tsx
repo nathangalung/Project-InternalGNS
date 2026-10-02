@@ -17,12 +17,12 @@ import * as invoicesApi from "./api"
 import { runDownload, safeFileName } from "./download"
 import { useInvoiceSummary, useInvoices } from "./hooks"
 import InvoiceFilter, { type InvoiceFilterValues } from "./InvoiceFilter"
-import { detailSearch, invoiceListParams, rowFromBackend } from "./list"
+import { canExportCoretax, detailSearch, invoiceListParams, rowFromBackend } from "./list"
 import type { InvoiceRow } from "./types"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "./types"
 
 type InvoiceListProps = {
-  // A cancelled row names its invoice
+  // Cancelled rows name themselves
   onViewDetail?: (quotationId: number, search: { invoiceId?: number }) => void
 }
 
@@ -289,37 +289,39 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
                               <line x1="12" y1="15" x2="12" y2="3" />
                             </svg>
                           </button>
-                          <button
-                            type="button"
-                            title="Unduh Coretax XML"
-                            className={ui.iconAction}
-                            onClick={() =>
-                              runDownload(
-                                () =>
-                                  downloadXml(
-                                    `/invoices/${row.id}/coretax.xml`,
-                                    `${safeFileName(row.invoiceNo)}.coretax.xml`,
-                                  ),
-                                "Gagal mengunduh XML Coretax.",
-                              )
-                            }
-                          >
-                            <svg
-                              aria-hidden="true"
-                              width="18"
-                              height="18"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                          {canExportCoretax(row) && (
+                            <button
+                              type="button"
+                              title="Unduh Coretax XML"
+                              className={ui.iconAction}
+                              onClick={() =>
+                                runDownload(
+                                  () =>
+                                    downloadXml(
+                                      `/invoices/${row.id}/coretax.xml`,
+                                      `${safeFileName(row.invoiceNo)}.coretax.xml`,
+                                    ),
+                                  "Gagal mengunduh XML Coretax.",
+                                )
+                              }
                             >
-                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                              <polyline points="14 2 14 8 20 8" />
-                              <path d="m9 13 2 2 4-4" />
-                            </svg>
-                          </button>
+                              <svg
+                                aria-hidden="true"
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <path d="m9 13 2 2 4-4" />
+                              </svg>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

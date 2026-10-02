@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { InvoiceBackendRow } from "@/types/api"
 import type { InvoiceFilterValues } from "./InvoiceFilter"
-import { detailSearch, invoiceListParams, rowFromBackend } from "./list"
+import { canExportCoretax, detailSearch, invoiceListParams, rowFromBackend } from "./list"
 
 function invoice(over: Partial<InvoiceBackendRow> = {}): InvoiceBackendRow {
   const status = over.status ?? "sent"
@@ -132,9 +132,19 @@ describe("rowFromBackend", () => {
 })
 
 describe("detailSearch", () => {
-  // The quotation route opens the newest.
+  // Quotation route opens newest.
   it("names a cancelled invoice, which a Pengganti may have replaced", () => {
     expect(detailSearch(rowFromBackend(invoice({ status: "cancelled" })))).toEqual({ invoiceId: 3 })
     expect(detailSearch(rowFromBackend(invoice()))).toEqual({})
+  })
+})
+
+describe("canExportCoretax", () => {
+  // Coretax refuses cancelled invoices.
+  it("offers the XML for every row but a cancelled one", () => {
+    expect(canExportCoretax(rowFromBackend(invoice({ status: "cancelled" })))).toBe(false)
+    for (const status of ["draft", "sent", "paid", "overdue"] as const) {
+      expect(canExportCoretax(rowFromBackend(invoice({ status })))).toBe(true)
+    }
   })
 })

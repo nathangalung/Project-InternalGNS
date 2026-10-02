@@ -88,3 +88,8 @@ export function rowFromBackend(inv: InvoiceBackendRow): InvoiceRow {
 export function detailSearch(row: InvoiceRow): { invoiceId?: number } {
   return row.status === "DIBATALKAN" ? { invoiceId: row.id } : {}
 }
+
+// Coretax refuses cancelled invoices.
+export function canExportCoretax(row: InvoiceRow): boolean {
+  return row.status !== "DIBATALKAN"
+}
