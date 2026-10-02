@@ -156,6 +156,10 @@ test("a logo over 2 MB is refused and a small one is saved", async ({ page, seed
         (await api<{ logoObjectKey?: string }>("GET", `/clients/${client.id}`)).logoObjectKey,
     )
     .toMatch(new RegExp(`^clients/${client.id}/.*logo\\.png$`))
+
+  // The stored logo loads as a blob URL.
+  await page.reload()
+  await expect(logo.locator("img")).toHaveAttribute("src", /^blob:/)
 })
 
 // Phone takes 9-12 digits.

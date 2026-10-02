@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import { useEffect, useId, useRef, useState } from "react"
+import { useId, useRef, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import * as clientsApi from "@/features/clients/api"
 import { contactUpdateBody, getCompanyInitials } from "@/features/clients/helpers"
@@ -14,7 +14,7 @@ import {
 } from "@/features/clients/hooks"
 import CountryCombobox from "@/features/countries/CountryCombobox"
 import { useCountries } from "@/features/countries/hooks"
-import { fetchObjectUrl } from "@/lib/api-client"
+import { useObjectUrl } from "@/hooks/useObjectUrl"
 import { logoBackground } from "@/lib/avatar"
 import { formErrors } from "@/lib/form-errors"
 import { toast } from "@/lib/toast"
@@ -82,7 +82,8 @@ export default function ClientDetail({ client }: ClientDetailProps) {
   const [npwp, setNpwp] = useState(client.npwp ?? "")
   const [address, setAddress] = useState(client.address ?? "")
   const [isActive, setIsActive] = useState(client.isActive)
-  const [logoDataUrl, setLogoDataUrl] = useState<string>("")
+  // Optimistic preview of a picked logo
+  const [logoPreview, setLogoPreview] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<ClientField, string>>>({})
@@ -107,6 +108,8 @@ export default function ClientDetail({ client }: ClientDetailProps) {
   const updateClient = useUpdateClient()
   const uploadLogo = useUploadClientLogo()
   const { data: logoDownload } = useClientLogoDownloadUrl(client.id, client.logoObjectKey)
+  const storedLogo = useObjectUrl(logoDownload?.downloadUrl)
+  const logoDataUrl = logoPreview || storedLogo
   const { data: contactList = [] } = useClientContacts(client.id)
   const createContact = useCreateContact()
   const updateContact = useUpdateContact()
@@ -120,30 +123,6 @@ export default function ClientDetail({ client }: ClientDetailProps) {
       { onSettled: () => setPendingDeleteId(null) },
     )
   }
-
-  useEffect(() => {
-    const path = logoDownload?.downloadUrl
-    if (!path) {
-      if (!client.logoObjectKey) setLogoDataUrl("")
-      return
-    }
-    let active = true
-    let objectUrl = ""
-    fetchObjectUrl(path)
-      .then((u) => {
-        if (active) {
-          objectUrl = u
-          setLogoDataUrl(u)
-        } else {
-          URL.revokeObjectURL(u)
-        }
-      })
-      .catch(() => {})
-    return () => {
-      active = false
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
-    }
-  }, [logoDownload?.downloadUrl, client.logoObjectKey])
 
   // Form state hydrates once from the state initializers above. The route
   // remounts on a different client, so a background refetch of the same client
@@ -268,10 +247,10 @@ export default function ClientDetail({ client }: ClientDetailProps) {
       toast.error(err instanceof Error ? err.message : "Logo tidak valid.")
       return
     }
-    const previous = logoDataUrl
+    const previous = logoPreview
     const reader = new FileReader()
     reader.onload = () => {
-      if (typeof reader.result === "string") setLogoDataUrl(reader.result)
+      if (typeof reader.result === "string") setLogoPreview(reader.result)
     }
     reader.readAsDataURL(file)
     uploadLogo.mutate(
@@ -279,7 +258,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
       {
         onError: () => {
           reader.abort()
-          setLogoDataUrl(previous)
+          setLogoPreview(previous)
         },
       },
     )
