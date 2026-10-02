@@ -101,6 +101,7 @@ list.
 | GET | `/quotations/{id}` | `Get` | header, items and history queries |
 | PUT | `/quotations/{id}` | `Update` | `fn_update_quotation_versioned` with `If-Match`, else `fn_update_quotation` (draft only) |
 | PATCH | `/quotations/{id}/status` | `ChangeStatus` | `fn_change_quotation_status` |
+| PATCH | `/quotations/{id}/contact` | `ChangeContact` | `fn_quotation_update_contact` (draft, with the header free of other claims, or accepted) |
 | POST | `/quotations/{id}/send` | `Send` | `fn_change_quotation_status` to sent |
 | POST | `/quotations/{id}/revise` | `Revise` | `fn_revise_quotation` |
 | GET | `/quotations/{id}/revisions` | `Revisions` | `quotations.list_revisions` |
@@ -112,7 +113,7 @@ list.
 | PATCH | `/quotations/{id}/lines/{lineId}/offer` | `SetLineOffer` | `fn_quotation_set_line_offer` |
 | DELETE | `/quotations/{id}/lines/{lineId}` | `DeleteLine` | `fn_quotation_delete_line` |
 | PUT | `/quotations/{id}/header` | `UpdateHeader` | `fn_quotation_update_header` (claim held; replaces every header field) |
-| GET | `/quotations/{id}/events` | `Events` | server-sent events fed by `LISTEN quotation_events` |
+| GET | `/quotations/{id}/events` | `Events` | server-sent events fed by `LISTEN quotation_events`, plus `resync` after the listener reconnects |
 
 `POST /quotations` answers `201` with `{"id": <quotation id>}`. The allowed
 status moves are in the detail response (`allowedTransitions`, `canRevise`);

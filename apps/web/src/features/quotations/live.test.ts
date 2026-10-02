@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { QuotationDetail, QuotationEditLock } from "@/types/api"
-import { HEADER_PART, headerInput, linePart, lockOwners, nextExpiry } from "./live"
+import { HEADER_PART, headerInput, linePart, lockOwners, nextExpiry, saveDraft } from "./live"
 
 const lock = (part: string, userId: number, userName: string, expiresAt = "2026-10-01T10:00:00Z") =>
   ({ part, userId, userName, expiresAt }) satisfies QuotationEditLock
@@ -101,5 +101,77 @@ describe("headerInput", () => {
       shippingDays: undefined,
       shippingCost: undefined,
     })
+  })
+})
+
+describe("saveDraft", () => {
+  type Run = { holdsHeader: boolean; contactId?: number; grant?: boolean; fail?: string }
+
+  // A recorded Simpan.
+  async function simpan(opts: Run): Promise<{ ok: boolean; calls: string[] }> {
+    const calls: string[] = []
+    const step = async (name: string) => {
+      calls.push(name)
+      if (opts.fail === name) throw new Error(name)
+    }
+    const ok = await saveDraft({
+      holdsHeader: opts.holdsHeader,
+      contactId: opts.contactId,
+      acquireHeader: async () => {
+        calls.push("acquire")
+        return opts.grant ?? true
+      },
+      releaseHeader: async () => {
+        calls.push("release")
+      },
+      saveHeader: () => step("header"),
+      saveContact: (id) => step(`contact:${id}`),
+    })
+    return { ok, calls }
+  }
+
+  it.each<Run & { name: string; want: string[]; ok: boolean }>([
+    { name: "header only", holdsHeader: true, want: ["header"], ok: true },
+    {
+      name: "header, then contact",
+      holdsHeader: true,
+      contactId: 7,
+      want: ["header", "contact:7"],
+      ok: true,
+    },
+    {
+      name: "a contact claims the header first",
+      holdsHeader: false,
+      contactId: 7,
+      want: ["acquire", "contact:7"],
+      ok: true,
+    },
+    { name: "nothing to save", holdsHeader: false, want: [], ok: true },
+    {
+      name: "a header held elsewhere stops the save",
+      holdsHeader: false,
+      contactId: 7,
+      grant: false,
+      want: ["acquire"],
+      ok: false,
+    },
+    {
+      name: "a refused contact frees the claim it took",
+      holdsHeader: false,
+      contactId: 7,
+      fail: "contact:7",
+      want: ["acquire", "contact:7", "release"],
+      ok: false,
+    },
+    {
+      name: "a refused header keeps the own claim",
+      holdsHeader: true,
+      contactId: 7,
+      fail: "header",
+      want: ["header"],
+      ok: false,
+    },
+  ])("$name", async ({ name: _, want, ok, ...opts }) => {
+    expect(await simpan(opts)).toEqual({ ok, calls: want })
   })
 })

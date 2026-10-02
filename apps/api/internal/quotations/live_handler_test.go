@@ -359,3 +359,73 @@ func TestHandler_EventsRefusals(t *testing.T) {
 	res.Body.Close()
 	assert.Equal(t, http.StatusServiceUnavailable, res.StatusCode)
 }
+
+// Contact changes are header changes.
+// Another editor's header claim refuses it with edit_locked; a saved change
+// is announced to the open editors.
+func TestHandler_ContactChangeIsLive(t *testing.T) {
+	pool := testutil.Pool(t)
+	hub := live.NewHub()
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	go live.Listen(ctx, pool, hub, 10*time.Millisecond)
+	srv := liveServer(t, hub)
+	id, _ := liveDraftOver(t, srv)
+	alt := insertContact(t, seedCompanyID, "Kontak Pengganti")
+	budi := committedEditor(t, "Budi")
+	base := "/quotations/" + strconv.FormatInt(id, 10)
+	body := `{"contactId":` + strconv.FormatInt(alt, 10) + `}`
+
+	res := doJSONWithHeaders(t, srv, http.MethodPost, base+"/locks", quotations.LockRequest{Part: "header"}, as(budi))
+	res.Body.Close()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	res = doRaw(t, http.MethodPatch, srv.URL+base+"/contact", body, nil)
+	e := problemOf(t, res)
+	assert.Equal(t, http.StatusConflict, res.StatusCode)
+	assert.Equal(t, httperr.EditLockedCode, e.Code)
+	assert.Equal(t, "Sedang diubah oleh Budi.", e.Detail)
+	res = doJSONWithHeaders(t, srv, http.MethodDelete, base+"/locks/header", nil, as(budi))
+	res.Body.Close()
+
+	// LISTEN starts asynchronously; probe until it delivers.
+	events, stop := hub.Subscribe(id)
+	defer stop()
+	probe := `{"quotationId": ` + strconv.FormatInt(id, 10) + `, "kind": "probe", "userId": 0}`
+	deadline := time.After(5 * time.Second)
+probing:
+	for {
+		_, err := pool.Exec(ctx, "SELECT pg_notify($1, $2)", live.Channel, probe)
+		require.NoError(t, err)
+		for {
+			select {
+			case ev := <-events:
+				if ev.Kind == "probe" {
+					break probing
+				}
+				continue
+			case <-time.After(50 * time.Millisecond):
+			case <-deadline:
+				t.Fatal("listener never delivered")
+			}
+			break
+		}
+	}
+
+	res = doRaw(t, http.MethodPatch, srv.URL+base+"/contact", body, nil)
+	res.Body.Close()
+	require.Equal(t, http.StatusNoContent, res.StatusCode)
+	// Late probes may still be queued; skip them.
+	notice := time.After(5 * time.Second)
+	for {
+		select {
+		case ev := <-events:
+			if ev.Kind == "probe" {
+				continue
+			}
+			assert.Equal(t, live.Event{QuotationID: id, Kind: "header", Part: "header", UserID: seedUserID}, ev)
+			return
+		case <-notice:
+			t.Fatal("no notice for the contact change")
+		}
+	}
+}

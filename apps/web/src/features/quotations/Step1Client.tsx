@@ -41,6 +41,8 @@ type Step1ClientProps = {
   setSelectedContactId?: (id: number | undefined) => void
   // Edit mode: the client is fixed
   lockClient?: boolean
+  // Edit mode: header held elsewhere
+  contactReadOnly?: boolean
 }
 
 export default function Step1Client({
@@ -54,6 +56,7 @@ export default function Step1Client({
   selectedContactId,
   setSelectedContactId,
   lockClient = false,
+  contactReadOnly = false,
 }: Step1ClientProps) {
   return (
     <div className={qe.stepContent}>
@@ -167,11 +170,12 @@ export default function Step1Client({
                   type="button"
                   onClick={() => setSelectedContactId?.(c.id)}
                   aria-pressed={isSelected}
+                  disabled={contactReadOnly}
                   className={`flex w-full items-center gap-3 rounded-md border-[1.5px] px-4 py-3 text-left ${ui.focusRing} ${
                     isSelected
                       ? "border-primary-700 bg-[#F5F0FF]"
                       : "border-transparent bg-[#F2F4F6]"
-                  }`}
+                  }${contactReadOnly ? " cursor-default" : ""}`}
                 >
                   <div className={`${radioBase} ${isSelected ? radioSelected : radioIdle}`}>
                     {isSelected && <div className={radioDot} />}

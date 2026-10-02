@@ -276,6 +276,8 @@ func (r *Repo) ChangeStatus(ctx context.Context, id int64, status Status, note *
 }
 
 // UpdateContact updates contact snapshot.
+// On a draft the contact is part of the header: another user's header claim
+// refuses it with P0015, and the change is announced to open editors.
 func (r *Repo) UpdateContact(ctx context.Context, id, contactID, userID int64) error {
 	var result string
 	err := r.db.QueryRow(ctx, r.store.Get("quotations.update_contact"), id, contactID, userID).Scan(&result)

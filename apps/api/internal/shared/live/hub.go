@@ -19,9 +19,14 @@ const Channel = "quotation_events"
 // are dropped rather than stalling the publisher.
 const buffer = 8
 
+// KindResync means missed changes.
+// Sent after the listener reconnects: notices committed while it was down
+// are gone, so every viewer reloads instead.
+const KindResync = "resync"
+
 // Event is one change to a quotation.
-// Kind is locked, unlocked, line, lines, header or status; Part names the
-// line ("line:<id>") or "header" when the change concerns one.
+// Kind is locked, unlocked, line, lines, header, status or resync; Part
+// names the line ("line:<id>") or "header" when the change concerns one.
 type Event struct {
 	QuotationID int64  `json:"quotationId"`
 	Kind        string `json:"kind"`
@@ -101,6 +106,23 @@ func (h *Hub) Publish(ev Event) {
 		select {
 		case ch <- ev:
 		default:
+		}
+	}
+}
+
+// Resync asks subscribers to reload.
+// Each gets a resync event for its own quotation, without blocking like
+// Publish.
+func (h *Hub) Resync() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	for id, set := range h.subs {
+		ev := Event{QuotationID: id, Kind: KindResync}
+		for ch := range set {
+			select {
+			case ch <- ev:
+			default:
+			}
 		}
 	}
 }
