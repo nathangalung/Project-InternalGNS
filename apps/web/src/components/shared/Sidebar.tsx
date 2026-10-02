@@ -209,14 +209,16 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Closed below lg: hidden, so its controls leave the tab order */}
+      {/* Closed below lg: hidden, so its controls leave the tab order.
+          Visibility only transitions on close; on open it turns visible at
+          once, so the close button can take focus. */}
       <aside
         ref={asideRef}
         id={drawerId}
-        className={`fixed left-0 top-0 z-[100] flex h-screen w-[220px] flex-shrink-0 flex-col overflow-y-auto bg-dark-900 py-5 transition-[transform,translate,scale,rotate,visibility] motion-reduce:transition-none lg:visible lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-[100] flex h-screen w-[220px] flex-shrink-0 flex-col overflow-y-auto bg-dark-900 py-5 motion-reduce:transition-none lg:visible lg:translate-x-0 ${
           drawerOpen
-            ? "translate-x-0 shadow-lg"
-            : "-translate-x-full max-lg:invisible lg:shadow-none"
+            ? "translate-x-0 shadow-lg transition-[transform,translate,scale,rotate]"
+            : "-translate-x-full max-lg:invisible lg:shadow-none transition-[transform,translate,scale,rotate,visibility]"
         }`}
       >
         <div className="mb-6 flex items-center gap-2 px-4">

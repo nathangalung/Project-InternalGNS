@@ -83,7 +83,8 @@ test("finance reads the header from the invoice alone (INV-1)", async ({
   await openInvoice(page, invoice)
   const header = page.locator("main")
   await expect(header.getByText(`No. PO: ${invoice.poNumber}`)).toBeVisible()
-  await expect(header.getByRole("link", { name: client.name })).toBeVisible()
+  // The header and the Ringkasan Klien card both link the client.
+  await expect(header.getByRole("link", { name: client.name })).toHaveCount(2)
   // Finance may not open quotations or POs, so those stay plain text.
   await expect(header.getByText(invoice.quotationNo)).toBeVisible()
   await expect(header.getByRole("link", { name: invoice.quotationNo })).toHaveCount(0)

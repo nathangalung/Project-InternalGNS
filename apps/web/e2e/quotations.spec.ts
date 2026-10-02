@@ -780,7 +780,7 @@ test.describe("quotation list", () => {
     await filter.getByRole("button", { name: "Terapkan" }).click()
 
     await page.getByRole("button", { name: /^\d+ Baris$/ }).click()
-    await page.getByRole("menuitemradio", { name: "5 Baris" }).click()
+    await page.getByRole("menuitemradio", { name: "5 Baris", exact: true }).click()
     await page.getByRole("button", { name: "2", exact: true }).click()
     await expect(rows).toHaveCount(1)
 
