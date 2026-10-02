@@ -166,7 +166,9 @@ scanned digest. A digest that fails the scan stays untagged in GHCR, where
 no deploy pulls it; delete it from the package page if the clutter matters.
 
 To rebuild a release, for example to pick up base-image patches, run the
-`release` workflow by hand (Actions → release → Run workflow) with the tag.
+`release` workflow by hand (Actions → release → Run workflow) with the tag,
+started from `main`: a dispatch runs the workflow file of the branch it is
+started from, and one that predates these checks has none of them.
 Its `resolve release` job refuses, before anything is built, a tag that is
 not `vX.Y.Z`, one that does not exist, and one whose own `ci` run for the tag
 push did not succeed (a green pull-request run on the same commit does not
