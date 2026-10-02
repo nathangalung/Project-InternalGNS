@@ -122,9 +122,12 @@ jobs:
         id: tag
         env:
           TAG: ${{ needs.resolve.outputs.tag }}
+          OWNER: ${{ github.repository_owner }}
+          SERVICE: ${{ matrix.service }}
         run: |
           {
             echo "value=$TAG"
+            echo "image=$REGISTRY/${OWNER,,}/internalgns-$SERVICE"
             echo "sha=$(git rev-parse HEAD)"
             echo "short=$(git rev-parse --short=7 HEAD)"
           } >> "$GITHUB_OUTPUT"
@@ -135,7 +138,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/internalgns-${{ matrix.service }}
+          images: ${{ steps.tag.outputs.image }}
           tags: |
             type=raw,value=${{ steps.tag.outputs.value }}
             type=raw,value=sha-${{ steps.tag.outputs.short }},priority=100
@@ -152,41 +155,18 @@ jobs:
             exit 1
           fi
 
-      - name: build image (local scan)
+      # Build once, push untagged.
+      # The image goes to GHCR by digest only, Trivy scans that digest, and
+      # the release tags are then pointed at it, so the published image is
+      # the scanned one. Building twice reran the runtime stage's package
+      # upgrade and shipped a second, unscanned build. A digest that fails
+      # the scan stays untagged, and compose.prod.yml pulls only by tag.
+      - name: build and push by digest
+        id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ${{ matrix.context }}
-          push: false
-          load: true
-          tags: internalgns-${{ matrix.service }}:scan
-          build-args: |
-            VERSION=${{ steps.tag.outputs.value }}
-            VITE_API_URL=${{ vars.VITE_API_URL }}
-          cache-from: type=gha,scope=${{ matrix.service }}
-          cache-to: type=gha,scope=${{ matrix.service }},mode=max,ignore-error=true
-          # The runtime stage installs OS packages, and its cached layer keys only
-          # on the Dockerfile line, so a cache hit would ship patches as old as
-          # the first build. A release always rebuilds it; build stages stay
-          # cached.
-          no-cache-filters: runtime
-
-      - name: scan image
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: internalgns-${{ matrix.service }}:scan
-          format: table
-          exit-code: "1"
-          ignore-unfixed: true
-          vuln-type: os,library
-          severity: CRITICAL,HIGH
-          trivyignores: .trivyignore
-
-      - name: build and push
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          context: ${{ matrix.context }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          outputs: type=image,name=${{ steps.tag.outputs.image }},push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VERSION=${{ steps.tag.outputs.value }}
@@ -200,3 +180,43 @@ jobs:
           no-cache-filters: runtime
           provenance: mode=max
           sbom: true
+
+      - name: scan image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          TRIVY_IMAGE_SRC: remote
+          TRIVY_PLATFORM: linux/amd64
+        with:
+          image-ref: ${{ steps.tag.outputs.image }}@${{ steps.build.outputs.digest }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+          trivyignores: .trivyignore
+
+      - name: tag the scanned digest
+        env:
+          IMAGE: ${{ steps.tag.outputs.image }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          set -euo pipefail
+          args=()
+          while IFS= read -r t; do
+            if [ -n "$t" ]; then args+=(-t "$t"); fi
+          done <<< "$TAGS"
+          docker buildx imagetools create "${args[@]}" "$IMAGE@$DIGEST"
+          # A one-source create is a carbon copy, so each tag must now resolve
+          # to the digest Trivy passed.
+          while IFS= read -r t; do
+            [ -n "$t" ] || continue
+            got=$(docker buildx imagetools inspect "$t" --format '{{json .Manifest.Digest}}' | tr -d '"')
+            if [ "$got" != "$DIGEST" ]; then
+              echo "::error::$t points at $got, not the scanned $DIGEST"
+              exit 1
+            fi
+            echo "$t -> $DIGEST"
+          done <<< "$TAGS"

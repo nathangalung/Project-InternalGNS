@@ -159,6 +159,12 @@ The workflow publishes exactly two tags per image:
 There is no `:latest`. `compose.prod.yml` refuses to start while `TAG` is
 empty, so a deploy always names the release it runs.
 
+Each image is built once and pushed by digest, untagged. Trivy scans that
+digest and fails the job on a fixed CRITICAL or HIGH finding; only then are
+both tags pointed at it, and the job checks that each tag resolves to the
+scanned digest. A digest that fails the scan stays untagged in GHCR, where
+no deploy pulls it; delete it from the package page if the clutter matters.
+
 To rebuild a release, for example to pick up base-image patches, run the
 `release` workflow by hand (Actions → release → Run workflow) with the tag.
 Its `resolve release` job refuses, before anything is built, a tag that is
