@@ -29,6 +29,29 @@ test("the Grafik year menu picks a year by keyboard", async ({ page }) => {
   await expect(page.getByRole("main").getByRole("button", { name: "Grafik: 2024" })).toBeFocused()
 })
 
+// The closed drawer takes no focus.
+test("the mobile drawer leaves the tab order closed and closes on Escape", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 700 })
+  await page.goto("/quotations")
+  const menuBtn = page.getByRole("button", { name: "Buka menu" })
+  const nav = page.getByRole("link", { name: "Katalog Produk" })
+  await expect(nav).toBeHidden()
+
+  // Tab from the menu button skips the closed drawer.
+  await menuBtn.focus()
+  await page.keyboard.press("Tab")
+  expect(await page.evaluate(() => Boolean(document.activeElement?.closest("aside")))).toBe(false)
+
+  await menuBtn.click()
+  await expect(menuBtn).toHaveAttribute("aria-expanded", "true")
+  await expect(nav).toBeVisible()
+  await expect(page.getByRole("button", { name: "Tutup menu" }).last()).toBeFocused()
+
+  await page.keyboard.press("Escape")
+  await expect(nav).toBeHidden()
+  await expect(menuBtn).toBeFocused()
+})
+
 test("the page-size menu picks a size and leaves the page scrollable", async ({ page }) => {
   await page.goto("/quotations")
   const main = page.getByRole("main")

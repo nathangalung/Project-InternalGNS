@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router"
-import { useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import { useAuth, useMe } from "@/features/auth/hooks"
 import ChangeOwnPasswordModal from "@/features/users/ChangeOwnPasswordModal"
 import { roleCanAccess, type Section, sectionFromPathname } from "@/lib/rbac"
@@ -130,6 +130,34 @@ export default function Sidebar() {
   const { logout } = useAuth()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
+  const drawerId = useId()
+  const asideRef = useRef<HTMLElement>(null)
+  const menuBtnRef = useRef<HTMLButtonElement>(null)
+  const closeBtnRef = useRef<HTMLButtonElement>(null)
+  const wasOpen = useRef(false)
+
+  // Drawer focus and Escape.
+  //
+  // Opening moves focus to the close button and Escape closes. Closing
+  // returns focus to the menu button, unless it already moved on, such as
+  // into the password dialog.
+  useEffect(() => {
+    if (drawerOpen) {
+      wasOpen.current = true
+      closeBtnRef.current?.focus()
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setDrawerOpen(false)
+      }
+      document.addEventListener("keydown", onKey)
+      return () => document.removeEventListener("keydown", onKey)
+    }
+    if (!wasOpen.current) return
+    wasOpen.current = false
+    const active = document.activeElement
+    if (active === document.body || asideRef.current?.contains(active)) {
+      menuBtnRef.current?.focus()
+    }
+  }, [drawerOpen])
 
   // Highlight follows the router, detail routes included.
   const activeSection = useRouterState({
@@ -153,11 +181,13 @@ export default function Sidebar() {
       {/* Mobile top bar */}
       <header className="fixed inset-x-0 top-0 z-[90] flex h-14 items-center gap-3 bg-dark-900 px-4 lg:hidden">
         <button
+          ref={menuBtnRef}
           type="button"
           className={`${iconBtn} text-dark-200`}
           onClick={() => setDrawerOpen(true)}
           aria-label="Buka menu"
           aria-expanded={drawerOpen}
+          aria-controls={drawerId}
         >
           <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" strokeWidth="2">
             <line x1="3" y1="6" x2="21" y2="6" />
@@ -179,9 +209,14 @@ export default function Sidebar() {
         />
       )}
 
+      {/* Closed below lg: hidden, so its controls leave the tab order */}
       <aside
-        className={`fixed left-0 top-0 z-[100] flex h-screen w-[220px] flex-shrink-0 flex-col overflow-y-auto bg-dark-900 py-5 transition-transform motion-reduce:transition-none lg:translate-x-0 ${
-          drawerOpen ? "translate-x-0 shadow-lg" : "-translate-x-full lg:shadow-none"
+        ref={asideRef}
+        id={drawerId}
+        className={`fixed left-0 top-0 z-[100] flex h-screen w-[220px] flex-shrink-0 flex-col overflow-y-auto bg-dark-900 py-5 transition-[transform,translate,scale,rotate,visibility] motion-reduce:transition-none lg:visible lg:translate-x-0 ${
+          drawerOpen
+            ? "translate-x-0 shadow-lg"
+            : "-translate-x-full max-lg:invisible lg:shadow-none"
         }`}
       >
         <div className="mb-6 flex items-center gap-2 px-4">
@@ -191,6 +226,7 @@ export default function Sidebar() {
             <span className="text-caption leading-tight text-dark-400">Admin Panel</span>
           </div>
           <button
+            ref={closeBtnRef}
             type="button"
             className={`${iconBtn} ml-auto h-8 w-8 rounded-sm bg-white/[0.06] text-dark-300 lg:hidden`}
             onClick={() => setDrawerOpen(false)}
