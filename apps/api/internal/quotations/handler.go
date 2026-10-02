@@ -1,9 +1,7 @@
 package quotations
 
 import (
-	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -362,9 +360,7 @@ func (h *Handler) Revise(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req ReviseRequest
-	// The note is optional, so an empty body is fine.
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil && !errors.Is(err, io.EOF) {
-		httperr.Render(w, httperr.BadRequest("invalid json"))
+	if !httpx.DecodeOptionalJSON(w, r, &req) {
 		return
 	}
 	userID := deps.CurrentUserID(r.Context())
@@ -424,12 +420,12 @@ func (h *Handler) Send(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	note := "Quotation dikirim ke klien"
-	if r.Body != nil {
-		var body SendRequest
-		_ = json.NewDecoder(r.Body).Decode(&body)
-		if body.Note != nil && strings.TrimSpace(*body.Note) != "" {
-			note = *body.Note
-		}
+	var body SendRequest
+	if !httpx.DecodeOptionalJSON(w, r, &body) {
+		return
+	}
+	if body.Note != nil && strings.TrimSpace(*body.Note) != "" {
+		note = *body.Note
 	}
 	userID := deps.CurrentUserID(r.Context())
 	if err := h.repo.ChangeStatus(r.Context(), id, "sent", &note, userID); err != nil {

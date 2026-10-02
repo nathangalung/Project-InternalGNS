@@ -27,6 +27,8 @@ func TestRouter_OversizedJSONIs413(t *testing.T) {
 		{http.MethodPost, "/api/v1/quotations/"},
 		{http.MethodPut, "/api/v1/quotations/1/header"},
 		{http.MethodPost, "/api/v1/quotations/1/lines"},
+		{http.MethodPost, "/api/v1/quotations/1/revise"},
+		{http.MethodPost, "/api/v1/quotations/1/send"},
 		{http.MethodPost, "/api/v1/items/match-rows"},
 		{http.MethodPost, "/api/v1/clients/"},
 	}

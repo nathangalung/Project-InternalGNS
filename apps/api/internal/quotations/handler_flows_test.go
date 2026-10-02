@@ -268,6 +268,7 @@ func TestHandler_Revise_BadInput(t *testing.T) {
 	}{
 		{"bad id", "/quotations/abc/revise", ""},
 		{"bad json", idPath(id, "/revise"), `{"note":`},
+		{"bad send json", idPath(id, "/send"), `{"note":`},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
