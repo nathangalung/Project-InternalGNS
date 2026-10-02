@@ -229,15 +229,27 @@ describe("live contact", () => {
     jatuhTempo: "",
   })
 
-  it("follows another editor's contact until the user picks one", () => {
+  it("follows another editor's contact", () => {
     const { result } = wizard()
     act(() => result.current.seed(stored(8)))
     act(() => result.current.syncFromServer(stored(9), true))
     expect(result.current.selectedContactId).toBe(9)
+  })
 
+  it("keeps a pick while the stored contact stays", () => {
+    const { result } = wizard()
+    act(() => result.current.seed(stored(8)))
+    act(() => result.current.setSelectedContactId(4))
+    act(() => result.current.syncFromServer(stored(8), false))
+    expect(result.current.selectedContactId).toBe(4)
+  })
+
+  it("drops a pick the stored contact changed under", () => {
+    const { result } = wizard()
+    act(() => result.current.seed(stored(8)))
     act(() => result.current.setSelectedContactId(4))
     act(() => result.current.syncFromServer(stored(10), true))
-    expect(result.current.selectedContactId).toBe(4)
+    expect(result.current.selectedContactId).toBe(10)
   })
 })
 

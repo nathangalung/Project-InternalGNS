@@ -97,10 +97,11 @@ export type DraftSave = {
   saveContact: (contactId: number) => Promise<unknown>
 }
 
-// Save the header, then the contact.
+// Save header, then contact.
 //
 // The contact is part of the header, so a changed one is sent while this
-// user holds the header, claimed here when the header steps did not. True
+// user holds the header. The pick and the header steps claim it; a claim
+// that lapsed since is taken again here. True
 // when everything saved; on a refusal a claim taken here is freed, while a
 // claim held before stays for the next try.
 export async function saveDraft(s: DraftSave): Promise<boolean> {

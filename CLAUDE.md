@@ -218,8 +218,9 @@ document's status history table.
   someone else holds is a 409 `edit_locked` whose detail names them. A line
   save and the header save need the caller's claim; add, delete, the
   Tidak Ditawarkan toggle and a contact change
-  (`fn_quotation_update_contact`) need the part free, and the edit page
-  sends the contact while holding the header. The full-draft `PUT` and
+  (`fn_quotation_update_contact`) need the part free; the edit page claims
+  the header when a contact is picked and sends it while holding the
+  header. The full-draft `PUT` and
   leaving draft are refused while another user holds a part. Every change
   calls `fn_quotation_notify`, which `pg_notify`s `quotation_events`; one
   pooled connection LISTENs (`shared/live`) and fans the notices out to

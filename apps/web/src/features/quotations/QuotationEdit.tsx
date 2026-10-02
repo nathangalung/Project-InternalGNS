@@ -258,6 +258,16 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     setProductAddOpen(open)
   }
 
+  // A contact pick claims the header.
+  //
+  // The contact is a header part, so an unclaimed pick could later replace
+  // a contact another editor saved meanwhile. Simpan or leaving frees it.
+  async function pickContact(id: number | undefined) {
+    if (id === selectedContactId) return
+    if (!holdsHeader && !(await acquire(HEADER_PART))) return
+    setSelectedContactId(id)
+  }
+
   // A discount opened from the product step claims the header for itself.
   const discountClaim = useRef(false)
 
@@ -470,7 +480,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             setShowClientAdd={() => undefined}
             contacts={contacts}
             selectedContactId={selectedContactId}
-            setSelectedContactId={setSelectedContactId}
+            setSelectedContactId={(id) => void pickContact(id)}
             lockClient
             contactReadOnly={Boolean(owners.header)}
           />

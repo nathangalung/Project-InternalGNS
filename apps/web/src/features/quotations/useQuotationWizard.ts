@@ -80,11 +80,11 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
     if (!open) setEditingProduct(null)
   }
 
-  // Load every step at once.
-  // Each field is set outright, so a reseed also drops removed lines.
-  // The contact last loaded from the server.
+  // Last stored contact.
   const storedContact = useRef<number | undefined>(undefined)
 
+  // Load every step at once.
+  // Each field is set outright, so a reseed also drops removed lines.
   const seed = useCallback((s: WizardSeed) => {
     storedContact.current = s.selectedContactId
     setSelectedClient(s.selectedClient)
@@ -101,12 +101,12 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
 
   // Follow the stored draft live.
   // Lines always follow the server; the header fields only when the caller
-  // is not editing them; the contact until the user picks another one. Page
-  // and client stay as the user left them.
+  // is not editing them. A pick holds the header, so a stored contact that
+  // still changes (a claim that lapsed) replaces the pick instead of being
+  // overwritten by it. Page and client stay as the user left them.
   const syncFromServer = useCallback((s: WizardSeed, header: boolean) => {
-    const before = storedContact.current
+    if (s.selectedContactId !== storedContact.current) setSelectedContactId(s.selectedContactId)
     storedContact.current = s.selectedContactId
-    setSelectedContactId((picked) => (picked === before ? s.selectedContactId : picked))
     setProducts(s.products)
     if (!header) return
     setDiscountPct(s.discountPct)

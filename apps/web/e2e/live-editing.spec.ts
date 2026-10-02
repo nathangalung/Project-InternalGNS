@@ -132,13 +132,14 @@ test.describe("live quotation editing", () => {
     const q = await seed.quotation({ client, lines: [{ item, qty: 1, price: 25_000 }] })
     const other = await secondEditor(browser)
     try {
-      // The operational editor picks the second contact, then holds the header.
+      // Picking the second contact claims the header on step 1 already.
       await other.page.goto(`/quotations/${q.id}/edit`)
-      await other.page.getByRole("button", { name: new RegExp(`^${second}`) }).click()
-      await toStep(other.page, 4)
-      await expect(other.page.getByLabel(/BERLAKU SAMPAI/)).toBeEnabled()
+      const theirPick = other.page.getByRole("button", { name: new RegExp(`^${second}`) })
+      await theirPick.click()
+      await expect(theirPick).toHaveAttribute("aria-pressed", "true")
 
-      // This page sees the contact read-only, naming the holder.
+      // So this page cannot hold a pick of its own that a later save would
+      // lay over theirs: the contact is read-only, naming the holder.
       await page.goto(`/quotations/${q.id}/edit`)
       await expect(
         page.getByText(
@@ -148,6 +149,9 @@ test.describe("live quotation editing", () => {
       const pick = page.getByRole("button", { name: new RegExp(`^${second}`) })
       await expect(pick).toBeDisabled()
       await expect(pick).toHaveAttribute("aria-pressed", "false")
+
+      await toStep(other.page, 4)
+      await expect(other.page.getByLabel(/BERLAKU SAMPAI/)).toBeEnabled()
 
       // Their save reaches this page without a reload and frees the contact.
       await other.page.getByRole("button", { name: "Simpan" }).click()
