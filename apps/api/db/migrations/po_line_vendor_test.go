@@ -12,7 +12,7 @@ import (
 
 const lineVendorMigration = "00083_po_line_vendor.sql"
 
-// PO lines take the quoted vendor.
+// Backfill copies own-product links.
 // Only a link for the line's own product is copied: a line whose product
 // was swapped in the PO edit keeps no vendor rather than the old one.
 func TestMigration00083_BackfillsLineVendor(t *testing.T) {

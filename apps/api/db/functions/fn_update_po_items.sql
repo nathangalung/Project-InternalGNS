@@ -4,13 +4,15 @@ CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id b
  LANGUAGE plpgsql
 AS $function$
 DECLARE
-  v_status    VARCHAR(20);
-  v_quotation BIGINT;
-  v_line      INT := 0;
-  v_offered   BIGINT;
-  v_vendor    BIGINT;
-  v_link      BIGINT;
-  it          JSONB;
+  v_status      VARCHAR(20);
+  v_quotation   BIGINT;
+  v_line        INT := 0;
+  v_offered     BIGINT;
+  v_vendor      BIGINT;
+  v_link        BIGINT;
+  v_link_vendor BIGINT;
+  v_stored      BIGINT[];
+  it            JSONB;
 BEGIN
   SELECT status, quotation_id INTO v_status, v_quotation
   FROM purchase_orders
@@ -71,6 +73,11 @@ BEGIN
       updated_by   = p_user_id
   WHERE id = p_po_id;
 
+  -- Links the PO already stores stay valid.
+  SELECT COALESCE(array_agg(vendor_product_id), '{}') INTO v_stored
+  FROM purchase_order_items
+  WHERE po_id = p_po_id AND vendor_product_id IS NOT NULL;
+
   DELETE FROM purchase_order_items WHERE po_id = p_po_id;
 
   FOR it IN SELECT * FROM jsonb_array_elements(p_items)
@@ -86,11 +93,16 @@ BEGIN
         USING ERRCODE = 'P0014';
     END IF;
     IF v_link IS NOT NULL THEN
-      IF NOT EXISTS (
-        SELECT 1 FROM vendor_products WHERE id = v_link AND item_id = v_offered
-      ) THEN
+      SELECT vendor_id INTO v_link_vendor
+      FROM vendor_products WHERE id = v_link AND item_id = v_offered;
+      IF NOT FOUND THEN
         RAISE EXCEPTION 'Vendor ini tidak menyediakan produk tersebut. Pilih vendor lain.'
           USING ERRCODE = 'P0014';
+      END IF;
+      -- A new pick is linked like a vendor id.
+      IF NOT v_link = ANY (v_stored) THEN
+        v_link := fn_link_vendor_item(
+          v_link_vendor, v_offered, NULLIF(it->>'costPrice','')::NUMERIC, p_user_id);
       END IF;
     ELSIF v_vendor IS NOT NULL THEN
       v_link := fn_link_vendor_item(

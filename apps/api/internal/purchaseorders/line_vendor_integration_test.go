@@ -27,7 +27,7 @@ func insertVendor(t *testing.T, tx pgx.Tx, name, location string, active bool) i
 	return id
 }
 
-// linkVendorItem links a vendor to an item.
+// linkVendorItem links a vendor.
 func linkVendorItem(t *testing.T, tx pgx.Tx, vendorID, itemID int64, cost string) int64 {
 	t.Helper()
 	var id int64
@@ -48,7 +48,7 @@ func firstProductLine(t *testing.T, tx pgx.Tx, poID int64) (qiID, vpID *int64) {
 	return qiID, vpID
 }
 
-// The PO line keeps its supplier.
+// PO line keeps its supplier.
 // fn_create_purchase_order copies the quotation line's vendor link, and the
 // items list reads it from the PO line.
 func TestPurchaseOrder_CreateStoresLineVendor(t *testing.T) {
@@ -69,7 +69,7 @@ func TestPurchaseOrder_CreateStoresLineVendor(t *testing.T) {
 	assert.Equal(t, vpID, items[0].VendorProductID)
 }
 
-// A link for another product is dropped.
+// Foreign product link dropped.
 // A quotation line whose vendor link names another item would otherwise
 // make the PO show, and gate on, a vendor that never offered the product.
 func TestPurchaseOrder_CreateDropsForeignVendorLink(t *testing.T) {
@@ -92,7 +92,7 @@ func TestPurchaseOrder_CreateDropsForeignVendorLink(t *testing.T) {
 	assert.Nil(t, vpID)
 }
 
-// The edit stores the picked vendor.
+// Edit stores picked vendor.
 // A vendor chosen in Ubah PO used to be dropped on save, so the PO kept
 // showing the quotation line's vendor; a vendor without a link to the item
 // is linked the way a quotation links it.
@@ -116,18 +116,6 @@ func TestRepo_UpdateItems_StoresLineVendor(t *testing.T) {
 			line: func(t *testing.T, tx pgx.Tx, l *purchaseorders.UpdateItemsLine) *int64 {
 				v := insertVendor(t, tx, "CV Baru", "Batam", true)
 				l.VendorID = &v
-				return &v
-			},
-		},
-		{
-			name: "link kept after its vendor is deactivated",
-			line: func(t *testing.T, tx pgx.Tx, l *purchaseorders.UpdateItemsLine) *int64 {
-				v := insertVendor(t, tx, "CV Lama", "Bitung", false)
-				link := linkVendorItem(t, tx, v, seedItemID, "40000")
-				_, err := tx.Exec(context.Background(),
-					`UPDATE vendor_products SET is_active = FALSE WHERE id = $1`, link)
-				require.NoError(t, err)
-				l.VendorProductID = &link
 				return &v
 			},
 		},
@@ -168,7 +156,80 @@ func TestRepo_UpdateItems_StoresLineVendor(t *testing.T) {
 	}
 }
 
-// A line added in the edit is gated.
+// A picked inactive link revives.
+// A link the PO does not store yet goes through fn_link_vendor_item, as a
+// vendor picked by id does: the same link comes back active, and a link
+// still at 0 takes the line's harga beli.
+func TestRepo_UpdateItems_RevivesPickedLink(t *testing.T) {
+	cases := []struct {
+		name string
+		pick func(l *purchaseorders.UpdateItemsLine, vendor, link int64)
+	}{
+		{
+			name: "by vendor",
+			pick: func(l *purchaseorders.UpdateItemsLine, vendor, _ int64) { l.VendorID = &vendor },
+		},
+		{
+			name: "by link",
+			pick: func(l *purchaseorders.UpdateItemsLine, _, link int64) { l.VendorProductID = &link },
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, tx := testutil.BeginTx(t)
+			poID := acceptedQuotationWithVendor(t, tx, seedCompanyID)
+			qiID, _ := firstProductLine(t, tx, poID)
+			vendor := insertVendor(t, tx, "CV Lama Aktif", "Bitung", true)
+			link := linkVendorItem(t, tx, vendor, seedItemID, "0")
+			_, err := tx.Exec(ctx, `UPDATE vendor_products SET is_active = FALSE WHERE id = $1`, link)
+			require.NoError(t, err)
+			offered := seedItemID
+			req := itemsWith(purchaseorders.UpdateItemsLine{
+				QuotationItemID: qiID, OfferedItemID: &offered, CostPrice: strPtr("40000"),
+			})
+			tc.pick(&req.Items[0], vendor, link)
+
+			_, err = purchaseorders.NewRepo(tx, testutil.Store(t)).UpdateItems(ctx, poID, req, seedUserID, nil)
+			require.NoError(t, err)
+
+			_, stored := firstProductLine(t, tx, poID)
+			require.NotNil(t, stored)
+			assert.Equal(t, link, *stored)
+			var active, priced bool
+			require.NoError(t, tx.QueryRow(ctx,
+				`SELECT is_active, cost_price = 40000 FROM vendor_products WHERE id = $1`,
+				link).Scan(&active, &priced))
+			assert.True(t, active)
+			assert.True(t, priced)
+		})
+	}
+}
+
+// Stored inactive supplier is kept.
+// Deactivating a vendor must not block editing a PO it already supplies:
+// the link the PO stores is sent back unchanged and stays.
+func TestRepo_UpdateItems_KeepsStoredInactiveLink(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	poID := acceptedQuotationWithVendor(t, tx, seedCompanyID)
+	qiID, stored := firstProductLine(t, tx, poID)
+	require.NotNil(t, stored)
+	_, err := tx.Exec(ctx, `UPDATE vendors SET is_active = FALSE WHERE id = $1`, incompleteVendorID)
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx, `UPDATE vendor_products SET is_active = FALSE WHERE id = $1`, *stored)
+	require.NoError(t, err)
+	offered := seedItemID
+	req := itemsWith(purchaseorders.UpdateItemsLine{
+		QuotationItemID: qiID, OfferedItemID: &offered, VendorProductID: stored,
+	})
+
+	_, err = purchaseorders.NewRepo(tx, testutil.Store(t)).UpdateItems(ctx, poID, req, seedUserID, nil)
+	require.NoError(t, err)
+
+	_, kept := firstProductLine(t, tx, poID)
+	assert.Equal(t, stored, kept)
+}
+
+// Edit-added line is gated.
 // Its vendor had no quotation line to resolve through, so the work gate
 // never checked that vendor's data.
 func TestRepo_Completeness_AddedLineVendor(t *testing.T) {
@@ -254,6 +315,15 @@ func TestHandler_UpdateItems_RefusesForeignLinks(t *testing.T) {
 			line: func(t *testing.T, tx pgx.Tx, l *purchaseorders.UpdateItemsLine) {
 				v := insertVendor(t, tx, "CV Nonaktif", "Medan", false)
 				l.VendorID = &v
+			},
+			detail: "Vendor tidak ditemukan atau sudah nonaktif. Pilih vendor lain.",
+		},
+		{
+			name: "inactive vendor link as a new pick",
+			line: func(t *testing.T, tx pgx.Tx, l *purchaseorders.UpdateItemsLine) {
+				v := insertVendor(t, tx, "CV Lama", "Bitung", false)
+				link := linkVendorItem(t, tx, v, seedItemID, "40000")
+				l.VendorProductID = &link
 			},
 			detail: "Vendor tidak ditemukan atau sudah nonaktif. Pilih vendor lain.",
 		},

@@ -135,8 +135,10 @@ type UpdateItemsLine struct {
 	IsAvailable     *bool   `json:"isAvailable,omitempty"`
 	ShipDestination *string `json:"shipDestination,omitempty"`
 	// Supplier of the line.
-	// VendorProductID must be a link for OfferedItemID. VendorID is read
-	// only without it, and links a vendor the item has none to yet.
+	// VendorProductID must be a link for OfferedItemID. A link the PO
+	// already stores is kept as is; any other needs an active vendor.
+	// VendorID is read only without it, and links a vendor the item has
+	// none to yet.
 	VendorProductID *int64 `json:"vendorProductId,omitempty"`
 	VendorID        *int64 `json:"vendorId,omitempty"`
 }
