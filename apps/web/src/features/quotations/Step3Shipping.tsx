@@ -90,6 +90,7 @@ export default function Step3Shipping({
             id={`${id}-waktu`}
             type="number"
             min={1}
+            max={365}
             placeholder="Masukkan jumlah hari kerja setelah PO diterima..."
             value={shippingTime}
             onChange={(e) => setShippingTime(e.target.value)}

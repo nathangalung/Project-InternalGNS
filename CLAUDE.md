@@ -188,6 +188,9 @@ document's status history table.
   Draft goes to sent or cancelled; sent to accepted, rejected or cancelled;
   revision to rejected or cancelled. Rejected and cancelled need a reason.
   Accepted creates the PO in the same transaction. Only drafts are editable.
+  Validity and shipping days run from 1 to 365 (`validate.MaxDays`, a 422
+  on the field; the database refuses only below 1), on the PO's shipping
+  days too, and the web inputs carry the same bound.
   A draft may keep unfinished product lines, but sending refuses (with the
   count) while any offered product line lacks its product, unit, vendor,
   harga beli or harga jual. A line marked Tidak Ditawarkan (`is_available`

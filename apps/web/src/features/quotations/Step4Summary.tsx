@@ -130,6 +130,7 @@ export default function Step4Summary({
               id={`${id}-berlaku`}
               type="number"
               min="1"
+              max="365"
               placeholder="Masukkan jumlah hari"
               value={berlakuSampai}
               onChange={(e) => setBerlakuSampai(e.target.value)}
