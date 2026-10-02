@@ -180,6 +180,7 @@ export default function InvoiceDetail({ inv }: InvoiceDetailProps) {
       />
       <ClientSummaryCard
         clientName={inv.companyName}
+        clientId={inv.companyClientId}
         clientInitials={getCompanyInitials(inv.companyName)}
         clientInfo={clientInfoOf(inv)}
         shippingAlamat={shipping.alamat}

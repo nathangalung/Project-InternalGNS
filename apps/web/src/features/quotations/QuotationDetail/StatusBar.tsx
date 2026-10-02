@@ -1,4 +1,4 @@
-import { useRef } from "react"
+import { type ReactNode, useRef } from "react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +14,7 @@ import { quotationBadge } from "../status"
 
 type StatusBarProps = {
   status: Status
-  hint: string
+  hint: ReactNode
   // Menu moves, cancel excluded
   moves: QuotationTransition[]
   cancel?: QuotationTransition
