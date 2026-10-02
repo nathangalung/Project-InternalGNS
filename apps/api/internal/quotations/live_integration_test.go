@@ -321,6 +321,62 @@ func TestUpdateHeader(t *testing.T) {
 	assert.Equal(t, "9000000.00", d.Total)
 }
 
+// The contact belongs to the header.
+// Another user's header claim refuses the change; the caller's own claim or
+// a free header lets it through.
+func TestUpdateContact_FollowsHeaderClaim(t *testing.T) {
+	ctx, repo, tx := newRepo(t)
+	q := newLiveDraft(t, ctx, repo)
+	budi := newEditor(t, ctx, tx, "Budi")
+	var alt int64
+	require.NoError(t, tx.QueryRow(ctx, `
+		INSERT INTO company_contacts (company_id, name, country_code, created_by, updated_by)
+		VALUES ($1, 'Kontak Pengganti', 'IDN', 1, 1) RETURNING id`, seedCompanyID).Scan(&alt))
+
+	_, err := repo.Lock(ctx, q.id, "header", budi)
+	require.NoError(t, err)
+	err = attempt(t, ctx, tx, func() error { return repo.UpdateContact(ctx, q.id, alt, seedUserID) })
+	status, code, detail := errCode(err)
+	assert.Equal(t, 409, status)
+	assert.Equal(t, httperr.EditLockedCode, code)
+	assert.Equal(t, "Sedang diubah oleh Budi.", detail)
+	d, err := repo.GetDetail(ctx, q.id)
+	require.NoError(t, err)
+	require.NotNil(t, d.ContactID)
+	assert.Equal(t, seedContactID, *d.ContactID, "the refused change wrote nothing")
+
+	require.NoError(t, repo.Unlock(ctx, q.id, "header", budi))
+	_, err = repo.Lock(ctx, q.id, "header", seedUserID)
+	require.NoError(t, err)
+	require.NoError(t, repo.UpdateContact(ctx, q.id, alt, seedUserID), "the own claim")
+
+	require.NoError(t, repo.Unlock(ctx, q.id, "header", seedUserID))
+	require.NoError(t, repo.UpdateContact(ctx, q.id, seedContactID, seedUserID), "a free header")
+	d, err = repo.GetDetail(ctx, q.id)
+	require.NoError(t, err)
+	assert.Equal(t, seedContactID, *d.ContactID)
+}
+
+// An accepted quotation ignores claims.
+// The PO gate re-picks its contact; nobody edits it live.
+func TestUpdateContact_AcceptedIgnoresClaims(t *testing.T) {
+	ctx, repo, tx := newRepo(t)
+	q := newLiveDraft(t, ctx, repo)
+	budi := newEditor(t, ctx, tx, "Budi")
+	_, err := repo.Lock(ctx, q.id, "header", budi)
+	require.NoError(t, err)
+	forceStatus(t, ctx, tx, q.id, quotations.StatusAccepted)
+	var alt int64
+	require.NoError(t, tx.QueryRow(ctx, `
+		INSERT INTO company_contacts (company_id, name, country_code, created_by, updated_by)
+		VALUES ($1, 'Kontak PO', 'IDN', 1, 1) RETURNING id`, seedCompanyID).Scan(&alt))
+
+	require.NoError(t, repo.UpdateContact(ctx, q.id, alt, seedUserID))
+	d, err := repo.GetDetail(ctx, q.id)
+	require.NoError(t, err)
+	assert.Equal(t, alt, *d.ContactID)
+}
+
 // Live totals equal a whole save.
 func TestRecompute_MatchesWholeSave(t *testing.T) {
 	ctx, repo, _ := newRepo(t)
