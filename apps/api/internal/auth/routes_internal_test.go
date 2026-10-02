@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 )
 
@@ -136,14 +137,45 @@ func TestLoginLimit(t *testing.T) {
 
 	t.Run("an unreadable body spends the address budget", func(t *testing.T) {
 		h := loginLimit(10, 3)(stubLogin())
-		for _, body := range []string{"{", "[]", strings.Repeat("a", loginBodyMax+1)} {
+		for _, body := range []string{"{", "[]", "nope"} {
 			code, _ := loginHit(h, body)
 			assert.Equal(t, http.StatusOK, code)
 		}
-		code, _ := loginHit(h, "nope")
+		code, _ := loginHit(h, "x")
 		assert.Equal(t, http.StatusTooManyRequests, code, "garbage shares one bucket per address")
 		code, _ = loginHit(h, loginBody("budi@globalsakti.com"))
 		assert.Equal(t, http.StatusOK, code, "an account keeps its own budget")
+	})
+
+	// The handler decodes the first value and ignores the rest, so the
+	// key must too, or junk would buy a second budget.
+	t.Run("trailing junk shares the account budget", func(t *testing.T) {
+		h := loginLimit(loginPerIP, 2)(stubLogin())
+		for i := range 2 {
+			code, _ := loginHit(h, loginBody("budi@globalsakti.com"))
+			assert.Equal(t, http.StatusOK, code, "login %d", i+1)
+		}
+		code, _ := loginHit(h, loginBody("budi@globalsakti.com")+" x")
+		assert.Equal(t, http.StatusTooManyRequests, code)
+		code, _ = loginHit(h, loginBody("budi@globalsakti.com")+strings.Repeat(" ", 200))
+		assert.Equal(t, http.StatusTooManyRequests, code)
+	})
+
+	t.Run("an oversized body is refused unread", func(t *testing.T) {
+		h := loginLimit(loginPerIP, loginPerAccount)(stubLogin())
+		padded := loginBody("budi@globalsakti.com") + strings.Repeat(" ", loginBodyMax)
+		code, body := loginHit(h, padded)
+		assert.Equal(t, http.StatusRequestEntityTooLarge, code)
+		assert.Contains(t, body, httpx.BodyTooLargeDetail)
+		assert.NotContains(t, body, "budi", "the handler never ran")
+		code, _ = loginHit(h, loginBody("budi@globalsakti.com")+strings.Repeat(" ", loginBodyMax-60))
+		assert.Equal(t, http.StatusOK, code, "a body within the bound passes")
+	})
+
+	t.Run("any other key failure is a 500", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		loginKeyError(rec, httptest.NewRequest(http.MethodPost, "/login", nil), assert.AnError)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	})
 
 	t.Run("the account key never holds the raw email", func(t *testing.T) {

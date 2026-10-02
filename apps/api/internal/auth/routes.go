@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"io"
 	"mime"
 	"net/http"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/session"
 )
 
@@ -74,7 +76,8 @@ func refreshLimit(perIP, perCookie int) func(http.Handler) http.Handler {
 	}
 }
 
-// Login and password limits per minute.
+// Login and password limits.
+// Every budget counts per minute.
 // An office signs in from one public address at the start of the day, so
 // the address carries only a flood ceiling and the tight budget is per
 // account: per address and email for login, per user for a password change.
@@ -87,18 +90,26 @@ const (
 	passwordPerUser = 5
 )
 
-// loginBodyMax bounds the peeked body.
-// A login body is two short fields.
+// loginBodyMax bounds the login body.
+// A login body is two short fields, about 100 bytes.
 const loginBodyMax = 4 << 10
 
-// loginAccountKey keys by address and email.
-// It peeks the JSON body and hands it on unread to the handler. The key
-// holds a digest of the trimmed, lower-cased email, the form the user
+// errLoginTooLarge marks an oversized body.
+var errLoginTooLarge = errors.New("login body too large")
+
+// loginAccountKey keys address and email.
+// It peeks the JSON body and hands it on unread to the handler, decoding
+// the first value the way httpx.DecodeJSON does, so trailing bytes cannot
+// move a login to another bucket. A body past loginBodyMax is refused. The
+// key holds a digest of the trimmed, lower-cased email, the form the user
 // lookup matches, never the address itself. A body it cannot read keys on
 // the address alone.
 func loginAccountKey(r *http.Request) (string, error) {
 	ip, _ := clientIPKey(r)
-	raw, err := io.ReadAll(io.LimitReader(r.Body, loginBodyMax))
+	raw, err := io.ReadAll(io.LimitReader(r.Body, loginBodyMax+1))
+	if len(raw) > loginBodyMax {
+		return "", errLoginTooLarge
+	}
 	r.Body = struct {
 		io.Reader
 		io.Closer
@@ -106,18 +117,29 @@ func loginAccountKey(r *http.Request) (string, error) {
 	var body struct {
 		Email string `json:"email"`
 	}
-	if readable := err == nil && json.Unmarshal(raw, &body) == nil; !readable {
+	if readable := err == nil && json.NewDecoder(bytes.NewReader(raw)).Decode(&body) == nil; !readable {
 		return ip, nil
 	}
 	sum := sha256.Sum256([]byte(strings.ToLower(strings.TrimSpace(body.Email))))
 	return ip + "|" + hex.EncodeToString(sum[:]), nil
 }
 
+// loginKeyError renders key failures.
+// The only one the key raises is an oversized body; the counter never fails.
+func loginKeyError(w http.ResponseWriter, _ *http.Request, err error) {
+	if errors.Is(err, errLoginTooLarge) {
+		httperr.Render(w, httperr.PayloadTooLarge(httpx.BodyTooLargeDetail))
+		return
+	}
+	httperr.Render(w, httperr.Internal("login rate limit failed"))
+}
+
 // loginLimit limits login calls.
 func loginLimit(perIP, perAccount int) func(http.Handler) http.Handler {
 	byIP := limitBy(perIP)
 	byAccount := httprate.LimitBy(perAccount, time.Minute, loginAccountKey,
-		httprate.WithLimitCounter(newMonotonicCounter(time.Now)))
+		httprate.WithLimitCounter(newMonotonicCounter(time.Now)),
+		httprate.WithErrorHandler(loginKeyError))
 	return func(next http.Handler) http.Handler {
 		return byIP(byAccount(next))
 	}
