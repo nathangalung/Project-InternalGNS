@@ -138,6 +138,7 @@ test.describe("purchase order detail", () => {
     await expect(page.locator("main")).toContainText(vendor.name)
     await page.getByRole("button", { name: "Edit produk 1" }).click()
     const modal = page.getByRole("dialog", { name: "Edit Produk Quotation" })
+    await modal.getByLabel("Nama Vendor *").click()
     await modal.getByLabel("Nama Vendor *").fill(other.name)
     await page.getByRole("option", { name: new RegExp(other.name) }).click()
     // The pick brings the vendor's own harga beli, so no price prompt.
