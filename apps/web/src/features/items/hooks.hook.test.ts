@@ -8,9 +8,12 @@ import { invalidated, renderQueryHook, seed, settle, until } from "@/test/query"
 import * as api from "./api"
 import {
   useActiveVendorOptions,
+  useAddItemImages,
   useAddVendorToItem,
   useCreateItem,
+  useDeleteItemImage,
   useItem,
+  useItemGallery,
   useItemImage,
   useItemImageDownloadUrl,
   useItemPriceHistory,
@@ -18,9 +21,8 @@ import {
   useItems,
   useItemVendors,
   useLineRecommendation,
-  useRemoveItemImage,
+  useSetItemCover,
   useUpdateItem,
-  useUploadItemImage,
 } from "./hooks"
 
 vi.mock("./api")
@@ -167,72 +169,154 @@ describe("item writes", () => {
   })
 })
 
-describe("useUploadItemImage", () => {
-  const img = (size = 10) => new File([new Uint8Array(size)], "foto.webp", { type: "image/webp" })
+describe("useItemGallery", () => {
+  it("waits for an id", async () => {
+    const { result } = renderQueryHook(() => useItemGallery(undefined))
+    await until(() => expect(result.current.fetchStatus).toBe("idle"))
+    expect(m.listImages).not.toHaveBeenCalled()
+  })
 
-  it("uploads, saves the key, and refreshes item views", async () => {
-    m.presignImageUpload.mockResolvedValue({
+  it("lists the product's photos", async () => {
+    m.listImages.mockResolvedValue({ max: 8, images: [] })
+    const { result } = renderQueryHook(() => useItemGallery(9))
+    await until(() => expect(result.current.data).toEqual({ max: 8, images: [] }))
+    expect(m.listImages).toHaveBeenCalledWith(9)
+  })
+})
+
+describe("useAddItemImages", () => {
+  const img = (name: string, size = 10) =>
+    new File([new Uint8Array(size)], name, { type: "image/webp" })
+  const photos = queryKeys.items.images(9)
+
+  it("adds each picked photo in turn and refreshes every photo view", async () => {
+    m.presignImageUpload.mockImplementation(async (_id, name) => ({
       uploadUrl: "/u",
-      objectKey: "items/9/f.webp",
+      objectKey: `items/9/${name}`,
       expiresAt: 1,
-    })
-    m.updateImage.mockResolvedValue(undefined)
-    const { qc, result } = renderQueryHook(() => useUploadItemImage())
-    seed(qc, [detail, list])
-    await settle(() => result.current.mutateAsync({ id: 9, file: img() }))
-    expect(m.presignImageUpload).toHaveBeenCalledWith(9, "foto.webp")
-    expect(m.updateImage).toHaveBeenCalledWith(9, "items/9/f.webp")
-    expect(invalidated(qc, [detail, list])).toEqual([detail, list])
+    }))
+    m.addImage.mockResolvedValue(undefined)
+    const { qc, result } = renderQueryHook(() => useAddItemImages())
+    seed(qc, [detail, list, photos])
+    await settle(() => result.current.mutateAsync({ id: 9, files: [img("a.webp"), img("b.webp")] }))
+    expect(m.addImage.mock.calls).toEqual([
+      [9, "items/9/a.webp"],
+      [9, "items/9/b.webp"],
+    ])
+    expect(invalidated(qc, [detail, list, photos])).toEqual([detail, list, photos])
   })
 
   it("uploads the shrunk copy, so a large photo that shrinks under the cap passes", async () => {
-    const big = img(8 * 1024 * 1024)
-    const small = new File([new Uint8Array(10)], "foto-kecil.webp", { type: "image/webp" })
+    const big = img("foto.webp", 8 * 1024 * 1024)
+    const small = img("foto-kecil.webp")
     vi.mocked(shrinkImage).mockResolvedValueOnce(small)
     m.presignImageUpload.mockResolvedValue({
       uploadUrl: "/u",
       objectKey: "items/9/k.webp",
       expiresAt: 1,
     })
-    m.updateImage.mockResolvedValue(undefined)
-    const { result } = renderQueryHook(() => useUploadItemImage())
-    await settle(() => result.current.mutateAsync({ id: 9, file: big }))
+    m.addImage.mockResolvedValue(undefined)
+    const { result } = renderQueryHook(() => useAddItemImages())
+    await settle(() => result.current.mutateAsync({ id: 9, files: [big] }))
     expect(shrinkImage).toHaveBeenCalledWith(big)
     expect(m.presignImageUpload).toHaveBeenCalledWith(9, "foto-kecil.webp")
     expect(vi.mocked(uploadWithFreshKey).mock.calls[0][1]).toBe(small)
   })
 
   // MD-13: refused files skip storage.
-  it("refuses an oversize image before asking for an upload URL", async () => {
-    const { result } = renderQueryHook(() => useUploadItemImage())
-    await settle(() => result.current.mutateAsync({ id: 9, file: img(5 * 1024 * 1024 + 1) }))
-    expect(m.presignImageUpload).not.toHaveBeenCalled()
+  it("stops at an oversize photo, keeping the ones already added", async () => {
+    m.presignImageUpload.mockResolvedValue({
+      uploadUrl: "/u",
+      objectKey: "items/9/a.webp",
+      expiresAt: 1,
+    })
+    m.addImage.mockResolvedValue(undefined)
+    const { qc, result } = renderQueryHook(() => useAddItemImages())
+    seed(qc, [photos])
+    await settle(() =>
+      result.current.mutateAsync({
+        id: 9,
+        files: [img("a.webp"), img("besar.webp", 5 * 1024 * 1024 + 1), img("c.webp")],
+      }),
+    )
+    expect(m.addImage).toHaveBeenCalledTimes(1)
     expect(toast.error).toHaveBeenCalledWith("Ukuran foto produk melebihi 5 MB.")
+    expect(invalidated(qc, [photos])).toEqual([photos])
   })
 
-  it("falls back to Indonesian copy when the upload fails without a reason", async () => {
+  it("shows the server's refusal, else Indonesian copy", async () => {
+    m.presignImageUpload.mockResolvedValue({
+      uploadUrl: "/u",
+      objectKey: "items/9/a.webp",
+      expiresAt: 1,
+    })
+    m.addImage.mockRejectedValueOnce(new Error("Maksimal 8 foto per produk."))
+    const { result } = renderQueryHook(() => useAddItemImages())
+    await settle(() => result.current.mutateAsync({ id: 9, files: [img("a.webp")] }))
+    expect(toast.error).toHaveBeenCalledWith("Maksimal 8 foto per produk.")
     m.presignImageUpload.mockRejectedValue(new Error(""))
-    const { result } = renderQueryHook(() => useUploadItemImage())
-    await settle(() => result.current.mutateAsync({ id: 9, file: img() }))
-    expect(toast.error).toHaveBeenCalledWith("Gagal mengunggah foto produk.")
+    await settle(() => result.current.mutateAsync({ id: 9, files: [img("a.webp")] }))
+    expect(toast.error).toHaveBeenLastCalledWith("Gagal mengunggah foto produk.")
   })
 })
 
-describe("useRemoveItemImage", () => {
-  it("removes the image and refreshes item views", async () => {
-    m.removeImage.mockResolvedValue(undefined)
-    const { qc, result } = renderQueryHook(() => useRemoveItemImage())
-    seed(qc, [detail, list])
-    await settle(() => result.current.mutateAsync(9))
-    expect(m.removeImage).toHaveBeenCalledWith(9)
-    expect(invalidated(qc, [detail, list])).toEqual([detail, list])
+describe("photo changes", () => {
+  const photos = queryKeys.items.images(9)
+
+  it.each<
+    [
+      string,
+      () => { mutateAsync: (v: { id: number; imageId: number }) => Promise<unknown> },
+      () => unknown,
+    ]
+  >([
+    ["delete", useDeleteItemImage, () => m.deleteImage],
+    ["cover", useSetItemCover, () => m.setCoverImage],
+  ])("%s calls the api and refreshes every photo view", async (_name, hook, fn) => {
+    vi.mocked(fn() as () => Promise<void>).mockResolvedValue(undefined)
+    const { qc, result } = renderQueryHook(hook)
+    seed(qc, [detail, list, photos])
+    await settle(() => result.current.mutateAsync({ id: 9, imageId: 4 }))
+    expect(fn()).toHaveBeenCalledWith(9, 4)
+    expect(invalidated(qc, [detail, list, photos])).toEqual([detail, list, photos])
   })
 
-  it("shows Indonesian copy when the removal fails without a reason", async () => {
-    m.removeImage.mockRejectedValue(new Error(""))
-    const { result } = renderQueryHook(() => useRemoveItemImage())
-    await settle(() => result.current.mutateAsync(9))
-    expect(toast.error).toHaveBeenCalledWith("Gagal menghapus foto produk.")
+  it.each<
+    [
+      string,
+      () => { mutateAsync: (v: { id: number; imageId: number }) => Promise<unknown> },
+      () => unknown,
+      string,
+    ]
+  >([
+    ["delete", useDeleteItemImage, () => m.deleteImage, "Gagal menghapus foto produk."],
+    ["cover", useSetItemCover, () => m.setCoverImage, "Gagal mengubah foto utama."],
+  ])("%s falls back to Indonesian copy", async (_name, hook, fn, msg) => {
+    vi.mocked(fn() as () => Promise<void>).mockRejectedValue(new Error(""))
+    const { result } = renderQueryHook(hook)
+    await settle(() => result.current.mutateAsync({ id: 9, imageId: 4 }))
+    expect(toast.error).toHaveBeenCalledWith(msg)
+  })
+
+  it("a delete stays pending until the photo views have refetched", async () => {
+    m.deleteImage.mockResolvedValue(undefined)
+    const { qc, result } = renderQueryHook(() => useDeleteItemImage())
+    let refetched: () => void = () => {}
+    vi.spyOn(qc, "invalidateQueries").mockReturnValue(
+      new Promise<void>((r) => {
+        refetched = r
+      }),
+    )
+    let settled = false
+    const run = result.current.mutateAsync({ id: 9, imageId: 4 }).then(() => {
+      settled = true
+    })
+    await until(() => expect(qc.invalidateQueries).toHaveBeenCalledTimes(1))
+    await new Promise((r) => setTimeout(r, 20))
+    expect(settled).toBe(false)
+    refetched()
+    await run
+    expect(settled).toBe(true)
   })
 })
 
@@ -248,29 +332,6 @@ describe("useItemImage", () => {
     const { result } = renderQueryHook(() => useItemImage(9, "items/9/a.webp"))
     await until(() => expect(result.current).toBe("blob:/storage/object?k=1"))
     expect(m.presignImageDownload).toHaveBeenCalledWith(9)
-  })
-})
-
-describe("useRemoveItemImage settling", () => {
-  it("stays pending until the item views have refetched", async () => {
-    m.removeImage.mockResolvedValue(undefined)
-    const { qc, result } = renderQueryHook(() => useRemoveItemImage())
-    let refetched: () => void = () => {}
-    vi.spyOn(qc, "invalidateQueries").mockReturnValue(
-      new Promise<void>((r) => {
-        refetched = r
-      }),
-    )
-    let settled = false
-    const run = result.current.mutateAsync(9).then(() => {
-      settled = true
-    })
-    await until(() => expect(qc.invalidateQueries).toHaveBeenCalledTimes(2))
-    await new Promise((r) => setTimeout(r, 20))
-    expect(settled).toBe(false)
-    refetched()
-    await run
-    expect(settled).toBe(true)
   })
 })
 

@@ -5,10 +5,8 @@ import { expect, test } from "./support/seed"
 
 // Product photo flows.
 //
-// Add, view, replace and remove a catalog photo, its list thumbnail, and
-// the read-only finance view.
-
-type Item = { imageObjectKey?: string }
+// Add several photos, swipe the gallery, pick the cover, remove photos, the
+// list thumbnail, the maximum, and the read-only finance view.
 
 // CRC32 for PNG chunks.
 function crc32(buf: Buffer): number {
@@ -46,10 +44,6 @@ function png(width: number, height: number, rgb: [number, number, number]): Buff
   ])
 }
 
-// Stored key from the API.
-const storedKey = (id: number) => async () =>
-  (await api<Item>("GET", `/items/${id}`)).imageObjectKey ?? ""
-
 // Image decoded with real pixels.
 async function expectDecoded(img: Locator) {
   await expect
@@ -57,58 +51,93 @@ async function expectDecoded(img: Locator) {
     .toBeGreaterThan(0)
 }
 
-test("a product photo is added, viewed, replaced and removed", async ({ page, seed }) => {
+type Gallery = { max: number; images: { objectKey: string; isCover: boolean }[] }
+
+// Stored photos, cover first.
+const photos = (id: number) => async () =>
+  (await api<Gallery>("GET", `/items/${id}/images`)).images.map((p) => [
+    p.objectKey.split(".").pop(),
+    p.isCover,
+  ])
+
+const red = { name: "kamera.png", mimeType: "image/png", buffer: png(2000, 1500, [200, 30, 30]) }
+const blue = { name: "kecil.png", mimeType: "image/png", buffer: png(120, 90, [30, 30, 200]) }
+
+test("product photos are added, swiped, made the cover and removed", async ({ page, seed }) => {
   const item = await seed.item({ label: "Produk Foto" })
   await page.goto(`/products/${item.id}`)
-  const add = page.getByRole("button", { name: "Tambah Foto" })
-  await expect(add).toBeVisible()
-  await expect(page.getByRole("button", { name: "Hapus Foto" })).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Tambah Foto (0/8)" })).toBeEnabled()
+  await expect(page.getByRole("heading", { name: "Foto Produk" })).toHaveCount(0)
 
-  // A large photo is shrunk to WebP before upload.
-  await page.locator('input[type="file"]').setInputFiles({
-    name: "kamera.png",
-    mimeType: "image/png",
-    buffer: png(2000, 1500, [200, 30, 30]),
-  })
-  const view = page.getByRole("button", { name: `Lihat foto ${item.name}` })
-  await expect(view).toBeVisible()
-  await expect(page.getByRole("button", { name: "Ganti Foto" })).toBeEnabled()
-  await expect.poll(storedKey(item.id)).toMatch(new RegExp(`^items/${item.id}/.+\\.webp$`))
+  // Two at once: the large one is shrunk to WebP, the small one kept.
+  await page.locator('input[type="file"]').setInputFiles([red, blue])
+  await expect(page.getByRole("button", { name: "Tambah Foto (2/8)" })).toBeEnabled()
+  await expect.poll(photos(item.id)).toEqual([
+    ["webp", true],
+    ["png", false],
+  ])
+  const gallery = page.getByRole("region", { name: `Foto ${item.name}` })
+  await expect(page.getByText("1 / 2")).toBeVisible()
+  await expectDecoded(gallery.getByRole("img", { name: `Foto 1 dari 2 ${item.name}` }))
 
-  // The stored copy survives a reload and opens full size.
+  // Swipe on: arrow, dot and keyboard all move the strip.
+  await gallery.getByRole("button", { name: "Foto berikutnya" }).click()
+  await expect(page.getByText("2 / 2")).toBeVisible()
+  await expectDecoded(gallery.getByRole("img", { name: `Foto 2 dari 2 ${item.name}` }))
+  await page.getByRole("button", { name: "Foto 1", exact: true }).click()
+  await expect(page.getByText("1 / 2")).toBeVisible()
+  await page.getByRole("button", { name: "Foto 2", exact: true }).press("ArrowLeft")
+  await expect(page.getByText("1 / 2")).toBeVisible()
+  await gallery.getByRole("button", { name: "Foto berikutnya" }).click()
+
+  // The second photo becomes the cover, and leads after a reload.
+  await page.getByRole("button", { name: "Jadikan Foto Utama" }).click()
+  await expect.poll(photos(item.id)).toEqual([
+    ["png", true],
+    ["webp", false],
+  ])
   await page.reload()
-  await expectDecoded(view.locator("img"))
-  await view.click()
+  const avatar = page.getByRole("button", { name: `Lihat foto ${item.name}` })
+  await expectDecoded(avatar.locator("img"))
+  await expect(page.getByText("Foto Utama", { exact: true })).toBeVisible()
+
+  // A slide opens full size.
+  await gallery.getByRole("button", { name: "Lihat foto 1 dari 2 ukuran penuh" }).click()
   const preview = page.getByRole("dialog", { name: item.name })
   await expectDecoded(preview.getByRole("img", { name: `Foto ${item.name}` }))
   await page.keyboard.press("Escape")
   await expect(preview).toBeHidden()
 
-  // A small photo is kept as it is.
-  const first = await storedKey(item.id)()
-  await page.locator('input[type="file"]').setInputFiles({
-    name: "kecil.png",
-    mimeType: "image/png",
-    buffer: png(120, 90, [30, 30, 200]),
-  })
-  await expect.poll(storedKey(item.id)).toMatch(/\.png$/)
-  expect(await storedKey(item.id)()).not.toBe(first)
-
-  // The catalog list shows the thumbnail.
+  // The catalog list shows the cover.
   await page.goto("/products")
   await page.getByPlaceholder("Cari kode IMPA, nama, kategori produk...").fill(item.name)
-  const row = page.getByRole("row", { name: new RegExp(item.name) })
-  await expectDecoded(row.locator("img"))
+  await expectDecoded(page.getByRole("row", { name: new RegExp(item.name) }).locator("img"))
 
-  // Removal asks first, then the initials return.
+  // Removing the cover passes it on; removing the last clears the gallery.
   await page.goto(`/products/${item.id}`)
-  await page.getByRole("button", { name: "Hapus Foto" }).click()
-  const confirm = page.getByRole("dialog", { name: "Hapus foto produk?" })
-  await confirm.getByRole("button", { name: "Hapus Foto" }).click()
-  await expect(confirm).toBeHidden()
-  await expect(page.getByRole("button", { name: "Tambah Foto" })).toBeFocused()
+  for (const left of [1, 0]) {
+    await page.getByRole("button", { name: "Hapus Foto" }).click()
+    const confirm = page.getByRole("dialog", { name: "Hapus foto produk?" })
+    await confirm.getByRole("button", { name: "Hapus Foto" }).click()
+    await expect(confirm).toBeHidden()
+    await expect.poll(async () => (await photos(item.id)()).length).toBe(left)
+  }
+  expect(await photos(item.id)()).toEqual([])
+  await expect(page.getByRole("heading", { name: "Foto Produk" })).toHaveCount(0)
   await expect(page.getByRole("button", { name: `Lihat foto ${item.name}` })).toHaveCount(0)
-  await expect.poll(storedKey(item.id)).toBe("")
+  await expect(page.getByRole("button", { name: "Tambah Foto (0/8)" })).toBeEnabled()
+})
+
+test("picks past the maximum are left out", async ({ page, seed }) => {
+  const item = await seed.item({ label: "Produk Foto Penuh" })
+  await page.goto(`/products/${item.id}`)
+  const nine = Array.from({ length: 9 }, (_, i) => ({ ...blue, name: `foto-${i}.png` }))
+  await page.locator('input[type="file"]').setInputFiles(nine)
+  await expect(
+    page.getByText("Maksimal 8 foto per produk; 1 foto tidak ditambahkan."),
+  ).toBeVisible()
+  await expect(page.getByRole("button", { name: "Tambah Foto (8/8)" })).toBeDisabled()
+  expect((await photos(item.id)()).length).toBe(8)
 })
 
 test("a file that is not a photo is refused before upload", async ({ page, seed }) => {
@@ -121,7 +150,7 @@ test("a file that is not a photo is refused before upload", async ({ page, seed 
   })
   await expect(page.getByText(/Format foto produk tidak didukung/)).toBeVisible()
   await expect(page.getByRole("button", { name: "Tambah Foto" })).toBeEnabled()
-  expect(await storedKey(item.id)()).toBe("")
+  expect(await photos(item.id)()).toEqual([])
 })
 
 test.describe("as finance", () => {
@@ -131,7 +160,7 @@ test.describe("as finance", () => {
     const item = await seed.item()
     await page.goto(`/products/${item.id}`)
     await expect(page.getByRole("heading", { name: item.name, level: 2 })).toBeVisible()
-    for (const name of ["Tambah Foto", "Ganti Foto", "Hapus Foto"]) {
+    for (const name of ["Tambah Foto", "Jadikan Foto Utama", "Hapus Foto"]) {
       await expect(page.getByRole("button", { name })).toHaveCount(0)
     }
     await expect(page.locator('input[type="file"]')).toHaveCount(0)

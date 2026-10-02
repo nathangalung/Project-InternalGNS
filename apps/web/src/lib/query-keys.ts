@@ -29,6 +29,7 @@ export const queryKeys = {
       ["items", "search-advanced", q, minScore ?? null, limit ?? null, isActive ?? null] as const,
     vendors: (id: number) => ["items", id, "vendors"] as const,
     priceHistory: (id: number, limit?: number) => ["items", id, "price-history", limit] as const,
+    images: (id: number) => ["items", id, "images"] as const,
   },
   vendors: {
     all: ["vendors"] as const,

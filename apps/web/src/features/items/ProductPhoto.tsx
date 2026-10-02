@@ -1,9 +1,11 @@
-import { type ReactNode, useEffect, useRef, useState } from "react"
+import { type ReactNode, useRef, useState } from "react"
 import Modal from "@/components/shared/Modal"
+import { filesToAdd } from "@/features/items/gallery"
 import { productInitials } from "@/features/items/helpers"
-import { useItemImage, useRemoveItemImage, useUploadItemImage } from "@/features/items/hooks"
+import { useAddItemImages, useItemGallery, useItemImage } from "@/features/items/hooks"
 import { logoBackground } from "@/lib/avatar"
-import { btnRemove, ui } from "@/lib/ui"
+import { toast } from "@/lib/toast"
+import { ui } from "@/lib/ui"
 
 type ProductPhotoProps = {
   product: { id: number; name: string; imageObjectKey?: string }
@@ -17,58 +19,28 @@ const PHOTO_ACCEPT = ".png,.jpg,.jpeg,.webp,.gif"
 
 const smallOutline = `${ui.btnOutline} px-3 py-1.5 text-xs`
 
-// Product photo with its actions.
+// Product cover with the add action.
 //
-// Anyone can open the photo full size. A catalog writer adds, replaces or
-// removes it; removal asks first. The picked file shows at once from a
-// local blob URL and stays until the next pick or a removal, so the photo
-// never flickers back to the old one while the server copy loads. A failed
-// upload drops the local copy again.
+// The cover (Foto Utama) is the product's avatar; anyone can open it full
+// size. A catalog writer adds photos to the gallery below, several at once,
+// up to its maximum; picks past the maximum are left out with a notice.
 export default function ProductPhoto({ product, canWrite, children }: ProductPhotoProps) {
-  const stored = useItemImage(product.id, product.imageObjectKey)
-  const upload = useUploadItemImage()
-  const remove = useRemoveItemImage()
+  const photo = useItemImage(product.id, product.imageObjectKey)
+  const { data: gallery } = useItemGallery(canWrite ? product.id : undefined)
+  const add = useAddItemImages()
   const inputRef = useRef<HTMLInputElement>(null)
-  const pickRef = useRef<HTMLButtonElement>(null)
-  const [local, setLocal] = useState("")
   const [viewing, setViewing] = useState(false)
-  const [confirming, setConfirming] = useState(false)
-  const [refocus, setRefocus] = useState(false)
 
-  // Revoke a replaced local copy.
-  useEffect(() => {
-    if (!local) return
-    return () => URL.revokeObjectURL(local)
-  }, [local])
+  const have = gallery?.images.length ?? 0
+  const max = gallery?.max ?? 0
+  const full = gallery !== undefined && have >= max
 
-  // Focus survives a removal.
-  // The Hapus Foto button that opened the dialog is gone once the photo is,
-  // so focus moves to the add button after the dialog has let go.
-  useEffect(() => {
-    if (!refocus || confirming) return
-    pickRef.current?.focus()
-    setRefocus(false)
-  }, [refocus, confirming])
-
-  const photo = local || (product.imageObjectKey ? stored : "")
-  const hasPhoto = Boolean(product.imageObjectKey) || Boolean(local)
-  const busy = upload.isPending || remove.isPending
-
-  function pick(file: File | undefined) {
-    if (!file) return
-    const preview = file.type.startsWith("image/") ? URL.createObjectURL(file) : ""
-    setLocal(preview)
-    upload.mutate({ id: product.id, file }, { onError: () => setLocal("") })
-  }
-
-  function confirmRemove() {
-    remove.mutate(product.id, {
-      onSuccess: () => {
-        setLocal("")
-        setConfirming(false)
-        setRefocus(true)
-      },
-    })
+  function pick(files: File[]) {
+    if (files.length === 0) return
+    const { take, skipped } = filesToAdd(files, have, max)
+    if (skipped > 0)
+      toast.info(`Maksimal ${max} foto per produk; ${skipped} foto tidak ditambahkan.`)
+    if (take.length > 0) add.mutate({ id: product.id, files: take })
   }
 
   const frame =
@@ -87,8 +59,7 @@ export default function ProductPhoto({ product, canWrite, children }: ProductPho
           type="button"
           onClick={() => setViewing(true)}
           aria-label={`Lihat foto ${product.name}`}
-          aria-busy={upload.isPending}
-          className={`${frame} p-0 ${upload.isPending ? "opacity-70" : ""} ${ui.focusRing}`}
+          className={`${frame} p-0 ${ui.focusRing}`}
           style={frameStyle}
         >
           {face}
@@ -107,17 +78,18 @@ export default function ProductPhoto({ product, canWrite, children }: ProductPho
               ref={inputRef}
               type="file"
               accept={PHOTO_ACCEPT}
+              multiple
               className="hidden"
               onChange={(e) => {
-                pick(e.target.files?.[0])
+                pick([...(e.target.files ?? [])])
                 e.target.value = ""
               }}
             />
             <button
-              ref={pickRef}
               type="button"
               className={smallOutline}
-              disabled={busy}
+              disabled={add.isPending || full || gallery === undefined}
+              aria-busy={add.isPending}
               onClick={() => inputRef.current?.click()}
             >
               <svg
@@ -134,18 +106,8 @@ export default function ProductPhoto({ product, canWrite, children }: ProductPho
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                 <circle cx="12" cy="13" r="4" />
               </svg>
-              {upload.isPending ? "Mengunggah..." : hasPhoto ? "Ganti Foto" : "Tambah Foto"}
+              {add.isPending ? "Mengunggah..." : `Tambah Foto (${have}/${max})`}
             </button>
-            {hasPhoto && (
-              <button
-                type="button"
-                className={`${btnRemove} px-3 py-1.5 text-xs`}
-                disabled={busy}
-                onClick={() => setConfirming(true)}
-              >
-                Hapus Foto
-              </button>
-            )}
           </div>
         )}
       </div>
@@ -157,33 +119,6 @@ export default function ProductPhoto({ product, canWrite, children }: ProductPho
             alt={`Foto ${product.name}`}
             className="mx-auto mb-4 max-h-[70vh] w-auto max-w-full rounded-md object-contain"
           />
-        </Modal>
-      )}
-
-      {confirming && (
-        <Modal
-          title="Hapus foto produk?"
-          onClose={() => setConfirming(false)}
-          footer={
-            <>
-              <button type="button" className={ui.modalCancel} onClick={() => setConfirming(false)}>
-                Batal
-              </button>
-              <button
-                type="button"
-                className={ui.modalSubmit}
-                disabled={remove.isPending}
-                onClick={confirmRemove}
-              >
-                {remove.isPending ? "Menghapus..." : "Hapus Foto"}
-              </button>
-            </>
-          }
-        >
-          <p className="m-0 pb-4 text-sm text-[#4A4455]">
-            Foto {product.name} akan dihapus dari katalog. Produk kembali ditampilkan dengan
-            inisialnya.
-          </p>
         </Modal>
       )}
     </>
