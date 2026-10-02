@@ -92,11 +92,11 @@ export type PoLineSource = {
   costPrice?: string
   isAvailable: boolean
   shipDestination?: string
+  vendorProductId?: number
 }
 
 // Wizard row with stored line.
 export type PoEditLine = ProductItem & {
-  quotationItemId?: number
   // Absent on a line added in the wizard
   source?: PoLineSource
   // Set once the line is edited
@@ -114,9 +114,9 @@ export function poLinesToEdit(
       const sell = toNum(it.sellingPrice)
       return {
         id: it.id,
-        quotationItemId: it.quotationItemId,
         itemId: it.offeredItemId,
         vendorId: it.vendorId,
+        vendorProductId: it.vendorProductId,
         nama: it.itemName,
         kodeImpa: it.itemCode ?? "",
         requestedNama: it.itemName,
@@ -138,6 +138,7 @@ export function poLinesToEdit(
           costPrice: it.costPrice,
           isAvailable: it.isAvailable,
           shipDestination: it.shipDestination,
+          vendorProductId: it.vendorProductId,
         },
       }
     })
@@ -152,14 +153,16 @@ function unitIdOf(line: PoEditLine, unitIdByCode: Map<string, number>): number |
 // Save payload line.
 //
 // An untouched line goes back exactly as stored, so a quantity edit
-// elsewhere cannot reset its availability, destination, unit or unknown
-// cost. An edited line keeps the stored fields the wizard cannot show.
+// elsewhere cannot reset its availability, destination, unit, vendor or
+// unknown cost. An edited line keeps the stored fields the wizard cannot
+// show, and leaves its quotation line once the product changes. A vendor
+// picked without a link travels as vendorId and the server links it.
 export function lineToInput(line: PoEditLine, unitIdByCode: Map<string, number>): PoItemInput {
   const s = line.source
   if (s && !line.touched) return { ...s }
   const costUnknown = s !== undefined && s.costPrice === undefined && line.hargaBeli === 0
   return {
-    quotationItemId: s?.quotationItemId ?? line.quotationItemId,
+    quotationItemId: s && line.itemId === s.offeredItemId ? s.quotationItemId : undefined,
     offeredItemId: line.itemId,
     itemName: line.nama || line.requestedNama,
     itemCode: line.kodeImpa || undefined,
@@ -169,6 +172,8 @@ export function lineToInput(line: PoEditLine, unitIdByCode: Map<string, number>)
     costPrice: costUnknown ? undefined : String(line.hargaBeli),
     isAvailable: s?.isAvailable,
     shipDestination: s?.shipDestination,
+    vendorProductId: line.vendorProductId,
+    vendorId: line.vendorProductId === undefined ? line.vendorId : undefined,
   }
 }
 
