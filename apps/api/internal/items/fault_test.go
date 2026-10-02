@@ -26,6 +26,7 @@ func TestHandler_DBFailureIsGenericProblem(t *testing.T) {
 		{"image upload url", http.MethodGet, "/items/1/image/upload-url?fileName=a.jpg", nil},
 		{"image download url", http.MethodGet, "/items/1/image/download-url", nil},
 		{"image add", http.MethodPost, "/items/1/images", items.UpdateImageRequest{ObjectKey: "items/1/a.jpg"}},
+		{"photo list", http.MethodGet, "/items/1/images", nil},
 		// The pool cannot begin, so the import refuses to run unguarded.
 		{"match rows without tx", http.MethodPost, "/items/match-rows",
 			items.MatchRowsRequest{Rows: []items.MatchRowInput{{Name: "Baut"}}}},
@@ -54,6 +55,7 @@ func TestHandler_SecondQueryFailure(t *testing.T) {
 		{"price history after parent", http.MethodGet, "/items/" + id + "/price-history", nil},
 		{"image add after parent", http.MethodPost, "/items/" + id + "/images",
 			items.UpdateImageRequest{ObjectKey: "items/" + id + "/a.jpg"}},
+		{"photo list after parent", http.MethodGet, "/items/" + id + "/images", nil},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
