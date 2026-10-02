@@ -24,14 +24,23 @@ func NewRepo(exec db.Executor, store queries.Store) *Repo {
 var ErrNotFound = errors.New("not found")
 
 // totalPurchaseExpr sums accepted costs.
-// The accepted-quotation cost sum is per vendor and skips deals whose PO
-// was cancelled, matching total_purchase in vendors.sql.
-const totalPurchaseExpr = "COALESCE((SELECT SUM(qi.total_cost) FROM quotation_items qi" +
+// A deal counts at its PO line costs, since PO lines can be edited after
+// acceptance and the dashboard books them, each line reaching its vendor
+// through the quotation line it came from; a deal with no PO yet counts at
+// its quotation cost, and a cancelled PO drops it. Matches total_purchase in
+// vendors.sql.
+const totalPurchaseExpr = "COALESCE((SELECT SUM(c.cost) FROM (" +
+	"SELECT poi.total_cost AS cost FROM purchase_order_items poi" +
+	" JOIN purchase_orders po ON po.id = poi.po_id" +
+	" JOIN quotation_items qi ON qi.id = poi.quotation_item_id" +
+	" JOIN vendor_products vp ON vp.id = qi.vendor_product_id" +
+	" WHERE vp.vendor_id = v.id AND po.status <> 'CANCELLED'" +
+	" UNION ALL" +
+	" SELECT qi.total_cost FROM quotation_items qi" +
 	" JOIN vendor_products vp ON vp.id = qi.vendor_product_id" +
 	" JOIN quotations q ON q.id = qi.quotation_id" +
 	" WHERE vp.vendor_id = v.id AND q.status = 'accepted'" +
-	" AND NOT EXISTS (SELECT 1 FROM purchase_orders po" +
-	" WHERE po.quotation_id = q.id AND po.status = 'CANCELLED')), 0)"
+	" AND NOT EXISTS (SELECT 1 FROM purchase_orders po WHERE po.quotation_id = q.id)) c), 0)"
 
 // sortable lists vendor sort keys.
 var sortable = listq.Whitelist{
