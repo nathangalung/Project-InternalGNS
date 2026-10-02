@@ -167,6 +167,20 @@ func TestChangeStatus_SendNeedsCompleteLines(t *testing.T) {
 		})
 	}
 
+	// An imported line may arrive without its unit; only live AddLines
+	// stores one.
+	t.Run("no unit", func(t *testing.T) {
+		ctx, repo, _ := newRepo(t)
+		id := createWith(t, ctx, repo, offered())
+		_, err := repo.AddLines(ctx, id,
+			[]quotations.CreateItem{missing(func(l *quotations.CreateItem) { l.UnitID = 0 })}, seedUserID)
+		require.NoError(t, err)
+		err = repo.ChangeStatus(ctx, id, quotations.StatusSent, nil, seedUserID)
+		assert.Equal(t,
+			"1 baris produk belum lengkap. Isi produk, satuan, vendor, harga beli, dan harga jual sebelum quotation dikirim.",
+			detailError(t, err))
+	})
+
 	t.Run("a no-offer line does not block", func(t *testing.T) {
 		ctx, repo, _ := newRepo(t)
 		id := createWith(t, ctx, repo, offered(), noOffer())
