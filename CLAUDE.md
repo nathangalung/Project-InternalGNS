@@ -235,7 +235,11 @@ document's status history table.
   CANCELLED are terminal, and the file is locked in both. A PO keeps at least
   one product line and every product line priced above zero: the line edit
   (`fn_update_po_items`) refuses otherwise, and so do ON_PROGRESS and
-  DELIVERED, so no Rp 0 invoice is issued. A qty 0 line stays allowed.
+  DELIVERED, so no Rp 0 invoice is issued. A qty 0 line stays allowed, but
+  ON_PROGRESS and DELIVERED need one product line with a quantity. Both
+  moves also pass the completeness gate (client, vendor and shipping-address
+  data), a 422 `po_incomplete`; delivery runs it again, since ON_PROGRESS
+  edits and client edits can reopen a gap.
 - Invoice: draft, sent, paid, cancelled; overdue is stored only on legacy
   rows. Draft goes to sent; sent or overdue to paid, which stamps `paid_at`
   and takes an optional proof stored under `invoices/<id>/payment/`. Draft,

@@ -13,7 +13,7 @@ import (
 // flight. The server owns it now, and answers in one round trip.
 
 // ClientCompleteness is the client gate.
-// It is the client side of the ON_PROGRESS gate.
+// It is the client side of the ON_PROGRESS and DELIVERED gate.
 type ClientCompleteness struct {
 	ID           int64   `db:"id"`
 	Name         string  `db:"name"`

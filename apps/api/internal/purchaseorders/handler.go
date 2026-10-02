@@ -330,7 +330,7 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"note": "Alasan pembatalan wajib diisi."}))
 		return
 	}
-	if !h.allowOnProgress(w, r, id, req.Status) {
+	if !h.allowWork(w, r, id, req.Status) {
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())
@@ -400,11 +400,20 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, UpdatedResponse{ID: id, RowVersion: newVersion})
 }
 
-// allowOnProgress requires complete master data.
+// gatedMove names the gated moves.
+// Starting work and delivering both need complete master data: edits in
+// ON_PROGRESS and client edits can reopen a gap after the promotion passed.
+// The database refuses every other move into these states.
+func gatedMove(from, to Status) bool {
+	return (from == StatusUploaded && to == StatusOnProgress) ||
+		(from == StatusOnProgress && to == StatusDelivered)
+}
+
+// allowWork requires complete master data.
 // It reports whether the caller may continue; it has already written the
 // response when it returns false.
-func (h *Handler) allowOnProgress(w http.ResponseWriter, r *http.Request, id int64, target Status) bool {
-	if target != StatusOnProgress {
+func (h *Handler) allowWork(w http.ResponseWriter, r *http.Request, id int64, target Status) bool {
+	if target != StatusOnProgress && target != StatusDelivered {
 		return true
 	}
 	po, err := h.repo.GetByID(r.Context(), id)
@@ -416,8 +425,7 @@ func (h *Handler) allowOnProgress(w http.ResponseWriter, r *http.Request, id int
 		httperr.RenderDBErr(w, err)
 		return false
 	}
-	// Only the promotion from UPLOADED is gated; the DB refuses the rest.
-	if po.Status != StatusUploaded {
+	if !gatedMove(po.Status, target) {
 		return true
 	}
 	issues, err := h.repo.Completeness(r.Context(), id)
