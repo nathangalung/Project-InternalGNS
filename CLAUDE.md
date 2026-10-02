@@ -321,7 +321,9 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
   and client pages: the five newest quotations that reached the client (every
   status but draft and cancelled) from `GET /items/{id}/quotations`,
   `/vendors/{id}/quotations` and `/clients/{id}/quotations`, with the
-  quotation status badge; each page passes only its own columns.
+  quotation status badge; each page passes only its own columns. A failed
+  load shows in the section (`throwOnError: false`), never on the route
+  error boundary, so the page and its unsaved form stay.
 
 Stored files (logos, product photos, attachments) come through the
 authenticated API proxy, and the enforced CSP allows images only from self,

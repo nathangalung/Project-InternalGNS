@@ -4,7 +4,14 @@ import { shrinkImage } from "@/lib/image-shrink"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
-import { invalidated, renderQueryHook, seed, settle, until } from "@/test/query"
+import {
+  invalidated,
+  renderQueryHook,
+  seed,
+  settle,
+  throwingQueryClient,
+  until,
+} from "@/test/query"
 import * as api from "./api"
 import {
   useActiveVendorOptions,
@@ -369,5 +376,12 @@ describe("useItemRecentQuotations", () => {
     await until(() => expect(result.current.data).toEqual([]))
     expect(m.listRecentQuotations).toHaveBeenCalledTimes(1)
     expect(m.listRecentQuotations).toHaveBeenCalledWith(9)
+  })
+
+  // The section shows its own error.
+  it("keeps a failure out of the route error boundary", async () => {
+    m.listRecentQuotations.mockRejectedValue(new Error("502"))
+    const { result } = renderQueryHook(() => useItemRecentQuotations(9), throwingQueryClient())
+    await until(() => expect(result.current.isError).toBe(true))
   })
 })

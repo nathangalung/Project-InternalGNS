@@ -13,6 +13,20 @@ export function testQueryClient(): QueryClient {
   })
 }
 
+// Client that throws like production.
+//
+// lib/query-client sends a failed query to the route error boundary; this
+// one throws every failure, so a hook that opts out is the only one that
+// renders its error.
+export function throwingQueryClient(): QueryClient {
+  return new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: Number.POSITIVE_INFINITY, throwOnError: true },
+      mutations: { retry: false },
+    },
+  })
+}
+
 // Hook inside a query provider.
 export function renderQueryHook<R>(hook: () => R, qc: QueryClient = testQueryClient()) {
   const Wrapper = ({ children }: { children: ReactNode }) => (

@@ -169,9 +169,13 @@ export function useClientLogoDownloadUrl(id: number | undefined, objectKey?: str
 }
 
 // The newest quotations, newest first.
+//
+// A secondary section: a failure shows in it, not on the route error
+// boundary, which would replace the page and its unsaved form.
 export function useClientRecentQuotations(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.clients.quotations(id) : queryKeys.clients.all,
     queryFn: id !== undefined && id > 0 ? () => clientsApi.listRecentQuotations(id) : skipToken,
+    throwOnError: false,
   })
 }

@@ -214,9 +214,13 @@ export function useItemImage(id: number, objectKey: string | undefined): string 
 }
 
 // The newest quotations, newest first.
+//
+// A secondary section: a failure shows in it, not on the route error
+// boundary, which would replace the page and its unsaved form.
 export function useItemRecentQuotations(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.items.quotations(id) : queryKeys.items.all,
     queryFn: id !== undefined && id > 0 ? () => itemsApi.listRecentQuotations(id) : skipToken,
+    throwOnError: false,
   })
 }

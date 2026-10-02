@@ -2,7 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ApiError } from "@/lib/api-client"
 import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
-import { invalidated, renderQueryHook, seed, settle, until } from "@/test/query"
+import {
+  invalidated,
+  renderQueryHook,
+  seed,
+  settle,
+  throwingQueryClient,
+  until,
+} from "@/test/query"
 import * as api from "./api"
 import {
   useCreateVendor,
@@ -152,5 +159,12 @@ describe("useVendorRecentQuotations", () => {
     await until(() => expect(result.current.data).toEqual([]))
     expect(m.listRecentQuotations).toHaveBeenCalledTimes(1)
     expect(m.listRecentQuotations).toHaveBeenCalledWith(4)
+  })
+
+  // The section shows its own error.
+  it("keeps a failure out of the route error boundary", async () => {
+    m.listRecentQuotations.mockRejectedValue(new Error("502"))
+    const { result } = renderQueryHook(() => useVendorRecentQuotations(4), throwingQueryClient())
+    await until(() => expect(result.current.isError).toBe(true))
   })
 })
