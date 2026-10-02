@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Image tag to push (e.g. v0.1.0)"
+        description: "Existing vX.Y.Z tag whose ci run passed, to rebuild (e.g. v0.4.0)"
         required: true
         type: string
 
@@ -34,10 +34,13 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  publish:
-    name: publish images
+  resolve:
+    name: resolve release
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
     # A ci run from a pull request, even one on a branch named v*, must not
     # publish: only a tag pushed to this repository does.
     if: >
@@ -46,6 +49,53 @@ jobs:
        github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.head_repository.full_name == github.repository &&
        startsWith(github.event.workflow_run.head_branch, 'v'))
+    outputs:
+      tag: ${{ steps.ref.outputs.tag }}
+      sha: ${{ steps.ref.outputs.sha }}
+    steps:
+      # A dispatch rebuilds a released tag.
+      # It must name an existing vX.Y.Z tag whose own ci push run succeeded,
+      # and publish checks out that tag's commit, never the dispatching
+      # branch's head, so no image carries a release tag over code CI did
+      # not pass.
+      - name: resolve tag and commit
+        id: ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_TAG: ${{ inputs.tag }}
+          RUN_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" != "workflow_dispatch" ]; then
+            tag=$RUN_BRANCH
+            sha=$RUN_SHA
+          else
+            tag=$DISPATCH_TAG
+            if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::tag '$tag' is not vX.Y.Z"
+              exit 1
+            fi
+            if ! sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/refs/tags/$tag" --jq .sha); then
+              echo "::error::tag $tag does not exist in $GITHUB_REPOSITORY"
+              exit 1
+            fi
+            passed=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$sha&event=push&status=success&per_page=100" \
+              --jq "[.workflow_runs[] | select(.head_branch == \"$tag\")] | length")
+            if [ "$passed" -eq 0 ]; then
+              echo "::error::no successful ci run for the $tag tag push at $sha"
+              exit 1
+            fi
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: publish images
+    needs: resolve
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -57,7 +107,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ needs.resolve.outputs.sha }}
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
@@ -71,17 +121,13 @@ jobs:
       - name: resolve tag
         id: tag
         env:
-          DISPATCH_TAG: ${{ inputs.tag }}
-          WORKFLOW_RUN_BRANCH: ${{ github.event.workflow_run.head_branch }}
-          EVENT_NAME: ${{ github.event_name }}
+          TAG: ${{ needs.resolve.outputs.tag }}
         run: |
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            echo "value=$DISPATCH_TAG" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=$WORKFLOW_RUN_BRANCH" >> "$GITHUB_OUTPUT"
-          fi
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          echo "short=$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
+          {
+            echo "value=$TAG"
+            echo "sha=$(git rev-parse HEAD)"
+            echo "short=$(git rev-parse --short=7 HEAD)"
+          } >> "$GITHUB_OUTPUT"
 
       # Checked-out SHA, not github.sha.
       # Under workflow_run github.sha is main's head, not the tag's commit.
