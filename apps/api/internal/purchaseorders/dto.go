@@ -46,6 +46,9 @@ type PurchaseOrder struct {
 	// Issued when work starts.
 	// Set at ON_PROGRESS; nil until then.
 	DeliveryNoteNumber *string `db:"delivery_note_number" json:"deliveryNoteNumber,omitempty"`
+	// Day the number issued, WIB.
+	// Nil before ON_PROGRESS and on legacy rows with no status history.
+	DeliveryNoteDate *time.Time `db:"delivery_note_date" json:"deliveryNoteDate,omitempty"`
 
 	// Moves the caller may offer.
 	// Each starts from Status.

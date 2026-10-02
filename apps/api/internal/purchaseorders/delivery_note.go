@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -45,6 +46,7 @@ type dnItem struct {
 type dnData struct {
 	DeliveryNoteNo string
 	PONo           string
+	PODate         string
 	CompanyName    string
 	CompanyAddress string
 	AttnName       string
@@ -125,13 +127,24 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, d
 	return dnData{
 		DeliveryNoteNo: pdfgen.LatexEscape(dnNo),
 		PONo:           pdfgen.LatexEscape(po.PoNumber),
+		PODate:         po.PoDate.In(tz.Jakarta()).Format("2 January 2006"),
 		CompanyName:    pdfgen.LatexEscape(po.CompanyName),
 		CompanyAddress: pdfgen.LatexEscape(pdfgen.StrDeref(client.Address)),
 		AttnName:       pdfgen.LatexEscape(attn),
 		VesselName:     pdfgen.LatexEscape(vessel),
-		DateLine:       pdfgen.JakartaDateLine(po.PoDate.In(tz.Jakarta())),
+		DateLine:       pdfgen.JakartaDateLine(deliveryNoteDate(po).In(tz.Jakarta())),
 		Items:          deliveryNoteItems(items),
 	}
+}
+
+// deliveryNoteDate dates the note.
+// The note is dated the day its number was issued, the month that number
+// carries. A legacy PO with no stamp falls back to its PO date.
+func deliveryNoteDate(po PurchaseOrder) time.Time {
+	if po.DeliveryNoteDate != nil {
+		return *po.DeliveryNoteDate
+	}
+	return po.PoDate
 }
 
 // deliveryNoteItems lists the delivered lines.

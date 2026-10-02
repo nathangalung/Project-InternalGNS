@@ -164,7 +164,7 @@ func invoiceData(items []map[string]any) map[string]any {
 
 func deliveryNoteData(items []map[string]any) map[string]any {
 	return map[string]any{
-		"DeliveryNoteNo": "DN-778/2026", "PONo": "PO-778/2026",
+		"DeliveryNoteNo": "DN-26778001/GNS/IV/2026", "PONo": "PO-262641156/GNS/IV/2026", "PODate": "20 September 2026",
 		"CompanyName":    "PT. Pelita Global Logistik Nusantara",
 		"CompanyAddress": "Jl. Sudirman Kav 52, Jakarta", "AttnName": "Bapak Riza Chair", "VesselName": "MV Global Star",
 		"DateLine": "Jakarta, 30 April 2026", "Items": items,

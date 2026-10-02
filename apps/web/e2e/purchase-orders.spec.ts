@@ -268,6 +268,9 @@ test.describe("purchase order status", () => {
     const saved = await seed.poByQuotation(q.id)
     expect(saved.status).toBe("ON_PROGRESS")
     expect(saved.deliveryNoteNumber).toBeTruthy()
+    // The note is dated the WIB day its number was issued.
+    const todayWib = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jakarta" })
+    expect(saved.deliveryNoteDate?.slice(0, 10)).toBe(todayWib)
     await page.getByPlaceholder("Cari purchase order, klien, atau nomor...").fill(seed.prefix)
     const row = page.getByRole("row", { name: new RegExp(client.name) })
     await expect(row).toContainText("Dalam Progres")

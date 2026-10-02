@@ -239,7 +239,9 @@ document's status history table.
   the object, so a key with no upload behind it is a 422. UPLOADED
   goes to ON_PROGRESS; ON_PROGRESS to DELIVERED or back to UPLOADED; any open
   state to CANCELLED with a reason. The delivery-note number is stamped on
-  ON_PROGRESS or DELIVERED, and DELIVERED creates the invoice. DELIVERED and
+  ON_PROGRESS or DELIVERED together with its WIB issue date
+  (`delivery_note_date`), which the note prints as its Date above the PO No
+  and PO Date rows, and DELIVERED creates the invoice. DELIVERED and
   CANCELLED are terminal, and the file is locked in both. A PO keeps at least
   one product line and every product line priced above zero: the line edit
   (`fn_update_po_items`) refuses otherwise, and so do ON_PROGRESS and

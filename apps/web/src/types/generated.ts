@@ -658,6 +658,7 @@ export type PurchaseOrderRow = {
     createdAt: string;
     updatedAt: string;
     deliveryNoteNumber?: string;
+    deliveryNoteDate?: string;
     allowedTransitions: PoTransition[];
 };
 
