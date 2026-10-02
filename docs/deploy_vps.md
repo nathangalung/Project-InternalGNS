@@ -159,6 +159,14 @@ The workflow publishes exactly two tags per image:
 There is no `:latest`. `compose.prod.yml` refuses to start while `TAG` is
 empty, so a deploy always names the release it runs.
 
+To rebuild a release, for example to pick up base-image patches, run the
+`release` workflow by hand (Actions → release → Run workflow) with the tag.
+Its `resolve release` job refuses, before anything is built, a tag that is
+not `vX.Y.Z`, one that does not exist, and one whose own `ci` run for the tag
+push did not succeed (a green pull-request run on the same commit does not
+count). It then builds the tag's commit, whichever branch the dispatch was
+started from, and overwrites that tag's images with the rebuild.
+
 Verify in GitHub → Packages tab.
 
 If the GHCR package visibility defaults to private, switch it to **public**
