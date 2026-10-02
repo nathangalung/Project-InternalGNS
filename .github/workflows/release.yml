@@ -15,8 +15,19 @@ permissions:
   contents: read
   packages: write
 
+# One group per release tag.
+# Under workflow_run github.ref is always the default branch, and a group
+# keeps one pending run, so a third tag pushed during a release cancelled
+# the second one's queued run. A tag's push run and a dispatch of the same
+# tag share a group, so two builds never race to push one tag. A ci run from
+# a pull request publishes nothing and gets a group of its own, so a branch
+# named like a tag cannot cancel that tag's queued release.
 concurrency:
-  group: release-${{ github.ref }}
+  group: >-
+    release-${{ github.event.workflow_run.event == 'push'
+    && github.event.workflow_run.head_branch
+    || inputs.tag
+    || github.run_id }}
   cancel-in-progress: false
 
 env:
