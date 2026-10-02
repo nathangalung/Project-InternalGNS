@@ -212,21 +212,25 @@ document's status history table.
   runs it at startup and then hourly (`quotations.RunExpiryLoop`), and
   `pg_try_advisory_xact_lock` keeps two replicas from both doing a run.
   A saved draft is edited live, by several users at once, one part each.
-  The parts are the header (shipping, terms, discount) and each line
-  (`line:<id>`); `POST /quotations/{id}/locks` claims one for two minutes
-  (`EditLockTTL`, renewed every 30 s by `useEditLocks`), and a part someone
-  else holds is a 409 `edit_locked` whose detail names them. A line save
-  and the header save need the caller's claim; add, delete and the
-  Tidak Ditawarkan toggle need the part free. The full-draft `PUT` and
+  The parts are the header (contact, shipping, terms, discount) and each
+  line (`line:<id>`); `POST /quotations/{id}/locks` claims one for two
+  minutes (`EditLockTTL`, renewed every 30 s by `useEditLocks`), and a part
+  someone else holds is a 409 `edit_locked` whose detail names them. A line
+  save and the header save need the caller's claim; add, delete, the
+  Tidak Ditawarkan toggle and a contact change
+  (`fn_quotation_update_contact`) need the part free, and the edit page
+  sends the contact while holding the header. The full-draft `PUT` and
   leaving draft are refused while another user holds a part. Every change
   calls `fn_quotation_notify`, which `pg_notify`s `quotation_events`; one
   pooled connection LISTENs (`shared/live`) and fans the notices out to
   `GET /quotations/{id}/events`, a server-sent event stream the web reads
   with fetch (`lib/event-stream.ts`, since EventSource cannot send the
-  token). The stream ends after five minutes and on shutdown; the web
-  reconnects and reloads the draft on every notice and reconnect. The
-  edit page shows another user's line or header read-only with their name
-  and frees its claims on leave, including on pagehide.
+  token). A notice sent while that connection is down is lost, so every
+  LISTEN after the first sends `resync` to each open stream. The stream
+  ends after five minutes and on shutdown; the web reconnects and reloads
+  the draft on every event and reconnect. The edit page shows another
+  user's line or header read-only with their name and frees its claims on
+  leave, including on pagehide.
 - Purchase order: PENDING, UPLOADED, ON_PROGRESS, DELIVERED, CANCELLED.
   PENDING and UPLOADED follow the PO file: attaching it moves PENDING to
   UPLOADED and removing it moves back, and neither is a manual move. Every
