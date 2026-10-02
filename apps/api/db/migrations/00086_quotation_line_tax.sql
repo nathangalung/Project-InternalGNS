@@ -1,6 +1,6 @@
 -- +goose Up
 
--- 00084 QUOTATION LINE TAX
+-- 00086 QUOTATION LINE TAX
 -- The quotation DPP, PPN and Grand Total were generated from the header
 -- subtotal: PPN from the unrounded DPP and Grand Total rounded on its own,
 -- so the three could disagree with each other by a sen, and with the PO

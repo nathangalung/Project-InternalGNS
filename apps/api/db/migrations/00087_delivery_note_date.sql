@@ -1,6 +1,6 @@
 -- +goose Up
 
--- 00085 DELIVERY NOTE DATE
+-- 00087 DELIVERY NOTE DATE
 -- The delivery note printed the client PO date as its Date, while its
 -- number carries the month it was issued (fn_next_doc_no at ON_PROGRESS),
 -- so a PO dated 28 Dec 2025 and started on 5 Jan 2026 printed a January

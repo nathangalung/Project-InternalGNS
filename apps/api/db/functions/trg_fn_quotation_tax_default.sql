@@ -1,4 +1,4 @@
--- Canonical current body of trg_fn_quotation_tax_default (deployed by migration 00084).
+-- Canonical current body of trg_fn_quotation_tax_default (deployed by migration 00086).
 CREATE OR REPLACE FUNCTION public.trg_fn_quotation_tax_default()
  RETURNS trigger
  LANGUAGE plpgsql

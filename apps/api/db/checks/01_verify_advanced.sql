@@ -107,7 +107,7 @@ FROM quotation_items
 WHERE quotation_id = 1
 ORDER BY line_number;
 
--- B.2 Verify quotation header tax, rounded per line (00084)
+-- B.2 Verify quotation header tax, rounded per line (00086)
 SELECT
   q.quotation_no,
   q.total, q.total_discount,

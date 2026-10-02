@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_quotation (deployed by migration 00084).
+-- Canonical current body of fn_update_quotation (deployed by migration 00086).
 CREATE OR REPLACE FUNCTION public.fn_update_quotation(p_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_user_id bigint, p_notes text DEFAULT NULL::text)
  RETURNS bigint
  LANGUAGE plpgsql

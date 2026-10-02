@@ -1,6 +1,6 @@
 -- +goose Up
 
--- 00083 PRICE HISTORY TIEBREAK
+-- 00085 PRICE HISTORY TIEBREAK
 -- fn_suggest_selling_prices ordered by created_at alone, so two lines of one
 -- quotation (or two quotations made in one transaction) tied and the LIMIT
 -- cut was arbitrary. The newest quotation id, then the line number, decide.

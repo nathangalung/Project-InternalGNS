@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_po_status (deployed by migration 00085).
+-- Canonical current body of fn_change_po_status (deployed by migration 00087).
 CREATE OR REPLACE FUNCTION public.fn_change_po_status(p_po_id bigint, p_new_status text, p_user_id bigint, p_note text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql

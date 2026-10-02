@@ -1,4 +1,4 @@
--- Canonical current body of fn_line_ppn (deployed by migration 00084).
+-- Canonical current body of fn_line_ppn (deployed by migration 00086).
 CREATE OR REPLACE FUNCTION public.fn_line_ppn(p_subtotal numeric)
  RETURNS numeric
  LANGUAGE sql

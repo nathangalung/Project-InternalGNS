@@ -1,4 +1,4 @@
--- Canonical current body of fn_revise_quotation (deployed by migration 00084).
+-- Canonical current body of fn_revise_quotation (deployed by migration 00086).
 CREATE OR REPLACE FUNCTION public.fn_revise_quotation(p_quotation_id bigint, p_user_id bigint, p_note text DEFAULT NULL::text)
  RETURNS bigint
  LANGUAGE plpgsql

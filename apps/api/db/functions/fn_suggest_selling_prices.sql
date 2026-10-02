@@ -1,4 +1,4 @@
--- Canonical current body of fn_suggest_selling_prices (deployed by migration 00083).
+-- Canonical current body of fn_suggest_selling_prices (deployed by migration 00085).
 CREATE OR REPLACE FUNCTION public.fn_suggest_selling_prices(p_item_id bigint, p_limit integer DEFAULT 5)
  RETURNS TABLE(quotation_no character varying, quotation_date timestamp with time zone, client_name character varying, qty numeric, cost_price numeric, selling_price numeric, profit_pct numeric)
  LANGUAGE sql

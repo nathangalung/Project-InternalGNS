@@ -1,4 +1,4 @@
--- Canonical current body of fn_recompute_quotation_totals (deployed by migration 00084).
+-- Canonical current body of fn_recompute_quotation_totals (deployed by migration 00086).
 CREATE OR REPLACE FUNCTION public.fn_recompute_quotation_totals(p_quotation_id bigint)
  RETURNS void
  LANGUAGE plpgsql
