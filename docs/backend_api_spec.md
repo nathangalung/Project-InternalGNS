@@ -115,6 +115,25 @@ list.
 status moves are in the detail response (`allowedTransitions`, `canRevise`);
 see the Status model section of `CLAUDE.md`.
 
+### RFQ file format
+
+`POST /quotations/rfq` reads an .xlsx (the first sheet with product rows) or a
+.csv, up to 1 MB and 500 product rows. The header row must sit in the first
+15 rows; headers match without regard to case, exactly or as part of the
+title:
+
+| Column | Accepted titles | Required |
+|---|---|---|
+| Product name | Nama, Produk, Name, Deskripsi, Description | yes |
+| IMPA code | IMPA, Kode IMPA, Kode | no |
+| Quantity | Kuantitas, Jumlah, Qty, Quantity | no (0 when absent) |
+| Unit | Satuan, Unit | no |
+
+Other columns (No, Remark, price) are ignored. Rows with no name are skipped,
+as is a category row whose name cell is merged across a mapped column
+(DECK STORES). A product merged down over several sheet rows counts once;
+a row with its own text under a merged quantity is a separate product.
+
 ## 4. Database functions in the flow
 
 | Function | Called by |
