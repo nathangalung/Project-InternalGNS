@@ -51,6 +51,37 @@ test("a sent quotation shows on its product, vendor and client pages", async ({ 
   await expect(page).toHaveURL(new RegExp(`/quotations/${sent.id}$`))
 })
 
+// Cached list follows status changes.
+test("accepting a quotation updates the product's list in place", async ({ page, seed }) => {
+  const client = await seed.client()
+  const vendor = await seed.vendor()
+  const item = await seed.item({ vendor, cost: 100_000 })
+  const created = await seed.quotation({
+    client,
+    lines: [{ item, qty: 1, price: 150_000, cost: 100_000 }],
+  })
+  await seed.send(created.id)
+  const sent = await seed.getQuotation(created.id)
+
+  await page.goto(`/products/${item.id}`)
+  const row = section(page).getByRole("row", { name: new RegExp(sent.quotationNo) })
+  await expect(row).toContainText("Dikirim")
+
+  await row.getByRole("link", { name: sent.quotationNo }).click()
+  await page.getByRole("button", { name: "Status Dikirim, ubah status" }).click()
+  await page.getByRole("menu").getByRole("menuitem", { name: "Disetujui" }).click()
+  await page
+    .getByRole("dialog", { name: "Ubah Status ke Disetujui" })
+    .getByRole("button", { name: "Setujui" })
+    .click()
+  await expect(page.getByRole("button", { name: "Status Disetujui", exact: true })).toBeVisible()
+
+  // In-app back, no reload.
+  await page.goBack()
+  await expect(page).toHaveURL(new RegExp(`/products/${item.id}$`))
+  await expect(row).toContainText("Disetujui")
+})
+
 test("a product never quoted says so", async ({ page, seed }) => {
   const item = await seed.item()
   await page.goto(`/products/${item.id}`)

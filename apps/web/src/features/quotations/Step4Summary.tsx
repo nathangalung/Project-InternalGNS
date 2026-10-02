@@ -1,5 +1,6 @@
 import { useId, useState } from "react"
-import { getPageNumbers } from "@/lib/pagination"
+import PageButtons from "@/components/shared/PageButtons"
+import { clampPage, pageCount } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { isValidAddress, optionalAddressError } from "@/lib/validation"
 import { requestDiffers, requestedCode } from "./lines"
@@ -56,10 +57,6 @@ const alertBox =
 // Amber: saving still works
 const noticeBox =
   "rounded-md border border-[rgba(245,158,11,0.3)] bg-[rgba(245,158,11,0.08)] px-3.5 py-2.5 text-xs font-medium text-[#92400E]"
-const pageBtn = `flex h-8 w-8 items-center justify-center rounded-sm text-sm transition ${ui.focusRing}`
-const pageBtnIdle = "font-medium text-[#4A4455] hover:bg-dark-100"
-const pageBtnActive = "bg-primary-700 font-bold text-white"
-const pageBtnNav = `flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100 disabled:cursor-not-allowed disabled:opacity-40 ${ui.focusRing}`
 const costRow = "flex justify-between text-xs text-[#4B5563]"
 const costValue = "font-semibold text-[#111827]"
 
@@ -94,8 +91,10 @@ export default function Step4Summary({
   const [prodPage, setProdPage] = useState(1)
   const [prodExpanded, setProdExpanded] = useState(true)
 
-  const totalPages = Math.ceil(products.length / PAGE_SIZE) || 1
-  const pageSlice = products.slice((prodPage - 1) * PAGE_SIZE, prodPage * PAGE_SIZE)
+  const totalPages = pageCount(products.length, PAGE_SIZE)
+  // Removed lines can shrink pages.
+  const page = clampPage(prodPage, totalPages)
+  const pageSlice = products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const isTenggatWaktuFilled = jatuhTempo.trim().length > 0 && berlakuSampai.trim().length > 0
   const hasContent = products.length > 0 || isValidAddress(shippingAddress)
@@ -300,62 +299,12 @@ export default function Step4Summary({
               </div>
               <div className="flex items-center gap-3">
                 {/* Pagination — always visible */}
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    className={pageBtnNav}
-                    aria-label="Halaman sebelumnya"
-                    disabled={prodPage === 1}
-                    onClick={() => setProdPage((p) => Math.max(1, p - 1))}
-                  >
-                    <svg aria-hidden="true" width="5" height="8" viewBox="0 0 5 8" fill="none">
-                      <path
-                        d="M4 1L1 4L4 7"
-                        stroke="#191C1E"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                  {getPageNumbers(prodPage, totalPages).map((n, i) =>
-                    n === null ? (
-                      <span
-                        key={`e${i}`}
-                        className="select-none self-center px-0.5 text-[13px] text-[#9CA3AF]"
-                      >
-                        …
-                      </span>
-                    ) : (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setProdPage(n)}
-                        aria-current={n === prodPage ? "page" : undefined}
-                        className={`${pageBtn} ${n === prodPage ? pageBtnActive : pageBtnIdle}`}
-                      >
-                        {n}
-                      </button>
-                    ),
-                  )}
-                  <button
-                    type="button"
-                    className={pageBtnNav}
-                    aria-label="Halaman berikutnya"
-                    disabled={prodPage === totalPages}
-                    onClick={() => setProdPage((p) => Math.min(totalPages, p + 1))}
-                  >
-                    <svg aria-hidden="true" width="5" height="8" viewBox="0 0 5 8" fill="none">
-                      <path
-                        d="M1 1L4 4L1 7"
-                        stroke="#191C1E"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
+                <PageButtons
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPage={setProdPage}
+                  dimDisabled
+                />
                 {/* Toggle */}
                 <button
                   type="button"
@@ -391,7 +340,7 @@ export default function Step4Summary({
               <div className="rounded-b-lg border border-t-0 border-[rgba(204,195,216,0.2)] bg-white p-5">
                 <div className="flex flex-col gap-4">
                   {pageSlice.map((p, i) => {
-                    const globalIndex = (prodPage - 1) * PAGE_SIZE + i + 1
+                    const globalIndex = (page - 1) * PAGE_SIZE + i + 1
                     const profit = p.hargaJual - p.hargaBeli
                     const profitPct =
                       p.hargaBeli > 0 ? ((profit / p.hargaBeli) * 100).toFixed(2) : "0.00"

@@ -38,12 +38,13 @@ describe("clientKpis", () => {
     expect(k.growth.startsWith("-")).toBe(false)
   })
 
+  // Unknown shows a dash.
   it("shows a dash without a base or data", () => {
     expect(clientKpis(undefined)).toEqual({
-      total: 0,
-      growth: "-",
-      newThisMonth: 0,
-      activeShare: "-",
+      total: undefined,
+      growth: "–",
+      newThisMonth: undefined,
+      activeShare: "–",
     })
     const k = clientKpis({
       total: 3,

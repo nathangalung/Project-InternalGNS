@@ -4,7 +4,14 @@ import { shrinkImage } from "@/lib/image-shrink"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
-import { invalidated, renderQueryHook, seed, settle, until } from "@/test/query"
+import {
+  invalidated,
+  renderQueryHook,
+  seed,
+  settle,
+  throwingQueryClient,
+  until,
+} from "@/test/query"
 import * as api from "./api"
 import {
   useActiveVendorOptions,
@@ -135,23 +142,29 @@ describe("item writes", () => {
     expect(invalidated(qc, [list, vendorDetail])).toEqual([list])
   })
 
-  // Vendor tabs show item names.
+  // Lists printing the item name.
+  //
+  // Vendor tabs and Quotation Terakhir show it.
   it("refreshes items and vendors after an update", async () => {
     m.update.mockResolvedValue({ id: 9 } as never)
     const { qc, result } = renderQueryHook(() => useUpdateItem())
     const quotations = queryKeys.quotations.list()
-    seed(qc, [detail, vendorDetail, quotations])
+    const vendorQuotations = queryKeys.vendors.quotations(4)
+    const keys = [detail, vendorDetail, vendorQuotations, quotations]
+    seed(qc, keys)
     await settle(() =>
       result.current.mutateAsync({ id: 9, input: { name: "Baut", isActive: true } }),
     )
-    expect(invalidated(qc, [detail, vendorDetail, quotations])).toEqual([detail, vendorDetail])
+    expect(invalidated(qc, keys)).toEqual([detail, vendorDetail, vendorQuotations])
   })
 
-  it("toasts Indonesian copy when an update fails", async () => {
+  // The form shows it inline.
+  it("leaves a failed update to the form, without a toast", async () => {
     m.update.mockRejectedValue(new Error(""))
     const { result } = renderQueryHook(() => useUpdateItem())
     await settle(() => result.current.mutateAsync({ id: 9, input: { name: "B", isActive: true } }))
-    expect(toast.error).toHaveBeenCalledWith("Gagal memperbarui produk.")
+    await until(() => expect(result.current.isError).toBe(true))
+    expect(toast.error).not.toHaveBeenCalled()
   })
 
   // Vendor detail, counts change too.
@@ -367,5 +380,12 @@ describe("useItemRecentQuotations", () => {
     await until(() => expect(result.current.data).toEqual([]))
     expect(m.listRecentQuotations).toHaveBeenCalledTimes(1)
     expect(m.listRecentQuotations).toHaveBeenCalledWith(9)
+  })
+
+  // Section shows its error.
+  it("keeps a failure out of the route error boundary", async () => {
+    m.listRecentQuotations.mockRejectedValue(new Error("502"))
+    const { result } = renderQueryHook(() => useItemRecentQuotations(9), throwingQueryClient())
+    await until(() => expect(result.current.isError).toBe(true))
   })
 })

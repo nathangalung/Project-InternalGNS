@@ -156,6 +156,10 @@ test("a logo over 2 MB is refused and a small one is saved", async ({ page, seed
         (await api<{ logoObjectKey?: string }>("GET", `/clients/${client.id}`)).logoObjectKey,
     )
     .toMatch(new RegExp(`^clients/${client.id}/.*logo\\.png$`))
+
+  // Stored logo loads as blob.
+  await page.reload()
+  await expect(logo.locator("img")).toHaveAttribute("src", /^blob:/)
 })
 
 // Phone takes 9-12 digits.
@@ -193,4 +197,19 @@ test("a contact edit refuses a 13-digit phone", async ({ page, seed }) => {
   await expect
     .poll(async () => (await api<Contact[]>("GET", `/clients/${client.id}/contacts`))[0].phone)
     .toBe("812345678901")
+})
+
+// Failed summary shows a dash.
+test("the KPI cards show a dash, not zero, without a summary", async ({ page }) => {
+  await page.route("**/api/v1/clients/summary", (route) =>
+    route.fulfill({
+      status: 404,
+      contentType: "application/problem+json",
+      body: JSON.stringify({ type: "about:blank", title: "Tidak ditemukan", status: 404 }),
+    }),
+  )
+  await page.goto("/clients")
+  const card = page.getByText("Total Klien", { exact: true }).locator("xpath=..")
+  await expect(card).toContainText("–")
+  await expect(card).not.toContainText("0")
 })

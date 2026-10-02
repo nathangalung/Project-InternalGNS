@@ -76,7 +76,7 @@ func TestEffectiveStatus_OneRuleEverywhere(t *testing.T) {
 			require.NoError(t, err)
 			require.Len(t, listed.Rows, 1)
 			assert.Equal(t, tc.want, listed.Rows[0].EffectiveStatus, "List row")
-			for _, s := range []invoices.Status{invoices.StatusDraft, invoices.StatusSent, invoices.StatusPaid, invoices.StatusOverdue} {
+			for _, s := range []invoices.Status{invoices.StatusDraft, invoices.StatusSent, invoices.StatusPaid, invoices.StatusOverdue, invoices.StatusCancelled} {
 				res, err := repo.List(ctx, invoices.ListFilter{Q: inv.InvoiceNo, EffectiveStatuses: []string{string(s)}, Limit: 10})
 				require.NoError(t, err)
 				assert.Equalf(t, s == tc.want, res.Total == 1, "filter %s", s)

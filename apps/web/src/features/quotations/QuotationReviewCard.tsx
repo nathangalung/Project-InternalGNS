@@ -1,9 +1,12 @@
 import { useState } from "react"
+import Modal from "@/components/shared/Modal"
 import {
   useDeleteQuotationRequest,
   useQuotationRequests,
   useUpsertQuotationRequest,
 } from "@/features/quotations/hooks"
+import { errorMessage } from "@/lib/errors"
+import { ui } from "@/lib/ui"
 import type {
   QuotationItemRequestRow,
   QuotationMatchStatus,
@@ -77,6 +80,8 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
   const [expanded, setExpanded] = useState(false)
   const [draft, setDraft] = useState<DraftRow | null>(null)
   const [errMsg, setErrMsg] = useState<string | null>(null)
+  // Request waiting for delete confirmation
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null)
 
   const rows = requestsQuery.data ?? []
   const nextLineNo = rows.reduce((m, r) => Math.max(m, r.lineNo), 0) + 1
@@ -132,16 +137,18 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
       }
       setDraft(null)
     } catch (e) {
-      setErrMsg((e as Error).message)
+      setErrMsg(errorMessage(e, "Gagal menyimpan item request."))
     }
   }
 
-  async function deleteRow(id: number) {
-    if (!confirm("Hapus permintaan ini?")) return
+  async function confirmDelete() {
+    const id = pendingDelete
+    setPendingDelete(null)
+    if (id === null) return
     try {
       await remove.mutateAsync({ quotationId, requestId: id })
     } catch (e) {
-      setErrMsg((e as Error).message)
+      setErrMsg(errorMessage(e, "Gagal menghapus item request."))
     }
   }
 
@@ -165,7 +172,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
         },
       })
     } catch (e) {
-      setErrMsg((e as Error).message)
+      setErrMsg(errorMessage(e, "Gagal menyimpan item request."))
     }
   }
 
@@ -282,7 +289,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
                         </button>
                         <button
                           type="button"
-                          onClick={() => deleteRow(r.id)}
+                          onClick={() => setPendingDelete(r.id)}
                           className="text-xs text-error"
                         >
                           Hapus
@@ -379,6 +386,31 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
             </div>
           )}
         </div>
+      )}
+      {pendingDelete !== null && (
+        <Modal
+          title="Hapus permintaan ini?"
+          onClose={() => setPendingDelete(null)}
+          className="max-w-[min(440px,92vw)]!"
+          footer={
+            <>
+              <button
+                type="button"
+                className={ui.modalCancel}
+                onClick={() => setPendingDelete(null)}
+              >
+                Batal
+              </button>
+              <button type="button" className={ui.modalSubmit} onClick={confirmDelete}>
+                Hapus Permintaan
+              </button>
+            </>
+          }
+        >
+          <p className="m-0 text-sm leading-6 text-[#4A4455]">
+            Permintaan ini dihapus dari daftar review dan tidak dapat dikembalikan.
+          </p>
+        </Modal>
       )}
     </div>
   )

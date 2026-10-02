@@ -20,6 +20,7 @@ import {
   formatNumber as formatId,
   formatRupiah as formatRp,
   formatRupiahAxis as formatRpAxis,
+  PENDING_FIGURE,
   toNum,
 } from "@/lib/format"
 import { pill, ui } from "@/lib/ui"
@@ -101,7 +102,7 @@ export default function DashboardFinancial() {
   // Tile count, one Terlambat source
   const overdue = statusCount(summary?.invoiceStatuses, "overdue") ?? summary?.invoicesOverdue ?? 0
   // Dash until the summary arrives
-  const fig = (text: string) => (summary ? text : "–")
+  const fig = (text: string) => (summary ? text : PENDING_FIGURE)
 
   const recentInvoices = useMemo(() => toRecentInvoices(rawInvoices?.rows ?? []), [rawInvoices])
 

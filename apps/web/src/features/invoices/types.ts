@@ -2,8 +2,6 @@ import type { InvoiceStatus } from "@/lib/status"
 
 export type { ChangeInvoiceStatusInput, UpdateInvoiceDatesInput } from "@/types/api"
 
-export type { InvoiceStatus }
-
 // Displayed status, cancelled included.
 export type InvoiceDisplayStatus = InvoiceStatus | "DIBATALKAN"
 
@@ -17,7 +15,7 @@ export type InvoiceRow = {
   dueDate: string // ISO
   total: string // formatted Rp
   totalNumber: number
-  status: InvoiceStatus
+  status: InvoiceDisplayStatus
 }
 
 export const INVOICE_LABEL: Record<InvoiceDisplayStatus, string> = {

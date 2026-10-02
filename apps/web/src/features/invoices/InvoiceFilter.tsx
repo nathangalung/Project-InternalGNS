@@ -5,7 +5,7 @@ import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
 import { type DatePreset, presetRange } from "@/lib/date-range"
 import { chip, presetChip, ui } from "@/lib/ui"
-import type { InvoiceStatus } from "./types"
+import type { InvoiceDisplayStatus } from "./types"
 import { INVOICE_LABEL } from "./types"
 
 export type { DatePreset }
@@ -17,7 +17,7 @@ export type InvoiceFilterValues = {
   duePreset: DatePreset
   dueStart: string
   dueEnd: string
-  statuses: InvoiceStatus[]
+  statuses: InvoiceDisplayStatus[]
   minHarga: string
   maxHarga: string
 }
@@ -41,7 +41,14 @@ const DEFAULTS: InvoiceFilterValues = {
   maxHarga: "",
 }
 
-const STATUS_OPTIONS: InvoiceStatus[] = ["DRAF", "DIKIRIM", "DIBAYAR", "TERLAMBAT"]
+// Dibatalkan is off by default.
+const STATUS_OPTIONS: InvoiceDisplayStatus[] = [
+  "DRAF",
+  "DIKIRIM",
+  "DIBAYAR",
+  "TERLAMBAT",
+  "DIBATALKAN",
+]
 
 type DateRangeBlockProps = {
   heading: string
@@ -129,7 +136,7 @@ export default function InvoiceFilter({ onClose, onApply, initialValues }: Invoi
   )
   const [dueStart, setDueStart] = useState<string>(initialValues?.dueStart ?? DEFAULTS.dueStart)
   const [dueEnd, setDueEnd] = useState<string>(initialValues?.dueEnd ?? DEFAULTS.dueEnd)
-  const [activeStatuses, setActiveStatuses] = useState<InvoiceStatus[]>(
+  const [activeStatuses, setActiveStatuses] = useState<InvoiceDisplayStatus[]>(
     initialValues?.statuses ?? DEFAULTS.statuses,
   )
   const fieldId = useId()
@@ -147,7 +154,7 @@ export default function InvoiceFilter({ onClose, onApply, initialValues }: Invoi
     minHarga !== DEFAULTS.minHarga ||
     maxHarga !== DEFAULTS.maxHarga
 
-  const toggleStatus = (s: InvoiceStatus) =>
+  const toggleStatus = (s: InvoiceDisplayStatus) =>
     setActiveStatuses((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]))
 
   const handleReset = () => {

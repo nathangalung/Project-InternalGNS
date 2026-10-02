@@ -200,8 +200,13 @@ test.describe("live quotation editing", () => {
     await expect(product).toBeHidden()
     await expect(page.getByText("Satuan belum diisi.")).toHaveCount(0)
     // Deleting is saved at once, so it asks first.
-    page.once("dialog", (d) => void d.accept())
+    const ask = page.getByRole("dialog", { name: "Hapus produk ini dari quotation?" })
     await page.getByRole("button", { name: "Hapus produk 1" }).click()
+    await ask.getByRole("button", { name: "Batal" }).click()
+    await expect(ask).toBeHidden()
+    await expect(page.locator("main")).toContainText("PRODUK 2")
+    await page.getByRole("button", { name: "Hapus produk 1" }).click()
+    await ask.getByRole("button", { name: "Hapus Produk" }).click()
     await expect(page.locator("main")).not.toContainText("PRODUK 2")
     await expect
       .poll(async () =>
@@ -210,6 +215,31 @@ test.describe("live quotation editing", () => {
           .map((it) => [it.requestedName, it.unitId !== undefined]),
       )
       .toEqual([[fresh, true]])
+  })
+
+  // Product table keeps a page.
+  test("deleting the last line on the last page shows the page before", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const lines = Array.from({ length: 6 }, (_, i) => ({ item, qty: i + 1, price: 25_000 }))
+    const q = await seed.quotation({ client, lines })
+
+    await page.goto(`/quotations/${q.id}/edit`)
+    await toStep(page, 2)
+    await page.getByRole("button", { name: "2", exact: true }).click()
+    await expect(page.getByText("Menampilkan 6–6 dari 6 produk")).toBeVisible()
+    await page.getByRole("button", { name: "Hapus produk 6" }).click()
+    await page
+      .getByRole("dialog", { name: "Hapus produk ini dari quotation?" })
+      .getByRole("button", { name: "Hapus Produk" })
+      .click()
+
+    await expect(page.getByText("Menampilkan 1–5 dari 5 produk")).toBeVisible()
+    await expect(page.getByRole("button", { name: "Hapus produk 5" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "1", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
   })
 
   test("a change saved elsewhere shows up without a reload", async ({ page, seed }) => {

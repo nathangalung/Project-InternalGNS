@@ -108,17 +108,19 @@ export function useCreateItem() {
   })
 }
 
+// Failures show in the form.
 export function useUpdateItem() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, input }: { id: number; input: itemsApi.UpdateItemInput }) =>
       itemsApi.update(id, input),
-    // Vendor tabs show item names.
+    // Lists printing the item name.
+    //
+    // Vendor tabs and Quotation Terakhir show it.
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.items.all })
       qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui produk.")),
   })
 }
 
@@ -214,9 +216,13 @@ export function useItemImage(id: number, objectKey: string | undefined): string 
 }
 
 // The newest quotations, newest first.
+//
+// A secondary section: a failure shows in it, not on the route error
+// boundary, which would replace the page and its unsaved form.
 export function useItemRecentQuotations(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.items.quotations(id) : queryKeys.items.all,
     queryFn: id !== undefined && id > 0 ? () => itemsApi.listRecentQuotations(id) : skipToken,
+    throwOnError: false,
   })
 }

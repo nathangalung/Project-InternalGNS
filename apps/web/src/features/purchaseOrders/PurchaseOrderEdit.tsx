@@ -230,19 +230,29 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
       <div className={ui.pageContent}>
         <div className="flex w-full items-center justify-between gap-4 max-sm:flex-col max-sm:items-stretch">
           <div className="flex min-w-0 flex-col gap-3">
-            <nav className={ui.breadcrumb} aria-label="Breadcrumb">
+            <nav className={`${ui.breadcrumb} flex-wrap`} aria-label="Breadcrumb">
               <Link to="/purchase-orders" className={`${ui.breadcrumbLink} no-underline`}>
                 Daftar Purchase Order
               </Link>
               <span className={ui.breadcrumbSep} aria-hidden="true">
                 &rsaquo;
               </span>
+              <Link
+                to="/purchase-orders/$id"
+                params={{ id: String(po.quotationId) }}
+                className={`${ui.breadcrumbLink} no-underline`}
+              >
+                Detail {po.poNumber}
+              </Link>
+              <span className={ui.breadcrumbSep} aria-hidden="true">
+                &rsaquo;
+              </span>
               <span className={ui.breadcrumbCurrent} aria-current="page">
-                Edit Purchase Order
+                Edit
               </span>
             </nav>
             <h1 className="text-2xl font-bold leading-8 tracking-tight text-dark-900 [overflow-wrap:anywhere]">
-              Edit Purchase Order
+              Edit Purchase Order {po.poNumber}
             </h1>
           </div>
 

@@ -23,7 +23,7 @@ import { useUnits } from "@/features/units/hooks"
 import { canWriteCatalog } from "@/lib/rbac"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
-import { useListScreen } from "@/lib/useListScreen"
+import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import type { AdvancedSearchTier } from "@/types/api"
 
 type ProductListProps = {
@@ -110,6 +110,10 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
   }, [unitsData])
 
   const totalItems = isSearchActive ? searchView.total : (listData?.total ?? 0)
+  usePageWithin(
+    list,
+    isSearchActive ? (searchData ? searchView.total : undefined) : listData?.total,
+  )
   const totalPages = list.totalPagesOf(totalItems)
   const currentRows: KatalogRow[] = isSearchActive
     ? katalogRowsFromHits(searchView.hits)

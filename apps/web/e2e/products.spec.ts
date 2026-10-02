@@ -93,6 +93,21 @@ test("renaming a product and turning it off saves both", async ({ page, seed }) 
     .toEqual([renamed, false])
 })
 
+// One message per failed save.
+test("a refused save is reported once, under the form", async ({ page, seed }) => {
+  const taken = await seed.item()
+  const item = await seed.item()
+  await page.goto(`/products/${item.id}`)
+  await page.getByLabel("Kode IMPA").fill(taken.impaCode)
+  await page.getByRole("button", { name: "Simpan Perubahan" }).click()
+
+  const inline = page.getByRole("main").getByRole("alert")
+  await expect(inline).toBeVisible()
+  const text = (await inline.textContent())?.trim() ?? ""
+  expect(text).not.toBe("")
+  await expect(page.getByText(text, { exact: true })).toHaveCount(1)
+})
+
 test.describe("as finance", () => {
   test.use({ session: "finance" })
 

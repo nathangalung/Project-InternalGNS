@@ -1,5 +1,5 @@
-import { getPageNumbers } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
+import PageButtons from "./PageButtons"
 import RowsPerPageMenu from "./RowsPerPageMenu"
 
 type PaginationProps = {
@@ -15,9 +15,6 @@ type PaginationProps = {
   // Hides range while loading
   isLoading?: boolean
 }
-
-const pageBtnBase = `flex h-8 w-8 items-center justify-center rounded-sm text-sm transition ${ui.focusRing}`
-const navBtn = `flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100 disabled:cursor-not-allowed ${ui.focusRing}`
 
 // Pagination footer with page picker.
 export default function Pagination({
@@ -54,66 +51,12 @@ export default function Pagination({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-1 sm:flex-nowrap sm:justify-start">
-        <button
-          type="button"
-          className={navBtn}
-          onClick={() => onPage(Math.max(1, currentPage - 1))}
-          disabled={currentPage === 1}
-          aria-label="Halaman sebelumnya"
-        >
-          <svg width="5" height="8" viewBox="0 0 5 8" fill="none" aria-hidden="true">
-            <path
-              d="M4 1L1 4L4 7"
-              stroke="#191C1E"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        {getPageNumbers(currentPage, totalPages).map((n, i) =>
-          n === null ? (
-            <span
-              key={`e${i}`}
-              className="select-none self-center px-[2px] text-[13px] text-[#9CA3AF]"
-            >
-              …
-            </span>
-          ) : (
-            <button
-              key={n}
-              type="button"
-              onClick={() => onPage(n)}
-              aria-current={n === currentPage ? "page" : undefined}
-              className={`${pageBtnBase} ${
-                n === currentPage
-                  ? "bg-primary-700 font-bold text-white"
-                  : "font-medium text-[#4A4455] hover:bg-dark-100"
-              }`}
-            >
-              {n}
-            </button>
-          ),
-        )}
-        <button
-          type="button"
-          className={navBtn}
-          onClick={() => onPage(Math.min(totalPages, currentPage + 1))}
-          disabled={currentPage === totalPages || totalPages === 0}
-          aria-label="Halaman berikutnya"
-        >
-          <svg width="5" height="8" viewBox="0 0 5 8" fill="none" aria-hidden="true">
-            <path
-              d="M1 1L4 4L1 7"
-              stroke="#191C1E"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-      </div>
+      <PageButtons
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPage={onPage}
+        className="flex flex-wrap items-center justify-center gap-1 sm:flex-nowrap sm:justify-start"
+      />
     </div>
   )
 }

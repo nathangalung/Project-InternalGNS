@@ -83,7 +83,8 @@ test("finance reads the header from the invoice alone (INV-1)", async ({
   await openInvoice(page, invoice)
   const header = page.locator("main")
   await expect(header.getByText(`No. PO: ${invoice.poNumber}`)).toBeVisible()
-  await expect(header.getByRole("link", { name: client.name })).toBeVisible()
+  // The header and the Ringkasan Klien card both link the client.
+  await expect(header.getByRole("link", { name: client.name })).toHaveCount(2)
   // Finance may not open quotations or POs, so those stay plain text.
   await expect(header.getByText(invoice.quotationNo)).toBeVisible()
   await expect(header.getByRole("link", { name: invoice.quotationNo })).toHaveCount(0)
@@ -278,6 +279,39 @@ test("a cancelled invoice without a Pengganti offers one (INV-10)", async ({
   await expect(statusBar(page).getByText(`Menggantikan ${invoice.invoiceNo}`)).toBeVisible()
   await expect(page.getByRole("heading", { name: `Invoice ${invoice.invoiceNo}` })).toHaveCount(0)
   await expectActions(page, ["Tandai Dikirim", "Batalkan & Terbitkan Pengganti"])
+})
+
+// Only Dibatalkan lists it.
+test("the Dibatalkan filter finds a cancelled invoice and opens it", async ({
+  page,
+  admin,
+  client,
+  invoice,
+}) => {
+  await setInvoiceStatus(admin, invoice.id, "cancelled", "Dibatalkan lewat API")
+  await page.goto("/invoices")
+  await page.getByPlaceholder("Cari invoice, klien, atau nomor...").fill(client.name)
+  const row = page.getByRole("row").filter({ hasText: invoice.invoiceNo })
+  await expect(page.getByText("Belum ada Invoice.", { exact: false })).toBeVisible()
+  await expect(row).toHaveCount(0)
+
+  await page.getByRole("button", { name: "Filter", exact: true }).click()
+  const filter = page.getByRole("dialog", { name: "Filter Invoice" })
+  await filter.getByRole("button", { name: "Dibatalkan", exact: true }).click()
+  await filter.getByRole("button", { name: "Terapkan" }).click()
+  await expect(row).toHaveCount(1)
+  await expect(row).toContainText("Dibatalkan")
+  await expect(row.getByRole("button", { name: "Unduh invoice" })).toBeVisible()
+  await expect(row.getByRole("button", { name: "Unduh Coretax XML" })).toHaveCount(0)
+
+  const link = row.getByRole("link", { name: invoice.invoiceNo })
+  await expect(link).toHaveAttribute(
+    "href",
+    `/invoices/${invoice.quotationId}?invoiceId=${invoice.id}`,
+  )
+  await link.click()
+  await expect(page.getByRole("heading", { name: `Invoice ${invoice.invoiceNo}` })).toBeVisible()
+  await expectActions(page, ["Terbitkan Pengganti"])
 })
 
 // A browser outside Jakarta.

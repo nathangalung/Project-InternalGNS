@@ -14,10 +14,10 @@ import ClientFilter, { type ClientFilterValues } from "@/features/clients/Client
 import { clientKpis } from "@/features/clients/helpers"
 import { useClientSummary, useClients } from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
-import { formatNumber, formatRupiah } from "@/lib/format"
+import { formatNumber, formatRupiah, PENDING_FIGURE } from "@/lib/format"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
-import { useListScreen } from "@/lib/useListScreen"
+import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import type { ClientRow } from "@/types/api"
 
 export default function ClientList() {
@@ -49,6 +49,7 @@ export default function ClientList() {
   const { data: clientsData, isLoading } = useClients(queryParams)
   const currentRows = clientsData?.rows ?? []
   const totalItems = clientsData?.total ?? 0
+  usePageWithin(list, clientsData?.total)
 
   const countryOf = useMemo(() => {
     const map = new Map<string, string>()
@@ -90,9 +91,17 @@ export default function ClientList() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard tone="violet" label="Total Klien" value={formatNumber(kpis.total)} />
+          <StatCard
+            tone="violet"
+            label="Total Klien"
+            value={formatNumber(kpis.total, PENDING_FIGURE)}
+          />
           <StatCard tone="blue" label="Pertumbuhan tahun ini" value={kpis.growth} />
-          <StatCard tone="green" label="Baru bulan ini" value={formatNumber(kpis.newThisMonth)} />
+          <StatCard
+            tone="green"
+            label="Baru bulan ini"
+            value={formatNumber(kpis.newThisMonth, PENDING_FIGURE)}
+          />
           <StatCard tone="gold" label="Klien aktif" value={kpis.activeShare} />
         </div>
 

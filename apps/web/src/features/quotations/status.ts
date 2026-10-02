@@ -100,21 +100,25 @@ export function transitionCopy(
   }
 }
 
+// Tile, count unknown before data.
+export type StatTile = Omit<QuotationStatusCount, "count"> & { count: number | undefined }
+
 // Stats rows to tiles.
 //
-// Before the first response the canonical statuses show as zero, so the
-// grid does not jump when the data lands.
+// Before the first response, or after a failed one, the canonical statuses
+// show without a count, so the grid does not jump when the data lands and
+// zero is never shown as data.
 export function statTiles(rows: QuotationStatusCount[] | undefined): {
-  total: number
-  tiles: QuotationStatusCount[]
+  total: number | undefined
+  tiles: StatTile[]
 } {
-  const tiles =
-    rows && rows.length > 0
-      ? rows
-      : QUOTATION_STATUSES.map((status) => ({
-          status,
-          label: quotationStatusLabel(status),
-          count: 0,
-        }))
-  return { total: tiles.reduce((s, r) => s + r.count, 0), tiles }
+  if (rows && rows.length > 0) {
+    return { total: rows.reduce((s, r) => s + r.count, 0), tiles: rows }
+  }
+  const tiles = QUOTATION_STATUSES.map((status) => ({
+    status,
+    label: quotationStatusLabel(status),
+    count: undefined,
+  }))
+  return { total: undefined, tiles }
 }

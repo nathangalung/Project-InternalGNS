@@ -67,6 +67,7 @@ export type RecentQuotation = {
   quotationNo: string
   version: number
   client: string
+  clientId: number
   date: string
   productCount: number
   total: string
@@ -91,6 +92,7 @@ export function toRecentQuotation(
     quotationNo: q.quotationNo,
     version: q.version,
     client: q.companyName,
+    clientId: q.companyClientId,
     date: formatDate(q.createdAt),
     productCount: q.productCount,
     total: `Rp${formatNumber(q.grandTotal)}`,

@@ -458,8 +458,11 @@ test.describe("quotation wizard import and requests", () => {
       )
       .toEqual([[text, "unavailable"]])
 
-    page.once("dialog", (d) => void d.accept())
     await row.getByRole("button", { name: "Hapus" }).click()
+    await page
+      .getByRole("dialog", { name: "Hapus permintaan ini?" })
+      .getByRole("button", { name: "Hapus Permintaan" })
+      .click()
     await expect(row).toHaveCount(0)
     expect(await api<Request[]>("GET", `/quotations/${q.id}/requests`)).toEqual([])
   })
@@ -751,6 +754,42 @@ test.describe("quotation list", () => {
     await expect(page.getByRole("link", { name: open.quotationNo })).toBeVisible()
     await expect(page.getByPlaceholder("Cari penawaran, klien, atau nomor...")).toHaveValue(
       seed.prefix,
+    )
+  })
+
+  // Narrower result moves the reader.
+  test("removing a chip past the last page lands on the new last page", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const lines = [{ item, qty: 1, price: 30_000 }]
+    for (let i = 0; i < 4; i++) await seed.quotation({ client, lines })
+    for (let i = 0; i < 2; i++) {
+      const q = await seed.quotation({ client, lines })
+      await seed.setQuotationStatus(q.id, "cancelled", "Klien tidak jadi memesan")
+    }
+
+    await page.goto("/quotations")
+    await page.getByPlaceholder("Cari penawaran, klien, atau nomor...").fill(seed.prefix)
+    const rows = page.getByRole("row", { name: new RegExp(client.name) })
+    await expect(rows).toHaveCount(6)
+    await page.getByRole("button", { name: "Filter", exact: true }).click()
+    const filter = page.getByRole("dialog", { name: "Filter Quotation" })
+    const statuses = filter.getByRole("group", { name: "Status Quotation" })
+    await statuses.getByRole("button", { name: "Draf" }).click()
+    await statuses.getByRole("button", { name: "Dibatalkan" }).click()
+    await filter.getByRole("button", { name: "Terapkan" }).click()
+
+    await page.getByRole("button", { name: /^\d+ Baris$/ }).click()
+    await page.getByRole("menuitemradio", { name: "5 Baris", exact: true }).click()
+    await page.getByRole("button", { name: "2", exact: true }).click()
+    await expect(rows).toHaveCount(1)
+
+    await page.getByRole("button", { name: "Hapus filter Status: Draf" }).click()
+    await expect(rows).toHaveCount(2)
+    await expect(page.getByText("Menampilkan 1-2 dari 2 Quotation")).toBeVisible()
+    await expect(page.getByRole("button", { name: "1", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
     )
   })
 })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { getPageNumbers, PAGE_SIZE_OPTIONS } from "./pagination"
+import { clampPage, getPageNumbers, PAGE_SIZE_OPTIONS, pageCount } from "./pagination"
 
 describe("getPageNumbers", () => {
   it.each<[string, number, number, (number | null)[]]>([
@@ -29,5 +29,27 @@ describe("getPageNumbers", () => {
 
   it("offers the row sizes the list footer shows", () => {
     expect(PAGE_SIZE_OPTIONS).toEqual([5, 10, 15])
+  })
+})
+
+describe("pageCount", () => {
+  it.each<[number, number, number]>([
+    [0, 5, 1],
+    [5, 5, 1],
+    [6, 5, 2],
+    [11, 5, 3],
+  ])("%i rows at %i a page make %i pages", (rows, size, want) => {
+    expect(pageCount(rows, size)).toBe(want)
+  })
+})
+
+describe("clampPage", () => {
+  it.each<[string, number, number, number]>([
+    ["within range", 2, 3, 2],
+    ["past the end", 3, 2, 2],
+    ["below one", 0, 3, 1],
+    ["no pages", 4, 0, 1],
+  ])("%s", (_name, page, total, want) => {
+    expect(clampPage(page, total)).toBe(want)
   })
 })

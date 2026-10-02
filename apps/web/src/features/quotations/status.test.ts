@@ -105,10 +105,12 @@ describe("statTiles order", () => {
     expect(statTiles(rows)).toEqual({ total: 5, tiles: rows })
   })
 
-  it("shows zero tiles before data", () => {
+  // Unknown counts, not zero.
+  it("shows every tile without a count before data", () => {
     const { total, tiles } = statTiles(undefined)
-    expect(total).toBe(0)
+    expect(total).toBeUndefined()
     expect(tiles.map((t) => t.label)).toEqual(QUOTATION_STATUS_LABELS)
+    expect(tiles.every((t) => t.count === undefined)).toBe(true)
   })
 })
 

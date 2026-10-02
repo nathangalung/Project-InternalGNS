@@ -21,6 +21,7 @@ import {
   formatNumber as formatId,
   formatRupiah as formatRp,
   formatRupiahAxis as formatRpAxis,
+  PENDING_FIGURE,
   toNum,
 } from "@/lib/format"
 import { roleCanAccess } from "@/lib/rbac"
@@ -100,7 +101,7 @@ export default function Dashboard() {
   // Tile count, one Terlambat source
   const overdue = statusCount(summary?.invoiceStatuses, "overdue") ?? summary?.invoicesOverdue ?? 0
   // Dash until the summary arrives
-  const fig = (text: string) => (summary ? text : "–")
+  const fig = (text: string) => (summary ? text : PENDING_FIGURE)
 
   return (
     <div className={ui.pageContent}>

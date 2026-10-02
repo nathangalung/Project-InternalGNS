@@ -147,6 +147,7 @@ describe("status labels", () => {
       id: 1,
       quotationNo: "Q-1",
       version: 1,
+      companyClientId: 4,
       companyName: "PT Laut",
       status: "expired",
       grandTotal: "10",
@@ -300,6 +301,7 @@ describe("unreadable money", () => {
       id: 1,
       quotationNo: "Q-1",
       version: 1,
+      companyClientId: 4,
       companyName: "PT Laut",
       status: "draft",
       grandTotal: "n/a",
@@ -317,6 +319,7 @@ describe("unreadable money", () => {
       id: 1,
       quotationNo: "Q-1",
       version: 2,
+      companyClientId: 4,
       companyName: "PT Laut",
       status: "sent",
       grandTotal: "1250000",
@@ -326,7 +329,13 @@ describe("unreadable money", () => {
       productCount: 1,
       createdAt: "2026-09-01T12:00:00Z",
     })
-    expect(row).toMatchObject({ id: "1", total: "1.250.000", hargaBeli: "900.000,5", version: 2 })
+    expect(row).toMatchObject({
+      id: "1",
+      clientId: 4,
+      total: "1.250.000",
+      hargaBeli: "900.000,5",
+      version: 2,
+    })
   })
 })
 

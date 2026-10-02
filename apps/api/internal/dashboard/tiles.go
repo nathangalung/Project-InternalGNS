@@ -1,30 +1,31 @@
 package dashboard
 
-import "github.com/nathangalung/internalgns/apps/api/internal/invoices"
+import (
+	"github.com/nathangalung/internalgns/apps/api/internal/invoices"
+	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
+	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
+)
 
 // tile pairs status and label.
 type tile struct{ status, label string }
 
-// Quotation and PO tile orders.
-// Keys and labels match the quotations and purchaseorders status models.
-var (
-	quotationTiles = []tile{
-		{"draft", "Draf"},
-		{"sent", "Dikirim"},
-		{"revision", "Revisi"},
-		{"accepted", "Disetujui"},
-		{"rejected", "Ditolak"},
-		{"cancelled", "Dibatalkan"},
-		{"expired", "Kedaluwarsa"},
+// quotationTiles follows the quotation slice.
+func quotationTiles() []tile {
+	out := make([]tile, 0, len(quotations.Statuses))
+	for _, s := range quotations.Statuses {
+		out = append(out, tile{string(s.Status), s.Label})
 	}
-	poTiles = []tile{
-		{"PENDING", "Pending"},
-		{"UPLOADED", "PO Diunggah"},
-		{"ON_PROGRESS", "Dalam Progres"},
-		{"DELIVERED", "Dikirim"},
-		{"CANCELLED", "Dibatalkan"},
+	return out
+}
+
+// poTiles follows the PO slice.
+func poTiles() []tile {
+	out := make([]tile, 0, len(purchaseorders.StatusOrder))
+	for _, s := range purchaseorders.StatusOrder {
+		out = append(out, tile{string(s), purchaseorders.StatusLabel(s)})
 	}
-)
+	return out
+}
 
 // invoiceTiles follows the invoice slice.
 func invoiceTiles() []tile {

@@ -44,8 +44,8 @@ func (r *Repo) Summary(ctx context.Context) (Summary, error) {
 	if err != nil {
 		return Summary{}, err
 	}
-	s.QuotationStatuses = fold(quotationTiles, counts["quotation"])
-	s.PoStatuses = fold(poTiles, counts["purchase_order"])
+	s.QuotationStatuses = fold(quotationTiles(), counts["quotation"])
+	s.PoStatuses = fold(poTiles(), counts["purchase_order"])
 	s.InvoiceStatuses = fold(invoiceTiles(), counts["invoice"])
 	return s, nil
 }

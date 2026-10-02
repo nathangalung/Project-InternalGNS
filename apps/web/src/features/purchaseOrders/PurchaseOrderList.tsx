@@ -12,7 +12,7 @@ import { resolveRange } from "@/lib/date-range"
 import { formatDate } from "@/lib/format"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
-import { useListScreen } from "@/lib/useListScreen"
+import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import { poRowFromBackend } from "./adapters"
 import * as purchaseOrdersApi from "./api"
 import { usePoUpload, usePurchaseOrders } from "./hooks"
@@ -70,6 +70,7 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
   const upload = usePoUpload(uploadRow)
 
   const totalItems = rawList?.total ?? 0
+  usePageWithin(list, rawList?.total)
   const totalPages = list.totalPagesOf(totalItems)
 
   async function handleUploadSubmit(

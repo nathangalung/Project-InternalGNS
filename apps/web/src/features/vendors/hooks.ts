@@ -53,10 +53,13 @@ export function useUpdateVendor() {
       vendorsApi.update(id, input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
-      // PO lines and item vendor lists carry the vendor name.
+      // Lists printing the vendor name.
+      //
+      // PO lines, item vendor lists and Quotation Terakhir carry it.
       qc.invalidateQueries({
         predicate: (q) =>
-          (q.queryKey[0] === "items" && q.queryKey[2] === "vendors") ||
+          (q.queryKey[0] === "items" &&
+            (q.queryKey[2] === "vendors" || q.queryKey[2] === "quotations")) ||
           (q.queryKey[0] === "purchase-orders" && q.queryKey[2] === "items"),
       })
     },
@@ -96,9 +99,13 @@ export function useVendorLogoDownloadUrl(id: number | undefined, objectKey?: str
 }
 
 // The newest quotations, newest first.
+//
+// A secondary section: a failure shows in it, not on the route error
+// boundary, which would replace the page and its unsaved form.
 export function useVendorRecentQuotations(id: number | undefined) {
   return useQuery({
     queryKey: id ? queryKeys.vendors.quotations(id) : queryKeys.vendors.all,
     queryFn: id !== undefined && id > 0 ? () => vendorsApi.listRecentQuotations(id) : skipToken,
+    throwOnError: false,
   })
 }

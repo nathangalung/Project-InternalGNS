@@ -1,21 +1,18 @@
 import { useState } from "react"
 import EntityLink from "@/components/shared/EntityLink"
+import PageButtons from "@/components/shared/PageButtons"
 import RowsPerPageMenu from "@/components/shared/RowsPerPageMenu"
 import type { ProductRow } from "@/features/quotations/types"
 import { formatRupiah as formatRp } from "@/lib/format"
+import { clampPage, PAGE_SIZE_OPTIONS, pageCount } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { qe } from "../wizard-styles"
-import { getPageNumbers, PAGE_SIZE_OPTIONS } from "./helpers"
 
 type ProductTableProps = {
   showProfit?: boolean
   products: ProductRow[]
 }
 
-const pageBtn = `flex h-8 w-8 items-center justify-center rounded-sm text-sm transition ${ui.focusRing}`
-const pageBtnIdle = "font-medium text-[#4A4455] hover:bg-dark-100"
-const pageBtnActive = "bg-primary-700 font-bold text-white"
-const pageBtnNav = `flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100 disabled:cursor-not-allowed disabled:opacity-40 ${ui.focusRing}`
 const requestedNote = "mt-0.5 text-[11px] text-[#B45309]"
 // Profit column classes.
 //
@@ -28,14 +25,15 @@ const tdProfit =
 
 // Collapsible paginated product list.
 export default function ProductTable({ products, showProfit = true }: ProductTableProps) {
-  const [page, setPage] = useState(1)
+  const [rawPage, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(5)
   const [expanded, setExpanded] = useState(true)
 
   if (products.length === 0) return null
 
   const total = products.length
-  const totalPages = Math.ceil(total / pageSize) || 1
+  const totalPages = pageCount(total, pageSize)
+  const page = clampPage(rawPage, totalPages)
   const start = (page - 1) * pageSize
   const slice = products.slice(start, start + pageSize)
 
@@ -60,62 +58,7 @@ export default function ProductTable({ products, showProfit = true }: ProductTab
             }}
             triggerClassName={`flex items-center gap-1.5 rounded-sm border border-dark-200 bg-white px-2.5 py-[5px] text-xs text-[#4A4455] ${ui.focusRing}`}
           />
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              className={pageBtnNav}
-              aria-label="Halaman sebelumnya"
-              disabled={page === 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              <svg aria-hidden="true" width="5" height="8" viewBox="0 0 5 8" fill="none">
-                <path
-                  d="M4 1L1 4L4 7"
-                  stroke="#191C1E"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-            {getPageNumbers(page, totalPages).map((n, i) =>
-              n === null ? (
-                <span
-                  key={`e${i}`}
-                  className="select-none self-center px-0.5 text-[13px] text-[#9CA3AF]"
-                >
-                  …
-                </span>
-              ) : (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setPage(n)}
-                  aria-current={n === page ? "page" : undefined}
-                  className={`${pageBtn} ${n === page ? pageBtnActive : pageBtnIdle}`}
-                >
-                  {n}
-                </button>
-              ),
-            )}
-            <button
-              type="button"
-              className={pageBtnNav}
-              aria-label="Halaman berikutnya"
-              disabled={page === totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              <svg aria-hidden="true" width="5" height="8" viewBox="0 0 5 8" fill="none">
-                <path
-                  d="M1 1L4 4L1 7"
-                  stroke="#191C1E"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
+          <PageButtons currentPage={page} totalPages={totalPages} onPage={setPage} dimDisabled />
           <button
             type="button"
             onClick={() => setExpanded((e) => !e)}

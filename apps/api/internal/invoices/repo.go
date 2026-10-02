@@ -51,13 +51,12 @@ var sortable = listq.Whitelist{
 var tiebreak = listq.Column{Expr: "inv.id", Dir: listq.Desc}
 
 // filterableEffective keeps the known values.
-// Cancelled is not an effective-status filter; unknown values are ignored
-// rather than matching nothing.
+// Cancelled is listed only when asked for by name; the web's default set
+// leaves it out. Unknown values are ignored rather than matching nothing.
 func filterableEffective(raw []string) []string {
 	out := make([]string, 0, len(raw))
 	for _, s := range raw {
-		switch Status(s) {
-		case StatusDraft, StatusSent, StatusPaid, StatusOverdue:
+		if isValidStatus(Status(s)) {
 			out = append(out, s)
 		}
 	}

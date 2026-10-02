@@ -347,6 +347,25 @@ func TestRepo_ChangeStatus_RejectsInvalid(t *testing.T) {
 	}
 }
 
+// List rows carry client id.
+func TestRepo_List_CarriesClientID(t *testing.T) {
+	ctx, repo, _ := newRepo(t)
+	in := sampleCreate()
+	id, err := repo.Create(ctx, in, seedUserID)
+	require.NoError(t, err)
+
+	res, err := repo.List(ctx, quotations.ListFilter{SortBy: "createdAt", SortDir: "desc", Limit: 100})
+	require.NoError(t, err)
+	var found bool
+	for _, r := range res.Rows {
+		if r.ID == id {
+			found = true
+			assert.Equal(t, in.CompanyClientID, r.CompanyClientID)
+		}
+	}
+	assert.True(t, found, "created quotation listed")
+}
+
 func TestRepo_List_FiltersAndSort(t *testing.T) {
 	ctx, repo, _ := newRepo(t)
 	for i := 0; i < 3; i++ {

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react"
+import { useId, useRef, useState } from "react"
 import EntityLink from "@/components/shared/EntityLink"
 import Pagination from "@/components/shared/Pagination"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
@@ -9,7 +9,7 @@ import {
   useVendorItems,
   useVendorLogoDownloadUrl,
 } from "@/features/vendors/hooks"
-import { fetchObjectUrl } from "@/lib/api-client"
+import { useObjectUrl } from "@/hooks/useObjectUrl"
 import { logoBackground } from "@/lib/avatar"
 import { errorMessage } from "@/lib/errors"
 import { formatRupiah } from "@/lib/format"
@@ -17,7 +17,7 @@ import { canWriteCatalog } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
-import { useListScreen } from "@/lib/useListScreen"
+import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import { digitsOnly, optionalEmailError, optionalPhoneError } from "@/lib/validation"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
 import { buildContactInfo, vendorFormErrors } from "./contact-info"
@@ -68,7 +68,8 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   const [email, setEmail] = useState(initialEmail)
   const [address, setAddress] = useState(vendor.location ?? "")
   const [isActive, setIsActive] = useState(vendor.isActive)
-  const [logoDataUrl, setLogoDataUrl] = useState<string>("")
+  // Picked logo preview
+  const [logoPreview, setLogoPreview] = useState("")
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -89,6 +90,8 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   const updateVendor = useUpdateVendor()
   const uploadLogo = useUploadVendorLogo()
   const { data: logoDownload } = useVendorLogoDownloadUrl(vendor.id, vendor.logoObjectKey)
+  const storedLogo = useObjectUrl(logoDownload?.downloadUrl)
+  const logoDataUrl = logoPreview || storedLogo
   const itemsList = useListScreen<Record<string, never>>({})
   const {
     data: vendorItems,
@@ -101,30 +104,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   })
   const items = vendorItems?.rows ?? []
   const itemsTotal = vendorItems?.total ?? 0
-
-  useEffect(() => {
-    const path = logoDownload?.downloadUrl
-    if (!path) {
-      if (!vendor.logoObjectKey) setLogoDataUrl("")
-      return
-    }
-    let active = true
-    let objectUrl = ""
-    fetchObjectUrl(path)
-      .then((u) => {
-        if (active) {
-          objectUrl = u
-          setLogoDataUrl(u)
-        } else {
-          URL.revokeObjectURL(u)
-        }
-      })
-      .catch(() => {})
-    return () => {
-      active = false
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
-    }
-  }, [logoDownload?.downloadUrl, vendor.logoObjectKey])
+  usePageWithin(itemsList, vendorItems?.total)
 
   // Form state hydrates once from the state initializers above. The route
   // remounts on a different vendor, so a background refetch of the same vendor
@@ -152,11 +132,11 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
       toast.error(errorMessage(err, "Berkas logo vendor tidak valid."))
       return
     }
-    const previous = logoDataUrl
+    const previous = logoPreview
     let failed = false
     const reader = new FileReader()
     reader.onload = () => {
-      if (!failed && typeof reader.result === "string") setLogoDataUrl(reader.result)
+      if (!failed && typeof reader.result === "string") setLogoPreview(reader.result)
     }
     reader.readAsDataURL(file)
     uploadLogo.mutate(
@@ -164,7 +144,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
       {
         onError: () => {
           failed = true
-          setLogoDataUrl(previous)
+          setLogoPreview(previous)
         },
       },
     )

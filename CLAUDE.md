@@ -256,7 +256,11 @@ document's status history table.
   a PO; `POST /invoices/{id}/replacement` then issues a Pengganti draft for
   the same PO. Terlambat is derived, never set: `fn_invoice_effective_status`
   (a stored overdue, or a draft or sent past its due date) is the one rule the
-  list, summary and dashboard read.
+  list, summary and dashboard read. The invoice list leaves cancelled
+  invoices out until Dibatalkan is picked in its filter; a cancelled row
+  opens itself with `?invoiceId`, since the quotation route shows the newest
+  invoice, its Pengganti once one exists, and offers no Coretax XML, which
+  the API refuses for a cancelled invoice.
 
 Status labels are Indonesian and come from the API (`StatusLabel` in each
 package); `src/lib/status.ts` mirrors them for fields that carry only the key.
@@ -321,7 +325,9 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
   and client pages: the five newest quotations that reached the client (every
   status but draft and cancelled) from `GET /items/{id}/quotations`,
   `/vendors/{id}/quotations` and `/clients/{id}/quotations`, with the
-  quotation status badge; each page passes only its own columns.
+  quotation status badge; each page passes only its own columns. A failed
+  load shows in the section (`throwOnError: false`), never on the route
+  error boundary, so the page and its unsaved form stay.
 
 Stored files (logos, product photos, attachments) come through the
 authenticated API proxy, and the enforced CSP allows images only from self,
@@ -343,7 +349,11 @@ debounce, filters, page, per-page, and the reset-to-page-1 invariant. Note which
 mutator resets the page — `setSearch`, `applyFilters` and `setItemsPerPage` do,
 `clearSearch` and `patchFilters` do not, because removing a filter chip must
 keep the reader in place. Each screen still owns its own filter defaults and
-query call.
+query call, and passes the server total to `usePageWithin`, which moves the
+reader to the new last page when a narrower result ends before the current
+one. Client-side tables (the quotation product tables) clamp the same way
+through `clampPage` in `lib/pagination.ts`, and every pager renders
+`components/shared/PageButtons`.
 
 ## Testing
 

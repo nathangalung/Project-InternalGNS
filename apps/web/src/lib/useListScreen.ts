@@ -1,5 +1,6 @@
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import { clampPage, pageCount } from "@/lib/pagination"
 
 export type ListScreen<F> = {
   search: string
@@ -63,6 +64,21 @@ export function useListScreen<F>(initialFilters: F, initialItemsPerPage = 10): L
     itemsPerPage,
     setItemsPerPage,
     startIndex,
-    totalPagesOf: (totalItems) => Math.max(1, Math.ceil(totalItems / itemsPerPage)),
+    totalPagesOf: (totalItems) => pageCount(totalItems, itemsPerPage),
   }
+}
+
+// Keep the page in range.
+//
+// Removing a chip keeps the page, and rows removed elsewhere shrink the
+// total on the next fetch, so the server total can end before the page;
+// the reader moves to the new last page. An unknown total (still loading)
+// leaves the page alone.
+export function usePageWithin<F>(list: ListScreen<F>, totalItems: number | undefined): void {
+  const { currentPage, setCurrentPage, itemsPerPage } = list
+  useEffect(() => {
+    if (totalItems === undefined) return
+    const page = clampPage(currentPage, pageCount(totalItems, itemsPerPage))
+    if (page !== currentPage) setCurrentPage(page)
+  }, [totalItems, currentPage, itemsPerPage, setCurrentPage])
 }

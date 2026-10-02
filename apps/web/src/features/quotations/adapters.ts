@@ -186,6 +186,7 @@ export function toTableRow(api: ApiQuotationRow): QuotationRow {
     displayNo: api.quotationNo,
     version: api.version,
     client: api.companyName,
+    clientId: api.companyClientId,
     date: formatDate(api.createdAt),
     hargaBeli: Number.isFinite(hargaBeli) ? formatNumber(hargaBeli) : api.totalHargaBeli,
     total: Number.isFinite(grand) ? formatNumber(grand) : api.grandTotal,

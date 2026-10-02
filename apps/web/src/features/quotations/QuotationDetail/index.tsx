@@ -1,4 +1,5 @@
 import { useState } from "react"
+import EntityLink from "@/components/shared/EntityLink"
 import HistoryTimeline from "@/components/shared/HistoryTimeline"
 import { getCompanyInitials } from "@/features/clients/helpers"
 import { downloadQuotationPdf } from "@/features/quotations/hooks"
@@ -67,7 +68,18 @@ export default function QuotationDetail({
       />
       <StatusBar
         status={q.status}
-        hint={statusHint(status)}
+        hint={
+          status === "accepted" ? (
+            <>
+              {statusHint(status)}{" "}
+              <EntityLink kind="purchaseOrder" quotationId={id}>
+                Lihat PO
+              </EntityLink>
+            </>
+          ) : (
+            statusHint(status)
+          )
+        }
         moves={moves}
         cancel={cancel}
         canRevise={canRevise}
