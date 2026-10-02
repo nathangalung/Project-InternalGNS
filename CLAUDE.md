@@ -259,7 +259,8 @@ document's status history table.
   list, summary and dashboard read. The invoice list leaves cancelled
   invoices out until Dibatalkan is picked in its filter; a cancelled row
   opens itself with `?invoiceId`, since the quotation route shows the newest
-  invoice, its Pengganti once one exists.
+  invoice, its Pengganti once one exists, and offers no Coretax XML, which
+  the API refuses for a cancelled invoice.
 
 Status labels are Indonesian and come from the API (`StatusLabel` in each
 package); `src/lib/status.ts` mirrors them for fields that carry only the key.
