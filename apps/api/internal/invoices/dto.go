@@ -134,7 +134,7 @@ type UpdateDatesRequest struct {
 type ListFilter struct {
 	Q                 string
 	Statuses          []string
-	EffectiveStatuses []string // draft|sent|paid|overdue with summary semantics
+	EffectiveStatuses []string // draft|sent|paid|overdue|cancelled with summary semantics
 	DateFrom          *time.Time
 	DateTo            *time.Time
 	DueFrom           *time.Time
