@@ -79,8 +79,8 @@ hosts still pull. Resolve a new one with
 `docker buildx imagetools inspect <name:tag> --format '{{json .Manifest.Digest}}'`.
 Dependabot's `docker` (Dockerfiles) and `docker-compose` (compose files)
 ecosystems move tag and digest together. No ecosystem reads workflow
-images, so `ci.yml` copies the `compose.dev.yml` pins and its first backend
-step fails until they match.
+images, so `ci.yml` copies the compose pins and its first backend step fails
+until they match both `compose.dev.yml` and `compose.prod.yml`.
 
 ## Bumping policy
 

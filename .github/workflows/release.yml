@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Image tag to push (e.g. v0.1.0)"
+        description: "Existing vX.Y.Z tag whose ci run passed, to rebuild (e.g. v0.4.0)"
         required: true
         type: string
 
@@ -15,18 +15,32 @@ permissions:
   contents: read
   packages: write
 
+# One group per release tag.
+# Under workflow_run github.ref is always the default branch, and a group
+# keeps one pending run, so a third tag pushed during a release cancelled
+# the second one's queued run. A tag's push run and a dispatch of the same
+# tag share a group, so two builds never race to push one tag. A ci run from
+# a pull request publishes nothing and gets a group of its own, so a branch
+# named like a tag cannot cancel that tag's queued release.
 concurrency:
-  group: release-${{ github.ref }}
+  group: >-
+    release-${{ github.event.workflow_run.event == 'push'
+    && github.event.workflow_run.head_branch
+    || inputs.tag
+    || github.run_id }}
   cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
 
 jobs:
-  publish:
-    name: publish images
+  resolve:
+    name: resolve release
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
     # A ci run from a pull request, even one on a branch named v*, must not
     # publish: only a tag pushed to this repository does.
     if: >
@@ -35,6 +49,53 @@ jobs:
        github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.head_repository.full_name == github.repository &&
        startsWith(github.event.workflow_run.head_branch, 'v'))
+    outputs:
+      tag: ${{ steps.ref.outputs.tag }}
+      sha: ${{ steps.ref.outputs.sha }}
+    steps:
+      # A dispatch rebuilds a released tag.
+      # It must name an existing vX.Y.Z tag whose own ci push run succeeded,
+      # and publish checks out that tag's commit, never the dispatching
+      # branch's head, so no image carries a release tag over code CI did
+      # not pass.
+      - name: resolve tag and commit
+        id: ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_TAG: ${{ inputs.tag }}
+          RUN_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" != "workflow_dispatch" ]; then
+            tag=$RUN_BRANCH
+            sha=$RUN_SHA
+          else
+            tag=$DISPATCH_TAG
+            if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::tag '$tag' is not vX.Y.Z"
+              exit 1
+            fi
+            if ! sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/refs/tags/$tag" --jq .sha); then
+              echo "::error::tag $tag does not exist in $GITHUB_REPOSITORY"
+              exit 1
+            fi
+            passed=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$sha&event=push&status=success&per_page=100" \
+              --jq "[.workflow_runs[] | select(.head_branch == \"$tag\")] | length")
+            if [ "$passed" -eq 0 ]; then
+              echo "::error::no successful ci run for the $tag tag push at $sha"
+              exit 1
+            fi
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: publish images
+    needs: resolve
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -46,7 +107,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ needs.resolve.outputs.sha }}
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
@@ -60,17 +121,16 @@ jobs:
       - name: resolve tag
         id: tag
         env:
-          DISPATCH_TAG: ${{ inputs.tag }}
-          WORKFLOW_RUN_BRANCH: ${{ github.event.workflow_run.head_branch }}
-          EVENT_NAME: ${{ github.event_name }}
+          TAG: ${{ needs.resolve.outputs.tag }}
+          OWNER: ${{ github.repository_owner }}
+          SERVICE: ${{ matrix.service }}
         run: |
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            echo "value=$DISPATCH_TAG" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=$WORKFLOW_RUN_BRANCH" >> "$GITHUB_OUTPUT"
-          fi
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          echo "short=$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
+          {
+            echo "value=$TAG"
+            echo "image=$REGISTRY/${OWNER,,}/internalgns-$SERVICE"
+            echo "sha=$(git rev-parse HEAD)"
+            echo "short=$(git rev-parse --short=7 HEAD)"
+          } >> "$GITHUB_OUTPUT"
 
       # Checked-out SHA, not github.sha.
       # Under workflow_run github.sha is main's head, not the tag's commit.
@@ -78,7 +138,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/internalgns-${{ matrix.service }}
+          images: ${{ steps.tag.outputs.image }}
           tags: |
             type=raw,value=${{ steps.tag.outputs.value }}
             type=raw,value=sha-${{ steps.tag.outputs.short }},priority=100
@@ -95,41 +155,18 @@ jobs:
             exit 1
           fi
 
-      - name: build image (local scan)
+      # Build once, push untagged.
+      # The image goes to GHCR by digest only, Trivy scans that digest, and
+      # the release tags are then pointed at it, so the published image is
+      # the scanned one. Building twice reran the runtime stage's package
+      # upgrade and shipped a second, unscanned build. A digest that fails
+      # the scan stays untagged, and compose.prod.yml pulls only by tag.
+      - name: build and push by digest
+        id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ${{ matrix.context }}
-          push: false
-          load: true
-          tags: internalgns-${{ matrix.service }}:scan
-          build-args: |
-            VERSION=${{ steps.tag.outputs.value }}
-            VITE_API_URL=${{ vars.VITE_API_URL }}
-          cache-from: type=gha,scope=${{ matrix.service }}
-          cache-to: type=gha,scope=${{ matrix.service }},mode=max,ignore-error=true
-          # The runtime stage installs OS packages, and its cached layer keys only
-          # on the Dockerfile line, so a cache hit would ship patches as old as
-          # the first build. A release always rebuilds it; build stages stay
-          # cached.
-          no-cache-filters: runtime
-
-      - name: scan image
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: internalgns-${{ matrix.service }}:scan
-          format: table
-          exit-code: "1"
-          ignore-unfixed: true
-          vuln-type: os,library
-          severity: CRITICAL,HIGH
-          trivyignores: .trivyignore
-
-      - name: build and push
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          context: ${{ matrix.context }}
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          outputs: type=image,name=${{ steps.tag.outputs.image }},push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VERSION=${{ steps.tag.outputs.value }}
@@ -143,3 +180,52 @@ jobs:
           no-cache-filters: runtime
           provenance: mode=max
           sbom: true
+
+      - name: scan image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          TRIVY_IMAGE_SRC: remote
+          TRIVY_PLATFORM: linux/amd64
+        with:
+          image-ref: ${{ steps.tag.outputs.image }}@${{ steps.build.outputs.digest }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+          trivyignores: .trivyignore
+
+      - name: tag the scanned digest
+        env:
+          IMAGE: ${{ steps.tag.outputs.image }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          set -euo pipefail
+          args=()
+          while IFS= read -r t; do
+            if [ -n "$t" ]; then args+=(-t "$t"); fi
+          done <<< "$TAGS"
+          # Dry run before any tag moves.
+          # It prints the exact index bytes the create would push, plus a
+          # newline, so their hash is the digest the tags would carry. A
+          # one-source create is a carbon copy; anything else stops here,
+          # before a tag is published.
+          planned="sha256:$(docker buildx imagetools create --dry-run "${args[@]}" "$IMAGE@$DIGEST" \
+            | head -c -1 | sha256sum | cut -d' ' -f1)"
+          if [ "$planned" != "$DIGEST" ]; then
+            echo "::error::the tags would point at $planned, not the scanned $DIGEST; no tag was moved"
+            exit 1
+          fi
+          docker buildx imagetools create "${args[@]}" "$IMAGE@$DIGEST"
+          while IFS= read -r t; do
+            [ -n "$t" ] || continue
+            got=$(docker buildx imagetools inspect "$t" --format '{{json .Manifest.Digest}}' | tr -d '"')
+            if [ "$got" != "$DIGEST" ]; then
+              echo "::error::$t was moved but now points at $got, not the scanned $DIGEST; repoint it before deploying"
+              exit 1
+            fi
+            echo "$t -> $DIGEST"
+          done <<< "$TAGS"

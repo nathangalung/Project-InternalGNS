@@ -63,7 +63,7 @@ updates:
 
   # Base images are pinned as tag@sha256 index digests; these entries move
   # both. Workflow images cannot be tracked, so ci.yml copies the compose
-  # pins and fails until it matches compose.dev.yml.
+  # pins and fails until it matches both compose files.
   - package-ecosystem: docker
     directory: /apps/api
     schedule:
