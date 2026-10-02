@@ -1,7 +1,5 @@
 import type { ProductRow } from "@/features/quotations/types"
 
-export { getPageNumbers, PAGE_SIZE_OPTIONS } from "@/lib/pagination"
-
 // Product profit after the discount.
 //
 // The header discount comes off the selling side only, so it comes straight

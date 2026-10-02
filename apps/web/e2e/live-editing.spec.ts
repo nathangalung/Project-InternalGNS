@@ -212,6 +212,28 @@ test.describe("live quotation editing", () => {
       .toEqual([[fresh, true]])
   })
 
+  // The product table keeps a page.
+  test("deleting the last line on the last page shows the page before", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const lines = Array.from({ length: 6 }, (_, i) => ({ item, qty: i + 1, price: 25_000 }))
+    const q = await seed.quotation({ client, lines })
+
+    await page.goto(`/quotations/${q.id}/edit`)
+    await toStep(page, 2)
+    await page.getByRole("button", { name: "2", exact: true }).click()
+    await expect(page.getByText("Menampilkan 6–6 dari 6 produk")).toBeVisible()
+    page.once("dialog", (d) => void d.accept())
+    await page.getByRole("button", { name: "Hapus produk 6" }).click()
+
+    await expect(page.getByText("Menampilkan 1–5 dari 5 produk")).toBeVisible()
+    await expect(page.getByRole("button", { name: "Hapus produk 5" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "1", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+  })
+
   test("a change saved elsewhere shows up without a reload", async ({ page, seed }) => {
     const client = await seed.client()
     const item = await seed.item()

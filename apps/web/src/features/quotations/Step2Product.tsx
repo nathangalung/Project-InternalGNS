@@ -1,8 +1,9 @@
 import type React from "react"
 import { useRef, useState } from "react"
+import PageButtons from "@/components/shared/PageButtons"
 import RowsPerPageMenu from "@/components/shared/RowsPerPageMenu"
 import { matchRows, recommend } from "@/features/items/api"
-import { getPageNumbers } from "@/lib/pagination"
+import { clampPage, pageCount } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { parseRfq } from "./api"
 import { importedLines, importSummary } from "./import"
@@ -11,10 +12,6 @@ import QuotationReviewCard from "./QuotationReviewCard"
 import { countUnknownUnits, type ProductItem, unitIssue } from "./wizard"
 import { qe, qep } from "./wizard-styles"
 
-const pageBtn = `flex h-8 w-8 items-center justify-center rounded-sm text-sm transition ${ui.focusRing}`
-const pageBtnIdle = "font-medium text-[#4A4455] hover:bg-dark-100"
-const pageBtnActive = "bg-primary-700 font-bold text-white"
-const pageBtnNav = `flex items-center justify-center rounded-sm border border-[#CCC3D8] p-2 transition hover:bg-dark-100 disabled:cursor-not-allowed disabled:opacity-40 ${ui.focusRing}`
 const costRow = "flex justify-between text-xs text-[#4B5563]"
 const costValue = "font-semibold text-[#111827]"
 const cardIconBtn = `rounded-sm p-0.5 disabled:cursor-not-allowed disabled:opacity-40 ${ui.focusRing}`
@@ -130,8 +127,10 @@ export default function Step2Product({
   }
 
   const totalProds = products.length
-  const totalPages = Math.ceil(totalProds / prodPageSize) || 1
-  const start = (prodPage - 1) * prodPageSize
+  const totalPages = pageCount(totalProds, prodPageSize)
+  // A removed line can leave the page past the end.
+  const page = clampPage(prodPage, totalPages)
+  const start = (page - 1) * prodPageSize
   const summaryProfit = summarySubTotal - summaryTotalHargaBeli
 
   return (
@@ -260,62 +259,12 @@ export default function Step2Product({
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                className={pageBtnNav}
-                aria-label="Halaman sebelumnya"
-                disabled={prodPage === 1}
-                onClick={() => setProdPage((p) => Math.max(1, p - 1))}
-              >
-                <svg aria-hidden="true" width="5" height="8" viewBox="0 0 5 8" fill="none">
-                  <path
-                    d="M4 1L1 4L4 7"
-                    stroke="#191C1E"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-              {getPageNumbers(prodPage, totalPages).map((n, i) =>
-                n === null ? (
-                  <span
-                    key={`e${i}`}
-                    className="select-none self-center px-0.5 text-[13px] text-[#9CA3AF]"
-                  >
-                    …
-                  </span>
-                ) : (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setProdPage(n)}
-                    aria-current={n === prodPage ? "page" : undefined}
-                    className={`${pageBtn} ${n === prodPage ? pageBtnActive : pageBtnIdle}`}
-                  >
-                    {n}
-                  </button>
-                ),
-              )}
-              <button
-                type="button"
-                className={pageBtnNav}
-                aria-label="Halaman berikutnya"
-                disabled={prodPage === totalPages}
-                onClick={() => setProdPage((p) => Math.min(totalPages, p + 1))}
-              >
-                <svg aria-hidden="true" width="5" height="8" viewBox="0 0 5 8" fill="none">
-                  <path
-                    d="M1 1L4 4L1 7"
-                    stroke="#191C1E"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            </div>
+            <PageButtons
+              currentPage={page}
+              totalPages={totalPages}
+              onPage={setProdPage}
+              dimDisabled
+            />
             <button
               type="button"
               onClick={() => setProdExpanded((e) => !e)}
