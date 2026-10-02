@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router"
-import { useCallback, useEffect, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import LoadingState from "@/components/shared/LoadingState"
+import Modal from "@/components/shared/Modal"
 import NotFoundState from "@/components/shared/NotFoundState"
 import StateMessage from "@/components/shared/StateMessage"
 import { useMe } from "@/features/auth/hooks"
@@ -103,6 +104,8 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   const { data: detail, isPending: isDetailPending } = useQuotation(qid)
   const updateContactMutation = useUpdateQuotationContact()
   const live = useLiveChange(qid)
+  // Line waiting for delete confirmation
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null)
   const locks = useEditLocks(qid)
   const { data: me } = useMe()
   const editable = detail ? isEditable(detail.status) : false
@@ -305,8 +308,16 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
   }
 
   // Saved at once, so it asks first.
+  //
+  // A dialog, not confirm(), which would block the lock heartbeat.
   function deleteLine(id: number) {
-    if (qid === undefined || !confirm("Hapus produk ini dari quotation?")) return
+    if (qid !== undefined) setPendingDelete(id)
+  }
+
+  function confirmDelete() {
+    const id = pendingDelete
+    setPendingDelete(null)
+    if (qid === undefined || id === null) return
     void change(() => quotationsApi.deleteLine(qid, id))
   }
 
@@ -583,6 +594,31 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         clientId={detail?.companyClientId}
         allowIncomplete
       />
+      {pendingDelete !== null && (
+        <Modal
+          title="Hapus produk ini dari quotation?"
+          onClose={() => setPendingDelete(null)}
+          className="max-w-[min(440px,92vw)]!"
+          footer={
+            <>
+              <button
+                type="button"
+                className={ui.modalCancel}
+                onClick={() => setPendingDelete(null)}
+              >
+                Batal
+              </button>
+              <button type="button" className={ui.modalSubmit} onClick={confirmDelete}>
+                Hapus Produk
+              </button>
+            </>
+          }
+        >
+          <p className="m-0 text-sm leading-6 text-[#4A4455]">
+            Produk ini langsung dihapus dari draf dan tidak dapat dikembalikan.
+          </p>
+        </Modal>
+      )}
     </>
   )
 }

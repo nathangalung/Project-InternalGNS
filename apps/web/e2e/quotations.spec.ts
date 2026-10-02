@@ -458,8 +458,11 @@ test.describe("quotation wizard import and requests", () => {
       )
       .toEqual([[text, "unavailable"]])
 
-    page.once("dialog", (d) => void d.accept())
     await row.getByRole("button", { name: "Hapus" }).click()
+    await page
+      .getByRole("dialog", { name: "Hapus permintaan ini?" })
+      .getByRole("button", { name: "Hapus Permintaan" })
+      .click()
     await expect(row).toHaveCount(0)
     expect(await api<Request[]>("GET", `/quotations/${q.id}/requests`)).toEqual([])
   })
