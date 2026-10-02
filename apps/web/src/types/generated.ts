@@ -355,6 +355,7 @@ export type ItemPriceHistoryRow = {
 
 // From items/dto.go
 export type ItemQuotationRow = {
+    lineId: number;
     quotationId: number;
     quotationNo: string;
     quotationDate: string;
@@ -1063,6 +1064,7 @@ export type VendorItemRow = {
 
 // From vendors/dto.go
 export type VendorQuotationRow = {
+    lineId: number;
     quotationId: number;
     quotationNo: string;
     quotationDate: string;

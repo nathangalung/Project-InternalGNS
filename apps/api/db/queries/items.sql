@@ -264,7 +264,7 @@ FROM fn_recommend_lines($1, $2);
 -- The product's newest quotation lines: quotations that reached the client
 -- (every status but draft and cancelled), newest quotation first. Lines
 -- marked Tidak Ditawarkan were not offered and stay out. $2 = limit.
-SELECT q.id AS quotation_id, q.quotation_no, q.created_at AS quotation_date, q.status,
+SELECT qi.id AS line_id, q.id AS quotation_id, q.quotation_no, q.created_at AS quotation_date, q.status,
        q.company_client_id AS client_id, q.company_client_name AS client_name, q.contact_name,
        v.id AS vendor_id, v.name AS vendor_name,
        qi.qty::text AS qty, qi.cost_price::text AS cost_price, qi.selling_price::text AS selling_price

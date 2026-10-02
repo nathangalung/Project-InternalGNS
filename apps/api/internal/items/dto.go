@@ -213,6 +213,7 @@ const RecentQuotationCount = 5
 // ItemQuotation is one quotation line offering the product.
 // Status is the quotation's status key; the web labels it.
 type ItemQuotation struct {
+	LineID        int64     `db:"line_id"        json:"lineId"`
 	QuotationID   int64     `db:"quotation_id"   json:"quotationId"`
 	QuotationNo   string    `db:"quotation_no"   json:"quotationNo"`
 	QuotationDate time.Time `db:"quotation_date" json:"quotationDate"`

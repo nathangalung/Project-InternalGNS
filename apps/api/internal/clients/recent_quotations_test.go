@@ -2,12 +2,14 @@ package clients_test
 
 import (
 	"net/http"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -55,6 +57,28 @@ func TestHandler_RecentQuotations(t *testing.T) {
 			require.NoError(t, err)
 			defer res.Body.Close()
 			assert.Equal(t, c.want, res.StatusCode)
+		})
+	}
+}
+
+// Failed reads stay generic.
+// The parent read and the list read each fail as a 500 that leaks nothing.
+func TestHandler_RecentQuotations_Faults(t *testing.T) {
+	id := newClient(t)
+	cases := []struct {
+		name string
+		exec db.Executor
+	}{
+		{"parent read", testutil.FakeExec{}},
+		{"list read", &testutil.CountingExec{Inner: testutil.Pool(t), FailAfter: 1}},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			srv := mountedSrv(t, c.exec)
+			res, err := srv.Client().Get(srv.URL + "/clients/" + strconv.FormatInt(id, 10) + "/quotations")
+			require.NoError(t, err)
+			defer res.Body.Close()
+			assertInternalProblem(t, res)
 		})
 	}
 }

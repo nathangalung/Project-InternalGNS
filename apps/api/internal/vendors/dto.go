@@ -88,6 +88,7 @@ const RecentQuotationCount = 5
 // VendorQuotation is one quotation line supplied by the vendor.
 // Status is the quotation's status key; the web labels it.
 type VendorQuotation struct {
+	LineID        int64     `db:"line_id"        json:"lineId"`
 	QuotationID   int64     `db:"quotation_id"   json:"quotationId"`
 	QuotationNo   string    `db:"quotation_no"   json:"quotationNo"`
 	QuotationDate time.Time `db:"quotation_date" json:"quotationDate"`
