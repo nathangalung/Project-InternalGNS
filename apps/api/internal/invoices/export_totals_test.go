@@ -193,3 +193,47 @@ func TestExport_PrintsSen(t *testing.T) {
 	assert.Equal(t, []string{"Rp~5.000,95"}, got.LineUnitPrices)
 	assert.Equal(t, []string{"Rp~5.000,95"}, got.LineAmounts)
 }
+
+// Fractional qty rounds like Postgres.
+// ROUND(2.5 x 1234.57, 2) is 3086.43, half away from zero, so the printed
+// line and TotalProduk must land on the stored DPP, not a binary 3086.42.
+func TestExport_FractionalQtyMatchesDPP(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	store := testutil.Store(t)
+
+	qrepo := quotations.NewRepo(tx, store)
+	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		CompanyClientID: seedCompanyID,
+		DiscountPct:     "0",
+		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{
+			RequestedName: "Tali Tambang",
+			Qty:           "2.5",
+			UnitID:        seedUnitID,
+			SellingPrice:  "1234.57",
+		}}),
+	}, seedUserID)
+	require.NoError(t, err)
+	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "sent", nil, seedUserID))
+	require.NoError(t, qrepo.ChangeStatus(ctx, qid, "accepted", nil, seedUserID))
+
+	porepo := purchaseorders.NewRepo(tx, store)
+	po, err := porepo.GetByQuotation(ctx, qid)
+	require.NoError(t, err)
+	attachPOFile(ctx, t, porepo, po.ID)
+	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusOnProgress, seedUserID))
+	require.NoError(t, porepo.ChangeStatus(ctx, po.ID, purchaseorders.StatusDelivered, seedUserID))
+
+	repo := invoices.NewRepo(tx, store)
+	inv, err := repo.GetByQuotation(ctx, qid)
+	require.NoError(t, err)
+	items, err := repo.ListItems(ctx, inv.ID)
+	require.NoError(t, err)
+	require.NotNil(t, inv.Dpp)
+	assert.Equal(t, 3086.43, mustF(t, *inv.Dpp), "Postgres rounds half away from zero")
+
+	got := newExportHandler(t, tx).PDFTotalsForTest(ctx, inv, items)
+	assert.Empty(t, got.Diskon, "no discount, no Diskon row")
+	assert.Equal(t, []string{"Rp~3.086,43"}, got.LineAmounts)
+	assert.Equal(t, "Rp~3.086,43", got.TotalProduk)
+	assert.Equal(t, got.DPP, got.TotalProduk, "TotalProduk - Diskon must equal DPP")
+}
