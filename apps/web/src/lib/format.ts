@@ -94,7 +94,7 @@ function toSen(rp: number): number {
   return Math.round(rp * 100)
 }
 
-// Integer division, half away from zero.
+// Integer division, half up.
 //
 // Matches Postgres ROUND on numeric; operands are never negative here.
 function divRound(a: bigint, b: bigint): bigint {
@@ -102,7 +102,7 @@ function divRound(a: bigint, b: bigint): bigint {
   return (a % b) * BigInt(2) >= b ? q + BigInt(1) : q
 }
 
-// Sum of rupiah amounts, in sen.
+// Sum rupiah in sen.
 //
 // Adds whole sen so two-decimal amounts never pick up float noise.
 export function sumRupiah(values: number[]): number {
