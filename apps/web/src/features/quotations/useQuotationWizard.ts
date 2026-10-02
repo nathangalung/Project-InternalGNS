@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
 import { countInvalidQty, isLineComplete, qtyErrorIndexes, qtyErrorsById } from "./lines"
 import {
@@ -82,7 +82,11 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
 
   // Load every step at once.
   // Each field is set outright, so a reseed also drops removed lines.
+  // The contact last loaded from the server.
+  const storedContact = useRef<number | undefined>(undefined)
+
   const seed = useCallback((s: WizardSeed) => {
+    storedContact.current = s.selectedContactId
     setSelectedClient(s.selectedClient)
     setSelectedContactId(s.selectedContactId)
     setDiscountPct(s.discountPct)
@@ -97,8 +101,12 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
 
   // Follow the stored draft live.
   // Lines always follow the server; the header fields only when the caller
-  // is not editing them. Page, client and contact stay as the user left them.
+  // is not editing them; the contact until the user picks another one. Page
+  // and client stay as the user left them.
   const syncFromServer = useCallback((s: WizardSeed, header: boolean) => {
+    const before = storedContact.current
+    storedContact.current = s.selectedContactId
+    setSelectedContactId((picked) => (picked === before ? s.selectedContactId : picked))
     setProducts(s.products)
     if (!header) return
     setDiscountPct(s.discountPct)

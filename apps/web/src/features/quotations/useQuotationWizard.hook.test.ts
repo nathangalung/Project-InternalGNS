@@ -216,6 +216,31 @@ describe("useQuotationWizard seed", () => {
   })
 })
 
+describe("live contact", () => {
+  const stored = (selectedContactId: number) => ({
+    selectedClient: "3",
+    selectedContactId,
+    discountPct: 0,
+    products: [],
+    shippingAddress: "",
+    shippingTime: "",
+    shippingCost: "",
+    berlakuSampai: "",
+    jatuhTempo: "",
+  })
+
+  it("follows another editor's contact until the user picks one", () => {
+    const { result } = wizard()
+    act(() => result.current.seed(stored(8)))
+    act(() => result.current.syncFromServer(stored(9), true))
+    expect(result.current.selectedContactId).toBe(9)
+
+    act(() => result.current.setSelectedContactId(4))
+    act(() => result.current.syncFromServer(stored(10), true))
+    expect(result.current.selectedContactId).toBe(4)
+  })
+})
+
 describe("no-offer lines", () => {
   it("toggles a line out of the offer and back, keeping its prices", () => {
     const { result } = wizard()

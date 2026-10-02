@@ -84,3 +84,34 @@ export function headerInput(d: QuotationDetail, h: HeaderFields): QuotationHeade
     shippingCost: h.shippingCost || undefined,
   }
 }
+
+// The steps of one Simpan.
+//
+// contactId is set only when the user picked another contact.
+export type DraftSave = {
+  holdsHeader: boolean
+  contactId?: number
+  acquireHeader: () => Promise<boolean>
+  releaseHeader: () => Promise<void>
+  saveHeader: () => Promise<unknown>
+  saveContact: (contactId: number) => Promise<unknown>
+}
+
+// Save the header, then the contact.
+//
+// The contact is part of the header, so a changed one is sent while this
+// user holds the header, claimed here when the header steps did not. True
+// when everything saved; on a refusal a claim taken here is freed, while a
+// claim held before stays for the next try.
+export async function saveDraft(s: DraftSave): Promise<boolean> {
+  const claim = s.contactId !== undefined && !s.holdsHeader
+  if (claim && !(await s.acquireHeader())) return false
+  try {
+    if (s.holdsHeader) await s.saveHeader()
+    if (s.contactId !== undefined) await s.saveContact(s.contactId)
+  } catch {
+    if (claim) void s.releaseHeader()
+    return false
+  }
+  return true
+}

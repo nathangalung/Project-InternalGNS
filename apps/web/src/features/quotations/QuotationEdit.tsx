@@ -23,7 +23,7 @@ import { ui } from "@/lib/ui"
 import type { QuotationDetail } from "@/types/api"
 import { toItemInput } from "./adapters"
 import DiscountModal from "./DiscountModal"
-import { HEADER_PART, headerInput, linePart, lockOwners } from "./live"
+import { HEADER_PART, headerInput, linePart, lockOwners, saveDraft } from "./live"
 import Step1Client, { type Client } from "./Step1Client"
 import Step2Product from "./Step2Product"
 import Step3Shipping from "./Step3Shipping"
@@ -311,24 +311,19 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
 
   async function handleSave() {
     if (!detail || qid === undefined) return
-    if (holdsHeader) {
-      const input = headerInput(detail, headerFields)
-      try {
-        await live.mutateAsync(() => quotationsApi.updateHeader(qid, input))
-      } catch {
-        return
-      }
-      leaving.current = true
-      // Leaving releases it too; this only frees it sooner.
-      void release(HEADER_PART)
-    }
-    if (selectedContactId !== undefined && selectedContactId !== detail.contactId) {
-      updateContactMutation.mutate(
-        { id: qid, contactId: selectedContactId },
-        { onSuccess: goToDetail },
-      )
-      return
-    }
+    const input = headerInput(detail, headerFields)
+    const saved = await saveDraft({
+      holdsHeader,
+      contactId: selectedContactId !== detail.contactId ? selectedContactId : undefined,
+      acquireHeader: () => acquire(HEADER_PART),
+      releaseHeader: () => release(HEADER_PART),
+      saveHeader: () => live.mutateAsync(() => quotationsApi.updateHeader(qid, input)),
+      saveContact: (contactId) => updateContactMutation.mutateAsync({ id: qid, contactId }),
+    })
+    if (!saved) return
+    leaving.current = true
+    // Leaving releases it too; this only frees it sooner.
+    void release(HEADER_PART)
     goToDetail()
   }
 
@@ -459,10 +454,10 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         </div>
 
         {/* Render Step Components */}
-        {onHeaderStep && owners.header && (
+        {(onHeaderStep || step === 1) && owners.header && (
           <div role="status" className={headerNotice}>
-            Pengiriman, tenggat waktu dan diskon sedang diubah oleh {owners.header}. Bagian ini
-            dapat diubah lagi setelah selesai.
+            Narahubung, pengiriman, tenggat waktu dan diskon sedang diubah oleh {owners.header}.
+            Bagian ini dapat diubah lagi setelah selesai.
           </div>
         )}
         {step === 1 && (
@@ -477,6 +472,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
             selectedContactId={selectedContactId}
             setSelectedContactId={setSelectedContactId}
             lockClient
+            contactReadOnly={Boolean(owners.header)}
           />
         )}
         {step === 2 && (

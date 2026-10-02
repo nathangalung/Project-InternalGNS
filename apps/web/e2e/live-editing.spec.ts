@@ -103,7 +103,7 @@ test.describe("live quotation editing", () => {
       await toStep(page, 4)
       await expect(
         page.getByText(
-          `Pengiriman, tenggat waktu dan diskon sedang diubah oleh ${operationalName}`,
+          `Narahubung, pengiriman, tenggat waktu dan diskon sedang diubah oleh ${operationalName}`,
         ),
       ).toBeVisible()
       await expect(page.getByLabel(/BERLAKU SAMPAI/)).toBeDisabled()
@@ -115,6 +115,46 @@ test.describe("live quotation editing", () => {
       await expect(page.getByLabel(/BERLAKU SAMPAI/)).toBeEnabled()
       await expect(page.getByLabel(/BERLAKU SAMPAI/)).toHaveValue("21")
       await expect.poll(async () => (await seed.getQuotation(q.id)).validityDays).toBe(21)
+    } finally {
+      await other.close()
+    }
+  })
+
+  test("the contact belongs to the header and its change shows up live", async ({
+    browser,
+    page,
+    seed,
+  }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const second = `${seed.prefix} Narahubung Kedua`
+    const secondId = await seed.contact(client, second)
+    const q = await seed.quotation({ client, lines: [{ item, qty: 1, price: 25_000 }] })
+    const other = await secondEditor(browser)
+    try {
+      // The operational editor picks the second contact, then holds the header.
+      await other.page.goto(`/quotations/${q.id}/edit`)
+      await other.page.getByRole("button", { name: new RegExp(`^${second}`) }).click()
+      await toStep(other.page, 4)
+      await expect(other.page.getByLabel(/BERLAKU SAMPAI/)).toBeEnabled()
+
+      // This page sees the contact read-only, naming the holder.
+      await page.goto(`/quotations/${q.id}/edit`)
+      await expect(
+        page.getByText(
+          `Narahubung, pengiriman, tenggat waktu dan diskon sedang diubah oleh ${operationalName}`,
+        ),
+      ).toBeVisible()
+      const pick = page.getByRole("button", { name: new RegExp(`^${second}`) })
+      await expect(pick).toBeDisabled()
+      await expect(pick).toHaveAttribute("aria-pressed", "false")
+
+      // Their save reaches this page without a reload and frees the contact.
+      await other.page.getByRole("button", { name: "Simpan" }).click()
+      await expect(other.page).toHaveURL(new RegExp(`/quotations/${q.id}$`), { timeout: 15_000 })
+      await expect.poll(async () => (await seed.getQuotation(q.id)).contactId).toBe(secondId)
+      await expect(pick).toHaveAttribute("aria-pressed", "true")
+      await expect(pick).toBeEnabled()
     } finally {
       await other.close()
     }
