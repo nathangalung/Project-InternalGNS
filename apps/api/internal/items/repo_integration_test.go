@@ -204,3 +204,38 @@ func TestRepo_SearchRequestHistory(t *testing.T) {
 	require.NoError(t, err)
 	_ = hits
 }
+
+// Exact SKU outranks its siblings.
+//
+// Stored SKUs keep their case while the query is lowercased, so the exact
+// branch must compare lowercased SKUs to score 1.00 above the 0.92 LIKE hits.
+func TestRepo_SearchVendorOffers_ExactSKUCaseInsensitive(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := items.NewRepo(tx, testutil.Store(t))
+
+	const base = "QXEXACT-1"
+	ids := map[string]int64{}
+	for _, sku := range []string{base, base + "0", base + "1"} {
+		it, err := repo.Create(ctx, items.CreateItemRequest{Name: "EXACT SKU " + sku}, seedUserID)
+		require.NoError(t, err)
+		_, err = repo.AddVendor(ctx, it.ID, items.AddVendorToItemRequest{
+			VendorID:  seedVendorID,
+			VendorSKU: ptrS(sku),
+			CostPrice: ptrS("1000"),
+		}, seedUserID)
+		require.NoError(t, err)
+		ids[sku] = it.ID
+	}
+
+	for _, query := range []string{base, "qxexact-1"} {
+		hits, err := repo.SearchVendorOffers(ctx, query, 10, nil)
+		require.NoError(t, err)
+		scores := map[int64]float32{}
+		for _, h := range hits {
+			scores[h.ItemID] = h.Score
+		}
+		assert.InDelta(t, 1.00, scores[ids[base]], 0.001, "exact SKU for %q", query)
+		assert.InDelta(t, 0.92, scores[ids[base+"0"]], 0.001, "sibling for %q", query)
+		assert.InDelta(t, 0.92, scores[ids[base+"1"]], 0.001, "sibling for %q", query)
+	}
+}

@@ -2,15 +2,22 @@
 SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.updated_at,
        COALESCE((SELECT COUNT(*) FROM vendor_products vp
                   WHERE vp.vendor_id = v.id AND vp.is_active = TRUE), 0) AS product_count,
-       COALESCE((SELECT SUM(qi.total_cost)::TEXT
+       COALESCE((SELECT SUM(c.cost)::TEXT FROM (
+                  SELECT poi.total_cost AS cost
+                  FROM purchase_order_items poi
+                  JOIN purchase_orders po ON po.id = poi.po_id
+                  JOIN vendor_products vp ON vp.id = poi.vendor_product_id
+                  WHERE vp.vendor_id = v.id
+                    AND po.status <> 'CANCELLED'
+                  UNION ALL
+                  SELECT qi.total_cost
                   FROM quotation_items qi
                   JOIN vendor_products vp ON vp.id = qi.vendor_product_id
                   JOIN quotations q ON q.id = qi.quotation_id
                   WHERE vp.vendor_id = v.id
                     AND q.status = 'accepted'
                     AND NOT EXISTS (SELECT 1 FROM purchase_orders po
-                                    WHERE po.quotation_id = q.id
-                                      AND po.status = 'CANCELLED')), '0') AS total_purchase,
+                                    WHERE po.quotation_id = q.id)) c), '0') AS total_purchase,
        v.logo_object_key
 FROM vendors v
 WHERE 1=1;
@@ -23,15 +30,22 @@ WHERE 1=1;
 SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.updated_at,
        COALESCE((SELECT COUNT(*) FROM vendor_products vp
                   WHERE vp.vendor_id = v.id AND vp.is_active = TRUE), 0) AS product_count,
-       COALESCE((SELECT SUM(qi.total_cost)::TEXT
+       COALESCE((SELECT SUM(c.cost)::TEXT FROM (
+                  SELECT poi.total_cost AS cost
+                  FROM purchase_order_items poi
+                  JOIN purchase_orders po ON po.id = poi.po_id
+                  JOIN vendor_products vp ON vp.id = poi.vendor_product_id
+                  WHERE vp.vendor_id = v.id
+                    AND po.status <> 'CANCELLED'
+                  UNION ALL
+                  SELECT qi.total_cost
                   FROM quotation_items qi
                   JOIN vendor_products vp ON vp.id = qi.vendor_product_id
                   JOIN quotations q ON q.id = qi.quotation_id
                   WHERE vp.vendor_id = v.id
                     AND q.status = 'accepted'
                     AND NOT EXISTS (SELECT 1 FROM purchase_orders po
-                                    WHERE po.quotation_id = q.id
-                                      AND po.status = 'CANCELLED')), '0') AS total_purchase,
+                                    WHERE po.quotation_id = q.id)) c), '0') AS total_purchase,
        v.logo_object_key
 FROM vendors v
 WHERE v.id = $1;
@@ -55,15 +69,22 @@ UPDATE vendors
 RETURNING id, name, location, contact_info, is_active, created_at, updated_at,
           COALESCE((SELECT COUNT(*) FROM vendor_products vp
                     WHERE vp.vendor_id = vendors.id AND vp.is_active = TRUE), 0) AS product_count,
-          COALESCE((SELECT SUM(qi.total_cost)::TEXT
+          COALESCE((SELECT SUM(c.cost)::TEXT FROM (
+                    SELECT poi.total_cost AS cost
+                    FROM purchase_order_items poi
+                    JOIN purchase_orders po ON po.id = poi.po_id
+                    JOIN vendor_products vp ON vp.id = poi.vendor_product_id
+                    WHERE vp.vendor_id = vendors.id
+                      AND po.status <> 'CANCELLED'
+                    UNION ALL
+                    SELECT qi.total_cost
                     FROM quotation_items qi
                     JOIN vendor_products vp ON vp.id = qi.vendor_product_id
                     JOIN quotations q ON q.id = qi.quotation_id
                     WHERE vp.vendor_id = vendors.id
                       AND q.status = 'accepted'
                       AND NOT EXISTS (SELECT 1 FROM purchase_orders po
-                                      WHERE po.quotation_id = q.id
-                                        AND po.status = 'CANCELLED')), '0') AS total_purchase,
+                                      WHERE po.quotation_id = q.id)) c), '0') AS total_purchase,
           logo_object_key;
 
 -- name: vendors.update_logo

@@ -5,13 +5,14 @@ SELECT cc.id, cc.number, cc.name, cc.npwp, cc.address, cc.email, cc.country_code
        co.name  AS contact_name,
        co.email AS contact_email,
        co.phone AS contact_phone,
-       COALESCE((SELECT SUM(q.grand_total)::TEXT
+       COALESCE((SELECT SUM(CASE WHEN po.id IS NULL THEN q.grand_total
+                                 ELSE (SELECT t.po_grand_total FROM v_po_totals t
+                                       WHERE t.po_id = po.id) END)::TEXT
                  FROM quotations q
+                 LEFT JOIN purchase_orders po ON po.quotation_id = q.id
                  WHERE q.company_client_id = cc.id
                    AND q.status = 'accepted'
-                   AND NOT EXISTS (SELECT 1 FROM purchase_orders po
-                                   WHERE po.quotation_id = q.id
-                                     AND po.status = 'CANCELLED')), '0') AS total_purchase,
+                   AND po.status IS DISTINCT FROM 'CANCELLED'), '0') AS total_purchase,
        COALESCE((SELECT COUNT(*)
                  FROM quotations q
                  WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count,
@@ -45,13 +46,14 @@ SELECT cc.id, cc.number, cc.name, cc.npwp, cc.address, cc.email, cc.country_code
        co.name  AS contact_name,
        co.email AS contact_email,
        co.phone AS contact_phone,
-       COALESCE((SELECT SUM(q.grand_total)::TEXT
+       COALESCE((SELECT SUM(CASE WHEN po.id IS NULL THEN q.grand_total
+                                 ELSE (SELECT t.po_grand_total FROM v_po_totals t
+                                       WHERE t.po_id = po.id) END)::TEXT
                  FROM quotations q
+                 LEFT JOIN purchase_orders po ON po.quotation_id = q.id
                  WHERE q.company_client_id = cc.id
                    AND q.status = 'accepted'
-                   AND NOT EXISTS (SELECT 1 FROM purchase_orders po
-                                   WHERE po.quotation_id = q.id
-                                     AND po.status = 'CANCELLED')), '0') AS total_purchase,
+                   AND po.status IS DISTINCT FROM 'CANCELLED'), '0') AS total_purchase,
        COALESCE((SELECT COUNT(*)
                  FROM quotations q
                  WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count,
@@ -75,13 +77,14 @@ SELECT cc.id, cc.number, cc.name, cc.npwp, cc.address, cc.email, cc.country_code
        co.name  AS contact_name,
        co.email AS contact_email,
        co.phone AS contact_phone,
-       COALESCE((SELECT SUM(q.grand_total)::TEXT
+       COALESCE((SELECT SUM(CASE WHEN po.id IS NULL THEN q.grand_total
+                                 ELSE (SELECT t.po_grand_total FROM v_po_totals t
+                                       WHERE t.po_id = po.id) END)::TEXT
                  FROM quotations q
+                 LEFT JOIN purchase_orders po ON po.quotation_id = q.id
                  WHERE q.company_client_id = cc.id
                    AND q.status = 'accepted'
-                   AND NOT EXISTS (SELECT 1 FROM purchase_orders po
-                                   WHERE po.quotation_id = q.id
-                                     AND po.status = 'CANCELLED')), '0') AS total_purchase,
+                   AND po.status IS DISTINCT FROM 'CANCELLED'), '0') AS total_purchase,
        COALESCE((SELECT COUNT(*)
                  FROM quotations q
                  WHERE q.company_client_id = cc.id), 0)::BIGINT AS quotation_count,
@@ -142,13 +145,14 @@ RETURNING id, number, name, npwp, address, email, country_code,
           NULL::TEXT   AS contact_name,
           NULL::TEXT   AS contact_email,
           NULL::TEXT   AS contact_phone,
-          COALESCE((SELECT SUM(q.grand_total)::TEXT
+          COALESCE((SELECT SUM(CASE WHEN po.id IS NULL THEN q.grand_total
+                                    ELSE (SELECT t.po_grand_total FROM v_po_totals t
+                                          WHERE t.po_id = po.id) END)::TEXT
                     FROM quotations q
+                    LEFT JOIN purchase_orders po ON po.quotation_id = q.id
                     WHERE q.company_client_id = company_client.id
                       AND q.status = 'accepted'
-                      AND NOT EXISTS (SELECT 1 FROM purchase_orders po
-                                      WHERE po.quotation_id = q.id
-                                        AND po.status = 'CANCELLED')), '0') AS total_purchase,
+                      AND po.status IS DISTINCT FROM 'CANCELLED'), '0') AS total_purchase,
           COALESCE((SELECT COUNT(*)
                     FROM quotations q
                     WHERE q.company_client_id = company_client.id), 0)::BIGINT AS quotation_count,

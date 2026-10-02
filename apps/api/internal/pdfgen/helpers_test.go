@@ -49,6 +49,11 @@ func TestBigMul(t *testing.T) {
 		{"bad", "1", "0.00"},
 		{"1", "bad", "0.00"},
 		{"2.5", "4", "10.00"},
+		// Half away from zero, like Postgres ROUND(numeric, 2).
+		{"2.5", "1234.57", "3086.43"},
+		{"0.5", "0.01", "0.01"},
+		{"2.5", "0.01", "0.03"},
+		{"-2.5", "0.01", "-0.03"},
 	}
 	for _, c := range cases {
 		if got := BigMul(c.a, c.b); got != c.want {

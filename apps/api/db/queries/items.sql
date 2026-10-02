@@ -188,7 +188,7 @@ WITH q AS (
         v.name AS vendor_name,
         vp.vendor_sku,
         GREATEST(
-            CASE WHEN COALESCE(vp.vendor_sku,'') = q.nq THEN 1.00 ELSE 0 END,
+            CASE WHEN lower(vp.vendor_sku) = q.nq      THEN 1.00 ELSE 0 END,
             CASE WHEN lower(vp.vendor_sku) LIKE q.pat   THEN 0.92 ELSE 0 END,
             CASE WHEN lower(v.name) LIKE q.pat          THEN 0.70 ELSE 0 END,
             similarity(COALESCE(vp.vendor_sku,''), q.nq) * 0.85,

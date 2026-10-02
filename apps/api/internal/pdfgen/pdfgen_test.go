@@ -42,21 +42,3 @@ func TestFormatQty(t *testing.T) {
 		}
 	}
 }
-
-func TestFormatIDR(t *testing.T) {
-	cases := map[string]string{
-		"":             "Rp~--",
-		"0":            "Rp~0",
-		"100":          "Rp~100",
-		"1000":         "Rp~1.000",
-		"123456789":    "Rp~123.456.789",
-		"123456789.50": "Rp~123.456.789",
-		"-6316150":     "-Rp~6.316.150",
-		"abc":          "Rp~--",
-	}
-	for in, want := range cases {
-		if got := FormatIDR(in); got != want {
-			t.Errorf("FormatIDR(%q) = %q; want %q", in, got, want)
-		}
-	}
-}

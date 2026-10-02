@@ -1,5 +1,5 @@
 import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
-import { computeTaxBreakdown } from "@/lib/format"
+import { computeTaxBreakdown, lineNet, sumRupiah } from "@/lib/format"
 import { isValidAddress, optionalAddressError } from "@/lib/validation"
 import type { QuotationDetail } from "@/types/api"
 import { toWizardProduct } from "./adapters"
@@ -85,10 +85,12 @@ export function wizardSummary(
   const offered = products.filter((p) => !p.noOffer)
   const totalHargaBeli = offered.reduce((sum, p) => sum + p.hargaBeli * p.jumlah, 0)
   const totalHargaJual = offered.reduce((sum, p) => sum + p.hargaJual * p.jumlah, 0)
-  const nominalDiskon = totalHargaJual * (discountPct / 100)
-  const subTotal = totalHargaJual - nominalDiskon
+  // Discounted and taxed per line, as the server stores the totals.
+  const nets = offered.map((p) => lineNet(p.jumlah, p.hargaJual, discountPct))
+  const subTotal = sumRupiah(nets)
+  const nominalDiskon = sumRupiah(offered.map((p, i) => lineNet(p.jumlah, p.hargaJual) - nets[i]))
   const shipping = Number(shippingCost) || 0
-  const tax = computeTaxBreakdown({ subtotal: subTotal, shipping })
+  const tax = computeTaxBreakdown([...nets, shipping])
   return {
     totalProdukQty: offered.reduce((sum, p) => sum + p.jumlah, 0),
     totalHargaBeli,

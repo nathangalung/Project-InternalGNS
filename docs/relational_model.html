@@ -457,9 +457,9 @@ a:hover{text-decoration:underline}
           <div class="col-row"><span class="col-name">total</span><span class="col-type">NUMERIC(15,2)</span></div>
           <div class="col-row"><span class="col-name">total_discount</span><span class="col-type">NUMERIC(15,2)</span></div>
           <div class="col-row"><span class="col-name gen">subtotal</span><span class="col-type">GENERATED</span></div>
-          <div class="col-row"><span class="col-name gen">dpp_nilai_lain</span><span class="col-type">GENERATED</span></div>
-          <div class="col-row"><span class="col-name gen">ppn_amount</span><span class="col-type">GENERATED</span></div>
-          <div class="col-row"><span class="col-name gen">grand_total</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name">dpp_nilai_lain</span><span class="col-type">NUMERIC(15,2)</span></div>
+          <div class="col-row"><span class="col-name">ppn_amount</span><span class="col-type">NUMERIC(15,2)</span></div>
+          <div class="col-row"><span class="col-name">grand_total</span><span class="col-type">NUMERIC(15,2)</span></div>
           <div class="col-section">Concurrency</div>
           <div class="col-row"><span class="col-name">row_version</span><span class="col-type">INT NN</span></div>
           <div class="col-section">Timestamps</div>
@@ -526,6 +526,7 @@ a:hover{text-decoration:underline}
           <div class="col-row"><span class="col-name">po_date</span><span class="col-type">DATE NN</span></div>
           <div class="col-row"><span class="col-name">status</span><span class="col-type">VARCHAR(20) NN CHK</span></div>
           <div class="col-row"><span class="col-name">delivery_note_number</span><span class="col-type">VARCHAR(50)</span></div>
+          <div class="col-row"><span class="col-name">delivery_note_date</span><span class="col-type">DATE</span></div>
           <div class="col-row"><span class="col-name">notes</span><span class="col-type">TEXT</span></div>
           <div class="col-row"><span class="col-name">file_url</span><span class="col-type">VARCHAR(500)</span></div>
           <div class="col-section">Audit</div>
@@ -999,9 +1000,9 @@ a:hover{text-decoration:underline}
           <tr><td class="col-nm">total</td><td class="col-tp">NUMERIC(15,2)</td><td>Total semua baris sebelum diskon (SUM dari total_selling tiap item, product + shipping). Diisi app layer.</td><td>126,323,000.00</td></tr>
           <tr><td class="col-nm">total_discount</td><td class="col-tp">NUMERIC(15,2)</td><td>Total diskon (SUM dari discount_amount tiap item). Diisi app layer.</td><td>6,316,150.00</td></tr>
           <tr><td class="col-nm gen">subtotal <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>total − total_discount</code> — Sub Total setelah diskon (level-1)</td><td>120,006,850.00</td></tr>
-          <tr><td class="col-nm gen">dpp_nilai_lain <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>(total − total_discount) × 11/12</code> — langsung ke base stored (level-1)</td><td>110,006,279.00</td></tr>
-          <tr><td class="col-nm gen">ppn_amount <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>(total − total_discount) × 11/12 × 0.12</code> — langsung ke base (level-1)</td><td>13,200,754.00</td></tr>
-          <tr><td class="col-nm gen">grand_total <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>(total − total_discount) × 11/12 × 1.12</code> — = DPP + PPN (level-1)</td><td>123,207,033.00</td></tr>
+          <tr><td class="col-nm">dpp_nilai_lain</td><td class="col-tp">NUMERIC(15,2)</td><td><code>SUM(ROUND(subtotal baris × 11/12, 2))</code> — dibulatkan per baris lalu dijumlah, sama dengan PO dan invoice. Diisi fungsi quotation (00086)</td><td>110,006,279.17</td></tr>
+          <tr><td class="col-nm">ppn_amount</td><td class="col-tp">NUMERIC(15,2)</td><td><code>SUM(ROUND(ROUND(subtotal baris × 11/12, 2) × 0.12, 2))</code> — PPN per baris dari DPP yang sudah dibulatkan</td><td>13,200,753.50</td></tr>
+          <tr><td class="col-nm">grand_total</td><td class="col-tp">NUMERIC(15,2)</td><td><code>subtotal + ppn_amount</code></td><td>133,207,603.50</td></tr>
           <tr class="section-divider"><td colspan="4">Concurrency (Optimistic Locking)</td></tr>
           <tr><td class="col-nm">row_version <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">INT</td><td>Counter yang di-increment tiap UPDATE. App layer pakai <code>WHERE id=? AND row_version=?</code> untuk detect concurrent edit — kalau affected_rows=0, throw conflict error.</td><td>3</td></tr>
           <tr class="section-divider"><td colspan="4">Timestamps</td></tr>
@@ -1116,7 +1117,8 @@ a:hover{text-decoration:underline}
           <tr><td class="col-nm fk">contact_id <span class="cbadge cbadge-fk">FK</span></td><td class="col-tp">BIGINT</td><td>Contact yang menandatangani PO → company_contacts.id. Nullable.</td><td>3</td></tr>
           <tr><td class="col-nm">po_date <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">DATE</td><td>Tanggal PO diterima dari client</td><td>2026-04-05</td></tr>
           <tr><td class="col-nm">status <span class="cbadge cbadge-nn">NOT NULL</span> <span class="cbadge cbadge-chk">CHECK</span></td><td class="col-tp">VARCHAR(20)</td><td>Status PO. Dropdown: PENDING | UPLOADED | ON PROGRESS | DELIVERED</td><td>UPLOADED</td></tr>
-          <tr><td class="col-nm">delivery_note_number</td><td class="col-tp">VARCHAR(50)</td><td>Nomor surat jalan / delivery note. Diisi saat status berubah ke DELIVERED.</td><td>DN-264131/GNS/IV/2026</td></tr>
+          <tr><td class="col-nm">delivery_note_number</td><td class="col-tp">VARCHAR(50)</td><td>Nomor surat jalan / delivery note. Diisi saat status berubah ke ON_PROGRESS (atau DELIVERED bila belum terisi).</td><td>DN-264131/GNS/IV/2026</td></tr>
+          <tr><td class="col-nm">delivery_note_date</td><td class="col-tp">DATE</td><td>Tanggal surat jalan: hari (WIB) nomor surat jalan diterbitkan, dicetak sebagai Date pada surat jalan. NULL pada PO lama tanpa riwayat status; PDF lalu memakai po_date.</td><td>2026-04-07</td></tr>
           <tr><td class="col-nm">notes</td><td class="col-tp">TEXT</td><td>Catatan internal (misalnya perbedaan antara PO dan quotation)</td><td>Client minta tambah qty item #3</td></tr>
           <tr><td class="col-nm">file_url</td><td class="col-tp">VARCHAR(500)</td><td>URL file PO yang di-upload ke storage (PDF/image). Nullable jika belum di-upload.</td><td>https://storage/po/PO-264129.pdf</td></tr>
           <tr class="section-divider"><td colspan="4">Audit Trail</td></tr>

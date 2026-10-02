@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test"
-import { api, deactivate, idFrom } from "./support/sales"
+import type { PurchaseOrderItemRow } from "../src/types/generated"
+import { api, deactivate, idFrom, rupiah } from "./support/sales"
 import { expect, test } from "./support/seed"
 
 // Client master data flows.
@@ -212,4 +213,54 @@ test("the KPI cards show a dash, not zero, without a summary", async ({ page }) 
   const card = page.getByText("Total Klien", { exact: true }).locator("xpath=..")
   await expect(card).toContainText("–")
   await expect(card).not.toContainText("0")
+})
+
+// Total Pembelian reads the PO.
+//
+// A PO edited after acceptance is what is delivered and invoiced, so the
+// client and vendor lists total its lines, not the accepted quotation.
+test("Total Pembelian follows the PO lines once they are edited", async ({ page, seed }) => {
+  const client = await seed.client()
+  const vendor = await seed.vendor()
+  const item = await seed.item({ vendor, cost: 100_000 })
+  const q = await seed.quotation({ client, lines: [{ item, qty: 3, price: 150_000 }] })
+  const po = await seed.accept(q.id)
+  const lines = await api<PurchaseOrderItemRow[]>("GET", `/purchase-orders/${po.id}/items`)
+  const line = lines.find((l) => l.itemType === "product")
+  if (!line) throw new Error("the PO has no product line")
+  await api(
+    "PUT",
+    `/purchase-orders/${po.id}/items`,
+    {
+      discountPct: "0",
+      items: [
+        {
+          quotationItemId: line.quotationItemId,
+          offeredItemId: line.offeredItemId,
+          vendorProductId: line.vendorProductId,
+          itemName: line.itemName,
+          qty: "1",
+          unitId: line.unitId,
+          sellingPrice: "150000",
+          costPrice: "80000",
+        },
+      ],
+    },
+    { "If-Match": String(po.rowVersion) },
+  )
+  const edited = await seed.poByQuotation(q.id)
+  // 150.000 plus PPN; the quotation would read 499.500.
+  expect(edited.poGrandTotal).toBe("166500.00")
+
+  await page.goto("/clients")
+  await page.getByPlaceholder("Cari nama klien...").fill(client.name)
+  await expect(page.getByRole("row", { name: new RegExp(client.name) })).toContainText(
+    rupiah(166_500),
+  )
+
+  await page.goto("/vendors")
+  await page.getByPlaceholder("Cari nama, negara asal vendor...").fill(vendor.name)
+  await expect(page.getByRole("row", { name: new RegExp(vendor.name) })).toContainText(
+    rupiah(80_000),
+  )
 })

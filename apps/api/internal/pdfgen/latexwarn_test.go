@@ -142,19 +142,29 @@ func quotationData(items []map[string]any) map[string]any {
 }
 
 func invoiceData(items []map[string]any) map[string]any {
+	// The invoice prints the sen, so its fixture carries them at full width.
+	withSen := make([]map[string]any, 0, len(items))
+	for _, it := range items {
+		c := map[string]any{}
+		for k, v := range it {
+			c[k] = v
+		}
+		c["UnitPrice"], c["Amount"] = "Rp~9.040.000,25", "Rp~45.200.001,25"
+		withSen = append(withSen, c)
+	}
 	return map[string]any{
 		"UseA4": false, "CompanyName": "PT. Pelita Global Logistik Nusantara", "CompanyNPWP": "01.234.567.8-901.000",
 		"CompanyAddress": "Jl. Sudirman Kav 52, Jakarta", "VesselName": "MV Global Star", "InvoiceNo": "INV-26400393/GNS/IV/2026",
 		"PONo": "PO-778/2026", "PODate": "20 April 2026", "InvoiceDate": "30 April 2026", "DueDate": "30 May 2026",
-		"Items": items, "TotalProduk": "Rp~45.200.000", "Diskon": "Rp~2.260.000", "DiscountPct": "5", "DPP": "Rp~42.940.000",
-		"DPPNilaiLain": "Rp~39.361.667", "PPN": "Rp~4.723.400", "Total": "Rp~47.663.400", "PaymentTerms": "30 hari",
+		"Items": withSen, "TotalProduk": "Rp~48.200.002,25", "Diskon": "Rp~2.410.000,11", "DiscountPct": "5", "DPP": "Rp~45.790.002,14",
+		"DPPNilaiLain": "Rp~41.974.168,63", "PPN": "Rp~5.036.900,24", "Total": "Rp~50.826.902,38", "PaymentTerms": "30 hari",
 		"BankName": "Bank Mandiri", "BankAccountNo": "123-00-4567890", "BankAccountName": "PT Global Niaga Sakti", "DateLine": "Jakarta, 30 April 2026", "SignerName": "Director",
 	}
 }
 
 func deliveryNoteData(items []map[string]any) map[string]any {
 	return map[string]any{
-		"DeliveryNoteNo": "DN-778/2026", "PONo": "PO-778/2026",
+		"DeliveryNoteNo": "DN-26778001/GNS/IV/2026", "PONo": "PO-262641156/GNS/IV/2026", "PODate": "20 September 2026",
 		"CompanyName":    "PT. Pelita Global Logistik Nusantara",
 		"CompanyAddress": "Jl. Sudirman Kav 52, Jakarta", "AttnName": "Bapak Riza Chair", "VesselName": "MV Global Star",
 		"DateLine": "Jakarta, 30 April 2026", "Items": items,

@@ -2,8 +2,9 @@ package pdfgen
 
 import (
 	"fmt"
-	"math/big"
 	"net/http"
+
+	"github.com/shopspring/decimal"
 )
 
 // StrDeref dereferences, nil as "".
@@ -55,44 +56,47 @@ func zero(s string) string {
 	return s
 }
 
-func bigFromStr(s string) *big.Float {
-	x, _ := new(big.Float).SetPrec(64).SetString(zero(s))
-	if x == nil {
-		return new(big.Float)
+// decFromStr parses a numeric string.
+// Empty or malformed input is zero.
+func decFromStr(s string) decimal.Decimal {
+	d, err := decimal.NewFromString(zero(s))
+	if err != nil {
+		return decimal.Zero
 	}
-	return x
+	return d
 }
 
-func bigToStr(f *big.Float) string {
-	return f.Text('f', 2)
+// decToStr rounds to sen.
+// Half away from zero, like Postgres ROUND(numeric, 2), so a printed figure
+// matches the one the database stored.
+func decToStr(d decimal.Decimal) string {
+	return d.Round(2).StringFixed(2)
 }
 
 // BigMul multiplies numeric strings.
-// It uses big.Float (64-bit precision) and returns a 2-decimal string. Used
-// for monetary qty × price math.
+// The product is exact, then rounded to sen like Postgres. Used for
+// monetary qty × price math.
 func BigMul(a, b string) string {
-	return bigToStr(new(big.Float).Mul(bigFromStr(a), bigFromStr(b)))
+	return decToStr(decFromStr(a).Mul(decFromStr(b)))
 }
 
 // BigSub subtracts numeric strings.
 // It returns a - b.
 func BigSub(a, b string) string {
-	return bigToStr(new(big.Float).Sub(bigFromStr(a), bigFromStr(b)))
+	return decToStr(decFromStr(a).Sub(decFromStr(b)))
 }
 
 // BigMulDiv returns a*num/den.
 // It returns "0" if den is zero.
 func BigMulDiv(a, num, den string) string {
-	prod := new(big.Float).Mul(bigFromStr(a), bigFromStr(num))
-	d := bigFromStr(den)
-	if d.Sign() == 0 {
+	d := decFromStr(den)
+	if d.IsZero() {
 		return "0"
 	}
-	return bigToStr(new(big.Float).Quo(prod, d))
+	return decToStr(decFromStr(a).Mul(decFromStr(num)).Div(d))
 }
 
 // BigAdd adds numeric strings.
-// It uses big.Float.
 func BigAdd(a, b string) string {
-	return bigToStr(new(big.Float).Add(bigFromStr(a), bigFromStr(b)))
+	return decToStr(decFromStr(a).Add(decFromStr(b)))
 }

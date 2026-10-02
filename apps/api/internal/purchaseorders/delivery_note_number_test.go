@@ -1,6 +1,9 @@
 package purchaseorders
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 // Note prints its stored number.
 // It prints only once work started.
@@ -27,6 +30,28 @@ func TestIssuedDeliveryNote(t *testing.T) {
 			got, ok := issuedDeliveryNote(PurchaseOrder{Status: c.status, DeliveryNoteNumber: c.dn})
 			if got != c.want || ok != c.wantOK {
 				t.Errorf("issuedDeliveryNote = (%q, %v), want (%q, %v)", got, ok, c.want, c.wantOK)
+			}
+		})
+	}
+}
+
+// Note dated when issued.
+// A legacy PO with no stamp falls back to its PO date.
+func TestDeliveryNoteDate(t *testing.T) {
+	poDate := time.Date(2025, 12, 28, 0, 0, 0, 0, time.UTC)
+	issued := time.Date(2026, 1, 5, 0, 0, 0, 0, time.UTC)
+	cases := []struct {
+		name string
+		po   PurchaseOrder
+		want time.Time
+	}{
+		{"stamped prints its own date", PurchaseOrder{PoDate: poDate, DeliveryNoteDate: &issued}, issued},
+		{"legacy falls back to the PO date", PurchaseOrder{PoDate: poDate}, poDate},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := deliveryNoteDate(c.po); !got.Equal(c.want) {
+				t.Errorf("deliveryNoteDate = %v, want %v", got, c.want)
 			}
 		})
 	}

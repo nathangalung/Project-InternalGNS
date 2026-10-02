@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_quotation (deployed by migration 00073).
+-- Canonical current body of fn_create_quotation (deployed by migration 00086).
 CREATE OR REPLACE FUNCTION public.fn_create_quotation(p_company_client_id bigint, p_contact_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_created_by bigint, p_notes text DEFAULT NULL::text, p_status text DEFAULT 'draft'::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -16,6 +16,9 @@ DECLARE
   v_qty                 NUMERIC(12,2);
   v_selling_price       NUMERIC(15,2);
   v_pct                 NUMERIC(5,2);
+  v_line                NUMERIC(15,2);
+  v_dpp                 NUMERIC(15,2) := 0;
+  v_ppn                 NUMERIC(15,2) := 0;
 BEGIN
   -- 1. Validation
   IF p_items IS NULL OR jsonb_array_length(p_items) = 0 THEN
@@ -53,20 +56,26 @@ BEGIN
 
   -- 3. Pre-calculate totals. The discount is gross minus net per line, as
   -- quotation_items.subtotal and v_po_totals round them, so the header
-  -- subtotal is the sum of the line subtotals.
+  -- subtotal is the sum of the line subtotals. DPP and PPN are rounded per
+  -- line and summed, as v_po_totals and fn_create_invoice do.
   FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
     v_qty := (v_item->>'qty')::NUMERIC(12,2);
     v_selling_price := (v_item->>'selling_price')::NUMERIC(15,2);
+    v_line := ROUND(v_qty * v_selling_price * (1 - v_pct / 100), 2);
 
     v_total          := v_total + (v_qty * v_selling_price);
     v_total_produk   := v_total_produk + (v_qty * v_selling_price);
     v_total_discount := v_total_discount
                         + ROUND(v_qty * v_selling_price, 2)
-                        - ROUND(v_qty * v_selling_price * (1 - v_pct / 100), 2);
+                        - v_line;
+    v_dpp            := v_dpp + fn_line_dpp(v_line);
+    v_ppn            := v_ppn + fn_line_ppn(v_line);
   END LOOP;
 
   IF p_shipping_cost IS NOT NULL AND p_shipping_cost > 0 THEN
     v_total := v_total + p_shipping_cost;
+    v_dpp   := v_dpp + fn_line_dpp(p_shipping_cost);
+    v_ppn   := v_ppn + fn_line_ppn(p_shipping_cost);
   END IF;
 
   -- 4. Generate quotation_no
@@ -79,6 +88,7 @@ BEGIN
     client_ref_no, vessel_name, status,
     payment_terms, validity_days, discount_pct,
     total_produk, total, total_discount,
+    dpp_nilai_lain, ppn_amount, grand_total,
     notes, created_by, updated_by
   ) VALUES (
     v_quotation_no, 1, p_company_client_id, v_company_name,
@@ -86,6 +96,7 @@ BEGIN
     p_client_ref_no, p_vessel_name, p_status,
     p_payment_terms, p_validity_days, p_discount_pct,
     v_total_produk, v_total, v_total_discount,
+    v_dpp, v_ppn, v_total - v_total_discount + v_ppn,
     p_notes, p_created_by, p_created_by
   ) RETURNING id INTO v_quotation_id;
 

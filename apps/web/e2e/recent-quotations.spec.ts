@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test"
+import { rupiah } from "./support/sales"
 import { expect, test } from "./support/seed"
 
 // Quotation Terakhir on detail pages.
@@ -44,6 +45,7 @@ test("a sent quotation shows on its product, vendor and client pages", async ({ 
   await expect(page).toHaveURL(new RegExp(`/clients/${client.id}$`))
   const clientRow = section(page).getByRole("row", { name: new RegExp(sent.quotationNo) })
   await expect(clientRow).toContainText("1 produk")
+  await expect(clientRow).toContainText(rupiah(Number(sent.grandTotal)))
   await expect(clientRow).toContainText("Dikirim")
 
   // Every quotation number opens the quotation.

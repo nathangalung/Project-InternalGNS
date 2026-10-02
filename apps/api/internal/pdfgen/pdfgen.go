@@ -228,42 +228,9 @@ func LatexBreakable(s string) string {
 	return b.String()
 }
 
-// FormatIDR renders Rupiah amounts.
-// The format is Rp 1.234.567, with dot grouping.
-func FormatIDR(numericStr string) string {
-	if numericStr == "" {
-		return "Rp~--"
-	}
-	negative := false
-	s := strings.TrimSpace(numericStr)
-	if strings.HasPrefix(s, "-") {
-		negative = true
-		s = s[1:]
-	}
-	intPart := s
-	if dot := strings.IndexByte(s, '.'); dot >= 0 {
-		intPart = s[:dot]
-	}
-	if _, err := strconv.ParseInt(intPart, 10, 64); err != nil {
-		return "Rp~--"
-	}
-	var b strings.Builder
-	for i, c := range intPart {
-		if i > 0 && (len(intPart)-i)%3 == 0 {
-			b.WriteByte('.')
-		}
-		b.WriteRune(c)
-	}
-	prefix := "Rp~"
-	if negative {
-		prefix = "-Rp~"
-	}
-	return prefix + b.String()
-}
-
 // FormatIDRCents keeps the cents.
 func FormatIDRCents(numericStr string) string {
-	// FormatIDR truncates, and filed invoices must not be restated.
+	// Every document prints stored amounts with their sen, so rows add up.
 	s := strings.TrimSpace(numericStr)
 	if s == "" {
 		return "Rp~--"
@@ -323,6 +290,6 @@ func JakartaDateLine(t time.Time) string {
 func funcMap() template.FuncMap {
 	return template.FuncMap{
 		"esc": LatexEscape,
-		"idr": FormatIDR,
+		"idr": FormatIDRCents,
 	}
 }

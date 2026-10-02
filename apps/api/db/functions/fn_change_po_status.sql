@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_po_status (deployed by migration 00081).
+-- Canonical current body of fn_change_po_status (deployed by migration 00087).
 CREATE OR REPLACE FUNCTION public.fn_change_po_status(p_po_id bigint, p_new_status text, p_user_id bigint, p_note text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql
@@ -91,6 +91,9 @@ BEGIN
   UPDATE purchase_orders
   SET status               = p_new_status,
       delivery_note_number = COALESCE(v_dn, delivery_note_number),
+      -- The note is dated the WIB day its number is issued.
+      delivery_note_date   = CASE WHEN v_dn IS NOT NULL THEN CURRENT_DATE
+                                  ELSE delivery_note_date END,
       updated_by           = p_user_id
   WHERE id = p_po_id;
 

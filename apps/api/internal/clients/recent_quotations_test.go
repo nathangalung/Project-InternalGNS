@@ -34,7 +34,8 @@ func TestRepo_RecentQuotations(t *testing.T) {
 	require.NotNil(t, first.ContactName)
 	assert.Equal(t, d.Contact, *first.ContactName)
 	assert.Equal(t, 1, first.ProductCount, "only offered lines count")
-	assert.NotEmpty(t, first.GrandTotal)
+	// The header subtotal 300 plus its PPN, never total or subtotal alone.
+	assert.Equal(t, "333.00", first.GrandTotal)
 	assert.Equal(t, "expired", got[2].Status)
 }
 

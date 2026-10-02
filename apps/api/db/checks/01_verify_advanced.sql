@@ -107,18 +107,24 @@ FROM quotation_items
 WHERE quotation_id = 1
 ORDER BY line_number;
 
--- B.2 Verify quotation header GENERATED vs manual formula
+-- B.2 Verify quotation header tax, rounded per line (00086)
 SELECT
-  quotation_no,
-  total, total_discount,
-  subtotal AS db_subtotal,
-  (total - total_discount) AS expected_subtotal,
-  dpp_nilai_lain AS db_dpp,
-  ROUND((total - total_discount) * 11.0 / 12.0, 2) AS expected_dpp,
-  grand_total AS db_grand,
-  ROUND((total - total_discount) * 11.0 / 12.0 * 1.12, 2) AS expected_grand,
-  grand_total - (dpp_nilai_lain + ppn_amount) AS diff_grand_vs_dpp_plus_ppn  -- must be 0 (rounding tolerance)
-FROM quotations;
+  q.quotation_no,
+  q.total, q.total_discount,
+  q.subtotal AS db_subtotal,
+  l.net AS lines_subtotal,              -- differs only on legacy header-only rows
+  q.dpp_nilai_lain AS db_dpp,
+  l.dpp AS expected_dpp,
+  q.ppn_amount AS db_ppn,
+  l.ppn AS expected_ppn,
+  q.grand_total - (q.subtotal + q.ppn_amount) AS diff_grand_vs_subtotal_plus_ppn  -- must be 0
+FROM quotations q
+LEFT JOIN (
+  SELECT quotation_id, SUM(subtotal) AS net,
+         SUM(ROUND(subtotal * 11.0 / 12.0, 2)) AS dpp,
+         SUM(ROUND(ROUND(subtotal * 11.0 / 12.0, 2) * 0.12, 2)) AS ppn
+  FROM quotation_items GROUP BY quotation_id
+) l ON l.quotation_id = q.id;
 
 -- B.3 Verify invoice tax calculation
 SELECT

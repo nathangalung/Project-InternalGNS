@@ -239,7 +239,9 @@ document's status history table.
   the object, so a key with no upload behind it is a 422. UPLOADED
   goes to ON_PROGRESS; ON_PROGRESS to DELIVERED or back to UPLOADED; any open
   state to CANCELLED with a reason. The delivery-note number is stamped on
-  ON_PROGRESS or DELIVERED, and DELIVERED creates the invoice. DELIVERED and
+  ON_PROGRESS or DELIVERED together with its WIB issue date
+  (`delivery_note_date`), which the note prints as its Date above the PO No
+  and PO Date rows, and DELIVERED creates the invoice. DELIVERED and
   CANCELLED are terminal, and the file is locked in both. A PO keeps at least
   one product line and every product line priced above zero: the line edit
   (`fn_update_po_items`) refuses otherwise, and so do ON_PROGRESS and
@@ -468,12 +470,17 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    cut.
 9. Invoice tax figures are rounded per line, then summed to the header (matching
    DJP e-faktur), and `ppn_amount` is computed from the already-rounded DPP
-   base. Invoices snapshot `gross_unit_price` and `total_discount`, so the PDF
+   base. The quotation (`fn_line_dpp`, `fn_line_ppn`, stored by the functions
+   that write its totals) and the PO (`v_po_totals`) use the same rule, so all
+   three agree, and the web previews mirror it (`computeTaxBreakdown`).
+   Invoices snapshot `gross_unit_price` and `total_discount`, so the PDF
    prints a gross line plus a real discount row (`TotalProduk − Diskon = DPP`)
-   without reading the quotation. Do not restate already-filed invoices: their
-   amounts are never recomputed, and a wrong invoice is cancelled and replaced
-   by a Pengganti. Only the invoice and due dates stay editable, and only until
-   the invoice is paid or cancelled.
+   without reading the quotation. Every PDF prints the sen, and the Go line
+   math (`pdfgen.BigMul`) rounds half away from zero like Postgres `ROUND`,
+   so a fractional quantity still adds up. Do not restate already-filed
+   invoices: their amounts are never recomputed, and a wrong invoice is
+   cancelled and replaced by a Pengganti. Only the invoice and due dates stay
+   editable, and only until the invoice is paid or cancelled.
 
 ## Tooling and style
 

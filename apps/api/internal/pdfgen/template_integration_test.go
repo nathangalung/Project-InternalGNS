@@ -138,12 +138,13 @@ func TestRealTemplate_DeliveryNote(t *testing.T) {
 		Qty, Unit, Name, ShipDestination string
 	}
 	data := struct {
-		DeliveryNoteNo, PONo, CompanyName, CompanyAddress, AttnName, VesselName string
-		DateLine                                                                string
-		Items                                                                   []item
+		DeliveryNoteNo, PONo, PODate, CompanyName, CompanyAddress, AttnName, VesselName string
+		DateLine                                                                        string
+		Items                                                                           []item
 	}{
 		DeliveryNoteNo: "DN-PO-001",
 		PONo:           "PO-001",
+		PODate:         "28 December 2025",
 		CompanyName:    "PT Sample",
 		CompanyAddress: "Jl. Test",
 		AttnName:       "Budi",

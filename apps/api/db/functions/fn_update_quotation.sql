@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_quotation (deployed by migration 00078).
+-- Canonical current body of fn_update_quotation (deployed by migration 00086).
 CREATE OR REPLACE FUNCTION public.fn_update_quotation(p_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_user_id bigint, p_notes text DEFAULT NULL::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -17,6 +17,9 @@ DECLARE
   v_key           TEXT;
   v_left          INT;
   v_pct           NUMERIC(5,2);
+  v_line          NUMERIC(15,2);
+  v_dpp           NUMERIC(15,2) := 0;
+  v_ppn           NUMERIC(15,2) := 0;
 BEGIN
   -- 1. Lock + verify status='draft'
   SELECT status INTO v_status
@@ -52,19 +55,26 @@ BEGIN
   -- 3. Pre-calculate totals. The discount is gross minus net per line at
   -- the pct the lines inherit, as quotation_items.subtotal and v_po_totals
   -- round them, so the header subtotal is the sum of the line subtotals.
+  -- DPP and PPN are rounded per line and summed, as v_po_totals and
+  -- fn_create_invoice do.
   v_pct := p_discount_pct;
   FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
     v_qty := (v_item->>'qty')::NUMERIC(12,2);
     v_selling_price := (v_item->>'selling_price')::NUMERIC(15,2);
+    v_line         := ROUND(v_qty * v_selling_price * (1 - v_pct / 100), 2);
     v_total        := v_total + (v_qty * v_selling_price);
     v_total_produk := v_total_produk + (v_qty * v_selling_price);
     v_total_disc   := v_total_disc
                       + ROUND(v_qty * v_selling_price, 2)
-                      - ROUND(v_qty * v_selling_price * (1 - v_pct / 100), 2);
+                      - v_line;
+    v_dpp          := v_dpp + fn_line_dpp(v_line);
+    v_ppn          := v_ppn + fn_line_ppn(v_line);
   END LOOP;
 
   IF p_shipping_cost IS NOT NULL AND p_shipping_cost > 0 THEN
     v_total := v_total + p_shipping_cost;
+    v_dpp   := v_dpp + fn_line_dpp(p_shipping_cost);
+    v_ppn   := v_ppn + fn_line_ppn(p_shipping_cost);
   END IF;
 
   -- 4. Count the matches already learned, keyed like trg_learn_match
@@ -101,6 +111,9 @@ BEGIN
       total_produk   = v_total_produk,
       total          = v_total,
       total_discount = v_total_disc,
+      dpp_nilai_lain = v_dpp,
+      ppn_amount     = v_ppn,
+      grand_total    = v_total - v_total_disc + v_ppn,
       notes          = p_notes,
       updated_by     = p_user_id
   WHERE id = p_id;
