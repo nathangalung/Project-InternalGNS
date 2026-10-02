@@ -468,7 +468,9 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    cut.
 9. Invoice tax figures are rounded per line, then summed to the header (matching
    DJP e-faktur), and `ppn_amount` is computed from the already-rounded DPP
-   base. Invoices snapshot `gross_unit_price` and `total_discount`, so the PDF
+   base. The quotation (`fn_line_dpp`, `fn_line_ppn`, stored by the functions
+   that write its totals) and the PO (`v_po_totals`) use the same rule, so all
+   three agree, and the web previews mirror it (`computeTaxBreakdown`). Invoices snapshot `gross_unit_price` and `total_discount`, so the PDF
    prints a gross line plus a real discount row (`TotalProduk − Diskon = DPP`)
    without reading the quotation. Do not restate already-filed invoices: their
    amounts are never recomputed, and a wrong invoice is cancelled and replaced

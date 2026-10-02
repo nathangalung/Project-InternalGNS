@@ -457,9 +457,9 @@ a:hover{text-decoration:underline}
           <div class="col-row"><span class="col-name">total</span><span class="col-type">NUMERIC(15,2)</span></div>
           <div class="col-row"><span class="col-name">total_discount</span><span class="col-type">NUMERIC(15,2)</span></div>
           <div class="col-row"><span class="col-name gen">subtotal</span><span class="col-type">GENERATED</span></div>
-          <div class="col-row"><span class="col-name gen">dpp_nilai_lain</span><span class="col-type">GENERATED</span></div>
-          <div class="col-row"><span class="col-name gen">ppn_amount</span><span class="col-type">GENERATED</span></div>
-          <div class="col-row"><span class="col-name gen">grand_total</span><span class="col-type">GENERATED</span></div>
+          <div class="col-row"><span class="col-name">dpp_nilai_lain</span><span class="col-type">NUMERIC(15,2)</span></div>
+          <div class="col-row"><span class="col-name">ppn_amount</span><span class="col-type">NUMERIC(15,2)</span></div>
+          <div class="col-row"><span class="col-name">grand_total</span><span class="col-type">NUMERIC(15,2)</span></div>
           <div class="col-section">Concurrency</div>
           <div class="col-row"><span class="col-name">row_version</span><span class="col-type">INT NN</span></div>
           <div class="col-section">Timestamps</div>
@@ -999,9 +999,9 @@ a:hover{text-decoration:underline}
           <tr><td class="col-nm">total</td><td class="col-tp">NUMERIC(15,2)</td><td>Total semua baris sebelum diskon (SUM dari total_selling tiap item, product + shipping). Diisi app layer.</td><td>126,323,000.00</td></tr>
           <tr><td class="col-nm">total_discount</td><td class="col-tp">NUMERIC(15,2)</td><td>Total diskon (SUM dari discount_amount tiap item). Diisi app layer.</td><td>6,316,150.00</td></tr>
           <tr><td class="col-nm gen">subtotal <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>total − total_discount</code> — Sub Total setelah diskon (level-1)</td><td>120,006,850.00</td></tr>
-          <tr><td class="col-nm gen">dpp_nilai_lain <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>(total − total_discount) × 11/12</code> — langsung ke base stored (level-1)</td><td>110,006,279.00</td></tr>
-          <tr><td class="col-nm gen">ppn_amount <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>(total − total_discount) × 11/12 × 0.12</code> — langsung ke base (level-1)</td><td>13,200,754.00</td></tr>
-          <tr><td class="col-nm gen">grand_total <span class="cbadge cbadge-gen">GENERATED</span></td><td class="col-tp">NUMERIC(15,2)</td><td><code>(total − total_discount) × 11/12 × 1.12</code> — = DPP + PPN (level-1)</td><td>123,207,033.00</td></tr>
+          <tr><td class="col-nm">dpp_nilai_lain</td><td class="col-tp">NUMERIC(15,2)</td><td><code>SUM(ROUND(subtotal baris × 11/12, 2))</code> — dibulatkan per baris lalu dijumlah, sama dengan PO dan invoice. Diisi fungsi quotation (00084)</td><td>110,006,279.17</td></tr>
+          <tr><td class="col-nm">ppn_amount</td><td class="col-tp">NUMERIC(15,2)</td><td><code>SUM(ROUND(ROUND(subtotal baris × 11/12, 2) × 0.12, 2))</code> — PPN per baris dari DPP yang sudah dibulatkan</td><td>13,200,753.50</td></tr>
+          <tr><td class="col-nm">grand_total</td><td class="col-tp">NUMERIC(15,2)</td><td><code>subtotal + ppn_amount</code></td><td>133,207,603.50</td></tr>
           <tr class="section-divider"><td colspan="4">Concurrency (Optimistic Locking)</td></tr>
           <tr><td class="col-nm">row_version <span class="cbadge cbadge-nn">NOT NULL</span></td><td class="col-tp">INT</td><td>Counter yang di-increment tiap UPDATE. App layer pakai <code>WHERE id=? AND row_version=?</code> untuk detect concurrent edit — kalau affected_rows=0, throw conflict error.</td><td>3</td></tr>
           <tr class="section-divider"><td colspan="4">Timestamps</td></tr>
