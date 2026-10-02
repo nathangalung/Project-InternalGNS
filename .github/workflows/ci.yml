@@ -39,18 +39,22 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # Dependabot cannot update workflow images, only compose.dev.yml, so
-      # its compose PRs fail here until these pins are copied over.
-      - name: ci images match compose.dev.yml
+      # Dependabot cannot update workflow images, only the compose files, so
+      # its compose PRs fail here until these pins are copied over. Both files
+      # must match: Dokploy deploys compose.prod.yml, so a pin moved there
+      # alone would ship an image no CI run tested.
+      - name: ci images match both compose files
         working-directory: .
         run: |
           refs=$(grep -ohE '(postgres|pgsty/silo):[0-9A-Z][^[:space:]]*' .github/workflows/ci.yml | sort -u)
           test -n "$refs"
-          for ref in $refs; do
-            grep -qxF "    image: $ref" compose.dev.yml || {
-              echo "::error::$ref differs from the compose.dev.yml pin"
-              exit 1
-            }
+          for file in compose.dev.yml compose.prod.yml; do
+            for ref in $refs; do
+              grep -qxF "    image: $ref" "$file" || {
+                echo "::error::$ref differs from the $file pin"
+                exit 1
+              }
+            done
           done
 
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
