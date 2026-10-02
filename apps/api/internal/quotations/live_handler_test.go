@@ -414,10 +414,18 @@ probing:
 	res = doRaw(t, http.MethodPatch, srv.URL+base+"/contact", body, nil)
 	res.Body.Close()
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
-	select {
-	case ev := <-events:
-		assert.Equal(t, live.Event{QuotationID: id, Kind: "header", Part: "header", UserID: seedUserID}, ev)
-	case <-time.After(5 * time.Second):
-		t.Fatal("no notice for the contact change")
+	// Late probes may still be queued; skip them.
+	notice := time.After(5 * time.Second)
+	for {
+		select {
+		case ev := <-events:
+			if ev.Kind == "probe" {
+				continue
+			}
+			assert.Equal(t, live.Event{QuotationID: id, Kind: "header", Part: "header", UserID: seedUserID}, ev)
+			return
+		case <-notice:
+			t.Fatal("no notice for the contact change")
+		}
 	}
 }
