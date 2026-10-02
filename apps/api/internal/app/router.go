@@ -51,7 +51,7 @@ func NewRouter(cfg Config, pool *pgxpool.Pool, store queries.Store, storageClien
 	r.Use(requestIDResponseMiddleware)
 	r.Use(clientIP)
 	r.Use(accessLogMiddleware)
-	r.Use(middleware.Recoverer)
+	r.Use(recoverer)
 	r.Use(requestTimeout(defaultRequestTimeout, renderRequestTimeout, uploadRequestTimeout))
 	r.Use(securityHeadersMiddleware)
 	r.Use(bodyLimitMiddleware(2 * 1024 * 1024))

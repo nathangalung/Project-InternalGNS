@@ -3,10 +3,12 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
 	"net/netip"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -65,6 +67,29 @@ func requestIDResponseMiddleware(next http.Handler) http.Handler {
 		if id := middleware.GetReqID(r.Context()); id != "" {
 			w.Header().Set(middleware.RequestIDHeader, id)
 		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// recoverer turns a panic into 500.
+// It logs through slog, so the line is JSON and carries request_id like
+// every other server error; chi's Recoverer printed a coloured stack to
+// stderr instead. http.ErrAbortHandler is net/http's deliberate abort and
+// is passed on.
+func recoverer(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			rvr := recover()
+			if rvr == nil {
+				return
+			}
+			if err, ok := rvr.(error); ok && errors.Is(err, http.ErrAbortHandler) {
+				panic(rvr)
+			}
+			slog.ErrorContext(r.Context(), "panic",
+				"panic", fmt.Sprint(rvr), "stack", string(debug.Stack()))
+			httperr.Render(w, httperr.Internal("internal server error"))
+		}()
 		next.ServeHTTP(w, r)
 	})
 }
