@@ -195,6 +195,10 @@ docker inspect dokploy-traefik 2>/dev/null | grep -i certresolver
 # Confirm the entrypoint names the labels use: web on :80, websecure on :443.
 # A default Dokploy install keeps its static config here.
 sudo grep -A8 entryPoints /etc/dokploy/traefik/traefik.yml
+
+# Prints nothing on a default install: web (:80) does not redirect to https,
+# so the http routers (section 12) do it.
+sudo grep -n -A4 redirections /etc/dokploy/traefik/traefik.yml
 ```
 
 The routers in `compose.prod.yml` name the entrypoints `web` and
@@ -463,12 +467,14 @@ TLS. They are set in the `compose.prod.yml` labels:
   `includeSubDomains` or `preload` until every sibling host is known to be
   HTTPS-only.
 - A permanent redirect from `http://` to `https://` on both hosts, path and
-  query kept. HSTS only takes effect after a first https visit, and Dokploy's
-  Traefik has no global redirect on `web` (:80): before these routers,
-  `http://internal.globalsakti.com/` and `http://api.internal.globalsakti.com/`
-  answered 404, so a typed or old http link made the app look down. The
-  `internalgns-*-http` routers and `internalgns-*-redirect` middlewares are
-  the whole change; delete those ten labels to undo it. Traefik v3.6 answers
+  query kept. HSTS only takes effect after a first https visit, and a default
+  Dokploy install sets no redirect on the `web` entrypoint (:80); the section 2
+  check shows whether this server's does. Without one, `http://<WEB_HOST>/`
+  and `http://<API_HOST>/` answer 404, so a typed or old http link makes the
+  app look down. If the entrypoint already redirects, its catch-all router
+  outranks these and the labels are inert. The `internalgns-*-http` routers
+  and `internalgns-*-redirect` middlewares are the whole change; delete those
+  ten labels to undo it. Traefik v3.6 answers
   `301` (checked locally against these labels); the smoke check accepts `308`
   too. The ACME http challenge is unaffected, since Traefik serves
   `/.well-known/acme-challenge/` ahead of every router.
