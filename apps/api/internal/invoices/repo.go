@@ -56,8 +56,7 @@ var tiebreak = listq.Column{Expr: "inv.id", Dir: listq.Desc}
 func filterableEffective(raw []string) []string {
 	out := make([]string, 0, len(raw))
 	for _, s := range raw {
-		switch Status(s) {
-		case StatusDraft, StatusSent, StatusPaid, StatusOverdue, StatusCancelled:
+		if isValidStatus(Status(s)) {
 			out = append(out, s)
 		}
 	}

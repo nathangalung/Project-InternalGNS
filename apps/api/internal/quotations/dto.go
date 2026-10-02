@@ -98,18 +98,18 @@ type RevisionRow struct {
 
 // List row shape.
 type ListRow struct {
-	ID              int64     `db:"id"               json:"id"`
-	QuotationNo     string    `db:"quotation_no"     json:"quotationNo"`
+	ID              int64     `db:"id"                json:"id"`
+	QuotationNo     string    `db:"quotation_no"      json:"quotationNo"`
 	Version         int16     `db:"version"           json:"version"`
 	CompanyClientID int64     `db:"company_client_id" json:"companyClientId"`
 	CompanyName     string    `db:"company_name"      json:"companyName"`
-	Status          Status    `db:"status"           json:"status"`
-	GrandTotal      string    `db:"grand_total"      json:"grandTotal"`
-	Subtotal        string    `db:"subtotal"         json:"subtotal"`
-	TotalDiscount   string    `db:"total_discount"   json:"totalDiscount"`
-	TotalHargaBeli  string    `db:"total_harga_beli" json:"totalHargaBeli"`
-	ProductCount    int64     `db:"product_count"    json:"productCount"`
-	CreatedAt       time.Time `db:"created_at"       json:"createdAt"`
+	Status          Status    `db:"status"            json:"status"`
+	GrandTotal      string    `db:"grand_total"       json:"grandTotal"`
+	Subtotal        string    `db:"subtotal"          json:"subtotal"`
+	TotalDiscount   string    `db:"total_discount"    json:"totalDiscount"`
+	TotalHargaBeli  string    `db:"total_harga_beli"  json:"totalHargaBeli"`
+	ProductCount    int64     `db:"product_count"     json:"productCount"`
+	CreatedAt       time.Time `db:"created_at"        json:"createdAt"`
 }
 
 // ListResult wraps rows with total.
