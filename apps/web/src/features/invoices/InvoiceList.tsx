@@ -13,7 +13,7 @@ import { resolveRange } from "@/lib/date-range"
 import { formatDate, formatNumber, formatRupiah } from "@/lib/format"
 import { deriveInvoiceStatus } from "@/lib/status"
 import { ui } from "@/lib/ui"
-import { useListScreen } from "@/lib/useListScreen"
+import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import type { InvoiceBackendRow } from "@/types/api"
 import * as invoicesApi from "./api"
 import { runDownload, safeFileName } from "./download"
@@ -118,6 +118,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
   }, [rawList])
 
   const totalItems = rawList?.total ?? 0
+  usePageWithin(list, rawList?.total)
   const totalPages = list.totalPagesOf(totalItems)
 
   const counts = {

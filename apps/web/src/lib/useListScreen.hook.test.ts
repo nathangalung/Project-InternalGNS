@@ -1,7 +1,7 @@
 import { act } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { renderHook } from "@/test/renderHook"
-import { type ListScreen, useListScreen } from "./useListScreen"
+import { type ListScreen, useListScreen, usePageWithin } from "./useListScreen"
 
 type Filters = { status: string; min: number }
 const initial: Filters = { status: "all", min: 0 }
@@ -87,6 +87,31 @@ describe("useListScreen", () => {
     expect(result.current.search).toBe("")
     act(() => vi.advanceTimersByTime(250))
     expect(result.current.debouncedSearch).toBe("")
+  })
+
+  // A shrunk total moves the reader.
+  //
+  // Removing a chip keeps the page, so a narrower result can end before
+  // it; the reader lands on the new last page, and an unknown total
+  // leaves the page alone.
+  it.each<[string, number | undefined, number]>([
+    ["past the end moves to the last page", 20, 2],
+    ["an empty result moves to page 1", 0, 1],
+    ["within range stays", 45, 4],
+    ["an unknown total stays", undefined, 4],
+  ])("%s", (_name, total, want) => {
+    const { result, rerender } = renderHook(
+      (t: number | undefined) => {
+        const list = useListScreen(initial)
+        usePageWithin(list, t)
+        return list
+      },
+      45 as number | undefined,
+    )
+    act(() => result.current.setCurrentPage(4))
+    rerender(total)
+    expect(result.current.currentPage).toBe(want)
+    expect(result.current.startIndex).toBe((want - 1) * 10)
   })
 
   it.each<[number, number, number]>([

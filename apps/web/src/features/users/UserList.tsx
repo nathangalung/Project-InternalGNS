@@ -12,7 +12,7 @@ import { useUsers } from "@/features/users/hooks"
 import { formatDateShort } from "@/lib/format"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
-import { useListScreen } from "@/lib/useListScreen"
+import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import type { Role } from "@/types/api"
 import UserAddModal from "./UserAddModal"
 import UserFilter, { type RoleFilter, type StatusFilter } from "./UserFilter"
@@ -71,6 +71,7 @@ export default function UserList() {
   const { data: usersData, isLoading } = useUsers(queryParams)
   const currentRows = usersData?.rows ?? []
   const totalItems = usersData?.total ?? 0
+  usePageWithin(list, usersData?.total)
   const totalPages = list.totalPagesOf(totalItems)
 
   return (

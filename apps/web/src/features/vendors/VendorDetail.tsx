@@ -17,7 +17,7 @@ import { canWriteCatalog } from "@/lib/rbac"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
-import { useListScreen } from "@/lib/useListScreen"
+import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import { digitsOnly, optionalEmailError, optionalPhoneError } from "@/lib/validation"
 import type { VendorContactInfo, VendorRow } from "@/types/api"
 import { buildContactInfo, vendorFormErrors } from "./contact-info"
@@ -101,6 +101,7 @@ export default function VendorDetail({ vendor, onBack }: VendorDetailProps) {
   })
   const items = vendorItems?.rows ?? []
   const itemsTotal = vendorItems?.total ?? 0
+  usePageWithin(itemsList, vendorItems?.total)
 
   useEffect(() => {
     const path = logoDownload?.downloadUrl

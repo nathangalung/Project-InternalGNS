@@ -15,7 +15,7 @@ import { formatRupiah } from "@/lib/format"
 import { canWriteCatalog } from "@/lib/rbac"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
-import { useListScreen } from "@/lib/useListScreen"
+import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import type { VendorRow } from "@/types/api"
 
 type VendorListProps = {
@@ -77,6 +77,7 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
   const { data, isLoading } = useVendors(queryParams)
   const currentRows = data?.rows ?? []
   const totalItems = data?.total ?? 0
+  usePageWithin(list, data?.total)
   const totalPages = list.totalPagesOf(totalItems)
 
   return (

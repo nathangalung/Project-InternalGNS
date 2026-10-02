@@ -19,3 +19,17 @@ export function getPageNumbers(current: number, total: number): (number | null)[
   }
   return pages
 }
+
+// Pages for a row count.
+// Never zero, so an empty list still has page 1.
+export function pageCount(rows: number, size: number): number {
+  return Math.max(1, Math.ceil(rows / size))
+}
+
+// Page pulled into range.
+//
+// A list that shrank under the reader (a removed line, a narrowed filter)
+// shows its new last page rather than an empty one.
+export function clampPage(page: number, totalPages: number): number {
+  return Math.min(Math.max(page, 1), Math.max(totalPages, 1))
+}

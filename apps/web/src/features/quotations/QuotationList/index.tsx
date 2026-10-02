@@ -9,7 +9,7 @@ import {
 } from "@/features/quotations/hooks"
 import { resolveRange } from "@/lib/date-range"
 import { ui } from "@/lib/ui"
-import { useListScreen } from "@/lib/useListScreen"
+import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import type { QuotationSortKey } from "@/types/api"
 import QuotationFilter, { type DatePreset, type StatusFilter } from "../QuotationFilter"
 import { quotationStatusFromLabel } from "../status"
@@ -89,6 +89,7 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
   const currentData: QuotationRow[] = useMemo(() => (data?.rows ?? []).map(toTableRow), [data])
 
   const totalItems = data?.total ?? 0
+  usePageWithin(list, data?.total)
   const totalPages = list.totalPagesOf(totalItems)
 
   // Active-filter chips shown above the table.
