@@ -44,7 +44,7 @@ func TestHandler_Put_OversizeIsRefused(t *testing.T) {
 	}{
 		{"at the cap", limit, true, http.StatusNoContent, 1},
 		{"declared past the cap", limit + 1, true, http.StatusRequestEntityTooLarge, 0},
-		{"streamed past the cap", limit + 1, false, http.StatusRequestEntityTooLarge, 0},
+		{"read past the declared length", limit + 1, false, http.StatusRequestEntityTooLarge, 0},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -60,8 +60,8 @@ func TestHandler_Put_OversizeIsRefused(t *testing.T) {
 			if tc.declareLength {
 				req.ContentLength = tc.size
 			} else {
-				// A chunked upload announces no length.
-				req.ContentLength = -1
+				// A length under the body still stops at the cap.
+				req.ContentLength = limit
 			}
 			rec := httptest.NewRecorder()
 			h.Put(rec, req)

@@ -186,11 +186,11 @@ func TestClient_PutDefaultsContentType(t *testing.T) {
 	assert.True(t, exists)
 }
 
-// MinIO keeps cap refusal typed.
-// The handler can only answer 413 if the SDK hands back the body reader's
-// error unchanged, and a refused upload must leave nothing behind, or the
-// retry with a smaller file would hit the overwrite guard.
-func TestHandler_OversizeStreamAgainstMinio(t *testing.T) {
+// An unknown length never reaches MinIO.
+// minio-go would buffer a ~512 MiB part for it. The refused upload must
+// leave nothing behind, or the retry with a known length would hit the
+// overwrite guard.
+func TestHandler_UnknownLengthAgainstMinio(t *testing.T) {
 	cfg := requireMinio(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
@@ -207,7 +207,7 @@ func TestHandler_OversizeStreamAgainstMinio(t *testing.T) {
 	req.ContentLength = -1
 	rec := httptest.NewRecorder()
 	h.Put(rec, req)
-	assert.Equal(t, http.StatusRequestEntityTooLarge, rec.Code, rec.Body.String())
+	assert.Equal(t, http.StatusLengthRequired, rec.Code, rec.Body.String())
 
 	exists, err := c.ObjectExists(ctx, storage.BucketClientLogos, key)
 	require.NoError(t, err)
