@@ -17,7 +17,7 @@ export type InvoiceRow = {
   dueDate: string // ISO
   total: string // formatted Rp
   totalNumber: number
-  status: InvoiceStatus
+  status: InvoiceDisplayStatus
 }
 
 export const INVOICE_LABEL: Record<InvoiceDisplayStatus, string> = {

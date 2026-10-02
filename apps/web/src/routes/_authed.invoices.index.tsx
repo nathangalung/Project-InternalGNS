@@ -10,7 +10,9 @@ function InvoiceListRoute() {
 
   return (
     <InvoiceList
-      onViewDetail={(qid) => void navigate({ to: "/invoices/$id", params: { id: String(qid) } })}
+      onViewDetail={(qid, search) =>
+        void navigate({ to: "/invoices/$id", params: { id: String(qid) }, search })
+      }
     />
   )
 }

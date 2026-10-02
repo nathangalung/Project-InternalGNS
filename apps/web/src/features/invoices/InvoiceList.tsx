@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router"
 import { useMemo, useState } from "react"
 import ActiveFilters, { type FilterChip } from "@/components/shared/ActiveFilters"
 import EntityLink from "@/components/shared/EntityLink"
@@ -9,64 +10,20 @@ import StatCard from "@/components/shared/StatCard"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { downloadPdf, downloadXml } from "@/lib/api-client"
-import { resolveRange } from "@/lib/date-range"
-import { formatDate, formatNumber, formatRupiah, PENDING_FIGURE } from "@/lib/format"
-import { deriveInvoiceStatus } from "@/lib/status"
+import { formatDate, formatNumber, PENDING_FIGURE } from "@/lib/format"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
-import type { InvoiceBackendRow } from "@/types/api"
 import * as invoicesApi from "./api"
 import { runDownload, safeFileName } from "./download"
 import { useInvoiceSummary, useInvoices } from "./hooks"
 import InvoiceFilter, { type InvoiceFilterValues } from "./InvoiceFilter"
-import type { InvoiceRow, InvoiceStatus } from "./types"
+import { detailSearch, invoiceListParams, rowFromBackend } from "./list"
+import type { InvoiceRow } from "./types"
 import { INVOICE_LABEL, INVOICE_STATUS_STYLE } from "./types"
 
-const STATUS_TO_EFFECTIVE: Record<InvoiceStatus, string> = {
-  DRAF: "draft",
-  DIKIRIM: "sent",
-  DIBAYAR: "paid",
-  TERLAMBAT: "overdue",
-}
-
-// Every displayable status.
-//
-// Sent when no explicit status filter is set so the server excludes cancelled
-// invoices and X-Total-Count matches the rows shown. Never map a status to
-// "cancelled" above: it would re-admit cancelled rows here and desync the
-// pagination denominator again.
-const ALL_EFFECTIVE_STATUSES = Object.values(STATUS_TO_EFFECTIVE).join(",")
-
-function rupiahToDigits(s: string): string {
-  return s.replace(/\D/g, "")
-}
-
 type InvoiceListProps = {
-  onViewDetail?: (quotationId: number) => void
-}
-
-function parseRupiahNumber(s: string | undefined): number {
-  if (!s) return 0
-  const n = Number(s)
-  return Number.isFinite(n) ? n : 0
-}
-
-function rowFromBackend(inv: InvoiceBackendRow): InvoiceRow {
-  const totalNumber = parseRupiahNumber(inv.total ?? inv.subtotal)
-  return {
-    id: inv.id,
-    quotationId: inv.quotationId,
-    companyClientId: inv.companyClientId,
-    invoiceNo: inv.invoiceNo,
-    client: inv.companyName,
-    createdAt: inv.invoiceDate,
-    dueDate: inv.dueDate ?? inv.invoiceDate,
-    total: formatRupiah(totalNumber),
-    totalNumber,
-    // Cancelled invoices never reach here: the list query always sends
-    // effectiveStatus, which has no cancelled clause.
-    status: deriveInvoiceStatus(inv),
-  }
+  // A cancelled row names its invoice
+  onViewDetail?: (quotationId: number, search: { invoiceId?: number }) => void
 }
 
 export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
@@ -76,39 +33,10 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
   const { debouncedSearch, filters: activeFilters, itemsPerPage, startIndex } = list
   const { clearSearch, patchFilters } = list
 
-  const queryParams = useMemo(() => {
-    const out: Parameters<typeof useInvoices>[0] = {
-      q: debouncedSearch || undefined,
-      limit: itemsPerPage,
-      offset: startIndex,
-      sortBy: "createdAt",
-      sortDir: "desc",
-      effectiveStatus: ALL_EFFECTIVE_STATUSES,
-    }
-    if (!activeFilters) return out
-    if (activeFilters.statuses.length > 0) {
-      out.effectiveStatus = activeFilters.statuses.map((s) => STATUS_TO_EFFECTIVE[s]).join(",")
-    }
-    const createdRange = resolveRange(
-      activeFilters.createdPreset,
-      activeFilters.createdStart,
-      activeFilters.createdEnd,
-    )
-    if (createdRange.start) out.dateFrom = createdRange.start
-    if (createdRange.end) out.dateTo = createdRange.end
-    const dueRange = resolveRange(
-      activeFilters.duePreset,
-      activeFilters.dueStart,
-      activeFilters.dueEnd,
-    )
-    if (dueRange.start) out.dueFrom = dueRange.start
-    if (dueRange.end) out.dueTo = dueRange.end
-    const min = rupiahToDigits(activeFilters.minHarga)
-    if (min && min !== "0") out.minTotal = min
-    const max = rupiahToDigits(activeFilters.maxHarga)
-    if (max && max !== "0") out.maxTotal = max
-    return out
-  }, [debouncedSearch, activeFilters, itemsPerPage, startIndex])
+  const queryParams = useMemo(
+    () => invoiceListParams(debouncedSearch, activeFilters, itemsPerPage, startIndex),
+    [debouncedSearch, activeFilters, itemsPerPage, startIndex],
+  )
 
   const { data: rawList, isLoading } = useInvoices(queryParams)
   const { data: summaryData } = useInvoiceSummary()
@@ -292,9 +220,20 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
                   return (
                     <tr key={row.id} className={ui.tr}>
                       <td className={`${ui.tdCenter} font-bold text-primary-700`}>
-                        <EntityLink kind="invoice" quotationId={row.quotationId}>
-                          {row.invoiceNo}
-                        </EntityLink>
+                        {row.status === "DIBATALKAN" ? (
+                          <Link
+                            to="/invoices/$id"
+                            params={{ id: String(row.quotationId) }}
+                            search={detailSearch(row)}
+                            className={ui.entityLink}
+                          >
+                            {row.invoiceNo}
+                          </Link>
+                        ) : (
+                          <EntityLink kind="invoice" quotationId={row.quotationId}>
+                            {row.invoiceNo}
+                          </EntityLink>
+                        )}
                       </td>
                       <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>
                         <EntityLink kind="client" id={row.companyClientId} tone="name">
@@ -315,7 +254,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
                             type="button"
                             title="Lihat detail"
                             className={ui.iconAction}
-                            onClick={() => onViewDetail?.(row.quotationId)}
+                            onClick={() => onViewDetail?.(row.quotationId, detailSearch(row))}
                           >
                             <EyeIcon size={18} />
                           </button>

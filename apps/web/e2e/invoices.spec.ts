@@ -280,6 +280,37 @@ test("a cancelled invoice without a Pengganti offers one (INV-10)", async ({
   await expectActions(page, ["Tandai Dikirim", "Batalkan & Terbitkan Pengganti"])
 })
 
+// Only Dibatalkan lists it.
+test("the Dibatalkan filter finds a cancelled invoice and opens it", async ({
+  page,
+  admin,
+  client,
+  invoice,
+}) => {
+  await setInvoiceStatus(admin, invoice.id, "cancelled", "Dibatalkan lewat API")
+  await page.goto("/invoices")
+  await page.getByPlaceholder("Cari invoice, klien, atau nomor...").fill(client.name)
+  const row = page.getByRole("row").filter({ hasText: invoice.invoiceNo })
+  await expect(page.getByText("Belum ada Invoice.", { exact: false })).toBeVisible()
+  await expect(row).toHaveCount(0)
+
+  await page.getByRole("button", { name: "Filter", exact: true }).click()
+  const filter = page.getByRole("dialog", { name: "Filter Invoice" })
+  await filter.getByRole("button", { name: "Dibatalkan", exact: true }).click()
+  await filter.getByRole("button", { name: "Terapkan" }).click()
+  await expect(row).toHaveCount(1)
+  await expect(row).toContainText("Dibatalkan")
+
+  const link = row.getByRole("link", { name: invoice.invoiceNo })
+  await expect(link).toHaveAttribute(
+    "href",
+    `/invoices/${invoice.quotationId}?invoiceId=${invoice.id}`,
+  )
+  await link.click()
+  await expect(page.getByRole("heading", { name: `Invoice ${invoice.invoiceNo}` })).toBeVisible()
+  await expectActions(page, ["Terbitkan Pengganti"])
+})
+
 // A browser outside Jakarta.
 test.describe("in a browser west of Jakarta", () => {
   test.use({ timezoneId: "America/Los_Angeles" })
