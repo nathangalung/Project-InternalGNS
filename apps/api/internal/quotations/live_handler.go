@@ -198,8 +198,9 @@ func (h *Handler) UpdateHeader(w http.ResponseWriter, r *http.Request) {
 // Events streams one draft's changes.
 //
 // Server-sent events: "ready" once, then one event per change, named by its
-// kind, with the change as JSON data. The web reloads the quotation on each,
-// so an event carries no business data. Comment pings keep proxies from
+// kind, with the change as JSON data, plus "resync" when the listener
+// reconnected and may have missed changes. The web reloads the quotation on
+// each, so an event carries no business data. Comment pings keep proxies from
 // closing the idle connection. The stream ends after streamLifetime, when
 // the client leaves, or when the server shuts down; the web reconnects
 // through the normal authenticated path.

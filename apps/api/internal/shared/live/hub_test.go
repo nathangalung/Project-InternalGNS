@@ -121,3 +121,19 @@ func TestParse(t *testing.T) {
 		})
 	}
 }
+
+// Resync reaches every subscriber.
+func TestHub_ResyncReachesEverySubscriber(t *testing.T) {
+	h := live.NewHub()
+	a, stopA := h.Subscribe(1)
+	defer stopA()
+	b, stopB := h.Subscribe(2)
+	defer stopB()
+
+	h.Resync()
+	assert.Equal(t, live.Event{QuotationID: 1, Kind: live.KindResync}, recv(t, a))
+	assert.Equal(t, live.Event{QuotationID: 2, Kind: live.KindResync}, recv(t, b))
+
+	h.Close()
+	h.Resync() // a closed hub has nobody to tell
+}
