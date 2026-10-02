@@ -242,7 +242,8 @@ document's status history table.
   edits and client edits can reopen a gap.
 - Invoice: draft, sent, paid, cancelled; overdue is stored only on legacy
   rows. Draft goes to sent; sent or overdue to paid, which stamps `paid_at`
-  and takes an optional proof stored under `invoices/<id>/payment/`. Draft,
+  and takes an optional proof stored under `invoices/<id>/payment/`; marking
+  a paid invoice paid again is a no-op, or a 422 when it carries a proof. Draft,
   sent or overdue go to cancelled with a reason, and only when the invoice has
   a PO; `POST /invoices/{id}/replacement` then issues a Pengganti draft for
   the same PO. Terlambat is derived, never set: `fn_invoice_effective_status`

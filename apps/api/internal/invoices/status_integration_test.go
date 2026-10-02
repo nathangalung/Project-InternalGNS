@@ -2,6 +2,7 @@ package invoices_test
 
 import (
 	"errors"
+	"net/http"
 	"strconv"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/invoices"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -152,6 +154,40 @@ func TestChangeStatus_PaidWithoutProof(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, det.PaidAt)
 	assert.Nil(t, det.PaymentProofKey)
+}
+
+// A second payment keeps no proof.
+// Another tab may mark the invoice paid first; a proof sent with the second
+// mark used to vanish behind a 204. It is refused instead, while a repeat
+// without proof stays a no-op.
+func TestChangeStatus_RepaidWithProofRefused(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, _, invID := deliveredPOWithInvoice(t, tx)
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+	proof := "invoices/" + strconv.FormatInt(invID, 10) + "/payment/1700000000-bukti.pdf"
+
+	require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusSent), seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusPaid), seedUserID))
+	require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusPaid), seedUserID),
+		"a repeat without proof changes nothing")
+
+	_, err := tx.Exec(ctx, "SAVEPOINT repaid")
+	require.NoError(t, err)
+	err = repo.ChangeStatus(ctx, invID, invoices.ChangeStatusRequest{
+		Status: invoices.StatusPaid, PaymentProofKey: &proof,
+	}, seedUserID)
+	require.Error(t, err)
+	assert.Equal(t, "P0012", sqlState(err))
+	e := httperr.FromDBErr(err)
+	assert.Equal(t, http.StatusUnprocessableEntity, e.Status)
+	assert.Equal(t, "Invoice sudah ditandai Dibayar. Muat ulang halaman; bukti pembayaran tidak tersimpan.", e.Detail)
+	_, err = tx.Exec(ctx, "ROLLBACK TO SAVEPOINT repaid")
+	require.NoError(t, err)
+
+	det, err := repo.GetDetail(ctx, invID)
+	require.NoError(t, err)
+	assert.Nil(t, det.PaymentProofKey)
+	assert.Len(t, det.History, 2)
 }
 
 func TestChangeStatus_ProofOnlyWhenPaid(t *testing.T) {
