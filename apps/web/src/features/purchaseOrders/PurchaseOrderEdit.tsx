@@ -154,8 +154,9 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
   const { isAlamatOk, isWaktuFilled, hasContent } = wizardGates({
     shippingAddress,
     shippingTime,
-    jatuhTempo,
-    berlakuSampai,
+    // A PO has no quotation terms.
+    jatuhTempo: "",
+    berlakuSampai: "",
     productCount: products.length,
     addressRequired,
   })
