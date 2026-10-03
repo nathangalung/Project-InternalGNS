@@ -1,25 +1,27 @@
 package auth
 
 import (
+	"container/list"
 	"crypto/sha256"
 	"sync"
 )
 
 // unknownMissLimit bounds tracked addresses.
-// An evicted address reads zero again and answers without backoff, so the
-// limit sets what flushing a probe costs: ten thousand misses on other
-// addresses, each a full bcrypt, which the 100 per minute address budget
-// stretches to 100 address-minutes. The table stays near 2 MB.
+// An evicted address reads zero again and answers without backoff. Flushing
+// a probe takes ten thousand misses on other addresses: 100 minutes from one
+// IP at the 100 per minute address budget, about two minutes from 50 IPs.
+// A restart flushes everything for free, while users.failed_login_attempts
+// survives it, so an address probed past the free misses before a deploy
+// tells on its first attempt after it. Both are accepted residual risks.
+// The table stays near 2 MB.
 const unknownMissLimit = 10_000
 
 type missKey [sha256.Size]byte
 
 // missEntry is one tracked address.
-// Entries form a ring around the counter's sentinel, most recent first.
 type missEntry struct {
-	key        missKey
-	misses     int
-	prev, next *missEntry
+	key    missKey
+	misses int
 }
 
 // missCounter tallies unknown-address misses.
@@ -30,16 +32,14 @@ type missEntry struct {
 // Like the column, a count never decays; when full, the address missed
 // least recently is dropped.
 type missCounter struct {
-	mu    sync.Mutex
-	limit int
-	ring  missEntry
-	byKey map[missKey]*missEntry
+	mu     sync.Mutex
+	limit  int
+	recent *list.List
+	byKey  map[missKey]*list.Element
 }
 
 func newMissCounter(limit int) *missCounter {
-	c := &missCounter{limit: limit, byKey: make(map[missKey]*missEntry)}
-	c.ring.prev, c.ring.next = &c.ring, &c.ring
-	return c
+	return &missCounter{limit: limit, recent: list.New(), byKey: make(map[missKey]*list.Element)}
 }
 
 func keyOf(email string) missKey {
@@ -50,8 +50,8 @@ func keyOf(email string) missKey {
 func (c *missCounter) count(email string) int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if e, ok := c.byKey[keyOf(email)]; ok {
-		return e.misses
+	if el, ok := c.byKey[keyOf(email)]; ok {
+		return el.Value.(*missEntry).misses
 	}
 	return 0
 }
@@ -61,25 +61,15 @@ func (c *missCounter) miss(email string) {
 	key := keyOf(email)
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	e, ok := c.byKey[key]
-	if ok {
-		c.unlink(e)
-	} else {
-		if len(c.byKey) >= c.limit {
-			oldest := c.ring.prev
-			c.unlink(oldest)
-			delete(c.byKey, oldest.key)
-		}
-		e = &missEntry{key: key}
-		c.byKey[key] = e
+	if el, ok := c.byKey[key]; ok {
+		el.Value.(*missEntry).misses++
+		c.recent.MoveToFront(el)
+		return
 	}
-	e.misses++
-	e.prev, e.next = &c.ring, c.ring.next
-	c.ring.next.prev = e
-	c.ring.next = e
-}
-
-func (c *missCounter) unlink(e *missEntry) {
-	e.prev.next = e.next
-	e.next.prev = e.prev
+	if len(c.byKey) >= c.limit {
+		oldest := c.recent.Back()
+		c.recent.Remove(oldest)
+		delete(c.byKey, oldest.Value.(*missEntry).key)
+	}
+	c.byKey[key] = c.recent.PushFront(&missEntry{key: key, misses: 1})
 }
