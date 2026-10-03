@@ -41,6 +41,13 @@ const totalPurchaseExpr = "COALESCE((SELECT SUM(c.cost) FROM (" +
 	" WHERE vp.vendor_id = v.id AND q.status = 'accepted'" +
 	" AND NOT EXISTS (SELECT 1 FROM purchase_orders po WHERE po.quotation_id = q.id)) c), 0)"
 
+// productCountExpr counts listed products.
+// Only active links to active items count, the rows vendors.list_items
+// pages. Matches product_count in vendors.sql.
+const productCountExpr = "(SELECT COUNT(*) FROM vendor_products vp" +
+	" JOIN items i ON i.id = vp.item_id AND i.is_active = TRUE" +
+	" WHERE vp.vendor_id = v.id AND vp.is_active = TRUE)"
+
 // sortable lists vendor sort keys.
 var sortable = listq.Whitelist{
 	Default: "name",
@@ -50,8 +57,8 @@ var sortable = listq.Whitelist{
 		"created_at":     {Expr: "v.created_at", Dir: listq.Desc},
 		"totalPurchase":  {Expr: totalPurchaseExpr, Dir: listq.Desc},
 		"total_purchase": {Expr: totalPurchaseExpr, Dir: listq.Desc},
-		"productCount":   {Expr: "(SELECT COUNT(*) FROM vendor_products vp WHERE vp.vendor_id = v.id AND vp.is_active = TRUE)", Dir: listq.Desc},
-		"product_count":  {Expr: "(SELECT COUNT(*) FROM vendor_products vp WHERE vp.vendor_id = v.id AND vp.is_active = TRUE)", Dir: listq.Desc},
+		"productCount":   {Expr: productCountExpr, Dir: listq.Desc},
+		"product_count":  {Expr: productCountExpr, Dir: listq.Desc},
 	},
 }
 

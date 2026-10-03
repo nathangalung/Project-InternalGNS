@@ -1,6 +1,7 @@
 -- name: vendors.list_base
 SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.updated_at,
        COALESCE((SELECT COUNT(*) FROM vendor_products vp
+                  JOIN items i ON i.id = vp.item_id AND i.is_active = TRUE
                   WHERE vp.vendor_id = v.id AND vp.is_active = TRUE), 0) AS product_count,
        COALESCE((SELECT SUM(c.cost)::TEXT FROM (
                   SELECT poi.total_cost AS cost
@@ -29,6 +30,7 @@ WHERE 1=1;
 -- name: vendors.get_by_id
 SELECT v.id, v.name, v.location, v.contact_info, v.is_active, v.created_at, v.updated_at,
        COALESCE((SELECT COUNT(*) FROM vendor_products vp
+                  JOIN items i ON i.id = vp.item_id AND i.is_active = TRUE
                   WHERE vp.vendor_id = v.id AND vp.is_active = TRUE), 0) AS product_count,
        COALESCE((SELECT SUM(c.cost)::TEXT FROM (
                   SELECT poi.total_cost AS cost
@@ -68,6 +70,7 @@ UPDATE vendors
  WHERE id = $1
 RETURNING id, name, location, contact_info, is_active, created_at, updated_at,
           COALESCE((SELECT COUNT(*) FROM vendor_products vp
+                    JOIN items i ON i.id = vp.item_id AND i.is_active = TRUE
                     WHERE vp.vendor_id = vendors.id AND vp.is_active = TRUE), 0) AS product_count,
           COALESCE((SELECT SUM(c.cost)::TEXT FROM (
                     SELECT poi.total_cost AS cost
