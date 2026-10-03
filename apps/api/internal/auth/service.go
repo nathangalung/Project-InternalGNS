@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -139,7 +140,15 @@ func throttle(ctx context.Context, d time.Duration) {
 	}
 }
 
+// normalizeEmail is the lookup form.
+// Login reads and writes every tally under it and the login rate limit keys
+// on it, so no spelling of one address reaches two counts.
+func normalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
+}
+
 func (s *Service) Login(ctx context.Context, email, password string) (Session, error) {
+	email = normalizeEmail(email)
 	u, err := s.users.GetByEmail(ctx, email)
 	if errors.Is(err, users.ErrNotFound) {
 		return Session{}, s.rejectUnknown(ctx, email, password)

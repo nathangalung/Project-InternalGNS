@@ -7,7 +7,7 @@ import (
 )
 
 // Misses count per address.
-// Each normalised address keeps its own tally, and a full counter drops
+// Each address keeps its own tally, and a full counter drops
 // the address missed least recently, which then reads zero again.
 func TestMissCounter(t *testing.T) {
 	tests := []struct {
@@ -19,7 +19,6 @@ func TestMissCounter(t *testing.T) {
 		{"unseen reads zero", 4, nil, map[string]int{"a@x": 0}},
 		{"counts each miss", 4, []string{"a@x", "a@x", "a@x"}, map[string]int{"a@x": 3}},
 		{"addresses independent", 4, []string{"a@x", "b@x", "a@x"}, map[string]int{"a@x": 2, "b@x": 1}},
-		{"case and space fold", 4, []string{"A@X", " a@x "}, map[string]int{"a@x": 2}},
 		{
 			"full drops least recent", 2,
 			[]string{"a@x", "b@x", "a@x", "c@x"},

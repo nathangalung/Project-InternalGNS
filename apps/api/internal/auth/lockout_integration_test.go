@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -112,13 +113,12 @@ func TestService_Login_BackoffMatchesForUnknownAddresses(t *testing.T) {
 	const attempts = 8
 	delays := func(email string) []time.Duration {
 		svc := auth.NewService(repo, "test-secret-please-change", time.Minute)
-		var got []time.Duration
-		auth.SetThrottle(svc, func(_ context.Context, d time.Duration) { got = append(got, d) })
+		got := recordWaits(svc)
 		for range attempts {
 			_, err := svc.Login(ctx, email, "Wrong-pw1!")
 			require.ErrorIs(t, err, auth.ErrInvalidCredentials)
 		}
-		return got
+		return *got
 	}
 
 	want := delays(registered)
@@ -126,6 +126,52 @@ func TestService_Login_BackoffMatchesForUnknownAddresses(t *testing.T) {
 	assert.Equal(t, 250*time.Millisecond, want[5], "the sixth attempt pays the first delay")
 	assert.Equal(t, want, delays("nobody-"+uniqueEmail(t)), "unknown address")
 	assert.Equal(t, want, delays(deactivated), "deactivated address")
+}
+
+// Spelling never splits the tally.
+// Five misses as one spelling and a sixth as another reach one count,
+// account or not, so mixing spellings cannot open a timing gap.
+func TestService_Login_BackoffIgnoresSpelling(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := users.NewRepo(tx, testutil.Store(t))
+	account := func(prefix string) string {
+		email := strings.ToLower(prefix + uniqueEmail(t))
+		_, err := repo.Create(ctx, users.CreateUserRequest{
+			Email: email, Name: "x", Password: "Right-pw1!", Role: users.RoleOperational,
+		}, 1)
+		require.NoError(t, err)
+		return email
+	}
+	padded := func(s string) string { return " " + s + "\t" }
+
+	tests := []struct {
+		name     string
+		email    string
+		spelling func(string) string
+	}{
+		{"registered, padded", account("pad-"), padded},
+		{"registered, upper case", account("upper-"), strings.ToUpper},
+		{"unknown, padded", strings.ToLower("nobody-pad-" + uniqueEmail(t)), padded},
+		{"unknown, upper case", strings.ToLower("nobody-upper-" + uniqueEmail(t)), strings.ToUpper},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			svc := auth.NewService(repo, "test-secret-please-change", time.Minute)
+			got := recordWaits(svc)
+			for _, email := range []string{tc.email, tc.email, tc.email, tc.email, tc.email, tc.spelling(tc.email)} {
+				_, err := svc.Login(ctx, email, "Wrong-pw1!")
+				require.ErrorIs(t, err, auth.ErrInvalidCredentials)
+			}
+			assert.Equal(t, []time.Duration{0, 0, 0, 0, 0, 250 * time.Millisecond}, *got)
+		})
+	}
+}
+
+// recordWaits captures each backoff wait.
+func recordWaits(svc *auth.Service) *[]time.Duration {
+	var got []time.Duration
+	auth.SetThrottle(svc, func(_ context.Context, d time.Duration) { got = append(got, d) })
+	return &got
 }
 
 // postLogin posts a login body.

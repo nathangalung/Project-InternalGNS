@@ -2,7 +2,6 @@ package auth
 
 import (
 	"crypto/sha256"
-	"strings"
 	"sync"
 )
 
@@ -26,8 +25,8 @@ type missEntry struct {
 // missCounter tallies unknown-address misses.
 // users.failed_login_attempts counts misses only for active accounts, so an
 // unknown or deactivated address keeps its count here, in process memory
-// (the API runs one replica). Keys are a digest of the trimmed, lower-cased
-// address, the form loginAccountKey keys on, never the address itself.
+// (the API runs one replica). Keys are a digest of the address as Login
+// normalised it, never the address itself.
 // Like the column, a count never decays; when full, the address missed
 // least recently is dropped.
 type missCounter struct {
@@ -44,7 +43,7 @@ func newMissCounter(limit int) *missCounter {
 }
 
 func keyOf(email string) missKey {
-	return sha256.Sum256([]byte(strings.ToLower(strings.TrimSpace(email))))
+	return sha256.Sum256([]byte(email))
 }
 
 // count returns prior misses.
