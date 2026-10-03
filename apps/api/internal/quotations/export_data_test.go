@@ -3,6 +3,8 @@ package quotations
 import (
 	"testing"
 	"time"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 )
 
 func qStr(s string) *string { return &s }
@@ -288,6 +290,27 @@ func TestBuildExportData_FooterTerms(t *testing.T) {
 				if c.got != c.want {
 					t.Errorf("%s = %q, want %q", c.field, c.got, c.want)
 				}
+			}
+		})
+	}
+}
+
+// The client name gets break points.
+// The To cell wraps, but one long unbroken token still overflows unless
+// the name carries break points; a short name prints exactly as escaped.
+func TestBuildExportData_CompanyNameBreaksLongTokens(t *testing.T) {
+	long := "PT.GlobalMaritimeServicesIndonesia & Co"
+	cases := []struct{ name, client, want string }{
+		{"short name is escaped", "PT Maju & Co", `PT Maju \& Co`},
+		{"long token gets break points", long, pdfgen.LatexBreakable(long)},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			h := header("1000.00", "1100.00", "0.00", "1100.00", "1008.33", "121.00", "1221.00")
+			h.CompanyClientName = tc.client
+			got := buildExportData(QuotationDetail{Quotation: h}, qUnits, "", "", "Director")
+			if got.CompanyName != tc.want {
+				t.Errorf("CompanyName = %q, want %q", got.CompanyName, tc.want)
 			}
 		})
 	}

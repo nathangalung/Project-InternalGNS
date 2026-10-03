@@ -180,7 +180,7 @@ func buildExportData(
 	return exportData{
 		QuotationNo:   pdfgen.LatexEscape(d.QuotationNo),
 		ClientRefNo:   pdfgen.LatexEscape(pdfgen.StrDeref(d.ClientRefNo)),
-		CompanyName:   pdfgen.LatexEscape(d.CompanyClientName),
+		CompanyName:   pdfgen.LatexBreakable(d.CompanyClientName),
 		AttnName:      pdfgen.LatexEscape(attn),
 		AttnEmail:     pdfgen.LatexEscape(contactEmail),
 		AttnPhone:     pdfgen.LatexEscape(contactPhone),
