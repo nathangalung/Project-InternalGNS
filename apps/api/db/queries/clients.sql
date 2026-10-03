@@ -126,37 +126,50 @@ FROM ins;
 -- name: clients.update
 -- A NULL $10 keeps the number. trg_company_client_number_lock refuses a
 -- different one (P0013) once any quotation references the client, since its
--- document numbers embed it.
-UPDATE company_client
-   SET number       = COALESCE($10::text, number),
-       name         = $2,
-       npwp         = $3,
-       address      = $4,
-       email        = $5,
-       country_code = COALESCE(NULLIF($6, ''), country_code),
-       tku_id       = $7,
-       is_active    = $8,
-       updated_by   = $9,
-       updated_at   = NOW()
- WHERE id = $1
-RETURNING id, number, name, npwp, address, email, country_code,
-          tku_id, is_active, created_at, updated_at,
-          NULL::BIGINT AS contact_id,
-          NULL::TEXT   AS contact_name,
-          NULL::TEXT   AS contact_email,
-          NULL::TEXT   AS contact_phone,
-          COALESCE((SELECT SUM(CASE WHEN po.id IS NULL THEN q.grand_total
-                                    ELSE (SELECT t.po_grand_total FROM v_po_totals t
-                                          WHERE t.po_id = po.id) END)::TEXT
-                    FROM quotations q
-                    LEFT JOIN purchase_orders po ON po.quotation_id = q.id
-                    WHERE q.company_client_id = company_client.id
-                      AND q.status = 'accepted'
-                      AND po.status IS DISTINCT FROM 'CANCELLED'), '0') AS total_purchase,
-          COALESCE((SELECT COUNT(*)
-                    FROM quotations q
-                    WHERE q.company_client_id = company_client.id), 0)::BIGINT AS quotation_count,
-          logo_object_key;
+-- document numbers embed it. The row comes back as clients.get_by_id reads
+-- it, main contact included.
+WITH upd AS (
+    UPDATE company_client
+       SET number       = COALESCE($10::text, number),
+           name         = $2,
+           npwp         = $3,
+           address      = $4,
+           email        = $5,
+           country_code = COALESCE(NULLIF($6, ''), country_code),
+           tku_id       = $7,
+           is_active    = $8,
+           updated_by   = $9,
+           updated_at   = NOW()
+     WHERE id = $1
+    RETURNING id, number, name, npwp, address, email, country_code,
+              tku_id, is_active, created_at, updated_at, logo_object_key
+)
+SELECT upd.id, upd.number, upd.name, upd.npwp, upd.address, upd.email, upd.country_code,
+       upd.tku_id, upd.is_active, upd.created_at, upd.updated_at,
+       co.id    AS contact_id,
+       co.name  AS contact_name,
+       co.email AS contact_email,
+       co.phone AS contact_phone,
+       COALESCE((SELECT SUM(CASE WHEN po.id IS NULL THEN q.grand_total
+                                 ELSE (SELECT t.po_grand_total FROM v_po_totals t
+                                       WHERE t.po_id = po.id) END)::TEXT
+                 FROM quotations q
+                 LEFT JOIN purchase_orders po ON po.quotation_id = q.id
+                 WHERE q.company_client_id = upd.id
+                   AND q.status = 'accepted'
+                   AND po.status IS DISTINCT FROM 'CANCELLED'), '0') AS total_purchase,
+       COALESCE((SELECT COUNT(*)
+                 FROM quotations q
+                 WHERE q.company_client_id = upd.id), 0)::BIGINT AS quotation_count,
+       upd.logo_object_key
+FROM upd
+LEFT JOIN LATERAL (
+    SELECT id, name, email, phone
+    FROM company_contacts
+    WHERE company_id = upd.id AND is_active = TRUE
+    ORDER BY id ASC
+    LIMIT 1
+) co ON TRUE;
 
 -- name: clients.update_logo
 UPDATE company_client
