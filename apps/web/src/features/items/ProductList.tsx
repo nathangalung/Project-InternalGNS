@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import ActiveFilters from "@/components/shared/ActiveFilters"
 import EntityLink from "@/components/shared/EntityLink"
 import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
@@ -20,6 +21,8 @@ import ProductCreateModal from "@/features/items/ProductCreateModal"
 import ProductFilter, { type ProductFilterValues } from "@/features/items/ProductFilter"
 import ProductThumb from "@/features/items/ProductThumb"
 import { useUnits } from "@/features/units/hooks"
+import { filterChips } from "@/lib/filter-chips"
+import { statusFilterLabel } from "@/lib/filter-options"
 import { emptyListText } from "@/lib/list-empty"
 import { canWriteCatalog } from "@/lib/rbac"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
@@ -43,6 +46,9 @@ const TIER_BADGE: Record<AdvancedSearchTier, { label: string; cls: string }> = {
   ITEM_FUZZY: { label: "FUZZY", cls: "bg-[#F3F4F6] text-[#4B5563]" },
 }
 
+// Filters with nothing applied.
+const PRODUCT_FILTERS: ProductFilterValues = { status: "all", unitCode: "" }
+
 export default function ProductList({ onViewDetail }: ProductListProps) {
   const { data: unitsData } = useUnits()
   const { data: me } = useMe()
@@ -51,8 +57,22 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
   const [showAdd, setShowAdd] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
 
-  const list = useListScreen<ProductFilterValues>({ status: "all", unitCode: "" })
+  const list = useListScreen<ProductFilterValues>(PRODUCT_FILTERS)
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
+  const chips = filterChips(
+    { term: debouncedSearch, clear: list.clearSearch },
+    filters,
+    PRODUCT_FILTERS,
+    {
+      status: (v) => `Status: ${statusFilterLabel(v)}`,
+      unitCode: (v) => `Satuan: ${v}`,
+    },
+    list.patchFilters,
+  )
+  const clearAllFilters = () => {
+    list.clearSearch()
+    list.applyFilters(PRODUCT_FILTERS)
+  }
   const source = katalogSource(list.search, debouncedSearch)
   const isSearchActive = source === "search"
 
@@ -159,6 +179,8 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
           />
           <FilterButton onClick={() => setShowFilter(true)} />
         </div>
+
+        <ActiveFilters chips={chips} onClearAll={clearAllFilters} />
 
         {isSearchActive && searchData && (
           <div className="-mb-3 flex flex-wrap items-center gap-2">

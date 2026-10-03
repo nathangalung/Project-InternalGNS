@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import ActiveFilters from "@/components/shared/ActiveFilters"
 import EntityLink from "@/components/shared/EntityLink"
 import EntityLogo from "@/components/shared/EntityLogo"
 import EyeIcon from "@/components/shared/EyeIcon"
@@ -11,6 +12,8 @@ import { useMe } from "@/features/auth/hooks"
 import { useVendors } from "@/features/vendors/hooks"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
 import VendorFilter, { type VendorFilterValues } from "@/features/vendors/VendorFilter"
+import { filterChips } from "@/lib/filter-chips"
+import { statusFilterLabel } from "@/lib/filter-options"
 import { formatRupiah } from "@/lib/format"
 import { emptyListText } from "@/lib/list-empty"
 import { canWriteCatalog } from "@/lib/rbac"
@@ -27,6 +30,9 @@ type SortKey = "totalPembelian" | "productCount"
 
 const sortBtnCls = `inline-flex w-full items-center justify-center rounded-sm uppercase ${ui.focusRing}`
 
+// Filters with nothing applied.
+const VENDOR_FILTERS: VendorFilterValues = { status: "all", countryName: "", minTotal: "" }
+
 export default function VendorList({ onViewDetail }: VendorListProps) {
   const [showAdd, setShowAdd] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
@@ -35,12 +41,23 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
   const { data: me } = useMe()
   const canWrite = canWriteCatalog(me?.role)
 
-  const list = useListScreen<VendorFilterValues>({
-    status: "all",
-    countryName: "",
-    minTotal: "",
-  })
+  const list = useListScreen<VendorFilterValues>(VENDOR_FILTERS)
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
+  const chips = filterChips(
+    { term: debouncedSearch, clear: list.clearSearch },
+    filters,
+    VENDOR_FILTERS,
+    {
+      status: (v) => `Status: ${statusFilterLabel(v)}`,
+      countryName: (v) => `Lokasi: ${v}`,
+      minTotal: (v) => `Min Total Pembelian: ${formatRupiah(v)}`,
+    },
+    list.patchFilters,
+  )
+  const clearAllFilters = () => {
+    list.clearSearch()
+    list.applyFilters(VENDOR_FILTERS)
+  }
 
   function ariaSort(k: SortKey): "ascending" | "descending" | undefined {
     if (sortKey !== k) return undefined
@@ -120,6 +137,8 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
           />
           <FilterButton onClick={() => setShowFilter(true)} />
         </div>
+
+        <ActiveFilters chips={chips} onClearAll={clearAllFilters} />
 
         <div className={ui.tableWrap}>
           <table className="w-full border-collapse">

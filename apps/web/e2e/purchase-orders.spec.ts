@@ -386,6 +386,22 @@ test.describe("purchase order list", () => {
     )
     expect(po.id).not.toBe(other.po.id)
   })
+
+  // Every chip removes its own filter.
+  test("the total chip on the PO list can be removed", async ({ page, seed }) => {
+    const { client } = await acceptedPo(seed)
+    await page.goto("/purchase-orders")
+    await page.getByPlaceholder("Cari purchase order, klien, atau nomor...").fill(seed.prefix)
+    const rows = page.getByRole("row", { name: new RegExp(client.name) })
+    await expect(rows).toHaveCount(1)
+    await page.getByRole("button", { name: "Filter", exact: true }).click()
+    const filter = page.getByRole("dialog", { name: "Filter Purchase Order" })
+    await filter.getByLabel("Min Total").fill("999999999999")
+    await filter.getByRole("button", { name: "Terapkan" }).click()
+    await expect(rows).toHaveCount(0)
+    await page.getByRole("button", { name: /^Hapus filter Total/ }).click()
+    await expect(rows).toHaveCount(1)
+  })
 })
 
 // Addressless quotation through the wizard.

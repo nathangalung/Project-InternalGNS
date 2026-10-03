@@ -120,12 +120,14 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
         out.push({
           key: "date",
           label: `Tanggal: ${activeFilters.startDate} s/d ${activeFilters.endDate}`,
+          onRemove: () => patchFilters((p) => (p ? { ...p, preset: "semua" } : p)),
         })
       }
       if (activeFilters.minHarga !== "" || activeFilters.maxHarga !== "") {
         out.push({
           key: "total",
           label: `Total: ${activeFilters.minHarga || "0"} - ${activeFilters.maxHarga || "tanpa batas"}`,
+          onRemove: () => patchFilters((p) => (p ? { ...p, minHarga: "", maxHarga: "" } : p)),
         })
       }
     }
