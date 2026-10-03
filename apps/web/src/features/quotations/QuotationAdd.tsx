@@ -182,7 +182,7 @@ export default function QuotationAdd() {
         {/* Header & Stepper */}
         <div className={qe.headerSection}>
           <div className={qe.headerLeft}>
-            <nav className={ui.breadcrumb}>
+            <nav className={`${ui.breadcrumb} flex-wrap`} aria-label="Breadcrumb">
               <button
                 type="button"
                 className={ui.breadcrumbLink}
@@ -190,8 +190,12 @@ export default function QuotationAdd() {
               >
                 Daftar Quotation
               </button>
-              <span className={ui.breadcrumbSep}>&rsaquo;</span>
-              <span className={ui.breadcrumbCurrent}>Tambah Quotation</span>
+              <span className={ui.breadcrumbSep} aria-hidden="true">
+                &rsaquo;
+              </span>
+              <span className={ui.breadcrumbCurrent} aria-current="page">
+                Tambah Quotation
+              </span>
             </nav>
             <div className={qe.titleRow}>
               <h1 className={qe.title}>Tambah Quotation Baru</h1>
