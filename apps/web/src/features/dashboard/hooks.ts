@@ -5,10 +5,15 @@ import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
 import type { DashboardMetric } from "@/types/api"
 
+// Dashboard figures.
+//
+// The dashboards show their own SummaryError banner, so a failure stays off
+// the route error boundary and one bad metric never blanks the page.
 export function useDashboardSummary() {
   return useQuery({
     queryKey: queryKeys.dashboard.summary(),
     queryFn: dashboardApi.summary,
+    throwOnError: false,
   })
 }
 
@@ -23,6 +28,7 @@ export function useDashboardTimeseries(
     queryKey: queryKeys.dashboard.timeseries(metric, from, to, interval),
     queryFn: () => dashboardApi.timeseries(metric, from, to, interval),
     enabled,
+    throwOnError: false,
   })
 }
 

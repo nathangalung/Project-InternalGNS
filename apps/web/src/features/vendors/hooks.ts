@@ -27,6 +27,10 @@ export function useVendor(id: number | undefined) {
   })
 }
 
+// Products a vendor supplies.
+//
+// A secondary table: a failure shows in it, not on the route error boundary,
+// which would replace the page and its unsaved form.
 export function useVendorItems(vendorId: number | undefined, page: vendorsApi.VendorItemsPage) {
   return useQuery({
     queryKey: vendorId ? [...queryKeys.vendors.items(vendorId), page] : queryKeys.vendors.all,
@@ -35,6 +39,7 @@ export function useVendorItems(vendorId: number | undefined, page: vendorsApi.Ve
         ? () => vendorsApi.listItems(vendorId, page)
         : skipToken,
     placeholderData: keepPreviousData,
+    throwOnError: false,
   })
 }
 

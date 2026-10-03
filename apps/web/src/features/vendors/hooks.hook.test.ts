@@ -168,3 +168,15 @@ describe("useVendorRecentQuotations", () => {
     await until(() => expect(result.current.isError).toBe(true))
   })
 })
+
+// A secondary table shows its error.
+describe("useVendorItems failure", () => {
+  it("keeps a failure out of the route error boundary", async () => {
+    m.listItems.mockRejectedValue(new Error("502"))
+    const { result } = renderQueryHook(
+      () => useVendorItems(4, { limit: 10, offset: 0 }),
+      throwingQueryClient(),
+    )
+    await until(() => expect(result.current.isError).toBe(true))
+  })
+})

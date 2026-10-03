@@ -1,7 +1,7 @@
 import { act } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { toast } from "@/lib/toast"
-import { renderQueryHook, until } from "@/test/query"
+import { renderQueryHook, throwingQueryClient, until } from "@/test/query"
 import * as api from "./api"
 import { useDashboardExport, useDashboardSummary, useDashboardTimeseries } from "./hooks"
 
@@ -63,5 +63,20 @@ describe("useDashboardExport", () => {
     await act(() => result.current.exportXlsx(2026))
     expect(toast.error).toHaveBeenCalledWith("Gagal mengunduh file Excel dashboard. Coba lagi.")
     expect(result.current.exporting).toBe(false)
+  })
+})
+
+// Dashboards show their own error banner.
+describe("dashboard failures", () => {
+  it("keeps a summary failure out of the route error boundary", async () => {
+    m.summary.mockRejectedValue(new Error("502"))
+    const { result } = renderQueryHook(() => useDashboardSummary(), throwingQueryClient())
+    await until(() => expect(result.current.isError).toBe(true))
+  })
+
+  it("keeps a timeseries failure out of the route error boundary", async () => {
+    m.timeseries.mockRejectedValue(new Error("502"))
+    const { result } = renderQueryHook(() => useDashboardTimeseries("ppn"), throwingQueryClient())
+    await until(() => expect(result.current.isError).toBe(true))
   })
 })

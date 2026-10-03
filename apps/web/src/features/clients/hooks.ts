@@ -72,6 +72,10 @@ export function useUpdateClient() {
   })
 }
 
+// Contacts of a client.
+//
+// A secondary card: a failure shows in it, not on the route error boundary,
+// which would replace the page and its unsaved form.
 export function useClientContacts(companyId: number | undefined) {
   return useQuery({
     queryKey: companyId ? queryKeys.clients.contacts(companyId) : queryKeys.clients.all,
@@ -79,6 +83,7 @@ export function useClientContacts(companyId: number | undefined) {
       companyId !== undefined && companyId > 0
         ? () => clientsApi.listContacts(companyId)
         : skipToken,
+    throwOnError: false,
   })
 }
 
