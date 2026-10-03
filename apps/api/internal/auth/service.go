@@ -46,6 +46,8 @@ type Service struct {
 	refreshExpiry time.Duration
 	issuer        string
 	now           func() time.Time
+	wait          func(context.Context, time.Duration)
+	unknownMisses *missCounter
 }
 
 func NewService(repo *users.Repo, secret string, expiry time.Duration) *Service {
@@ -56,6 +58,8 @@ func NewService(repo *users.Repo, secret string, expiry time.Duration) *Service 
 		refreshExpiry: 0,
 		issuer:        "internalgns-api",
 		now:           time.Now,
+		wait:          throttle,
+		unknownMisses: newMissCounter(unknownMissLimit),
 	}
 }
 
@@ -138,11 +142,7 @@ func throttle(ctx context.Context, d time.Duration) {
 func (s *Service) Login(ctx context.Context, email, password string) (Session, error) {
 	u, err := s.users.GetByEmail(ctx, email)
 	if errors.Is(err, users.ErrNotFound) {
-		// Burn the same bcrypt work a real account would, then give the same
-		// verdict, so neither the response nor its timing tells an attacker
-		// whether the address is registered.
-		_ = bcrypt.CompareHashAndPassword(dummyPasswordHash, []byte(password))
-		return Session{}, ErrInvalidCredentials
+		return Session{}, s.rejectUnknown(ctx, email, password)
 	}
 	if err != nil {
 		// A database outage is not a credential verdict; let it surface.
@@ -154,13 +154,14 @@ func (s *Service) Login(ctx context.Context, email, password string) (Session, e
 	// password still gets through.
 	lock, err := s.users.LockStatus(ctx, email)
 	if errors.Is(err, users.ErrNotFound) {
-		// Deactivated or removed between the two reads: same verdict.
-		return Session{}, ErrInvalidCredentials
+		// Deactivated or removed between the two reads: now an unknown
+		// address, and priced as one.
+		return Session{}, s.rejectUnknown(ctx, email, password)
 	}
 	if err != nil {
 		return Session{}, err
 	}
-	throttle(ctx, loginBackoff(lock.FailedLoginAttempts))
+	s.wait(ctx, loginBackoff(lock.FailedLoginAttempts))
 
 	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)); err != nil {
 		// Bookkeeping must never overturn the verdict nor raise a 500 that
@@ -189,6 +190,19 @@ func (s *Service) Login(ctx context.Context, email, password string) (Session, e
 		return Session{}, err
 	}
 	return resp, nil
+}
+
+// rejectUnknown prices a missing account.
+// An unknown or deactivated address pays the backoff a registered one
+// would after the same misses, then the same bcrypt work, then gets the
+// same verdict, so neither the response nor its timing tells an attacker
+// whether the address is a live account. The steps run in the order of
+// the registered path: read the count, wait, compare, record.
+func (s *Service) rejectUnknown(ctx context.Context, email, password string) error {
+	s.wait(ctx, loginBackoff(s.unknownMisses.count(email)))
+	_ = bcrypt.CompareHashAndPassword(dummyPasswordHash, []byte(password))
+	s.unknownMisses.miss(email)
+	return ErrInvalidCredentials
 }
 
 // issue mints a bound session.

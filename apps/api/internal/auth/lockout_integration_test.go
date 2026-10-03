@@ -2,6 +2,7 @@ package auth_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -87,6 +88,44 @@ func TestRepo_UpdatePassword_ClearsThrottle(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 0, st.FailedLoginAttempts)
 	assert.Nil(t, st.LockedUntil)
+}
+
+// Backoff never tells accounts apart.
+// A registered, an unknown and a deactivated address pay the same delay
+// after the same number of misses, so timing cannot confirm an account.
+func TestService_Login_BackoffMatchesForUnknownAddresses(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := users.NewRepo(tx, testutil.Store(t))
+	registered := "known-" + uniqueEmail(t)
+	_, err := repo.Create(ctx, users.CreateUserRequest{
+		Email: registered, Name: "x", Password: "Right-pw1!", Role: users.RoleOperational,
+	}, 1)
+	require.NoError(t, err)
+	inactive := false
+	deactivated := "closed-" + uniqueEmail(t)
+	_, err = repo.Create(ctx, users.CreateUserRequest{
+		Email: deactivated, Name: "x", Password: "Right-pw1!", Role: users.RoleOperational,
+		IsActive: &inactive,
+	}, 1)
+	require.NoError(t, err)
+
+	const attempts = 8
+	delays := func(email string) []time.Duration {
+		svc := auth.NewService(repo, "test-secret-please-change", time.Minute)
+		var got []time.Duration
+		auth.SetThrottle(svc, func(_ context.Context, d time.Duration) { got = append(got, d) })
+		for range attempts {
+			_, err := svc.Login(ctx, email, "Wrong-pw1!")
+			require.ErrorIs(t, err, auth.ErrInvalidCredentials)
+		}
+		return got
+	}
+
+	want := delays(registered)
+	require.Len(t, want, attempts)
+	assert.Equal(t, 250*time.Millisecond, want[5], "the sixth attempt pays the first delay")
+	assert.Equal(t, want, delays("nobody-"+uniqueEmail(t)), "unknown address")
+	assert.Equal(t, want, delays(deactivated), "deactivated address")
 }
 
 // postLogin posts a login body.
