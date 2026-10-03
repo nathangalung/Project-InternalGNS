@@ -79,6 +79,13 @@ The refresh token lives only in a cookie; no response body carries it.
   refuses `*`, an empty list, or any entry that is not
   `scheme://host[:port]` in every environment; the default is the dev SPA,
   `http://localhost:5174`.
+- Login guessing is slowed, never locked out: after five misses each attempt
+  waits 250 ms before the password check, doubling to a 4 s ceiling, and
+  still answers the neutral 401. An account counts misses in
+  `users.failed_login_attempts`; an unknown or deactivated address counts
+  them in a bounded in-memory table (`auth/misscounter.go`, one API
+  replica) and pays the same delay and bcrypt work, so timing never tells
+  whether an address is a live account.
 - Browsers apply a `Set-Cookie` on a cross-origin response only when the
   request was sent with credentials, so the SPA calls the auth routes with
   `credentials: "include"`.

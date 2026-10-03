@@ -225,15 +225,12 @@ matters once orphaned uploads consume real disk.
   filed with DJP changes), but the face value of an already-issued document
   differs on reprint. Flagged rather than reverted because reprinting a document
   that contradicts its own line items is worse.
-- **Login still leaks account existence through the lockout path.** Six wrong
-  passwords return 429 "account temporarily locked" for a real active account
-  and 401 for an unknown or deactivated one, because failed-attempt bookkeeping
-  only runs after a successful user lookup. The single-request oracle (message,
-  status, bcrypt timing) is closed; this one is not, and the same asymmetry lets
-  six unauthenticated requests lock a known account for 15 minutes. Closing it
-  means recording attempts for unknown emails too (a shared/hashed bucket) or
-  returning 401 with a constant-time delay instead of 429 — a deliberate
-  usability trade-off, so it needs a decision rather than a silent change.
+- **Closed: login leaked account existence through the lockout path.** The
+  hard lock became an escalating delay (250 ms after five misses, doubling to
+  4 s) answered with the same 401, and an unknown or deactivated address now
+  pays the same delay as an account after the same misses, counted in a
+  bounded in-memory table (`auth/misscounter.go`), so neither status nor
+  timing tells the two apart.
 
 ## Open questions for the owner
 
