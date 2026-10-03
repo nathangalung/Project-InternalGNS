@@ -445,6 +445,7 @@ export default function ProductAdd({
             closeIfMatch={closeIfMatch}
             isProductFilled={isProductFilled}
             isSatuanFilled={isSatuanFilled}
+            minQty={docKind === "po" ? 0 : 1}
             onAddProductNew={() => {
               setOpenDropdown(null)
               setShowProductNew(true)

@@ -130,9 +130,26 @@ export function upsertProduct(
   editing: ProductItem | null,
   data: ProductAddFormData,
 ): ProductItem[] {
+  const fields = productFields(data)
+  if (editing) {
+    return products.map((p) => (p.id === editing.id ? { ...p, ...fields } : p))
+  }
+  return [...products, { id: nextLineId(products), ...fields }]
+}
+
+// One past the highest id.
+export function nextLineId(products: { id: number }[]): number {
+  return products.reduce((m, p) => Math.max(m, p.id), 0) + 1
+}
+
+// Line fields from the form.
+//
+// The qty is kept as typed, 0 and negatives included, so each editor flags
+// what its own server rule refuses.
+export function productFields(data: ProductAddFormData): Omit<ProductItem, "id" | "noOffer"> {
   const offer = splitOffer(data.kodeImpaNama)
   const requested = splitOffer(data.requestedKodeImpaNama)
-  const fields = {
+  return {
     itemId: data.itemId,
     requestedItemId: data.requestedItemId,
     vendorId: data.vendorId,
@@ -147,11 +164,6 @@ export function upsertProduct(
     hargaBeli: Number(data.hargaBeli) || 0,
     hargaJual: Number(data.hargaJual) || 0,
   }
-  if (editing) {
-    return products.map((p) => (p.id === editing.id ? { ...p, ...fields } : p))
-  }
-  const nextId = products.reduce((m, p) => Math.max(m, p.id), 0) + 1
-  return [...products, { id: nextId, ...fields }]
 }
 
 // Unit ids by upper-case code.

@@ -166,6 +166,34 @@ test.describe("purchase order detail", () => {
     await expect(page.locator("main")).toContainText(other.name)
     await expect(page.locator("main")).not.toContainText(vendor.name)
   })
+
+  test("a line kept at qty 0 in the PO editor is saved at 0", async ({ page, seed }) => {
+    const { q, po } = await acceptedPo(seed)
+
+    await page.goto(`/purchase-orders/${q.id}/edit`)
+    await page.getByRole("button", { name: "Edit produk 1" }).click()
+    const modal = page.getByRole("dialog", { name: "Edit Produk PO" })
+    await modal.getByLabel("Jumlah Produk *").fill("0")
+    await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
+    await expect(modal).toBeHidden()
+    // A PO line may stay at 0, so nothing asks to fix it.
+    await expect(page.locator("main").getByText("Jumlah harus")).toHaveCount(0)
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Simpan", exact: true }).click()
+
+    await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}$`))
+    await expect
+      .poll(async () => {
+        const items = await api<PurchaseOrderItemRow[]>("GET", `/purchase-orders/${po.id}/items`)
+        return Number(items.find((it) => it.itemType === "product")?.qty)
+      })
+      .toBe(0)
+    // The editor reopens on the stored 0 without flagging it.
+    await page.goto(`/purchase-orders/${q.id}/edit`)
+    await expect(page.getByRole("button", { name: "Edit produk 1" })).toBeVisible()
+    await expect(page.getByText("Jumlah harus lebih dari 0.")).toHaveCount(0)
+  })
 })
 
 test.describe("purchase order file", () => {

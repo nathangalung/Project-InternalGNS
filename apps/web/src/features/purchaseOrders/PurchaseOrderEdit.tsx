@@ -5,6 +5,7 @@ import { fromClientRow } from "@/features/clients/helpers"
 import { useClient } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
 import DiscountModal from "@/features/quotations/DiscountModal"
+import { PO_QTY_ERROR, qtyIssue } from "@/features/quotations/lines"
 import Step2Product from "@/features/quotations/Step2Product"
 import Step3Shipping from "@/features/quotations/Step3Shipping"
 import Step4Summary from "@/features/quotations/Step4Summary"
@@ -22,6 +23,7 @@ import {
   loadFailureMessage,
   type PoEditLine,
   poLinesToEdit,
+  upsertPoLine,
 } from "./adapters"
 import { usePoItems, usePurchaseOrderByQuotation, useUpdatePoItems } from "./hooks"
 import { isPoLockRefusal } from "./PurchaseOrderDetail/helpers"
@@ -39,15 +41,6 @@ const steps = [
   { n: 2, label: "PENGIRIMAN" },
   { n: 3, label: "RINGKASAN" },
 ]
-
-// Split "123456 - Name" parts.
-function splitOffer(s: string): { kode: string; nama: string } {
-  const trimmed = s.trim()
-  if (!trimmed) return { kode: "", nama: "" }
-  const [first, ...rest] = trimmed.split(/\s*-\s*/)
-  if (rest.length > 0 && /^\d+$/.test(first)) return { kode: first, nama: rest.join(" - ") }
-  return { kode: "", nama: trimmed }
-}
 
 const arrowIcon = (
   <svg
@@ -188,6 +181,11 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
     const missing = linesMissingUnit(products, unitIdByCode)
     if (missing.length > 0) {
       toast.error(`Satuan belum dikenali untuk: ${missing.join(", ")}.`)
+      return
+    }
+    // Qty 0 stays allowed; a negative one is refused.
+    if (products.some((p) => qtyIssue(p.jumlah, true))) {
+      toast.error(`${PO_QTY_ERROR} Ubah produk yang ditandai sebelum menyimpan.`)
       return
     }
     const shipDays = Number(shippingTime)
@@ -366,6 +364,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
                 summaryDpp={summaryDpp}
                 summaryPpn={summaryPpn}
                 onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
+                allowZeroQty
               />
             )}
             {step === 2 && (
@@ -426,35 +425,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
           if (!open) setEditingId(null)
         }}
         onSuccess={(data) => {
-          const offer = splitOffer(data.kodeImpaNama)
-          const req = splitOffer(data.requestedKodeImpaNama)
-          const fields = {
-            itemId: data.itemId,
-            vendorId: data.vendorId,
-            vendorProductId: data.vendorProductId,
-            nama: offer.nama,
-            kodeImpa: offer.kode,
-            requestedNama: req.nama || offer.nama,
-            requestedKodeImpa: req.kode,
-            vendor: data.namaVendor,
-            jumlah: Number(data.jumlahProduk) || 1,
-            satuan: data.satuan,
-            hargaBeli: Number(data.hargaBeli) || 0,
-            hargaJual: Number(data.hargaJual) || 0,
-          }
-          if (editingProduct) {
-            // Stored fields ride along on the touched line.
-            setProducts((prev) =>
-              prev.map((p) =>
-                p.id === editingProduct.id ? { ...p, ...fields, touched: true } : p,
-              ),
-            )
-          } else {
-            setProducts((prev) => [
-              ...prev,
-              { id: prev.reduce((m, p) => Math.max(m, p.id), 0) + 1, ...fields },
-            ])
-          }
+          setProducts((prev) => upsertPoLine(prev, editingProduct, data))
           setEditingId(null)
         }}
       />

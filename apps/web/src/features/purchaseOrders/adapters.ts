@@ -1,5 +1,6 @@
+import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
 import type { ProductRow, ShippingRow } from "@/features/quotations/types"
-import type { ProductItem } from "@/features/quotations/wizard"
+import { nextLineId, type ProductItem, productFields } from "@/features/quotations/wizard"
 import { formatDateTime, formatRupiah, toNum } from "@/lib/format"
 import type {
   PoItemInput,
@@ -142,6 +143,23 @@ export function poLinesToEdit(
         },
       }
     })
+}
+
+// Product form into PO lines.
+//
+// An edited line keeps its stored source and is marked touched; a new line
+// is appended without one. The qty stays as typed, so a line kept at 0 is
+// saved at 0.
+export function upsertPoLine(
+  lines: PoEditLine[],
+  editing: PoEditLine | null,
+  data: ProductAddFormData,
+): PoEditLine[] {
+  const fields = productFields(data)
+  if (editing) {
+    return lines.map((p) => (p.id === editing.id ? { ...p, ...fields, touched: true } : p))
+  }
+  return [...lines, { id: nextLineId(lines), ...fields }]
 }
 
 function unitIdOf(line: PoEditLine, unitIdByCode: Map<string, number>): number | undefined {

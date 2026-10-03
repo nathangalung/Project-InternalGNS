@@ -21,6 +21,18 @@ export function countInvalidQty(lines: { jumlah: number }[]): number {
   return lines.filter((l) => !isValidQty(l.jumlah)).length
 }
 
+// A PO line may be 0.
+//
+// The PO edit server rule (validate.NonNegative) refuses only a negative or
+// non-numeric qty, with this text.
+export const PO_QTY_ERROR = "Jumlah harus berupa angka 0 atau lebih."
+
+// Why a line's qty fails.
+export function qtyIssue(qty: number, allowZero: boolean): string | undefined {
+  if (!allowZero) return isValidQty(qty) ? undefined : QTY_ERROR
+  return Number.isFinite(qty) && qty >= 0 ? undefined : PO_QTY_ERROR
+}
+
 // Line indexes from a 422.
 //
 // The server keys a line error as items[<i>].qty, where i is the position in
