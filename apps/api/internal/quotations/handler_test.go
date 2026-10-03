@@ -468,13 +468,13 @@ func TestHandler_QIR_LockedParentConflicts(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			res := doJSON(t, srv, tc.method, tc.path, tc.body)
+			res := doJSONWithHeaders(t, srv, tc.method, tc.path, tc.body, map[string]string{"If-Match": "0"})
 			var e httperr.Error
 			decodeBody(t, res, &e)
 			assert.Equal(t, http.StatusConflict, res.StatusCode)
 			assert.Equal(t, http.StatusConflict, e.Status)
 			assert.Contains(t, e.Detail, "status saat ini Dikirim")
-			assert.Contains(t, e.Detail, "hanya dapat diubah saat quotation berstatus Draf")
+			assert.Contains(t, e.Detail, "Hanya quotation berstatus Draf yang dapat diubah")
 		})
 	}
 }

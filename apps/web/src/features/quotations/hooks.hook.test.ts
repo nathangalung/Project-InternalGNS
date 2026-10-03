@@ -224,18 +224,42 @@ describe("item requests", () => {
     expect(invalidated(qc, [reqs, other, qDetail])).toEqual([reqs])
   })
 
-  it("updates a request with an id", async () => {
+  it("updates a request with an id at its version", async () => {
     m.updateRequest.mockResolvedValue({ id: 2 } as never)
     const { result } = renderQueryHook(() => useUpsertQuotationRequest())
     await settle(() =>
       result.current.mutateAsync({
         quotationId: 5,
         requestId: 2,
+        rowVersion: 3,
         input: { rawName: "Mur" } as never,
       }),
     )
-    expect(m.updateRequest).toHaveBeenCalledWith(5, 2, { rawName: "Mur" })
+    expect(m.updateRequest).toHaveBeenCalledWith(5, 2, { rawName: "Mur" }, 3)
     expect(m.createRequest).not.toHaveBeenCalled()
+  })
+
+  it("reloads the requests after a refused save", async () => {
+    m.updateRequest.mockRejectedValue(new Error("version_conflict"))
+    const { qc, result } = renderQueryHook(() => useUpsertQuotationRequest())
+    seed(qc, [reqs, other])
+    await settle(() =>
+      result.current.mutateAsync({
+        quotationId: 5,
+        requestId: 2,
+        rowVersion: 0,
+        input: { rawName: "Mur" } as never,
+      }),
+    )
+    expect(invalidated(qc, [reqs, other])).toEqual([reqs])
+  })
+
+  it("reloads the requests after a refused delete", async () => {
+    m.deleteRequest.mockRejectedValue(new Error("edit_locked"))
+    const { qc, result } = renderQueryHook(() => useDeleteQuotationRequest())
+    seed(qc, [reqs, other])
+    await settle(() => result.current.mutateAsync({ quotationId: 5, requestId: 2 }))
+    expect(invalidated(qc, [reqs, other])).toEqual([reqs])
   })
 
   it("deletes a request and refreshes that quotation's requests", async () => {
@@ -280,16 +304,17 @@ describe("useQuotationLive", () => {
   // Stream body that ends after the given frames.
   const stream = (text: string) => new Response(text)
 
-  it("reloads the quotation on every notice and stops on leave", async () => {
+  it("reloads the quotation and its requests on every notice and stops on leave", async () => {
     let aborted: AbortSignal | undefined
     m.openEvents.mockImplementation((_id, signal) => {
       aborted = signal
-      return Promise.resolve(stream("event: ready\ndata: {}\n\nevent: line\ndata: {}\n\n"))
+      return Promise.resolve(stream("event: ready\ndata: {}\n\nevent: requests\ndata: {}\n\n"))
     })
     const { qc, unmount } = renderQueryHook(() => useQuotationLive(5, [], 1))
     const spy = vi.spyOn(qc, "invalidateQueries")
-    await until(() => expect(spy).toHaveBeenCalledTimes(2))
+    await until(() => expect(spy).toHaveBeenCalledTimes(4))
     expect(spy).toHaveBeenCalledWith({ queryKey: qDetail })
+    expect(spy).toHaveBeenCalledWith({ queryKey: queryKeys.quotations.requests(5) })
     expect(m.openEvents).toHaveBeenCalledWith(5, expect.any(AbortSignal))
     unmount()
     expect(aborted?.aborted).toBe(true)

@@ -144,8 +144,13 @@ describe("quotations api", () => {
     ],
     [
       "update request",
-      () => api.updateRequest(5, 2, { rawName: "Mur" } as never),
-      { path: "/quotations/5/requests/2", method: "PUT", body: { rawName: "Mur" } },
+      () => api.updateRequest(5, 2, { rawName: "Mur" } as never, 3),
+      {
+        path: "/quotations/5/requests/2",
+        method: "PUT",
+        body: { rawName: "Mur" },
+        headers: { "If-Match": "3" },
+      },
     ],
     [
       "delete request",

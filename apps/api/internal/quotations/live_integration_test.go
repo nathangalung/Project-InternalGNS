@@ -357,6 +357,67 @@ func TestUpdateContact_FollowsHeaderClaim(t *testing.T) {
 	assert.Equal(t, seedContactID, *d.ContactID)
 }
 
+// Deleting a request spares claims.
+// The delete clears request_id on its lines, so another user's claim on one
+// of them refuses it; a free line lets it through.
+func TestDeleteItemRequest_FollowsLineClaims(t *testing.T) {
+	ctx, repo, tx := newRepo(t)
+	q := newLiveDraft(t, ctx, repo)
+	budi := newEditor(t, ctx, tx, "Budi")
+	req, err := repo.CreateItemRequest(ctx, q.id, sampleItemRequest(), seedUserID)
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx, `UPDATE quotation_items SET request_id = $1 WHERE id = $2`, req.ID, q.lines[0])
+	require.NoError(t, err)
+
+	_, err = repo.Lock(ctx, q.id, part(q.lines[0]), budi)
+	require.NoError(t, err)
+	err = attempt(t, ctx, tx, func() error { return repo.DeleteItemRequest(ctx, q.id, req.ID, seedUserID) })
+	status, code, detail := errCode(err)
+	assert.Equal(t, 409, status)
+	assert.Equal(t, httperr.EditLockedCode, code)
+	assert.Equal(t, "Sedang diubah oleh Budi.", detail)
+	_, err = repo.GetItemRequest(ctx, req.ID)
+	require.NoError(t, err, "the refused delete kept the request")
+
+	require.NoError(t, repo.Unlock(ctx, q.id, part(q.lines[0]), budi))
+	require.NoError(t, repo.DeleteItemRequest(ctx, q.id, req.ID, seedUserID))
+	var linked *int64
+	require.NoError(t, tx.QueryRow(ctx, `SELECT request_id FROM quotation_items WHERE id = $1`, q.lines[0]).Scan(&linked))
+	assert.Nil(t, linked)
+}
+
+// Requests follow the draft gate.
+// Add, save and delete are refused once the quotation left draft.
+func TestItemRequests_DraftOnly(t *testing.T) {
+	ctx, repo, tx := newRepo(t)
+	q := newLiveDraft(t, ctx, repo)
+	req, err := repo.CreateItemRequest(ctx, q.id, sampleItemRequest(), seedUserID)
+	require.NoError(t, err)
+	forceStatus(t, ctx, tx, q.id, quotations.StatusSent)
+	upd := quotations.ItemRequestUpdate{LineNo: 1, RequestText: "x", MatchStatus: "pending", SourceType: "manual"}
+
+	calls := map[string]func() error{
+		"add": func() error {
+			next := sampleItemRequest()
+			next.LineNo = 2
+			_, e := repo.CreateItemRequest(ctx, q.id, next, seedUserID)
+			return e
+		},
+		"save": func() error {
+			_, e := repo.UpdateItemRequest(ctx, q.id, req.ID, req.RowVersion, upd, seedUserID)
+			return e
+		},
+		"delete": func() error { return repo.DeleteItemRequest(ctx, q.id, req.ID, seedUserID) },
+	}
+	for name, call := range calls {
+		t.Run(name, func(t *testing.T) {
+			status, _, detail := errCode(attempt(t, ctx, tx, call))
+			assert.Equal(t, 409, status)
+			assert.Contains(t, detail, "Hanya quotation berstatus Draf")
+		})
+	}
+}
+
 // An accepted quotation ignores claims.
 // The PO gate re-picks its contact; nobody edits it live.
 func TestUpdateContact_AcceptedIgnoresClaims(t *testing.T) {

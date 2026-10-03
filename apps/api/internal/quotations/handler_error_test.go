@@ -63,7 +63,7 @@ func TestHandler_ErrorPaths(t *testing.T) {
 			quotations.ItemRequestCreate{LineNo: 1, RequestText: "X"}, nil, http.StatusInternalServerError},
 		{"requests update", http.MethodPut, "/quotations/1/requests/1", quotations.ItemRequestUpdate{
 			LineNo: 1, RequestText: "X", MatchStatus: "pending", SourceType: "manual",
-		}, nil, http.StatusInternalServerError},
+		}, map[string]string{"If-Match": "0"}, http.StatusInternalServerError},
 		{"requests delete", http.MethodDelete, "/quotations/1/requests/1", nil, nil, http.StatusInternalServerError},
 	}
 	for _, c := range cases {

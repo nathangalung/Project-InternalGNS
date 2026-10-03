@@ -80,7 +80,7 @@ func TestQIR_RejectsWhenParentSent(t *testing.T) {
 
 	_, err := repo.CreateItemRequest(ctx, qid, sampleItemRequest(), seedUserID)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "hanya dapat diubah saat quotation berstatus Draf")
+	assert.Contains(t, err.Error(), "Hanya quotation berstatus Draf yang dapat diubah")
 }
 
 func TestQIR_UpdateSetsReviewedOnFirstNonPending(t *testing.T) {
@@ -98,7 +98,7 @@ func TestQIR_UpdateSetsReviewedOnFirstNonPending(t *testing.T) {
 		MatchStatus:   "matched",
 		SourceType:    created.SourceType,
 	}
-	updated, err := repo.UpdateItemRequest(ctx, qid, created.ID, upd, seedUserID)
+	updated, err := repo.UpdateItemRequest(ctx, qid, created.ID, created.RowVersion, upd, seedUserID)
 	require.NoError(t, err)
 	assert.Equal(t, "matched", updated.MatchStatus)
 	require.NotNil(t, updated.ReviewedBy)
@@ -119,11 +119,11 @@ func TestQIR_UpdateRowVersionIncrements(t *testing.T) {
 		MatchStatus: created.MatchStatus,
 		SourceType:  created.SourceType,
 	}
-	u1, err := repo.UpdateItemRequest(ctx, qid, created.ID, upd, seedUserID)
+	u1, err := repo.UpdateItemRequest(ctx, qid, created.ID, created.RowVersion, upd, seedUserID)
 	require.NoError(t, err)
 	assert.Equal(t, int32(1), u1.RowVersion)
 
-	u2, err := repo.UpdateItemRequest(ctx, qid, created.ID, upd, seedUserID)
+	u2, err := repo.UpdateItemRequest(ctx, qid, created.ID, u1.RowVersion, upd, seedUserID)
 	require.NoError(t, err)
 	assert.Equal(t, int32(2), u2.RowVersion)
 }
@@ -136,7 +136,7 @@ func TestQIR_UpdateNotFound(t *testing.T) {
 		MatchStatus: "pending",
 		SourceType:  "manual",
 	}
-	_, err := repo.UpdateItemRequest(ctx, 1, 9999999, upd, seedUserID)
+	_, err := repo.UpdateItemRequest(ctx, 1, 9999999, 0, upd, seedUserID)
 	assert.ErrorIs(t, err, quotations.ErrNotFound)
 }
 
@@ -145,14 +145,14 @@ func TestQIR_DeleteRemovesRow(t *testing.T) {
 	created, err := repo.CreateItemRequest(ctx, qid, sampleItemRequest(), seedUserID)
 	require.NoError(t, err)
 
-	require.NoError(t, repo.DeleteItemRequest(ctx, qid, created.ID))
+	require.NoError(t, repo.DeleteItemRequest(ctx, qid, created.ID, seedUserID))
 	_, err = repo.GetItemRequest(ctx, created.ID)
 	assert.ErrorIs(t, err, quotations.ErrNotFound)
 }
 
 func TestQIR_DeleteNotFound(t *testing.T) {
 	ctx, repo, _ := newRepo(t)
-	err := repo.DeleteItemRequest(ctx, 1, 9999999)
+	err := repo.DeleteItemRequest(ctx, 1, 9999999, seedUserID)
 	assert.ErrorIs(t, err, quotations.ErrNotFound)
 }
 
@@ -165,4 +165,31 @@ func TestQIR_UniqueLineNoEnforced(t *testing.T) {
 	dup.RequestText = "different but same line_no"
 	_, err = repo.CreateItemRequest(ctx, qid, dup, seedUserID)
 	require.Error(t, err)
+}
+
+// A stale request save loses.
+// Two editors saving the same request: the one holding the old version is
+// refused instead of overwriting the other's change.
+func TestQIR_UpdateStaleVersionRefused(t *testing.T) {
+	ctx, repo, tx := newRepo(t)
+	qid, err := repo.Create(ctx, sampleCreate(), seedUserID)
+	require.NoError(t, err)
+	created, err := repo.CreateItemRequest(ctx, qid, sampleItemRequest(), seedUserID)
+	require.NoError(t, err)
+	upd := quotations.ItemRequestUpdate{
+		LineNo: created.LineNo, RequestText: "first save", MatchStatus: "pending", SourceType: "manual",
+	}
+	_, err = repo.UpdateItemRequest(ctx, qid, created.ID, created.RowVersion, upd, seedUserID)
+	require.NoError(t, err)
+
+	upd.RequestText = "stale save"
+	err = attempt(t, ctx, tx, func() error {
+		_, e := repo.UpdateItemRequest(ctx, qid, created.ID, created.RowVersion, upd, seedUserID)
+		return e
+	})
+	assert.ErrorIs(t, err, quotations.ErrVersionMismatch)
+	got, err := repo.GetItemRequest(ctx, created.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "first save", got.RequestText)
+	assert.Equal(t, int32(1), got.RowVersion)
 }

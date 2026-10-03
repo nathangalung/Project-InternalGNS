@@ -5,7 +5,7 @@ import {
   useQuotationRequests,
   useUpsertQuotationRequest,
 } from "@/features/quotations/hooks"
-import { errorMessage } from "@/lib/errors"
+import { errorMessage, isVersionConflict } from "@/lib/errors"
 import { ui } from "@/lib/ui"
 import type {
   QuotationItemRequestRow,
@@ -19,6 +19,8 @@ interface QuotationReviewCardProps {
 
 interface DraftRow {
   id?: number
+  // Version the edit started from
+  rowVersion: number
   lineNo: number
   requestText: string
   requestImpa: string
@@ -31,6 +33,7 @@ interface DraftRow {
 
 function emptyDraft(nextLineNo: number): DraftRow {
   return {
+    rowVersion: 0,
     lineNo: nextLineNo,
     requestText: "",
     requestImpa: "",
@@ -45,6 +48,7 @@ function emptyDraft(nextLineNo: number): DraftRow {
 function rowToDraft(r: QuotationItemRequestRow): DraftRow {
   return {
     id: r.id,
+    rowVersion: r.rowVersion,
     lineNo: r.lineNo,
     requestText: r.requestText,
     requestImpa: r.requestImpa ?? "",
@@ -128,6 +132,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
         await upsert.mutateAsync({
           quotationId,
           requestId: draft.id,
+          rowVersion: draft.rowVersion,
           input: {
             ...base,
             matchStatus: draft.matchStatus,
@@ -137,6 +142,8 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
       }
       setDraft(null)
     } catch (e) {
+      // Saved by someone else: the reloaded row is the one to edit.
+      if (isVersionConflict(e)) setDraft(null)
       setErrMsg(errorMessage(e, "Gagal menyimpan item request."))
     }
   }
@@ -158,6 +165,7 @@ export default function QuotationReviewCard({ quotationId }: QuotationReviewCard
       await upsert.mutateAsync({
         quotationId,
         requestId: r.id,
+        rowVersion: r.rowVersion,
         input: {
           lineNo: r.lineNo,
           requestText: r.requestText,

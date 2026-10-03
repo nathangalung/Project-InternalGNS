@@ -136,9 +136,18 @@ export function useQuotationRequests(quotationId: number | undefined) {
 
 type UpsertArgs =
   | { quotationId: number; requestId?: undefined; input: QuotationItemRequestCreateInput }
-  | { quotationId: number; requestId: number; input: QuotationItemRequestUpdateInput }
+  | {
+      quotationId: number
+      requestId: number
+      // The version the form was loaded at
+      rowVersion: number
+      input: QuotationItemRequestUpdateInput
+    }
 
 // Failures show in the card.
+//
+// A refused save or delete (another editor got there first) still reloads
+// the requests, so the card shows what is stored.
 export function useUpsertQuotationRequest() {
   const qc = useQueryClient()
   return useMutation({
@@ -146,9 +155,14 @@ export function useUpsertQuotationRequest() {
       if (args.requestId === undefined) {
         return quotationsApi.createRequest(args.quotationId, args.input)
       }
-      return quotationsApi.updateRequest(args.quotationId, args.requestId, args.input)
+      return quotationsApi.updateRequest(
+        args.quotationId,
+        args.requestId,
+        args.input,
+        args.rowVersion,
+      )
     },
-    onSuccess: (_, { quotationId }) => {
+    onSettled: (_data, _err, { quotationId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.quotations.requests(quotationId) })
     },
   })
@@ -160,7 +174,7 @@ export function useDeleteQuotationRequest() {
   return useMutation({
     mutationFn: ({ quotationId, requestId }: { quotationId: number; requestId: number }) =>
       quotationsApi.deleteRequest(quotationId, requestId),
-    onSuccess: (_, { quotationId }) => {
+    onSettled: (_data, _err, { quotationId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.quotations.requests(quotationId) })
     },
   })
@@ -190,8 +204,8 @@ export const LOCK_HEARTBEAT_MS = 30_000
 // Follow a draft live.
 //
 // Every change notice, and every reconnect (the stream keeps no backlog),
-// reloads the quotation. An expired claim sends no notice, so the page also
-// reloads when another user's claim lapses.
+// reloads the quotation and its requests. An expired claim sends no notice,
+// so the page also reloads when another user's claim lapses.
 export function useQuotationLive(
   id: number | undefined,
   locks: QuotationEditLock[] | undefined,
@@ -203,7 +217,10 @@ export function useQuotationLive(
     const ctl = new AbortController()
     void followEventStream({
       open: (signal) => quotationsApi.openEvents(id, signal),
-      onEvent: () => qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) }),
+      onEvent: () => {
+        qc.invalidateQueries({ queryKey: queryKeys.quotations.detail(id) })
+        qc.invalidateQueries({ queryKey: queryKeys.quotations.requests(id) })
+      },
       signal: ctl.signal,
     })
     return () => ctl.abort()
