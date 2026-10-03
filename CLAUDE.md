@@ -496,7 +496,8 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    cannot hold the letterhead, the table and those blocks at any item count.
    Geometry uses `includehead` so the running header prints on the sheet
    instead of off its top edge. The party block (To, Address and the rest)
-   is a top-aligned `tabularx` whose value column is ragged-right `X`, and
+   is a top-aligned `tabularx` whose value column is ragged-right `X` with
+   hyphenation off (English patterns would split Indonesian names), and
    the client name and address go through `pdfgen.LatexBreakable`, so a long
    name or address wraps instead of printing over the number and date block.
    The layout fixtures carry a long name and a full office address, and
