@@ -99,24 +99,60 @@ export function useMarkInvoicePaid() {
   })
 }
 
+// Refresh after a new number.
+//
+// The PO header prints its live invoice number, which a cancel or a
+// Pengganti changes.
+function useInvalidateInvoiceNumber() {
+  const qc = useQueryClient()
+  const invalidate = useInvalidateInvoices()
+  return () =>
+    Promise.all([invalidate(), qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })])
+}
+
+// Cancel held, Pengganti failed.
+class ReplacementFailed extends Error {
+  constructor(readonly reason: unknown) {
+    super("")
+  }
+}
+
+// Text for a held cancel.
+function replacementFailedText(reason: unknown): string {
+  const detail = errorMessage(reason, "").replace(/\.$/, "")
+  const why = detail ? `: ${detail}` : ""
+  return `Invoice sudah dibatalkan, tetapi invoice pengganti gagal diterbitkan${why}. Gunakan Terbitkan Pengganti untuk mencoba lagi.`
+}
+
 // Cancel, then issue the Pengganti.
 //
 // Two calls, not one transaction. When the second fails the invoice stays
-// cancelled with canReplace set, and the page offers Terbitkan Pengganti.
+// cancelled with canReplace set, and the page offers Terbitkan Pengganti;
+// the toast says so, so only the Pengganti is retried.
 export function useCancelAndReplaceInvoice() {
   const qc = useQueryClient()
   const invalidate = useInvalidateInvoices()
+  const invalidateNumber = useInvalidateInvoiceNumber()
   return useMutation({
     mutationFn: async ({ id, note }: { id: number; note: string }): Promise<InvoiceDetail> => {
       await invApi.changeStatus(id, { status: "cancelled", note })
-      return invApi.replace(id)
+      try {
+        return await invApi.replace(id)
+      } catch (err) {
+        throw new ReplacementFailed(err)
+      }
     },
     onSuccess: async (next) => {
       qc.setQueryData(queryKeys.invoices.byQuotation(next.quotationId), next)
-      await invalidate()
+      await invalidateNumber()
       toast.success(`Invoice pengganti ${next.invoiceNo} diterbitkan.`)
     },
     onError: async (err) => {
+      if (err instanceof ReplacementFailed) {
+        await invalidateNumber()
+        toast.error(replacementFailedText(err.reason))
+        return
+      }
       await invalidate()
       toast.error(errorMessage(err, "Gagal membatalkan invoice."))
     },
@@ -126,12 +162,12 @@ export function useCancelAndReplaceInvoice() {
 // Pengganti for cancelled invoice.
 export function useReplaceInvoice() {
   const qc = useQueryClient()
-  const invalidate = useInvalidateInvoices()
+  const invalidateNumber = useInvalidateInvoiceNumber()
   return useMutation({
     mutationFn: (id: number) => invApi.replace(id),
     onSuccess: async (next) => {
       qc.setQueryData(queryKeys.invoices.byQuotation(next.quotationId), next)
-      await invalidate()
+      await invalidateNumber()
       toast.success(`Invoice pengganti ${next.invoiceNo} diterbitkan.`)
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal menerbitkan invoice pengganti.")),

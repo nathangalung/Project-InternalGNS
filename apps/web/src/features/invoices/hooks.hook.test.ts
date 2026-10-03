@@ -165,43 +165,65 @@ describe("replacement", () => {
     m.changeStatus.mockResolvedValue(undefined)
     m.replace.mockResolvedValue(next)
     const { qc, result } = renderQueryHook(() => useCancelAndReplaceInvoice())
-    seed(qc, views)
+    seed(qc, [...views, poList])
     await settle(() => result.current.mutateAsync({ id: 4, note: "Salah NPWP" }))
     expect(m.changeStatus).toHaveBeenCalledWith(4, { status: "cancelled", note: "Salah NPWP" })
     expect(m.replace).toHaveBeenCalledWith(4)
     expect(qc.getQueryData(queryKeys.invoices.byQuotation(5))).toEqual(next)
-    expect(invalidated(qc, views)).toEqual(views)
+    // The PO header names the Pengganti now.
+    expect(invalidated(qc, [...views, poList])).toEqual([...views, poList])
     expect(toast.success).toHaveBeenCalledWith("Invoice pengganti INV/2026/IX/002 diterbitkan.")
   })
 
   // Two calls; second may fail.
   //
-  // A failed second step leaves a cancelled invoice to show.
-  it("still refreshes when the Pengganti fails after the cancel", async () => {
+  // A failed second step leaves a cancelled invoice to show, and the toast
+  // says the cancel went through so only the Pengganti is retried.
+  it.each<[string, Error, string]>([
+    [
+      "the server reason",
+      new ApiError(409, null, "Invoice pengganti sudah ada."),
+      "Invoice sudah dibatalkan, tetapi invoice pengganti gagal diterbitkan: Invoice pengganti sudah ada. Gunakan Terbitkan Pengganti untuk mencoba lagi.",
+    ],
+    [
+      "no reason",
+      new Error(""),
+      "Invoice sudah dibatalkan, tetapi invoice pengganti gagal diterbitkan. Gunakan Terbitkan Pengganti untuk mencoba lagi.",
+    ],
+  ])("says the cancel held when the Pengganti fails, with %s", async (_name, err, text) => {
     m.changeStatus.mockResolvedValue(undefined)
-    m.replace.mockRejectedValue(new Error(""))
+    m.replace.mockRejectedValue(err)
     const { qc, result } = renderQueryHook(() => useCancelAndReplaceInvoice())
-    seed(qc, views)
+    seed(qc, [...views, poList])
     await settle(() => result.current.mutateAsync({ id: 4, note: "x" }))
-    await until(() => expect(invalidated(qc, views)).toEqual(views))
-    expect(toast.error).toHaveBeenCalledWith("Gagal membatalkan invoice.")
+    await until(() => expect(invalidated(qc, [...views, poList])).toEqual([...views, poList]))
+    expect(toast.error).toHaveBeenCalledWith(text)
   })
 
   it("does not issue a Pengganti when the cancel is refused", async () => {
     m.changeStatus.mockRejectedValue(new ApiError(422, null, "Catatan wajib diisi."))
-    const { result } = renderQueryHook(() => useCancelAndReplaceInvoice())
+    const { qc, result } = renderQueryHook(() => useCancelAndReplaceInvoice())
+    seed(qc, [...views, poList])
     await settle(() => result.current.mutateAsync({ id: 4, note: "" }))
     expect(m.replace).not.toHaveBeenCalled()
     expect(toast.error).toHaveBeenCalledWith("Catatan wajib diisi.")
+    await until(() => expect(invalidated(qc, [...views, poList])).toEqual(views))
+  })
+
+  it("names the cancel when it fails without a reason", async () => {
+    m.changeStatus.mockRejectedValue(new Error(""))
+    const { result } = renderQueryHook(() => useCancelAndReplaceInvoice())
+    await settle(() => result.current.mutateAsync({ id: 4, note: "x" }))
+    expect(toast.error).toHaveBeenCalledWith("Gagal membatalkan invoice.")
   })
 
   it("issues a Pengganti for an already cancelled invoice", async () => {
     m.replace.mockResolvedValue(next)
     const { qc, result } = renderQueryHook(() => useReplaceInvoice())
-    seed(qc, views)
+    seed(qc, [...views, poList])
     await settle(() => result.current.mutateAsync(4))
     expect(qc.getQueryData(queryKeys.invoices.byQuotation(5))).toEqual(next)
-    expect(invalidated(qc, views)).toEqual(views)
+    expect(invalidated(qc, [...views, poList])).toEqual([...views, poList])
     expect(toast.success).toHaveBeenCalledWith("Invoice pengganti INV/2026/IX/002 diterbitkan.")
   })
 
