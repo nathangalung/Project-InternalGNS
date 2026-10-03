@@ -40,7 +40,7 @@ Feature: Login, session refresh and session revocation
     And the account has no failed login attempts
 
   Scenario: A rate-limited login answers problem+json
-    When someone logs in as one unknown email 11 times from one address
+    When someone logs in as one unknown email 11 times from one address, all but the last at once
     Then the response status is 429
     And the response is problem+json
 
