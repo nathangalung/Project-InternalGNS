@@ -53,6 +53,29 @@ func topmost(words []pdfWord, text string) (pdfWord, bool) {
 	return best, found
 }
 
+// partyBand keeps the party rows.
+// The band runs from the To row down to the document title, so the
+// letterhead copy of an address word ("Gedung", "Jl.", "Jakarta") and the
+// item table below never stand in for the party block's own word.
+func partyBand(t *testing.T, words []pdfWord, title string) []pdfWord {
+	t.Helper()
+	to, ok := topmost(words, "To")
+	if !ok {
+		t.Fatal("To row not found on page 1")
+	}
+	end, ok := topmost(words, title)
+	if !ok || end.yMin <= to.yMin {
+		t.Fatalf("title %q not found below the To row", title)
+	}
+	band := make([]pdfWord, 0, len(words))
+	for _, w := range words {
+		if w.yMin >= to.yMin-1 && w.yMin < end.yMin {
+			band = append(band, w)
+		}
+	}
+	return band
+}
+
 // Party blocks wrap long fields.
 // A long legal name and a full office address must wrap inside the left
 // party column: no bad box, every word whole (English patterns must not
@@ -64,14 +87,14 @@ func TestLatexExports_LongPartyWraps(t *testing.T) {
 	invoiceA4 := invoiceData(sampleItems(6))
 	invoiceA4["UseA4"] = true
 	docs := []struct {
-		name, tmpl, label, number string
-		words                     []string
-		data                      map[string]any
+		name, tmpl, title, label, number string
+		words                            []string
+		data                             map[string]any
 	}{
-		{"quotation", "quotation/Quotation.tex.tmpl", "Your", "Q-26400393/GNS/IV/2026", nameWords, quotationData(sampleItems(2))},
-		{"delivery note", "delivery_note/DeliveryNote.tex.tmpl", "Delivery", "DN-26778001/GNS/IV/2026", addressWords, deliveryNoteData(sampleItems(2))},
-		{"invoice A5", "invoice/Invoice.tex.tmpl", "Invoice", "INV-26400393/GNS/IV/2026", addressWords, invoiceData(sampleItems(2))},
-		{"invoice A4", "invoice/Invoice.tex.tmpl", "Invoice", "INV-26400393/GNS/IV/2026", addressWords, invoiceA4},
+		{"quotation", "quotation/Quotation.tex.tmpl", "QUOTATION", "Your", "Q-26400393/GNS/IV/2026", nameWords, quotationData(sampleItems(2))},
+		{"delivery note", "delivery_note/DeliveryNote.tex.tmpl", "DELIVERY", "Delivery", "DN-26778001/GNS/IV/2026", addressWords, deliveryNoteData(sampleItems(2))},
+		{"invoice A5", "invoice/Invoice.tex.tmpl", "INVOICE", "Invoice", "INV-26400393/GNS/IV/2026", addressWords, invoiceData(sampleItems(2))},
+		{"invoice A4", "invoice/Invoice.tex.tmpl", "INVOICE", "Invoice", "INV-26400393/GNS/IV/2026", addressWords, invoiceA4},
 	}
 	for _, d := range docs {
 		t.Run(d.name, func(t *testing.T) {
@@ -89,7 +112,7 @@ func TestLatexExports_LongPartyWraps(t *testing.T) {
 				t.Errorf("overfull=%d underfull=%d warnings=%d, want all 0", over, under, warn)
 			}
 
-			words := firstPageWords(t, filepath.Join(dir, "doc.pdf"))
+			words := partyBand(t, firstPageWords(t, filepath.Join(dir, "doc.pdf")), d.title)
 			label, ok := topmost(words, d.label)
 			if !ok {
 				t.Fatalf("label %q not found on page 1", d.label)
@@ -100,7 +123,7 @@ func TestLatexExports_LongPartyWraps(t *testing.T) {
 			for _, pw := range d.words {
 				w, ok := topmost(words, pw)
 				if !ok {
-					t.Errorf("party word %q not found whole on page 1", pw)
+					t.Errorf("party word %q not found whole in the party block", pw)
 					continue
 				}
 				if w.xMax >= label.xMin {

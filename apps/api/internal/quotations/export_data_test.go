@@ -295,7 +295,7 @@ func TestBuildExportData_FooterTerms(t *testing.T) {
 	}
 }
 
-// The client name gets break points.
+// Client name gets break points.
 // The To cell wraps, but one long unbroken token still overflows unless
 // the name carries break points; a short name prints exactly as escaped.
 func TestBuildExportData_CompanyNameBreaksLongTokens(t *testing.T) {
