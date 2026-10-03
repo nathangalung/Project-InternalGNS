@@ -231,17 +231,17 @@ document's status history table.
   requests (Permintaan, `/quotations/{id}/requests`) follow the same
   contract (`fn_quotation_request_*`): adding one needs only the draft, a
   save needs `If-Match` with the request's `rowVersion`, and a delete needs
-  every line linked to it free, since it clears their `request_id`. Every change
-  calls `fn_quotation_notify`, which `pg_notify`s `quotation_events`; one
-  pooled connection LISTENs (`shared/live`) and fans the notices out to
-  `GET /quotations/{id}/events`, a server-sent event stream the web reads
-  with fetch (`lib/event-stream.ts`, since EventSource cannot send the
-  token). A notice sent while that connection is down is lost, so every
-  LISTEN after the first sends `resync` to each open stream. The stream
-  ends after five minutes and on shutdown; the web reconnects and reloads
-  the draft and its requests on every event and reconnect. The edit page shows another
-  user's line or header read-only with their name and frees its claims on
-  leave, including on pagehide.
+  every line linked to it free, since it clears their `request_id`. Every
+  change calls `fn_quotation_notify`, which `pg_notify`s
+  `quotation_events`; one pooled connection LISTENs (`shared/live`) and
+  fans the notices out to `GET /quotations/{id}/events`, a server-sent
+  event stream the web reads with fetch (`lib/event-stream.ts`, since
+  EventSource cannot send the token). A notice sent while that connection
+  is down is lost, so every LISTEN after the first sends `resync` to each
+  open stream. The stream ends after five minutes and on shutdown; the web
+  reconnects and reloads the draft and its requests on every event and
+  reconnect. The edit page shows another user's line or header read-only
+  with their name and frees its claims on leave, including on pagehide.
 - Purchase order: PENDING, UPLOADED, ON_PROGRESS, DELIVERED, CANCELLED.
   PENDING and UPLOADED follow the PO file: attaching it moves PENDING to
   UPLOADED and removing it moves back, and neither is a manual move. Every
