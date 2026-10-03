@@ -77,18 +77,21 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
         out.push({
           key: "created",
           label: `Dibuat: ${activeFilters.createdStart} s/d ${activeFilters.createdEnd}`,
+          onRemove: () => patchFilters((p) => (p ? { ...p, createdPreset: "semua" } : p)),
         })
       }
       if (activeFilters.duePreset !== "semua") {
         out.push({
           key: "due",
           label: `Jatuh tempo: ${activeFilters.dueStart} s/d ${activeFilters.dueEnd}`,
+          onRemove: () => patchFilters((p) => (p ? { ...p, duePreset: "semua" } : p)),
         })
       }
       if (activeFilters.minHarga !== "" || activeFilters.maxHarga !== "") {
         out.push({
           key: "total",
           label: `Total: ${activeFilters.minHarga || "0"} - ${activeFilters.maxHarga || "tanpa batas"}`,
+          onRemove: () => patchFilters((p) => (p ? { ...p, minHarga: "", maxHarga: "" } : p)),
         })
       }
     }
