@@ -495,7 +495,13 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    portrait only: it carries two signature blocks the others do not, and A5
    cannot hold the letterhead, the table and those blocks at any item count.
    Geometry uses `includehead` so the running header prints on the sheet
-   instead of off its top edge. `TestLatexExports_Clean` and `_MultiPage`
+   instead of off its top edge. The party block (To, Address and the rest)
+   is a top-aligned `tabularx` whose value column is ragged-right `X`, and
+   the client name and address go through `pdfgen.LatexBreakable`, so a long
+   name or address wraps instead of printing over the number and date block.
+   The layout fixtures carry a long name and a full office address, and
+   `TestLatexExports_LongPartyWraps` checks with `pdftotext -bbox` that they
+   stay left of that block. `TestLatexExports_Clean` and `_MultiPage`
    fail on any overfull or underfull box, which is what keeps text from being
    cut.
 9. Invoice tax figures are rounded per line, then summed to the header (matching
