@@ -230,7 +230,8 @@ matters once orphaned uploads consume real disk.
   4 s) answered with the same 401, and an unknown or deactivated address now
   pays the same delay as an account after the same misses, counted in a
   bounded in-memory table (`auth/misscounter.go`), so neither status nor
-  timing tells the two apart.
+  timing tells the two apart. Eviction and restarts leave an accepted
+  residual window, recorded in `backend_dev_guide.md`.
 
 ## Open questions for the owner
 
