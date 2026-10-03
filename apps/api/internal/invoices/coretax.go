@@ -100,7 +100,7 @@ func (h *CoretaxHandler) Export(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	// A void invoice is never filed; its Pengganti is.
@@ -112,13 +112,13 @@ func (h *CoretaxHandler) Export(w http.ResponseWriter, r *http.Request) {
 
 	items, err := h.repo.ListItems(r.Context(), id)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 
 	client, err := h.clients.GetByID(r.Context(), inv.CompanyClientID)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 

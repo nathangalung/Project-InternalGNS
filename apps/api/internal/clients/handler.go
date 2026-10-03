@@ -58,7 +58,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
@@ -79,7 +79,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, c)
@@ -114,7 +114,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusCreated, c)
@@ -160,7 +160,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, c)
@@ -170,7 +170,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Summary(w http.ResponseWriter, r *http.Request) {
 	s, err := h.repo.Summary(r.Context())
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, s)
@@ -199,7 +199,7 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 
 	results, err := h.repo.Search(r.Context(), q, minScore, limit)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, results)
@@ -214,12 +214,12 @@ func (h *Handler) ListContacts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.requireClient(r.Context(), id); err != nil {
-		renderClientErr(w, err)
+		renderClientErr(w, r, err)
 		return
 	}
 	contacts, err := h.repo.ListContacts(r.Context(), id)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, contacts)
@@ -251,7 +251,7 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 	userID := deps.CurrentUserID(r.Context())
 	c, err := h.repo.CreateContact(r.Context(), id, req, userID)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusCreated, c)
@@ -294,7 +294,7 @@ func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, c)
@@ -317,7 +317,7 @@ func (h *Handler) DeleteContact(w http.ResponseWriter, r *http.Request) {
 			httperr.Render(w, httperr.NotFound("contact not found"))
 			return
 		}
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -334,12 +334,12 @@ func (h *Handler) requireClient(ctx context.Context, id int64) error {
 }
 
 // renderClientErr maps sentinels to problems.
-func renderClientErr(w http.ResponseWriter, err error) {
+func renderClientErr(w http.ResponseWriter, r *http.Request, err error) {
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("client not found"))
 		return
 	}
-	httperr.RenderDBErr(w, err)
+	httperr.RenderDBErrCtx(r.Context(), w, err)
 }
 
 // RecentQuotations lists the client's newest quotations.
@@ -351,7 +351,7 @@ func (h *Handler) RecentQuotations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.requireClient(r.Context(), id); err != nil {
-		renderClientErr(w, err)
+		renderClientErr(w, r, err)
 		return
 	}
 	rows, err := h.repo.RecentQuotations(r.Context(), id)

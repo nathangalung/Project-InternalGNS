@@ -176,9 +176,9 @@ func TestFromDBErr_UnknownPgCode(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, got.Status)
 }
 
-func TestRenderDBErr(t *testing.T) {
+func TestRenderDBErrCtx_Conflict(t *testing.T) {
 	rec := httptest.NewRecorder()
-	RenderDBErr(rec, &pgconn.PgError{Code: "23505", Message: "dup"})
+	RenderDBErrCtx(context.Background(), rec, &pgconn.PgError{Code: "23505", Message: "dup"})
 	res := rec.Result()
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusConflict, res.StatusCode)

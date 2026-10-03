@@ -71,7 +71,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
@@ -86,7 +86,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WarnIfTruncated(r.Context(), "invoices.export", res.Total, len(res.Rows))
@@ -114,7 +114,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	}
 	data, err := sheet.Write("Invoice", headers, rows)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteXLSX(w, "invoice-export", data)
@@ -123,7 +123,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Summary(w http.ResponseWriter, r *http.Request) {
 	s, err := h.repo.Summary(r.Context())
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, s)
@@ -141,7 +141,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, inv)
@@ -159,7 +159,7 @@ func (h *Handler) GetByQuotation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, inv)
@@ -173,7 +173,7 @@ func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 	}
 	items, err := h.repo.ListItems(r.Context(), id)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, items)
@@ -211,7 +211,7 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 				"Status Terlambat ditentukan otomatis dari tanggal jatuh tempo.", nil))
 			return
 		}
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -273,7 +273,7 @@ func (h *Handler) UpdateDates(w http.ResponseWriter, r *http.Request) {
 			// Use 409 per round3_plan optimistic-lock contract (not RFC 7232 412).
 			httperr.Render(w, httperr.VersionConflict())
 		default:
-			httperr.RenderDBErr(w, err)
+			httperr.RenderDBErrCtx(r.Context(), w, err)
 		}
 		return
 	}

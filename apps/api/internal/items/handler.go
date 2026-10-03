@@ -64,7 +64,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
@@ -83,7 +83,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, item)
@@ -103,7 +103,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	userID := deps.CurrentUserID(r.Context())
 	item, err := h.repo.Create(r.Context(), req, userID)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusCreated, item)
@@ -133,7 +133,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, item)
@@ -168,7 +168,7 @@ func (h *Handler) AddVendor(w http.ResponseWriter, r *http.Request) {
 			}))
 			return
 		}
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusCreated, row)
@@ -228,7 +228,7 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 		return err
 	})
 	if err := eg.Wait(); err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	if len(items) == searchLayerCap || len(offers) == searchLayerCap || len(requests) == searchLayerCap {
@@ -240,7 +240,7 @@ func (h *Handler) SearchAdvanced(w http.ResponseWriter, r *http.Request) {
 	// and request-history layers carry no item name.
 	meta, err := h.repo.ItemMetaByIDs(ctx, candidateItemIDs(items, offers, requests))
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 
@@ -294,12 +294,12 @@ func (h *Handler) ListVendorsForItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.requireItem(r.Context(), id); err != nil {
-		renderItemErr(w, err)
+		renderItemErr(w, r, err)
 		return
 	}
 	vendors, err := h.repo.ListVendorsForItem(r.Context(), id)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, vendors)
@@ -314,12 +314,12 @@ func (h *Handler) PriceHistory(w http.ResponseWriter, r *http.Request) {
 	limit := paginate.ParseLimit(r, 5)
 
 	if err := h.requireItem(r.Context(), id); err != nil {
-		renderItemErr(w, err)
+		renderItemErr(w, r, err)
 		return
 	}
 	history, err := h.repo.SuggestSellingPrices(r.Context(), id, limit)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, history)
@@ -336,12 +336,12 @@ func (h *Handler) requireItem(ctx context.Context, id int64) error {
 }
 
 // renderItemErr maps sentinels to problems.
-func renderItemErr(w http.ResponseWriter, err error) {
+func renderItemErr(w http.ResponseWriter, r *http.Request, err error) {
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("item not found"))
 		return
 	}
-	httperr.RenderDBErr(w, err)
+	httperr.RenderDBErrCtx(r.Context(), w, err)
 }
 
 // maxRecommendIDs caps one request.
@@ -408,7 +408,7 @@ func (h *Handler) RecentQuotations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.requireItem(r.Context(), id); err != nil {
-		renderItemErr(w, err)
+		renderItemErr(w, r, err)
 		return
 	}
 	rows, err := h.repo.RecentQuotations(r.Context(), id)

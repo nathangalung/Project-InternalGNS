@@ -61,7 +61,7 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WarnIfTruncated(r.Context(), "invoices.coretax_export", res.Total, len(res.Rows))
@@ -74,7 +74,7 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 	}
 	itemsByID, err := h.repo.ListItemsBulk(r.Context(), invoiceIDs)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 
@@ -98,14 +98,14 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 
 	clientsByID, err := h.clients.GetByIDs(r.Context(), clientIDs)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	// A bulk read returns fewer rows where GetByID returned ErrNotFound; keep
 	// the old hard failure instead of exporting a blank buyer.
 	for _, id := range clientIDs {
 		if _, ok := clientsByID[id]; !ok {
-			httperr.RenderDBErr(w, clients.ErrNotFound)
+			httperr.RenderDBErrCtx(r.Context(), w, clients.ErrNotFound)
 			return
 		}
 	}

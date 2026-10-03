@@ -81,7 +81,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	h.respond(w, r, resp)
@@ -93,7 +93,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	if raw := session.Read(r); raw != "" {
 		if err := h.svc.RevokeRefresh(r.Context(), raw); err != nil {
-			httperr.RenderDBErr(w, err)
+			httperr.RenderDBErrCtx(r.Context(), w, err)
 			return
 		}
 	}
@@ -127,7 +127,7 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	h.respond(w, r, resp)
@@ -146,7 +146,7 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, toMeUser(u))
@@ -195,7 +195,7 @@ func (h *Handler) ChangeOwnPassword(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unauthorized(DetailSessionRevoked))
 		return
 	case err != nil:
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	// Every session ended, this one too; the client signs in again.
