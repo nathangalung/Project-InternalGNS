@@ -435,6 +435,19 @@ on the VPS (mode 600), and it prints the old and new `TAG` and the changed
 keys, never values. `DOKPLOY_APP` and `GHCR_OWNER` override the app name and
 image owner.
 
+Two transient failures have been seen, and neither needs a code change:
+
+- **The pull check fails on a published tag.** `docker manifest inspect`
+  against GHCR can fail for a moment even though the image pulls. The script
+  then says the tag is not pullable and leaves `TAG` unchanged. Pull the two
+  images on the VPS to confirm they exist, then run the script again.
+- **The deploy fails at the git clone.** Dokploy clones `main` on every
+  deploy, and the clone from the VPS can be cut off by GitHub (`RPC failed`,
+  `early EOF`, `Connection reset by peer` in the deploy log under
+  `/etc/dokploy/logs/<app>/`). The running containers keep serving the
+  previous release. Redeploy with **Deploy** in Dokploy, or with the next
+  push to `main`.
+
 ## 11. Monitoring and alerts
 
 Every container has a healthcheck (`pg_isready`, `silo healthcheck cluster`,
