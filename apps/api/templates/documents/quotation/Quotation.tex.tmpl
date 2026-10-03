@@ -130,8 +130,8 @@
 \noindent
 \begin{minipage}[t]{0.52\textwidth}
   {\QPartySize
-  % Values wrap; tops align.
-  \begin{tabularx}{\linewidth}[t]{@{}l@{\,}l@{\,}>{\RaggedRight\arraybackslash}X@{}}
+  % Values wrap whole words; tops align.
+  \begin{tabularx}{\linewidth}[t]{@{}l@{\,}l@{\,}>{\RaggedRight\hyphenpenalty=10000\arraybackslash}X@{}}
     To           & : & [[.CompanyName]] \\[1pt]
     Attn         & : & [[.AttnName]] \\[1pt]
     Email        & : & [[if .AttnEmail]]\href{mailto:[[.AttnEmail]]}{[[.AttnEmail]]}[[else]]-[[end]] \\[1pt]

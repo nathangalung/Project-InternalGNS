@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -54,14 +55,12 @@ func topmost(words []pdfWord, text string) (pdfWord, bool) {
 
 // Party blocks wrap long fields.
 // A long legal name and a full office address must wrap inside the left
-// party column: no bad box, every word left of the document-number block,
-// and the document number still one intact word.
+// party column: no bad box, every word whole (English patterns must not
+// hyphenate Indonesian names) and left of the document-number block, and
+// the document number still one intact word.
 func TestLatexExports_LongPartyWraps(t *testing.T) {
-	// Short words that never hyphenate.
-	// Tbk ends the name and 10220 ends the address, so an unwrapped cell
-	// pushes them furthest right.
-	nameWords := []string{"Tbk"}
-	addressWords := []string{"Tbk", "BNI", "10220"}
+	nameWords := strings.Fields(partyName)
+	addressWords := append(strings.Fields(partyAddress), nameWords...)
 	invoiceA4 := invoiceData(sampleItems(6))
 	invoiceA4["UseA4"] = true
 	docs := []struct {
@@ -101,12 +100,48 @@ func TestLatexExports_LongPartyWraps(t *testing.T) {
 			for _, pw := range d.words {
 				w, ok := topmost(words, pw)
 				if !ok {
-					t.Errorf("party word %q not found on page 1", pw)
+					t.Errorf("party word %q not found whole on page 1", pw)
 					continue
 				}
 				if w.xMax >= label.xMin {
 					t.Errorf("party word %q ends at x=%.1f, past the %q block at x=%.1f", pw, w.xMax, d.label, label.xMin)
 				}
+			}
+		})
+	}
+}
+
+// Party tokens wrap too.
+// One unbroken 89-character token in the client name wraps only through
+// LatexBreakable's break points; the escaped control proves the check bites.
+func TestLatexExports_LongPartyTokenWraps(t *testing.T) {
+	token := "PT.GlobalMaritime" + strings.Repeat("Nusantara", 7) + "Persada07"
+	if len(token) != 89 {
+		t.Fatalf("token has %d characters, want 89", len(token))
+	}
+	docs := []struct {
+		name, tmpl string
+		data       func(items []map[string]any) map[string]any
+	}{
+		{"quotation", "quotation/Quotation.tex.tmpl", quotationData},
+		{"delivery note", "delivery_note/DeliveryNote.tex.tmpl", deliveryNoteData},
+		{"invoice A5", "invoice/Invoice.tex.tmpl", invoiceData},
+	}
+	for _, d := range docs {
+		t.Run(d.name, func(t *testing.T) {
+			data := d.data(sampleItems(2))
+			data["CompanyName"] = LatexBreakable(token)
+			log := compileLog(t, d.tmpl, data)
+			if !producedOutput(log) {
+				t.Skip("xelatex produced no output")
+			}
+			if over, under, warn := badBoxes(log); over != 0 || under != 0 || warn != 0 {
+				t.Errorf("breakable: overfull=%d underfull=%d warnings=%d, want all 0", over, under, warn)
+			}
+
+			data["CompanyName"] = LatexEscape(token)
+			if over, _, _ := badBoxes(compileLog(t, d.tmpl, data)); over == 0 {
+				t.Error("escaped control: no overfull box, so the check cannot catch an overflow")
 			}
 		})
 	}

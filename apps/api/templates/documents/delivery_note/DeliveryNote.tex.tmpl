@@ -87,8 +87,8 @@
 \noindent
 \begin{minipage}[t]{0.52\textwidth}
   {\small
-  % Values wrap; tops align.
-  \begin{tabularx}{\linewidth}[t]{@{}l@{\,}l@{\,}>{\RaggedRight\arraybackslash}X@{}}
+  % Values wrap whole words; tops align.
+  \begin{tabularx}{\linewidth}[t]{@{}l@{\,}l@{\,}>{\RaggedRight\hyphenpenalty=10000\arraybackslash}X@{}}
     To      & : & [[.CompanyName]] \\[1pt]
     Address & : & [[if .CompanyAddress]][[.CompanyAddress]][[else]]-[[end]] \\[1pt]
     Attn    & : & [[if .AttnName]][[.AttnName]][[else]]-[[end]] \\[1pt]
