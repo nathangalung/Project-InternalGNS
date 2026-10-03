@@ -46,12 +46,19 @@ func keyOf(email string) missKey {
 	return sha256.Sum256([]byte(email))
 }
 
+// entryOf unwraps a list element.
+// The list holds only entries, so the assertion cannot fail.
+func entryOf(el *list.Element) *missEntry {
+	e, _ := el.Value.(*missEntry)
+	return e
+}
+
 // count returns prior misses.
 func (c *missCounter) count(email string) int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if el, ok := c.byKey[keyOf(email)]; ok {
-		return el.Value.(*missEntry).misses
+		return entryOf(el).misses
 	}
 	return 0
 }
@@ -62,14 +69,14 @@ func (c *missCounter) miss(email string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if el, ok := c.byKey[key]; ok {
-		el.Value.(*missEntry).misses++
+		entryOf(el).misses++
 		c.recent.MoveToFront(el)
 		return
 	}
 	if len(c.byKey) >= c.limit {
 		oldest := c.recent.Back()
 		c.recent.Remove(oldest)
-		delete(c.byKey, oldest.Value.(*missEntry).key)
+		delete(c.byKey, entryOf(oldest).key)
 	}
 	c.byKey[key] = c.recent.PushFront(&missEntry{key: key, misses: 1})
 }
