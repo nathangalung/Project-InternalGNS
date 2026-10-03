@@ -10,6 +10,7 @@ import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useUsers } from "@/features/users/hooks"
 import { formatDateShort } from "@/lib/format"
+import { emptyListText } from "@/lib/list-empty"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
@@ -137,7 +138,9 @@ export default function UserList() {
             <tbody>
               {isLoading && <TableLoadingRow colSpan={6} />}
               {!isLoading && currentRows.length === 0 && (
-                <TableEmptyRow colSpan={6}>Tidak ada pengguna.</TableEmptyRow>
+                <TableEmptyRow colSpan={6}>
+                  {emptyListText(list, "Belum ada pengguna.")}
+                </TableEmptyRow>
               )}
               {!isLoading &&
                 currentRows.map((u) => {

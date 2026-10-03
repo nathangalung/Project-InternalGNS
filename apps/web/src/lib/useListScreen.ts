@@ -20,12 +20,16 @@ export type ListScreen<F> = {
   setItemsPerPage: (count: number) => void
   startIndex: number
   totalPagesOf: (totalItems: number) => number
+  // A search or filters off their defaults hide some rows.
+  narrowed: boolean
 }
 
 // Shared list state machine.
 export function useListScreen<F>(initialFilters: F, initialItemsPerPage = 10): ListScreen<F> {
   const [search, setSearchState] = useState("")
   const [filters, setFiltersState] = useState<F>(initialFilters)
+  // First defaults, kept to tell a narrowed list.
+  const [defaults] = useState(() => JSON.stringify(initialFilters))
   const [itemsPerPage, setItemsPerPageState] = useState(initialItemsPerPage)
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -65,6 +69,7 @@ export function useListScreen<F>(initialFilters: F, initialItemsPerPage = 10): L
     setItemsPerPage,
     startIndex,
     totalPagesOf: (totalItems) => pageCount(totalItems, itemsPerPage),
+    narrowed: debouncedSearch !== "" || JSON.stringify(filters) !== defaults,
   }
 }
 

@@ -20,6 +20,7 @@ import ProductCreateModal from "@/features/items/ProductCreateModal"
 import ProductFilter, { type ProductFilterValues } from "@/features/items/ProductFilter"
 import ProductThumb from "@/features/items/ProductThumb"
 import { useUnits } from "@/features/units/hooks"
+import { emptyListText } from "@/lib/list-empty"
 import { canWriteCatalog } from "@/lib/rbac"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
@@ -206,9 +207,7 @@ export default function ProductList({ onViewDetail }: ProductListProps) {
               {isLoading && <TableLoadingRow colSpan={5} />}
               {!isLoading && currentRows.length === 0 && (
                 <TableEmptyRow colSpan={5}>
-                  {isSearchActive
-                    ? `Tidak ada hasil untuk "${debouncedSearch}".`
-                    : "Tidak ada produk."}
+                  {emptyListText(list, "Belum ada produk.")}
                 </TableEmptyRow>
               )}
               {!isLoading &&

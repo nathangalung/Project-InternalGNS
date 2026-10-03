@@ -11,6 +11,7 @@ import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { downloadPdf, downloadXml } from "@/lib/api-client"
 import { formatDate, formatNumber, PENDING_FIGURE } from "@/lib/format"
+import { emptyListText } from "@/lib/list-empty"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import * as invoicesApi from "./api"
@@ -211,7 +212,10 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
               {isLoading && <TableLoadingRow colSpan={7} />}
               {!isLoading && currentRows.length === 0 && (
                 <TableEmptyRow colSpan={7}>
-                  Belum ada Invoice. Invoice dibuat otomatis ketika status PO menjadi Dikirim.
+                  {emptyListText(
+                    list,
+                    "Belum ada Invoice. Invoice dibuat otomatis ketika status PO menjadi Dikirim.",
+                  )}
                 </TableEmptyRow>
               )}
               {!isLoading &&

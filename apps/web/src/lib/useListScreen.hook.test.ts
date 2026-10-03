@@ -79,6 +79,20 @@ describe("useListScreen", () => {
     expect(result.current.debouncedSearch).toBe("baut")
   })
 
+  // Narrowed means the rows shown are a subset.
+  it("is narrowed by a search or by filters off their defaults", () => {
+    const { result } = setup()
+    expect(result.current.narrowed).toBe(false)
+    act(() => result.current.applyFilters({ status: "active", min: 0 }))
+    expect(result.current.narrowed).toBe(true)
+    act(() => result.current.applyFilters({ status: "all", min: 0 }))
+    expect(result.current.narrowed).toBe(false)
+    act(() => result.current.setSearch("baut"))
+    expect(result.current.narrowed).toBe(false)
+    act(() => vi.advanceTimersByTime(250))
+    expect(result.current.narrowed).toBe(true)
+  })
+
   it("clears the term but lets the debounce catch up", () => {
     const { result } = setup()
     act(() => result.current.setSearch("baut"))

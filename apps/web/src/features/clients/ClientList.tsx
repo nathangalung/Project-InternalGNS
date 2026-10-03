@@ -15,6 +15,7 @@ import { clientKpis } from "@/features/clients/helpers"
 import { useClientSummary, useClients } from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
 import { formatNumber, formatRupiah, PENDING_FIGURE } from "@/lib/format"
+import { emptyListText } from "@/lib/list-empty"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
@@ -129,7 +130,7 @@ export default function ClientList() {
             <tbody>
               {isLoading && <TableLoadingRow colSpan={6} />}
               {!isLoading && currentRows.length === 0 && (
-                <TableEmptyRow colSpan={6}>Tidak ada klien.</TableEmptyRow>
+                <TableEmptyRow colSpan={6}>{emptyListText(list, "Belum ada klien.")}</TableEmptyRow>
               )}
               {!isLoading &&
                 currentRows.map((c: ClientRow) => {
