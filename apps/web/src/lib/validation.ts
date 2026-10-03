@@ -59,3 +59,17 @@ export function optionalEmailError(s: string): string | null {
 export function optionalAddressError(s: string): string | null {
   return s.trim() === "" || isValidAddress(s) ? null : ADDRESS_ERROR
 }
+
+export const NPWP_ERROR = "NPWP harus 16 digit angka."
+
+// Optional NPWP, checked once filled.
+//
+// Mirrors validate.ClientNPWP: an Indonesian client's NPWP is the 16 digits
+// Coretax files, with dots, dashes or spaces allowed between them; a foreign
+// buyer keeps its own tax id. A blank country is Indonesia.
+export function optionalNpwpError(s: string, countryCode: string): string | null {
+  const t = s.trim()
+  const indonesian = countryCode === "" || countryCode.toUpperCase() === "IDN"
+  if (t === "" || !indonesian) return null
+  return /^[0-9. -]+$/.test(t) && digitsOnly(t).length === 16 ? null : NPWP_ERROR
+}

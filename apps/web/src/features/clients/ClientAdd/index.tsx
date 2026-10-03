@@ -2,7 +2,12 @@ import { useState } from "react"
 import Modal from "@/components/shared/Modal"
 import { useCreateClient, useCreateContact, useUploadClientLogo } from "@/features/clients/hooks"
 import { ui } from "@/lib/ui"
-import { optionalAddressError, optionalEmailError, optionalPhoneError } from "@/lib/validation"
+import {
+  optionalAddressError,
+  optionalEmailError,
+  optionalNpwpError,
+  optionalPhoneError,
+} from "@/lib/validation"
 import type { ClientRow } from "@/types/api"
 import CompanyCard from "./CompanyCard"
 import ContactCard from "./ContactCard"
@@ -45,8 +50,14 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
   const emailError = isNamaKontakFilled ? optionalEmailError(form.email) : null
   // One way to reach them, and no filled field the API would refuse.
   const hasContactWay = form.nomorTelepon.trim() !== "" || form.email.trim() !== ""
+  // NPWP is optional; an Indonesian one must be 16 digits.
+  const npwpError = isNamaKontakFilled ? optionalNpwpError(form.npwp, form.kodeNegara) : null
   const isContactValid =
-    isNamaKontakFilled && hasContactWay && phoneError === null && emailError === null
+    isNamaKontakFilled &&
+    hasContactWay &&
+    phoneError === null &&
+    emailError === null &&
+    npwpError === null
 
   function handleChange(field: keyof ClientAddFormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -135,7 +146,12 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
         emailError={emailError}
       />
       <fieldset disabled={isClientSaved} className="m-0 min-w-0 border-0 p-0">
-        <LegalCard form={form} onChange={handleChange} isNamaKontakFilled={isNamaKontakFilled} />
+        <LegalCard
+          form={form}
+          onChange={handleChange}
+          isNamaKontakFilled={isNamaKontakFilled}
+          npwpError={npwpError}
+        />
       </fieldset>
     </Modal>
   )

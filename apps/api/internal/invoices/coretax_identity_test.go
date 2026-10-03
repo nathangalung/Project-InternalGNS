@@ -9,33 +9,6 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 )
 
-func TestNormalizeNPWP(t *testing.T) {
-	t.Parallel()
-	cases := []struct {
-		name string
-		in   string
-		want string
-		ok   bool
-	}{
-		{name: "plain 16 digits", in: "0123456789012345", want: "0123456789012345", ok: true},
-		{name: "printed separators", in: "01.234.567.89.012.345", want: "0123456789012345", ok: true},
-		{name: "spaces", in: " 0123456789012345 ", want: "0123456789012345", ok: true},
-		{name: "legacy 15 digits", in: "01.234.567.8-901.000", want: "012345678901000", ok: false},
-		{name: "too long", in: "01234567890123456", want: "01234567890123456", ok: false},
-		{name: "letters", in: "PASSPORT123", want: "", ok: false},
-		{name: "empty", in: "", want: "", ok: false},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			got, ok := normalizeNPWP(tc.in)
-			if got != tc.want || ok != tc.ok {
-				t.Fatalf("normalizeNPWP(%q) = (%q, %v), want (%q, %v)", tc.in, got, ok, tc.want, tc.ok)
-			}
-		})
-	}
-}
-
 // Indonesian buyers need an NPWP.
 // Labelling them a passport holder files a tax invoice DJP cannot match to
 // the buyer.

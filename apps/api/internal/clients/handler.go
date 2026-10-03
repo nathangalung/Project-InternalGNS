@@ -14,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 )
 
 type Handler struct {
@@ -101,6 +102,11 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
+	if msg := validate.ClientNPWP(req.CountryCode, req.NPWP); msg != "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"npwp": msg}))
+		return
+	}
+	req.NPWP = validate.StoredNPWP(req.CountryCode, req.NPWP)
 	number, ok := normalizeNumber(req.Number)
 	if !ok {
 		numberProblem(w, ErrNumberInvalid)
@@ -142,6 +148,11 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
+	if msg := validate.ClientNPWP(req.CountryCode, req.NPWP); msg != "" {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"npwp": msg}))
+		return
+	}
+	req.NPWP = validate.StoredNPWP(req.CountryCode, req.NPWP)
 
 	number, ok := normalizeNumber(req.Number)
 	if !ok {
