@@ -17,7 +17,7 @@ const logoImg = "/logo.png"
 const navItems = [
   { label: "Dashboard", icon: "grid", page: "dashboard", to: "/" },
   {
-    label: "Dashboard Financial",
+    label: "Dashboard Finansial",
     icon: "bar-chart",
     page: "dashboard-financial",
     to: "/dashboard-financial",
