@@ -25,8 +25,9 @@ const buffer = 8
 const KindResync = "resync"
 
 // Event is one change to a quotation.
-// Kind is locked, unlocked, line, lines, header, status or resync; Part
-// names the line ("line:<id>") or "header" when the change concerns one.
+// Kind is locked, unlocked, line, lines, header, requests, status or
+// resync; Part names the line ("line:<id>") or "header" when the change
+// concerns one.
 type Event struct {
 	QuotationID int64  `json:"quotationId"`
 	Kind        string `json:"kind"`

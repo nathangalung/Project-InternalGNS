@@ -9,7 +9,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 
+	dbpkg "github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
@@ -110,34 +112,43 @@ func (r *Repo) CreateItemRequest(ctx context.Context, quotationID int64, req Ite
 
 // UpdateItemRequest replaces and bumps version.
 // Sets reviewed_by/at on first pending→non-pending only. A request that
-// belongs to another quotation is ErrNotFound.
+// belongs to another quotation is ErrNotFound; one saved since ifMatch is
+// ErrVersionMismatch.
 func (r *Repo) UpdateItemRequest(
-	ctx context.Context, quotationID, id int64, req ItemRequestUpdate, userID int64,
+	ctx context.Context, quotationID, id int64, ifMatch int32, req ItemRequestUpdate, userID int64,
 ) (ItemRequestRow, error) {
 	var row ItemRequestRow
 	rows, err := r.db.Query(ctx, r.store.Get("quotations.qir_update"),
-		id, req.LineNo, req.RequestText, req.RequestImpa,
+		quotationID, id, ifMatch, req.LineNo, req.RequestText, req.RequestImpa,
 		req.RequestedQty, req.RequestedUom,
 		req.MatchedItemID, req.MatchStatus, req.SourceType,
-		req.SourceRef, req.Notes, userID, quotationID,
+		req.SourceRef, req.Notes, userID,
 	)
 	if err != nil {
 		return row, err
 	}
 	row, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[ItemRequestRow])
-	if errors.Is(err, pgx.ErrNoRows) {
-		return row, ErrNotFound
-	}
-	return row, err
+	return row, requestErr(err)
 }
 
 // DeleteItemRequest removes row.
-// A request that belongs to another quotation is ErrNotFound.
-func (r *Repo) DeleteItemRequest(ctx context.Context, quotationID, id int64) error {
-	var deleted int64
-	err := r.db.QueryRow(ctx, r.store.Get("quotations.qir_delete"), id, quotationID).Scan(&deleted)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return ErrNotFound
+// A request that belongs to another quotation is ErrNotFound; a line linked
+// to it that another user holds refuses the delete (P0015).
+func (r *Repo) DeleteItemRequest(ctx context.Context, quotationID, id, userID int64) error {
+	_, err := r.db.Exec(ctx, r.store.Get("quotations.qir_delete"), quotationID, id, userID)
+	return requestErr(err)
+}
+
+// requestErr maps request refusals.
+func requestErr(err error) error {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		switch pgErr.Code {
+		case dbpkg.SQLStateVersionMismatch:
+			return ErrVersionMismatch
+		case dbpkg.SQLStateNotFound:
+			return ErrNotFound
+		}
 	}
 	return err
 }
@@ -190,6 +201,15 @@ func (h *Handler) UpdateItemRequest(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid rid"))
 		return
 	}
+	ifMatch, err := httpx.ParseIfMatch(r.Header.Get("If-Match"))
+	if err != nil {
+		httperr.Render(w, httperr.BadRequest(err.Error()))
+		return
+	}
+	if ifMatch == nil {
+		httperr.Render(w, httperr.BadRequest("If-Match header required"))
+		return
+	}
 	var req ItemRequestUpdate
 	if !httpx.DecodeJSON(w, r, &req) {
 		return
@@ -199,9 +219,13 @@ func (h *Handler) UpdateItemRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userID := deps.CurrentUserID(r.Context())
-	out, err := h.repo.UpdateItemRequest(r.Context(), qid, rid, req, userID)
+	out, err := h.repo.UpdateItemRequest(r.Context(), qid, rid, *ifMatch, req, userID)
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("request not found"))
+		return
+	}
+	if errors.Is(err, ErrVersionMismatch) {
+		httperr.Render(w, httperr.VersionConflict())
 		return
 	}
 	if err != nil {
@@ -222,7 +246,7 @@ func (h *Handler) DeleteItemRequest(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid rid"))
 		return
 	}
-	err = h.repo.DeleteItemRequest(r.Context(), qid, rid)
+	err = h.repo.DeleteItemRequest(r.Context(), qid, rid, deps.CurrentUserID(r.Context()))
 	if errors.Is(err, ErrNotFound) {
 		httperr.Render(w, httperr.NotFound("request not found"))
 		return

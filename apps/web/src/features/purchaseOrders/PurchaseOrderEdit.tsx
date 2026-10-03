@@ -5,23 +5,25 @@ import { fromClientRow } from "@/features/clients/helpers"
 import { useClient } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
 import DiscountModal from "@/features/quotations/DiscountModal"
+import { countInvalidQty, PO_QTY_ERROR } from "@/features/quotations/lines"
 import Step2Product from "@/features/quotations/Step2Product"
 import Step3Shipping from "@/features/quotations/Step3Shipping"
 import Step4Summary from "@/features/quotations/Step4Summary"
-import { wizardSummary } from "@/features/quotations/wizard"
+import { wizardGates, wizardSummary } from "@/features/quotations/wizard"
 import { useUnits } from "@/features/units/hooks"
 import { isVersionConflict } from "@/lib/errors"
 import { formatNumber as formatRp, toNum } from "@/lib/format"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
-import { isValidAddress } from "@/lib/validation"
 import type { PoUpdateItemsInput, PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
 import {
   linesMissingUnit,
+  linesNeedAddress,
   lineToInput,
   loadFailureMessage,
   type PoEditLine,
   poLinesToEdit,
+  upsertPoLine,
 } from "./adapters"
 import { usePoItems, usePurchaseOrderByQuotation, useUpdatePoItems } from "./hooks"
 import { isPoLockRefusal } from "./PurchaseOrderDetail/helpers"
@@ -39,15 +41,6 @@ const steps = [
   { n: 2, label: "PENGIRIMAN" },
   { n: 3, label: "RINGKASAN" },
 ]
-
-// Split "123456 - Name" parts.
-function splitOffer(s: string): { kode: string; nama: string } {
-  const trimmed = s.trim()
-  if (!trimmed) return { kode: "", nama: "" }
-  const [first, ...rest] = trimmed.split(/\s*-\s*/)
-  if (rest.length > 0 && /^\d+$/.test(first)) return { kode: first, nama: rest.join(" - ") }
-  return { kode: "", nama: trimmed }
-}
 
 const arrowIcon = (
   <svg
@@ -99,10 +92,6 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
   const [shippingTime, setShippingTime] = useState("")
   const [shippingCost, setShippingCost] = useState("")
 
-  // Shown by the summary step, never saved on a PO.
-  const [jatuhTempo, setJatuhTempo] = useState("")
-  const [berlakuSampai, setBerlakuSampai] = useState("")
-
   const unitNameById = useMemo(() => {
     const m = new Map<number, string>()
     for (const u of unitsData ?? []) m.set(u.id, u.code)
@@ -153,16 +142,24 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
   // Cost follows the days only.
   //
   // Typing an address must not wipe the stored days and cost: every
-  // keystroke before the 20th is a short address. The save guard below
-  // refuses a charge without a valid address instead.
+  // keystroke before the 20th is a short address.
   function changeTime(v: string) {
     setShippingTime(v)
     if (v.trim() === "") setShippingCost("")
   }
 
-  const isAlamatFilled = isValidAddress(shippingAddress)
-  const isWaktuFilled = isAlamatFilled && shippingTime.trim().length > 0
-  const hasContent = products.length > 0 || isAlamatFilled
+  // The quotation's rules: the address is optional until the PO gate, and
+  // past it the PO keeps the address its lines rely on.
+  const addressRequired = po.status === "ON_PROGRESS" && linesNeedAddress(products)
+  const { isAlamatOk, isWaktuFilled, hasContent } = wizardGates({
+    shippingAddress,
+    shippingTime,
+    // A PO has no quotation terms.
+    jatuhTempo: "",
+    berlakuSampai: "",
+    productCount: products.length,
+    addressRequired,
+  })
 
   const currentClient = clientRow ? fromClientRow(clientRow) : undefined
   const editingProduct = products.find((p) => p.id === editingId) ?? null
@@ -187,10 +184,9 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
       toast.error(`Satuan belum dikenali untuk: ${missing.join(", ")}.`)
       return
     }
-    // The server keeps the shipping line only with an address.
-    const hasShipping = shippingTime.trim() !== "" || toNum(shippingCost) > 0
-    if (hasShipping && !isAlamatFilled) {
-      toast.error("Isi alamat pengiriman (min. 20 karakter) sebelum menyimpan pengiriman.")
+    // Qty 0 stays allowed; a negative one is refused.
+    if (countInvalidQty(products, true) > 0) {
+      toast.error(`${PO_QTY_ERROR} Ubah produk yang ditandai sebelum menyimpan.`)
       return
     }
     const shipDays = Number(shippingTime)
@@ -277,7 +273,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
               <button
                 type="button"
                 className={`${ui.btnPrimary} w-[148px] max-sm:w-auto`}
-                disabled={!hydrated || !hasContent || updateMutation.isPending}
+                disabled={!hydrated || !hasContent || !isAlamatOk || updateMutation.isPending}
                 onClick={() => void handleSave()}
               >
                 {updateMutation.isPending ? "Menyimpan..." : "Simpan"}
@@ -369,6 +365,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
                 summaryDpp={summaryDpp}
                 summaryPpn={summaryPpn}
                 onImportProducts={(newProds) => setProducts((prev) => [...prev, ...newProds])}
+                allowZeroQty
               />
             )}
             {step === 2 && (
@@ -379,18 +376,14 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
                 setShippingTime={changeTime}
                 shippingCost={shippingCost}
                 setShippingCost={setShippingCost}
-                isAlamatOk={isAlamatFilled}
-                addressRequired
+                isAlamatOk={isAlamatOk}
+                addressRequired={addressRequired}
                 isWaktuFilled={isWaktuFilled}
                 formatRp={formatRp}
               />
             )}
             {step === 3 && (
               <Step4Summary
-                jatuhTempo={jatuhTempo}
-                setJatuhTempo={setJatuhTempo}
-                berlakuSampai={berlakuSampai}
-                setBerlakuSampai={setBerlakuSampai}
                 currentClient={currentClient}
                 shippingAddress={shippingAddress}
                 shippingTime={shippingTime}
@@ -427,40 +420,13 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
         open={showProductAdd}
         initialData={editingProduct}
         clientId={po.companyClientId}
+        docKind="po"
         onOpenChange={(open) => {
           setShowProductAdd(open)
           if (!open) setEditingId(null)
         }}
         onSuccess={(data) => {
-          const offer = splitOffer(data.kodeImpaNama)
-          const req = splitOffer(data.requestedKodeImpaNama)
-          const fields = {
-            itemId: data.itemId,
-            vendorId: data.vendorId,
-            vendorProductId: data.vendorProductId,
-            nama: offer.nama,
-            kodeImpa: offer.kode,
-            requestedNama: req.nama || offer.nama,
-            requestedKodeImpa: req.kode,
-            vendor: data.namaVendor,
-            jumlah: Number(data.jumlahProduk) || 1,
-            satuan: data.satuan,
-            hargaBeli: Number(data.hargaBeli) || 0,
-            hargaJual: Number(data.hargaJual) || 0,
-          }
-          if (editingProduct) {
-            // Stored fields ride along on the touched line.
-            setProducts((prev) =>
-              prev.map((p) =>
-                p.id === editingProduct.id ? { ...p, ...fields, touched: true } : p,
-              ),
-            )
-          } else {
-            setProducts((prev) => [
-              ...prev,
-              { id: prev.reduce((m, p) => Math.max(m, p.id), 0) + 1, ...fields },
-            ])
-          }
+          setProducts((prev) => upsertPoLine(prev, editingProduct, data))
           setEditingId(null)
         }}
       />

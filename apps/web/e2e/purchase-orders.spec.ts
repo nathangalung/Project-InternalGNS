@@ -89,6 +89,10 @@ test.describe("purchase order detail", () => {
     await expect(page.getByRole("button", { name: "Diskon (5%)" })).toBeVisible()
     await page.getByRole("button", { name: "Lanjut" }).click()
     await page.getByRole("button", { name: "Lanjut" }).click()
+    // The PO keeps its quotation's terms, so the summary asks for none.
+    await expect(page.getByRole("heading", { name: "Ringkasan Klien" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Tenggat Waktu Penawaran" })).toHaveCount(0)
+    await expect(page.locator("main")).not.toContainText("wajib diisi sebelum menyimpan")
     await page.getByRole("button", { name: "Simpan", exact: true }).click()
 
     await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}$`))
@@ -108,7 +112,7 @@ test.describe("purchase order detail", () => {
 
     await page.goto(`/purchase-orders/${q.id}/edit`)
     await page.getByRole("button", { name: "Edit produk 1" }).click()
-    const modal = page.getByRole("dialog", { name: "Edit Produk Quotation" })
+    const modal = page.getByRole("dialog", { name: "Edit Produk PO" })
     await expect(modal.getByLabel("Harga Jual Satuan *")).toHaveValue("100000")
     await modal.getByLabel("Harga Jual Satuan *").fill("120000")
     await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
@@ -137,7 +141,7 @@ test.describe("purchase order detail", () => {
     await page.goto(`/purchase-orders/${q.id}/edit`)
     await expect(page.locator("main")).toContainText(vendor.name)
     await page.getByRole("button", { name: "Edit produk 1" }).click()
-    const modal = page.getByRole("dialog", { name: "Edit Produk Quotation" })
+    const modal = page.getByRole("dialog", { name: "Edit Produk PO" })
     await modal.getByLabel("Nama Vendor *").click()
     await modal.getByLabel("Nama Vendor *").fill(other.name)
     await page.getByRole("option", { name: new RegExp(other.name) }).click()
@@ -161,6 +165,34 @@ test.describe("purchase order detail", () => {
     await page.goto(`/purchase-orders/${q.id}/edit`)
     await expect(page.locator("main")).toContainText(other.name)
     await expect(page.locator("main")).not.toContainText(vendor.name)
+  })
+
+  test("a line kept at qty 0 in the PO editor is saved at 0", async ({ page, seed }) => {
+    const { q, po } = await acceptedPo(seed)
+
+    await page.goto(`/purchase-orders/${q.id}/edit`)
+    await page.getByRole("button", { name: "Edit produk 1" }).click()
+    const modal = page.getByRole("dialog", { name: "Edit Produk PO" })
+    await modal.getByLabel("Jumlah Produk *").fill("0")
+    await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
+    await expect(modal).toBeHidden()
+    // A PO line may stay at 0, so nothing asks to fix it.
+    await expect(page.locator("main").getByText("Jumlah harus")).toHaveCount(0)
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Simpan", exact: true }).click()
+
+    await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}$`))
+    await expect
+      .poll(async () => {
+        const items = await api<PurchaseOrderItemRow[]>("GET", `/purchase-orders/${po.id}/items`)
+        return Number(items.find((it) => it.itemType === "product")?.qty)
+      })
+      .toBe(0)
+    // The editor reopens on the stored 0 without flagging it.
+    await page.goto(`/purchase-orders/${q.id}/edit`)
+    await expect(page.getByRole("button", { name: "Edit produk 1" })).toBeVisible()
+    await expect(page.locator("main").getByText("Jumlah harus")).toHaveCount(0)
   })
 })
 
@@ -535,7 +567,7 @@ test.describe("purchase order address gaps", () => {
     await expect(cost).toHaveValue("75000")
     // Key by key, as a person types: no keystroke wipes the stored charge.
     await page
-      .getByLabel("Alamat Lengkap *")
+      .getByLabel("Alamat Lengkap (Opsional)")
       .pressSequentially("Jl. Pelabuhan Raya No. 12, Tanjung Priok")
     await expect(days).toHaveValue("5")
     await expect(cost).toHaveValue("75000")
@@ -555,6 +587,39 @@ test.describe("purchase order address gaps", () => {
       sellingPrice: "75000.00",
       shippingDays: 5,
     })
+
+    // In progress, the lines rely on the PO address, so it cannot be cleared.
+    await page.goto(`/purchase-orders/${qid}/edit`)
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    const required = page.getByLabel("Alamat Lengkap *")
+    await expect(required).toHaveValue("Jl. Pelabuhan Raya No. 12, Tanjung Priok")
+    await expect(page.getByText("Wajib diisi selama PO diproses")).toBeVisible()
+    await required.fill("")
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await expect(page.getByRole("button", { name: "Simpan", exact: true })).toBeDisabled()
+  })
+
+  test("Ubah PO saves new days on a PO without an address", async ({ page, seed }) => {
+    const qid = await addresslessQuotation(page, seed)
+    const po = await seed.accept(qid)
+
+    await page.goto(`/purchase-orders/${qid}/edit`)
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await expect(page.getByLabel("Alamat Lengkap (Opsional)")).toHaveValue("")
+    const days = page.getByLabel("Waktu Pengiriman (Hari) *")
+    await expect(days).toBeEnabled()
+    await expect(days).toHaveValue("5")
+    await days.fill("8")
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Simpan", exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`/purchase-orders/${qid}$`))
+
+    const lines = await api<
+      { itemType: string; sellingPrice: string; shippingDays?: number; shipDestination?: string }[]
+    >("GET", `/purchase-orders/${po.id}/items`)
+    const ship = lines.find((l) => l.itemType === "shipping")
+    expect(ship).toMatchObject({ sellingPrice: "75000.00", shippingDays: 8 })
+    expect(ship?.shipDestination).toBeUndefined()
   })
 })
 

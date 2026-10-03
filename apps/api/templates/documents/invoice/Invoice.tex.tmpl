@@ -15,6 +15,7 @@
 \usepackage{graphicx}
 \usepackage{longtable}
 \usepackage{array}
+\usepackage{tabularx}
 \usepackage{colortbl}
 \usepackage{xcolor}
 \usepackage{booktabs}
@@ -127,19 +128,20 @@
 \noindent
 \begin{minipage}[t]{0.52\textwidth}
   {\IPartySize
-  \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
+  % Values wrap whole words; tops align.
+  \begin{tabularx}{\linewidth}[t]{@{}l@{\,}l@{\,}>{\RaggedRight\hyphenpenalty=10000\arraybackslash}X@{}}
     To           & : & [[.CompanyName]] \\[1pt]
     NPWP         & : & [[if .CompanyNPWP]][[.CompanyNPWP]][[else]]-[[end]] \\[1pt]
     Address      & : & [[if .CompanyAddress]][[.CompanyAddress]][[else]]-[[end]] \\[1pt]
     Vessel       & : & [[if .VesselName]][[.VesselName]][[else]]-[[end]] \\
-  \end{tabular}
+  \end{tabularx}%
   }
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.44\textwidth}
   \raggedleft
   {\IPartySize
-  \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
+  \begin{tabular}[t]{@{}l@{\,}l@{\,}l@{}}
     Invoice No   & : & [[.InvoiceNo]] \\[1pt]
     PO No        & : & [[.PONo]] \\[1pt]
     PO Date      & : & [[.PODate]] \\[1pt]

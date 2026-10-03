@@ -222,11 +222,13 @@ export async function updateRequest(
   quotationId: number,
   requestId: number,
   input: QuotationItemRequestUpdateInput,
+  rowVersion: number,
 ): Promise<QuotationItemRequestRow> {
   return apiRequest<QuotationItemRequestRow>({
     path: `/quotations/${quotationId}/requests/${requestId}`,
     method: "PUT",
     body: input,
+    headers: { "If-Match": String(rowVersion) },
   })
 }
 

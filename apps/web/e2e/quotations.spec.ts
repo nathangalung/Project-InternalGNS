@@ -112,6 +112,9 @@ test.describe("quotation wizard", () => {
   test("a client added inside the wizard is the one selected", async ({ page, seed }) => {
     const name = seed.name("Klien Wizard")
     await page.goto("/quotations/add")
+    const crumbs = page.getByRole("navigation", { name: "Breadcrumb" })
+    await expect(crumbs.locator('[aria-current="page"]')).toHaveText("Tambah Quotation")
+    await expect(crumbs.locator('[aria-hidden="true"]')).toHaveCount(1)
     await page.getByRole("button", { name: "Tambah Klien Baru" }).click()
     const modal = page.getByRole("dialog", { name: "Tambah Klien" })
     await modal.getByLabel("Nama Perusahaan *").fill(name)

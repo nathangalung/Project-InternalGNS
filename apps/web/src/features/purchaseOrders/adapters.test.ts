@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest"
+import type { ProductAddFormData } from "@/features/items/ProductAdd/helpers"
 import { formatRupiah } from "@/lib/format"
 import type { PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
 import {
   detailsChanged,
   linesMissingUnit,
+  linesNeedAddress,
   lineToInput,
   loadFailureMessage,
   type PoEditLine,
@@ -12,6 +14,7 @@ import {
   poItemsToShipping,
   poLinesToEdit,
   poRowFromBackend,
+  upsertPoLine,
 } from "./adapters"
 
 const line = (over: Partial<PurchaseOrderItemRow>): PurchaseOrderItemRow => ({
@@ -234,6 +237,51 @@ describe("edit wizard round trip", () => {
   })
 })
 
+describe("upsertPoLine", () => {
+  const [stored] = poLinesToEdit(
+    [line({ id: 7, offeredItemId: 42, unitId: 2, unitCode: "MTR", costPrice: "60.00" })],
+    () => "",
+  )
+  const form: ProductAddFormData = {
+    requestedKodeImpaNama: "",
+    kodeImpaNama: "123456 - Rope",
+    jumlahProduk: "0",
+    satuan: "MTR",
+    namaVendor: "PT Laut",
+    hargaBeli: "60",
+    hargaJual: "100",
+    itemId: 42,
+    vendorId: 7,
+    vendorProductId: 700,
+  }
+
+  // A PO line may be kept at qty 0.
+  it("keeps a qty 0 edit at 0 and sends it so", () => {
+    const [edited] = upsertPoLine([stored], stored, form)
+    expect(edited).toMatchObject({ id: 7, jumlah: 0, touched: true, source: stored.source })
+    expect(lineToInput(edited, units).qty).toBe("0")
+  })
+
+  it("keeps a negative qty so the editor can flag it", () => {
+    const [edited] = upsertPoLine([stored], stored, { ...form, jumlahProduk: "-1" })
+    expect(edited.jumlah).toBe(-1)
+  })
+
+  it("leaves the other lines alone", () => {
+    const other: PoEditLine = { ...stored, id: 8 }
+    const out = upsertPoLine([stored, other], stored, form)
+    expect(out[1]).toBe(other)
+  })
+
+  it("appends a new line untouched and without a source", () => {
+    const out = upsertPoLine([stored], null, { ...form, jumlahProduk: "4" })
+    expect(out).toHaveLength(2)
+    expect(out[1]).toMatchObject({ id: 8, jumlah: 4, nama: "Rope", kodeImpa: "123456" })
+    expect(out[1].source).toBeUndefined()
+    expect(out[1].touched).toBeUndefined()
+  })
+})
+
 describe("linesMissingUnit", () => {
   const [legacy] = poLinesToEdit([line({ id: 1, itemName: "Legacy" })], () => "")
   const [known] = poLinesToEdit(
@@ -252,6 +300,20 @@ describe("linesMissingUnit", () => {
   it("flags a new line with no unit", () => {
     const fresh = { ...known, source: undefined, satuan: "" }
     expect(linesMissingUnit([fresh], units)).toEqual(["Known"])
+  })
+})
+
+describe("linesNeedAddress", () => {
+  const [own] = poLinesToEdit([line({ id: 1, shipDestination: "Gudang B" })], () => "")
+  const [bare] = poLinesToEdit([line({ id: 2, shipDestination: "  " })], () => "")
+
+  it("lets lines that carry their own destination pass", () => {
+    expect(linesNeedAddress([own])).toBe(false)
+  })
+
+  it("flags a stored line with a blank destination or a new line", () => {
+    expect(linesNeedAddress([own, bare])).toBe(true)
+    expect(linesNeedAddress([own, { ...own, source: undefined }])).toBe(true)
   })
 })
 

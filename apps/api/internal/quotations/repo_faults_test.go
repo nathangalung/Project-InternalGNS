@@ -58,10 +58,10 @@ func TestRepo_QueryFailuresPropagate(t *testing.T) {
 			return err
 		}},
 		{"update request", func() error {
-			_, err := r.UpdateItemRequest(ctx, 1, 1, quotations.ItemRequestUpdate{LineNo: 1, RequestText: "X"}, 1)
+			_, err := r.UpdateItemRequest(ctx, 1, 1, 0, quotations.ItemRequestUpdate{LineNo: 1, RequestText: "X"}, 1)
 			return err
 		}},
-		{"delete request", func() error { return r.DeleteItemRequest(ctx, 1, 1) }},
+		{"delete request", func() error { return r.DeleteItemRequest(ctx, 1, 1, 1) }},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

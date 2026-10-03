@@ -155,10 +155,10 @@ func TestHandler_ItemRequests_Flow(t *testing.T) {
 	assert.Equal(t, created.ID, rows[0].ID)
 
 	rid := strconv.FormatInt(created.ID, 10)
-	ures := doJSON(t, srv, http.MethodPut, base+"/"+rid, map[string]any{
+	ures := doJSONWithHeaders(t, srv, http.MethodPut, base+"/"+rid, map[string]any{
 		"lineNo": 1, "requestText": "LAMP LED 12W COOL WHITE",
 		"matchedItemId": seedItemID, "matchStatus": "matched", "sourceType": "manual",
-	})
+	}, map[string]string{"If-Match": "0"})
 	require.Equal(t, http.StatusOK, ures.StatusCode)
 	var updated quotations.ItemRequestRow
 	decodeBody(t, ures, &updated)
@@ -205,7 +205,7 @@ func TestHandler_ItemRequests_Errors(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			res := doRaw(t, c.method, srv.URL+c.path, c.body, nil)
+			res := doRaw(t, c.method, srv.URL+c.path, c.body, map[string]string{"If-Match": "0"})
 			e := problemOf(t, res)
 			assert.Equal(t, c.want, res.StatusCode)
 			for _, f := range c.wantFields {

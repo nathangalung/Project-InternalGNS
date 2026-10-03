@@ -114,6 +114,10 @@ list.
 | DELETE | `/quotations/{id}/lines/{lineId}` | `DeleteLine` | `fn_quotation_delete_line` |
 | PUT | `/quotations/{id}/header` | `UpdateHeader` | `fn_quotation_update_header` (claim held; replaces every header field) |
 | GET | `/quotations/{id}/events` | `Events` | server-sent events fed by `LISTEN quotation_events`, plus `resync` after the listener reconnects |
+| GET | `/quotations/{id}/requests` | `ListItemRequests` | `quotations.qir_list` |
+| POST | `/quotations/{id}/requests` | `CreateItemRequest` | `fn_quotation_request_add` (draft) |
+| PUT | `/quotations/{id}/requests/{rid}` | `UpdateItemRequest` | `fn_quotation_request_update` (draft; `If-Match` required, 400 without it, 409 `version_conflict` when stale) |
+| DELETE | `/quotations/{id}/requests/{rid}` | `DeleteItemRequest` | `fn_quotation_request_delete` (draft; 409 `edit_locked` while another user holds a linked line) |
 
 `POST /quotations` answers `201` with `{"id": <quotation id>}`. The allowed
 status moves are in the detail response (`allowedTransitions`, `canRevise`);

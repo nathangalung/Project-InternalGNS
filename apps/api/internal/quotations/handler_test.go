@@ -468,20 +468,20 @@ func TestHandler_QIR_LockedParentConflicts(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			res := doJSON(t, srv, tc.method, tc.path, tc.body)
+			res := doJSONWithHeaders(t, srv, tc.method, tc.path, tc.body, map[string]string{"If-Match": "0"})
 			var e httperr.Error
 			decodeBody(t, res, &e)
 			assert.Equal(t, http.StatusConflict, res.StatusCode)
 			assert.Equal(t, http.StatusConflict, e.Status)
 			assert.Contains(t, e.Detail, "status saat ini Dikirim")
-			assert.Contains(t, e.Detail, "hanya dapat diubah saat quotation berstatus Draf")
+			assert.Contains(t, e.Detail, "Hanya quotation berstatus Draf yang dapat diubah")
 		})
 	}
 }
 
 // Missing QIR parent is 404.
-// The same trigger raises P0011 for a missing parent, which must surface as
-// 404 rather than the pre-00046 422.
+// fn_quotation_lock_draft raises P0011 for a missing parent, which must
+// surface as 404 rather than the pre-00046 422.
 func TestHandler_QIR_UnknownParentNotFound(t *testing.T) {
 	srv, _ := resetServer(t)
 

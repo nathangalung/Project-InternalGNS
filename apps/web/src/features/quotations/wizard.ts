@@ -42,15 +42,19 @@ export type WizardGates = {
 // Step gating for both wizards.
 //
 // The shipping address is optional on a quotation and required at the PO,
-// so only a started one must be valid. Days need a valid address.
+// so only a started one must be valid, unless the caller requires one. Days
+// need a valid address.
 export function wizardGates(input: {
   shippingAddress: string
   shippingTime: string
   jatuhTempo: string
   berlakuSampai: string
   productCount: number
+  addressRequired?: boolean
 }): WizardGates {
-  const isAlamatOk = optionalAddressError(input.shippingAddress) === null
+  const isAlamatOk = input.addressRequired
+    ? isValidAddress(input.shippingAddress)
+    : optionalAddressError(input.shippingAddress) === null
   return {
     isAlamatOk,
     isWaktuFilled: isAlamatOk && input.shippingTime.trim().length > 0,
@@ -126,9 +130,26 @@ export function upsertProduct(
   editing: ProductItem | null,
   data: ProductAddFormData,
 ): ProductItem[] {
+  const fields = productFields(data)
+  if (editing) {
+    return products.map((p) => (p.id === editing.id ? { ...p, ...fields } : p))
+  }
+  return [...products, { id: nextLineId(products), ...fields }]
+}
+
+// One past the highest id.
+export function nextLineId(products: { id: number }[]): number {
+  return products.reduce((m, p) => Math.max(m, p.id), 0) + 1
+}
+
+// Line fields from the form.
+//
+// The qty is kept as typed, 0 and negatives included, so each editor flags
+// what its own server rule refuses.
+export function productFields(data: ProductAddFormData): Omit<ProductItem, "id" | "noOffer"> {
   const offer = splitOffer(data.kodeImpaNama)
   const requested = splitOffer(data.requestedKodeImpaNama)
-  const fields = {
+  return {
     itemId: data.itemId,
     requestedItemId: data.requestedItemId,
     vendorId: data.vendorId,
@@ -143,11 +164,6 @@ export function upsertProduct(
     hargaBeli: Number(data.hargaBeli) || 0,
     hargaJual: Number(data.hargaJual) || 0,
   }
-  if (editing) {
-    return products.map((p) => (p.id === editing.id ? { ...p, ...fields } : p))
-  }
-  const nextId = products.reduce((m, p) => Math.max(m, p.id), 0) + 1
-  return [...products, { id: nextId, ...fields }]
 }
 
 // Unit ids by upper-case code.

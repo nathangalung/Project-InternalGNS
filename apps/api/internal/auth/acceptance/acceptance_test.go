@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -205,16 +207,54 @@ func (s *scenarioState) logInUnknown() error {
 }
 
 // logInUnknownFromOneAddress repeats one unknown email.
-// An unknown email pays no backoff, so the limiter is all that answers.
+// An unknown email pays the backoff an account would, so ten misses in a
+// row would wait out almost eight seconds. All but the last go out at once,
+// overlapping their delays; the limiter counts each on arrival, so the last
+// meets it.
 func (s *scenarioState) logInUnknownFromOneAddress(n int) error {
 	ip := nextIP()
 	email := fmt.Sprintf("nobody_%d@example.test", time.Now().UnixNano())
-	for range n {
-		if err := s.loginAs(email, rightPassword, ip); err != nil {
-			return err
-		}
+	body, err := json.Marshal(auth.LoginRequest{Email: email, Password: rightPassword})
+	if err != nil {
+		return err
 	}
-	return nil
+	var (
+		wg   sync.WaitGroup
+		mu   sync.Mutex
+		errs []error
+	)
+	for range n - 1 {
+		wg.Go(func() {
+			if err := s.postBlind("/api/v1/auth/login", ip, body); err != nil {
+				mu.Lock()
+				errs = append(errs, err)
+				mu.Unlock()
+			}
+		})
+	}
+	wg.Wait()
+	if err := errors.Join(errs...); err != nil {
+		return err
+	}
+	return s.loginAs(email, rightPassword, ip)
+}
+
+// postBlind posts, discarding the answer.
+// It leaves the scenario's last response alone, so goroutines may share it.
+func (s *scenarioState) postBlind(path, ip string, body []byte) error {
+	req, err := http.NewRequest(http.MethodPost, s.srv.URL+path, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Forwarded-For", ip)
+	res, err := s.srv.Client().Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	_, err = io.Copy(io.Discard, res.Body)
+	return err
 }
 
 // colleaguesLogIn shares one office address.
@@ -541,7 +581,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the account logs in with the password "([^"]+)"$`, state.logIn)
 		sc.Step(`^the account logged in again$`, state.loggedInAgain)
 		sc.Step(`^someone logs in as an unknown email$`, state.logInUnknown)
-		sc.Step(`^someone logs in as one unknown email (\d+) times from one address$`, state.logInUnknownFromOneAddress)
+		sc.Step(`^someone logs in as one unknown email (\d+) times from one address, all but the last at once$`, state.logInUnknownFromOneAddress)
 		sc.Step(`^(\d+) colleagues log in with the right password from one address$`, state.colleaguesLogIn)
 		sc.Step(`^the account has failed to log in (\d+) times$`, state.failLogins)
 		sc.Step(`^the account is logged in$`, state.loggedIn)

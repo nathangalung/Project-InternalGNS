@@ -137,57 +137,26 @@ FROM quotation_item_requests
 WHERE id = $1;
 
 -- name: quotations.qir_create
-INSERT INTO quotation_item_requests (
-    quotation_id, line_no, request_text, request_impa,
-    requested_qty, requested_uom,
-    matched_item_id, match_status, source_type, source_ref, notes,
-    created_by, updated_by
-) VALUES (
-    $1, $2, $3, $4,
-    $5::numeric(15,3), $6,
-    $7, COALESCE($8, 'pending'), COALESCE($9, 'manual'), $10, $11,
-    $12, $12
-)
-RETURNING id, quotation_id, line_no, request_text, request_impa,
-          requested_qty::text, requested_uom,
-          matched_item_id, match_status, source_type, source_ref, notes,
-          reviewed_by, reviewed_at, row_version,
-          created_by, updated_by, created_at, updated_at;
+-- Draft only; open editors hear of it.
+SELECT id, quotation_id, line_no, request_text, request_impa,
+       requested_qty::text, requested_uom,
+       matched_item_id, match_status, source_type, source_ref, notes,
+       reviewed_by, reviewed_at, row_version,
+       created_by, updated_by, created_at, updated_at
+FROM fn_quotation_request_add($1, $2, $3, $4, $5::numeric, $6, $7, $8, $9, $10, $11, $12);
 
 -- name: quotations.qir_update
-UPDATE quotation_item_requests SET
-    line_no         = $2,
-    request_text    = $3,
-    request_impa    = $4,
-    requested_qty   = $5::numeric(15,3),
-    requested_uom   = $6,
-    matched_item_id = $7,
-    match_status    = $8::varchar(20),
-    source_type     = $9::varchar(20),
-    source_ref      = $10,
-    notes           = $11,
-    reviewed_by     = CASE
-        WHEN $8::varchar(20) <> 'pending' AND reviewed_by IS NULL THEN $12
-        ELSE reviewed_by
-    END,
-    reviewed_at     = CASE
-        WHEN $8::varchar(20) <> 'pending' AND reviewed_at IS NULL THEN NOW()
-        ELSE reviewed_at
-    END,
-    updated_by      = $12,
-    row_version     = row_version + 1
-WHERE id = $1 AND quotation_id = $13
-RETURNING id, quotation_id, line_no, request_text, request_impa,
-          requested_qty::text, requested_uom,
-          matched_item_id, match_status, source_type, source_ref, notes,
-          reviewed_by, reviewed_at, row_version,
-          created_by, updated_by, created_at, updated_at;
+-- $3 is the If-Match version; a stale one raises P0010.
+SELECT id, quotation_id, line_no, request_text, request_impa,
+       requested_qty::text, requested_uom,
+       matched_item_id, match_status, source_type, source_ref, notes,
+       reviewed_by, reviewed_at, row_version,
+       created_by, updated_by, created_at, updated_at
+FROM fn_quotation_request_update($1, $2, $3, $4, $5, $6, $7::numeric, $8, $9, $10, $11, $12, $13, $14);
 
 -- name: quotations.qir_delete
-DELETE FROM quotation_item_requests
-WHERE id = $1 AND quotation_id = $2
-RETURNING id;
-
+-- Refused while another user holds a line linked to the request.
+SELECT fn_quotation_request_delete($1, $2, $3);
 
 -- name: quotations.update_contact
 -- Only a draft or an accepted quotation takes another contact: the draft in

@@ -13,7 +13,7 @@ type Step3ShippingProps = {
   setShippingCost: (s: string) => void
   // Empty or valid; the address is optional
   isAlamatOk: boolean
-  // The PO asks for the address
+  // A PO in progress asks for it
   addressRequired?: boolean
   isWaktuFilled: boolean
   formatRp: (n: number) => string
@@ -62,7 +62,7 @@ export default function Step3Shipping({
           <textarea
             id={`${id}-alamat`}
             aria-invalid={addressError ? true : undefined}
-            aria-describedby={addressError || !addressRequired ? `${id}-alamat-hint` : undefined}
+            aria-describedby={`${id}-alamat-hint`}
             placeholder="Masukkan alamat pengiriman secara detail (min. 20 karakter)..."
             value={shippingAddress}
             onChange={(e) => setShippingAddress(e.target.value)}
@@ -74,11 +74,11 @@ export default function Step3Shipping({
               {addressError}
             </span>
           ) : (
-            !addressRequired && (
-              <span id={`${id}-alamat-hint`} className="mt-1 block text-xs text-dark-600">
-                Wajib diisi sebelum PO diproses
-              </span>
-            )
+            <span id={`${id}-alamat-hint`} className="mt-1 block text-xs text-dark-600">
+              {addressRequired
+                ? "Wajib diisi selama PO diproses"
+                : "Wajib diisi sebelum PO diproses"}
+            </span>
           )}
         </div>
 

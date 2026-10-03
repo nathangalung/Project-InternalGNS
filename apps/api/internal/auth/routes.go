@@ -10,7 +10,6 @@ import (
 	"mime"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -101,8 +100,8 @@ var errLoginTooLarge = errors.New("login body too large")
 // It peeks the JSON body and hands it on unread to the handler, decoding
 // the first value the way httpx.DecodeJSON does, so trailing bytes cannot
 // move a login to another bucket. A body past loginBodyMax is refused. The
-// key holds a digest of the trimmed, lower-cased email, the form the user
-// lookup matches, never the address itself. A body it cannot read keys on
+// key holds a digest of the email in the form Login looks it up
+// (normalizeEmail), never the address itself. A body it cannot read keys on
 // the address alone.
 func loginAccountKey(r *http.Request) (string, error) {
 	ip, _ := clientIPKey(r)
@@ -120,7 +119,7 @@ func loginAccountKey(r *http.Request) (string, error) {
 	if readable := err == nil && json.NewDecoder(bytes.NewReader(raw)).Decode(&body) == nil; !readable {
 		return ip, nil
 	}
-	sum := sha256.Sum256([]byte(strings.ToLower(strings.TrimSpace(body.Email))))
+	sum := sha256.Sum256([]byte(normalizeEmail(body.Email)))
 	return ip + "|" + hex.EncodeToString(sum[:]), nil
 }
 

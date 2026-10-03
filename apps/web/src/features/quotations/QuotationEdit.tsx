@@ -556,10 +556,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         )}
         {step === 4 && (
           <Step4Summary
-            jatuhTempo={jatuhTempo}
-            setJatuhTempo={setJatuhTempo}
-            berlakuSampai={berlakuSampai}
-            setBerlakuSampai={setBerlakuSampai}
+            terms={{ jatuhTempo, setJatuhTempo, berlakuSampai, setBerlakuSampai }}
             currentClient={currentClient}
             shippingAddress={shippingAddress}
             shippingTime={shippingTime}

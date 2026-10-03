@@ -1,6 +1,7 @@
 import type { Browser, Page } from "@playwright/test"
 import { savedTokens } from "./fixtures"
 import { e2eUsers } from "./support/env"
+import { api } from "./support/sales"
 import { expect, test } from "./support/seed"
 import { signedInContext } from "./support/session"
 import { xlsx } from "./support/xlsx"
@@ -262,5 +263,40 @@ test.describe("live quotation editing", () => {
     await expect(page.locator("main")).toContainText("PRODUK 2")
     for (let i = 0; i < 2; i++) await page.getByRole("button", { name: "Lanjut" }).click()
     await expect(page.getByLabel(/BERLAKU SAMPAI/)).toHaveValue("45")
+  })
+
+  test("requests changed elsewhere show up in the open card", async ({ page, seed }) => {
+    const client = await seed.client()
+    const item = await seed.item()
+    const q = await seed.quotation({ client, lines: [{ item, qty: 1, price: 25_000 }] })
+    const text = `${seed.prefix} tali tambang`
+    const path = `/quotations/${q.id}/requests`
+
+    await page.goto(`/quotations/${q.id}/edit`)
+    await toStep(page, 2)
+    const expand = page.getByRole("button", { name: "Tampilkan" })
+    if (await expand.isVisible()) await expand.click()
+    await expect(page.getByText("(0 permintaan)")).toBeVisible()
+
+    // Another user adds, saves and deletes a request.
+    const added = await api<{ id: number; rowVersion: number }>("POST", path, {
+      lineNo: 1,
+      requestText: text,
+    })
+    await expect(page.getByRole("row", { name: new RegExp(text) })).toBeVisible()
+    const body = {
+      lineNo: 1,
+      requestText: `${text} 16mm`,
+      matchStatus: "pending",
+      sourceType: "manual",
+    }
+    await api("PUT", `${path}/${added.id}`, body, { "If-Match": String(added.rowVersion) })
+    await expect(page.getByRole("row", { name: new RegExp(`${text} 16mm`) })).toBeVisible()
+    // A save from the old version is refused, not merged.
+    await expect(
+      api("PUT", `${path}/${added.id}`, body, { "If-Match": String(added.rowVersion) }),
+    ).rejects.toMatchObject({ status: 409 })
+    await api("DELETE", `${path}/${added.id}`)
+    await expect(page.getByText("(0 permintaan)")).toBeVisible()
   })
 })

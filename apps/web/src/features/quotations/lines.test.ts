@@ -7,9 +7,12 @@ import {
   isLineComplete,
   isValidQty,
   lineGaps,
+  PO_QTY_ERROR,
   parseQty,
+  QTY_ERROR,
   qtyErrorIndexes,
   qtyErrorsById,
+  qtyIssue,
   requestDiffers,
   requestedCode,
 } from "./lines"
@@ -35,6 +38,25 @@ describe("isValidQty rule", () => {
 
   it("counts the bad lines", () => {
     expect(countInvalidQty([{ jumlah: 1 }, { jumlah: 0 }, { jumlah: -3 }])).toBe(2)
+  })
+
+  it("counts only negatives on a PO", () => {
+    expect(countInvalidQty([{ jumlah: 1 }, { jumlah: 0 }, { jumlah: -3 }], true)).toBe(1)
+  })
+})
+
+describe("qtyIssue rule", () => {
+  // A PO line may stay at qty 0; a quotation line may not.
+  it.each<[number, boolean, string | undefined]>([
+    [3, false, undefined],
+    [0, false, QTY_ERROR],
+    [-1, false, QTY_ERROR],
+    [3, true, undefined],
+    [0, true, undefined],
+    [-1, true, PO_QTY_ERROR],
+    [Number.NaN, true, PO_QTY_ERROR],
+  ])("qty %d, zero allowed %s", (qty, allowZero, want) => {
+    expect(qtyIssue(qty, allowZero)).toBe(want)
   })
 })
 

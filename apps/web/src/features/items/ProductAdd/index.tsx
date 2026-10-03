@@ -51,6 +51,13 @@ type ProductAddProps = {
   clientId?: number
   // A quotation draft may stay unpriced
   allowIncomplete?: boolean
+  // Document the line belongs to
+  docKind?: "quotation" | "po"
+}
+
+const DIALOG_TITLE = {
+  quotation: { add: "Tambah Produk ke Quotation", edit: "Edit Produk Quotation" },
+  po: { add: "Tambah Produk ke PO", edit: "Edit Produk PO" },
 }
 
 // Product creation orchestrator.
@@ -61,6 +68,7 @@ export default function ProductAdd({
   initialData,
   clientId,
   allowIncomplete = false,
+  docKind = "quotation",
 }: ProductAddProps) {
   const [form, setForm] = useState<ProductAddFormData>(INITIAL_FORM)
   const [openDropdown, setOpenDropdown] = useState<DropdownKey | null>(null)
@@ -390,7 +398,7 @@ export default function ProductAdd({
     <>
       <div className={showProductNew || showVendorNew ? "hidden" : ""}>
         <Modal
-          title={initialData ? "Edit Produk Quotation" : "Tambah Produk ke Quotation"}
+          title={DIALOG_TITLE[docKind][initialData ? "edit" : "add"]}
           onClose={handleCancel}
           footer={
             <>
@@ -437,6 +445,7 @@ export default function ProductAdd({
             closeIfMatch={closeIfMatch}
             isProductFilled={isProductFilled}
             isSatuanFilled={isSatuanFilled}
+            minQty={docKind === "po" ? 0 : 1}
             onAddProductNew={() => {
               setOpenDropdown(null)
               setShowProductNew(true)

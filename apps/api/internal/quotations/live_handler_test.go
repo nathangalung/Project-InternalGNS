@@ -297,6 +297,93 @@ func TestHandler_EventsStream(t *testing.T) {
 	}
 }
 
+// Request changes reach editors.
+// Adding, saving and deleting a Permintaan each send a requests notice.
+func TestHandler_EventsStream_ItemRequests(t *testing.T) {
+	restore := quotations.SetStreamTiming(time.Minute, time.Hour)
+	t.Cleanup(restore)
+	hub := live.NewHub()
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	go live.Listen(ctx, testutil.Pool(t), hub, 10*time.Millisecond)
+	srv := liveServer(t, hub)
+	id, _ := liveDraftOver(t, srv)
+	base := "/quotations/" + strconv.FormatInt(id, 10)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL+base+"/events", nil)
+	require.NoError(t, err)
+	res, err := srv.Client().Do(req)
+	require.NoError(t, err)
+	defer res.Body.Close()
+	stream := &streamReader{sc: bufio.NewScanner(res.Body)}
+	ev, _ := stream.next(t)
+	require.Equal(t, "ready", ev)
+	events := make(chan [2]string, 8)
+	go func() {
+		for {
+			e, d := stream.next(t)
+			if e == "" {
+				return
+			}
+			if e != "ping" {
+				events <- [2]string{e, d}
+			}
+		}
+	}()
+	want := live.Event{QuotationID: id, Kind: "requests", UserID: seedUserID}
+	expect := func(t *testing.T) {
+		t.Helper()
+		select {
+		case e := <-events:
+			assert.Equal(t, "requests", e[0])
+			var payload live.Event
+			require.NoError(t, json.Unmarshal([]byte(e[1]), &payload))
+			assert.Equal(t, want, payload)
+		case <-time.After(5 * time.Second):
+			t.Fatal("no requests event on the stream")
+		}
+	}
+
+	// LISTEN starts asynchronously; add requests until one is heard.
+	var created quotations.ItemRequestRow
+	deadline := time.After(5 * time.Second)
+	for heard, line := false, int32(1); !heard; line++ {
+		r := doJSON(t, srv, http.MethodPost, base+"/requests",
+			quotations.ItemRequestCreate{LineNo: line, RequestText: "LAMP LED 12W"})
+		require.Equal(t, http.StatusCreated, r.StatusCode)
+		decodeBody(t, r, &created)
+		select {
+		case e := <-events:
+			assert.Equal(t, "requests", e[0])
+			heard = true
+		case <-time.After(100 * time.Millisecond):
+		case <-deadline:
+			t.Fatal("no event on the stream")
+		}
+	}
+	// Late notices from the probe loop are drained.
+	for drained := false; !drained; {
+		select {
+		case <-events:
+		case <-time.After(300 * time.Millisecond):
+			drained = true
+		}
+	}
+
+	rid := strconv.FormatInt(created.ID, 10)
+	r := doJSONWithHeaders(t, srv, http.MethodPut, base+"/requests/"+rid, quotations.ItemRequestUpdate{
+		LineNo: created.LineNo, RequestText: "LAMP LED 18W", MatchStatus: "pending", SourceType: "manual",
+	}, map[string]string{"If-Match": "0"})
+	r.Body.Close()
+	require.Equal(t, http.StatusOK, r.StatusCode)
+	expect(t)
+
+	r = doJSON(t, srv, http.MethodDelete, base+"/requests/"+rid, nil)
+	r.Body.Close()
+	require.Equal(t, http.StatusNoContent, r.StatusCode)
+	expect(t)
+}
+
 // Streams ping, then end.
 func TestHandler_EventsStreamPingsAndEnds(t *testing.T) {
 	restore := quotations.SetStreamTiming(150*time.Millisecond, 40*time.Millisecond)

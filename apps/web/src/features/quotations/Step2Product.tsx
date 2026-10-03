@@ -7,7 +7,7 @@ import { clampPage, pageCount } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { parseRfq } from "./api"
 import { importedLines, importSummary } from "./import"
-import { isValidQty, lineGaps, QTY_ERROR, requestDiffers, requestedCode } from "./lines"
+import { lineGaps, qtyIssue, requestDiffers, requestedCode } from "./lines"
 import QuotationReviewCard from "./QuotationReviewCard"
 import { countUnknownUnits, type ProductItem, unitIssue } from "./wizard"
 import { qe, qep } from "./wizard-styles"
@@ -59,6 +59,8 @@ type Step2ProductProps = {
   editProduct?: (p: ProductItem) => void
   // Editor names of lines other users hold
   lockedBy?: Record<number, string>
+  // A PO line may stay at qty 0
+  allowZeroQty?: boolean
 }
 
 export default function Step2Product({
@@ -89,6 +91,7 @@ export default function Step2Product({
   toggleNoOffer,
   editProduct,
   lockedBy = {},
+  allowZeroQty = false,
 }: Step2ProductProps) {
   // No unit warnings before the list loads
   const unitsReady = unitIdByCode.size > 0
@@ -308,7 +311,7 @@ export default function Step2Product({
                 const requestNama = p.requestedNama || p.nama
                 const requestKode = requestedCode(p)
                 const isDifferent = requestDiffers(p)
-                const qtyError = qtyErrors[p.id] ?? (isValidQty(p.jumlah) ? undefined : QTY_ERROR)
+                const qtyError = qtyErrors[p.id] ?? qtyIssue(p.jumlah, allowZeroQty)
                 const unitError = unitsReady ? unitIssue(p.satuan, unitIdByCode) : null
                 // Only a quotation has a send rule to fill in for
                 const gaps = toggleNoOffer ? lineGaps(p) : []

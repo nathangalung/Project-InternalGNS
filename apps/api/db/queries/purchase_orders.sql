@@ -32,9 +32,10 @@ SELECT po.id,
 FROM purchase_orders po
 JOIN quotations q ON q.id = po.quotation_id
 JOIN company_client cc ON cc.id = po.company_client_id
--- Totals per paged row through idx_po_items_po. OFFSET 0 keeps the planner
--- from flattening this into a join that aggregates every PO line on each
--- page load; the count keeps the plain join, which it drops when unused.
+-- Totals per paged row through the (po_id, line_number) key. OFFSET 0
+-- keeps the planner from flattening this into a join that aggregates every
+-- PO line on each page load; the count keeps the plain join, which it drops
+-- when unused.
 LEFT JOIN LATERAL (SELECT * FROM v_po_totals v WHERE v.po_id = po.id OFFSET 0) t ON TRUE
 WHERE 1=1;
 

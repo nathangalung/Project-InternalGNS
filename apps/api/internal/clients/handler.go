@@ -148,11 +148,15 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
-	if msg := validate.ClientNPWP(req.CountryCode, req.NPWP); msg != "" {
+	country, ok := h.updateCountry(w, r, id, req)
+	if !ok {
+		return
+	}
+	if msg := validate.ClientNPWP(country, req.NPWP); msg != "" {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"npwp": msg}))
 		return
 	}
-	req.NPWP = validate.StoredNPWP(req.CountryCode, req.NPWP)
+	req.NPWP = validate.StoredNPWP(country, req.NPWP)
 
 	number, ok := normalizeNumber(req.Number)
 	if !ok {
@@ -175,6 +179,25 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, c)
+}
+
+// updateCountry is the country saved.
+// clients.update keeps the stored country when the body sends none, so the
+// NPWP is judged against that one; ok is false once a problem is written.
+func (h *Handler) updateCountry(w http.ResponseWriter, r *http.Request, id int64, req UpdateClientRequest) (string, bool) {
+	if req.CountryCode != "" || req.NPWP == nil || strings.TrimSpace(*req.NPWP) == "" {
+		return req.CountryCode, true
+	}
+	stored, err := h.repo.GetByID(r.Context(), id)
+	if errors.Is(err, ErrNotFound) {
+		httperr.Render(w, httperr.NotFound("client not found"))
+		return "", false
+	}
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return "", false
+	}
+	return stored.CountryCode, true
 }
 
 // Summary handles GET /clients/summary

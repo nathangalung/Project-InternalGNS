@@ -371,10 +371,6 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.Unprocessable(fields))
 		return
 	}
-	if chargeWithoutAddress(req) {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"shippingAddress": shippingAddressRequired}))
-		return
-	}
 	actor := deps.CurrentUserID(r.Context())
 	newVersion, err := h.repo.UpdateItems(r.Context(), id, req, actor, ifMatch)
 	if err != nil {
@@ -508,8 +504,6 @@ func validateFile(req UpdateFileRequest) map[string]string {
 	return fields
 }
 
-const shippingAddressRequired = "Alamat pengiriman wajib diisi bila ada biaya pengiriman."
-
 // validateItemNumbers checks edit numbers.
 // A qty 0 line stays allowed and a blank value keeps the database default;
 // a sent harga jual must be above zero, as fn_update_po_items demands.
@@ -536,18 +530,4 @@ func validateItemNumbers(req UpdateItemsRequest) map[string]string {
 		f.Add("shippingCost", validate.NonNegative("Biaya pengiriman", *req.ShippingCost))
 	}
 	return f.Result()
-}
-
-// chargeWithoutAddress spots a dropped charge.
-// fn_update_po_items writes the shipping line only with an address, so a
-// positive cost sent without one would be lost silently.
-func chargeWithoutAddress(req UpdateItemsRequest) bool {
-	if req.ShippingCost == nil {
-		return false
-	}
-	cost, err := strconv.ParseFloat(strings.TrimSpace(*req.ShippingCost), 64)
-	if err != nil || cost <= 0 {
-		return false
-	}
-	return req.ShippingAddress == nil || strings.TrimSpace(*req.ShippingAddress) == ""
 }

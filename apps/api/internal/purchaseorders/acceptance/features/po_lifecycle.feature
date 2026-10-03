@@ -101,11 +101,12 @@ Feature: Purchase order lifecycle
     When the user edits PO items with discount "0" and selling price "100000"
     Then the PO is refused as locked with "PO yang sudah dikirim atau dibatalkan tidak dapat diubah."
 
-  Scenario: A shipping charge without an address is refused on the field
+  Scenario: A shipping charge without an address is kept
     Given an accepted quotation
     When the user edits PO items with a shipping charge of "75000" and no address
-    Then the response status is 422
-    And the field "shippingAddress" says "Alamat pengiriman wajib diisi bila ada biaya pengiriman."
+    Then the response status is 200
+    When the user lists PO items
+    Then the shipping line charges "75000"
 
   Scenario: Edited PO price flows into invoice
     Given an accepted quotation

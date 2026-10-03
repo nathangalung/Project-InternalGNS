@@ -96,13 +96,18 @@ func refreshTokenCount(t *testing.T, ctx context.Context, tx pgx.Tx, userID int6
 
 // Closed between reads: same verdict.
 // An account deactivated after its row was read gets the neutral verdict,
-// not an error that would tell it apart from a wrong password.
+// not an error that would tell it apart from a wrong password, and pays
+// the backoff an account would after the same misses.
 func TestService_Login_AccountClosedBetweenReads(t *testing.T) {
 	ctx, tx, u := faultAccount(t)
 	svc := svcOn(tx, storeWith(t, map[string]string{"users.lock_status": noLockRow}))
+	got := recordWaits(svc)
 
-	_, err := svc.Login(ctx, u.Email, faultPassword)
-	assert.ErrorIs(t, err, auth.ErrInvalidCredentials)
+	for range 6 {
+		_, err := svc.Login(ctx, u.Email, faultPassword)
+		assert.ErrorIs(t, err, auth.ErrInvalidCredentials)
+	}
+	assert.Equal(t, []time.Duration{0, 0, 0, 0, 0, 250 * time.Millisecond}, *got)
 }
 
 // Bookkeeping never overturns the verdict.

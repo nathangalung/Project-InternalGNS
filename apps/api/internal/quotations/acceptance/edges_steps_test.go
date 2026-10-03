@@ -142,9 +142,9 @@ func (s *scenarioState) foreignRequestPath() string {
 }
 
 func (s *scenarioState) editRequestViaOther() error {
-	return s.sendRequest(http.MethodPut, s.foreignRequestPath(), quotations.ItemRequestUpdate{
+	return s.sendRequestWith(http.MethodPut, s.foreignRequestPath(), quotations.ItemRequestUpdate{
 		LineNo: 1, RequestText: "DIUBAH LEWAT QUOTATION LAIN", MatchStatus: "pending", SourceType: "manual",
-	})
+	}, map[string]string{"If-Match": "0"})
 }
 
 func (s *scenarioState) deleteRequestViaOther() error {

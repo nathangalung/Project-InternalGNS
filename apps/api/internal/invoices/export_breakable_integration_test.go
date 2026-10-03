@@ -46,3 +46,20 @@ func TestExport_LineDescriptionsBreakLongTokens(t *testing.T) {
 
 	assert.Equal(t, []string{pdfgen.LatexBreakable(dest), `Deck \& Hold \#2`, ""}, got)
 }
+
+// Party fields get break points.
+// The To and Address cells wrap, but one long unbroken token in the client
+// name or address still overflows unless the text carries break points.
+func TestExport_PartyBreaksLongTokens(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	name := "PT.GlobalMaritimeServicesIndonesia & Co"
+	addr := "Komplek Pergudangan Jl.RayaCakung-Cilincing/Km.3-BlokC7 #12, Jakarta Utara"
+	_, err := tx.Exec(ctx, `UPDATE company_client SET address = $1 WHERE id = $2`, addr, seedCompanyID)
+	require.NoError(t, err)
+
+	got := newExportHandler(t, tx).PDFHeaderForTest(ctx, invoices.Invoice{CompanyClientID: seedCompanyID, CompanyName: name}, nil)
+
+	assert.Equal(t, pdfgen.LatexBreakable(name), got.CompanyName)
+	assert.Equal(t, pdfgen.LatexBreakable(addr), got.CompanyAddress)
+	assert.Contains(t, got.CompanyAddress, `\discretionary{}{}{}`, "the long token carries break points")
+}

@@ -43,6 +43,8 @@ type IdentityCardProps = {
   onPickProduct?: (item: CatalogItem) => void
   onPickRequestSuggestion?: (item: CatalogItem) => void
   onCopyRequestToOffer?: () => void
+  // Lowest qty the document takes
+  minQty?: number
 }
 
 // Product identity card.
@@ -63,6 +65,7 @@ export default function IdentityCard({
   onPickProduct,
   onPickRequestSuggestion,
   onCopyRequestToOffer,
+  minQty = 1,
 }: IdentityCardProps) {
   const requestId = useId()
   const offerId = useId()
@@ -275,7 +278,7 @@ export default function IdentityCard({
               id={qtyId}
               className={`${ui.fieldInput} font-sans ${ui.disabledField}`}
               type="number"
-              min={1}
+              min={minQty}
               placeholder="Masukkan jumlah produk"
               value={form.jumlahProduk}
               onChange={(e) => onChange("jumlahProduk", e.target.value)}

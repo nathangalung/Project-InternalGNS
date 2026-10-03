@@ -83,3 +83,57 @@ func TestHandler_ClientNPWP(t *testing.T) {
 		assert.Equal(t, msg, problem.Fields["npwp"])
 	})
 }
+
+// Blank country keeps stored one.
+// The update SQL keeps the client's country, so the NPWP is checked and
+// stored against it, not against IDN.
+func TestHandler_UpdateNPWP_StoredCountry(t *testing.T) {
+	cleaner := testutil.NewCleaner(t)
+	srv := newSrv(t)
+	create := func(country, npwp string) (int64, string) {
+		t.Helper()
+		name := fmt.Sprintf("PT Negara %d", time.Now().UnixNano())
+		res := doJSON(t, srv, http.MethodPost, "/clients/", map[string]any{
+			"name": name, "countryCode": country, "npwp": npwp,
+		})
+		defer res.Body.Close()
+		require.Equal(t, http.StatusCreated, res.StatusCode)
+		var c struct{ ID int64 }
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&c))
+		cleaner.Client(c.ID)
+		return c.ID, name
+	}
+	put := func(id int64, name, npwp string) *http.Response {
+		t.Helper()
+		return doJSON(t, srv, http.MethodPut, fmt.Sprintf("/clients/%d", id), map[string]any{
+			"name": name + " Baru", "npwp": npwp, "isActive": true,
+		})
+	}
+
+	t.Run("foreign client keeps its tax id", func(t *testing.T) {
+		id, name := create("SGP", "T08GB0001A")
+		res := put(id, name, "T08-GB-0001A")
+		defer res.Body.Close()
+		require.Equal(t, http.StatusOK, res.StatusCode)
+		var c struct{ CountryCode, NPWP string }
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&c))
+		assert.Equal(t, "SGP", c.CountryCode)
+		assert.Equal(t, "T08-GB-0001A", c.NPWP, "a foreign id is stored as given")
+	})
+
+	t.Run("indonesian client still checked", func(t *testing.T) {
+		id, name := create("IDN", "")
+		res := put(id, name, "12345")
+		defer res.Body.Close()
+		require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+		var problem httperr.Error
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&problem))
+		assert.Equal(t, "NPWP harus 16 digit angka.", problem.Fields["npwp"])
+	})
+
+	t.Run("unknown client", func(t *testing.T) {
+		res := put(99999999, "PT Hilang", "T08GB0001A")
+		defer res.Body.Close()
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
+	})
+}

@@ -15,6 +15,7 @@
 \usepackage{graphicx}
 \usepackage{longtable}
 \usepackage{array}
+\usepackage{tabularx}
 \usepackage{colortbl}
 \usepackage{xcolor}
 \usepackage{booktabs}
@@ -129,19 +130,20 @@
 \noindent
 \begin{minipage}[t]{0.52\textwidth}
   {\QPartySize
-  \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
+  % Values wrap whole words; tops align.
+  \begin{tabularx}{\linewidth}[t]{@{}l@{\,}l@{\,}>{\RaggedRight\hyphenpenalty=10000\arraybackslash}X@{}}
     To           & : & [[.CompanyName]] \\[1pt]
     Attn         & : & [[.AttnName]] \\[1pt]
     Email        & : & [[if .AttnEmail]]\href{mailto:[[.AttnEmail]]}{[[.AttnEmail]]}[[else]]-[[end]] \\[1pt]
     Contact No.  & : & [[.AttnPhone]] \\
-  \end{tabular}
+  \end{tabularx}%
   }
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.44\textwidth}
   \raggedleft
   {\QPartySize
-  \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
+  \begin{tabular}[t]{@{}l@{\,}l@{\,}l@{}}
     No           & : & [[.QuotationNo]] \\[1pt]
     Your Ref No. & : & [[.ClientRefNo]] \\[1pt]
     Date         & : & [[.DateLine]] \\[1pt]

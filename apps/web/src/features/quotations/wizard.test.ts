@@ -72,6 +72,15 @@ describe("wizardGates", () => {
     expect(wizardGates({ ...base, shippingTime: "3" }).isWaktuFilled).toBe(true)
     expect(wizardGates({ ...base, shippingTime: "  " }).isWaktuFilled).toBe(false)
   })
+
+  it("refuses a blank address the caller requires", () => {
+    const g = wizardGates({ ...base, shippingTime: "3", addressRequired: true })
+    expect(g.isAlamatOk).toBe(false)
+    expect(g.isWaktuFilled).toBe(false)
+    expect(
+      wizardGates({ ...base, shippingAddress: ADDRESS, addressRequired: true }).isAlamatOk,
+    ).toBe(true)
+  })
 })
 
 describe("wizardSummary", () => {
