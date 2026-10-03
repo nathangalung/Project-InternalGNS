@@ -257,6 +257,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
                           <button
                             type="button"
                             title="Lihat detail"
+                            aria-label={`Lihat detail ${row.invoiceNo}`}
                             className={ui.iconAction}
                             onClick={() => onViewDetail?.(row.quotationId, detailSearch(row))}
                           >
@@ -265,6 +266,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
                           <button
                             type="button"
                             title="Unduh invoice"
+                            aria-label={`Unduh invoice ${row.invoiceNo}`}
                             className={ui.iconAction}
                             onClick={() =>
                               runDownload(
@@ -297,6 +299,7 @@ export default function InvoiceList({ onViewDetail }: InvoiceListProps) {
                             <button
                               type="button"
                               title="Unduh Coretax XML"
+                              aria-label={`Unduh Coretax XML ${row.invoiceNo}`}
                               className={ui.iconAction}
                               onClick={() =>
                                 runDownload(
