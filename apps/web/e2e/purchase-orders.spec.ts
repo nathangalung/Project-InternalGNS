@@ -555,6 +555,16 @@ test.describe("purchase order address gaps", () => {
       sellingPrice: "75000.00",
       shippingDays: 5,
     })
+
+    // In progress, the lines rely on the PO address, so it cannot be cleared.
+    await page.goto(`/purchase-orders/${qid}/edit`)
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    const required = page.getByLabel("Alamat Lengkap *")
+    await expect(required).toHaveValue("Jl. Pelabuhan Raya No. 12, Tanjung Priok")
+    await expect(page.getByText("Wajib diisi selama PO diproses")).toBeVisible()
+    await required.fill("")
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await expect(page.getByRole("button", { name: "Simpan", exact: true })).toBeDisabled()
   })
 
   test("Ubah PO saves new days on a PO without an address", async ({ page, seed }) => {

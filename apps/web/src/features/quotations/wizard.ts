@@ -42,15 +42,19 @@ export type WizardGates = {
 // Step gating for both wizards.
 //
 // The shipping address is optional on a quotation and required at the PO,
-// so only a started one must be valid. Days need a valid address.
+// so only a started one must be valid, unless the caller requires one. Days
+// need a valid address.
 export function wizardGates(input: {
   shippingAddress: string
   shippingTime: string
   jatuhTempo: string
   berlakuSampai: string
   productCount: number
+  addressRequired?: boolean
 }): WizardGates {
-  const isAlamatOk = optionalAddressError(input.shippingAddress) === null
+  const isAlamatOk = input.addressRequired
+    ? isValidAddress(input.shippingAddress)
+    : optionalAddressError(input.shippingAddress) === null
   return {
     isAlamatOk,
     isWaktuFilled: isAlamatOk && input.shippingTime.trim().length > 0,

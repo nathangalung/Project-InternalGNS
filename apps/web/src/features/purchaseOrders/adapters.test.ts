@@ -4,6 +4,7 @@ import type { PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
 import {
   detailsChanged,
   linesMissingUnit,
+  linesNeedAddress,
   lineToInput,
   loadFailureMessage,
   type PoEditLine,
@@ -252,6 +253,20 @@ describe("linesMissingUnit", () => {
   it("flags a new line with no unit", () => {
     const fresh = { ...known, source: undefined, satuan: "" }
     expect(linesMissingUnit([fresh], units)).toEqual(["Known"])
+  })
+})
+
+describe("linesNeedAddress", () => {
+  const [own] = poLinesToEdit([line({ id: 1, shipDestination: "Gudang B" })], () => "")
+  const [bare] = poLinesToEdit([line({ id: 2, shipDestination: "  " })], () => "")
+
+  it("lets lines that carry their own destination pass", () => {
+    expect(linesNeedAddress([own])).toBe(false)
+  })
+
+  it("flags a stored line with a blank destination or a new line", () => {
+    expect(linesNeedAddress([own, bare])).toBe(true)
+    expect(linesNeedAddress([own, { ...own, source: undefined }])).toBe(true)
   })
 })
 

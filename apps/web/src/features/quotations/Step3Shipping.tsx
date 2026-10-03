@@ -13,6 +13,8 @@ type Step3ShippingProps = {
   setShippingCost: (s: string) => void
   // Empty or valid; the address is optional
   isAlamatOk: boolean
+  // A PO in progress asks for it
+  addressRequired?: boolean
   isWaktuFilled: boolean
   formatRp: (n: number) => string
   // Another user holds the header
@@ -32,6 +34,7 @@ export default function Step3Shipping({
   isAlamatOk,
   isWaktuFilled,
   formatRp,
+  addressRequired = false,
   readOnly = false,
 }: Step3ShippingProps) {
   const id = useId()
@@ -49,7 +52,12 @@ export default function Step3Shipping({
       <div className="flex flex-col gap-6">
         <div>
           <label htmlFor={`${id}-alamat`} className={fieldLabel}>
-            Alamat Lengkap <span className={optionalCls}>(Opsional)</span>
+            Alamat Lengkap{" "}
+            {addressRequired ? (
+              <span className="text-error">*</span>
+            ) : (
+              <span className={optionalCls}>(Opsional)</span>
+            )}
           </label>
           <textarea
             id={`${id}-alamat`}
@@ -67,7 +75,9 @@ export default function Step3Shipping({
             </span>
           ) : (
             <span id={`${id}-alamat-hint`} className="mt-1 block text-xs text-dark-600">
-              Wajib diisi sebelum PO diproses
+              {addressRequired
+                ? "Wajib diisi selama PO diproses"
+                : "Wajib diisi sebelum PO diproses"}
             </span>
           )}
         </div>

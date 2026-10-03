@@ -17,6 +17,7 @@ import { ui } from "@/lib/ui"
 import type { PoUpdateItemsInput, PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
 import {
   linesMissingUnit,
+  linesNeedAddress,
   lineToInput,
   loadFailureMessage,
   type PoEditLine,
@@ -158,13 +159,16 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
     if (v.trim() === "") setShippingCost("")
   }
 
-  // The quotation's rules: the address is optional until the PO gate.
+  // The quotation's rules: the address is optional until the PO gate, and
+  // past it the PO keeps the address its lines rely on.
+  const addressRequired = po.status === "ON_PROGRESS" && linesNeedAddress(products)
   const { isAlamatOk, isWaktuFilled, hasContent } = wizardGates({
     shippingAddress,
     shippingTime,
     jatuhTempo,
     berlakuSampai,
     productCount: products.length,
+    addressRequired,
   })
 
   const currentClient = clientRow ? fromClientRow(clientRow) : undefined
@@ -377,6 +381,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
                 shippingCost={shippingCost}
                 setShippingCost={setShippingCost}
                 isAlamatOk={isAlamatOk}
+                addressRequired={addressRequired}
                 isWaktuFilled={isWaktuFilled}
                 formatRp={formatRp}
               />

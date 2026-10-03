@@ -191,6 +191,14 @@ export function linesMissingUnit(lines: PoEditLine[], unitIdByCode: Map<string, 
     .map((l) => l.nama || l.requestedNama)
 }
 
+// Lines the PO address covers.
+//
+// Mirrors the server's shipping gate: a product line with its own
+// destination needs no PO address; any other line does.
+export function linesNeedAddress(lines: PoEditLine[]): boolean {
+  return lines.some((l) => !l.source?.shipDestination?.trim())
+}
+
 // Creation row's fixed note.
 const CREATED_NOTE = "PO dibuat"
 
