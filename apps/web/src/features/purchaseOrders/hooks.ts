@@ -139,6 +139,8 @@ export function useChangePoStatus() {
 }
 
 // Stale version refetches the PO.
+//
+// The invoice shows No. PO and Tanggal PO, so it refreshes too.
 export function useUpdatePoDetails() {
   const qc = useQueryClient()
   return useMutation({
@@ -153,7 +155,10 @@ export function useUpdatePoDetails() {
       poDate: string
       rowVersion: number
     }) => poApi.updateDetails(id, { poNumber, poDate }, rowVersion),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.all })
+      qc.invalidateQueries({ queryKey: queryKeys.invoices.all })
+    },
     onError: (err) => reportPoError(qc, err, "Gagal memperbarui detail PO."),
   })
 }
@@ -188,6 +193,8 @@ export function useUploadPoFile() {
   })
 }
 
+// Line edits move Total Pembelian, and a picked vendor may gain a product
+// link, so the client, vendor and product pages refresh too.
 export function useUpdatePoItems() {
   const qc = useQueryClient()
   return useMutation({
@@ -205,6 +212,9 @@ export function useUpdatePoItems() {
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.detail(id) })
       qc.invalidateQueries({ queryKey: queryKeys.purchaseOrders.items(id) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboard.all })
+      qc.invalidateQueries({ queryKey: queryKeys.clients.all })
+      qc.invalidateQueries({ queryKey: queryKeys.vendors.all })
+      qc.invalidateQueries({ queryKey: queryKeys.items.all })
     },
     onError: (err) => reportPoError(qc, err, "Gagal memperbarui item PO."),
   })

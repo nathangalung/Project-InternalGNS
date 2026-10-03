@@ -219,15 +219,16 @@ describe("useChangePoStatus", () => {
 })
 
 describe("PO writes", () => {
-  it("details save with the row version and refresh POs", async () => {
+  // The invoice shows No. PO and Tanggal PO.
+  it("details save with the row version and refresh POs and invoices", async () => {
     m.updateDetails.mockResolvedValue(undefined)
     const { qc, result } = renderQueryHook(() => useUpdatePoDetails())
-    seed(qc, [poDetail, dash])
+    seed(qc, [poDetail, dash, invList])
     await settle(() =>
       result.current.mutateAsync({ id: 3, poNumber: "PO-1", poDate: "2026-09-24", rowVersion: 4 }),
     )
     expect(m.updateDetails).toHaveBeenCalledWith(3, { poNumber: "PO-1", poDate: "2026-09-24" }, 4)
-    expect(invalidated(qc, [poDetail, dash])).toEqual([poDetail])
+    expect(invalidated(qc, [poDetail, dash, invList])).toEqual([poDetail, invList])
   })
 
   it("remove file refreshes POs and dashboard", async () => {
@@ -261,13 +262,25 @@ describe("PO writes", () => {
     )
   })
 
-  it("items save refreshes POs, the PO's items and dashboard", async () => {
+  // Line edits move Total Pembelian and may link a vendor to a product.
+  it("items save refreshes POs, totals, vendor links and dashboard", async () => {
     m.updateItems.mockResolvedValue({ id: 3, rowVersion: 5 })
     const { qc, result } = renderQueryHook(() => useUpdatePoItems())
-    seed(qc, [poDetail, poItems, dash, invList])
+    const clientList = queryKeys.clients.list()
+    const vendorList = queryKeys.vendors.list()
+    const itemDetail = queryKeys.items.detail(9)
+    const keys = [poDetail, poItems, dash, invList, clientList, vendorList, itemDetail]
+    seed(qc, keys)
     await settle(() => result.current.mutateAsync({ id: 3, input: {} as never, rowVersion: 4 }))
     expect(m.updateItems).toHaveBeenCalledWith(3, {}, 4)
-    expect(invalidated(qc, [poDetail, poItems, dash, invList])).toEqual([poDetail, poItems, dash])
+    expect(invalidated(qc, keys)).toEqual([
+      poDetail,
+      poItems,
+      dash,
+      clientList,
+      vendorList,
+      itemDetail,
+    ])
   })
 
   // Stale version or lock reloads.
