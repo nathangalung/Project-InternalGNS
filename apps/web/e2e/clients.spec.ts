@@ -264,3 +264,30 @@ test("Total Pembelian follows the PO lines once they are edited", async ({ page,
     rupiah(80_000),
   )
 })
+
+// Table edit survives the form.
+//
+// No HP on the company form is the main contact's phone. A phone changed in
+// the contacts table must show in the form and must not be written back by
+// a later Simpan Perubahan.
+test("a main contact edit in the table survives a company save", async ({ page, seed }) => {
+  const client = await seed.client()
+  await page.goto(`/clients/${client.id}`)
+  const card = contactsCard(page)
+  await card.getByRole("button", { name: `Ubah narahubung ${seed.prefix} Narahubung` }).click()
+  await card.getByLabel("No HP").fill("812345678901")
+  await card.getByRole("button", { name: "Simpan", exact: true }).click()
+  await expect
+    .poll(async () => (await api<Contact[]>("GET", `/clients/${client.id}/contacts`))[0].phone)
+    .toBe("812345678901")
+
+  await expect(page.getByLabel("No HP").first()).toHaveValue("812345678901")
+  const address = `${seed.prefix} Jl. Pelabuhan 1`
+  await page.getByLabel("Alamat Rinci").fill(address)
+  await page.getByRole("button", { name: "Simpan Perubahan" }).click()
+  await expect
+    .poll(async () => (await api<{ address?: string }>("GET", `/clients/${client.id}`)).address)
+    .toBe(address)
+  const [main] = await api<Contact[]>("GET", `/clients/${client.id}/contacts`)
+  expect(main.phone).toBe("812345678901")
+})

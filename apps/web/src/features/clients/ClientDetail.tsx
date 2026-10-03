@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import { useId, useRef, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import * as clientsApi from "@/features/clients/api"
 import { contactUpdateBody, getCompanyInitials } from "@/features/clients/helpers"
@@ -127,6 +127,20 @@ export default function ClientDetail({ client }: ClientDetailProps) {
   // Form state hydrates once from the state initializers above. The route
   // remounts on a different client, so a background refetch of the same client
   // never overwrites in-progress edits.
+
+  // Main contact phone follows edits.
+  //
+  // No HP is the main contact's phone, which the contacts table also edits.
+  // A changed stored phone replaces the field only while it is untouched, so
+  // Simpan never writes the old number back over the table's edit.
+  const storedPhone = client.contactPhone ?? ""
+  const lastStoredPhone = useRef(storedPhone)
+  useEffect(() => {
+    const previous = lastStoredPhone.current
+    if (previous === storedPhone) return
+    lastStoredPhone.current = storedPhone
+    setPhone((current) => (current === previous ? storedPhone : current))
+  }, [storedPhone])
 
   const dirty =
     name !== client.name ||
