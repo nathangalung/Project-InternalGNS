@@ -1,5 +1,6 @@
 import { useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
+import { ROLE_LABEL, ROLE_ORDER } from "@/features/users/helpers"
 import { useCreateUser } from "@/features/users/hooks"
 import PasswordChecklist from "@/features/users/PasswordChecklist"
 import PasswordInput from "@/features/users/PasswordInput"
@@ -19,11 +20,7 @@ type RoleCard = {
   label: string
 }
 
-const ROLE_CARDS: RoleCard[] = [
-  { value: "superadmin", label: "Super Admin" },
-  { value: "finance", label: "Finance" },
-  { value: "operational", label: "Operasional" },
-]
+const ROLE_CARDS: RoleCard[] = ROLE_ORDER.map((r) => ({ value: r, label: ROLE_LABEL[r] }))
 
 // Least privilege by default.
 const DEFAULT_ROLE: Role = "operational"

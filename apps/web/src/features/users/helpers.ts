@@ -14,3 +14,13 @@ export function endsSessions(before: Access, after: Access & { password?: string
     (after.password ?? "").length > 0
   )
 }
+
+// Role names in the UI.
+export const ROLE_LABEL: Record<Role, string> = {
+  superadmin: "Super Admin",
+  operational: "Operasional",
+  finance: "Finance",
+}
+
+// Order the role pickers list them.
+export const ROLE_ORDER: readonly Role[] = ["superadmin", "finance", "operational"]

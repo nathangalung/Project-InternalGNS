@@ -9,7 +9,7 @@ import {
 import { useMe } from "@/features/auth/hooks"
 import { PartialUserUpdateError } from "@/features/users/api"
 import ChangeOwnPasswordModal from "@/features/users/ChangeOwnPasswordModal"
-import { endsSessions } from "@/features/users/helpers"
+import { endsSessions, ROLE_LABEL, ROLE_ORDER } from "@/features/users/helpers"
 import { useEndOwnSession, useUpdateUser } from "@/features/users/hooks"
 import PasswordChecklist from "@/features/users/PasswordChecklist"
 import PasswordInput from "@/features/users/PasswordInput"
@@ -24,17 +24,10 @@ type UserDetailProps = {
   onBack: () => void
 }
 
-const ROLE_LABEL: Record<Role, string> = {
-  superadmin: "Super Admin",
-  operational: "Operasional",
-  finance: "Finance",
-}
-
-const ROLE_OPTIONS: { value: Role; label: string }[] = [
-  { value: "superadmin", label: "Super Admin" },
-  { value: "finance", label: "Finance" },
-  { value: "operational", label: "Operasional" },
-]
+const ROLE_OPTIONS: { value: Role; label: string }[] = ROLE_ORDER.map((r) => ({
+  value: r,
+  label: ROLE_LABEL[r],
+}))
 
 const FIELDS = ["name", "email", "password", "role"] as const
 

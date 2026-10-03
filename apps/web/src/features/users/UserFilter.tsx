@@ -1,7 +1,9 @@
 import { useId, useState } from "react"
 import FilterFooter from "@/components/shared/FilterFooter"
 import Modal from "@/components/shared/Modal"
+import { ROLE_LABEL, ROLE_ORDER } from "@/features/users/helpers"
 import type { StatusFilterValue } from "@/lib/filter-options"
+import { STATUS_FILTER_OPTIONS } from "@/lib/filter-options"
 import { chip, ui } from "@/lib/ui"
 import type { Role } from "@/types/api"
 
@@ -16,16 +18,10 @@ type UserFilterProps = {
 
 const ROLE_OPTIONS: { value: RoleFilter; label: string }[] = [
   { value: "all", label: "Semua" },
-  { value: "superadmin", label: "Superadmin" },
-  { value: "operational", label: "Operasional" },
-  { value: "finance", label: "Finance" },
+  ...ROLE_ORDER.map((r) => ({ value: r, label: ROLE_LABEL[r] })),
 ]
 
-const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
-  { value: "all", label: "Semua" },
-  { value: "active", label: "Aktif" },
-  { value: "inactive", label: "Nonaktif" },
-]
+const STATUS_OPTIONS = STATUS_FILTER_OPTIONS
 
 export default function UserFilter({ onClose, onApply, initialValues }: UserFilterProps) {
   const [role, setRole] = useState<RoleFilter>(initialValues?.role ?? "all")

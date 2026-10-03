@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { STATUS_FILTER_OPTIONS } from "./filter-options"
+import { STATUS_FILTER_OPTIONS, statusFilterLabel } from "./filter-options"
 
 describe("STATUS_FILTER_OPTIONS", () => {
   it("lists every status once, Semua first, in Indonesian", () => {
@@ -8,5 +8,13 @@ describe("STATUS_FILTER_OPTIONS", () => {
       { value: "active", label: "Aktif" },
       { value: "inactive", label: "Nonaktif" },
     ])
+  })
+})
+
+describe("statusFilterLabel", () => {
+  it("reads each value's label from the options", () => {
+    expect(statusFilterLabel("active")).toBe("Aktif")
+    expect(statusFilterLabel("inactive")).toBe("Nonaktif")
+    expect(statusFilterLabel("all")).toBe("Semua")
   })
 })
