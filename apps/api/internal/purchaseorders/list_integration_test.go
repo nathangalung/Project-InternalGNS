@@ -277,8 +277,8 @@ func TestHandler_Export_MatchesList(t *testing.T) {
 	rows := exportRows(t, srv, url.Values{"q": {fx.client}, "sortBy": {"poNumber"}, "sortDir": {"asc"}})
 	require.Len(t, rows, 3)
 	assert.Equal(t, []string{"No. Delivery Note", "No. PO", "No. Quotation", "Tanggal", "Klien", "Status", "Total"}, rows[0])
-	assert.Equal(t, []string{"", fx.a.PoNumber, fx.a.QuotationNo, "2026-01-10", fx.client, "Pending", "555000.00"}, rows[1])
-	assert.Equal(t, []string{"", fx.b.PoNumber, fx.b.QuotationNo, "2026-02-20", fx.client, "PO Diunggah", "333000.00"}, rows[2])
+	assert.Equal(t, []string{"", fx.a.PoNumber, fx.a.QuotationNo, "2026-01-10", fx.client, "Pending", "555000"}, rows[1])
+	assert.Equal(t, []string{"", fx.b.PoNumber, fx.b.QuotationNo, "2026-02-20", fx.client, "PO Diunggah", "333000"}, rows[2])
 }
 
 // exportRows reads the XLSX sheet.
@@ -291,7 +291,8 @@ func exportRows(t *testing.T, srv *httptest.Server, q url.Values) [][]string {
 	require.NoError(t, err)
 	f, err := excelize.OpenReader(bytes.NewReader(body))
 	require.NoError(t, err)
-	rows, err := f.GetRows("Delivery Note")
+	// Raw values: Total is a number cell, formatted only for display.
+	rows, err := f.GetRows("Delivery Note", excelize.Options{RawCellValue: true})
 	require.NoError(t, err)
 	return rows
 }

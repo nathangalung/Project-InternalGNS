@@ -96,3 +96,40 @@ func TestWrite_SinkFailure(t *testing.T) {
 	require.ErrorIs(t, err, errSink)
 	assert.Contains(t, err.Error(), "write xlsx")
 }
+
+// Money columns are numbers.
+// Excel sums and sorts them only as numbers; a blank or unparsable value
+// stays as it is, and the other columns stay text.
+func TestWrite_MoneyColumnsAreNumbers(t *testing.T) {
+	rows := [][]string{{"Q-1", "1234567.89"}, {"Q-2", ""}, {"Q-3", "n/a"}}
+	raw, err := Write("Data", []string{"No", "Total"}, rows, 1)
+	require.NoError(t, err)
+	f, err := excelize.OpenReader(bytes.NewReader(raw))
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = f.Close() })
+
+	// A number cell carries no string type.
+	kind, err := f.GetCellType("Data", "B2")
+	require.NoError(t, err)
+	assert.Contains(t, []excelize.CellType{excelize.CellTypeUnset, excelize.CellTypeNumber}, kind)
+	value, err := f.GetCellValue("Data", "B2", excelize.Options{RawCellValue: true})
+	require.NoError(t, err)
+	assert.Equal(t, "1234567.89", value)
+	styleID, err := f.GetCellStyle("Data", "B2")
+	require.NoError(t, err)
+	style, err := f.GetStyle(styleID)
+	require.NoError(t, err)
+	require.NotNil(t, style.CustomNumFmt)
+	assert.Equal(t, "#,##0.00", *style.CustomNumFmt)
+
+	blank, err := f.GetCellValue("Data", "B3")
+	require.NoError(t, err)
+	assert.Empty(t, blank)
+	text, err := f.GetCellValue("Data", "B4")
+	require.NoError(t, err)
+	assert.Equal(t, "n/a", text)
+	kind, err = f.GetCellType("Data", "A2")
+	require.NoError(t, err)
+	assert.NotContains(t, []excelize.CellType{excelize.CellTypeUnset, excelize.CellTypeNumber}, kind,
+		"other columns stay text")
+}

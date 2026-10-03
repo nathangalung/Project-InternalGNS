@@ -327,6 +327,11 @@ func TestHandler_Export_XLSX(t *testing.T) {
 	require.GreaterOrEqual(t, len(rows), 2, "header + at least one data row")
 	assert.Equal(t, "No. Quotation", rows[0][0])
 	assert.Equal(t, "Draf", rows[1][3], "the status reads as the app shows it")
+	styleID, err := f.GetCellStyle("Quotation", "G2")
+	require.NoError(t, err)
+	style, err := f.GetStyle(styleID)
+	require.NoError(t, err)
+	require.NotNil(t, style.CustomNumFmt, "Grand Total is a number Excel can sum")
 }
 
 // Unpriced product lines block sending.

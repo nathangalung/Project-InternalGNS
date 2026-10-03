@@ -112,7 +112,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 			total,
 		})
 	}
-	data, err := sheet.Write("Invoice", headers, rows)
+	data, err := sheet.Write("Invoice", headers, rows, 6)
 	if err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return

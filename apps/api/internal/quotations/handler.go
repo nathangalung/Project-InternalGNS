@@ -93,7 +93,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 			q.GrandTotal,
 		})
 	}
-	data, err := sheet.Write("Quotation", headers, rows)
+	data, err := sheet.Write("Quotation", headers, rows, 4, 5, 6)
 	if err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
