@@ -15,6 +15,7 @@
 \usepackage{graphicx}
 \usepackage{longtable}
 \usepackage{array}
+\usepackage{tabularx}
 \usepackage{colortbl}
 \usepackage{xcolor}
 \usepackage{ragged2e}
@@ -86,19 +87,20 @@
 \noindent
 \begin{minipage}[t]{0.52\textwidth}
   {\small
-  \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
+  % Values wrap; tops align.
+  \begin{tabularx}{\linewidth}[t]{@{}l@{\,}l@{\,}>{\RaggedRight\arraybackslash}X@{}}
     To      & : & [[.CompanyName]] \\[1pt]
     Address & : & [[if .CompanyAddress]][[.CompanyAddress]][[else]]-[[end]] \\[1pt]
     Attn    & : & [[if .AttnName]][[.AttnName]][[else]]-[[end]] \\[1pt]
     Vessel  & : & [[if .VesselName]][[.VesselName]][[else]]-[[end]] \\
-  \end{tabular}
+  \end{tabularx}%
   }
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.44\textwidth}
   \raggedleft
   {\small
-  \begin{tabular}{@{}l@{\,}l@{\,}l@{}}
+  \begin{tabular}[t]{@{}l@{\,}l@{\,}l@{}}
     Delivery Note No & : & [[.DeliveryNoteNo]] \\[1pt]
     Date             & : & [[.DateLine]] \\[1pt]
     PO No            & : & [[.PONo]] \\[1pt]
