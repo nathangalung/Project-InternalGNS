@@ -381,6 +381,9 @@ through `clampPage` in `lib/pagination.ts`, and every pager renders
 defaults), and every list's empty row goes through `emptyListText`
 (`lib/list-empty.ts`), so a search or filter with no match says
 `Tidak ada hasil untuk …` instead of the list's own "Belum ada …".
+Every list shows what narrows it as chips (`components/shared/ActiveFilters`);
+the master-data lists build them with `filterChips` (`lib/filter-chips.ts`),
+and every chip removes only its own filter.
 
 ## Testing
 
