@@ -239,7 +239,7 @@ func (s *scenarioState) logInUnknownFromOneAddress(n int) error {
 	return s.loginAs(email, rightPassword, ip)
 }
 
-// postBlind posts and drops the answer.
+// postBlind posts, discarding the answer.
 // It leaves the scenario's last response alone, so goroutines may share it.
 func (s *scenarioState) postBlind(path, ip string, body []byte) error {
 	req, err := http.NewRequest(http.MethodPost, s.srv.URL+path, bytes.NewReader(body))
