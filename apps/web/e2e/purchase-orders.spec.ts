@@ -89,6 +89,10 @@ test.describe("purchase order detail", () => {
     await expect(page.getByRole("button", { name: "Diskon (5%)" })).toBeVisible()
     await page.getByRole("button", { name: "Lanjut" }).click()
     await page.getByRole("button", { name: "Lanjut" }).click()
+    // The PO keeps its quotation's terms, so the summary asks for none.
+    await expect(page.getByRole("heading", { name: "Ringkasan Klien" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Tenggat Waktu Penawaran" })).toHaveCount(0)
+    await expect(page.locator("main")).not.toContainText("wajib diisi sebelum menyimpan")
     await page.getByRole("button", { name: "Simpan", exact: true }).click()
 
     await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}$`))
@@ -108,7 +112,7 @@ test.describe("purchase order detail", () => {
 
     await page.goto(`/purchase-orders/${q.id}/edit`)
     await page.getByRole("button", { name: "Edit produk 1" }).click()
-    const modal = page.getByRole("dialog", { name: "Edit Produk Quotation" })
+    const modal = page.getByRole("dialog", { name: "Edit Produk PO" })
     await expect(modal.getByLabel("Harga Jual Satuan *")).toHaveValue("100000")
     await modal.getByLabel("Harga Jual Satuan *").fill("120000")
     await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
@@ -137,7 +141,7 @@ test.describe("purchase order detail", () => {
     await page.goto(`/purchase-orders/${q.id}/edit`)
     await expect(page.locator("main")).toContainText(vendor.name)
     await page.getByRole("button", { name: "Edit produk 1" }).click()
-    const modal = page.getByRole("dialog", { name: "Edit Produk Quotation" })
+    const modal = page.getByRole("dialog", { name: "Edit Produk PO" })
     await modal.getByLabel("Nama Vendor *").click()
     await modal.getByLabel("Nama Vendor *").fill(other.name)
     await page.getByRole("option", { name: new RegExp(other.name) }).click()

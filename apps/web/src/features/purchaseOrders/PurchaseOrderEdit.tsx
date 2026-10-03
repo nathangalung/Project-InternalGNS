@@ -99,10 +99,6 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
   const [shippingTime, setShippingTime] = useState("")
   const [shippingCost, setShippingCost] = useState("")
 
-  // Shown by the summary step, never saved on a PO.
-  const [jatuhTempo, setJatuhTempo] = useState("")
-  const [berlakuSampai, setBerlakuSampai] = useState("")
-
   const unitNameById = useMemo(() => {
     const m = new Map<number, string>()
     for (const u of unitsData ?? []) m.set(u.id, u.code)
@@ -388,10 +384,6 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
             )}
             {step === 3 && (
               <Step4Summary
-                jatuhTempo={jatuhTempo}
-                setJatuhTempo={setJatuhTempo}
-                berlakuSampai={berlakuSampai}
-                setBerlakuSampai={setBerlakuSampai}
                 currentClient={currentClient}
                 shippingAddress={shippingAddress}
                 shippingTime={shippingTime}
@@ -428,6 +420,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
         open={showProductAdd}
         initialData={editingProduct}
         clientId={po.companyClientId}
+        docKind="po"
         onOpenChange={(open) => {
           setShowProductAdd(open)
           if (!open) setEditingId(null)

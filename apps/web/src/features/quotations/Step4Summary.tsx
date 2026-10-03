@@ -8,11 +8,17 @@ import type { Client } from "./Step1Client"
 import type { ProductItem } from "./wizard"
 import { qe, qep } from "./wizard-styles"
 
-type Step4SummaryProps = {
+// Quotation payment and validity days.
+type SummaryTerms = {
   jatuhTempo: string
   setJatuhTempo: (s: string) => void
   berlakuSampai: string
   setBerlakuSampai: (s: string) => void
+}
+
+type Step4SummaryProps = {
+  // Absent on a PO, which keeps its quotation's terms
+  terms?: SummaryTerms
   currentClient?: Client
   shippingAddress: string
   shippingTime: string
@@ -60,11 +66,62 @@ const noticeBox =
 const costRow = "flex justify-between text-xs text-[#4B5563]"
 const costValue = "font-semibold text-[#111827]"
 
+function termsFilled(t: SummaryTerms): boolean {
+  return t.jatuhTempo.trim().length > 0 && t.berlakuSampai.trim().length > 0
+}
+
+// Tenggat Waktu Penawaran inputs.
+function TermsCard({
+  terms,
+  id,
+  readOnly,
+}: {
+  terms: SummaryTerms
+  id: string
+  readOnly: boolean
+}) {
+  return (
+    <>
+      <h2 className={`${qe.sectionTitle} mb-3`}>Tenggat Waktu Penawaran</h2>
+      <div className={`${card} ${grid2} gap-6`}>
+        <div>
+          <label htmlFor={`${id}-tempo`} className={formLabel}>
+            JATUH TEMPO PEMBAYARAN (HARI) <span className="text-error">*</span>
+          </label>
+          <input
+            id={`${id}-tempo`}
+            type="number"
+            min="1"
+            placeholder="Masukkan hari sampai jatuh tempo"
+            value={terms.jatuhTempo}
+            onChange={(e) => terms.setJatuhTempo(e.target.value)}
+            disabled={readOnly}
+            className={formInput}
+          />
+        </div>
+        <div>
+          <label htmlFor={`${id}-berlaku`} className={formLabel}>
+            BERLAKU SAMPAI (HARI) <span className="text-error">*</span>
+          </label>
+          <input
+            id={`${id}-berlaku`}
+            type="number"
+            min="1"
+            max="365"
+            placeholder="Masukkan jumlah hari"
+            value={terms.berlakuSampai}
+            onChange={(e) => terms.setBerlakuSampai(e.target.value)}
+            disabled={readOnly}
+            className={formInput}
+          />
+        </div>
+      </div>
+    </>
+  )
+}
+
 export default function Step4Summary({
-  jatuhTempo,
-  setJatuhTempo,
-  berlakuSampai,
-  setBerlakuSampai,
+  terms,
   currentClient,
   shippingAddress,
   shippingTime,
@@ -96,72 +153,40 @@ export default function Step4Summary({
   const page = clampPage(prodPage, totalPages)
   const pageSlice = products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  const isTenggatWaktuFilled = jatuhTempo.trim().length > 0 && berlakuSampai.trim().length > 0
   const hasContent = products.length > 0 || isValidAddress(shippingAddress)
   const addressError = optionalAddressError(shippingAddress)
+  const hasNotices = invalidQtyCount > 0 || incompleteCount > 0 || unknownUnitCount > 0
 
   return (
     <div className={qe.stepContent}>
-      {/* Tenggat Waktu Penawaran */}
-      <div>
-        <h2 className={`${qe.sectionTitle} mb-3`}>Tenggat Waktu Penawaran</h2>
-        <div className={`${card} ${grid2} gap-6`}>
-          <div>
-            <label htmlFor={`${id}-tempo`} className={formLabel}>
-              JATUH TEMPO PEMBAYARAN (HARI) <span className="text-error">*</span>
-            </label>
-            <input
-              id={`${id}-tempo`}
-              type="number"
-              min="1"
-              placeholder="Masukkan hari sampai jatuh tempo"
-              value={jatuhTempo}
-              onChange={(e) => setJatuhTempo(e.target.value)}
-              disabled={readOnly}
-              className={formInput}
-            />
-          </div>
-          <div>
-            <label htmlFor={`${id}-berlaku`} className={formLabel}>
-              BERLAKU SAMPAI (HARI) <span className="text-error">*</span>
-            </label>
-            <input
-              id={`${id}-berlaku`}
-              type="number"
-              min="1"
-              max="365"
-              placeholder="Masukkan jumlah hari"
-              value={berlakuSampai}
-              onChange={(e) => setBerlakuSampai(e.target.value)}
-              disabled={readOnly}
-              className={formInput}
-            />
-          </div>
+      {(terms || hasNotices) && (
+        <div>
+          {terms && <TermsCard terms={terms} id={id} readOnly={readOnly} />}
+          {invalidQtyCount > 0 && (
+            <div role="alert" className={`${alertBox} mt-2.5`}>
+              {invalidQtyCount} produk memiliki jumlah 0 atau kurang. Perbaiki di langkah Produk
+              sebelum menyimpan.
+            </div>
+          )}
+          {incompleteCount > 0 && (
+            <div role="status" className={`${noticeBox} mt-2.5`}>
+              {incompleteCount} produk belum lengkap (vendor atau harga). Quotation tetap tersimpan
+              sebagai Draf; lengkapi sebelum dikirim.
+            </div>
+          )}
+          {unknownUnitCount > 0 && (
+            <div role="alert" className={`${alertBox} mt-2.5`}>
+              {unknownUnitCount} produk memiliki satuan yang tidak dikenal. Pilih satuannya di
+              langkah Produk sebelum menyimpan.
+            </div>
+          )}
+          {terms && !termsFilled(terms) && (
+            <div className={`${alertBox} mt-2.5`}>
+              Jatuh tempo pembayaran dan berlaku sampai wajib diisi sebelum menyimpan.
+            </div>
+          )}
         </div>
-        {invalidQtyCount > 0 && (
-          <div role="alert" className={`${alertBox} mt-2.5`}>
-            {invalidQtyCount} produk memiliki jumlah 0 atau kurang. Perbaiki di langkah Produk
-            sebelum menyimpan.
-          </div>
-        )}
-        {incompleteCount > 0 && (
-          <div role="status" className={`${noticeBox} mt-2.5`}>
-            {incompleteCount} produk belum lengkap (vendor atau harga). Quotation tetap tersimpan
-            sebagai Draf; lengkapi sebelum dikirim.
-          </div>
-        )}
-        {unknownUnitCount > 0 && (
-          <div role="alert" className={`${alertBox} mt-2.5`}>
-            {unknownUnitCount} produk memiliki satuan yang tidak dikenal. Pilih satuannya di langkah
-            Produk sebelum menyimpan.
-          </div>
-        )}
-        {!isTenggatWaktuFilled && (
-          <div className={`${alertBox} mt-2.5`}>
-            Jatuh tempo pembayaran dan berlaku sampai wajib diisi sebelum menyimpan.
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Ringkasan Klien */}
       <div>
