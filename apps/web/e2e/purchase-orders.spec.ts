@@ -298,6 +298,11 @@ test.describe("purchase order status", () => {
     expect((await seed.poByQuotation(q.id)).status).toBe("DELIVERED")
 
     await page.goto(`/purchase-orders/${q.id}`)
+    // The header names the invoice it issued and opens it.
+    const delivered = await seed.poByQuotation(q.id)
+    expect(delivered.invoiceNo).toBeTruthy()
+    const invoiceLink = page.getByRole("link", { name: delivered.invoiceNo ?? "" })
+    await expect(invoiceLink).toHaveAttribute("href", `/invoices/${q.id}`)
     await expect(page.getByRole("button", { name: "Dikirim", exact: true })).toBeDisabled()
     await expect(page.getByText("Status ini sudah final dan tidak dapat diubah.")).toBeVisible()
     await expect(page.getByRole("button", { name: "Ubah", exact: true })).toBeDisabled()

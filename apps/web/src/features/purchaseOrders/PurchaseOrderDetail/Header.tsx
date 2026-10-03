@@ -13,6 +13,8 @@ type HeaderProps = {
   // Saved status, never the pending choice
   status: PoStatus
   deliveryNoteNumber?: string
+  // Issued at DELIVERED
+  invoiceNo?: string
   // Undefined once lines are locked
   onEdit?: () => void
   onDownloadDeliveryNote?: () => void
@@ -25,6 +27,7 @@ export default function Header({
   createdAt,
   status,
   deliveryNoteNumber,
+  invoiceNo,
   onEdit,
   onDownloadDeliveryNote,
 }: HeaderProps) {
@@ -65,6 +68,19 @@ export default function Header({
                   </span>
                   <span className={`${ui.metaText} [overflow-wrap:anywhere]`}>
                     Surat Jalan {deliveryNoteNumber}
+                  </span>
+                </>
+              )}
+              {invoiceNo && (
+                <>
+                  <span className={ui.metaSep} aria-hidden="true">
+                    |
+                  </span>
+                  <span className={`${ui.metaText} [overflow-wrap:anywhere]`}>
+                    Invoice{" "}
+                    <EntityLink kind="invoice" quotationId={quotationId}>
+                      {invoiceNo}
+                    </EntityLink>
                   </span>
                 </>
               )}
