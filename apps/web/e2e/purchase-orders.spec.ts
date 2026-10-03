@@ -535,7 +535,7 @@ test.describe("purchase order address gaps", () => {
     await expect(cost).toHaveValue("75000")
     // Key by key, as a person types: no keystroke wipes the stored charge.
     await page
-      .getByLabel("Alamat Lengkap *")
+      .getByLabel("Alamat Lengkap (Opsional)")
       .pressSequentially("Jl. Pelabuhan Raya No. 12, Tanjung Priok")
     await expect(days).toHaveValue("5")
     await expect(cost).toHaveValue("75000")
@@ -555,6 +555,29 @@ test.describe("purchase order address gaps", () => {
       sellingPrice: "75000.00",
       shippingDays: 5,
     })
+  })
+
+  test("Ubah PO saves new days on a PO without an address", async ({ page, seed }) => {
+    const qid = await addresslessQuotation(page, seed)
+    const po = await seed.accept(qid)
+
+    await page.goto(`/purchase-orders/${qid}/edit`)
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await expect(page.getByLabel("Alamat Lengkap (Opsional)")).toHaveValue("")
+    const days = page.getByLabel("Waktu Pengiriman (Hari) *")
+    await expect(days).toBeEnabled()
+    await expect(days).toHaveValue("5")
+    await days.fill("8")
+    await page.getByRole("button", { name: "Lanjut" }).click()
+    await page.getByRole("button", { name: "Simpan", exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`/purchase-orders/${qid}$`))
+
+    const lines = await api<
+      { itemType: string; sellingPrice: string; shippingDays?: number; shipDestination?: string }[]
+    >("GET", `/purchase-orders/${po.id}/items`)
+    const ship = lines.find((l) => l.itemType === "shipping")
+    expect(ship).toMatchObject({ sellingPrice: "75000.00", shippingDays: 8 })
+    expect(ship?.shipDestination).toBeUndefined()
   })
 })
 

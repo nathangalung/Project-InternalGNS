@@ -13,8 +13,6 @@ type Step3ShippingProps = {
   setShippingCost: (s: string) => void
   // Empty or valid; the address is optional
   isAlamatOk: boolean
-  // The PO asks for the address
-  addressRequired?: boolean
   isWaktuFilled: boolean
   formatRp: (n: number) => string
   // Another user holds the header
@@ -34,7 +32,6 @@ export default function Step3Shipping({
   isAlamatOk,
   isWaktuFilled,
   formatRp,
-  addressRequired = false,
   readOnly = false,
 }: Step3ShippingProps) {
   const id = useId()
@@ -52,17 +49,12 @@ export default function Step3Shipping({
       <div className="flex flex-col gap-6">
         <div>
           <label htmlFor={`${id}-alamat`} className={fieldLabel}>
-            Alamat Lengkap{" "}
-            {addressRequired ? (
-              <span className="text-error">*</span>
-            ) : (
-              <span className={optionalCls}>(Opsional)</span>
-            )}
+            Alamat Lengkap <span className={optionalCls}>(Opsional)</span>
           </label>
           <textarea
             id={`${id}-alamat`}
             aria-invalid={addressError ? true : undefined}
-            aria-describedby={addressError || !addressRequired ? `${id}-alamat-hint` : undefined}
+            aria-describedby={`${id}-alamat-hint`}
             placeholder="Masukkan alamat pengiriman secara detail (min. 20 karakter)..."
             value={shippingAddress}
             onChange={(e) => setShippingAddress(e.target.value)}
@@ -74,11 +66,9 @@ export default function Step3Shipping({
               {addressError}
             </span>
           ) : (
-            !addressRequired && (
-              <span id={`${id}-alamat-hint`} className="mt-1 block text-xs text-dark-600">
-                Wajib diisi sebelum PO diproses
-              </span>
-            )
+            <span id={`${id}-alamat-hint`} className="mt-1 block text-xs text-dark-600">
+              Wajib diisi sebelum PO diproses
+            </span>
           )}
         </div>
 

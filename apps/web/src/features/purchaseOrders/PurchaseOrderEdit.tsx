@@ -8,13 +8,12 @@ import DiscountModal from "@/features/quotations/DiscountModal"
 import Step2Product from "@/features/quotations/Step2Product"
 import Step3Shipping from "@/features/quotations/Step3Shipping"
 import Step4Summary from "@/features/quotations/Step4Summary"
-import { wizardSummary } from "@/features/quotations/wizard"
+import { wizardGates, wizardSummary } from "@/features/quotations/wizard"
 import { useUnits } from "@/features/units/hooks"
 import { isVersionConflict } from "@/lib/errors"
 import { formatNumber as formatRp, toNum } from "@/lib/format"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
-import { isValidAddress } from "@/lib/validation"
 import type { PoUpdateItemsInput, PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
 import {
   linesMissingUnit,
@@ -153,16 +152,20 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
   // Cost follows the days only.
   //
   // Typing an address must not wipe the stored days and cost: every
-  // keystroke before the 20th is a short address. The save guard below
-  // refuses a charge without a valid address instead.
+  // keystroke before the 20th is a short address.
   function changeTime(v: string) {
     setShippingTime(v)
     if (v.trim() === "") setShippingCost("")
   }
 
-  const isAlamatFilled = isValidAddress(shippingAddress)
-  const isWaktuFilled = isAlamatFilled && shippingTime.trim().length > 0
-  const hasContent = products.length > 0 || isAlamatFilled
+  // The quotation's rules: the address is optional until the PO gate.
+  const { isAlamatOk, isWaktuFilled, hasContent } = wizardGates({
+    shippingAddress,
+    shippingTime,
+    jatuhTempo,
+    berlakuSampai,
+    productCount: products.length,
+  })
 
   const currentClient = clientRow ? fromClientRow(clientRow) : undefined
   const editingProduct = products.find((p) => p.id === editingId) ?? null
@@ -185,12 +188,6 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
     const missing = linesMissingUnit(products, unitIdByCode)
     if (missing.length > 0) {
       toast.error(`Satuan belum dikenali untuk: ${missing.join(", ")}.`)
-      return
-    }
-    // The server keeps the shipping line only with an address.
-    const hasShipping = shippingTime.trim() !== "" || toNum(shippingCost) > 0
-    if (hasShipping && !isAlamatFilled) {
-      toast.error("Isi alamat pengiriman (min. 20 karakter) sebelum menyimpan pengiriman.")
       return
     }
     const shipDays = Number(shippingTime)
@@ -277,7 +274,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
               <button
                 type="button"
                 className={`${ui.btnPrimary} w-[148px] max-sm:w-auto`}
-                disabled={!hydrated || !hasContent || updateMutation.isPending}
+                disabled={!hydrated || !hasContent || !isAlamatOk || updateMutation.isPending}
                 onClick={() => void handleSave()}
               >
                 {updateMutation.isPending ? "Menyimpan..." : "Simpan"}
@@ -379,8 +376,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
                 setShippingTime={changeTime}
                 shippingCost={shippingCost}
                 setShippingCost={setShippingCost}
-                isAlamatOk={isAlamatFilled}
-                addressRequired
+                isAlamatOk={isAlamatOk}
                 isWaktuFilled={isWaktuFilled}
                 formatRp={formatRp}
               />
