@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_po_items (deployed by migration 00084).
+-- Canonical current body of fn_update_po_items (deployed by migration 00089).
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -136,7 +136,9 @@ BEGIN
     );
   END LOOP;
 
-  IF p_shipping_address IS NOT NULL AND TRIM(p_shipping_address) <> '' THEN
+  -- Address, a charge or days keep the line, as on the quotation.
+  IF NULLIF(TRIM(p_shipping_address), '') IS NOT NULL OR COALESCE(p_shipping_cost, 0) > 0
+     OR p_shipping_days IS NOT NULL THEN
     v_line := v_line + 1;
     INSERT INTO purchase_order_items (
       po_id, line_number, item_type,
@@ -152,7 +154,7 @@ BEGIN
       COALESCE(p_shipping_cost, 0),
       0,
       TRUE,
-      p_shipping_address,
+      NULLIF(TRIM(p_shipping_address), ''),
       p_shipping_days,
       p_user_id,
       p_user_id

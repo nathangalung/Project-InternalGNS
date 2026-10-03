@@ -193,8 +193,9 @@ document's status history table.
   on the field; the database refuses only below 1), on the PO's shipping
   days too, and the web inputs carry the same bound. Shipping address, cost
   and days live on the one shipping line, kept when any of the three is
-  given; a line with no cost is no charge (harga jual 0) and the PDF prints
-  only its Delivery Time.
+  given, on the quotation and in Ubah PO alike (`fn_update_po_items`); a
+  line with no cost is no charge (harga jual 0) and the PDF prints only its
+  Delivery Time. The address is optional until the PO gate.
   A draft may keep unfinished product lines, but sending refuses (with the
   count) while any offered product line lacks its product, unit, vendor,
   harga beli or harga jual. A line marked Tidak Ditawarkan (`is_available`

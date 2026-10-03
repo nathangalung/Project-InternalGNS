@@ -247,21 +247,25 @@ func TestHandler_SecondQueryFaults(t *testing.T) {
 	}
 }
 
-// A charge needs its address.
-// The shipping line is kept only with an address, so a charge sent without
-// one would vanish; the edit is refused on the field instead.
-func TestHandler_UpdateItems_ShippingChargeNeedsAddress(t *testing.T) {
+// Any shipping field keeps the line.
+// Address, a positive cost or days each keep the shipping line, as on the
+// quotation; a line with no cost charges nothing.
+func TestHandler_UpdateItems_ShippingLineKept(t *testing.T) {
+	addr := "Kapal Uji, Dermaga 3, Tanjung Priok"
 	tests := []struct {
-		name    string
-		address *string
-		cost    *string
-		want    int
+		name     string
+		address  *string
+		days     *int
+		cost     *string
+		wantCost string // "" means no shipping line
 	}{
-		{"charge without address", nil, strPtr("75000"), http.StatusUnprocessableEntity},
-		{"charge with blank address", strPtr("   "), strPtr("75000"), http.StatusUnprocessableEntity},
-		{"zero charge without address", nil, strPtr("0"), http.StatusOK},
-		{"no charge without address", nil, nil, http.StatusOK},
-		{"charge with address", strPtr("Kapal Uji, Dermaga 3, Tanjung Priok"), strPtr("75000"), http.StatusOK},
+		{"charge without address", nil, nil, strPtr("75000"), "75000.00"},
+		{"charge with blank address", strPtr("   "), nil, strPtr("75000"), "75000.00"},
+		{"days without address", nil, intPtr(7), nil, "0.00"},
+		{"address alone", &addr, nil, nil, "0.00"},
+		{"charge with address", &addr, intPtr(7), strPtr("75000"), "75000.00"},
+		{"zero charge alone", nil, nil, strPtr("0"), ""},
+		{"nothing", nil, nil, nil, ""},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -272,20 +276,29 @@ func TestHandler_UpdateItems_ShippingChargeNeedsAddress(t *testing.T) {
 			require.NoError(t, err)
 
 			req := itemsAt("125000")
-			req.ShippingAddress, req.ShippingCost = tc.address, tc.cost
+			req.ShippingAddress, req.ShippingDays, req.ShippingCost = tc.address, tc.days, tc.cost
 			res := doJSONWithHeaders(t, srv, http.MethodPut, fmt.Sprintf("/purchase-orders/%d/items", poID),
 				req, map[string]string{"If-Match": strconv.Itoa(int(before.RowVersion))})
 			defer res.Body.Close()
-			require.Equal(t, tc.want, res.StatusCode)
-			if tc.want != http.StatusUnprocessableEntity {
+			require.Equal(t, http.StatusOK, res.StatusCode)
+
+			items, err := repo.ListItems(ctx, poID)
+			require.NoError(t, err)
+			var ship *purchaseorders.PurchaseOrderItem
+			for i := range items {
+				if items[i].ItemType == "shipping" {
+					ship = &items[i]
+				}
+			}
+			if tc.wantCost == "" {
+				assert.Nil(t, ship)
 				return
 			}
-			assert.Equal(t, map[string]string{
-				"shippingAddress": "Alamat pengiriman wajib diisi bila ada biaya pengiriman.",
-			}, readProblem(t, res).Fields)
-			after, err := repo.GetByID(ctx, poID)
-			require.NoError(t, err)
-			assert.Equal(t, before.RowVersion, after.RowVersion, "refused edit writes nothing")
+			require.NotNil(t, ship)
+			assert.Equal(t, tc.wantCost, ship.SellingPrice)
+			assert.Equal(t, tc.days, ship.ShippingDays)
 		})
 	}
 }
+
+func intPtr(v int) *int { return &v }

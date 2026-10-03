@@ -403,7 +403,7 @@ func TestRepo_UpdateItems_VersionedNotFound(t *testing.T) {
 // They survive create then update.
 func TestRepo_ShippingDays_RoundTrip(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
-	poID := acceptedQuotationWithShipping(t, tx, 7)
+	poID := acceptedQuotationWithShipping(t, tx, strPtr("Tanjung Priok"), 7, strPtr("75000"))
 
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 	created, err := repo.ListItems(ctx, poID)
@@ -436,19 +436,47 @@ func TestRepo_ShippingDays_RoundTrip(t *testing.T) {
 	assert.Equal(t, 12, *updatedShip.ShippingDays)
 }
 
+// Days alone survive Ubah PO.
+// A quotation may carry Waktu Pengiriman without an address; the PO keeps
+// that no-charge line through an edit, as the quotation does.
+func TestRepo_ShippingDays_KeptWithoutAddress(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	poID := acceptedQuotationWithShipping(t, tx, nil, 7, nil)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	created, err := repo.ListItems(ctx, poID)
+	require.NoError(t, err)
+	require.Equal(t, 7, *shippingLine(t, created).ShippingDays)
+
+	days := 9
+	_, err = repo.UpdateItems(ctx, poID, purchaseorders.UpdateItemsRequest{
+		DiscountPct:  "0",
+		ShippingDays: &days,
+		Items: []purchaseorders.UpdateItemsLine{{
+			ItemName: "Edited Item", Qty: "3", UnitID: int16Ptr(seedUnitID), SellingPrice: "200000",
+		}},
+	}, seedUserID, nil)
+	require.NoError(t, err)
+
+	updated, err := repo.ListItems(ctx, poID)
+	require.NoError(t, err)
+	ship := shippingLine(t, updated)
+	require.NotNil(t, ship.ShippingDays)
+	assert.Equal(t, 9, *ship.ShippingDays)
+	assert.Nil(t, ship.ShipDestination)
+	assert.Equal(t, "0.00", ship.SellingPrice, "no charge")
+}
+
 // Accept shipping quotation, return PO.
-func acceptedQuotationWithShipping(t *testing.T, tx pgx.Tx, days int) int64 {
+func acceptedQuotationWithShipping(t *testing.T, tx pgx.Tx, addr *string, days int, cost *string) int64 {
 	t.Helper()
 	ctx := context.Background()
 	qrepo := quotations.NewRepo(tx, testutil.Store(t))
-	addr := "Tanjung Priok"
-	cost := "75000"
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
-		ShippingAddress: &addr,
+		ShippingAddress: addr,
 		ShippingDays:    &days,
-		ShippingCost:    &cost,
+		ShippingCost:    cost,
 		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{
 			RequestedName: "Test Product",
 			Qty:           "2",

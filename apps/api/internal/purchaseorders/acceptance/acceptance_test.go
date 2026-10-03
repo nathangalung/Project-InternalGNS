@@ -311,6 +311,23 @@ func (s *scenarioState) poItemsAtLeastProducts(min int) error {
 	return nil
 }
 
+// shippingLineCharges reads the charge.
+func (s *scenarioState) shippingLineCharges(want string) error {
+	var rows []purchaseorders.PurchaseOrderItem
+	if err := json.Unmarshal(s.body, &rows); err != nil {
+		return err
+	}
+	for _, it := range rows {
+		if it.ItemType == "shipping" {
+			if !numericEquals(it.SellingPrice, want) {
+				return fmt.Errorf("shipping charges %s, want %s", it.SellingPrice, want)
+			}
+			return nil
+		}
+	}
+	return fmt.Errorf("no shipping line in %s", s.body)
+}
+
 func (s *scenarioState) poListAtLeast(min int) error {
 	var rows []purchaseorders.PurchaseOrder
 	if err := json.Unmarshal(s.body, &rows); err != nil {
@@ -659,6 +676,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the invoice status is "([^"]+)"$`, state.invoiceStatusEquals)
 		sc.Step(`^the user edits PO items with discount "([^"]*)" and selling price "([^"]*)"$`, state.editPOItems)
 		sc.Step(`^the user edits PO items with a shipping charge of "([^"]+)" and no address$`, state.editPOItemsChargeNoAddress)
+		sc.Step(`^the shipping line charges "([^"]+)"$`, state.shippingLineCharges)
 		sc.Step(`^the user lists invoice items by quotation$`, state.listInvoiceItems)
 		sc.Step(`^the user edits PO details with number "([^"]+)"$`, state.editPODetails)
 		sc.Step(`^the user edits PO details with a stale If-Match$`, state.editPODetailsStaleVersion)
