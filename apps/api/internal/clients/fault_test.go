@@ -24,6 +24,8 @@ func TestHandler_DBFailureIsGenericProblem(t *testing.T) {
 		{"summary", http.MethodGet, "/clients/summary", nil},
 		{"update", http.MethodPut, "/clients/1",
 			clients.UpdateClientRequest{Name: "PT Gagal", CountryCode: "IDN", IsActive: true}},
+		{"update stored country", http.MethodPut, "/clients/1",
+			clients.UpdateClientRequest{Name: "PT Gagal", NPWP: ptr("T08GB0001A"), IsActive: true}},
 		{"update contact", http.MethodPatch, "/clients/1/contacts/1", map[string]any{"name": "Gagal"}},
 		{"delete contact", http.MethodDelete, "/clients/1/contacts/1", nil},
 		{"logo upload url", http.MethodGet, "/clients/1/logo/upload-url?fileName=a.png", nil},
