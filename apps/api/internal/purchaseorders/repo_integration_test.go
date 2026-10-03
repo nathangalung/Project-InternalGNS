@@ -198,7 +198,7 @@ func TestRepo_UpdateItems_DiscountOutOfRangeIsUnprocessable(t *testing.T) {
 	require.ErrorAs(t, err, &pgErr)
 	assert.Equal(t, "P0014", pgErr.Code)
 
-	// The handler falls through to RenderDBErr, so FromDBErr is the contract.
+	// The handler falls through to RenderDBErrCtx, so FromDBErr is the contract.
 	e := httperr.FromDBErr(err)
 	assert.Equal(t, http.StatusUnprocessableEntity, e.Status)
 	// Prose, so it rides in Detail; a "db" field key would toast as a label.

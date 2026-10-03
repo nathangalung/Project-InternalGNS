@@ -195,8 +195,10 @@ test-db-reset: db-up ## Recreate the throwaway test database
 	  -c "DROP DATABASE IF EXISTS $(CI_TEST_DB) WITH (FORCE);" \
 	  -c "CREATE DATABASE $(CI_TEST_DB) OWNER gns_app;" >/dev/null
 
-test-api: test-db-reset ## Run Go tests against a throwaway DB (serialized)
+# Storage suites need MinIO too.
+test-api: deps-up test-db-reset ## Run Go tests against a throwaway DB (serialized)
 	cd $(API_DIR) && TEST_DATABASE_URL=$(CI_TEST_DSN) DATABASE_URL=$(CI_TEST_DSN) \
+	  MINIO_ENDPOINT=$${MINIO_ENDPOINT:-localhost:9000} \
 	  go test ./... -race -count=1 -p=1
 
 test-api-ci: test-api ## Run Go tests the way CI does

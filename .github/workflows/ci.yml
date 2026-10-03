@@ -120,10 +120,28 @@ jobs:
   # The layout tests skip without xelatex, so the backend job never ran them.
   # Here they run inside the api image itself, with the TeX Live the release
   # ships, and any skip other than the root-only permission case fails.
+  # The PDF tests that read a document from the database (delivery note,
+  # quotation and invoice downloads, the PDF acceptance steps) need Postgres
+  # too, so the job gets the same service and the container shares the host
+  # network to reach it.
   pdf:
     name: pdf layout (xelatex)
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18.6-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
+        env:
+          POSTGRES_DB: gns_citest
+          POSTGRES_USER: gns_app
+          POSTGRES_PASSWORD: gns_app
+          TZ: Asia/Jakarta
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U gns_app -d gns_citest"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
     defaults:
       run:
         working-directory: apps/api
@@ -156,8 +174,9 @@ jobs:
       - name: layout tests in the runtime image
         shell: bash
         run: |
-          docker run --rm --user root --entrypoint bash \
+          docker run --rm --user root --entrypoint bash --network host \
             -v "$PWD":/src -w /src \
+            -e TEST_DATABASE_URL="postgres://gns_app:gns_app@localhost:5432/gns_citest?sslmode=disable" \
             -v "$(go env GOROOT)":/usr/local/go:ro \
             -v "$(go env GOMODCACHE)":/go/pkg/mod \
             -e GOMODCACHE=/go/pkg/mod -e GOTOOLCHAIN=local -e GOFLAGS=-mod=readonly \
@@ -167,9 +186,10 @@ jobs:
               apt-get update -qq
               apt-get install -y -qq --no-install-recommends poppler-utils >/dev/null
               xelatex --version | sed -n 1p
-              go test -count=1 -v \
-                -run "TestLatex|TestRender|TestRealTemplate|PaperSize|TestQuotationPDF|TestInvoiceTemplate" \
-                ./internal/pdfgen/ ./internal/quotations/ ./internal/invoices/' | tee pdf.log
+              go test -count=1 -p=1 -v \
+                -run "TestLatex|TestRender|TestRealTemplate|PaperSize|TestQuotationPDF|TestInvoiceTemplate|TestDeliveryNote_|TestQuotationExport_PDF_|TestExport_PDF_|TestQuotationFeatures" \
+                ./internal/pdfgen/ ./internal/quotations/ ./internal/invoices/ \
+                ./internal/purchaseorders/ ./internal/quotations/acceptance/' | tee pdf.log
           skips=$(grep -- '--- SKIP' pdf.log | grep -v 'TestRender_StagingFailures/asset_unreadable' || true)
           if [ -n "$skips" ]; then
             echo "::error::PDF layout tests skipped; the gate needs every one to run"

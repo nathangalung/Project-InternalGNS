@@ -182,16 +182,8 @@ func FromDBErr(err error) Error {
 			return UnprocessableDetail("Tanggal di luar rentang yang diizinkan. Periksa kembali tanggalnya.", nil)
 		}
 	}
-	// Never surface raw internal error text to the client; RenderDBErr logs it.
+	// Never surface raw internal error text to the client; RenderDBErrCtx logs it.
 	return Internal("internal server error")
-}
-
-// RenderDBErr renders without request context.
-// Kept for call sites that have not been converted yet: its log line carries
-// no request_id, so it cannot be joined to its access-log line. Prefer
-// RenderDBErrCtx everywhere a request context is in hand.
-func RenderDBErr(w http.ResponseWriter, err error) {
-	RenderDBErrCtx(context.Background(), w, err)
 }
 
 // RenderDBErrCtx renders, logging with context.

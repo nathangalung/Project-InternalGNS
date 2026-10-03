@@ -96,9 +96,10 @@ export function useUpdateContact() {
     }) => clientsApi.updateContact(companyId, contactId, input),
     onSuccess: (_, { companyId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) })
-      // List rows embed contact fields. Detail is left alone so an open detail
-      // form is never refetched out from under in-progress edits.
+      // List rows and the detail embed the main contact. The detail form
+      // copies its fields once, so a refetch never clobbers its edits.
       void qc.invalidateQueries({ queryKey: queryKeys.clients.lists() })
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.detail(companyId) })
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui kontak.")),
   })
@@ -116,9 +117,9 @@ export function useCreateContact() {
     }) => clientsApi.createContact(companyId, input),
     onSuccess: (_, { companyId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) })
-      // List rows embed contact fields, so refresh them too. Detail stays put
-      // to protect an open detail form.
+      // A first contact becomes the main one shown on lists and the detail.
       void qc.invalidateQueries({ queryKey: queryKeys.clients.lists() })
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.detail(companyId) })
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan kontak.")),
   })
@@ -132,6 +133,8 @@ export function useDeleteContact() {
     onSuccess: (_, { companyId }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.clients.contacts(companyId) })
       void qc.invalidateQueries({ queryKey: queryKeys.clients.lists() })
+      // Removing the main contact promotes the next one.
+      void qc.invalidateQueries({ queryKey: queryKeys.clients.detail(companyId) })
     },
     onError: (err) => toast.error(errorMessage(err, "Gagal menghapus kontak.")),
   })

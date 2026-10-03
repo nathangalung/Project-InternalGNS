@@ -51,7 +51,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
@@ -74,7 +74,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, u)
@@ -99,7 +99,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusCreated, u)
@@ -142,7 +142,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	// The caller's live role is in the context, so a changed role or a
@@ -176,7 +176,7 @@ func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 			httperr.Render(w, httperr.NotFound("user not found"))
 			return
 		}
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	// A reset ends every session of the account, the caller's own included.

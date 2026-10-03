@@ -25,6 +25,9 @@ func TestNonNegativeAndPositive(t *testing.T) {
 		{"1e3", true, true},
 		{"-1", false, false},
 		{"-0.01", false, false},
+		// Stored to the sen: 0.004 is 0.00, 0.005 rounds up to 0.01.
+		{"0.004", true, false},
+		{"0.005", true, true},
 		{"NaN", false, false},
 		{"nan", false, false},
 		{"Inf", false, false},

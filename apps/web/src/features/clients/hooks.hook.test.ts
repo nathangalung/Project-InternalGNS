@@ -187,14 +187,18 @@ describe("contact writes", () => {
   ]
 
   it.each(cases)(
-    "%s refreshes contacts and lists, not the detail",
+    "%s refreshes the contacts, lists and detail of its client",
     async (_n, hook, ok, _f, vars) => {
       ok()
       const { qc, result } = renderQueryHook(hook)
       const otherContacts = queryKeys.clients.contacts(8)
       seed(qc, [contacts, list, detail, otherContacts])
       await settle(() => result.current.mutateAsync(vars as never))
-      expect(invalidated(qc, [contacts, list, detail, otherContacts])).toEqual([contacts, list])
+      expect(invalidated(qc, [contacts, list, detail, otherContacts])).toEqual([
+        contacts,
+        list,
+        detail,
+      ])
     },
   )
 

@@ -3,7 +3,7 @@ import { adminCredentials, type Role } from "./support/env"
 
 const allSections = [
   "Dashboard",
-  "Dashboard Financial",
+  "Dashboard Finansial",
   "Dashboard Operasional",
   "Quotation",
   "Purchase Order",
@@ -27,7 +27,7 @@ const visible: Record<Role, readonly (typeof allSections)[number][]> = {
   ],
   finance: [
     "Dashboard",
-    "Dashboard Financial",
+    "Dashboard Finansial",
     "Invoices",
     "Katalog Produk",
     "Daftar Vendor",

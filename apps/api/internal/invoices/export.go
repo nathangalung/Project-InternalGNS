@@ -88,13 +88,13 @@ func (h *ExportHandler) ExportPDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 
 	items, err := h.repo.ListItems(r.Context(), id)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 
@@ -102,7 +102,7 @@ func (h *ExportHandler) ExportPDF(w http.ResponseWriter, r *http.Request) {
 
 	pdf, err := h.renderer.Render(r.Context(), "invoice/Invoice.tex.tmpl", data)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 

@@ -165,6 +165,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           createdAt={formatDate(po.createdAt)}
           status={po.status}
           deliveryNoteNumber={po.deliveryNoteNumber}
+          invoiceNo={po.invoiceNo}
           onEdit={isPoLocked(po.status) ? undefined : onEdit}
           onDownloadDeliveryNote={dnReady ? () => void handleDownloadDeliveryNote() : undefined}
         />

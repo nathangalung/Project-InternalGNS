@@ -28,7 +28,7 @@ func NewHandler(repo *Repo) *Handler {
 func (h *Handler) Summary(w http.ResponseWriter, r *http.Request) {
 	s, err := h.repo.Summary(r.Context())
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	if !canViewFinancial(deps.CurrentUserRole(r.Context())) {
@@ -69,7 +69,7 @@ func (h *Handler) Timeseries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, points)

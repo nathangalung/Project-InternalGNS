@@ -64,7 +64,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	w.Header().Set("X-Total-Count", strconv.FormatInt(res.Total, 10))
@@ -79,7 +79,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.repo.List(r.Context(), f)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WarnIfTruncated(r.Context(), "purchaseorders.export", res.Total, len(res.Rows))
@@ -100,7 +100,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	}
 	data, err := sheet.Write("Delivery Note", headers, rows)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteXLSX(w, "delivery-note-export", data)
@@ -118,7 +118,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, po)
@@ -136,7 +136,7 @@ func (h *Handler) GetByQuotation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, po)
@@ -150,7 +150,7 @@ func (h *Handler) ListItems(w http.ResponseWriter, r *http.Request) {
 	}
 	items, err := h.repo.ListItems(r.Context(), id)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, items)
@@ -178,7 +178,7 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 			httperr.Render(w, httperr.NotFound("purchase order not found"))
 			return
 		}
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	// The key comes from the client, so it must address an upload made for
@@ -201,7 +201,7 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrLocked):
 			renderLocked(w, err.Error())
 		default:
-			httperr.RenderDBErr(w, err)
+			httperr.RenderDBErrCtx(r.Context(), w, err)
 		}
 		return
 	}
@@ -253,7 +253,7 @@ func (h *Handler) UpdateNotes(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrVersionMismatch):
 			httperr.Render(w, httperr.VersionConflict())
 		default:
-			httperr.RenderDBErr(w, err)
+			httperr.RenderDBErrCtx(r.Context(), w, err)
 		}
 		return
 	}
@@ -299,7 +299,7 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrLocked):
 			renderLocked(w, "Nomor dan tanggal PO tidak dapat diubah setelah invoice dikirim.")
 		default:
-			httperr.RenderDBErr(w, err)
+			httperr.RenderDBErrCtx(r.Context(), w, err)
 		}
 		return
 	}
@@ -337,7 +337,7 @@ func (h *Handler) ChangeStatus(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrInvalidTransition):
 			httperr.Render(w, httperr.Unprocessable(map[string]string{"status": err.Error()}))
 		default:
-			httperr.RenderDBErr(w, err)
+			httperr.RenderDBErrCtx(r.Context(), w, err)
 		}
 		return
 	}
@@ -387,7 +387,7 @@ func (h *Handler) UpdateItems(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrLocked):
 			renderLocked(w, err.Error())
 		default:
-			httperr.RenderDBErr(w, err)
+			httperr.RenderDBErrCtx(r.Context(), w, err)
 		}
 		return
 	}
@@ -416,7 +416,7 @@ func (h *Handler) allowWork(w http.ResponseWriter, r *http.Request, id int64, ta
 		return false
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return false
 	}
 	if !gatedMove(po.Status, target) {
@@ -424,7 +424,7 @@ func (h *Handler) allowWork(w http.ResponseWriter, r *http.Request, id int64, ta
 	}
 	issues, err := h.repo.Completeness(r.Context(), id)
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return false
 	}
 	if len(issues) == 0 {
@@ -450,7 +450,7 @@ func (h *Handler) RemoveFile(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrLocked):
 			renderLocked(w, err.Error())
 		default:
-			httperr.RenderDBErr(w, err)
+			httperr.RenderDBErrCtx(r.Context(), w, err)
 		}
 		return
 	}
@@ -470,7 +470,7 @@ func (h *Handler) History(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErr(w, err)
+		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, rows)

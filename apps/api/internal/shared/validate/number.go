@@ -30,10 +30,11 @@ func NonNegative(label, s string) string {
 }
 
 // Positive checks a required amount.
-// s must be a finite number above zero; label starts the message.
-// It returns "" when s passes.
+// s must be a finite number that stays above zero once stored to the sen,
+// as the NUMERIC(_,2) columns do; label starts the message. It returns ""
+// when s passes.
 func Positive(label, s string) string {
-	if v, ok := finite(s); ok && v > 0 {
+	if v, ok := finite(s); ok && math.Round(v*100) > 0 {
 		return ""
 	}
 	return label + " harus berupa angka lebih dari 0."
