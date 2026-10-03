@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { useMemo, useState } from "react"
+import ActiveFilters from "@/components/shared/ActiveFilters"
 import EntityLink from "@/components/shared/EntityLink"
 import EntityLogo from "@/components/shared/EntityLogo"
 import EyeIcon from "@/components/shared/EyeIcon"
@@ -14,12 +15,17 @@ import ClientFilter, { type ClientFilterValues } from "@/features/clients/Client
 import { clientKpis } from "@/features/clients/helpers"
 import { useClientSummary, useClients } from "@/features/clients/hooks"
 import { useCountries } from "@/features/countries/hooks"
+import { filterChips } from "@/lib/filter-chips"
+import { statusFilterLabel } from "@/lib/filter-options"
 import { formatNumber, formatRupiah, PENDING_FIGURE } from "@/lib/format"
 import { emptyListText } from "@/lib/list-empty"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import type { ClientRow } from "@/types/api"
+
+// Filters with nothing applied.
+const CLIENT_FILTERS: ClientFilterValues = { status: "all", countryCode: "", minTotal: "" }
 
 export default function ClientList() {
   const { data: countriesData } = useCountries()
@@ -28,11 +34,7 @@ export default function ClientList() {
   const [showAdd, setShowAdd] = useState(false)
   const [showFilter, setShowFilter] = useState(false)
 
-  const list = useListScreen<ClientFilterValues>({
-    status: "all",
-    countryCode: "",
-    minTotal: "",
-  })
+  const list = useListScreen<ClientFilterValues>(CLIENT_FILTERS)
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
 
   const queryParams = useMemo(
@@ -59,6 +61,26 @@ export default function ClientList() {
   }, [countriesData])
 
   const kpis = useMemo(() => clientKpis(summaryData), [summaryData])
+
+  const chips = useMemo(
+    () =>
+      filterChips(
+        { term: debouncedSearch, clear: list.clearSearch },
+        filters,
+        CLIENT_FILTERS,
+        {
+          status: (v) => `Status: ${statusFilterLabel(v)}`,
+          countryCode: (v) => `Negara: ${countryOf(v)}`,
+          minTotal: (v) => `Min Total Pembelian: ${formatRupiah(v)}`,
+        },
+        list.patchFilters,
+      ),
+    [debouncedSearch, filters, countryOf, list.clearSearch, list.patchFilters],
+  )
+  const clearAllFilters = () => {
+    list.clearSearch()
+    list.applyFilters(CLIENT_FILTERS)
+  }
 
   const totalPages = list.totalPagesOf(totalItems)
 
@@ -114,6 +136,8 @@ export default function ClientList() {
           />
           <FilterButton onClick={() => setShowFilter(true)} />
         </div>
+
+        <ActiveFilters chips={chips} onClearAll={clearAllFilters} />
 
         <div className={ui.tableWrap}>
           <table className="w-full border-collapse">

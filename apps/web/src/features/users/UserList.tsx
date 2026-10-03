@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { useMemo, useState } from "react"
+import ActiveFilters from "@/components/shared/ActiveFilters"
 import EntityLink from "@/components/shared/EntityLink"
 import EyeIcon from "@/components/shared/EyeIcon"
 import FilterButton from "@/components/shared/FilterButton"
@@ -8,7 +9,10 @@ import SearchInput from "@/components/shared/SearchInput"
 import SortIcon from "@/components/shared/SortIcon"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
+import { ROLE_LABEL } from "@/features/users/helpers"
 import { useUsers } from "@/features/users/hooks"
+import { filterChips } from "@/lib/filter-chips"
+import { statusFilterLabel } from "@/lib/filter-options"
 import { formatDateShort } from "@/lib/format"
 import { emptyListText } from "@/lib/list-empty"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
@@ -32,14 +36,31 @@ const ROLE_BADGE: Record<Role, { label: string; bg: string; color: string }> = {
   finance: { label: "FINANCE", bg: "#DBEAFE", color: "#1D4ED8" },
 }
 
+// Filters with nothing applied.
+const USER_FILTERS: UserFilters = { role: "all", status: "all" }
+
 export default function UserList() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
   const [sortKey, setSortKey] = useState<SortKey>("createdAt")
   const [showFilter, setShowFilter] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
 
-  const list = useListScreen<UserFilters>({ role: "all", status: "all" })
+  const list = useListScreen<UserFilters>(USER_FILTERS)
   const { debouncedSearch, filters, itemsPerPage, startIndex } = list
+  const chips = filterChips(
+    { term: debouncedSearch, clear: list.clearSearch },
+    filters,
+    USER_FILTERS,
+    {
+      role: (v) => `Peran: ${v === "all" ? "Semua" : ROLE_LABEL[v]}`,
+      status: (v) => `Status: ${statusFilterLabel(v)}`,
+    },
+    list.patchFilters,
+  )
+  const clearAllFilters = () => {
+    list.clearSearch()
+    list.applyFilters(USER_FILTERS)
+  }
 
   function ariaSort(key: SortKey): "ascending" | "descending" | "none" {
     if (sortKey !== key) return "none"
@@ -112,6 +133,8 @@ export default function UserList() {
           />
           <FilterButton onClick={() => setShowFilter(true)} />
         </div>
+
+        <ActiveFilters chips={chips} onClearAll={clearAllFilters} />
 
         <div className={ui.tableWrap}>
           <table className="w-full border-collapse">
