@@ -301,7 +301,9 @@ test("the Dibatalkan filter finds a cancelled invoice and opens it", async ({
   await filter.getByRole("button", { name: "Terapkan" }).click()
   await expect(row).toHaveCount(1)
   await expect(row).toContainText("Dibatalkan")
-  await expect(row.getByRole("button", { name: "Unduh invoice" })).toBeVisible()
+  await expect(
+    row.getByRole("button", { name: `Unduh invoice ${invoice.invoiceNo}` }),
+  ).toBeVisible()
   await expect(row.getByRole("button", { name: "Unduh Coretax XML" })).toHaveCount(0)
 
   const link = row.getByRole("link", { name: invoice.invoiceNo })
