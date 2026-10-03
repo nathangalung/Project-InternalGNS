@@ -192,7 +192,7 @@ test.describe("purchase order detail", () => {
     // The editor reopens on the stored 0 without flagging it.
     await page.goto(`/purchase-orders/${q.id}/edit`)
     await expect(page.getByRole("button", { name: "Edit produk 1" })).toBeVisible()
-    await expect(page.getByText("Jumlah harus lebih dari 0.")).toHaveCount(0)
+    await expect(page.locator("main").getByText("Jumlah harus")).toHaveCount(0)
   })
 })
 

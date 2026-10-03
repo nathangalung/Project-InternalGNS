@@ -17,11 +17,12 @@ export function isValidQty(qty: number): boolean {
   return Number.isFinite(qty) && qty > 0
 }
 
-export function countInvalidQty(lines: { jumlah: number }[]): number {
-  return lines.filter((l) => !isValidQty(l.jumlah)).length
+// Lines whose qty fails.
+export function countInvalidQty(lines: { jumlah: number }[], allowZero = false): number {
+  return lines.filter((l) => qtyIssue(l.jumlah, allowZero)).length
 }
 
-// A PO line may be 0.
+// PO lines may be 0.
 //
 // The PO edit server rule (validate.NonNegative) refuses only a negative or
 // non-numeric qty, with this text.

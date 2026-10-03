@@ -5,7 +5,7 @@ import { fromClientRow } from "@/features/clients/helpers"
 import { useClient } from "@/features/clients/hooks"
 import ProductAdd from "@/features/items/ProductAdd"
 import DiscountModal from "@/features/quotations/DiscountModal"
-import { PO_QTY_ERROR, qtyIssue } from "@/features/quotations/lines"
+import { countInvalidQty, PO_QTY_ERROR } from "@/features/quotations/lines"
 import Step2Product from "@/features/quotations/Step2Product"
 import Step3Shipping from "@/features/quotations/Step3Shipping"
 import Step4Summary from "@/features/quotations/Step4Summary"
@@ -184,7 +184,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
       return
     }
     // Qty 0 stays allowed; a negative one is refused.
-    if (products.some((p) => qtyIssue(p.jumlah, true))) {
+    if (countInvalidQty(products, true) > 0) {
       toast.error(`${PO_QTY_ERROR} Ubah produk yang ditandai sebelum menyimpan.`)
       return
     }

@@ -39,6 +39,10 @@ describe("isValidQty rule", () => {
   it("counts the bad lines", () => {
     expect(countInvalidQty([{ jumlah: 1 }, { jumlah: 0 }, { jumlah: -3 }])).toBe(2)
   })
+
+  it("counts only negatives on a PO", () => {
+    expect(countInvalidQty([{ jumlah: 1 }, { jumlah: 0 }, { jumlah: -3 }], true)).toBe(1)
+  })
 })
 
 describe("qtyIssue rule", () => {
