@@ -52,10 +52,15 @@ export function useItemSearchAdvanced(q: string, options: itemsApi.SearchAdvance
   })
 }
 
+// Vendors linked to a product.
+//
+// A secondary table: a failure shows in it, not on the route error boundary,
+// which would replace the page and its unsaved form.
 export function useItemVendors(itemId: number | undefined) {
   return useQuery({
     queryKey: itemId ? queryKeys.items.vendors(itemId) : queryKeys.items.all,
     queryFn: itemId !== undefined && itemId > 0 ? () => itemsApi.listVendors(itemId) : skipToken,
+    throwOnError: false,
   })
 }
 

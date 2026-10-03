@@ -14,6 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 )
 
 // CoretaxHandler renders e-faktur XML.
@@ -256,33 +257,12 @@ func lineGrossAndDiscount(it InvoiceItem) (string, string) {
 	return price, disc.String()
 }
 
-// npwpDigits is Coretax's NPWP length.
-const npwpDigits = 16
-
 // ErrBuyerIdentity marks a rejected buyer.
 var ErrBuyerIdentity = errors.New("coretax buyer identity invalid")
 
-// normalizeNPWP strips NPWP separators.
-// It also reports whether the digits left make a full-length NPWP.
-func normalizeNPWP(raw string) (string, bool) {
-	var b strings.Builder
-	for _, r := range raw {
-		switch {
-		case r >= '0' && r <= '9':
-			b.WriteRune(r)
-		case r == '.' || r == '-' || r == ' ':
-		default:
-			return "", false
-		}
-	}
-	out := b.String()
-	return out, len(out) == npwpDigits
-}
-
 // isIndonesianBuyer reads blank as IDN.
-// That matches the XML default.
 func isIndonesianBuyer(c clients.Client) bool {
-	return c.CountryCode == "" || strings.EqualFold(c.CountryCode, "IDN")
+	return validate.Indonesian(c.CountryCode)
 }
 
 // buyerTin picks the buyer's TIN.
@@ -290,7 +270,7 @@ func isIndonesianBuyer(c clients.Client) bool {
 // buyer's own tax id is left untouched.
 func buyerTin(c clients.Client) string {
 	raw := strings.TrimSpace(strDeref(c.NPWP))
-	if digits, ok := normalizeNPWP(raw); ok {
+	if digits, ok := validate.NPWP(raw); ok {
 		return digits
 	}
 	return raw
@@ -300,7 +280,7 @@ func buyerTin(c clients.Client) string {
 // One without a valid NPWP is refused: filing them as a passport holder with
 // no document number produces a tax invoice DJP cannot match to the buyer.
 func validateBuyerIdentity(c clients.Client) error {
-	if _, ok := normalizeNPWP(strings.TrimSpace(strDeref(c.NPWP))); ok {
+	if _, ok := validate.NPWP(strings.TrimSpace(strDeref(c.NPWP))); ok {
 		return nil
 	}
 	if isIndonesianBuyer(c) {

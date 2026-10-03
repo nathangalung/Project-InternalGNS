@@ -17,6 +17,9 @@ func codes(gaps []CompletenessGap) []GapCode {
 	return out
 }
 
+// validNPWP is a 16-digit NPWP.
+const validNPWP = "0612345678901000"
+
 func TestMissingClientFields(t *testing.T) {
 	complete := ClientCompleteness{
 		ID: 1, Name: "PT. IMC Ship Management",
@@ -37,12 +40,12 @@ func TestMissingClientFields(t *testing.T) {
 		},
 		{
 			name:  "phone alone satisfies the contact channel",
-			input: ClientCompleteness{ID: 1, Name: "X", Number: s("1"), Npwp: s("2"), Address: s("3"), ContactName: s("A"), ContactPhone: s("08")},
+			input: ClientCompleteness{ID: 1, Name: "X", Number: s("1"), Npwp: s(validNPWP), Address: s("3"), ContactName: s("A"), ContactPhone: s("08")},
 			want:  []GapCode{},
 		},
 		{
 			name:  "no contact at all",
-			input: ClientCompleteness{ID: 1, Name: "X", Number: s("1"), Npwp: s("2"), Address: s("3")},
+			input: ClientCompleteness{ID: 1, Name: "X", Number: s("1"), Npwp: s(validNPWP), Address: s("3")},
 			want:  []GapCode{GapContactName, GapContactReach},
 		},
 		{
@@ -50,10 +53,21 @@ func TestMissingClientFields(t *testing.T) {
 			// moot: the quotation has to pick an active one.
 			name: "chosen contact deactivated",
 			input: ClientCompleteness{
-				ID: 1, Name: "X", Number: s("1"), Npwp: s("2"),
+				ID: 1, Name: "X", Number: s("1"), Npwp: s(validNPWP),
 				ContactName: s("A"), ContactEmail: s("a@b.c"), ContactInactive: true,
 			},
 			want: []GapCode{GapClientAddress, GapContactInactive},
+		},
+		{
+			// Coretax refuses the invoice issued at DELIVERED.
+			name:  "indonesian NPWP short of 16 digits",
+			input: ClientCompleteness{ID: 1, Name: "X", Number: s("1"), Npwp: s("012345678901000"), Address: s("3"), ContactName: s("A"), ContactPhone: s("08")},
+			want:  []GapCode{GapClientNpwp},
+		},
+		{
+			name:  "foreign buyer keeps its own tax id",
+			input: ClientCompleteness{ID: 1, Name: "X", Number: s("1"), Npwp: s("T08LL1234A"), CountryCode: "SGP", Address: s("3"), ContactName: s("A"), ContactPhone: s("08")},
+			want:  []GapCode{},
 		},
 		{
 			// TKU is derived from the NPWP when it is not recorded, the same
@@ -110,7 +124,7 @@ func TestGapLabels(t *testing.T) {
 	}, missingClientFields(ClientCompleteness{}))
 	assert.Equal(t, []CompletenessGap{{Code: GapContactInactive, Label: "Narahubung aktif"}},
 		missingClientFields(ClientCompleteness{
-			Number: s("1"), Npwp: s("2"), Address: s("3"), ContactInactive: true,
+			Number: s("1"), Npwp: s(validNPWP), Address: s("3"), ContactInactive: true,
 		}))
 	assert.Equal(t, []CompletenessGap{
 		{Code: GapVendorLocation, Label: "Lokasi"},

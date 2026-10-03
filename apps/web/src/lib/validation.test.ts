@@ -6,8 +6,10 @@ import {
   isValidAddress,
   isValidEmail,
   isValidPhone,
+  NPWP_ERROR,
   optionalAddressError,
   optionalEmailError,
+  optionalNpwpError,
   optionalPhoneError,
   PHONE_ERROR,
 } from "./validation"
@@ -112,5 +114,20 @@ describe("digitsOnly", () => {
     ["abc", ""],
   ])("%j -> %j", (s, want) => {
     expect(digitsOnly(s)).toBe(want)
+  })
+})
+
+describe("optionalNpwpError", () => {
+  it.each([
+    ["", "IDN", null],
+    ["   ", "IDN", null],
+    ["0123456789012345", "IDN", null],
+    ["01.234.567.89.012.345", "IDN", null],
+    ["01.234.567.8-901.000", "IDN", NPWP_ERROR],
+    ["12345", "", NPWP_ERROR],
+    ["NPWP0123456789012", "IDN", NPWP_ERROR],
+    ["T08LL1234A", "SGP", null],
+  ])("%j for %j is %j", (value, country, want) => {
+    expect(optionalNpwpError(value, country)).toBe(want)
   })
 })

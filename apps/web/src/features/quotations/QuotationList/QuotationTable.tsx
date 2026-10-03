@@ -14,6 +14,8 @@ type QuotationTableProps = {
   onSort: (key: SortableRowKey) => void
   onViewDetail?: (id: string) => void
   onDownload?: (row: QuotationRow) => void
+  // Empty-state text, aware of search and filters
+  emptyText: string
 }
 
 // Sort control, keyboard reachable.
@@ -28,6 +30,7 @@ export default function QuotationTable({
   onSort,
   onViewDetail,
   onDownload,
+  emptyText,
 }: QuotationTableProps) {
   const dirOf = (key: SortableRowKey) => (sortKey === key ? sortDir : null)
   const ariaSort = (key: SortableRowKey) => {
@@ -70,9 +73,7 @@ export default function QuotationTable({
       </thead>
       <tbody>
         {isLoading && <TableLoadingRow colSpan={8} />}
-        {!isLoading && rows.length === 0 && (
-          <TableEmptyRow colSpan={8}>Belum ada Quotation.</TableEmptyRow>
-        )}
+        {!isLoading && rows.length === 0 && <TableEmptyRow colSpan={8}>{emptyText}</TableEmptyRow>}
         {!isLoading &&
           rows.map((row) => {
             const badge = statusConfig[row.status]

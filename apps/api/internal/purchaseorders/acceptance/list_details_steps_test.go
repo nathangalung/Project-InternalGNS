@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"net/url"
 	"strings"
 	"time"
@@ -96,7 +97,7 @@ func (s *scenarioState) exportRowForPO() ([]string, error) {
 		return nil, err
 	}
 	defer f.Close()
-	rows, err := f.GetRows(f.GetSheetName(0))
+	rows, err := f.GetRows(f.GetSheetName(0), excelize.Options{RawCellValue: true})
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +123,13 @@ func (s *scenarioState) exportShowsPOTotal(want string) error {
 	if err != nil {
 		return err
 	}
-	if len(row) <= exportTotalCol || row[exportTotalCol] != want {
+	// Total is a number cell; compare the values, not their text.
+	if len(row) <= exportTotalCol {
+		return fmt.Errorf("want total %s got row %v", want, row)
+	}
+	wantN, werr := strconv.ParseFloat(want, 64)
+	gotN, gerr := strconv.ParseFloat(row[exportTotalCol], 64)
+	if werr != nil || gerr != nil || wantN != gotN {
 		return fmt.Errorf("want total %s got row %v", want, row)
 	}
 	return nil

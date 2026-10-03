@@ -183,6 +183,24 @@ test("Tambah Klien refuses a 13-digit phone inline", async ({ page, seed }) => {
   await expect(modal).toBeHidden()
 })
 
+test("Tambah Klien refuses an NPWP short of 16 digits inline", async ({ page, seed }) => {
+  await page.goto("/clients")
+  await page.getByRole("button", { name: "Tambah Klien" }).click()
+  const modal = page.getByRole("dialog", { name: "Tambah Klien" })
+  const save = modal.getByRole("button", { name: "Simpan Data" })
+  await modal.getByLabel("Nama Perusahaan *").fill(seed.name("Klien NPWP"))
+  await modal.getByLabel("Nama Narahubung *").fill(`${seed.prefix} Rina`)
+  await modal.getByLabel("Nomor Telepon (Opsional)").fill("812345678901")
+  await modal.getByLabel("NPWP (Opsional)").fill("012345678901000")
+  await expect(modal.getByText("NPWP harus 16 digit angka.")).toBeVisible()
+  await expect(save).toBeDisabled()
+  await modal.getByLabel("NPWP (Opsional)").fill("0123456789012345")
+  await expect(modal.getByText("NPWP harus 16 digit angka.")).toBeHidden()
+  await expect(save).toBeEnabled()
+  await modal.getByRole("button", { name: "Batal" }).click()
+  await expect(modal).toBeHidden()
+})
+
 test("a contact edit refuses a 13-digit phone", async ({ page, seed }) => {
   const client = await seed.client()
   await page.goto(`/clients/${client.id}`)

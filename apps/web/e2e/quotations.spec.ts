@@ -694,7 +694,7 @@ test.describe("quotation status", () => {
       )
       await poSearch.fill(seed.prefix)
       await searched
-      await expect(page.getByText("Belum ada Purchase Order.")).toBeVisible()
+      await expect(page.getByText(`Tidak ada hasil untuk "${seed.prefix}".`)).toBeVisible()
 
       await nav.getByRole("link", { name: "Quotation", exact: true }).click()
       await page.getByPlaceholder("Cari penawaran, klien, atau nomor...").fill(seed.prefix)
@@ -724,6 +724,14 @@ test.describe("quotation status", () => {
 })
 
 test.describe("quotation list", () => {
+  // No match is not an empty list.
+  test("a search with no match names the term, not Belum ada", async ({ page }) => {
+    await page.goto("/quotations")
+    await page.getByPlaceholder("Cari penawaran, klien, atau nomor...").fill("zzz-tidak-ada-zzz")
+    await expect(page.getByText('Tidak ada hasil untuk "zzz-tidak-ada-zzz".')).toBeVisible()
+    await expect(page.getByText("Belum ada Quotation.")).toHaveCount(0)
+  })
+
   test("a status filter narrows the search and its chip removes it", async ({ page, seed }) => {
     const client = await seed.client()
     const item = await seed.item()

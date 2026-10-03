@@ -135,7 +135,8 @@ internal/
   pdfgen/           LaTeX (xelatex) document rendering
   storage/          MinIO client, bucket policy, authenticated download proxy
   shared/           deps, db helpers, httperr (RFC 7807), httpx, paginate,
-                    listq (list query builder), sheet (XLSX), assetproxy
+                    listq (list query builder), sheet (XLSX; money columns are
+                    numbers so Excel can sum them), assetproxy
                     (descriptor-driven presign handlers, one set reused by
                     every slice), money, tz, validate (phone and email
                     rules the web mirrors), live (quotation change
@@ -284,6 +285,14 @@ filled by `fn_next_client_number`; a typed one must be four digits and unused,
 and it is locked once a quotation uses it, because every document number
 embeds it.
 
+A client's NPWP follows one rule, `validate.ClientNPWP`, mirrored by
+`optionalNpwpError` in the web: an Indonesian client (country IDN or blank)
+has the 16 digits Coretax files, typed with or without separators and stored
+as digits only (`validate.StoredNPWP`; the printed form overflows the
+20-character column); a foreign buyer keeps its own tax id. The PO gate
+refuses ON_PROGRESS and DELIVERED on a malformed Indonesian NPWP, since the
+invoice issued at DELIVERED would fail the Coretax export.
+
 ## Frontend layout (`apps/web`)
 
 Feature-based with file-based routing:
@@ -368,6 +377,10 @@ reader to the new last page when a narrower result ends before the current
 one. Client-side tables (the quotation product tables) clamp the same way
 through `clampPage` in `lib/pagination.ts`, and every pager renders
 `components/shared/PageButtons`.
+`useListScreen` also reports `narrowed` (a search, or filters off their
+defaults), and every list's empty row goes through `emptyListText`
+(`lib/list-empty.ts`), so a search or filter with no match says
+`Tidak ada hasil untuk …` instead of the list's own "Belum ada …".
 
 ## Testing
 

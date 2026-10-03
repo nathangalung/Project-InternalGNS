@@ -8,6 +8,7 @@ import {
   useQuotations,
 } from "@/features/quotations/hooks"
 import { resolveRange } from "@/lib/date-range"
+import { emptyListText } from "@/lib/list-empty"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
 import type { QuotationSortKey } from "@/types/api"
@@ -157,6 +158,7 @@ export default function QuotationList({ onViewDetail }: QuotationListProps) {
             onSort={requestSort}
             onViewDetail={onViewDetail}
             onDownload={handleDownload}
+            emptyText={emptyListText(list, "Belum ada Quotation.")}
           />
           <Pagination
             totalItems={totalItems}

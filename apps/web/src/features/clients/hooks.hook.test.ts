@@ -265,3 +265,12 @@ describe("useClientRecentQuotations", () => {
     await until(() => expect(result.current.isError).toBe(true))
   })
 })
+
+// The contacts card shows its error.
+describe("useClientContacts failure", () => {
+  it("keeps a failure out of the route error boundary", async () => {
+    m.listContacts.mockRejectedValue(new Error("502"))
+    const { result } = renderQueryHook(() => useClientContacts(7), throwingQueryClient())
+    await until(() => expect(result.current.isError).toBe(true))
+  })
+})

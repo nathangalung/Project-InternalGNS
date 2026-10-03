@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 )
 
 // Master data gating PO work.
@@ -19,6 +20,7 @@ type ClientCompleteness struct {
 	Name         string  `db:"name"`
 	Number       *string `db:"number"`
 	Npwp         *string `db:"npwp"`
+	CountryCode  string  `db:"country_code"`
 	Address      *string `db:"address"`
 	ContactName  *string `db:"contact_name"`
 	ContactEmail *string `db:"contact_email"`
@@ -121,6 +123,9 @@ func missingClientFields(c ClientCompleteness) []CompletenessGap {
 	}
 	if !filled(c.Npwp) {
 		missing = append(missing, CompletenessGap{GapClientNpwp, "NPWP"})
+	} else if msg := validate.ClientNPWP(c.CountryCode, c.Npwp); msg != "" {
+		// The invoice issued at DELIVERED goes to Coretax, which refuses it.
+		missing = append(missing, CompletenessGap{GapClientNpwp, "NPWP 16 digit"})
 	}
 	if !filled(c.Address) {
 		missing = append(missing, CompletenessGap{GapClientAddress, "Alamat"})

@@ -10,6 +10,7 @@ import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { downloadPdf } from "@/lib/api-client"
 import { resolveRange } from "@/lib/date-range"
 import { formatDate } from "@/lib/format"
+import { emptyListText } from "@/lib/list-empty"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { useListScreen, usePageWithin } from "@/lib/useListScreen"
@@ -195,7 +196,10 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
               {isLoading && <TableLoadingRow colSpan={7} />}
               {!isLoading && currentRows.length === 0 && (
                 <TableEmptyRow colSpan={7}>
-                  Belum ada Purchase Order. PO terbuat otomatis ketika quotation disetujui.
+                  {emptyListText(
+                    list,
+                    "Belum ada Purchase Order. PO terbuat otomatis ketika quotation disetujui.",
+                  )}
                 </TableEmptyRow>
               )}
               {!isLoading &&

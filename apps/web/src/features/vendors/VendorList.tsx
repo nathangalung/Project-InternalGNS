@@ -12,6 +12,7 @@ import { useVendors } from "@/features/vendors/hooks"
 import VendorAddModal from "@/features/vendors/VendorAddModal"
 import VendorFilter, { type VendorFilterValues } from "@/features/vendors/VendorFilter"
 import { formatRupiah } from "@/lib/format"
+import { emptyListText } from "@/lib/list-empty"
 import { canWriteCatalog } from "@/lib/rbac"
 import { BADGE_AKTIF, BADGE_NONAKTIF } from "@/lib/status"
 import { ui } from "@/lib/ui"
@@ -151,7 +152,9 @@ export default function VendorList({ onViewDetail }: VendorListProps) {
             <tbody>
               {isLoading && <TableLoadingRow colSpan={6} />}
               {!isLoading && currentRows.length === 0 && (
-                <TableEmptyRow colSpan={6}>Tidak ada vendor.</TableEmptyRow>
+                <TableEmptyRow colSpan={6}>
+                  {emptyListText(list, "Belum ada vendor.")}
+                </TableEmptyRow>
               )}
               {!isLoading &&
                 currentRows.map((v: VendorRow) => {

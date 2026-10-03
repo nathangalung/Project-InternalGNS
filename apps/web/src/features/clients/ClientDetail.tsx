@@ -20,7 +20,12 @@ import { formErrors } from "@/lib/form-errors"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
-import { digitsOnly, optionalEmailError, optionalPhoneError } from "@/lib/validation"
+import {
+  digitsOnly,
+  optionalEmailError,
+  optionalNpwpError,
+  optionalPhoneError,
+} from "@/lib/validation"
 import type { ClientRow } from "@/types/api"
 import ClientQuotations from "./ClientQuotations"
 
@@ -59,7 +64,7 @@ function contactSaveCls(enabled: boolean): string {
 }
 
 // Inputs the API can refuse.
-const CLIENT_FIELDS = ["name", "phone", "email"] as const
+const CLIENT_FIELDS = ["name", "phone", "email", "npwp"] as const
 
 type ClientField = (typeof CLIENT_FIELDS)[number]
 
@@ -110,7 +115,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
   const { data: logoDownload } = useClientLogoDownloadUrl(client.id, client.logoObjectKey)
   const storedLogo = useObjectUrl(logoDownload?.downloadUrl)
   const logoDataUrl = logoPreview || storedLogo
-  const { data: contactList = [] } = useClientContacts(client.id)
+  const { data: contactList = [], isError: contactsError } = useClientContacts(client.id)
   const createContact = useCreateContact()
   const updateContact = useUpdateContact()
   const deleteContact = useDeleteContact()
@@ -155,6 +160,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
   // A server message wins until the input changes.
   const phoneError = fieldErrors.phone || optionalPhoneError(phone)
   const emailError = fieldErrors.email || optionalEmailError(email)
+  const npwpError = fieldErrors.npwp || optionalNpwpError(npwp, countryCode)
   const newPhoneError = optionalPhoneError(newContactPhone)
   const newEmailError = optionalEmailError(newContactEmail)
   const canAddContact = Boolean(newContactName.trim()) && !newPhoneError && !newEmailError
@@ -184,6 +190,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
     if (!name.trim()) errs.name = "Wajib diisi"
     if (phoneError) errs.phone = phoneError
     if (emailError) errs.email = emailError
+    if (npwpError) errs.npwp = npwpError
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs)
       return
@@ -522,10 +529,16 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                 id={`${fid}-npwp`}
                 type="text"
                 value={npwp}
-                placeholder="00.000.000.0-000.000"
-                onChange={(e) => setNpwp(e.target.value)}
+                placeholder="0000.0000.0000.0000"
+                aria-invalid={npwpError ? true : undefined}
+                aria-describedby={npwpError ? `${fid}-npwp-error` : undefined}
+                onChange={(e) => {
+                  setNpwp(e.target.value)
+                  setFieldErrors((p) => ({ ...p, npwp: "" }))
+                }}
                 className={`h-[47px] w-full rounded-md border-[1.5px] border-transparent bg-[#F2F4F6] px-4 py-3 font-sans text-base font-medium text-[#191C1E] outline-none transition-[border-color,box-shadow] duration-150 ${ui.fieldFocus}`}
               />
+              <FieldError id={`${fid}-npwp-error`} message={npwpError} />
             </div>
 
             <div>
@@ -843,7 +856,11 @@ export default function ClientDetail({ client }: ClientDetailProps) {
           </div>
         )}
 
-        {contactList.length === 0 && !contactFormOpen && (
+        {contactsError && (
+          <div className="p-6 text-center text-sm text-[#DC2626]">Gagal memuat narahubung.</div>
+        )}
+
+        {!contactsError && contactList.length === 0 && !contactFormOpen && (
           <div className="p-6 text-center text-sm text-[#94A3B8]">
             Belum ada narahubung. Klik Tambah Narahubung untuk menambahkan.
           </div>

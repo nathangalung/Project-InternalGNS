@@ -132,7 +132,7 @@ func TestHandler_Export_AppliesFilter(t *testing.T) {
 	f, err := excelize.OpenReader(bytes.NewReader(rec.Body.Bytes()))
 	require.NoError(t, err)
 	defer func() { _ = f.Close() }()
-	rows, err := f.GetRows(f.GetSheetName(0))
+	rows, err := f.GetRows(f.GetSheetName(0), excelize.Options{RawCellValue: true})
 	require.NoError(t, err)
 	require.Len(t, rows, 3, "header plus the two 2099 invoices")
 
@@ -143,6 +143,11 @@ func TestHandler_Export_AppliesFilter(t *testing.T) {
 		assert.Equal(t, inv.InvoiceDate.Format(time.DateOnly), row[2])
 		assert.Equal(t, inv.DueDate.Format(time.DateOnly), row[3])
 		assert.Equal(t, inv.CompanyName, row[4])
-		assert.Equal(t, *inv.Total, row[6])
+		// Total is a number cell.
+		want, err := strconv.ParseFloat(*inv.Total, 64)
+		require.NoError(t, err)
+		got, err := strconv.ParseFloat(row[6], 64)
+		require.NoError(t, err)
+		assert.Equal(t, want, got)
 	}
 }

@@ -292,7 +292,7 @@ test("the Dibatalkan filter finds a cancelled invoice and opens it", async ({
   await page.goto("/invoices")
   await page.getByPlaceholder("Cari invoice, klien, atau nomor...").fill(client.name)
   const row = page.getByRole("row").filter({ hasText: invoice.invoiceNo })
-  await expect(page.getByText("Belum ada Invoice.", { exact: false })).toBeVisible()
+  await expect(page.getByText(`Tidak ada hasil untuk "${client.name}".`)).toBeVisible()
   await expect(row).toHaveCount(0)
 
   await page.getByRole("button", { name: "Filter", exact: true }).click()

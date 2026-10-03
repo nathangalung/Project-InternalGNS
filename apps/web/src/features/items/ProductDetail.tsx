@@ -56,7 +56,11 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
   const [showAddVendor, setShowAddVendor] = useState(false)
 
   const updateItem = useUpdateItem()
-  const { data: itemVendors, isLoading: vendorsLoading } = useItemVendors(product.id)
+  const {
+    data: itemVendors,
+    isLoading: vendorsLoading,
+    isError: vendorsError,
+  } = useItemVendors(product.id)
 
   // Every field but the unit hydrates once from the state initializers above.
   // The unit code resolves only after the units list arrives, so seed it once
@@ -391,7 +395,10 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
               </thead>
               <tbody>
                 {vendorsLoading && <TableLoadingRow colSpan={4} />}
-                {!vendorsLoading && (itemVendors ?? []).length === 0 && (
+                {vendorsError && (
+                  <TableEmptyRow colSpan={4}>Gagal memuat vendor produk.</TableEmptyRow>
+                )}
+                {!vendorsLoading && !vendorsError && (itemVendors ?? []).length === 0 && (
                   <TableEmptyRow colSpan={4}>
                     {canWrite
                       ? 'Belum ada vendor terkait. Klik "Tambah Vendor" untuk menambah.'
