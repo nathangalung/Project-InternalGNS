@@ -190,7 +190,10 @@ document's status history table.
   Accepted creates the PO in the same transaction. Only drafts are editable.
   Validity and shipping days run from 1 to 365 (`validate.MaxDays`, a 422
   on the field; the database refuses only below 1), on the PO's shipping
-  days too, and the web inputs carry the same bound.
+  days too, and the web inputs carry the same bound. Shipping address, cost
+  and days live on the one shipping line, kept when any of the three is
+  given; a line with no cost is no charge (harga jual 0) and the PDF prints
+  only its Delivery Time.
   A draft may keep unfinished product lines, but sending refuses (with the
   count) while any offered product line lacks its product, unit, vendor,
   harga beli or harga jual. A line marked Tidak Ditawarkan (`is_available`
@@ -199,7 +202,8 @@ document's status history table.
   PDF prints No Offer, it never blocks sending, `fn_create_purchase_order`
   leaves it out of the PO, and accepting needs at least one offered line.
   The same function links a vendor a line names by `vendorId` when the item
-  has no link to it yet. New lines, from the RFQ import or picked by hand,
+  has no link to it yet, and refuses a `vendorProductId` that names another
+  product (P0014). New lines, from the RFQ import or picked by hand,
   start from `fn_recommend_lines` (`GET /items/recommendations`): the vendor
   on this client's newest sent or accepted deal for the item at its current
   harga beli, else the cheapest active vendor, and the harga jual of this
@@ -382,8 +386,11 @@ through `clampPage` in `lib/pagination.ts`, and every pager renders
   what `make seed-dev` loaded. Asserting on ambient volume passes locally and
   fails on CI. Use `make test-api-ci` before pushing anything that touches
   integration tests.
-- The PDF layout tests skip without xelatex. CI runs them in the API runtime
-  image (the `pdf layout (xelatex)` job), so a local skip is not a pass.
+- The PDF tests skip without xelatex. CI runs them in the API runtime image
+  (the `pdf layout (xelatex)` job) with a Postgres service, so the layout
+  tests, the delivery note, quotation and invoice downloads and the PDF
+  acceptance steps all run there, and any skip fails the job. A local skip
+  is not a pass.
 - Web logic tests are Vitest in node (`src/**/*.test.ts`). Hook tests are
   `*.hook.test.ts(x)` in a happy-dom project and render through
   `src/test/renderHook.tsx`. `bun run test` runs both projects.

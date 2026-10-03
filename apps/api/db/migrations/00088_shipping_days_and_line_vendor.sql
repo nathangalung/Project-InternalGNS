@@ -1,0 +1,949 @@
+-- +goose Up
+-- 00088 SHIPPING DAYS AND LINE VENDOR
+-- Waktu Pengiriman lives on the shipping line, which was kept only for an
+-- address or a cost, so days entered without either were dropped. A days-only
+-- line is kept at harga jual 0, the same no-charge line an address alone
+-- makes. A line's vendor link must name the line's own product; another
+-- product's link passed the send gate and was lost on the PO.
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION public.fn_create_quotation(p_company_client_id bigint, p_contact_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_created_by bigint, p_notes text DEFAULT NULL::text, p_status text DEFAULT 'draft'::text)
+ RETURNS bigint
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  v_quotation_id        BIGINT;
+  v_quotation_no        TEXT;
+  v_company_name        VARCHAR;
+  v_contact_name        VARCHAR;
+  v_item                JSONB;
+  v_line_no             SMALLINT := 0;
+  v_total_produk        NUMERIC(15,2) := 0;
+  v_total               NUMERIC(15,2) := 0;
+  v_total_discount      NUMERIC(15,2) := 0;
+  v_qty                 NUMERIC(12,2);
+  v_selling_price       NUMERIC(15,2);
+  v_pct                 NUMERIC(5,2);
+  v_line                NUMERIC(15,2);
+  v_dpp                 NUMERIC(15,2) := 0;
+  v_ppn                 NUMERIC(15,2) := 0;
+BEGIN
+  -- 1. Validation
+  IF p_items IS NULL OR jsonb_array_length(p_items) = 0 THEN
+    RAISE EXCEPTION 'Quotation harus memiliki minimal satu baris.'
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  IF p_discount_pct < 0 OR p_discount_pct > 100 THEN
+    RAISE EXCEPTION 'Diskon harus antara 0 dan 100; nilai yang dikirim %.', p_discount_pct
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  -- The pct the lines inherit, at column scale.
+  v_pct := p_discount_pct;
+
+  -- 2. Snapshot company_client_name + contact_name
+  SELECT name INTO v_company_name
+  FROM company_client WHERE id = p_company_client_id AND is_active = TRUE;
+
+  IF v_company_name IS NULL THEN
+    RAISE EXCEPTION 'Klien tidak ditemukan atau sudah nonaktif. Pilih klien lain.'
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  IF p_contact_id IS NOT NULL THEN
+    SELECT name INTO v_contact_name
+    FROM company_contacts
+    WHERE id = p_contact_id AND company_id = p_company_client_id AND is_active = TRUE;
+
+    IF v_contact_name IS NULL THEN
+      RAISE EXCEPTION 'Narahubung tidak ditemukan, sudah nonaktif, atau bukan milik klien ini.'
+        USING ERRCODE = 'P0014';
+    END IF;
+  END IF;
+
+  -- 3. Pre-calculate totals. The discount is gross minus net per line, as
+  -- quotation_items.subtotal and v_po_totals round them, so the header
+  -- subtotal is the sum of the line subtotals. DPP and PPN are rounded per
+  -- line and summed, as v_po_totals and fn_create_invoice do.
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
+    v_qty := (v_item->>'qty')::NUMERIC(12,2);
+    v_selling_price := (v_item->>'selling_price')::NUMERIC(15,2);
+    v_line := ROUND(v_qty * v_selling_price * (1 - v_pct / 100), 2);
+
+    v_total          := v_total + (v_qty * v_selling_price);
+    v_total_produk   := v_total_produk + (v_qty * v_selling_price);
+    v_total_discount := v_total_discount
+                        + ROUND(v_qty * v_selling_price, 2)
+                        - v_line;
+    v_dpp            := v_dpp + fn_line_dpp(v_line);
+    v_ppn            := v_ppn + fn_line_ppn(v_line);
+  END LOOP;
+
+  IF p_shipping_cost IS NOT NULL AND p_shipping_cost > 0 THEN
+    v_total := v_total + p_shipping_cost;
+    v_dpp   := v_dpp + fn_line_dpp(p_shipping_cost);
+    v_ppn   := v_ppn + fn_line_ppn(p_shipping_cost);
+  END IF;
+
+  -- 4. Generate quotation_no
+  v_quotation_no := fn_next_doc_no('Q', p_company_client_id);
+
+  -- 5. INSERT header
+  INSERT INTO quotations (
+    quotation_no, version, company_client_id, company_client_name,
+    contact_id, contact_name,
+    client_ref_no, vessel_name, status,
+    payment_terms, validity_days, discount_pct,
+    total_produk, total, total_discount,
+    dpp_nilai_lain, ppn_amount, grand_total,
+    notes, created_by, updated_by
+  ) VALUES (
+    v_quotation_no, 1, p_company_client_id, v_company_name,
+    p_contact_id, v_contact_name,
+    p_client_ref_no, p_vessel_name, p_status,
+    p_payment_terms, p_validity_days, p_discount_pct,
+    v_total_produk, v_total, v_total_discount,
+    v_dpp, v_ppn, v_total - v_total_discount + v_ppn,
+    p_notes, p_created_by, p_created_by
+  ) RETURNING id INTO v_quotation_id;
+
+  -- 6. INSERT product items
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
+    v_line_no := v_line_no + 1;
+    INSERT INTO quotation_items (
+      quotation_id, line_number, item_type,
+      requested_item_id, requested_impa, requested_name,
+      offered_item_id, vendor_product_id,
+      qty, unit_id, selling_price, cost_price,
+      is_available, ship_destination, due_date,
+      update_vendor_price, created_by, updated_by
+    ) VALUES (
+      v_quotation_id,
+      v_line_no,
+      'product',
+      NULLIF((v_item->>'requested_item_id'),'')::BIGINT,
+      v_item->>'requested_impa',
+      v_item->>'requested_name',
+      NULLIF((v_item->>'offered_item_id'),'')::BIGINT,
+      NULLIF((v_item->>'vendor_product_id'),'')::BIGINT,
+      (v_item->>'qty')::NUMERIC(12,2),
+      (v_item->>'unit_id')::SMALLINT,
+      (v_item->>'selling_price')::NUMERIC(15,2),
+      NULLIF((v_item->>'cost_price'),'')::NUMERIC(15,2),
+      COALESCE((v_item->>'is_available')::BOOLEAN, TRUE),
+      v_item->>'ship_destination',
+      NULLIF((v_item->>'due_date'),'')::DATE,
+      COALESCE((v_item->>'update_vendor_price')::BOOLEAN, FALSE),
+      p_created_by, p_created_by
+    );
+  END LOOP;
+
+  -- 7. INSERT shipping line
+  IF NULLIF(TRIM(p_shipping_address), '') IS NOT NULL OR COALESCE(p_shipping_cost, 0) > 0
+     OR p_shipping_days IS NOT NULL THEN
+    v_line_no := v_line_no + 1;
+    INSERT INTO quotation_items (
+      quotation_id, line_number, item_type,
+      requested_name,
+      qty, unit_id, selling_price,
+      ship_destination, shipping_days,
+      created_by, updated_by
+    ) VALUES (
+      v_quotation_id,
+      v_line_no,
+      'shipping',
+      'SHIPPING' || COALESCE(' — ' || p_shipping_address, ''),
+      1,
+      (SELECT id FROM units WHERE code = 'UNIT' LIMIT 1),
+      COALESCE(p_shipping_cost, 0),
+      p_shipping_address,
+      p_shipping_days,
+      p_created_by, p_created_by
+    );
+  END IF;
+
+  RETURN v_quotation_id;
+END;
+$function$
+;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION public.fn_update_quotation(p_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_user_id bigint, p_notes text DEFAULT NULL::text)
+ RETURNS bigint
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  v_status        VARCHAR(20);
+  v_item          JSONB;
+  v_line_no       SMALLINT := 0;
+  v_total_produk  NUMERIC(15,2) := 0;
+  v_total         NUMERIC(15,2) := 0;
+  v_total_disc    NUMERIC(15,2) := 0;
+  v_qty           NUMERIC(12,2);
+  v_selling_price NUMERIC(15,2);
+  v_learn         TEXT;
+  v_known         JSONB;
+  v_key           TEXT;
+  v_left          INT;
+  v_pct           NUMERIC(5,2);
+  v_line          NUMERIC(15,2);
+  v_dpp           NUMERIC(15,2) := 0;
+  v_ppn           NUMERIC(15,2) := 0;
+BEGIN
+  -- 1. Lock + verify status='draft'
+  SELECT status INTO v_status
+  FROM quotations
+  WHERE id = p_id
+  FOR UPDATE;
+
+  IF v_status IS NULL THEN
+    RAISE EXCEPTION 'Quotation % tidak ditemukan.', p_id
+      USING ERRCODE = 'P0011';
+  END IF;
+
+  IF v_status != 'draft' THEN
+    RAISE EXCEPTION 'Hanya quotation berstatus Draf yang dapat diubah; status saat ini %.',
+      fn_quotation_status_label(v_status)
+      USING ERRCODE = 'P0013';
+  END IF;
+
+  -- A whole save rewrites every line, so nobody else may be mid-edit.
+  PERFORM fn_quotation_no_other_editors(p_id, p_user_id);
+
+  -- 2. Validation
+  IF p_items IS NULL OR jsonb_array_length(p_items) = 0 THEN
+    RAISE EXCEPTION 'Quotation harus memiliki minimal satu baris.'
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  IF p_discount_pct < 0 OR p_discount_pct > 100 THEN
+    RAISE EXCEPTION 'Diskon harus antara 0 dan 100; nilai yang dikirim %.', p_discount_pct
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  -- 3. Pre-calculate totals. The discount is gross minus net per line at
+  -- the pct the lines inherit, as quotation_items.subtotal and v_po_totals
+  -- round them, so the header subtotal is the sum of the line subtotals.
+  -- DPP and PPN are rounded per line and summed, as v_po_totals and
+  -- fn_create_invoice do.
+  v_pct := p_discount_pct;
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
+    v_qty := (v_item->>'qty')::NUMERIC(12,2);
+    v_selling_price := (v_item->>'selling_price')::NUMERIC(15,2);
+    v_line         := ROUND(v_qty * v_selling_price * (1 - v_pct / 100), 2);
+    v_total        := v_total + (v_qty * v_selling_price);
+    v_total_produk := v_total_produk + (v_qty * v_selling_price);
+    v_total_disc   := v_total_disc
+                      + ROUND(v_qty * v_selling_price, 2)
+                      - v_line;
+    v_dpp          := v_dpp + fn_line_dpp(v_line);
+    v_ppn          := v_ppn + fn_line_ppn(v_line);
+  END LOOP;
+
+  IF p_shipping_cost IS NOT NULL AND p_shipping_cost > 0 THEN
+    v_total := v_total + p_shipping_cost;
+    v_dpp   := v_dpp + fn_line_dpp(p_shipping_cost);
+    v_ppn   := v_ppn + fn_line_ppn(p_shipping_cost);
+  END IF;
+
+  -- 4. Count the matches already learned, keyed like trg_learn_match
+  -- (item id, then LOWER(TRIM(request text))), so a re-saved line is not
+  -- counted again.
+  SELECT COALESCE(jsonb_object_agg(k, n), '{}'::jsonb) INTO v_known
+  FROM (
+    SELECT requested_item_id::TEXT || ':' || LOWER(TRIM(requested_name)) AS k,
+           COUNT(*) AS n
+    FROM quotation_items
+    WHERE quotation_id = p_id
+      AND requested_item_id IS NOT NULL
+      AND requested_name IS NOT NULL
+      AND TRIM(requested_name) != ''
+    GROUP BY 1
+  ) s;
+
+  -- 5. DELETE existing items.
+  -- PO/invoice referencing items will be set NULL via FK ON DELETE SET NULL.
+  -- Since status='draft', there are usually no PO/invoice yet — safe.
+  DELETE FROM quotation_items WHERE quotation_id = p_id;
+
+  -- 6. UPDATE header.
+  -- discount_pct UPDATE bypasses trg_protect_quotation_discount because
+  -- status='draft' (trigger only blocks when status != 'draft').
+  -- trg_cascade_quotation_discount will fire but affect 0 rows
+  -- (items already deleted).
+  UPDATE quotations
+  SET client_ref_no  = p_client_ref_no,
+      vessel_name    = p_vessel_name,
+      payment_terms  = p_payment_terms,
+      validity_days  = p_validity_days,
+      discount_pct   = p_discount_pct,
+      total_produk   = v_total_produk,
+      total          = v_total,
+      total_discount = v_total_disc,
+      dpp_nilai_lain = v_dpp,
+      ppn_amount     = v_ppn,
+      grand_total    = v_total - v_total_disc + v_ppn,
+      notes          = p_notes,
+      updated_by     = p_user_id
+  WHERE id = p_id;
+
+  -- 7. INSERT product items (trigger inherit discount_pct fires BEFORE INSERT).
+  -- Each line whose match was already on the draft uses up one known
+  -- occurrence and skips trg_learn_match; the rest learn as on create.
+  v_learn := current_setting('gns.learn_match', true);
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
+    v_line_no := v_line_no + 1;
+    v_key := (NULLIF((v_item->>'requested_item_id'),'')::BIGINT)::TEXT
+             || ':' || LOWER(TRIM(v_item->>'requested_name'));
+    v_left := COALESCE((v_known->>v_key)::INT, 0);
+    IF v_left > 0 THEN
+      v_known := jsonb_set(v_known, ARRAY[v_key], to_jsonb(v_left - 1));
+      PERFORM set_config('gns.learn_match', 'off', true);
+    ELSE
+      PERFORM set_config('gns.learn_match', COALESCE(v_learn, ''), true);
+    END IF;
+
+    INSERT INTO quotation_items (
+      quotation_id, line_number, item_type,
+      requested_item_id, requested_impa, requested_name,
+      offered_item_id, vendor_product_id,
+      qty, unit_id, selling_price, cost_price,
+      is_available, ship_destination, due_date,
+      update_vendor_price, created_by, updated_by
+    ) VALUES (
+      p_id,
+      v_line_no,
+      'product',
+      NULLIF((v_item->>'requested_item_id'),'')::BIGINT,
+      v_item->>'requested_impa',
+      v_item->>'requested_name',
+      NULLIF((v_item->>'offered_item_id'),'')::BIGINT,
+      NULLIF((v_item->>'vendor_product_id'),'')::BIGINT,
+      (v_item->>'qty')::NUMERIC(12,2),
+      (v_item->>'unit_id')::SMALLINT,
+      (v_item->>'selling_price')::NUMERIC(15,2),
+      NULLIF((v_item->>'cost_price'),'')::NUMERIC(15,2),
+      COALESCE((v_item->>'is_available')::BOOLEAN, TRUE),
+      v_item->>'ship_destination',
+      NULLIF((v_item->>'due_date'),'')::DATE,
+      COALESCE((v_item->>'update_vendor_price')::BOOLEAN, FALSE),
+      p_user_id, p_user_id
+    );
+  END LOOP;
+  PERFORM set_config('gns.learn_match', COALESCE(v_learn, ''), true);
+
+  -- 8. INSERT shipping line (if present)
+  IF NULLIF(TRIM(p_shipping_address), '') IS NOT NULL OR COALESCE(p_shipping_cost, 0) > 0
+     OR p_shipping_days IS NOT NULL THEN
+    v_line_no := v_line_no + 1;
+    INSERT INTO quotation_items (
+      quotation_id, line_number, item_type,
+      requested_name,
+      qty, unit_id, selling_price,
+      ship_destination, shipping_days,
+      created_by, updated_by
+    ) VALUES (
+      p_id,
+      v_line_no,
+      'shipping',
+      'SHIPPING' || COALESCE(' — ' || p_shipping_address, ''),
+      1,
+      (SELECT id FROM units WHERE code = 'UNIT' LIMIT 1),
+      COALESCE(p_shipping_cost, 0),
+      p_shipping_address,
+      p_shipping_days,
+      p_user_id, p_user_id
+    );
+  END IF;
+
+  -- Line ids changed: line locks point at lines that are gone.
+  DELETE FROM quotation_edit_locks WHERE quotation_id = p_id AND part <> 'header';
+  PERFORM fn_quotation_notify(p_id, 'lines', NULL, p_user_id);
+
+  RETURN p_id;
+END;
+$function$
+;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION public.fn_quotation_update_header(p_quotation_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_notes text, p_user_id bigint)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  v_ship_id BIGINT;
+  v_next    SMALLINT;
+BEGIN
+  PERFORM fn_quotation_lock_draft(p_quotation_id);
+  PERFORM fn_quotation_part_held(p_quotation_id, 'header', p_user_id);
+  IF p_discount_pct < 0 OR p_discount_pct > 100 THEN
+    RAISE EXCEPTION 'Diskon harus antara 0 dan 100; nilai yang dikirim %.', p_discount_pct
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  -- The discount cascade trigger re-prices every line.
+  UPDATE quotations
+  SET client_ref_no = p_client_ref_no,
+      vessel_name   = p_vessel_name,
+      payment_terms = p_payment_terms,
+      validity_days = p_validity_days,
+      discount_pct  = p_discount_pct,
+      notes         = p_notes,
+      updated_by    = p_user_id
+  WHERE id = p_quotation_id;
+
+  SELECT id INTO v_ship_id FROM quotation_items
+  WHERE quotation_id = p_quotation_id AND item_type = 'shipping';
+  IF NULLIF(TRIM(p_shipping_address), '') IS NOT NULL OR COALESCE(p_shipping_cost, 0) > 0
+     OR p_shipping_days IS NOT NULL THEN
+    IF v_ship_id IS NULL THEN
+      SELECT COALESCE(MAX(line_number), 0) + 1 INTO v_next
+      FROM quotation_items WHERE quotation_id = p_quotation_id;
+      INSERT INTO quotation_items (
+        quotation_id, line_number, item_type, requested_name, qty, unit_id, selling_price,
+        ship_destination, shipping_days, created_by, updated_by
+      ) VALUES (
+        p_quotation_id, v_next, 'shipping',
+        'SHIPPING' || COALESCE(' — ' || p_shipping_address, ''), 1,
+        (SELECT id FROM units WHERE code = 'UNIT' LIMIT 1),
+        COALESCE(p_shipping_cost, 0), p_shipping_address, p_shipping_days,
+        p_user_id, p_user_id
+      );
+    ELSE
+      UPDATE quotation_items
+      SET requested_name   = 'SHIPPING' || COALESCE(' — ' || p_shipping_address, ''),
+          selling_price    = COALESCE(p_shipping_cost, 0),
+          ship_destination = p_shipping_address,
+          shipping_days    = p_shipping_days,
+          updated_by       = p_user_id
+      WHERE id = v_ship_id;
+    END IF;
+  ELSIF v_ship_id IS NOT NULL THEN
+    DELETE FROM quotation_items WHERE id = v_ship_id;
+  END IF;
+
+  PERFORM fn_recompute_quotation_totals(p_quotation_id);
+  PERFORM fn_quotation_notify(p_quotation_id, 'header', 'header', p_user_id);
+END;
+$function$
+;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION public.fn_prepare_quotation_lines(p_items jsonb, p_user_id bigint)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  v_out     JSONB := '[]'::JSONB;
+  v_item    JSONB;
+  v_vendor  BIGINT;
+  v_offered BIGINT;
+  v_link    BIGINT;
+BEGIN
+  -- Leave a missing list to the caller's own validation.
+  IF p_items IS NULL OR jsonb_typeof(p_items) <> 'array' THEN
+    RETURN p_items;
+  END IF;
+
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
+    v_vendor := NULLIF(v_item->>'vendor_id', '')::BIGINT;
+    IF (v_item->>'is_available') = 'false' THEN
+      -- Tidak Ditawarkan: nothing is sold, so nothing is priced.
+      v_item := (v_item - 'vendor_product_id' - 'cost_price' - 'update_vendor_price')
+                || jsonb_build_object('selling_price', '0');
+    ELSIF v_vendor IS NOT NULL AND NULLIF(v_item->>'vendor_product_id', '') IS NULL THEN
+      v_offered := NULLIF(v_item->>'offered_item_id', '')::BIGINT;
+      IF v_offered IS NULL THEN
+        RAISE EXCEPTION 'Pilih produk yang ditawarkan sebelum memilih vendor.'
+          USING ERRCODE = 'P0014';
+      END IF;
+      v_link := fn_link_vendor_item(
+        v_vendor, v_offered, NULLIF(v_item->>'cost_price', '')::NUMERIC, p_user_id);
+      v_item := jsonb_set(v_item, '{vendor_product_id}', to_jsonb(v_link));
+    ELSIF NULLIF(v_item->>'vendor_product_id', '') IS NOT NULL
+      AND NULLIF(v_item->>'offered_item_id', '') IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM vendor_products
+        WHERE id = (v_item->>'vendor_product_id')::BIGINT
+          AND item_id = (v_item->>'offered_item_id')::BIGINT) THEN
+      -- A vendor link names one product.
+      RAISE EXCEPTION 'Vendor yang dipilih bukan pemasok produk ini. Pilih ulang vendor.'
+        USING ERRCODE = 'P0014';
+    END IF;
+    v_out := v_out || jsonb_build_array(v_item - 'vendor_id');
+  END LOOP;
+  RETURN v_out;
+END;
+$function$
+;
+-- +goose StatementEnd
+
+-- +goose Down
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION public.fn_create_quotation(p_company_client_id bigint, p_contact_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_created_by bigint, p_notes text DEFAULT NULL::text, p_status text DEFAULT 'draft'::text)
+ RETURNS bigint
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  v_quotation_id        BIGINT;
+  v_quotation_no        TEXT;
+  v_company_name        VARCHAR;
+  v_contact_name        VARCHAR;
+  v_item                JSONB;
+  v_line_no             SMALLINT := 0;
+  v_total_produk        NUMERIC(15,2) := 0;
+  v_total               NUMERIC(15,2) := 0;
+  v_total_discount      NUMERIC(15,2) := 0;
+  v_qty                 NUMERIC(12,2);
+  v_selling_price       NUMERIC(15,2);
+  v_pct                 NUMERIC(5,2);
+  v_line                NUMERIC(15,2);
+  v_dpp                 NUMERIC(15,2) := 0;
+  v_ppn                 NUMERIC(15,2) := 0;
+BEGIN
+  -- 1. Validation
+  IF p_items IS NULL OR jsonb_array_length(p_items) = 0 THEN
+    RAISE EXCEPTION 'Quotation harus memiliki minimal satu baris.'
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  IF p_discount_pct < 0 OR p_discount_pct > 100 THEN
+    RAISE EXCEPTION 'Diskon harus antara 0 dan 100; nilai yang dikirim %.', p_discount_pct
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  -- The pct the lines inherit, at column scale.
+  v_pct := p_discount_pct;
+
+  -- 2. Snapshot company_client_name + contact_name
+  SELECT name INTO v_company_name
+  FROM company_client WHERE id = p_company_client_id AND is_active = TRUE;
+
+  IF v_company_name IS NULL THEN
+    RAISE EXCEPTION 'Klien tidak ditemukan atau sudah nonaktif. Pilih klien lain.'
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  IF p_contact_id IS NOT NULL THEN
+    SELECT name INTO v_contact_name
+    FROM company_contacts
+    WHERE id = p_contact_id AND company_id = p_company_client_id AND is_active = TRUE;
+
+    IF v_contact_name IS NULL THEN
+      RAISE EXCEPTION 'Narahubung tidak ditemukan, sudah nonaktif, atau bukan milik klien ini.'
+        USING ERRCODE = 'P0014';
+    END IF;
+  END IF;
+
+  -- 3. Pre-calculate totals. The discount is gross minus net per line, as
+  -- quotation_items.subtotal and v_po_totals round them, so the header
+  -- subtotal is the sum of the line subtotals. DPP and PPN are rounded per
+  -- line and summed, as v_po_totals and fn_create_invoice do.
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
+    v_qty := (v_item->>'qty')::NUMERIC(12,2);
+    v_selling_price := (v_item->>'selling_price')::NUMERIC(15,2);
+    v_line := ROUND(v_qty * v_selling_price * (1 - v_pct / 100), 2);
+
+    v_total          := v_total + (v_qty * v_selling_price);
+    v_total_produk   := v_total_produk + (v_qty * v_selling_price);
+    v_total_discount := v_total_discount
+                        + ROUND(v_qty * v_selling_price, 2)
+                        - v_line;
+    v_dpp            := v_dpp + fn_line_dpp(v_line);
+    v_ppn            := v_ppn + fn_line_ppn(v_line);
+  END LOOP;
+
+  IF p_shipping_cost IS NOT NULL AND p_shipping_cost > 0 THEN
+    v_total := v_total + p_shipping_cost;
+    v_dpp   := v_dpp + fn_line_dpp(p_shipping_cost);
+    v_ppn   := v_ppn + fn_line_ppn(p_shipping_cost);
+  END IF;
+
+  -- 4. Generate quotation_no
+  v_quotation_no := fn_next_doc_no('Q', p_company_client_id);
+
+  -- 5. INSERT header
+  INSERT INTO quotations (
+    quotation_no, version, company_client_id, company_client_name,
+    contact_id, contact_name,
+    client_ref_no, vessel_name, status,
+    payment_terms, validity_days, discount_pct,
+    total_produk, total, total_discount,
+    dpp_nilai_lain, ppn_amount, grand_total,
+    notes, created_by, updated_by
+  ) VALUES (
+    v_quotation_no, 1, p_company_client_id, v_company_name,
+    p_contact_id, v_contact_name,
+    p_client_ref_no, p_vessel_name, p_status,
+    p_payment_terms, p_validity_days, p_discount_pct,
+    v_total_produk, v_total, v_total_discount,
+    v_dpp, v_ppn, v_total - v_total_discount + v_ppn,
+    p_notes, p_created_by, p_created_by
+  ) RETURNING id INTO v_quotation_id;
+
+  -- 6. INSERT product items
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
+    v_line_no := v_line_no + 1;
+    INSERT INTO quotation_items (
+      quotation_id, line_number, item_type,
+      requested_item_id, requested_impa, requested_name,
+      offered_item_id, vendor_product_id,
+      qty, unit_id, selling_price, cost_price,
+      is_available, ship_destination, due_date,
+      update_vendor_price, created_by, updated_by
+    ) VALUES (
+      v_quotation_id,
+      v_line_no,
+      'product',
+      NULLIF((v_item->>'requested_item_id'),'')::BIGINT,
+      v_item->>'requested_impa',
+      v_item->>'requested_name',
+      NULLIF((v_item->>'offered_item_id'),'')::BIGINT,
+      NULLIF((v_item->>'vendor_product_id'),'')::BIGINT,
+      (v_item->>'qty')::NUMERIC(12,2),
+      (v_item->>'unit_id')::SMALLINT,
+      (v_item->>'selling_price')::NUMERIC(15,2),
+      NULLIF((v_item->>'cost_price'),'')::NUMERIC(15,2),
+      COALESCE((v_item->>'is_available')::BOOLEAN, TRUE),
+      v_item->>'ship_destination',
+      NULLIF((v_item->>'due_date'),'')::DATE,
+      COALESCE((v_item->>'update_vendor_price')::BOOLEAN, FALSE),
+      p_created_by, p_created_by
+    );
+  END LOOP;
+
+  -- 7. INSERT shipping line
+  IF NULLIF(TRIM(p_shipping_address), '') IS NOT NULL OR COALESCE(p_shipping_cost, 0) > 0 THEN
+    v_line_no := v_line_no + 1;
+    INSERT INTO quotation_items (
+      quotation_id, line_number, item_type,
+      requested_name,
+      qty, unit_id, selling_price,
+      ship_destination, shipping_days,
+      created_by, updated_by
+    ) VALUES (
+      v_quotation_id,
+      v_line_no,
+      'shipping',
+      'SHIPPING' || COALESCE(' — ' || p_shipping_address, ''),
+      1,
+      (SELECT id FROM units WHERE code = 'UNIT' LIMIT 1),
+      COALESCE(p_shipping_cost, 0),
+      p_shipping_address,
+      p_shipping_days,
+      p_created_by, p_created_by
+    );
+  END IF;
+
+  RETURN v_quotation_id;
+END;
+$function$
+;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION public.fn_update_quotation(p_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_user_id bigint, p_notes text DEFAULT NULL::text)
+ RETURNS bigint
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  v_status        VARCHAR(20);
+  v_item          JSONB;
+  v_line_no       SMALLINT := 0;
+  v_total_produk  NUMERIC(15,2) := 0;
+  v_total         NUMERIC(15,2) := 0;
+  v_total_disc    NUMERIC(15,2) := 0;
+  v_qty           NUMERIC(12,2);
+  v_selling_price NUMERIC(15,2);
+  v_learn         TEXT;
+  v_known         JSONB;
+  v_key           TEXT;
+  v_left          INT;
+  v_pct           NUMERIC(5,2);
+  v_line          NUMERIC(15,2);
+  v_dpp           NUMERIC(15,2) := 0;
+  v_ppn           NUMERIC(15,2) := 0;
+BEGIN
+  -- 1. Lock + verify status='draft'
+  SELECT status INTO v_status
+  FROM quotations
+  WHERE id = p_id
+  FOR UPDATE;
+
+  IF v_status IS NULL THEN
+    RAISE EXCEPTION 'Quotation % tidak ditemukan.', p_id
+      USING ERRCODE = 'P0011';
+  END IF;
+
+  IF v_status != 'draft' THEN
+    RAISE EXCEPTION 'Hanya quotation berstatus Draf yang dapat diubah; status saat ini %.',
+      fn_quotation_status_label(v_status)
+      USING ERRCODE = 'P0013';
+  END IF;
+
+  -- A whole save rewrites every line, so nobody else may be mid-edit.
+  PERFORM fn_quotation_no_other_editors(p_id, p_user_id);
+
+  -- 2. Validation
+  IF p_items IS NULL OR jsonb_array_length(p_items) = 0 THEN
+    RAISE EXCEPTION 'Quotation harus memiliki minimal satu baris.'
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  IF p_discount_pct < 0 OR p_discount_pct > 100 THEN
+    RAISE EXCEPTION 'Diskon harus antara 0 dan 100; nilai yang dikirim %.', p_discount_pct
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  -- 3. Pre-calculate totals. The discount is gross minus net per line at
+  -- the pct the lines inherit, as quotation_items.subtotal and v_po_totals
+  -- round them, so the header subtotal is the sum of the line subtotals.
+  -- DPP and PPN are rounded per line and summed, as v_po_totals and
+  -- fn_create_invoice do.
+  v_pct := p_discount_pct;
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
+    v_qty := (v_item->>'qty')::NUMERIC(12,2);
+    v_selling_price := (v_item->>'selling_price')::NUMERIC(15,2);
+    v_line         := ROUND(v_qty * v_selling_price * (1 - v_pct / 100), 2);
+    v_total        := v_total + (v_qty * v_selling_price);
+    v_total_produk := v_total_produk + (v_qty * v_selling_price);
+    v_total_disc   := v_total_disc
+                      + ROUND(v_qty * v_selling_price, 2)
+                      - v_line;
+    v_dpp          := v_dpp + fn_line_dpp(v_line);
+    v_ppn          := v_ppn + fn_line_ppn(v_line);
+  END LOOP;
+
+  IF p_shipping_cost IS NOT NULL AND p_shipping_cost > 0 THEN
+    v_total := v_total + p_shipping_cost;
+    v_dpp   := v_dpp + fn_line_dpp(p_shipping_cost);
+    v_ppn   := v_ppn + fn_line_ppn(p_shipping_cost);
+  END IF;
+
+  -- 4. Count the matches already learned, keyed like trg_learn_match
+  -- (item id, then LOWER(TRIM(request text))), so a re-saved line is not
+  -- counted again.
+  SELECT COALESCE(jsonb_object_agg(k, n), '{}'::jsonb) INTO v_known
+  FROM (
+    SELECT requested_item_id::TEXT || ':' || LOWER(TRIM(requested_name)) AS k,
+           COUNT(*) AS n
+    FROM quotation_items
+    WHERE quotation_id = p_id
+      AND requested_item_id IS NOT NULL
+      AND requested_name IS NOT NULL
+      AND TRIM(requested_name) != ''
+    GROUP BY 1
+  ) s;
+
+  -- 5. DELETE existing items.
+  -- PO/invoice referencing items will be set NULL via FK ON DELETE SET NULL.
+  -- Since status='draft', there are usually no PO/invoice yet — safe.
+  DELETE FROM quotation_items WHERE quotation_id = p_id;
+
+  -- 6. UPDATE header.
+  -- discount_pct UPDATE bypasses trg_protect_quotation_discount because
+  -- status='draft' (trigger only blocks when status != 'draft').
+  -- trg_cascade_quotation_discount will fire but affect 0 rows
+  -- (items already deleted).
+  UPDATE quotations
+  SET client_ref_no  = p_client_ref_no,
+      vessel_name    = p_vessel_name,
+      payment_terms  = p_payment_terms,
+      validity_days  = p_validity_days,
+      discount_pct   = p_discount_pct,
+      total_produk   = v_total_produk,
+      total          = v_total,
+      total_discount = v_total_disc,
+      dpp_nilai_lain = v_dpp,
+      ppn_amount     = v_ppn,
+      grand_total    = v_total - v_total_disc + v_ppn,
+      notes          = p_notes,
+      updated_by     = p_user_id
+  WHERE id = p_id;
+
+  -- 7. INSERT product items (trigger inherit discount_pct fires BEFORE INSERT).
+  -- Each line whose match was already on the draft uses up one known
+  -- occurrence and skips trg_learn_match; the rest learn as on create.
+  v_learn := current_setting('gns.learn_match', true);
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
+    v_line_no := v_line_no + 1;
+    v_key := (NULLIF((v_item->>'requested_item_id'),'')::BIGINT)::TEXT
+             || ':' || LOWER(TRIM(v_item->>'requested_name'));
+    v_left := COALESCE((v_known->>v_key)::INT, 0);
+    IF v_left > 0 THEN
+      v_known := jsonb_set(v_known, ARRAY[v_key], to_jsonb(v_left - 1));
+      PERFORM set_config('gns.learn_match', 'off', true);
+    ELSE
+      PERFORM set_config('gns.learn_match', COALESCE(v_learn, ''), true);
+    END IF;
+
+    INSERT INTO quotation_items (
+      quotation_id, line_number, item_type,
+      requested_item_id, requested_impa, requested_name,
+      offered_item_id, vendor_product_id,
+      qty, unit_id, selling_price, cost_price,
+      is_available, ship_destination, due_date,
+      update_vendor_price, created_by, updated_by
+    ) VALUES (
+      p_id,
+      v_line_no,
+      'product',
+      NULLIF((v_item->>'requested_item_id'),'')::BIGINT,
+      v_item->>'requested_impa',
+      v_item->>'requested_name',
+      NULLIF((v_item->>'offered_item_id'),'')::BIGINT,
+      NULLIF((v_item->>'vendor_product_id'),'')::BIGINT,
+      (v_item->>'qty')::NUMERIC(12,2),
+      (v_item->>'unit_id')::SMALLINT,
+      (v_item->>'selling_price')::NUMERIC(15,2),
+      NULLIF((v_item->>'cost_price'),'')::NUMERIC(15,2),
+      COALESCE((v_item->>'is_available')::BOOLEAN, TRUE),
+      v_item->>'ship_destination',
+      NULLIF((v_item->>'due_date'),'')::DATE,
+      COALESCE((v_item->>'update_vendor_price')::BOOLEAN, FALSE),
+      p_user_id, p_user_id
+    );
+  END LOOP;
+  PERFORM set_config('gns.learn_match', COALESCE(v_learn, ''), true);
+
+  -- 8. INSERT shipping line (if present)
+  IF NULLIF(TRIM(p_shipping_address), '') IS NOT NULL OR COALESCE(p_shipping_cost, 0) > 0 THEN
+    v_line_no := v_line_no + 1;
+    INSERT INTO quotation_items (
+      quotation_id, line_number, item_type,
+      requested_name,
+      qty, unit_id, selling_price,
+      ship_destination, shipping_days,
+      created_by, updated_by
+    ) VALUES (
+      p_id,
+      v_line_no,
+      'shipping',
+      'SHIPPING' || COALESCE(' — ' || p_shipping_address, ''),
+      1,
+      (SELECT id FROM units WHERE code = 'UNIT' LIMIT 1),
+      COALESCE(p_shipping_cost, 0),
+      p_shipping_address,
+      p_shipping_days,
+      p_user_id, p_user_id
+    );
+  END IF;
+
+  -- Line ids changed: line locks point at lines that are gone.
+  DELETE FROM quotation_edit_locks WHERE quotation_id = p_id AND part <> 'header';
+  PERFORM fn_quotation_notify(p_id, 'lines', NULL, p_user_id);
+
+  RETURN p_id;
+END;
+$function$
+;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION public.fn_quotation_update_header(p_quotation_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_notes text, p_user_id bigint)
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  v_ship_id BIGINT;
+  v_next    SMALLINT;
+BEGIN
+  PERFORM fn_quotation_lock_draft(p_quotation_id);
+  PERFORM fn_quotation_part_held(p_quotation_id, 'header', p_user_id);
+  IF p_discount_pct < 0 OR p_discount_pct > 100 THEN
+    RAISE EXCEPTION 'Diskon harus antara 0 dan 100; nilai yang dikirim %.', p_discount_pct
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  -- The discount cascade trigger re-prices every line.
+  UPDATE quotations
+  SET client_ref_no = p_client_ref_no,
+      vessel_name   = p_vessel_name,
+      payment_terms = p_payment_terms,
+      validity_days = p_validity_days,
+      discount_pct  = p_discount_pct,
+      notes         = p_notes,
+      updated_by    = p_user_id
+  WHERE id = p_quotation_id;
+
+  SELECT id INTO v_ship_id FROM quotation_items
+  WHERE quotation_id = p_quotation_id AND item_type = 'shipping';
+  IF NULLIF(TRIM(p_shipping_address), '') IS NOT NULL OR COALESCE(p_shipping_cost, 0) > 0 THEN
+    IF v_ship_id IS NULL THEN
+      SELECT COALESCE(MAX(line_number), 0) + 1 INTO v_next
+      FROM quotation_items WHERE quotation_id = p_quotation_id;
+      INSERT INTO quotation_items (
+        quotation_id, line_number, item_type, requested_name, qty, unit_id, selling_price,
+        ship_destination, shipping_days, created_by, updated_by
+      ) VALUES (
+        p_quotation_id, v_next, 'shipping',
+        'SHIPPING' || COALESCE(' — ' || p_shipping_address, ''), 1,
+        (SELECT id FROM units WHERE code = 'UNIT' LIMIT 1),
+        COALESCE(p_shipping_cost, 0), p_shipping_address, p_shipping_days,
+        p_user_id, p_user_id
+      );
+    ELSE
+      UPDATE quotation_items
+      SET requested_name   = 'SHIPPING' || COALESCE(' — ' || p_shipping_address, ''),
+          selling_price    = COALESCE(p_shipping_cost, 0),
+          ship_destination = p_shipping_address,
+          shipping_days    = p_shipping_days,
+          updated_by       = p_user_id
+      WHERE id = v_ship_id;
+    END IF;
+  ELSIF v_ship_id IS NOT NULL THEN
+    DELETE FROM quotation_items WHERE id = v_ship_id;
+  END IF;
+
+  PERFORM fn_recompute_quotation_totals(p_quotation_id);
+  PERFORM fn_quotation_notify(p_quotation_id, 'header', 'header', p_user_id);
+END;
+$function$
+;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION public.fn_prepare_quotation_lines(p_items jsonb, p_user_id bigint)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+  v_out     JSONB := '[]'::JSONB;
+  v_item    JSONB;
+  v_vendor  BIGINT;
+  v_offered BIGINT;
+  v_link    BIGINT;
+BEGIN
+  -- Leave a missing list to the caller's own validation.
+  IF p_items IS NULL OR jsonb_typeof(p_items) <> 'array' THEN
+    RETURN p_items;
+  END IF;
+
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
+    v_vendor := NULLIF(v_item->>'vendor_id', '')::BIGINT;
+    IF (v_item->>'is_available') = 'false' THEN
+      -- Tidak Ditawarkan: nothing is sold, so nothing is priced.
+      v_item := (v_item - 'vendor_product_id' - 'cost_price' - 'update_vendor_price')
+                || jsonb_build_object('selling_price', '0');
+    ELSIF v_vendor IS NOT NULL AND NULLIF(v_item->>'vendor_product_id', '') IS NULL THEN
+      v_offered := NULLIF(v_item->>'offered_item_id', '')::BIGINT;
+      IF v_offered IS NULL THEN
+        RAISE EXCEPTION 'Pilih produk yang ditawarkan sebelum memilih vendor.'
+          USING ERRCODE = 'P0014';
+      END IF;
+      v_link := fn_link_vendor_item(
+        v_vendor, v_offered, NULLIF(v_item->>'cost_price', '')::NUMERIC, p_user_id);
+      v_item := jsonb_set(v_item, '{vendor_product_id}', to_jsonb(v_link));
+    END IF;
+    v_out := v_out || jsonb_build_array(v_item - 'vendor_id');
+  END LOOP;
+  RETURN v_out;
+END;
+$function$
+;
+-- +goose StatementEnd
