@@ -136,7 +136,7 @@ test("a deactivated product is found by name under the Nonaktif filter", async (
   await deactivate("item", dropped.id)
 
   await page.goto("/products")
-  await page.getByRole("button", { name: "Filter" }).click()
+  await page.getByRole("button", { name: "Filter", exact: true }).click()
   const filter = page.getByRole("dialog", { name: "Filter Produk" })
   await filter.getByRole("button", { name: "Nonaktif" }).click()
   await filter.getByRole("button", { name: "Terapkan" }).click()

@@ -118,7 +118,7 @@ test("the status filter separates active and inactive clients", async ({ page, s
   await page.getByPlaceholder("Cari nama klien...").fill(seed.prefix)
   const rows = page.getByRole("row", { name: new RegExp(seed.prefix) })
   await expect(rows).toHaveCount(2)
-  await page.getByRole("button", { name: "Filter" }).click()
+  await page.getByRole("button", { name: "Filter", exact: true }).click()
   const filter = page.getByRole("dialog", { name: "Filter Klien" })
   await filter.getByRole("button", { name: "Nonaktif" }).click()
   await filter.getByRole("button", { name: "Terapkan" }).click()
@@ -315,7 +315,8 @@ test("a client status filter shows as a chip that removes it", async ({ page, se
   const client = await seed.client()
   await page.goto("/clients")
   await page.getByPlaceholder("Cari nama klien...").fill(client.name)
-  const rows = page.getByRole("row", { name: new RegExp(client.name) })
+  // The client's own link; the empty row also names the search term.
+  const rows = page.getByRole("link", { name: client.name, exact: true })
   await expect(rows).toHaveCount(1)
   await page.getByRole("button", { name: "Filter", exact: true }).click()
   const filter = page.getByRole("dialog", { name: "Filter Klien" })
