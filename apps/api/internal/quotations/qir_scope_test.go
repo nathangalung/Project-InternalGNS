@@ -11,7 +11,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 )
 
-// A request save names its version.
+// Request save needs If-Match.
 // If-Match is required; a stale one is the standard version conflict.
 func TestHandler_UpdateItemRequest_IfMatch(t *testing.T) {
 	srv, _ := resetServer(t)

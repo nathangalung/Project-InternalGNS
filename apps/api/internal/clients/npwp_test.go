@@ -84,7 +84,7 @@ func TestHandler_ClientNPWP(t *testing.T) {
 	})
 }
 
-// A blank country keeps the stored one.
+// Blank country keeps stored one.
 // The update SQL keeps the client's country, so the NPWP is checked and
 // stored against it, not against IDN.
 func TestHandler_UpdateNPWP_StoredCountry(t *testing.T) {

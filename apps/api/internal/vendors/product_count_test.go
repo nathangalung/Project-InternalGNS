@@ -14,7 +14,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/vendors"
 )
 
-// vendorLinking links active and inactive items.
+// vendorLinking seeds mixed items.
 func vendorLinking(t *testing.T, ctx context.Context, tx pgx.Tx, name string, active, inactive int) int64 {
 	t.Helper()
 	var vendorID int64

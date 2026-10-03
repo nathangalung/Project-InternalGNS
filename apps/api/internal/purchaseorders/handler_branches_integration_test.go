@@ -247,7 +247,7 @@ func TestHandler_SecondQueryFaults(t *testing.T) {
 	}
 }
 
-// Any shipping field keeps the line.
+// Shipping fields keep the line.
 // Address, a positive cost or days each keep the shipping line, as on the
 // quotation; a line with no cost charges nothing.
 func TestHandler_UpdateItems_ShippingLineKept(t *testing.T) {
