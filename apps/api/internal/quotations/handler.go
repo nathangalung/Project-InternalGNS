@@ -87,7 +87,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 			q.QuotationNo,
 			q.CreatedAt.In(tz.Jakarta()).Format("2006-01-02"),
 			q.CompanyName,
-			string(q.Status),
+			StatusLabel(q.Status),
 			q.Subtotal,
 			q.TotalDiscount,
 			q.GrandTotal,

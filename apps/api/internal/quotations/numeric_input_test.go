@@ -36,6 +36,7 @@ var lineCases = []lineCase{
 	{"qty Inf", func(it *quotations.CreateItem) { it.Qty = "Inf" }, lineQtyField, qtyMsg},
 	{"qty negative", func(it *quotations.CreateItem) { it.Qty = "-1" }, lineQtyField, qtyMsg},
 	{"qty zero", func(it *quotations.CreateItem) { it.Qty = "0" }, lineQtyField, qtyMsg},
+	{"qty below a sen", func(it *quotations.CreateItem) { it.Qty = "0.004" }, lineQtyField, qtyMsg},
 	{"selling NaN", func(it *quotations.CreateItem) { it.SellingPrice = "NaN" }, "items[0].sellingPrice", sellMsg},
 	{"selling Inf", func(it *quotations.CreateItem) { it.SellingPrice = "Infinity" }, "items[0].sellingPrice", sellMsg},
 	{"selling negative", func(it *quotations.CreateItem) { it.SellingPrice = "-1" }, "items[0].sellingPrice", sellMsg},
