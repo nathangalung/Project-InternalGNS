@@ -2,6 +2,7 @@ package invoices
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -31,10 +32,13 @@ func TestBuildCoretaxWorkbook_ClearsSampleAndFills(t *testing.T) {
 	invs := []Invoice{
 		{
 			ID: 1, InvoiceNo: "INV-A/GNS/V/2026", CompanyClientID: 10,
+			CompanyName: "PT. Test Buyer", CompanyNpwp: sptr("0000000000000000"), CompanyAddress: sptr("Jakarta"),
 			InvoiceDate: time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC),
 		},
 		{
 			ID: 2, InvoiceNo: "INV-B/GNS/V/2026", CompanyClientID: 10,
+			// Issued before the client was renamed.
+			CompanyName: "PT. Nama Lama", CompanyNpwp: sptr("0000000000000000"), CompanyAddress: sptr("Bekasi"),
 			InvoiceDate: time.Date(2026, 5, 2, 0, 0, 0, 0, time.UTC),
 		},
 	}
@@ -100,6 +104,15 @@ func TestBuildCoretaxWorkbook_ClearsSampleAndFills(t *testing.T) {
 	dataDetail := len(detailRows) - 1 // minus header
 	if dataDetail != totalLines {
 		t.Fatalf("DetailFaktur data rows = %d, want %d", dataDetail, totalLines)
+	}
+
+	// Each row files its invoiced buyer (Nama, Alamat Pembeli).
+	for row, want := range map[int][2]string{4: {"PT. Test Buyer", "Jakarta"}, 5: {"PT. Nama Lama", "Bekasi"}} {
+		name, _ := f.GetCellValue(coretaxSheetFaktur, fmt.Sprintf("O%d", row))
+		addr, _ := f.GetCellValue(coretaxSheetFaktur, fmt.Sprintf("P%d", row))
+		if name != want[0] || addr != want[1] {
+			t.Fatalf("row %d buyer = %q, %q; want %q, %q", row, name, addr, want[0], want[1])
+		}
 	}
 
 	// NPWP header populated.

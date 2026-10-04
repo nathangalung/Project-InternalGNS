@@ -150,8 +150,8 @@ ROLLBACK;
 
 -- C.2 Invalid ppn_rate (must = 12.00)
 BEGIN;
-INSERT INTO invoices (invoice_no, quotation_id, company_client_id, invoice_date, dpp, ppn_rate, status, created_by)
-VALUES ('INV-TEST', 1, 2, CURRENT_DATE, 1000000, 11.00, 'draft', 3);
+INSERT INTO invoices (invoice_no, quotation_id, company_client_id, buyer_name, invoice_date, dpp, ppn_rate, status, created_by)
+VALUES ('INV-TEST', 1, 2, 'PT Uji', CURRENT_DATE, 1000000, 11.00, 'draft', 3);
 -- EXPECTED: ERROR - ppn_rate must be 12.00
 ROLLBACK;
 

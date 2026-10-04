@@ -65,7 +65,9 @@ func TestBuildCoretaxWorkbook_RecreatesMissingSheets(t *testing.T) {
 	}
 }
 
-// invalidBuyers names rejected clients once.
+// invalidBuyers names each fix once.
+// Identity is checked as invoiced: a draft names its client, an issued
+// invoice names itself, since only a Pengganti changes its buyer.
 func TestInvalidBuyers(t *testing.T) {
 	t.Parallel()
 	npwp := "0000000000000000"
@@ -75,25 +77,55 @@ func TestInvalidBuyers(t *testing.T) {
 		3: {ID: 3, Name: "Foreign Co", CountryCode: "SGP"},
 		4: {ID: 4, Name: "CV Kosong"},
 	}
+	draft := func(client int64, withNpwp bool) Invoice {
+		inv := Invoice{CompanyClientID: client, CompanyName: buyers[client].Name, Status: StatusDraft}
+		if withNpwp {
+			inv.CompanyNpwp = &npwp
+		}
+		return inv
+	}
+	sent := func(no string, client int64, withNpwp bool) Invoice {
+		inv := draft(client, withNpwp)
+		inv.InvoiceNo, inv.Status = no, StatusSent
+		return inv
+	}
 	cases := []struct {
 		name string
 		invs []Invoice
-		want []string
+		want refusedBuyers
 	}{
-		{name: "none invalid", invs: []Invoice{{CompanyClientID: 2}, {CompanyClientID: 3}}, want: []string{}},
-		{name: "one buyer on two invoices", invs: []Invoice{{CompanyClientID: 1}, {CompanyClientID: 2}, {CompanyClientID: 1}},
-			want: []string{"PT Tanpa NPWP"}},
-		{name: "a blank country is Indonesian", invs: []Invoice{{CompanyClientID: 4}, {CompanyClientID: 1}},
-			want: []string{"CV Kosong", "PT Tanpa NPWP"}},
-		{name: "an unread client is skipped", invs: []Invoice{{CompanyClientID: 99}}, want: []string{}},
+		{name: "none invalid", invs: []Invoice{draft(2, true), draft(3, false)},
+			want: refusedBuyers{clients: []string{}, invoices: []string{}}},
+		{name: "one buyer on two invoices", invs: []Invoice{draft(1, false), draft(2, true), draft(1, false)},
+			want: refusedBuyers{clients: []string{"PT Tanpa NPWP"}, invoices: []string{}}},
+		{name: "a blank country is Indonesian", invs: []Invoice{draft(4, false), draft(1, false)},
+			want: refusedBuyers{clients: []string{"CV Kosong", "PT Tanpa NPWP"}, invoices: []string{}}},
+		{name: "an issued invoice names itself", invs: []Invoice{sent("INV-1", 2, false), sent("INV-2", 2, false)},
+			want: refusedBuyers{clients: []string{}, invoices: []string{"INV-1", "INV-2"}}},
+		{name: "the invoiced npwp wins over the client", invs: []Invoice{sent("INV-3", 1, true)},
+			want: refusedBuyers{clients: []string{}, invoices: []string{}}},
+		{name: "an unread client is skipped", invs: []Invoice{{CompanyClientID: 99}},
+			want: refusedBuyers{clients: []string{}, invoices: []string{}}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			if got := invalidBuyers(tc.invs, buyers); !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("invalidBuyers = %v, want %v", got, tc.want)
+				t.Fatalf("invalidBuyers = %+v, want %+v", got, tc.want)
 			}
 		})
+	}
+}
+
+// Refusal names both fixes.
+func TestBuyerIdentityMessage(t *testing.T) {
+	t.Parallel()
+	got := buyerIdentityMessage(refusedBuyers{clients: []string{"PT A"}, invoices: []string{"INV-1"}})
+	want := "Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia. Lengkapi NPWP klien: PT A. " +
+		"Invoice yang sudah diterbitkan tetap memakai data klien saat diterbitkan; " +
+		"batalkan lalu terbitkan invoice pengganti untuk: INV-1."
+	if got != want {
+		t.Fatalf("message = %q, want %q", got, want)
 	}
 }
 

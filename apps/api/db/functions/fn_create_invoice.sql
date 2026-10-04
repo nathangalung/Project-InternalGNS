@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_invoice (deployed by migration 00073).
+-- Canonical current body of fn_create_invoice (deployed by migration 00095).
 -- Snapshots a delivered PO's items into a draft invoice. Line tax figures are
 -- rounded per line; the header tax figures are the SUM of those per-line values
 -- so the invoice matches what is filed with DJP per line via e-faktur.
@@ -45,19 +45,25 @@ BEGIN
 
   v_inv_no := fn_next_doc_no('INV', v_company_id);
 
+  -- The buyer is stored as the client is now.
   INSERT INTO invoices (
     invoice_no, quotation_id, po_id, company_client_id,
+    buyer_name, buyer_npwp, buyer_address,
     invoice_date, due_date, subtotal, dpp,
     status, faktur_type, replaces_invoice_id, created_by, updated_by
-  ) VALUES (
+  )
+  SELECT
     v_inv_no, v_quotation_id, p_po_id, v_company_id,
+    cc.name, cc.npwp, cc.address,
     CURRENT_DATE, CURRENT_DATE + INTERVAL '30 days',
     v_dpp, v_dpp,
     'draft',
     CASE WHEN v_replaces_id IS NULL THEN 'Normal' ELSE 'Pengganti' END,
     v_replaces_id,
     p_user_id, p_user_id
-  ) RETURNING id INTO v_inv_id;
+  FROM company_client cc
+  WHERE cc.id = v_company_id
+  RETURNING id INTO v_inv_id;
 
   INSERT INTO invoice_items (
     invoice_id, quotation_item_id, line_type, line_number,

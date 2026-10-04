@@ -228,6 +228,8 @@ export type InvoiceBackendRow = {
     poId?: number;
     companyClientId: number;
     companyName: string;
+    companyNpwp?: string;
+    companyAddress?: string;
     invoiceDate: string;
     dueDate?: string;
     subtotal?: string;
@@ -261,8 +263,6 @@ export type InvoiceDetail = InvoiceBackendRow & {
     vesselName?: string;
     poNumber?: string;
     poDate?: string;
-    companyNpwp?: string;
-    companyAddress?: string;
     companyEmail?: string;
     companyCountryCode: string;
     companyTkuId?: string;

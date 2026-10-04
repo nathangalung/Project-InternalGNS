@@ -112,8 +112,8 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 
 	// One refusal for the whole workbook: a half-filed bulk import is worse
 	// than none, and the operator fixes every client in one pass.
-	if names := invalidBuyers(invs, clientsByID); len(names) > 0 {
-		httperr.Render(w, httperr.UnprocessableDetail(buyerIdentityMessage(names), nil))
+	if refused := invalidBuyers(invs, clientsByID); !refused.empty() {
+		httperr.Render(w, httperr.UnprocessableDetail(buyerIdentityMessage(refused), nil))
 		return
 	}
 
@@ -131,24 +131,30 @@ func (h *CoretaxHandler) ExportBulkXLSX(w http.ResponseWriter, r *http.Request) 
 	httpx.WriteXLSX(w, "coretax-export", data)
 }
 
-// invalidBuyers names each rejected client.
-func invalidBuyers(invs []Invoice, clientsByID map[int64]clients.Client) []string {
+// invalidBuyers names each refused buyer.
+// Each invoice is checked as invoiced. A draft names its client once, since
+// completing the client fixes every draft; an issued invoice names itself.
+func invalidBuyers(invs []Invoice, clientsByID map[int64]clients.Client) refusedBuyers {
 	seen := map[int64]struct{}{}
-	names := []string{}
+	out := refusedBuyers{clients: []string{}, invoices: []string{}}
 	for _, inv := range invs {
 		c, ok := clientsByID[inv.CompanyClientID]
 		if !ok {
 			continue
 		}
-		if _, done := seen[inv.CompanyClientID]; done {
+		if validateBuyerIdentity(invoiceBuyer(inv, c)) == nil {
 			continue
 		}
-		if err := validateBuyerIdentity(c); err != nil {
+		if inv.Status != StatusDraft {
+			out.invoices = append(out.invoices, inv.InvoiceNo)
+			continue
+		}
+		if _, done := seen[inv.CompanyClientID]; !done {
 			seen[inv.CompanyClientID] = struct{}{}
-			names = append(names, c.Name)
+			out.clients = append(out.clients, c.Name)
 		}
 	}
-	return names
+	return out
 }
 
 // buildCoretaxWorkbook fills the DJP template.

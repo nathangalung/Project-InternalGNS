@@ -123,8 +123,8 @@ func (h *CoretaxHandler) Export(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if verr := validateBuyerIdentity(client); verr != nil {
-		httperr.Render(w, httperr.UnprocessableDetail(buyerIdentityMessage([]string{client.Name}), nil))
+	if refused := invalidBuyers([]Invoice{inv}, map[int64]clients.Client{inv.CompanyClientID: client}); !refused.empty() {
+		httperr.Render(w, httperr.UnprocessableDetail(buyerIdentityMessage(refused), nil))
 		return
 	}
 
@@ -154,6 +154,7 @@ func (h *CoretaxHandler) buildBulk(inv Invoice, items []InvoiceItem, client clie
 // Shared by the single-invoice XML export and the bulk XLSX export so the
 // field derivation lives in one place.
 func coretaxInvoiceFor(settings deps.CoretaxSettings, inv Invoice, items []InvoiceItem, client clients.Client) coretaxTaxInvoice {
+	client = invoiceBuyer(inv, client)
 	trxCode := "04"
 	if inv.TaxTransactionCode != nil && *inv.TaxTransactionCode != "" {
 		trxCode = *inv.TaxTransactionCode
@@ -289,10 +290,37 @@ func validateBuyerIdentity(c clients.Client) error {
 	return nil
 }
 
+// invoiceBuyer is the buyer as invoiced.
+// Name, NPWP and address come from the invoice snapshot; country, email and
+// TKU stay the client's.
+func invoiceBuyer(inv Invoice, c clients.Client) clients.Client {
+	c.Name = inv.CompanyName
+	c.NPWP = inv.CompanyNpwp
+	c.Address = inv.CompanyAddress
+	return c
+}
+
+// refusedBuyers names each fix.
+// A draft follows its client, so completing the client fixes it; an issued
+// invoice keeps its buyer and needs a Pengganti.
+type refusedBuyers struct {
+	clients  []string
+	invoices []string
+}
+
+func (r refusedBuyers) empty() bool { return len(r.clients) == 0 && len(r.invoices) == 0 }
+
 // buyerIdentityMessage words the refusal toast.
-func buyerIdentityMessage(names []string) string {
-	return "Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia. " +
-		"Lengkapi NPWP klien: " + strings.Join(names, ", ") + "."
+func buyerIdentityMessage(r refusedBuyers) string {
+	msg := "Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia."
+	if len(r.clients) > 0 {
+		msg += " Lengkapi NPWP klien: " + strings.Join(r.clients, ", ") + "."
+	}
+	if len(r.invoices) > 0 {
+		msg += " Invoice yang sudah diterbitkan tetap memakai data klien saat diterbitkan; " +
+			"batalkan lalu terbitkan invoice pengganti untuk: " + strings.Join(r.invoices, ", ") + "."
+	}
+	return msg
 }
 
 func strDeref(p *string) string {

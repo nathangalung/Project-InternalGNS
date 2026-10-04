@@ -89,13 +89,15 @@ func TestBuildBulk_BuyerIDTKUFallback(t *testing.T) {
 	email := "buyer@example.com"
 	h := &CoretaxHandler{settings: deps.CoretaxSettings{SellerTIN: "9999999999999999", SellerIDTKU: "9999999999999999000000"}}
 	inv := Invoice{
-		InvoiceNo:   "INV/2026/0001",
-		InvoiceDate: time.Date(2026, 5, 13, 0, 0, 0, 0, time.UTC),
+		InvoiceNo:      "INV/2026/0001",
+		InvoiceDate:    time.Date(2026, 5, 13, 0, 0, 0, 0, time.UTC),
+		CompanyName:    "PT Buyer",
+		CompanyNpwp:    &npwp,
+		CompanyAddress: &addr,
 	}
+	// The invoice carries the buyer; email and country stay the client's.
 	client := clients.Client{
-		Name:        "PT Buyer",
-		NPWP:        &npwp,
-		Address:     &addr,
+		Name:        "PT Buyer Baru",
 		Email:       &email,
 		CountryCode: "IDN",
 	}
@@ -121,6 +123,9 @@ func TestBuildBulk_BuyerIDTKUFallback(t *testing.T) {
 	}
 	if !strings.HasPrefix(tx.BuyerAdress, "Jl. Kelapa") {
 		t.Fatalf("BuyerAdress not propagated: %q", tx.BuyerAdress)
+	}
+	if tx.BuyerName != "PT Buyer" || tx.BuyerEmail != email {
+		t.Fatalf("want invoiced name and client email, got %q, %q", tx.BuyerName, tx.BuyerEmail)
 	}
 }
 

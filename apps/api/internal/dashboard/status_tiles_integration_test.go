@@ -92,10 +92,10 @@ func TestRepo_Summary_OverdueIsDerived(t *testing.T) {
 
 	qid := insertQuotation(ctx, t, tx, "SQ-TILE-OVD", "accepted")
 	_, err = tx.Exec(ctx, `
-		INSERT INTO invoices (invoice_no, quotation_id, company_client_id,
+		INSERT INTO invoices (invoice_no, quotation_id, company_client_id, buyer_name,
 		                      invoice_date, due_date, subtotal, dpp, total, status,
 		                      created_by, updated_by)
-		VALUES ('INV-TILE-OVD', $1, 1, CURRENT_DATE - 40, CURRENT_DATE - 10,
+		VALUES ('INV-TILE-OVD', $1, 1, 'PT Uji', CURRENT_DATE - 40, CURRENT_DATE - 10,
 		        10000, 10000, 11100, 'sent', 1, 1)`, qid)
 	require.NoError(t, err)
 
@@ -133,10 +133,10 @@ func TestRepo_Summary_OverdueMatchesTile(t *testing.T) {
 
 			qid := insertQuotation(ctx, t, tx, "SQ-TILE-DUE", "accepted")
 			_, err = tx.Exec(ctx, `
-				INSERT INTO invoices (invoice_no, quotation_id, company_client_id,
+				INSERT INTO invoices (invoice_no, quotation_id, company_client_id, buyer_name,
 				                      invoice_date, due_date, subtotal, dpp, total, status,
 				                      created_by, updated_by)
-				VALUES ('INV-TILE-DUE', $1, 1, CURRENT_DATE - 40, CURRENT_DATE + $2::int,
+				VALUES ('INV-TILE-DUE', $1, 1, 'PT Uji', CURRENT_DATE - 40, CURRENT_DATE + $2::int,
 				        10000, 10000, 11100, $3, 1, 1)`, qid, tc.dueDays, tc.status)
 			require.NoError(t, err)
 

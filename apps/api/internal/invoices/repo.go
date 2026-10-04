@@ -68,7 +68,7 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
 		p := c.Arg(listq.Contains(f.Q))
-		c.And("(inv.invoice_no ILIKE " + p + " OR q.quotation_no ILIKE " + p + " OR cc.name ILIKE " + p + ")")
+		c.And("(inv.invoice_no ILIKE " + p + " OR q.quotation_no ILIKE " + p + " OR inv.buyer_name ILIKE " + p + " OR cc.name ILIKE " + p + ")")
 	}
 	if len(f.Statuses) > 0 {
 		p := c.Arg(f.Statuses)

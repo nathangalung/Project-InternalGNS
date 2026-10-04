@@ -49,9 +49,9 @@ func TestCoretaxInvoiceFor_EmitsNormalizedTin(t *testing.T) {
 	npwp := "01.234.567.89.012.345"
 	tx := coretaxInvoiceFor(
 		deps.CoretaxSettings{SellerTIN: "9999999999999999", SellerIDTKU: "9999999999999999000000"},
-		Invoice{InvoiceNo: "INV/2026/0001", InvoiceDate: time.Now()},
+		Invoice{InvoiceNo: "INV/2026/0001", InvoiceDate: time.Now(), CompanyName: "PT Buyer", CompanyNpwp: &npwp},
 		nil,
-		clients.Client{Name: "PT Buyer", CountryCode: "IDN", NPWP: &npwp},
+		clients.Client{Name: "PT Buyer", CountryCode: "IDN"},
 	)
 	if tx.BuyerTin != "0123456789012345" {
 		t.Fatalf("want normalized TIN, got %q", tx.BuyerTin)
