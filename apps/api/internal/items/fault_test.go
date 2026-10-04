@@ -22,7 +22,7 @@ func TestHandler_DBFailureIsGenericProblem(t *testing.T) {
 		body   any
 	}{
 		{"update", http.MethodPut, "/items/1", items.UpdateItemRequest{Name: "Gagal", IsActive: true}},
-		{"add vendor", http.MethodPost, "/items/1/vendors", items.AddVendorToItemRequest{VendorID: 1}},
+		{"add vendor", http.MethodPost, "/items/1/vendors", map[string]any{"vendorId": 1}},
 		{"image upload url", http.MethodGet, "/items/1/image/upload-url?fileName=a.jpg", nil},
 		{"image download url", http.MethodGet, "/items/1/image/download-url", nil},
 		{"image add", http.MethodPost, "/items/1/images", items.UpdateImageRequest{ObjectKey: "items/1/a.jpg"}},

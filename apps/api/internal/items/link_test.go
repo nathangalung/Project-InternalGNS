@@ -13,7 +13,6 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
-	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -31,10 +30,10 @@ func listVendors(t *testing.T, itemID int64) []items.VendorForItem {
 func TestHandler_AddVendor_RelinkUpdatesInPlace(t *testing.T) {
 	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("RELINK")})
 	vendorID := createVendor(t, true)
-	link := func(req items.AddVendorToItemRequest) items.VendorForItem {
+	link := func(body map[string]any) items.VendorForItem {
 		t.Helper()
-		req.VendorID = vendorID
-		res := doJSON(t, newSrv(t), http.MethodPost, "/items/"+itoa(it.ID)+"/vendors", req)
+		body["vendorId"] = vendorID
+		res := doJSON(t, newSrv(t), http.MethodPost, "/items/"+itoa(it.ID)+"/vendors", body)
 		defer res.Body.Close()
 		require.Equal(t, http.StatusCreated, res.StatusCode)
 		var row items.VendorForItem
@@ -42,10 +41,8 @@ func TestHandler_AddVendor_RelinkUpdatesInPlace(t *testing.T) {
 		return row
 	}
 
-	first := link(items.AddVendorToItemRequest{
-		VendorSKU: httpx.SetText("SKU-1"), CostPrice: ptrS("1500"), ProductURL: httpx.SetText("https://toko.local/a"),
-	})
-	second := link(items.AddVendorToItemRequest{VendorSKU: httpx.SetText("SKU-2"), CostPrice: ptrS(""), ProductURL: httpx.SetText("")})
+	first := link(map[string]any{"vendorSku": "SKU-1", "costPrice": "1500", "productUrl": "https://toko.local/a"})
+	second := link(map[string]any{"vendorSku": "SKU-2", "costPrice": "", "productUrl": ""})
 	assert.Equal(t, first.VendorProductID, second.VendorProductID, "same offer row")
 
 	rows := listVendors(t, it.ID)
@@ -58,7 +55,7 @@ func TestHandler_AddVendor_RelinkUpdatesInPlace(t *testing.T) {
 	assert.Equal(t, "0.00", *got.CostPrice, "a blank cost is stored as zero")
 	assert.Nil(t, got.ProductURL, "a blank URL clears it")
 
-	third := link(items.AddVendorToItemRequest{VendorSKU: httpx.OptionalText{Set: true}, CostPrice: ptrS("0")})
+	third := link(map[string]any{"vendorSku": nil, "costPrice": "0"})
 	assert.Nil(t, third.VendorSKU, "a null SKU clears it")
 }
 
@@ -107,7 +104,7 @@ func TestHandler_AddVendor_ScreensCostPrice(t *testing.T) {
 	vendorID := createVendor(t, true)
 	for _, cost := range []string{"-5", "abc", "NaN", "Inf"} {
 		res := doJSON(t, newSrv(t), http.MethodPost, "/items/"+itoa(it.ID)+"/vendors",
-			items.AddVendorToItemRequest{VendorID: vendorID, CostPrice: ptrS(cost)})
+			map[string]any{"vendorId": vendorID, "costPrice": cost})
 		require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode, cost)
 		var p httperr.Error
 		require.NoError(t, json.NewDecoder(res.Body).Decode(&p))
@@ -122,7 +119,7 @@ func TestHandler_AddVendor_RequiresVendorID(t *testing.T) {
 	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("NO VENDOR")})
 	for _, id := range []int64{0, -5} {
 		res := doJSON(t, newSrv(t), http.MethodPost, "/items/"+itoa(it.ID)+"/vendors",
-			items.AddVendorToItemRequest{VendorID: id})
+			map[string]any{"vendorId": id})
 		res.Body.Close()
 		assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode, "vendorId %d", id)
 	}

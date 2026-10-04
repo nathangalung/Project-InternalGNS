@@ -182,7 +182,7 @@ func TestHandler_MatchRows_SkipsDeactivatedVendorPrice(t *testing.T) {
 		cost   string
 	}{{cheap, "100"}, {dear, "200"}} {
 		res := doJSON(t, newSrv(t), http.MethodPost, "/items/"+itoa(it.ID)+"/vendors",
-			items.AddVendorToItemRequest{VendorID: link.vendor, CostPrice: ptrS(link.cost)})
+			map[string]any{"vendorId": link.vendor, "costPrice": link.cost})
 		res.Body.Close()
 		require.Equal(t, http.StatusCreated, res.StatusCode)
 	}
@@ -222,7 +222,7 @@ func TestHandler_AddVendor_RequiresActiveVendor(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			res := doJSON(t, newSrv(t), http.MethodPost, "/items/"+itoa(it.ID)+"/vendors",
-				items.AddVendorToItemRequest{VendorID: c.vendor, CostPrice: ptrS("150")})
+				map[string]any{"vendorId": c.vendor, "costPrice": "150"})
 			defer res.Body.Close()
 			assert.Equal(t, c.want, res.StatusCode)
 		})

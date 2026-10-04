@@ -112,9 +112,9 @@ type UpdateItemRequest struct {
 // or productUrl keeps the stored one, and null or a blank clears it.
 type AddVendorToItemRequest struct {
 	VendorID   int64              `json:"vendorId"`
-	VendorSKU  httpx.OptionalText `json:"vendorSku,omitzero"`
+	VendorSKU  httpx.OptionalText `json:"vendorSku"`
 	CostPrice  *string            `json:"costPrice"`
-	ProductURL httpx.OptionalText `json:"productUrl,omitzero"`
+	ProductURL httpx.OptionalText `json:"productUrl"`
 }
 
 // Result row from items.match_with_vendor_by_id.
