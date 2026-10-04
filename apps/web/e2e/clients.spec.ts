@@ -168,6 +168,28 @@ const PHONE_ERROR = "Nomor telepon harus 9–12 digit angka."
 // Taken contact email copy.
 const EMAIL_TAKEN = "Email ini sudah dipakai kontak aktif lain, di klien ini atau klien lain."
 
+test("a refused Tambah Klien is reported once, in the form", async ({ page, seed }) => {
+  const detail = "Nomor klien sudah digunakan."
+  await page.route("**/api/v1/clients", (route) =>
+    route.request().method() === "POST"
+      ? route.fulfill({
+          status: 422,
+          contentType: "application/problem+json",
+          body: JSON.stringify({ status: 422, title: "Unprocessable Entity", detail }),
+        })
+      : route.fallback(),
+  )
+  await page.goto("/clients")
+  await page.getByRole("button", { name: "Tambah Klien" }).click()
+  const modal = page.getByRole("dialog", { name: "Tambah Klien" })
+  await modal.getByLabel("Nama Perusahaan *").fill(seed.name("Klien Ditolak"))
+  await modal.getByLabel("Nama Narahubung *").fill(`${seed.prefix} Rina`)
+  await modal.getByLabel("Nomor Telepon (Opsional)").fill("812345678901")
+  await modal.getByRole("button", { name: "Simpan Data" }).click()
+  await expect(modal.getByText(detail)).toBeVisible()
+  await expect(page.getByText(detail)).toHaveCount(1)
+})
+
 test("Tambah Klien refuses a 13-digit phone inline", async ({ page, seed }) => {
   await page.goto("/clients")
   await page.getByRole("button", { name: "Tambah Klien" }).click()

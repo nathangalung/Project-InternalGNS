@@ -20,6 +20,7 @@ import CountryCombobox from "@/features/countries/CountryCombobox"
 import { useCountries } from "@/features/countries/hooks"
 import { useObjectUrl } from "@/hooks/useObjectUrl"
 import { logoBackground } from "@/lib/avatar"
+import { errorMessage } from "@/lib/errors"
 import { formErrors } from "@/lib/form-errors"
 import { toast } from "@/lib/toast"
 import { ui } from "@/lib/ui"
@@ -865,7 +866,11 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                     },
                     {
                       onSuccess: closeAddContactForm,
-                      onError: (err) => setNewEmailTaken(contactEmailError(err) ?? ""),
+                      onError: (err) => {
+                        const taken = contactEmailError(err)
+                        setNewEmailTaken(taken ?? "")
+                        if (!taken) toast.error(errorMessage(err, "Gagal menyimpan kontak."))
+                      },
                     },
                   )
                 }}

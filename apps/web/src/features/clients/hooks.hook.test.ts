@@ -122,12 +122,17 @@ describe("client writes", () => {
     expect(invalidated(qc, [list, detail, unrelated])).toEqual([list, detail])
   })
 
-  it("toasts the server reason when a create fails", async () => {
-    m.create.mockRejectedValue(new ApiError(422, null, "Nama klien sudah ada."))
-    const { result } = renderQueryHook(() => useCreateClient())
-    await settle(() => result.current.mutateAsync({ name: "PT A" }))
-    expect(toast.error).toHaveBeenCalledWith("Nama klien sudah ada.")
-  })
+  // The form shows every failure.
+  it.each([new ApiError(422, null, "Nama klien sudah ada."), new ApiError(500, null, "")])(
+    "leaves a failed create to the form",
+    async (err) => {
+      m.create.mockRejectedValue(err)
+      const { result } = renderQueryHook(() => useCreateClient())
+      await settle(() => result.current.mutateAsync({ name: "PT A" }))
+      await until(() => expect(result.current.error).toBe(err))
+      expect(toast.error).not.toHaveBeenCalled()
+    },
+  )
 
   it("refreshes the documents that print the client name after an update", async () => {
     m.update.mockResolvedValue({ id: 7 } as never)
@@ -142,8 +147,8 @@ describe("client writes", () => {
     expect(invalidated(qc, [detail, ...others, unrelated])).toEqual([detail, ...others])
   })
 
-  it("falls back to Indonesian copy when an update fails without a reason", async () => {
-    m.update.mockRejectedValue(new TypeError(""))
+  it("leaves a failed update to the form", async () => {
+    m.update.mockRejectedValue(new ApiError(422, null, "NPWP tidak valid."))
     const { result } = renderQueryHook(() => useUpdateClient())
     await settle(() =>
       result.current.mutateAsync({
@@ -151,7 +156,8 @@ describe("client writes", () => {
         input: { name: "A", countryCode: "ID", isActive: true },
       }),
     )
-    expect(toast.error).toHaveBeenCalledWith("Gagal memperbarui klien.")
+    await until(() => expect(result.current.isError).toBe(true))
+    expect(toast.error).not.toHaveBeenCalled()
   })
 })
 
@@ -159,14 +165,15 @@ describe("client writes", () => {
 describe("contact writes", () => {
   const contactInput = { name: "Budi", countryCode: "ID" }
   type Mutation = () => { mutateAsync: (vars: never) => Promise<unknown> }
-  const cases: [string, Mutation, () => void, () => void, unknown, string][] = [
+  const cases: [string, Mutation, () => void, () => void, unknown, string | null][] = [
     [
       "create",
       () => useCreateContact(),
       () => m.createContact.mockResolvedValue({ id: 3 } as never),
       () => m.createContact.mockRejectedValue(new Error("")),
       { companyId: 7, input: contactInput },
-      "Gagal menyimpan kontak.",
+      // Each caller reports it.
+      null,
     ],
     [
       "update",
@@ -202,17 +209,21 @@ describe("contact writes", () => {
     },
   )
 
-  it.each(cases)("%s toasts Indonesian copy on failure", async (_n, hook, _ok, fail, vars, msg) => {
-    fail()
-    const { result } = renderQueryHook(hook)
-    await settle(() => result.current.mutateAsync(vars as never))
-    expect(toast.error).toHaveBeenCalledWith(msg)
-  })
+  it.each(cases)(
+    "%s reports a failure as its callers need",
+    async (_n, hook, _ok, fail, vars, msg) => {
+      fail()
+      const { result } = renderQueryHook(hook)
+      await settle(() => result.current.mutateAsync(vars as never))
+      if (msg === null) expect(toast.error).not.toHaveBeenCalled()
+      else expect(toast.error).toHaveBeenCalledWith(msg)
+    },
+  )
 
   // The form shows it on its email input.
-  it.each(cases.slice(0, 2))(
+  it.each(cases.slice(1, 2))(
     "%s leaves a taken email to the form",
-    async (name, hook, _ok, _f, vars) => {
+    async (_n, hook, _ok, _f, vars) => {
       const taken = "Email ini sudah dipakai kontak aktif lain, di klien ini atau klien lain."
       const err = new ApiError(
         422,
@@ -224,8 +235,7 @@ describe("contact writes", () => {
         },
         taken,
       )
-      const write = name === "create" ? m.createContact : m.updateContact
-      write.mockRejectedValue(err)
+      m.updateContact.mockRejectedValue(err)
       const { result } = renderQueryHook(hook)
       await settle(() => result.current.mutateAsync(vars as never))
       expect(toast.error).not.toHaveBeenCalled()

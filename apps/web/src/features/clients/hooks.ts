@@ -43,15 +43,16 @@ export function useClientSearch(q: string, options: { minScore?: number; limit?:
   })
 }
 
+// Failures show in the form.
 export function useCreateClient() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: clientsApi.create,
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clients.all }),
-    onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan klien.")),
   })
 }
 
+// Failures show in the form.
 export function useUpdateClient() {
   const qc = useQueryClient()
   return useMutation({
@@ -69,7 +70,6 @@ export function useUpdateClient() {
         void qc.invalidateQueries({ queryKey: key })
       }
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui klien.")),
   })
 }
 
@@ -114,6 +114,7 @@ export function useUpdateContact() {
   })
 }
 
+// Callers report failures.
 export function useCreateContact() {
   const qc = useQueryClient()
   return useMutation({
@@ -129,9 +130,6 @@ export function useCreateContact() {
       // A first contact becomes the main one shown on lists and the detail.
       void qc.invalidateQueries({ queryKey: queryKeys.clients.lists() })
       void qc.invalidateQueries({ queryKey: queryKeys.clients.detail(companyId) })
-    },
-    onError: (err) => {
-      if (!contactEmailError(err)) toast.error(errorMessage(err, "Gagal menyimpan kontak."))
     },
   })
 }
