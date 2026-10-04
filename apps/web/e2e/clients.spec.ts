@@ -190,6 +190,29 @@ test("a refused Tambah Klien is reported once, in the form", async ({ page, seed
   await expect(page.getByText(detail)).toHaveCount(1)
 })
 
+test("a refused Tambah Narahubung is reported once, as a toast", async ({ page, seed }) => {
+  const client = await seed.client()
+  const detail = "Narahubung ini sudah terdaftar."
+  await page.route(`**/api/v1/clients/${client.id}/contacts`, (route) =>
+    route.request().method() === "POST"
+      ? route.fulfill({
+          status: 422,
+          contentType: "application/problem+json",
+          body: JSON.stringify({ status: 422, title: "Unprocessable Entity", detail }),
+        })
+      : route.fallback(),
+  )
+  await page.goto(`/clients/${client.id}`)
+  const card = contactsCard(page)
+  await card.getByRole("button", { name: "Tambah Narahubung" }).click()
+  await card.getByLabel("Nama *").fill(`${seed.prefix} Ditolak`)
+  await card.getByRole("button", { name: "Simpan", exact: true }).click()
+  await expect(page.getByRole("alert").filter({ hasText: detail })).toBeVisible()
+  await expect(page.getByText(detail)).toHaveCount(1)
+  // The form stays open with its input.
+  await expect(card.getByLabel("Nama *")).toHaveValue(`${seed.prefix} Ditolak`)
+})
+
 test("Tambah Klien refuses a 13-digit phone inline", async ({ page, seed }) => {
   await page.goto("/clients")
   await page.getByRole("button", { name: "Tambah Klien" }).click()

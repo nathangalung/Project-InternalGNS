@@ -391,7 +391,7 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
 - `LoadError` is the inline failed-lookup row with Coba Lagi. A query a form
   or dialog reads while it holds unsaved input (the Tambah Produk dialog, the
   quotation wizard's client step, Ganti Narahubung) opts out of the route
-  error boundary, through `throwOnError: false` or `lookupThrow` from
+  error boundary, through `throwOnError: false` or `INLINE_LOOKUP` from
   `lib/query-client`, and shows its failure with `LoadError` instead, since
   the boundary would discard the document being edited.
 - `StatCard` is the summary tile on list screens and dashboards.
@@ -517,7 +517,14 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
 
 1. Migrations are append-only and land in number order; never edit an
    applied one.
-2. Backend errors are RFC 7807; the frontend shows them via toast.
+2. Backend errors are RFC 7807. The web reports a failed save once: the
+   form shows what it can render inline, and the mutation hook toasts only
+   what no caller renders. The user forms show field and conflict errors
+   inline, so their hooks toast the rest (`isInlineFormError`); the client,
+   vendor and product forms show every failure in their banner, so those
+   hooks never toast; a caller with no inline slot (Tambah Kontak on the
+   client detail) toasts in its own `onError`. Every other failure is a
+   toast.
 3. TypeScript is strict, no `any`, prefer `type` over `interface`.
 4. Go errors are wrapped with `fmt.Errorf("...: %w", err)`; tests are
    table-driven.
