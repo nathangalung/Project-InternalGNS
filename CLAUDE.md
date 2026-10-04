@@ -214,7 +214,11 @@ document's status history table.
   leaves it out of the PO, and accepting needs at least one offered line.
   The same function links a vendor a line names by `vendorId` when the item
   has no link to it yet, and refuses a `vendorProductId` that names another
-  product (P0014). New lines, from the RFQ import or picked by hand,
+  product (P0014). A save of a draft, the full `PUT` included, runs it only
+  after locking the quotation row and passing the status checks, so a
+  vendor link never locks before the quotation; a create runs it after the
+  client checks.
+  New lines, from the RFQ import or picked by hand,
   start from `fn_recommend_lines` (`GET /items/recommendations`): the vendor
   on this client's newest sent or accepted deal for the item at its current
   harga beli, else the cheapest active vendor, and the harga jual of this
