@@ -42,7 +42,8 @@ func exportCoretaxXML(t *testing.T, tx pgx.Tx, invoiceID int64) *httptest.Respon
 
 // Export needs an Indonesian NPWP.
 // Filing an Indonesian buyer as a passport holder produces a tax invoice DJP
-// cannot match to the buyer.
+// cannot match to the buyer. The invoiced NPWP is checked, here a legacy
+// row backfilled from a client that had none.
 func TestCoretaxExport_RefusesIndonesianBuyerWithoutNPWP(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
@@ -50,7 +51,7 @@ func TestCoretaxExport_RefusesIndonesianBuyerWithoutNPWP(t *testing.T) {
 	rec := exportCoretaxXML(t, tx, invID)
 	assert.Equal(t, http.StatusOK, rec.Code, "seeded client carries a valid NPWP: %s", rec.Body.String())
 
-	_, err := tx.Exec(ctx, `UPDATE company_client SET npwp = NULL WHERE id = $1`, seedCompanyID)
+	_, err := tx.Exec(ctx, `UPDATE invoices SET buyer_npwp = NULL WHERE id = $1`, invID)
 	require.NoError(t, err)
 
 	rec = exportCoretaxXML(t, tx, invID)
@@ -62,7 +63,7 @@ func TestCoretaxExport_RefusesIndonesianBuyerWithShortNPWP(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, _, invID := deliveredPOWithInvoice(t, tx)
 
-	_, err := tx.Exec(ctx, `UPDATE company_client SET npwp = '012345678901234' WHERE id = $1`, seedCompanyID)
+	_, err := tx.Exec(ctx, `UPDATE invoices SET buyer_npwp = '012345678901234' WHERE id = $1`, invID)
 	require.NoError(t, err)
 
 	rec := exportCoretaxXML(t, tx, invID)

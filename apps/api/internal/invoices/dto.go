@@ -20,8 +20,7 @@ type Invoice struct {
 	PoID            *int64 `db:"po_id"                 json:"poId,omitempty"`
 	CompanyClientID int64  `db:"company_client_id"     json:"companyClientId"`
 	// Buyer as invoiced.
-	// Snapshotted by fn_create_invoice; a draft follows client edits, an
-	// issued invoice keeps the buyer it went out to.
+	// Snapshotted by fn_create_invoice; a client edit never restates it.
 	CompanyName         string     `db:"company_name"          json:"companyName"`
 	CompanyNpwp         *string    `db:"company_npwp"          json:"companyNpwp,omitempty"`
 	CompanyAddress      *string    `db:"company_address"       json:"companyAddress,omitempty"`

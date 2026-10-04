@@ -59,10 +59,10 @@ func invoicedBuyer(t *testing.T, repo *invoices.Repo, id int64) buyer {
 	return buyer{name: det.CompanyName, npwp: deref(det.CompanyNpwp), address: deref(det.CompanyAddress)}
 }
 
-// Issued invoices keep their buyer.
-// A client edit after the invoice left draft never restates it; a draft
-// follows the client until it is sent, and a Pengganti takes the client as
-// it is when the Pengganti is issued.
+// Invoices keep their buyer.
+// A client edit never restates an invoice, draft or issued, and never
+// bumps its row_version; a Pengganti takes the client as it is when the
+// Pengganti is issued.
 func TestInvoice_BuyerSnapshot(t *testing.T) {
 	reason := "Salah alamat penagihan"
 	cancel := invoices.ChangeStatusRequest{Status: invoices.StatusCancelled, Note: &reason}
@@ -90,13 +90,19 @@ func TestInvoice_BuyerSnapshot(t *testing.T) {
 		assert.Contains(t, ids, invID)
 	})
 
-	t.Run("a draft follows the client", func(t *testing.T) {
-		_, tx := testutil.BeginTx(t)
+	t.Run("a draft keeps its buyer", func(t *testing.T) {
+		ctx, tx := testutil.BeginTx(t)
 		_, _, invID := deliveredPOWithInvoice(t, tx)
 		repo := invoices.NewRepo(tx, testutil.Store(t))
+		before := clientBuyer(t, tx)
+		draft, err := repo.GetByID(ctx, invID)
+		require.NoError(t, err)
 
 		moveClient(t, tx, movedBuyer)
-		assert.Equal(t, movedBuyer, invoicedBuyer(t, repo, invID))
+		assert.Equal(t, before, invoicedBuyer(t, repo, invID))
+		after, err := repo.GetByID(ctx, invID)
+		require.NoError(t, err)
+		assert.Equal(t, draft.RowVersion, after.RowVersion, "an open date edit stays current")
 	})
 
 	t.Run("a pengganti takes the client at its issue", func(t *testing.T) {
@@ -142,14 +148,13 @@ func TestCoretaxExport_FilesTheInvoicedBuyer(t *testing.T) {
 		assert.NotEqual(t, movedBuyer.npwp, filed.Tin)
 	})
 
-	t.Run("a sent invoice without an NPWP needs a pengganti", func(t *testing.T) {
+	t.Run("an invoice without an NPWP needs a pengganti", func(t *testing.T) {
 		ctx, tx := testutil.BeginTx(t)
 		_, _, invID := deliveredPOWithInvoice(t, tx)
 		repo := invoices.NewRepo(tx, testutil.Store(t))
-		noNpwp := clientBuyer(t, tx)
-		noNpwp.npwp = ""
-		moveClient(t, tx, noNpwp)
-		require.NoError(t, repo.ChangeStatus(ctx, invID, move(invoices.StatusSent), seedUserID))
+		// A legacy row backfilled from a client with no NPWP.
+		_, err := tx.Exec(ctx, `UPDATE invoices SET buyer_npwp = NULL WHERE id = $1`, invID)
+		require.NoError(t, err)
 		moveClient(t, tx, movedBuyer)
 		inv, err := repo.GetByID(ctx, invID)
 		require.NoError(t, err)
@@ -158,8 +163,8 @@ func TestCoretaxExport_FilesTheInvoicedBuyer(t *testing.T) {
 		require.Equal(t, http.StatusUnprocessableEntity, rec.Code, rec.Body.String())
 		assert.Equal(t,
 			"Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia. "+
-				"Invoice yang sudah diterbitkan tetap memakai data klien saat diterbitkan; "+
-				"batalkan lalu terbitkan invoice pengganti untuk: "+inv.InvoiceNo+".",
+				"Invoice memakai data klien saat invoice dibuat, jadi lengkapi NPWP klien, "+
+				"lalu batalkan dan terbitkan invoice pengganti untuk: "+inv.InvoiceNo+".",
 			problemDetail(t, rec))
 	})
 }

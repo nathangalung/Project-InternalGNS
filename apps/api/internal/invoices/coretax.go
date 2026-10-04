@@ -123,7 +123,7 @@ func (h *CoretaxHandler) Export(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if refused := invalidBuyers([]Invoice{inv}, map[int64]clients.Client{inv.CompanyClientID: client}); !refused.empty() {
+	if refused := invalidBuyers([]Invoice{inv}, map[int64]clients.Client{inv.CompanyClientID: client}); len(refused) > 0 {
 		httperr.Render(w, httperr.UnprocessableDetail(buyerIdentityMessage(refused), nil))
 		return
 	}
@@ -300,27 +300,13 @@ func invoiceBuyer(inv Invoice, c clients.Client) clients.Client {
 	return c
 }
 
-// refusedBuyers names each fix.
-// A draft follows its client, so completing the client fixes it; an issued
-// invoice keeps its buyer and needs a Pengganti.
-type refusedBuyers struct {
-	clients  []string
-	invoices []string
-}
-
-func (r refusedBuyers) empty() bool { return len(r.clients) == 0 && len(r.invoices) == 0 }
-
 // buyerIdentityMessage words the refusal toast.
-func buyerIdentityMessage(r refusedBuyers) string {
-	msg := "Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia."
-	if len(r.clients) > 0 {
-		msg += " Lengkapi NPWP klien: " + strings.Join(r.clients, ", ") + "."
-	}
-	if len(r.invoices) > 0 {
-		msg += " Invoice yang sudah diterbitkan tetap memakai data klien saat diterbitkan; " +
-			"batalkan lalu terbitkan invoice pengganti untuk: " + strings.Join(r.invoices, ", ") + "."
-	}
-	return msg
+// Every invoice keeps the buyer it was created with, so the fix is the
+// client's NPWP and then a Pengganti, which copies the client again.
+func buyerIdentityMessage(invoiceNos []string) string {
+	return "Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia. " +
+		"Invoice memakai data klien saat invoice dibuat, jadi lengkapi NPWP klien, " +
+		"lalu batalkan dan terbitkan invoice pengganti untuk: " + strings.Join(invoiceNos, ", ") + "."
 }
 
 func strDeref(p *string) string {

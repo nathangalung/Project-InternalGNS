@@ -304,11 +304,11 @@ document's status history table.
   a PO; `POST /invoices/{id}/replacement` then issues a Pengganti draft for
   the same PO. The invoice stores its buyer's name, NPWP and address
   (`buyer_*`, copied by `fn_create_invoice`), and the detail, list, PDF and
-  Coretax read those. A draft follows client edits
-  (`trg_company_client_refresh_draft_invoices`), so an NPWP finance completes
-  reaches it; once it leaves draft it keeps the buyer it went out to, and only
-  a Pengganti, which copies the client as it is then, changes it. Coretax
-  refuses an issued invoice without a valid NPWP with that Pengganti route.
+  Coretax read those. A client edit never restates an invoice, draft
+  included (the PO gate already required a valid NPWP and address at
+  DELIVERED); only a Pengganti, which copies the client as it is then,
+  changes it. Coretax refuses an invoice without a valid NPWP with that
+  Pengganti route.
   Country, email and TKU stay live. Terlambat is derived, never set: `fn_invoice_effective_status`
   (a stored overdue, or a draft or sent past its due date) is the one rule the
   list, summary and dashboard read. The invoice list leaves cancelled
