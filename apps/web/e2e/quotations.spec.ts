@@ -671,6 +671,8 @@ test.describe("quotation status", () => {
 
     // Keyboard pick, then Escape
     await page.keyboard.press("ArrowDown")
+    // Enter only once the open menu highlights its first move.
+    await expect(page.getByRole("menuitem", { name: "Disetujui" })).toBeFocused()
     await page.keyboard.press("Enter")
     await expect(page.getByRole("dialog", { name: "Ubah Status ke Disetujui" })).toBeVisible()
     await page.keyboard.press("Escape")

@@ -24,7 +24,9 @@ test("the Grafik year menu picks a year by keyboard", async ({ page }) => {
   await expect(trigger).toBeFocused()
 
   await page.keyboard.press("ArrowDown")
+  await expect(menu).toBeVisible()
   await page.keyboard.press("End")
+  await expect(menu.getByRole("menuitemradio", { name: "Tahun 2024" })).toBeFocused()
   await page.keyboard.press("Enter")
   await expect(page.getByRole("main").getByRole("button", { name: "Grafik: 2024" })).toBeFocused()
 })
