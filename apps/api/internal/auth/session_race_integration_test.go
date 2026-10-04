@@ -2,6 +2,7 @@ package auth_test
 
 import (
 	"context"
+	"crypto/sha256"
 	"testing"
 	"time"
 
@@ -179,4 +180,57 @@ func TestService_ChangeOwnPassword_CannotOverwriteAConcurrentReset(t *testing.T)
 	require.NoError(t, err, "the admin reset must stand")
 	_, err = svc.Login(context.Background(), u.Email, "Sendiri-pw3#")
 	assert.ErrorIs(t, err, auth.ErrInvalidCredentials)
+}
+
+// Replay blast meets a rotation.
+// A replay of an old token ends the sessions while the stolen chain's
+// newest token is being rotated. The blast waits for the rotation instead
+// of deadlocking with it, then revokes the successor the rotation minted.
+func TestService_Refresh_ReplayBlastWaitsForRotation(t *testing.T) {
+	svc, u := committedUser(t)
+	ctx := context.Background()
+	pool := testutil.Pool(t)
+	store := testutil.Store(t)
+	first, err := svc.Login(ctx, u.Email, racePassword)
+	require.NoError(t, err)
+	second, err := svc.Refresh(ctx, first.RefreshToken)
+	require.NoError(t, err)
+	_, err = pool.Exec(ctx,
+		`UPDATE refresh_tokens SET revoked_at = now() - interval '30 seconds'
+		  WHERE user_id = $1 AND revoked_at IS NOT NULL`, u.ID)
+	require.NoError(t, err)
+
+	// The rotation of the newest token holds the owner's share lock.
+	rotation, err := pool.Begin(ctx)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = rotation.Rollback(ctx) })
+	secondHash := sha256.Sum256([]byte(second.RefreshToken))
+	_, err = rotation.Exec(ctx, store.Get("auth.refresh_lock_owner"), secondHash[:])
+	require.NoError(t, err)
+
+	done := make(chan struct{})
+	var replayErr error
+	go func() {
+		defer close(done)
+		_, replayErr = svc.Refresh(ctx, first.RefreshToken)
+	}()
+	waitBlockedOn(t, rotation, done)
+
+	var version int64
+	require.NoError(t, rotation.QueryRow(ctx, store.Get("auth.refresh_redeem"), secondHash[:]).
+		Scan(new(int64), &version))
+	successor := sha256.Sum256([]byte(t.Name() + "successor"))
+	_, err = rotation.Exec(ctx, store.Get("auth.refresh_insert"),
+		u.ID, successor[:], time.Now().Add(time.Hour), version)
+	require.NoError(t, err)
+	require.NoError(t, rotation.Commit(ctx), "the rotation must not lose a deadlock to the blast")
+	<-done
+
+	require.ErrorIs(t, replayErr, auth.ErrReusedRefresh)
+	var reason *string
+	require.NoError(t, pool.QueryRow(ctx,
+		`SELECT revoked_reason FROM refresh_tokens WHERE token_hash = $1`, successor[:]).Scan(&reason))
+	require.NotNil(t, reason, "the successor minted during the blast must be revoked")
+	assert.Equal(t, "reuse", *reason)
+	assert.Equal(t, 0, activeRefreshTokens(t, u.ID))
 }

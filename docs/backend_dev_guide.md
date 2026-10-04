@@ -58,7 +58,11 @@ The refresh token lives only in a cookie; no response body carries it.
   bumped, so the access tokens minted from the stolen chain die on their
   next request too, and the cookie is expired. The blast runs in its own
   transaction after the refusal, since upgrading the refresh's share lock
-  on the users row would deadlock two concurrent replays. A replayed token
+  on the users row would deadlock two concurrent replays. It bumps the
+  version before it revokes the tokens, taking the users row before any
+  token row as a refresh and a users change do, so a blast that meets a
+  rotation of the stolen chain waits for it and then revokes the successor
+  it minted, instead of deadlocking with it. A replayed token
   whose session already ended (minted under an older version) is just
   `revoked` and ends nothing, so a stolen token cannot keep signing out the
   logins that follow. The cost

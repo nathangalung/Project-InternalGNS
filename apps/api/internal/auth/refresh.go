@@ -155,15 +155,19 @@ func (r *RefreshRepo) revokeToken(ctx context.Context, hash []byte) error {
 }
 
 // endSessions ends every session.
-// It revokes the user's refresh tokens and bumps the session version, so the
-// access tokens minted from a replayed chain are refused too. The users
-// query is reached through the store because users cannot import auth.
+// It bumps the session version and revokes the user's refresh tokens, so
+// the access tokens minted from a replayed chain are refused too. The bump
+// goes first: it takes the users row before any token row, the order a
+// refresh and a users change both lock in, so a blast waits for a rotation
+// in flight, and the revoke then sees the successor that rotation minted.
+// The users query is reached through the store because users cannot import
+// auth.
 func (r *RefreshRepo) endSessions(ctx context.Context, userID int64) error {
-	if _, err := r.db.Exec(ctx, r.store.Get("auth.refresh_revoke_user"), userID, "reuse"); err != nil {
-		return fmt.Errorf("revoke all refresh tokens: %w", err)
-	}
 	if _, err := r.db.Exec(ctx, r.store.Get("users.bump_session_version"), userID); err != nil {
 		return fmt.Errorf("bump session version: %w", err)
+	}
+	if _, err := r.db.Exec(ctx, r.store.Get("auth.refresh_revoke_user"), userID, "reuse"); err != nil {
+		return fmt.Errorf("revoke all refresh tokens: %w", err)
 	}
 	return nil
 }

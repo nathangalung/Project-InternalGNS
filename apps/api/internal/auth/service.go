@@ -303,8 +303,9 @@ func (s *Service) Refresh(ctx context.Context, raw string) (Session, error) {
 	}
 	// The blast writes the users row, so it runs in its own transaction:
 	// upgrading the share lock above would deadlock two concurrent replays.
-	// The refusal wrote nothing, and the version bump refuses whatever was
-	// minted in between.
+	// It locks users before refresh_tokens, like a rotation, so it waits for
+	// one in flight instead of deadlocking with it. The refusal wrote
+	// nothing, and the version bump refuses whatever was minted in between.
 	if blast != 0 {
 		if err := s.endSessions(ctx, blast); err != nil {
 			return Session{}, err
