@@ -70,10 +70,12 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 		p := c.Arg(listq.Contains(f.Q))
 		cond := "inv.buyer_name ILIKE " + p + " OR cc.name ILIKE " + p
 		// 10/2026 finds invoices numbered that month; I/2026 skips II/2026.
+		// The old number of a re-imported invoice answers typed text only.
 		if period, ok := listq.Period(f.Q); ok {
 			cond += " OR inv.invoice_no ILIKE " + c.Arg(period)
 		} else {
-			cond += " OR inv.invoice_no ILIKE " + p + " OR q.quotation_no ILIKE " + p
+			cond += " OR inv.invoice_no ILIKE " + p + " OR q.quotation_no ILIKE " + p +
+				" OR inv.legacy_no ILIKE " + p
 		}
 		c.And("(" + cond + ")")
 	}

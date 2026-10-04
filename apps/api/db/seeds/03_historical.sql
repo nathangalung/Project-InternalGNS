@@ -8429,2088 +8429,2088 @@ INSERT INTO quotations (
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES
   (1, 'Q-2440111/GNS/I/2024', 1, NULL, 11, 'PT. Solusi Pelayaran Nusantara', 1, 'Ibu Panda', ':', NULL, 'sent', ':', 0, 4480000.00, 4480000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-025/GNS/I/2024
-File: Q-025 (Floatless Level Switch ) - solusi.xlsx', ((TIMESTAMP '2024-01-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-025 (Floatless Level Switch ) - solusi.xlsx', 'Q-025/GNS/I/2024', ((TIMESTAMP '2024-01-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (2, 'Q-2440031/GNS/I/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', ':', NULL, 'sent', ':', 0, 55000000.00, 55000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-032/GNS/I/2024
-File: Q-032 (V-23-2403-362-E - Dewi Ambarwati) - pelita.xlsx', ((TIMESTAMP '2024-01-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-032 (V-23-2403-362-E - Dewi Ambarwati) - pelita.xlsx', 'Q-032/GNS/I/2024', ((TIMESTAMP '2024-01-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (3, 'Q-2440032/GNS/I/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', ':', NULL, 'sent', ':', 0, 200000.00, 200000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-033/GNS/I/2024
-File: Q-033 (water blaster) - pelita.xlsx', ((TIMESTAMP '2024-01-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-033 (water blaster) - pelita.xlsx', 'Q-033/GNS/I/2024', ((TIMESTAMP '2024-01-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (4, 'Q-2440112/GNS/I/2024', 1, NULL, 11, 'PT. Solusi Pelayaran Nusantara', 1, 'Ibu Panda', ':', NULL, 'sent', ':', 0, 52250000.00, 52250000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-087/GNS/I/2024
-File: Q-087 (Seal Complete Hydraulic ) - solusi.xlsx', ((TIMESTAMP '2024-01-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-087 (Seal Complete Hydraulic ) - solusi.xlsx', 'Q-087/GNS/I/2024', ((TIMESTAMP '2024-01-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (5, 'Q-2440033/GNS/I/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', ':', NULL, 'sent', ':', 0, 6000000.00, 6000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-091/GNS/I/2024
-File: Q-091 (CPU Incenerator Mitsubishi) - pelita.xlsx', ((TIMESTAMP '2024-01-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-091 (CPU Incenerator Mitsubishi) - pelita.xlsx', 'Q-091/GNS/I/2024', ((TIMESTAMP '2024-01-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (6, 'Q-2440034/GNS/I/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 52200000.00, 52200000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-095/GNS/I/2024
-File: Q-095 (V-24-2402-107-E 10 - DEWI SHINTA MANGGALA ) - pelita.xlsx', ((TIMESTAMP '2024-01-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-095 (V-24-2402-107-E 10 - DEWI SHINTA MANGGALA ) - pelita.xlsx', 'Q-095/GNS/I/2024', ((TIMESTAMP '2024-01-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (7, 'Q-2440035/GNS/II/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 64800000.00, 64800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-107/GNS/II/2024
-File: Q-107 (Roller Bearing - Dewi Ambarwati) - pelita.xlsx', ((TIMESTAMP '2024-02-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-107 (Roller Bearing - Dewi Ambarwati) - pelita.xlsx', 'Q-107/GNS/II/2024', ((TIMESTAMP '2024-02-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (8, 'Q-2440036/GNS/III/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', ':', NULL, 'sent', ':', 0, 6750000.00, 6750000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-162/GNS/III/2024
-File: Q-162 (Cement High Presure - DEWI SHINTA MANGGALA ) - pelita.xlsx', ((TIMESTAMP '2024-03-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-162 (Cement High Presure - DEWI SHINTA MANGGALA ) - pelita.xlsx', 'Q-162/GNS/III/2024', ((TIMESTAMP '2024-03-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (9, 'Q-2440037/GNS/V/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 24000000.00, 24000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-317/GNS/V/2024
-File: Q-317 (UPS - Daidan Pertiwi ) - pelita.xlsx', ((TIMESTAMP '2024-05-08 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-317 (UPS - Daidan Pertiwi ) - pelita.xlsx', 'Q-317/GNS/V/2024', ((TIMESTAMP '2024-05-08 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (10, 'Q-2440171/GNS/V/2024', 1, NULL, 17, 'PT. Lumoso Pratama Line', 4, 'Bapak Yunus', ':', NULL, 'sent', ':', 0, 9500000.00, 9500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-318/GNS/V/2024
-File: Q-318 ARC Welder - lumoso.xlsx', ((TIMESTAMP '2024-05-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-318 ARC Welder - lumoso.xlsx', 'Q-318/GNS/V/2024', ((TIMESTAMP '2024-05-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (11, 'Q-2440172/GNS/V/2024', 1, NULL, 17, 'PT. Lumoso Pratama Line', 4, 'Bapak Yunus', ':', NULL, 'sent', ':', 0, 32000000.00, 32000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-319/GNS/V/2024
-File: Q-319 Trafo Step Down - lumoso.xlsx', ((TIMESTAMP '2024-05-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-319 Trafo Step Down - lumoso.xlsx', 'Q-319/GNS/V/2024', ((TIMESTAMP '2024-05-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (12, 'Q-2440173/GNS/V/2024', 1, NULL, 17, 'PT. Lumoso Pratama Line', 4, 'Bapak Yunus', ':', NULL, 'sent', ':', 0, 23000000.00, 23000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-323/GNS/V/2024
-File: Q-323 ARC Inverter Welder - lumoso.xlsx', ((TIMESTAMP '2024-05-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-323 ARC Inverter Welder - lumoso.xlsx', 'Q-323/GNS/V/2024', ((TIMESTAMP '2024-05-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (13, 'Q-2440038/GNS/V/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 2500000.00, 2500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-327/GNS/V/2024
-File: Q-327 (Starter for FL Lamp - Daidan Mustikawati ) - pelita.xlsx', ((TIMESTAMP '2024-05-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-327 (Starter for FL Lamp - Daidan Mustikawati ) - pelita.xlsx', 'Q-327/GNS/V/2024', ((TIMESTAMP '2024-05-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (14, 'Q-2440039/GNS/V/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 18400000.00, 18400000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-330/GNS/V/2024
-File: Q-330  (UPS - Daidan Pertiwi ) - pelita.xlsx', ((TIMESTAMP '2024-05-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-330  (UPS - Daidan Pertiwi ) - pelita.xlsx', 'Q-330/GNS/V/2024', ((TIMESTAMP '2024-05-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (15, 'Q-24400310/GNS/V/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 14000000.00, 14000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-331/GNS/V/2024
-File: Q-331  (AVR custom - Daidan Pertiwi ) - pelita.xlsx', ((TIMESTAMP '2024-05-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-331  (AVR custom - Daidan Pertiwi ) - pelita.xlsx', 'Q-331/GNS/V/2024', ((TIMESTAMP '2024-05-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (16, 'Q-24400311/GNS/V/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 8000000.00, 8000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-332/GNS/V/2024
-File: Q-332  (AVR SVC 5000N - Daidan Pertiwi ) - pelita.xlsx', ((TIMESTAMP '2024-05-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-332  (AVR SVC 5000N - Daidan Pertiwi ) - pelita.xlsx', 'Q-332/GNS/V/2024', ((TIMESTAMP '2024-05-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (17, 'Q-2440061/GNS/V/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', ':', NULL, 'sent', ':', 0, 1850000.00, 1850000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-333/GNS/V/2024
-File: Q-333  (O Ring - NBR ) - NGK.xlsx', ((TIMESTAMP '2024-05-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-333  (O Ring - NBR ) - NGK.xlsx', 'Q-333/GNS/V/2024', ((TIMESTAMP '2024-05-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (18, 'Q-2440062/GNS/V/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', ':', NULL, 'sent', ':', 0, 7900000.00, 7900000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-334/GNS/V/2024
-File: Q-334  (O Ring - Viton ) - NGK.xlsx', ((TIMESTAMP '2024-05-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-334  (O Ring - Viton ) - NGK.xlsx', 'Q-334/GNS/V/2024', ((TIMESTAMP '2024-05-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (19, 'Q-2440181/GNS/V/2024', 1, NULL, 18, 'PT. Indoglas Jaya', 6, 'Bapak Yusup Suhada', ':', NULL, 'sent', ':', 0, 2000000.00, 2000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-335/GNS/V/2024
-File: Q-335  (Endcap) - Indoglas.xlsx', ((TIMESTAMP '2024-05-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-335  (Endcap) - Indoglas.xlsx', 'Q-335/GNS/V/2024', ((TIMESTAMP '2024-05-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (20, 'Q-2440182/GNS/V/2024', 1, NULL, 18, 'PT. Indoglas Jaya', 6, 'Bapak Yusup Suhada', ':', NULL, 'sent', ':', 0, 2300000.00, 2300000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-335-R/GNS/V/2024
-File: Q-335-R (Endcap) - Indoglas.xlsx', ((TIMESTAMP '2024-05-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-335-R (Endcap) - Indoglas.xlsx', 'Q-335-R/GNS/V/2024', ((TIMESTAMP '2024-05-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (21, 'Q-2440063/GNS/V/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', ':', NULL, 'sent', ':', 0, 420000.00, 420000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-341/GNS/V/2024
-File: Q-341  (O Ring P-80 - NBR ) - NGK.xlsx', ((TIMESTAMP '2024-05-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-341  (O Ring P-80 - NBR ) - NGK.xlsx', 'Q-341/GNS/V/2024', ((TIMESTAMP '2024-05-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (22, 'Q-24400312/GNS/VI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 1100000.00, 1100000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-353/GNS/V/2024
-File: Q-353  (Trafo step up down ) - Pelita.xlsx', ((TIMESTAMP '2024-06-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-353  (Trafo step up down ) - Pelita.xlsx', 'Q-353/GNS/V/2024', ((TIMESTAMP '2024-06-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (23, 'Q-24400313/GNS/VI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 2200000.00, 2200000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-359/GNS/V/2024
-File: Q-359  (Trafo step up down 1000w ) - Pelita.xlsx', ((TIMESTAMP '2024-06-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-359  (Trafo step up down 1000w ) - Pelita.xlsx', 'Q-359/GNS/V/2024', ((TIMESTAMP '2024-06-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (24, 'Q-2440064/GNS/VI/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', ':', NULL, 'sent', ':', 0, 234000.00, 234000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-373/GNS/VI/2024
-File: Q-373  (O Ring JIS P-20 - NBR ) - NGK.xlsx', ((TIMESTAMP '2024-06-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-373  (O Ring JIS P-20 - NBR ) - NGK.xlsx', 'Q-373/GNS/VI/2024', ((TIMESTAMP '2024-06-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (25, 'Q-24400314/GNS/VI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 1760000.00, 1760000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-374/GNS/VI/2024
-File: Q-374  (Rechargeable AA Battery ) - Pelita.xlsx', ((TIMESTAMP '2024-06-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-374  (Rechargeable AA Battery ) - Pelita.xlsx', 'Q-374/GNS/VI/2024', ((TIMESTAMP '2024-06-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (26, 'Q-24400315/GNS/VI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 350000.00, 350000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-375/GNS/VI/2024
-File: Q-375  (Battery Charger ) - Pelita.xlsx', ((TIMESTAMP '2024-06-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-375  (Battery Charger ) - Pelita.xlsx', 'Q-375/GNS/VI/2024', ((TIMESTAMP '2024-06-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (27, 'Q-24400316/GNS/VI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 2460000.00, 2460000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-376/GNS/VI/2024
-File: Q-376  (Rechargeable AA Battery & Charger ) - Pelita.xlsx', ((TIMESTAMP '2024-06-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-376  (Rechargeable AA Battery & Charger ) - Pelita.xlsx', 'Q-376/GNS/VI/2024', ((TIMESTAMP '2024-06-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (28, 'Q-24400317/GNS/VI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 64800000.00, 64800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-392/GNS/VI/2024
-File: Q-392 (Handy Talkie - Motorolla) - pelita.xlsx', ((TIMESTAMP '2024-06-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-392 (Handy Talkie - Motorolla) - pelita.xlsx', 'Q-392/GNS/VI/2024', ((TIMESTAMP '2024-06-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (29, 'Q-2440065/GNS/VI/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 5834000.00, 5834000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-394/GNS/VI/2024
-File: Q-394  (Oil Seal & O Ring) - NGK.xlsx', ((TIMESTAMP '2024-06-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-394  (Oil Seal & O Ring) - NGK.xlsx', 'Q-394/GNS/VI/2024', ((TIMESTAMP '2024-06-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (30, 'Q-2440011/GNS/VII/2024', 1, NULL, 1, 'PT. IMC Ship Management', 7, 'Bapak Riza Chair', ':', NULL, 'sent', ':', 0, 20312000.00, 20312000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-412/GNS/VII/2024
-File: Q-412 (Computer Set) - IMC.xlsx', ((TIMESTAMP '2024-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-412 (Computer Set) - IMC.xlsx', 'Q-412/GNS/VII/2024', ((TIMESTAMP '2024-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (31, 'Q-2440012/GNS/VII/2024', 1, NULL, 1, 'PT. IMC Ship Management', 7, 'Bapak Riza Chair', ':', NULL, 'sent', ':', 0, 42311000.00, 42311000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-413/GNS/VII/2024
-File: Q-413 (Computer Set) - IMC.xlsx', ((TIMESTAMP '2024-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-413 (Computer Set) - IMC.xlsx', 'Q-413/GNS/VII/2024', ((TIMESTAMP '2024-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (32, 'Q-2440013/GNS/VII/2024', 1, NULL, 1, 'PT. IMC Ship Management', 8, 'Bp. Maskur Suhaimi', ':', NULL, 'sent', ':', 0, 9925000.00, 9925000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-447/GNS/VII/2024
-File: Q-447 (Selenoid Valve) - IMC.xlsx', ((TIMESTAMP '2024-07-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-447 (Selenoid Valve) - IMC.xlsx', 'Q-447/GNS/VII/2024', ((TIMESTAMP '2024-07-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (33, 'Q-24400318/GNS/VII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 13500000.00, 13500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-483/GNS/VII/2024
-File: Q-483 (Single Gas Detector) - Pelita.xlsx', ((TIMESTAMP '2024-07-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-483 (Single Gas Detector) - Pelita.xlsx', 'Q-483/GNS/VII/2024', ((TIMESTAMP '2024-07-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (34, 'Q-24400319/GNS/VII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 15000000.00, 15000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-484/GNS/VII/2024
-File: Q-484 (Single Gas Detector) - ready Pelita.xlsx', ((TIMESTAMP '2024-07-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-484 (Single Gas Detector) - ready Pelita.xlsx', 'Q-484/GNS/VII/2024', ((TIMESTAMP '2024-07-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (35, 'Q-24400320/GNS/VII/2024', 2, 34, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 15000000.00, 15000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-484/GNS/VII/2024
-File: Q-484 (Single Gas Detector).pdf.xlsx', ((TIMESTAMP '2024-07-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-484 (Single Gas Detector).pdf.xlsx', 'Q-484/GNS/VII/2024', ((TIMESTAMP '2024-07-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (36, 'Q-24400321/GNS/VII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 7200000.00, 7200000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-492/GNS/VII/2024
-File: Q-492 (Kalibrasi-Single Gas Detector) - Pelita.xlsx', ((TIMESTAMP '2024-07-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-492 (Kalibrasi-Single Gas Detector) - Pelita.xlsx', 'Q-492/GNS/VII/2024', ((TIMESTAMP '2024-07-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (37, 'Q-2440014/GNS/VII/2024', 1, NULL, 1, 'PT. IMC Ship Management', 7, 'Bapak Riza Chair', ':', NULL, 'sent', ':', 0, 15512000.00, 15512000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-496/GNS/VII/2024
-File: Q-496 (form 305) - IMC.xlsx', ((TIMESTAMP '2024-07-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-496 (form 305) - IMC.xlsx', 'Q-496/GNS/VII/2024', ((TIMESTAMP '2024-07-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (38, 'Q-2440161/GNS/VII/2024', 1, NULL, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', ':', NULL, 'sent', ':', 0, 85103250.00, 85103250.00, 0.00, 'Imported from Excel
 Original Q-no: Q-502/GNS/VII/2024
-File: Q-499 (Pipe Request - Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-07-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-499 (Pipe Request - Yuxin Satu) - IMC.xlsx', 'Q-502/GNS/VII/2024', ((TIMESTAMP '2024-07-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (39, 'Q-2440162/GNS/VII/2024', 2, 38, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', 'Req 001 Engine', NULL, 'draft', ':', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-502/GNS/VII/2024
-File: Q-502 (Req 001 Engine ) - Isna Agung Pertama.xlsx', ((TIMESTAMP '2024-07-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-502 (Req 001 Engine ) - Isna Agung Pertama.xlsx', 'Q-502/GNS/VII/2024', ((TIMESTAMP '2024-07-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (40, 'Q-24400322/GNS/VII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 24820000.00, 24820000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-503/GNS/VII/2024
-File: Q-503 ( TRANSFORMER INPUT 440 VAC - Dewi Ambarwati) - pelita.xlsx', ((TIMESTAMP '2024-07-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-503 ( TRANSFORMER INPUT 440 VAC - Dewi Ambarwati) - pelita.xlsx', 'Q-503/GNS/VII/2024', ((TIMESTAMP '2024-07-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (41, 'Q-24400323/GNS/VII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 5878000.00, 5878000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-504/GNS/VII/2024
-File: Q-504 (V-24-2405-196-D-06 - Daidan Pertiwi) - pelita.xlsx', ((TIMESTAMP '2024-07-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-504 (V-24-2405-196-D-06 - Daidan Pertiwi) - pelita.xlsx', 'Q-504/GNS/VII/2024', ((TIMESTAMP '2024-07-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (42, 'Q-24400324/GNS/VII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', ':', NULL, 'draft', ':', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-505/GNS/VII/2024
-File: Q-505 (Schneider NSX100 160 250N - Dewi Saraswati) - Pelita.xlsx', ((TIMESTAMP '2024-07-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-505 (Schneider NSX100 160 250N - Dewi Saraswati) - Pelita.xlsx', 'Q-505/GNS/VII/2024', ((TIMESTAMP '2024-07-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (43, 'Q-24400325/GNS/VII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', ':', NULL, 'sent', ':', 0, 10710000.00, 10710000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-508/GNS/VII/2024
-File: Q-508 (SART - DEWI AMBARWATI) - pelita.xlsx', ((TIMESTAMP '2024-07-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-508 (SART - DEWI AMBARWATI) - pelita.xlsx', 'Q-508/GNS/VII/2024', ((TIMESTAMP '2024-07-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (44, 'Q-24400326/GNS/VIII/2024', 2, 43, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, NULL, 'sent', '30 Days', 0, 97680660.00, 97680660.00, 0.00, 'Imported from Excel
 Original Q-no: Q-508/GNS/VII/2024
-File: Q-518 (Scaling Machine - DEWI AMBARWATI) - pelita.xlsx', ((TIMESTAMP '2024-08-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-518 (Scaling Machine - DEWI AMBARWATI) - pelita.xlsx', 'Q-508/GNS/VII/2024', ((TIMESTAMP '2024-08-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (45, 'Q-2440163/GNS/VII/2024', 1, NULL, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', '19/DS-01/RatuDamai/V/24', NULL, 'sent', NULL, 0, 321501015.00, 321501015.00, 0.00, 'Imported from Excel
 Original Q-no: Q-509/GNS/VII/2024
-File: Q-509 (No. 19_DS-01_RatuDamai_V_24 ) - Isna Agung Pertama.xlsx', ((TIMESTAMP '2024-07-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-509 (No. 19_DS-01_RatuDamai_V_24 ) - Isna Agung Pertama.xlsx', 'Q-509/GNS/VII/2024', ((TIMESTAMP '2024-07-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (46, 'Q-2440164/GNS/VII/2024', 1, NULL, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 19356120.00, 19356120.00, 0.00, 'Imported from Excel
 Original Q-no: Q-512/GNS/VII/2024
-File: Q-512 (Coffee machine) - Isna Agung Pertama.xlsx', ((TIMESTAMP '2024-07-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-512 (Coffee machine) - Isna Agung Pertama.xlsx', 'Q-512/GNS/VII/2024', ((TIMESTAMP '2024-07-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (47, 'Q-24400327/GNS/VIII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'sent', '30 Days', 0, 19920000.00, 19920000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-519/GNS/VIII/2024
-File: Q-519 (Rexroth Solenoid Pneumatic) - pelita.xlsx', ((TIMESTAMP '2024-08-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-519 (Rexroth Solenoid Pneumatic) - pelita.xlsx', 'Q-519/GNS/VIII/2024', ((TIMESTAMP '2024-08-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (48, 'Q-24400328/GNS/VIII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-24-2401-309-D/05', NULL, 'sent', '30 days', 0, 29224380.00, 29224380.00, 0.00, 'Imported from Excel
 Original Q-no: Q-523/GNS/VIII/2024
-File: Q-523 (DEWI AMBARWATI) - pelita.xlsx', ((TIMESTAMP '2024-08-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-523 (DEWI AMBARWATI) - pelita.xlsx', 'Q-523/GNS/VIII/2024', ((TIMESTAMP '2024-08-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (49, 'Q-24400329/GNS/VIII/2024', 2, 48, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-24-2401-309-D/05', NULL, 'sent', '30 days', 0, 29224380.00, 29224380.00, 0.00, 'Imported from Excel
 Original Q-no: Q-523/GNS/VIII/2024
-File: Q-530 (V-24-2401-309-D-05 - DEWI AMBARWATI) - Pelita.xlsx', ((TIMESTAMP '2024-08-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-530 (V-24-2401-309-D-05 - DEWI AMBARWATI) - Pelita.xlsx', 'Q-523/GNS/VIII/2024', ((TIMESTAMP '2024-08-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (50, 'Q-24400330/GNS/VIII/2024', 3, 49, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-24-2404-216-D/10', NULL, 'sent', '30 days', 0, 464558000.00, 464558000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-523/GNS/VIII/2024
-File: Q-533 ( V-24-2404-216-D-10- DAIDAN MUSTIKAWATI) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-08-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
+File: Q-533 ( V-24-2404-216-D-10- DAIDAN MUSTIKAWATI) - Pelita Global Logistik.xlsx', 'Q-523/GNS/VIII/2024', ((TIMESTAMP '2024-08-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
 INSERT INTO quotations (
   id, quotation_no, version, parent_id, company_client_id, company_client_name,
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES
   (51, 'Q-2440066/GNS/VIII/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 825000.00, 825000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-524/GNS/VIII/2024
-File: Q-524  (Oil Seal & O Ring) - NGK.xlsx', ((TIMESTAMP '2024-08-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-524  (Oil Seal & O Ring) - NGK.xlsx', 'Q-524/GNS/VIII/2024', ((TIMESTAMP '2024-08-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (52, 'Q-24400331/GNS/VIII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2401-284-E/05', NULL, 'sent', '30 days', 0, 25160000.00, 25160000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-528/GNS/VIII/2024
-File: Q-528 (V-24-2401-284-E-05 - DEWI AMBARWATI) - pelita.xlsx', ((TIMESTAMP '2024-08-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-528 (V-24-2401-284-E-05 - DEWI AMBARWATI) - pelita.xlsx', 'Q-528/GNS/VIII/2024', ((TIMESTAMP '2024-08-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (53, 'Q-24400332/GNS/VIII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2405-027-E/11', NULL, 'draft', '30 Days', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-535/GNS/VIII/2024
-File: Q-535 (Hydraulic pump - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-08-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-535 (Hydraulic pump - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-535/GNS/VIII/2024', ((TIMESTAMP '2024-08-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (54, 'Q-2440067/GNS/VIII/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', 'RFQ_OIL SEAL NOK SB 40-55-9', NULL, 'sent', '30 Days', 0, 4085000.00, 4085000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-536/GNS/VIII/2024
-File: Q-536  (Oil Seal NOK SB 40-55-9) - NGK.xlsx', ((TIMESTAMP '2024-08-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-536  (Oil Seal NOK SB 40-55-9) - NGK.xlsx', 'Q-536/GNS/VIII/2024', ((TIMESTAMP '2024-08-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (55, 'Q-24400333/GNS/VIII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'sent', '30 days', 0, 11592000.00, 11592000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-532/GNS/VIII/2024
-File: Q-532 (V-24-2404-246-E-01 - DAIDAN MUSTIKAWATI) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-08-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-532 (V-24-2404-246-E-01 - DAIDAN MUSTIKAWATI) - Pelita Global Logistik.xlsx', 'Q-532/GNS/VIII/2024', ((TIMESTAMP '2024-08-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (56, 'Q-2440015/GNS/VIII/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', 'ENGINE REQUISITION 007', NULL, 'sent', '30 days', 0, 22631000.00, 22631000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-538/GNS/VIII/2024
-File: Q-538 (ENGINE REQUISITION 007 - Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-08-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-538 (ENGINE REQUISITION 007 - Yuxin Satu) - IMC.xlsx', 'Q-538/GNS/VIII/2024', ((TIMESTAMP '2024-08-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (57, 'Q-2440016/GNS/VIII/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', 'ENGINE REQUISITION 008', NULL, 'sent', '30 days', 0, 1305000.00, 1305000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-539/GNS/VIII/2024
-File: Q-539 (ENGINE REQUISITION 008 - Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-08-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-539 (ENGINE REQUISITION 008 - Yuxin Satu) - IMC.xlsx', 'Q-539/GNS/VIII/2024', ((TIMESTAMP '2024-08-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (58, 'Q-24400334/GNS/VIII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2402-191-E/10', NULL, 'sent', '30 days', 0, 27120000.00, 27120000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-540/GNS/VIII/2024
-File: Q-540 (V-24-2402-191-E-10 - DEWI SHINTA MANGGALA) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-08-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-540 (V-24-2402-191-E-10 - DEWI SHINTA MANGGALA) - Pelita Global Logistik.xlsx', 'Q-540/GNS/VIII/2024', ((TIMESTAMP '2024-08-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (59, 'Q-2440165/GNS/VIII/2024', 1, NULL, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', '101 Req Engine Store', NULL, 'sent', '30 days', 0, 47106500.00, 47106500.00, 0.00, 'Imported from Excel
 Original Q-no: Q-541/GNS/VIII/2024
-File: Q-541 (101 Req Engine Store ) - Isna Agung Permata.xlsx', ((TIMESTAMP '2024-08-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-541 (101 Req Engine Store ) - Isna Agung Permata.xlsx', 'Q-541/GNS/VIII/2024', ((TIMESTAMP '2024-08-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (60, 'Q-2440166/GNS/VIII/2024', 1, NULL, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 14700000.00, 14700000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-543/GNS/VIII/2024
-File: Q-543 - Isna Agung Permata.xlsx', ((TIMESTAMP '2024-08-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-543 - Isna Agung Permata.xlsx', 'Q-543/GNS/VIII/2024', ((TIMESTAMP '2024-08-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (61, 'Q-2440068/GNS/VIII/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', 'RFQ_OIL SEAL NOK SB 40-55-9', NULL, 'sent', '30 Days', 0, 1310000.00, 1310000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-542/GNS/VIII/2024
-File: Q-542  (Oil Seal NOK SB 40-55-9) - NGK.xlsx', ((TIMESTAMP '2024-08-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-542  (Oil Seal NOK SB 40-55-9) - NGK.xlsx', 'Q-542/GNS/VIII/2024', ((TIMESTAMP '2024-08-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (62, 'Q-2440167/GNS/VIII/2024', 1, NULL, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', 'No.102/SP-1/RatuDamai/VIII/24', NULL, 'sent', '30 days', 0, 23880000.00, 23880000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-545/GNS/VIII/2024
-File: Q-545 (102 Req Nordic Ballast - Engine ) - Isna Agung Permata.xlsx', ((TIMESTAMP '2024-08-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-545 (102 Req Nordic Ballast - Engine ) - Isna Agung Permata.xlsx', 'Q-545/GNS/VIII/2024', ((TIMESTAMP '2024-08-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (63, 'Q-2440168/GNS/VIII/2024', 1, NULL, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', 'No. 29/CH-01/DECK/RatuDamai/VIII/24', NULL, 'draft', '30 Days', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-547/GNS/VIII/2024
-File: Q-547 (Req No. 29 RatuDamai) - Isna Agung Pertama.xlsx', ((TIMESTAMP '2024-08-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-547 (Req No. 29 RatuDamai) - Isna Agung Pertama.xlsx', 'Q-547/GNS/VIII/2024', ((TIMESTAMP '2024-08-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (64, 'Q-24400335/GNS/IX/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'draft', '30 Days', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-758/MH/IX/2023
-File: Q-548 (Seal Kit Hydraulic Cylinder - DEWI SARASWATI) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-09-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-548 (Seal Kit Hydraulic Cylinder - DEWI SARASWATI) - Pelita Global Logistik.xlsx', 'Q-758/MH/IX/2023', ((TIMESTAMP '2024-09-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (65, 'Q-24400336/GNS/IX/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-24-2404-233-D/09', NULL, 'sent', '30 Days', 0, 3300000.00, 3300000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-549/GNS/IX/2024
-File: Q-549 (HRU SHR 500 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-09-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-549 (HRU SHR 500 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-549/GNS/IX/2024', ((TIMESTAMP '2024-09-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (66, 'Q-2440169/GNS/IX/2024', 1, NULL, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', NULL, NULL, 'draft', ':', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-550/GNS/IX/2024
-File: Q-550 (Filter 2040PM) - Isna Agung Permata.xlsx', ((TIMESTAMP '2024-09-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-550 (Filter 2040PM) - Isna Agung Permata.xlsx', 'Q-550/GNS/IX/2024', ((TIMESTAMP '2024-09-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (67, 'Q-24401610/GNS/IX/2024', 1, NULL, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', '0', NULL, 'sent', '30 days', 0, 38990000.00, 38990000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-551/GNS/IX/2024
-File: Q-551 (Req Ratu Damai No 34 DS-01_2) - Isna Agung Permata.xlsx', ((TIMESTAMP '2024-09-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-551 (Req Ratu Damai No 34 DS-01_2) - Isna Agung Permata.xlsx', 'Q-551/GNS/IX/2024', ((TIMESTAMP '2024-09-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (68, 'Q-24401611/GNS/IX/2024', 1, NULL, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 20500000.00, 20500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-557/GNS/IX/2024
-File: Q-557 (Req 109 - Urgent trafo step up - Ratu Damai) - Isna Agung Permata.xlsx', ((TIMESTAMP '2024-09-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-557 (Req 109 - Urgent trafo step up - Ratu Damai) - Isna Agung Permata.xlsx', 'Q-557/GNS/IX/2024', ((TIMESTAMP '2024-09-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (69, 'Q-24401612/GNS/IX/2024', 1, NULL, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 895000.00, 895000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-558/GNS/IX/2024
-File: Q-558 (Dongkrak botol_hydraulic jack - tugboat ) - Isna Agung Permata.xlsx', ((TIMESTAMP '2024-09-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-558 (Dongkrak botol_hydraulic jack - tugboat ) - Isna Agung Permata.xlsx', 'Q-558/GNS/IX/2024', ((TIMESTAMP '2024-09-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (70, 'Q-24400337/GNS/IX/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-24-2405-107-D/12', NULL, 'sent', '30 days', 0, 13000000.00, 13000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-561/GNS/IX/2024
-File: Q-561 (Navtex Receiver - Daidan Pertiwi) - pelita.xlsx', ((TIMESTAMP '2024-09-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-561 (Navtex Receiver - Daidan Pertiwi) - pelita.xlsx', 'Q-561/GNS/IX/2024', ((TIMESTAMP '2024-09-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (71, 'Q-2440017/GNS/IX/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', 'Engine Inventory 008/E/8/2024', NULL, 'sent', '30 days', 0, 1305000.00, 1305000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-563/GNS/IX/2024
-File: Q-563 (ENGINE Inventory 008_E_8_2024 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-563 (ENGINE Inventory 008_E_8_2024 - MV Yuxin Satu) - IMC.xlsx', 'Q-563/GNS/IX/2024', ((TIMESTAMP '2024-09-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (72, 'Q-2440018/GNS/IX/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', '007/E/08/2024', NULL, 'sent', '30 days', 0, 27000000.00, 27000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-564/GNS/IX/2024
-File: Q-564 (Electrician Inventory 007 - Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-564 (Electrician Inventory 007 - Yuxin Satu) - IMC.xlsx', 'Q-564/GNS/IX/2024', ((TIMESTAMP '2024-09-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (73, 'Q-2440019/GNS/IX/2024', 2, 72, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', '007/E/08/2024', NULL, 'sent', '30 days', 0, 27000000.00, 27000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-564/GNS/IX/2024
-File: Q-564 (Electrician Inventory 007_E_8_2024 - Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-564 (Electrician Inventory 007_E_8_2024 - Yuxin Satu) - IMC.xlsx', 'Q-564/GNS/IX/2024', ((TIMESTAMP '2024-09-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (74, 'Q-24400110/GNS/IX/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', '018/D/08/2024', NULL, 'draft', '-', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-565/GNS/IX/2024
-File: Q-565 (Refill LPG 018_D_08_2024 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-565 (Refill LPG 018_D_08_2024 - MV Yuxin Satu) - IMC.xlsx', 'Q-565/GNS/IX/2024', ((TIMESTAMP '2024-09-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (75, 'Q-24400111/GNS/IX/2024', 2, 74, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', '017/D/08/2024', NULL, 'draft', '-', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-565/GNS/IX/2024
-File: Q-570 (Refill Oxygen 017_D_08_2024 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-570 (Refill Oxygen 017_D_08_2024 - MV Yuxin Satu) - IMC.xlsx', 'Q-565/GNS/IX/2024', ((TIMESTAMP '2024-09-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (76, 'Q-24400112/GNS/IX/2024', 3, 75, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', '014/D/8/2024', NULL, 'sent', '30 days', 0, 3040000.00, 3040000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-565/GNS/IX/2024
-File: Q-571 (Slings Belt 014_D_08_2024 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-571 (Slings Belt 014_D_08_2024 - MV Yuxin Satu) - IMC.xlsx', 'Q-565/GNS/IX/2024', ((TIMESTAMP '2024-09-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (77, 'Q-24400113/GNS/IX/2024', 4, 76, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', '003/E/07/2024', NULL, 'sent', '30 days', 0, 16030000.00, 16030000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-565/GNS/IX/2024
-File: Q-565 (Deck Crane 003_E_07_2024 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-565 (Deck Crane 003_E_07_2024 - MV Yuxin Satu) - IMC.xlsx', 'Q-565/GNS/IX/2024', ((TIMESTAMP '2024-09-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (78, 'Q-24400114/GNS/IX/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', '013/E/08/2024', NULL, 'sent', '30 days', 0, 39360000.00, 39360000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-566/GNS/IX/2024
-File: Q-566 (Lub Oil Inventory 013_E_08_2024 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-566 (Lub Oil Inventory 013_E_08_2024 - MV Yuxin Satu) - IMC.xlsx', 'Q-566/GNS/IX/2024', ((TIMESTAMP '2024-09-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (79, 'Q-24400115/GNS/IX/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', '015/D/08/2024', NULL, 'sent', '30 days', 0, 2580000.00, 2580000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-568/GNS/IX/2024
-File: Q-568 (Electronic UPS APC Computer 015_D_08_2024 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-568 (Electronic UPS APC Computer 015_D_08_2024 - MV Yuxin Satu) - IMC.xlsx', 'Q-568/GNS/IX/2024', ((TIMESTAMP '2024-09-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (80, 'Q-24400116/GNS/IX/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', 'Revisi 001/D/07/2024', NULL, 'sent', '30 days', 0, 140000000.00, 140000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-567/GNS/IX/2024
-File: Q-567 (Wire Mooring Rope rev 001_D_07_2024 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-567 (Wire Mooring Rope rev 001_D_07_2024 - MV Yuxin Satu) - IMC.xlsx', 'Q-567/GNS/IX/2024', ((TIMESTAMP '2024-09-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (81, 'Q-24400117/GNS/IX/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', '019/D/09/2024', NULL, 'sent', '30 days', 0, 11250000.00, 11250000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-570/GNS/IX/2024
-File: Q-570 (Hydraulic Jack 019_E_09_2024 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-570 (Hydraulic Jack 019_E_09_2024 - MV Yuxin Satu) - IMC.xlsx', 'Q-570/GNS/IX/2024', ((TIMESTAMP '2024-09-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (82, 'Q-24401613/GNS/IX/2024', 1, NULL, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 14800000.00, 14800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-573/GNS/IX/2024
-File: Q-573 (Ratu Damai ) - Isna Agung Permata.xlsx', ((TIMESTAMP '2024-09-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-573 (Ratu Damai ) - Isna Agung Permata.xlsx', 'Q-573/GNS/IX/2024', ((TIMESTAMP '2024-09-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (83, 'Q-24400118/GNS/IX/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', '016/E/07/2024', NULL, 'sent', '30 days', 0, 17500000.00, 17500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-569/GNS/IX/2024
-File: Q-569 (Fitter Requesition 016_E_07_2024 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-569 (Fitter Requesition 016_E_07_2024 - MV Yuxin Satu) - IMC.xlsx', 'Q-569/GNS/IX/2024', ((TIMESTAMP '2024-09-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (84, 'Q-24400119/GNS/IX/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', '017/D/08/2024', NULL, 'draft', '-', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-574/GNS/IX/2024
-File: Q-579 (Refill Oxygen 017_D_08_2024 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-579 (Refill Oxygen 017_D_08_2024 - MV Yuxin Satu) - IMC.xlsx', 'Q-574/GNS/IX/2024', ((TIMESTAMP '2024-09-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (85, 'Q-24401614/GNS/IX/2024', 1, NULL, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 1500000.00, 1500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-577/GNS/IX/2024
-File: Q-577 (Peta Laut) - Isna Agung Permata.xlsx', ((TIMESTAMP '2024-09-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-577 (Peta Laut) - Isna Agung Permata.xlsx', 'Q-577/GNS/IX/2024', ((TIMESTAMP '2024-09-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (86, 'Q-24400120/GNS/IX/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', '018/D/08/2024', NULL, 'sent', '30 days', 0, 9000000.00, 9000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-580/GNS/IX/2024
-File: Q-580 (Refill LPG 018_D_08_2024 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-580 (Refill LPG 018_D_08_2024 - MV Yuxin Satu) - IMC.xlsx', 'Q-580/GNS/IX/2024', ((TIMESTAMP '2024-09-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (87, 'Q-24400121/GNS/IX/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', '004/D/07/2024', NULL, 'sent', NULL, 0, 20602500.00, 20602500.00, 0.00, 'Imported from Excel
 Original Q-no: Q-572/GNS/IX/2024
-File: Q-572 (Medicine List 004_D_07_2024 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-09-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-572 (Medicine List 004_D_07_2024 - MV Yuxin Satu) - IMC.xlsx', 'Q-572/GNS/IX/2024', ((TIMESTAMP '2024-09-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (88, 'Q-24400338/GNS/IX/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-24-2405-113-D/07', NULL, 'sent', '30 days', 0, 57300000.00, 57300000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-584/GNS/IX/2024
-File: Q-584 (V_24_2405_113_D_07 Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-09-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-584 (V_24_2405_113_D_07 Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-584/GNS/IX/2024', ((TIMESTAMP '2024-09-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (89, 'Q-24400339/GNS/IX/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-24-2405-207-D/05', NULL, 'draft', '30 days', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-585/GNS/IX/2024
-File: Q-585 (V_24_2405_207_D_05 Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-09-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-585 (V_24_2405_207_D_05 Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-585/GNS/IX/2024', ((TIMESTAMP '2024-09-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (90, 'Q-24400340/GNS/IX/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-24-2405-045-D/07', NULL, 'draft', '30 days', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-586/GNS/IX/2024
-File: Q-586 (V_24_2405_045_D_07 Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-09-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-586 (V_24_2405_045_D_07 Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-586/GNS/IX/2024', ((TIMESTAMP '2024-09-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (91, 'Q-24400122/GNS/X/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', NULL, NULL, 'sent', '30 days', 0, 13860000.00, 13860000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-587/GNS/X/2024
-File: Q-587 (Bearing - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-10-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-587 (Bearing - MV Yuxin Satu) - IMC.xlsx', 'Q-587/GNS/X/2024', ((TIMESTAMP '2024-10-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (92, 'Q-2440069/GNS/X/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 500000.00, 500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-591/GNS/X/2024
-File: Q-591  (Dust Seal) - NGK.xlsx', ((TIMESTAMP '2024-10-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-591  (Dust Seal) - NGK.xlsx', 'Q-591/GNS/X/2024', ((TIMESTAMP '2024-10-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (93, 'Q-24400123/GNS/X/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', NULL, NULL, 'sent', '30 days', 0, 9600000.00, 9600000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-590/GNS/X/2024
-File: Q-590 (Bearing Cover - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-10-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-590 (Bearing Cover - MV Yuxin Satu) - IMC.xlsx', 'Q-590/GNS/X/2024', ((TIMESTAMP '2024-10-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (94, 'Q-24400341/GNS/X/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2403-239-E/07', NULL, 'sent', '30 days', 0, 13500000.00, 13500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-603/GNS/X/2024
-File: Q-603 (V-24-2403-239-E-07 - Nozzle Head) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-10-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-603 (V-24-2403-239-E-07 - Nozzle Head) - Pelita Global Logistik.xlsx', 'Q-603/GNS/X/2024', ((TIMESTAMP '2024-10-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (95, 'Q-24401615/GNS/X/2024', 1, NULL, 16, 'PT. Isna Agung Permata', 9, 'Bapak Divton', NULL, NULL, 'draft', ':', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-604/GNS/X/2024
-File: Q-604 - Isna Agung Permata.xlsx', ((TIMESTAMP '2024-10-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-604 - Isna Agung Permata.xlsx', 'Q-604/GNS/X/2024', ((TIMESTAMP '2024-10-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (96, 'Q-2440051/GNS/X/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'draft', ':', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-609/GNS/X/2024
-File: Q-609 - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-10-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-609 - Karunia Aman Selalu.xlsx', 'Q-609/GNS/X/2024', ((TIMESTAMP '2024-10-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (97, 'Q-2440052/GNS/X/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 4600000.00, 4600000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-615/GNS/X/2024
-File: Q-615 (Seal tape dll) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-10-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-615 (Seal tape dll) - Karunia Aman Selalu.xlsx', 'Q-615/GNS/X/2024', ((TIMESTAMP '2024-10-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (98, 'Q-2440053/GNS/X/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 12650000.00, 12650000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-618/GNS/X/2024
-File: Q-618 (Handle & wires) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-10-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-618 (Handle & wires) - Karunia Aman Selalu.xlsx', 'Q-618/GNS/X/2024', ((TIMESTAMP '2024-10-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (99, 'Q-24400342/GNS/X/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2403-372-E/02', NULL, 'sent', '30 days', 0, 13500000.00, 13500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-619/GNS/X/2024
-File: Q-619 (V-24-2403-372-E_02 - Danfoss - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-10-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-619 (V-24-2403-372-E_02 - Danfoss - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-619/GNS/X/2024', ((TIMESTAMP '2024-10-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (100, 'Q-24400343/GNS/X/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 12, 'Bp. Irzi Ardiansyah', NULL, NULL, 'draft', ':', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-620/GNS/X/2024
-File: Q-620 (Cylinder Head Yanmar - Daidan Mustikawati ) - Pelita Global.xlsx', ((TIMESTAMP '2024-10-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
+File: Q-620 (Cylinder Head Yanmar - Daidan Mustikawati ) - Pelita Global.xlsx', 'Q-620/GNS/X/2024', ((TIMESTAMP '2024-10-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
 INSERT INTO quotations (
   id, quotation_no, version, parent_id, company_client_id, company_client_name,
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES
   (101, 'Q-2440054/GNS/X/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 1632000.00, 1632000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-623/GNS/X/2024
-File: Q-623 (Parker Racor 2040 PM) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-10-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-623 (Parker Racor 2040 PM) - Karunia Aman Selalu.xlsx', 'Q-623/GNS/X/2024', ((TIMESTAMP '2024-10-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (102, 'Q-2440055/GNS/X/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 1476500.00, 1476500.00, 0.00, 'Imported from Excel
 Original Q-no: Q-624/GNS/X/2024
-File: Q-624 (Circuit Breaker Airpax) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-10-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-624 (Circuit Breaker Airpax) - Karunia Aman Selalu.xlsx', 'Q-624/GNS/X/2024', ((TIMESTAMP '2024-10-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (103, 'Q-2440041/GNS/X/2024', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 13, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 573500.00, 573500.00, 0.00, 'Imported from Excel
 Original Q-no: Q-625/GNS/X/2024
-File: Q-625 (Jointing Compound) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2024-10-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-625 (Jointing Compound) - Karunia Aman Sentosa.xlsx', 'Q-625/GNS/X/2024', ((TIMESTAMP '2024-10-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (104, 'Q-24400610/GNS/X/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 4840000.00, 4840000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-626/GNS/X/2024
-File: Q-626  (Oil Seal SKY-USH56) - NGK.xlsx', ((TIMESTAMP '2024-10-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-626  (Oil Seal SKY-USH56) - NGK.xlsx', 'Q-626/GNS/X/2024', ((TIMESTAMP '2024-10-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (105, 'Q-24400124/GNS/X/2024', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', '020/E/10/24', NULL, 'sent', '30 days', 5.0, 700000.00, 700000.00, 35000.00, 'Imported from Excel
 Original Q-no: Q-627/GNS/X/2024
-File: Q-627 (Spring - 020-E-10-24 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-10-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-627 (Spring - 020-E-10-24 - MV Yuxin Satu) - IMC.xlsx', 'Q-627/GNS/X/2024', ((TIMESTAMP '2024-10-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (106, 'Q-24400344/GNS/X/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-24-2405-215-D/06', NULL, 'sent', '30 days', 5.0, 7475000.00, 7475000.00, 373750.00, 'Imported from Excel
 Original Q-no: Q-628/GNS/X/2024
-File: Q-628 (V-24-2405-215-D0-6 - Oring Viton - MV Daidan Pertiwi) - Pelita.xlsx', ((TIMESTAMP '2024-10-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-628 (V-24-2405-215-D0-6 - Oring Viton - MV Daidan Pertiwi) - Pelita.xlsx', 'Q-628/GNS/X/2024', ((TIMESTAMP '2024-10-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (107, 'Q-2440056/GNS/XI/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'draft', ':', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-629/GNS/XI/2024
-File: Q-629 (Hylomar dan Loctite) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-11-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-629 (Hylomar dan Loctite) - Karunia Aman Selalu.xlsx', 'Q-629/GNS/XI/2024', ((TIMESTAMP '2024-11-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (108, 'Q-24400125/GNS/XI/2024', 1, NULL, 1, 'PT. IMC Ship Management', 14, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'sent', '30 Days', 0, 6430000.00, 6430000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-631/GNS/XI/2024
-File: Q-631  (Danfoss Tez 55 - MV Yuxin Satu) - IMC.xlsx', ((TIMESTAMP '2024-11-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-631  (Danfoss Tez 55 - MV Yuxin Satu) - IMC.xlsx', 'Q-631/GNS/XI/2024', ((TIMESTAMP '2024-11-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (109, 'Q-2440091/GNS/XI/2024', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', 'FC KML SM116', NULL, 'sent', '30 days', 0, 44423750.00, 44423750.00, 0.00, 'Imported from Excel
 Original Q-no: Q-635/GNS/XI/2024
-File: Q-635 (FC KML SM116) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2024-11-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-635 (FC KML SM116) - Kasen Maritim Logistik.xlsx', 'Q-635/GNS/XI/2024', ((TIMESTAMP '2024-11-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (110, 'Q-24400345/GNS/XI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2405-283-E/01', NULL, 'sent', '30 days', 5.0, 2227500.00, 2227500.00, 111375.00, 'Imported from Excel
 Original Q-no: Q-630/GNS/XI/2024
-File: Q-630 (V-24-2405-283-E-01- Thermo Expansion valve) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-630 (V-24-2405-283-E-01- Thermo Expansion valve) - Pelita Global Logistik.xlsx', 'Q-630/GNS/XI/2024', ((TIMESTAMP '2024-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (111, 'Q-24400346/GNS/XI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2402-315-E/02', NULL, 'sent', '30 days', 5.0, 990000.00, 990000.00, 49500.00, 'Imported from Excel
 Original Q-no: Q-632/GNS/XI/2024
-File: Q-632 (V-24-2402-315-E-02 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-632 (V-24-2402-315-E-02 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-632/GNS/XI/2024', ((TIMESTAMP '2024-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (112, 'Q-24400347/GNS/XI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2402-320-E/06', NULL, 'sent', '30 days', 5.0, 2475000.00, 2475000.00, 123750.00, 'Imported from Excel
 Original Q-no: Q-633/GNS/XI/2024
-File: Q-633 (V-24-2402-320-E-06 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-633 (V-24-2402-320-E-06 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-633/GNS/XI/2024', ((TIMESTAMP '2024-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (113, 'Q-24400348/GNS/XI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2404-381-E/01', NULL, 'sent', '30 days', 5.0, 13843500.00, 13843500.00, 692175.00, 'Imported from Excel
 Original Q-no: Q-634/GNS/XI/2024
-File: Q-634 (V-24-2402-381-E-01 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-634 (V-24-2402-381-E-01 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-634/GNS/XI/2024', ((TIMESTAMP '2024-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (114, 'Q-24400349/GNS/XI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2404-432-E/01', NULL, 'sent', '30 days', 5.0, 42000000.00, 42000000.00, 2100000.00, 'Imported from Excel
 Original Q-no: Q-636/GNS/XI/2024
-File: Q-636 (V-24-2404-432-E-01 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-636 (V-24-2404-432-E-01 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-636/GNS/XI/2024', ((TIMESTAMP '2024-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (115, 'Q-24400350/GNS/XI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2404-427-E/01', NULL, 'sent', '30 days', 5.0, 6872500.00, 6872500.00, 343625.00, 'Imported from Excel
 Original Q-no: Q-637/GNS/XI/2024
-File: Q-637 (V-24-2404-427-E-01 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-637 (V-24-2404-427-E-01 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-637/GNS/XI/2024', ((TIMESTAMP '2024-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (116, 'Q-24400351/GNS/XI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2405-287-E/06', NULL, 'sent', '30 days', 5.0, 33765000.00, 33765000.00, 1688250.00, 'Imported from Excel
 Original Q-no: Q-638/GNS/XI/2024
-File: Q-638 (V-24-2405-287-E-06 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-638 (V-24-2405-287-E-06 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-638/GNS/XI/2024', ((TIMESTAMP '2024-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (117, 'Q-24400611/GNS/XI/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 515000.00, 515000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-639/GNS/XI/2024
-File: Q-639  (OIL SEAL NOK AE2838-EC) - NGK.xlsx', ((TIMESTAMP '2024-11-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-639  (OIL SEAL NOK AE2838-EC) - NGK.xlsx', 'Q-639/GNS/XI/2024', ((TIMESTAMP '2024-11-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (118, 'Q-24400352/GNS/XI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 12, 'Bp. Irzi Ardiansyah', 'V-24-24040436-D', NULL, 'draft', ':', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-640/GNS/XI/2024
-File: Q-640 (V-24-2404-436_D - Webbing Sling) - pelita.xlsx', ((TIMESTAMP '2024-11-08 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-640 (V-24-2404-436_D - Webbing Sling) - pelita.xlsx', 'Q-640/GNS/XI/2024', ((TIMESTAMP '2024-11-08 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (119, 'Q-24400612/GNS/XI/2024', 2, 118, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 1760000.00, 1760000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-640/GNS/XI/2024
-File: Q-645  (OIL SEAL NOK) - NGK.xlsx', ((TIMESTAMP '2024-11-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-645  (OIL SEAL NOK) - NGK.xlsx', 'Q-640/GNS/XI/2024', ((TIMESTAMP '2024-11-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (120, 'Q-24400353/GNS/XI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'draft', ':', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-642/GNS/XI/2024
-File: Q-642 (Nipple Baut Hydraulic - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-11-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-642 (Nipple Baut Hydraulic - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-642/GNS/XI/2024', ((TIMESTAMP '2024-11-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (121, 'Q-24400354/GNS/XI/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2402-314-E/02', NULL, 'draft', ':', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-646/GNS/XI/2024
-File: Q-646 (V-24-2402-314-E-02 - BM31U - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-11-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-646 (V-24-2402-314-E-02 - BM31U - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-646/GNS/XI/2024', ((TIMESTAMP '2024-11-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (122, 'Q-2440057/GNS/XII/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 4873100.00, 4873100.00, 0.00, 'Imported from Excel
 Original Q-no: Q-647/GNS/XII/2024
-File: Q-647 - (Marina 18) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-12-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-647 - (Marina 18) - Karunia Aman Selalu.xlsx', 'Q-647/GNS/XII/2024', ((TIMESTAMP '2024-12-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (123, 'Q-2440058/GNS/XII/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 27509500.00, 27509500.00, 0.00, 'Imported from Excel
 Original Q-no: Q-648/GNS/XII/2024
-File: Q-648 - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-12-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-648 - Karunia Aman Selalu.xlsx', 'Q-648/GNS/XII/2024', ((TIMESTAMP '2024-12-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (124, 'Q-2440059/GNS/XII/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', 'Marina 18 by WA', NULL, 'sent', '30 days', 0, 1360000.00, 1360000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-649/GNS/XII/2024
-File: Q-649 (Parker Racor 2040 PM) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-12-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-649 (Parker Racor 2040 PM) - Karunia Aman Selalu.xlsx', 'Q-649/GNS/XII/2024', ((TIMESTAMP '2024-12-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (125, 'Q-24400613/GNS/XII/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 304000.00, 304000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-653/GNS/XII/2024
-File: Q-653  (Hallite) - NGK.xlsx', ((TIMESTAMP '2024-12-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-653  (Hallite) - NGK.xlsx', 'Q-653/GNS/XII/2024', ((TIMESTAMP '2024-12-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (126, 'Q-24400614/GNS/XII/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'draft', '30 Days', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-654/GNS/XII/2024
-File: Q-654  (Seal SB 73 95 14) - NGK.xlsx', ((TIMESTAMP '2024-12-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-654  (Seal SB 73 95 14) - NGK.xlsx', 'Q-654/GNS/XII/2024', ((TIMESTAMP '2024-12-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (127, 'Q-24400510/GNS/XII/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'draft', ':', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-655/GNS/XII/2024
-File: Q-655 (Filter SS202 FL670) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-655 (Filter SS202 FL670) - Karunia Aman Selalu.xlsx', 'Q-655/GNS/XII/2024', ((TIMESTAMP '2024-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (128, 'Q-24400615/GNS/XII/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 days', 0, 510000.00, 510000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-659/GNS/XII/2024
-File: Q-659  (Equivalent Hallite) - NGK.xlsx', ((TIMESTAMP '2024-12-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-659  (Equivalent Hallite) - NGK.xlsx', 'Q-659/GNS/XII/2024', ((TIMESTAMP '2024-12-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (129, 'Q-24400511/GNS/XII/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'draft', ':', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-660/GNS/XII/2024
-File: Q-660 - (Fuji Electric FA) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-12-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-660 - (Fuji Electric FA) - Karunia Aman Selalu.xlsx', 'Q-660/GNS/XII/2024', ((TIMESTAMP '2024-12-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (130, 'Q-24400512/GNS/XII/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'draft', '30 days', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-662/GNS/XII/2024
-File: Q-662 - (Safety Shooes) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-12-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-662 - (Safety Shooes) - Karunia Aman Selalu.xlsx', 'Q-662/GNS/XII/2024', ((TIMESTAMP '2024-12-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (131, 'Q-24400355/GNS/XII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 16, 'Bapak Riza Chair', 'V-24-2405-045-D/07', NULL, 'sent', '30 days', 0, 10550000.00, 10550000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-664/GNS/XII/2024
-File: Q-664 (Kabel RST - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-12-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-664 (Kabel RST - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-664/GNS/XII/2024', ((TIMESTAMP '2024-12-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (132, 'Q-24400356/GNS/XII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'O-24-2405-198-E/02', NULL, 'sent', '30 days', 0, 30000000.00, 30000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-666/GNS/XII/2024
-File: Q-665 (Kabel RST Genset - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-12-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-665 (Kabel RST Genset - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-666/GNS/XII/2024', ((TIMESTAMP '2024-12-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (133, 'Q-24400357/GNS/XII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-24-2403-400-D/05', NULL, 'sent', '30 Days', 0, 64300000.00, 64300000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-667/GNS/XII/2024
-File: Q-667 (HT HX400IS - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-12-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-667 (HT HX400IS - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-667/GNS/XII/2024', ((TIMESTAMP '2024-12-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (134, 'Q-24400358/GNS/XII/2024', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'O-24-2405-198-E/02', NULL, 'sent', '30 days', 0, 40125000.00, 40125000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-668/GNS/XII/2024
-File: Q-668 (Kabel NYAF Genset - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2024-12-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-668 (Kabel NYAF Genset - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-668/GNS/XII/2024', ((TIMESTAMP '2024-12-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (135, 'Q-24400616/GNS/XII/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 2375000.00, 2375000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-669/GNS/XII/2024
-File: Q-669  (Seal SB 73 95 14 - 5 pcs) - NGK.xlsx', ((TIMESTAMP '2024-12-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-669  (Seal SB 73 95 14 - 5 pcs) - NGK.xlsx', 'Q-669/GNS/XII/2024', ((TIMESTAMP '2024-12-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (136, 'Q-24400617/GNS/XII/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 3500000.00, 3500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-670/GNS/XII/2024
-File: Q-670 (Seal SB 73 95 14 - 10 pcs) - NGK.xlsx', ((TIMESTAMP '2024-12-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-670 (Seal SB 73 95 14 - 10 pcs) - NGK.xlsx', 'Q-670/GNS/XII/2024', ((TIMESTAMP '2024-12-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (137, 'Q-24400618/GNS/XII/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 270000.00, 270000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-671/GNS/XII/2024
-File: Q-671  (OIL SEAL TC 50 65 9) - NGK.xlsx', ((TIMESTAMP '2024-12-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-671  (OIL SEAL TC 50 65 9) - NGK.xlsx', 'Q-671/GNS/XII/2024', ((TIMESTAMP '2024-12-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (138, 'Q-2440092/GNS/XII/2024', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', NULL, NULL, 'draft', ':', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-673/GNS/XII/2024
-File: Q-673 (Shell Tellus S2 VX32) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2024-12-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-673 (Shell Tellus S2 VX32) - Kasen Maritim Logistik.xlsx', 'Q-673/GNS/XII/2024', ((TIMESTAMP '2024-12-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (139, 'Q-24400513/GNS/XII/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'draft', ':', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-677/GNS/XII/2024
-File: Q-677 (Tachometer RPM KUS) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-12-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-677 (Tachometer RPM KUS) - Karunia Aman Selalu.xlsx', 'Q-677/GNS/XII/2024', ((TIMESTAMP '2024-12-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (140, 'Q-24400619/GNS/XII/2024', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 3649000.00, 3649000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-679/GNS/XII/2024
-File: Q-679  (Oil seal_Oring) - NGK.xlsx', ((TIMESTAMP '2024-12-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-679  (Oil seal_Oring) - NGK.xlsx', 'Q-679/GNS/XII/2024', ((TIMESTAMP '2024-12-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (141, 'Q-24400514/GNS/XII/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 11680400.00, 11680400.00, 0.00, 'Imported from Excel
 Original Q-no: Q-680/GNS/XII/2024
-File: Q-680 (baterry tongkang lampu dll) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-12-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-680 (baterry tongkang lampu dll) - Karunia Aman Selalu.xlsx', 'Q-680/GNS/XII/2024', ((TIMESTAMP '2024-12-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (142, 'Q-24400515/GNS/XII/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 17, 'Bapak Hari', NULL, 'TB Marina 18/BG BEE POWER 3005', 'sent', '30 days', 0, 14320000.00, 14320000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-685/GNS/XII/2024
-File: Q-685 (TB Marina 18-BG BEE POWER 3005) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-12-31 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-685 (TB Marina 18-BG BEE POWER 3005) - Karunia Aman Selalu.xlsx', 'Q-685/GNS/XII/2024', ((TIMESTAMP '2024-12-31 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (143, 'Q-24400516/GNS/XII/2024', 1, NULL, 5, 'PT. Karunia Aman Selalu', 17, 'Bapak Hari', NULL, 'TB Marina 26', 'sent', '30 days', 0, 1250000.00, 1250000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-686/GNS/XII/2024
-File: Q-686 (TB Marina 26 KUS K-Y23100) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2024-12-31 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-686 (TB Marina 26 KUS K-Y23100) - Karunia Aman Selalu.xlsx', 'Q-686/GNS/XII/2024', ((TIMESTAMP '2024-12-31 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (144, 'Q-2540051/GNS/I/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 9980000.00, 9980000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251001/GNS/I/2025
-File: Q-251001 (Accu GS N200) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-01-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251001 (Accu GS N200) - Karunia Aman Selalu.xlsx', 'Q-251001/GNS/I/2025', ((TIMESTAMP '2025-01-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (145, 'Q-2540052/GNS/I/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 14320000.00, 14320000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251002/GNS/I/2025
-File: Q-251002 (Parachute Rocket) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-01-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251002 (Parachute Rocket) - Karunia Aman Selalu.xlsx', 'Q-251002/GNS/I/2025', ((TIMESTAMP '2025-01-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (146, 'Q-2540011/GNS/I/2025', 1, NULL, 1, 'PT. IMC Ship Management', 10, 'Ibu Aisya Dewi Faradiba', NULL, NULL, 'sent', '30 Days', 5.0, 17400000.00, 17400000.00, 870000.00, 'Imported from Excel
 Original Q-no: Q-256003/GNS/I/2025
-File: Q-256003 (Hydraulic Hose) - IMC Ship Management.xlsx', ((TIMESTAMP '2025-01-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256003 (Hydraulic Hose) - IMC Ship Management.xlsx', 'Q-256003/GNS/I/2025', ((TIMESTAMP '2025-01-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (147, 'Q-2540031/GNS/I/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'sample from Bp. Heri Febri', 'MV DEWI SARASWATI', 'sent', '30 Days', 5.0, 9900000.00, 9900000.00, 495000.00, 'Imported from Excel
 Original Q-no: Q-252007/GNS/I/2025
-File: Q-252007 (Oring Viton - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-01-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252007 (Oring Viton - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-252007/GNS/I/2025', ((TIMESTAMP '2025-01-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (148, 'Q-2540032/GNS/I/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'O-25-2404-008-E/01', 'MV DAIDAN MUSTIKAWATI', 'sent', '30 Days', 0, 52095000.00, 52095000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252008/GNS/I/2025
-File: Q-252008 (O-25-2404-008-E_01 Shaft Complete - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-01-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252008 (O-25-2404-008-E_01 Shaft Complete - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-252008/GNS/I/2025', ((TIMESTAMP '2025-01-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (149, 'Q-2540053/GNS/I/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 870000.00, 870000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251011/GNS/I/2025
-File: Q-251011 (wifi extender dll) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-01-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251011 (wifi extender dll) - Karunia Aman Selalu.xlsx', 'Q-251011/GNS/I/2025', ((TIMESTAMP '2025-01-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (150, 'Q-2540111/GNS/I/2025', 1, NULL, 11, 'PT. Solusi Pelayaran Nusantara', 19, 'Bp. Adha/Ibu Rani', 'samples from bp. Adha', NULL, 'sent', '30 Days', 0, 17065000.00, 17065000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-257009/GNS/I/2025
-File: Q-257009 - (Noah Asyera) - Solusi Pelayaran Nusantara - Revisi.xlsx', ((TIMESTAMP '2025-01-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
+File: Q-257009 - (Noah Asyera) - Solusi Pelayaran Nusantara - Revisi.xlsx', 'Q-257009/GNS/I/2025', ((TIMESTAMP '2025-01-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
 INSERT INTO quotations (
   id, quotation_no, version, parent_id, company_client_id, company_client_name,
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES
   (151, 'Q-2540091/GNS/I/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', 'Request Sheet', NULL, 'sent', NULL, 0, 610915500.00, 610915500.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255012/GNS/I/2025
-File: Q-255012 - (Hand Tools & Consumable Engine) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-01-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255012 - (Hand Tools & Consumable Engine) - Kasen Maritim Logistik.xlsx', 'Q-255012/GNS/I/2025', ((TIMESTAMP '2025-01-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (152, 'Q-2540092/GNS/I/2025', 2, 151, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', 'Request Sheet', NULL, 'sent', NULL, 0, 224745000.00, 224745000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255012/GNS/I/2025
-File: Q-255280 - (Electical Part Crane Liebherr) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-01-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255280 - (Electical Part Crane Liebherr) - Kasen Maritim Logistik.xlsx', 'Q-255012/GNS/I/2025', ((TIMESTAMP '2025-01-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (153, 'Q-2540041/GNS/I/2025', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 20, 'Bapak Bagas', NULL, NULL, 'sent', '30 days', 0, 24522000.00, 24522000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-261035/GNS/I/2026
-File: Q-265034 (ComAp Inteli Nano Module dll) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2025-01-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265034 (ComAp Inteli Nano Module dll) - Karunia Aman Sentosa.xlsx', 'Q-261035/GNS/I/2026', ((TIMESTAMP '2025-01-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (154, 'Q-2540112/GNS/I/2025', 1, NULL, 11, 'PT. Solusi Pelayaran Nusantara', 19, 'Bp. Adha/Ibu Rani', 'samples from bp. Adha', NULL, 'sent', '30 Days', 0, 4750000.00, 4750000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-2570014/GNS/I/2025
-File: Q-257014 - (Butterfly Key - Noah Asyera) - Solusi Pelayaran Nusantara.xlsx', ((TIMESTAMP '2025-01-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-257014 - (Butterfly Key - Noah Asyera) - Solusi Pelayaran Nusantara.xlsx', 'Q-2570014/GNS/I/2025', ((TIMESTAMP '2025-01-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (155, 'Q-2540054/GNS/I/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 9558750.00, 9558750.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251015/GNS/I/2025
-File: Q-251015 (Racor 2040 PM dll) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-01-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251015 (Racor 2040 PM dll) - Karunia Aman Selalu.xlsx', 'Q-251015/GNS/I/2025', ((TIMESTAMP '2025-01-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (156, 'Q-2540055/GNS/I/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 210000.00, 210000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251016/GNS/I/2025
-File: Q-251016 (kain majun) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-01-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251016 (kain majun) - Karunia Aman Selalu.xlsx', 'Q-251016/GNS/I/2025', ((TIMESTAMP '2025-01-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (157, 'Q-2540061/GNS/I/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 304000.00, 304000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-254017/GNS/I/2025
-File: Q-254017 (Hallite 30 45 10 PU) - NGK.xlsx', ((TIMESTAMP '2025-01-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254017 (Hallite 30 45 10 PU) - NGK.xlsx', 'Q-254017/GNS/I/2025', ((TIMESTAMP '2025-01-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (158, 'Q-2540056/GNS/I/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 21, 'Bapak Harry Kurniawan', NULL, 'TB Marina 26/BG Marine Power 3012', 'sent', '30 Days', 0, 200000.00, 200000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251019/GNS/I/2025
-File: Q-251019 (Kapasitor Pompa Celup) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-01-31 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251019 (Kapasitor Pompa Celup) - Karunia Aman Selalu.xlsx', 'Q-251019/GNS/I/2025', ((TIMESTAMP '2025-01-31 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (159, 'Q-2540033/GNS/II/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2404-376-E/07', 'MV DAIDAN MUSTIKAWATI', 'sent', '30 Days', 0, 24000000.00, 24000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252028/GNS/II/2025
-File: Q-252028 (V-24-2404-376-E_07 Hydraulic Pump Rexroth - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-02-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252028 (V-24-2404-376-E_07 Hydraulic Pump Rexroth - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-252028/GNS/II/2025', ((TIMESTAMP '2025-02-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (160, 'Q-2540034/GNS/II/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-024-D/08', NULL, 'sent', '30 days', 0, 7100000.00, 7100000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253023/GNS/II/2025
-File: Q-253023 (Plug Socket PCE - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-02-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253023 (Plug Socket PCE - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253023/GNS/II/2025', ((TIMESTAMP '2025-02-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (161, 'Q-2540062/GNS/II/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 225000.00, 225000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-254025/GNS/II/2025
-File: Q-254025 (Oring P16 dan P25) - NGK.xlsx', ((TIMESTAMP '2025-02-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254025 (Oring P16 dan P25) - NGK.xlsx', 'Q-254025/GNS/II/2025', ((TIMESTAMP '2025-02-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (162, 'Q-2540093/GNS/II/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', 'No. 1/ELECTRIC/KML Karunia/I/24', NULL, 'sent', '30 days', 0, 126898500.00, 126898500.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255024/GNS/II/2025
-File: Q-255024 - (Electric - Lighting) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-02-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255024 - (Electric - Lighting) - Kasen Maritim Logistik.xlsx', 'Q-255024/GNS/II/2025', ((TIMESTAMP '2025-02-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (163, 'Q-2540057/GNS/II/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 7653750.00, 7653750.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251031/GNS/II/2025
-File: Q-251031 (Air Filter dll) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-02-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251031 (Air Filter dll) - Karunia Aman Selalu.xlsx', 'Q-251031/GNS/II/2025', ((TIMESTAMP '2025-02-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (164, 'Q-2540035/GNS/II/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, 'MV DAIDAN MUSTIKAWATI', 'sent', '30 Days', 0, 1722000.00, 1722000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252035/GNS/II/2025
-File: Q-252035 (Transport to Berau - Hydraulic Pump Rexroth - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-02-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252035 (Transport to Berau - Hydraulic Pump Rexroth - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-252035/GNS/II/2025', ((TIMESTAMP '2025-02-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (165, 'Q-2540036/GNS/II/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-24-2401-338-D/15', 'MV DEWI AMBARWATI', 'sent', '30 Days', 0, 31000000.00, 31000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253037/GNS/II/2025
-File: Q-253037 (D Shackle set - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-02-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253037 (D Shackle set - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253037/GNS/II/2025', ((TIMESTAMP '2025-02-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (166, 'Q-2540037/GNS/II/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'O-25-2404-040-E/06', 'MV DAIDAN MUSTIKAWATI', 'sent', '30 Days', 5.0, 1800000.00, 1800000.00, 90000.00, 'Imported from Excel
 Original Q-no: Q-253040/GNS/II/2025
-File: Q-253040 (BEARING HK 1612 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-02-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253040 (BEARING HK 1612 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253040/GNS/II/2025', ((TIMESTAMP '2025-02-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (167, 'Q-2540038/GNS/II/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2403-024-E/05', NULL, 'draft', '30 days', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252042/GNS/II/2025
-File: Q-252042 (Dry Walnut Shell - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-02-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252042 (Dry Walnut Shell - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-252042/GNS/II/2025', ((TIMESTAMP '2025-02-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (168, 'Q-2540094/GNS/II/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', 'No. 1/DECK/KML Karunia/I/24', NULL, 'sent', NULL, 0, 197026500.00, 197026500.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255038/GNS/II/2025
-File: Q-255038 - (Deck Store) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-02-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255038 - (Deck Store) - Kasen Maritim Logistik.xlsx', 'Q-255038/GNS/II/2025', ((TIMESTAMP '2025-02-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (169, 'Q-2540039/GNS/II/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2404-488-E/10', 'MV DAIDAN MUSTIKAWATI', 'sent', '30 Days', 0, 97000000.00, 97000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252048/GNS/II/2025
-File: Q-252048 (Cylinder Head - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-02-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252048 (Cylinder Head - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-252048/GNS/II/2025', ((TIMESTAMP '2025-02-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (170, 'Q-2540095/GNS/II/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 24317000.00, 24317000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255045/GNS/II/2025
-File: Q-255045 - (TB Repair) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-02-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255045 - (TB Repair) - Kasen Maritim Logistik.xlsx', 'Q-255045/GNS/II/2025', ((TIMESTAMP '2025-02-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (171, 'Q-2540113/GNS/II/2025', 1, NULL, 11, 'PT. Solusi Pelayaran Nusantara', 22, 'Ibu Rita', 'SBPM 005-018.1', NULL, 'sent', '30 days', 0, 5300000.00, 5300000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-2570046/GNS/II/2025
-File: Q-257046 - (Baut) - Solusi Pelayaran Nusantara.xlsx', ((TIMESTAMP '2025-02-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-257046 - (Baut) - Solusi Pelayaran Nusantara.xlsx', 'Q-2570046/GNS/II/2025', ((TIMESTAMP '2025-02-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (172, 'Q-25400310/GNS/II/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 12, 'Bp. Irzi Ardiansyah', NULL, 'MV DAIDAN MUSTIKAWATI', 'sent', '30 Days', 0, 17340000.00, 17340000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252049/GNS/II/2025
-File: Q-252049 (Phoenix Contact - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-02-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252049 (Phoenix Contact - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-252049/GNS/II/2025', ((TIMESTAMP '2025-02-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (173, 'Q-25400311/GNS/II/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, 'MV DAIDAN MUSTIKAWATI', 'sent', '30 Days', 0, 13380000.00, 13380000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252051/GNS/II/2025
-File: Q-252051 (Transport to Manado - Cylinder Head - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-02-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252051 (Transport to Manado - Cylinder Head - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-252051/GNS/II/2025', ((TIMESTAMP '2025-02-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (174, 'Q-2540096/GNS/II/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 20715000.00, 20715000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255026/GNS/II/2025
-File: Q-255026 - (PC Lenovo) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-02-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255026 - (PC Lenovo) - Kasen Maritim Logistik.xlsx', 'Q-255026/GNS/II/2025', ((TIMESTAMP '2025-02-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (175, 'Q-2540114/GNS/II/2025', 1, NULL, 11, 'PT. Solusi Pelayaran Nusantara', 23, 'Ibu Rani', 'SSS SBPM 005-018', NULL, 'sent', '30 days', 0, 9751000.00, 9751000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-257052/GNS/I/2025
-File: Q-257052 - ( Engine Equipment Dept - Noah Asyera) - Solusi Pelayaran Nusantara.xlsx', ((TIMESTAMP '2025-02-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-257052 - ( Engine Equipment Dept - Noah Asyera) - Solusi Pelayaran Nusantara.xlsx', 'Q-257052/GNS/I/2025', ((TIMESTAMP '2025-02-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (176, 'Q-2540042/GNS/II/2025', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 13, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 26780000.00, 26780000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-257052/GNS/II/2025
-File: Q-257049 - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2025-02-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-257049 - Karunia Aman Sentosa.xlsx', 'Q-257052/GNS/II/2025', ((TIMESTAMP '2025-02-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (177, 'Q-2540043/GNS/II/2025', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 13, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 26780000.00, 26780000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-257053/GNS/II/2025
-File: Q-257053 - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2025-02-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-257053 - Karunia Aman Sentosa.xlsx', 'Q-257053/GNS/II/2025', ((TIMESTAMP '2025-02-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (178, 'Q-25400312/GNS/II/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, 'MV DAIDAN MUSTIKAWATI', 'sent', '30 Days', 0, 53885000.00, 53885000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252055/GNS/II/2025
-File: Q-252055 (Transport to Ternate - Cylinder Head - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-02-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252055 (Transport to Ternate - Cylinder Head - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-252055/GNS/II/2025', ((TIMESTAMP '2025-02-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (179, 'Q-2540115/GNS/II/2025', 1, NULL, 11, 'PT. Solusi Pelayaran Nusantara', 22, 'Ibu Rita', NULL, NULL, 'sent', '30 Days', 0, 4705000.00, 4705000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-2570054/GNS/II/2025
-File: Q-257054 - (Baut&Mur) - Solusi Pelayaran Nusantara.xlsx', ((TIMESTAMP '2025-02-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-257054 - (Baut&Mur) - Solusi Pelayaran Nusantara.xlsx', 'Q-2570054/GNS/II/2025', ((TIMESTAMP '2025-02-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (180, 'Q-2540063/GNS/II/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 700000.00, 700000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-254056/GNS/II/2025
-File: Q-254056 (Oring G25) - NGK.xlsx', ((TIMESTAMP '2025-02-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254056 (Oring G25) - NGK.xlsx', 'Q-254056/GNS/II/2025', ((TIMESTAMP '2025-02-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (181, 'Q-25400313/GNS/II/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, 'MV DAIDAN MUSTIKAWATI', 'sent', '30 Days', 0, 2668800.00, 2668800.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252057/GNS/II/2025
-File: Q-252057 (Transport to Ternate 24kg - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252057 (Transport to Ternate 24kg - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-252057/GNS/II/2025', ((TIMESTAMP '2025-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (182, 'Q-25400314/GNS/II/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2402-027-D/03', NULL, 'sent', '30 days', 5.0, 16920000.00, 16920000.00, 846000.00, 'Imported from Excel
 Original Q-no: Q-253063/GNS/II/2025
-File: Q-253063 - (V-25-2402-027-D-03 Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253063 - (V-25-2402-027-D-03 Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-253063/GNS/II/2025', ((TIMESTAMP '2025-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (183, 'Q-2540064/GNS/II/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 200000.00, 200000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-254058/GNS/II/2025
-File: Q-254058 (Oring NOK C03092-G0) - NGK.xlsx', ((TIMESTAMP '2025-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254058 (Oring NOK C03092-G0) - NGK.xlsx', 'Q-254058/GNS/II/2025', ((TIMESTAMP '2025-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (184, 'Q-2540097/GNS/II/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 6700000.00, 6700000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255060/GNS/II/2025
-File: Q-255060 - AC - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255060 - AC - Kasen Maritim Logistik.xlsx', 'Q-255060/GNS/II/2025', ((TIMESTAMP '2025-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (185, 'Q-25400315/GNS/II/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 12, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 0, 23000000.00, 23000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253065/GNS/II/2025
-File: Q-253065 - (VRLA Battery OP24-12) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-02-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253065 - (VRLA Battery OP24-12) - Pelita Global Logistik.xlsx', 'Q-253065/GNS/II/2025', ((TIMESTAMP '2025-02-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (186, 'Q-25400316/GNS/II/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-24-2405-295-D/08', NULL, 'sent', '30 Days', 5.0, 33005000.00, 33005000.00, 1650250.00, 'Imported from Excel
 Original Q-no: Q-253067/GNS/II/2025
-File: Q-253067 - (V-24-2405-295-D-08 - handy talky - DAIDAN PERTIWI) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-02-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253067 - (V-24-2405-295-D-08 - handy talky - DAIDAN PERTIWI) - Pelita Global Logistik.xlsx', 'Q-253067/GNS/II/2025', ((TIMESTAMP '2025-02-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (187, 'Q-25400317/GNS/III/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 12, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 0, 42750000.00, 42750000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253070/GNS/III/2025
-File: Q-253070 - (Firewire cable IEEE 1394 Armored) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-03-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253070 - (Firewire cable IEEE 1394 Armored) - Pelita Global Logistik.xlsx', 'Q-253070/GNS/III/2025', ((TIMESTAMP '2025-03-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (188, 'Q-2540098/GNS/III/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 7590000.00, 7590000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255069/GNS/III/2025
-File: Q-255069 - (Almanak Neutika dll) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-03-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255069 - (Almanak Neutika dll) - Kasen Maritim Logistik.xlsx', 'Q-255069/GNS/III/2025', ((TIMESTAMP '2025-03-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (189, 'Q-25400318/GNS/III/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 12, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 0, 36800000.00, 36800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253075/GNS/III/2025
-File: Q-253075 - (Repeaters) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-03-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253075 - (Repeaters) - Pelita Global Logistik.xlsx', 'Q-253075/GNS/III/2025', ((TIMESTAMP '2025-03-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (190, 'Q-2540099/GNS/III/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 4750000.00, 4750000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255076/GNS/III/2025
-File: Q-255076 - Air Filter & Fluke 59 max - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-03-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255076 - Air Filter & Fluke 59 max - Kasen Maritim Logistik.xlsx', 'Q-255076/GNS/III/2025', ((TIMESTAMP '2025-03-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (191, 'Q-25400319/GNS/III/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 12, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 0, 29350000.00, 29350000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253077/GNS/III/2025
-File: Q-253077 - (VDR APT) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-03-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253077 - (VDR APT) - Pelita Global Logistik.xlsx', 'Q-253077/GNS/III/2025', ((TIMESTAMP '2025-03-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (192, 'Q-25400320/GNS/III/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 12, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 0, 9450000.00, 9450000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253078/GNS/III/2025
-File: Q-253078 - (VDR - travel allowance) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-03-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253078 - (VDR - travel allowance) - Pelita Global Logistik.xlsx', 'Q-253078/GNS/III/2025', ((TIMESTAMP '2025-03-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (193, 'Q-25400910/GNS/III/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 2440000.00, 2440000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255079/GNS/III/2025
-File: Q-255079 - Accu Charger 24V - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-03-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255079 - Accu Charger 24V - Kasen Maritim Logistik.xlsx', 'Q-255079/GNS/III/2025', ((TIMESTAMP '2025-03-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (194, 'Q-25400911/GNS/III/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 615000.00, 615000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255080/GNS/III/2025
-File: Q-255080 - MASTERLOCK 3058DAT - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-03-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255080 - MASTERLOCK 3058DAT - Kasen Maritim Logistik.xlsx', 'Q-255080/GNS/III/2025', ((TIMESTAMP '2025-03-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (195, 'Q-2540058/GNS/III/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 2990000.00, 2990000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251081/GNS/III/2025
-File: Q-251081 (Racor 2020 PM_AVR) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-03-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251081 (Racor 2020 PM_AVR) - Karunia Aman Selalu.xlsx', 'Q-251081/GNS/III/2025', ((TIMESTAMP '2025-03-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (196, 'Q-2540065/GNS/III/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 100000.00, 100000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-254080/GNS/III/2025
-File: Q-254080 (O-RING NOK CO3092-G0) - NGK.xlsx', ((TIMESTAMP '2025-03-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254080 (O-RING NOK CO3092-G0) - NGK.xlsx', 'Q-254080/GNS/III/2025', ((TIMESTAMP '2025-03-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (197, 'Q-25400321/GNS/III/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, NULL, 'sent', '30 Days', 0, 3500000.00, 3500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253083/GNS/III/2025
-File: Q-253083 (Transport Jakarta - Cilacap) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-03-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253083 (Transport Jakarta - Cilacap) - Pelita Global Logistik.xlsx', 'Q-253083/GNS/III/2025', ((TIMESTAMP '2025-03-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (198, 'Q-25400322/GNS/III/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2401-049-E/01', 'MV DEWI AMBARWATI', 'sent', '30 Days', 0, 4000000.00, 4000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252085/GNS/III/2025
-File: Q-252085 (V-25-2401-049-E_01 Battery Charger Smartgen - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-03-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252085 (V-25-2401-049-E_01 Battery Charger Smartgen - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-252085/GNS/III/2025', ((TIMESTAMP '2025-03-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (199, 'Q-2540059/GNS/IV/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 3470000.00, 3470000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251090/GNS/IV/2025
-File: Q-251090 (Hose, Air Filter) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-04-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251090 (Hose, Air Filter) - Karunia Aman Selalu.xlsx', 'Q-251090/GNS/IV/2025', ((TIMESTAMP '2025-04-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (200, 'Q-25400323/GNS/IV/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2403-413-E/06', 'MV DEWI SARASWATI', 'sent', '30 Days', 0, 10000000.00, 10000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252089/GNS/IV/2025
-File: Q-252089 (V-24-2403-413-E_06  Plat Valve Set - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-04-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
+File: Q-252089 (V-24-2403-413-E_06  Plat Valve Set - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-252089/GNS/IV/2025', ((TIMESTAMP '2025-04-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
 INSERT INTO quotations (
   id, quotation_no, version, parent_id, company_client_id, company_client_name,
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES
   (201, 'Q-25400324/GNS/IV/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2401-079-E/04', 'MV DEWI AMBARWATI', 'sent', '30 days', 5.0, 45500000.00, 45500000.00, 2275000.00, 'Imported from Excel
 Original Q-no: Q-252091/GNS/IV/2025
-File: Q-252091 (V-25-2401-079-E_04  Pressure Gauge - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-04-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252091 (V-25-2401-079-E_04  Pressure Gauge - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-252091/GNS/IV/2025', ((TIMESTAMP '2025-04-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (202, 'Q-25400325/GNS/IV/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2403-094-E/01', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 3625000.00, 3625000.00, 181250.00, 'Imported from Excel
 Original Q-no: Q-252092/GNS/IV/2025
-File: Q-252092 (V-25-2403-094-E_01 Schneider relay, contactor - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-04-08 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252092 (V-25-2403-094-E_01 Schneider relay, contactor - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-252092/GNS/IV/2025', ((TIMESTAMP '2025-04-08 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (203, 'Q-2540116/GNS/IV/2025', 1, NULL, 11, 'PT. Solusi Pelayaran Nusantara', 23, 'Ibu Rani', 'NA/ D/ MAR/ 2025/027', 'MV NOAH ASYERA - MAINTENANCE EQUIPMENT DECK STORE', 'sent', '30 days', 0, 54840000.00, 54840000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-257093/GNS/IV/2025
-File: Q-257093 - (Deck Store - Noah Asyera) - Solusi Pelayaran Nusantara.xlsx', ((TIMESTAMP '2025-04-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-257093 - (Deck Store - Noah Asyera) - Solusi Pelayaran Nusantara.xlsx', 'Q-257093/GNS/IV/2025', ((TIMESTAMP '2025-04-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (204, 'Q-2540117/GNS/IV/2025', 1, NULL, 11, 'PT. Solusi Pelayaran Nusantara', 23, 'Ibu Rani', 'SPN SBPM 005-019', 'MV NOAH ASYERA - Galley, Linen & routine consumtion', 'draft', '30 Days', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-257094/GNS/IV/2025
-File: Q-257094 - (Galley, linen - Noah Asyera) - Solusi Pelayaran Nusantara.xlsx', ((TIMESTAMP '2025-04-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-257094 - (Galley, linen - Noah Asyera) - Solusi Pelayaran Nusantara.xlsx', 'Q-257094/GNS/IV/2025', ((TIMESTAMP '2025-04-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (205, 'Q-2540118/GNS/IV/2025', 1, NULL, 11, 'PT. Solusi Pelayaran Nusantara', 23, 'Ibu Rani', 'NA/D/APR/2025/029', 'MV NOAH ASYERA - SAFETY EQUIPMENT', 'sent', '30 days', 0, 42425000.00, 42425000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-257095/GNS/IV/2025
-File: Q-257095 - (Safety Equipment Store - Noah Asyera) - Solusi Pelayaran Nusantara.xlsx', ((TIMESTAMP '2025-04-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-257095 - (Safety Equipment Store - Noah Asyera) - Solusi Pelayaran Nusantara.xlsx', 'Q-257095/GNS/IV/2025', ((TIMESTAMP '2025-04-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (206, 'Q-25400326/GNS/IV/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 24, 'Bp. Febri', NULL, NULL, 'sent', '30 Days', 5.0, 16500000.00, 16500000.00, 825000.00, 'Imported from Excel
 Original Q-no: Q-253097/GNS/IV/2025
-File: Q-253097 - (Trafo Stepdown) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-04-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253097 - (Trafo Stepdown) - Pelita Global Logistik.xlsx', 'Q-253097/GNS/IV/2025', ((TIMESTAMP '2025-04-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (207, 'Q-2540012/GNS/IV/2025', 1, NULL, 1, 'PT. IMC Ship Management', 7, 'Bapak Riza Chair', NULL, NULL, 'sent', '30 Days', 5.0, 25000000.00, 25000000.00, 1250000.00, 'Imported from Excel
 Original Q-no: Q-256099/GNS/IV/2025
-File: Q-256099 (Inflatable Life Jacket) - IMC Ship Management.xlsx', ((TIMESTAMP '2025-04-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256099 (Inflatable Life Jacket) - IMC Ship Management.xlsx', 'Q-256099/GNS/IV/2025', ((TIMESTAMP '2025-04-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (208, 'Q-25400510/GNS/IV/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 4086000.00, 4086000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251099/GNS/IV/2025
-File: Q-251099 (Porstex dll - Marina 18) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251099 (Porstex dll - Marina 18) - Karunia Aman Selalu.xlsx', 'Q-251099/GNS/IV/2025', ((TIMESTAMP '2025-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (209, 'Q-25400511/GNS/IV/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 3671000.00, 3671000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251102/GNS/IV/2025
-File: Q-251102 (Lampu Navigasi dll - Marina 18) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251102 (Lampu Navigasi dll - Marina 18) - Karunia Aman Selalu.xlsx', 'Q-251102/GNS/IV/2025', ((TIMESTAMP '2025-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (210, 'Q-25400327/GNS/IV/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'Sample', NULL, 'sent', '30 Days', 0, 1330000.00, 1330000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252101/GNS/IV/2025
-File: Q-252101 (Mechanical Seal) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252101 (Mechanical Seal) - Pelita Global Logistik.xlsx', 'Q-252101/GNS/IV/2025', ((TIMESTAMP '2025-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (211, 'Q-25400328/GNS/IV/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, NULL, 'sent', '30 Days', 0, 300000.00, 300000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253103/GNS/IV/2025
-File: Q-253103 (Kapasitor 33uf 100v) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253103 (Kapasitor 33uf 100v) - Pelita Global Logistik.xlsx', 'Q-253103/GNS/IV/2025', ((TIMESTAMP '2025-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (212, 'Q-25400329/GNS/IV/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-024-D/08', NULL, 'sent', '30 days', 5.0, 41100000.00, 41100000.00, 2055000.00, 'Imported from Excel
 Original Q-no: Q-253105/GNS/IV/2025
-File: Q-253105 (Shackle Crosby G Type - Daidan Mustikawati - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-04-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253105 (Shackle Crosby G Type - Daidan Mustikawati - Pelita Global Logistik.xlsx', 'Q-253105/GNS/IV/2025', ((TIMESTAMP '2025-04-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (213, 'Q-25400512/GNS/IV/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 15545000.00, 15545000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251107/GNS/IV/2025
-File: Q-251107 (Teleflex double engine) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-04-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251107 (Teleflex double engine) - Karunia Aman Selalu.xlsx', 'Q-251107/GNS/IV/2025', ((TIMESTAMP '2025-04-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (214, 'Q-25400330/GNS/IV/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'Sample', NULL, 'sent', '30 Days', 0, 1400000.00, 1400000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252109/GNS/IV/2025
-File: Q-252109 (Potensio OCR - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-04-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252109 (Potensio OCR - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-252109/GNS/IV/2025', ((TIMESTAMP '2025-04-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (215, 'Q-25400331/GNS/IV/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 25, 'Bp. Riza Chair / Ibu Aisya Dewi Faradiba', NULL, 'MV DEWI SARASWATI', 'sent', '30 Days', 0, 1500000.00, 1500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253111/GNS/IV/2025
-File: Q-253111 (Kabel NYVIN - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-04-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253111 (Kabel NYVIN - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253111/GNS/IV/2025', ((TIMESTAMP '2025-04-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (216, 'Q-25400513/GNS/IV/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 775200.00, 775200.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251112/GNS/IV/2025
-File: Q-251112 (Racor 2040 PM) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-04-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251112 (Racor 2040 PM) - Karunia Aman Selalu.xlsx', 'Q-251112/GNS/IV/2025', ((TIMESTAMP '2025-04-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (217, 'Q-25400332/GNS/IV/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 25, 'Bp. Riza Chair / Ibu Aisya Dewi Faradiba', 'V-25-2403-113-E', 'MV DEWI SARASWATI', 'sent', '30 Days', 0, 710000.00, 710000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253114/GNS/IV/2025
-File: Q-253114 (Kabel NYVIN - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-04-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253114 (Kabel NYVIN - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253114/GNS/IV/2025', ((TIMESTAMP '2025-04-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (218, 'Q-25400333/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2403-421-E', 'MV DEWI SARASWATI', 'sent', '30 Days', 0, 5950000.00, 5950000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252117/GNS/V/2025
-File: Q-252117 (Emergency Push Button - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252117 (Emergency Push Button - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-252117/GNS/V/2025', ((TIMESTAMP '2025-05-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (219, 'Q-25400334/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'sent', '30 Days', 0, 22000000.00, 22000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252118/GNS/V/2025
-File: Q-252118 (Saginomiya ATX 71140) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252118 (Saginomiya ATX 71140) - Pelita Global Logistik.xlsx', 'Q-252118/GNS/V/2025', ((TIMESTAMP '2025-05-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (220, 'Q-25400335/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, 'MV DAIDAN MUSTIKAWATI', 'sent', '30 Days', 0, 39685000.00, 39685000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252119/GNS/V/2025
-File: Q-252119 (Trafo Step down 440-220 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252119 (Trafo Step down 440-220 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-252119/GNS/V/2025', ((TIMESTAMP '2025-05-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (221, 'Q-25400336/GNS/V/2025', 2, 220, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, 'MV DAIDAN PERTIWI', 'sent', '30 Days', 0, 39685000.00, 39685000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252119/GNS/V/2025
-File: Q-252120 (Trafo Step down 440-220 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252120 (Trafo Step down 440-220 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-252119/GNS/V/2025', ((TIMESTAMP '2025-05-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (222, 'Q-25400337/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-156-E/08', 'MV DAIDAN MUSTIKAWATI', 'sent', '30 days', 0, 16500000.00, 16500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253121/GNS/V/2025
-File: Q-253121 (Trafo las, gerinda - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253121 (Trafo las, gerinda - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253121/GNS/V/2025', ((TIMESTAMP '2025-05-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (223, 'Q-2540119/GNS/V/2025', 1, NULL, 11, 'PT. Solusi Pelayaran Nusantara', 23, 'Ibu Rani', 'NA-SPN-E-01-2025-009', NULL, 'sent', '30 days', 0, 7550000.00, 7550000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-257122/GNS/V/2025
-File: Q-257122 - (quick coupler) - Solusi Pelayaran Nusantara.xlsx', ((TIMESTAMP '2025-05-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-257122 - (quick coupler) - Solusi Pelayaran Nusantara.xlsx', 'Q-257122/GNS/V/2025', ((TIMESTAMP '2025-05-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (224, 'Q-2540066/GNS/V/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 15000000.00, 15000000.00, 750000.00, 'Imported from Excel
 Original Q-no: Q-254125/GNS/IV/2025
-File: Q-254125 (PS 32) - NGK.xlsx', ((TIMESTAMP '2025-05-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254125 (PS 32) - NGK.xlsx', 'Q-254125/GNS/IV/2025', ((TIMESTAMP '2025-05-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (225, 'Q-25400338/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'sample from Bp. Heri Febri', 'MV DAIDAN MUSTIKAWATI', 'sent', '30 Days', 5.0, 10560000.00, 10560000.00, 528000.00, 'Imported from Excel
 Original Q-no: Q-252130/GNS/V/2025
-File: Q-252130 (Oring Seating Viton - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252130 (Oring Seating Viton - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-252130/GNS/V/2025', ((TIMESTAMP '2025-05-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (226, 'Q-25400339/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2401-106-E/03', NULL, 'sent', '30 Days', 0, 3200000.00, 3200000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252131/GNS/V/2025
-File: Q-252131 (Potensio OCR - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252131 (Potensio OCR - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-252131/GNS/V/2025', ((TIMESTAMP '2025-05-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (227, 'Q-2540067/GNS/V/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 2250000.00, 2250000.00, 112500.00, 'Imported from Excel
 Original Q-no: Q-254129/GNS/IV/2025
-File: Q-254129 (Guide Ring) - NGK.xlsx', ((TIMESTAMP '2025-05-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254129 (Guide Ring) - NGK.xlsx', 'Q-254129/GNS/IV/2025', ((TIMESTAMP '2025-05-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (228, 'Q-25400340/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 26, 'Bp. Rapli Rakasiwi', NULL, 'MV DEWI SAMUDRA', 'sent', '30 Days', 0, 4650000.00, 4650000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253137/GNS/V/2025
-File: Q-253137 (Cleaning Palka EX Cargo Clinker - Dewi Samudra) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253137 (Cleaning Palka EX Cargo Clinker - Dewi Samudra) - Pelita Global Logistik.xlsx', 'Q-253137/GNS/V/2025', ((TIMESTAMP '2025-05-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (229, 'Q-25400514/GNS/V/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 9400000.00, 9400000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251139/GNS/V/2025
-File: Q-251139 (Compressor_Battery N200) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-05-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251139 (Compressor_Battery N200) - Karunia Aman Selalu.xlsx', 'Q-251139/GNS/V/2025', ((TIMESTAMP '2025-05-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (230, 'Q-25400341/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-156-E/08', 'MV DAIDAN MUSTIKAWATI', 'draft', '30 days', 5.0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253138/GNS/V/2025
-File: Q-253138 (Pumps Pneumatic Wilden T8 - Daidan Mustikawati ) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253138 (Pumps Pneumatic Wilden T8 - Daidan Mustikawati ) - Pelita Global Logistik.xlsx', 'Q-253138/GNS/V/2025', ((TIMESTAMP '2025-05-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (231, 'Q-25400342/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 27, 'Bp. Fakka Kodrat Tulloh', 'Sample from Pak Fakka', NULL, 'sent', '30 Days', 0, 1400000.00, 1400000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-256140/GNS/V/2025
-File: Q-256140 (Hydraulic Hose) - PT Pelita Global Logistik - Pak Fakka.xlsx', ((TIMESTAMP '2025-05-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256140 (Hydraulic Hose) - PT Pelita Global Logistik - Pak Fakka.xlsx', 'Q-256140/GNS/V/2025', ((TIMESTAMP '2025-05-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (232, 'Q-2540021/GNS/V/2025', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 10.0, 800000.00, 800000.00, 80000.00, 'Imported from Excel
 Original Q-no: Q-258141/GNS/V/2025
-File: Q-258141 - (Oil Seal - Hydraulic Motor Windlass - ) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2025-05-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258141 - (Oil Seal - Hydraulic Motor Windlass - ) - Sentra Makmur Lines.xlsx', 'Q-258141/GNS/V/2025', ((TIMESTAMP '2025-05-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (233, 'Q-25400912/GNS/V/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', 'No. 4/ENGINE/KML Karunia/IV/25', NULL, 'sent', '30 days', 0, 1700000.00, 1700000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255142/GNS/V/2025
-File: Q-255142 - (Oring Seal) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-05-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255142 - (Oring Seal) - Kasen Maritim Logistik.xlsx', 'Q-255142/GNS/V/2025', ((TIMESTAMP '2025-05-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (234, 'Q-25400343/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2401-049-E/01', 'MV DEWI AMBARWATI', 'sent', '30 Days', 0, 4500000.00, 4500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252143/GNS/V/2025
-File: Q-252143 (V-25-2401-049-E_01 Smartgen BACM2420A - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252143 (V-25-2401-049-E_01 Smartgen BACM2420A - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-252143/GNS/V/2025', ((TIMESTAMP '2025-05-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (235, 'Q-25400344/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-101-D/05', NULL, 'sent', '30 days', 0, 4000000.00, 4000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253146/GNS/V/2025
-File: Q-253146 (Air Breathing Compressor_Trafo - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253146 (Air Breathing Compressor_Trafo - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-253146/GNS/V/2025', ((TIMESTAMP '2025-05-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (236, 'Q-25400913/GNS/V/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 12000000.00, 12000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255145/GNS/V/2025
-File: Q-255145 - (Fan Blower 16inch) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-05-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255145 - (Fan Blower 16inch) - Kasen Maritim Logistik.xlsx', 'Q-255145/GNS/V/2025', ((TIMESTAMP '2025-05-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (237, 'Q-25400345/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2401-122-D/01', 'MV DEWI AMBARWATI', 'sent', '30 Days', 0, 1380000.00, 1380000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252147/GNS/V/2025
-File: Q-252147 (Proximity PFI25-8AO - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252147 (Proximity PFI25-8AO - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-252147/GNS/V/2025', ((TIMESTAMP '2025-05-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (238, 'Q-25400346/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-115-D/01', 'MV DEWI AMBARWATI', 'sent', '30 days', 5.0, 12200000.00, 12200000.00, 610000.00, 'Imported from Excel
 Original Q-no: Q-253149/GNS/V/2025
-File: Q-253149 (Satellite EPIRB,  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253149 (Satellite EPIRB,  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253149/GNS/V/2025', ((TIMESTAMP '2025-05-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (239, 'Q-25400914/GNS/V/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 5500000.00, 5500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255151/GNS/V/2025
-File: Q-255151 - (Tanchometer 3000RPM) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-05-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255151 - (Tanchometer 3000RPM) - Kasen Maritim Logistik.xlsx', 'Q-255151/GNS/V/2025', ((TIMESTAMP '2025-05-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (240, 'Q-25400347/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'sent', '30 Days', 0, 17411000.00, 17411000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252150/GNS/V/2025
-File: Q-252150 (Valve Gelas duga - QG221SB) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252150 (Valve Gelas duga - QG221SB) - Pelita Global Logistik.xlsx', 'Q-252150/GNS/V/2025', ((TIMESTAMP '2025-05-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (241, 'Q-25400348/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'sent', '30 Days', 0, 1200000.00, 1200000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252152/GNS/V/2025
-File: Q-252152 (Delivery BACM2420A to Banjarmasin) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252152 (Delivery BACM2420A to Banjarmasin) - Pelita Global Logistik.xlsx', 'Q-252152/GNS/V/2025', ((TIMESTAMP '2025-05-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (242, 'Q-25400349/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-243-D/01', NULL, 'sent', '30 Days', 0, 17425000.00, 17425000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253153/GNS/V/2025
-File: Q-253153 (Computer Desktop Set with Monitor) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253153 (Computer Desktop Set with Monitor) - Pelita Global Logistik.xlsx', 'Q-253153/GNS/V/2025', ((TIMESTAMP '2025-05-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (243, 'Q-25400350/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-243-D/01', NULL, 'sent', '30 Days', 0, 25500000.00, 25500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253156/GNS/V/2025
-File: Q-253156 (Lenovo PC Desktop with Display) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253156 (Lenovo PC Desktop with Display) - Pelita Global Logistik.xlsx', 'Q-253156/GNS/V/2025', ((TIMESTAMP '2025-05-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (244, 'Q-2540068/GNS/V/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 100000.00, 100000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-254151/GNS/V/2025
-File: Q-254151 (Oring P12) - NGK.xlsx', ((TIMESTAMP '2025-05-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254151 (Oring P12) - NGK.xlsx', 'Q-254151/GNS/V/2025', ((TIMESTAMP '2025-05-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (245, 'Q-25400351/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'sent', '30 Days', 0, 30000000.00, 30000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252154/GNS/V/2025
-File: Q-256154 (MPC-300 PCB Module A) - PT Pelita Global Logistik - Pak Fakka.xlsx', ((TIMESTAMP '2025-05-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256154 (MPC-300 PCB Module A) - PT Pelita Global Logistik - Pak Fakka.xlsx', 'Q-252154/GNS/V/2025', ((TIMESTAMP '2025-05-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (246, 'Q-25400352/GNS/V/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-24-2403-325-E/08', 'MV DEWI AMBARWATI', 'sent', '30 days', 0, 30000000.00, 30000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252155/GNS/V/2025
-File: Q-252155 (MPC-300 PCB Module A) - PT Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-05-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252155 (MPC-300 PCB Module A) - PT Pelita Global Logistik.xlsx', 'Q-252155/GNS/V/2025', ((TIMESTAMP '2025-05-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (247, 'Q-2540013/GNS/V/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, NULL, 'sent', '30 Days', 5.0, 14030000.00, 14030000.00, 701500.00, 'Imported from Excel
 Original Q-no: Q-256150/GNS/V/2025
-File: Q-256150 (Safety shoes, helmet, Life Jacket) - IMC Ship Management.xlsx', ((TIMESTAMP '2025-05-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256150 (Safety shoes, helmet, Life Jacket) - IMC Ship Management.xlsx', 'Q-256150/GNS/V/2025', ((TIMESTAMP '2025-05-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (248, 'Q-25400915/GNS/VI/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 1230000.00, 1230000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255156/GNS/VI/2025
-File: Q-255156 - (Socket_kabel las) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-06-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255156 - (Socket_kabel las) - Kasen Maritim Logistik.xlsx', 'Q-255156/GNS/VI/2025', ((TIMESTAMP '2025-06-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (249, 'Q-25400353/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2404-273-E/03', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 0, 4280000.00, 4280000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252159/GNS/VI/2025
-File: Q-252159 (V-25-2404-273-E_03 - Pelita Mustikawati) - PT Pelita Global Logistik - Bronze Valve.xlsx', ((TIMESTAMP '2025-06-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252159 (V-25-2404-273-E_03 - Pelita Mustikawati) - PT Pelita Global Logistik - Bronze Valve.xlsx', 'Q-252159/GNS/VI/2025', ((TIMESTAMP '2025-06-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (250, 'Q-25400354/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2404-290-D/02', 'MV DEWI AMBARWATI', 'sent', '30 days', 0, 106200000.00, 106200000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252162/GNS/VI/2025
-File: Q-252159 (V-25-2404-290-D_02 - Pelita Mustikawati) - PT Pelita Global Logistik Bolt Nut.xlsx', ((TIMESTAMP '2025-06-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
+File: Q-252159 (V-25-2404-290-D_02 - Pelita Mustikawati) - PT Pelita Global Logistik Bolt Nut.xlsx', 'Q-252162/GNS/VI/2025', ((TIMESTAMP '2025-06-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
 INSERT INTO quotations (
   id, quotation_no, version, parent_id, company_client_id, company_client_name,
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES
   (251, 'Q-25400355/GNS/VI/2025', 2, 250, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2404-290-D/02', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 0, 106200000.00, 106200000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252162/GNS/VI/2025
-File: Q-252162 (V-25-2404-290-D_02 - Pelita Mustikawati) - PT Pelita Global Logistik Bolt Nut.xlsx', ((TIMESTAMP '2025-06-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252162 (V-25-2404-290-D_02 - Pelita Mustikawati) - PT Pelita Global Logistik Bolt Nut.xlsx', 'Q-252162/GNS/VI/2025', ((TIMESTAMP '2025-06-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (252, 'Q-25400356/GNS/VI/2025', 3, 251, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2404-290-D/02', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 0, 73000000.00, 73000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252162/GNS/VI/2025
-File: Q-252162 (V-25-2404-290-D_02 - Pelita Mustikawati) - PT Pelita Global Logistik Bolt Nut - revisi harga.xlsx', ((TIMESTAMP '2025-06-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252162 (V-25-2404-290-D_02 - Pelita Mustikawati) - PT Pelita Global Logistik Bolt Nut - revisi harga.xlsx', 'Q-252162/GNS/VI/2025', ((TIMESTAMP '2025-06-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (253, 'Q-25400515/GNS/VI/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 1500000.00, 1500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251161/GNS/VI/2025
-File: Q-251161 (Circuit Breaker Airpax) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-06-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251161 (Circuit Breaker Airpax) - Karunia Aman Selalu.xlsx', 'Q-251161/GNS/VI/2025', ((TIMESTAMP '2025-06-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (254, 'Q-25400357/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2404-278-E/04', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 0, 72787500.00, 72787500.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252165/GNS/VI/2025
-File: Q-252165 (V-25-2404-278-E_04 - Pelita Mustikawati) - PT Pelita Global Logistik lampu kapal.xlsx', ((TIMESTAMP '2025-06-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252165 (V-25-2404-278-E_04 - Pelita Mustikawati) - PT Pelita Global Logistik lampu kapal.xlsx', 'Q-252165/GNS/VI/2025', ((TIMESTAMP '2025-06-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (255, 'Q-25400358/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'sent', '30 Days', 0, 12400000.00, 12400000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252166/GNS/VI/2025
-File: Q-252166 (MCCB Breaker & cable profinet B) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252166 (MCCB Breaker & cable profinet B) - Pelita Global Logistik.xlsx', 'Q-252166/GNS/VI/2025', ((TIMESTAMP '2025-06-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (256, 'Q-25400916/GNS/VI/2025', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 4086000.00, 4086000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-255164/GNS/VI/2025
-File: Q-255164 - (Bolt & Nut) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2025-06-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-255164 - (Bolt & Nut) - Kasen Maritim Logistik.xlsx', 'Q-255164/GNS/VI/2025', ((TIMESTAMP '2025-06-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (257, 'Q-25400359/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-283-D/05', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 5.0, 49815000.00, 49815000.00, 2490750.00, 'Imported from Excel
 Original Q-no: Q-253167/GNS/VI/2025
-File: Q-253167 (V-25-2404-283-D_05  - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253167 (V-25-2404-283-D_05  - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253167/GNS/VI/2025', ((TIMESTAMP '2025-06-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (258, 'Q-25400360/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-141-D/04', 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 0, 8400000.00, 8400000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253103/GNS/VI/2025
-File: Q-253168 (Binocullar BOSTRON ) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253168 (Binocullar BOSTRON ) - Pelita Global Logistik.xlsx', 'Q-253103/GNS/VI/2025', ((TIMESTAMP '2025-06-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (259, 'Q-25400361/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-134-D/06', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 5.0, 88740000.00, 88740000.00, 4437000.00, 'Imported from Excel
 Original Q-no: Q-253169/GNS/VI/2025
-File: Q-253169 (V-25-2401-134-D_06  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253169 (V-25-2401-134-D_06  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253169/GNS/VI/2025', ((TIMESTAMP '2025-06-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (260, 'Q-25400362/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-310-D/05', NULL, 'sent', '30 Days', 0, 3300000.00, 3300000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253170/GNS/VI/2025
-File: Q-253126 (Transport Pacitan) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253126 (Transport Pacitan) - Pelita Global Logistik.xlsx', 'Q-253170/GNS/VI/2025', ((TIMESTAMP '2025-06-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (261, 'Q-25400363/GNS/VI/2025', 2, 260, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-310-D/05', 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 0, 6540000.00, 6540000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253170/GNS/VI/2025
-File: Q-253170 (V-25-2404-310-D_05 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253170 (V-25-2404-310-D_05 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253170/GNS/VI/2025', ((TIMESTAMP '2025-06-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (262, 'Q-25400364/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-312-D/05', 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 0, 1025000.00, 1025000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253171/GNS/VI/2025
-File: Q-253171 (V-25-2404-312-D_05 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253171 (V-25-2404-312-D_05 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253171/GNS/VI/2025', ((TIMESTAMP '2025-06-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (263, 'Q-25400365/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-125-E/05', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 0, 87050000.00, 87050000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253172/GNS/VI/2025
-File: Q-253172 (V-25-2401-125-E_05  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253172 (V-25-2401-125-E_05  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253172/GNS/VI/2025', ((TIMESTAMP '2025-06-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (264, 'Q-25400366/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-139-E/05', 'MV DEWI AMBARWATI', 'sent', '30 days', 0, 78650000.00, 78650000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253174/GNS/VI/2025
-File: Q-253174 (V-25-2401-139-E_05  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253174 (V-25-2401-139-E_05  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253174/GNS/VI/2025', ((TIMESTAMP '2025-06-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (265, 'Q-25400367/GNS/VI/2025', 2, 264, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-139-E/05', 'MV DEWI AMBARWATI', 'sent', '30 days', 0, 45980000.00, 45980000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253174/GNS/VI/2025
-File: Q-253174 rev (V-25-2401-139-E_05  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253174 rev (V-25-2401-139-E_05  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253174/GNS/VI/2025', ((TIMESTAMP '2025-06-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (266, 'Q-25400368/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-138-E/05', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 5.0, 8287000.00, 8287000.00, 414350.00, 'Imported from Excel
 Original Q-no: Q-253179/GNS/VI/2025
-File: Q-253179 (V-25-2401-138-E_05  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253179 (V-25-2401-138-E_05  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253179/GNS/VI/2025', ((TIMESTAMP '2025-06-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (267, 'Q-25400369/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-137-D/02', 'MV DEWI AMBARWATI', 'sent', '30 days', 0, 17500000.00, 17500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253180/GNS/VI/2025
-File: Q-253180 (V-25-2401-137-D_02  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253180 (V-25-2401-137-D_02  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253180/GNS/VI/2025', ((TIMESTAMP '2025-06-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (268, 'Q-25400370/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-201-D/06', 'MV DEWI AMBARWATI', 'sent', '30 days', 0, 88000000.00, 88000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253181/GNS/VI/2025
-File: Q-253181 (V-25-2404-201-D_06  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253181 (V-25-2404-201-D_06  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253181/GNS/VI/2025', ((TIMESTAMP '2025-06-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (269, 'Q-25400371/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 26, 'Bp. Rapli Rakasiwi', NULL, 'MV DEWI SAMUDRA', 'sent', '30 Days', 0, 65250000.00, 65250000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-259176/GNS/VI/2025
-File: Q-259176 (Service Manuver Panel System - Pelita Mustikawati) - Pelita Global Logistik - Pak Rapli.xlsx', ((TIMESTAMP '2025-06-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-259176 (Service Manuver Panel System - Pelita Mustikawati) - Pelita Global Logistik - Pak Rapli.xlsx', 'Q-259176/GNS/VI/2025', ((TIMESTAMP '2025-06-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (270, 'Q-25400516/GNS/VI/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 200000.00, 200000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251188/GNS/VI/2025
-File: Q-251188 (Nipple Grease) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-06-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251188 (Nipple Grease) - Karunia Aman Selalu.xlsx', 'Q-251188/GNS/VI/2025', ((TIMESTAMP '2025-06-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (271, 'Q-25400372/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-140-D/04', 'MV DEWI AMBARWATI', 'sent', '30 days', 0, 62000000.00, 62000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253182/GNS/VI/2025
-File: Q-253182 (V-25-2401-140-D_04  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253182 (V-25-2401-140-D_04  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253182/GNS/VI/2025', ((TIMESTAMP '2025-06-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (272, 'Q-25400373/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-141-D/04', 'MV DEWI AMBARWATI', 'sent', '30 days', 0, 24000000.00, 24000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253183/GNS/VI/2025
-File: Q-253183 (V-25-2401-141-D_04  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253183 (V-25-2401-141-D_04  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253183/GNS/VI/2025', ((TIMESTAMP '2025-06-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (273, 'Q-25400374/GNS/VI/2025', 2, 272, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-141-D/04', 'MV DEWI AMBARWATI', 'sent', '30 days', 0, 155000000.00, 155000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253183/GNS/VI/2025
-File: Q-253193 (V-25-2405-108-D_05  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253193 (V-25-2405-108-D_05  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253183/GNS/VI/2025', ((TIMESTAMP '2025-06-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (274, 'Q-25400375/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-109-D/05', 'MV DEWI AMBARWATI', 'sent', '30 days', 0, 8800000.00, 8800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253184/GNS/VI/2025
-File: Q-253184 (V-25-2401-109-D_05  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253184 (V-25-2401-109-D_05  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253184/GNS/VI/2025', ((TIMESTAMP '2025-06-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (275, 'Q-25400376/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'Request Sheet', NULL, 'sent', NULL, 0, 96477000.00, 96477000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253186/GNS/VI/2025
-File: Q-253186 (V-25-2401-133-E_05  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253186 (V-25-2401-133-E_05  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253186/GNS/VI/2025', ((TIMESTAMP '2025-06-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (276, 'Q-2540022/GNS/VI/2025', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 10.0, 3900000.00, 3900000.00, 390000.00, 'Imported from Excel
 Original Q-no: Q-258178/GNS/VI/2025
-File: Q-258178 - (Flexible rubber oneflex 4 inch ) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2025-06-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258178 - (Flexible rubber oneflex 4 inch ) - Sentra Makmur Lines.xlsx', 'Q-258178/GNS/VI/2025', ((TIMESTAMP '2025-06-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (277, 'Q-25400377/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-125-E/05', 'MV PELITA MUSTIKAWATI', 'draft', '30 days', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253185/GNS/VI/2025
-File: Q-253185 (V-25-2401-135-D_04  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253185 (V-25-2401-135-D_04  - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253185/GNS/VI/2025', ((TIMESTAMP '2025-06-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (278, 'Q-25400378/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-147-E', 'MV DEWI AMBARWATI', 'sent', '30 Days', 0, 3140000.00, 3140000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253187/GNS/VI/2025
-File: Q-253187 (V-25-2401-147-E - Gas Nitrogen - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253187 (V-25-2401-147-E - Gas Nitrogen - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253187/GNS/VI/2025', ((TIMESTAMP '2025-06-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (279, 'Q-25400379/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 27, 'Bp. Fakka Kodrat Tulloh', 'Photo from Pak Fakka', NULL, 'sent', '30 Days', 0, 6000000.00, 6000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-256188/GNS/VI/2025
-File: Q-256188 (Potensiometer 5KΩ 25watt) - PT Pelita Global Logistik - Pak Fakka.xlsx', ((TIMESTAMP '2025-06-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256188 (Potensiometer 5KΩ 25watt) - PT Pelita Global Logistik - Pak Fakka.xlsx', 'Q-256188/GNS/VI/2025', ((TIMESTAMP '2025-06-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (280, 'Q-25400517/GNS/VI/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, 'TB Marina 25/BG Bee Power 3004', 'sent', '30 Days', 0, 400000.00, 400000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251189/GNS/VI/2025
-File: Q-251189 (Mono Lever Switch) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-06-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251189 (Mono Lever Switch) - Karunia Aman Selalu.xlsx', 'Q-251189/GNS/VI/2025', ((TIMESTAMP '2025-06-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (281, 'Q-2540014/GNS/VI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0026/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 970000.00, 970000.00, 48500.00, 'Imported from Excel
 Original Q-no: Q-256192/GNS/VI/2025
-File: Q-256192 (8404-V-0026-REQ25 - Duo Check Valve - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-06-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256192 (8404-V-0026-REQ25 - Duo Check Valve - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256192/GNS/VI/2025', ((TIMESTAMP '2025-06-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (282, 'Q-25400380/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-161-D/03', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 157000000.00, 157000000.00, 7850000.00, 'Imported from Excel
 Original Q-no: Q-253193/GNS/VI/2025
-File: Q-253193 (V-25-2403-161-D_03  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253193 (V-25-2403-161-D_03  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253193/GNS/VI/2025', ((TIMESTAMP '2025-06-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (283, 'Q-25400381/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-181-D/04', 'MV DEWI SARASWATI', 'sent', '30 Days', 5.0, 19000000.00, 19000000.00, 950000.00, 'Imported from Excel
 Original Q-no: Q-253194/GNS/VI/2025
-File: Q-253194 (V-25-2403-181-D_04  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253194 (V-25-2403-181-D_04  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253194/GNS/VI/2025', ((TIMESTAMP '2025-06-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (284, 'Q-25400382/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-108-D/05', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 10850000.00, 10850000.00, 542500.00, 'Imported from Excel
 Original Q-no: Q-253195/GNS/VI/2025
-File: Q-253195 (V-25-2405-108-D_05  - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253195 (V-25-2405-108-D_05  - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253195/GNS/VI/2025', ((TIMESTAMP '2025-06-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (285, 'Q-25400383/GNS/VI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-162-D/05', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 12325000.00, 12325000.00, 616250.00, 'Imported from Excel
 Original Q-no: Q-253196/GNS/VI/2025
-File: Q-253196 (V-25-2403-162-D_05  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-06-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253196 (V-25-2403-162-D_05  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253196/GNS/VI/2025', ((TIMESTAMP '2025-06-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (286, 'Q-2540015/GNS/VI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0041/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 158976000.00, 158976000.00, 7948800.00, 'Imported from Excel
 Original Q-no: Q-256191/GNS/VI/2025
-File: Q-256191 (8404-V-0041-REQ25  - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-06-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256191 (8404-V-0041-REQ25  - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256191/GNS/VI/2025', ((TIMESTAMP '2025-06-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (287, 'Q-2540016/GNS/VI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8408/V-0020/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 31700000.00, 31700000.00, 1585000.00, 'Imported from Excel
 Original Q-no: Q-256197/GNS/VI/2025
-File: Q-256197 (8408-V-0020-REQ25 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-06-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256197 (8408-V-0020-REQ25 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256197/GNS/VI/2025', ((TIMESTAMP '2025-06-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (288, 'Q-2540017/GNS/VI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V/0039-REQ025', NULL, 'sent', '30 days', 0, 211770000.00, 211770000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-256190/GNS/VI/2025
-File: Q-256190 (R8404-V-0039-REQ025 (1)  - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-06-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256190 (R8404-V-0039-REQ025 (1)  - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256190/GNS/VI/2025', ((TIMESTAMP '2025-06-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (289, 'Q-2540018/GNS/VI/2025', 2, 288, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V/0039-REQ025', 'MV Yuxin Satu', 'sent', '30 days', 0, 258790000.00, 258790000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-256190/GNS/VI/2025
-File: Q-256190 (R8404-V-0039-REQ025 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-06-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256190 (R8404-V-0039-REQ025 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256190/GNS/VI/2025', ((TIMESTAMP '2025-06-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (290, 'Q-25400384/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-150-D/04', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 12400000.00, 12400000.00, 620000.00, 'Imported from Excel
 Original Q-no: Q-253198/GNS/VII/2025
-File: Q-253198 (V-25-2403-150-D_04  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253198 (V-25-2403-150-D_04  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253198/GNS/VII/2025', ((TIMESTAMP '2025-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (291, 'Q-25400385/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-318-D/04', 'MV PELITA MUSTIKWATI', 'sent', '30 Days', 0, 14400000.00, 14400000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253199/GNS/VII/2025
-File: Q-253199 (V-25-2404-318-D_04 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253199 (V-25-2404-318-D_04 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253199/GNS/VII/2025', ((TIMESTAMP '2025-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (292, 'Q-25400386/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-323-D/05', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 0, 2300000.00, 2300000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253200/GNS/VII/2025
-File: Q-253200 (V-25-2404-323-D_05 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253200 (V-25-2404-323-D_05 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253200/GNS/VII/2025', ((TIMESTAMP '2025-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (293, 'Q-25400387/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-329-E/05', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 5.0, 16686000.00, 16686000.00, 834300.00, 'Imported from Excel
 Original Q-no: Q-253201/GNS/VII/2025
-File: Q-253201 (V-25-2404-329-E_05  - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253201 (V-25-2404-329-E_05  - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253201/GNS/VII/2025', ((TIMESTAMP '2025-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (294, 'Q-25400388/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-311-D/02', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 5.0, 42790000.00, 42790000.00, 2139500.00, 'Imported from Excel
 Original Q-no: Q-253202/GNS/VII/2025
-File: Q-253202 (V-25-2404-311-D_02  - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253202 (V-25-2404-311-D_02  - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253202/GNS/VII/2025', ((TIMESTAMP '2025-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (295, 'Q-25400389/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-306-D/03', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 5.0, 20210000.00, 20210000.00, 1010500.00, 'Imported from Excel
 Original Q-no: Q-253204/GNS/VII/2025
-File: Q-253204 (V-25-2404-306-D_03 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253204 (V-25-2404-306-D_03 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253204/GNS/VII/2025', ((TIMESTAMP '2025-07-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (296, 'Q-25400390/GNS/VII/2025', 2, 295, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-068-D/07', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 5.0, 80400000.00, 80400000.00, 4020000.00, 'Imported from Excel
 Original Q-no: Q-253204/GNS/VII/2025
-File: Q-253210 (V-25-2404-068-D_07 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253210 (V-25-2404-068-D_07 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253204/GNS/VII/2025', ((TIMESTAMP '2025-07-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (297, 'Q-25400391/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'sent', '30 Days', 0, 1900000.00, 1900000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252205/GNS/VII/2025
-File: Q-252205 (Rectifier 6RI50E-080) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252205 (Rectifier 6RI50E-080) - Pelita Global Logistik.xlsx', 'Q-252205/GNS/VII/2025', ((TIMESTAMP '2025-07-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (298, 'Q-25400392/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-288-D/05', 'MV PELITA MUSTIKAWATI', 'draft', '30 Days', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253206/GNS/VII/2025
-File: Q-253206 (V-25-2404-288-D_05 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253206 (V-25-2404-288-D_05 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253206/GNS/VII/2025', ((TIMESTAMP '2025-07-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (299, 'Q-25400393/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, 'MV DAIDAN MUSTIKAWATI', 'sent', '30 Days', 0, 8800000.00, 8800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252208/GNS/VII/2025
-File: Q-252208 (Trafo Step down 440-220v 5kva box - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252208 (Trafo Step down 440-220v 5kva box - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-252208/GNS/VII/2025', ((TIMESTAMP '2025-07-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (300, 'Q-25400394/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 0, 15000000.00, 15000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252209/GNS/VII/2025
-File: Q-252209 (Trafo Step down 440-380v 10kva box - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
+File: Q-252209 (Trafo Step down 440-380v 10kva box - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-252209/GNS/VII/2025', ((TIMESTAMP '2025-07-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
 INSERT INTO quotations (
   id, quotation_no, version, parent_id, company_client_id, company_client_name,
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES
   (301, 'Q-25400395/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'samples', NULL, 'sent', '30 Days', 0, 3250000.00, 3250000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252213/GNS/VII/2025
-File: Q-252213 (Seal Hydraulic Jack Set) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252213 (Seal Hydraulic Jack Set) - Pelita Global Logistik.xlsx', 'Q-252213/GNS/VII/2025', ((TIMESTAMP '2025-07-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (302, 'Q-25400396/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, NULL, 'sent', '30 Days', 0, 68000000.00, 68000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253211/GNS/VII/2025
-File: Q-252211 (Aluminum Foil Tape Waterproof) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252211 (Aluminum Foil Tape Waterproof) - Pelita Global Logistik.xlsx', 'Q-253211/GNS/VII/2025', ((TIMESTAMP '2025-07-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (303, 'Q-25400397/GNS/VII/2025', 2, 302, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, NULL, 'sent', '30 Days', 0, 76900000.00, 76900000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253211/GNS/VII/2025
-File: Q-252311 (Pump and Aluminum Foil Tape Waterproof) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252311 (Pump and Aluminum Foil Tape Waterproof) - Pelita Global Logistik.xlsx', 'Q-253211/GNS/VII/2025', ((TIMESTAMP '2025-07-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (304, 'Q-25400398/GNS/VII/2025', 3, 303, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, NULL, 'sent', '30 Days', 0, 76900000.00, 76900000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253211/GNS/VII/2025
-File: Q-253211 (Pump and Aluminum Foil Tape Waterproof) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253211 (Pump and Aluminum Foil Tape Waterproof) - Pelita Global Logistik.xlsx', 'Q-253211/GNS/VII/2025', ((TIMESTAMP '2025-07-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (305, 'Q-2540019/GNS/VII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0048/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 1150000.00, 1150000.00, 57500.00, 'Imported from Excel
 Original Q-no: Q-256212/GNS/VII/2025
-File: Q-256212 (8404_V-0048_REQ25 - Relay Push Botton) - IMC Ship Management(AutoRecovered).xlsx', ((TIMESTAMP '2025-07-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256212 (8404_V-0048_REQ25 - Relay Push Botton) - IMC Ship Management(AutoRecovered).xlsx', 'Q-256212/GNS/VII/2025', ((TIMESTAMP '2025-07-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (306, 'Q-25400110/GNS/VII/2025', 2, 305, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0048/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 1150000.00, 1150000.00, 57500.00, 'Imported from Excel
 Original Q-no: Q-256212/GNS/VII/2025
-File: Q-256212 (8404_V-0048_REQ25 - Relay Push Botton) - IMC Ship Management.xlsx', ((TIMESTAMP '2025-07-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256212 (8404_V-0048_REQ25 - Relay Push Botton) - IMC Ship Management.xlsx', 'Q-256212/GNS/VII/2025', ((TIMESTAMP '2025-07-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (307, 'Q-25400111/GNS/VII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0045/REQ25', 'MV YUXIN SATU - ENGINE STORE', 'sent', '30 Days', 5.0, 2215000.00, 2215000.00, 110750.00, 'Imported from Excel
 Original Q-no: Q-256214/GNS/VII/2025
-File: Q-256214 (8404_V-0045_REQ25 Cylinder Gauge - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-07-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256214 (8404_V-0045_REQ25 Cylinder Gauge - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256214/GNS/VII/2025', ((TIMESTAMP '2025-07-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (308, 'Q-25400399/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, 'MV PELITA MUSTKAWATI', 'sent', '30 Days', 0, 8650000.00, 8650000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253213/GNS/VII/2025
-File: Q-253213 (Transport Jakarta - Samarinda_Pompa, tape) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253213 (Transport Jakarta - Samarinda_Pompa, tape) - Pelita Global Logistik.xlsx', 'Q-253213/GNS/VII/2025', ((TIMESTAMP '2025-07-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (309, 'Q-25400518/GNS/VII/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 775200.00, 775200.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251215/GNS/VII/2025
-File: Q-251215 (Racor 2040 PM) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-07-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251215 (Racor 2040 PM) - Karunia Aman Selalu.xlsx', 'Q-251215/GNS/VII/2025', ((TIMESTAMP '2025-07-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (310, 'Q-254003100/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'O-25-2401-093-E/01', 'MV DEWI AMBARWATI', 'sent', '30 days', 0, 900000.00, 900000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252214/GNS/VII/2025
-File: Q-252214 (O-25-2401-093-E_01 - Dewi Ambarwati) - PT Pelita Global Logistik - Dioda MDS 60-16.xlsx', ((TIMESTAMP '2025-07-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252214 (O-25-2401-093-E_01 - Dewi Ambarwati) - PT Pelita Global Logistik - Dioda MDS 60-16.xlsx', 'Q-252214/GNS/VII/2025', ((TIMESTAMP '2025-07-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (311, 'Q-25400112/GNS/VII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0005/REQ25', NULL, 'sent', '30 days', 5.0, 244956000.00, 244956000.00, 12247800.00, 'Imported from Excel
 Original Q-no: Q-256215/GNS/VII/2025
-File: Q-256215 (R8404-V-0005-REQ025 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-07-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256215 (R8404-V-0005-REQ025 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256215/GNS/VII/2025', ((TIMESTAMP '2025-07-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (312, 'Q-25400113/GNS/VII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404-V-0021-REQ025', 'MV YUXIN SATU', 'sent', '30 days', 6.0, 15244500.00, 15244500.00, 914670.00, 'Imported from Excel
 Original Q-no: Q-256216/GNS/VII/2025
-File: Q-256216 (R8404-V-0021-REQ025 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-07-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256216 (R8404-V-0021-REQ025 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256216/GNS/VII/2025', ((TIMESTAMP '2025-07-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (313, 'Q-25400114/GNS/VII/2025', 2, 312, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0041/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 49400000.00, 49400000.00, 2470000.00, 'Imported from Excel
 Original Q-no: Q-256216/GNS/VII/2025
-File: Q-256216-2 (R8404-V-0021-REQ025 - Yuxin Satu) - IMC Shipping Management (version 1).xlsb.xlsx', ((TIMESTAMP '2025-07-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256216-2 (R8404-V-0021-REQ025 - Yuxin Satu) - IMC Shipping Management (version 1).xlsb.xlsx', 'Q-256216/GNS/VII/2025', ((TIMESTAMP '2025-07-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (314, 'Q-25400115/GNS/VII/2025', 3, 313, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0041/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 49400000.00, 49400000.00, 2470000.00, 'Imported from Excel
 Original Q-no: Q-256216/GNS/VII/2025
-File: Q-256216-2 (R8404-V-0021-REQ025 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-07-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256216-2 (R8404-V-0021-REQ025 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256216/GNS/VII/2025', ((TIMESTAMP '2025-07-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (315, 'Q-25400116/GNS/VII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '060/E/07/25', 'MV YUXIN SATU', 'sent', '30 Days', 5.0, 44700000.00, 44700000.00, 2235000.00, 'Imported from Excel
 Original Q-no: Q-256217/GNS/VII/2025
-File: Q-256217 (060-E-07-25 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-07-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256217 (060-E-07-25 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256217/GNS/VII/2025', ((TIMESTAMP '2025-07-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (316, 'Q-25400519/GNS/VII/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 575000.00, 575000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251221/GNS/VII/2025
-File: Q-251221 (Shackle Omega 17 Ton) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-07-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251221 (Shackle Omega 17 Ton) - Karunia Aman Selalu.xlsx', 'Q-251221/GNS/VII/2025', ((TIMESTAMP '2025-07-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (317, 'Q-254003101/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, NULL, 'sent', '30 Days', 0, 5500000.00, 5500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253220/GNS/VII/2025
-File: Q-253220 (Baterry EPRIB) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253220 (Baterry EPRIB) - Pelita Global Logistik.xlsx', 'Q-253220/GNS/VII/2025', ((TIMESTAMP '2025-07-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (318, 'Q-25400117/GNS/VII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0048/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 11340000.00, 11340000.00, 567000.00, 'Imported from Excel
 Original Q-no: Q-256222/GNS/VII/2025
-File: Q-256222 (8404-V-0001-REQ25 - Safety Equipment - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-07-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256222 (8404-V-0001-REQ25 - Safety Equipment - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256222/GNS/VII/2025', ((TIMESTAMP '2025-07-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (319, 'Q-2540141/GNS/VII/2025', 1, NULL, 14, 'PT. Tara Jaya Cemerlang', 30, 'Bp. Nico', NULL, NULL, 'sent', '30 Days', 5.0, 24050000.00, 24050000.00, 1202500.00, 'Imported from Excel
 Original Q-no: Q-258218/GNS/VII/2025
-File: Q-258218 - (Navigation light ) - Tara Jaya Cemerlang.xlsx', ((TIMESTAMP '2025-07-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258218 - (Navigation light ) - Tara Jaya Cemerlang.xlsx', 'Q-258218/GNS/VII/2025', ((TIMESTAMP '2025-07-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (320, 'Q-25400520/GNS/VII/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 4350000.00, 4350000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251224/GNS/VII/2025
-File: Q-251224 (Plat lubang SS 2mm ) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-07-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251224 (Plat lubang SS 2mm ) - Karunia Aman Selalu.xlsx', 'Q-251224/GNS/VII/2025', ((TIMESTAMP '2025-07-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (321, 'Q-25400118/GNS/VII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0051/REQ25', 'MV PELITA MUSTKAWATI', 'sent', '30 Days', 5.0, 2800000.00, 2800000.00, 140000.00, 'Imported from Excel
 Original Q-no: Q-256225/GNS/VII/2025
-File: Q-256224 (8404-V-0051-REQ25 - indicator paper) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256224 (8404-V-0051-REQ25 - indicator paper) - Pelita Global Logistik.xlsx', 'Q-256225/GNS/VII/2025', ((TIMESTAMP '2025-07-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (322, 'Q-25400119/GNS/VII/2025', 2, 321, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0051/REQ25', 'MV PELITA MUSTKAWATI', 'sent', '30 Days', 5.0, 2800000.00, 2800000.00, 140000.00, 'Imported from Excel
 Original Q-no: Q-256225/GNS/VII/2025
-File: Q-256225 (8404-V-0051-REQ25 - indicator paper) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256225 (8404-V-0051-REQ25 - indicator paper) - Pelita Global Logistik.xlsx', 'Q-256225/GNS/VII/2025', ((TIMESTAMP '2025-07-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (323, 'Q-25400521/GNS/VII/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 31, 'Bapak Pedra', NULL, 'TB Marina 18', 'sent', '30 days', 0, 11833000.00, 11833000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251227/GNS/VII/2025
-File: Q-251227 (ComAp Inteli Nano Module dll) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-07-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251227 (ComAp Inteli Nano Module dll) - Karunia Aman Selalu.xlsx', 'Q-251227/GNS/VII/2025', ((TIMESTAMP '2025-07-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (324, 'Q-25400522/GNS/VII/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 200000.00, 200000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251228/GNS/VII/2025
-File: Q-251228 (kunci shock 18mm) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-07-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251228 (kunci shock 18mm) - Karunia Aman Selalu.xlsx', 'Q-251228/GNS/VII/2025', ((TIMESTAMP '2025-07-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (325, 'Q-254003102/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-357-D/01', 'MV PELITA MUSTKAWATI', 'sent', '30 Days', 5.0, 6800000.00, 6800000.00, 340000.00, 'Imported from Excel
 Original Q-no: Q-253229/GNS/VII/2025
-File: Q-253229 (V-25-2404-357-D_01 - Aluminum Foil Tape Waterproof) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253229 (V-25-2404-357-D_01 - Aluminum Foil Tape Waterproof) - Pelita Global Logistik.xlsx', 'Q-253229/GNS/VII/2025', ((TIMESTAMP '2025-07-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (326, 'Q-254003103/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-343-D/02', 'MV PELITA MUSTKAWATI', 'sent', '30 Days', 5.0, 8900000.00, 8900000.00, 445000.00, 'Imported from Excel
 Original Q-no: Q-253230/GNS/VII/2025
-File: Q-253230 (V-25-2404-343-D_02 - Pompa SOMY) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253230 (V-25-2404-343-D_02 - Pompa SOMY) - Pelita Global Logistik.xlsx', 'Q-253230/GNS/VII/2025', ((TIMESTAMP '2025-07-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (327, 'Q-254003104/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, 'MV PELITA MUSTKAWATI', 'sent', '30 Days', 0, 8650000.00, 8650000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253231/GNS/VII/2025
-File: Q-253231 (Transport Jakarta - Samarinda) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253231 (Transport Jakarta - Samarinda) - Pelita Global Logistik.xlsx', 'Q-253231/GNS/VII/2025', ((TIMESTAMP '2025-07-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (328, 'Q-254003105/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2404-363-E/02', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 0, 7100000.00, 7100000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252232/GNS/VII/2025
-File: Q-252232 (V-25-2404-363-E_02 contactor SC-N5 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252232 (V-25-2404-363-E_02 contactor SC-N5 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-252232/GNS/VII/2025', ((TIMESTAMP '2025-07-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (329, 'Q-254003106/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2403-229-E/02', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 8500000.00, 8500000.00, 425000.00, 'Imported from Excel
 Original Q-no: Q-252234/GNS/VII/2025
-File: Q-252234 (V-25-2403-229-E_02 - Trafo Step down 440-220 - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252234 (V-25-2403-229-E_02 - Trafo Step down 440-220 - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-252234/GNS/VII/2025', ((TIMESTAMP '2025-07-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (330, 'Q-254003107/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-227-E/01', 'MV PELITA MUSTKAWATI', 'sent', '30 Days', 0, 2100000.00, 2100000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253223/GNS/VII/2025
-File: Q-253223 (Lamp Cover Acrylic) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253223 (Lamp Cover Acrylic) - Pelita Global Logistik.xlsx', 'Q-253223/GNS/VII/2025', ((TIMESTAMP '2025-07-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (331, 'Q-254003108/GNS/VII/2025', 2, 330, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-227-E/01', 'MV DEWI SARASWATI', 'sent', '30 Days', 0, 2100000.00, 2100000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253223/GNS/VII/2025
-File: Q-253236 (V-25-2403-227-E_01 - cover mika - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253236 (V-25-2403-227-E_01 - cover mika - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253223/GNS/VII/2025', ((TIMESTAMP '2025-07-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (332, 'Q-254003109/GNS/VII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, 'MV DEWI AMBARWATI', 'sent', '30 Days', 5.0, 1725000.00, 1725000.00, 86250.00, 'Imported from Excel
 Original Q-no: Q-253235/GNS/VII/2025
-File: Q-253235 (Sensor Citicel for Gas Detector - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-07-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253235 (Sensor Citicel for Gas Detector - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253235/GNS/VII/2025', ((TIMESTAMP '2025-07-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (333, 'Q-25400120/GNS/VII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', 'PR ATK IMCSM', NULL, 'sent', '30 Days', 0, 1970000.00, 1970000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-256238/GNS/VII/2025
-File: Q-256238 (PR ATK IMCSM) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-07-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256238 (PR ATK IMCSM) - IMC Shipping Management.xlsx', 'Q-256238/GNS/VII/2025', ((TIMESTAMP '2025-07-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (334, 'Q-2540142/GNS/VII/2025', 1, NULL, 14, 'PT. Tara Jaya Cemerlang', 30, 'Bp. Nico', NULL, NULL, 'sent', '30 Days', 5.0, 3924000.00, 3924000.00, 196200.00, 'Imported from Excel
 Original Q-no: Q-258239/GNS/VII/2025
-File: Q-258239 - (Filter) - Tara Jaya Cemerlang.xlsx', ((TIMESTAMP '2025-07-31 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258239 - (Filter) - Tara Jaya Cemerlang.xlsx', 'Q-258239/GNS/VII/2025', ((TIMESTAMP '2025-07-31 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (335, 'Q-25400121/GNS/VIII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, NULL, 'sent', '30 Days', 5.0, 19800000.00, 19800000.00, 990000.00, 'Imported from Excel
 Original Q-no: Q-256240/GNS/VIII/2025
-File: Q-256240 (Delivery Yuxin Satu - Port Cigading) - PT IMC Ship Management.xlsx', ((TIMESTAMP '2025-08-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256240 (Delivery Yuxin Satu - Port Cigading) - PT IMC Ship Management.xlsx', 'Q-256240/GNS/VIII/2025', ((TIMESTAMP '2025-08-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (336, 'Q-254003110/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2401-112-D/07', 'MV DEWI AMBARWATI', 'sent', '30 days', 5.0, 12500000.00, 12500000.00, 625000.00, 'Imported from Excel
 Original Q-no: Q-253241/GNS/VIII/2025
-File: Q-253241 (V-25-2401-112-D_07  Binoculars - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253241 (V-25-2401-112-D_07  Binoculars - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253241/GNS/VIII/2025', ((TIMESTAMP '2025-08-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (337, 'Q-254003111/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-205-E/09', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 68178000.00, 68178000.00, 3408900.00, 'Imported from Excel
 Original Q-no: Q-253242/GNS/VIII/2025
-File: Q-253242 (V-25-2403-205-E_09  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253242 (V-25-2403-205-E_09  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253242/GNS/VIII/2025', ((TIMESTAMP '2025-08-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (338, 'Q-254003112/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-222-E/05', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 79978000.00, 79978000.00, 3998900.00, 'Imported from Excel
 Original Q-no: Q-253243/GNS/VIII/2025
-File: Q-253243 (V-25-2403-222-E_05  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253243 (V-25-2403-222-E_05  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253243/GNS/VIII/2025', ((TIMESTAMP '2025-08-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (339, 'Q-25400523/GNS/VIII/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 32, 'Bapak Harry', NULL, 'TB AMAN 01 - KASEN POWER 2023', 'sent', '30 days', 0, 28133000.00, 28133000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251245/GNS/VIII/2025
-File: Q-251245 (TB AMAN 01 - Dept Engine) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-08-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251245 (TB AMAN 01 - Dept Engine) - Karunia Aman Selalu.xlsx', 'Q-251245/GNS/VIII/2025', ((TIMESTAMP '2025-08-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (340, 'Q-254003113/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 33, 'Bp. Heri Febri', 'WA', NULL, 'sent', '30 Days', 0, 800000.00, 800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-256247/GNS/VIII/2025
-File: Q-256247 (IC SLA 7024M) - PT Pelita Global Logistik - Pak Heri Febri.xlsx', ((TIMESTAMP '2025-08-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256247 (IC SLA 7024M) - PT Pelita Global Logistik - Pak Heri Febri.xlsx', 'Q-256247/GNS/VIII/2025', ((TIMESTAMP '2025-08-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (341, 'Q-254003114/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 33, 'Bp. Heri Febri', 'WA', NULL, 'sent', '30 Days', 0, 720000.00, 720000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-256248/GNS/VIII/2025
-File: Q-256248 (Switching AC-DC - Pelita Mustikawati) - PT Pelita Global Logistik - Pak Heri Febri.xlsx', ((TIMESTAMP '2025-08-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256248 (Switching AC-DC - Pelita Mustikawati) - PT Pelita Global Logistik - Pak Heri Febri.xlsx', 'Q-256248/GNS/VIII/2025', ((TIMESTAMP '2025-08-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (342, 'Q-25400122/GNS/VIII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0049/REQ25', 'MV YUXIN SATU', 'sent', '30 Days', 5.0, 44500000.00, 44500000.00, 2225000.00, 'Imported from Excel
 Original Q-no: Q-256244/GNS/VIII/2025
-File: Q-256244 (8404-V-0049-REQ25 - Nautical Equip - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-08-08 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256244 (8404-V-0049-REQ25 - Nautical Equip - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256244/GNS/VIII/2025', ((TIMESTAMP '2025-08-08 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (343, 'Q-254003115/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-256-E/03', 'MV DAIDAN PERTIWI', 'sent', '30 days', 7.0, 39190000.00, 39190000.00, 2743300.00, 'Imported from Excel
 Original Q-no: Q-253250/GNS/VIII/2025
-File: Q-253250 (V-25-2405-256-E-03- Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253250 (V-25-2405-256-E-03- Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-253250/GNS/VIII/2025', ((TIMESTAMP '2025-08-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (344, 'Q-2540069/GNS/VIII/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', 'sample from user', NULL, 'sent', '30 Days', 5.0, 656000.00, 656000.00, 32800.00, 'Imported from Excel
 Original Q-no: Q-254252/GNS/VIII/2025
-File: Q-254252 (Seal Set TKW & Cylinder New Era) - NGK.xlsx', ((TIMESTAMP '2025-08-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254252 (Seal Set TKW & Cylinder New Era) - NGK.xlsx', 'Q-254252/GNS/VIII/2025', ((TIMESTAMP '2025-08-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (345, 'Q-25400610/GNS/VIII/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 0, 300000.00, 300000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-254256/GNS/VIII/2025
-File: Q-254256 (Oring P9) - NGK.xlsx', ((TIMESTAMP '2025-08-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254256 (Oring P9) - NGK.xlsx', 'Q-254256/GNS/VIII/2025', ((TIMESTAMP '2025-08-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (346, 'Q-254003116/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2405-245-E/03', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 6600000.00, 6600000.00, 330000.00, 'Imported from Excel
 Original Q-no: Q-252254/GNS/VIII/2025
-File: Q-252254 (V-25-2405-245-E-03 Pressure Gauge - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252254 (V-25-2405-245-E-03 Pressure Gauge - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-252254/GNS/VIII/2025', ((TIMESTAMP '2025-08-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (347, 'Q-254003117/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'sent', '30 Days', 0, 3350000.00, 3350000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252255/GNS/VIII/2025
-File: Q-252255 (Delivery to Banjarmasin) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252255 (Delivery to Banjarmasin) - Pelita Global Logistik.xlsx', 'Q-252255/GNS/VIII/2025', ((TIMESTAMP '2025-08-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (348, 'Q-254003118/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-259-E/06', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 45775000.00, 45775000.00, 2288750.00, 'Imported from Excel
 Original Q-no: Q-253251/GNS/VIII/2025
-File: Q-253251 (V-25-2405-259-E-06 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253251 (V-25-2405-259-E-06 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-253251/GNS/VIII/2025', ((TIMESTAMP '2025-08-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (349, 'Q-254003119/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2404-383-E/01', 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 0, 800000.00, 800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252257/GNS/VIII/2025
-File: Q-252257 (V-25-2404-383-E-01 - SLA 7024M - Pelita Mustikawati) - PT Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252257 (V-25-2404-383-E-01 - SLA 7024M - Pelita Mustikawati) - PT Pelita Global Logistik.xlsx', 'Q-252257/GNS/VIII/2025', ((TIMESTAMP '2025-08-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (350, 'Q-254003120/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2401-177-E/02', 'MV DEWI AMBARWATI', 'sent', '30 days', 0, 2700000.00, 2700000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252258/GNS/VIII/2025
-File: Q-252258 (V-25-2401-177-E-02 - Dewi Ambarwati) - PT Pelita Global Logistik - Dioda MDS 60-16.xlsx', ((TIMESTAMP '2025-08-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
+File: Q-252258 (V-25-2401-177-E-02 - Dewi Ambarwati) - PT Pelita Global Logistik - Dioda MDS 60-16.xlsx', 'Q-252258/GNS/VIII/2025', ((TIMESTAMP '2025-08-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
 INSERT INTO quotations (
   id, quotation_no, version, parent_id, company_client_id, company_client_name,
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES
   (351, 'Q-254003121/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2401-178-E/03', 'MV DEWI AMBARWATI', 'sent', '30 Days', 0, 8250000.00, 8250000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252259/GNS/VIII/2025
-File: Q-252259 (V-25-2401-178-E-03 - AVR 6GA2 491-1A - Dewi Ambarwati ) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252259 (V-25-2401-178-E-03 - AVR 6GA2 491-1A - Dewi Ambarwati ) - Pelita Global Logistik.xlsx', 'Q-252259/GNS/VIII/2025', ((TIMESTAMP '2025-08-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (352, 'Q-254003122/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, 'MV DAIDAN PERTIWI', 'sent', '30 Days', 0, 600000.00, 600000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252262/GNS/VIII/2025
-File: Q-252262 (Transport to Tarakan Kalimantan - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252262 (Transport to Tarakan Kalimantan - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-252262/GNS/VIII/2025', ((TIMESTAMP '2025-08-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (353, 'Q-254003123/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2404-383-E/01', 'MV DEWI AMBARWATI', 'sent', '30 Days', 0, 265000000.00, 265000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252263/GNS/VIII/2025
-File: Q-252263 (V-25-2401-183-E-09 - Compressor Bitzer - Dewi Ambarwati) - PT Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252263 (V-25-2401-183-E-09 - Compressor Bitzer - Dewi Ambarwati) - PT Pelita Global Logistik.xlsx', 'Q-252263/GNS/VIII/2025', ((TIMESTAMP '2025-08-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (354, 'Q-254003124/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-338-D/07', 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 5.0, 11615000.00, 11615000.00, 580750.00, 'Imported from Excel
 Original Q-no: Q-253260/GNS/VIII/2025
-File: Q-253260 (V-25-2404-338-D-07 - Trafo Step down 440-220 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253260 (V-25-2404-338-D-07 - Trafo Step down 440-220 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253260/GNS/VIII/2025', ((TIMESTAMP '2025-08-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (355, 'Q-254003125/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', NULL, NULL, NULL, 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 5.0, 15490000.00, 15490000.00, 774500.00, 'Imported from Excel
 Original Q-no: Q-253264/GNS/VIII/2025
-File: Q-252264 (Aluminum Foil Tape Waterproof 3 sizes) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252264 (Aluminum Foil Tape Waterproof 3 sizes) - Pelita Global Logistik.xlsx', 'Q-253264/GNS/VIII/2025', ((TIMESTAMP '2025-08-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (356, 'Q-25400611/GNS/VIII/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 days', 5.0, 1645000.00, 1645000.00, 82250.00, 'Imported from Excel
 Original Q-no: Q-254261/GNS/VIII/2025
-File: Q-254261 (Dust seal, pick and hook) - PT Niterra Mobility Indonesia.xlsx', ((TIMESTAMP '2025-08-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254261 (Dust seal, pick and hook) - PT Niterra Mobility Indonesia.xlsx', 'Q-254261/GNS/VIII/2025', ((TIMESTAMP '2025-08-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (357, 'Q-25400612/GNS/VIII/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 10890000.00, 10890000.00, 544500.00, 'Imported from Excel
 Original Q-no: Q-254265/GNS/VIII/2025
-File: Q-254265 (Oring P29A dll) - NGK.xlsx', ((TIMESTAMP '2025-08-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254265 (Oring P29A dll) - NGK.xlsx', 'Q-254265/GNS/VIII/2025', ((TIMESTAMP '2025-08-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (358, 'Q-254003126/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 5.0, 16750000.00, 16750000.00, 837500.00, 'Imported from Excel
 Original Q-no: Q-253266/GNS/VIII/2025
-File: Q-253266 (Trafo Step down 440-380V, 10KVA, box - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253266 (Trafo Step down 440-380V, 10KVA, box - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253266/GNS/VIII/2025', ((TIMESTAMP '2025-08-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (359, 'Q-254003127/GNS/VIII/2025', 2, 358, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-338-D/07', 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 5.0, 15000000.00, 15000000.00, 750000.00, 'Imported from Excel
 Original Q-no: Q-253266/GNS/VIII/2025
-File: Q-253266 (V-25-2404-338-D-07 - Trafo Step down 440-220V, 10KVA, with box - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253266 (V-25-2404-338-D-07 - Trafo Step down 440-220V, 10KVA, with box - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253266/GNS/VIII/2025', ((TIMESTAMP '2025-08-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (360, 'Q-254003128/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, 'MV DEWI SARASWATI', 'sent', '30 days', 0, 38500000.00, 38500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253267/GNS/VIII/2025
-File: Q-252267 (terpal, corrugated cardboard - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252267 (terpal, corrugated cardboard - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253267/GNS/VIII/2025', ((TIMESTAMP '2025-08-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (361, 'Q-254003129/GNS/VIII/2025', 2, 360, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-248-D/07', 'MV DEWI SARASWATI', 'sent', '30 days', 0, 87875000.00, 87875000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253267/GNS/VIII/2025
-File: Q-253267 (V-25-2403-248-D-07 - Terpal, corrugated cardboard - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253267 (V-25-2403-248-D-07 - Terpal, corrugated cardboard - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253267/GNS/VIII/2025', ((TIMESTAMP '2025-08-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (362, 'Q-254003130/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-415-D/01', 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 5.0, 15490000.00, 15490000.00, 774500.00, 'Imported from Excel
 Original Q-no: Q-253268/GNS/VIII/2025
-File: Q-253268 (V-25-2404-415-D-01 - Lakban Hatch Cover - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253268 (V-25-2404-415-D-01 - Lakban Hatch Cover - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253268/GNS/VIII/2025', ((TIMESTAMP '2025-08-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (363, 'Q-25400613/GNS/VIII/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 1870000.00, 1870000.00, 93500.00, 'Imported from Excel
 Original Q-no: Q-254266/GNS/VIII/2025
-File: Q-254266 (Oil Seal NOK) - NGK.xlsx', ((TIMESTAMP '2025-08-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254266 (Oil Seal NOK) - NGK.xlsx', 'Q-254266/GNS/VIII/2025', ((TIMESTAMP '2025-08-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (364, 'Q-254003131/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-416-E/01', 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 5.0, 16930000.00, 16930000.00, 846500.00, 'Imported from Excel
 Original Q-no: Q-253269/GNS/VIII/2025
-File: Q-253269 (V-25-2404-416-E-01 - Trafo Step down 440-380V, 10KVA, box - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253269 (V-25-2404-416-E-01 - Trafo Step down 440-380V, 10KVA, box - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253269/GNS/VIII/2025', ((TIMESTAMP '2025-08-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (365, 'Q-25400614/GNS/VIII/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 days', 5.0, 3280000.00, 3280000.00, 164000.00, 'Imported from Excel
 Original Q-no: Q-254413/GNS/XII/2025
-File: Q-254413 (Oil Seal KOYO MHSA 28-42-8, Hallite DHS UHS) - PT Niterra Mobility Indonesia.xlsx', ((TIMESTAMP '2025-08-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254413 (Oil Seal KOYO MHSA 28-42-8, Hallite DHS UHS) - PT Niterra Mobility Indonesia.xlsx', 'Q-254413/GNS/XII/2025', ((TIMESTAMP '2025-08-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (366, 'Q-254003132/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-326-D/06', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 5.0, 2900000.00, 2900000.00, 145000.00, 'Imported from Excel
 Original Q-no: Q-253270/GNS/VIII/2025
-File: Q-253270 (V-25-2404-326-D-06 - iCom V80 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253270 (V-25-2404-326-D-06 - iCom V80 - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253270/GNS/VIII/2025', ((TIMESTAMP '2025-08-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (367, 'Q-254003133/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-328-D/06', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 5.0, 33375000.00, 33375000.00, 1668750.00, 'Imported from Excel
 Original Q-no: Q-253271/GNS/VIII/2025
-File: Q-253271 (V-25-2404-328-D-06 - trafo 440-380 5KVA - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253271 (V-25-2404-328-D-06 - trafo 440-380 5KVA - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253271/GNS/VIII/2025', ((TIMESTAMP '2025-08-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (368, 'Q-254003134/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-340-D/06', 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 5.0, 8435000.00, 8435000.00, 421750.00, 'Imported from Excel
 Original Q-no: Q-253272/GNS/VIII/2025
-File: Q-253272 (V-25-2404-340-D-06 - Mur Baut - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253272 (V-25-2404-340-D-06 - Mur Baut - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253272/GNS/VIII/2025', ((TIMESTAMP '2025-08-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (369, 'Q-254003135/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-335-D/06', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 5.0, 4250000.00, 4250000.00, 212500.00, 'Imported from Excel
 Original Q-no: Q-253274/GNS/VIII/2025
-File: Q-253274 (V-25-2404-335-D-06 - Flags - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253274 (V-25-2404-335-D-06 - Flags - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253274/GNS/VIII/2025', ((TIMESTAMP '2025-08-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (370, 'Q-254003136/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-367-D/06', 'MV PELITA MUSTIKAWATI', 'sent', '30 days', 5.0, 8825000.00, 8825000.00, 441250.00, 'Imported from Excel
 Original Q-no: Q-253275/GNS/VIII/2025
-File: Q-253275 (V-25-2404-367-D-06 - Kabel NYYHY - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253275 (V-25-2404-367-D-06 - Kabel NYYHY - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253275/GNS/VIII/2025', ((TIMESTAMP '2025-08-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (371, 'Q-254003137/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-376-D/06', 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 5.0, 650000.00, 650000.00, 32500.00, 'Imported from Excel
 Original Q-no: Q-253276/GNS/VIII/2025
-File: Q-253276 (V-25-2404-376-D-06 - Easy Touch GCU Meter - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253276 (V-25-2404-376-D-06 - Easy Touch GCU Meter - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253276/GNS/VIII/2025', ((TIMESTAMP '2025-08-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (372, 'Q-254003138/GNS/VIII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-429-D/02', 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 5.0, 33240000.00, 33240000.00, 1662000.00, 'Imported from Excel
 Original Q-no: Q-253278/GNS/VIII/2025
-File: Q-253278 (V-25-2404-429-D-02 - Lakban Hatch Cover - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-08-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253278 (V-25-2404-429-D-02 - Lakban Hatch Cover - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253278/GNS/VIII/2025', ((TIMESTAMP '2025-08-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (373, 'Q-254003139/GNS/IX/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, 'MV DEWI AMBARWATI', 'sent', '30 Days', 0, 1340000.00, 1340000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252281/GNS/XI/2025
-File: Q-252281 (Transport to Kendari - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-09-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252281 (Transport to Kendari - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-252281/GNS/XI/2025', ((TIMESTAMP '2025-09-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (374, 'Q-254003140/GNS/IX/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, 'MV DAIDAN PERTIWI', 'sent', '30 Days', 0, 1400000.00, 1400000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252282/GNS/XI/2025
-File: Q-252282 (Transport to Tarakan - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-09-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252282 (Transport to Tarakan - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-252282/GNS/XI/2025', ((TIMESTAMP '2025-09-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (375, 'Q-254003141/GNS/IX/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, 'MV DEWI AMBARWATI', 'sent', '30 Days', 5.0, 6000000.00, 6000000.00, 300000.00, 'Imported from Excel
 Original Q-no: Q-253282/GNS/VIII/2025
-File: Q-253281 (Gaslux - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-09-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253281 (Gaslux - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-253282/GNS/VIII/2025', ((TIMESTAMP '2025-09-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (376, 'Q-254003142/GNS/IX/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, NULL, 'sent', '30 Days', 0, 17000000.00, 17000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253284/GNS/XI/2025
-File: Q-253284 (Transport to Balikapan) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-09-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253284 (Transport to Balikapan) - Pelita Global Logistik.xlsx', 'Q-253284/GNS/XI/2025', ((TIMESTAMP '2025-09-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (377, 'Q-2540023/GNS/IX/2025', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 10.0, 2400000.00, 2400000.00, 240000.00, 'Imported from Excel
 Original Q-no: Q-258285/GNS/XI/2025
-File: Q-258285 - (EMERSON A-WZ 55855) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2025-09-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258285 - (EMERSON A-WZ 55855) - Sentra Makmur Lines.xlsx', 'Q-258285/GNS/XI/2025', ((TIMESTAMP '2025-09-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (378, 'Q-25400524/GNS/IX/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 32, 'Bapak Harry', NULL, 'TB AMAN 01 - KASEN POWER 2023', 'sent', '30 days', 0, 13835000.00, 13835000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251287/GNS/XI/2025
-File: Q-251287 (Spesial Tool Elektrik - Office) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-09-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251287 (Spesial Tool Elektrik - Office) - Karunia Aman Selalu.xlsx', 'Q-251287/GNS/XI/2025', ((TIMESTAMP '2025-09-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (379, 'Q-25400525/GNS/IX/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 32, 'Bapak Harry', NULL, NULL, 'sent', '30 days', 0, 3214000.00, 3214000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251288/GNS/XI/2025
-File: Q-251288 (Part Pendukung OH GEnerator Listrik) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-09-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251288 (Part Pendukung OH GEnerator Listrik) - Karunia Aman Selalu.xlsx', 'Q-251288/GNS/XI/2025', ((TIMESTAMP '2025-09-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (380, 'Q-25400526/GNS/IX/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, 'TB MARINA 25', 'sent', '30 days', 0, 2800000.00, 2800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251291/GNS/XI/2025
-File: Q-251291 (Air Cooler Cleaner) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-09-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251291 (Air Cooler Cleaner) - Karunia Aman Selalu.xlsx', 'Q-251291/GNS/XI/2025', ((TIMESTAMP '2025-09-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (381, 'Q-25400527/GNS/IX/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 17, 'Bapak Hari', NULL, NULL, 'sent', '30 Days', 0, 2100000.00, 2100000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251293/GNS/IX/2025
-File: Q-251293 (Schneider Limit Switch XCKJ H29) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-09-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251293 (Schneider Limit Switch XCKJ H29) - Karunia Aman Selalu.xlsx', 'Q-251293/GNS/IX/2025', ((TIMESTAMP '2025-09-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (382, 'Q-25400528/GNS/IX/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, 'TB MARINA 25', 'sent', '30 days', 0, 29149000.00, 29149000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251290/GNS/XI/2025
-File: Q-251290 (Tachometer) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-09-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251290 (Tachometer) - Karunia Aman Selalu.xlsx', 'Q-251290/GNS/XI/2025', ((TIMESTAMP '2025-09-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (383, 'Q-254003143/GNS/IX/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 16, 'Bapak Riza Chair', 'by phone/WA', NULL, 'sent', '30 Days', 5.0, 66500000.00, 66500000.00, 3325000.00, 'Imported from Excel
 Original Q-no: Q-253295/GNS/IX/2025
-File: Q-253295 (Corrugated cardboard single wall) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-09-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253295 (Corrugated cardboard single wall) - Pelita Global Logistik.xlsx', 'Q-253295/GNS/IX/2025', ((TIMESTAMP '2025-09-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (384, 'Q-254003144/GNS/IX/2025', 2, 383, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-276-D/04', 'MV DEWI SARASWATI', 'sent', '30 days', 7.0, 90000000.00, 90000000.00, 6300000.00, 'Imported from Excel
 Original Q-no: Q-253295/GNS/IX/2025
-File: Q-253295 (V-25-2403-276-D-04 - Heaving line, cardboard, Tarpaulin- Dewi Saraswati ) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-09-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253295 (V-25-2403-276-D-04 - Heaving line, cardboard, Tarpaulin- Dewi Saraswati ) - Pelita Global Logistik.xlsx', 'Q-253295/GNS/IX/2025', ((TIMESTAMP '2025-09-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (385, 'Q-25400529/GNS/IX/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 21, 'Bapak Harry Kurniawan', NULL, NULL, 'sent', '30 Days', 0, 4735000.00, 4735000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251295/GNS/IX/2025
-File: Q-251295 (Bearing, Mechseal, Impeller) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-09-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251295 (Bearing, Mechseal, Impeller) - Karunia Aman Selalu.xlsx', 'Q-251295/GNS/IX/2025', ((TIMESTAMP '2025-09-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (386, 'Q-2540131/GNS/IX/2025', 1, NULL, 13, 'PT. Indobaruna Bulk Transport', 34, 'Bapak Fakka', NULL, NULL, 'sent', '30 Days', 5.0, 5000000.00, 5000000.00, 250000.00, 'Imported from Excel
 Original Q-no: Q-258296/GNS/IX/2025
-File: Q-258296 (Fuji Push Button AR30F0r) - PT Indobaruna Bulk Transport.xlsx', ((TIMESTAMP '2025-09-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258296 (Fuji Push Button AR30F0r) - PT Indobaruna Bulk Transport.xlsx', 'Q-258296/GNS/IX/2025', ((TIMESTAMP '2025-09-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (387, 'Q-254003145/GNS/IX/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2404-445-E/05', 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 0, 2400000.00, 2400000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252257/GNS/IX/2025
-File: Q-252297 (V-25-2404-445-E_05 - CKD HSVC2-15-4H - Pelita Mustikawati) - PT Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-09-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252297 (V-25-2404-445-E_05 - CKD HSVC2-15-4H - Pelita Mustikawati) - PT Pelita Global Logistik.xlsx', 'Q-252257/GNS/IX/2025', ((TIMESTAMP '2025-09-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (388, 'Q-25400530/GNS/IX/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 31, 'Bapak Pedra', NULL, NULL, 'sent', '30 Days', 0, 2100000.00, 2100000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251228/GNS/IX/2025
-File: Q-251298 (IC Regulator Cummin 24V) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-09-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251298 (IC Regulator Cummin 24V) - Karunia Aman Selalu.xlsx', 'Q-251228/GNS/IX/2025', ((TIMESTAMP '2025-09-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (389, 'Q-25400531/GNS/IX/2025', 2, 388, 5, 'PT. Karunia Aman Selalu', 31, 'Bapak Pedra', NULL, NULL, 'sent', '30 Days', 0, 2100000.00, 2100000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251228/GNS/IX/2025
-File: Q-251298 (IC Regulator Cummin 6BT 28V) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-09-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251298 (IC Regulator Cummin 6BT 28V) - Karunia Aman Selalu.xlsx', 'Q-251228/GNS/IX/2025', ((TIMESTAMP '2025-09-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (390, 'Q-25400532/GNS/X/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 10300000.00, 10300000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251309/GNS/X/2025
-File: Q-251309 (Rudder Angle Seafirst DNR 101) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-10-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251309 (Rudder Angle Seafirst DNR 101) - Karunia Aman Selalu.xlsx', 'Q-251309/GNS/X/2025', ((TIMESTAMP '2025-10-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (391, 'Q-25400123/GNS/X/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0052/REQ25', 'MV Yuxin Satu', 'sent', '30 days', 0, 98645000.00, 98645000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-256301/GNS/X/2025
-File: Q-256301 (8404-V-0052-REQ25 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-10-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256301 (8404-V-0052-REQ25 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256301/GNS/X/2025', ((TIMESTAMP '2025-10-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (392, 'Q-25400124/GNS/X/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0057/REQ25', 'MV Yuxin Satu', 'sent', '30 days', 5.0, 153135000.00, 153135000.00, 7656750.00, 'Imported from Excel
 Original Q-no: Q-256305/GNS/X/2025
-File: Q-256305 (8404-V-0057-REQ25 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-10-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256305 (8404-V-0057-REQ25 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256305/GNS/X/2025', ((TIMESTAMP '2025-10-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (393, 'Q-25400125/GNS/X/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0059/REQ25', 'MV Yuxin Satu', 'sent', '30 days', 5.0, 1200000.00, 1200000.00, 60000.00, 'Imported from Excel
 Original Q-no: Q-256307/GNS/X/2025
-File: Q-256307 (8404-V-0059-REQ25 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-10-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256307 (8404-V-0059-REQ25 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256307/GNS/X/2025', ((TIMESTAMP '2025-10-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (394, 'Q-25400126/GNS/X/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0060/REQ25', 'MV Yuxin Satu', 'sent', '30 days', 5.0, 57876500.00, 57876500.00, 2893825.00, 'Imported from Excel
 Original Q-no: Q-256308/GNS/X/2025
-File: Q-256308 (8404-V-0060-REQ25 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-10-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256308 (8404-V-0060-REQ25 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256308/GNS/X/2025', ((TIMESTAMP '2025-10-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (395, 'Q-25400127/GNS/X/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0053/REQ25', 'MV Yuxin Satu', 'sent', '30 days', 5.0, 5594000.00, 5594000.00, 279700.00, 'Imported from Excel
 Original Q-no: Q-256302/GNS/X/2025
-File: Q-256302 (8404-V-0053-REQ25 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-10-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256302 (8404-V-0053-REQ25 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256302/GNS/X/2025', ((TIMESTAMP '2025-10-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (396, 'Q-25400128/GNS/X/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0056/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 7060000.00, 7060000.00, 353000.00, 'Imported from Excel
 Original Q-no: Q-256303/GNS/X/2025
-File: Q-256304 (8404-V-0056-REQ25 - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2025-10-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256304 (8404-V-0056-REQ25 - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-256303/GNS/X/2025', ((TIMESTAMP '2025-10-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (397, 'Q-25400129/GNS/X/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0058/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 6650000.00, 6650000.00, 332500.00, 'Imported from Excel
 Original Q-no: Q-256306/GNS/X/2025
-File: Q-256306 (8404-V-0058-REQ25 - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2025-10-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256306 (8404-V-0058-REQ25 - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-256306/GNS/X/2025', ((TIMESTAMP '2025-10-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (398, 'Q-25400533/GNS/X/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 31, 'Bapak Pedra', NULL, NULL, 'sent', '30 days', 0, 13835000.00, 13835000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251312/GNS/X/2025
-File: Q-251312 (Megger Insultalion Tester, 1000V - Kyoritsu) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-10-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251312 (Megger Insultalion Tester, 1000V - Kyoritsu) - Karunia Aman Selalu.xlsx', 'Q-251312/GNS/X/2025', ((TIMESTAMP '2025-10-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (399, 'Q-25400534/GNS/X/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 31, 'Bapak Pedra', NULL, NULL, 'sent', '30 Days', 0, 12310000.00, 12310000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251311/GNS/X/2025
-File: Q-251311 (Peta Laut) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-10-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251311 (Peta Laut) - Karunia Aman Selalu.xlsx', 'Q-251311/GNS/X/2025', ((TIMESTAMP '2025-10-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (400, 'Q-25400615/GNS/X/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 2346000.00, 2346000.00, 117300.00, 'Imported from Excel
 Original Q-no: Q-254310/GNS/X/2025
-File: Q-254310 (Seal Set Pompa TKW & Cylinder New Era) - NGK.xlsx', ((TIMESTAMP '2025-10-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
+File: Q-254310 (Seal Set Pompa TKW & Cylinder New Era) - NGK.xlsx', 'Q-254310/GNS/X/2025', ((TIMESTAMP '2025-10-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
 INSERT INTO quotations (
   id, quotation_no, version, parent_id, company_client_id, company_client_name,
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES
   (401, 'Q-254003146/GNS/X/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, 'MV DEWI SHINTA MANGGALA', 'sent', '30 Days', 0, 110000000.00, 110000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252315/GNS/X/2025
-File: Q-252315 (Quint DC - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-10-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252315 (Quint DC - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-252315/GNS/X/2025', ((TIMESTAMP '2025-10-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (402, 'Q-254003147/GNS/X/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-327-E/01', 'MV DAIDAN PERTIWI', 'sent', '30 Days', 5.0, 32750000.00, 32750000.00, 1637500.00, 'Imported from Excel
 Original Q-no: Q-253314/GNS/X/2025
-File: Q-253314 (V-25-2405-327-E-01 - Trafo Step down 440-380V, 440-220V 10KVA, box - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-10-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253314 (V-25-2405-327-E-01 - Trafo Step down 440-380V, 440-220V 10KVA, box - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-253314/GNS/X/2025', ((TIMESTAMP '2025-10-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (403, 'Q-254003148/GNS/X/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2403-272-E/02', 'MV DEWI SARASWATI', 'sent', '30 Days', 0, 4125000.00, 4125000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252317/GNS/X/2025
-File: Q-252317 (V-25-2403-272-E-02 - AVR 6GA2 491-1A - Dewi Saraswati ) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-10-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252317 (V-25-2403-272-E-02 - AVR 6GA2 491-1A - Dewi Saraswati ) - Pelita Global Logistik.xlsx', 'Q-252317/GNS/X/2025', ((TIMESTAMP '2025-10-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (404, 'Q-25400130/GNS/X/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '073/E/10/25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 2300000.00, 2300000.00, 115000.00, 'Imported from Excel
 Original Q-no: Q-256318/GNS/X/2025
-File: Q-256318 (073-E-10-25  - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-10-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256318 (073-E-10-25  - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256318/GNS/X/2025', ((TIMESTAMP '2025-10-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (405, 'Q-25400131/GNS/X/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '075/E/10/25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 6770000.00, 6770000.00, 338500.00, 'Imported from Excel
 Original Q-no: Q-256319/GNS/X/2025
-File: Q-256319 (075-E-10-25  - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-10-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256319 (075-E-10-25  - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256319/GNS/X/2025', ((TIMESTAMP '2025-10-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (406, 'Q-2540132/GNS/X/2025', 1, NULL, 13, 'PT. Indobaruna Bulk Transport', 34, 'Bapak Fakka', NULL, NULL, 'sent', '30 days', 5.0, 2500000.00, 2500000.00, 125000.00, 'Imported from Excel
 Original Q-no: Q-258320/GNS/X/2025
-File: Q-258320 (Portable medical oxygen) - Indobaruna Bulk Transport.xlsx', ((TIMESTAMP '2025-10-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258320 (Portable medical oxygen) - Indobaruna Bulk Transport.xlsx', 'Q-258320/GNS/X/2025', ((TIMESTAMP '2025-10-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (407, 'Q-254003149/GNS/X/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2404-490-E/06', 'MV PELITA MUSTIKAWATI', 'sent', '30 Days', 5.0, 7200000.00, 7200000.00, 360000.00, 'Imported from Excel
 Original Q-no: Q-253321/GNS/X/2025
-File: Q-253321 (V-25-2404-490-E-06 - Bearing SKF NU 23305 ECJ - Pelita Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-10-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253321 (V-25-2404-490-E-06 - Bearing SKF NU 23305 ECJ - Pelita Mustikawati) - Pelita Global Logistik.xlsx', 'Q-253321/GNS/X/2025', ((TIMESTAMP '2025-10-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (408, 'Q-2540024/GNS/X/2025', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', NULL, NULL, 'draft', '30 Days', 10.0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-258323/GNS/X/2025
-File: Q-258323 - (Butterfly Valve double flange) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2025-10-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258323 - (Butterfly Valve double flange) - Sentra Makmur Lines.xlsx', 'Q-258323/GNS/X/2025', ((TIMESTAMP '2025-10-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (409, 'Q-2540025/GNS/X/2025', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', NULL, NULL, 'draft', '30 Days', 10.0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-258324/GNS/X/2025
-File: Q-258324 - (Bearing) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2025-10-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258324 - (Bearing) - Sentra Makmur Lines.xlsx', 'Q-258324/GNS/X/2025', ((TIMESTAMP '2025-10-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (410, 'Q-2540026/GNS/X/2025', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 days', 5.0, 233180000.00, 233180000.00, 11659000.00, 'Imported from Excel
 Original Q-no: Q-258327/GNS/X/2025
-File: Q-258327 - (Bearing Shave Pulley) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2025-10-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258327 - (Bearing Shave Pulley) - Sentra Makmur Lines.xlsx', 'Q-258327/GNS/X/2025', ((TIMESTAMP '2025-10-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (411, 'Q-2540027/GNS/X/2025', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 5.0, 4350000.00, 4350000.00, 217500.00, 'Imported from Excel
 Original Q-no: Q-258330/GNS/X/2025
-File: Q-258330 - (DANFOSS MBC 5100) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2025-10-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258330 - (DANFOSS MBC 5100) - Sentra Makmur Lines.xlsx', 'Q-258330/GNS/X/2025', ((TIMESTAMP '2025-10-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (412, 'Q-254003150/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', NULL, NULL, NULL, NULL, 'sent', '30 Days', 0, 38600000.00, 38600000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-256335/GNS/X/2025
-File: Q-256335 (Electrical Immersion Heater) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256335 (Electrical Immersion Heater) - Pelita Global Logistik.xlsx', 'Q-256335/GNS/X/2025', ((TIMESTAMP '2025-11-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (413, 'Q-254003151/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2405-294-E/09', 'MV DAIDAN PERTIWI', 'sent', '30 Days', 0, 56150000.00, 56150000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252337/GNS/XI/2025
-File: Q-252254 (V-25-2405-294-E-09 - Compressor  - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252254 (V-25-2405-294-E-09 - Compressor  - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-252337/GNS/XI/2025', ((TIMESTAMP '2025-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (414, 'Q-254003152/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2405-294-E/09', 'MV DAIDAN PERTIWI', 'sent', '30 Days', 0, 56150000.00, 56150000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252338/GNS/XI/2025
-File: Q-252338 (V-25-2405-294-E-09 - Compressor  - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252338 (V-25-2405-294-E-09 - Compressor  - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-252338/GNS/XI/2025', ((TIMESTAMP '2025-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (415, 'Q-25400132/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '122/ENGINE/ML/X/25', 'MV MAJESTIC LAKSONO', 'sent', '30 days', 5.0, 1100000.00, 1100000.00, 55000.00, 'Imported from Excel
 Original Q-no: Q-256339/GNS/XI/2025
-File: Q-256339 (122-Engine-ML-X-25 - Bearing - MV Majestic Laksono) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256339 (122-Engine-ML-X-25 - Bearing - MV Majestic Laksono) - IMC Shipping Management.xlsx', 'Q-256339/GNS/XI/2025', ((TIMESTAMP '2025-11-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (416, 'Q-25400535/GNS/XI/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 116000.00, 116000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251356/GNS/XI/2025
-File: Q-251356 (Sailing Verlop Inner) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-11-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251356 (Sailing Verlop Inner) - Karunia Aman Selalu.xlsx', 'Q-251356/GNS/XI/2025', ((TIMESTAMP '2025-11-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (417, 'Q-254003153/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'PO No V-25-2405-294-E/09/01', 'MV DAIDAN PERTIWI', 'sent', '30 Days', 0, 22500000.00, 22500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-252355/GNS/XI/2025
-File: Q-252355 (Transport to Meulaboh - Compressor - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252355 (Transport to Meulaboh - Compressor - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-252355/GNS/XI/2025', ((TIMESTAMP '2025-11-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (418, 'Q-254003154/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-305-D/05', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 3500000.00, 3500000.00, 175000.00, 'Imported from Excel
 Original Q-no: Q-253342/GNS/XI/2025
-File: Q-253342 (V-25-2403-305-D-05  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253342 (V-25-2403-305-D-05  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253342/GNS/XI/2025', ((TIMESTAMP '2025-11-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (419, 'Q-254003155/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-243-E/08', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 24080000.00, 24080000.00, 1204000.00, 'Imported from Excel
 Original Q-no: Q-253344/GNS/XI/2025
-File: Q-253344 (V-25-2403-243-E-08  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253344 (V-25-2403-243-E-08  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253344/GNS/XI/2025', ((TIMESTAMP '2025-11-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (420, 'Q-254003156/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-310-D/06', 'MV DEWI SARASWATI', 'sent', '30 Days', 0, 14300000.00, 14300000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253348/GNS/XI/2025
-File: Q-253348 (V-25-2403-310-D-06  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253348 (V-25-2403-310-D-06  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253348/GNS/XI/2025', ((TIMESTAMP '2025-11-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (421, 'Q-254003157/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-251-D/06', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 23750000.00, 23750000.00, 1187500.00, 'Imported from Excel
 Original Q-no: Q-253350/GNS/XI/2025
-File: Q-253350 (V-25-2403-251-D-06  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253350 (V-25-2403-251-D-06  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253350/GNS/XI/2025', ((TIMESTAMP '2025-11-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (422, 'Q-254003158/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-309-E/02', 'MV DEWI SARASWATI', 'draft', '30 days', 5.0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-253353/GNS/XI/2025
-File: Q-253353 (V-25-2403-309-E-02  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253353 (V-25-2403-309-E-02  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253353/GNS/XI/2025', ((TIMESTAMP '2025-11-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (423, 'Q-254003159/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-270-E/06', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 2150000.00, 2150000.00, 107500.00, 'Imported from Excel
 Original Q-no: Q-253340/GNS/XI/2025
-File: Q-253340 (V-25-2403-270-E-06  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253340 (V-25-2403-270-E-06  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253340/GNS/XI/2025', ((TIMESTAMP '2025-11-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (424, 'Q-254003160/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-271-E/03', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 4300000.00, 4300000.00, 215000.00, 'Imported from Excel
 Original Q-no: Q-253341/GNS/XI/2025
-File: Q-253341 (V-25-2403-271-E-03  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253341 (V-25-2403-271-E-03  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253341/GNS/XI/2025', ((TIMESTAMP '2025-11-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (425, 'Q-254003161/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-303-D/05', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 2000000.00, 2000000.00, 100000.00, 'Imported from Excel
 Original Q-no: Q-253346/GNS/XI/2025
-File: Q-253346 (V-25-2403-303-D-05  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253346 (V-25-2403-303-D-05  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253346/GNS/XI/2025', ((TIMESTAMP '2025-11-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (426, 'Q-254003162/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-299-D/02', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 2895000.00, 2895000.00, 144750.00, 'Imported from Excel
 Original Q-no: Q-253347/GNS/XI/2025
-File: Q-253347 (V-25-2403-299-D-02  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253347 (V-25-2403-299-D-02  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253347/GNS/XI/2025', ((TIMESTAMP '2025-11-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (427, 'Q-254003163/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-260-D/08', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 4550000.00, 4550000.00, 227500.00, 'Imported from Excel
 Original Q-no: Q-253351/GNS/XI/2025
-File: Q-253351 (V-25-2403-260-D-08  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253351 (V-25-2403-260-D-08  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253351/GNS/XI/2025', ((TIMESTAMP '2025-11-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (428, 'Q-2540133/GNS/XI/2025', 1, NULL, 13, 'PT. Indobaruna Bulk Transport', 35, 'Ms. Arly Masneti', '0094.RL.IHB/MTC.DCK.PRT/2025.OFC', 'MV. HEBAT', 'sent', '30 days', 5.0, 4240000.00, 4240000.00, 212000.00, 'Imported from Excel
 Original Q-no: Q-258365/GNS/XI/2025
-File: Q-258365 (0094.RL.IHB_MTC.DCK.PRT_2025.OFC - MV. HEBAT) - Indobaruna Bulk Transport.xlsx', ((TIMESTAMP '2025-11-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258365 (0094.RL.IHB_MTC.DCK.PRT_2025.OFC - MV. HEBAT) - Indobaruna Bulk Transport.xlsx', 'Q-258365/GNS/XI/2025', ((TIMESTAMP '2025-11-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (429, 'Q-2540134/GNS/XI/2025', 1, NULL, 13, 'PT. Indobaruna Bulk Transport', 35, 'Ms. Arly Masneti', '0090.RL.IHB/MTC.ENG.PRT/2025.OFC', 'MV. HEBAT', 'sent', '30 days', 5.0, 21850000.00, 21850000.00, 1092500.00, 'Imported from Excel
 Original Q-no: Q-258368/GNS/XI/2025
-File: Q-258368 (0090.RL.IHB_MTC.ENG.PRT_2025.OFC - MV. HEBAT) - Indobaruna Bulk Transport.xlsx', ((TIMESTAMP '2025-11-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258368 (0090.RL.IHB_MTC.ENG.PRT_2025.OFC - MV. HEBAT) - Indobaruna Bulk Transport.xlsx', 'Q-258368/GNS/XI/2025', ((TIMESTAMP '2025-11-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (430, 'Q-254003164/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-249-D/02', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 196780000.00, 196780000.00, 9839000.00, 'Imported from Excel
 Original Q-no: Q-253349/GNS/XI/2025
-File: Q-253349 (V-25-2403-249-D-02  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253349 (V-25-2403-249-D-02  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253349/GNS/XI/2025', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (431, 'Q-254003165/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-222-E/12', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 80068500.00, 80068500.00, 4003425.00, 'Imported from Excel
 Original Q-no: Q-253352/GNS/XI/2025
-File: Q-253352 (V-25-2403-222-E-12  - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253352 (V-25-2403-222-E-12  - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-253352/GNS/XI/2025', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (432, 'Q-254003166/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2403-244-E/09', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 80464000.00, 80464000.00, 4023200.00, 'Imported from Excel
 Original Q-no: Q-25343/GNS/XI/2025
-File: Q-253343 (V-25-2403-244-E-09 - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253343 (V-25-2403-244-E-09 - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-25343/GNS/XI/2025', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (433, 'Q-25400133/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '080/D/11/25', 'MV YUXIN SATU', 'sent', '30 Days', 0, 5850000.00, 5850000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-25359/GNS/XI/2025
-File: Q-256359 (REQ 080-D-11-25  - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256359 (REQ 080-D-11-25  - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-25359/GNS/XI/2025', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (434, 'Q-25400134/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '01/DECK/10/25', 'MV YUXIN SATU', 'sent', '30 days', 0, 11612000.00, 11612000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-25363/GNS/XI/2025
-File: Q-256363 (01-DECK-10-25 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256363 (01-DECK-10-25 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-25363/GNS/XI/2025', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (435, 'Q-25400135/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '079/E/11/25', 'MV YUXIN SATU', 'sent', '30 days', 0, 22000000.00, 22000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-256358/GNS/XI/2025
-File: Q-256358 (REQ 079-E-1-25  - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256358 (REQ 079-E-1-25  - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256358/GNS/XI/2025', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (436, 'Q-25400136/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0041/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 122630000.00, 122630000.00, 6131500.00, 'Imported from Excel
 Original Q-no: Q-256360/GNS/XI/2025 - REQ 81/D/11/25
-File: Q-256360 (REQ 81-D-11-25  - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256360 (REQ 81-D-11-25  - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256360/GNS/XI/2025 - REQ 81/D/11/25', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (437, 'Q-25400137/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '081/E/11/25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 19040000.00, 19040000.00, 952000.00, 'Imported from Excel
 Original Q-no: Q-256361/GNS/XI/2025
-File: Q-256361 (REQ 081-E-11-25  - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256361 (REQ 081-E-11-25  - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256361/GNS/XI/2025', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (438, 'Q-25400138/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '82/D/11/25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 18000000.00, 18000000.00, 900000.00, 'Imported from Excel
 Original Q-no: Q-256362/GNS/XI/2025
-File: Q-256362 (REQ 82-D-11-25  - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256362 (REQ 82-D-11-25  - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256362/GNS/XI/2025', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (439, 'Q-25400139/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '003/D/09/25', 'MV YUXIN SATU', 'sent', '30 Days', 5.0, 12070000.00, 12070000.00, 603500.00, 'Imported from Excel
 Original Q-no: Q-256364/GNS/XI/2025
-File: Q-256364 (003-D-09-25 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256364 (003-D-09-25 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256364/GNS/XI/2025', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (440, 'Q-25400140/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0061/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 81283500.00, 81283500.00, 4064175.00, 'Imported from Excel
 Original Q-no: Q-256366/GNS/XI/2025
-File: Q-256366 (8404-V-0061-REQ25  - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256366 (8404-V-0061-REQ25  - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256366/GNS/XI/2025', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (441, 'Q-25400141/GNS/XI/2025', 2, 440, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0060/REQ25', 'MV Yuxin Satu', 'sent', '30 days', 5.0, 87000000.00, 87000000.00, 4350000.00, 'Imported from Excel
 Original Q-no: Q-256366/GNS/XI/2025
-File: Q-256366 (8404-V-0060-REQ25 - WATER BLASTER HIGH PRESSURE - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256366 (8404-V-0060-REQ25 - WATER BLASTER HIGH PRESSURE - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256366/GNS/XI/2025', ((TIMESTAMP '2025-11-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (442, 'Q-25400142/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '82/D/11/25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 15600000.00, 15600000.00, 780000.00, 'Imported from Excel
 Original Q-no: Q-256367/GNS/XI/2025
-File: Q-256367 (8404-V-0062-REQ25  - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256367 (8404-V-0062-REQ25  - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256367/GNS/XI/2025', ((TIMESTAMP '2025-11-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (443, 'Q-25400143/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '073/E/10/25', 'MV YUXIN SATU', 'sent', '30 Days', 5.0, 24400000.00, 24400000.00, 1220000.00, 'Imported from Excel
 Original Q-no: Q-256365/GNS/XI/2025
-File: Q-256365 (073-E-10-25 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256365 (073-E-10-25 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256365/GNS/XI/2025', ((TIMESTAMP '2025-11-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (444, 'Q-25400144/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0060/REQ25', 'MV Yuxin Satu', 'sent', '30 days', 5.0, 87000000.00, 87000000.00, 4350000.00, 'Imported from Excel
 Original Q-no: Q-256369/GNS/XI/2025
-File: Q-256369 (8404-V-0060-REQ25 - WATER BLASTER HIGH PRESSURE - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256369 (8404-V-0060-REQ25 - WATER BLASTER HIGH PRESSURE - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256369/GNS/XI/2025', ((TIMESTAMP '2025-11-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (445, 'Q-25400145/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0055/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 4410000.00, 4410000.00, 220500.00, 'Imported from Excel
 Original Q-no: Q-256303/GNS/XI/2025
-File: Q-256303 (8404-V-0055-REQ25 - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2025-11-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256303 (8404-V-0055-REQ25 - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-256303/GNS/XI/2025', ((TIMESTAMP '2025-11-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (446, 'Q-254003167/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-344-D/03', 'MV DAIDAN PERTIWI', 'sent', '30 Days', 5.0, 256000000.00, 256000000.00, 12800000.00, 'Imported from Excel
 Original Q-no: Q-253370/GNS/XI/2025
-File: Q-253370 (V-25-2405-344-D-03 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253370 (V-25-2405-344-D-03 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-253370/GNS/XI/2025', ((TIMESTAMP '2025-11-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (447, 'Q-254003168/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-238-D/09', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 21278000.00, 21278000.00, 1063900.00, 'Imported from Excel
 Original Q-no: Q-253376/GNS/XI/2025
-File: Q-253376 (V-25-2405-238-D-09  - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253376 (V-25-2405-238-D-09  - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-253376/GNS/XI/2025', ((TIMESTAMP '2025-11-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (448, 'Q-25400146/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, 'MV YUXIN SATU', 'sent', '30 Days', 5.0, 6100000.00, 6100000.00, 305000.00, 'Imported from Excel
 Original Q-no: Q-256371/GNS/XI/2025
-File: Q-256371 (Telescopic Ladder - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2025-11-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256371 (Telescopic Ladder - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-256371/GNS/XI/2025', ((TIMESTAMP '2025-11-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (449, 'Q-25400147/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0064/REQ25', 'MV Yuxin Satu', 'sent', '30 days', 5.0, 69520000.00, 69520000.00, 3476000.00, 'Imported from Excel
 Original Q-no: Q-256372/GNS/XI/2025
-File: Q-256372 (8404-V-0064-REQ25 - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256372 (8404-V-0064-REQ25 - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256372/GNS/XI/2025', ((TIMESTAMP '2025-11-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (450, 'Q-25400148/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '008/D/11/25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 32125500.00, 32125500.00, 1606275.00, 'Imported from Excel
 Original Q-no: Q-256373/GNS/XI/2025
-File: Q-256373 (008-D-11-25 - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2025-11-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
+File: Q-256373 (008-D-11-25 - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-256373/GNS/XI/2025', ((TIMESTAMP '2025-11-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
 INSERT INTO quotations (
   id, quotation_no, version, parent_id, company_client_id, company_client_name,
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES
   (451, 'Q-25400149/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '009/D/11/25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 8350000.00, 8350000.00, 417500.00, 'Imported from Excel
 Original Q-no: Q-256374/GNS/XI/2025
-File: Q-256374 (009-D-11-25 - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2025-11-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256374 (009-D-11-25 - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-256374/GNS/XI/2025', ((TIMESTAMP '2025-11-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (452, 'Q-25400150/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0065/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 6000000.00, 6000000.00, 300000.00, 'Imported from Excel
 Original Q-no: Q-256375/GNS/XI/2025
-File: Q-256375 (8404-V0065-REQ25 - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2025-11-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256375 (8404-V0065-REQ25 - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-256375/GNS/XI/2025', ((TIMESTAMP '2025-11-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (453, 'Q-25400151/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '085/E/11/25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 29000000.00, 29000000.00, 1450000.00, 'Imported from Excel
 Original Q-no: Q-256377/GNS/XI/2025
-File: Q-256377 (085-E-11-25 - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2025-11-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256377 (085-E-11-25 - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-256377/GNS/XI/2025', ((TIMESTAMP '2025-11-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (454, 'Q-25400152/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, 'MV YUXIN SATU', 'sent', '30 Days', 5.0, 16750000.00, 16750000.00, 837500.00, 'Imported from Excel
 Original Q-no: Q-256378/GNS/XI/2025
-File: Q-256378 (Trafo Step 440-380V - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256378 (Trafo Step 440-380V - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256378/GNS/XI/2025', ((TIMESTAMP '2025-11-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (455, 'Q-254003169/GNS/XI/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2403-257-E/01', 'MV DEWI SARASWATI', 'sent', '30 Days', 5.0, 12500000.00, 12500000.00, 625000.00, 'Imported from Excel
 Original Q-no: Q-252384/GNS/XI/2025
-File: Q-252384 (V-25-2403-257-E-01 - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-11-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252384 (V-25-2403-257-E-01 - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-252384/GNS/XI/2025', ((TIMESTAMP '2025-11-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (456, 'Q-25400153/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, 'MV YUXIN SATU', 'sent', '30 Days', 5.0, 27875000.00, 27875000.00, 1393750.00, 'Imported from Excel
 Original Q-no: Q-256380/GNS/XI/2025
-File: Q-256380 (Trafo 440-380V, 30KVA - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256380 (Trafo 440-380V, 30KVA - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256380/GNS/XI/2025', ((TIMESTAMP '2025-11-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (457, 'Q-25400154/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, 'MV YUXIN SATU', 'sent', '30 Days', 5.0, 31000000.00, 31000000.00, 1550000.00, 'Imported from Excel
 Original Q-no: Q-256381/GNS/XI/2025
-File: Q-256381 (Kompresor Angin PUMA - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256381 (Kompresor Angin PUMA - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256381/GNS/XI/2025', ((TIMESTAMP '2025-11-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (458, 'Q-25400155/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, 'MV YUXIN SATU', 'sent', '30 Days', 5.0, 14900000.00, 14900000.00, 745000.00, 'Imported from Excel
 Original Q-no: Q-256382/GNS/XI/2025
-File: Q-256382 (Mesin Las INVERDELTA 400W III - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256382 (Mesin Las INVERDELTA 400W III - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256382/GNS/XI/2025', ((TIMESTAMP '2025-11-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (459, 'Q-25400156/GNS/XI/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '010/D/11/25', 'MV YUXIN SATU', 'sent', '30 Days', 5.0, 2500000.00, 2500000.00, 125000.00, 'Imported from Excel
 Original Q-no: Q-256383/GNS/XI/2025
-File: Q-256383 (010-D-11-25 - Dust Saw - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-11-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256383 (010-D-11-25 - Dust Saw - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256383/GNS/XI/2025', ((TIMESTAMP '2025-11-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (460, 'Q-2540028/GNS/XII/2025', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 0, 118300000.00, 118300000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-258385/GNS/XI/2025
-File: Q-258385 - (Parker Denison T7EEC) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2025-12-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258385 - (Parker Denison T7EEC) - Sentra Makmur Lines.xlsx', 'Q-258385/GNS/XI/2025', ((TIMESTAMP '2025-12-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (461, 'Q-2540029/GNS/XII/2025', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 0, 10234980.00, 10234980.00, 0.00, 'Imported from Excel
 Original Q-no: Q-258386/GNS/XII/2025
-File: Q-258386 - (Delivery Parker Denison T7EEC) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2025-12-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-258386 - (Delivery Parker Denison T7EEC) - Sentra Makmur Lines.xlsx', 'Q-258386/GNS/XII/2025', ((TIMESTAMP '2025-12-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (462, 'Q-2540121/GNS/XII/2025', 1, NULL, 12, 'PT. Transcoal Pasific', 36, 'Bp. Fajrin', NULL, NULL, 'sent', '30 days', 5.0, 2000000.00, 2000000.00, 100000.00, 'Imported from Excel
 Original Q-no: Q-259387/GNS/XII/2025
-File: Q-259387 - (Polycarbonate Case) - Transcoal Pasific.xlsx', ((TIMESTAMP '2025-12-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-259387 - (Polycarbonate Case) - Transcoal Pasific.xlsx', 'Q-259387/GNS/XII/2025', ((TIMESTAMP '2025-12-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (463, 'Q-2540122/GNS/XII/2025', 1, NULL, 12, 'PT. Transcoal Pasific', 36, 'Bp. Fajrin', NULL, NULL, 'sent', '30 days', 5.0, 21045000.00, 21045000.00, 1052250.00, 'Imported from Excel
 Original Q-no: Q-259388/GNS/XII/2025
-File: Q-259388 - (Pneumatic Impact) - Transcoal Pasific.xlsx', ((TIMESTAMP '2025-12-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-259388 - (Pneumatic Impact) - Transcoal Pasific.xlsx', 'Q-259388/GNS/XII/2025', ((TIMESTAMP '2025-12-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (464, 'Q-2540123/GNS/XII/2025', 1, NULL, 12, 'PT. Transcoal Pasific', 36, 'Bp. Fajrin', NULL, NULL, 'sent', '30 days', 5.0, 1450000.00, 1450000.00, 72500.00, 'Imported from Excel
 Original Q-no: Q-259389/GNS/XII/2025
-File: Q-259389 - (Water pipe clamp) - Transcoal Pasific.xlsx', ((TIMESTAMP '2025-12-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-259389 - (Water pipe clamp) - Transcoal Pasific.xlsx', 'Q-259389/GNS/XII/2025', ((TIMESTAMP '2025-12-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (465, 'Q-2540124/GNS/XII/2025', 1, NULL, 12, 'PT. Transcoal Pasific', 36, 'Bp. Fajrin', NULL, NULL, 'sent', '30 days', 5.0, 2650000.00, 2650000.00, 132500.00, 'Imported from Excel
 Original Q-no: Q-259390/GNS/XII/2025
-File: Q-259390 - (Clinometer) - Transcoal Pasific.xlsx', ((TIMESTAMP '2025-12-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-259390 - (Clinometer) - Transcoal Pasific.xlsx', 'Q-259390/GNS/XII/2025', ((TIMESTAMP '2025-12-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (466, 'Q-2540125/GNS/XII/2025', 1, NULL, 12, 'PT. Transcoal Pasific', 36, 'Bp. Fajrin', NULL, NULL, 'sent', '30 days', 5.0, 2680000.00, 2680000.00, 134000.00, 'Imported from Excel
 Original Q-no: Q-259391/GNS/XII/2025
-File: Q-259391 - (Back Buzzer) - Transcoal Pasific.xlsx', ((TIMESTAMP '2025-12-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-259391 - (Back Buzzer) - Transcoal Pasific.xlsx', 'Q-259391/GNS/XII/2025', ((TIMESTAMP '2025-12-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (467, 'Q-254003170/GNS/XII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2402-213-E/04', 'MV DEWI SHINTA MANGGALA', 'draft', '30 days', 0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-25393/GNS/XII/2025
-File: Q-252393 (V-25-2402-213-E-04 - MPC-300 PCB Module - Dewi Shinta Manggala) - PT Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252393 (V-25-2402-213-E-04 - MPC-300 PCB Module - Dewi Shinta Manggala) - PT Pelita Global Logistik.xlsx', 'Q-25393/GNS/XII/2025', ((TIMESTAMP '2025-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (468, 'Q-254003171/GNS/XII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-25-2402-212-E/05', 'MV DEWI SHINTA MANGGALA', 'sent', '30 days', 0, 32000000.00, 32000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-25394/GNS/XII/2025
-File: Q-252394 (V-25-2402-212-E-05 - PCB Type NNR-NS2008L-1009.2 - Dewi Shinta Manggala) - PT Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-252394 (V-25-2402-212-E-05 - PCB Type NNR-NS2008L-1009.2 - Dewi Shinta Manggala) - PT Pelita Global Logistik.xlsx', 'Q-25394/GNS/XII/2025', ((TIMESTAMP '2025-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (469, 'Q-25400157/GNS/XII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '021/DECK/ML/X/2025', 'MV MAJESTIC LAKSONO', 'sent', 'Payment in Advance (Before Delivery)', 5.0, 81356000.00, 81356000.00, 4067800.00, 'Imported from Excel
 Original Q-no: Q-256395/GNS/XII/2025
-File: Q-256395 (021-DECK-ML-X-2025 - Majestic Laksono) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256395 (021-DECK-ML-X-2025 - Majestic Laksono) - IMC Shipping Management.xlsx', 'Q-256395/GNS/XII/2025', ((TIMESTAMP '2025-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (470, 'Q-25400158/GNS/XII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '028/DECK/ML/VIII/2025/DOCK', 'MV MAJESTIC LAKSONO', 'sent', 'Payment in Advance (Before Delivery)', 5.0, 88985000.00, 88985000.00, 4449250.00, 'Imported from Excel
 Original Q-no: Q-256396/GNS/XII/2025
-File: Q-256396 (028-DECK-ML-VIII-2025-DOCK  - Majestic Laksono) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256396 (028-DECK-ML-VIII-2025-DOCK  - Majestic Laksono) - IMC Shipping Management.xlsx', 'Q-256396/GNS/XII/2025', ((TIMESTAMP '2025-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (471, 'Q-25400159/GNS/XII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0069/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 52250000.00, 52250000.00, 2612500.00, 'Imported from Excel
 Original Q-no: Q-256399/GNS/XII/2025
-File: Q-256399 (8404-V-0069-REQ25  - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256399 (8404-V-0069-REQ25  - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-256399/GNS/XII/2025', ((TIMESTAMP '2025-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (472, 'Q-25400160/GNS/XII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0070/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 3000000.00, 3000000.00, 150000.00, 'Imported from Excel
 Original Q-no: Q-256400/GNS/XII/2025
-File: Q-256400 (8404-V-0070-REQ25 - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2025-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256400 (8404-V-0070-REQ25 - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-256400/GNS/XII/2025', ((TIMESTAMP '2025-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (473, 'Q-25400161/GNS/XII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '010/D/12/25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 3600000.00, 3600000.00, 180000.00, 'Imported from Excel
 Original Q-no: Q-256401/GNS/XII/2025
-File: Q-256401 (010-D-12-25 - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2025-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256401 (010-D-12-25 - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-256401/GNS/XII/2025', ((TIMESTAMP '2025-12-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (474, 'Q-254003172/GNS/XII/2025', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, NULL, 'sent', '30 days', 5.0, 110000000.00, 110000000.00, 5500000.00, 'Imported from Excel
 Original Q-no: Q-253403/GNS/XII/2025
-File: Q-253403 (Hatch Cover Tape) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2025-12-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-253403 (Hatch Cover Tape) - Pelita Global Logistik.xlsx', 'Q-253403/GNS/XII/2025', ((TIMESTAMP '2025-12-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (475, 'Q-25400536/GNS/XII/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 37, 'Bapak Bagas', NULL, NULL, 'sent', '30 Days', 0, 750000.00, 750000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251404/GNS/XII/2025
-File: Q-251404 (Relay Schneider RXM4AB2P7 230VAC) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-12-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251404 (Relay Schneider RXM4AB2P7 230VAC) - Karunia Aman Selalu.xlsx', 'Q-251404/GNS/XII/2025', ((TIMESTAMP '2025-12-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (476, 'Q-2540126/GNS/XII/2025', 1, NULL, 12, 'PT. Transcoal Pasific', 36, 'Bp. Fajrin', 'SSR NO .SV1/E/077/11/2025', NULL, 'sent', '30 days', 5.0, 4105000.00, 4105000.00, 205250.00, 'Imported from Excel
 Original Q-no: Q-259406/GNS/XII/2025
-File: Q-259406 - (SSR NO SV1-E-077-11-2025) - Transcoal Pasific.xlsx', ((TIMESTAMP '2025-12-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-259406 - (SSR NO SV1-E-077-11-2025) - Transcoal Pasific.xlsx', 'Q-259406/GNS/XII/2025', ((TIMESTAMP '2025-12-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (477, 'Q-25400616/GNS/XII/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 5700000.00, 5700000.00, 285000.00, 'Imported from Excel
 Original Q-no: Q-254409/GNS/XII/2025
-File: Q-254409 (Rod Seal 10 16 6 3 - requote) - NGK.xlsx', ((TIMESTAMP '2025-12-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254409 (Rod Seal 10 16 6 3 - requote) - NGK.xlsx', 'Q-254409/GNS/XII/2025', ((TIMESTAMP '2025-12-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (478, 'Q-25400537/GNS/XII/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 37, 'Bapak Bagas', NULL, NULL, 'sent', '30 Days', 0, 12500000.00, 12500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251411/GNS/XII/2025
-File: Q-251411 (Roller Stator Danfoss RE-540) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-12-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251411 (Roller Stator Danfoss RE-540) - Karunia Aman Selalu.xlsx', 'Q-251411/GNS/XII/2025', ((TIMESTAMP '2025-12-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (479, 'Q-25400617/GNS/XII/2025', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'draft', '30 days', 5.0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-254412/GNS/XII/2025
-File: Q-254412 (Oil Seal VR45A VR32A) - PT Niterra Mobility Indonesia.xlsx', ((TIMESTAMP '2025-12-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-254412 (Oil Seal VR45A VR32A) - PT Niterra Mobility Indonesia.xlsx', 'Q-254412/GNS/XII/2025', ((TIMESTAMP '2025-12-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (480, 'Q-25400162/GNS/XII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '103/ENGINE/ML/LAMP/DOCK/VIII/25', 'MV MAJESTIC LAKSONO', 'sent', 'Payment in Advance (Before Delivery)', 5.0, 9500000.00, 9500000.00, 475000.00, 'Imported from Excel
 Original Q-no: Q-256410/GNS/XII/2025
-File: Q-256397 (029-DECK-ML-XII-2025-DOCK  - Majestic Laksono) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-12-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256397 (029-DECK-ML-XII-2025-DOCK  - Majestic Laksono) - IMC Shipping Management.xlsx', 'Q-256410/GNS/XII/2025', ((TIMESTAMP '2025-12-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (481, 'Q-25400163/GNS/XII/2025', 2, 480, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '103/ENGINE/ML/LAMP/DOCK/VIII/25', 'MV MAJESTIC LAKSONO', 'sent', 'Payment in Advance (Before Delivery)', 5.0, 9500000.00, 9500000.00, 475000.00, 'Imported from Excel
 Original Q-no: Q-256410/GNS/XII/2025
-File: Q-256410 (103-ENGINE-ML_LAMP-DOCK-VIII-25  - Majestic Laksono) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-12-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256410 (103-ENGINE-ML_LAMP-DOCK-VIII-25  - Majestic Laksono) - IMC Shipping Management.xlsx', 'Q-256410/GNS/XII/2025', ((TIMESTAMP '2025-12-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (482, 'Q-2540127/GNS/XII/2025', 1, NULL, 12, 'PT. Transcoal Pasific', 36, 'Bp. Fajrin', 'ETI-2512-00114', NULL, 'sent', '30 days', 5.0, 6900000.00, 6900000.00, 345000.00, 'Imported from Excel
 Original Q-no: Q-259414/GNS/XII/2025
-File: Q-259414 - (ETI-2512-00114) - Transcoal Pasific.xlsx', ((TIMESTAMP '2025-12-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-259414 - (ETI-2512-00114) - Transcoal Pasific.xlsx', 'Q-259414/GNS/XII/2025', ((TIMESTAMP '2025-12-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (483, 'Q-25400538/GNS/XII/2025', 1, NULL, 5, 'PT. Karunia Aman Selalu', 37, 'Bapak Bagas', NULL, NULL, 'sent', '30 days', 0, 1729000.00, 1729000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-251414/GNS/XII/2025
-File: Q-251414 (Racor 2040 PM dll) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2025-12-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-251414 (Racor 2040 PM dll) - Karunia Aman Selalu.xlsx', 'Q-251414/GNS/XII/2025', ((TIMESTAMP '2025-12-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (484, 'Q-25400164/GNS/XII/2025', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, 'MV MAJESTIC LAKSONO', 'sent', 'Advance payment (before delivery)', 0, 18000000.00, 18000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-256417/GNS/XII/2025
-File: Q-256417 (Nozzle Burner  - Majestic Laksono) - IMC Shipping Management.xlsx', ((TIMESTAMP '2025-12-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-256417 (Nozzle Burner  - Majestic Laksono) - IMC Shipping Management.xlsx', 'Q-256417/GNS/XII/2025', ((TIMESTAMP '2025-12-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (485, 'Q-2540128/GNS/XII/2025', 1, NULL, 12, 'PT. Transcoal Pasific', 36, 'Bp. Fajrin', NULL, NULL, 'sent', '30 Days', 0, 1450000.00, 1450000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-259416/GNS/XII/2025
-File: Q-259416 - (Delivery To Sangatta Utara - KalTim) - Transcoal Pasific.xlsx', ((TIMESTAMP '2025-12-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-259416 - (Delivery To Sangatta Utara - KalTim) - Transcoal Pasific.xlsx', 'Q-259416/GNS/XII/2025', ((TIMESTAMP '2025-12-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (486, 'Q-2540129/GNS/XII/2025', 1, NULL, 12, 'PT. Transcoal Pasific', 36, 'Bp. Fajrin', 'TCP-2510-00156', NULL, 'sent', '30 Days', 0, 3102600.00, 3102600.00, 0.00, 'Imported from Excel
 Original Q-no: Q-259418/GNS/XII/2025
-File: Q-259418 - (TCP-2510-00156 - FC PIONEER SANGATTA ) - Transcoal Pasific.xlsx', ((TIMESTAMP '2025-12-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-259418 - (TCP-2510-00156 - FC PIONEER SANGATTA ) - Transcoal Pasific.xlsx', 'Q-259418/GNS/XII/2025', ((TIMESTAMP '2025-12-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (487, 'Q-25401210/GNS/XII/2025', 1, NULL, 12, 'PT. Transcoal Pasific', 36, 'Bp. Fajrin', 'TCP 2509-00082', NULL, 'sent', '30 Days', 0, 25605000.00, 25605000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-259419/GNS/XII/2025
-File: Q-259419 - (TCP 2509-00082 - FC DLS - Asam-asam) - Transcoal Pasific.xlsx', ((TIMESTAMP '2025-12-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-259419 - (TCP 2509-00082 - FC DLS - Asam-asam) - Transcoal Pasific.xlsx', 'Q-259419/GNS/XII/2025', ((TIMESTAMP '2025-12-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (488, 'Q-2640031/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-005-E/02', 'MV DAIDAN PERTIWI', 'sent', '30 Days', 0, 10500000.00, 10500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263001/GNS/I/2026
-File: Q-263001 (V-26-2405-005-E-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263001 (V-26-2405-005-E-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263001/GNS/I/2026', ((TIMESTAMP '2026-01-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (489, 'Q-2640032/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-002-E/02', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 6500000.00, 6500000.00, 325000.00, 'Imported from Excel
 Original Q-no: Q-263002-O/GNS/I/2026
-File: Q-263002-O (V-26-2405-002-E-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263002-O (V-26-2405-002-E-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263002-O/GNS/I/2026', ((TIMESTAMP '2026-01-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (490, 'Q-2640033/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-354-D/02', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 35800000.00, 35800000.00, 1790000.00, 'Imported from Excel
 Original Q-no: Q-263003-O/GNS/I/2026
-File: Q-263003-O ( V-25-2405-354-D-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263003-O ( V-25-2405-354-D-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263003-O/GNS/I/2026', ((TIMESTAMP '2026-01-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (491, 'Q-2640034/GNS/I/2026', 2, 490, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-002-E/02', 'MV DAIDAN PERTIWI', 'draft', '30 days', 5.0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263003-O/GNS/I/2026
-File: Q-263003-O (V-25-2405-366-D-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263003-O (V-25-2405-366-D-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263003-O/GNS/I/2026', ((TIMESTAMP '2026-01-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (492, 'Q-2640035/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-209-D/02', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 68400000.00, 68400000.00, 3420000.00, 'Imported from Excel
 Original Q-no: Q-263004-O/GNS/I/2026
-File: Q-263004-O (V-25-2405-209-D-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263004-O (V-25-2405-209-D-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263004-O/GNS/I/2026', ((TIMESTAMP '2026-01-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (493, 'Q-2640036/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-342-E/02', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 6990000.00, 6990000.00, 349500.00, 'Imported from Excel
 Original Q-no: Q-263005-O/GNS/I/2026
-File: Q-263005-O (V-25-2405-342-E-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263005-O (V-25-2405-342-E-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263005-O/GNS/I/2026', ((TIMESTAMP '2026-01-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (494, 'Q-2640037/GNS/I/2026', 2, 493, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-101-D/07', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 3400000.00, 3400000.00, 170000.00, 'Imported from Excel
 Original Q-no: Q-263005-O/GNS/I/2026
-File: Q-263013-O (V-25-2405-101-D-07 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263013-O (V-25-2405-101-D-07 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263005-O/GNS/I/2026', ((TIMESTAMP '2026-01-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (495, 'Q-2640038/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-376-D/02', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 6050000.00, 6050000.00, 302500.00, 'Imported from Excel
 Original Q-no: Q-263006-O/GNS/I/2026
-File: Q-263006-O ( V-25-2405-376-D-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263006-O ( V-25-2405-376-D-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263006-O/GNS/I/2026', ((TIMESTAMP '2026-01-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (496, 'Q-2640039/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-388-E/02', 'MV DAIDAN PERTIWI', 'draft', '30 days', 5.0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263009-O/GNS/I/2026
-File: Q-263009-O (V-25-2405-388-E-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263009-O (V-25-2405-388-E-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263009-O/GNS/I/2026', ((TIMESTAMP '2026-01-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (497, 'Q-26400310/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-010-D/02', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 2600000.00, 2600000.00, 130000.00, 'Imported from Excel
 Original Q-no: Q-263010-O/GNS/I/2026
-File: Q-263010-O (V-26-2405-010-D-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263010-O (V-26-2405-010-D-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263010-O/GNS/I/2026', ((TIMESTAMP '2026-01-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (498, 'Q-26400311/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, 'MV DAIDAN PERTIWI', 'sent', '30 Days', 5.0, 8000000.00, 8000000.00, 400000.00, 'Imported from Excel
 Original Q-no: Q-263010/GNS/I/2026
-File: Q-263010 (Cordless Impact Wrench - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263010 (Cordless Impact Wrench - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263010/GNS/I/2026', ((TIMESTAMP '2026-01-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (499, 'Q-26400312/GNS/I/2026', 2, 498, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, 'MV DAIDAN PERTIWI', 'sent', '30 Days', 0, 6480000.00, 6480000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263010/GNS/I/2026
-File: Q-263010 (Lampu LED Hannoch 12 Watt - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263010 (Lampu LED Hannoch 12 Watt - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263010/GNS/I/2026', ((TIMESTAMP '2026-01-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (500, 'Q-26400313/GNS/I/2026', 3, 499, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, 'MV DAIDAN PERTIWI', 'sent', '30 Days', 5.0, 6500000.00, 6500000.00, 325000.00, 'Imported from Excel
 Original Q-no: Q-263010/GNS/I/2026
-File: Q-263010 (Portable Impact Wrench - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
+File: Q-263010 (Portable Impact Wrench - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263010/GNS/I/2026', ((TIMESTAMP '2026-01-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
 INSERT INTO quotations (
   id, quotation_no, version, parent_id, company_client_id, company_client_name,
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES
   (501, 'Q-26400314/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, 'MV DAIDAN PERTIWI', 'sent', '30 Days', 5.0, 6480000.00, 6480000.00, 324000.00, 'Imported from Excel
 Original Q-no: Q-263011/GNS/I/2026
-File: Q-263011 (Lampu LED Hannoch 12 Watt - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263011 (Lampu LED Hannoch 12 Watt - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263011/GNS/I/2026', ((TIMESTAMP '2026-01-04 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (502, 'Q-26400315/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, 'MV DAIDAN PERTIWI', 'sent', '30 Days', 5.0, 44700000.00, 44700000.00, 2235000.00, 'Imported from Excel
 Original Q-no: Q-263005/GNS/I/2026
-File: Q-263005 (V-25-2405-342-E-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263005 (V-25-2405-342-E-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263005/GNS/I/2026', ((TIMESTAMP '2026-01-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (503, 'Q-26400316/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-087-E/02', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 51314400.00, 51314400.00, 2565720.00, 'Imported from Excel
 Original Q-no: Q-263008-O/GNS/I/2026
-File: Q-263008-O (V-25-2405-087-E-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263008-O (V-25-2405-087-E-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263008-O/GNS/I/2026', ((TIMESTAMP '2026-01-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (504, 'Q-26400317/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-287-D/03', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 17400000.00, 17400000.00, 870000.00, 'Imported from Excel
 Original Q-no: Q-263012-O/GNS/I/2026
-File: Q-263012-O (V-25-2405-287-D-03 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263012-O (V-25-2405-287-D-03 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263012-O/GNS/I/2026', ((TIMESTAMP '2026-01-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (505, 'Q-26400318/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'sent', '30 Days', 0, 2000000.00, 2000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-262019/GNS/I/2026
-File: Q-262019 (Vention Charger) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-262019 (Vention Charger) - Pelita Global Logistik.xlsx', 'Q-262019/GNS/I/2026', ((TIMESTAMP '2026-01-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (506, 'Q-26400319/GNS/I/2026', 2, 505, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'sent', '30 Days', 0, 69888000.00, 69888000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-262019/GNS/I/2026
-File: Q-262024 (Butterfly Valve) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-262024 (Butterfly Valve) - Pelita Global Logistik.xlsx', 'Q-262019/GNS/I/2026', ((TIMESTAMP '2026-01-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (507, 'Q-26400320/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-189-D/02', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 92000000.00, 92000000.00, 4600000.00, 'Imported from Excel
 Original Q-no: Q-263014-O/GNS/I/2026
-File: Q-263014-O (V-25-2405-189-D-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263014-O (V-25-2405-189-D-02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263014-O/GNS/I/2026', ((TIMESTAMP '2026-01-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (508, 'Q-26400321/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-24-2405-281-D/07', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 69000000.00, 69000000.00, 3450000.00, 'Imported from Excel
 Original Q-no: Q-263015-O/GNS/I/2026
-File: Q-263015-O ( V-24-2405-281-D-07 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263015-O ( V-24-2405-281-D-07 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263015-O/GNS/I/2026', ((TIMESTAMP '2026-01-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (509, 'Q-26400322/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-292-D/05', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 115204000.00, 115204000.00, 5760200.00, 'Imported from Excel
 Original Q-no: Q-263020-O/GNS/I/2026
-File: Q-263020-O ( V-25-2405-292-D-05 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263020-O ( V-25-2405-292-D-05 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263020-O/GNS/I/2026', ((TIMESTAMP '2026-01-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (510, 'Q-26400323/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-384-D/05', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 396710000.00, 396710000.00, 19835500.00, 'Imported from Excel
 Original Q-no: Q-2630210-O/GNS/I/2026
-File: Q-263021-O (V-25-2405-384-D-05 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263021-O (V-25-2405-384-D-05 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-2630210-O/GNS/I/2026', ((TIMESTAMP '2026-01-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (511, 'Q-2640021/GNS/I/2026', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', '441/ENGINE/IX/2025', 'MV ALIYAH PERMATA', 'sent', '30 days', 0, 13240000.00, 13240000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-261022/GNS/I/2026
-File: Q-261022-O (441-ENGINE-IX-2025 - Aliyah Permata) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2026-01-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-261022-O (441-ENGINE-IX-2025 - Aliyah Permata) - Sentra Makmur Lines.xlsx', 'Q-261022/GNS/I/2026', ((TIMESTAMP '2026-01-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (512, 'Q-26400324/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-25-2405-321-D/06', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 151110000.00, 151110000.00, 7555500.00, 'Imported from Excel
 Original Q-no: Q-263007-O/GNS/I/2026
-File: Q-263007-O (V-25-2405-321-D-06 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263007-O (V-25-2405-321-D-06 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263007-O/GNS/I/2026', ((TIMESTAMP '2026-01-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (513, 'Q-2640022/GNS/I/2026', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', NULL, 'MV ALIYAH PERMATA', 'sent', '30 days', 5.0, 7950000.00, 7950000.00, 397500.00, 'Imported from Excel
 Original Q-no: Q-261023/GNS/I/2026
-File: Q-261023-O (Grease pump - Aliyah Permata) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2026-01-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-261023-O (Grease pump - Aliyah Permata) - Sentra Makmur Lines.xlsx', 'Q-261023/GNS/I/2026', ((TIMESTAMP '2026-01-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (514, 'Q-2640011/GNS/I/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0001/REQ26', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 1155000.00, 1155000.00, 57750.00, 'Imported from Excel
 Original Q-no: Q-264026/GNS/I/2026
-File: Q-264026-O (8404_V-0001_REQ26 - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-01-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264026-O (8404_V-0001_REQ26 - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-264026/GNS/I/2026', ((TIMESTAMP '2026-01-14 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (515, 'Q-26400325/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'sent', '30 Days', 0, 13800000.00, 13800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-262027/GNS/I/2026
-File: Q-262027 (Impeller - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-262027 (Impeller - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-262027/GNS/I/2026', ((TIMESTAMP '2026-01-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (516, 'Q-26400326/GNS/I/2026', 2, 515, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-26-2405-062-E/01', 'MV DAIDAN PERTIWI', 'sent', '30 Days', 0, 13800000.00, 13800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-262027/GNS/I/2026
-File: Q-262027 (V-26-2405-062-E_01 - Impeller - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-262027 (V-26-2405-062-E_01 - Impeller - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-262027/GNS/I/2026', ((TIMESTAMP '2026-01-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (517, 'Q-26400327/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-26-2405-030-E/03', 'MV DAIDAN PERTIWI', 'sent', '30 Days', 0, 17123500.00, 17123500.00, 0.00, 'Imported from Excel
 Original Q-no: Q-262028/GNS/I/2026
-File: Q-262028 (V-26-2405-030-E_03 - Marine Cast Iron F-7363 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-262028 (V-26-2405-030-E_03 - Marine Cast Iron F-7363 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-262028/GNS/I/2026', ((TIMESTAMP '2026-01-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (518, 'Q-2640012/GNS/I/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0072/REQ25', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 11599600.00, 11599600.00, 579980.00, 'Imported from Excel
 Original Q-no: Q-264025/GNS/I/2026
-File: Q-264025-O (8404_V-0072_REQ25 - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-01-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264025-O (8404_V-0072_REQ25 - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-264025/GNS/I/2026', ((TIMESTAMP '2026-01-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (519, 'Q-26400328/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-26-2405-051-E/01', NULL, 'sent', '30 Days', 0, 25645000.00, 25645000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-262031/GNS/I/2026
-File: Q-262031 (V-26-2405-051-E_01 - Butterfly Valves Center Handle Actuator - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-262031 (V-26-2405-051-E_01 - Butterfly Valves Center Handle Actuator - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-262031/GNS/I/2026', ((TIMESTAMP '2026-01-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (520, 'Q-26400329/GNS/I/2026', 2, 519, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-26-2405-056-E/01', 'MV DAIDAN PERTIWI', 'sent', '30 Days', 0, 87250000.00, 87250000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-262031/GNS/I/2026
-File: Q-262036 (V-26-2405-056-E_01 - BUTTERFLY VALVE WAFER TYPE DN 150 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-262036 (V-26-2405-056-E_01 - BUTTERFLY VALVE WAFER TYPE DN 150 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-262031/GNS/I/2026', ((TIMESTAMP '2026-01-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (521, 'Q-26400330/GNS/I/2026', 3, 520, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-26-2405-063-E/02', 'MV DAIDAN PERTIWI', 'sent', '30 Days', 0, 64230000.00, 64230000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-262031/GNS/I/2026
-File: Q-262037 (V-26-2405-063-E_02 - Angle Valve - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-262037 (V-26-2405-063-E_02 - Angle Valve - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-262031/GNS/I/2026', ((TIMESTAMP '2026-01-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (522, 'Q-2640051/GNS/I/2026', 1, NULL, 5, 'PT. Karunia Aman Selalu', 11, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 7000000.00, 7000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265029/GNS/I/2026
-File: Q-265029 (SEAFIRST Rudder) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2026-01-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265029 (SEAFIRST Rudder) - Karunia Aman Selalu.xlsx', 'Q-265029/GNS/I/2026', ((TIMESTAMP '2026-01-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (523, 'Q-2640041/GNS/I/2026', 2, 522, 4, 'PT. Karunia Aman Sentosa', 13, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 7000000.00, 7000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265029/GNS/I/2026
-File: Q-265029 (SEAFIRST Rudder) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-01-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265029 (SEAFIRST Rudder) - Karunia Aman Sentosa.xlsx', 'Q-265029/GNS/I/2026', ((TIMESTAMP '2026-01-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (524, 'Q-26400331/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 33, 'Bp. Heri Febri', 'Sample', 'MV Daidan Pertiwi', 'sent', '30 days', 0, 33500000.00, 33500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-262032/GNS/I/2026
-File: Q-262032 (Custom Cover Lampu TL - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-262032 (Custom Cover Lampu TL - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-262032/GNS/I/2026', ((TIMESTAMP '2026-01-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (525, 'Q-26400332/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-26-2405-070-E', NULL, 'sent', '30 Days', 0, 25465000.00, 25465000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-262033/GNS/I/2026
-File: Q-262033 (V-26-2405-070-E - Angle Valve Cast Iron F-7308 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-262033 (V-26-2405-070-E - Angle Valve Cast Iron F-7308 - Daidan Mustikawati) - Pelita Global Logistik.xlsx', 'Q-262033/GNS/I/2026', ((TIMESTAMP '2026-01-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (526, 'Q-2640042/GNS/I/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 13, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 150000.00, 150000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265038/GNS/I/2026
-File: Q-265038 (Relay Schneider RXG22BD) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-01-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265038 (Relay Schneider RXG22BD) - Karunia Aman Sentosa.xlsx', 'Q-265038/GNS/I/2026', ((TIMESTAMP '2026-01-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (527, 'Q-2640023/GNS/I/2026', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', '441/ENGINE/IX/2025', 'MV ALIYAH PERMATA', 'sent', '30 days', 0, 14575000.00, 14575000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-261030/GNS/I/2026
-File: Q-261030-O (441-ENGINE-IX-2025 - Aliyah Permata) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2026-01-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-261030-O (441-ENGINE-IX-2025 - Aliyah Permata) - Sentra Makmur Lines.xlsx', 'Q-261030/GNS/I/2026', ((TIMESTAMP '2026-01-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (528, 'Q-26400333/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-039-E/04', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 6000000.00, 6000000.00, 300000.00, 'Imported from Excel
 Original Q-no: Q-263039-O/GNS/I/2026
-File: Q-263039-O (V-26-2405-039-E_04 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263039-O (V-26-2405-039-E_04 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263039-O/GNS/I/2026', ((TIMESTAMP '2026-01-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (529, 'Q-26400334/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-027-D/02', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 5850000.00, 5850000.00, 292500.00, 'Imported from Excel
 Original Q-no: Q-263040-O/GNS/I/2026
-File: Q-263040-O (V-26-2405-027-D_02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263040-O (V-26-2405-027-D_02 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263040-O/GNS/I/2026', ((TIMESTAMP '2026-01-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (530, 'Q-26400335/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-028-D/03', 'MV DAIDAN PERTIWI', 'sent', '30 days', 5.0, 33000000.00, 33000000.00, 1650000.00, 'Imported from Excel
 Original Q-no: Q-263041-O/GNS/I/2026
-File: Q-263041-O (V-26-2405-028-D_03 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263041-O (V-26-2405-028-D_03 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263041-O/GNS/I/2026', ((TIMESTAMP '2026-01-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (531, 'Q-2640043/GNS/I/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 13, 'Bapak Divton', NULL, NULL, 'sent', '30 days', 0, 43360000.00, 43360000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265035/GNS/I/2026
-File: Q-265035 (Parachute Rocket) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-01-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265035 (Parachute Rocket) - Karunia Aman Sentosa.xlsx', 'Q-265035/GNS/I/2026', ((TIMESTAMP '2026-01-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (532, 'Q-2640013/GNS/I/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, 'MV YUXIN SATU', 'sent', '30 days', 0, 59000000.00, 59000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-264042/GNS/I/2026
-File: Q-264042-O (Compressor - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-01-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264042-O (Compressor - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-264042/GNS/I/2026', ((TIMESTAMP '2026-01-22 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (533, 'Q-26400336/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-050-E/03', 'MV DAIDAN ALMEIRA PERTIWI', 'sent', '30 Days', 0, 31510000.00, 31510000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263043-O/GNS/I/2026
-File: Q-263043 (V-26-2405-050-E_03 - Marine Cast Iron F-7364 - Daidan Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263043 (V-26-2405-050-E_03 - Marine Cast Iron F-7364 - Daidan Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263043-O/GNS/I/2026', ((TIMESTAMP '2026-01-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (534, 'Q-26400337/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-086-E/03', 'MV Daidan Almeira Pertiwi', 'sent', '30 days', 0, 41000000.00, 41000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263044/GNS/I/2026
-File: Q-263044-O (V-26-2405-086-E_03 - Daidan Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263044-O (V-26-2405-086-E_03 - Daidan Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263044/GNS/I/2026', ((TIMESTAMP '2026-01-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (535, 'Q-26400338/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-054-D/03', 'MV Daidan Almeira Pertiwi', 'sent', '30 days', 5.0, 6200000.00, 6200000.00, 310000.00, 'Imported from Excel
 Original Q-no: Q-263045/GNS/I/2026
-File: Q-263045-O (V-26-2405-054-D_03 - Daidan Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263045-O (V-26-2405-054-D_03 - Daidan Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263045/GNS/I/2026', ((TIMESTAMP '2026-01-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (536, 'Q-26400339/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-081-D/03', 'MV Daidan Almeira Pertiwi', 'sent', '30 days', 5.0, 23000000.00, 23000000.00, 1150000.00, 'Imported from Excel
 Original Q-no: Q-263047/GNS/I/2026
-File: Q-263047-O (V-26-2405-081-D_03 - Daidan Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263047-O (V-26-2405-081-D_03 - Daidan Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263047/GNS/I/2026', ((TIMESTAMP '2026-01-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (537, 'Q-26400340/GNS/I/2026', 2, 536, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-058-D/02', 'MV Daidan Almeira Pertiwi', 'sent', '30 days', 5.0, 115000000.00, 115000000.00, 5750000.00, 'Imported from Excel
 Original Q-no: Q-263047/GNS/I/2026
-File: Q-263050-O (V-26-2405-058-D_02 - Daidan Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263050-O (V-26-2405-058-D_02 - Daidan Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263047/GNS/I/2026', ((TIMESTAMP '2026-01-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (538, 'Q-26400341/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-049-D/02', 'MV Daidan Almeira Pertiwi', 'sent', '30 days', 0, 1875000.00, 1875000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263049/GNS/I/2026
-File: Q-263049-O (V-26-2405-049-D_02 - Daidan Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263049-O (V-26-2405-049-D_02 - Daidan Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263049/GNS/I/2026', ((TIMESTAMP '2026-01-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (539, 'Q-26400342/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-044-E/06', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 days', 5.0, 173832500.00, 173832500.00, 8691625.00, 'Imported from Excel
 Original Q-no: Q-263052-O/GNS/I/2026
-File: Q-263052-O (V-26-2405-044-E_06 - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263052-O (V-26-2405-044-E_06 - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263052-O/GNS/I/2026', ((TIMESTAMP '2026-01-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (540, 'Q-26400343/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-085-E/07', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 Days', 0, 28620000.00, 28620000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263053/GNS/I/2026
-File: Q-263053 (V-26-2405-085-E_07 - Check Valves DIN Bronze PN10 - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263053 (V-26-2405-085-E_07 - Check Valves DIN Bronze PN10 - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263053/GNS/I/2026', ((TIMESTAMP '2026-01-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (541, 'Q-2640044/GNS/I/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 13, 'Bapak Divton', NULL, 'TB AMAN 01', 'sent', '30 Days', 0, 3800000.00, 3800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265051/GNS/I/2026
-File: Q-265051 (Siemens UVR 3VA9908-0BB25) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-01-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265051 (Siemens UVR 3VA9908-0BB25) - Karunia Aman Sentosa.xlsx', 'Q-265051/GNS/I/2026', ((TIMESTAMP '2026-01-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (542, 'Q-26400344/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-088-D/04', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 days', 5.0, 40050000.00, 40050000.00, 2002500.00, 'Imported from Excel
 Original Q-no: Q-263054-O/GNS/I/2026
-File: Q-263054-O (V-26-2405-088-D_04 - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263054-O (V-26-2405-088-D_04 - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263054-O/GNS/I/2026', ((TIMESTAMP '2026-01-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (543, 'Q-2640014/GNS/I/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, 'MV YUXIN SATU', 'sent', '30 Days', 0, 66750000.00, 66750000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-264055/GNS/I/2026
-File: Q-264055 (Compressor - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-01-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264055 (Compressor - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-264055/GNS/I/2026', ((TIMESTAMP '2026-01-28 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (544, 'Q-26400345/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', 'V-26-2405-125-E/01', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 Days', 0, 60340500.00, 60340500.00, 0.00, 'Imported from Excel
 Original Q-no: Q-262055/GNS/I/2026
-File: Q-262055 (V-26-2405-125-E_01 - GATE VALVE DN 150 5K FOR LINE BUNKER STASION - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-262055 (V-26-2405-125-E_01 - GATE VALVE DN 150 5K FOR LINE BUNKER STASION - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-262055/GNS/I/2026', ((TIMESTAMP '2026-01-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (545, 'Q-26400346/GNS/I/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-082-D/03', 'MV Pelita Almeira Pertiwi', 'sent', '30 days', 5.0, 19300000.00, 19300000.00, 965000.00, 'Imported from Excel
 Original Q-no: Q-263046/GNS/I/2026
-File: Q-263046-O (V-26-2405-082-D_03 - Daidan Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-01-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263046-O (V-26-2405-082-D_03 - Daidan Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263046/GNS/I/2026', ((TIMESTAMP '2026-01-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (546, 'Q-26400347/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 Days', 0, 54027000.00, 54027000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-262056/GNS/II/2026
-File: Q-262056 (V-26-2405-125-E_01 - Revision - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-262056 (V-26-2405-125-E_01 - Revision - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-262056/GNS/II/2026', ((TIMESTAMP '2026-02-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (547, 'Q-26400348/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2401-008-D/05', 'MV DEWI AMBARWATI', 'sent', '30 days', 5.0, 213650000.00, 213650000.00, 10682500.00, 'Imported from Excel
 Original Q-no: Q-263162-D/GNS/II/2026
-File: Q-263162-D (V-26-2401-008-D_05 - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263162-D (V-26-2401-008-D_05 - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-263162-D/GNS/II/2026', ((TIMESTAMP '2026-02-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (548, 'Q-2640081/GNS/II/2026', 1, NULL, 8, 'PT. Aman Maritim Nusantara', 38, 'Ibu Mira Dwi Kartina', 'PR25-2601-0074', 'MV AMAN SUKSES', 'sent', '30 Days', 5.0, 2250000.00, 2250000.00, 112500.00, 'Imported from Excel
 Original Q-no: Q-266058/GNS/II/2026
-File: Q-266058 (ICOM HM214V HANDSET VHF GM-600 - MV Aman Sukses) -  Aman Maritim Nusantara.xlsx', ((TIMESTAMP '2026-02-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-266058 (ICOM HM214V HANDSET VHF GM-600 - MV Aman Sukses) -  Aman Maritim Nusantara.xlsx', 'Q-266058/GNS/II/2026', ((TIMESTAMP '2026-02-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (549, 'Q-2640061/GNS/II/2026', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 13120000.00, 13120000.00, 656000.00, 'Imported from Excel
 Original Q-no: Q-267059/GNS/II/2026
-File: Q-267059 (Oring P29A dll) - Niterra.xlsx', ((TIMESTAMP '2026-02-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-267059 (Oring P29A dll) - Niterra.xlsx', 'Q-267059/GNS/II/2026', ((TIMESTAMP '2026-02-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (550, 'Q-2640015/GNS/II/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, 'MV MAJESTIC LAKSONO', 'sent', '30 Days', 15.0, 24800000.00, 24800000.00, 3720000.00, 'Imported from Excel
 Original Q-no: Q-264063/GNS/II/2026
-File: Q-264063 (Kompresor Angin PUMA - Majestic Laksono) - IMC Shipping Management.xlsx', ((TIMESTAMP '2026-02-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
+File: Q-264063 (Kompresor Angin PUMA - Majestic Laksono) - IMC Shipping Management.xlsx', 'Q-264063/GNS/II/2026', ((TIMESTAMP '2026-02-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
 INSERT INTO quotations (
   id, quotation_no, version, parent_id, company_client_id, company_client_name,
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES
   (551, 'Q-26400349/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-025-E/05', 'MV DEWI SHINTA MANGGALA', 'sent', '30 Days', 5.0, 4650000.00, 4650000.00, 232500.00, 'Imported from Excel
 Original Q-no: Q-263065/GNS/II/2026
-File: Q-263065 (V-26-2402-025-E_05 - Butterfly Valves DIN Wafer Type 5710 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263065 (V-26-2402-025-E_05 - Butterfly Valves DIN Wafer Type 5710 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263065/GNS/II/2026', ((TIMESTAMP '2026-02-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (552, 'Q-2640016/GNS/II/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, 'MV YUXIN SATU', 'sent', '30 Days', 0, 136200000.00, 136200000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-264059/GNS/II/2026
-File: Q-264059 (Compressor - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-02-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264059 (Compressor - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-264059/GNS/II/2026', ((TIMESTAMP '2026-02-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (553, 'Q-2640045/GNS/II/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 20, 'Bapak Bagas', NULL, 'TB AMAN 03-08 & TB MORA 01-04', 'sent', '30 Days', 0, 15420000.00, 15420000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265064/GNS/II/2026
-File: Q-265064 (Selenoid Valve - Aman 07) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-02-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265064 (Selenoid Valve - Aman 07) - Karunia Aman Sentosa.xlsx', 'Q-265064/GNS/II/2026', ((TIMESTAMP '2026-02-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (554, 'Q-2640046/GNS/II/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 13, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 2800000.00, 2800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265066/GNS/II/2026
-File: Q-265066 (Module GC250 Sices) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-02-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265066 (Module GC250 Sices) - Karunia Aman Sentosa.xlsx', 'Q-265066/GNS/II/2026', ((TIMESTAMP '2026-02-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (555, 'Q-2640071/GNS/II/2026', 1, NULL, 7, 'PT. Mitrabahtera Segara Sejati', 39, 'Ibu Mira Dwi Kartina', 'PR09-2602-0023', 'TB KELLY - PT ANAGA SHIPPING INDONESIA', 'sent', '30 Days', 5.0, 7168000.00, 7168000.00, 358400.00, 'Imported from Excel
 Original Q-no: Q-268067/GNS/II/2026
-File: Q-268067 (PR09-2602-0023 - TB Kelly Anaga Shipping Indonesia) - Mitrabahtera Segara Sejati.xlsx', ((TIMESTAMP '2026-02-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-268067 (PR09-2602-0023 - TB Kelly Anaga Shipping Indonesia) - Mitrabahtera Segara Sejati.xlsx', 'Q-268067/GNS/II/2026', ((TIMESTAMP '2026-02-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (556, 'Q-2640024/GNS/II/2026', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 5.0, 17400000.00, 17400000.00, 870000.00, 'Imported from Excel
 Original Q-no: Q-261071/GNS/II/2026
-File: Q-261071 (AVR AS440) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2026-02-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-261071 (AVR AS440) - Sentra Makmur Lines.xlsx', 'Q-261071/GNS/II/2026', ((TIMESTAMP '2026-02-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (557, 'Q-26400350/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-128-D/01', 'MV DEWI SHINTA MANGGALA', 'sent', '30 days', 5.0, 12250000.00, 12250000.00, 612500.00, 'Imported from Excel
 Original Q-no: Q-263070-O/GNS/I/2026
-File: Q-263070-O (V-26-2405-128-D_01 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263070-O (V-26-2405-128-D_01 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263070-O/GNS/I/2026', ((TIMESTAMP '2026-02-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (558, 'Q-26400351/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-035-D/05', 'MV DEWI SHINTA MANGGALA', 'draft', '30 days', 5.0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263072-O/GNS/II/2026
-File: Q-263072-O (V-26-2402-035-D_05 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263072-O (V-26-2402-035-D_05 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263072-O/GNS/II/2026', ((TIMESTAMP '2026-02-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (559, 'Q-26400352/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-051-D/06', 'MV DEWI SHINTA MANGGALA', 'sent', '30 Days', 5.0, 6300000.00, 6300000.00, 315000.00, 'Imported from Excel
 Original Q-no: Q-263073-O/GNS/II/2026
-File: Q-263073 (V-26-2402-051-D_06 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263073 (V-26-2402-051-D_06 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263073-O/GNS/II/2026', ((TIMESTAMP '2026-02-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (560, 'Q-2640072/GNS/II/2026', 1, NULL, 7, 'PT. Mitrabahtera Segara Sejati', 40, 'Ibu Noorohmah', NULL, NULL, 'sent', '30 Days', 5.0, 1500000.00, 1500000.00, 75000.00, 'Imported from Excel
 Original Q-no: Q-266068/GNS/II/2026
-File: Q-266056 (Hand Microphone ICOM M324G) - Mitrabahtera Segara Sejati.xlsx', ((TIMESTAMP '2026-02-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-266056 (Hand Microphone ICOM M324G) - Mitrabahtera Segara Sejati.xlsx', 'Q-266068/GNS/II/2026', ((TIMESTAMP '2026-02-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (561, 'Q-2640073/GNS/II/2026', 1, NULL, 7, 'PT. Mitrabahtera Segara Sejati', 40, 'Ibu Noorohmah', NULL, NULL, 'sent', '30 Days', 5.0, 1500000.00, 1500000.00, 75000.00, 'Imported from Excel
 Original Q-no: Q-268069/GNS/II/2026
-File: Q-268069 (Hand Microphone ICOM M324G- HM200B) - Mitrabahtera Segara Sejati.xlsx', ((TIMESTAMP '2026-02-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-268069 (Hand Microphone ICOM M324G- HM200B) - Mitrabahtera Segara Sejati.xlsx', 'Q-268069/GNS/II/2026', ((TIMESTAMP '2026-02-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (562, 'Q-26400353/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2403-040-D/01', 'MV DEWI SARASWATI', 'sent', '30 days', 7.0, 131320000.00, 131320000.00, 9192400.00, 'Imported from Excel
 Original Q-no: Q-263074-O/GNS/II/2026
-File: Q-263074 (V-26-2403-040-D_01 - Heaving line, cardboard, Tarpaulin - Dewi Saraswati ) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263074 (V-26-2403-040-D_01 - Heaving line, cardboard, Tarpaulin - Dewi Saraswati ) - Pelita Global Logistik.xlsx', 'Q-263074-O/GNS/II/2026', ((TIMESTAMP '2026-02-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (563, 'Q-26400354/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-053-D/05', 'MV DEWI SHINTA MANGGALA', 'sent', '30 days', 5.0, 14240000.00, 14240000.00, 712000.00, 'Imported from Excel
 Original Q-no: Q-263075-O/GNS/II/2026
-File: Q-263075-O (V-26-2402-053-D_05 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263075-O (V-26-2402-053-D_05 - Daidan Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263075-O/GNS/II/2026', ((TIMESTAMP '2026-02-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (564, 'Q-26400355/GNS/II/2026', 2, 563, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-053-D/05', 'MV DEWI SHINTA MANGGALA', 'sent', '30 days', 5.0, 14240000.00, 14240000.00, 712000.00, 'Imported from Excel
 Original Q-no: Q-263075-O/GNS/II/2026
-File: Q-263075-O (V-26-2402-053-D_05 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263075-O (V-26-2402-053-D_05 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263075-O/GNS/II/2026', ((TIMESTAMP '2026-02-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (565, 'Q-26400356/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-054-D/05', 'MV DEWI SHINTA MANGGALA', 'sent', '30 days', 5.0, 45000000.00, 45000000.00, 2250000.00, 'Imported from Excel
 Original Q-no: Q-263076-O/GNS/II/2026
-File: Q-263076-O (V-26-2402-054-D_05 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263076-O (V-26-2402-054-D_05 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263076-O/GNS/II/2026', ((TIMESTAMP '2026-02-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (566, 'Q-2640047/GNS/II/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 20, 'Bapak Bagas', NULL, 'TB AMAN 01', 'sent', '30 days', 0, 5508000.00, 5508000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265077/GNS/II/2026
-File: Q-265077 (Relay Flosser) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-02-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265077 (Relay Flosser) - Karunia Aman Sentosa.xlsx', 'Q-265077/GNS/II/2026', ((TIMESTAMP '2026-02-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (567, 'Q-2640052/GNS/II/2026', 2, 566, 5, 'PT. Karunia Aman Selalu', 37, 'Bapak Bagas', NULL, NULL, 'sent', '30 Days', 0, 28000000.00, 28000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265077/GNS/II/2026
-File: Q-265077 (Relay Schneider RXM4AB2P7) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2026-02-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265077 (Relay Schneider RXM4AB2P7) - Karunia Aman Selalu.xlsx', 'Q-265077/GNS/II/2026', ((TIMESTAMP '2026-02-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (568, 'Q-2640053/GNS/II/2026', 1, NULL, 5, 'PT. Karunia Aman Selalu', 37, 'Bapak Bagas', NULL, 'TB MORA 01', 'sent', '30 Days', 0, 1790000.00, 1790000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265078/GNS/II/2026
-File: Q-265078 (Relay Schneider RXM4AB2P7) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2026-02-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265078 (Relay Schneider RXM4AB2P7) - Karunia Aman Selalu.xlsx', 'Q-265078/GNS/II/2026', ((TIMESTAMP '2026-02-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (569, 'Q-26400357/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2401-035-D/06', 'MV DEWI AMBARWATI', 'sent', '30 days', 5.0, 68440000.00, 68440000.00, 3422000.00, 'Imported from Excel
 Original Q-no: Q-263163-D/GNS/II/2026
-File: Q-263163-D (V-26-2401-035-D_06 - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263163-D (V-26-2401-035-D_06 - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-263163-D/GNS/II/2026', ((TIMESTAMP '2026-02-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (570, 'Q-26400358/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-191-E/01', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 days', 7.0, 8580000.00, 8580000.00, 600600.00, 'Imported from Excel
 Original Q-no: Q-263077-O/GNS/II/2026
-File: Q-263076 (V-26-2405-191-E_01 - Vacuum Pump Suction, Gauge Manifold - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263076 (V-26-2405-191-E_01 - Vacuum Pump Suction, Gauge Manifold - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263077-O/GNS/II/2026', ((TIMESTAMP '2026-02-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (571, 'Q-26400359/GNS/II/2026', 2, 570, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-191-E/01', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 days', 0, 8580000.00, 8580000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263077-O/GNS/II/2026
-File: Q-263077 (V-26-2405-191-E_01 - Vacuum Pump Suction, Gauge Manifold - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263077 (V-26-2405-191-E_01 - Vacuum Pump Suction, Gauge Manifold - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263077-O/GNS/II/2026', ((TIMESTAMP '2026-02-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (572, 'Q-26400360/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-149-E/01', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 days', 0, 70800000.00, 70800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263079-O/GNS/II/2026
-File: Q-263079 (V-26-2405-149-E_01 - Freon R407 - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263079 (V-26-2405-149-E_01 - Freon R407 - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263079-O/GNS/II/2026', ((TIMESTAMP '2026-02-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (573, 'Q-2640025/GNS/II/2026', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 5.0, 5120000.00, 5120000.00, 256000.00, 'Imported from Excel
 Original Q-no: Q-261080/GNS/II/2026
-File: Q-261080 (Oring Kit Viton) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2026-02-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-261080 (Oring Kit Viton) - Sentra Makmur Lines.xlsx', 'Q-261080/GNS/II/2026', ((TIMESTAMP '2026-02-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (574, 'Q-2640017/GNS/II/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0003/REQ26', 'MV YUXIN SATU', 'draft', '30 days', 5.0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-264081/GNS/II/2026
-File: Q-264081-O (8404_V-0003_REQ26 Medicine - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-02-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264081-O (8404_V-0003_REQ26 Medicine - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-264081/GNS/II/2026', ((TIMESTAMP '2026-02-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (575, 'Q-2640018/GNS/II/2026', 2, 574, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0005/REQ26', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 7990000.00, 7990000.00, 399500.00, 'Imported from Excel
 Original Q-no: Q-264081/GNS/II/2026
-File: Q-264083-O (8404_V-0005_REQ26 Stationery - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-02-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264083-O (8404_V-0005_REQ26 Stationery - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-264081/GNS/II/2026', ((TIMESTAMP '2026-02-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (576, 'Q-2640019/GNS/II/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0004/REQ26', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 107066000.00, 107066000.00, 5353300.00, 'Imported from Excel
 Original Q-no: Q-264082/GNS/II/2026
-File: Q-264082-O (8404_V-0004_REQ26 Deck - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-02-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264082-O (8404_V-0004_REQ26 Deck - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-264082/GNS/II/2026', ((TIMESTAMP '2026-02-18 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (577, 'Q-2640048/GNS/II/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 20, 'Bapak Bagas', NULL, 'TB Marina 18', 'sent', '30 days', 0, 13919500.00, 13919500.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265086/GNS/II/2026
-File: Q-265086 (Accu dll - Marina 18) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-02-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265086 (Accu dll - Marina 18) - Karunia Aman Sentosa.xlsx', 'Q-265086/GNS/II/2026', ((TIMESTAMP '2026-02-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (578, 'Q-2640082/GNS/II/2026', 1, NULL, 8, 'PT. Aman Maritim Nusantara', 38, 'Ibu Mira Dwi Kartina', 'PR25-2602-0017', 'MV AMAN SUKSES', 'sent', '30 days', 5.0, 15350000.00, 15350000.00, 767500.00, 'Imported from Excel
 Original Q-no: Q-268087/GNS/II/2026
-File: Q-268068-O (PR25-2602-0017-Vanbelt dll) - MBSS- Aman Maritim Nusantara.xlsx', ((TIMESTAMP '2026-02-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-268068-O (PR25-2602-0017-Vanbelt dll) - MBSS- Aman Maritim Nusantara.xlsx', 'Q-268087/GNS/II/2026', ((TIMESTAMP '2026-02-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (579, 'Q-2640083/GNS/II/2026', 2, 578, 8, 'PT. Aman Maritim Nusantara', 38, 'Ibu Mira Dwi Kartina', 'PR25-2602-0017', 'MV AMAN SUKSES', 'sent', '30 days', 5.0, 15350000.00, 15350000.00, 767500.00, 'Imported from Excel
 Original Q-no: Q-268087/GNS/II/2026
-File: Q-268087-O (PR25-2602-0017-Vanbelt dll) - MBSS- Aman Maritim Nusantara.xlsx', ((TIMESTAMP '2026-02-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-268087-O (PR25-2602-0017-Vanbelt dll) - MBSS- Aman Maritim Nusantara.xlsx', 'Q-268087/GNS/II/2026', ((TIMESTAMP '2026-02-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (580, 'Q-2640074/GNS/II/2026', 1, NULL, 7, 'PT. Mitrabahtera Segara Sejati', 40, 'Ibu Noorohmah', NULL, NULL, 'sent', '30 days', 5.0, 1900000.00, 1900000.00, 95000.00, 'Imported from Excel
 Original Q-no: Q-268088/GNS/II/2026
-File: Q-268088-O (Horn Set Cicada) - Mitrabahtera Segara Sejati.xlsx', ((TIMESTAMP '2026-02-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-268088-O (Horn Set Cicada) - Mitrabahtera Segara Sejati.xlsx', 'Q-268088/GNS/II/2026', ((TIMESTAMP '2026-02-19 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (581, 'Q-2640062/GNS/II/2026', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 3880000.00, 3880000.00, 194000.00, 'Imported from Excel
 Original Q-no: Q-267089/GNS/II/2026
-File: Q-267089 (Hallite dll) - Niterra.xlsx', ((TIMESTAMP '2026-02-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-267089 (Hallite dll) - Niterra.xlsx', 'Q-267089/GNS/II/2026', ((TIMESTAMP '2026-02-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (582, 'Q-2640063/GNS/II/2026', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 630000.00, 630000.00, 31500.00, 'Imported from Excel
 Original Q-no: Q-267090/GNS/II/2026
-File: Q-267090 (Oring 58 3,1) - Niterra.xlsx', ((TIMESTAMP '2026-02-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-267090 (Oring 58 3,1) - Niterra.xlsx', 'Q-267090/GNS/II/2026', ((TIMESTAMP '2026-02-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (583, 'Q-2640064/GNS/II/2026', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 3000000.00, 3000000.00, 150000.00, 'Imported from Excel
 Original Q-no: Q-267091/GNS/II/2026
-File: Q-267090 (Ring kotak) - Niterra.xlsx', ((TIMESTAMP '2026-02-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-267090 (Ring kotak) - Niterra.xlsx', 'Q-267091/GNS/II/2026', ((TIMESTAMP '2026-02-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (584, 'Q-2640065/GNS/II/2026', 2, 583, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 3000000.00, 3000000.00, 150000.00, 'Imported from Excel
 Original Q-no: Q-267091/GNS/II/2026
-File: Q-267091 (Ring kotak) - Niterra.xlsx', ((TIMESTAMP '2026-02-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-267091 (Ring kotak) - Niterra.xlsx', 'Q-267091/GNS/II/2026', ((TIMESTAMP '2026-02-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (585, 'Q-2640066/GNS/II/2026', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 810000.00, 810000.00, 40500.00, 'Imported from Excel
 Original Q-no: Q-267092/GNS/II/2026
-File: Q-267092 (Seal Set Pompa TKW) - Niterra.xlsx', ((TIMESTAMP '2026-02-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-267092 (Seal Set Pompa TKW) - Niterra.xlsx', 'Q-267092/GNS/II/2026', ((TIMESTAMP '2026-02-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (586, 'Q-2640067/GNS/II/2026', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 1536000.00, 1536000.00, 76800.00, 'Imported from Excel
 Original Q-no: Q-267093/GNS/II/2026
-File: Q-267093 (Seal Set Cylinder New Era) - Niterra.xlsx', ((TIMESTAMP '2026-02-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-267093 (Seal Set Cylinder New Era) - Niterra.xlsx', 'Q-267093/GNS/II/2026', ((TIMESTAMP '2026-02-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (587, 'Q-26400361/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-183-D/04', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 Days', 0, 9500000.00, 9500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263095/GNS/II/2026
-File: Q-263095 (V-26-2405-183-D_04- Fire hose prefitted 65mmx20m - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263095 (V-26-2405-183-D_04- Fire hose prefitted 65mmx20m - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263095/GNS/II/2026', ((TIMESTAMP '2026-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (588, 'Q-26400362/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 Days', 5.0, 4350000.00, 4350000.00, 217500.00, 'Imported from Excel
 Original Q-no: Q-263096/GNS/II/2026
-File: Q-263096 (Needle Bearing - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263096 (Needle Bearing - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263096/GNS/II/2026', ((TIMESTAMP '2026-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (589, 'Q-26400363/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-094-D/05', 'MV DEWI SHINTA MANGGALA', 'sent', '30 Days', 0, 24500000.00, 24500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263097/GNS/II/2026
-File: Q-263097 (V-26-2402-094-D_05 - Embarkation Ladders - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263097 (V-26-2402-094-D_05 - Embarkation Ladders - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263097/GNS/II/2026', ((TIMESTAMP '2026-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (590, 'Q-2640049/GNS/II/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 41, 'Bapak Pedra', NULL, NULL, 'sent', '30 Days', 0, 2235000.00, 2235000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265094/GNS/II/2026
-File: Q-265094 (Nozzle Cleaner Gun) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265094 (Nozzle Cleaner Gun) - Karunia Aman Sentosa.xlsx', 'Q-265094/GNS/II/2026', ((TIMESTAMP '2026-02-24 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (591, 'Q-2640068/GNS/II/2026', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 6400000.00, 6400000.00, 320000.00, 'Imported from Excel
 Original Q-no: Q-267098/GNS/II/2026
-File: Q-267098 (Rod Seal 10 16 6 3) - Niterra.xlsx', ((TIMESTAMP '2026-02-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-267098 (Rod Seal 10 16 6 3) - Niterra.xlsx', 'Q-267098/GNS/II/2026', ((TIMESTAMP '2026-02-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (592, 'Q-2640069/GNS/II/2026', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 days', 5.0, 1470000.00, 1470000.00, 73500.00, 'Imported from Excel
 Original Q-no: Q-267099/GNS/II/2026
-File: Q-267099 (Oil Seal KOYO MHSA 28-42-8) - PT Niterra Mobility Indonesia.xlsx', ((TIMESTAMP '2026-02-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-267099 (Oil Seal KOYO MHSA 28-42-8) - PT Niterra Mobility Indonesia.xlsx', 'Q-267099/GNS/II/2026', ((TIMESTAMP '2026-02-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (593, 'Q-2640075/GNS/II/2026', 1, NULL, 7, 'PT. Mitrabahtera Segara Sejati', 42, 'Bapak Gia Arekta', 'PR01-2602-0134', 'TUG BOAT - FRED 18', 'sent', '30 Days', 5.0, 7678000.00, 7678000.00, 383900.00, 'Imported from Excel
 Original Q-no: Q-268100/GNS/II/2026
-File: Q-268100 (PR01-2602-0134 - TUG BOAT - FRED 18) - Mitrabahtera Segara Sejati.xlsx', ((TIMESTAMP '2026-02-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-268100 (PR01-2602-0134 - TUG BOAT - FRED 18) - Mitrabahtera Segara Sejati.xlsx', 'Q-268100/GNS/II/2026', ((TIMESTAMP '2026-02-25 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (594, 'Q-26400364/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-061-D/05', 'MV DEWI SHINTA MANGGALA', 'sent', '30 days', 5.0, 14276000.00, 14276000.00, 713800.00, 'Imported from Excel
 Original Q-no: Q-263101/GNS/II/2026
-File: Q-263101 (V-26-2402-061-D_05 - Sport Equipment  - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263101 (V-26-2402-061-D_05 - Sport Equipment  - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263101/GNS/II/2026', ((TIMESTAMP '2026-02-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (595, 'Q-2640101/GNS/II/2026', 1, NULL, 10, 'PT. Adamaris Shipping Indonesia', 43, 'Ibu Muthia Zahrah', 'PR39-2602-0007', 'BG SEGARA 78', 'sent', '30 days', 5.0, 352000.00, 352000.00, 17600.00, 'Imported from Excel
 Original Q-no: Q-268102/GNS/II/2026
-File: Q-268102 (PR39-2602-0007 - BG SEGARA 78) - MBSS  PT ADAMARIS SHIPPING INDONESIA.xlsx', ((TIMESTAMP '2026-02-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-268102 (PR39-2602-0007 - BG SEGARA 78) - MBSS  PT ADAMARIS SHIPPING INDONESIA.xlsx', 'Q-268102/GNS/II/2026', ((TIMESTAMP '2026-02-26 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (596, 'Q-26400365/GNS/II/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 2, 'Ibu Idola Marganda Silitonga', NULL, NULL, 'sent', '30 days', 5.0, 216000000.00, 216000000.00, 10800000.00, 'Imported from Excel
 Original Q-no: Q-262104/GNS/II/2026
-File: Q-262104-O (Danfoss Pressure Control) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-02-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-262104-O (Danfoss Pressure Control) - Pelita Global Logistik.xlsx', 'Q-262104/GNS/II/2026', ((TIMESTAMP '2026-02-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (597, 'Q-26400366/GNS/III/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-077-D/03', 'MV DEWI SHINTA MANGGALA', 'sent', '30 days', 5.0, 1650000.00, 1650000.00, 82500.00, 'Imported from Excel
 Original Q-no: Q-263105-O/GNS/III/2026
-File: Q-263105 (V-26-2402-077-D_03 - Fire Plan Holder - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-03-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263105 (V-26-2402-077-D_03 - Fire Plan Holder - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263105-O/GNS/III/2026', ((TIMESTAMP '2026-03-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (598, 'Q-26400367/GNS/III/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-086-D/03', 'MV DEWI SHINTA MANGGALA', 'sent', '30 days', 5.0, 25600000.00, 25600000.00, 1280000.00, 'Imported from Excel
 Original Q-no: Q-263106-O/GNS/III/2026
-File: Q-263106 (V-26-2402-086-D_03 - Submersible Pump - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-03-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263106 (V-26-2402-086-D_03 - Submersible Pump - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263106-O/GNS/III/2026', ((TIMESTAMP '2026-03-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (599, 'Q-26400368/GNS/III/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-091-D/01', 'MV DEWI SHINTA MANGGALA', 'sent', '30 days', 5.0, 25000000.00, 25000000.00, 1250000.00, 'Imported from Excel
 Original Q-no: Q-263107-O/GNS/III/2026
-File: Q-263107 (V-26-2402-091-D_01- HT UHF Intrinsically Safe - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-03-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263107 (V-26-2402-091-D_01- HT UHF Intrinsically Safe - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263107-O/GNS/III/2026', ((TIMESTAMP '2026-03-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (600, 'Q-26400369/GNS/III/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-087-D/04', 'MV DEWI SHINTA MANGGALA', 'sent', '30 Days', 0, 9000000.00, 9000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263108/GNS/III/2026
-File: Q-263108 (V-26-2402-087-D_04 - Globe Valve DIN16 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-03-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
+File: Q-263108 (V-26-2402-087-D_04 - Globe Valve DIN16 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263108/GNS/III/2026', ((TIMESTAMP '2026-03-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
 INSERT INTO quotations (
   id, quotation_no, version, parent_id, company_client_id, company_client_name,
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES
   (601, 'Q-26400610/GNS/III/2026', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 400000.00, 400000.00, 20000.00, 'Imported from Excel
 Original Q-no: Q-267109/GNS/III/2026
-File: Q-267109 (Oil Seal NOK TC 25 40 7) - Niterra.xlsx', ((TIMESTAMP '2026-03-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-267109 (Oil Seal NOK TC 25 40 7) - Niterra.xlsx', 'Q-267109/GNS/III/2026', ((TIMESTAMP '2026-03-03 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (602, 'Q-26400410/GNS/III/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 20, 'Bapak Bagas', NULL, 'TB AMAN 05', 'sent', '30 Days', 0, 7775000.00, 7775000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265110/GNS/III/2026
-File: Q-265110 (Power Supply Diamond Antenna GZV4000 - Aman 05) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-03-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265110 (Power Supply Diamond Antenna GZV4000 - Aman 05) - Karunia Aman Sentosa.xlsx', 'Q-265110/GNS/III/2026', ((TIMESTAMP '2026-03-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (603, 'Q-26400411/GNS/III/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 20, 'Bapak Bagas', NULL, 'TB MARINA 12', 'sent', '30 days', 0, 27233000.00, 27233000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265111/GNS/III/2026
-File: Q-265111 (Filter dll - Marina 12) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-03-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265111 (Filter dll - Marina 12) - Karunia Aman Sentosa.xlsx', 'Q-265111/GNS/III/2026', ((TIMESTAMP '2026-03-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (604, 'Q-26400412/GNS/III/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 20, 'Bapak Bagas', 'V-26-2405-002-E/02', 'TB MARINA 12', 'sent', '30 days', 0, 11500000.00, 11500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265112/GNS/III/2026
-File: Q-265112 (Water Temperature Drat dll - Marina 12) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-03-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265112 (Water Temperature Drat dll - Marina 12) - Karunia Aman Sentosa.xlsx', 'Q-265112/GNS/III/2026', ((TIMESTAMP '2026-03-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (605, 'Q-26400413/GNS/III/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 20, 'Bapak Bagas', NULL, 'TB MARINA 12', 'sent', '30 days', 0, 14200000.00, 14200000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265113/GNS/III/2026
-File: Q-265113 (Lampu Akomodasi kap RM dll - Marina 12) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-03-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265113 (Lampu Akomodasi kap RM dll - Marina 12) - Karunia Aman Sentosa.xlsx', 'Q-265113/GNS/III/2026', ((TIMESTAMP '2026-03-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (606, 'Q-26400414/GNS/III/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 20, 'Bapak Bagas', NULL, 'TB MARINA 12', 'sent', '30 Days', 0, 5000000.00, 5000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265116/GNS/III/2026
-File: Q-265116 (Schneider DOL Starter - Marina 12) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-03-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265116 (Schneider DOL Starter - Marina 12) - Karunia Aman Sentosa.xlsx', 'Q-265116/GNS/III/2026', ((TIMESTAMP '2026-03-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (607, 'Q-26400415/GNS/III/2026', 2, 606, 4, 'PT. Karunia Aman Sentosa', 20, 'Bapak Bagas', 'V-26-2405-005-E/02', NULL, 'sent', '30 Days', 0, 5000000.00, 5000000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265116/GNS/III/2026
-File: Q-265116 (Schneider DOL Starter) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-03-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265116 (Schneider DOL Starter) - Karunia Aman Sentosa.xlsx', 'Q-265116/GNS/III/2026', ((TIMESTAMP '2026-03-09 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (608, 'Q-2640054/GNS/III/2026', 1, NULL, 5, 'PT. Karunia Aman Selalu', 37, 'Bapak Bagas', NULL, 'TB MARINA 25', 'sent', '30 Days', 0, 16970000.00, 16970000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265118/GNS/III/2026
-File: Q-265118 (Breaker MCCB - NS 100N- Marina 25) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2026-03-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265118 (Breaker MCCB - NS 100N- Marina 25) - Karunia Aman Selalu.xlsx', 'Q-265118/GNS/III/2026', ((TIMESTAMP '2026-03-10 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (609, 'Q-2640026/GNS/III/2026', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 0, 1350000.00, 1350000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-261119/GNS/III/2026
-File: Q-261119 (Port to port JKT-Kendari) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2026-03-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-261119 (Port to port JKT-Kendari) - Sentra Makmur Lines.xlsx', 'Q-261119/GNS/III/2026', ((TIMESTAMP '2026-03-12 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (610, 'Q-2640055/GNS/III/2026', 1, NULL, 5, 'PT. Karunia Aman Selalu', 37, 'Bapak Bagas', NULL, 'TB Marina 18', 'sent', '30 Days', 0, 320000.00, 320000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265121/GNS/III/2026
-File: Q-265121 (Asbes pita) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2026-03-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265121 (Asbes pita) - Karunia Aman Selalu.xlsx', 'Q-265121/GNS/III/2026', ((TIMESTAMP '2026-03-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (611, 'Q-2640056/GNS/III/2026', 1, NULL, 5, 'PT. Karunia Aman Selalu', 37, 'Bapak Bagas', NULL, 'TB Marina 18', 'sent', '30 Days', 0, 2484000.00, 2484000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265122/GNS/III/2026
-File: Q-265122 (Filter Racor) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2026-03-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265122 (Filter Racor) - Karunia Aman Selalu.xlsx', 'Q-265122/GNS/III/2026', ((TIMESTAMP '2026-03-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (612, 'Q-26400611/GNS/III/2026', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 8300000.00, 8300000.00, 415000.00, 'Imported from Excel
 Original Q-no: Q-267123/GNS/III/2026
-File: Q-267123 (Packing Sakagami) - Niterra.xlsx', ((TIMESTAMP '2026-03-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-267123 (Packing Sakagami) - Niterra.xlsx', 'Q-267123/GNS/III/2026', ((TIMESTAMP '2026-03-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (613, 'Q-2640076/GNS/III/2026', 1, NULL, 7, 'PT. Mitrabahtera Segara Sejati', 44, 'Ibu Intan Ardita', 'PR01-2603-0101', 'TB FRED 19', 'sent', '30 Days', 5.0, 7333000.00, 7333000.00, 366650.00, 'Imported from Excel
 Original Q-no: Q-268124/GNS/III/2026
-File: Q-268124 (PR01-2603-0101 - TUG BOAT - FRED 19) - Mitrabahtera Segara Sejati.xlsx', ((TIMESTAMP '2026-03-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-268124 (PR01-2603-0101 - TUG BOAT - FRED 19) - Mitrabahtera Segara Sejati.xlsx', 'Q-268124/GNS/III/2026', ((TIMESTAMP '2026-03-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (614, 'Q-2640077/GNS/III/2026', 1, NULL, 7, 'PT. Mitrabahtera Segara Sejati', 44, 'Ibu Intan Ardita', 'PR01-2603-0102', 'TB FRED 20', 'sent', '30 Days', 5.0, 12403000.00, 12403000.00, 620150.00, 'Imported from Excel
 Original Q-no: Q-268125/GNS/III/2026
-File: Q-268125 (PR01-2603-0102 - TUG BOAT - FRED 20) - Mitrabahtera Segara Sejati.xlsx', ((TIMESTAMP '2026-03-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-268125 (PR01-2603-0102 - TUG BOAT - FRED 20) - Mitrabahtera Segara Sejati.xlsx', 'Q-268125/GNS/III/2026', ((TIMESTAMP '2026-03-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (615, 'Q-2640078/GNS/III/2026', 1, NULL, 7, 'PT. Mitrabahtera Segara Sejati', 44, 'Ibu Intan Ardita', 'PR01-2603-0103', 'TB FRED 21', 'sent', '30 Days', 5.0, 7218000.00, 7218000.00, 360900.00, 'Imported from Excel
 Original Q-no: Q-268126/GNS/III/2026
-File: Q-268126 (PR01-2603-0103 - TUG BOAT - FRED 21) - Mitrabahtera Segara Sejati.xlsx', ((TIMESTAMP '2026-03-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-268126 (PR01-2603-0103 - TUG BOAT - FRED 21) - Mitrabahtera Segara Sejati.xlsx', 'Q-268126/GNS/III/2026', ((TIMESTAMP '2026-03-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (616, 'Q-2640057/GNS/III/2026', 1, NULL, 5, 'PT. Karunia Aman Selalu', 37, 'Bapak Bagas', NULL, NULL, 'sent', '30 days', 5.0, 16750000.00, 16750000.00, 837500.00, 'Imported from Excel
 Original Q-no: Q-265129/GNS/III/2026
-File: Q-265127 (Dial Bore Gauge) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2026-03-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265127 (Dial Bore Gauge) - Karunia Aman Selalu.xlsx', 'Q-265129/GNS/III/2026', ((TIMESTAMP '2026-03-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (617, 'Q-26400416/GNS/III/2026', 2, 616, 4, 'PT. Karunia Aman Sentosa', 20, 'Bapak Bagas', NULL, 'TB AMAN 03', 'sent', '30 Days', 0, 2450000.00, 2450000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265129/GNS/III/2026
-File: Q-265129 (MCCB Schneider NSX 100F - Aman 03) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-03-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265129 (MCCB Schneider NSX 100F - Aman 03) - Karunia Aman Sentosa.xlsx', 'Q-265129/GNS/III/2026', ((TIMESTAMP '2026-03-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (618, 'Q-26400417/GNS/III/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 20, 'Bapak Bagas', NULL, 'TB AMAN 07', 'sent', '30 Days', 0, 60000.00, 60000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265130/GNS/III/2026
-File: Q-265130 (Dioda Kiprok FSB3510 - Aman 07) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-03-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265130 (Dioda Kiprok FSB3510 - Aman 07) - Karunia Aman Sentosa.xlsx', 'Q-265130/GNS/III/2026', ((TIMESTAMP '2026-03-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (619, 'Q-26400418/GNS/III/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 13, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 1950000.00, 1950000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265131/GNS/III/2026
-File: Q-265131 (Peta Laut) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-03-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265131 (Peta Laut) - Karunia Aman Sentosa.xlsx', 'Q-265131/GNS/III/2026', ((TIMESTAMP '2026-03-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (620, 'Q-26400370/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2403-069-D/09', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 33250000.00, 33250000.00, 1662500.00, 'Imported from Excel
 Original Q-no: Q-263134-O/GNS/IV/2026
-File: Q-263134 (V-26-2403-069-D_09 - HT HX400 IS - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263134 (V-26-2403-069-D_09 - HT HX400 IS - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-263134-O/GNS/IV/2026', ((TIMESTAMP '2026-04-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (621, 'Q-26400371/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2403-039-D/05', 'MV DEWI SARASWATI', 'sent', '30 days', 7.0, 8600000.00, 8600000.00, 602000.00, 'Imported from Excel
 Original Q-no: Q-263135-O/GNS/IV/2026
-File: Q-263135 (V-26-2403-039-D_05 - BINOCULAR OCEANPRO 7X50 - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263135 (V-26-2403-039-D_05 - BINOCULAR OCEANPRO 7X50 - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-263135-O/GNS/IV/2026', ((TIMESTAMP '2026-04-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (622, 'Q-26400372/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-203-D/02', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 days', 5.0, 28860000.00, 28860000.00, 1443000.00, 'Imported from Excel
 Original Q-no: Q-263136-O/GNS/IV/2026
-File: Q-263136-O (V-26-2405-203-D_02 - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263136-O (V-26-2405-203-D_02 - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263136-O/GNS/IV/2026', ((TIMESTAMP '2026-04-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (623, 'Q-26400110/GNS/IV/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0006/REQ26', 'MV YUXIN SATU', 'sent', NULL, 0, 107623000.00, 107623000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-264128/GNS/IV/2026
-File: Q-264128-O (8404_V-0006_REQ26 - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-04-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264128-O (8404_V-0006_REQ26 - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-264128/GNS/IV/2026', ((TIMESTAMP '2026-04-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (624, 'Q-26400111/GNS/IV/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '013/E/03/26', 'MV YUXIN SATU', 'draft', '30 days', 5.0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-264132/GNS/IV/2026
-File: Q-264132 (013_E-03_26 - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-04-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264132 (013_E-03_26 - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-264132/GNS/IV/2026', ((TIMESTAMP '2026-04-01 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (625, 'Q-26400373/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-209-D/04', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 days', 5.0, 44010000.00, 44010000.00, 2200500.00, 'Imported from Excel
 Original Q-no: Q-263137-O/GNS/IV/2026
-File: Q-263137-O (V-26-2405-209-D_04 - Shampoo etc - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263137-O (V-26-2405-209-D_04 - Shampoo etc - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263137-O/GNS/IV/2026', ((TIMESTAMP '2026-04-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (626, 'Q-26400374/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-214-D/02', NULL, 'draft', '30 days', 5.0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263138-O/GNS/IV/2026
-File: Q-263138-O (V-26-2405-214-D_02 - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263138-O (V-26-2405-214-D_02 - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263138-O/GNS/IV/2026', ((TIMESTAMP '2026-04-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (627, 'Q-26400375/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-215-E/05', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 days', 5.0, 11250000.00, 11250000.00, 562500.00, 'Imported from Excel
 Original Q-no: Q-263139-O/GNS/IV/2026
-File: Q-263139-O (V-26-2405-215-E_05 - Kain Majun tanpa jahit - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263139-O (V-26-2405-215-E_05 - Kain Majun tanpa jahit - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263139-O/GNS/IV/2026', ((TIMESTAMP '2026-04-02 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (628, 'Q-26400376/GNS/IV/2026', 2, 627, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-231-D/03', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 days', 5.0, 12340000.00, 12340000.00, 617000.00, 'Imported from Excel
 Original Q-no: Q-263139-O/GNS/IV/2026
-File: Q-263140-O (V-26-2405-231-D_03 - IMO Symbols - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263140-O (V-26-2405-231-D_03 - IMO Symbols - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263139-O/GNS/IV/2026', ((TIMESTAMP '2026-04-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (629, 'Q-26400377/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-238-D/03', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 days', 5.0, 10912500.00, 10912500.00, 545625.00, 'Imported from Excel
 Original Q-no: Q-263141-O/GNS/IV/2026
-File: Q-263141-O (V-26-2405-238-D_03 - Stationary - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263141-O (V-26-2405-238-D_03 - Stationary - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263141-O/GNS/IV/2026', ((TIMESTAMP '2026-04-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (630, 'Q-26400378/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-221-E/01', 'MV PELITA ALMEIRA PERTIWI', 'draft', '30 days', 5.0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263142-O/GNS/IV/2026
-File: Q-263142-O (V-26-2405-221-E_01 - Screw plate set - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263142-O (V-26-2405-221-E_01 - Screw plate set - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263142-O/GNS/IV/2026', ((TIMESTAMP '2026-04-05 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (631, 'Q-26400379/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-178-D/05', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 days', 5.0, 75000.00, 75000.00, 3750.00, 'Imported from Excel
 Original Q-no: Q-263145-O/GNS/IV/2026
-File: Q-263145-O (V-26-2405-178-D_05 - Kain Majun tanpa jahit - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263145-O (V-26-2405-178-D_05 - Kain Majun tanpa jahit - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263145-O/GNS/IV/2026', ((TIMESTAMP '2026-04-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (632, 'Q-26400380/GNS/IV/2026', 2, 631, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2405-178-D/05', 'MV PELITA ALMEIRA PERTIWI', 'sent', '30 days', 5.0, 750000.00, 750000.00, 37500.00, 'Imported from Excel
 Original Q-no: Q-263145-O/GNS/IV/2026
-File: Q-263145-O (V-26-2405-178-D_05 - Welding Helmet - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263145-O (V-26-2405-178-D_05 - Welding Helmet - Pelita Almeira Pertiwi) - Pelita Global Logistik.xlsx', 'Q-263145-O/GNS/IV/2026', ((TIMESTAMP '2026-04-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (633, 'Q-26400112/GNS/IV/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', '8404/V-0009/REQ26', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 74725000.00, 74725000.00, 3736250.00, 'Imported from Excel
 Original Q-no: Q-264143/GNS/IV/2026
-File: Q-264143-O (8404_V-0009_REQ26 - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-04-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264143-O (8404_V-0009_REQ26 - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-264143/GNS/IV/2026', ((TIMESTAMP '2026-04-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (634, 'Q-26400113/GNS/IV/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, 'MV YUXIN SATU', 'sent', '30 days', 5.0, 78715000.00, 78715000.00, 3935750.00, 'Imported from Excel
 Original Q-no: Q-264144/GNS/IV/2026
-File: Q-264144 (Publication - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-04-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264144 (Publication - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-264144/GNS/IV/2026', ((TIMESTAMP '2026-04-06 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (635, 'Q-26400114/GNS/IV/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', 'DECK REQ', 'MV YUXIN SATU', 'sent', '30 days', 5.0, 52855000.00, 52855000.00, 2642750.00, 'Imported from Excel
 Original Q-no: Q-264146/GNS/IV/2026
-File: Q-264146 (Deck Req - Yuxin Satu) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-04-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264146 (Deck Req - Yuxin Satu) - IMC Ship Management.xlsx', 'Q-264146/GNS/IV/2026', ((TIMESTAMP '2026-04-07 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (636, 'Q-26400115/GNS/IV/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, 'MV YUXIN SATU', 'sent', '30 days', 5.0, 177200000.00, 177200000.00, 8860000.00, 'Imported from Excel
 Original Q-no: Q-264147/GNS/IV/2026
-File: Q-264147 (Heaving line, Cardboard, Tarpaulin - Yuxin Satu ) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-04-08 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264147 (Heaving line, Cardboard, Tarpaulin - Yuxin Satu ) - IMC Ship Management.xlsx', 'Q-264147/GNS/IV/2026', ((TIMESTAMP '2026-04-08 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (637, 'Q-2640058/GNS/IV/2026', 1, NULL, 5, 'PT. Karunia Aman Selalu', 37, 'Bapak Bagas', NULL, NULL, 'sent', '30 Days', 0, 414000.00, 414000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265148/GNS/IV/2026
-File: Q-265148 (Magnafluk Spot Check) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2026-04-08 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265148 (Magnafluk Spot Check) - Karunia Aman Selalu.xlsx', 'Q-265148/GNS/IV/2026', ((TIMESTAMP '2026-04-08 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (638, 'Q-26400381/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-056-D/06', 'MV DEWI SHINTA MANGGALA', 'sent', '30 days', 5.0, 38500000.00, 38500000.00, 1925000.00, 'Imported from Excel
 Original Q-no: Q-263147-O/GNS/IV/2026
-File: Q-263147-O (V-26-2402-056-D_06 - Ladder - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263147-O (V-26-2402-056-D_06 - Ladder - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263147-O/GNS/IV/2026', ((TIMESTAMP '2026-04-11 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (639, 'Q-26400382/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-276-D/07', 'MV DEWI SHINTA MANGGALA', 'sent', '30 days', 5.0, 27100000.00, 27100000.00, 1355000.00, 'Imported from Excel
 Original Q-no: Q-263148-O/GNS/IV/2026
-File: Q-263148-O (V-26-2402-276-D_07 - Globe Valve, Ubolt - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263148-O (V-26-2402-276-D_07 - Globe Valve, Ubolt - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263148-O/GNS/IV/2026', ((TIMESTAMP '2026-04-13 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (640, 'Q-26400116/GNS/IV/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, 'MV YUXIN SATU', 'sent', '30 Days', 5.0, 20000000.00, 20000000.00, 1000000.00, 'Imported from Excel
 Original Q-no: Q-264151/GNS/IV/2026
-File: Q-264151 (Kompresor Angin PUMA-used - Yuxin Satu) - IMC Shipping Management.xlsx', ((TIMESTAMP '2026-04-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264151 (Kompresor Angin PUMA-used - Yuxin Satu) - IMC Shipping Management.xlsx', 'Q-264151/GNS/IV/2026', ((TIMESTAMP '2026-04-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (641, 'Q-26400419/GNS/IV/2026', 1, NULL, 4, 'PT. Karunia Aman Sentosa', 20, 'Bapak Bagas', NULL, 'TB AMAN 05', 'sent', '30 Days', 0, 3790000.00, 3790000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265149/GNS/IV/2026
-File: Q-265149 (Filter, VBelt - Aman 05) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-04-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265149 (Filter, VBelt - Aman 05) - Karunia Aman Sentosa.xlsx', 'Q-265149/GNS/IV/2026', ((TIMESTAMP '2026-04-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (642, 'Q-2640059/GNS/IV/2026', 1, NULL, 5, 'PT. Karunia Aman Selalu', 37, 'Bapak Bagas', NULL, 'TB AMAN 06', 'sent', '30 Days', 0, 4760000.00, 4760000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265150/GNS/IV/2026
-File: Q-265117 (Vbelt Ribbed- Mora 04) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2026-04-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265117 (Vbelt Ribbed- Mora 04) - Karunia Aman Selalu.xlsx', 'Q-265150/GNS/IV/2026', ((TIMESTAMP '2026-04-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (643, 'Q-26400420/GNS/IV/2026', 2, 642, 4, 'PT. Karunia Aman Sentosa', 20, 'Bapak Bagas', NULL, 'TB AMAN 06', 'sent', '30 Days', 0, 4250000.00, 4250000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265150/GNS/IV/2026
-File: Q-265150 (Sensor, VBelt- Aman 06) - Karunia Aman Sentosa.xlsx', ((TIMESTAMP '2026-04-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265150 (Sensor, VBelt- Aman 06) - Karunia Aman Sentosa.xlsx', 'Q-265150/GNS/IV/2026', ((TIMESTAMP '2026-04-15 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (644, 'Q-26400383/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', NULL, 'MV DEWI SHINTA MANGGALA', 'sent', '30 Days', 0, 4500000.00, 4500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-263152/GNS/IV/2026
-File: Q-263152 (Delivery SMI 2 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263152 (Delivery SMI 2 - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263152/GNS/IV/2026', ((TIMESTAMP '2026-04-16 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (645, 'Q-26400384/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2403-112-D/05', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 9640000.00, 9640000.00, 482000.00, 'Imported from Excel
 Original Q-no: Q-263153-O/GNS/IV/2026
-File: Q-263153-O (V-26-2403-112-D_05 - Rocket Parachute Flares - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263153-O (V-26-2403-112-D_05 - Rocket Parachute Flares - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-263153-O/GNS/IV/2026', ((TIMESTAMP '2026-04-17 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (646, 'Q-26400385/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-274-D/05', 'MV DEWI SHINTA MANGGALA', 'sent', '30 days', 5.0, 15321000.00, 15321000.00, 766050.00, 'Imported from Excel
 Original Q-no: Q-263154-O/GNS/IV/2026
-File: Q-263154-O (V-26-2402-274-D_05 - Obat - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263154-O (V-26-2402-274-D_05 - Obat - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263154-O/GNS/IV/2026', ((TIMESTAMP '2026-04-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (647, 'Q-26400386/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2402-225-D/05', 'MV DEWI SHINTA MANGGALA', 'sent', '30 Days', 5.0, 925000.00, 925000.00, 46250.00, 'Imported from Excel
 Original Q-no: Q-263155/GNS/IV/2026
-File: Q-263155 (V-26-2402-225-D_05 - Flag - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263155 (V-26-2402-225-D_05 - Flag - Dewi Shinta Manggala) - Pelita Global Logistik.xlsx', 'Q-263155/GNS/IV/2026', ((TIMESTAMP '2026-04-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (648, 'Q-26400387/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2403-008-E/04', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 17700000.00, 17700000.00, 885000.00, 'Imported from Excel
 Original Q-no: Q-263157-O/GNS/IV/2026
-File: Q-263157 (V-26-2403-008-E_04 - Kain Majun - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263157 (V-26-2403-008-E_04 - Kain Majun - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-263157-O/GNS/IV/2026', ((TIMESTAMP '2026-04-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (649, 'Q-26400388/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2403-006-E/05', 'MV DEWI SARASWATI', 'sent', '30 days', 5.0, 39694000.00, 39694000.00, 1984700.00, 'Imported from Excel
 Original Q-no: Q-263158-O/GNS/IV/2026
-File: Q-263158 (V-26-2403-006-E_05 - Dewi Saraswati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263158 (V-26-2403-006-E_05 - Dewi Saraswati) - Pelita Global Logistik.xlsx', 'Q-263158-O/GNS/IV/2026', ((TIMESTAMP '2026-04-20 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (650, 'Q-26400117/GNS/IV/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, NULL, 'sent', '30 Days', 5.0, 20950000.00, 20950000.00, 1047500.00, 'Imported from Excel
 Original Q-no: Q-264161/GNS/IV/2026
-File: Q-264161 Laptop Lenovo - IMC Shipping Management.xlsx', ((TIMESTAMP '2026-04-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
+File: Q-264161 Laptop Lenovo - IMC Shipping Management.xlsx', 'Q-264161/GNS/IV/2026', ((TIMESTAMP '2026-04-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
 INSERT INTO quotations (
   id, quotation_no, version, parent_id, company_client_id, company_client_name,
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES
   (651, 'Q-26400510/GNS/IV/2026', 1, NULL, 5, 'PT. Karunia Aman Selalu', 37, 'Bapak Bagas', NULL, 'TB MORA 01', 'sent', '30 Days', 0, 800000.00, 800000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265160/GNS/IV/2026
-File: Q-265160 (VBelt - Mora 01) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2026-04-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265160 (VBelt - Mora 01) - Karunia Aman Selalu.xlsx', 'Q-265160/GNS/IV/2026', ((TIMESTAMP '2026-04-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (652, 'Q-26400612/GNS/IV/2026', 1, NULL, 6, 'PT. Niterra Mobility Indonesia', 5, 'Bapak Wawan Wijaya', NULL, NULL, 'sent', '30 Days', 5.0, 6400000.00, 6400000.00, 320000.00, 'Imported from Excel
 Original Q-no: Q-267159/GNS/IV/2026
-File: Q-267159 (Rod Seal 10 16 6 3) - Niterra.xlsx', ((TIMESTAMP '2026-04-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-267159 (Rod Seal 10 16 6 3) - Niterra.xlsx', 'Q-267159/GNS/IV/2026', ((TIMESTAMP '2026-04-21 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (653, 'Q-2640027/GNS/IV/2026', 1, NULL, 2, 'PT. Sentra Makmur Lines', 28, 'Bp. Irzi Ardiansyah', NULL, NULL, 'sent', '30 Days', 0, 22500000.00, 22500000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-261167/GNS/IV/2026
-File: Q-261167 (Shackle D 55 Ton) - Sentra Makmur Lines.xlsx', ((TIMESTAMP '2026-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-261167 (Shackle D 55 Ton) - Sentra Makmur Lines.xlsx', 'Q-261167/GNS/IV/2026', ((TIMESTAMP '2026-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (654, 'Q-26400389/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2401-009-D/01', 'MV DEWI AMBARWATI', 'sent', '30 days', 5.0, 102715000.00, 102715000.00, 5135750.00, 'Imported from Excel
 Original Q-no: Q-263164-O/GNS/IV/2026
-File: Q-263164-D (V-26-2401-009-D_01 - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263164-D (V-26-2401-009-D_01 - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-263164-O/GNS/IV/2026', ((TIMESTAMP '2026-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (655, 'Q-26400390/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2401-002-D/05', 'MV DEWI AMBARWATI', 'sent', '30 days', 5.0, 25590000.00, 25590000.00, 1279500.00, 'Imported from Excel
 Original Q-no: Q-263165-O/GNS/IV/2026
-File: Q-263165-D (V-26-2401-002-D_05 - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263165-D (V-26-2401-002-D_05 - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-263165-O/GNS/IV/2026', ((TIMESTAMP '2026-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (656, 'Q-26400391/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2401-073-D/04', 'MV DEWI AMBARWATI', 'sent', '30 days', 5.0, 49000000.00, 49000000.00, 2450000.00, 'Imported from Excel
 Original Q-no: Q-263166-O/GNS/IV/2026
-File: Q-263166-D (V-26-2401-073-D_04 - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263166-D (V-26-2401-073-D_04 - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-263166-O/GNS/IV/2026', ((TIMESTAMP '2026-04-23 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (657, 'Q-2640091/GNS/IV/2026', 1, NULL, 9, 'PT. Kasen Maritim Logistik', 15, 'Bapak Divton', NULL, NULL, 'sent', '30 Days', 0, 370000.00, 370000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265167/GNS/IV/2026
-File: Q-265167 (Flow Meter) - Kasen Maritim Logistik.xlsx', ((TIMESTAMP '2026-04-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-265167 (Flow Meter) - Kasen Maritim Logistik.xlsx', 'Q-265167/GNS/IV/2026', ((TIMESTAMP '2026-04-27 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (658, 'Q-2640079/GNS/IV/2026', 1, NULL, 7, 'PT. Mitrabahtera Segara Sejati', 42, 'Bapak Gia Arekta', 'PR43-2604-0035', 'TUG BOAT - MIMI L01', 'sent', '30 Days', 5.0, 11786000.00, 11786000.00, 589300.00, 'Imported from Excel
 Original Q-no: Q-268171/GNS/IV/2026
-File: Q-268171 (PR43-2604-0035 - TUG BOAT - MIMI L01) - Mitrabahtera Segara Sejati.xlsx', ((TIMESTAMP '2026-04-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-268171 (PR43-2604-0035 - TUG BOAT - MIMI L01) - Mitrabahtera Segara Sejati.xlsx', 'Q-268171/GNS/IV/2026', ((TIMESTAMP '2026-04-29 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (659, 'Q-26400392/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2401-008-D', 'MV DEWI AMBARWATI', 'sent', '30 days', 5.0, 28250000.00, 28250000.00, 1412500.00, 'Imported from Excel
 Original Q-no: Q-263169-O/GNS/IV/2026
-File: Q-263169-O (V-26-2401-008-D - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263169-O (V-26-2401-008-D - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-263169-O/GNS/IV/2026', ((TIMESTAMP '2026-04-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (660, 'Q-26400393/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2401-035-D', 'MV DEWI AMBARWATI', 'sent', '30 days', 5.0, 45200000.00, 45200000.00, 2260000.00, 'Imported from Excel
 Original Q-no: Q-263170-O/GNS/IV/2026
-File: Q-263170-O (V-26-2401-035-D - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263170-O (V-26-2401-035-D - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-263170-O/GNS/IV/2026', ((TIMESTAMP '2026-04-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (661, 'Q-26400394/GNS/IV/2026', 1, NULL, 3, 'PT. Pelita Global Logistik', 3, 'Ibu Aisya Dewi Faradiba', 'V-26-2401-018-D/04', 'MV DEWI AMBARWATI', 'sent', '30 days', 5.0, 24000000.00, 24000000.00, 1200000.00, 'Imported from Excel
 Original Q-no: Q-263174-O/GNS/IV/2026
-File: Q-263174-O (V-26-2401-018-D_04 -Mouthpiece Alcosan AL6000 - Dewi Ambarwati) - Pelita Global Logistik.xlsx', ((TIMESTAMP '2026-04-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-263174-O (V-26-2401-018-D_04 -Mouthpiece Alcosan AL6000 - Dewi Ambarwati) - Pelita Global Logistik.xlsx', 'Q-263174-O/GNS/IV/2026', ((TIMESTAMP '2026-04-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (662, 'Q-26400118/GNS/IV/2026', 1, NULL, 1, 'PT. IMC Ship Management', 29, 'Bp. Restu Umar Singgih', NULL, 'MV YUXIN SATU', 'draft', '30 days', 5.0, 0.00, 0.00, 0.00, 'Imported from Excel
 Original Q-no: Q-264172/GNS/IV/2026
-File: Q-264172 (VALVE FIRE HYDRANT 10DN 40 - Yuxin Satu ) - IMC Ship Management.xlsx', ((TIMESTAMP '2026-04-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
+File: Q-264172 (VALVE FIRE HYDRANT 10DN 40 - Yuxin Satu ) - IMC Ship Management.xlsx', 'Q-264172/GNS/IV/2026', ((TIMESTAMP '2026-04-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1),
   (663, 'Q-26400511/GNS/IV/2026', 1, NULL, 5, 'PT. Karunia Aman Selalu', 37, 'Bapak Bagas', NULL, 'TB MARINA 23', 'sent', '30 Days', 0, 665000.00, 665000.00, 0.00, 'Imported from Excel
 Original Q-no: Q-265171/GNS/IV/2026
-File: Q-265171 (MPU Sensor PN 3034572- Marina 23) - Karunia Aman Selalu.xlsx', ((TIMESTAMP '2026-04-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
+File: Q-265171 (MPU Sensor PN 3034572- Marina 23) - Karunia Aman Selalu.xlsx', 'Q-265171/GNS/IV/2026', ((TIMESTAMP '2026-04-30 09:00:00') AT TIME ZONE 'Asia/Jakarta'), 1, 1);
 SELECT setval('quotations_id_seq', 663);
 
 -- 8. Quotation items (3740)

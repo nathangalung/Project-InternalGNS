@@ -1,6 +1,7 @@
 -- name: invoices.list_base
 SELECT inv.id,
        inv.invoice_no,
+       inv.legacy_no,
        inv.quotation_id,
        q.quotation_no,
        inv.po_id,
@@ -41,6 +42,7 @@ WHERE 1=1;
 -- name: invoices.get_by_id
 SELECT inv.id,
        inv.invoice_no,
+       inv.legacy_no,
        inv.quotation_id,
        q.quotation_no,
        inv.po_id,
@@ -73,6 +75,7 @@ WHERE inv.id = $1;
 -- name: invoices.get_by_quotation
 SELECT inv.id,
        inv.invoice_no,
+       inv.legacy_no,
        inv.quotation_id,
        q.quotation_no,
        inv.po_id,
@@ -110,6 +113,7 @@ LIMIT 1;
 -- endpoints, so the page must never need them.
 SELECT inv.id,
        inv.invoice_no,
+       inv.legacy_no,
        inv.quotation_id,
        q.quotation_no,
        q.vessel_name,
@@ -165,6 +169,7 @@ WHERE inv.id = $1;
 -- name: invoices.get_detail_by_quotation
 SELECT inv.id,
        inv.invoice_no,
+       inv.legacy_no,
        inv.quotation_id,
        q.quotation_no,
        q.vessel_name,

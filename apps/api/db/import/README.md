@@ -33,7 +33,8 @@ truncate-and-rebuild seed. No live database is needed to generate it, and
 4. Version chains for files that share an original Q-number (a `parent_id`
    chain, oldest by date is v1).
 5. The original Excel Q-number and source filename into `quotations.notes` for
-   traceability.
+   traceability, and the Q-number into `quotations.legacy_no`, which the
+   quotation list search matches.
 6. A `doc_counters` restart at 0, since every number it loads is legacy, so
    the API's `fn_next_doc_no` issues `Q-00001/GNS/...` next.
 7. `status='draft'` for files where every line has `selling_price <= 0`, so

@@ -15,7 +15,8 @@ Decisions:
   (a 2024 file gets `/.../2024`, a 2025 file gets `/.../2025`, etc.).
   fn_next_doc_no issues `Q-{5 digits}/GNS/{Roman}/{YYYY}` from doc_counters,
   which the seed restarts, so the two formats never collide.
-- Original Q-no recorded in quotations.notes
+- Original Q-no recorded in quotations.notes and kept searchable as
+  quotations.legacy_no
 - Duplicates by original Q-no become a date-ordered version chain
 - Status = 'draft' when every line has selling_price <= 0 (Excel pricing
   not yet entered), else 'sent'
@@ -415,6 +416,7 @@ def main():
                 "total": total,
                 "total_discount": total_discount,
                 "notes": notes,
+                "legacy_no": (file_data.get("raw_qno_norm") or "").strip() or None,
                 "date_iso": date_iso,
             })
             prev_id = quotation_id_counter
@@ -534,7 +536,7 @@ RESTART IDENTITY CASCADE;
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES""")
     rows = []
     for q in quotations:
@@ -548,7 +550,7 @@ RESTART IDENTITY CASCADE;
             f"{sql_str(q['client_ref_no'])}, {sql_str(q['vessel_name'])}, {sql_str(q['status'])}, "
             f"{sql_str(q['payment_terms'])}, {q['discount_pct']}, "
             f"{q['total_produk']:.2f}, {q['total']:.2f}, {q['total_discount']:.2f}, "
-            f"{sql_str(q['notes'])}, {created_at}, {SUPERADMIN_ID}, {SUPERADMIN_ID})"
+            f"{sql_str(q['notes'])}, {sql_str(q['legacy_no'])}, {created_at}, {SUPERADMIN_ID}, {SUPERADMIN_ID})"
         )
     CHUNK_Q = 50
     for i in range(0, len(rows), CHUNK_Q):
@@ -559,7 +561,7 @@ RESTART IDENTITY CASCADE;
   contact_id, contact_name, client_ref_no, vessel_name, status,
   payment_terms, discount_pct,
   total_produk, total, total_discount,
-  notes, created_at, created_by, updated_by
+  notes, legacy_no, created_at, created_by, updated_by
 ) VALUES""")
         out.append(",\n".join(chunk) + ";")
     out.append(f"SELECT setval('quotations_id_seq', {quotation_id_counter});\n")

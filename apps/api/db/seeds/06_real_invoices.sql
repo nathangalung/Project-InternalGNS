@@ -242,4 +242,67 @@ UPDATE purchase_orders po
  WHERE po.status <> 'DELIVERED'
    AND EXISTS (SELECT 1 FROM invoices i WHERE i.po_id = po.id);
 
+-- 5. Each invoice keeps the number it was issued under, from its file name
+--    (011_1_2026 -> 011/1/2026), so the list search still finds it. The
+--    original DO numbers are not on file, so legacy_dn_no stays NULL.
+UPDATE invoices i
+   SET legacy_no = v.legacy_no
+  FROM (VALUES
+    (478::bigint, '015/I/2026'),
+    (481::bigint, '036/2/2026'),
+    (486::bigint, '024/II/2026'),
+    (488::bigint, '10611/1/2026'),
+    (489::bigint, '005/1/2026'),
+    (490::bigint, '006/1/2026'),
+    (492::bigint, '001/I/2026'),
+    (498::bigint, '003/1/2026'),
+    (500::bigint, '004/1/2026'),
+    (506::bigint, '008/1/2026'),
+    (509::bigint, '009/1/2026'),
+    (512::bigint, '007/1/2026'),
+    (519::bigint, '011/1/2026'),
+    (520::bigint, '010/1/2026'),
+    (522::bigint, '012/1/2026'),
+    (523::bigint, '014/1/2026'),
+    (524::bigint, '013/1/2026'),
+    (526::bigint, '017/I/2026'),
+    (528::bigint, '018/1/2026'),
+    (530::bigint, '026/2/2026'),
+    (537::bigint, '023B/2/2026'),
+    (542::bigint, '020/2/2026'),
+    (543::bigint, '019/1/2026'),
+    (544::bigint, '025/2/2026'),
+    (548::bigint, '022/2/2026'),
+    (552::bigint, '038/3/2026'),
+    (555::bigint, '035/2/2026'),
+    (556::bigint, '032/2/2026'),
+    (557::bigint, '033/2/2026'),
+    (565::bigint, '027/2/2026'),
+    (568::bigint, '031/2/2026'),
+    (571::bigint, '041/3/2026'),
+    (573::bigint, '030/2/2026'),
+    (575::bigint, '029/2/2026'),
+    (576::bigint, '038/3/2026'),
+    (587::bigint, '050/4/2026'),
+    (589::bigint, '055/5/2026'),
+    (593::bigint, '037/3/2026'),
+    (604::bigint, '044/4/2026'),
+    (605::bigint, '042/3/2026'),
+    (611::bigint, '046/4/2026'),
+    (614::bigint, '043/4/2026'),
+    (619::bigint, '047/4/2026'),
+    (640::bigint, '051/4/2026'),
+    (641::bigint, '048/4/2026'),
+    (643::bigint, '052/4/2026'),
+    (645::bigint, '045/4/2026'),
+    (646::bigint, '056/5/2026'),
+    (647::bigint, '10616/4/2026'),
+    (649::bigint, '053/4/2026'),
+    (654::bigint, '054/5/2026'),
+    (660::bigint, '057/5/2026'),
+    (668::bigint, '016/I/2026'),
+    (669::bigint, '025/2/2026')
+  ) AS v(quotation_id, legacy_no)
+ WHERE i.quotation_id = v.quotation_id;
+
 COMMIT;

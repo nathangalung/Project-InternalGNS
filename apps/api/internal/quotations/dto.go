@@ -7,8 +7,11 @@ import (
 
 // Quotation mirrors the quotations header.
 type Quotation struct {
-	ID                int64     `db:"id"                  json:"id"`
-	QuotationNo       string    `db:"quotation_no"        json:"quotationNo"`
+	ID          int64  `db:"id"                  json:"id"`
+	QuotationNo string `db:"quotation_no"        json:"quotationNo"`
+	// Number first issued under.
+	// Set by a re-import only; nil for app-created quotations.
+	LegacyNo          *string   `db:"legacy_no"           json:"legacyNo,omitempty"`
 	Version           int16     `db:"version"             json:"version"`
 	CompanyClientID   int64     `db:"company_client_id"   json:"companyClientId"`
 	CompanyClientName string    `db:"company_client_name" json:"companyClientName"`
@@ -100,6 +103,7 @@ type RevisionRow struct {
 type ListRow struct {
 	ID              int64     `db:"id"                json:"id"`
 	QuotationNo     string    `db:"quotation_no"      json:"quotationNo"`
+	LegacyNo        *string   `db:"legacy_no"         json:"legacyNo,omitempty"`
 	Version         int16     `db:"version"           json:"version"`
 	CompanyClientID int64     `db:"company_client_id" json:"companyClientId"`
 	CompanyName     string    `db:"company_name"      json:"companyName"`

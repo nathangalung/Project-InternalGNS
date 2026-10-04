@@ -2,6 +2,7 @@
 SELECT po.id,
        po.po_number,
        po.delivery_note_number,
+       po.legacy_dn_no,
        po.delivery_note_date,
        (SELECT i.invoice_no FROM invoices i WHERE i.po_id = po.id
          ORDER BY i.status = 'cancelled', i.id DESC LIMIT 1) AS invoice_no,
@@ -52,6 +53,7 @@ WHERE 1=1;
 SELECT po.id,
        po.po_number,
        po.delivery_note_number,
+       po.legacy_dn_no,
        po.delivery_note_date,
        (SELECT i.invoice_no FROM invoices i WHERE i.po_id = po.id
          ORDER BY i.status = 'cancelled', i.id DESC LIMIT 1) AS invoice_no,
@@ -90,6 +92,7 @@ WHERE po.id = $1;
 SELECT po.id,
        po.po_number,
        po.delivery_note_number,
+       po.legacy_dn_no,
        po.delivery_note_date,
        (SELECT i.invoice_no FROM invoices i WHERE i.po_id = po.id
          ORDER BY i.status = 'cancelled', i.id DESC LIMIT 1) AS invoice_no,

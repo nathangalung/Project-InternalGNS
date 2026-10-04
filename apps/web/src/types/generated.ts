@@ -223,6 +223,7 @@ export type DashboardTimeseriesPoint = {
 export type InvoiceBackendRow = {
     id: number;
     invoiceNo: string;
+    legacyNo?: string;
     quotationId: number;
     quotationNo: string;
     poId?: number;
@@ -659,6 +660,7 @@ export type PurchaseOrderRow = {
     updatedAt: string;
     deliveryNoteNumber?: string;
     deliveryNoteDate?: string;
+    legacyDnNo?: string;
     invoiceNo?: string;
     linesLocked: boolean;
     allowedTransitions: PoTransition[];
@@ -717,6 +719,7 @@ export type QuotationEditLock = {
 export type QuotationHeader = {
     id: number;
     quotationNo: string;
+    legacyNo?: string;
     version: number;
     companyClientId: number;
     companyClientName: string;
@@ -865,6 +868,7 @@ export type QuotationLinesAdded = {
 export type QuotationListRow = {
     id: number;
     quotationNo: string;
+    legacyNo?: string;
     version: number;
     companyClientId: number;
     companyName: string;

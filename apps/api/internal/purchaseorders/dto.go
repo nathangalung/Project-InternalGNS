@@ -51,6 +51,9 @@ type PurchaseOrder struct {
 	// Day the number issued, WIB.
 	// Nil before ON_PROGRESS and on legacy rows with no status history.
 	DeliveryNoteDate *time.Time `db:"delivery_note_date" json:"deliveryNoteDate,omitempty"`
+	// Delivery note first issued.
+	// The number on the original DO, set by a re-import only.
+	LegacyDnNo *string `db:"legacy_dn_no" json:"legacyDnNo,omitempty"`
 	// Invoice issued at DELIVERED.
 	// A live one wins over a cancelled one; nil before delivery.
 	InvoiceNo *string `db:"invoice_no" json:"invoiceNo,omitempty"`
