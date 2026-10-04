@@ -628,6 +628,10 @@ COMMENT ON TABLE doc_sequences IS
   'Running sequence per (doc_type, company, year). UPSERT atomic via fn_next_doc_no for race-safe number generation.';
 
 -- Legacy counters resume after the legacy numbers on file.
+-- The rebuild reads each client's current number, so a client renumbered
+-- while 00098 was live matches none of its old documents and restarts its
+-- legacy counter at 1. This Down is for development; the documented
+-- production rollback restores a snapshot instead (docs/deploy_vps.md).
 INSERT INTO doc_sequences (doc_type, company_id, year, last_seq)
 SELECT doc_type, company_id, m[2]::INT, MAX(m[1]::INT)
 FROM (
