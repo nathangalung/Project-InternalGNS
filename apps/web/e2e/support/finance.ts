@@ -127,6 +127,11 @@ export async function deliveredInvoice(token: string, client: SeedClient): Promi
     "get PO",
   )
   await uploadPoFile(token, po.id)
+  // Work needs the client's PO number.
+  await send(token, "PATCH", `/purchase-orders/${po.id}/details`, {
+    poNumber: `PO-E2E-${po.id}`,
+    poDate: po.poDate.slice(0, 10),
+  })
   for (const status of ["ON_PROGRESS", "DELIVERED"]) {
     await send(token, "PATCH", `/purchase-orders/${po.id}/status`, { status })
   }

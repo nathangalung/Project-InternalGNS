@@ -316,10 +316,24 @@ export class SalesSeed {
   }
 
   // Send, accept, return PO.
-  async accept(id: number): Promise<PurchaseOrder> {
+  //
+  // The client's PO number is entered as it arrives with the order, since
+  // Dalam Progres requires it; poNumber null leaves the PO without one.
+  async accept(id: number, opts: { poNumber?: string | null } = {}): Promise<PurchaseOrder> {
     await this.send(id)
     await this.setQuotationStatus(id, "accepted")
+    const po = await this.poByQuotation(id)
+    if (opts.poNumber === null) return po
+    await this.setPoNumber(po, opts.poNumber ?? `${this.prefix}-PO-${po.id}`)
     return this.poByQuotation(id)
+  }
+
+  // Enter the client's PO number.
+  async setPoNumber(po: PurchaseOrder, poNumber: string): Promise<void> {
+    await api("PATCH", `/purchase-orders/${po.id}/details`, {
+      poNumber,
+      poDate: po.poDate.slice(0, 10),
+    })
   }
 
   async revise(id: number, note?: string): Promise<number> {
