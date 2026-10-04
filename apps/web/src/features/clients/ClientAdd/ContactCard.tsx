@@ -73,6 +73,7 @@ export default function ContactCard({
             value={form.email}
             onChange={(e) => onChange("email", e.target.value)}
             disabled={!isNamaKontakFilled}
+            aria-invalid={emailError ? true : undefined}
           />
           {emailError && <span className={fieldErrorCls}>{emailError}</span>}
         </div>

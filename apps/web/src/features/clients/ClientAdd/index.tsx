@@ -1,5 +1,6 @@
 import { useState } from "react"
 import Modal from "@/components/shared/Modal"
+import { contactEmailError } from "@/features/clients/helpers"
 import { useCreateClient, useCreateContact, useUploadClientLogo } from "@/features/clients/hooks"
 import { ui } from "@/lib/ui"
 import {
@@ -28,6 +29,8 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
   const [form, setForm] = useState<ClientAddFormData>(INITIAL_FORM)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  // Server refusal of a taken email, until the input changes.
+  const [emailTaken, setEmailTaken] = useState("")
   // Saved before a failed contact call.
   const [createdClient, setCreatedClient] = useState<ClientRow | null>(null)
   const createClient = useCreateClient()
@@ -47,7 +50,7 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
   const isNamaKontakFilled = isCompanyReady && form.namaKontak.trim().length > 0
 
   const phoneError = isNamaKontakFilled ? optionalPhoneError(form.nomorTelepon) : null
-  const emailError = isNamaKontakFilled ? optionalEmailError(form.email) : null
+  const emailError = isNamaKontakFilled ? emailTaken || optionalEmailError(form.email) : null
   // One way to reach them, and no filled field the API would refuse.
   const hasContactWay = form.nomorTelepon.trim() !== "" || form.email.trim() !== ""
   // NPWP is optional; an Indonesian one must be 16 digits.
@@ -61,6 +64,7 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
 
   function handleChange(field: keyof ClientAddFormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
+    if (field === "email") setEmailTaken("")
   }
 
   async function handleSubmit() {
@@ -79,6 +83,12 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
       setCreatedClient(null)
       onOpenChange(false)
     } catch (err) {
+      // A taken email sits on the email input.
+      const taken = contactEmailError(err)
+      if (taken) {
+        setEmailTaken(taken)
+        return
+      }
       const msg = err instanceof Error ? err.message : "Gagal menyimpan klien."
       setSubmitError(msg)
     }
@@ -89,6 +99,7 @@ export default function ClientAdd({ open, onOpenChange, onSuccess }: ClientAddPr
     setLogoFile(null)
     setCreatedClient(null)
     setSubmitError(null)
+    setEmailTaken("")
     onOpenChange(false)
   }
 

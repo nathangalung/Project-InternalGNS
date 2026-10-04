@@ -244,6 +244,34 @@ test("a contact email another client's contact owns is refused on the field", as
   await expect(page.getByText(EMAIL_TAKEN)).toHaveCount(0)
 })
 
+// Taken email on Tambah Klien.
+test("Tambah Klien shows a taken contact email on its field", async ({ page, seed }) => {
+  const owner = await seed.client()
+  const taken = owner.contactEmail ?? ""
+  expect(taken).not.toBe("")
+  const name = seed.name("Klien Email")
+  await page.goto("/clients")
+  await page.getByRole("button", { name: "Tambah Klien" }).click()
+  const modal = page.getByRole("dialog", { name: "Tambah Klien" })
+  const save = modal.getByRole("button", { name: "Simpan Data" })
+  await modal.getByLabel("Nama Perusahaan *").fill(name)
+  await modal.getByLabel("Nama Narahubung *").fill(`${seed.prefix} Rina`)
+  const email = modal.getByLabel("Email (Opsional)")
+  await email.fill(taken.toUpperCase())
+  await save.click()
+
+  // The client is saved; only its contact waits for a free email.
+  await expect(modal.getByRole("status")).toContainText("Klien sudah tersimpan tanpa kontak.")
+  await seed.adopt("client", name)
+  await expect(email).toHaveAttribute("aria-invalid", "true")
+  await expect(modal.getByText(EMAIL_TAKEN)).toHaveCount(1)
+  await expect(save).toBeDisabled()
+  await email.fill(`baru.${Date.now()}@example.com`)
+  await expect(modal.getByText(EMAIL_TAKEN)).toHaveCount(0)
+  await save.click()
+  await expect(modal).toBeHidden()
+})
+
 // Failed summary shows a dash.
 test("the KPI cards show a dash, not zero, without a summary", async ({ page }) => {
   await page.route("**/api/v1/clients/summary", (route) =>
