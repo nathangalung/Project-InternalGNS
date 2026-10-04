@@ -128,8 +128,12 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
             <button type="button" className={ui.breadcrumbLink} onClick={onBack}>
               Katalog Produk
             </button>
-            <span className={ui.breadcrumbSep}>&rsaquo;</span>
-            <span className={ui.breadcrumbCurrent}>Detail Produk</span>
+            <span className={ui.breadcrumbSep} aria-hidden="true">
+              &rsaquo;
+            </span>
+            <span className={ui.breadcrumbCurrent} aria-current="page">
+              Detail Produk
+            </span>
           </nav>
 
           <div className="flex items-center gap-5">
