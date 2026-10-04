@@ -110,6 +110,49 @@ func TestService_Refresh_OldReuseBlastsAllSessions(t *testing.T) {
 	// An old replay blasts every session, so the rotated token is revoked too.
 	_, err = svc.Refresh(ctx, rotated.RefreshToken)
 	assert.ErrorIs(t, err, auth.ErrRevokedRefresh)
+
+	// The access tokens of the stolen chain die with it.
+	for name, tok := range map[string]string{"first": first.Token, "rotated": rotated.Token} {
+		_, err = svc.Authenticate(ctx, tok)
+		assert.ErrorIs(t, err, auth.ErrSessionRevoked, name)
+	}
+}
+
+// Stale replay spares new sessions.
+// Once the blast bumped the version, the replayed token is from an ended
+// session; replaying it again must not end the login that followed.
+func TestService_Refresh_StaleReplaySparesNewLogin(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	store := testutil.Store(t)
+	userRepo := users.NewRepo(tx, store)
+	u, err := userRepo.Create(ctx, users.CreateUserRequest{
+		Email: uniqueEmail(t), Name: "Stale Replay IT",
+		Password: "Sup3rSecret!", Role: users.RoleOperational,
+	}, 1)
+	require.NoError(t, err)
+	svc := auth.NewService(userRepo, "test-secret-please-change", time.Hour).
+		WithRefresh(auth.NewRefreshRepo(tx, store), 24*time.Hour)
+
+	first, err := svc.Login(ctx, u.Email, "Sup3rSecret!")
+	require.NoError(t, err)
+	_, err = svc.Refresh(ctx, first.RefreshToken)
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx,
+		"UPDATE refresh_tokens SET revoked_at = now() - interval '30 seconds' WHERE revoked_at IS NOT NULL")
+	require.NoError(t, err)
+	_, err = svc.Refresh(ctx, first.RefreshToken)
+	require.ErrorIs(t, err, auth.ErrReusedRefresh)
+
+	fresh, err := svc.Login(ctx, u.Email, "Sup3rSecret!")
+	require.NoError(t, err)
+	_, err = svc.Refresh(ctx, first.RefreshToken)
+	assert.ErrorIs(t, err, auth.ErrRevokedRefresh, "a replay from an ended session is just dead")
+	assert.NotErrorIs(t, err, auth.ErrReusedRefresh)
+
+	_, err = svc.Authenticate(ctx, fresh.Token)
+	require.NoError(t, err, "the new login keeps its access token")
+	_, err = svc.Refresh(ctx, fresh.RefreshToken)
+	require.NoError(t, err, "the new login keeps its refresh token")
 }
 
 // Unknown token: never been issued.

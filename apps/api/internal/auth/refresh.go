@@ -154,10 +154,16 @@ func (r *RefreshRepo) revokeToken(ctx context.Context, hash []byte) error {
 	return err
 }
 
-func (r *RefreshRepo) revokeAllForUser(ctx context.Context, userID int64) error {
-	_, err := r.db.Exec(ctx, r.store.Get("auth.refresh_revoke_user"), userID, "reuse")
-	if err != nil {
+// endSessions ends every session.
+// It revokes the user's refresh tokens and bumps the session version, so the
+// access tokens minted from a replayed chain are refused too. The users
+// query is reached through the store because users cannot import auth.
+func (r *RefreshRepo) endSessions(ctx context.Context, userID int64) error {
+	if _, err := r.db.Exec(ctx, r.store.Get("auth.refresh_revoke_user"), userID, "reuse"); err != nil {
 		return fmt.Errorf("revoke all refresh tokens: %w", err)
+	}
+	if _, err := r.db.Exec(ctx, r.store.Get("users.bump_session_version"), userID); err != nil {
+		return fmt.Errorf("bump session version: %w", err)
 	}
 	return nil
 }

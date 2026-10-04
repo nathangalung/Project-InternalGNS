@@ -54,7 +54,14 @@ The refresh token lives only in a cookie; no response body carries it.
   401 `reused` detail, but it keeps the user's other sessions and leaves the
   cookie alone (`ErrRacedRefresh`), because the browser's one cookie jar may
   already hold the winner's fresh token. Past that window it is a replay:
-  every session of the user is revoked and the cookie is expired. The cost
+  every refresh token of the user is revoked and `session_version` is
+  bumped, so the access tokens minted from the stolen chain die on their
+  next request too, and the cookie is expired. The blast runs in its own
+  transaction after the refusal, since upgrading the refresh's share lock
+  on the users row would deadlock two concurrent replays. A replayed token
+  whose session already ended (minted under an older version) is just
+  `revoked` and ends nothing, so a stolen token cannot keep signing out the
+  logins that follow. The cost
   of keeping the cookie: when the winner's response itself is lost, the jar
   still holds the rotated token, and an attempt past the window counts as a
   replay. The web makes refresh single-flight across tabs (Web Locks), so

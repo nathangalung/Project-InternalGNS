@@ -52,9 +52,10 @@ to superadmin and finance at both layers, including the dashboard endpoints.
 
 Sessions end on expiry or by version. Every access and refresh token carries
 the `users.session_version` it was minted under, and the auth middleware
-refuses any other. A role change, a deactivation, or a password change bumps
-the version and revokes refresh tokens, so every open session of that user
-ends on its next request.
+refuses any other. A role change, a deactivation, a password change, or a
+rotated refresh token replayed past its 10-second grace bumps the version
+and revokes refresh tokens, so every open session of that user ends on its
+next request.
 
 The refresh token travels only in the `gns_refresh` cookie, never in a
 response body: HttpOnly, Secure, SameSite=Strict, `Path=/api/v1/auth`,

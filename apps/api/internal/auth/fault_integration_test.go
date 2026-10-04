@@ -31,6 +31,7 @@ var failingSQL = map[string]string{
 	"auth.refresh_lookup":        `SELECT 1 / 0, TRUE, 'x', FALSE, FALSE WHERE $1::bytea IS NOT NULL AND $2::float8 IS NOT NULL`,
 	"auth.refresh_revoke_user":   `SELECT 1 / 0 WHERE $1::bigint IS NOT NULL AND $2::text IS NOT NULL`,
 	"auth.refresh_revoke_token":  `SELECT 1 / 0 WHERE $1::bytea IS NOT NULL`,
+	"users.bump_session_version": `SELECT 1 / 0 WHERE $1::bigint IS NOT NULL`,
 }
 
 // noLockRow mimics a late deactivation.
@@ -189,9 +190,18 @@ func TestService_Refresh_RefusalLookupFailureSurfaces(t *testing.T) {
 }
 
 // Failed replay blast ends nothing.
-// The revocation of every session and the replay verdict are one unit, so
-// a failed blast is an error and the live session is left as it was.
+// The refresh revocation and the version bump are one unit, so a failed
+// blast is an error and the live session is left as it was.
 func TestService_Refresh_ReplayBlastFailureSurfaces(t *testing.T) {
+	for _, key := range []string{"auth.refresh_revoke_user", "users.bump_session_version"} {
+		t.Run(key, func(t *testing.T) {
+			replayBlastFails(t, key)
+		})
+	}
+}
+
+// replayBlastFails fails one blast step.
+func replayBlastFails(t *testing.T, key string) {
 	ctx, tx, u := faultAccount(t)
 	real := svcOn(tx, testutil.Store(t))
 	first, err := real.Login(ctx, u.Email, faultPassword)
@@ -202,9 +212,11 @@ func TestService_Refresh_ReplayBlastFailureSurfaces(t *testing.T) {
 		WHERE user_id = $1 AND revoked_at IS NOT NULL`, u.ID)
 	require.NoError(t, err)
 
-	_, err = svcOn(tx, failing(t, "auth.refresh_revoke_user")).Refresh(ctx, first.RefreshToken)
+	_, err = svcOn(tx, failing(t, key)).Refresh(ctx, first.RefreshToken)
 	requireDBFault(t, err)
 
+	_, err = real.Authenticate(ctx, second.Token)
+	assert.NoError(t, err, "the failed blast must not have bumped the version")
 	_, err = real.Refresh(ctx, second.RefreshToken)
 	assert.NoError(t, err, "the failed blast must not have revoked the live session")
 }
