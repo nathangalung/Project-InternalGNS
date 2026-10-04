@@ -103,6 +103,7 @@ export async function deliveredInvoice(token: string, client: SeedClient): Promi
       body: JSON.stringify({
         companyClientId: client.id,
         discountPct: "0",
+        validityDays: 30,
         items: [
           {
             requestedName: "Tali Tambat E2E",
