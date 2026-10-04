@@ -237,8 +237,8 @@ func TestRepo_List_Filters(t *testing.T) {
 }
 
 // Month-year search finds numbers.
-// The quotation and delivery note numbers match whole periods only; the
-// client's own PO number also carries one. 1999 keeps every other row out.
+// The PO and delivery-note numbers carry the period; the quotation is
+// found by typed text alone. 1999 keeps every other row out.
 func TestRepo_List_PeriodSearch(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	fx := newListFixture(t, tx)
@@ -261,7 +261,8 @@ func TestRepo_List_PeriodSearch(t *testing.T) {
 		{"1/1999", []int64{fx.a.ID}},
 		{"2/1999", []int64{fx.b.ID}},
 		{"II/1999", []int64{fx.b.ID}},
-		{"10/1999", []int64{fx.a.ID}},
+		{"10/1999", []int64{}},
+		{"Q-" + tag, []int64{fx.a.ID}},
 		{"xi / 1999", []int64{}},
 		{"DN-" + tag, []int64{fx.b.ID}},
 	}

@@ -47,19 +47,24 @@ func TestRepo_List_EscapesLikeWildcards(t *testing.T) {
 }
 
 // Month-year search finds numbers.
-// The invoice and its quotation are both searched, and the month is
-// matched between slashes. 1999 keeps every other row out.
+// Only the invoice number carries the period; its quotation is found by
+// typed text alone. 1999 keeps every other row out.
 func TestRepo_List_PeriodSearch(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	tag := strconv.FormatInt(time.Now().UnixNano(), 36)
-	_, _, october := deliveredPOWithInvoice(t, tx)
+	quotedNovember, _, october := deliveredPOWithInvoice(t, tx)
 	_, _, february := deliveredPOWithInvoice(t, tx)
-	quotedJanuary, _, january := deliveredPOWithInvoice(t, tx)
-	_, err := tx.Exec(ctx, `UPDATE invoices SET invoice_no = $2 WHERE id = $1`, october, "INV-"+tag+"1/GNS/X/1999")
-	require.NoError(t, err)
-	_, err = tx.Exec(ctx, `UPDATE invoices SET invoice_no = $2 WHERE id = $1`, february, "INV-"+tag+"2/GNS/II/1999")
-	require.NoError(t, err)
-	_, err = tx.Exec(ctx, `UPDATE quotations SET quotation_no = $2 WHERE id = $1`, quotedJanuary, "Q-"+tag+"3/GNS/I/1999")
+	_, _, january := deliveredPOWithInvoice(t, tx)
+	for id, no := range map[int64]string{
+		october:  "INV-" + tag + "1/GNS/X/1999",
+		february: "INV-" + tag + "2/GNS/II/1999",
+		january:  "INV-" + tag + "3/GNS/I/1999",
+	} {
+		_, err := tx.Exec(ctx, `UPDATE invoices SET invoice_no = $2 WHERE id = $1`, id, no)
+		require.NoError(t, err)
+	}
+	_, err := tx.Exec(ctx, `UPDATE quotations SET quotation_no = $2 WHERE id = $1`,
+		quotedNovember, "Q-"+tag+"9/GNS/XI/1999")
 	require.NoError(t, err)
 	repo := invoices.NewRepo(tx, testutil.Store(t))
 
@@ -72,6 +77,8 @@ func TestRepo_List_PeriodSearch(t *testing.T) {
 		{"2/1999", []int64{february}},
 		{"1/1999", []int64{january}},
 		{"i / 1999", []int64{january}},
+		{"11/1999", []int64{}},
+		{"Q-" + tag + "9", []int64{october}},
 		{"0/1999", []int64{}},
 	}
 	for _, tc := range tests {

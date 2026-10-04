@@ -62,15 +62,16 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	if f.Q != "" {
 		p := c.Arg(listq.Contains(f.Q))
 		cond := "po.po_number ILIKE " + p + " OR cc.name ILIKE " + p
-		number := p
-		// 10/2026 finds whole periods, so I/2026 skips II/2026. The client's
-		// own PO number is free text, so it also keeps the typed match.
+		// 10/2026 finds PO and delivery-note numbers of that month, and
+		// I/2026 skips II/2026. The client's own PO number is free text, so
+		// it also keeps the typed match.
 		if period, ok := listq.Period(f.Q); ok {
-			number = c.Arg(period)
-			cond += " OR po.po_number ILIKE " + number
+			pp := c.Arg(period)
+			cond += " OR po.po_number ILIKE " + pp + " OR po.delivery_note_number ILIKE " + pp
+		} else {
+			cond += " OR q.quotation_no ILIKE " + p + " OR po.delivery_note_number ILIKE " + p
 		}
-		c.And("(" + cond + " OR q.quotation_no ILIKE " + number +
-			" OR po.delivery_note_number ILIKE " + number + ")")
+		c.And("(" + cond + ")")
 	}
 	if len(f.Statuses) > 0 {
 		p := c.Arg(f.Statuses)
