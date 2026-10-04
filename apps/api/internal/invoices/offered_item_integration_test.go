@@ -81,7 +81,6 @@ func newExportHandler(t *testing.T, tx pgx.Tx) *invoices.ExportHandler {
 	store := testutil.Store(t)
 	return invoices.NewExportHandler(
 		invoices.NewRepo(tx, store),
-
 		pdfgen.NewRenderer(t.TempDir()),
 		deps.PdfSettings{},
 	)

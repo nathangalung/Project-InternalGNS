@@ -40,7 +40,6 @@ func TestExport_NewExportHandler(t *testing.T) {
 
 	h := invoices.NewExportHandler(
 		invoices.NewRepo(pool, store),
-
 		pdfgen.NewRenderer(t.TempDir()),
 		deps.PdfSettings{},
 	)

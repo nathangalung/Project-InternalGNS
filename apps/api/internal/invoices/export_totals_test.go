@@ -119,7 +119,6 @@ func TestExport_TotalsBlockBalances(t *testing.T) {
 	// And the same three figures as the builder wires them into the template.
 	h := invoices.NewExportHandler(
 		repo,
-
 		pdfgen.NewRenderer(t.TempDir()),
 		deps.PdfSettings{},
 	)
@@ -152,7 +151,6 @@ func TestExport_TotalsBlock_NoDiscountHidesRow(t *testing.T) {
 
 	h := invoices.NewExportHandler(
 		repo,
-
 		pdfgen.NewRenderer(t.TempDir()),
 		deps.PdfSettings{},
 	)
