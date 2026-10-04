@@ -175,12 +175,9 @@ func (r *Repo) AddVendor(ctx context.Context, itemID int64, req AddVendorToItemR
 	if req.CostPrice != nil && *req.CostPrice != "" {
 		cost = *req.CostPrice
 	}
-	var productURL *string
-	if req.ProductURL != nil && *req.ProductURL != "" {
-		productURL = req.ProductURL
-	}
 	rows, err := r.db.Query(ctx, r.store.Get("items.add_vendor"),
-		req.VendorID, itemID, req.VendorSKU, cost, productURL, userID,
+		req.VendorID, itemID, req.VendorSKU.Value, cost, req.ProductURL.Value, userID,
+		req.VendorSKU.Set, req.ProductURL.Set,
 	)
 	if err != nil {
 		return VendorForItem{}, err

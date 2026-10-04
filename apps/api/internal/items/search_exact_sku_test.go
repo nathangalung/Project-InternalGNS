@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -34,7 +35,7 @@ func TestHandler_SearchAdvanced_ExactSKUFirst(t *testing.T) {
 		id := insertItem(t, clean, fmt.Sprintf("Rantai Uji %d %d", stamp, i), true)
 		_, err := repo.AddVendor(ctx, id, items.AddVendorToItemRequest{
 			VendorID:  seedVendorID,
-			VendorSKU: ptrS(sku),
+			VendorSKU: httpx.SetText(sku),
 			CostPrice: ptrS("1000"),
 		}, seedUserID)
 		require.NoError(t, err)

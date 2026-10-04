@@ -17,6 +17,7 @@ import (
 	"github.com/cucumber/godog"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -153,7 +154,7 @@ func (s *scenarioState) updateItemName() error {
 func (s *scenarioState) linkVendor(vendorID int64) error {
 	cost := "100000"
 	sku := "ATDD-SKU"
-	body := items.AddVendorToItemRequest{VendorID: vendorID, VendorSKU: &sku, CostPrice: &cost}
+	body := items.AddVendorToItemRequest{VendorID: vendorID, VendorSKU: httpx.SetText(sku), CostPrice: &cost}
 	return s.sendRequest(http.MethodPost, "/items/"+strconv.FormatInt(s.itemID, 10)+"/vendors", body)
 }
 

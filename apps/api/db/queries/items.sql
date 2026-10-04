@@ -57,16 +57,25 @@ SELECT fn_item_image_set_cover($1, $2, $3);
 -- Links only an active vendor: an inactive one is filtered out of every
 -- vendor list, so the link would be saved but never shown. No row back means
 -- the vendor is missing or inactive; items.vendor_active tells which.
+-- Relinking updates the offer in place: $7 and $8 say whether the SKU and
+-- the URL were sent, an unsent one keeps the stored value, and a sent null
+-- or blank clears it. The quote stamp moves only with the price, as
+-- trg_fn_sync_vendor_cost does.
 WITH ins AS (
     INSERT INTO vendor_products
         (vendor_id, item_id, vendor_sku, cost_price, product_url, last_quoted_at, created_by, updated_by)
-    SELECT $1::bigint, $2::bigint, $3::varchar, $4::numeric, $5::text, NOW(), $6::bigint, $6::bigint
+    SELECT $1::bigint, $2::bigint, NULLIF(BTRIM($3::varchar), ''), $4::numeric,
+           NULLIF(BTRIM($5::text), ''), NOW(), $6::bigint, $6::bigint
     WHERE EXISTS (SELECT 1 FROM vendors WHERE id = $1::bigint AND is_active)
     ON CONFLICT (vendor_id, item_id) DO UPDATE
-       SET vendor_sku     = EXCLUDED.vendor_sku,
+       SET vendor_sku     = CASE WHEN $7::boolean THEN EXCLUDED.vendor_sku
+                                 ELSE vendor_products.vendor_sku END,
            cost_price     = EXCLUDED.cost_price,
-           product_url    = EXCLUDED.product_url,
-           last_quoted_at = EXCLUDED.last_quoted_at,
+           product_url    = CASE WHEN $8::boolean THEN EXCLUDED.product_url
+                                 ELSE vendor_products.product_url END,
+           last_quoted_at = CASE WHEN EXCLUDED.cost_price IS DISTINCT FROM vendor_products.cost_price
+                                 THEN EXCLUDED.last_quoted_at
+                                 ELSE vendor_products.last_quoted_at END,
            is_active      = TRUE,
            updated_by     = EXCLUDED.updated_by,
            updated_at     = NOW()

@@ -5,7 +5,12 @@ import { expect, test } from "./support/seed"
 //
 // Create, link a vendor, filters and the read-only finance view.
 
-type ItemVendor = { vendorId: number; costPrice?: string }
+type ItemVendor = {
+  vendorId: number
+  costPrice?: string
+  vendorSku?: string
+  productUrl?: string
+}
 
 test("Tambah Produk adds an item the Katalog search finds", async ({ page, seed }) => {
   const name = seed.name("Produk Baru")
@@ -74,6 +79,38 @@ test("Tambah Vendor searches the server for active vendors and links one", async
   )
   const linked = await api<ItemVendor[]>("GET", `/items/${item.id}/vendors`)
   expect(linked).toEqual([expect.objectContaining({ vendorId: active.id, costPrice: "125000.00" })])
+})
+
+// Relinking only reprices.
+test("picking a linked vendor again keeps its SKU and product URL", async ({ page, seed }) => {
+  const item = await seed.item()
+  const vendor = await seed.vendor()
+  const url = "https://toko.example/relink"
+  await api("POST", `/items/${item.id}/vendors`, {
+    vendorId: vendor.id,
+    vendorSku: "SKU-RELINK",
+    costPrice: "100000",
+    productUrl: url,
+  })
+
+  await page.goto(`/products/${item.id}`)
+  await page.getByRole("button", { name: "Tambah Vendor" }).click()
+  const modal = page.getByRole("dialog", { name: "Tambah Vendor Terkait" })
+  await modal.getByLabel("Nama Vendor *").fill(vendor.name)
+  await page.getByRole("option", { name: new RegExp(vendor.name) }).click()
+  await modal.getByLabel("Harga Beli *").fill("150000")
+  await modal.getByRole("button", { name: "Tambahkan" }).click()
+  await expect(modal).toBeHidden()
+
+  const linked = await api<ItemVendor[]>("GET", `/items/${item.id}/vendors`)
+  expect(linked).toEqual([
+    expect.objectContaining({
+      vendorId: vendor.id,
+      costPrice: "150000.00",
+      vendorSku: "SKU-RELINK",
+      productUrl: url,
+    }),
+  ])
 })
 
 test("renaming a product and turning it off saves both", async ({ page, seed }) => {

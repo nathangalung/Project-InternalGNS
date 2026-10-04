@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -165,7 +166,7 @@ func TestRepo_SearchVendorOffers_SurfacesInactiveItem(t *testing.T) {
 	const sku = "ZZQXSKU12345"
 	_, err = repo.AddVendor(ctx, it.ID, items.AddVendorToItemRequest{
 		VendorID:  seedVendorID,
-		VendorSKU: ptrS(sku),
+		VendorSKU: httpx.SetText(sku),
 		CostPrice: ptrS("1000"),
 	}, seedUserID)
 	require.NoError(t, err)
@@ -220,7 +221,7 @@ func TestRepo_SearchVendorOffers_ExactSKUCaseInsensitive(t *testing.T) {
 		require.NoError(t, err)
 		_, err = repo.AddVendor(ctx, it.ID, items.AddVendorToItemRequest{
 			VendorID:  seedVendorID,
-			VendorSKU: ptrS(sku),
+			VendorSKU: httpx.SetText(sku),
 			CostPrice: ptrS("1000"),
 		}, seedUserID)
 		require.NoError(t, err)

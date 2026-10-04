@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -41,9 +42,9 @@ func TestHandler_AddVendor_RelinkUpdatesInPlace(t *testing.T) {
 	}
 
 	first := link(items.AddVendorToItemRequest{
-		VendorSKU: ptrS("SKU-1"), CostPrice: ptrS("1500"), ProductURL: ptrS("https://toko.local/a"),
+		VendorSKU: httpx.SetText("SKU-1"), CostPrice: ptrS("1500"), ProductURL: httpx.SetText("https://toko.local/a"),
 	})
-	second := link(items.AddVendorToItemRequest{VendorSKU: ptrS("SKU-2"), CostPrice: ptrS(""), ProductURL: ptrS("")})
+	second := link(items.AddVendorToItemRequest{VendorSKU: httpx.SetText("SKU-2"), CostPrice: ptrS(""), ProductURL: httpx.SetText("")})
 	assert.Equal(t, first.VendorProductID, second.VendorProductID, "same offer row")
 
 	rows := listVendors(t, it.ID)
@@ -55,6 +56,46 @@ func TestHandler_AddVendor_RelinkUpdatesInPlace(t *testing.T) {
 	require.NotNil(t, got.CostPrice)
 	assert.Equal(t, "0.00", *got.CostPrice, "a blank cost is stored as zero")
 	assert.Nil(t, got.ProductURL, "a blank URL clears it")
+
+	third := link(items.AddVendorToItemRequest{VendorSKU: httpx.OptionalText{Set: true}, CostPrice: ptrS("0")})
+	assert.Nil(t, third.VendorSKU, "a null SKU clears it")
+}
+
+// Relinking keeps unsent details.
+// The add-vendor modal sends no SKU and no blank URL, so picking a linked
+// vendor again to update its price keeps both, and the quote stamp moves
+// only when the price does.
+func TestHandler_AddVendor_RelinkKeepsUnsentDetails(t *testing.T) {
+	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("RELINK KEEP")})
+	vendorID := createVendor(t, true)
+	path := "/items/" + itoa(it.ID) + "/vendors"
+	link := func(body map[string]any) items.VendorForItem {
+		t.Helper()
+		body["vendorId"] = vendorID
+		res := doJSON(t, newSrv(t), http.MethodPost, path, body)
+		defer res.Body.Close()
+		require.Equal(t, http.StatusCreated, res.StatusCode)
+		var row items.VendorForItem
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&row))
+		return row
+	}
+
+	first := link(map[string]any{"vendorSku": "SKU-KEEP", "costPrice": "1500", "productUrl": "https://toko.local/keep"})
+	same := link(map[string]any{"costPrice": "1500"})
+	repriced := link(map[string]any{"costPrice": "2500"})
+
+	for name, row := range map[string]items.VendorForItem{"same price": same, "new price": repriced} {
+		require.NotNil(t, row.VendorSKU, name)
+		assert.Equal(t, "SKU-KEEP", *row.VendorSKU, name)
+		require.NotNil(t, row.ProductURL, name)
+		assert.Equal(t, "https://toko.local/keep", *row.ProductURL, name)
+	}
+	require.NotNil(t, same.CostPrice)
+	assert.Equal(t, "1500.00", *same.CostPrice)
+	require.NotNil(t, repriced.CostPrice)
+	assert.Equal(t, "2500.00", *repriced.CostPrice)
+	assert.Equal(t, first.LastQuotedAt, same.LastQuotedAt, "an unchanged price is no new quote")
+	assert.NotEqual(t, first.LastQuotedAt, repriced.LastQuotedAt, "a new price is a new quote")
 }
 
 // vendorId is required.

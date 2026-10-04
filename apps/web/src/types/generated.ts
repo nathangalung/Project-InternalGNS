@@ -12,9 +12,9 @@
 // From items/dto.go
 export type AddVendorToItemInput = {
     vendorId: number;
-    vendorSku?: string | null;
+    vendorSku?: string;
     costPrice?: string | null;
-    productUrl?: string | null;
+    productUrl?: string;
 };
 
 // From items/dto.go
