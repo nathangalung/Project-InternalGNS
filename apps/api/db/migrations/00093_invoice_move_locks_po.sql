@@ -1,4 +1,13 @@
--- Canonical current body of fn_change_invoice_status (deployed by migration 00093).
+-- +goose Up
+-- 00093 INVOICE MOVE LOCKS PO
+-- fn_update_po_details locks the PO and refuses once the invoice is sent,
+-- but a send locked only the invoice, so a send and a PO number change on
+-- the same PO could both commit and leave a sent invoice showing a number
+-- it was never sent with. Every invoice move now locks its PO after the
+-- invoice, the order fn_replace_invoice already uses, so whichever save
+-- runs second waits for the first and sees its result.
+
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION public.fn_change_invoice_status(p_invoice_id bigint, p_target text, p_user_id bigint, p_note text DEFAULT NULL::text, p_proof_key text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql
@@ -88,3 +97,5 @@ BEGIN
     (p_invoice_id, v_current, p_target, v_note, v_proof, p_user_id);
 END;
 $function$
+;
+-- +goose StatementEnd
