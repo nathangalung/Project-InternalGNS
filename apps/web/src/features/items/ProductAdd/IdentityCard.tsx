@@ -108,7 +108,11 @@ export default function IdentityCard({
             />
             <AutocompleteContent>
               {requestFailure ? (
-                <CatalogFailure failure={requestFailure} />
+                <LoadError
+                  message="Gagal memuat katalog produk."
+                  className="px-5 py-2.5"
+                  {...requestFailure}
+                />
               ) : requestMatches.length === 0 ? (
                 <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
                   Tidak ada rekomendasi — input akan disimpan apa adanya.
@@ -222,7 +226,11 @@ export default function IdentityCard({
             />
             <AutocompleteContent>
               {productFailure ? (
-                <CatalogFailure failure={productFailure} />
+                <LoadError
+                  message="Gagal memuat katalog produk."
+                  className="px-5 py-2.5"
+                  {...productFailure}
+                />
               ) : productMatches.length === 0 ? (
                 <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>Tidak ada hasil</div>
               ) : (
@@ -299,17 +307,5 @@ export default function IdentityCard({
         </div>
       </div>
     </>
-  )
-}
-
-// Failed catalog lookup row.
-function CatalogFailure({ failure }: { failure: LookupFailure }) {
-  return (
-    <LoadError
-      message="Gagal memuat katalog produk."
-      onRetry={failure.retry}
-      retrying={failure.retrying}
-      className="px-5 py-2.5"
-    />
   )
 }

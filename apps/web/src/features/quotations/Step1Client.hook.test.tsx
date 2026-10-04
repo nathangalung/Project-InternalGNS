@@ -15,13 +15,13 @@ afterEach(unmount)
 
 describe("Step1Client lookup", () => {
   it("says the client list failed and retries it", async () => {
-    const failure = { retry: vi.fn(), retrying: false }
+    const failure = { onRetry: vi.fn(), retrying: false }
     await mount(<Step1Client {...base} clientsFailure={failure} />)
     expect(byRole("alert").map((a) => a.textContent)).toEqual([
       "Gagal memuat daftar klien.Coba Lagi",
     ])
     await click(button("Coba Lagi"))
-    expect(failure.retry).toHaveBeenCalledTimes(1)
+    expect(failure.onRetry).toHaveBeenCalledTimes(1)
   })
 
   it("shows no error while the list loads fine", async () => {

@@ -35,7 +35,7 @@ function Harness(failures: Failures) {
   )
 }
 
-const failure = (): LookupFailure => ({ retry: vi.fn(), retrying: false })
+const failure = (): LookupFailure => ({ onRetry: vi.fn(), retrying: false })
 const alerts = () => byRole("alert").map((a) => a.textContent)
 
 function vendorField(): HTMLInputElement {
@@ -62,7 +62,7 @@ describe("VendorPriceCard lookups", () => {
     expect(alerts()).toEqual(["Gagal memuat vendor.Coba Lagi"])
     expect(document.body.textContent).not.toContain("Tidak ada hasil")
     await click(byRole("alert")[0].querySelector("button") as HTMLButtonElement)
-    expect(vendorFailure.retry).toHaveBeenCalledTimes(1)
+    expect(vendorFailure.onRetry).toHaveBeenCalledTimes(1)
   })
 
   it("names a failed price history and a failed recommendation", async () => {
@@ -78,7 +78,7 @@ describe("VendorPriceCard lookups", () => {
     const [rec, history] = byRole("alert").map((a) => a.querySelector("button") as HTMLElement)
     await click(rec)
     await click(history)
-    expect(recommendationFailure.retry).toHaveBeenCalledTimes(1)
-    expect(historyFailure.retry).toHaveBeenCalledTimes(1)
+    expect(recommendationFailure.onRetry).toHaveBeenCalledTimes(1)
+    expect(historyFailure.onRetry).toHaveBeenCalledTimes(1)
   })
 })

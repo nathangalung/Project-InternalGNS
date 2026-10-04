@@ -75,9 +75,9 @@ export default function VendorPriceCard({
     >
       <div className={ui.modalSectionHeading}>Vendor dan Harga Beli</div>
       {recommendationFailure && (
-        <LookupRow
+        <LoadError
           message="Gagal memuat rekomendasi vendor dan harga."
-          failure={recommendationFailure}
+          {...recommendationFailure}
         />
       )}
 
@@ -104,10 +104,10 @@ export default function VendorPriceCard({
           />
           <AutocompleteContent>
             {vendorFailure && (
-              <LookupRow
+              <LoadError
                 message="Gagal memuat vendor."
-                failure={vendorFailure}
                 className="px-5 py-2.5"
+                {...vendorFailure}
               />
             )}
             {vendorMatches.length === 0 ? (
@@ -231,7 +231,7 @@ export default function VendorPriceCard({
         </Menu.Portal>
       </Menu.Root>
       {historyFailure && (
-        <LookupRow message="Gagal memuat historis harga jual." failure={historyFailure} />
+        <LoadError message="Gagal memuat historis harga jual." {...historyFailure} />
       )}
 
       <div className={ui.field}>
@@ -245,26 +245,6 @@ export default function VendorPriceCard({
         </div>
       </div>
     </div>
-  )
-}
-
-// Failed lookup with retry.
-function LookupRow({
-  message,
-  failure,
-  className,
-}: {
-  message: string
-  failure: LookupFailure
-  className?: string
-}) {
-  return (
-    <LoadError
-      message={message}
-      onRetry={failure.retry}
-      retrying={failure.retrying}
-      className={className}
-    />
   )
 }
 

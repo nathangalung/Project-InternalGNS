@@ -110,7 +110,7 @@ describe("IdentityCard pickers", () => {
   })
 
   it("says a catalog lookup failed instead of claiming no match, and retries it", async () => {
-    const failure = { retry: vi.fn(), retrying: false }
+    const failure = { onRetry: vi.fn(), retrying: false }
     await mount(<Harness spies={spies()} matches={[]} failure={failure} />)
     const request = field("Kode IMPA/Nama Produk Request")
     await type(request, "baut")
@@ -119,7 +119,7 @@ describe("IdentityCard pickers", () => {
     ])
     expect(document.body.textContent).not.toContain("Tidak ada rekomendasi")
     await click(button("Coba Lagi"))
-    expect(failure.retry).toHaveBeenCalledTimes(1)
+    expect(failure.onRetry).toHaveBeenCalledTimes(1)
     await press("Escape", request)
     expect(form().requestedKodeImpaNama).toBe("baut")
 

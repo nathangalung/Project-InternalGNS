@@ -1,6 +1,7 @@
 type LookupQuery = { isError: boolean; isFetching: boolean; refetch: () => unknown }
 
-export type LookupFailure = { retry: () => void; retrying: boolean }
+// Spreads into LoadError.
+export type LookupFailure = { onRetry: () => void; retrying: boolean }
 
 // Failed lookups, retried together.
 //
@@ -11,7 +12,7 @@ export function lookupFailure(...queries: LookupQuery[]): LookupFailure | null {
   const failed = queries.filter((q) => q.isError)
   if (failed.length === 0) return null
   return {
-    retry: () => {
+    onRetry: () => {
       for (const q of failed) void q.refetch()
     },
     retrying: failed.some((q) => q.isFetching),

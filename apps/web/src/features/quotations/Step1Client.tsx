@@ -125,13 +125,7 @@ export default function Step1Client({
         </div>
       )}
 
-      {clientsFailure && (
-        <LoadError
-          message="Gagal memuat daftar klien."
-          onRetry={clientsFailure.retry}
-          retrying={clientsFailure.retrying}
-        />
-      )}
+      {clientsFailure && <LoadError message="Gagal memuat daftar klien." {...clientsFailure} />}
 
       <div className="flex flex-col gap-3">
         {filteredClients.map((client) => {

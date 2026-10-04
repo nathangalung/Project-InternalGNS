@@ -18,7 +18,7 @@ describe("lookupFailure", () => {
     const failed = query(true)
     const failure = lookupFailure(ok, failed)
     expect(failure?.retrying).toBe(false)
-    failure?.retry()
+    failure?.onRetry()
     expect(failed.refetch).toHaveBeenCalledTimes(1)
     expect(ok.refetch).not.toHaveBeenCalled()
   })
