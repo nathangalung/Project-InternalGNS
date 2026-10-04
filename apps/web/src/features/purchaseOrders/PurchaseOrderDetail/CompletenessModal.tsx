@@ -11,9 +11,12 @@ type CompletenessModalProps = {
   // Route key of the PO and its quotation
   quotationId: number
   onClose: () => void
+  // Opens the PO number form; absent while it is locked
+  onEnterPoNumber?: () => void
 }
 
 const SCOPE: Record<PoIssueKind, string> = {
+  po: "PO",
   client: "Klien",
   vendor: "Vendor",
   shipping: "Pengiriman",
@@ -25,6 +28,7 @@ export default function CompletenessModal({
   target,
   quotationId,
   onClose,
+  onEnterPoNumber,
 }: CompletenessModalProps) {
   return (
     <Modal
@@ -38,8 +42,9 @@ export default function CompletenessModal({
     >
       <p className="m-0 text-[13px] leading-[1.5] text-[#4A4455]">
         Sebelum mengubah status menjadi <strong className="text-[#6B21A8]">{target}</strong>, data
-        berikut harus dilengkapi terlebih dahulu. Buka nama klien atau vendor, Ganti Narahubung
-        untuk memilih narahubung aktif, atau Ubah PO untuk mengisi alamat pengiriman.
+        berikut harus dilengkapi terlebih dahulu. Isi No. PO dari klien, buka nama klien atau
+        vendor, Ganti Narahubung untuk memilih narahubung aktif, atau Ubah PO untuk mengisi alamat
+        pengiriman.
       </p>
 
       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
@@ -50,7 +55,19 @@ export default function CompletenessModal({
           >
             <div className="mb-1 text-[13px] font-bold text-accent-900">
               {SCOPE[issue.kind]}:{" "}
-              {issue.kind === "shipping" ? (
+              {issue.kind === "po" ? (
+                onEnterPoNumber ? (
+                  <button
+                    type="button"
+                    className={`${ui.entityLink} cursor-pointer border-0 bg-transparent p-0 font-bold`}
+                    onClick={onEnterPoNumber}
+                  >
+                    Isi No. PO
+                  </button>
+                ) : (
+                  "No. PO"
+                )
+              ) : issue.kind === "shipping" ? (
                 <Link
                   to="/purchase-orders/$id/edit"
                   params={{ id: String(quotationId) }}

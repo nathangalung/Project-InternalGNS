@@ -3,7 +3,13 @@ import Modal from "@/components/shared/Modal"
 import { errorMessage } from "@/lib/errors"
 import { ui } from "@/lib/ui"
 import { validateAsset } from "@/lib/upload-validation"
-import { uploadRules } from "./PurchaseOrderDetail/helpers"
+import {
+  PO_NUMBER_REQUIRED_MESSAGE,
+  type PoDetailsErrors,
+  poNumberRequired,
+  poRef,
+  uploadRules,
+} from "./PurchaseOrderDetail/helpers"
 import type { PoRow } from "./types"
 
 // Mirrors the poDoc upload policy.
@@ -19,7 +25,11 @@ type UploadPoModalProps = {
   // Invoice lookup in flight; fields wait
   checking?: boolean
   onClose: () => void
-  onSubmit: (file: File | null, details: { poNumber: string; poDate: string }) => void
+  // Resolves to the details refusal, null once saved
+  onSubmit: (
+    file: File | null,
+    details: { poNumber: string; poDate: string },
+  ) => Promise<PoDetailsErrors | null>
 }
 
 export default function UploadPoModal({
@@ -33,14 +43,19 @@ export default function UploadPoModal({
 }: UploadPoModalProps) {
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState<string>("")
-  const [draftNumber, setDraftNumber] = useState(row.poNumber)
+  const [numberError, setNumberError] = useState<string>("")
+  const [dateError, setDateError] = useState<string>("")
+  const [draftNumber, setDraftNumber] = useState(row.poNumber ?? "")
   const [draftDate, setDraftDate] = useState(row.poDate.slice(0, 10))
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const rules = uploadRules(row.status, hasExistingFile, detailsLocked)
   const detailsFrozen = detailsLocked || checking
+  // Work in progress keeps its number.
+  const numberRequired = poNumberRequired(row.status)
+  const showNumberHint = !detailsLocked && !numberRequired
   // A locked form shows and sends the stored values.
-  const poNumber = detailsLocked ? row.poNumber : draftNumber
+  const poNumber = detailsLocked ? (row.poNumber ?? "") : draftNumber
   const poDate = detailsLocked ? row.poDate.slice(0, 10) : draftDate
   const isEdit = hasExistingFile || rules.fileLocked
 
@@ -67,23 +82,29 @@ export default function UploadPoModal({
     !checking &&
     rules.editable &&
     (!rules.needsFile || file !== null) &&
-    poNumber.trim() !== "" &&
     poDate !== ""
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (rules.needsFile && !file) {
       setError("Berkas PO wajib diunggah.")
       return
     }
-    if (!poNumber.trim()) {
-      setError("Nomor PO wajib diisi.")
+    if (numberRequired && !poNumber.trim()) {
+      setNumberError(PO_NUMBER_REQUIRED_MESSAGE)
       return
     }
     if (!poDate) {
       setError("Tanggal PO wajib diisi.")
       return
     }
-    onSubmit(file, { poNumber: poNumber.trim(), poDate })
+    setError("")
+    setNumberError("")
+    setDateError("")
+    const refused = await onSubmit(file, { poNumber: poNumber.trim(), poDate })
+    if (!refused) return
+    setNumberError(refused.fields.poNumber ?? "")
+    setDateError(refused.fields.poDate ?? "")
+    setError(refused.banner ?? "")
   }
 
   return (
@@ -95,7 +116,7 @@ export default function UploadPoModal({
             {isEdit ? "Ubah Detail Purchase Order" : "Upload Berkas Purchase Order"}
           </span>
           <span className="mt-1 block text-[13px] font-normal leading-6 text-[#4A4455]">
-            {row.poNumber} • {row.client}
+            {poRef(row)} • {row.client}
           </span>
         </>
       }
@@ -107,7 +128,7 @@ export default function UploadPoModal({
           <button
             type="button"
             className={ui.modalSubmit}
-            onClick={handleSubmit}
+            onClick={() => void handleSubmit()}
             disabled={!canSubmit}
           >
             {submitting ? "Menyimpan..." : isEdit ? "Simpan" : "Upload"}
@@ -118,18 +139,41 @@ export default function UploadPoModal({
       <div className={ui.modalSection}>
         <div className={ui.field}>
           <label htmlFor="po-number" className={ui.fieldLabel}>
-            Nomor PO <span className="text-[#DC2626]">*</span>
+            Nomor PO {numberRequired && <span className="text-[#DC2626]">*</span>}
           </label>
           <input
             id="po-number"
             type="text"
             value={poNumber}
             maxLength={50}
-            onChange={(e) => setDraftNumber(e.target.value)}
+            onChange={(e) => {
+              setDraftNumber(e.target.value)
+              setNumberError("")
+            }}
             disabled={detailsFrozen}
-            aria-describedby={detailsLocked ? "po-details-locked" : undefined}
+            aria-invalid={numberError !== "" || undefined}
+            aria-describedby={
+              detailsLocked
+                ? "po-details-locked"
+                : numberError
+                  ? "po-number-error"
+                  : showNumberHint
+                    ? "po-number-hint"
+                    : undefined
+            }
             className={`${ui.fieldInput} ${ui.disabledField}`}
           />
+          {numberError ? (
+            <p id="po-number-error" role="alert" className="m-0 mt-1 text-xs text-[#B91C1C]">
+              {numberError}
+            </p>
+          ) : (
+            showNumberHint && (
+              <p id="po-number-hint" className="m-0 mt-1 text-xs text-[#4A4455]">
+                Nomor PO dari klien, wajib diisi sebelum PO Dalam Progres.
+              </p>
+            )
+          )}
         </div>
         <div className={ui.field}>
           <label htmlFor="po-date" className={ui.fieldLabel}>
@@ -139,11 +183,22 @@ export default function UploadPoModal({
             id="po-date"
             type="date"
             value={poDate}
-            onChange={(e) => setDraftDate(e.target.value)}
+            onChange={(e) => {
+              setDraftDate(e.target.value)
+              setDateError("")
+            }}
             disabled={detailsFrozen}
-            aria-describedby={detailsLocked ? "po-details-locked" : undefined}
+            aria-invalid={dateError !== "" || undefined}
+            aria-describedby={
+              detailsLocked ? "po-details-locked" : dateError ? "po-date-error" : undefined
+            }
             className={`${ui.fieldInput} ${ui.disabledField}`}
           />
+          {dateError && (
+            <p id="po-date-error" role="alert" className="m-0 mt-1 text-xs text-[#B91C1C]">
+              {dateError}
+            </p>
+          )}
         </div>
         {detailsLocked && (
           <p id="po-details-locked" className="text-xs text-[#4A4455]">

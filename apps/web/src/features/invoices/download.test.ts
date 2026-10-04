@@ -10,7 +10,7 @@ beforeEach(() => vi.clearAllMocks())
 
 describe("safeFileName", () => {
   it("replaces the slashes in invoice numbers", () => {
-    expect(safeFileName("INV-2640016/GNS/IX/2026")).toBe("INV-2640016_GNS_IX_2026")
+    expect(safeFileName("INV-00016/GNS/IX/2026")).toBe("INV-00016_GNS_IX_2026")
   })
 
   it("keeps dots, dashes and underscores", () => {

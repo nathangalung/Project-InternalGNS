@@ -122,7 +122,15 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
     file: File | null,
     details: { poNumber: string; poDate: string },
   ) {
-    if (await upload.save(file, details)) setShowUpload(false)
+    const result = await upload.save(file, details)
+    if (result.saved) setShowUpload(false)
+    return result.errors
+  }
+
+  // The gate's PO number link.
+  function enterPoNumber() {
+    setGate(null)
+    setShowUpload(true)
   }
 
   async function handleRemoveFile() {
@@ -227,7 +235,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           detailsLocked={upload.detailsLocked}
           checking={upload.checking}
           onClose={() => setShowUpload(false)}
-          onSubmit={(file, details) => void handleUploadSubmit(file, details)}
+          onSubmit={handleUploadSubmit}
         />
       )}
 
@@ -276,6 +284,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           target={gate.target}
           quotationId={po.quotationId}
           onClose={() => setGate(null)}
+          onEnterPoNumber={rules.editable ? enterPoNumber : undefined}
         />
       )}
     </>

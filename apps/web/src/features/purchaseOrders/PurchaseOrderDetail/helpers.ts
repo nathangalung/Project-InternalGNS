@@ -1,5 +1,6 @@
 import { ApiError } from "@/lib/api-client"
 import { errorMessage, isVersionConflict, problemCode } from "@/lib/errors"
+import { type FormErrors, formErrors } from "@/lib/form-errors"
 import { toNum } from "@/lib/format"
 import type {
   InvoiceBackendStatus,
@@ -35,6 +36,41 @@ export const PO_STATUS_ORDER: PoStatus[] = [
   "DELIVERED",
   "CANCELLED",
 ]
+
+// Shown for a numberless PO.
+export const PO_NUMBER_MISSING = "Belum ada No. PO"
+
+// Name of a PO in prose.
+//
+// Its client number, or the quotation it came from while it has none.
+export function poRef(po: { poNumber?: string; quotationNo: string }): string {
+  return po.poNumber ?? `PO dari ${po.quotationNo}`
+}
+
+// Work keeps the client's number.
+//
+// Mirrors fn_update_po_details: a PO in ON_PROGRESS or DELIVERED cannot
+// clear its number, which the gate required to get there.
+export function poNumberRequired(status: PoStatus): boolean {
+  return status === "ON_PROGRESS" || status === "DELIVERED"
+}
+
+// The server's refusal, shown before sending.
+export const PO_NUMBER_REQUIRED_MESSAGE =
+  "No. PO klien wajib diisi untuk PO yang sudah Dalam Progres atau Dikirim."
+
+export const PO_DETAILS_FIELDS = ["poNumber", "poDate"] as const
+export type PoDetailsErrors = FormErrors<(typeof PO_DETAILS_FIELDS)[number]>
+
+// Details refusals the form shows.
+//
+// A 422 names its field (a taken number, or a cleared one once work has
+// started), so the upload modal shows it inline and the hook does not toast
+// it. Null for any other failure.
+export function poDetailsErrors(err: unknown): PoDetailsErrors | null {
+  if (!(err instanceof ApiError) || err.status !== 422) return null
+  return formErrors(err, PO_DETAILS_FIELDS, "Gagal memperbarui detail PO.")
+}
 
 export function shortDocNo(no: string): string {
   const slash = no.indexOf("/")

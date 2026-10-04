@@ -2,11 +2,13 @@ import { Link } from "@tanstack/react-router"
 import EntityLink from "@/components/shared/EntityLink"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { ui } from "@/lib/ui"
+import PoNumber from "../PoNumber"
 import type { PoStatus } from "../types"
 import { PO_LABEL, PO_STATUS_CONFIG } from "./helpers"
 
 type HeaderProps = {
-  poNumber: string
+  // None until the client's number is entered
+  poNumber?: string
   quotationId: number
   quotationNo: string
   createdAt: string
@@ -49,14 +51,16 @@ export default function Header({
           &rsaquo;
         </span>
         <span className={ui.breadcrumbCurrent} aria-current="page">
-          Detail {poNumber}
+          Detail <PoNumber value={poNumber} />
         </span>
       </nav>
 
       <div className={ui.detailHeader}>
         <div className={ui.detailHeaderLeft}>
           <div className="min-w-0">
-            <h1 className={ui.detailTitle}>Purchase Order {poNumber}</h1>
+            <h1 className={ui.detailTitle}>
+              Purchase Order <PoNumber value={poNumber} />
+            </h1>
             <div className={ui.metaRow}>
               <span className={ui.metaText}>Dibuat pada: {createdAt}</span>
               <span className={ui.metaSep} aria-hidden="true">
