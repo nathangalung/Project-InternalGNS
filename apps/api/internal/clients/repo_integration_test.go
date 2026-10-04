@@ -176,6 +176,28 @@ func TestRepo_DeactivateContact(t *testing.T) {
 	assert.ErrorIs(t, err, clients.ErrNotFound)
 }
 
+// A document's contact stays readable.
+// Deactivating a contact keeps it on the documents that chose it.
+func TestRepo_GetContact(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	repo := clients.NewRepo(tx, testutil.Store(t))
+	email := "lama@kapal.example"
+	c, err := repo.CreateContact(ctx, seedCompanyID,
+		clients.CreateContactRequest{Name: "Kontak Lama", Email: &email, CountryCode: "IDN"}, seedUserID)
+	require.NoError(t, err)
+	require.NoError(t, repo.DeactivateContact(ctx, seedCompanyID, c.ID, seedUserID))
+
+	got, err := repo.GetContact(ctx, seedCompanyID, c.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "Kontak Lama", got.Name)
+	require.NotNil(t, got.Email)
+	assert.Equal(t, email, *got.Email)
+	assert.False(t, got.IsActive)
+
+	_, err = repo.GetContact(ctx, seedCompanyID+999999, c.ID)
+	assert.ErrorIs(t, err, clients.ErrNotFound, "another company's contact")
+}
+
 func TestRepo_DeactivateContact_WrongCompany(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := clients.NewRepo(tx, testutil.Store(t))

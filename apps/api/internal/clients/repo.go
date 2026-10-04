@@ -219,6 +219,21 @@ func (r *Repo) ListContacts(ctx context.Context, companyID int64) ([]Contact, er
 	return pgx.CollectRows(rows, pgx.RowToStructByName[Contact])
 }
 
+// GetContact reads one contact.
+// A deactivated contact is returned too; ErrNotFound when the company has
+// no contact with that id.
+func (r *Repo) GetContact(ctx context.Context, companyID, contactID int64) (Contact, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("clients.get_contact"), companyID, contactID)
+	if err != nil {
+		return Contact{}, err
+	}
+	c, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Contact])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Contact{}, ErrNotFound
+	}
+	return c, err
+}
+
 // Summary aggregates KPIs.
 func (r *Repo) Summary(ctx context.Context) (Summary, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("clients.summary"))

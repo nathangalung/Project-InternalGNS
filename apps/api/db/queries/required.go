@@ -20,6 +20,7 @@ var RequiredKeys = []string{
 	"clients.deactivate_contact",
 	"clients.get_by_id",
 	"clients.get_by_ids",
+	"clients.get_contact",
 	"clients.list_base",
 	"clients.list_contacts",
 	"clients.list_count_base",

@@ -109,8 +109,10 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 		return exportData{}, err
 	}
 
-	client, _ := h.clients.GetByID(ctx, d.CompanyClientID)
-	contactEmail, contactPhone := h.contactComm(ctx, d, client)
+	contactEmail, contactPhone, err := h.contactComm(ctx, d)
+	if err != nil {
+		return exportData{}, err
+	}
 
 	return buildExportData(d, unitsByID, contactEmail, contactPhone, h.settings.SignerName), nil
 }
@@ -234,20 +236,22 @@ func (h *ExportHandler) unitsLookup(ctx context.Context) (map[int16]string, erro
 	return out, nil
 }
 
-func (h *ExportHandler) contactComm(ctx context.Context, d QuotationDetail, c clients.Client) (string, string) {
+// contactComm reads the ATTN details.
+// They are the chosen contact's own, even once it is deactivated, so the
+// block always describes the one person it names. With no contact, or one
+// that is gone, none are printed rather than another person's.
+func (h *ExportHandler) contactComm(ctx context.Context, d QuotationDetail) (string, string, error) {
 	if d.ContactID == nil {
-		return pdfgen.StrDeref(c.ContactEmail), pdfgen.StrDeref(c.ContactPhone)
+		return "", "", nil
 	}
-	contacts, err := h.clients.ListContacts(ctx, d.CompanyClientID)
+	c, err := h.clients.GetContact(ctx, d.CompanyClientID, *d.ContactID)
+	if errors.Is(err, clients.ErrNotFound) {
+		return "", "", nil
+	}
 	if err != nil {
-		return pdfgen.StrDeref(c.ContactEmail), pdfgen.StrDeref(c.ContactPhone)
+		return "", "", err
 	}
-	for _, ct := range contacts {
-		if ct.ID == *d.ContactID {
-			return pdfgen.StrDeref(ct.Email), pdfgen.StrDeref(ct.Phone)
-		}
-	}
-	return pdfgen.StrDeref(c.ContactEmail), pdfgen.StrDeref(c.ContactPhone)
+	return pdfgen.StrDeref(c.Email), pdfgen.StrDeref(c.Phone), nil
 }
 
 // isPriced reports a positive price.
