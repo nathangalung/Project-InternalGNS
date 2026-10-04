@@ -9,10 +9,12 @@ from psql alone.
 
 Decisions:
 - Customers 4001..4018, explicit IDs 1..18
-- Q-numbers regenerated via the schema's `fn_next_doc_no` formula computed
-  ahead of time (same monotonic per-company-per-year seq behaviour). Each
-  file keeps its own historical year token (a 2024 file gets `/.../2024`,
-  a 2025 file gets `/.../2025`, etc.)
+- Q-numbers rebuilt in the legacy format the historical quotations were
+  issued under, `Q-{YY}{co_no}{seq}/GNS/{Roman}/{YYYY}` with a
+  per-company-per-year seq. Each file keeps its own historical year token
+  (a 2024 file gets `/.../2024`, a 2025 file gets `/.../2025`, etc.).
+  fn_next_doc_no issues `Q-{5 digits}/GNS/{Roman}/{YYYY}` from doc_counters,
+  which the seed restarts, so the two formats never collide.
 - Original Q-no recorded in quotations.notes
 - Duplicates by original Q-no become a date-ordered version chain
 - Status = 'draft' when every line has selling_price <= 0 (Excel pricing
@@ -138,8 +140,8 @@ def sql_num(v) -> str:
     return str(v)
 
 
-def fn_next_doc_no(prefix: str, company_no: str, seq: int, year: int, month: int) -> str:
-    """Match schema's `fn_next_doc_no` output exactly."""
+def legacy_doc_no(prefix: str, company_no: str, seq: int, year: int, month: int) -> str:
+    """Legacy number: client number and per-year seq."""
     yy = f"{year % 100:02d}"
     return f"{prefix}-{yy}{company_no}{seq}/GNS/{ROMAN[month-1]}/{year}"
 
@@ -265,7 +267,7 @@ def main():
         vp_id_lookup[key] = idx
 
     # ----- Quotation generation -----
-    # Per (company, year) seq counter, mirrors fn_next_doc_no
+    # Per (company, year) seq counter of the legacy format
     seq_counter: dict[tuple[int, int], int] = defaultdict(int)
     quotations: list[dict] = []
     quotation_items: list[dict] = []
@@ -369,7 +371,7 @@ def main():
                 date_iso = "2026-01-01"
             seq_key = (cust_id, year)
             seq_counter[seq_key] += 1
-            new_qno = fn_next_doc_no("Q", cust_no, seq_counter[seq_key], year, month)
+            new_qno = legacy_doc_no("Q", cust_no, seq_counter[seq_key], year, month)
 
             # Status: 'draft' if no line has positive selling_price
             # (Excel pricing not yet entered). Else 'sent'.
@@ -445,8 +447,7 @@ def main():
   item_request_matches,
   vendor_products, items,
   company_contacts, company_client,
-  vendors,
-  doc_sequences
+  vendors
 RESTART IDENTITY CASCADE;
 """)
 
@@ -521,14 +522,10 @@ RESTART IDENTITY CASCADE;
         out.append(",\n".join(chunk) + ";")
     out.append(f"SELECT setval('vendor_products_id_seq', {len(vp_map)});\n")
 
-    # -- Doc sequences (record last_seq used) --
-    out.append("-- 6. doc_sequences — record sequence per (company, year) so future fn_next_doc_no continues correctly")
-    if seq_counter:
-        out.append("INSERT INTO doc_sequences (doc_type, company_id, year, last_seq) VALUES")
-        rows = []
-        for (cid, year), seq in sorted(seq_counter.items()):
-            rows.append(f"  ('Q', {cid}, {year}, {seq})")
-        out.append(",\n".join(rows) + ";\n")
+    # -- Doc counters (restart with the documents) --
+    out.append("-- 6. doc_counters restart: every number loaded here is in the legacy format,")
+    out.append("--    so fn_next_doc_no starts each type at its first new-format number.")
+    out.append("UPDATE doc_counters SET last_seq = 0, updated_at = NOW();\n")
 
     # -- Quotations --
     out.append(f"-- 7. Quotations ({len(quotations)})")

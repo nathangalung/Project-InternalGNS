@@ -124,10 +124,8 @@ SELECT ins.id, ins.number, ins.name, ins.npwp, ins.address, ins.email, ins.count
 FROM ins;
 
 -- name: clients.update
--- A NULL $10 keeps the number. trg_company_client_number_lock refuses a
--- different one (P0013) once any quotation references the client, since its
--- document numbers embed it. The row comes back as clients.get_by_id reads
--- it, main contact included.
+-- A NULL $10 keeps the number. The row comes back as clients.get_by_id
+-- reads it, main contact included.
 WITH upd AS (
     UPDATE company_client
        SET number       = COALESCE($10::text, number),

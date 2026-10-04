@@ -28,14 +28,14 @@ truncate-and-rebuild seed. No live database is needed to generate it, and
    normalised name, contacts by `(company, normalised name)`, vendor_products
    by `(vendor_id, item_id)`.
 3. Quotations, chronologically per `(company, year)`. The Q-number is rebuilt
-   from the file's actual date, so a March 2024 file gets `/III/2024`. Format:
-   `Q-{YY}{co_no}{seq}/GNS/{Roman}/{YYYY}`.
+   from the file's actual date, so a March 2024 file gets `/III/2024`. Legacy
+   format, as the quotations were issued: `Q-{YY}{co_no}{seq}/GNS/{Roman}/{YYYY}`.
 4. Version chains for files that share an original Q-number (a `parent_id`
    chain, oldest by date is v1).
 5. The original Excel Q-number and source filename into `quotations.notes` for
    traceability.
-6. A `doc_sequences` upsert for each `(Q, company, year)` so the API's
-   `fn_next_doc_no` continues from the right `last_seq`.
+6. A `doc_counters` restart at 0, since every number it loads is legacy, so
+   the API's `fn_next_doc_no` issues `Q-00001/GNS/...` next.
 7. `status='draft'` for files where every line has `selling_price <= 0`, so
    users can finish them in the UI.
 8. Product lines with `selling_price <= 0` are dropped when the file has at

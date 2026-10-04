@@ -11,12 +11,14 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/cucumber/godog"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/invoices"
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/tz"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -51,6 +53,10 @@ type scenarioState struct {
 	roleUsed  bool
 	// gate holds the readiness fixture.
 	gate *readinessFixture
+	// poNumber is the client PO number the accept entered.
+	poNumber string
+	// bareAccept leaves the PO numberless.
+	bareAccept bool
 }
 
 func (s *scenarioState) reset() error {
@@ -182,7 +188,25 @@ func (s *scenarioState) acceptedQuotationFrom(create quotations.CreateRequest) e
 		return err
 	}
 	s.poID = po.ID
+	if s.bareAccept {
+		return nil
+	}
+	// The client's PO arrives with its number.
+	s.poNumber = "PO-ATDD-" + strconv.FormatInt(po.ID, 10)
+	if err := s.editPODetailsDated(s.poNumber, po.PoDate.In(tz.Jakarta()).Format(time.DateOnly)); err != nil {
+		return err
+	}
+	if s.last.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("po number want 204 got %d body=%s", s.last.StatusCode, s.body)
+	}
 	return nil
+}
+
+// Accept leaving the PO numberless.
+func (s *scenarioState) acceptedQuotationBare() error {
+	s.bareAccept = true
+	defer func() { s.bareAccept = false }()
+	return s.acceptedQuotation()
 }
 
 func (s *scenarioState) readPOByQuotation() error {
@@ -219,13 +243,14 @@ func (s *scenarioState) poDetailStatusEquals(want string) error {
 	return nil
 }
 
-func (s *scenarioState) poNumberSet() error {
+// The read PO has no number.
+func (s *scenarioState) poNumberMissing() error {
 	var po purchaseorders.PurchaseOrder
 	if err := json.Unmarshal(s.body, &po); err != nil {
 		return err
 	}
-	if strings.TrimSpace(po.PoNumber) == "" {
-		return fmt.Errorf("po number empty")
+	if po.PoNumber != nil {
+		return fmt.Errorf("want no PO number got %q", *po.PoNumber)
 	}
 	return nil
 }
@@ -660,7 +685,8 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the user lists POs filtered by status "([^"]+)"$`, state.listPOsByStatus)
 		sc.Step(`^the response status is (\d+)$`, state.statusEquals)
 		sc.Step(`^the PO status is "([^"]+)"$`, state.poDetailStatusEquals)
-		sc.Step(`^the PO number is set$`, state.poNumberSet)
+		sc.Step(`^the PO has no number$`, state.poNumberMissing)
+		sc.Step(`^a quotation accepted without a client PO number$`, state.acceptedQuotationBare)
 		sc.Step(`^the PO file name is "([^"]+)"$`, state.poFileNameEquals)
 		sc.Step(`^the PO discount is "([^"]+)"$`, state.poDiscountEquals)
 		sc.Step(`^the PO totals equal the invoice totals$`, state.poTotalsEqualInvoice)

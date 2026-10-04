@@ -13,8 +13,10 @@ const (
 )
 
 type PurchaseOrder struct {
-	ID                int64      `db:"id"                  json:"id"`
-	PoNumber          string     `db:"po_number"           json:"poNumber"`
+	ID int64 `db:"id"                  json:"id"`
+	// The client's own PO number.
+	// Nil until a user enters it; ON_PROGRESS and DELIVERED require it.
+	PoNumber          *string    `db:"po_number"           json:"poNumber,omitempty"`
 	QuotationID       int64      `db:"quotation_id"        json:"quotationId"`
 	QuotationNo       string     `db:"quotation_no"        json:"quotationNo"`
 	CompanyClientID   int64      `db:"company_client_id"   json:"companyClientId"`

@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_quotation (deployed by migration 00092).
+-- Canonical current body of fn_create_quotation (deployed by migration 00098).
 CREATE OR REPLACE FUNCTION public.fn_create_quotation(p_company_client_id bigint, p_contact_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_created_by bigint, p_notes text DEFAULT NULL::text, p_status text DEFAULT 'draft'::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -83,7 +83,7 @@ BEGIN
   END IF;
 
   -- 4. Generate quotation_no
-  v_quotation_no := fn_next_doc_no('Q', p_company_client_id);
+  v_quotation_no := fn_next_doc_no('Q');
 
   -- 5. INSERT header
   INSERT INTO quotations (

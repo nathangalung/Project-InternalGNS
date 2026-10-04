@@ -133,7 +133,7 @@ func TestRepo_List_Filters(t *testing.T) {
 		},
 		{
 			"po number matches one",
-			func(fx listFixture) purchaseorders.ListFilter { return purchaseorders.ListFilter{Q: fx.a.PoNumber} },
+			func(fx listFixture) purchaseorders.ListFilter { return purchaseorders.ListFilter{Q: *fx.a.PoNumber} },
 			func(fx listFixture) []int64 { return []int64{fx.a.ID} },
 		},
 		{
@@ -235,6 +235,19 @@ func TestRepo_List_Filters(t *testing.T) {
 	}
 }
 
+// A numberless PO exports a blank cell.
+func TestHandler_Export_NumberlessPO(t *testing.T) {
+	ctx, tx, srv := txServer(t)
+	fx := newListFixture(t, tx)
+	require.NoError(t, purchaseorders.NewRepo(tx, testutil.Store(t)).
+		UpdateDetails(ctx, fx.a.ID, "", fx.a.PoDate, seedUserID, nil))
+
+	rows := exportRows(t, srv, url.Values{"q": {fx.a.QuotationNo}})
+	require.Len(t, rows, 2)
+	assert.Equal(t, "", rows[1][2], "No. PO stays blank until entered")
+	assert.Equal(t, fx.a.QuotationNo, rows[1][4])
+}
+
 // A page keeps the count.
 func TestRepo_List_PageKeepsTotal(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
@@ -282,8 +295,8 @@ func TestHandler_Export_MatchesList(t *testing.T) {
 		"No. Delivery Note", "Tanggal Delivery Note", "No. PO", "Tanggal PO",
 		"No. Quotation", "Klien", "Status", "Total",
 	}, rows[0])
-	assert.Equal(t, []string{"", "", fx.a.PoNumber, "2026-01-10", fx.a.QuotationNo, fx.client, "Pending", "555000"}, rows[1])
-	assert.Equal(t, []string{"", "", fx.b.PoNumber, "2026-02-20", fx.b.QuotationNo, fx.client, "PO Diunggah", "333000"}, rows[2])
+	assert.Equal(t, []string{"", "", *fx.a.PoNumber, "2026-01-10", fx.a.QuotationNo, fx.client, "Pending", "555000"}, rows[1])
+	assert.Equal(t, []string{"", "", *fx.b.PoNumber, "2026-02-20", fx.b.QuotationNo, fx.client, "PO Diunggah", "333000"}, rows[2])
 }
 
 // exportRows reads the XLSX sheet.
@@ -340,7 +353,7 @@ func TestHandler_Export_DeliveryNoteFollowsIssuance(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, po.DeliveryNoteNumber, "the stored number survives the walk")
 
-			rows := exportRows(t, srv, url.Values{"q": {po.PoNumber}})
+			rows := exportRows(t, srv, url.Values{"q": {*po.PoNumber}})
 			require.Len(t, rows, 2)
 			assert.Equal(t, tc.status, rows[1][6])
 			assert.Equal(t, "2026-01-05", rows[1][3], "Tanggal PO is the client's PO date")

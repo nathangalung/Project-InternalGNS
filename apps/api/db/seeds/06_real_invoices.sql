@@ -237,7 +237,7 @@ UPDATE purchase_orders po
    SET status               = 'DELIVERED',
        delivery_note_number = COALESCE(
          po.delivery_note_number,
-         fn_next_doc_no('DN', po.company_client_id)
+         fn_next_doc_no('DN')
        )
  WHERE po.status <> 'DELIVERED'
    AND EXISTS (SELECT 1 FROM invoices i WHERE i.po_id = po.id);

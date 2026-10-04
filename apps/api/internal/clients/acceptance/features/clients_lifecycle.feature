@@ -101,12 +101,12 @@ Feature: Client lifecycle
     Then the response status is 422
     And the client number error reads "Nomor klien harus 4 digit dan belum dipakai."
 
-  Scenario: The client number is fixed once a quotation uses it
+  Scenario: The client number stays editable once a quotation uses it
     Given an existing client
     And a quotation references the client
     When the user changes the client number
-    Then the response status is 422
-    And the client number error reads "Nomor klien tidak dapat diubah karena sudah dipakai pada penawaran."
+    Then the response status is 200
+    And the client carries the new number
 
   Scenario Outline: Whitespace-only names are rejected on create and update
     Given an existing client

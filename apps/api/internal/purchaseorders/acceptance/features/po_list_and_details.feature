@@ -21,13 +21,28 @@ Feature: PO list, export and client PO details
     Then the response status is 422
     And the problem detail mentions "<message>"
     When the user reads the PO by quotation
-    Then the PO keeps its generated number
+    Then the PO keeps its client number
 
     Examples:
       | edit                                                        | message               |
       | edits PO details with a number of 51 characters             | Isian terlalu panjang |
       | edits PO details with number "PO/1" dated "2026-02-30"      | YYYY-MM-DD            |
-      | edits PO details with number "   " dated "2026-02-03"       | required              |
+
+  Scenario: A blank number clears it before work starts
+    Given an accepted quotation
+    When the user edits PO details with number "   " dated "2026-02-03"
+    Then the response status is 204
+    When the user reads the PO by quotation
+    Then the PO has no number
+
+  Scenario: A PO in work cannot clear its number
+    Given an accepted quotation
+    And the PO has reached "ON_PROGRESS"
+    When the user edits PO details with number "   " dated "2026-02-03"
+    Then the response status is 422
+    And the field "poNumber" says "No. PO klien wajib diisi"
+    When the user reads the PO by quotation
+    Then the PO keeps its client number
 
   Scenario: A client PO number is unique per client
     Given an accepted quotation

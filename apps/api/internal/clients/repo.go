@@ -28,9 +28,6 @@ var ErrNotFound = errors.New("not found")
 // Number malformed or already taken.
 var ErrNumberInvalid = errors.New("client number invalid or taken")
 
-// Number fixed by a quotation.
-var ErrNumberLocked = errors.New("client number used by a quotation")
-
 // ErrEmailTaken marks taken emails.
 // Another active contact, at any client, owns the email.
 var ErrEmailTaken = errors.New("contact email taken")
@@ -176,13 +173,9 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateClientRequest, us
 }
 
 // numberErr maps number refusals.
-// P0013 comes only from trg_company_client_number_lock.
 func numberErr(err error) error {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
-		if pgErr.Code == db.SQLStateBlockedByRelated {
-			return ErrNumberLocked
-		}
 		switch pgErr.ConstraintName {
 		case "uq_company_client_number", "company_client_number_format_check":
 			return fmt.Errorf("%w: %s", ErrNumberInvalid, pgErr.ConstraintName)

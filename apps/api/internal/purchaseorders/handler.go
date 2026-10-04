@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
@@ -99,7 +100,7 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 		rows = append(rows, []string{
 			dn,
 			dnDate,
-			po.PoNumber,
+			pdfgen.StrDeref(po.PoNumber),
 			po.PoDate.In(tz.Jakarta()).Format("2006-01-02"),
 			po.QuotationNo,
 			po.CompanyName,
@@ -284,16 +285,13 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 	if !httpx.DecodeJSON(w, r, &req) {
 		return
 	}
-	if strings.TrimSpace(req.PoNumber) == "" {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"poNumber": "required"}))
-		return
-	}
 	poDate, err := time.Parse("2006-01-02", strings.TrimSpace(req.PoDate))
 	if err != nil {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"poDate": "must be YYYY-MM-DD"}))
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())
+	// A blank number means none; the database refuses it once work started.
 	if err := h.repo.UpdateDetails(r.Context(), id, strings.TrimSpace(req.PoNumber), poDate, actor, ifMatch); err != nil {
 		switch {
 		case errors.Is(err, ErrNotFound):
@@ -302,6 +300,8 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 			httperr.Render(w, httperr.Unprocessable(map[string]string{
 				"poNumber": "sudah dipakai PO lain untuk klien ini",
 			}))
+		case errors.Is(err, ErrPoNumberRequired):
+			httperr.Render(w, httperr.Unprocessable(map[string]string{"poNumber": err.Error()}))
 		case errors.Is(err, ErrVersionMismatch):
 			httperr.Render(w, httperr.VersionConflict())
 		// A filed invoice prints po_number and po_date, so both are read-only.

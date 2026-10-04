@@ -5,8 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
+	"strconv"
 	"testing"
+	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -18,6 +22,10 @@ const (
 	docNoClientA int64 = 9100001
 	docNoClientB int64 = 9100002
 )
+
+// docNo splits a document number.
+// Type, running number, Roman month and year.
+var docNo = regexp.MustCompile(`^(Q|INV|DN)-([0-9]{5,})/GNS/(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)/([0-9]{4})$`)
 
 // insertClient writes a client fixture.
 // It returns the insert error.
@@ -41,16 +49,14 @@ func dropClients(t *testing.T, ids ...int64) {
 		_, _ = pool.Exec(ctx, `DELETE FROM quotation_status_history WHERE quotation_id IN
 			(SELECT id FROM quotations WHERE company_client_id = $1)`, id)
 		_, _ = pool.Exec(ctx, `DELETE FROM quotations WHERE company_client_id = $1`, id)
-		_, _ = pool.Exec(ctx, `DELETE FROM doc_sequences WHERE company_id = $1`, id)
 		_, _ = pool.Exec(ctx, `DELETE FROM company_client WHERE id = $1`, id)
 	}
 }
 
 // Client numbers are four digits.
 //
-// Document numbers embed it with no delimiter, so a variable-width number
-// lets two clients produce the same quotation number and permanently block
-// the second one.
+// The number stays a fixed-width, unique key even though no document number
+// embeds it any more.
 func TestCompanyClientNumber_FixedFourDigits(t *testing.T) {
 	pool := testutil.Pool(t)
 	ctx := context.Background()
@@ -97,30 +103,165 @@ func TestCompanyClientNumber_FixedFourDigits(t *testing.T) {
 	assert.Zero(t, n, "every existing client must carry a four digit number after the backfill")
 }
 
-// Overlapping prefixes never collide.
-// Clients whose numbers share a prefix get distinct quotation numbers.
-func TestQuotationNo_NoCollisionAcrossPrefixOverlap(t *testing.T) {
-	srv, ctx := resetServer(t)
+// nextDocNo draws one number.
+func nextDocNo(t *testing.T, ctx context.Context, tx pgx.Tx, docType string) string {
+	t.Helper()
+	var no string
+	require.NoError(t, tx.QueryRow(ctx, `SELECT fn_next_doc_no($1)`, docType).Scan(&no))
+	return no
+}
+
+// seqOf reads the running number.
+func seqOf(t *testing.T, no string) int {
+	t.Helper()
+	m := docNo.FindStringSubmatch(no)
+	require.NotNil(t, m, "%q is not a document number", no)
+	n, err := strconv.Atoi(m[2])
+	require.NoError(t, err)
+	return n
+}
+
+// Numbers carry the WIB period.
+// Each type prints its prefix, a five-digit running number and the Roman
+// month and year of today's WIB date.
+func TestNextDocNo_Format(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	var roman, year string
+	require.NoError(t, tx.QueryRow(ctx, `
+		SELECT fn_month_to_roman(EXTRACT(MONTH FROM CURRENT_DATE)::int),
+		       EXTRACT(YEAR FROM CURRENT_DATE)::text`).Scan(&roman, &year))
+	for _, docType := range []string{"Q", "INV", "DN"} {
+		t.Run(docType, func(t *testing.T) {
+			no := nextDocNo(t, ctx, tx, docType)
+			m := docNo.FindStringSubmatch(no)
+			require.NotNil(t, m, "%q is not a document number", no)
+			assert.Equal(t, docType, m[1])
+			assert.Equal(t, roman, m[3])
+			assert.Equal(t, year, m[4])
+		})
+	}
+}
+
+// Every month has its numeral.
+func TestMonthToRoman(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	want := []string{"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"}
+	for i, w := range want {
+		var got string
+		require.NoError(t, tx.QueryRow(ctx, `SELECT fn_month_to_roman($1)`, i+1).Scan(&got))
+		assert.Equal(t, w, got, "month %d", i+1)
+	}
+}
+
+// One counter per type.
+// Drawing a quotation number never moves the invoice or delivery-note
+// counter, and the quotation counter only ever grows by one.
+func TestNextDocNo_CountersPerType(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	inv := seqOf(t, nextDocNo(t, ctx, tx, "INV"))
+	dn := seqOf(t, nextDocNo(t, ctx, tx, "DN"))
+	q1 := seqOf(t, nextDocNo(t, ctx, tx, "Q"))
+	q2 := seqOf(t, nextDocNo(t, ctx, tx, "Q"))
+
+	assert.Equal(t, q1+1, q2)
+	assert.Equal(t, inv+1, seqOf(t, nextDocNo(t, ctx, tx, "INV")))
+	assert.Equal(t, dn+1, seqOf(t, nextDocNo(t, ctx, tx, "DN")))
+}
+
+// Past 99999 the number grows.
+// lpad would cut the sixth digit and reissue an old number.
+func TestNextDocNo_GrowsPastFiveDigits(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, err := tx.Exec(ctx, `UPDATE doc_counters SET last_seq = 99998 WHERE doc_type = 'DN'`)
+	require.NoError(t, err)
+
+	assert.Regexp(t, `^DN-99999/GNS/`, nextDocNo(t, ctx, tx, "DN"))
+	assert.Regexp(t, `^DN-100000/GNS/`, nextDocNo(t, ctx, tx, "DN"))
+	assert.Regexp(t, `^DN-100001/GNS/`, nextDocNo(t, ctx, tx, "DN"))
+}
+
+// Only Q, INV and DN are numbered.
+// A PO carries the client's own number.
+func TestNextDocNo_UnknownType(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	var no string
+	err := tx.QueryRow(ctx, `SELECT fn_next_doc_no('PO')`).Scan(&no)
+	require.ErrorContains(t, err, "unknown document type PO")
+}
+
+// A rollback returns the number.
+// The counter is a row, not a sequence, so an aborted document leaves no
+// gap.
+func TestNextDocNo_RollbackLeavesNoGap(t *testing.T) {
+	ctx := context.Background()
 	pool := testutil.Pool(t)
+
+	first, err := pool.Begin(ctx)
+	require.NoError(t, err)
+	drawn := nextDocNo(t, ctx, first, "INV")
+	require.NoError(t, first.Rollback(ctx))
+
+	second, err := pool.Begin(ctx)
+	require.NoError(t, err)
+	defer func() { _ = second.Rollback(ctx) }()
+	assert.Equal(t, drawn, nextDocNo(t, ctx, second, "INV"))
+}
+
+// Concurrent callers queue.
+// The second caller waits on the counter row and takes the next number
+// once the first commits.
+func TestNextDocNo_ConcurrentCallersDiffer(t *testing.T) {
+	ctx := context.Background()
+	pool := testutil.Pool(t)
+
+	first, err := pool.Begin(ctx)
+	require.NoError(t, err)
+	defer func() { _ = first.Rollback(ctx) }()
+	a := nextDocNo(t, ctx, first, "Q")
+
+	type drawn struct {
+		no  string
+		err error
+	}
+	done := make(chan drawn, 1)
+	go func() {
+		tx, err := pool.Begin(ctx)
+		if err != nil {
+			done <- drawn{err: err}
+			return
+		}
+		defer func() { _ = tx.Rollback(ctx) }()
+		var no string
+		err = tx.QueryRow(ctx, `SELECT fn_next_doc_no('Q')`).Scan(&no)
+		done <- drawn{no, err}
+	}()
+	select {
+	case d := <-done:
+		t.Fatalf("second caller did not wait for the first: %+v", d)
+	case <-time.After(300 * time.Millisecond):
+	}
+	require.NoError(t, first.Commit(ctx))
+
+	b := <-done
+	require.NoError(t, b.err)
+	assert.Equal(t, seqOf(t, a)+1, seqOf(t, b.no))
+}
+
+// Quotations share one counter.
+// Two clients' quotations draw consecutive numbers, whatever their client
+// numbers.
+func TestQuotationNo_OneCounterAcrossClients(t *testing.T) {
+	srv, ctx := resetServer(t)
 	t.Cleanup(func() { dropClients(t, docNoClientA, docNoClientB) })
 
 	dropClients(t, docNoClientA, docNoClientB)
 	require.NoError(t, insertClient(t, ctx, docNoClientA, "0901"))
 	require.NoError(t, insertClient(t, ctx, docNoClientB, "0911"))
 
-	// Client A is on sequence 11, client B on sequence 1: the pair that
-	// used to collapse to the same number.
-	_, err := pool.Exec(ctx,
-		`INSERT INTO doc_sequences (doc_type, company_id, year, last_seq, updated_at)
-		 VALUES ('Q', $1, EXTRACT(YEAR FROM NOW())::INT, 10, NOW())`, docNoClientA)
-	require.NoError(t, err)
-
 	noA := createQuotationFor(t, srv, docNoClientA)
 	noB := createQuotationFor(t, srv, docNoClientB)
 
-	assert.NotEqual(t, noA, noB, "prefix-overlapping clients must not share a quotation number")
-	assert.Contains(t, noA, "090111")
-	assert.Contains(t, noB, "09111")
+	assert.Equal(t, seqOf(t, noA)+1, seqOf(t, noB))
 }
 
 // createQuotationFor posts a one-line draft.

@@ -209,6 +209,7 @@ func (s *scenarioState) deliverQuotation(create quotations.CreateRequest) error 
 	if err := s.attachPOFile(); err != nil {
 		return err
 	}
+	testutil.EnterPONumber(s.t, context.Background(), testutil.Pool(s.t), s.poID)
 	for _, target := range []purchaseorders.Status{purchaseorders.StatusOnProgress, purchaseorders.StatusDelivered} {
 		if err := s.sendRequest(http.MethodPatch, "/purchase-orders/"+strconv.FormatInt(s.poID, 10)+"/status", purchaseorders.ChangeStatusRequest{Status: target}); err != nil {
 			return err

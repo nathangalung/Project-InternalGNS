@@ -45,6 +45,7 @@ func acceptedQuotationForCompany(t *testing.T, tx pgx.Tx, companyID int64) int64
 
 	po, err := purchaseorders.NewRepo(tx, testutil.Store(t)).GetByQuotation(ctx, qid)
 	require.NoError(t, err)
+	testutil.EnterPONumber(t, ctx, tx, po.ID)
 	return po.ID
 }
 

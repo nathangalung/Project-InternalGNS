@@ -142,6 +142,7 @@ func (s *scenarioState) invoiceFor(qty, price, cost string) error {
 	}); err != nil {
 		return err
 	}
+	testutil.EnterPONumber(s.t, context.Background(), testutil.Pool(s.t), po.ID)
 	for _, target := range []purchaseorders.Status{purchaseorders.StatusOnProgress, purchaseorders.StatusDelivered} {
 		if err := s.expect(http.StatusNoContent, http.MethodPatch, poPath+"/status",
 			purchaseorders.ChangeStatusRequest{Status: target}); err != nil {

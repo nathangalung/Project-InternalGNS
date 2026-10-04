@@ -504,7 +504,7 @@ export type PoFileInput = {
 };
 
 // From purchaseorders/completeness.go
-export type PoGapCode = "client_address" | "client_npwp" | "client_number" | "contact_inactive" | "contact_name" | "contact_reach" | "shipping_address" | "vendor_location" | "vendor_reach";
+export type PoGapCode = "client_address" | "client_npwp" | "client_number" | "contact_inactive" | "contact_name" | "contact_reach" | "po_number" | "shipping_address" | "vendor_location" | "vendor_reach";
 
 // From purchaseorders/completeness.go
 export type PoIncompleteProblem = ProblemDetail & {
@@ -512,7 +512,7 @@ export type PoIncompleteProblem = ProblemDetail & {
 };
 
 // From purchaseorders/completeness.go
-export type PoIssueKind = "client" | "shipping" | "vendor";
+export type PoIssueKind = "client" | "po" | "shipping" | "vendor";
 
 // From purchaseorders/dto.go
 export type PoItemInput = {
@@ -632,7 +632,7 @@ export type PurchaseOrderItemRow = {
 // From purchaseorders/dto.go
 export type PurchaseOrderRow = {
     id: number;
-    poNumber: string;
+    poNumber?: string;
     quotationId: number;
     quotationNo: string;
     companyClientId: number;

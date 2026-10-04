@@ -43,6 +43,7 @@ func TestCleaner_QuotationRemovesPOAndInvoice(t *testing.T) {
 		require.NoError(t, porepo.UpdateFile(ctx, poID, purchaseorders.UpdateFileRequest{
 			FileName: "po.pdf", FileSize: 1, ObjectKey: "po/cleaner/1-po.pdf",
 		}, seedUserID))
+		testutil.EnterPONumber(t, ctx, pool, poID)
 		for _, s := range []purchaseorders.Status{purchaseorders.StatusOnProgress, purchaseorders.StatusDelivered} {
 			require.NoError(t, porepo.ChangeStatus(ctx, poID, s, seedUserID))
 		}

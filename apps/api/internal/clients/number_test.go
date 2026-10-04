@@ -135,7 +135,9 @@ func insertQuotation(t *testing.T, ctx context.Context, tx pgx.Tx, clientID int6
 	require.NoError(t, err)
 }
 
-// Number edits follow quotation usage.
+// Number edits ignore quotation usage.
+// No document number embeds the client number, so a quoted client may
+// take another free number.
 func TestRepo_Update_ClientNumber(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -151,7 +153,7 @@ func TestRepo_Update_ClientNumber(t *testing.T) {
 		{"change before any quotation", false,
 			func(t *testing.T, tx pgx.Tx, _ string) *string { return freeNumber(t, tx) }, nil, false},
 		{"change after quotation", true,
-			func(t *testing.T, tx pgx.Tx, _ string) *string { return freeNumber(t, tx) }, clients.ErrNumberLocked, true},
+			func(t *testing.T, tx pgx.Tx, _ string) *string { return freeNumber(t, tx) }, nil, false},
 		{"change to taken number", false,
 			func(t *testing.T, tx pgx.Tx, _ string) *string {
 				other := freeNumber(t, tx)

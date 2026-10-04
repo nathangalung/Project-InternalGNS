@@ -4,12 +4,12 @@
 --
 -- Runs after 04_quotation_states.sql, which has already:
 --   * Promoted these 55 quotations to 'accepted' (auto-creating each one's
---     PO via fn_create_purchase_order, with a placeholder po_number from
---     fn_next_doc_no and po_date = CURRENT_DATE).
+--     PO via fn_create_purchase_order, with no po_number yet and
+--     po_date = CURRENT_DATE).
 --   * Snapshotted quotation_items into purchase_order_items.
 --   * Rejected every other quotation.
 --
--- This seed simply UPDATEs the placeholder po_number / po_date with the real
+-- This seed simply UPDATEs po_number / po_date with the real
 -- customer values. po_items remain untouched because they already mirror
 -- quotation_items.
 --
@@ -91,7 +91,7 @@ INSERT INTO _real_po VALUES
   (549, 'V-26-2405-125-E/01/02',           '2026-02-02', 3),  -- Gate Valve / FINAL revision (latest = /01/02; file 021 typed /01/01)
   (520, 'V-26-2405-030-E/03/01',           '2026-01-15', 3); -- Gate Valve F-7363 250mm
 
--- UPDATE the placeholder po_number / po_date that 04_quotation_states.sql
+-- UPDATE the empty po_number and the po_date that 04_quotation_states.sql
 -- got from fn_create_purchase_order with the real customer values.
 UPDATE purchase_orders po
    SET po_number  = r.po_number,

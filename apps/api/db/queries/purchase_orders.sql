@@ -156,11 +156,13 @@ WHERE poi.po_id = $1
 ORDER BY poi.line_number;
 
 -- name: purchase_orders.completeness_client
--- Client master data the PO's documents need; $1=po id.
+-- The PO's own number and the client master data its documents need;
+-- $1=po id.
 -- The narahubung is the quotation's chosen contact, even when it has since
 -- been deactivated, so the gate can say so; only a quotation with no chosen
 -- contact falls back to the client's first active one.
-SELECT cc.id,
+SELECT po.po_number,
+       cc.id,
        cc.name,
        cc.number,
        cc.npwp,

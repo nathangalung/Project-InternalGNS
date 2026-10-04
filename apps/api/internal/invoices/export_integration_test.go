@@ -214,7 +214,7 @@ func TestExport_PDF_Header(t *testing.T) {
 	got := h.PDFHeaderForTest(inv, items)
 
 	assert.Equal(t, `MV Sinar \& Bahari`, got.VesselName, "escaped for LaTeX")
-	assert.Equal(t, pdfgen.LatexEscape(po.PoNumber), got.PONo)
+	assert.Equal(t, pdfgen.LatexEscape(pdfgen.StrDeref(po.PoNumber)), got.PONo)
 	assert.Equal(t, po.PoDate.Format("2 January 2006"), got.PODate)
 	assert.Equal(t, pdfgen.LatexEscape(pdfgen.StrDeref(client.NPWP)), got.CompanyNPWP)
 	assert.Equal(t, inv.InvoiceDate.Format("2 January 2006"), got.InvoiceDate)

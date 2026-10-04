@@ -345,7 +345,8 @@ func TestRepo_Summary(t *testing.T) {
 }
 
 // attachPOFile uploads the client PO.
-// It moves PENDING to UPLOADED.
+// It moves PENDING to UPLOADED and enters the client's PO number, which
+// work requires.
 func attachPOFile(ctx context.Context, t *testing.T, porepo *purchaseorders.Repo, poID int64) {
 	t.Helper()
 	require.NoError(t, porepo.UpdateFile(ctx, poID, purchaseorders.UpdateFileRequest{
@@ -353,4 +354,7 @@ func attachPOFile(ctx context.Context, t *testing.T, porepo *purchaseorders.Repo
 		FileSize:  1024,
 		ObjectKey: storage.BuildObjectKey("po", poID, "po.pdf"),
 	}, seedUserID))
+	po, err := porepo.GetByID(ctx, poID)
+	require.NoError(t, err)
+	require.NoError(t, porepo.UpdateDetails(ctx, poID, "PO-UJI-"+strconv.FormatInt(poID, 10), po.PoDate, seedUserID, nil))
 }

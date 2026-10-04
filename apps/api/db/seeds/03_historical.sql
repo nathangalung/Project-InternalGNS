@@ -12,8 +12,7 @@ TRUNCATE TABLE
   item_request_matches,
   vendor_products, items,
   company_contacts, company_client,
-  vendors,
-  doc_sequences
+  vendors
 RESTART IDENTITY CASCADE;
 
 -- 1. Customers (18 entities, IDs 1..18)
@@ -8420,39 +8419,9 @@ INSERT INTO vendor_products (id, vendor_id, item_id, cost_price, created_by, upd
   (2531, 1137, 3102, 22000.00, 1, 1);
 SELECT setval('vendor_products_id_seq', 2531);
 
--- 6. doc_sequences — record sequence per (company, year) so future fn_next_doc_no continues correctly
-INSERT INTO doc_sequences (doc_type, company_id, year, last_seq) VALUES
-  ('Q', 1, 2024, 25),
-  ('Q', 1, 2025, 64),
-  ('Q', 1, 2026, 18),
-  ('Q', 2, 2025, 9),
-  ('Q', 2, 2026, 7),
-  ('Q', 3, 2024, 58),
-  ('Q', 3, 2025, 172),
-  ('Q', 3, 2026, 94),
-  ('Q', 4, 2024, 1),
-  ('Q', 4, 2025, 3),
-  ('Q', 4, 2026, 20),
-  ('Q', 5, 2024, 16),
-  ('Q', 5, 2025, 38),
-  ('Q', 5, 2026, 11),
-  ('Q', 6, 2024, 19),
-  ('Q', 6, 2025, 17),
-  ('Q', 6, 2026, 12),
-  ('Q', 7, 2026, 9),
-  ('Q', 8, 2026, 3),
-  ('Q', 9, 2024, 2),
-  ('Q', 9, 2025, 16),
-  ('Q', 9, 2026, 1),
-  ('Q', 10, 2026, 1),
-  ('Q', 11, 2024, 2),
-  ('Q', 11, 2025, 9),
-  ('Q', 12, 2025, 10),
-  ('Q', 13, 2025, 4),
-  ('Q', 14, 2025, 2),
-  ('Q', 16, 2024, 15),
-  ('Q', 17, 2024, 3),
-  ('Q', 18, 2024, 2);
+-- 6. doc_counters restart: every number loaded here is in the legacy format,
+--    so fn_next_doc_no starts each type at its first new-format number.
+UPDATE doc_counters SET last_seq = 0, updated_at = NOW();
 
 -- 7. Quotations (663)
 INSERT INTO quotations (
