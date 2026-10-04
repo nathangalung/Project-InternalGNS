@@ -273,7 +273,14 @@ document's status history table.
   ON_PROGRESS or DELIVERED together with its WIB issue date
   (`delivery_note_date`), which the note prints as its Date above the PO No
   and PO Date rows, and DELIVERED creates the invoice. DELIVERED and
-  CANCELLED are terminal, and the file is locked in both. A PO keeps at least
+  CANCELLED are terminal, and the file is locked in both. The lines lock in
+  both too, with one exception: while a delivered PO's invoice is cancelled
+  and no live invoice replaces it, Ubah PO opens again, so the Pengganti
+  issued afterwards bills the corrected lines (and a delivery-note reprint
+  shows them); the Pengganti locks them again. `fn_po_lines_locked` is the
+  rule `fn_update_po_items` and the PO read (`linesLocked`, which the web
+  gates Ubah PO on) share, and a delivered PO with no invoice at all stays
+  locked. A PO keeps at least
   one product line and every product line priced above zero: the line edit
   (`fn_update_po_items`) refuses otherwise, and so do ON_PROGRESS and
   DELIVERED, so no Rp 0 invoice is issued. A qty 0 line stays allowed, but

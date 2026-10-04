@@ -1,4 +1,32 @@
--- Canonical current body of fn_update_po_items (deployed by migration 00094).
+-- +goose Up
+-- 00094 DELIVERED PO REOPENS ON CANCELLED INVOICE
+-- A Pengganti re-snapshots the PO through fn_create_invoice, but a
+-- delivered PO's lines were locked, so a Pengganti could never correct a
+-- wrong quantity or price. A delivered PO's lines now open while its
+-- invoice is cancelled and no live invoice replaces it; the Pengganti
+-- locks them again. A delivered PO with no invoice at all stays locked.
+-- fn_po_lines_locked is the one rule the edit and the PO read share.
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION public.fn_po_lines_locked(p_po_id bigint, p_status text)
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE
+AS $function$
+  SELECT CASE
+           WHEN p_status = 'CANCELLED' THEN TRUE
+           WHEN p_status <> 'DELIVERED' THEN FALSE
+           ELSE NOT (
+             EXISTS (SELECT 1 FROM invoices i
+                     WHERE i.po_id = p_po_id AND i.status = 'cancelled')
+             AND NOT EXISTS (SELECT 1 FROM invoices i
+                             WHERE i.po_id = p_po_id AND i.status <> 'cancelled'))
+         END
+$function$
+;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -168,3 +196,5 @@ BEGIN
   END IF;
 END;
 $function$
+;
+-- +goose StatementEnd

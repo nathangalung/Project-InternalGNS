@@ -235,5 +235,6 @@ func TestRepo_UpdateItems_CancelledIsLocked(t *testing.T) {
 		DiscountPct: "0",
 		Items:       []purchaseorders.UpdateItemsLine{},
 	}, seedUserID, nil)
-	assert.ErrorIs(t, err, purchaseorders.ErrLocked)
+	require.ErrorIs(t, err, purchaseorders.ErrLocked)
+	assert.Equal(t, "PO yang dibatalkan tidak dapat diubah.", err.Error())
 }

@@ -99,7 +99,7 @@ Feature: Purchase order lifecycle
     Given an accepted quotation
     And the PO has reached "DELIVERED"
     When the user edits PO items with discount "0" and selling price "100000"
-    Then the PO is refused as locked with "PO yang sudah dikirim atau dibatalkan tidak dapat diubah."
+    Then the PO is refused as locked with "PO yang sudah dikirim hanya dapat diubah setelah invoicenya dibatalkan dan sebelum invoice pengganti diterbitkan."
 
   Scenario: A shipping charge without an address is kept
     Given an accepted quotation
@@ -291,7 +291,7 @@ Feature: Purchase order lifecycle
     Given an accepted quotation
     And the PO has reached "CANCELLED"
     When the user edits PO items with discount "0" and selling price "100000"
-    Then the PO is refused as locked with "PO yang sudah dikirim atau dibatalkan tidak dapat diubah."
+    Then the PO is refused as locked with "PO yang dibatalkan tidak dapat diubah."
 
   Scenario: A cancelled PO has no delivery note
     Given an accepted quotation

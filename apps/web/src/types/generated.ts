@@ -660,6 +660,7 @@ export type PurchaseOrderRow = {
     deliveryNoteNumber?: string;
     deliveryNoteDate?: string;
     invoiceNo?: string;
+    linesLocked: boolean;
     allowedTransitions: PoTransition[];
 };
 
