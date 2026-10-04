@@ -301,6 +301,17 @@ test("a cancelled invoice still downloads its PDF", async ({ page, admin, invoic
   await page.addInitScript(() => {
     Object.defineProperty(window, "showSaveFilePicker", { value: undefined })
   })
+  // The CI browser job has no xelatex; the pdf layout job renders the
+  // DIBATALKAN copy. Keep the API's own headers so CORS still holds.
+  await page.route(`**/api/v1/invoices/${invoice.id}/pdf`, async (route) => {
+    const response = await route.fetch()
+    await route.fulfill({
+      response,
+      status: 200,
+      contentType: "application/pdf",
+      body: "%PDF-1.7\n%%EOF\n",
+    })
+  })
   await setInvoiceStatus(admin, invoice.id, "cancelled", "Dibatalkan lewat API")
   await openInvoice(page, invoice)
   const download = page.waitForEvent("download")
