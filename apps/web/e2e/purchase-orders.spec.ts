@@ -36,14 +36,18 @@ async function choosePoStatus(page: Page, current: string, next: string): Promis
 
 test.describe("purchase order detail", () => {
   test("links, client card and totals come from the PO", async ({ page, seed }) => {
-    const { client, q, po } = await acceptedPo(seed, { discountPct: 10 })
+    // A client number with slashes shows whole.
+    const { client, q, po } = await acceptedPo(seed, {
+      discountPct: 10,
+      poNumber: `${seed.prefix}/PO/KLIEN/07`,
+    })
 
     await page.goto("/purchase-orders")
     await page.getByPlaceholder("Cari purchase order, klien, atau nomor...").fill(seed.prefix)
     const row = page.getByRole("row", { name: new RegExp(client.name) })
     await expect(row).toHaveCount(1)
     // Both PO routes are keyed by the quotation id.
-    const poLink = row.getByRole("link", { name: po.poNumber ?? "" })
+    const poLink = row.getByRole("link", { name: po.poNumber ?? "", exact: true })
     await expect(poLink).toHaveAttribute("href", `/purchase-orders/${q.id}`)
     await expect(row.getByRole("link", { name: client.name })).toHaveAttribute(
       "href",

@@ -228,8 +228,13 @@ export default function PurchaseOrderList({ onViewDetail }: PurchaseOrderListPro
                         className={`${ui.tdCenter} font-bold`}
                         title={row.poNumber ?? PO_NUMBER_MISSING}
                       >
-                        <EntityLink kind="purchaseOrder" quotationId={row.quotationId}>
-                          <PoNumber value={row.poNumber && shortDocNo(row.poNumber)} />
+                        {/* Shown whole; only CSS clips a long one. */}
+                        <EntityLink
+                          kind="purchaseOrder"
+                          quotationId={row.quotationId}
+                          className="inline-block max-w-56 truncate align-bottom"
+                        >
+                          <PoNumber value={row.poNumber} />
                         </EntityLink>
                       </td>
                       <td className={`${ui.tdCenter} font-medium text-[#191C1E]`}>
