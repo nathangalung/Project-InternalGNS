@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
@@ -231,6 +232,44 @@ func TestRepo_List_Filters(t *testing.T) {
 			require.NotNil(t, res.Rows)
 			assert.Equal(t, want, ids(res.Rows))
 			assert.Equal(t, int64(len(want)), res.Total)
+		})
+	}
+}
+
+// A month and year find numbers.
+// The quotation and delivery note numbers match whole periods only; the
+// client's own PO number also carries one. 1999 keeps every other row out.
+func TestRepo_List_PeriodSearch(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	fx := newListFixture(t, tx)
+	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
+	tag := strconv.FormatInt(time.Now().UnixNano(), 36)
+	day := time.Date(2026, time.March, 2, 0, 0, 0, 0, time.UTC)
+	require.NoError(t, repo.UpdateDetails(ctx, fx.a.ID, tag+"-A/KLIEN/I/1999", day, seedUserID, nil))
+	_, err := tx.Exec(ctx, `UPDATE purchase_orders SET delivery_note_number = $2 WHERE id = $1`,
+		fx.b.ID, "DN-"+tag+"/GNS/II/1999")
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx, `UPDATE quotations SET quotation_no = $2 WHERE id = $1`,
+		fx.a.QuotationID, "Q-"+tag+"/GNS/X/1999")
+	require.NoError(t, err)
+
+	tests := []struct {
+		q    string
+		want []int64
+	}{
+		{"I/1999", []int64{fx.a.ID}},
+		{"1/1999", []int64{fx.a.ID}},
+		{"2/1999", []int64{fx.b.ID}},
+		{"II/1999", []int64{fx.b.ID}},
+		{"10/1999", []int64{fx.a.ID}},
+		{"xi / 1999", []int64{}},
+		{"DN-" + tag, []int64{fx.b.ID}},
+	}
+	for _, tc := range tests {
+		t.Run(tc.q, func(t *testing.T) {
+			res, err := repo.List(ctx, purchaseorders.ListFilter{Q: tc.q, Limit: 100})
+			require.NoError(t, err)
+			assert.ElementsMatch(t, tc.want, ids(res.Rows))
 		})
 	}
 }

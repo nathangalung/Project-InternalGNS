@@ -235,3 +235,39 @@ func TestContains(t *testing.T) {
 		}
 	}
 }
+
+// Month-year queries become anchored patterns.
+func TestPeriod(t *testing.T) {
+	cases := []struct {
+		in, want string
+		ok       bool
+	}{
+		{"10/2026", "%/X/2026%", true},
+		{"1/2026", "%/I/2026%", true},
+		{"01/2026", "%/I/2026%", true},
+		{"12/2025", "%/XII/2025%", true},
+		{"X/2026", "%/X/2026%", true},
+		{"x / 2026", "%/X/2026%", true},
+		{"  vii/2026  ", "%/VII/2026%", true},
+		{"0/2026", "", false},
+		{"13/2026", "", false},
+		{"010/2026", "", false},
+		{"IIII/2026", "", false},
+		{"XIII/2026", "", false},
+		{"10/26", "", false},
+		{"10/20266", "", false},
+		{"10/2026/1", "", false},
+		{"10-2026", "", false},
+		{"/2026", "", false},
+		{"10/", "", false},
+		{"+1/2026", "", false},
+		{"PT Acme", "", false},
+		{"", "", false},
+	}
+	for _, tc := range cases {
+		got, ok := Period(tc.in)
+		if got != tc.want || ok != tc.ok {
+			t.Errorf("Period(%q) = %q, %v, want %q, %v", tc.in, got, ok, tc.want, tc.ok)
+		}
+	}
+}

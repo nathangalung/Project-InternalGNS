@@ -11,6 +11,7 @@
 package listq
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 
@@ -183,4 +184,50 @@ var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
 // Search text matches as typed, so a % or _ is not a wildcard.
 func Contains(s string) string {
 	return "%" + likeEscaper.Replace(s) + "%"
+}
+
+// romanMonths are the number months.
+var romanMonths = []string{"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"}
+
+// Period builds a month-year pattern.
+//
+// Document numbers end in /GNS/{Roman month}/{year}, optionally followed by
+// a revision suffix. A query naming a month and a four-digit year, as
+// 10/2026, 1/2026, X/2026 or x / 2026, becomes the ILIKE pattern
+// %/X/2026% every number of that period contains. The leading slash anchors
+// the month, so I/2026 never matches II/2026, VII/2026 or XI/2026. ok is
+// false for anything else, month 0 and 13 included.
+func Period(q string) (pattern string, ok bool) {
+	month, year, found := strings.Cut(q, "/")
+	if !found {
+		return "", false
+	}
+	month = strings.ToUpper(strings.TrimSpace(month))
+	year = strings.TrimSpace(year)
+	if len(year) != 4 || !digits(year) {
+		return "", false
+	}
+	if digits(month) && len(month) <= 2 {
+		n, _ := strconv.Atoi(month)
+		if n < 1 || n > 12 {
+			return "", false
+		}
+		month = romanMonths[n-1]
+	} else if !slices.Contains(romanMonths, month) {
+		return "", false
+	}
+	return "%/" + month + "/" + year + "%", true
+}
+
+// digits reports a non-empty ASCII digit run.
+func digits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
 }

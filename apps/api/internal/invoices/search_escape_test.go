@@ -1,8 +1,10 @@
 package invoices_test
 
 import (
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -42,4 +44,45 @@ func TestRepo_List_EscapesLikeWildcards(t *testing.T) {
 	assert.NotContains(t, ids("Seratu_"), invID)
 	ids("%")
 	ids(`\`)
+}
+
+// A month and year find numbers.
+// The invoice and its quotation are both searched, and the month is
+// matched between slashes. 1999 keeps every other row out.
+func TestRepo_List_PeriodSearch(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	tag := strconv.FormatInt(time.Now().UnixNano(), 36)
+	_, _, october := deliveredPOWithInvoice(t, tx)
+	_, _, february := deliveredPOWithInvoice(t, tx)
+	quotedJanuary, _, january := deliveredPOWithInvoice(t, tx)
+	_, err := tx.Exec(ctx, `UPDATE invoices SET invoice_no = $2 WHERE id = $1`, october, "INV-"+tag+"1/GNS/X/1999")
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx, `UPDATE invoices SET invoice_no = $2 WHERE id = $1`, february, "INV-"+tag+"2/GNS/II/1999")
+	require.NoError(t, err)
+	_, err = tx.Exec(ctx, `UPDATE quotations SET quotation_no = $2 WHERE id = $1`, quotedJanuary, "Q-"+tag+"3/GNS/I/1999")
+	require.NoError(t, err)
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+
+	tests := []struct {
+		q    string
+		want []int64
+	}{
+		{"10/1999", []int64{october}},
+		{"X/1999", []int64{october}},
+		{"2/1999", []int64{february}},
+		{"1/1999", []int64{january}},
+		{"i / 1999", []int64{january}},
+		{"0/1999", []int64{}},
+	}
+	for _, tc := range tests {
+		t.Run(tc.q, func(t *testing.T) {
+			res, err := repo.List(ctx, invoices.ListFilter{Q: tc.q, Limit: 100})
+			require.NoError(t, err)
+			got := make([]int64, 0, len(res.Rows))
+			for _, r := range res.Rows {
+				got = append(got, r.ID)
+			}
+			assert.ElementsMatch(t, tc.want, got)
+		})
+	}
 }

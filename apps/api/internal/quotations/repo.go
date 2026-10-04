@@ -73,7 +73,12 @@ func (r *Repo) List(ctx context.Context, f ListFilter) (ListResult, error) {
 	c := listq.New()
 	if f.Q != "" {
 		p := c.Arg(listq.Contains(f.Q))
-		c.And("(q.quotation_no ILIKE " + p + " OR q.company_client_name ILIKE " + p + ")")
+		number := p
+		// 10/2026 finds whole periods, so I/2026 skips II/2026.
+		if period, ok := listq.Period(f.Q); ok {
+			number = c.Arg(period)
+		}
+		c.And("(q.quotation_no ILIKE " + number + " OR q.company_client_name ILIKE " + p + ")")
 	}
 	if len(f.Statuses) > 0 {
 		p := c.Arg(f.Statuses)
