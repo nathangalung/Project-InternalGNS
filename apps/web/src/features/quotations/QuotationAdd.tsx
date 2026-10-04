@@ -9,6 +9,7 @@ import { useUnits } from "@/features/units/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { formatNumber as formatRp } from "@/lib/format"
 import { lookupFailure } from "@/lib/lookup"
+import { INLINE_LOOKUP } from "@/lib/query-client"
 import { ui } from "@/lib/ui"
 import type { QuotationCreateInput, QuotationItemInput } from "@/types/api"
 import { toItemInput } from "./adapters"
@@ -21,8 +22,6 @@ import { useQuotationWizard } from "./useQuotationWizard"
 import { WIZARD_STEPS as steps, validityInput } from "./wizard"
 import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
 import { type PickClient, resolveClient, visibleClients } from "./wizardClient"
-
-const INLINE = { throwOnError: false } as const
 
 export default function QuotationAdd() {
   const navigate = useNavigate()
@@ -87,8 +86,8 @@ export default function QuotationAdd() {
   // Search hits are active only; the first page must match. A failure shows
   // on the client step, never on the route error boundary, which would
   // discard every line already added.
-  const clientsQuery = useClients({ limit: 50, isActive: true }, INLINE)
-  const searchQuery = useClientSearch(debouncedSearch, { limit: 30 }, INLINE)
+  const clientsQuery = useClients({ limit: 50, isActive: true }, INLINE_LOOKUP)
+  const searchQuery = useClientSearch(debouncedSearch, { limit: 30 }, INLINE_LOOKUP)
   const clientsData = clientsQuery.data
   const searchHits = searchQuery.data
   const createQuotation = useCreateQuotation()
@@ -109,7 +108,7 @@ export default function QuotationAdd() {
   const isListed = remoteClients.some((c) => c.id === selectedClient)
   const selectedQuery = useClient(
     !isListed && numericClientId > 0 ? numericClientId : undefined,
-    INLINE,
+    INLINE_LOOKUP,
   )
   const selectedRow = selectedQuery.data
   const clientsFailure = lookupFailure(

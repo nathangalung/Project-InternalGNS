@@ -15,6 +15,7 @@ import { useCreateVendor } from "@/features/vendors/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { errorMessage } from "@/lib/errors"
 import { lookupFailure } from "@/lib/lookup"
+import { INLINE_LOOKUP } from "@/lib/query-client"
 import { ui } from "@/lib/ui"
 import ProductCreateModal from "../ProductCreateModal"
 import {
@@ -55,11 +56,6 @@ type ProductAddProps = {
   // Document the line belongs to
   docKind?: "quotation" | "po"
 }
-
-// Lookups that fail in place.
-//
-// The route error boundary would discard the quotation or PO being edited.
-const INLINE = { throwOnError: false } as const
 
 const DIALOG_TITLE = {
   quotation: { add: "Tambah Produk ke Quotation", edit: "Edit Produk Quotation" },
@@ -110,14 +106,14 @@ export default function ProductAdd({
   const productSearch = useItemSearchAdvanced(
     productQueryDebounced,
     { limit: 10, isActive: true },
-    INLINE,
+    INLINE_LOOKUP,
   )
   const requestSearch = useItemSearchAdvanced(
     requestQueryDebounced,
     { limit: 10, isActive: true },
-    INLINE,
+    INLINE_LOOKUP,
   )
-  const itemsAllQuery = useItems({ limit: 50, isActive: true }, INLINE)
+  const itemsAllQuery = useItems({ limit: 50, isActive: true }, INLINE_LOOKUP)
   const searchResp = productSearch.data
   const requestSearchResp = requestSearch.data
   const itemsAll = itemsAllQuery.data

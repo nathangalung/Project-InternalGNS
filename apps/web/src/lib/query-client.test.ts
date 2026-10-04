@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest"
 import { ApiError } from "./api-client"
-import { lookupThrow, queryClient, shouldRetry } from "./query-client"
+import {
+  INLINE_LOOKUP,
+  type LookupOptions,
+  lookupThrow,
+  queryClient,
+  shouldRetry,
+} from "./query-client"
 
 describe("shouldRetry", () => {
   it.each<[string, number, unknown, boolean]>([
@@ -33,12 +39,12 @@ describe("queryClient defaults", () => {
   })
 })
 
-// An absent key keeps the default.
+// Absent key keeps the default.
 describe("lookupThrow", () => {
-  it.each<[string, { throwOnError?: boolean }, object]>([
-    ["opts out", { throwOnError: false }, { throwOnError: false }],
+  it.each<[string, LookupOptions, object]>([
+    ["opts out", INLINE_LOOKUP, { throwOnError: false }],
     ["keeps the default when unset", {}, {}],
-    ["keeps the default when true", { throwOnError: true }, {}],
+    ["keeps the default when undefined", { throwOnError: undefined }, {}],
   ])("%s", (_name, opts, want) => {
     expect(lookupThrow(opts)).toStrictEqual(want)
   })

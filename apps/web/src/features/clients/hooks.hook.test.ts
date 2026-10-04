@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { ApiError } from "@/lib/api-client"
+import { INLINE_LOOKUP } from "@/lib/query-client"
 import { queryKeys } from "@/lib/query-keys"
 import { toast } from "@/lib/toast"
 import {
@@ -308,21 +309,17 @@ describe("useClientContacts failure", () => {
   })
 })
 
-// The quotation wizard keeps its lines.
+// Wizard keeps its lines.
 describe("wizard client lookups", () => {
   const fail = new Error("502")
   const cases: [string, () => void, () => { isError: boolean }][] = [
-    [
-      "list",
-      () => m.list.mockRejectedValue(fail),
-      () => useClients({ limit: 50 }, { throwOnError: false }),
-    ],
+    ["list", () => m.list.mockRejectedValue(fail), () => useClients({ limit: 50 }, INLINE_LOOKUP)],
     [
       "search",
       () => m.search.mockRejectedValue(fail),
-      () => useClientSearch("pt", { limit: 30 }, { throwOnError: false }),
+      () => useClientSearch("pt", { limit: 30 }, INLINE_LOOKUP),
     ],
-    ["detail", () => m.get.mockRejectedValue(fail), () => useClient(7, { throwOnError: false })],
+    ["detail", () => m.get.mockRejectedValue(fail), () => useClient(7, INLINE_LOOKUP)],
   ]
 
   it.each(cases)("%s keeps a failure out of the route error boundary", async (_n, arm, hook) => {

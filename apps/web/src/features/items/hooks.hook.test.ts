@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import * as vendorsApi from "@/features/vendors/api"
 import { shrinkImage } from "@/lib/image-shrink"
+import { INLINE_LOOKUP } from "@/lib/query-client"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
@@ -399,19 +400,19 @@ describe("useItemVendors", () => {
   })
 })
 
-// The line dialog keeps its document.
+// Line dialog keeps its document.
 describe("ProductAdd lookups", () => {
   const fail = new Error("502")
   const cases: [string, () => void, () => { isError: boolean }][] = [
     [
       "catalog list",
       () => m.list.mockRejectedValue(fail),
-      () => useItems({ limit: 50 }, { throwOnError: false }),
+      () => useItems({ limit: 50 }, INLINE_LOOKUP),
     ],
     [
       "catalog search",
       () => m.searchAdvanced.mockRejectedValue(fail),
-      () => useItemSearchAdvanced("baut", { limit: 10 }, { throwOnError: false }),
+      () => useItemSearchAdvanced("baut", { limit: 10 }, INLINE_LOOKUP),
     ],
     [
       "vendor search",
