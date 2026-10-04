@@ -103,6 +103,18 @@ func TestDeliveryNote_Faults(t *testing.T) {
 			poTemplatesRoot,
 		},
 		{
+			// Never a note with a blank address.
+			"reading the client fails",
+			func(inner db.Executor) db.Executor { return &testutil.CountingExec{Inner: inner, FailAfter: 2} },
+			poTemplatesRoot,
+		},
+		{
+			// Never a note with a blank Attn and vessel.
+			"reading the quotation fails",
+			func(inner db.Executor) db.Executor { return &testutil.CountingExec{Inner: inner, FailAfter: 3} },
+			poTemplatesRoot,
+		},
+		{
 			"the template is missing",
 			func(inner db.Executor) db.Executor { return inner },
 			func(t *testing.T) string { return t.TempDir() },
