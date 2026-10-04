@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
@@ -96,6 +97,24 @@ func TestHandler_AddVendor_RelinkKeepsUnsentDetails(t *testing.T) {
 	assert.Equal(t, "2500.00", *repriced.CostPrice)
 	assert.Equal(t, first.LastQuotedAt, same.LastQuotedAt, "an unchanged price is no new quote")
 	assert.NotEqual(t, first.LastQuotedAt, repriced.LastQuotedAt, "a new price is a new quote")
+}
+
+// costPrice must be a number.
+// A blank one is stored as zero; anything else not a finite number of zero
+// or more lands on the costPrice field, and nothing is linked.
+func TestHandler_AddVendor_ScreensCostPrice(t *testing.T) {
+	it := createItem(t, items.CreateItemRequest{Name: uniqueItemName("COST")})
+	vendorID := createVendor(t, true)
+	for _, cost := range []string{"-5", "abc", "NaN", "Inf"} {
+		res := doJSON(t, newSrv(t), http.MethodPost, "/items/"+itoa(it.ID)+"/vendors",
+			items.AddVendorToItemRequest{VendorID: vendorID, CostPrice: ptrS(cost)})
+		require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode, cost)
+		var p httperr.Error
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&p))
+		res.Body.Close()
+		assert.Equal(t, map[string]string{"costPrice": "Harga beli harus berupa angka 0 atau lebih."}, p.Fields, cost)
+	}
+	assert.Empty(t, listVendors(t, it.ID))
 }
 
 // vendorId is required.

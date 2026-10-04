@@ -16,6 +16,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/paginate"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/validate"
 )
 
 type Handler struct {
@@ -28,8 +29,20 @@ type Handler struct {
 // it is logged.
 const searchLayerCap = 5000
 
+// msgIMPATaken sits on impaCode.
+const msgIMPATaken = "Kode IMPA ini sudah dipakai produk aktif lain."
+
 func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
+}
+
+// renderSaveErr maps an item save failure.
+func renderSaveErr(w http.ResponseWriter, r *http.Request, err error) {
+	if errors.Is(err, ErrIMPATaken) {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"impaCode": msgIMPATaken}))
+		return
+	}
+	httperr.RenderDBErrCtx(r.Context(), w, err)
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
@@ -103,7 +116,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	userID := deps.CurrentUserID(r.Context())
 	item, err := h.repo.Create(r.Context(), req, userID)
 	if err != nil {
-		httperr.RenderDBErrCtx(r.Context(), w, err)
+		renderSaveErr(w, r, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusCreated, item)
@@ -133,7 +146,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErrCtx(r.Context(), w, err)
+		renderSaveErr(w, r, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, item)
@@ -153,6 +166,13 @@ func (h *Handler) AddVendor(w http.ResponseWriter, r *http.Request) {
 	if req.VendorID <= 0 {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"vendorId": "required"}))
 		return
+	}
+	// A blank cost is stored as zero, so only a typed one is screened.
+	if req.CostPrice != nil && strings.TrimSpace(*req.CostPrice) != "" {
+		if msg := validate.NonNegative("Harga beli", *req.CostPrice); msg != "" {
+			httperr.Render(w, httperr.Unprocessable(map[string]string{"costPrice": msg}))
+			return
+		}
 	}
 
 	userID := deps.CurrentUserID(r.Context())

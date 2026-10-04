@@ -129,6 +129,20 @@ func (s *scenarioState) statusEquals(want int) error {
 	return nil
 }
 
+// problemField checks one field message.
+func (s *scenarioState) problemField(key, want string) error {
+	var p struct {
+		Fields map[string]string `json:"fields"`
+	}
+	if err := json.Unmarshal(s.body, &p); err != nil {
+		return fmt.Errorf("decode problem: %w", err)
+	}
+	if got := p.Fields[key]; got != want {
+		return fmt.Errorf("field %s: want %q got %q", key, want, got)
+	}
+	return nil
+}
+
 func (s *scenarioState) readItem() error {
 	return s.sendRequest(http.MethodGet, "/items/"+strconv.FormatInt(s.itemID, 10), nil)
 }
@@ -415,6 +429,7 @@ func initScenario(t *testing.T, cleaner *testutil.Cleaner) func(*godog.ScenarioC
 		sc.Step(`^the user creates an item$`, state.createItem)
 		sc.Step(`^the user creates an item with empty name$`, state.createItemEmptyName)
 		sc.Step(`^the response status is (\d+)$`, state.statusEquals)
+		sc.Step(`^the problem field "([^"]+)" says "([^"]+)"$`, state.problemField)
 		sc.Step(`^the response contains an item id$`, state.responseHasItemID)
 		sc.Step(`^an existing item$`, state.seedItem)
 		sc.Step(`^the user reads the item$`, state.readItem)

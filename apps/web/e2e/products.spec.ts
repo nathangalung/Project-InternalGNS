@@ -5,6 +5,9 @@ import { expect, test } from "./support/seed"
 //
 // Create, link a vendor, filters and the read-only finance view.
 
+// Taken IMPA code copy.
+const IMPA_TAKEN = "Kode IMPA ini sudah dipakai produk aktif lain."
+
 type ItemVendor = {
   vendorId: number
   costPrice?: string
@@ -130,19 +133,35 @@ test("renaming a product and turning it off saves both", async ({ page, seed }) 
     .toEqual([renamed, false])
 })
 
-// One message per failed save.
-test("a refused save is reported once, under the form", async ({ page, seed }) => {
+// One message, on Kode IMPA.
+test("a taken IMPA code is reported once, on its field", async ({ page, seed }) => {
   const taken = await seed.item()
   const item = await seed.item()
   await page.goto(`/products/${item.id}`)
-  await page.getByLabel("Kode IMPA").fill(taken.impaCode)
+  const impa = page.getByLabel("Kode IMPA")
+  await impa.fill(taken.impaCode)
   await page.getByRole("button", { name: "Simpan Perubahan" }).click()
 
-  const inline = page.getByRole("main").getByRole("alert")
-  await expect(inline).toBeVisible()
-  const text = (await inline.textContent())?.trim() ?? ""
-  expect(text).not.toBe("")
-  await expect(page.getByText(text, { exact: true })).toHaveCount(1)
+  await expect(impa).toHaveAttribute("aria-invalid", "true")
+  await expect(page.getByText(IMPA_TAKEN, { exact: true })).toHaveCount(1)
+  await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0)
+})
+
+test("Tambah Produk shows a taken IMPA code on its field", async ({ page, seed }) => {
+  const taken = await seed.item()
+  await page.goto("/products")
+  await page.getByRole("button", { name: "Tambah Produk" }).click()
+  const modal = page.getByRole("dialog", { name: "Tambah Produk Baru" })
+  await modal.getByLabel("Nama Produk *").fill(seed.name("Produk Kembar"))
+  const impa = modal.getByLabel("Kode IMPA")
+  await impa.fill(taken.impaCode)
+  await modal.getByRole("button", { name: "Tambahkan" }).click()
+
+  await expect(impa).toHaveAttribute("aria-invalid", "true")
+  await expect(page.getByText(IMPA_TAKEN, { exact: true })).toHaveCount(1)
+  await expect(modal.getByRole("alert")).toHaveCount(0)
+  await modal.getByRole("button", { name: "Batal" }).click()
+  await expect(modal).toBeHidden()
 })
 
 test.describe("as finance", () => {

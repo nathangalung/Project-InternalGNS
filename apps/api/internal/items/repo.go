@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/nathangalung/internalgns/apps/api/db/queries"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
@@ -28,6 +30,10 @@ func (r *Repo) WithExec(exec db.Executor) *Repo {
 }
 
 var ErrNotFound = errors.New("not found")
+
+// ErrIMPATaken marks a duplicate code.
+// Another active item already owns the IMPA code.
+var ErrIMPATaken = errors.New("items: impa code taken")
 
 // Vendor link failures.
 var (
@@ -105,9 +111,10 @@ func (r *Repo) Create(ctx context.Context, req CreateItemRequest, userID int64) 
 		req.Name, req.IMPACode, req.DefaultUnitID, req.Description, req.IsActive, userID,
 	)
 	if err != nil {
-		return Item{}, err
+		return Item{}, impaErr(err)
 	}
-	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Item])
+	item, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Item])
+	return item, impaErr(err)
 }
 
 func (r *Repo) Update(ctx context.Context, id int64, req UpdateItemRequest, userID int64) (Item, error) {
@@ -115,13 +122,24 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateItemRequest, user
 		id, req.Name, req.IMPACode, req.DefaultUnitID, req.Description, req.IsActive, userID,
 	)
 	if err != nil {
-		return Item{}, err
+		return Item{}, impaErr(err)
 	}
 	item, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Item])
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Item{}, ErrNotFound
 	}
-	return item, err
+	return item, impaErr(err)
+}
+
+// impaErr marks a taken IMPA code.
+// The database error stays wrapped, so a caller without a field to show it
+// on still renders the generic conflict.
+func impaErr(err error) error {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.ConstraintName == "uq_items_impa_code_active" {
+		return fmt.Errorf("%w: %w", ErrIMPATaken, err)
+	}
+	return err
 }
 
 // Images lists the gallery.
@@ -172,8 +190,8 @@ func (r *Repo) Recommend(ctx context.Context, clientID *int64, itemIDs []int64) 
 // Upsert vendor_products row.
 func (r *Repo) AddVendor(ctx context.Context, itemID int64, req AddVendorToItemRequest, userID int64) (VendorForItem, error) {
 	cost := "0"
-	if req.CostPrice != nil && *req.CostPrice != "" {
-		cost = *req.CostPrice
+	if req.CostPrice != nil && strings.TrimSpace(*req.CostPrice) != "" {
+		cost = strings.TrimSpace(*req.CostPrice)
 	}
 	rows, err := r.db.Query(ctx, r.store.Get("items.add_vendor"),
 		req.VendorID, itemID, req.VendorSKU.Value, cost, req.ProductURL.Value, userID,

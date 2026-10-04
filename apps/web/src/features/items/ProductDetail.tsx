@@ -3,14 +3,14 @@ import EntityLink from "@/components/shared/EntityLink"
 import { TableEmptyRow, TableLoadingRow } from "@/components/shared/TableStates"
 import { useMe } from "@/features/auth/hooks"
 import AddVendorToItemModal from "@/features/items/AddVendorToItemModal"
-import { apiFieldError, vendorInitials } from "@/features/items/helpers"
+import { ITEM_FIELDS, vendorInitials } from "@/features/items/helpers"
 import { useItemVendors, useUpdateItem } from "@/features/items/hooks"
 import ProductGallery from "@/features/items/ProductGallery"
 import ProductPhoto from "@/features/items/ProductPhoto"
 import ProductQuotations from "@/features/items/ProductQuotations"
 import { useUnits } from "@/features/units/hooks"
 import UnitCombobox from "@/features/units/UnitCombobox"
-import { errorMessage } from "@/lib/errors"
+import { formErrors } from "@/lib/form-errors"
 import { formatDate, formatRupiah } from "@/lib/format"
 import { canWriteCatalog } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
@@ -35,6 +35,7 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
   const nameId = useId()
   const nameErrorId = useId()
   const impaId = useId()
+  const impaErrorId = useId()
   const unitId = useId()
   const descriptionId = useId()
   const statusLabelId = useId()
@@ -113,9 +114,9 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
       })
       setFieldErrors({})
     } catch (err) {
-      const nameError = apiFieldError(err, "name")
-      if (nameError) setFieldErrors((p) => ({ ...p, name: nameError }))
-      setSubmitError(errorMessage(err, "Gagal menyimpan perubahan."))
+      const split = formErrors(err, ITEM_FIELDS, "Gagal menyimpan perubahan.")
+      setFieldErrors((p) => ({ ...p, ...split.fields }))
+      setSubmitError(split.banner)
     }
   }
 
@@ -235,11 +236,23 @@ export default function ProductDetail({ product, onBack }: ProductDetailProps) {
                   type="text"
                   readOnly={!canWrite}
                   inputMode="numeric"
+                  aria-invalid={fieldErrors.impaCode ? true : undefined}
+                  aria-describedby={fieldErrors.impaCode ? impaErrorId : undefined}
                   value={impa}
                   placeholder="Contoh: 330212"
-                  onChange={(e) => setImpa(e.target.value.replace(/\D/g, ""))}
-                  className={`${inputBase} border-transparent`}
+                  onChange={(e) => {
+                    setImpa(e.target.value.replace(/\D/g, ""))
+                    setFieldErrors((p) => ({ ...p, impaCode: "" }))
+                  }}
+                  className={`${inputBase} ${
+                    fieldErrors.impaCode ? "border-[#DC2626]" : "border-transparent"
+                  }`}
                 />
+                {fieldErrors.impaCode && (
+                  <div id={impaErrorId} className="mt-1.5 text-[12px] text-[#DC2626]">
+                    {fieldErrors.impaCode}
+                  </div>
+                )}
               </div>
 
               <div>
