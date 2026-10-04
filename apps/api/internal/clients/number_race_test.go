@@ -20,6 +20,7 @@ const blockWait = 300 * time.Millisecond
 // quoteFor is one priced line.
 func quoteFor(clientID int64) quotations.CreateRequest {
 	return quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: clientID, DiscountPct: "0",
 		Items: []quotations.CreateItem{{
 			RequestedName: "Barang Uji Nomor", Qty: "1", UnitID: 1, SellingPrice: "1000",

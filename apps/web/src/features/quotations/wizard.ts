@@ -64,6 +64,16 @@ export function wizardGates(input: {
   }
 }
 
+// Validity days to send.
+//
+// Only a blank field is left out. Any typed number goes as typed, so the
+// server refuses 0 or less with a field error instead of storing no
+// validity, which would keep a sent quotation from ever expiring.
+export function validityInput(typed: string): number | undefined {
+  const t = typed.trim()
+  return t ? Number(t) : undefined
+}
+
 export type WizardSummary = {
   totalProdukQty: number
   totalHargaBeli: number

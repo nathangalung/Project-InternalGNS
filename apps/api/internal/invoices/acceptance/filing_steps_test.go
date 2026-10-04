@@ -14,6 +14,7 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/invoices"
 	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
+	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
 // coretaxLine is one filed GoodService.
@@ -27,6 +28,7 @@ type coretaxLine struct {
 // deliveredDiscountedPurchaseOrder invoices a discounted line.
 func (s *scenarioState) deliveredDiscountedPurchaseOrder(qty, price, discountPct string) error {
 	return s.deliverQuotation(quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: defaultCompany,
 		DiscountPct:     discountPct,
 		Items: []quotations.CreateItem{{

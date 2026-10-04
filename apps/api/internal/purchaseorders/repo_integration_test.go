@@ -33,6 +33,7 @@ func acceptedQuotationWithPO(t *testing.T, tx pgx.Tx) (int64, int64) {
 	ctx := context.Background()
 	qrepo := quotations.NewRepo(tx, testutil.Store(t))
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{
@@ -472,6 +473,7 @@ func acceptedQuotationWithShipping(t *testing.T, tx pgx.Tx, addr *string, days i
 	ctx := context.Background()
 	qrepo := quotations.NewRepo(tx, testutil.Store(t))
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		ShippingAddress: addr,

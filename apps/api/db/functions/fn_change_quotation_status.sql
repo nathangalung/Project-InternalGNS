@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_quotation_status (deployed by migration 00078).
+-- Canonical current body of fn_change_quotation_status (deployed by migration 00092).
 -- Validates the transition under a FOR UPDATE lock, blocks finalizing a
 -- quotation with unpriced products (ERRCODE P0100), records history, and
 -- creates the purchase order on acceptance.
@@ -10,8 +10,9 @@ DECLARE
   v_old_status VARCHAR(20);
   v_valid      BOOLEAN;
   v_incomplete INTEGER;
+  v_validity   SMALLINT;
 BEGIN
-  SELECT status INTO v_old_status
+  SELECT status, validity_days INTO v_old_status, v_validity
   FROM quotations
   WHERE id = p_quotation_id
   FOR UPDATE;
@@ -55,6 +56,12 @@ BEGIN
   IF p_new_status IN ('rejected','cancelled') AND NULLIF(BTRIM(p_note), '') IS NULL THEN
     RAISE EXCEPTION 'Alasan wajib diisi untuk mengubah status menjadi %.',
       fn_quotation_status_label(p_new_status)
+      USING ERRCODE = 'P0014';
+  END IF;
+
+  -- What is sent must expire, so it needs a validity window.
+  IF p_new_status = 'sent' AND v_validity IS NULL THEN
+    RAISE EXCEPTION 'Isi masa berlaku sebelum quotation dikirim.'
       USING ERRCODE = 'P0014';
   END IF;
 

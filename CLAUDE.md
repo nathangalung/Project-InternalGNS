@@ -200,7 +200,11 @@ document's status history table.
   destination.
   A draft may keep unfinished product lines, but sending refuses (with the
   count) while any offered product line lacks its product, unit, vendor,
-  harga beli or harga jual. A line marked Tidak Ditawarkan (`is_available`
+  harga beli or harga jual, and while `validity_days` is empty, since a sent
+  quotation without one would never expire (a draft without one can still
+  be cancelled). The web sends any typed validity, 0 included, so the
+  server answers it with a field error instead of storing none. A line
+  marked Tidak Ditawarkan (`is_available`
   false, `noOffer` in the wizard) is a request the company cannot offer:
   `fn_prepare_quotation_lines` stores it at harga jual 0 with no vendor, the
   PDF prints No Offer, it never blocks sending, `fn_create_purchase_order`

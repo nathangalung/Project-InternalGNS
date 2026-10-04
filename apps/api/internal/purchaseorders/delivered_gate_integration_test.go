@@ -28,6 +28,7 @@ func completePOInProgress(t *testing.T, tx pgx.Tx) int64 {
 	require.NoError(t, err)
 	contactID := insertContact(t, tx, clientID, "Bp. Lengkap", strPtr("lengkap@gns.test"))
 	_, poID := createQuotation(t, tx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: clientID, ContactID: &contactID, DiscountPct: "0",
 		Items: []quotations.CreateItem{quoteLine(strPtr("Kapal Uji"))},
 	})

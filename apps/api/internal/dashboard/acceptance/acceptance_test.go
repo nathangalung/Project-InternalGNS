@@ -99,6 +99,7 @@ func (s *scenarioState) invoiceFor(qty, price, cost string) error {
 	// Sending needs a product and a vendor link.
 	offered, link := seedItem, seedVendorLink
 	create := quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: defaultCompany,
 		DiscountPct:     "0",
 		Items: []quotations.CreateItem{{

@@ -188,6 +188,33 @@ func TestChangeStatus_SendNeedsCompleteLines(t *testing.T) {
 	})
 }
 
+// Sending needs a validity window.
+// Without one the quotation never expires and prints no Validity.
+func TestChangeStatus_SendNeedsValidity(t *testing.T) {
+	draft := func(t *testing.T) (context.Context, *quotations.Repo, int64) {
+		t.Helper()
+		ctx, repo, _ := newRepo(t)
+		req := sampleCreate()
+		req.ValidityDays = nil
+		id, err := repo.Create(ctx, req, seedUserID)
+		require.NoError(t, err)
+		return ctx, repo, id
+	}
+
+	t.Run("send is refused", func(t *testing.T) {
+		ctx, repo, id := draft(t)
+		err := repo.ChangeStatus(ctx, id, quotations.StatusSent, nil, seedUserID)
+		assert.Equal(t, "Isi masa berlaku sebelum quotation dikirim.", detailError(t, err))
+		assert.Equal(t, "P0014", sqlState(err))
+	})
+
+	t.Run("cancel still works", func(t *testing.T) {
+		ctx, repo, id := draft(t)
+		note := "batal"
+		require.NoError(t, repo.ChangeStatus(ctx, id, quotations.StatusCancelled, &note, seedUserID))
+	})
+}
+
 // The PO skips no-offer lines.
 func TestAccept_LeavesNoOfferLinesOutOfThePO(t *testing.T) {
 	ctx, repo, tx := newRepo(t)

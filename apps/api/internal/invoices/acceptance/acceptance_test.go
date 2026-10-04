@@ -144,6 +144,7 @@ func (s *scenarioState) deliveredOfferedPurchaseOrder() error {
 // Deliver one line.
 func (s *scenarioState) deliverLine(line quotations.CreateItem) error {
 	create := quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: defaultCompany,
 		DiscountPct:     "0",
 		Items:           []quotations.CreateItem{line},

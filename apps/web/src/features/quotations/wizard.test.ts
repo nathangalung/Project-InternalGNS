@@ -9,6 +9,7 @@ import {
   unitIdIndex,
   unitIssue,
   upsertProduct,
+  validityInput,
   wizardGates,
   wizardSummary,
 } from "./wizard"
@@ -309,5 +310,18 @@ describe("seedFromDetail", () => {
       berlakuSampai: "",
       jatuhTempo: "",
     })
+  })
+})
+
+describe("validityInput", () => {
+  // Zero is sent for the server to refuse, never dropped to blank.
+  it.each([
+    ["", undefined],
+    ["  ", undefined],
+    [" 14 ", 14],
+    ["0", 0],
+    ["-2", -2],
+  ])("%j is %s", (typed, want) => {
+    expect(validityInput(typed)).toBe(want)
   })
 })

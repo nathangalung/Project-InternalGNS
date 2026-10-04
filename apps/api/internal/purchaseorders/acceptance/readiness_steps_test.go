@@ -86,6 +86,7 @@ func (s *scenarioState) acceptedQuotationWithoutAddresses() error {
 	s.gate = f
 	offered, cost := catalogItem, "50000"
 	return s.acceptedQuotationFrom(quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: f.clientID,
 		ContactID:       &f.chosen,
 		DiscountPct:     "0",

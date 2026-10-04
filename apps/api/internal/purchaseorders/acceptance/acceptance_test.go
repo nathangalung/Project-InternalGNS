@@ -128,6 +128,7 @@ func (s *scenarioState) acceptedQuotationForCompany(companyID int64) error {
 
 func (s *scenarioState) acceptedQuotationWith(companyID int64, item quotations.CreateItem) error {
 	return s.acceptedQuotationFrom(quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: companyID,
 		DiscountPct:     "0",
 		Items:           []quotations.CreateItem{item},

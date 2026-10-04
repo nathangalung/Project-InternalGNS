@@ -19,6 +19,7 @@ func TestMigration00084_BackfillsLineVendor(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	qrepo := quotations.NewRepo(tx, testutil.Store(t))
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: 1,
 		DiscountPct:     "0",
 		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{

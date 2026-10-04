@@ -40,6 +40,7 @@ func newListFixture(t *testing.T, tx pgx.Tx) listFixture {
 
 	quoted := func(price string) int64 {
 		_, poID := createQuotation(t, tx, quotations.CreateRequest{
+			ValidityDays:    testutil.Validity(),
 			CompanyClientID: clientID,
 			DiscountPct:     "0",
 			Items: []quotations.CreateItem{{

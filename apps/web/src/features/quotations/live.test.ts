@@ -88,7 +88,7 @@ describe("headerInput", () => {
         shippingTime: "",
         shippingCost: "",
         jatuhTempo: " ",
-        berlakuSampai: "0",
+        berlakuSampai: " ",
       }),
     ).toEqual({
       clientRefNo: undefined,
@@ -101,6 +101,14 @@ describe("headerInput", () => {
       shippingDays: undefined,
       shippingCost: undefined,
     })
+  })
+
+  // The server refuses it, so it is never stored as blank.
+  it.each([
+    ["0", 0],
+    ["-3", -3],
+  ])("sends validity %s as typed", (typed, want) => {
+    expect(headerInput(detail, { ...fields, berlakuSampai: typed }).validityDays).toBe(want)
   })
 })
 

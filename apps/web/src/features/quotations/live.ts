@@ -1,4 +1,5 @@
 import type { QuotationDetail, QuotationEditLock, QuotationHeaderInput } from "@/types/api"
+import { validityInput } from "./wizard"
 
 // Live edit parts and claims.
 //
@@ -70,14 +71,13 @@ export type HeaderFields = {
 // not edit are sent back from the stored quotation.
 export function headerInput(d: QuotationDetail, h: HeaderFields): QuotationHeaderInput {
   const shipDays = Number(h.shippingTime)
-  const validity = Number(h.berlakuSampai)
   const terms = h.jatuhTempo.trim()
   return {
     clientRefNo: d.clientRefNo ?? undefined,
     vesselName: d.vesselName ?? undefined,
     notes: d.notes ?? undefined,
     paymentTerms: terms ? `${terms} days` : undefined,
-    validityDays: validity > 0 ? validity : undefined,
+    validityDays: validityInput(h.berlakuSampai),
     discountPct: String(h.discountPct),
     shippingAddress: h.shippingAddress || undefined,
     shippingDays: Number.isFinite(shipDays) && shipDays > 0 ? shipDays : undefined,

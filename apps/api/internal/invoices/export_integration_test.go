@@ -194,6 +194,7 @@ func TestExport_PDF_Header(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	vessel := "MV Sinar & Bahari"
 	_, poID, invID := deliverQuotation(t, tx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		VesselName:      &vessel,

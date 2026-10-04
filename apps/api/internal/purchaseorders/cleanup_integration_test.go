@@ -26,6 +26,7 @@ func TestCleaner_QuotationRemovesPOAndInvoice(t *testing.T) {
 		c.Item(*lines[0].OfferedItemID)
 		var err error
 		qid, err = qrepo.Create(ctx, quotations.CreateRequest{
+			ValidityDays:    testutil.Validity(),
 			CompanyClientID: seedCompanyID,
 			DiscountPct:     "0",
 			Items:           lines,

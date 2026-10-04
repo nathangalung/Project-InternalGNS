@@ -15,6 +15,14 @@ import (
 // SeedVendorID is the fixture vendor.
 const SeedVendorID int64 = 9000001
 
+// Validity is a sendable validity window.
+// Sending a quotation needs validity_days, so a quotation a test sends
+// carries one.
+func Validity() *int {
+	v := 30
+	return &v
+}
+
 // OfferLines makes lines sendable.
 // Sending a quotation needs every offered product line to carry a product,
 // a vendor and a harga beli. A line missing its product gets a catalog item

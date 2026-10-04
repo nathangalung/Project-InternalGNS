@@ -28,6 +28,7 @@ func discountedPOWithInvoice(t *testing.T, tx pgx.Tx) int64 {
 	cost := "50000"
 	qrepo := quotations.NewRepo(tx, store)
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "10",
 		ShippingAddress: &addr,
@@ -203,6 +204,7 @@ func TestExport_FractionalQtyMatchesDPP(t *testing.T) {
 
 	qrepo := quotations.NewRepo(tx, store)
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{

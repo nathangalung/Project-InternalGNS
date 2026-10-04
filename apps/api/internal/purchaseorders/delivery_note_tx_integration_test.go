@@ -30,6 +30,7 @@ func TestDeliveryNote_PrintsGoodsNotTheShippingCharge(t *testing.T) {
 	contact, vessel := seedContactID, "MV Samudra Jaya"
 	addr, cost := "Dermaga Koja Utara", "50000"
 	_, poID := createQuotation(t, tx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		ContactID:       &contact,
 		VesselName:      &vessel,

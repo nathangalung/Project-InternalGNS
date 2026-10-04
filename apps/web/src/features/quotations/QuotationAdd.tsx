@@ -17,7 +17,7 @@ import Step2Product from "./Step2Product"
 import Step3Shipping from "./Step3Shipping"
 import Step4Summary from "./Step4Summary"
 import { useQuotationWizard } from "./useQuotationWizard"
-import { WIZARD_STEPS as steps } from "./wizard"
+import { WIZARD_STEPS as steps, validityInput } from "./wizard"
 import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
 import { type PickClient, resolveClient, visibleClients } from "./wizardClient"
 
@@ -143,14 +143,13 @@ export default function QuotationAdd() {
 
   function handleSubmit() {
     if (!canSubmit) return
-    const validity = Number(berlakuSampai)
     const shippingDays = Number(shippingTime)
     const input: QuotationCreateInput = {
       companyClientId: numericClientId,
       contactId: selectedContactId,
       clientRefNo: currentClient?.referenceNumber,
       paymentTerms: jatuhTempo.trim() ? `${jatuhTempo.trim()} days` : undefined,
-      validityDays: Number.isFinite(validity) && validity > 0 ? validity : undefined,
+      validityDays: validityInput(berlakuSampai),
       discountPct: String(discountPct),
       shippingAddress: shippingAddress || undefined,
       shippingDays: Number.isFinite(shippingDays) && shippingDays > 0 ? shippingDays : undefined,
