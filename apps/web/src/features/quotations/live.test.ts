@@ -63,11 +63,13 @@ describe("headerInput", () => {
     shippingCost: "150000",
     jatuhTempo: " 30 ",
     berlakuSampai: "14",
+    clientRefNo: " V-26-2405-002-E ",
   }
 
+  // The typed reference replaces the stored one.
   it("sends every header field", () => {
     expect(headerInput(detail, fields)).toEqual({
-      clientRefNo: "REF-1",
+      clientRefNo: "V-26-2405-002-E",
       vesselName: "MV Laut",
       notes: "Catatan",
       paymentTerms: "30 days",
@@ -89,6 +91,7 @@ describe("headerInput", () => {
         shippingCost: "",
         jatuhTempo: " ",
         berlakuSampai: " ",
+        clientRefNo: " ",
       }),
     ).toEqual({
       clientRefNo: undefined,

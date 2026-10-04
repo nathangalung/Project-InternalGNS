@@ -37,6 +37,7 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
 
   const [jatuhTempo, setJatuhTempo] = useState("")
   const [berlakuSampai, setBerlakuSampai] = useState("")
+  const [clientRefNo, setClientRefNo] = useState("")
 
   const [qtyFail, setQtyFail] = useState<{
     lines: ProductItem[]
@@ -97,6 +98,7 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
     setShippingCost(s.shippingCost)
     setBerlakuSampai(s.berlakuSampai)
     setJatuhTempo(s.jatuhTempo)
+    setClientRefNo(s.clientRefNo)
   }, [])
 
   // Follow the stored draft live.
@@ -115,6 +117,7 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
     setShippingCost(s.shippingCost)
     setBerlakuSampai(s.berlakuSampai)
     setJatuhTempo(s.jatuhTempo)
+    setClientRefNo(s.clientRefNo)
   }, [])
 
   // Server qty errors, per line.
@@ -162,6 +165,8 @@ export function useQuotationWizard(units: { id: number; code: string }[] | undef
     setJatuhTempo,
     berlakuSampai,
     setBerlakuSampai,
+    clientRefNo,
+    setClientRefNo,
     gates,
     summary,
     unitIdByCode,

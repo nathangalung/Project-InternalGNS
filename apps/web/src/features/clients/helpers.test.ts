@@ -149,7 +149,6 @@ describe("client picker cards", () => {
     email: "budi@laut.id",
     npwp: "01.234",
     nomorTKU: "TKU1",
-    referenceNumber: "C-007",
     lokasi: "Jakarta",
     contactId: 3,
   }

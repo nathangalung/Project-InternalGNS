@@ -32,7 +32,6 @@ describe("resolveClient", () => {
   it("falls back to the fetched row", () => {
     const got = resolveClient(listed, "99", row(99, "C-99"))
     expect(got?.id).toBe("99")
-    expect(got?.referenceNumber).toBe("C-99")
     expect(got?.narahubung).toBe("Budi")
     expect(got?.contactId).toBe(77)
   })

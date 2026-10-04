@@ -87,6 +87,9 @@ test.describe("quotation wizard", () => {
     await expect(create).toBeDisabled()
     await page.getByLabel("JATUH TEMPO PEMBAYARAN (HARI) *").fill("30")
     await page.getByLabel("BERLAKU SAMPAI (HARI) *").fill("14")
+    // The client's own RFQ number, never our client number.
+    const ref = `RFQ-${seed.prefix}`
+    await page.getByLabel("No. Referensi Klien").fill(ref)
     const summary = (await page.locator("main").textContent()) ?? ""
     // 4 x 150.000 less 10%, minus 4 x 100.000 cost.
     expect(figure(summary, "Total Estimasi Profit")).toBe(140_000)
@@ -103,6 +106,7 @@ test.describe("quotation wizard", () => {
     await link.click()
 
     await expectStatus(page, "Draf")
+    await expect(page.getByText(ref, { exact: true })).toBeVisible()
     const breakdown = costBreakdown(page)
     await expect(amountAfter(breakdown, "Grand Total")).toHaveText(rupiah(wizardTotal))
     // Q-10: the detail profit is taken after the discount, like the wizard.
@@ -480,6 +484,7 @@ test.describe("quotation status", () => {
       lines: [{ item, qty: 2, price: 120_000, cost: 90_000 }],
       notes: "Kirim sebelum akhir bulan",
       vesselName: "MV Sinar Bahari",
+      clientRefNo: "RFQ-LAMA",
     })
 
     await page.goto(`/quotations/${q.id}`)
@@ -503,15 +508,19 @@ test.describe("quotation status", () => {
     await expect(summary).toContainText("0123456789012345")
     await expect(summary).toContainText("Jl. Pelabuhan Raya No. 12, Tanjung Priok, Jakarta Utara")
     await expect(summary).toContainText(client.contactEmail ?? "")
+    // The stored client reference is the header's to correct.
+    const ref = page.getByLabel("No. Referensi Klien")
+    await expect(ref).toHaveValue("RFQ-LAMA")
+    await ref.fill("RFQ-BARU")
     await page.getByRole("button", { name: "Simpan" }).click()
     await expect(page).toHaveURL(new RegExp(`/quotations/${q.id}$`))
     // Q-11: saving the editor keeps the fields it does not show.
     await expect
       .poll(async () => {
         const saved = await seed.getQuotation(q.id)
-        return [saved.vesselName, saved.notes]
+        return [saved.vesselName, saved.notes, saved.clientRefNo]
       })
-      .toEqual(["MV Sinar Bahari", "Kirim sebelum akhir bulan"])
+      .toEqual(["MV Sinar Bahari", "Kirim sebelum akhir bulan", "RFQ-BARU"])
 
     const menu = await openStatusMenu(page, "Draf")
     await expect(menu.getByRole("menuitem")).toHaveText(["Dikirim"])

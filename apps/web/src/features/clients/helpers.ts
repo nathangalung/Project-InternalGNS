@@ -29,7 +29,6 @@ export function fromClientRow(c: ClientRow): Client & { contactId?: number } {
     email: c.contactEmail ?? c.email,
     npwp: c.npwp,
     nomorTKU: c.tkuId,
-    referenceNumber: c.number,
     lokasi: c.address,
     contactId: c.contactId,
   }
@@ -46,7 +45,6 @@ export function fromClientHit(h: ClientSearchHit): Client & { contactId?: number
     email: h.contactEmail ?? h.companyEmail,
     npwp: h.companyNpwp,
     nomorTKU: h.companyTku,
-    referenceNumber: h.companyNumber,
     lokasi: h.companyAddress,
     contactId: h.contactId,
   }

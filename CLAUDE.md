@@ -189,6 +189,9 @@ document's status history table.
   Draft goes to sent or cancelled; sent to accepted, rejected or cancelled;
   revision to rejected or cancelled. Rejected and cancelled need a reason.
   Accepted creates the PO in the same transaction. Only drafts are editable.
+  The client's own reference (No. Referensi Klien, `client_ref_no`, printed
+  as Your Ref No.) is typed in the wizard's summary step and saved with the
+  header; the client's four-digit number never stands in for it.
   Validity and shipping days run from 1 to 365 (`validate.MaxDays`, a 422
   on the field; the database refuses only below 1), on the PO's shipping
   days too, and the web inputs carry the same bound. Shipping address, cost

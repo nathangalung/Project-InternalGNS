@@ -109,6 +109,7 @@ type QuotationOpts = {
   notes?: string
   vesselName?: string
   validityDays?: number
+  clientRefNo?: string
 }
 
 // Create and update body.
@@ -129,6 +130,7 @@ async function quotationBody(
     shippingCost: opts.shippingCost ? String(opts.shippingCost) : undefined,
     notes: opts.notes,
     vesselName: opts.vesselName,
+    clientRefNo: opts.clientRefNo,
     items: opts.lines.map((l) => ({
       ...("item" in l
         ? {

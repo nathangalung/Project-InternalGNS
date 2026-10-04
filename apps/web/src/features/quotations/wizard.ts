@@ -215,6 +215,8 @@ export type WizardSeed = {
   shippingCost: string
   berlakuSampai: string
   jatuhTempo: string
+  // The client's own RFQ or PO number
+  clientRefNo: string
 }
 
 // Stored quotation into steps.
@@ -242,5 +244,6 @@ export function seedFromDetail(d: QuotationDetail, unitNameById: Map<number, str
     shippingCost: Number.isFinite(cost) ? String(cost) : "",
     berlakuSampai: d.validityDays ? String(d.validityDays) : "",
     jatuhTempo: Number.isFinite(termDays) && termDays > 0 ? String(termDays) : "",
+    clientRefNo: d.clientRefNo ?? "",
   }
 }

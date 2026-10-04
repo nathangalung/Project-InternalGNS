@@ -250,6 +250,7 @@ describe("seedFromDetail", () => {
     discountPct: "12.50",
     validityDays: 14,
     paymentTerms: "30 days",
+    clientRefNo: "V-26-2405-002-E",
     items: [
       {
         id: 11,
@@ -283,6 +284,7 @@ describe("seedFromDetail", () => {
       shippingCost: "75000",
       berlakuSampai: "14",
       jatuhTempo: "30",
+      clientRefNo: "V-26-2405-002-E",
     })
     expect(s.products.map((p) => [p.id, p.satuan])).toEqual([
       [11, "PCS"],
@@ -297,6 +299,7 @@ describe("seedFromDetail", () => {
       discountPct: "x",
       validityDays: undefined,
       paymentTerms: "segera",
+      clientRefNo: undefined,
       items: [],
     } as unknown as QuotationDetail
     expect(seedFromDetail(bare, new Map())).toEqual({
@@ -309,6 +312,7 @@ describe("seedFromDetail", () => {
       shippingCost: "",
       berlakuSampai: "",
       jatuhTempo: "",
+      clientRefNo: "",
     })
   })
 })

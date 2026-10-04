@@ -63,6 +63,8 @@ export default function QuotationAdd() {
     setJatuhTempo,
     berlakuSampai,
     setBerlakuSampai,
+    clientRefNo,
+    setClientRefNo,
     gates: { isAlamatOk, isWaktuFilled, isTenggatWaktuFilled, hasContent },
     summary,
     unitIdByCode,
@@ -147,7 +149,7 @@ export default function QuotationAdd() {
     const input: QuotationCreateInput = {
       companyClientId: numericClientId,
       contactId: selectedContactId,
-      clientRefNo: currentClient?.referenceNumber,
+      clientRefNo: clientRefNo.trim() || undefined,
       paymentTerms: jatuhTempo.trim() ? `${jatuhTempo.trim()} days` : undefined,
       validityDays: validityInput(berlakuSampai),
       discountPct: String(discountPct),
@@ -332,7 +334,14 @@ export default function QuotationAdd() {
         )}
         {step === 4 && (
           <Step4Summary
-            terms={{ jatuhTempo, setJatuhTempo, berlakuSampai, setBerlakuSampai }}
+            terms={{
+              jatuhTempo,
+              setJatuhTempo,
+              berlakuSampai,
+              setBerlakuSampai,
+              clientRefNo,
+              setClientRefNo,
+            }}
             currentClient={currentClient}
             shippingAddress={shippingAddress}
             shippingTime={shippingTime}

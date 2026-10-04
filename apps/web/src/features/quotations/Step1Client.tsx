@@ -24,7 +24,6 @@ export interface Client {
   phone?: string
   email?: string
   nomorTKU?: string
-  referenceNumber?: string
   npwp?: string
   lokasi?: string
 }
