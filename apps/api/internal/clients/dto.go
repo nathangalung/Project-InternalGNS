@@ -1,8 +1,9 @@
 package clients
 
 import (
-	"encoding/json"
 	"time"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 )
 
 // ListFilter for clients.list query.
@@ -130,23 +131,11 @@ type CreateContactRequest struct {
 // blank string. Phone keeps its replace-on-every-call behaviour, which the
 // client detail form relies on to clear it.
 type UpdateContactRequest struct {
-	Name        string       `json:"name"`
-	Email       OptionalText `json:"email"`
-	Phone       *string      `json:"phone"`
-	Title       OptionalText `json:"title"`
-	CountryCode string       `json:"countryCode"`
-}
-
-// OptionalText tracks a sent key.
-type OptionalText struct {
-	Set   bool
-	Value *string
-}
-
-// Runs only for present keys.
-func (o *OptionalText) UnmarshalJSON(b []byte) error {
-	o.Set = true
-	return json.Unmarshal(b, &o.Value)
+	Name        string             `json:"name"`
+	Email       httpx.OptionalText `json:"email"`
+	Phone       *string            `json:"phone"`
+	Title       httpx.OptionalText `json:"title"`
+	CountryCode string             `json:"countryCode"`
 }
 
 // RecentQuotationCount caps the client's quotation list.

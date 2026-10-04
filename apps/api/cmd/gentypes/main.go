@@ -93,7 +93,7 @@ func generate() (string, error) {
 		// Stored JSONB without a server shape.
 		"encoding/json.RawMessage": config.OverrideLiteral(bindings.KeywordUnknown),
 		// Tri-state text: absent keeps, null or blank clears.
-		module + "/internal/clients.OptionalText": config.OverrideNullable(config.OverrideLiteral(bindings.KeywordString)),
+		module + "/internal/shared/httpx.OptionalText": config.OverrideNullable(config.OverrideLiteral(bindings.KeywordString)),
 	})
 	for _, pk := range allowlist {
 		path := module + "/" + pk.Path
