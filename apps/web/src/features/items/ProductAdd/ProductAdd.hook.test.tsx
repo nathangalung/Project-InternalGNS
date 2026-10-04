@@ -14,8 +14,9 @@ vi.mock("@/features/units/api")
 
 const items = vi.mocked(itemsApi)
 
-const ACTIVE = { id: 1, name: "Baut Baja", impaCode: "330212", isActive: true } as ItemRow
-const RETIRED = { id: 2, name: "Ampelas Lama", impaCode: null, isActive: false } as ItemRow
+const STAMP = { createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" }
+const ACTIVE: ItemRow = { id: 1, name: "Baut Baja", impaCode: "330212", isActive: true, ...STAMP }
+const RETIRED: ItemRow = { id: 2, name: "Ampelas Lama", isActive: false, ...STAMP }
 
 function field(label: string): HTMLInputElement {
   const lbl = [...document.querySelectorAll("label")].find((l) => l.textContent?.startsWith(label))
