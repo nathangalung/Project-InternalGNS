@@ -16,9 +16,34 @@ import (
 // oneLine bills qty at 100000.
 func oneLine(qty string) purchaseorders.UpdateItemsRequest {
 	unit := seedUnitID
-	return purchaseorders.UpdateItemsRequest{DiscountPct: "0", Items: []purchaseorders.UpdateItemsLine{{
-		ItemName: "Test Product", Qty: qty, UnitID: &unit, SellingPrice: "100000",
-	}}}
+	address := "Jl. Pelabuhan 1, Jakarta"
+	return purchaseorders.UpdateItemsRequest{
+		DiscountPct: "0", ShippingAddress: &address,
+		Items: []purchaseorders.UpdateItemsLine{{
+			ItemName: "Test Product", Qty: qty, UnitID: &unit, SellingPrice: "100000",
+		}},
+	}
+}
+
+// No Rp 0 Pengganti.
+// fn_create_invoice refuses a PO with no billable product line, whatever
+// left its lines that way.
+func TestReplace_RefusesZeroProductPO(t *testing.T) {
+	ctx, tx := testutil.BeginTx(t)
+	_, poID, invID := deliveredPOWithInvoice(t, tx)
+	repo := invoices.NewRepo(tx, testutil.Store(t))
+	note := "Salah jumlah"
+	require.NoError(t, repo.ChangeStatus(ctx, invID, invoices.ChangeStatusRequest{
+		Status: invoices.StatusCancelled, Note: &note,
+	}, seedUserID))
+	_, err := tx.Exec(ctx, `
+		UPDATE purchase_order_items SET qty = 0 WHERE po_id = $1 AND item_type = 'product'`, poID)
+	require.NoError(t, err)
+
+	_, err = repo.Replace(ctx, invID, seedUserID)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(),
+		"PO ini belum memiliki baris produk bernilai, sehingga invoice tidak dapat diterbitkan. Perbaiki melalui Ubah PO.")
 }
 
 // Pengganti bills corrected lines.

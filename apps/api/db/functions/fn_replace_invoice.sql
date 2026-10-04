@@ -1,4 +1,4 @@
--- Canonical current body of fn_replace_invoice (deployed by migration 00073).
+-- Canonical current body of fn_replace_invoice (deployed by migration 00097).
 CREATE OR REPLACE FUNCTION public.fn_replace_invoice(p_invoice_id bigint, p_user_id bigint)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -39,6 +39,15 @@ BEGIN
   IF EXISTS (SELECT 1 FROM invoices WHERE po_id = v_po_id AND status <> 'cancelled') THEN
     RAISE EXCEPTION 'PO ini sudah memiliki invoice yang aktif.'
       USING ERRCODE = 'P0013';
+  END IF;
+
+  -- The reopened lines may have lost their billable product.
+  IF NOT EXISTS (
+    SELECT 1 FROM purchase_order_items
+    WHERE po_id = v_po_id AND item_type = 'product' AND total_selling > 0
+  ) THEN
+    RAISE EXCEPTION 'PO ini belum memiliki baris produk bernilai, sehingga invoice tidak dapat diterbitkan. Perbaiki melalui Ubah PO.'
+      USING ERRCODE = 'P0012';
   END IF;
 
   v_new_id := fn_create_invoice(v_po_id, p_user_id);

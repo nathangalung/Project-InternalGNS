@@ -217,6 +217,14 @@ export function linesNeedAddress(lines: PoEditLine[]): boolean {
   return lines.some((l) => !l.source?.shipDestination?.trim())
 }
 
+// Address required past the gate.
+//
+// ON_PROGRESS and a reopened DELIVERED PO keep the address their lines
+// rely on; fn_update_po_items refuses a delivered edit without it.
+export function poNeedsAddress(status: PurchaseOrderRow["status"], lines: PoEditLine[]): boolean {
+  return (status === "ON_PROGRESS" || status === "DELIVERED") && linesNeedAddress(lines)
+}
+
 // Creation row's fixed note.
 const CREATED_NOTE = "PO dibuat"
 

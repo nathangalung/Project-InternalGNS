@@ -18,11 +18,11 @@ import { ui } from "@/lib/ui"
 import type { PoUpdateItemsInput, PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
 import {
   linesMissingUnit,
-  linesNeedAddress,
   lineToInput,
   loadFailureMessage,
   type PoEditLine,
   poLinesToEdit,
+  poNeedsAddress,
   upsertPoLine,
 } from "./adapters"
 import { usePoItems, usePurchaseOrderByQuotation, useUpdatePoItems } from "./hooks"
@@ -150,7 +150,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
 
   // The quotation's rules: the address is optional until the PO gate, and
   // past it the PO keeps the address its lines rely on.
-  const addressRequired = po.status === "ON_PROGRESS" && linesNeedAddress(products)
+  const addressRequired = poNeedsAddress(po.status, products)
   const { isAlamatOk, isWaktuFilled, hasContent } = wizardGates({
     shippingAddress,
     shippingTime,

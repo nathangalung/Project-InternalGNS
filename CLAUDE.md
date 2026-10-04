@@ -280,7 +280,10 @@ document's status history table.
   shows them); the Pengganti locks them again. `fn_po_lines_locked` is the
   rule `fn_update_po_items` and the PO read (`linesLocked`, which the web
   gates Ubah PO on) share, and a delivered PO with no invoice at all stays
-  locked. A PO keeps at least
+  locked. A reopened edit keeps what DELIVERED required: one product line
+  with a quantity, and the shipping address while any product line lacks
+  its own destination; `fn_replace_invoice` also refuses a PO with no
+  billable product line. A PO keeps at least
   one product line and every product line priced above zero: the line edit
   (`fn_update_po_items`) refuses otherwise, and so do ON_PROGRESS and
   DELIVERED, so no Rp 0 invoice is issued. A qty 0 line stays allowed, but

@@ -13,6 +13,7 @@ import {
   poItemsToProducts,
   poItemsToShipping,
   poLinesToEdit,
+  poNeedsAddress,
   poRowFromBackend,
   upsertPoLine,
 } from "./adapters"
@@ -314,6 +315,22 @@ describe("linesNeedAddress", () => {
   it("flags a stored line with a blank destination or a new line", () => {
     expect(linesNeedAddress([own, bare])).toBe(true)
     expect(linesNeedAddress([own, { ...own, source: undefined }])).toBe(true)
+  })
+})
+
+describe("poNeedsAddress", () => {
+  const [own] = poLinesToEdit([line({ id: 1, shipDestination: "Gudang B" })], () => "")
+  const [bare] = poLinesToEdit([line({ id: 2 })], () => "")
+
+  it("asks past the gate while a line has no destination", () => {
+    expect(poNeedsAddress("ON_PROGRESS", [bare])).toBe(true)
+    expect(poNeedsAddress("DELIVERED", [bare])).toBe(true)
+    expect(poNeedsAddress("DELIVERED", [own])).toBe(false)
+  })
+
+  it("keeps the address optional before the gate", () => {
+    expect(poNeedsAddress("PENDING", [bare])).toBe(false)
+    expect(poNeedsAddress("UPLOADED", [bare])).toBe(false)
   })
 })
 
