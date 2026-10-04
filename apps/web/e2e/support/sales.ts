@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process"
 import { randomBytes } from "node:crypto"
 import { readFileSync } from "node:fs"
 import type { InvoiceDetail, PurchaseOrderRow, QuotationDetail } from "../../src/types/generated"
@@ -500,6 +501,22 @@ export async function uploadPoFile(
       }),
     },
     "application/json",
+  )
+}
+
+// Give a quotation an old number.
+//
+// Only an import writes legacy_no and the API never accepts it, so the
+// test sets it through psql on the database the API runs on (DATABASE_URL,
+// which make e2e, make e2e-csp and CI all export). Values go in as psql
+// variables, never spliced into the SQL.
+export function setQuotationLegacyNo(id: number, legacyNo: string): void {
+  const dsn = process.env.DATABASE_URL
+  if (!dsn) throw new Error("DATABASE_URL must name the database the API under test uses")
+  execFileSync(
+    "psql",
+    [dsn, "-X", "-q", "-v", "ON_ERROR_STOP=1", "-v", `id=${id}`, "-v", `legacy=${legacyNo}`],
+    { input: "UPDATE quotations SET legacy_no = :'legacy' WHERE id = :id;\n" },
   )
 }
 
