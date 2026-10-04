@@ -36,7 +36,7 @@ func NewHandler(repo *Repo) *Handler {
 	return &Handler{repo: repo}
 }
 
-// renderSaveErr maps an item save failure.
+// renderSaveErr maps save failures.
 func renderSaveErr(w http.ResponseWriter, r *http.Request, err error) {
 	if errors.Is(err, ErrIMPATaken) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"impaCode": msgIMPATaken}))

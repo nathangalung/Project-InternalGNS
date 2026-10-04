@@ -59,8 +59,8 @@ SELECT fn_item_image_set_cover($1, $2, $3);
 -- the vendor is missing or inactive; items.vendor_active tells which.
 -- Relinking updates the offer in place: $7 and $8 say whether the SKU and
 -- the URL were sent, an unsent one keeps the stored value, and a sent null
--- or blank clears it. The quote stamp moves only with the price, as
--- trg_fn_sync_vendor_cost does.
+-- or blank clears it. The quote stamp moves only with the price, so
+-- updating the SKU or the URL alone does not date a quote.
 WITH ins AS (
     INSERT INTO vendor_products
         (vendor_id, item_id, vendor_sku, cost_price, product_url, last_quoted_at, created_by, updated_by)

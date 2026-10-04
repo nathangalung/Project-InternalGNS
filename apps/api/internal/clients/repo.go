@@ -31,7 +31,8 @@ var ErrNumberInvalid = errors.New("client number invalid or taken")
 // Number fixed by a quotation.
 var ErrNumberLocked = errors.New("client number used by a quotation")
 
-// Email owned by another active contact.
+// ErrEmailTaken marks taken emails.
+// Another active contact, at any client, owns the email.
 var ErrEmailTaken = errors.New("contact email taken")
 
 // totalPurchaseExpr sums accepted deals.
@@ -259,7 +260,7 @@ func (r *Repo) CreateContact(ctx context.Context, companyID int64, req CreateCon
 	return c, emailErr(err)
 }
 
-// emailErr marks a taken contact email.
+// emailErr marks taken emails.
 // The database error stays wrapped for the generic conflict.
 func emailErr(err error) error {
 	var pgErr *pgconn.PgError

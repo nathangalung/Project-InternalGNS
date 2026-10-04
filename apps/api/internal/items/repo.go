@@ -131,7 +131,7 @@ func (r *Repo) Update(ctx context.Context, id int64, req UpdateItemRequest, user
 	return item, impaErr(err)
 }
 
-// impaErr marks a taken IMPA code.
+// impaErr marks taken codes.
 // The database error stays wrapped, so a caller without a field to show it
 // on still renders the generic conflict.
 func impaErr(err error) error {

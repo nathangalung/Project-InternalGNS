@@ -372,7 +372,7 @@ func (h *Handler) requireClient(ctx context.Context, id int64) error {
 // another client.
 const msgEmailTaken = "Email ini sudah dipakai kontak aktif lain, di klien ini atau klien lain."
 
-// renderContactErr maps a contact save failure.
+// renderContactErr maps save failures.
 func renderContactErr(w http.ResponseWriter, r *http.Request, err error) {
 	if errors.Is(err, ErrEmailTaken) {
 		httperr.Render(w, httperr.Unprocessable(map[string]string{"email": msgEmailTaken}))
