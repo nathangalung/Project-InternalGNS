@@ -216,7 +216,7 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
 		return
 	}
-	q := r.URL.Query().Get("q")
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	if q == "" {
 		httperr.Render(w, httperr.BadRequest("q is required"))
 		return
