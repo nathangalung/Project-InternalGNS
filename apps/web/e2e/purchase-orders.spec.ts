@@ -623,6 +623,8 @@ test.describe("purchase order address gaps", () => {
     page,
     seed,
   }) => {
+    // Walks the client edit, Ubah PO and two status moves.
+    test.slow()
     const qid = await addresslessQuotation(page, seed)
     const po = await seed.accept(qid)
     await seed.attachPoFile(po)
