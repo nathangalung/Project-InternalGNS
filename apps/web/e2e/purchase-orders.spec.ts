@@ -744,4 +744,29 @@ test.describe("purchase order contact gap", () => {
     await expect(page).toHaveURL(/\/purchase-orders$/)
     expect((await seed.poByQuotation(q.id)).status).toBe("ON_PROGRESS")
   })
+
+  test("a failed contact load says so and retries, never claiming no contacts", async ({
+    page,
+    seed,
+  }) => {
+    const client = await seed.client()
+    const { q } = await acceptedPo(seed, { client })
+    // The first load and its one retry fail.
+    let failures = 2
+    await page.route(`**/api/v1/clients/${client.id}/contacts`, (route) => {
+      if (failures === 0) return route.fallback()
+      failures--
+      return route.fulfill({ status: 500, contentType: "application/problem+json", body: "{}" })
+    })
+
+    await page.goto(`/quotations/${q.id}?narahubung=true`)
+    const picker = page.getByRole("dialog", { name: "Ganti Narahubung" })
+    await expect(picker.getByRole("alert")).toContainText("Gagal memuat narahubung.")
+    await expect(picker.getByText(/belum memiliki narahubung aktif/)).toHaveCount(0)
+    await picker.getByRole("button", { name: "Coba Lagi" }).click()
+    await expect(
+      picker.getByRole("button", { name: new RegExp(`${seed.prefix} Narahubung`) }),
+    ).toBeVisible()
+    await expect(picker.getByRole("alert")).toHaveCount(0)
+  })
 })
