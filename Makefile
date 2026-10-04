@@ -2,7 +2,7 @@
         db-up db-down db-logs db-shell deps-up \
         stack-up stack-down stack-logs ps reset \
         migrate migrate-up migrate-status migrate-down migrate-new \
-        seed seed-dev db-clean-testdata check-reconcile schema-dump db-erd db-functions-dump \
+        seed seed-build seed-sql seed-dev db-clean-testdata reimport-dev check-reconcile schema-dump db-erd db-functions-dump \
         api web dev \
         tidy \
         build build-api build-web \
@@ -30,6 +30,7 @@ MIG_DIR      := $(API_DIR)/db/migrations
 SEED_DIR     := $(API_DIR)/db/seeds
 CHECK_DIR    := $(API_DIR)/db/checks
 MAINT_DIR    := $(API_DIR)/db/maintenance
+IMPORT_DIR   := $(API_DIR)/db/import
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -117,7 +118,19 @@ seed: ## Load master data only (units + countries, idempotent)
 	@echo ">> $(SEED_DIR)/01_master.sql"
 	@PGCLIENTENCODING=UTF8 psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 < $(SEED_DIR)/01_master.sql
 
-seed-dev: migrate ## Migrate + load master + dev sample data (DEV ONLY)
+# The historical seed is built on this machine from Data/ and the hand-made
+# decision files in db/import/local/, and never committed (the repo is
+# public). seed-build runs the whole pipeline; seed-sql only writes the SQL
+# from its last outputs. Both refuse, naming what is missing, without them.
+seed-build: ## Rebuild the historical seed from Data/ and db/import/local/
+	cd $(IMPORT_DIR) && uv run build_seed.py --check-sources \
+	  && uv run parse.py && uv run clean_products.py \
+	  && uv run build_docs.py && uv run validate_docs.py && uv run build_seed.py
+
+seed-sql: ## Write db/seeds/03_historical.sql from the last seed-build outputs
+	cd $(IMPORT_DIR) && uv run build_seed.py
+
+seed-dev: migrate seed-sql ## Migrate + load master + historical data (DEV ONLY)
 	@set -e; for f in $(SEED_DIR)/*.sql; do \
 	  echo ">> $$f"; \
 	  PGCLIENTENCODING=UTF8 psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 < $$f; \
@@ -136,6 +149,24 @@ db-clean-testdata: ## Purge leftover ATDD/BDD acceptance rows (DEV ONLY)
 	esac
 	@echo ">> $(MAINT_DIR)/clean_test_data.sql"
 	@PGCLIENTENCODING=UTF8 psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 < $(MAINT_DIR)/clean_test_data.sql
+
+# Replace every business row with the historical seed in one transaction
+# (users, countries and units stay), then verify the load. Same local-host
+# guard as db-clean-testdata. Prod runs the script by hand: see
+# docs/data_reimport_plan.md.
+reimport-dev: ## Replace business data with the historical seed (DEV ONLY)
+	@host=$$(echo "$(DATABASE_URL)" \
+	  | sed -e 's#^.*://##' -e 's#^[^@/]*@##' -e 's#[/?].*$$##' \
+	        -e 's#:[0-9]*$$##' -e 's#^\[##' -e 's#\]$$##'); \
+	case "$$host" in \
+	  localhost|127.0.0.1|::1|postgres) ;; \
+	  *) echo "refusing: DATABASE_URL host '$$host' is not a local dev database"; exit 1 ;; \
+	esac
+	$(MAKE) seed-sql
+	@echo ">> $(IMPORT_DIR)/replace_business_data.sql"
+	@PGCLIENTENCODING=UTF8 psql "$(DATABASE_URL)" -X -q -v ON_ERROR_STOP=1 \
+	  -f $(IMPORT_DIR)/replace_business_data.sql
+	cd $(IMPORT_DIR) && uv run verify_seed.py "$(DATABASE_URL)"
 
 check-reconcile: ## Run reconciliation / verification queries
 	psql "$(DATABASE_URL)" -f $(CHECK_DIR)/01_verify_advanced.sql

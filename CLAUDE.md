@@ -90,7 +90,9 @@ make dev            # Postgres, MinIO, API (:8080), and the SPA (:5174)
 make web            # Vite dev server only (:5174)
 make stack-up       # Postgres, MinIO, pgweb, and API in Docker
 make stack-down     # Stop the Docker stack
-make seed-dev       # Migrate, then load master and historical data (dev only)
+make seed-dev       # Migrate, build the historical seed, load it with the master data (dev only)
+make reimport-dev   # Replace business data with the historical seed, then verify (dev only)
+make seed-build     # Rebuild the historical seed from Data/ and db/import/local/
 make db-ui          # pgweb database browser (:8081)
 make test           # Go tests, web typecheck, and Vitest
 make test-api       # Go tests on a throwaway database, as CI runs them
@@ -147,7 +149,7 @@ db/
   migrations/       Goose SQL migrations
   queries/          Embedded, hand-written SQL parsed by Load()
   functions/        Canonical current body of every plpgsql/sql function
-  seeds/            Master data and the historical import
+  seeds/            Master data; the historical seed is built, never committed
   import/           Excel-to-seed tool (uv)
 ```
 
@@ -258,7 +260,8 @@ shows a missing one as Belum ada No. PO.
   imported straight as sent, whose NULL to sent creation log carries the
   import time) prints its creation date. Its ATTN block prints the
   chosen contact's own email and phone, read by id even once that contact
-  is deactivated, and none when the quotation has no contact.
+  is deactivated, and none when the quotation has no contact. Its DELIVERY
+  PLACE prints the shipping line's address, else the vessel.
   A saved draft is edited live, by several users at once, one part each.
   The parts are the header (contact, client reference, shipping, terms,
   discount) and each line (`line:<id>`); `POST /quotations/{id}/locks`
@@ -611,6 +614,12 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
 
 - Python (only the `apps/api/db/import` tool) runs through `uv`; never call
   python, python3, pip, or pip3 directly.
+- The repository is public, so business data never enters git: `Data/`, the
+  import's `out/`, its hand-made decisions in `local/`, its real-file tests
+  in `tests_local/` and `db/seeds/03_historical.sql` are gitignored and live
+  only on the operator's machine. `make seed-dev`, `reimport-dev` and
+  `seed-build` stop and list what is missing without them. Tracked tests use
+  invented numbers, contacts and amounts, never values from `Data/`.
 - The JavaScript toolchain uses `bun` and `bunx`, not npm or npx.
 - Comments are in English. Section, function, and class header comments stay
   within five words. No emoji and no decorative separator lines.

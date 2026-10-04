@@ -4,7 +4,41 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "openpyxl",
+    "rapidfuzz>=3.14.6",
 ]
 
 [tool.uv]
 required-version = ">=0.12.19"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.10",
+]
+
+[tool.pytest.ini_options]
+# tests_local/ holds the checks against the real source files; it is
+# gitignored and runs only with GNS_DATA_DIR (conftest.py).
+testpaths = ["tests", "tests_local"]
+pythonpath = [".", "tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "BLE", "DTZ", "PERF", "PIE", "RUF", "ANN"]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "build_docs", "build_seed", "clean_products", "dedup", "docs_extract", "issued", "pdf_quote", "docs_manifest",
+    "helpers", "parse", "paths", "quotation", "reconcile", "scan", "seed_model", "seed_sql",
+    "sheets", "unit_map", "validate_docs", "values", "verify_seed",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Workbook cells carry naive datetimes, and real file names run long.
+"tests/*" = ["DTZ001", "E501"]
+"tests_local/*" = ["DTZ001", "E501"]
+# Source file paths are kept whole so they can be searched
+"local/docs_manifest.py" = ["E501"]

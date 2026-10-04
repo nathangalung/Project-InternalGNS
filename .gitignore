@@ -63,3 +63,13 @@ apps/api/api
 
 # Local deploy login for scripts/dokploy-set-tag.sh.
 .deploy.local
+
+# Source workbooks for the historical import; never committed.
+/Data/
+
+# Everything derived from Data/ or decided by hand about it stays on the
+# operator's machine: the repo is public (apps/api/db/import/README.md).
+/apps/api/db/import/out/
+/apps/api/db/import/local/
+/apps/api/db/import/tests_local/
+/apps/api/db/seeds/03_historical.sql

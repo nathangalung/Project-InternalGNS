@@ -346,9 +346,10 @@ ssh sysadmin@galung 'docker exec -i \
   < apps/api/db/seeds/01_master.sql
 ```
 
-The container supplies its own user and database name. Do **not** run any
-other seed on prod: `03_historical.sql` truncates the quotation, PO, invoice,
-catalog and client tables before rebuilding them, and 04 to 06 build on it.
+The container supplies its own user and database name. Do **not** load any
+other seed on prod directly: the historical data goes in only through the
+replacement in `docs/data_reimport_plan.md`, with a seed built on the
+operator's machine and copied over ssh (it is never in the repository).
 
 ## 8. MinIO buckets
 

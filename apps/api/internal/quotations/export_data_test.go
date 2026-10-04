@@ -298,6 +298,40 @@ func TestBuildExportData_FooterTerms(t *testing.T) {
 	}
 }
 
+// Delivery place is the address.
+// The shipping line's destination prints; a quotation without one prints
+// its vessel, and one with neither prints nothing.
+func TestBuildExportData_DeliveryPlace(t *testing.T) {
+	withDest := func(dest *string) []QuotationItem {
+		line := shippingLine(2, "0.00")
+		line.ShipDestination = dest
+		return []QuotationItem{productLine(1, "ROPE", "1.00", "10.00", "10.00"), line}
+	}
+	cases := []struct {
+		name   string
+		vessel *string
+		items  []QuotationItem
+		want   string
+	}{
+		{"destination wins over vessel", qStr("MV CONTOH"), withDest(qStr("Franco Surabaya")), "Franco Surabaya"},
+		{"destination without vessel", nil, withDest(qStr("Cilegon Port")), "Cilegon Port"},
+		{"blank destination falls back", qStr("MV CONTOH"), withDest(qStr("   ")), "MV CONTOH"},
+		{"no destination falls back", qStr("MV CONTOH"), withDest(nil), "MV CONTOH"},
+		{"no shipping line falls back", qStr("MV CONTOH"), nil, "MV CONTOH"},
+		{"neither prints nothing", nil, nil, ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			h := header("10.00", "10.00", "0.00", "10.00", "9.17", "1.10", "11.10")
+			h.VesselName = tc.vessel
+			got := buildExportData(QuotationDetail{Quotation: h, Items: tc.items}, qUnits, "", "", "Director", exportNow)
+			if got.DeliveryPlace != tc.want {
+				t.Errorf("DeliveryPlace = %q, want %q", got.DeliveryPlace, tc.want)
+			}
+		})
+	}
+}
+
 // Client name gets break points.
 // The To cell wraps, but one long unbroken token still overflows unless
 // the name carries break points; a short name prints exactly as escaped.

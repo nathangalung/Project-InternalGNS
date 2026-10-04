@@ -262,6 +262,10 @@ invoice-attachments  32/1088 32/1088 ok
 po-docs              31/128082 31/128082 ok
 ```
 
+That run predates migration 00098, which replaced `doc_sequences` with
+`doc_counters` (one row per document type), so a backup taken now lists
+`public.doc_counters` with 3 rows in its place.
+
 The ETags of all 73 restored objects matched their sources. The public schema
 had 71 functions in both databases. The restore also refused an existing
 database, a non-empty bucket and a snapshot with one byte appended to the dump
