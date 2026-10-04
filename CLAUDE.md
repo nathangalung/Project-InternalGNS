@@ -452,9 +452,13 @@ defaults), and every list's empty row goes through `emptyListText`
 `Tidak ada hasil untuk …` instead of the list's own "Belum ada …".
 The quotation, PO and invoice lists read a search of a month and year
 (`10/2026`, `X/2026`, `x / 2026`) as that period: `listq.Period` turns it into
-the slash-anchored pattern `%/X/2026%`, which the generated numbers (quotation,
-invoice, delivery note) match instead of the typed text, so `I/2026` never
-lists `II/2026`; names and the client's own PO number keep the typed match.
+the slash-anchored pattern `%/X/2026%`, which each list's own generated
+numbers match instead of the typed text (the quotation number on Quotation,
+the invoice number on Invoice, the delivery-note number on PO), so `I/2026`
+never lists `II/2026`. The client's own PO number matches both the typed text
+and the period pattern; names always match the typed text, and the quotation
+number on the invoice and PO lists matches it only when the query is not a
+period.
 Every list shows what narrows it as chips (`components/shared/ActiveFilters`);
 the master-data lists build them with `filterChips` (`lib/filter-chips.ts`),
 and every chip removes only its own filter.
