@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -60,7 +61,7 @@ func TestBuildExportData_ReconcilesWithStoredQuotation(t *testing.T) {
 	var offeredName string
 	require.NoError(t, tx.QueryRow(ctx, "SELECT name FROM items WHERE id = $1", seedItemID).Scan(&offeredName))
 
-	got := quotations.BuildExportData(d, map[int16]string{}, "", "", "Director")
+	got := quotations.BuildExportData(d, map[int16]string{}, "", "", "Director", time.Now())
 
 	// Every header figure is the stored one.
 	fields := []struct{ name, got, stored string }{
@@ -112,7 +113,7 @@ func TestBuildExportData_DeliveryTimeFromStoredShipping(t *testing.T) {
 	d, err := repo.GetDetail(ctx, id)
 	require.NoError(t, err)
 
-	got := quotations.BuildExportData(d, map[int16]string{}, "", "", "Director")
+	got := quotations.BuildExportData(d, map[int16]string{}, "", "", "Director", time.Now())
 	assert.Equal(t, "5 days", got.DeliveryTime)
 	assert.Equal(t, "MV TEST", got.DeliveryPlace)
 }

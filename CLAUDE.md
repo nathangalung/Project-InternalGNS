@@ -226,6 +226,11 @@ document's status history table.
   quotations past `validity_days` from the last send, by WIB date. The API
   runs it at startup and then hourly (`quotations.RunExpiryLoop`), and
   `pg_try_advisory_xact_lock` keeps two replicas from both doing a run.
+  The quotation PDF is dated at that last send, so its date plus its
+  Validity ends when the quotation expires; a draft prints today and a
+  legacy row with no send its creation date. Its ATTN block prints the
+  chosen contact's own email and phone, read by id even once that contact
+  is deactivated, and none when the quotation has no contact.
   A saved draft is edited live, by several users at once, one part each.
   The parts are the header (contact, shipping, terms, discount) and each
   line (`line:<id>`); `POST /quotations/{id}/locks` claims one for two

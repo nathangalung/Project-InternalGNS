@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -114,12 +115,35 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 		return exportData{}, err
 	}
 
-	return buildExportData(d, unitsByID, contactEmail, contactPhone, h.settings.SignerName), nil
+	return buildExportData(d, unitsByID, contactEmail, contactPhone, h.settings.SignerName, time.Now()), nil
+}
+
+// documentDate is the printed date.
+// It is the last send, the start fn_expire_quotations counts validity
+// from, so the printed date and validity end when the app expires the
+// quotation. A draft is dated now; a legacy row with no send keeps its
+// creation date.
+func documentDate(d QuotationDetail, now time.Time) time.Time {
+	var sent time.Time
+	for _, h := range d.History {
+		if h.ToStatus == StatusSent && h.ChangedAt.After(sent) {
+			sent = h.ChangedAt
+		}
+	}
+	switch {
+	case !sent.IsZero():
+		return sent
+	case d.Status == StatusDraft:
+		return now
+	default:
+		return d.CreatedAt
+	}
 }
 
 // buildExportData shapes the template data.
 func buildExportData(
 	d QuotationDetail, unitsByID map[int16]string, contactEmail, contactPhone, signerName string,
+	now time.Time,
 ) exportData {
 	// Every total is the stored header, so the app, the PDF and the
 	// invoice agree. A Tidak Ditawarkan line, or any unpriced one, prints
@@ -186,7 +210,7 @@ func buildExportData(
 		AttnName:      pdfgen.LatexEscape(attn),
 		AttnEmail:     pdfgen.LatexEscape(contactEmail),
 		AttnPhone:     pdfgen.LatexEscape(contactPhone),
-		DateLine:      pdfgen.JakartaDateLine(d.CreatedAt.In(tz.Jakarta())),
+		DateLine:      pdfgen.JakartaDateLine(documentDate(d, now).In(tz.Jakarta())),
 		Items:         items,
 		TotalProduk:   pdfgen.FormatIDRCents(d.TotalProduk),
 		DiscountPct:   d.DiscountPct,

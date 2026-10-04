@@ -62,6 +62,9 @@ func header(totalProduk, total, totalDiscount, subtotal, dpp, ppn, grand string)
 
 var qUnits = map[int16]string{19: "SET", 18: "UNIT"}
 
+// exportNow dates a draft's PDF.
+var exportNow = time.Date(2026, 10, 4, 3, 0, 0, 0, time.UTC)
+
 // Printed totals reconcile with header.
 // They come from the stored header.
 func TestBuildExportData_TotalsFromStoredHeader(t *testing.T) {
@@ -78,7 +81,7 @@ func TestBuildExportData_TotalsFromStoredHeader(t *testing.T) {
 		},
 	}
 
-	got := buildExportData(d, qUnits, "", "", "Director")
+	got := buildExportData(d, qUnits, "", "", "Director", exportNow)
 
 	checks := []struct {
 		field, got, want string
@@ -124,7 +127,7 @@ func TestBuildExportData_ZeroCostShipping(t *testing.T) {
 				Items:     []QuotationItem{productLine(1, "ITEM", "1.00", "1000.00", "1000.00"), ship},
 			}
 
-			got := buildExportData(d, qUnits, "", "", "Director")
+			got := buildExportData(d, qUnits, "", "", "Director", exportNow)
 
 			if got.HasShipping {
 				t.Error("HasShipping = true for a Rp 0 shipping line")
@@ -161,7 +164,7 @@ func TestBuildExportData_NoOfferIsUnpriced(t *testing.T) {
 		},
 	}
 
-	got := buildExportData(d, qUnits, "", "", "Director")
+	got := buildExportData(d, qUnits, "", "", "Director", exportNow)
 
 	cases := []struct {
 		line     int
@@ -195,7 +198,7 @@ func TestBuildExportData_OfferShowsOfferedItem(t *testing.T) {
 		Items:     []QuotationItem{offered, fallback},
 	}
 
-	got := buildExportData(d, qUnits, "", "", "Director")
+	got := buildExportData(d, qUnits, "", "", "Director", exportNow)
 
 	wantOffer := `LAMP LED 12W (100W) 220V E-27, COOL WHITE (790269)`
 	if got.Items[0].Offer != wantOffer {
@@ -226,7 +229,7 @@ func TestBuildExportData_PaperSize(t *testing.T) {
 			Quotation: header("1000.00", "1100.00", "0.00", "1100.00", "1008.33", "121.00", "1221.00"),
 			Items:     items,
 		}
-		if got := buildExportData(d, qUnits, "", "", "Director").UseA4; got != tc.wantA4 {
+		if got := buildExportData(d, qUnits, "", "", "Director", exportNow).UseA4; got != tc.wantA4 {
 			t.Errorf("%d products: UseA4 = %v, want %v", tc.products, got, tc.wantA4)
 		}
 	}
@@ -278,7 +281,7 @@ func TestBuildExportData_FooterTerms(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			h := header("1000.00", "1100.00", "0.00", "1100.00", "1008.33", "121.00", "1221.00")
 			h.VesselName, h.PaymentTerms, h.ValidityDays = tc.vessel, tc.payment, tc.validity
-			got := buildExportData(QuotationDetail{Quotation: h, Items: tc.items}, qUnits, "", "", "Director")
+			got := buildExportData(QuotationDetail{Quotation: h, Items: tc.items}, qUnits, "", "", "Director", exportNow)
 
 			checks := []struct{ field, got, want string }{
 				{"DeliveryPlace", got.DeliveryPlace, tc.wantPlace},
@@ -308,9 +311,49 @@ func TestBuildExportData_CompanyNameBreaksLongTokens(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			h := header("1000.00", "1100.00", "0.00", "1100.00", "1008.33", "121.00", "1221.00")
 			h.CompanyClientName = tc.client
-			got := buildExportData(QuotationDetail{Quotation: h}, qUnits, "", "", "Director")
+			got := buildExportData(QuotationDetail{Quotation: h}, qUnits, "", "", "Director", exportNow)
 			if got.CompanyName != tc.want {
 				t.Errorf("CompanyName = %q, want %q", got.CompanyName, tc.want)
+			}
+		})
+	}
+}
+
+// The PDF is dated at its last send.
+// Validity counts from that send (fn_expire_quotations), so the printed
+// date plus the printed validity ends when the app expires it. A draft is
+// dated today; a legacy row with no send keeps its creation date.
+func TestBuildExportData_DatedAtLastSend(t *testing.T) {
+	created := time.Date(2026, 9, 1, 2, 0, 0, 0, time.UTC)
+	now := time.Date(2026, 10, 3, 18, 30, 0, 0, time.UTC) // 4 Oct in WIB
+	sent := func(at time.Time) StatusHistoryEntry {
+		return StatusHistoryEntry{ToStatus: StatusSent, ChangedAt: at}
+	}
+	cases := []struct {
+		name    string
+		status  Status
+		history []StatusHistoryEntry
+		want    string
+	}{
+		{"draft prints today in WIB", StatusDraft, nil, "Jakarta, 4 October 2026"},
+		{"sent prints the send date", StatusSent,
+			[]StatusHistoryEntry{sent(time.Date(2026, 9, 20, 3, 0, 0, 0, time.UTC))},
+			"Jakarta, 20 September 2026"},
+		{"the newest send in WIB wins", StatusAccepted, []StatusHistoryEntry{
+			sent(time.Date(2026, 9, 20, 17, 30, 0, 0, time.UTC)),
+			{ToStatus: StatusAccepted, ChangedAt: time.Date(2026, 9, 25, 3, 0, 0, 0, time.UTC)},
+			sent(time.Date(2026, 9, 10, 3, 0, 0, 0, time.UTC)),
+		}, "Jakarta, 21 September 2026"},
+		{"legacy row without a send keeps its creation date", StatusAccepted, nil,
+			"Jakarta, 1 September 2026"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			h := header("1000.00", "1100.00", "0.00", "1100.00", "1008.33", "121.00", "1221.00")
+			h.Status, h.CreatedAt = tc.status, created
+			d := QuotationDetail{Quotation: h, History: tc.history}
+			if got := buildExportData(d, qUnits, "", "", "Director", now).DateLine; got != tc.want {
+				t.Errorf("DateLine = %q, want %q", got, tc.want)
 			}
 		})
 	}
