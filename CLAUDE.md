@@ -186,6 +186,23 @@ renders exactly those moves; it keeps no transition map of its own. A refused
 move is a 422 with Indonesian detail text. Every move writes a row to that
 document's status history table.
 
+Quotation, invoice and delivery-note numbers are one running number per
+document type that never resets, five digits wide and growing past 99999,
+then the Roman month and year of the WIB issue date: `Q-00011/GNS/X/2026`,
+`INV-00007/GNS/X/2026`, `DN-00007/GNS/X/2026`. `fn_next_doc_no(type)` takes
+the next value from that type's `doc_counters` row under its row lock, so
+concurrent callers queue and a rolled-back document leaves no gap; it is
+never a SEQUENCE. A revision keeps its base number with `Rev.n`, and a
+Pengganti draws a new invoice number. Numbers issued before 00098 keep their
+legacy format (year, client number and a yearly count). A purchase order's
+number is the client's own PO number: accepting a quotation leaves
+`po_number` NULL until a user enters it (blank means none), ON_PROGRESS and
+DELIVERED require it (a `po_number` gap on the PO in the completeness gate,
+and `fn_change_po_status` refuses it too), and a PO in either state cannot
+clear it (`fn_update_po_details`, a 422 on `poNumber`). It is unique per
+client (`uq_purchase_orders_client_po_number`), not globally, and the web
+shows a missing one as Belum ada No. PO.
+
 - Quotation: draft, sent, revision, accepted, rejected, cancelled, expired.
   Draft goes to sent or cancelled; sent to accepted, rejected or cancelled;
   revision to rejected or cancelled. Rejected and cancelled need a reason.
@@ -289,10 +306,10 @@ document's status history table.
   (`fn_update_po_items`) refuses otherwise, and so do ON_PROGRESS and
   DELIVERED, so no Rp 0 invoice is issued. A qty 0 line stays allowed, but
   ON_PROGRESS and DELIVERED need one product line with a quantity. Both
-  moves also pass the completeness gate (client, vendor and shipping-address
-  data), a 422 `po_incomplete`; delivery runs it again, since ON_PROGRESS
-  edits and client edits can reopen a gap. Each PO line stores its own
-  supplier (`vendor_product_id`), copied from the quotation line only when
+  moves also pass the completeness gate (the client's PO number, client,
+  vendor and shipping-address data), a 422 `po_incomplete`; delivery runs it
+  again, since ON_PROGRESS edits and client edits can reopen a gap. Each PO
+  line stores its own supplier (`vendor_product_id`), copied from the quotation line only when
   that link is for the line's product, and the items list and the gate
   read it from the PO line. The line edit takes `vendorProductId` (a link
   for the line's product) or `vendorId`, and refuses a `quotationItemId`
@@ -327,9 +344,9 @@ Status labels are Indonesian and come from the API (`StatusLabel` in each
 package); `src/lib/status.ts` mirrors them for fields that carry only the key.
 
 Clients get a four-digit number from the server. A blank number on create is
-filled by `fn_next_client_number`; a typed one must be four digits and unused,
-and it is locked once a quotation uses it, because every document number
-embeds it.
+filled by `fn_next_client_number`; a typed one must be four digits and unused.
+It stays editable after quotations use it, since no document number embeds
+it.
 
 A client's NPWP follows one rule, `validate.ClientNPWP`, mirrored by
 `optionalNpwpError` in the web: an Indonesian client (country IDN or blank)
@@ -433,6 +450,11 @@ through `clampPage` in `lib/pagination.ts`, and every pager renders
 defaults), and every list's empty row goes through `emptyListText`
 (`lib/list-empty.ts`), so a search or filter with no match says
 `Tidak ada hasil untuk …` instead of the list's own "Belum ada …".
+The quotation, PO and invoice lists read a search of a month and year
+(`10/2026`, `X/2026`, `x / 2026`) as that period: `listq.Period` turns it into
+the slash-anchored pattern `%/X/2026%`, which the generated numbers (quotation,
+invoice, delivery note) match instead of the typed text, so `I/2026` never
+lists `II/2026`; names and the client's own PO number keep the typed match.
 Every list shows what narrows it as chips (`components/shared/ActiveFilters`);
 the master-data lists build them with `filterChips` (`lib/filter-chips.ts`),
 and every chip removes only its own filter.

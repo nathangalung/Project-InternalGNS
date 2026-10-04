@@ -152,7 +152,7 @@ a row with its own text under a merged quantity is a separate product.
 | `fn_search_items(q, min_score, limit, is_active)` | `GET /items/search-advanced` |
 | `fn_match_request(req_text, limit)` | `POST /items/match-rows` |
 | `fn_suggest_selling_prices(item_id, limit)` | `GET /items/{id}/price-history` |
-| `fn_next_doc_no(doc_type, company_id)` | inside `fn_create_quotation` |
+| `fn_next_doc_no(doc_type)` | inside `fn_create_quotation`, `fn_create_invoice`, `fn_change_po_status` (DN) |
 | `fn_create_quotation(...)` | `POST /quotations` |
 | `fn_update_quotation_versioned(...)`, `fn_update_quotation(...)` | `PUT /quotations/{id}` |
 | `fn_change_quotation_status(id, status, user, note)` | `PATCH /quotations/{id}/status`, `POST /quotations/{id}/send` |
@@ -190,8 +190,8 @@ POST /api/v1/quotations
 [fn_create_quotation], one transaction
     1. check the lines and the discount
     2. snapshot the client and contact names
-    3. fn_next_doc_no('Q', company_id): atomic upsert on doc_sequences,
-       number built from the four-digit client number and the WIB period
+    3. fn_next_doc_no('Q'): the next running number from doc_counters
+       under its row lock, with the WIB month and year
     4. insert the header, the lines and an optional shipping line;
        triggers inherit the discount, sync vendor cost, learn matches, and
        log the draft in quotation_status_history
