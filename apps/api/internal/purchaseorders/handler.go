@@ -287,7 +287,7 @@ func (h *Handler) UpdateDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	poDate, err := time.Parse("2006-01-02", strings.TrimSpace(req.PoDate))
 	if err != nil {
-		httperr.Render(w, httperr.Unprocessable(map[string]string{"poDate": "must be YYYY-MM-DD"}))
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"poDate": "Tanggal PO harus berformat YYYY-MM-DD."}))
 		return
 	}
 	actor := deps.CurrentUserID(r.Context())

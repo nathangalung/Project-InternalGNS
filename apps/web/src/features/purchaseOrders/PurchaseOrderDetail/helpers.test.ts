@@ -289,12 +289,19 @@ describe("PO number", () => {
     const err = new ApiError(
       422,
       problem(422, {
-        fields: { poNumber: PO_NUMBER_REQUIRED_MESSAGE, poDate: "must be YYYY-MM-DD", other: "x" },
+        fields: {
+          poNumber: PO_NUMBER_REQUIRED_MESSAGE,
+          poDate: "Tanggal PO harus berformat YYYY-MM-DD.",
+          other: "x",
+        },
       }),
       "Unprocessable",
     )
     expect(poDetailsErrors(err)).toEqual({
-      fields: { poNumber: PO_NUMBER_REQUIRED_MESSAGE, poDate: "must be YYYY-MM-DD" },
+      fields: {
+        poNumber: PO_NUMBER_REQUIRED_MESSAGE,
+        poDate: "Tanggal PO harus berformat YYYY-MM-DD.",
+      },
       banner: "x",
     })
   })
