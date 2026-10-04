@@ -33,6 +33,7 @@ func acceptedQuotationWithPO(t *testing.T, tx pgx.Tx) (int64, int64) {
 	ctx := context.Background()
 	qrepo := quotations.NewRepo(tx, testutil.Store(t))
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{
@@ -169,7 +170,7 @@ func TestRepo_UpdateItems_DeliveredIsLocked(t *testing.T) {
 	}, seedUserID, &rowVersion)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, purchaseorders.ErrLocked)
-	assert.Equal(t, "PO yang sudah dikirim atau dibatalkan tidak dapat diubah.", err.Error())
+	assert.Equal(t, "PO yang sudah dikirim hanya dapat diubah setelah invoicenya dibatalkan dan sebelum invoice pengganti diterbitkan.", err.Error())
 }
 
 // Out-of-range discount is 422.
@@ -472,6 +473,7 @@ func acceptedQuotationWithShipping(t *testing.T, tx pgx.Tx, addr *string, days i
 	ctx := context.Background()
 	qrepo := quotations.NewRepo(tx, testutil.Store(t))
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		ShippingAddress: addr,

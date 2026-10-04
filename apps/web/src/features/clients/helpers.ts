@@ -1,5 +1,6 @@
 import type { UpdateContactInput } from "@/features/clients/api"
 import type { Client } from "@/features/quotations/Step1Client"
+import { ApiError } from "@/lib/api-client"
 import { PENDING_FIGURE } from "@/lib/format"
 import type { ClientRow, ClientSearchHit, ClientSummary } from "@/types/api"
 
@@ -29,7 +30,6 @@ export function fromClientRow(c: ClientRow): Client & { contactId?: number } {
     email: c.contactEmail ?? c.email,
     npwp: c.npwp,
     nomorTKU: c.tkuId,
-    referenceNumber: c.number,
     lokasi: c.address,
     contactId: c.contactId,
   }
@@ -46,7 +46,6 @@ export function fromClientHit(h: ClientSearchHit): Client & { contactId?: number
     email: h.contactEmail ?? h.companyEmail,
     npwp: h.companyNpwp,
     nomorTKU: h.companyTku,
-    referenceNumber: h.companyNumber,
     lokasi: h.companyAddress,
     contactId: h.contactId,
   }
@@ -121,4 +120,15 @@ export function contactUpdateBody(f: ContactFormValues, countryCode: string): Up
     title: f.title.trim(),
     countryCode,
   }
+}
+
+// Server email refusal, if any.
+//
+// A contact email another active contact owns, at this client or another,
+// comes back as 422 on fields.email; the contact form shows it on its email
+// input instead of a toast.
+export function contactEmailError(err: unknown): string | undefined {
+  if (!(err instanceof ApiError) || err.status !== 422) return undefined
+  const msg = err.body?.fields?.email?.trim()
+  return msg ? msg : undefined
 }

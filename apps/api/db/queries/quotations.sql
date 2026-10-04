@@ -67,26 +67,26 @@ WHERE 1=1;
 SELECT COUNT(*) FROM quotations q WHERE 1=1;
 
 -- name: quotations.fn_create
--- Lines pass through fn_prepare_quotation_lines first (no-offer lines,
--- vendor links); see migration 00077.
+-- The function prepares its lines (no-offer lines, vendor links) after its
+-- client checks; see migration 00092.
 SELECT fn_create_quotation(
     $1, $2, $3, $4, $5, $6, $7::numeric(5,2),
     $8, $9, $10::numeric(15,2),
-    fn_prepare_quotation_lines($11::jsonb, $12::bigint), $12, $13, $14
+    $11::jsonb, $12, $13, $14
 );
 
 -- name: quotations.fn_update
 SELECT fn_update_quotation(
     $1, $2, $3, $4, $5, $6::numeric(5,2),
     $7, $8, $9::numeric(15,2),
-    fn_prepare_quotation_lines($10::jsonb, $11::bigint), $11, $12
+    $10::jsonb, $11, $12
 );
 
 -- name: quotations.fn_update_versioned
 SELECT fn_update_quotation_versioned(
     $1, $2, $3, $4, $5, $6, $7::numeric(5,2),
     $8, $9, $10::numeric(15,2),
-    fn_prepare_quotation_lines($11::jsonb, $12::bigint), $12, $13
+    $11::jsonb, $12, $13
 );
 
 -- name: quotations.row_version

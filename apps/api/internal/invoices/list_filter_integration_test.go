@@ -35,6 +35,7 @@ func seedListFixture(t *testing.T, ctx context.Context, tx pgx.Tx) listFixture {
 
 	invoiceOf := func(qty string, invDate, dueDate string, path ...invoices.Status) invoices.Invoice {
 		_, _, id := deliverQuotation(t, tx, quotations.CreateRequest{
+			ValidityDays:    testutil.Validity(),
 			CompanyClientID: seedCompanyID,
 			DiscountPct:     "0",
 			Items: []quotations.CreateItem{{

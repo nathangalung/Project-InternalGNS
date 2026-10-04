@@ -51,6 +51,7 @@ export function useCreateVendor() {
   })
 }
 
+// Failures show in the form.
 export function useUpdateVendor() {
   const qc = useQueryClient()
   return useMutation({
@@ -68,7 +69,6 @@ export function useUpdateVendor() {
           (q.queryKey[0] === "purchase-orders" && q.queryKey[2] === "items"),
       })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui vendor.")),
   })
 }
 

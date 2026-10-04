@@ -52,9 +52,10 @@ to superadmin and finance at both layers, including the dashboard endpoints.
 
 Sessions end on expiry or by version. Every access and refresh token carries
 the `users.session_version` it was minted under, and the auth middleware
-refuses any other. A role change, a deactivation, or a password change bumps
-the version and revokes refresh tokens, so every open session of that user
-ends on its next request.
+refuses any other. A role change, a deactivation, a password change, or a
+rotated refresh token replayed past its 10-second grace bumps the version
+and revokes refresh tokens, so every open session of that user ends on its
+next request.
 
 The refresh token travels only in the `gns_refresh` cookie, never in a
 response body: HttpOnly, Secure, SameSite=Strict, `Path=/api/v1/auth`,
@@ -189,6 +190,9 @@ document's status history table.
   Draft goes to sent or cancelled; sent to accepted, rejected or cancelled;
   revision to rejected or cancelled. Rejected and cancelled need a reason.
   Accepted creates the PO in the same transaction. Only drafts are editable.
+  The client's own reference (No. Referensi Klien, `client_ref_no`, printed
+  as Your Ref No.) is typed in the wizard's summary step and saved with the
+  header; the client's four-digit number never stands in for it.
   Validity and shipping days run from 1 to 365 (`validate.MaxDays`, a 422
   on the field; the database refuses only below 1), on the PO's shipping
   days too, and the web inputs carry the same bound. Shipping address, cost
@@ -200,14 +204,22 @@ document's status history table.
   destination.
   A draft may keep unfinished product lines, but sending refuses (with the
   count) while any offered product line lacks its product, unit, vendor,
-  harga beli or harga jual. A line marked Tidak Ditawarkan (`is_available`
+  harga beli or harga jual, and while `validity_days` is empty, since a sent
+  quotation without one would never expire (a draft without one can still
+  be cancelled). The web sends any typed validity, 0 included, so the
+  server answers it with a field error instead of storing none. A line
+  marked Tidak Ditawarkan (`is_available`
   false, `noOffer` in the wizard) is a request the company cannot offer:
   `fn_prepare_quotation_lines` stores it at harga jual 0 with no vendor, the
   PDF prints No Offer, it never blocks sending, `fn_create_purchase_order`
   leaves it out of the PO, and accepting needs at least one offered line.
   The same function links a vendor a line names by `vendorId` when the item
   has no link to it yet, and refuses a `vendorProductId` that names another
-  product (P0014). New lines, from the RFQ import or picked by hand,
+  product (P0014). A save of a draft, the full `PUT` included, runs it only
+  after locking the quotation row and passing the status checks, so a
+  vendor link never locks before the quotation; a create runs it after the
+  client checks.
+  New lines, from the RFQ import or picked by hand,
   start from `fn_recommend_lines` (`GET /items/recommendations`): the vendor
   on this client's newest sent or accepted deal for the item at its current
   harga beli, else the cheapest active vendor, and the harga jual of this
@@ -219,9 +231,17 @@ document's status history table.
   quotations past `validity_days` from the last send, by WIB date. The API
   runs it at startup and then hourly (`quotations.RunExpiryLoop`), and
   `pg_try_advisory_xact_lock` keeps two replicas from both doing a run.
+  The quotation PDF is dated at its last send, a draft to sent move, so
+  for a quotation sent in the app its date plus its Validity ends when it
+  expires; a draft prints today, and a row with no such move (legacy, or
+  imported straight as sent, whose NULL to sent creation log carries the
+  import time) prints its creation date. Its ATTN block prints the
+  chosen contact's own email and phone, read by id even once that contact
+  is deactivated, and none when the quotation has no contact.
   A saved draft is edited live, by several users at once, one part each.
-  The parts are the header (contact, shipping, terms, discount) and each
-  line (`line:<id>`); `POST /quotations/{id}/locks` claims one for two
+  The parts are the header (contact, client reference, shipping, terms,
+  discount) and each line (`line:<id>`); `POST /quotations/{id}/locks`
+  claims one for two
   minutes (`EditLockTTL`, renewed every 30 s by `useEditLocks`), and a part
   someone else holds is a 409 `edit_locked` whose detail names them. A line
   save and the header save need the caller's claim; add, delete, the
@@ -254,7 +274,17 @@ document's status history table.
   ON_PROGRESS or DELIVERED together with its WIB issue date
   (`delivery_note_date`), which the note prints as its Date above the PO No
   and PO Date rows, and DELIVERED creates the invoice. DELIVERED and
-  CANCELLED are terminal, and the file is locked in both. A PO keeps at least
+  CANCELLED are terminal, and the file is locked in both. The lines lock in
+  both too, with one exception: while a delivered PO's invoice is cancelled
+  and no live invoice replaces it, Ubah PO opens again, so the Pengganti
+  issued afterwards bills the corrected lines (and a delivery-note reprint
+  shows them); the Pengganti locks them again. `fn_po_lines_locked` is the
+  rule `fn_update_po_items` and the PO read (`linesLocked`, which the web
+  gates Ubah PO on) share, and a delivered PO with no invoice at all stays
+  locked. A reopened edit keeps what DELIVERED required: one product line
+  with a quantity, and the shipping address while any product line lacks
+  its own destination; `fn_replace_invoice` also refuses a PO with no
+  billable product line. A PO keeps at least
   one product line and every product line priced above zero: the line edit
   (`fn_update_po_items`) refuses otherwise, and so do ON_PROGRESS and
   DELIVERED, so no Rp 0 invoice is issued. A qty 0 line stays allowed, but
@@ -276,7 +306,16 @@ document's status history table.
   a paid invoice paid again is a no-op, or a 422 when it carries a proof. Draft,
   sent or overdue go to cancelled with a reason, and only when the invoice has
   a PO; `POST /invoices/{id}/replacement` then issues a Pengganti draft for
-  the same PO. Terlambat is derived, never set: `fn_invoice_effective_status`
+  the same PO. The web keeps the two apart (Batalkan Invoice, then
+  Terbitkan Pengganti on the cancelled invoice), since Ubah PO opens only
+  in between. The invoice stores its buyer's name, NPWP and address
+  (`buyer_*`, copied by `fn_create_invoice`), and the detail, list, PDF and
+  Coretax read those. A client edit never restates an invoice, draft
+  included (the PO gate already required a valid NPWP and address at
+  DELIVERED); only a Pengganti, which copies the client as it is then,
+  changes it. Coretax refuses an invoice without a valid NPWP with that
+  Pengganti route.
+  Country, email and TKU stay live. Terlambat is derived, never set: `fn_invoice_effective_status`
   (a stored overdue, or a draft or sent past its due date) is the one rule the
   list, summary and dashboard read. The invoice list leaves cancelled
   invoices out until Dibatalkan is picked in its filter; a cancelled row
@@ -349,6 +388,12 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
   modal.
 - Page states: `LoadingState`, `NotFoundState`, `RouteErrorFallback` and
   `RouteNotFound`, all built on `StateMessage`; table rows use `TableStates`.
+- `LoadError` is the inline failed-lookup row with Coba Lagi. A query a form
+  or dialog reads while it holds unsaved input (the Tambah Produk dialog, the
+  quotation wizard's client step, Ganti Narahubung) opts out of the route
+  error boundary, through `throwOnError: false` or `INLINE_LOOKUP` from
+  `lib/query-client`, and shows its failure with `LoadError` instead, since
+  the boundary would discard the document being edited.
 - `StatCard` is the summary tile on list screens and dashboards.
 - `EntityLogo` is the list avatar: initials, or an image when given `src`.
 - `RecentQuotations` is the Quotation Terakhir section of the product, vendor
@@ -472,7 +517,14 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
 
 1. Migrations are append-only and land in number order; never edit an
    applied one.
-2. Backend errors are RFC 7807; the frontend shows them via toast.
+2. Backend errors are RFC 7807. The web reports a failed save once: the
+   form shows what it can render inline, and the mutation hook toasts only
+   what no caller renders. The user forms show field and conflict errors
+   inline, so their hooks toast the rest (`isInlineFormError`); the client,
+   vendor and product forms show every failure in their banner, so those
+   hooks never toast; a caller with no inline slot (Tambah Kontak on the
+   client detail) toasts in its own `onError`. Every other failure is a
+   toast.
 3. TypeScript is strict, no `any`, prefer `type` over `interface`.
 4. Go errors are wrapped with `fmt.Errorf("...: %w", err)`; tests are
    table-driven.
@@ -504,7 +556,13 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    `TestLatexExports_LongPartyWraps` checks with `pdftotext -bbox` that they
    stay left of that block. `TestLatexExports_Clean` and `_MultiPage`
    fail on any overfull or underfull box, which is what keeps text from being
-   cut.
+   cut. A cancelled invoice still downloads, marked DIBATALKAN beside its
+   title, in its running header and as a page watermark (a kernel
+   `shipout/background` hook, no extra package); a Pengganti prints
+   `Pengganti dari <no>` under its Invoice No. The export reads the one
+   detail row (`invoices.get_detail_by_id`), so a failed read is a 5xx, never
+   a PDF with a blank party; `TestLatexExports_InvoiceMarks` keeps both
+   marks on one clean A5 sheet.
 9. Invoice tax figures are rounded per line, then summed to the header (matching
    DJP e-faktur), and `ppn_amount` is computed from the already-rounded DPP
    base. The quotation (`fn_line_dpp`, `fn_line_ppn`, stored by the functions

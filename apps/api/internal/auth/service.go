@@ -259,8 +259,7 @@ func (s *Service) issue(ctx context.Context, rr *RefreshRepo, u users.User, vers
 
 // Refresh redeems and rotates tokens.
 // It re-issues the JWT plus a fresh refresh token. Reuse of an
-// already-redeemed token triggers revocation of every active refresh token
-// for that user.
+// already-redeemed token ends every session of that user.
 func (s *Service) Refresh(ctx context.Context, raw string) (Session, error) {
 	if s.refresh == nil || raw == "" {
 		return Session{}, ErrInvalidRefresh
@@ -269,11 +268,11 @@ func (s *Service) Refresh(ctx context.Context, raw string) (Session, error) {
 
 	// One transaction with the owner's row share-locked first: a password
 	// change or deactivation either commits before, leaving this token
-	// revoked, or waits and then revokes the successor issued here. The
-	// verdict is returned after commit so a reuse blast still lands.
+	// revoked, or waits and then revokes the successor issued here.
 	var (
 		resp    Session
 		verdict error
+		blast   int64
 	)
 	err := s.users.InTx(ctx, func(q *users.Repo, tx db.Executor) error {
 		rr := s.refresh.on(tx)
@@ -282,7 +281,7 @@ func (s *Service) Refresh(ctx context.Context, raw string) (Session, error) {
 		}
 		red, err := rr.redeem(ctx, hash)
 		if errors.Is(err, pgx.ErrNoRows) {
-			verdict, err = s.refusal(ctx, rr, hash)
+			verdict, blast, err = s.refusal(ctx, rr, hash)
 			return err
 		}
 		if err != nil {
@@ -302,25 +301,43 @@ func (s *Service) Refresh(ctx context.Context, raw string) (Session, error) {
 	if err != nil {
 		return Session{}, err
 	}
+	// The blast writes the users row, so it runs in its own transaction:
+	// upgrading the share lock above would deadlock two concurrent replays.
+	// It locks users before refresh_tokens, like a rotation, so it waits for
+	// one in flight instead of deadlocking with it. The refusal wrote
+	// nothing, and the version bump refuses whatever was minted in between.
+	if blast != 0 {
+		if err := s.endSessions(ctx, blast); err != nil {
+			return Session{}, err
+		}
+	}
 	if verdict != nil {
 		return Session{}, verdict
 	}
 	return resp, nil
 }
 
+// endSessions runs the reuse blast.
+func (s *Service) endSessions(ctx context.Context, userID int64) error {
+	return s.users.InTx(ctx, func(_ *users.Repo, tx db.Executor) error {
+		return s.refresh.on(tx).endSessions(ctx, userID)
+	})
+}
+
 // refusal explains unredeemable tokens.
-func (s *Service) refusal(ctx context.Context, rr *RefreshRepo, hash []byte) (error, error) {
+// blast is the user whose sessions a replay ends, or 0.
+func (s *Service) refusal(ctx context.Context, rr *RefreshRepo, hash []byte) (verdict error, blast int64, err error) {
 	st, err := rr.lookup(ctx, hash)
 	if err != nil {
-		return nil, fmt.Errorf("look up refresh token: %w", err)
+		return nil, 0, fmt.Errorf("look up refresh token: %w", err)
 	}
 	if !st.found {
-		return ErrInvalidRefresh, nil
+		return ErrInvalidRefresh, 0, nil
 	}
 	// Only rotation hands out a successor, so only a rotated token coming
 	// back is a replay. One ended on purpose is just a dead session.
 	if st.revoked && !revokedByRotation(st.reason) {
-		return ErrRevokedRefresh, nil
+		return ErrRevokedRefresh, 0, nil
 	}
 	if st.revoked {
 		// A concurrent or retried redeem (a duplicate tab, a network retry)
@@ -330,18 +347,21 @@ func (s *Service) refusal(ctx context.Context, rr *RefreshRepo, hash []byte) (er
 		// revocation is a benign race, so the other sessions survive and
 		// the verdict says so, letting the handler keep the cookie.
 		if !st.pastGrace {
-			return ErrRacedRefresh, nil
+			return ErrRacedRefresh, 0, nil
 		}
-		if err := rr.revokeAllForUser(ctx, st.userID); err != nil {
-			return nil, err
+		// A replay from an already ended session (a reuse blast, a password
+		// change) has nothing left to end: every session since is a new
+		// login, which a stolen token must not be able to end again.
+		if st.stale {
+			return ErrRevokedRefresh, 0, nil
 		}
-		return ErrReusedRefresh, nil
+		return ErrReusedRefresh, st.userID, nil
 	}
 	// Minted before a session version bump: ended on purpose, not expired.
 	if st.stale {
-		return ErrRevokedRefresh, nil
+		return ErrRevokedRefresh, 0, nil
 	}
-	return ErrExpiredRefresh, nil
+	return ErrExpiredRefresh, 0, nil
 }
 
 // RevokeRefresh revokes one refresh token.

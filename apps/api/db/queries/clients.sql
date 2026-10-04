@@ -189,6 +189,14 @@ FROM company_contacts
 WHERE company_id = $1 AND is_active = TRUE
 ORDER BY name;
 
+-- name: clients.get_contact
+-- One contact of the company, active or not: a document keeps the contact
+-- it chose after that contact is deactivated.
+SELECT id, company_id, name, email, phone, title, country_code,
+       is_active, created_at, updated_at
+FROM company_contacts
+WHERE company_id = $1 AND id = $2;
+
 -- name: clients.create_contact
 -- A blank email or title is stored as NULL: two blank emails would otherwise
 -- collide on the unique email index.

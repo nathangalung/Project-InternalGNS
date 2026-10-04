@@ -37,6 +37,7 @@ func acceptedQuotationWithVendor(t *testing.T, tx pgx.Tx, companyID int64) int64
 	qrepo := quotations.NewRepo(tx, testutil.Store(t))
 	offered := seedItemID
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: companyID,
 		DiscountPct:     "0",
 		Items: []quotations.CreateItem{{
@@ -158,6 +159,7 @@ func TestRepo_Completeness_ChosenContact(t *testing.T) {
 			ctx, tx := testutil.BeginTx(t)
 			contactID := insertContact(t, tx, seedCompanyID, "Ibu Pilihan", tc.email)
 			_, poID := createQuotation(t, tx, quotations.CreateRequest{
+				ValidityDays:    testutil.Validity(),
 				CompanyClientID: seedCompanyID, ContactID: &contactID, DiscountPct: "0",
 				Items: []quotations.CreateItem{quoteLine(strPtr("Kapal Uji"))},
 			})
@@ -206,6 +208,7 @@ func TestRepo_Completeness_ShipDestination(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx, tx := testutil.BeginTx(t)
 			_, poID := createQuotation(t, tx, quotations.CreateRequest{
+				ValidityDays:    testutil.Validity(),
 				CompanyClientID: seedCompanyID, DiscountPct: "0",
 				ShippingAddress: tc.address, ShippingDays: &days, ShippingCost: tc.cost,
 				Items: tc.lines,
@@ -256,6 +259,7 @@ func TestHandler_OnProgressGate_FillsAddresses(t *testing.T) {
 
 	offered, days := seedItemID, 5
 	_, poID := createQuotation(t, tx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: clientID, ContactID: &contactID, DiscountPct: "0",
 		ShippingDays: &days, ShippingCost: strPtr("75000"),
 		Items: []quotations.CreateItem{{

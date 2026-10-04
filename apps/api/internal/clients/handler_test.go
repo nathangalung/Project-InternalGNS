@@ -141,11 +141,16 @@ func TestHandler_Search(t *testing.T) {
 	assert.NotEmpty(t, hits)
 }
 
+// A blank q is refused.
+// Whitespace alone trims to empty, which fn_search_clients would turn into a
+// match-all pattern.
 func TestHandler_Search_MissingQ(t *testing.T) {
 	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodGet, "/clients/search", nil)
-	defer res.Body.Close()
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+	for _, path := range []string{"/clients/search", "/clients/search?q=", "/clients/search?q=%20%20", "/clients/search?q=%09"} {
+		res := doJSON(t, srv, http.MethodGet, path, nil)
+		res.Body.Close()
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode, path)
+	}
 }
 
 func TestHandler_Search_BadParams(t *testing.T) {

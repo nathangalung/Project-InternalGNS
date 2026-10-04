@@ -8,7 +8,7 @@ import {
   completenessIssues,
   deliveryNoteFileName,
   isInvoiceFiled,
-  isPoLocked,
+  isPoFileLocked,
   isPoLockRefusal,
   PO_CONFLICT_MESSAGE,
   PO_LABEL,
@@ -16,6 +16,7 @@ import {
   PO_STATUS_CONFIG,
   PO_STATUS_ORDER,
   poBreakdown,
+  poEditLockReason,
   poErrorMessage,
   shortDocNo,
   uploadRules,
@@ -52,7 +53,7 @@ describe("PO status maps", () => {
   })
 })
 
-describe("isPoLocked", () => {
+describe("isPoFileLocked", () => {
   it.each([
     ["PENDING", false],
     ["UPLOADED", false],
@@ -60,7 +61,24 @@ describe("isPoLocked", () => {
     ["DELIVERED", true],
     ["CANCELLED", true],
   ] as const)("%s -> %s", (status, locked) => {
-    expect(isPoLocked(status)).toBe(locked)
+    expect(isPoFileLocked(status)).toBe(locked)
+  })
+})
+
+describe("poEditLockReason", () => {
+  it.each([
+    ["PENDING", false, null],
+    ["ON_PROGRESS", false, null],
+    ["DELIVERED", false, null],
+    [
+      "DELIVERED",
+      true,
+      "PO yang sudah dikirim hanya dapat diubah setelah invoicenya dibatalkan dan sebelum invoice pengganti diterbitkan.",
+    ],
+    ["CANCELLED", true, "PO yang dibatalkan tidak dapat diubah."],
+    ["UPLOADED", true, "PO ini tidak dapat diubah."],
+  ] as const)("%s, locked %s", (status, linesLocked, reason) => {
+    expect(poEditLockReason({ status, linesLocked })).toBe(reason)
   })
 })
 

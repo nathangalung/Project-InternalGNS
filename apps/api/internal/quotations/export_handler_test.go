@@ -72,6 +72,7 @@ func TestQuotationExport_PDF_Failures(t *testing.T) {
 	}{
 		{"detail query fails", pdfExec{quotes: fake, clients: tx, units: tx, root: root}},
 		{"units lookup fails", pdfExec{quotes: tx, clients: tx, units: fake, root: root}},
+		{"contact lookup fails", pdfExec{quotes: tx, clients: fake, units: tx, root: root}},
 		{"template missing", pdfExec{quotes: tx, clients: tx, units: tx, root: t.TempDir()}},
 	}
 	for _, c := range cases {
@@ -136,39 +137,53 @@ func TestQuotationExport_PDF_WriteFailureIsLogged(t *testing.T) {
 	assert.Contains(t, logs.String(), "client went away")
 }
 
-// Attention prefers the quotation contact.
+// ATTN describes one person.
+// The details are the chosen contact's own, even once it is deactivated;
+// without one, or when it is gone, none are printed, never another
+// person's.
 func TestExportHandler_ContactComm(t *testing.T) {
 	ctx, tx, d := createInTx(t)
-	var contactID int64
-	require.NoError(t, tx.QueryRow(ctx, `
-		INSERT INTO company_contacts (company_id, name, email, phone, country_code, created_by, updated_by)
-		VALUES ($1, 'Kontak PDF', 'kontak@kapal.example', '0812-1111-2222', 'IDN', $2, $2)
-		RETURNING id`, seedCompanyID, seedUserID).Scan(&contactID))
-
-	email, phone := "klien@kapal.example", "021-555"
-	client := clients.Client{ContactEmail: &email, ContactPhone: &phone}
+	contact := func(name, email, phone string, active bool) int64 {
+		var id int64
+		require.NoError(t, tx.QueryRow(ctx, `
+			INSERT INTO company_contacts
+			    (company_id, name, email, phone, country_code, is_active, created_by, updated_by)
+			VALUES ($1, $2, $3, $4, 'IDN', $5, $6, $6)
+			RETURNING id`, seedCompanyID, name, email, phone, active, seedUserID).Scan(&id))
+		return id
+	}
+	active := contact("Kontak PDF", "kontak@kapal.example", "081211112222", true)
+	inactive := contact("Kontak Lama", "lama@kapal.example", "081233334444", false)
 	unknown := int64(987654321)
 
 	cases := []struct {
 		name      string
 		contactID *int64
-		exec      quotations.Executor
 		wantEmail string
 		wantPhone string
 	}{
-		{"no contact uses the client", nil, tx, email, phone},
-		{"listed contact", &contactID, tx, "kontak@kapal.example", "0812-1111-2222"},
-		{"contact not listed uses the client", &unknown, tx, email, phone},
-		{"contact lookup fails uses the client", &contactID, testutil.FakeExec{}, email, phone},
+		{"no contact prints none", nil, "", ""},
+		{"chosen contact", &active, "kontak@kapal.example", "081211112222"},
+		{"deactivated contact keeps its details", &inactive, "lama@kapal.example", "081233334444"},
+		{"missing contact prints none", &unknown, "", ""},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			h := pdfExec{quotes: tx, clients: c.exec, units: tx}.handler(t)
+			h := pdfExec{quotes: tx, clients: tx, units: tx}.handler(t)
 			det := d
 			det.ContactID = c.contactID
-			gotEmail, gotPhone := h.ContactComm(ctx, det, client)
+			gotEmail, gotPhone, err := h.ContactComm(ctx, det)
+			require.NoError(t, err)
 			assert.Equal(t, c.wantEmail, gotEmail)
 			assert.Equal(t, c.wantPhone, gotPhone)
 		})
 	}
+
+	t.Run("lookup fails", func(t *testing.T) {
+		h := pdfExec{quotes: tx, clients: testutil.FakeExec{}, units: tx}.handler(t)
+		det := d
+		det.ContactID = &active
+		_, _, err := h.ContactComm(ctx, det)
+		assert.ErrorIs(t, err, testutil.ErrFake)
+	})
 }

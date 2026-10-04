@@ -17,6 +17,8 @@ type HeaderProps = {
   invoiceNo?: string
   // Undefined once lines are locked
   onEdit?: () => void
+  // Tooltip while onEdit is off
+  editLockReason?: string
   onDownloadDeliveryNote?: () => void
 }
 
@@ -29,13 +31,18 @@ export default function Header({
   deliveryNoteNumber,
   invoiceNo,
   onEdit,
+  editLockReason,
   onDownloadDeliveryNote,
 }: HeaderProps) {
   const badge = PO_STATUS_CONFIG[status]
   return (
     <>
       <nav className={ui.breadcrumb} aria-label="Breadcrumb">
-        <Link to="/purchase-orders" className={`${ui.breadcrumbLink} no-underline`}>
+        <Link
+          activeOptions={{ exact: true }}
+          to="/purchase-orders"
+          className={`${ui.breadcrumbLink} no-underline`}
+        >
           Daftar Purchase Order
         </Link>
         <span className={ui.breadcrumbSep} aria-hidden="true">
@@ -99,7 +106,7 @@ export default function Header({
             className={`${ui.btnOutline} min-w-[130px]`}
             onClick={onEdit}
             disabled={!onEdit}
-            title={onEdit ? undefined : "PO yang sudah dikirim atau dibatalkan tidak dapat diubah"}
+            title={onEdit ? undefined : editLockReason}
           >
             <svg
               width="14"

@@ -1,4 +1,4 @@
--- Canonical current body of fn_update_po_items (deployed by migration 00089).
+-- Canonical current body of fn_update_po_items (deployed by migration 00097).
 CREATE OR REPLACE FUNCTION public.fn_update_po_items(p_po_id bigint, p_user_id bigint, p_discount_pct numeric, p_notes text, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -24,8 +24,14 @@ BEGIN
       USING ERRCODE = 'P0011';
   END IF;
 
-  IF v_status IN ('DELIVERED', 'CANCELLED') THEN
-    RAISE EXCEPTION 'PO yang sudah dikirim atau dibatalkan tidak dapat diubah.'
+  IF v_status = 'CANCELLED' THEN
+    RAISE EXCEPTION 'PO yang dibatalkan tidak dapat diubah.'
+      USING ERRCODE = 'P0013';
+  END IF;
+
+  -- The PO lock above orders this with fn_replace_invoice.
+  IF fn_po_lines_locked(p_po_id, v_status) THEN
+    RAISE EXCEPTION 'PO yang sudah dikirim hanya dapat diubah setelah invoicenya dibatalkan dan sebelum invoice pengganti diterbitkan.'
       USING ERRCODE = 'P0013';
   END IF;
 
@@ -159,6 +165,25 @@ BEGIN
       p_user_id,
       p_user_id
     );
+  END IF;
+
+  -- A delivered PO keeps what DELIVERED required.
+  IF v_status = 'DELIVERED' THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM purchase_order_items
+      WHERE po_id = p_po_id AND item_type = 'product' AND total_selling > 0
+    ) THEN
+      RAISE EXCEPTION 'Jumlah semua baris produk masih 0. Isi jumlah minimal satu baris produk.'
+        USING ERRCODE = 'P0014';
+    END IF;
+    IF NULLIF(TRIM(p_shipping_address), '') IS NULL AND EXISTS (
+      SELECT 1 FROM purchase_order_items
+      WHERE po_id = p_po_id AND item_type = 'product'
+        AND NULLIF(TRIM(ship_destination), '') IS NULL
+    ) THEN
+      RAISE EXCEPTION 'Alamat pengiriman wajib diisi selama ada baris produk tanpa alamat tujuan.'
+        USING ERRCODE = 'P0014';
+    END IF;
   END IF;
 END;
 $function$

@@ -189,12 +189,21 @@ func TestExpireDue_Boundaries(t *testing.T) {
 		// UTC: sent on 28 February.
 		{"sent just after WIB midnight", &seven, wib(time.March, 1, 0, 30), wib(time.March, 8, 17, 0), quotations.StatusSent},
 		{"missed many days", &seven, sentAt, longAfter, quotations.StatusExpired},
+		// Legacy rows only: sending now needs a validity.
 		{"no validity never expires", nil, sentAt, wib(time.December, 31, 12, 0), quotations.StatusSent},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx, repo, tx := newRepo(t)
-			id := sentWithValidity(t, ctx, repo, tt.validity)
+			validity := tt.validity
+			if validity == nil {
+				validity = &seven
+			}
+			id := sentWithValidity(t, ctx, repo, validity)
+			if tt.validity == nil {
+				_, err := tx.Exec(ctx, `UPDATE quotations SET validity_days = NULL WHERE id = $1`, id)
+				require.NoError(t, err)
+			}
 			setSentAt(t, ctx, tx, id, tt.sent)
 
 			_, err := repo.ExpireDue(ctx, tt.asOf.UTC())

@@ -1,4 +1,5 @@
 import { useState } from "react"
+import LoadError from "@/components/shared/LoadError"
 import Modal from "@/components/shared/Modal"
 import { useClientContacts } from "@/features/clients/hooks"
 import { useUpdateQuotationContact } from "@/features/quotations/hooks"
@@ -24,7 +25,7 @@ export default function ContactModal({
   contactId,
   onClose,
 }: ContactModalProps) {
-  const { data: contacts, isPending } = useClientContacts(companyId)
+  const { data: contacts, isPending, isError, isFetching, refetch } = useClientContacts(companyId)
   const [picked, setPicked] = useState<number | undefined>(contactId)
   const update = useUpdateQuotationContact()
   const active = contacts ?? []
@@ -65,7 +66,13 @@ export default function ContactModal({
       }
     >
       <div className={ui.modalSection}>
-        {isPending ? (
+        {isError ? (
+          <LoadError
+            message="Gagal memuat narahubung."
+            onRetry={() => void refetch()}
+            retrying={isFetching}
+          />
+        ) : isPending ? (
           <p className="text-sm text-[#4A4455]">Memuat narahubung…</p>
         ) : active.length === 0 ? (
           <p className="text-sm leading-6 text-[#4A4455]">

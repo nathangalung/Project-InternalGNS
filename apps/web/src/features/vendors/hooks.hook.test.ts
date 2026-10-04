@@ -106,11 +106,13 @@ describe("vendor writes", () => {
     expect(invalidated(qc, keys)).toEqual([detail, itemVendors, poItems, itemQuotations])
   })
 
-  it("toasts the server reason when an update fails", async () => {
+  // The form shows every failure.
+  it("leaves a failed update to the form", async () => {
     m.update.mockRejectedValue(new ApiError(409, null, "Nama vendor sudah dipakai."))
     const { result } = renderQueryHook(() => useUpdateVendor())
     await settle(() => result.current.mutateAsync({ id: 4, input: { name: "B", isActive: true } }))
-    expect(toast.error).toHaveBeenCalledWith("Nama vendor sudah dipakai.")
+    await until(() => expect(result.current.isError).toBe(true))
+    expect(toast.error).not.toHaveBeenCalled()
   })
 })
 

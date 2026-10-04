@@ -30,6 +30,7 @@ func TestDeliveryNote_PrintsGoodsNotTheShippingCharge(t *testing.T) {
 	contact, vessel := seedContactID, "MV Samudra Jaya"
 	addr, cost := "Dermaga Koja Utara", "50000"
 	_, poID := createQuotation(t, tx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		ContactID:       &contact,
 		VesselName:      &vessel,
@@ -99,6 +100,18 @@ func TestDeliveryNote_Faults(t *testing.T) {
 		{
 			"reading the lines fails",
 			func(inner db.Executor) db.Executor { return &testutil.CountingExec{Inner: inner, FailAfter: 1} },
+			poTemplatesRoot,
+		},
+		{
+			// Never a note with a blank address.
+			"reading the client fails",
+			func(inner db.Executor) db.Executor { return &testutil.CountingExec{Inner: inner, FailAfter: 2} },
+			poTemplatesRoot,
+		},
+		{
+			// Never a note with a blank Attn and vessel.
+			"reading the quotation fails",
+			func(inner db.Executor) db.Executor { return &testutil.CountingExec{Inner: inner, FailAfter: 3} },
 			poTemplatesRoot,
 		},
 		{

@@ -497,7 +497,9 @@ func TestWholeSave_ClearsOwnLineLocks(t *testing.T) {
 	_, err = repo.Lock(ctx, q.id, "header", seedUserID)
 	require.NoError(t, err)
 
-	req := quotations.UpdateRequest{DiscountPct: "0", Items: []quotations.CreateItem{offered()}}
+	req := quotations.UpdateRequest{
+		ValidityDays: intPtr(30), DiscountPct: "0", Items: []quotations.CreateItem{offered()},
+	}
 	_, err = repo.Update(ctx, q.id, req, seedUserID, nil)
 	require.NoError(t, err)
 	locks, err := repo.EditLocks(ctx, q.id)

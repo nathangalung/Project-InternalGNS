@@ -6,16 +6,19 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import * as clientsApi from "@/features/clients/api"
+import { contactEmailError } from "@/features/clients/helpers"
 import { errorMessage } from "@/lib/errors"
+import { type LookupOptions, lookupThrow } from "@/lib/query-client"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
 
-export function useClients(params: clientsApi.ClientListParams = {}) {
+export function useClients(params: clientsApi.ClientListParams = {}, lookup: LookupOptions = {}) {
   return useQuery({
     queryKey: queryKeys.clients.list(params),
     queryFn: () => clientsApi.list(params),
+    ...lookupThrow(lookup),
     placeholderData: keepPreviousData,
   })
 }
@@ -27,30 +30,37 @@ export function useClientSummary() {
   })
 }
 
-export function useClient(id: number | undefined) {
+export function useClient(id: number | undefined, lookup: LookupOptions = {}) {
   return useQuery({
     queryKey: id ? queryKeys.clients.detail(id) : queryKeys.clients.all,
     queryFn: id !== undefined && id > 0 ? () => clientsApi.get(id) : skipToken,
+    ...lookupThrow(lookup),
   })
 }
 
-export function useClientSearch(q: string, options: { minScore?: number; limit?: number } = {}) {
+export function useClientSearch(
+  q: string,
+  options: { minScore?: number; limit?: number } = {},
+  lookup: LookupOptions = {},
+) {
   return useQuery({
     queryKey: queryKeys.clients.search(q),
     queryFn: () => clientsApi.search(q, options),
     enabled: q.trim().length > 0,
+    ...lookupThrow(lookup),
   })
 }
 
+// Failures show in the form.
 export function useCreateClient() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: clientsApi.create,
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.clients.all }),
-    onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan klien.")),
   })
 }
 
+// Failures show in the form.
 export function useUpdateClient() {
   const qc = useQueryClient()
   return useMutation({
@@ -68,7 +78,6 @@ export function useUpdateClient() {
         void qc.invalidateQueries({ queryKey: key })
       }
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui klien.")),
   })
 }
 
@@ -106,10 +115,14 @@ export function useUpdateContact() {
       void qc.invalidateQueries({ queryKey: queryKeys.clients.lists() })
       void qc.invalidateQueries({ queryKey: queryKeys.clients.detail(companyId) })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui kontak.")),
+    // A taken email sits on the form's email input.
+    onError: (err) => {
+      if (!contactEmailError(err)) toast.error(errorMessage(err, "Gagal memperbarui kontak."))
+    },
   })
 }
 
+// Callers report failures.
 export function useCreateContact() {
   const qc = useQueryClient()
   return useMutation({
@@ -126,7 +139,6 @@ export function useCreateContact() {
       void qc.invalidateQueries({ queryKey: queryKeys.clients.lists() })
       void qc.invalidateQueries({ queryKey: queryKeys.clients.detail(companyId) })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan kontak.")),
   })
 }
 

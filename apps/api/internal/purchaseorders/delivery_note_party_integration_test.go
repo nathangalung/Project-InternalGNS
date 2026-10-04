@@ -28,7 +28,8 @@ func TestDeliveryNote_PartyBreaksLongTokens(t *testing.T) {
 		quotations.NewRepo(tx, store), pdfgen.NewRenderer(t.TempDir()),
 	)
 
-	gotName, gotAddr := h.PDFPartyForTest(ctx, purchaseorders.PurchaseOrder{CompanyClientID: seedCompanyID, CompanyName: name})
+	gotName, gotAddr, err := h.PDFPartyForTest(ctx, purchaseorders.PurchaseOrder{CompanyClientID: seedCompanyID, CompanyName: name})
+	require.NoError(t, err)
 
 	assert.Equal(t, pdfgen.LatexBreakable(name), gotName)
 	assert.Equal(t, pdfgen.LatexBreakable(addr), gotAddr)

@@ -2,15 +2,9 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router"
 import { useEffect, useId, useRef, useState } from "react"
 import { useAuth, useMe } from "@/features/auth/hooks"
 import ChangeOwnPasswordModal from "@/features/users/ChangeOwnPasswordModal"
+import { ROLE_LABEL } from "@/features/users/helpers"
 import { roleCanAccess, type Section, sectionFromPathname } from "@/lib/rbac"
 import { ui } from "@/lib/ui"
-import type { Role } from "@/types/api"
-
-const ROLE_LABEL: Record<Role, string> = {
-  superadmin: "Super Admin",
-  operational: "Operasional",
-  finance: "Finance",
-}
 
 const logoImg = "/logo.png"
 

@@ -1,9 +1,10 @@
 import { useId, useState } from "react"
 import Modal from "@/components/shared/Modal"
+import { ITEM_FIELDS, type ItemField } from "@/features/items/helpers"
 import { useCreateItem } from "@/features/items/hooks"
 import { useUnits } from "@/features/units/hooks"
 import UnitCombobox from "@/features/units/UnitCombobox"
-import { errorMessage } from "@/lib/errors"
+import { formErrors } from "@/lib/form-errors"
 import { ui } from "@/lib/ui"
 
 type ProductCreateModalData = {
@@ -31,11 +32,14 @@ export default function ProductCreateModal({
   const [satuanQuery, setSatuanQuery] = useState("")
   const [aktif, setAktif] = useState(true)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<ItemField, string>>>({})
 
   const { data: units } = useUnits()
   const createItem = useCreateItem()
   const nameId = useId()
+  const nameErrorId = useId()
   const impaId = useId()
+  const impaErrorId = useId()
   const unitId = useId()
   const statusId = useId()
 
@@ -46,6 +50,7 @@ export default function ProductCreateModal({
   async function handleSubmit() {
     if (!isValid) return
     setSubmitError(null)
+    setFieldErrors({})
     const unit = units?.find((u) => u.code === satuan)
     try {
       const created = await createItem.mutateAsync({
@@ -58,7 +63,9 @@ export default function ProductCreateModal({
       reset()
       onOpenChange(false)
     } catch (err) {
-      setSubmitError(errorMessage(err, "Gagal menyimpan produk."))
+      const split = formErrors(err, ITEM_FIELDS, "Gagal menyimpan produk.")
+      setFieldErrors(split.fields)
+      setSubmitError(split.banner)
     }
   }
 
@@ -74,6 +81,7 @@ export default function ProductCreateModal({
     setSatuanQuery("")
     setAktif(true)
     setSubmitError(null)
+    setFieldErrors({})
   }
 
   return (
@@ -115,12 +123,22 @@ export default function ProductCreateModal({
           </label>
           <input
             id={nameId}
-            className={`${ui.fieldInput} font-sans`}
+            className={`${ui.fieldInput} font-sans ${fieldErrors.name ? "border-error" : ""}`}
             type="text"
             placeholder="Masukkan nama produk..."
+            aria-invalid={fieldErrors.name ? true : undefined}
+            aria-describedby={fieldErrors.name ? nameErrorId : undefined}
             value={nama}
-            onChange={(e) => setNama(e.target.value)}
+            onChange={(e) => {
+              setNama(e.target.value)
+              setFieldErrors((p) => ({ ...p, name: undefined }))
+            }}
           />
+          {fieldErrors.name && (
+            <p id={nameErrorId} className="text-[12px] text-error">
+              {fieldErrors.name}
+            </p>
+          )}
         </div>
 
         <div className={ui.field}>
@@ -129,13 +147,23 @@ export default function ProductCreateModal({
           </label>
           <input
             id={impaId}
-            className={`${ui.fieldInput} font-sans`}
+            className={`${ui.fieldInput} font-sans ${fieldErrors.impaCode ? "border-error" : ""}`}
             type="text"
             inputMode="numeric"
             placeholder="Contoh: 330212"
+            aria-invalid={fieldErrors.impaCode ? true : undefined}
+            aria-describedby={fieldErrors.impaCode ? impaErrorId : undefined}
             value={kode}
-            onChange={(e) => setKode(e.target.value.replace(/\D/g, ""))}
+            onChange={(e) => {
+              setKode(e.target.value.replace(/\D/g, ""))
+              setFieldErrors((p) => ({ ...p, impaCode: undefined }))
+            }}
           />
+          {fieldErrors.impaCode && (
+            <p id={impaErrorId} className="text-[12px] text-error">
+              {fieldErrors.impaCode}
+            </p>
+          )}
         </div>
 
         <div className={ui.field}>

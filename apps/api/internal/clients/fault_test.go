@@ -85,6 +85,7 @@ func TestRepo_MoreErrorPaths(t *testing.T) {
 			return err
 		}},
 		{"deactivate contact", func() error { return r.DeactivateContact(ctx, 1, 1, 1) }},
+		{"get contact", func() error { _, err := r.GetContact(ctx, 1, 1); return err }},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

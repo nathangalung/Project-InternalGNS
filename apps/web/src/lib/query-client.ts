@@ -10,6 +10,22 @@ export function shouldRetry(failureCount: number, error: unknown): boolean {
   return failureCount < 1
 }
 
+export type LookupOptions = { throwOnError?: false }
+
+// Lookup kept out of boundary.
+//
+// For a lookup inside a form or dialog whose unsaved input the route error
+// boundary would discard.
+export const INLINE_LOOKUP = { throwOnError: false } as const satisfies LookupOptions
+
+// A lookup's boundary opt-out.
+//
+// Spread into useQuery options. An absent key leaves the client default,
+// which an explicit undefined key would override.
+export function lookupThrow({ throwOnError }: LookupOptions): LookupOptions {
+  return throwOnError === false ? { throwOnError } : {}
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

@@ -72,7 +72,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 // Export streams the filtered list.
-// The XLSX carries delivery-note numbers.
+// The XLSX carries delivery-note numbers. The note's own date and the
+// client's PO date are separate columns, each named for what it is.
 func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 	f := parseListFilter(r)
 	f.Limit, f.Offset = listq.Unbounded, 0
@@ -83,22 +84,30 @@ func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WarnIfTruncated(r.Context(), "purchaseorders.export", res.Total, len(res.Rows))
-	headers := []string{"No. Delivery Note", "No. PO", "No. Quotation", "Tanggal", "Klien", "Status", "Total"}
+	headers := []string{
+		"No. Delivery Note", "Tanggal Delivery Note", "No. PO", "Tanggal PO",
+		"No. Quotation", "Klien", "Status", "Total",
+	}
 	rows := make([][]string, 0, len(res.Rows))
 	for _, po := range res.Rows {
 		// Same rule as the PDF: blank unless the note can be printed.
-		dn, _ := issuedDeliveryNote(po)
+		dn, issued := issuedDeliveryNote(po)
+		dnDate := ""
+		if issued {
+			dnDate = deliveryNoteDate(po).In(tz.Jakarta()).Format("2006-01-02")
+		}
 		rows = append(rows, []string{
 			dn,
+			dnDate,
 			po.PoNumber,
-			po.QuotationNo,
 			po.PoDate.In(tz.Jakarta()).Format("2006-01-02"),
+			po.QuotationNo,
 			po.CompanyName,
 			StatusLabel(po.Status),
 			po.PoGrandTotal,
 		})
 	}
-	data, err := sheet.Write("Delivery Note", headers, rows, 6)
+	data, err := sheet.Write("Delivery Note", headers, rows, 7)
 	if err != nil {
 		httperr.RenderDBErrCtx(r.Context(), w, err)
 		return

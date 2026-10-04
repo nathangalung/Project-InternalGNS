@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import * as vendorsApi from "@/features/vendors/api"
 import { shrinkImage } from "@/lib/image-shrink"
+import { INLINE_LOOKUP } from "@/lib/query-client"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
@@ -395,6 +396,44 @@ describe("useItemVendors", () => {
   it("keeps a failure out of the route error boundary", async () => {
     m.listVendors.mockRejectedValue(new Error("502"))
     const { result } = renderQueryHook(() => useItemVendors(9), throwingQueryClient())
+    await until(() => expect(result.current.isError).toBe(true))
+  })
+})
+
+// Line dialog keeps its document.
+describe("ProductAdd lookups", () => {
+  const fail = new Error("502")
+  const cases: [string, () => void, () => { isError: boolean }][] = [
+    [
+      "catalog list",
+      () => m.list.mockRejectedValue(fail),
+      () => useItems({ limit: 50 }, INLINE_LOOKUP),
+    ],
+    [
+      "catalog search",
+      () => m.searchAdvanced.mockRejectedValue(fail),
+      () => useItemSearchAdvanced("baut", { limit: 10 }, INLINE_LOOKUP),
+    ],
+    [
+      "vendor search",
+      () => vendors.list.mockRejectedValue(fail),
+      () => useActiveVendorOptions("sinar"),
+    ],
+    [
+      "recommendation",
+      () => m.recommend.mockRejectedValue(fail),
+      () => useLineRecommendation(9, 3),
+    ],
+    [
+      "price history",
+      () => m.priceHistory.mockRejectedValue(fail),
+      () => useItemPriceHistory(9, 10),
+    ],
+  ]
+
+  it.each(cases)("%s keeps a failure out of the route error boundary", async (_n, arm, hook) => {
+    arm()
+    const { result } = renderQueryHook(hook, throwingQueryClient())
     await until(() => expect(result.current.isError).toBe(true))
   })
 })

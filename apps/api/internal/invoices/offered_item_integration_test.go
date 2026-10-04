@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/invoices"
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
@@ -49,6 +48,7 @@ func offeredItemPOWithInvoice(t *testing.T, tx pgx.Tx, offered int64) int64 {
 
 	qrepo := quotations.NewRepo(tx, store)
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{
@@ -81,9 +81,6 @@ func newExportHandler(t *testing.T, tx pgx.Tx) *invoices.ExportHandler {
 	store := testutil.Store(t)
 	return invoices.NewExportHandler(
 		invoices.NewRepo(tx, store),
-		clients.NewRepo(tx, store),
-		quotations.NewRepo(tx, store),
-		purchaseorders.NewRepo(tx, store),
 		pdfgen.NewRenderer(t.TempDir()),
 		deps.PdfSettings{},
 	)
@@ -115,7 +112,7 @@ func pdfLineNames(t *testing.T, tx pgx.Tx, invID int64) []string {
 	require.NoError(t, err)
 	items, err := repo.ListItems(ctx, invID)
 	require.NoError(t, err)
-	return newExportHandler(t, tx).PDFTotalsForTest(ctx, inv, items).LineNames
+	return newExportHandler(t, tx).PDFTotalsForTest(invoices.InvoiceDetail{Invoice: inv}, items).LineNames
 }
 
 func TestInvoice_SnapshotsOfferedItem(t *testing.T) {

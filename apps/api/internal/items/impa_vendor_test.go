@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -131,6 +132,15 @@ func TestHandler_MatchRows_IMPAIgnoresCase(t *testing.T) {
 	}
 }
 
+// requireIMPATaken expects the impaCode field.
+func requireIMPATaken(t *testing.T, res *http.Response, msg string) {
+	t.Helper()
+	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode, msg)
+	var p httperr.Error
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&p))
+	assert.Equal(t, map[string]string{"impaCode": "Kode IMPA ini sudah dipakai produk aktif lain."}, p.Fields, msg)
+}
+
 // One active item per IMPA.
 // It covers MD-04.
 func TestHandler_IMPA_DuplicateActiveIsConflict(t *testing.T) {
@@ -146,12 +156,12 @@ func TestHandler_IMPA_DuplicateActiveIsConflict(t *testing.T) {
 		_ = json.NewDecoder(create.Body).Decode(&leaked)
 		testutil.NewCleaner(t).Item(leaked.ID)
 	}
-	assert.Equal(t, http.StatusConflict, create.StatusCode, "create with a taken code")
+	requireIMPATaken(t, create, "create with a taken code")
 
 	upd := doJSON(t, newSrv(t), http.MethodPut, "/items/"+itoa(other.ID),
 		items.UpdateItemRequest{Name: other.Name, IMPACode: ptrS(code), IsActive: true})
 	defer upd.Body.Close()
-	assert.Equal(t, http.StatusConflict, upd.StatusCode, "update onto a taken code")
+	requireIMPATaken(t, upd, "update onto a taken code")
 
 	inactive := false
 	retired := createItem(t, items.CreateItemRequest{
@@ -172,7 +182,7 @@ func TestHandler_MatchRows_SkipsDeactivatedVendorPrice(t *testing.T) {
 		cost   string
 	}{{cheap, "100"}, {dear, "200"}} {
 		res := doJSON(t, newSrv(t), http.MethodPost, "/items/"+itoa(it.ID)+"/vendors",
-			items.AddVendorToItemRequest{VendorID: link.vendor, CostPrice: ptrS(link.cost)})
+			map[string]any{"vendorId": link.vendor, "costPrice": link.cost})
 		res.Body.Close()
 		require.Equal(t, http.StatusCreated, res.StatusCode)
 	}
@@ -212,7 +222,7 @@ func TestHandler_AddVendor_RequiresActiveVendor(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			res := doJSON(t, newSrv(t), http.MethodPost, "/items/"+itoa(it.ID)+"/vendors",
-				items.AddVendorToItemRequest{VendorID: c.vendor, CostPrice: ptrS("150")})
+				map[string]any{"vendorId": c.vendor, "costPrice": "150"})
 			defer res.Body.Close()
 			assert.Equal(t, c.want, res.StatusCode)
 		})

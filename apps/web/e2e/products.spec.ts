@@ -5,7 +5,15 @@ import { expect, test } from "./support/seed"
 //
 // Create, link a vendor, filters and the read-only finance view.
 
-type ItemVendor = { vendorId: number; costPrice?: string }
+// Taken IMPA code copy.
+const IMPA_TAKEN = "Kode IMPA ini sudah dipakai produk aktif lain."
+
+type ItemVendor = {
+  vendorId: number
+  costPrice?: string
+  vendorSku?: string
+  productUrl?: string
+}
 
 test("Tambah Produk adds an item the Katalog search finds", async ({ page, seed }) => {
   const name = seed.name("Produk Baru")
@@ -76,6 +84,38 @@ test("Tambah Vendor searches the server for active vendors and links one", async
   expect(linked).toEqual([expect.objectContaining({ vendorId: active.id, costPrice: "125000.00" })])
 })
 
+// Relinking only reprices.
+test("picking a linked vendor again keeps its SKU and product URL", async ({ page, seed }) => {
+  const item = await seed.item()
+  const vendor = await seed.vendor()
+  const url = "https://toko.example/relink"
+  await api("POST", `/items/${item.id}/vendors`, {
+    vendorId: vendor.id,
+    vendorSku: "SKU-RELINK",
+    costPrice: "100000",
+    productUrl: url,
+  })
+
+  await page.goto(`/products/${item.id}`)
+  await page.getByRole("button", { name: "Tambah Vendor" }).click()
+  const modal = page.getByRole("dialog", { name: "Tambah Vendor Terkait" })
+  await modal.getByLabel("Nama Vendor *").fill(vendor.name)
+  await page.getByRole("option", { name: new RegExp(vendor.name) }).click()
+  await modal.getByLabel("Harga Beli *").fill("150000")
+  await modal.getByRole("button", { name: "Tambahkan" }).click()
+  await expect(modal).toBeHidden()
+
+  const linked = await api<ItemVendor[]>("GET", `/items/${item.id}/vendors`)
+  expect(linked).toEqual([
+    expect.objectContaining({
+      vendorId: vendor.id,
+      costPrice: "150000.00",
+      vendorSku: "SKU-RELINK",
+      productUrl: url,
+    }),
+  ])
+})
+
 test("renaming a product and turning it off saves both", async ({ page, seed }) => {
   const item = await seed.item()
   const renamed = seed.name("Produk Ganti Nama")
@@ -93,19 +133,35 @@ test("renaming a product and turning it off saves both", async ({ page, seed }) 
     .toEqual([renamed, false])
 })
 
-// One message per failed save.
-test("a refused save is reported once, under the form", async ({ page, seed }) => {
+// One message, on Kode IMPA.
+test("a taken IMPA code is reported once, on its field", async ({ page, seed }) => {
   const taken = await seed.item()
   const item = await seed.item()
   await page.goto(`/products/${item.id}`)
-  await page.getByLabel("Kode IMPA").fill(taken.impaCode)
+  const impa = page.getByLabel("Kode IMPA")
+  await impa.fill(taken.impaCode)
   await page.getByRole("button", { name: "Simpan Perubahan" }).click()
 
-  const inline = page.getByRole("main").getByRole("alert")
-  await expect(inline).toBeVisible()
-  const text = (await inline.textContent())?.trim() ?? ""
-  expect(text).not.toBe("")
-  await expect(page.getByText(text, { exact: true })).toHaveCount(1)
+  await expect(impa).toHaveAttribute("aria-invalid", "true")
+  await expect(page.getByText(IMPA_TAKEN, { exact: true })).toHaveCount(1)
+  await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0)
+})
+
+test("Tambah Produk shows a taken IMPA code on its field", async ({ page, seed }) => {
+  const taken = await seed.item()
+  await page.goto("/products")
+  await page.getByRole("button", { name: "Tambah Produk" }).click()
+  const modal = page.getByRole("dialog", { name: "Tambah Produk Baru" })
+  await modal.getByLabel("Nama Produk *").fill(seed.name("Produk Kembar"))
+  const impa = modal.getByLabel("Kode IMPA")
+  await impa.fill(taken.impaCode)
+  await modal.getByRole("button", { name: "Tambahkan" }).click()
+
+  await expect(impa).toHaveAttribute("aria-invalid", "true")
+  await expect(page.getByText(IMPA_TAKEN, { exact: true })).toHaveCount(1)
+  await expect(modal.getByRole("alert")).toHaveCount(0)
+  await modal.getByRole("button", { name: "Batal" }).click()
+  await expect(modal).toBeHidden()
 })
 
 test.describe("as finance", () => {

@@ -20,6 +20,9 @@ func TestRepo_List_EscapesLikeWildcards(t *testing.T) {
 		UPDATE company_client SET name = 'PT Seratus% Laut'
 		WHERE id = (SELECT company_client_id FROM invoices WHERE id = $1)`, invID)
 	require.NoError(t, err)
+	// The row shows the invoiced name.
+	_, err = tx.Exec(ctx, `UPDATE invoices SET buyer_name = 'PT Seratus% Laut' WHERE id = $1`, invID)
+	require.NoError(t, err)
 	repo := invoices.NewRepo(tx, testutil.Store(t))
 
 	ids := func(q string) []int64 {

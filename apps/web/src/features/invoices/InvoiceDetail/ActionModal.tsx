@@ -18,7 +18,7 @@ const PROOF_ACCEPT = ".pdf,.png,.jpg,.jpeg,.webp,.xlsx,.xls"
 const COPY: Record<ActionModalKind, { title: string; submit: string }> = {
   send: { title: "Tandai Invoice Dikirim", submit: "Tandai Dikirim" },
   pay: { title: "Tandai Invoice Dibayar", submit: "Tandai Dibayar" },
-  cancel: { title: "Batalkan & Terbitkan Pengganti", submit: "Batalkan & Terbitkan" },
+  cancel: { title: "Batalkan Invoice", submit: "Batalkan Invoice" },
   replace: { title: "Terbitkan Invoice Pengganti", submit: "Terbitkan Pengganti" },
 }
 
@@ -112,9 +112,9 @@ export default function ActionModal({
         {kind === "cancel" && (
           <>
             <p>
-              Invoice <strong className="text-dark-900">{invoiceNo}</strong> akan dibatalkan, lalu
-              invoice pengganti berstatus Draf diterbitkan untuk PO yang sama. Pembatalan tidak
-              dapat dikembalikan.
+              Invoice <strong className="text-dark-900">{invoiceNo}</strong> akan dibatalkan.
+              Pembatalan tidak dapat dikembalikan. Setelah itu baris PO dapat diperbaiki melalui
+              Ubah PO, lalu terbitkan invoice pengganti dari halaman ini.
             </p>
             <div className={ui.field}>
               <label htmlFor={noteId} className={ui.fieldLabel}>
@@ -142,7 +142,8 @@ export default function ActionModal({
         {kind === "replace" && (
           <p>
             Invoice pengganti berstatus Draf akan diterbitkan untuk PO yang sama, menggantikan{" "}
-            <strong className="text-dark-900">{invoiceNo}</strong>.
+            <strong className="text-dark-900">{invoiceNo}</strong>, dengan baris dan data klien saat
+            ini. Pastikan PO sudah diperbaiki; setelah pengganti terbit, baris PO terkunci lagi.
           </p>
         )}
       </div>

@@ -16,7 +16,7 @@ import (
 // A 60-character name with no space overflows its A5 cell unless the PDF
 // line carries break points; short names print exactly as escaped.
 func TestExport_LineNamesBreakLongTokens(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
+	_, tx := testutil.BeginTx(t)
 	part := "GNS" + strings.Repeat("7X4Q", 14) + "Z"
 	require.Len(t, part, 60)
 	items := []invoices.InvoiceItem{
@@ -24,7 +24,7 @@ func TestExport_LineNamesBreakLongTokens(t *testing.T) {
 		{LineType: "product", ItemName: "Tali_Tambang", Qty: "2", UnitPrice: "5000"},
 	}
 
-	got := newExportHandler(t, tx).PDFTotalsForTest(ctx, invoices.Invoice{}, items).LineNames
+	got := newExportHandler(t, tx).PDFTotalsForTest(invoices.InvoiceDetail{}, items).LineNames
 
 	assert.Equal(t, []string{pdfgen.LatexBreakable(part), `Tali\_Tambang`}, got)
 }
@@ -33,7 +33,7 @@ func TestExport_LineNamesBreakLongTokens(t *testing.T) {
 // The Description cell prints the ship destination, which overflows its
 // cell as one unbroken token unless the line carries break points.
 func TestExport_LineDescriptionsBreakLongTokens(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
+	_, tx := testutil.BeginTx(t)
 	dest := "GUDANG" + strings.Repeat("TANJUNGPRIOK", 4) + "BLOKC7"
 	short := "Deck & Hold #2"
 	items := []invoices.InvoiceItem{
@@ -42,7 +42,7 @@ func TestExport_LineDescriptionsBreakLongTokens(t *testing.T) {
 		{LineType: "product", ItemName: "Lampu", Qty: "1", UnitPrice: "5000"},
 	}
 
-	got := newExportHandler(t, tx).PDFTotalsForTest(ctx, invoices.Invoice{}, items).LineDescriptions
+	got := newExportHandler(t, tx).PDFTotalsForTest(invoices.InvoiceDetail{}, items).LineDescriptions
 
 	assert.Equal(t, []string{pdfgen.LatexBreakable(dest), `Deck \& Hold \#2`, ""}, got)
 }
@@ -51,13 +51,12 @@ func TestExport_LineDescriptionsBreakLongTokens(t *testing.T) {
 // The To and Address cells wrap, but one long unbroken token in the client
 // name or address still overflows unless the text carries break points.
 func TestExport_PartyBreaksLongTokens(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
+	_, tx := testutil.BeginTx(t)
 	name := "PT.GlobalMaritimeServicesIndonesia & Co"
 	addr := "Komplek Pergudangan Jl.RayaCakung-Cilincing/Km.3-BlokC7 #12, Jakarta Utara"
-	_, err := tx.Exec(ctx, `UPDATE company_client SET address = $1 WHERE id = $2`, addr, seedCompanyID)
-	require.NoError(t, err)
+	det := invoices.InvoiceDetail{Invoice: invoices.Invoice{CompanyName: name, CompanyAddress: &addr}}
 
-	got := newExportHandler(t, tx).PDFHeaderForTest(ctx, invoices.Invoice{CompanyClientID: seedCompanyID, CompanyName: name}, nil)
+	got := newExportHandler(t, tx).PDFHeaderForTest(det, nil)
 
 	assert.Equal(t, pdfgen.LatexBreakable(name), got.CompanyName)
 	assert.Equal(t, pdfgen.LatexBreakable(addr), got.CompanyAddress)

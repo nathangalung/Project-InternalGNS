@@ -54,10 +54,11 @@ Feature: Item lifecycle
     Then the response status is 200
     And the imported row matched the seeded item by IMPA code
 
-  Scenario: A duplicate active IMPA code returns 409
+  Scenario: A duplicate active IMPA code lands on the IMPA field
     Given an existing item with an IMPA code
     When the user creates another item with the same IMPA code
-    Then the response status is 409
+    Then the response status is 422
+    And the problem field "impaCode" says "Kode IMPA ini sudah dipakai produk aktif lain."
 
   Scenario: Linking an inactive vendor returns 422
     Given an existing item

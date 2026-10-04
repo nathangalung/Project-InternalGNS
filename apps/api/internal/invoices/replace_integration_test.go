@@ -108,8 +108,8 @@ func TestSchema_OneLiveInvoicePerPO(t *testing.T) {
 	_, err := tx.Exec(ctx, `SAVEPOINT dup`)
 	require.NoError(t, err)
 	_, err = tx.Exec(ctx, `
-		INSERT INTO invoices (invoice_no, quotation_id, po_id, company_client_id, invoice_date, status, created_by, updated_by)
-		SELECT 'INV-DUP-LIVE', quotation_id, po_id, company_client_id, invoice_date, 'draft', 1, 1
+		INSERT INTO invoices (invoice_no, quotation_id, po_id, company_client_id, buyer_name, invoice_date, status, created_by, updated_by)
+		SELECT 'INV-DUP-LIVE', quotation_id, po_id, company_client_id, buyer_name, invoice_date, 'draft', 1, 1
 		  FROM invoices WHERE id = $1`, invID)
 	var pgErr *pgconn.PgError
 	require.True(t, errors.As(err, &pgErr), "second live invoice must be refused, got %v", err)

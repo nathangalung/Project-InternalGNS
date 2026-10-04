@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest"
+import { ApiError } from "@/lib/api-client"
 import type { ClientRow, ClientSearchHit } from "@/types/api"
 import {
   clientKpis,
+  contactEmailError,
   contactUpdateBody,
   dedupeByCompany,
   fromClientHit,
@@ -149,7 +151,6 @@ describe("client picker cards", () => {
     email: "budi@laut.id",
     npwp: "01.234",
     nomorTKU: "TKU1",
-    referenceNumber: "C-007",
     lokasi: "Jakarta",
     contactId: 3,
   }
@@ -189,5 +190,25 @@ describe("dedupeByCompany", () => {
 
   it("returns nothing for no hits", () => {
     expect(dedupeByCompany([])).toEqual([])
+  })
+})
+
+describe("contactEmailError", () => {
+  const taken = "Email ini sudah dipakai kontak aktif lain, di klien ini atau klien lain."
+  const problem = (fields: Record<string, string>) => ({
+    type: "about:blank",
+    title: "Unprocessable Entity",
+    status: 422,
+    fields,
+  })
+  it.each<[string, unknown, string | undefined]>([
+    ["taken email", new ApiError(422, problem({ email: taken }), taken), taken],
+    ["blank email message", new ApiError(422, problem({ email: "  " }), "x"), undefined],
+    ["another field", new ApiError(422, problem({ phone: "x" }), "x"), undefined],
+    ["no body", new ApiError(422, null, "x"), undefined],
+    ["a conflict", new ApiError(409, problem({ email: taken }), taken), undefined],
+    ["not an api error", new Error(taken), undefined],
+  ])("%s", (_name, err, want) => {
+    expect(contactEmailError(err)).toBe(want)
   })
 })

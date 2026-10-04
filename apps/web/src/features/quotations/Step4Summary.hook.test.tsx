@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { mount, unmount } from "@/test/dom"
+import { mount, type, unmount } from "@/test/dom"
 import Step4Summary from "./Step4Summary"
 
 const totals = {
@@ -38,6 +38,8 @@ describe("Step4Summary terms", () => {
       setJatuhTempo: vi.fn(),
       berlakuSampai: "",
       setBerlakuSampai: vi.fn(),
+      clientRefNo: "",
+      setClientRefNo: vi.fn(),
     }
     await mount(<Step4Summary {...base} terms={terms} />)
     expect(text()).toContain("Tenggat Waktu Penawaran")
@@ -57,5 +59,40 @@ describe("Step4Summary terms", () => {
     await mount(<Step4Summary {...base} unknownUnitCount={2} />)
     expect(text()).not.toContain("Tenggat Waktu Penawaran")
     expect(text()).toContain("2 produk memiliki satuan yang tidak dikenal")
+  })
+})
+
+describe("Step4Summary client reference", () => {
+  const terms = {
+    jatuhTempo: "30",
+    setJatuhTempo: vi.fn(),
+    berlakuSampai: "14",
+    setBerlakuSampai: vi.fn(),
+    clientRefNo: "",
+    setClientRefNo: vi.fn(),
+  }
+  const client = {
+    id: "7",
+    name: "PT Laut Biru",
+    narahubung: "Budi",
+    country: "ID",
+    initials: "LB",
+  }
+  const refInput = () => document.querySelector<HTMLInputElement>('input[maxlength="100"]')
+
+  // Printed as Your Ref No.; the client number never stands in.
+  it("takes the client's own reference", async () => {
+    await mount(<Step4Summary {...base} terms={terms} currentClient={client} />)
+    const input = refInput()
+    if (!input) throw new Error("no reference input")
+    expect(input.labels?.[0]?.textContent).toContain("No. Referensi Klien")
+    expect(text()).not.toContain("Reference Number")
+    await type(input, "V-26-2405-002-E")
+    expect(terms.setClientRefNo).toHaveBeenCalledWith("V-26-2405-002-E")
+  })
+
+  it("is read-only while another user holds the header", async () => {
+    await mount(<Step4Summary {...base} terms={terms} readOnly />)
+    expect(refInput()?.disabled).toBe(true)
   })
 })

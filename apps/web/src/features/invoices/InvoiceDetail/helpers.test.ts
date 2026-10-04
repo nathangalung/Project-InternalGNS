@@ -73,7 +73,7 @@ describe("invoiceActions", () => {
     const [cancel] = invoiceActions([move("cancelled", true)])
     expect(cancel).toEqual({
       kind: "cancel",
-      label: "Batalkan & Terbitkan Pengganti",
+      label: "Batalkan Invoice",
       requiresNote: true,
     })
   })

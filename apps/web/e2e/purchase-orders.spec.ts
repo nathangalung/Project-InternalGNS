@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test"
-import type { PurchaseOrderItemRow } from "../src/types/generated"
+import type { InvoiceDetail, PurchaseOrderItemRow } from "../src/types/generated"
 import { api, idFrom, pdfFile, rupiah, type SalesSeed, type SeedClient } from "./support/sales"
 import { expect, test } from "./support/seed"
 
@@ -394,6 +394,89 @@ test.describe("purchase order after invoicing", () => {
     await expect(page.getByRole("button", { name: "Ganti Berkas" })).toHaveCount(0)
     await expect(page.getByRole("button", { name: "Unduh Berkas" })).toBeVisible()
   })
+
+  test("a cancelled invoice reopens Ubah PO until its Pengganti", async ({ page, seed }) => {
+    const { q, po } = await acceptedPo(seed)
+    const invoice = await seed.deliver(po)
+    await page.goto(`/purchase-orders/${q.id}`)
+    const edit = page.getByRole("button", { name: "Ubah", exact: true })
+    await expect(edit).toBeDisabled()
+
+    await api("PATCH", `/invoices/${invoice.id}/status`, {
+      status: "cancelled",
+      note: "Salah jumlah",
+    })
+    await page.reload()
+    await expect(edit).toBeEnabled()
+    await edit.click()
+    await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}/edit$`))
+    await expect(page.getByRole("heading", { name: "Edit Purchase Order" })).toBeVisible()
+
+    await api("POST", `/invoices/${invoice.id}/replacement`)
+    await page.goto(`/purchase-orders/${q.id}`)
+    await expect(edit).toBeDisabled()
+    await page.goto(`/purchase-orders/${q.id}/edit`)
+    await expect(page.getByText("Purchase Order tidak dapat diubah")).toBeVisible()
+  })
+
+  test("the UI cancel lets Ubah PO correct what the Pengganti bills", async ({ page, seed }) => {
+    const { q, po } = await acceptedPo(seed)
+    const invoice = await seed.deliver(po)
+    const bar = page.getByRole("region", { name: "Status Invoice" })
+
+    await test.step("cancel the invoice on its page", async () => {
+      await page.goto(`/invoices/${q.id}`)
+      await bar.getByRole("button", { name: "Batalkan Invoice" }).click()
+      const dialog = page.getByRole("dialog", { name: "Batalkan Invoice" })
+      await dialog.getByLabel("Alasan Pembatalan").fill("Salah jumlah")
+      await dialog.getByRole("button", { name: "Batalkan Invoice", exact: true }).click()
+      await expect(dialog).toBeHidden()
+      // No Pengganti yet, so the lines stay open.
+      await expect(bar.getByRole("button", { name: "Terbitkan Pengganti" })).toBeVisible()
+    })
+
+    await test.step("correct the quantity in Ubah PO", async () => {
+      await page.goto(`/purchase-orders/${q.id}`)
+      await page.getByRole("button", { name: "Ubah", exact: true }).click()
+      await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}/edit$`))
+      await page.getByRole("button", { name: "Edit produk 1" }).click()
+      const modal = page.getByRole("dialog", { name: "Edit Produk PO" })
+      await modal.getByLabel("Jumlah Produk *").fill("1")
+      await modal.getByRole("button", { name: "Simpan Perubahan" }).click()
+      await expect(modal).toBeHidden()
+      await page.getByRole("button", { name: "Lanjut" }).click()
+      await page.getByRole("button", { name: "Lanjut" }).click()
+      await page.getByRole("button", { name: "Simpan", exact: true }).click()
+      await expect(page).toHaveURL(new RegExp(`/purchase-orders/${q.id}$`))
+      await expect
+        .poll(async () => (await seed.poByQuotation(q.id)).poTotalProduk)
+        .toBe("100000.00")
+    })
+
+    await test.step("the Pengganti bills the corrected line and relocks it", async () => {
+      await page.goto(`/invoices/${q.id}`)
+      await bar.getByRole("button", { name: "Terbitkan Pengganti" }).click()
+      const dialog = page.getByRole("dialog", { name: "Terbitkan Invoice Pengganti" })
+      await dialog.getByRole("button", { name: "Terbitkan Pengganti", exact: true }).click()
+      await expect(dialog).toBeHidden()
+      await expect(bar.getByText(`Menggantikan ${invoice.invoiceNo}`)).toBeVisible()
+
+      const next = await api<InvoiceDetail>("GET", `/invoices/by-quotation/${q.id}`)
+      const corrected = await seed.poByQuotation(q.id)
+      expect(next.id).not.toBe(invoice.id)
+      expect(next.total).toBe(corrected.poGrandTotal)
+      expect(next.total).not.toBe(invoice.total)
+      const breakdown = page.getByRole("heading", { name: "Rincian Biaya" }).locator("xpath=..")
+      await expect(
+        breakdown
+          .getByText("Grand Total", { exact: true })
+          .locator("xpath=following-sibling::*[1]"),
+      ).toHaveText(rupiah(Number(next.total)))
+
+      await page.goto(`/purchase-orders/${q.id}`)
+      await expect(page.getByRole("button", { name: "Ubah", exact: true })).toBeDisabled()
+    })
+  })
 })
 
 test.describe("purchase order list", () => {
@@ -540,6 +623,8 @@ test.describe("purchase order address gaps", () => {
     page,
     seed,
   }) => {
+    // Walks the client edit, Ubah PO and two status moves.
+    test.slow()
     const qid = await addresslessQuotation(page, seed)
     const po = await seed.accept(qid)
     await seed.attachPoFile(po)
@@ -660,5 +745,30 @@ test.describe("purchase order contact gap", () => {
     await choosePoStatus(page, "PO Diunggah", "Dalam Progres")
     await expect(page).toHaveURL(/\/purchase-orders$/)
     expect((await seed.poByQuotation(q.id)).status).toBe("ON_PROGRESS")
+  })
+
+  test("a failed contact load says so and retries, never claiming no contacts", async ({
+    page,
+    seed,
+  }) => {
+    const client = await seed.client()
+    const { q } = await acceptedPo(seed, { client })
+    // The first load and its one retry fail.
+    let failures = 2
+    await page.route(`**/api/v1/clients/${client.id}/contacts`, (route) => {
+      if (failures === 0) return route.fallback()
+      failures--
+      return route.fulfill({ status: 500, contentType: "application/problem+json", body: "{}" })
+    })
+
+    await page.goto(`/quotations/${q.id}?narahubung=true`)
+    const picker = page.getByRole("dialog", { name: "Ganti Narahubung" })
+    await expect(picker.getByRole("alert")).toContainText("Gagal memuat narahubung.")
+    await expect(picker.getByText(/belum memiliki narahubung aktif/)).toHaveCount(0)
+    await picker.getByRole("button", { name: "Coba Lagi" }).click()
+    await expect(
+      picker.getByRole("button", { name: new RegExp(`${seed.prefix} Narahubung`) }),
+    ).toBeVisible()
+    await expect(picker.getByRole("alert")).toHaveCount(0)
   })
 })

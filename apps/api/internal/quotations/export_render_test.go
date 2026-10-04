@@ -109,7 +109,7 @@ func sampleExport(productLines int) exportData {
 	validity := 14
 	d.ValidityDays = &validity
 	d.ContactName = qStr("Bapak Riza Chair")
-	return buildExportData(d, qUnits, "riza@example.com", "0811-000-000", "Director")
+	return buildExportData(d, qUnits, "riza@example.com", "0811-000-000", "Director", exportNow)
 }
 
 // badBoxes lists bad box lines.
@@ -237,7 +237,7 @@ func TestQuotationPDF_LongPartNumberWraps(t *testing.T) {
 				Quotation: header("1000.00", "1000.00", "0.00", "1000.00", "916.67", "110.00", "1110.00"),
 				Items:     items,
 			}
-			data := buildExportData(d, qUnits, "", "", "Director")
+			data := buildExportData(d, qUnits, "", "", "Director", exportNow)
 			if !strings.Contains(data.Items[0].Request, `\discretionary{}{}{}`) {
 				t.Fatalf("Request %q has no break points", data.Items[0].Request)
 			}

@@ -70,6 +70,7 @@ func TestQuotationTax_PerLine(t *testing.T) {
 
 	t.Run("whole save", func(t *testing.T) {
 		upd := quotations.UpdateRequest{
+			ValidityDays:    intPtr(30),
 			DiscountPct:     "2.5",
 			ShippingAddress: centsCreate().ShippingAddress,
 			ShippingCost:    centsCreate().ShippingCost,

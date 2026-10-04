@@ -3,6 +3,7 @@ package purchaseorders
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -85,7 +86,11 @@ func (h *DeliveryNoteHandler) ExportPDF(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	data := h.buildData(r.Context(), po, dnNo, items)
+	data, err := h.buildData(r.Context(), po, dnNo, items)
+	if err != nil {
+		httperr.RenderDBErrCtx(r.Context(), w, err)
+		return
+	}
 
 	pdf, err := h.renderer.Render(r.Context(), "delivery_note/DeliveryNote.tex.tmpl", data)
 	if err != nil {
@@ -111,17 +116,23 @@ func issuedDeliveryNote(po PurchaseOrder) (string, bool) {
 	return *po.DeliveryNoteNumber, true
 }
 
-func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, dnNo string, items []PurchaseOrderItem) dnData {
-	client, _ := h.clients.GetByID(ctx, po.CompanyClientID)
+// buildData maps the note.
+// A failed client or quotation read is an error, never a note with a blank
+// address, Attn or vessel; only a missing row prints blank.
+func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, dnNo string, items []PurchaseOrderItem) (dnData, error) {
+	client, err := h.clients.GetByID(ctx, po.CompanyClientID)
+	if err != nil && !errors.Is(err, clients.ErrNotFound) {
+		return dnData{}, fmt.Errorf("delivery note client: %w", err)
+	}
 
 	attn, vessel := "", ""
-	if q, err := h.quotations.GetDetail(ctx, po.QuotationID); err == nil {
-		if q.ContactName != nil {
-			attn = *q.ContactName
-		}
-		if q.VesselName != nil {
-			vessel = *q.VesselName
-		}
+	q, err := h.quotations.GetDetail(ctx, po.QuotationID)
+	switch {
+	case errors.Is(err, quotations.ErrNotFound):
+	case err != nil:
+		return dnData{}, fmt.Errorf("delivery note quotation: %w", err)
+	default:
+		attn, vessel = pdfgen.StrDeref(q.ContactName), pdfgen.StrDeref(q.VesselName)
 	}
 
 	return dnData{
@@ -134,7 +145,7 @@ func (h *DeliveryNoteHandler) buildData(ctx context.Context, po PurchaseOrder, d
 		VesselName:     pdfgen.LatexEscape(vessel),
 		DateLine:       pdfgen.JakartaDateLine(deliveryNoteDate(po).In(tz.Jakarta())),
 		Items:          deliveryNoteItems(items),
-	}
+	}, nil
 }
 
 // deliveryNoteDate dates the note.

@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/invoices"
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
 	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
@@ -28,6 +27,7 @@ func discountedPOWithInvoice(t *testing.T, tx pgx.Tx) int64 {
 	cost := "50000"
 	qrepo := quotations.NewRepo(tx, store)
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "10",
 		ShippingAddress: &addr,
@@ -119,13 +119,10 @@ func TestExport_TotalsBlockBalances(t *testing.T) {
 	// And the same three figures as the builder wires them into the template.
 	h := invoices.NewExportHandler(
 		repo,
-		clients.NewRepo(tx, store),
-		quotations.NewRepo(tx, store),
-		purchaseorders.NewRepo(tx, store),
 		pdfgen.NewRenderer(t.TempDir()),
 		deps.PdfSettings{},
 	)
-	totals := h.PDFTotalsForTest(ctx, inv, items)
+	totals := h.PDFTotalsForTest(invoices.InvoiceDetail{Invoice: inv}, items)
 	assert.Equal(t, pdfgen.FormatIDRCents(sum), totals.TotalProduk)
 	assert.Equal(t, pdfgen.FormatIDRCents(*inv.TotalDiscount), totals.Diskon)
 	assert.Equal(t, pdfgen.FormatIDRCents(*inv.Dpp), totals.DPP)
@@ -154,13 +151,10 @@ func TestExport_TotalsBlock_NoDiscountHidesRow(t *testing.T) {
 
 	h := invoices.NewExportHandler(
 		repo,
-		clients.NewRepo(tx, store),
-		quotations.NewRepo(tx, store),
-		purchaseorders.NewRepo(tx, store),
 		pdfgen.NewRenderer(t.TempDir()),
 		deps.PdfSettings{},
 	)
-	totals := h.PDFTotalsForTest(ctx, inv, items)
+	totals := h.PDFTotalsForTest(invoices.InvoiceDetail{Invoice: inv}, items)
 	assert.Empty(t, totals.Diskon, "zero discount must not print a Diskon row")
 	assert.Equal(t, pdfgen.FormatIDRCents(*inv.Dpp), totals.DPP)
 	assert.Equal(t, totals.DPP, totals.TotalProduk, "no discount means the two agree")
@@ -171,7 +165,7 @@ func TestExport_TotalsBlock_NoDiscountHidesRow(t *testing.T) {
 // DPP, so a truncated print would not add up (5.000 + 550 = 5.551) and would
 // differ from the VAT filed to Coretax.
 func TestExport_PrintsSen(t *testing.T) {
-	ctx, tx := testutil.BeginTx(t)
+	_, tx := testutil.BeginTx(t)
 	s := func(v string) *string { return &v }
 	inv := invoices.Invoice{
 		Dpp:           s("5000.95"),
@@ -184,7 +178,7 @@ func TestExport_PrintsSen(t *testing.T) {
 		{LineType: "product", ItemName: "Tali", Qty: "1", UnitPrice: "5000.95"},
 	}
 
-	got := newExportHandler(t, tx).PDFTotalsForTest(ctx, inv, items)
+	got := newExportHandler(t, tx).PDFTotalsForTest(invoices.InvoiceDetail{Invoice: inv}, items)
 	assert.Equal(t, "Rp~5.000,95", got.TotalProduk)
 	assert.Equal(t, "Rp~5.000,95", got.DPP)
 	assert.Equal(t, "Rp~4.584,20", got.DPPNilaiLain)
@@ -203,6 +197,7 @@ func TestExport_FractionalQtyMatchesDPP(t *testing.T) {
 
 	qrepo := quotations.NewRepo(tx, store)
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{
@@ -231,7 +226,7 @@ func TestExport_FractionalQtyMatchesDPP(t *testing.T) {
 	require.NotNil(t, inv.Dpp)
 	assert.Equal(t, 3086.43, mustF(t, *inv.Dpp), "Postgres rounds half away from zero")
 
-	got := newExportHandler(t, tx).PDFTotalsForTest(ctx, inv, items)
+	got := newExportHandler(t, tx).PDFTotalsForTest(invoices.InvoiceDetail{Invoice: inv}, items)
 	assert.Empty(t, got.Diskon, "no discount, no Diskon row")
 	assert.Equal(t, []string{"Rp~3.086,43"}, got.LineAmounts)
 	assert.Equal(t, "Rp~3.086,43", got.TotalProduk)

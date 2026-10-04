@@ -118,6 +118,11 @@ export function vendorInitials(name: string): string {
   return out || "?"
 }
 
+// Item fields the server names.
+// A taken IMPA code comes back as 422 on fields.impaCode.
+export const ITEM_FIELDS = ["name", "impaCode"] as const
+export type ItemField = (typeof ITEM_FIELDS)[number]
+
 // One problem-body field error.
 export function apiFieldError(err: unknown, key: string): string | undefined {
   if (!(err instanceof ApiError)) return undefined

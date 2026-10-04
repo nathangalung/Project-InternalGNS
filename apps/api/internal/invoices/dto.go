@@ -13,13 +13,17 @@ const (
 )
 
 type Invoice struct {
-	ID                  int64      `db:"id"                    json:"id"`
-	InvoiceNo           string     `db:"invoice_no"            json:"invoiceNo"`
-	QuotationID         int64      `db:"quotation_id"          json:"quotationId"`
-	QuotationNo         string     `db:"quotation_no"          json:"quotationNo"`
-	PoID                *int64     `db:"po_id"                 json:"poId,omitempty"`
-	CompanyClientID     int64      `db:"company_client_id"     json:"companyClientId"`
+	ID              int64  `db:"id"                    json:"id"`
+	InvoiceNo       string `db:"invoice_no"            json:"invoiceNo"`
+	QuotationID     int64  `db:"quotation_id"          json:"quotationId"`
+	QuotationNo     string `db:"quotation_no"          json:"quotationNo"`
+	PoID            *int64 `db:"po_id"                 json:"poId,omitempty"`
+	CompanyClientID int64  `db:"company_client_id"     json:"companyClientId"`
+	// Buyer as invoiced.
+	// Snapshotted by fn_create_invoice; a client edit never restates it.
 	CompanyName         string     `db:"company_name"          json:"companyName"`
+	CompanyNpwp         *string    `db:"company_npwp"          json:"companyNpwp,omitempty"`
+	CompanyAddress      *string    `db:"company_address"       json:"companyAddress,omitempty"`
 	InvoiceDate         time.Time  `db:"invoice_date"          json:"invoiceDate"`
 	DueDate             *time.Time `db:"due_date"              json:"dueDate,omitempty"`
 	Subtotal            *string    `db:"subtotal"              json:"subtotal,omitempty"`
@@ -49,8 +53,6 @@ type InvoiceDetail struct {
 	VesselName          *string    `db:"vessel_name"          json:"vesselName,omitempty"`
 	PoNumber            *string    `db:"po_number"            json:"poNumber,omitempty"`
 	PoDate              *time.Time `db:"po_date"              json:"poDate,omitempty"`
-	CompanyNpwp         *string    `db:"company_npwp"         json:"companyNpwp,omitempty"`
-	CompanyAddress      *string    `db:"company_address"      json:"companyAddress,omitempty"`
 	CompanyEmail        *string    `db:"company_email"        json:"companyEmail,omitempty"`
 	CompanyCountryCode  string     `db:"company_country_code" json:"companyCountryCode"`
 	CompanyTkuID        *string    `db:"company_tku_id"       json:"companyTkuId,omitempty"`

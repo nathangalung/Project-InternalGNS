@@ -43,10 +43,10 @@ func paidInvoiceFixture(t *testing.T, ctx context.Context, tx pgx.Tx, invoiceDat
 	require.NoError(t, err)
 
 	_, err = tx.Exec(ctx, `
-		INSERT INTO invoices (invoice_no, quotation_id, po_id, company_client_id,
+		INSERT INTO invoices (invoice_no, quotation_id, po_id, company_client_id, buyer_name,
 		                      invoice_date, due_date, subtotal, dpp, dpp_nilai_lain,
 		                      ppn_amount, total, status, created_by, updated_by)
-		VALUES ('INV-RECON-1', $1, $2, 1, $3::date, $3::date + 30, 10000, 10000, 9166.67,
+		VALUES ('INV-RECON-1', $1, $2, 1, 'PT Uji', $3::date, $3::date + 30, 10000, 10000, 9166.67,
 		        1100.00, 11100.00, 'paid', 1, 1)`, quotationID, poID, invoiceDate)
 	require.NoError(t, err)
 }

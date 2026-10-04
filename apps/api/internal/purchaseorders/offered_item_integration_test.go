@@ -20,6 +20,7 @@ func acceptedQuotationWithOffer(t *testing.T, tx pgx.Tx, requested string, offer
 	ctx := context.Background()
 	qrepo := quotations.NewRepo(tx, testutil.Store(t))
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{{

@@ -8,6 +8,8 @@ import { useCreateQuotation } from "@/features/quotations/hooks"
 import { useUnits } from "@/features/units/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { formatNumber as formatRp } from "@/lib/format"
+import { lookupFailure } from "@/lib/lookup"
+import { INLINE_LOOKUP } from "@/lib/query-client"
 import { ui } from "@/lib/ui"
 import type { QuotationCreateInput, QuotationItemInput } from "@/types/api"
 import { toItemInput } from "./adapters"
@@ -17,7 +19,7 @@ import Step2Product from "./Step2Product"
 import Step3Shipping from "./Step3Shipping"
 import Step4Summary from "./Step4Summary"
 import { useQuotationWizard } from "./useQuotationWizard"
-import { WIZARD_STEPS as steps } from "./wizard"
+import { WIZARD_STEPS as steps, validityInput } from "./wizard"
 import { qe, stepLabel, stepNum, stepPill } from "./wizard-styles"
 import { type PickClient, resolveClient, visibleClients } from "./wizardClient"
 
@@ -63,6 +65,8 @@ export default function QuotationAdd() {
     setJatuhTempo,
     berlakuSampai,
     setBerlakuSampai,
+    clientRefNo,
+    setClientRefNo,
     gates: { isAlamatOk, isWaktuFilled, isTenggatWaktuFilled, hasContent },
     summary,
     unitIdByCode,
@@ -79,9 +83,13 @@ export default function QuotationAdd() {
 
   const trimmedSearch = search.trim()
   const debouncedSearch = useDebouncedValue(trimmedSearch, 250)
-  // Search hits are active only; the first page must match.
-  const { data: clientsData } = useClients({ limit: 50, isActive: true })
-  const { data: searchHits } = useClientSearch(debouncedSearch, { limit: 30 })
+  // Search hits are active only; the first page must match. A failure shows
+  // on the client step, never on the route error boundary, which would
+  // discard every line already added.
+  const clientsQuery = useClients({ limit: 50, isActive: true }, INLINE_LOOKUP)
+  const searchQuery = useClientSearch(debouncedSearch, { limit: 30 }, INLINE_LOOKUP)
+  const clientsData = clientsQuery.data
+  const searchHits = searchQuery.data
   const createQuotation = useCreateQuotation()
 
   const numericClientId = Number(selectedClient)
@@ -98,8 +106,14 @@ export default function QuotationAdd() {
 
   // A selection outside the picker is fetched by id.
   const isListed = remoteClients.some((c) => c.id === selectedClient)
-  const { data: selectedRow } = useClient(
+  const selectedQuery = useClient(
     !isListed && numericClientId > 0 ? numericClientId : undefined,
+    INLINE_LOOKUP,
+  )
+  const selectedRow = selectedQuery.data
+  const clientsFailure = lookupFailure(
+    debouncedSearch.length > 0 ? searchQuery : clientsQuery,
+    selectedQuery,
   )
   const currentClient = useMemo(
     () => resolveClient(remoteClients, selectedClient, selectedRow),
@@ -143,14 +157,13 @@ export default function QuotationAdd() {
 
   function handleSubmit() {
     if (!canSubmit) return
-    const validity = Number(berlakuSampai)
     const shippingDays = Number(shippingTime)
     const input: QuotationCreateInput = {
       companyClientId: numericClientId,
       contactId: selectedContactId,
-      clientRefNo: currentClient?.referenceNumber,
+      clientRefNo: clientRefNo.trim() || undefined,
       paymentTerms: jatuhTempo.trim() ? `${jatuhTempo.trim()} days` : undefined,
-      validityDays: Number.isFinite(validity) && validity > 0 ? validity : undefined,
+      validityDays: validityInput(berlakuSampai),
       discountPct: String(discountPct),
       shippingAddress: shippingAddress || undefined,
       shippingDays: Number.isFinite(shippingDays) && shippingDays > 0 ? shippingDays : undefined,
@@ -285,6 +298,7 @@ export default function QuotationAdd() {
             selectedClient={selectedClient}
             setSelectedClient={setSelectedClient}
             setShowClientAdd={setShowClientAdd}
+            clientsFailure={clientsFailure}
             contacts={contacts}
             selectedContactId={selectedContactId}
             setSelectedContactId={setSelectedContactId}
@@ -333,7 +347,14 @@ export default function QuotationAdd() {
         )}
         {step === 4 && (
           <Step4Summary
-            terms={{ jatuhTempo, setJatuhTempo, berlakuSampai, setBerlakuSampai }}
+            terms={{
+              jatuhTempo,
+              setJatuhTempo,
+              berlakuSampai,
+              setBerlakuSampai,
+              clientRefNo,
+              setClientRefNo,
+            }}
             currentClient={currentClient}
             shippingAddress={shippingAddress}
             shippingTime={shippingTime}

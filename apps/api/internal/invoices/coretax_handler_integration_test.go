@@ -127,20 +127,27 @@ func TestCoretaxXLSX_Refusals(t *testing.T) {
 	}
 }
 
-// Refusal names each buyer once.
-func TestCoretaxXLSX_RefusesBuyerWithoutNPWPOnce(t *testing.T) {
+// Refusal names each invoice.
+// The invoiced NPWP is what is filed, so completing the client later does
+// not clear the refusal.
+func TestCoretaxXLSX_RefusesInvoicesWithoutNPWP(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	require.NoError(t, testutil.ResetCommercialDomain(ctx, tx))
-	deliveredPOWithInvoice(t, tx)
-	deliveredPOWithInvoice(t, tx)
-	var name string
-	require.NoError(t, tx.QueryRow(ctx,
-		`UPDATE company_client SET npwp = NULL, country_code = 'IDN' WHERE id = $1 RETURNING name`, seedCompanyID).Scan(&name))
+	_, _, first := deliveredPOWithInvoice(t, tx)
+	_, _, second := deliveredPOWithInvoice(t, tx)
+	var numbers string
+	require.NoError(t, tx.QueryRow(ctx, `
+		WITH blanked AS (
+			UPDATE invoices SET buyer_npwp = NULL WHERE id IN ($1, $2) RETURNING id, invoice_no
+		)
+		SELECT string_agg(invoice_no, ', ' ORDER BY id DESC) FROM blanked`, first, second).Scan(&numbers))
 
 	rec := serve(coretaxRouter(t, tx, coretaxSettings, templatesRoot(t)), "/invoices/coretax.xlsx")
 	require.Equal(t, http.StatusUnprocessableEntity, rec.Code, rec.Body.String())
 	assert.Equal(t,
-		"Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia. Lengkapi NPWP klien: "+name+".",
+		"Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia. "+
+			"Invoice memakai data klien saat invoice dibuat, jadi lengkapi NPWP klien, "+
+			"lalu batalkan dan terbitkan invoice pengganti untuk: "+numbers+".",
 		problemDetail(t, rec))
 }
 

@@ -66,6 +66,7 @@ list.
 | GET | `/items/search-advanced` | `SearchAdvanced` | `items.search_catalog`, `search_vendor_offers`, `search_request_history` |
 | POST | `/items/match-rows` | `MatchRows` | `items.match_request_batch` |
 | GET | `/items/{id}/vendors` | `ListVendorsForItem` | `items.list_vendors_for_item` |
+| POST | `/items/{id}/vendors` | `AddVendor` | `items.add_vendor`: relinking a linked vendor updates its price; an absent `vendorSku` or `productUrl` keeps the stored one, and `last_quoted_at` moves only with the price |
 | GET | `/items/{id}/price-history` | `PriceHistory` | `items.suggest_selling_prices` |
 | GET | `/items` | `List` | `items.list_base` + `list_count_base` |
 | GET | `/items/{id}` | `Get` | `items.get_by_id` |

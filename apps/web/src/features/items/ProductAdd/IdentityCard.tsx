@@ -1,4 +1,5 @@
 import { useId } from "react"
+import LoadError from "@/components/shared/LoadError"
 import {
   Autocomplete,
   AutocompleteContent,
@@ -15,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import type { LookupFailure } from "@/lib/lookup"
 import { dropdownLabel, ui } from "@/lib/ui"
 import {
   AddNewButton,
@@ -45,6 +47,9 @@ type IdentityCardProps = {
   onCopyRequestToOffer?: () => void
   // Lowest qty the document takes
   minQty?: number
+  // Failed catalog lookups
+  requestFailure?: LookupFailure | null
+  productFailure?: LookupFailure | null
 }
 
 // Product identity card.
@@ -66,6 +71,8 @@ export default function IdentityCard({
   onPickRequestSuggestion,
   onCopyRequestToOffer,
   minQty = 1,
+  requestFailure = null,
+  productFailure = null,
 }: IdentityCardProps) {
   const requestId = useId()
   const offerId = useId()
@@ -100,7 +107,13 @@ export default function IdentityCard({
               onFocus={() => setOpenDropdown("productRequest")}
             />
             <AutocompleteContent>
-              {requestMatches.length === 0 ? (
+              {requestFailure ? (
+                <LoadError
+                  message="Gagal memuat katalog produk."
+                  className="px-5 py-2.5"
+                  {...requestFailure}
+                />
+              ) : requestMatches.length === 0 ? (
                 <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
                   Tidak ada rekomendasi — input akan disimpan apa adanya.
                 </div>
@@ -212,7 +225,13 @@ export default function IdentityCard({
               onFocus={() => setOpenDropdown("product")}
             />
             <AutocompleteContent>
-              {productMatches.length === 0 ? (
+              {productFailure ? (
+                <LoadError
+                  message="Gagal memuat katalog produk."
+                  className="px-5 py-2.5"
+                  {...productFailure}
+                />
+              ) : productMatches.length === 0 ? (
                 <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>Tidak ada hasil</div>
               ) : (
                 <AutocompleteList>

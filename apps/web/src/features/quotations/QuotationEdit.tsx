@@ -88,6 +88,8 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     setJatuhTempo,
     berlakuSampai,
     setBerlakuSampai,
+    clientRefNo,
+    setClientRefNo,
     gates: { isAlamatOk, isWaktuFilled, isTenggatWaktuFilled },
     summary,
     unitIdByCode,
@@ -127,7 +129,6 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     const info = clientCardInfo(
       {
         narahubung: contactId === detail.contactId ? detail.contactName : undefined,
-        referenceNumber: detail.clientRefNo,
       },
       clientRow,
       contacts,
@@ -142,7 +143,6 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
       phone: info.phone,
       email: info.email,
       nomorTKU: info.nomorTKU,
-      referenceNumber: info.referenceNumber,
       npwp: info.npwp,
       lokasi: info.lokasi,
     }
@@ -200,6 +200,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
     shippingCost,
     jatuhTempo,
     berlakuSampai,
+    clientRefNo,
   }
 
   const {
@@ -396,6 +397,7 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
                 &rsaquo;
               </span>
               <Link
+                activeOptions={{ exact: true }}
                 to="/quotations/$id"
                 params={{ id: quotationId }}
                 className={`${ui.breadcrumbLink} no-underline`}
@@ -556,7 +558,14 @@ export default function QuotationEdit({ quotationId }: QuotationEditProps) {
         )}
         {step === 4 && (
           <Step4Summary
-            terms={{ jatuhTempo, setJatuhTempo, berlakuSampai, setBerlakuSampai }}
+            terms={{
+              jatuhTempo,
+              setJatuhTempo,
+              berlakuSampai,
+              setBerlakuSampai,
+              clientRefNo,
+              setClientRefNo,
+            }}
             currentClient={currentClient}
             shippingAddress={shippingAddress}
             shippingTime={shippingTime}

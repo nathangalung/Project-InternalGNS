@@ -31,6 +31,10 @@ var ErrNumberInvalid = errors.New("client number invalid or taken")
 // Number fixed by a quotation.
 var ErrNumberLocked = errors.New("client number used by a quotation")
 
+// ErrEmailTaken marks taken emails.
+// Another active contact, at any client, owns the email.
+var ErrEmailTaken = errors.New("contact email taken")
+
 // totalPurchaseExpr sums accepted deals.
 // Each deal counts at its PO grand total, since PO lines can be edited after
 // acceptance and are what is invoiced, or at its quotation total while it
@@ -219,6 +223,21 @@ func (r *Repo) ListContacts(ctx context.Context, companyID int64) ([]Contact, er
 	return pgx.CollectRows(rows, pgx.RowToStructByName[Contact])
 }
 
+// GetContact reads one contact.
+// A deactivated contact is returned too; ErrNotFound when the company has
+// no contact with that id.
+func (r *Repo) GetContact(ctx context.Context, companyID, contactID int64) (Contact, error) {
+	rows, err := r.db.Query(ctx, r.store.Get("clients.get_contact"), companyID, contactID)
+	if err != nil {
+		return Contact{}, err
+	}
+	c, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Contact])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Contact{}, ErrNotFound
+	}
+	return c, err
+}
+
 // Summary aggregates KPIs.
 func (r *Repo) Summary(ctx context.Context) (Summary, error) {
 	rows, err := r.db.Query(ctx, r.store.Get("clients.summary"))
@@ -235,9 +254,20 @@ func (r *Repo) CreateContact(ctx context.Context, companyID int64, req CreateCon
 		req.CountryCode, userID,
 	)
 	if err != nil {
-		return Contact{}, err
+		return Contact{}, emailErr(err)
 	}
-	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Contact])
+	c, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Contact])
+	return c, emailErr(err)
+}
+
+// emailErr marks taken emails.
+// The database error stays wrapped for the generic conflict.
+func emailErr(err error) error {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.ConstraintName == "idx_company_contacts_email" {
+		return fmt.Errorf("%w: %w", ErrEmailTaken, err)
+	}
+	return err
 }
 
 // UpdateContact edits an active contact.
@@ -248,13 +278,13 @@ func (r *Repo) UpdateContact(ctx context.Context, companyID, contactID int64, re
 		req.Title.Set, req.Title.Value, req.CountryCode, userID,
 	)
 	if err != nil {
-		return Contact{}, err
+		return Contact{}, emailErr(err)
 	}
 	c, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Contact])
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Contact{}, ErrNotFound
 	}
-	return c, err
+	return c, emailErr(err)
 }
 
 // DeactivateContact soft-deletes a contact.

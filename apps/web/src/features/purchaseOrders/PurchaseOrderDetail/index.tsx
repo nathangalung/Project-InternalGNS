@@ -33,8 +33,8 @@ import {
   canDownloadDeliveryNote,
   completenessIssues,
   deliveryNoteFileName,
-  isPoLocked,
   poBreakdown,
+  poEditLockReason,
   uploadRules,
 } from "./helpers"
 import ReasonModal from "./ReasonModal"
@@ -85,6 +85,7 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
   const totalShip = shipping.hargaSatuan
   const clientName = quotation?.client ?? po.companyName
   const dnReady = canDownloadDeliveryNote(po)
+  const editLockReason = poEditLockReason(po)
   const fileRemovable = po.status === "PENDING" || po.status === "UPLOADED"
   const hasFile = Boolean(po.objectKey && po.fileName)
   const rules = uploadRules(po.status, hasFile, upload.detailsLocked)
@@ -166,7 +167,8 @@ export default function PurchaseOrderDetail({ po, quotation, onEdit }: PurchaseO
           status={po.status}
           deliveryNoteNumber={po.deliveryNoteNumber}
           invoiceNo={po.invoiceNo}
-          onEdit={isPoLocked(po.status) ? undefined : onEdit}
+          onEdit={editLockReason ? undefined : onEdit}
+          editLockReason={editLockReason ?? undefined}
           onDownloadDeliveryNote={dnReady ? () => void handleDownloadDeliveryNote() : undefined}
         />
         <StatusBar

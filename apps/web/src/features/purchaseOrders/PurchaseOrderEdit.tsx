@@ -18,11 +18,11 @@ import { ui } from "@/lib/ui"
 import type { PoUpdateItemsInput, PurchaseOrderItemRow, PurchaseOrderRow } from "@/types/api"
 import {
   linesMissingUnit,
-  linesNeedAddress,
   lineToInput,
   loadFailureMessage,
   type PoEditLine,
   poLinesToEdit,
+  poNeedsAddress,
   upsertPoLine,
 } from "./adapters"
 import { usePoItems, usePurchaseOrderByQuotation, useUpdatePoItems } from "./hooks"
@@ -150,7 +150,7 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
 
   // The quotation's rules: the address is optional until the PO gate, and
   // past it the PO keeps the address its lines rely on.
-  const addressRequired = po.status === "ON_PROGRESS" && linesNeedAddress(products)
+  const addressRequired = poNeedsAddress(po.status, products)
   const { isAlamatOk, isWaktuFilled, hasContent } = wizardGates({
     shippingAddress,
     shippingTime,
@@ -224,13 +224,18 @@ export default function PurchaseOrderEdit({ po }: PurchaseOrderEditProps) {
         <div className="flex w-full items-center justify-between gap-4 max-sm:flex-col max-sm:items-stretch">
           <div className="flex min-w-0 flex-col gap-3">
             <nav className={`${ui.breadcrumb} flex-wrap`} aria-label="Breadcrumb">
-              <Link to="/purchase-orders" className={`${ui.breadcrumbLink} no-underline`}>
+              <Link
+                activeOptions={{ exact: true }}
+                to="/purchase-orders"
+                className={`${ui.breadcrumbLink} no-underline`}
+              >
                 Daftar Purchase Order
               </Link>
               <span className={ui.breadcrumbSep} aria-hidden="true">
                 &rsaquo;
               </span>
               <Link
+                activeOptions={{ exact: true }}
                 to="/purchase-orders/$id"
                 params={{ id: String(po.quotationId) }}
                 className={`${ui.breadcrumbLink} no-underline`}

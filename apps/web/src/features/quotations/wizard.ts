@@ -64,6 +64,16 @@ export function wizardGates(input: {
   }
 }
 
+// Validity days to send.
+//
+// Only a blank field is left out. Any typed number goes as typed, so the
+// server refuses 0 or less with a field error instead of storing no
+// validity, which would keep a sent quotation from ever expiring.
+export function validityInput(typed: string): number | undefined {
+  const t = typed.trim()
+  return t ? Number(t) : undefined
+}
+
 export type WizardSummary = {
   totalProdukQty: number
   totalHargaBeli: number
@@ -205,6 +215,8 @@ export type WizardSeed = {
   shippingCost: string
   berlakuSampai: string
   jatuhTempo: string
+  // The client's own RFQ or PO number
+  clientRefNo: string
 }
 
 // Stored quotation into steps.
@@ -232,5 +244,6 @@ export function seedFromDetail(d: QuotationDetail, unitNameById: Map<number, str
     shippingCost: Number.isFinite(cost) ? String(cost) : "",
     berlakuSampai: d.validityDays ? String(d.validityDays) : "",
     jatuhTempo: Number.isFinite(termDays) && termDays > 0 ? String(termDays) : "",
+    clientRefNo: d.clientRefNo ?? "",
   }
 }

@@ -52,6 +52,10 @@ type PurchaseOrder struct {
 	// Invoice issued at DELIVERED.
 	// A live one wins over a cancelled one; nil before delivery.
 	InvoiceNo *string `db:"invoice_no" json:"invoiceNo,omitempty"`
+	// Ubah PO is refused.
+	// Cancelled, or delivered unless its invoice is cancelled and not yet
+	// replaced (fn_po_lines_locked).
+	LinesLocked bool `db:"lines_locked" json:"linesLocked"`
 
 	// Moves the caller may offer.
 	// Each starts from Status.

@@ -24,6 +24,7 @@ func TestDeliveryNote_DatedWhenIssued(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	repo := purchaseorders.NewRepo(tx, testutil.Store(t))
 	_, poID := createQuotation(t, tx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		Items: []quotations.CreateItem{{

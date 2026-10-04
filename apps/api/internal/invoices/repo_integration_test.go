@@ -27,6 +27,7 @@ const (
 func deliveredPOWithInvoice(t *testing.T, tx pgx.Tx) (int64, int64, int64) {
 	t.Helper()
 	return deliverQuotation(t, tx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		Items: []quotations.CreateItem{{
@@ -155,6 +156,7 @@ func TestRepo_InvoiceHeaderEqualsLineSums(t *testing.T) {
 	// summing to 183333.34, whereas ROUND(200000*11/12) is 183333.33.
 	qrepo := quotations.NewRepo(tx, store)
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		DiscountPct:     "0",
 		Items: testutil.OfferLines(t, ctx, tx, []quotations.CreateItem{

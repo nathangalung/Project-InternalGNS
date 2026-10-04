@@ -1,6 +1,10 @@
 package items
 
-import "time"
+import (
+	"time"
+
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
+)
 
 type Item struct {
 	ID             int64     `db:"id"               json:"id"`
@@ -103,11 +107,14 @@ type UpdateItemRequest struct {
 	IsActive      bool    `json:"isActive"`
 }
 
+// Add vendor link body.
+// Relinking a linked vendor updates its offer in place: an absent vendorSku
+// or productUrl keeps the stored one, and null or a blank clears it.
 type AddVendorToItemRequest struct {
-	VendorID   int64   `json:"vendorId"`
-	VendorSKU  *string `json:"vendorSku"`
-	CostPrice  *string `json:"costPrice"`
-	ProductURL *string `json:"productUrl"`
+	VendorID   int64              `json:"vendorId"`
+	VendorSKU  httpx.OptionalText `json:"vendorSku"`
+	CostPrice  *string            `json:"costPrice"`
+	ProductURL httpx.OptionalText `json:"productUrl"`
 }
 
 // Result row from items.match_with_vendor_by_id.

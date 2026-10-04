@@ -2,6 +2,7 @@ package quotations_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/jackc/pgx/v5"
@@ -121,6 +122,48 @@ func TestCreate_RefusesBadVendorPicks(t *testing.T) {
 	}
 }
 
+// Saves check the quotation first.
+// Lines are prepared only under the row lock, after the status and client
+// checks, as the live saves do, so those refusals win over a vendor pick.
+func TestSave_ChecksQuotationBeforeLines(t *testing.T) {
+	vendorOnly := func(vendor int64) quotations.CreateItem {
+		l := offered()
+		l.VendorProductID, l.VendorID, l.OfferedItemID = nil, &vendor, nil
+		return l
+	}
+
+	for _, versioned := range []bool{false, true} {
+		t.Run(fmt.Sprintf("update of a sent quotation, versioned %v", versioned), func(t *testing.T) {
+			ctx, repo, tx := newRepo(t)
+			id := sentWithValidity(t, ctx, repo, intPtr(30))
+			var ifMatch *int32
+			if versioned {
+				d, err := repo.GetDetail(ctx, id)
+				require.NoError(t, err)
+				ifMatch = &d.RowVersion
+			}
+			req := quotations.UpdateRequest{
+				ValidityDays: intPtr(30), DiscountPct: "0",
+				Items: []quotations.CreateItem{vendorOnly(newVendor(t, ctx, tx, true))},
+			}
+			_, err := repo.Update(ctx, id, req, seedUserID, ifMatch)
+			assert.Equal(t, "P0013", sqlState(err))
+		})
+	}
+
+	t.Run("create for an inactive client", func(t *testing.T) {
+		ctx, repo, tx := newRepo(t)
+		vendor := newVendor(t, ctx, tx, true)
+		_, err := tx.Exec(ctx, `UPDATE company_client SET is_active = FALSE WHERE id = $1`, seedCompanyID)
+		require.NoError(t, err)
+		req := sampleCreate()
+		req.ContactID = nil
+		req.Items = []quotations.CreateItem{vendorOnly(vendor)}
+		_, err = repo.Create(ctx, req, seedUserID)
+		assert.Equal(t, "Klien tidak ditemukan atau sudah nonaktif. Pilih klien lain.", detailError(t, err))
+	})
+}
+
 // No-offer lines carry no price.
 func TestCreate_NoOfferLineIsUnpriced(t *testing.T) {
 	ctx, repo, _ := newRepo(t)
@@ -185,6 +228,33 @@ func TestChangeStatus_SendNeedsCompleteLines(t *testing.T) {
 		ctx, repo, _ := newRepo(t)
 		id := createWith(t, ctx, repo, offered(), noOffer())
 		require.NoError(t, repo.ChangeStatus(ctx, id, quotations.StatusSent, nil, seedUserID))
+	})
+}
+
+// Sending needs a validity window.
+// Without one the quotation never expires and prints no Validity.
+func TestChangeStatus_SendNeedsValidity(t *testing.T) {
+	draft := func(t *testing.T) (context.Context, *quotations.Repo, int64) {
+		t.Helper()
+		ctx, repo, _ := newRepo(t)
+		req := sampleCreate()
+		req.ValidityDays = nil
+		id, err := repo.Create(ctx, req, seedUserID)
+		require.NoError(t, err)
+		return ctx, repo, id
+	}
+
+	t.Run("send is refused", func(t *testing.T) {
+		ctx, repo, id := draft(t)
+		err := repo.ChangeStatus(ctx, id, quotations.StatusSent, nil, seedUserID)
+		assert.Equal(t, "Isi masa berlaku sebelum quotation dikirim.", detailError(t, err))
+		assert.Equal(t, "P0014", sqlState(err))
+	})
+
+	t.Run("cancel still works", func(t *testing.T) {
+		ctx, repo, id := draft(t)
+		note := "batal"
+		require.NoError(t, repo.ChangeStatus(ctx, id, quotations.StatusCancelled, &note, seedUserID))
 	})
 }
 

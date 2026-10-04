@@ -18,6 +18,7 @@ func TestRepo_List_EscapesLikeWildcards(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	clientID, _ := probeClient(t, tx, "PT Seratus% Laut")
 	_, poID := createQuotation(t, tx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: clientID, DiscountPct: "0",
 		Items: []quotations.CreateItem{quoteLine(strPtr("Kapal Uji"))},
 	})

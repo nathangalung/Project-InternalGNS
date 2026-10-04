@@ -1,11 +1,14 @@
 import { QueryClientProvider } from "@tanstack/react-query"
 import { act, useState } from "react"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import type { VendorListParams } from "@/features/vendors/api"
+import * as vendorsApi from "@/features/vendors/api"
 import { queryKeys } from "@/lib/query-keys"
 import { byRole, click, mount, press, settle, type, unmount } from "@/test/dom"
 import { testQueryClient } from "@/test/query"
 import AddVendorToItemModal from "./AddVendorToItemModal"
+
+vi.mock("@/features/vendors/api")
 
 // Params the vendor search sends.
 const noHits: VendorListParams = { q: "zzz", isActive: true, limit: 10 }
@@ -71,5 +74,17 @@ describe("AddVendorToItemModal", () => {
 
     await press("Escape")
     expect(byRole("dialog")).toHaveLength(0)
+  })
+
+  it("says the vendor search failed instead of offering a new vendor", async () => {
+    vi.mocked(vendorsApi.list).mockRejectedValue(new Error("502"))
+    await mount(<Harness />)
+    await type(vendorInput(), "sinar")
+    // Debounce, then the failed search.
+    await vi.waitFor(async () => {
+      await settle(50)
+      expect(document.body.textContent).toContain("Gagal memuat vendor.")
+    })
+    expect(document.body.textContent).not.toContain("tidak ditemukan")
   })
 })

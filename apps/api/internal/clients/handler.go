@@ -216,7 +216,7 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 		httperr.Render(w, httperr.BadRequest("invalid text in query parameter "+key))
 		return
 	}
-	q := r.URL.Query().Get("q")
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	if q == "" {
 		httperr.Render(w, httperr.BadRequest("q is required"))
 		return
@@ -285,7 +285,7 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 	userID := deps.CurrentUserID(r.Context())
 	c, err := h.repo.CreateContact(r.Context(), id, req, userID)
 	if err != nil {
-		httperr.RenderDBErrCtx(r.Context(), w, err)
+		renderContactErr(w, r, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusCreated, c)
@@ -328,7 +328,7 @@ func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httperr.RenderDBErrCtx(r.Context(), w, err)
+		renderContactErr(w, r, err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, c)
@@ -365,6 +365,20 @@ func (h *Handler) requireClient(ctx context.Context, id int64) error {
 		return fmt.Errorf("load client %d: %w", id, err)
 	}
 	return nil
+}
+
+// msgEmailTaken sits on email.
+// The unique index spans every client's active contacts, so the owner may be
+// another client.
+const msgEmailTaken = "Email ini sudah dipakai kontak aktif lain, di klien ini atau klien lain."
+
+// renderContactErr maps save failures.
+func renderContactErr(w http.ResponseWriter, r *http.Request, err error) {
+	if errors.Is(err, ErrEmailTaken) {
+		httperr.Render(w, httperr.Unprocessable(map[string]string{"email": msgEmailTaken}))
+		return
+	}
+	httperr.RenderDBErrCtx(r.Context(), w, err)
 }
 
 // renderClientErr maps sentinels to problems.

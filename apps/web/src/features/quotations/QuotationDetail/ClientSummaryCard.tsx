@@ -86,7 +86,7 @@ export default function ClientSummaryCard({
               <div className={ci?.npwp ? fieldValue : emptyValue}>{ci?.npwp || "Belum diisi"}</div>
             </div>
             <div>
-              <div className={fieldLabel}>Reference Number</div>
+              <div className={fieldLabel}>No. Referensi Klien</div>
               <div className={ci?.referenceNumber ? fieldValue : emptyValue}>
                 {ci?.referenceNumber || "Belum diisi"}
               </div>

@@ -1,5 +1,6 @@
 import { useId, useState } from "react"
 import PageButtons from "@/components/shared/PageButtons"
+import { optionalCls } from "@/features/clients/ClientAdd/helpers"
 import { clampPage, pageCount } from "@/lib/pagination"
 import { ui } from "@/lib/ui"
 import { isValidAddress, optionalAddressError } from "@/lib/validation"
@@ -8,16 +9,19 @@ import type { Client } from "./Step1Client"
 import type { ProductItem } from "./wizard"
 import { qe, qep } from "./wizard-styles"
 
-// Quotation payment and validity days.
+// Quotation reference and terms.
 type SummaryTerms = {
   jatuhTempo: string
   setJatuhTempo: (s: string) => void
   berlakuSampai: string
   setBerlakuSampai: (s: string) => void
+  // The client's own RFQ or PO number
+  clientRefNo: string
+  setClientRefNo: (s: string) => void
 }
 
 type Step4SummaryProps = {
-  // Absent on a PO, which keeps its quotation's terms
+  // Absent on a PO, which keeps its quotation's reference and terms
   terms?: SummaryTerms
   currentClient?: Client
   shippingAddress: string
@@ -68,6 +72,36 @@ const costValue = "font-semibold text-[#111827]"
 
 function termsFilled(t: SummaryTerms): boolean {
   return t.jatuhTempo.trim().length > 0 && t.berlakuSampai.trim().length > 0
+}
+
+// Client reference input.
+//
+// Printed as Your Ref No. on the quotation PDF.
+function RefCard({ terms, id, readOnly }: { terms: SummaryTerms; id: string; readOnly: boolean }) {
+  return (
+    <>
+      <h2 className={`${qe.sectionTitle} mb-3`}>Referensi Klien</h2>
+      <div className={`${card} mb-6`}>
+        <label htmlFor={`${id}-ref`} className={formLabel}>
+          No. Referensi Klien <span className={optionalCls}>(Opsional)</span>
+        </label>
+        <input
+          id={`${id}-ref`}
+          type="text"
+          maxLength={100}
+          aria-describedby={`${id}-ref-hint`}
+          placeholder="Nomor RFQ atau PO dari klien"
+          value={terms.clientRefNo}
+          onChange={(e) => terms.setClientRefNo(e.target.value)}
+          disabled={readOnly}
+          className={formInput}
+        />
+        <span id={`${id}-ref-hint`} className="mt-1 block text-xs text-dark-600">
+          Dicetak sebagai Your Ref No. di PDF quotation.
+        </span>
+      </div>
+    </>
+  )
 }
 
 // Tenggat Waktu Penawaran inputs.
@@ -161,6 +195,7 @@ export default function Step4Summary({
     <div className={qe.stepContent}>
       {(terms || hasNotices) && (
         <div>
+          {terms && <RefCard terms={terms} id={id} readOnly={readOnly} />}
           {terms && <TermsCard terms={terms} id={id} readOnly={readOnly} />}
           {invalidQtyCount > 0 && (
             <div role="alert" className={`${alertBox} mt-2.5`}>
@@ -237,12 +272,6 @@ export default function Step4Summary({
                 <div className={fieldLabel}>NPWP</div>
                 <div className={currentClient?.npwp ? fieldValue : emptyValue}>
                   {currentClient?.npwp || "Belum diisi"}
-                </div>
-              </div>
-              <div>
-                <div className={fieldLabel}>Reference Number</div>
-                <div className={currentClient?.referenceNumber ? fieldValue : emptyValue}>
-                  {currentClient?.referenceNumber || "Belum diisi"}
                 </div>
               </div>
             </div>

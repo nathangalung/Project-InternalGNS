@@ -105,6 +105,7 @@ func (s *scenarioState) buildCreate(discount string, lines int) quotations.Creat
 		items = append(items, offeredLine(fmt.Sprintf("ITEM %d", i+1), "1", "10000"))
 	}
 	return quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: defaultCompany,
 		DiscountPct:     discount,
 		Items:           items,

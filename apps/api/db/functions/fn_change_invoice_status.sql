@@ -1,4 +1,4 @@
--- Canonical current body of fn_change_invoice_status (deployed by migration 00082).
+-- Canonical current body of fn_change_invoice_status (deployed by migration 00093).
 CREATE OR REPLACE FUNCTION public.fn_change_invoice_status(p_invoice_id bigint, p_target text, p_user_id bigint, p_note text DEFAULT NULL::text, p_proof_key text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql
@@ -18,6 +18,11 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Invoice % tidak ditemukan.', p_invoice_id
       USING ERRCODE = 'P0011';
+  END IF;
+
+  -- Invoice then PO, as fn_replace_invoice.
+  IF v_po_id IS NOT NULL THEN
+    PERFORM 1 FROM purchase_orders WHERE id = v_po_id FOR UPDATE;
   END IF;
 
   IF p_target NOT IN ('draft','sent','paid','overdue','cancelled') THEN

@@ -37,12 +37,20 @@ export default function Header({
   }
   return (
     <>
-      <nav className={ui.breadcrumb}>
-        <Link to="/quotations" className={`${ui.breadcrumbLink} no-underline`}>
+      <nav className={ui.breadcrumb} aria-label="Breadcrumb">
+        <Link
+          activeOptions={{ exact: true }}
+          to="/quotations"
+          className={`${ui.breadcrumbLink} no-underline`}
+        >
           Daftar Quotation
         </Link>
-        <span className={ui.breadcrumbSep}>&rsaquo;</span>
-        <span className={ui.breadcrumbCurrent}>Detail {quotationId}</span>
+        <span className={ui.breadcrumbSep} aria-hidden="true">
+          &rsaquo;
+        </span>
+        <span className={ui.breadcrumbCurrent} aria-current="page">
+          Detail {quotationId}
+        </span>
       </nav>
 
       <div className={ui.detailHeader}>

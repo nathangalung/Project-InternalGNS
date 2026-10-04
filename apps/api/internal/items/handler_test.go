@@ -280,7 +280,7 @@ func TestHandler_Update_OK(t *testing.T) {
 
 func TestHandler_AddVendor_BadID(t *testing.T) {
 	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodPost, "/items/abc/vendors", items.AddVendorToItemRequest{VendorID: 1})
+	res := doJSON(t, srv, http.MethodPost, "/items/abc/vendors", map[string]any{"vendorId": 1})
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 }
@@ -297,14 +297,14 @@ func TestHandler_AddVendor_BadJSON(t *testing.T) {
 
 func TestHandler_AddVendor_MissingVendor(t *testing.T) {
 	srv := newSrv(t)
-	res := doJSON(t, srv, http.MethodPost, "/items/1/vendors", items.AddVendorToItemRequest{})
+	res := doJSON(t, srv, http.MethodPost, "/items/1/vendors", map[string]any{})
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
 }
 
 func TestHandler_AddVendor_RepoError(t *testing.T) {
 	srv := newSrv(t)
-	body := items.AddVendorToItemRequest{VendorID: 9999999}
+	body := map[string]any{"vendorId": 9999999}
 	res := doJSON(t, srv, http.MethodPost, "/items/9999999/vendors", body)
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)

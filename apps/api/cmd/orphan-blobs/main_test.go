@@ -31,10 +31,10 @@ func TestLoadReferences_InvoiceBucketKeepsProofs(t *testing.T) {
 		VALUES ('SQ-ORPHAN-1', 1, 'PT. IMC Ship Management', 0, 10000, 10000, 0, 1, 1)
 		RETURNING id`).Scan(&qid))
 	require.NoError(t, tx.QueryRow(ctx, `
-		INSERT INTO invoices (invoice_no, quotation_id, company_client_id, invoice_date,
+		INSERT INTO invoices (invoice_no, quotation_id, company_client_id, buyer_name, invoice_date,
 		                      subtotal, dpp, total, status, created_by, updated_by,
 		                      attachment_object_key, payment_proof_key)
-		VALUES ('INV-ORPHAN-1', $1, 1, CURRENT_DATE, 10000, 10000, 11100, 'paid', 1, 1,
+		VALUES ('INV-ORPHAN-1', $1, 1, 'PT Uji', CURRENT_DATE, 10000, 10000, 11100, 'paid', 1, 1,
 		        'orphan-test/attachment.pdf', 'orphan-test/payment/proof.pdf')
 		RETURNING id`, qid).Scan(&invID))
 	_, err := tx.Exec(ctx, `

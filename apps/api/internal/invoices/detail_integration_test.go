@@ -26,6 +26,7 @@ func deliveredPOWithVessel(t *testing.T, tx pgx.Tx) (int64, int64) {
 
 	qrepo := quotations.NewRepo(tx, store)
 	qid, err := qrepo.Create(ctx, quotations.CreateRequest{
+		ValidityDays:    testutil.Validity(),
 		CompanyClientID: seedCompanyID,
 		ContactID:       &contactID,
 		VesselName:      &vessel,

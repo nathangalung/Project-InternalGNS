@@ -161,6 +161,7 @@ describe("useQuotationWizard seed", () => {
         shippingCost: "75000",
         berlakuSampai: "14",
         jatuhTempo: "30",
+        clientRefNo: "RFQ-7",
       }),
     )
     expect(result.current).toMatchObject({
@@ -172,6 +173,7 @@ describe("useQuotationWizard seed", () => {
       shippingCost: "75000",
       berlakuSampai: "14",
       jatuhTempo: "30",
+      clientRefNo: "RFQ-7",
     })
     expect(result.current.gates.isWaktuFilled).toBe(true)
   })
@@ -188,10 +190,12 @@ describe("useQuotationWizard seed", () => {
       shippingCost: "75000",
       berlakuSampai: "14",
       jatuhTempo: "30",
+      clientRefNo: "RFQ-7",
     }
     act(() => result.current.saveProduct(FORM))
     act(() => result.current.setProdPage(2))
     act(() => result.current.setShippingTime("9"))
+    act(() => result.current.setClientRefNo("RFQ-8"))
 
     // Editing the header: only the lines follow.
     act(() => result.current.syncFromServer(stored, false))
@@ -199,6 +203,7 @@ describe("useQuotationWizard seed", () => {
       products: [],
       prodPage: 2,
       shippingTime: "9",
+      clientRefNo: "RFQ-8",
       selectedClient: "",
     })
 
@@ -212,6 +217,7 @@ describe("useQuotationWizard seed", () => {
       shippingCost: "75000",
       berlakuSampai: "14",
       jatuhTempo: "30",
+      clientRefNo: "RFQ-7",
     })
   })
 })
@@ -227,6 +233,7 @@ describe("live contact", () => {
     shippingCost: "",
     berlakuSampai: "",
     jatuhTempo: "",
+    clientRefNo: "",
   })
 
   it("follows another editor's contact", () => {

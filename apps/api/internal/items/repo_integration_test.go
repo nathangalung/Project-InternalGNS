@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/items"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httpx"
 	"github.com/nathangalung/internalgns/apps/api/internal/testutil"
 )
 
@@ -19,6 +20,9 @@ const (
 
 func ptrI16(v int16) *int16 { return &v }
 func ptrS(s string) *string { return &s }
+
+// sentText is a sent value.
+func sentText(s string) httpx.OptionalText { return httpx.OptionalText{Set: true, Value: &s} }
 
 func TestRepo_List(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
@@ -165,7 +169,7 @@ func TestRepo_SearchVendorOffers_SurfacesInactiveItem(t *testing.T) {
 	const sku = "ZZQXSKU12345"
 	_, err = repo.AddVendor(ctx, it.ID, items.AddVendorToItemRequest{
 		VendorID:  seedVendorID,
-		VendorSKU: ptrS(sku),
+		VendorSKU: sentText(sku),
 		CostPrice: ptrS("1000"),
 	}, seedUserID)
 	require.NoError(t, err)
@@ -220,7 +224,7 @@ func TestRepo_SearchVendorOffers_ExactSKUCaseInsensitive(t *testing.T) {
 		require.NoError(t, err)
 		_, err = repo.AddVendor(ctx, it.ID, items.AddVendorToItemRequest{
 			VendorID:  seedVendorID,
-			VendorSKU: ptrS(sku),
+			VendorSKU: sentText(sku),
 			CostPrice: ptrS("1000"),
 		}, seedUserID)
 		require.NoError(t, err)

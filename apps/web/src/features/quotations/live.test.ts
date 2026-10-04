@@ -63,11 +63,13 @@ describe("headerInput", () => {
     shippingCost: "150000",
     jatuhTempo: " 30 ",
     berlakuSampai: "14",
+    clientRefNo: " V-26-2405-002-E ",
   }
 
+  // The typed reference replaces the stored one.
   it("sends every header field", () => {
     expect(headerInput(detail, fields)).toEqual({
-      clientRefNo: "REF-1",
+      clientRefNo: "V-26-2405-002-E",
       vesselName: "MV Laut",
       notes: "Catatan",
       paymentTerms: "30 days",
@@ -88,7 +90,8 @@ describe("headerInput", () => {
         shippingTime: "",
         shippingCost: "",
         jatuhTempo: " ",
-        berlakuSampai: "0",
+        berlakuSampai: " ",
+        clientRefNo: " ",
       }),
     ).toEqual({
       clientRefNo: undefined,
@@ -101,6 +104,14 @@ describe("headerInput", () => {
       shippingDays: undefined,
       shippingCost: undefined,
     })
+  })
+
+  // The server refuses it, so it is never stored as blank.
+  it.each([
+    ["0", 0],
+    ["-3", -3],
+  ])("sends validity %s as typed", (typed, want) => {
+    expect(headerInput(detail, { ...fields, berlakuSampai: typed }).validityDays).toBe(want)
   })
 })
 

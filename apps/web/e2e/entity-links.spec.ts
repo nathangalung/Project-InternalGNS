@@ -56,6 +56,24 @@ test("the invoice client card links the client", async ({ page, seed }) => {
   )
 })
 
+test("detail breadcrumbs mark the current page", async ({ page, seed }) => {
+  const { client, lines } = await offered(seed)
+  const q = await seed.quotation({ client, lines })
+  const inv = await seed.deliver(await seed.accept(q.id))
+  const pages = [
+    { url: `/quotations/${q.id}`, current: `Detail ${q.quotationNo}` },
+    { url: `/invoices/${q.id}`, current: `Detail ${inv.invoiceNo}` },
+    { url: `/products/${lines[0].item.id}`, current: "Detail Produk" },
+  ]
+
+  for (const { url, current } of pages) {
+    await page.goto(url)
+    const crumbs = page.getByRole("navigation", { name: "Breadcrumb" })
+    await expect(crumbs.locator('[aria-current="page"]')).toHaveText(current)
+    await expect(crumbs.locator('[aria-hidden="true"]')).toHaveCount(1)
+  }
+})
+
 test("edit pages name the document and link back to it", async ({ page, seed }) => {
   const { client, lines } = await offered(seed)
   const draft = await seed.quotation({ client, lines })

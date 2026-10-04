@@ -123,8 +123,8 @@ func (h *CoretaxHandler) Export(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if verr := validateBuyerIdentity(client); verr != nil {
-		httperr.Render(w, httperr.UnprocessableDetail(buyerIdentityMessage([]string{client.Name}), nil))
+	if refused := invalidBuyers([]Invoice{inv}, map[int64]clients.Client{inv.CompanyClientID: client}); len(refused) > 0 {
+		httperr.Render(w, httperr.UnprocessableDetail(buyerIdentityMessage(refused), nil))
 		return
 	}
 
@@ -154,6 +154,7 @@ func (h *CoretaxHandler) buildBulk(inv Invoice, items []InvoiceItem, client clie
 // Shared by the single-invoice XML export and the bulk XLSX export so the
 // field derivation lives in one place.
 func coretaxInvoiceFor(settings deps.CoretaxSettings, inv Invoice, items []InvoiceItem, client clients.Client) coretaxTaxInvoice {
+	client = invoiceBuyer(inv, client)
 	trxCode := "04"
 	if inv.TaxTransactionCode != nil && *inv.TaxTransactionCode != "" {
 		trxCode = *inv.TaxTransactionCode
@@ -289,10 +290,23 @@ func validateBuyerIdentity(c clients.Client) error {
 	return nil
 }
 
+// invoiceBuyer is the buyer as invoiced.
+// Name, NPWP and address come from the invoice snapshot; country, email and
+// TKU stay the client's.
+func invoiceBuyer(inv Invoice, c clients.Client) clients.Client {
+	c.Name = inv.CompanyName
+	c.NPWP = inv.CompanyNpwp
+	c.Address = inv.CompanyAddress
+	return c
+}
+
 // buyerIdentityMessage words the refusal toast.
-func buyerIdentityMessage(names []string) string {
+// Every invoice keeps the buyer it was created with, so the fix is the
+// client's NPWP and then a Pengganti, which copies the client again.
+func buyerIdentityMessage(invoiceNos []string) string {
 	return "Ekspor Coretax memerlukan NPWP 16 digit untuk pembeli Indonesia. " +
-		"Lengkapi NPWP klien: " + strings.Join(names, ", ") + "."
+		"Invoice memakai data klien saat invoice dibuat, jadi lengkapi NPWP klien, " +
+		"lalu batalkan dan terbitkan invoice pengganti untuk: " + strings.Join(invoiceNos, ", ") + "."
 }
 
 func strDeref(p *string) string {

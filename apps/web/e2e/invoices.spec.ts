@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises"
 import type { Page } from "@playwright/test"
 import { test as base, expect, savedTokens } from "./fixtures"
 import { call } from "./support/api"
@@ -32,7 +33,7 @@ const test = base.extend<{ admin: string; client: SeedClient; invoice: SeedInvoi
 
 test.use({ session: "finance" })
 
-const ACTIONS = ["Tandai Dikirim", "Tandai Dibayar", "Batalkan & Terbitkan Pengganti"] as const
+const ACTIONS = ["Tandai Dikirim", "Tandai Dibayar", "Batalkan Invoice"] as const
 
 function statusBar(page: Page) {
   return page.getByRole("region", { name: "Status Invoice" })
@@ -102,7 +103,7 @@ test("a draft is sent, then paid with a proof, and locks (INV-2, INV-4, INV-8)",
 
   await test.step("a draft offers only send and cancel", async () => {
     await expect(statusBar(page).getByText("Draf", { exact: true })).toBeVisible()
-    await expectActions(page, ["Tandai Dikirim", "Batalkan & Terbitkan Pengganti"])
+    await expectActions(page, ["Tandai Dikirim", "Batalkan Invoice"])
   })
 
   await test.step("mark it sent", async () => {
@@ -110,7 +111,7 @@ test("a draft is sent, then paid with a proof, and locks (INV-2, INV-4, INV-8)",
     await confirm(page, "Tandai Invoice Dikirim", "Tandai Dikirim")
     await expect(page.getByText("Invoice ditandai Dikirim.")).toBeVisible()
     await expect(statusBar(page).getByText("Dikirim", { exact: true })).toBeVisible()
-    await expectActions(page, ["Tandai Dibayar", "Batalkan & Terbitkan Pengganti"])
+    await expectActions(page, ["Tandai Dibayar", "Batalkan Invoice"])
   })
 
   await test.step("mark it paid with a proof", async () => {
@@ -213,7 +214,7 @@ test("a past-due invoice reads Terlambat and still takes a payment", async ({
     bar.getByText("Terlambat ditentukan otomatis dari tanggal jatuh tempo."),
   ).toBeVisible()
   // Terlambat is derived, never a step to pick.
-  await expectActions(page, ["Tandai Dibayar", "Batalkan & Terbitkan Pengganti"])
+  await expectActions(page, ["Tandai Dibayar", "Batalkan Invoice"])
 
   await bar.getByRole("button", { name: "Tandai Dibayar" }).click()
   await confirm(page, "Tandai Invoice Dibayar", "Tandai Dibayar")
@@ -221,23 +222,36 @@ test("a past-due invoice reads Terlambat and still takes a payment", async ({
   await expectActions(page, [])
 })
 
-test("cancelling needs a reason and issues the Pengganti", async ({ page, invoice }) => {
+test("cancelling needs a reason, then the Pengganti is issued", async ({ page, invoice }) => {
   const reason = "Salah alamat penagihan"
   await openInvoice(page, invoice)
 
   let replacementNo = ""
   await test.step("an empty reason is refused in place", async () => {
-    await statusBar(page).getByRole("button", { name: "Batalkan & Terbitkan Pengganti" }).click()
-    const dialog = page.getByRole("dialog", { name: "Batalkan & Terbitkan Pengganti" })
-    await dialog.getByRole("button", { name: "Batalkan & Terbitkan", exact: true }).click()
+    await statusBar(page).getByRole("button", { name: "Batalkan Invoice" }).click()
+    const dialog = page.getByRole("dialog", { name: "Batalkan Invoice" })
+    await dialog.getByRole("button", { name: "Batalkan Invoice", exact: true }).click()
     await expect(dialog.getByText("Alasan pembatalan wajib diisi.")).toBeVisible()
     await expect(dialog.getByLabel("Alasan Pembatalan")).toBeFocused()
   })
 
-  await test.step("a reason cancels and lands on the Pengganti", async () => {
-    const dialog = page.getByRole("dialog", { name: "Batalkan & Terbitkan Pengganti" })
+  await test.step("a reason cancels and leaves the Pengganti for later", async () => {
+    const dialog = page.getByRole("dialog", { name: "Batalkan Invoice" })
     await dialog.getByLabel("Alasan Pembatalan").fill(reason)
-    await confirm(page, "Batalkan & Terbitkan Pengganti", "Batalkan & Terbitkan")
+    await confirm(page, "Batalkan Invoice", "Batalkan Invoice")
+    await expect(
+      page.getByText(
+        "Invoice dibatalkan. Perbaiki PO melalui Ubah PO bila perlu, lalu terbitkan invoice pengganti.",
+      ),
+    ).toBeVisible()
+    await expect(page.getByRole("heading", { name: `Invoice ${invoice.invoiceNo}` })).toBeVisible()
+    await expect(statusBar(page).getByText("Dibatalkan", { exact: true })).toBeVisible()
+    await expectActions(page, ["Terbitkan Pengganti"])
+  })
+
+  await test.step("Terbitkan Pengganti lands on the Pengganti", async () => {
+    await statusBar(page).getByRole("button", { name: "Terbitkan Pengganti" }).click()
+    await confirm(page, "Terbitkan Invoice Pengganti", "Terbitkan Pengganti")
     const toast = page.getByText(/^Invoice pengganti (.+) diterbitkan\.$/)
     await expect(toast).toBeVisible()
     replacementNo = /^Invoice pengganti (.+) diterbitkan\.$/.exec(
@@ -249,7 +263,7 @@ test("cancelling needs a reason and issues the Pengganti", async ({ page, invoic
     await expect(
       page.getByText(`Dibuat sebagai Draf, pengganti ${invoice.invoiceNo}`),
     ).toBeVisible()
-    await expectActions(page, ["Tandai Dikirim", "Batalkan & Terbitkan Pengganti"])
+    await expectActions(page, ["Tandai Dikirim", "Batalkan Invoice"])
   })
 
   await test.step("the original is cancelled and points forward", async () => {
@@ -278,7 +292,34 @@ test("a cancelled invoice without a Pengganti offers one (INV-10)", async ({
   await expect(page.getByText(/^Invoice pengganti .+ diterbitkan\.$/)).toBeVisible()
   await expect(statusBar(page).getByText(`Menggantikan ${invoice.invoiceNo}`)).toBeVisible()
   await expect(page.getByRole("heading", { name: `Invoice ${invoice.invoiceNo}` })).toHaveCount(0)
-  await expectActions(page, ["Tandai Dikirim", "Batalkan & Terbitkan Pengganti"])
+  await expectActions(page, ["Tandai Dikirim", "Batalkan Invoice"])
+})
+
+// The void copy stays printable.
+test("a cancelled invoice still downloads its PDF", async ({ page, admin, invoice }) => {
+  // Headless Chromium has no save dialog; take the anchor fallback.
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "showSaveFilePicker", { value: undefined })
+  })
+  // The CI browser job has no xelatex; the pdf layout job renders the
+  // DIBATALKAN copy. Keep the API's own headers so CORS still holds.
+  await page.route(`**/api/v1/invoices/${invoice.id}/pdf`, async (route) => {
+    const response = await route.fetch()
+    await route.fulfill({
+      response,
+      status: 200,
+      contentType: "application/pdf",
+      body: "%PDF-1.7\n%%EOF\n",
+    })
+  })
+  await setInvoiceStatus(admin, invoice.id, "cancelled", "Dibatalkan lewat API")
+  await openInvoice(page, invoice)
+  const download = page.waitForEvent("download")
+  await page.getByRole("button", { name: "Unduh PDF" }).click()
+  const file = await download
+  expect(file.suggestedFilename()).toMatch(/\.pdf$/)
+  expect(await file.failure()).toBeNull()
+  expect((await readFile(await file.path())).subarray(0, 5).toString()).toBe("%PDF-")
 })
 
 // Only Dibatalkan lists it.

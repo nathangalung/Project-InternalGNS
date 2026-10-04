@@ -1,4 +1,4 @@
--- Canonical current body of fn_create_quotation (deployed by migration 00088).
+-- Canonical current body of fn_create_quotation (deployed by migration 00092).
 CREATE OR REPLACE FUNCTION public.fn_create_quotation(p_company_client_id bigint, p_contact_id bigint, p_client_ref_no text, p_vessel_name text, p_payment_terms text, p_validity_days integer, p_discount_pct numeric, p_shipping_address text, p_shipping_days integer, p_shipping_cost numeric, p_items jsonb, p_created_by bigint, p_notes text DEFAULT NULL::text, p_status text DEFAULT 'draft'::text)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -53,6 +53,10 @@ BEGIN
         USING ERRCODE = 'P0014';
     END IF;
   END IF;
+
+  -- Lines are prepared after the client checks, as fn_update_quotation
+  -- prepares them after its row lock and status checks.
+  p_items := fn_prepare_quotation_lines(p_items, p_created_by);
 
   -- 3. Pre-calculate totals. The discount is gross minus net per line, as
   -- quotation_items.subtotal and v_po_totals round them, so the header

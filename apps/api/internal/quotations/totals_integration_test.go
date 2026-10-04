@@ -56,6 +56,7 @@ func TestRepo_HeaderDiscount_QuotationMatchesPO(t *testing.T) {
 			require.NoError(t, err)
 			if tc.update {
 				_, err = repo.Update(ctx, id, quotations.UpdateRequest{
+					ValidityDays:    want.ValidityDays,
 					DiscountPct:     want.DiscountPct,
 					ShippingAddress: want.ShippingAddress,
 					ShippingDays:    want.ShippingDays,
