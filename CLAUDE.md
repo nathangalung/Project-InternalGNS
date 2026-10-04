@@ -388,6 +388,12 @@ Shared pieces in `components/shared`, reuse them instead of copying markup:
   modal.
 - Page states: `LoadingState`, `NotFoundState`, `RouteErrorFallback` and
   `RouteNotFound`, all built on `StateMessage`; table rows use `TableStates`.
+- `LoadError` is the inline failed-lookup row with Coba Lagi. A query a form
+  or dialog reads while it holds unsaved input (the Tambah Produk dialog, the
+  quotation wizard's client step, Ganti Narahubung) opts out of the route
+  error boundary, through `throwOnError: false` or `lookupThrow` from
+  `lib/query-client`, and shows its failure with `LoadError` instead, since
+  the boundary would discard the document being edited.
 - `StatCard` is the summary tile on list screens and dashboards.
 - `EntityLogo` is the list avatar: initials, or an image when given `src`.
 - `RecentQuotations` is the Quotation Terakhir section of the product, vendor

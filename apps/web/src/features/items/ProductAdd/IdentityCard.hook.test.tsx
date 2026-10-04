@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import Modal from "@/components/shared/Modal"
-import { byRole, click, mount, press, type, unmount } from "@/test/dom"
+import type { LookupFailure } from "@/lib/lookup"
+import { button, byRole, click, mount, press, type, unmount } from "@/test/dom"
 import {
   type CatalogItem,
   type DropdownKey,
@@ -22,7 +23,15 @@ type Spies = {
   onClose: () => void
 }
 
-function Harness({ spies, matches }: { spies: Spies; matches: CatalogItem[] }) {
+function Harness({
+  spies,
+  matches,
+  failure = null,
+}: {
+  spies: Spies
+  matches: CatalogItem[]
+  failure?: LookupFailure | null
+}) {
   const [form, setForm] = useState<ProductAddFormData>(INITIAL_FORM)
   const [open, setOpen] = useState<DropdownKey | null>(null)
   const change = (key: keyof ProductAddFormData, value: string) =>
@@ -45,6 +54,8 @@ function Harness({ spies, matches }: { spies: Spies; matches: CatalogItem[] }) {
         onAddProductNew={spies.onAddNew}
         onPickProduct={spies.onPickProduct}
         onPickRequestSuggestion={spies.onPickRequest}
+        requestFailure={failure}
+        productFailure={failure}
       />
       <output>{JSON.stringify(form)}</output>
     </Modal>
@@ -96,6 +107,27 @@ describe("IdentityCard pickers", () => {
     )
     await press("Escape", request)
     expect(form().requestedKodeImpaNama).toBe("Permintaan khusus")
+  })
+
+  it("says a catalog lookup failed instead of claiming no match, and retries it", async () => {
+    const failure = { retry: vi.fn(), retrying: false }
+    await mount(<Harness spies={spies()} matches={[]} failure={failure} />)
+    const request = field("Kode IMPA/Nama Produk Request")
+    await type(request, "baut")
+    expect(byRole("alert").map((a) => a.textContent)).toEqual([
+      "Gagal memuat katalog produk.Coba Lagi",
+    ])
+    expect(document.body.textContent).not.toContain("Tidak ada rekomendasi")
+    await click(button("Coba Lagi"))
+    expect(failure.retry).toHaveBeenCalledTimes(1)
+    await press("Escape", request)
+    expect(form().requestedKodeImpaNama).toBe("baut")
+
+    await type(field("Kode IMPA/Nama Produk *"), "mur")
+    expect(document.body.textContent).toContain("Gagal memuat katalog produk.")
+    expect(document.body.textContent).not.toContain("Tidak ada hasil")
+    // A product outside the catalog can still be added.
+    expect(button("Tambah Produk Baru")).toBeTruthy()
   })
 
   it("picks an offer with the pointer and reaches Tambah Produk Baru", async () => {

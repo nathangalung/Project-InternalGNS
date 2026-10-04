@@ -1,3 +1,5 @@
+import LoadError from "@/components/shared/LoadError"
+import type { LookupFailure } from "@/lib/lookup"
 import { ui } from "@/lib/ui"
 import type { ContactRow } from "@/types/api"
 import { qe } from "./wizard-styles"
@@ -42,6 +44,8 @@ type Step1ClientProps = {
   lockClient?: boolean
   // Edit mode: header held elsewhere
   contactReadOnly?: boolean
+  // Failed client lookup
+  clientsFailure?: LookupFailure | null
 }
 
 export default function Step1Client({
@@ -56,6 +60,7 @@ export default function Step1Client({
   setSelectedContactId,
   lockClient = false,
   contactReadOnly = false,
+  clientsFailure = null,
 }: Step1ClientProps) {
   return (
     <div className={qe.stepContent}>
@@ -118,6 +123,14 @@ export default function Step1Client({
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+      )}
+
+      {clientsFailure && (
+        <LoadError
+          message="Gagal memuat daftar klien."
+          onRetry={clientsFailure.retry}
+          retrying={clientsFailure.retrying}
+        />
       )}
 
       <div className="flex flex-col gap-3">

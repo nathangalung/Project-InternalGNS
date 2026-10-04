@@ -11,6 +11,7 @@ import * as vendorsApi from "@/features/vendors/api"
 import { useObjectUrl } from "@/hooks/useObjectUrl"
 import { errorMessage } from "@/lib/errors"
 import { shrinkImage } from "@/lib/image-shrink"
+import { type LookupOptions, lookupThrow } from "@/lib/query-client"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
@@ -18,12 +19,13 @@ import { validateAsset } from "@/lib/upload-validation"
 
 export function useItems(
   params: itemsApi.ItemListParams = {},
-  options: { enabled?: boolean } = {},
+  options: LookupOptions & { enabled?: boolean } = {},
 ) {
   return useQuery({
     queryKey: queryKeys.items.list(params),
     queryFn: () => itemsApi.list(params),
     enabled: options.enabled ?? true,
+    ...lookupThrow(options),
     placeholderData: keepPreviousData,
   })
 }
@@ -39,7 +41,11 @@ export function useItem(id: number | undefined) {
 //
 // keepPreviousData prevents UI flicker while the user types (per TanStack
 // Query v5 paginated-queries guidance).
-export function useItemSearchAdvanced(q: string, options: itemsApi.SearchAdvancedOptions = {}) {
+export function useItemSearchAdvanced(
+  q: string,
+  options: itemsApi.SearchAdvancedOptions = {},
+  lookup: LookupOptions = {},
+) {
   return useQuery({
     queryKey: [
       ...queryKeys.items.searchAdvanced(q, options.minScore, options.limit, options.isActive),
@@ -49,6 +55,7 @@ export function useItemSearchAdvanced(q: string, options: itemsApi.SearchAdvance
     enabled: q.trim().length > 0,
     placeholderData: keepPreviousData,
     staleTime: 30_000,
+    ...lookupThrow(lookup),
   })
 }
 
@@ -68,6 +75,8 @@ export function useItemVendors(itemId: number | undefined) {
 //
 // Searches on the server so every vendor is reachable, not just the first
 // page. Inactive vendors are left out because the API refuses to link them.
+// Only dialogs use it, so a failure shows there, not on the route error
+// boundary.
 export function useActiveVendorOptions(q: string, limit = 10) {
   const term = q.trim()
   const params: vendorsApi.VendorListParams = { q: term, isActive: true, limit }
@@ -77,11 +86,13 @@ export function useActiveVendorOptions(q: string, limit = 10) {
     enabled: term.length > 0,
     placeholderData: keepPreviousData,
     staleTime: 30_000,
+    throwOnError: false,
   })
 }
 
 // Line defaults for one item.
 // Null when the item has no recommendation row.
+// A failure leaves the line to the user, never to the boundary.
 export function useLineRecommendation(itemId: number | undefined, clientId?: number) {
   return useQuery({
     queryKey: itemId
@@ -92,9 +103,12 @@ export function useLineRecommendation(itemId: number | undefined, clientId?: num
         ? async () => (await itemsApi.recommend([itemId], clientId))[0] ?? null
         : skipToken,
     staleTime: 30_000,
+    throwOnError: false,
   })
 }
 
+// Selling prices on past quotations.
+// Only the line dialog reads it; a failure shows there.
 export function useItemPriceHistory(itemId: number | undefined, limit?: number) {
   return useQuery({
     queryKey: itemId ? queryKeys.items.priceHistory(itemId, limit) : queryKeys.items.all,
@@ -102,6 +116,7 @@ export function useItemPriceHistory(itemId: number | undefined, limit?: number) 
       itemId !== undefined && itemId > 0
         ? () => itemsApi.priceHistory(itemId, { limit })
         : skipToken,
+    throwOnError: false,
   })
 }
 

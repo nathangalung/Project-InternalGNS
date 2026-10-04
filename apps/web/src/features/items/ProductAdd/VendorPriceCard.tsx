@@ -1,5 +1,6 @@
 import { Menu } from "@base-ui/react/menu"
 import { useId } from "react"
+import LoadError from "@/components/shared/LoadError"
 import {
   Autocomplete,
   AutocompleteContent,
@@ -7,6 +8,7 @@ import {
   AutocompleteItem,
   AutocompleteList,
 } from "@/components/ui/autocomplete"
+import type { LookupFailure } from "@/lib/lookup"
 import { dropdown, dropdownLabel, ui } from "@/lib/ui"
 import { cn } from "@/lib/utils"
 import {
@@ -35,6 +37,10 @@ type VendorPriceCardProps = {
   profit: number
   profitPct: string
   onAddVendorNew: () => void
+  // Failed lookups
+  vendorFailure?: LookupFailure | null
+  historyFailure?: LookupFailure | null
+  recommendationFailure?: LookupFailure | null
 }
 
 // Vendor and price card.
@@ -54,6 +60,9 @@ export default function VendorPriceCard({
   profit,
   profitPct,
   onAddVendorNew,
+  vendorFailure = null,
+  historyFailure = null,
+  recommendationFailure = null,
 }: VendorPriceCardProps) {
   const vendorId = useId()
   const buyId = useId()
@@ -65,6 +74,12 @@ export default function VendorPriceCard({
       }`}
     >
       <div className={ui.modalSectionHeading}>Vendor dan Harga Beli</div>
+      {recommendationFailure && (
+        <LookupRow
+          message="Gagal memuat rekomendasi vendor dan harga."
+          failure={recommendationFailure}
+        />
+      )}
 
       <div className={ui.field}>
         <label htmlFor={vendorId} className={ui.fieldLabel}>
@@ -88,10 +103,19 @@ export default function VendorPriceCard({
             }}
           />
           <AutocompleteContent>
+            {vendorFailure && (
+              <LookupRow
+                message="Gagal memuat vendor."
+                failure={vendorFailure}
+                className="px-5 py-2.5"
+              />
+            )}
             {vendorMatches.length === 0 ? (
-              <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
-                Tidak ada hasil. Silahkan tambahkan vendor baru.
-              </div>
+              !vendorFailure && (
+                <div className={`px-5 py-2.5 ${dropdownLabel(false)}`}>
+                  Tidak ada hasil. Silahkan tambahkan vendor baru.
+                </div>
+              )
             ) : (
               <AutocompleteList>
                 {vendorMatches.map((v) => {
@@ -206,6 +230,9 @@ export default function VendorPriceCard({
           </Menu.Positioner>
         </Menu.Portal>
       </Menu.Root>
+      {historyFailure && (
+        <LookupRow message="Gagal memuat historis harga jual." failure={historyFailure} />
+      )}
 
       <div className={ui.field}>
         <span className={ui.fieldLabel}>Profit</span>
@@ -218,6 +245,26 @@ export default function VendorPriceCard({
         </div>
       </div>
     </div>
+  )
+}
+
+// Failed lookup with retry.
+function LookupRow({
+  message,
+  failure,
+  className,
+}: {
+  message: string
+  failure: LookupFailure
+  className?: string
+}) {
+  return (
+    <LoadError
+      message={message}
+      onRetry={failure.retry}
+      retrying={failure.retrying}
+      className={className}
+    />
   )
 }
 

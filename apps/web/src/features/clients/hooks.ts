@@ -8,15 +8,17 @@ import {
 import * as clientsApi from "@/features/clients/api"
 import { contactEmailError } from "@/features/clients/helpers"
 import { errorMessage } from "@/lib/errors"
+import { type LookupOptions, lookupThrow } from "@/lib/query-client"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
 import { toast } from "@/lib/toast"
 import { validateAsset } from "@/lib/upload-validation"
 
-export function useClients(params: clientsApi.ClientListParams = {}) {
+export function useClients(params: clientsApi.ClientListParams = {}, lookup: LookupOptions = {}) {
   return useQuery({
     queryKey: queryKeys.clients.list(params),
     queryFn: () => clientsApi.list(params),
+    ...lookupThrow(lookup),
     placeholderData: keepPreviousData,
   })
 }
@@ -28,18 +30,24 @@ export function useClientSummary() {
   })
 }
 
-export function useClient(id: number | undefined) {
+export function useClient(id: number | undefined, lookup: LookupOptions = {}) {
   return useQuery({
     queryKey: id ? queryKeys.clients.detail(id) : queryKeys.clients.all,
     queryFn: id !== undefined && id > 0 ? () => clientsApi.get(id) : skipToken,
+    ...lookupThrow(lookup),
   })
 }
 
-export function useClientSearch(q: string, options: { minScore?: number; limit?: number } = {}) {
+export function useClientSearch(
+  q: string,
+  options: { minScore?: number; limit?: number } = {},
+  lookup: LookupOptions = {},
+) {
   return useQuery({
     queryKey: queryKeys.clients.search(q),
     queryFn: () => clientsApi.search(q, options),
     enabled: q.trim().length > 0,
+    ...lookupThrow(lookup),
   })
 }
 

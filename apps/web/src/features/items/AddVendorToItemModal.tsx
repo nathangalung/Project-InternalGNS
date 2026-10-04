@@ -1,4 +1,5 @@
 import { useId, useState } from "react"
+import LoadError from "@/components/shared/LoadError"
 import Modal from "@/components/shared/Modal"
 import SearchCombobox from "@/components/shared/SearchCombobox"
 import { addVendorError } from "@/features/items/helpers"
@@ -166,7 +167,14 @@ export default function AddVendorToItemModal({
               }`}
               panelClassName="border-[rgba(204,195,216,0.4)] py-1"
               status={
-                searching && vendorMatches.length === 0 ? (
+                vendorSearch.isError ? (
+                  <LoadError
+                    message="Gagal memuat vendor."
+                    onRetry={() => void vendorSearch.refetch()}
+                    retrying={vendorSearch.isFetching}
+                    className="px-5 py-3"
+                  />
+                ) : searching && vendorMatches.length === 0 ? (
                   <div className="px-5 py-3 text-center text-[13px] text-dark-500">
                     Mencari vendor…
                   </div>

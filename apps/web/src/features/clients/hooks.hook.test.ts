@@ -307,3 +307,27 @@ describe("useClientContacts failure", () => {
     await until(() => expect(result.current.isError).toBe(true))
   })
 })
+
+// The quotation wizard keeps its lines.
+describe("wizard client lookups", () => {
+  const fail = new Error("502")
+  const cases: [string, () => void, () => { isError: boolean }][] = [
+    [
+      "list",
+      () => m.list.mockRejectedValue(fail),
+      () => useClients({ limit: 50 }, { throwOnError: false }),
+    ],
+    [
+      "search",
+      () => m.search.mockRejectedValue(fail),
+      () => useClientSearch("pt", { limit: 30 }, { throwOnError: false }),
+    ],
+    ["detail", () => m.get.mockRejectedValue(fail), () => useClient(7, { throwOnError: false })],
+  ]
+
+  it.each(cases)("%s keeps a failure out of the route error boundary", async (_n, arm, hook) => {
+    arm()
+    const { result } = renderQueryHook(hook, throwingQueryClient())
+    await until(() => expect(result.current.isError).toBe(true))
+  })
+})

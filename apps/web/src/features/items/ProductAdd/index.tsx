@@ -14,6 +14,7 @@ import * as vendorsApi from "@/features/vendors/api"
 import { useCreateVendor } from "@/features/vendors/hooks"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { errorMessage } from "@/lib/errors"
+import { lookupFailure } from "@/lib/lookup"
 import { ui } from "@/lib/ui"
 import ProductCreateModal from "../ProductCreateModal"
 import {
@@ -54,6 +55,11 @@ type ProductAddProps = {
   // Document the line belongs to
   docKind?: "quotation" | "po"
 }
+
+// Lookups that fail in place.
+//
+// The route error boundary would discard the quotation or PO being edited.
+const INLINE = { throwOnError: false } as const
 
 const DIALOG_TITLE = {
   quotation: { add: "Tambah Produk ke Quotation", edit: "Edit Produk Quotation" },
@@ -101,15 +107,20 @@ export default function ProductAdd({
   const productQueryDebounced = useDebouncedValue(productQueryRaw, 250)
   const requestQueryDebounced = useDebouncedValue(requestQueryRaw, 250)
   // A deactivated product must not be offered for a new line.
-  const { data: searchResp } = useItemSearchAdvanced(productQueryDebounced, {
-    limit: 10,
-    isActive: true,
-  })
-  const { data: requestSearchResp } = useItemSearchAdvanced(requestQueryDebounced, {
-    limit: 10,
-    isActive: true,
-  })
-  const { data: itemsAll } = useItems({ limit: 50 })
+  const productSearch = useItemSearchAdvanced(
+    productQueryDebounced,
+    { limit: 10, isActive: true },
+    INLINE,
+  )
+  const requestSearch = useItemSearchAdvanced(
+    requestQueryDebounced,
+    { limit: 10, isActive: true },
+    INLINE,
+  )
+  const itemsAllQuery = useItems({ limit: 50 }, INLINE)
+  const searchResp = productSearch.data
+  const requestSearchResp = requestSearch.data
+  const itemsAll = itemsAllQuery.data
   const productCatalog: CatalogItem[] = useMemo(() => {
     if (productQueryDebounced.length > 0) {
       return (searchResp?.hits ?? []).map((h) => ({
@@ -144,10 +155,12 @@ export default function ProductAdd({
     }))
   }, [requestQueryDebounced, requestSearchResp, itemsAll])
 
-  const { data: vendorRows } = useItemVendors(pickedItemId ?? undefined)
+  const itemVendors = useItemVendors(pickedItemId ?? undefined)
+  const vendorRows = itemVendors.data
   // Every active vendor is searchable, not only the item's own.
   const vendorQueryDebounced = useDebouncedValue(form.namaVendor.trim(), 250)
-  const { data: vendorSearch } = useActiveVendorOptions(vendorQueryDebounced)
+  const vendorSearchQuery = useActiveVendorOptions(vendorQueryDebounced)
+  const vendorSearch = vendorSearchQuery.data
   const vendorOptions: VendorOption[] = useMemo(() => {
     const remote = (vendorRows ?? []).map((r) => ({
       nama: r.vendorName,
@@ -163,7 +176,8 @@ export default function ProductAdd({
   }, [vendorRows, extraVendors, vendorSearch, pickedItemId, initialData])
 
   // A picked product starts from its recommendation, once.
-  const { data: recommendation } = useLineRecommendation(autofillFor ?? undefined, clientId)
+  const recommendationQuery = useLineRecommendation(autofillFor ?? undefined, clientId)
+  const recommendation = recommendationQuery.data
   useEffect(() => {
     if (autofillFor === null || recommendation === undefined) return
     if (recommendation && recommendation.itemId === autofillFor) {
@@ -178,7 +192,8 @@ export default function ProductAdd({
     setAutofillFor(null)
   }, [autofillFor, recommendation, form])
 
-  const { data: priceHistoryRows } = useItemPriceHistory(pickedItemId ?? undefined, 10)
+  const priceHistory = useItemPriceHistory(pickedItemId ?? undefined, 10)
+  const priceHistoryRows = priceHistory.data
   const historisOptions: HistorisOption[] = useMemo(
     () =>
       (priceHistoryRows ?? []).map((r) => ({
@@ -327,6 +342,17 @@ export default function ProductAdd({
   const isBeliChanged = initialPrices.beli !== null && currentBeli !== initialPrices.beli
   const isJualChanged = initialPrices.jual !== null && currentJual !== initialPrices.jual
 
+  // The list each dropdown shows.
+  const productFailure = lookupFailure(
+    productQueryDebounced.length > 0 ? productSearch : itemsAllQuery,
+  )
+  const requestFailure = lookupFailure(
+    requestQueryDebounced.length > 0 ? requestSearch : itemsAllQuery,
+  )
+  const vendorFailure = lookupFailure(itemVendors, vendorSearchQuery)
+  const historyFailure = lookupFailure(priceHistory)
+  const recommendationFailure = autofillFor === null ? null : lookupFailure(recommendationQuery)
+
   function pickVendor(v: VendorOption) {
     setForm((prev) => ({
       ...prev,
@@ -451,6 +477,8 @@ export default function ProductAdd({
               setShowProductNew(true)
             }}
             onPickProduct={pickProduct}
+            requestFailure={requestFailure}
+            productFailure={productFailure}
             onPickRequestSuggestion={(item) => {
               setRequestedItem(item)
               const label = formatKodeNama(item.kode, item.nama)
@@ -492,6 +520,9 @@ export default function ProductAdd({
             isVendorFilled={pricesUnlocked}
             profit={profit}
             profitPct={profitPct}
+            vendorFailure={vendorFailure}
+            historyFailure={historyFailure}
+            recommendationFailure={recommendationFailure}
             onAddVendorNew={() => {
               setOpenDropdown(null)
               setNewVendorForm({ nama: "", harga: "" })
