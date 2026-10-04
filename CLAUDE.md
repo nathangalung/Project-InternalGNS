@@ -194,7 +194,11 @@ the next value from that type's `doc_counters` row under its row lock, so
 concurrent callers queue and a rolled-back document leaves no gap; it is
 never a SEQUENCE. A revision keeps its base number with `Rev.n`, and a
 Pengganti draws a new invoice number. Numbers issued before 00098 keep their
-legacy format (year, client number and a yearly count). A purchase order's
+legacy format (year, client number and a yearly count). A re-imported
+document also keeps the number it was first issued under in `legacy_no`
+(quotations, invoices) or `legacy_dn_no` (the PO's original DO): only the
+import writes it (00099), the list searches match it as typed text but never
+as a period, and the detail pages show it muted as No. lama. A purchase order's
 number is the client's own PO number: accepting a quotation leaves
 `po_number` NULL until a user enters it (blank means none), ON_PROGRESS and
 DELIVERED require it (a `po_number` gap on the PO in the completeness gate,
