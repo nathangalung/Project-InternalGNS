@@ -230,14 +230,17 @@ document's status history table.
   quotations past `validity_days` from the last send, by WIB date. The API
   runs it at startup and then hourly (`quotations.RunExpiryLoop`), and
   `pg_try_advisory_xact_lock` keeps two replicas from both doing a run.
-  The quotation PDF is dated at that last send, so its date plus its
-  Validity ends when the quotation expires; a draft prints today and a
-  legacy row with no send its creation date. Its ATTN block prints the
+  The quotation PDF is dated at its last send, a draft to sent move, so
+  for a quotation sent in the app its date plus its Validity ends when it
+  expires; a draft prints today, and a row with no such move (legacy, or
+  imported straight as sent, whose NULL to sent creation log carries the
+  import time) prints its creation date. Its ATTN block prints the
   chosen contact's own email and phone, read by id even once that contact
   is deactivated, and none when the quotation has no contact.
   A saved draft is edited live, by several users at once, one part each.
-  The parts are the header (contact, shipping, terms, discount) and each
-  line (`line:<id>`); `POST /quotations/{id}/locks` claims one for two
+  The parts are the header (contact, client reference, shipping, terms,
+  discount) and each line (`line:<id>`); `POST /quotations/{id}/locks`
+  claims one for two
   minutes (`EditLockTTL`, renewed every 30 s by `useEditLocks`), and a part
   someone else holds is a 409 `edit_locked` whose detail names them. A line
   save and the header save need the caller's claim; add, delete, the

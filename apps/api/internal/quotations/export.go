@@ -119,14 +119,14 @@ func (h *ExportHandler) buildData(ctx context.Context, d QuotationDetail) (expor
 }
 
 // documentDate is the printed date.
-// It is the last send, the start fn_expire_quotations counts validity
-// from, so the printed date and validity end when the app expires the
-// quotation. A draft is dated now; a legacy row with no send keeps its
-// creation date.
+// It is the last send, a draft to sent move; create writes only drafts,
+// so a NULL to sent row is the creation log of a row inserted as sent
+// (the import) and is stamped at the load, not the send. A draft is
+// dated now; a row with no send keeps its creation date.
 func documentDate(d QuotationDetail, now time.Time) time.Time {
 	var sent time.Time
 	for _, h := range d.History {
-		if h.ToStatus == StatusSent && h.ChangedAt.After(sent) {
+		if h.ToStatus == StatusSent && h.FromStatus != nil && h.ChangedAt.After(sent) {
 			sent = h.ChangedAt
 		}
 	}

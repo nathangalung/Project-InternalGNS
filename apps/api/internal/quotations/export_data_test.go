@@ -319,15 +319,16 @@ func TestBuildExportData_CompanyNameBreaksLongTokens(t *testing.T) {
 	}
 }
 
-// The PDF is dated at its last send.
-// Validity counts from that send (fn_expire_quotations), so the printed
-// date plus the printed validity ends when the app expires it. A draft is
-// dated today; a legacy row with no send keeps its creation date.
+// The PDF dates at sending.
+// A send is the draft to sent move. A draft is dated today; a row with no
+// such move (legacy, or imported straight as sent, whose creation log reads
+// NULL to sent at the import run) keeps its creation date.
 func TestBuildExportData_DatedAtLastSend(t *testing.T) {
 	created := time.Date(2026, 9, 1, 2, 0, 0, 0, time.UTC)
 	now := time.Date(2026, 10, 3, 18, 30, 0, 0, time.UTC) // 4 Oct in WIB
+	draft, sentStatus := StatusDraft, StatusSent
 	sent := func(at time.Time) StatusHistoryEntry {
-		return StatusHistoryEntry{ToStatus: StatusSent, ChangedAt: at}
+		return StatusHistoryEntry{FromStatus: &draft, ToStatus: StatusSent, ChangedAt: at}
 	}
 	cases := []struct {
 		name    string
@@ -346,6 +347,11 @@ func TestBuildExportData_DatedAtLastSend(t *testing.T) {
 		}, "Jakarta, 21 September 2026"},
 		{"legacy row without a send keeps its creation date", StatusAccepted, nil,
 			"Jakarta, 1 September 2026"},
+		{"imported row ignores its creation log", StatusAccepted, []StatusHistoryEntry{
+			{ToStatus: StatusSent, ChangedAt: time.Date(2026, 9, 24, 3, 0, 0, 0, time.UTC)},
+			{FromStatus: &sentStatus, ToStatus: StatusAccepted,
+				ChangedAt: time.Date(2026, 9, 24, 3, 0, 1, 0, time.UTC)},
+		}, "Jakarta, 1 September 2026"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
