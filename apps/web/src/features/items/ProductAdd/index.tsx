@@ -117,7 +117,7 @@ export default function ProductAdd({
     { limit: 10, isActive: true },
     INLINE,
   )
-  const itemsAllQuery = useItems({ limit: 50 }, INLINE)
+  const itemsAllQuery = useItems({ limit: 50, isActive: true }, INLINE)
   const searchResp = productSearch.data
   const requestSearchResp = requestSearch.data
   const itemsAll = itemsAllQuery.data
