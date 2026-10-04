@@ -46,7 +46,7 @@ func TestRepo_List_EscapesLikeWildcards(t *testing.T) {
 	ids(`\`)
 }
 
-// A month and year find numbers.
+// Month-year search finds numbers.
 // The invoice and its quotation are both searched, and the month is
 // matched between slashes. 1999 keeps every other row out.
 func TestRepo_List_PeriodSearch(t *testing.T) {

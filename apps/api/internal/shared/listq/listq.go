@@ -219,7 +219,7 @@ func Period(q string) (pattern string, ok bool) {
 	return "%/" + month + "/" + year + "%", true
 }
 
-// digits reports a non-empty ASCII digit run.
+// digits reports ASCII digits.
 func digits(s string) bool {
 	if s == "" {
 		return false

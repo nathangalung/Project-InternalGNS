@@ -826,7 +826,7 @@ test.describe("quotation status", () => {
 })
 
 test.describe("quotation list", () => {
-  // Numbers carry their WIB month and year.
+  // Numbers carry their period.
   test("a search by month and year finds this month's numbers", async ({ page, seed }) => {
     const client = await seed.client()
     const item = await seed.item()

@@ -40,7 +40,7 @@ export const PO_STATUS_ORDER: PoStatus[] = [
 // Shown for a numberless PO.
 export const PO_NUMBER_MISSING = "Belum ada No. PO"
 
-// Name of a PO in prose.
+// PO name in prose.
 //
 // Its client number, or the quotation it came from while it has none.
 export function poRef(po: { poNumber?: string; quotationNo: string }): string {
@@ -55,7 +55,7 @@ export function poNumberRequired(status: PoStatus): boolean {
   return status === "ON_PROGRESS" || status === "DELIVERED"
 }
 
-// The server's refusal, shown before sending.
+// Server refusal, shown early.
 export const PO_NUMBER_REQUIRED_MESSAGE =
   "No. PO klien wajib diisi untuk PO yang sudah Dalam Progres atau Dikirim."
 

@@ -238,7 +238,7 @@ describe("PO writes", () => {
     expect(invalidated(qc, [poDetail, dash, invList])).toEqual([poDetail, invList])
   })
 
-  // The upload modal shows a field refusal.
+  // Modal shows field refusals.
   it("details leave a field refusal to the form", async () => {
     m.updateDetails.mockRejectedValue(numberRefused())
     const { result } = renderQueryHook(() => useUpdatePoDetails())
@@ -443,7 +443,7 @@ describe("usePoUpload", () => {
     expect(hook.result.current.detailsLocked).toBe(false)
   })
 
-  // A field refusal goes back to the modal.
+  // Field refusal returns to modal.
   it("returns a refused number for the form, without attaching", async () => {
     m.updateDetails.mockRejectedValue(numberRefused())
     const { ok, errors, hook } = await save(row, pdf(), changed)
@@ -464,7 +464,7 @@ describe("usePoUpload", () => {
     expect(hook.result.current.detailsLocked).toBe(false)
   })
 
-  // A numberless PO sends a typed number.
+  // Numberless PO sends typed number.
   it("saves a first number on a PO without one", async () => {
     const { ok } = await save({ ...row, poNumber: undefined }, null, { ...same, poNumber: "PO-9" })
     expect(ok).toBe(true)

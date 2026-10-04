@@ -49,7 +49,7 @@ func (s *scenarioState) poNumberAndDate(number, date string) error {
 	return nil
 }
 
-// The PO keeps the accepted number.
+// PO keeps accepted number.
 func (s *scenarioState) poKeepsClientNumber() error {
 	po, err := s.readPO()
 	if err != nil {

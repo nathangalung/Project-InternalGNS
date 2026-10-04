@@ -11,7 +11,7 @@ type CompletenessModalProps = {
   // Route key of the PO and its quotation
   quotationId: number
   onClose: () => void
-  // Opens the PO number form; absent while it is locked
+  // Opens number form, unless locked
   onEnterPoNumber?: () => void
 }
 

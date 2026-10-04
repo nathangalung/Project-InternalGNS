@@ -236,7 +236,7 @@ func TestRepo_List_Filters(t *testing.T) {
 	}
 }
 
-// A month and year find numbers.
+// Month-year search finds numbers.
 // The quotation and delivery note numbers match whole periods only; the
 // client's own PO number also carries one. 1999 keeps every other row out.
 func TestRepo_List_PeriodSearch(t *testing.T) {
@@ -274,7 +274,7 @@ func TestRepo_List_PeriodSearch(t *testing.T) {
 	}
 }
 
-// A numberless PO exports a blank cell.
+// Numberless PO exports blank.
 func TestHandler_Export_NumberlessPO(t *testing.T) {
 	ctx, tx, srv := txServer(t)
 	fx := newListFixture(t, tx)

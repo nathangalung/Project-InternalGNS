@@ -230,10 +230,10 @@ func (s *scenarioState) createForBothClients() error {
 	return nil
 }
 
-// quotationSeq is a number's running part.
+// quotationSeq reads the count.
 var quotationSeq = regexp.MustCompile(`^Q-([0-9]{5,})/GNS/[IVX]+/[0-9]{4}$`)
 
-// The second number follows the first.
+// Second number follows first.
 func (s *scenarioState) docNosFollow() error {
 	var seqs [2]int
 	for i, no := range s.docNos {

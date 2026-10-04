@@ -180,7 +180,7 @@ func TestNextDocNo_GrowsPastFiveDigits(t *testing.T) {
 	assert.Regexp(t, `^DN-100001/GNS/`, nextDocNo(t, ctx, tx, "DN"))
 }
 
-// Only Q, INV and DN are numbered.
+// Only Q, INV, DN numbered.
 // A PO carries the client's own number.
 func TestNextDocNo_UnknownType(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)

@@ -7,7 +7,7 @@ import type { PoStatus } from "../types"
 import { PO_LABEL, PO_STATUS_CONFIG } from "./helpers"
 
 type HeaderProps = {
-  // None until the client's number is entered
+  // None until entered
   poNumber?: string
   quotationId: number
   quotationNo: string

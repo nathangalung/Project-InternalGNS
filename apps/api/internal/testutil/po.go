@@ -9,7 +9,7 @@ import (
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/db"
 )
 
-// EnterPONumber gives a PO its number.
+// EnterPONumber numbers a PO.
 // Accepting a quotation leaves the client's PO number empty and ON_PROGRESS
 // requires one, so a test walking a PO into work enters it first, as the
 // user does. A PO that has a number keeps it.

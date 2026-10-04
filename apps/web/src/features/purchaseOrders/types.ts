@@ -6,7 +6,7 @@ export type PoRow = {
   id: number
   quotationId: number
   quotationNo: string
-  // Client's own number; none until entered
+  // Client's number, none until entered
   poNumber?: string
   poDate: string
   companyClientId: number

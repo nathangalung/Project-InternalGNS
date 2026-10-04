@@ -29,8 +29,8 @@ type ClientCompleteness struct {
 	ContactInactive bool `db:"contact_inactive"`
 }
 
-// gateRow is the first gate read.
-// It carries the PO's own number beside its client.
+// gateRow carries number and client.
+// The PO's own number, read in the same query as its client.
 type gateRow struct {
 	ClientCompleteness
 	PoNumber *string `db:"po_number"`

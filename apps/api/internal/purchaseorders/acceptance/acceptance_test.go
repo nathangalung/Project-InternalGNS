@@ -243,7 +243,7 @@ func (s *scenarioState) poDetailStatusEquals(want string) error {
 	return nil
 }
 
-// The read PO has no number.
+// Read PO has no number.
 func (s *scenarioState) poNumberMissing() error {
 	var po purchaseorders.PurchaseOrder
 	if err := json.Unmarshal(s.body, &po); err != nil {

@@ -92,7 +92,7 @@ describe("detailsChanged", () => {
     expect(detailsChanged(row, next)).toBe(changed)
   })
 
-  // A numberless PO compares as blank.
+  // Numberless PO compares blank.
   it.each([
     [{ poNumber: "  ", poDate: "2026-09-01" }, false],
     [{ poNumber: "PO-1", poDate: "2026-09-01" }, true],

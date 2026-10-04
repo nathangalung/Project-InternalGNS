@@ -361,7 +361,7 @@ func (s *scenarioState) changeNumber() error {
 	return s.sendRequest(http.MethodPut, "/clients/"+strconv.FormatInt(s.clientID, 10), body)
 }
 
-// The client holds the number sent.
+// Client holds the sent number.
 func (s *scenarioState) numberIsChanged() error {
 	var c clients.Client
 	if err := json.Unmarshal(s.body, &c); err != nil {

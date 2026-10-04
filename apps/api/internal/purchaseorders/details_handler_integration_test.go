@@ -168,7 +168,7 @@ func TestRepo_UpdateDetails_NumberRule(t *testing.T) {
 	}
 }
 
-// Clearing in work is a field error.
+// Clearing in work refused.
 func TestHandler_UpdateDetails_ClearInWork(t *testing.T) {
 	_, tx, srv := txServer(t)
 	_, poID := poAt(t, tx, purchaseorders.StatusOnProgress)
@@ -196,7 +196,7 @@ func TestRepo_NumberlessPOsOfOneClient(t *testing.T) {
 	}
 }
 
-// A blank number never reaches the table.
+// Blank numbers never stored.
 func TestPurchaseOrders_BlankNumberRefused(t *testing.T) {
 	ctx, tx := testutil.BeginTx(t)
 	_, poID := acceptedQuotationWithBarePO(t, tx)
