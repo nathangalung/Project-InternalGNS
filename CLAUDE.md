@@ -537,7 +537,13 @@ Coverage gates fail CI below their tier; `make cover` runs both locally.
    `TestLatexExports_LongPartyWraps` checks with `pdftotext -bbox` that they
    stay left of that block. `TestLatexExports_Clean` and `_MultiPage`
    fail on any overfull or underfull box, which is what keeps text from being
-   cut.
+   cut. A cancelled invoice still downloads, marked DIBATALKAN beside its
+   title, in its running header and as a page watermark (a kernel
+   `shipout/background` hook, no extra package); a Pengganti prints
+   `Pengganti dari <no>` under its Invoice No. The export reads the one
+   detail row (`invoices.get_detail_by_id`), so a failed read is a 5xx, never
+   a PDF with a blank party; `TestLatexExports_InvoiceMarks` keeps both
+   marks on one clean A5 sheet.
 9. Invoice tax figures are rounded per line, then summed to the header (matching
    DJP e-faktur), and `ppn_amount` is computed from the already-rounded DPP
    base. The quotation (`fn_line_dpp`, `fn_line_ppn`, stored by the functions

@@ -9,8 +9,6 @@ import (
 
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
 	"github.com/nathangalung/internalgns/apps/api/internal/pdfgen"
-	"github.com/nathangalung/internalgns/apps/api/internal/purchaseorders"
-	"github.com/nathangalung/internalgns/apps/api/internal/quotations"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/assetproxy"
 	"github.com/nathangalung/internalgns/apps/api/internal/shared/deps"
 	"github.com/nathangalung/internalgns/apps/api/internal/storage"
@@ -80,14 +78,7 @@ func RoutesWithProofs(d deps.Deps, proofs ProofStore) chi.Router {
 	r.Get("/{id}/coretax.xml", coretax.Export)
 
 	if d.TemplatesRoot != "" {
-		exp := NewExportHandler(
-			repo,
-			clientsRepo,
-			quotations.NewRepo(d.Pool, d.Queries),
-			purchaseorders.NewRepo(d.Pool, d.Queries),
-			pdfgen.NewRenderer(d.TemplatesRoot),
-			d.Pdf,
-		)
+		exp := NewExportHandler(repo, pdfgen.NewRenderer(d.TemplatesRoot), d.Pdf)
 		r.Get("/{id}/pdf", exp.ExportPDF)
 	}
 

@@ -1,9 +1,71 @@
 package pdfgen
 
 import (
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 )
+
+// Void and Pengganti marks fit.
+// A cancelled Pengganti carries both marks; the tightest A5 sheet still
+// holds five products and shipping on one clean page, A4 and long tables
+// stay clean, and the text layer carries both marks.
+func TestLatexExports_InvoiceMarks(t *testing.T) {
+	withShipping := sampleItems(5)
+	withShipping = append(withShipping, map[string]any{
+		"No": 6, "Qty": "1", "Unit": "", "Name": "Pengiriman", "Description": "Pelabuhan Tanjung Priok",
+		"UnitPrice": "Rp~50.000", "Amount": "Rp~50.000",
+	})
+	marked := func(items []map[string]any, a4 bool) map[string]any {
+		d := invoiceData(items)
+		d["UseA4"] = a4
+		d["Cancelled"] = true
+		d["ReplacesInvoiceNo"] = "INV-26400393 1/GNS/IV/2026"
+		return d
+	}
+	cases := []struct {
+		name      string
+		data      map[string]any
+		wantPages int
+	}{
+		{"A5 five products and shipping", marked(withShipping, false), 1},
+		{"A4", marked(sampleItems(7), true), 0},
+		{"A4 multi-page", marked(sampleItems(60), true), 0},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			log, dir := compileDir(t, "invoice/Invoice.tex.tmpl", c.data)
+			if !producedOutput(log) {
+				t.Skip("xelatex produced no output")
+			}
+			if over, under, warn := badBoxes(log); over != 0 || under != 0 || warn != 0 {
+				t.Errorf("overfull=%d underfull=%d warnings=%d, want all 0", over, under, warn)
+			}
+			pages := pageCount(log)
+			if c.wantPages != 0 && pages != c.wantPages {
+				t.Errorf("pages = %d, want %d", pages, c.wantPages)
+			}
+			bin, err := exec.LookPath("pdftotext")
+			if err != nil {
+				t.Skip("pdftotext unavailable; the marks are not read back")
+			}
+			out, err := exec.Command(bin, filepath.Join(dir, "doc.pdf"), "-").Output()
+			if err != nil {
+				t.Fatalf("pdftotext: %v", err)
+			}
+			text := string(out)
+			// The title or the running head names it on every page; the
+			// rotated watermark comes out letter by letter, so it is not counted.
+			if got := strings.Count(text, "INVOICE DIBATALKAN"); got < pages {
+				t.Errorf("INVOICE DIBATALKAN printed %d times over %d page(s), want one per page", got, pages)
+			}
+			if !strings.Contains(text, "Pengganti dari") || !strings.Contains(text, "INV-26400393 1/GNS/IV/2026") {
+				t.Errorf("Pengganti line missing:\n%s", text)
+			}
+		})
+	}
+}
 
 // A5 invoice fits one sheet.
 // UseA4 flips above five products, so an A5 invoice holds up to five

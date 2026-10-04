@@ -49,33 +49,40 @@ func TestRealTemplate_Invoice(t *testing.T) {
 		PaymentTerms, BankName, BankAccountNo, BankAccountName                        string
 		DateLine, SignerName                                                          string
 		UseA4                                                                         bool
+		Cancelled                                                                     bool
+		ReplacesInvoiceNo                                                             string
 	}{
-		InvoiceNo:       "INV-2026-0001",
-		PONo:            "PO-2026-0001",
-		PODate:          "1 January 2026",
-		CompanyName:     "PT Sample",
-		CompanyNPWP:     "01.234.567.8-901.000",
-		CompanyAddress:  "Jl. Test",
-		VesselName:      "MV Test",
-		InvoiceDate:     "1 January 2026",
-		DueDate:         "31 January 2026",
-		Items:           []item{{No: 1, Qty: "1", Unit: "PCS", Name: "X", Description: "Y", UnitPrice: "Rp~100", Amount: "Rp~100"}},
-		TotalProduk:     "Rp~100",
-		Diskon:          "",
-		DiscountPct:     "0",
-		DPP:             "Rp~100",
-		DPPNilaiLain:    "Rp~91",
-		PPN:             "Rp~12",
-		Total:           "Rp~112",
-		PaymentTerms:    "NET 30",
-		BankName:        "BCA",
-		BankAccountNo:   "1234567890",
-		BankAccountName: "PT GNS",
-		DateLine:        "Jakarta, 1 January 2026",
-		SignerName:      "Direktur",
-		UseA4:           true,
+		InvoiceNo:         "INV-2026-0001",
+		PONo:              "PO-2026-0001",
+		PODate:            "1 January 2026",
+		CompanyName:       "PT Sample",
+		CompanyNPWP:       "01.234.567.8-901.000",
+		CompanyAddress:    "Jl. Test",
+		VesselName:        "MV Test",
+		InvoiceDate:       "1 January 2026",
+		DueDate:           "31 January 2026",
+		Items:             []item{{No: 1, Qty: "1", Unit: "PCS", Name: "X", Description: "Y", UnitPrice: "Rp~100", Amount: "Rp~100"}},
+		TotalProduk:       "Rp~100",
+		Diskon:            "",
+		DiscountPct:       "0",
+		DPP:               "Rp~100",
+		DPPNilaiLain:      "Rp~91",
+		PPN:               "Rp~12",
+		Total:             "Rp~112",
+		PaymentTerms:      "NET 30",
+		BankName:          "BCA",
+		BankAccountNo:     "1234567890",
+		BankAccountName:   "PT GNS",
+		DateLine:          "Jakarta, 1 January 2026",
+		SignerName:        "Direktur",
+		UseA4:             true,
+		Cancelled:         true,
+		ReplacesInvoiceNo: "INV-2026-0000",
 	}
 	out := execTemplate(t, "invoice/Invoice.tex.tmpl", data)
+	if !strings.Contains(out, "Pengganti dari & : & INV-2026-0000") || !strings.Contains(out, "DIBATALKAN") {
+		t.Error("invoice output missing the Pengganti line or the DIBATALKAN mark")
+	}
 	if !strings.Contains(out, `\documentclass`) {
 		t.Error("invoice output missing \\documentclass preamble")
 	}

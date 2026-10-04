@@ -162,7 +162,13 @@ func (r *Repo) GetDetailByQuotation(ctx context.Context, quotationID int64) (Inv
 	return r.detail(ctx, "invoices.get_detail_by_quotation", quotationID)
 }
 
-func (r *Repo) detail(ctx context.Context, query string, id int64) (InvoiceDetail, error) {
+// documentHeader reads one detail row.
+// It skips the moves and timeline, which a printed document does not show.
+func (r *Repo) documentHeader(ctx context.Context, id int64) (InvoiceDetail, error) {
+	return r.detailRow(ctx, "invoices.get_detail_by_id", id)
+}
+
+func (r *Repo) detailRow(ctx context.Context, query string, id int64) (InvoiceDetail, error) {
 	rows, err := r.db.Query(ctx, r.store.Get(query), id)
 	if err != nil {
 		return InvoiceDetail{}, err
@@ -171,6 +177,11 @@ func (r *Repo) detail(ctx context.Context, query string, id int64) (InvoiceDetai
 	if errors.Is(err, pgx.ErrNoRows) {
 		return InvoiceDetail{}, ErrNotFound
 	}
+	return det, err
+}
+
+func (r *Repo) detail(ctx context.Context, query string, id int64) (InvoiceDetail, error) {
+	det, err := r.detailRow(ctx, query, id)
 	if err != nil {
 		return InvoiceDetail{}, err
 	}

@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises"
 import type { Page } from "@playwright/test"
 import { test as base, expect, savedTokens } from "./fixtures"
 import { call } from "./support/api"
@@ -279,6 +280,22 @@ test("a cancelled invoice without a Pengganti offers one (INV-10)", async ({
   await expect(statusBar(page).getByText(`Menggantikan ${invoice.invoiceNo}`)).toBeVisible()
   await expect(page.getByRole("heading", { name: `Invoice ${invoice.invoiceNo}` })).toHaveCount(0)
   await expectActions(page, ["Tandai Dikirim", "Batalkan & Terbitkan Pengganti"])
+})
+
+// The void copy stays printable.
+test("a cancelled invoice still downloads its PDF", async ({ page, admin, invoice }) => {
+  // Headless Chromium has no save dialog; take the anchor fallback.
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "showSaveFilePicker", { value: undefined })
+  })
+  await setInvoiceStatus(admin, invoice.id, "cancelled", "Dibatalkan lewat API")
+  await openInvoice(page, invoice)
+  const download = page.waitForEvent("download")
+  await page.getByRole("button", { name: "Unduh PDF" }).click()
+  const file = await download
+  expect(file.suggestedFilename()).toMatch(/\.pdf$/)
+  expect(await file.failure()).toBeNull()
+  expect((await readFile(await file.path())).subarray(0, 5).toString()).toBe("%PDF-")
 })
 
 // Only Dibatalkan lists it.

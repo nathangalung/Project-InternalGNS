@@ -40,9 +40,7 @@ func TestExport_NewExportHandler(t *testing.T) {
 
 	h := invoices.NewExportHandler(
 		invoices.NewRepo(pool, store),
-		clients.NewRepo(pool, store),
-		quotations.NewRepo(pool, store),
-		purchaseorders.NewRepo(pool, store),
+
 		pdfgen.NewRenderer(t.TempDir()),
 		deps.PdfSettings{},
 	)
@@ -208,14 +206,13 @@ func TestExport_PDF_Header(t *testing.T) {
 	client, err := clients.NewRepo(tx, store).GetByID(ctx, seedCompanyID)
 	require.NoError(t, err)
 	repo := invoices.NewRepo(tx, store)
-	inv, err := repo.GetByID(ctx, invID)
+	inv, err := repo.GetDetail(ctx, invID)
 	require.NoError(t, err)
 	items, err := repo.ListItems(ctx, invID)
 	require.NoError(t, err)
 
-	h := invoices.NewExportHandler(repo, clients.NewRepo(tx, store), quotations.NewRepo(tx, store),
-		purchaseorders.NewRepo(tx, store), pdfgen.NewRenderer(t.TempDir()), deps.PdfSettings{})
-	got := h.PDFHeaderForTest(ctx, inv, items)
+	h := invoices.NewExportHandler(repo, pdfgen.NewRenderer(t.TempDir()), deps.PdfSettings{})
+	got := h.PDFHeaderForTest(inv, items)
 
 	assert.Equal(t, `MV Sinar \& Bahari`, got.VesselName, "escaped for LaTeX")
 	assert.Equal(t, pdfgen.LatexEscape(po.PoNumber), got.PONo)
