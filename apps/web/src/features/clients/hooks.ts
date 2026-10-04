@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import * as clientsApi from "@/features/clients/api"
+import { contactEmailError } from "@/features/clients/helpers"
 import { errorMessage } from "@/lib/errors"
 import { queryKeys } from "@/lib/query-keys"
 import { uploadWithFreshKey } from "@/lib/storage-upload"
@@ -106,7 +107,10 @@ export function useUpdateContact() {
       void qc.invalidateQueries({ queryKey: queryKeys.clients.lists() })
       void qc.invalidateQueries({ queryKey: queryKeys.clients.detail(companyId) })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal memperbarui kontak.")),
+    // A taken email sits on the form's email input.
+    onError: (err) => {
+      if (!contactEmailError(err)) toast.error(errorMessage(err, "Gagal memperbarui kontak."))
+    },
   })
 }
 
@@ -126,7 +130,9 @@ export function useCreateContact() {
       void qc.invalidateQueries({ queryKey: queryKeys.clients.lists() })
       void qc.invalidateQueries({ queryKey: queryKeys.clients.detail(companyId) })
     },
-    onError: (err) => toast.error(errorMessage(err, "Gagal menyimpan kontak.")),
+    onError: (err) => {
+      if (!contactEmailError(err)) toast.error(errorMessage(err, "Gagal menyimpan kontak."))
+    },
   })
 }
 

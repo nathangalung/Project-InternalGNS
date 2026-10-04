@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nathangalung/internalgns/apps/api/internal/clients"
+	"github.com/nathangalung/internalgns/apps/api/internal/shared/httperr"
 )
 
 // seedContact posts a titled contact.
@@ -117,9 +119,26 @@ func TestHandler_CreateContact_ReusesDeletedEmail(t *testing.T) {
 	defer res.Body.Close()
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
 
-	// An active contact still owns its email.
+	// An active contact still owns its email, in any case.
 	dup := doJSON(t, srv, http.MethodPost, "/clients/"+strconv.FormatInt(firstClient, 10)+"/contacts",
-		map[string]any{"name": "Penyalin", "email": *seeded.Email})
+		map[string]any{"name": "Penyalin", "email": strings.ToUpper(*seeded.Email)})
 	defer dup.Body.Close()
-	assert.Equal(t, http.StatusConflict, dup.StatusCode)
+	requireEmailTaken(t, dup)
+
+	kept := seedContact(t, firstClient)
+	upd := doJSON(t, srv, http.MethodPatch, contactPath(firstClient, kept.ID),
+		map[string]any{"name": kept.Name, "email": *seeded.Email, "countryCode": "IDN"})
+	defer upd.Body.Close()
+	requireEmailTaken(t, upd)
+}
+
+// requireEmailTaken expects the email field.
+func requireEmailTaken(t *testing.T, res *http.Response) {
+	t.Helper()
+	require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+	var p httperr.Error
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&p))
+	assert.Equal(t, map[string]string{
+		"email": "Email ini sudah dipakai kontak aktif lain, di klien ini atau klien lain.",
+	}, p.Fields)
 }

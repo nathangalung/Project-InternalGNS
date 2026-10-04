@@ -165,6 +165,8 @@ test("a logo over 2 MB is refused and a small one is saved", async ({ page, seed
 
 // Phone takes 9-12 digits.
 const PHONE_ERROR = "Nomor telepon harus 9–12 digit angka."
+// Taken contact email copy.
+const EMAIL_TAKEN = "Email ini sudah dipakai kontak aktif lain, di klien ini atau klien lain."
 
 test("Tambah Klien refuses a 13-digit phone inline", async ({ page, seed }) => {
   await page.goto("/clients")
@@ -216,6 +218,30 @@ test("a contact edit refuses a 13-digit phone", async ({ page, seed }) => {
   await expect
     .poll(async () => (await api<Contact[]>("GET", `/clients/${client.id}/contacts`))[0].phone)
     .toBe("812345678901")
+})
+
+// Taken email sits on Email.
+test("a contact email another client's contact owns is refused on the field", async ({
+  page,
+  seed,
+}) => {
+  const owner = await seed.client()
+  const client = await seed.client()
+  const taken = owner.contactEmail ?? ""
+  expect(taken).not.toBe("")
+  await page.goto(`/clients/${client.id}`)
+  const card = contactsCard(page)
+  await card.getByRole("button", { name: "+ Tambah Narahubung" }).click()
+  await card.getByLabel("Nama *").fill(`${seed.prefix} Penyalin`)
+  const email = card.getByLabel("Email")
+  await email.fill(taken.toUpperCase())
+  await card.getByRole("button", { name: "Simpan", exact: true }).click()
+
+  await expect(email).toHaveAttribute("aria-invalid", "true")
+  await expect(page.getByText(EMAIL_TAKEN)).toHaveCount(1)
+  await expect(card.getByRole("button", { name: "Simpan", exact: true })).toBeDisabled()
+  await email.fill(`baru.${Date.now()}@example.com`)
+  await expect(page.getByText(EMAIL_TAKEN)).toHaveCount(0)
 })
 
 // Failed summary shows a dash.

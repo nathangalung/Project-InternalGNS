@@ -208,6 +208,29 @@ describe("contact writes", () => {
     await settle(() => result.current.mutateAsync(vars as never))
     expect(toast.error).toHaveBeenCalledWith(msg)
   })
+
+  // The form shows it on its email input.
+  it.each(cases.slice(0, 2))(
+    "%s leaves a taken email to the form",
+    async (name, hook, _ok, _f, vars) => {
+      const taken = "Email ini sudah dipakai kontak aktif lain, di klien ini atau klien lain."
+      const err = new ApiError(
+        422,
+        {
+          type: "about:blank",
+          title: "Unprocessable Entity",
+          status: 422,
+          fields: { email: taken },
+        },
+        taken,
+      )
+      const write = name === "create" ? m.createContact : m.updateContact
+      write.mockRejectedValue(err)
+      const { result } = renderQueryHook(hook)
+      await settle(() => result.current.mutateAsync(vars as never))
+      expect(toast.error).not.toHaveBeenCalled()
+    },
+  )
 })
 
 describe("useUploadClientLogo", () => {

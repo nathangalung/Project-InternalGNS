@@ -2,7 +2,11 @@ import { Link } from "@tanstack/react-router"
 import { useEffect, useId, useRef, useState } from "react"
 import Modal from "@/components/shared/Modal"
 import * as clientsApi from "@/features/clients/api"
-import { contactUpdateBody, getCompanyInitials } from "@/features/clients/helpers"
+import {
+  contactEmailError,
+  contactUpdateBody,
+  getCompanyInitials,
+} from "@/features/clients/helpers"
 import {
   useClientContacts,
   useClientLogoDownloadUrl,
@@ -108,6 +112,9 @@ export default function ClientDetail({ client }: ClientDetailProps) {
   const [editPhone, setEditPhone] = useState("")
   const [editEmail, setEditEmail] = useState("")
   const [editTitle, setEditTitle] = useState("")
+  // Server refusal of a taken email, until the input changes.
+  const [newEmailTaken, setNewEmailTaken] = useState("")
+  const [editEmailTaken, setEditEmailTaken] = useState("")
 
   const { data: countries } = useCountries()
   const updateClient = useUpdateClient()
@@ -162,10 +169,10 @@ export default function ClientDetail({ client }: ClientDetailProps) {
   const emailError = fieldErrors.email || optionalEmailError(email)
   const npwpError = fieldErrors.npwp || optionalNpwpError(npwp, countryCode)
   const newPhoneError = optionalPhoneError(newContactPhone)
-  const newEmailError = optionalEmailError(newContactEmail)
+  const newEmailError = newEmailTaken || optionalEmailError(newContactEmail)
   const canAddContact = Boolean(newContactName.trim()) && !newPhoneError && !newEmailError
   const editPhoneError = optionalPhoneError(editPhone)
-  const editEmailError = optionalEmailError(editEmail)
+  const editEmailError = editEmailTaken || optionalEmailError(editEmail)
   const canSaveContact = Boolean(editName.trim()) && !editPhoneError && !editEmailError
 
   const countryOption = countries?.find((c) => c.code === countryCode)
@@ -239,6 +246,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
     setNewContactPhone("")
     setNewContactEmail("")
     setNewContactTitle("")
+    setNewEmailTaken("")
   }
 
   function openEditContact(c: {
@@ -253,6 +261,7 @@ export default function ClientDetail({ client }: ClientDetailProps) {
     setEditPhone(c.phone ?? "")
     setEditEmail(c.email ?? "")
     setEditTitle(c.title ?? "")
+    setEditEmailTaken("")
   }
 
   const logoBg = logoBackground(client.name)
@@ -678,7 +687,10 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                         value={editEmail}
                         aria-invalid={editEmailError ? true : undefined}
                         aria-describedby={editEmailError ? `${fid}-edit-email-error` : undefined}
-                        onChange={(e) => setEditEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEditEmail(e.target.value)
+                          setEditEmailTaken("")
+                        }}
                         className={inputCls}
                       />
                       <FieldError id={`${fid}-edit-email-error`} message={editEmailError} />
@@ -711,7 +723,10 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                               c.countryCode,
                             ),
                           },
-                          { onSuccess: () => setEditingContactId(null) },
+                          {
+                            onSuccess: () => setEditingContactId(null),
+                            onError: (err) => setEditEmailTaken(contactEmailError(err) ?? ""),
+                          },
                         )
                       }}
                       className={contactSaveCls(canSaveContact)}
@@ -819,7 +834,10 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                   value={newContactEmail}
                   aria-invalid={newEmailError ? true : undefined}
                   aria-describedby={newEmailError ? `${fid}-new-email-error` : undefined}
-                  onChange={(e) => setNewContactEmail(e.target.value)}
+                  onChange={(e) => {
+                    setNewContactEmail(e.target.value)
+                    setNewEmailTaken("")
+                  }}
                   placeholder="email@perusahaan.com"
                   className={inputCls}
                 />
@@ -845,7 +863,10 @@ export default function ClientDetail({ client }: ClientDetailProps) {
                         title: newContactTitle.trim() || undefined,
                       },
                     },
-                    { onSuccess: closeAddContactForm },
+                    {
+                      onSuccess: closeAddContactForm,
+                      onError: (err) => setNewEmailTaken(contactEmailError(err) ?? ""),
+                    },
                   )
                 }}
                 className={contactSaveCls(canAddContact)}
